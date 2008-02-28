@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://lamp.cfar.umd.edu/viperdata#"
+    xmlns:viperdata="http://lamp.cfar.umd.edu/viperdata#"
+    xmlns:viper="http://lamp.cfar.umd.edu/viper#"
+    elementFormDefault="qualified">
+  
+  <xsd:annotation>
+    <xsd:documentation xml:lang="en">
+      This is the schema for ViPER XML format.
+      It is currently at the prototype stage.
+      See also viperdata.xsd.
+    </xsd:documentation>
+  </xsd:annotation>
+  
+  <xsd:import 
+      namespace="http://lamp.cfar.umd.edu/viper#"
+      schemaLocation="TrecVid08-viper.xsd" />
+  
+  <xsd:element name="bbox" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="x" type="xsd:integer"/>
+	  <xsd:attribute name="y" type="xsd:integer"/>
+	  <xsd:attribute name="width" type="xsd:integer"/>
+	  <xsd:attribute name="height" type="xsd:integer"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="obox" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="x" type="xsd:integer"/>
+	  <xsd:attribute name="y" type="xsd:integer"/>
+	  <xsd:attribute name="width" type="xsd:integer"/>
+	  <xsd:attribute name="height" type="xsd:integer"/>
+	  <xsd:attribute name="rotation" type="xsd:integer"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="svalue" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="value" type="xsd:string"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="lvalue" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="value" type="xsd:Name"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="lvalue-possibles">
+    <xsd:complexType>
+      <xsd:sequence>
+	<xsd:element name="lvalue-enum" minOccurs="1" maxOccurs="unbounded">
+	  <xsd:complexType>
+	    <xsd:attribute name="value" type="xsd:Name"/>
+	  </xsd:complexType>
+	</xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="relation" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="value">
+	    <xsd:simpleType>
+	      <xsd:list itemType="xsd:nonNegativeInteger"/>
+	    </xsd:simpleType>
+	  </xsd:attribute>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="relation-reference" type="xsd:Name"/>
+  
+  <xsd:element name="dvalue" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="value" type="xsd:integer"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="fvalue" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="value" type="xsd:decimal"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="bvalue" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="value" type="xsd:boolean"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="circle" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="x" type="xsd:integer"/>
+	  <xsd:attribute name="y" type="xsd:integer"/>
+	  <xsd:attribute name="radius" type="xsd:integer"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  
+  <xsd:element name="point" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="x" type="xsd:integer"/>
+	  <xsd:attribute name="y" type="xsd:integer"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>
+

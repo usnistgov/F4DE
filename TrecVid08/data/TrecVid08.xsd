@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:viper="http://lamp.cfar.umd.edu/viper#"
+    xmlns:viperdata="http://lamp.cfar.umd.edu/viperdata#">
+
+  <xsd:import namespace="http://lamp.cfar.umd.edu/viper#" schemaLocation="TrecVid08-viper.xsd"/>
+
+  <xsd:import namespace="http://lamp.cfar.umd.edu/viperdata#" schemaLocation="TrecVid08-viperdata.xsd"/>
+
+</xsd:schema>
