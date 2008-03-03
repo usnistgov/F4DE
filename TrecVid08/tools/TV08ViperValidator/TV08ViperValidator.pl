@@ -1,7 +1,74 @@
 #!/usr/bin/env perl
 
 use strict;
-use Getopt::Long;
+
+##########
+# Version
+
+# $Id$
+my $version     = "0.1b";
+my $rpm_release = "1";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+print "TrecVid08 Viper XML Validator Version: $version\n";
+
+##########
+# Check we have every module (perl wise)
+
+my $have_everything = 1;
+
+# Getopt::Long
+unless (eval "use Getopt::Long; 1")
+  {
+    warn_print
+      (
+       "\"Getopt::Long\" is not available on your Perl installation. ",
+       "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
+      );
+    $have_everything = 0;
+  }
+
+# XML::Simple
+unless (eval "use XML::Simple; 1")
+  {
+    warn_print
+      (
+       "\"XML::Simple\" is not available on your Perl installation. ",
+       "Please see \"http://search.cpan.org/search?mode=module&query=xml%3A%3Asimple\" for installation information\n"
+      );
+    $have_everything = 0;
+  }
+
+# Data::Dumper
+unless (eval "use Data::Dumper; 1")
+  {
+    warn_print
+      (
+       "\"Data::Dumper\" is not available on your Perl installation. ",
+       "Please see \"http://search.cpan.org/search?mode=module&query=data%3A%3Adumper\" for installation information\n"
+      );
+    $have_everything = 0;
+  }
+
+# Scalar::Util
+unless (eval "use Scalar::Util qw(reftype); 1")
+  {
+    warn_print
+      (
+       "\"Scalar::Util\" is not available on your Perl installation. ",
+       "Please see \"http://search.cpan.org/search?mode=module&query=scalar%3A%3Autil\" for installation information\n"
+      );
+    $have_everything = 0;
+  }
+
+# Something missing, abort
+error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
+
+# Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 ########################################
@@ -41,9 +108,9 @@ GetOptions
    'verbose'         => \$verb,
    'help'            => sub {die "\n$usage\n";},
    'Debug+'          => \$debug_level,
-  ) || equit("Wrong option on the command line, aborting\n\n$usage\n");
+  ) || error_quit("Wrong option on the command line, aborting\n\n$usage\n");
 
-equit("Not enough arguments on the command line\n$usage\n")
+error_quit("Not enough arguments on the command line\n$usage\n")
   if (scalar @ARGV < 1);
 
 ##########
@@ -120,8 +187,8 @@ sub validate_file {
   }
 
   # At this point, all we ought to have left is the '<data>' content
-  if (! ( ($bigstring =~ s%^\s*\<data>%%i) 
-	  && ($bigstring =~ s%\<\/data\>\s*$%%i) ) ) {
+  if (! ( ($bigstring =~ m%^\s*\<data>%i) 
+	  && ($bigstring =~ m%\<\/data\>\s*$%i) ) ) {
     valerr($ifile,
 	   "After initial cleanup, we found more than just viper \'<data>\', aborting");
     return ();
@@ -130,8 +197,9 @@ sub validate_file {
   ##########
   # Process the data part
   my ($res, $text, %fdata) = &data_processor($bigstring); 
+
   if (! $res) {
-    valerr(&ifile, "$text");
+    valerr($ifile, "$text");
     return ();
   }
 
@@ -141,93 +209,48 @@ sub validate_file {
 
 ########################################
 
-sub keep_dp_doit {
-  my $string = shift @_;
-  
-  return ($string !~ m%^\s*$%);
-}
-
-##########
-
-sub get_xml_name {
-  my $str = shift @_;
-  my $txt = $default_error_value;
-
-  if ($str =~ m%^\s*\<([^\s]+)\s+%) {
-    $txt = $1;
-  }
-
-  return $txt;
-}
-
-##########
-
-sub get_xml_section {
-  my $name = shift @_;
-  my $rstr = shift @_;
-
-  my $txt = $default_error_value;
-  
-  if ($$rstr =~ s%^\s*(\<${name}(\/\>|\s+[^\>]+\/\>))%%) {
-    $txt = $1;
-  } elsif ($$rstr =~ s%^\s*(\<${name}(\>|\s+[^\>]+\>).+?\<\/${name}\>)%%) {
-    $txt = $1;
-  }
-
-  return $txt;
-}
-
-##########
-
-sub get_xml_name_section {
-  my $rstr = shift @_;
-  
-  my $name = $default_error_value;
-  my $section = $default_error_value;
-
-  $name = get_xml_name($$rstr);
-  if ($name eq $default_error_value) {
-    return ($name,  "");
-  }
-
-  $section = get_xml_section($name, $rstr);
-
-  return ($name, $section);
-}
-
-##########
-
 sub data_processor {
   my $string = shift @_;
 
   my $res = 1;
-  my $text = "NOTE: ALL SUB LEVELS NOT CHECKED YET. ";
+  my $text = "";
   my %fdata = ();
 
-  my $kd = 1;
-  while ($kd && &keep_dp_doit($string)) {
-    # Get the first found XML section name and its entire text
-    my ($name, $section) = get_xml_name_section(\$string);
-    if ($name eq $default_error_value) {
-      $text .= "Problem obtaining a valid xml name. ";
-      $res = 0;
-      $kd = 0;
-      next;
-    }
-    if ($section eq $default_error_value) {
-      $text .= "Problem obtaining XML section for name ($name).";
-      $res = 0;
-      $kd = 0;
-      next;
-    }
+  my $ref = XMLin($string);
 
-    dprint(2, "$name [left: ", length($string), "]\n");
+#  print Dumper($ref);
 
-  }
+  ##########
+  # At the first level should be a 'sourcefile' and only one for the entire viper file
+  my @keys = keys %$ref;
+
+  return (0, "Found multiple main tags in the \'<data>\' section, aborting", ())
+    if (scalar @keys > 1);
+
+  return(0, "Main tag found in the \'<data>\' section is not \'sourcefile\', aborting", ())
+    if ($keys[0] !~ m%^sourcefile$%i);
+
+  my $sf = $keys[0];
+  return(0, "Main \'<data>\' tag contains more than one \'sourcefile\' entry, aborting", ())
+    if (&is_array($ref->{$sf}) && (scalar @{$ref->{$sf}} > 1));
+
+  ##########
+  # Process each know subkeys one at a time
+  @keys = keys %{$ref->{$sf}};
+
+  # Will fill a temporary array with the re-organized data representation
+  my %tmp = ();
+
+  #####
+  # Check that the 'filename' attribute is set
+  my @tmpa = grep(m%^filename$%, @keys);
+  
+  
 
   if ($text !~ m%^\s*$%) {
     $text = " (" . &clean_begend_spaces($text) .")";
   }
+  %fdata = %tmp;
 
   return ($res, $text, %fdata);
 }
@@ -267,21 +290,19 @@ sub clean_begend_spaces {
 
 ####################
 
-sub vprint {
-  return if (! $verb);
-
-  print @_;
+sub warn_print {
+  print "WARNING: ", @_;
 }
 
 ##########
 
-sub equit {
-  &oquit ("${ekw}:", @_);
+sub error_quit {
+  &ok_quit ("${ekw}:", @_);
 }
 
 ##########
 
-sub oquit {
+sub ok_quit {
   print @_;
 
   die "\n";
@@ -289,7 +310,7 @@ sub oquit {
 
 ####################
 
-sub vprint {
+sub verb_print {
   return if (! $verb);
   
   print @_;
@@ -297,9 +318,40 @@ sub vprint {
 
 ##########
 
-sub dprint {
+sub debug_print {
   my $v = shift @_;
   return if ($v > $debug_level);
 
   print  @_;
+}
+
+####################
+# As explained: http://www.perl.com/pub/a/2005/04/14/cpan_guidelines.html?page=2
+
+sub is_array {
+  my $data = shift @_;
+
+  my $is_array = reftype( $data ) eq 'ARRAY';
+
+  return $is_array;
+}
+
+##########
+
+sub is_hash {
+  my $data = shift @_;
+
+  my $is_hash = reftype( $data ) eq 'HASH';
+
+  return $is_hash;
+}
+
+##########
+
+sub is_scalar {
+  my $data = shift @_;
+
+  my $is_scalar = (! &is_array($data)) && (! &is_hash($data));
+
+  return $is_scalar;
 }
