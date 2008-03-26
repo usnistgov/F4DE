@@ -76,29 +76,16 @@ my $show = 0;
 my $debug_level = 0;
 my $debug_file = "/tmp/validator-$$";
 my $debug_counter = 0;
-my $isgtf = 0;
+my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision information set
 my $xmllint = "";
 my $xsdpath = ".";
-
-##########
-# Authorized Events List
-my @ok_events = 
-  (
-   # Required events
-   "PersonRuns", "CellToEar", "ObjectPut", "PeopleMeet", "PeopleSplitup", 
-   "Embrace", "Pointing", "ElevatorNoEntry", "OpposingFlow", "TakePicture", 
-   # Optional events
-   "DoorOpenClose", "UseATM", "ObjectGet", "VestAppears", "SitDown", 
-   "StandUp", "ObjectTransfer", 
-   # Removed events
-   ##
-  );
+my $writeback = 0;
 
 ########################################
 # Options processing
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:    D                 V       d  gh          s  v    
+# USed:    D                 V       d  gh          s  vw    
 
 my %opt;
 my $dbgftmp = "";
@@ -111,6 +98,7 @@ GetOptions
    'TrecVid08xsd=s'  => \$xsdpath,
    'gtf'             => \$isgtf,
    'show_seen'       => \$show,
+   'write'           => \$writeback,
    'Verbose'         => \$verb,
    # Hidden otpions
    'debug+'          => \$debug_level,
@@ -135,6 +123,53 @@ $xmllint = &check_xmllint($xmllint);
 # Confirm that the required xsdfiles are available
 $xsdpath = &check_xsdfiles($xsdpath, @xsdfilesl);
 
+##########
+# Authorized Events List
+my @ok_events = 
+  (
+   # Required events
+   "PersonRuns", "CellToEar", "ObjectPut", "PeopleMeet", "PeopleSplitup", 
+   "Embrace", "Pointing", "ElevatorNoEntry", "OpposingFlow", "TakePicture", 
+   # Optional events
+   "DoorOpenClose", "UseATM", "ObjectGet", "VestAppears", "SitDown", 
+   "StandUp", "ObjectTransfer", 
+   # Removed events
+   ##
+  );
+
+##### Memory representations
+my %hash_file_attributes = 
+  (
+   "NUMFRAMES" => "dvalue",
+   "SOURCETYPE" => undef,
+   "H-FRAME-SIZE" => "dvalue",
+   "V-FRAME-SIZE" => "dvalue",
+   "FRAMERATE" => "fvalue",
+  );
+
+my @array_file_inline_attributes =
+  ("id", "name"); # 'id' is to be first
+
+my %hash_objects_attributes_types = 
+  (
+   "Point" => "point",
+   "BoundingBox" => "bbox",
+   "DetectionScore" => "fvalue",
+   "DetectionDecision" => "bvalue",
+  );
+
+my @array_objects_inline_attributes = 
+  ("name", "id", "framespan"); # order is important
+
+my %array_inline_attributes;
+@{$array_inline_attributes{"BoundingBox"}} = ("x", "y", "height", "width");
+@{$array_inline_attributes{"bbox"}} = ("x", "y", "height", "width");
+@{$array_inline_attributes{"Point"}} = ("x", "y");
+@{$array_inline_attributes{"point"}} = ("x", "y");
+@{$array_inline_attributes{"DetectionScore"}} = ("value");
+@{$array_inline_attributes{"fvalue"}} = ("value");
+@{$array_inline_attributes{"DetectionDecision"}} = ("value");
+@{$array_inline_attributes{"dvalue"}} = ("value");
 
 ##########
 # Default values to compare against
@@ -164,7 +199,10 @@ while ($tmp = shift @ARGV) {
   my ($text, %current) = &validate_file($tmp);
   next if ($text !~ m%^\s*$%);
 
-  print("Memory Representation:\n", Dumper(\%current)) if ($show);
+  print("** Memory Representation:\n", Dumper(\%current)) if ($show);
+
+  print("** XML re-Representation:\n", &writeback2xml(%current)) if ($writeback);
+
   %{$all{$tmp}} = %current;
   $ndone++;
 }
@@ -582,7 +620,7 @@ sub parse_file_section {
   my ($text, %attr) = &get_inline_xml_attributes($wtag, $str);
   return ($text, ()) if ($text !~ m%^\s*$%);
 
-  my @expected = ("id", "name"); # 'id' is to be first
+  my @expected = @array_file_inline_attributes;
   my ($in, $out) = &compare_arrays(\@expected, keys %attr);
   return("Could not find all the expected inline \'$wtag\' attributes", ())
     if (scalar @$in != scalar @expected);
@@ -608,14 +646,7 @@ sub parse_file_section {
     if ($text !~ m%^\s*$%);
 
   # Confirm they are the ones we want
-  my %expected_hash = 
-    (
-     "NUMFRAMES" => "dvalue",
-     "SOURCETYPE" => undef,
-     "H-FRAME-SIZE" => "dvalue",
-     "V-FRAME-SIZE" => "dvalue",
-     "FRAMERATE" => "fvalue",
-    );
+  my %expected_hash = %hash_file_attributes;
   @expected = keys %expected_hash;
   ($in, $out) = &compare_arrays(\@expected, keys %attr);
   return("Could not find all the expected \'$wtag\' attributes", ())
@@ -671,7 +702,7 @@ sub parse_object_section {
   my ($text, %attr) = &get_inline_xml_attributes($wtag, $str);
   return ($text, ()) if ($text !~ m%^\s*$%);
 
-  my @expected = ("name", "id", "framespan"); # order is important
+  my @expected = @array_objects_inline_attributes;
   my ($in, $out) = &compare_arrays(\@expected, keys %attr);
   return("Could not find all the expected inline \'file\' attributes", ())
     if (scalar @$in != scalar @expected);
@@ -709,13 +740,7 @@ sub parse_object_section {
     if ($text !~ m%^\s*$%);
   
   # Confirm they are the ones we want
-  my %expected_hash = 
-    (
-     "Point" => "point",
-     "BoundingBox" => "bbox",
-     "DetectionScore" => "fvalue",
-     "DetectionDecision" => "bvalue",
-    );
+  my %expected_hash = %hash_objects_attributes_types;
   @expected = keys %expected_hash;
   ($in, $out) = &compare_arrays(\@expected, keys %attr);
   return("Could not find all the expected \'$wtag\' attributes", ())
@@ -723,12 +748,19 @@ sub parse_object_section {
   return("Found some unexpected \'$wtag\' attributes", ())
     if (scalar @$out > 0);
 
+  my @det_sub = grep (/^detection/i, keys %expected_hash);
+
   # Check they are of valid type & reformat them for the output object hash
   foreach my $key (@expected) {
     my $val = $expected_hash{$key};
     next if (! defined $val);
     my @comp = keys %{$attr{$key}};
-    next if (scalar @comp == 0);
+    if (scalar @comp == 0) {
+      next if ($isgtf);
+      return("Expected \'$wtag\' required attribute ($key) does not have a value", ())
+	if (grep(m%^$key$%, @det_sub));
+      next;
+    }
     my @expected2;
     push @expected2, $val;
     ($in, $out) = &compare_arrays(\@expected2, @comp);
@@ -928,38 +960,12 @@ sub data_process_array_core {
 
 #####
 
-sub data_process_bbox {
+sub data_process_type {
+  my $type = shift @_;
   my %attr = @_;
-  my @expected = ("x", "y", "height", "width");
-  
-  return &data_process_array_core("bbox", \%attr, @expected);
-}
+  my @expected = @{$array_inline_attributes{$type}};
 
-#####
-
-sub data_process_point {
-  my %attr = @_;
-  my @expected = ("x", "y");
-  
-  return &data_process_array_core("point", \%attr, @expected);
-}
-
-#####
-
-sub data_process_fvalue {
-  my %attr = @_;
-  my @expected = ("value");
-  
-  return &data_process_array_core("fvalue", \%attr, @expected);
-}
-
-#####
-
-sub data_process_dvalue {
-  my %attr = @_;
-  my @expected = ("value");
-  
-  return &data_process_array_core("dvalue", \%attr, @expected);
+  return &data_process_array_core($type, \%attr, @expected);
 }
 
 #####
@@ -1008,25 +1014,7 @@ sub extract_data {
 
     # From here we work per 'data:' type
     $name =~ s%^data\:%%;
-  SWITCH: {
-      if ($name =~ m%^bbox$%) {
-	($text, @{$attr{$name}{$lfspan}}) = &data_process_bbox(%iattr);
-	last SWITCH;
-      }
-      if ($name =~ m%^point$%) {
-	($text, @{$attr{$name}{$lfspan}}) = &data_process_point(%iattr);
-	last SWITCH;
-      }
-      if ($name =~ m%^fvalue$%) {
-	($text, @{$attr{$name}{$lfspan}}) = &data_process_fvalue(%iattr);
-	last SWITCH;
-      }
-      if ($name =~ m%^dvalue$%) {
-	($text, @{$attr{$name}{$lfspan}}) = &data_process_dvalue(%iattr);
-	last SWITCH;
-      }
-      return("Unknown \'data\;\' type ($name)", ());
-    }
+    ($text, @{$attr{$name}{$lfspan}}) = &data_process_type($name, %iattr);
     return($text, ()) if ($text !~ m%^\s*$%);
     
     debug_print(2, "[$name | $lfspan | " . join(" , ", @{$attr{$name}{$lfspan}}), "]\n");
@@ -1306,4 +1294,122 @@ sub debug_savefile {
 
 sub numerically {
   return ($a <=> $b);
+}
+
+########################################
+
+sub wbi { # writeback indent
+  my $indent = shift @_;
+  my $spacer = "  ";
+  my $txt = "";
+  
+  for (my $i = 0; $i < $indent; $i++) {
+    $txt .= $spacer;
+  }
+
+  return $txt;
+}     
+
+#####
+
+sub writeback_file {
+  my $indent = shift @_;
+  my %file_hash = @_;
+  my $txt = "";
+
+  $txt .= &wbi($indent++) . "<file id=\"" . $file_hash{'file_id'} 
+    . "\" name=\"Information\">\n";
+
+  foreach my $key (sort keys %hash_file_attributes) {
+    $txt .= &wbi($indent) . "<attribute name=\"$key\"";
+    if (defined $file_hash{$key}) {
+      $txt .= ">\n";
+      $txt .= &wbi(++$indent) . "<data:" . $hash_file_attributes{$key}
+	. " value=\"" . $file_hash{$key} . "\"/>\n";
+      $txt .= &wbi(--$indent) . "</attribute>\n";
+    } else {
+      $txt .= "/>\n";
+    }
+  }
+
+  $txt .= &wbi(--$indent) . "</file>\n";
+
+  return $txt;
+}
+
+#####
+
+sub writeback_object {
+  my $indent = shift @_;
+  my $event = shift @_;
+  my $id = shift @_;
+  my %object_hash = @_;
+
+  my $txt = "";
+
+  $txt .= &wbi($indent++) . "<object framespan=\"" . $object_hash{'framespan'}
+    . "\" id=\"$id\" name=\"$event\">\n";
+
+  foreach my $key (sort keys %hash_objects_attributes_types) {
+    $txt .= &wbi($indent) . "<attribute name=\"$key\"";
+    if (defined $object_hash{$key}) {
+      $txt .= ">\n";
+
+      $indent++;
+      my @afs = keys %{$object_hash{$key}};
+      foreach my $fs (sort framespan_sort @afs) {
+	$txt .= &wbi($indent) . "<data:" . $hash_objects_attributes_types{$key}
+	  . " framespan=\"$fs\" ";
+
+	my @subtxta;
+	my @name_a = @{$array_inline_attributes{$key}};
+	my @value_a = @{$object_hash{$key}{$fs}};
+	while (scalar @name_a > 0) {
+	  my $name= shift @name_a;
+	  my $value = shift @value_a;
+	  push @subtxta, "$name\=\"$value\"";
+	}
+	$txt .= join(" ", @subtxta);
+
+	$txt .= "/>\n";
+      }
+
+      $txt .= &wbi(--$indent) . "</attribute>\n";
+    } else {
+      $txt .= "/>\n";
+    }
+  }
+  
+
+  $txt .= &wbi(--$indent) . "</object>\n";
+
+  return $txt;
+}
+
+##########
+
+sub writeback2xml {
+  my %it = @_;
+  my $txt = "";
+  my $indent = 0;
+  
+  $txt .= &wbi($indent) . "<sourcefile filename=\"" . $it{'file'}{'filename'} . "\">\n";
+
+  # file
+  $txt .= &writeback_file(++$indent, %{$it{'file'}});
+  
+  # Objects
+  foreach my $object (@ok_events) {
+    if (exists $it{$object}) {
+      my @ids = keys %{$it{$object}};
+      foreach my $id (sort @ids) {
+	$txt .= &writeback_object($indent, $object, $id, %{$it{$object}{$id}});
+      }
+    }
+  }
+  
+  # End the sourcefile
+  $txt .= &wbi(--$indent) . "</sourcefile>\n";
+
+  return($txt);
 }
