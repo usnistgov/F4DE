@@ -68,61 +68,6 @@ error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 ########################################
-# Default values for variables
-
-my $usage = &set_usage();
-my $verb = 0;
-my $show = 0;
-my $debug_level = 0;
-my $debug_file = "/tmp/validator-$$";
-my $debug_counter = 0;
-my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision information set
-my $xmllint = "";
-my $xsdpath = ".";
-my $writeback = 0;
-
-########################################
-# Options processing
-
-# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:    D                 V       d  gh          s  vw    
-
-my %opt;
-my $dbgftmp = "";
-GetOptions
-  (
-   \%opt,
-   'help',
-   'version',
-   'xmllint=s'       => \$xmllint,
-   'TrecVid08xsd=s'  => \$xsdpath,
-   'gtf'             => \$isgtf,
-   'show_seen'       => \$show,
-   'write'           => \$writeback,
-   'Verbose'         => \$verb,
-   # Hidden otpions
-   'debug+'          => \$debug_level,
-   'Debugfile=s'     => \$dbgftmp,
-  ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
-
-die("\n$usage\n") if ($opt{'help'});
-die("$versionid\n") if ($opt{'version'});
-
-error_quit("Not enough arguments on the command line\n$usage\n")
-  if (scalar @ARGV < 1);
-
-if ($dbgftmp ne "") {
-  $debug_file = $dbgftmp;
-  $debug_level++ if ($debug_level == 0);
-}
-
-##########
-
-# Confirm xmllint is present and at least 2.6.30
-$xmllint = &check_xmllint($xmllint);
-# Confirm that the required xsdfiles are available
-$xsdpath = &check_xsdfiles($xsdpath, @xsdfilesl);
-
 ##########
 # Authorized Events List
 my @ok_events = 
@@ -136,6 +81,7 @@ my @ok_events =
    # Removed events
    ##
   );
+my @asked_events;
 
 ##### Memory representations
 my %hash_file_attributes = 
@@ -158,18 +104,109 @@ my %hash_objects_attributes_types =
    "DetectionDecision" => "bvalue",
   );
 
+my %hash_objects_attributes_types_dynamic = 
+  (
+   "Point" => 1,
+   "BoundingBox" => 1,
+   "DetectionScore" => 0,
+   "DetectionDecision" => 0,
+  );
+
 my @array_objects_inline_attributes = 
   ("name", "id", "framespan"); # order is important
 
-my %array_inline_attributes;
-@{$array_inline_attributes{"BoundingBox"}} = ("x", "y", "height", "width");
-@{$array_inline_attributes{"bbox"}} = ("x", "y", "height", "width");
-@{$array_inline_attributes{"Point"}} = ("x", "y");
-@{$array_inline_attributes{"point"}} = ("x", "y");
-@{$array_inline_attributes{"DetectionScore"}} = ("value");
-@{$array_inline_attributes{"fvalue"}} = ("value");
-@{$array_inline_attributes{"DetectionDecision"}} = ("value");
-@{$array_inline_attributes{"dvalue"}} = ("value");
+my %hasharray_inline_attributes;
+@{$hasharray_inline_attributes{"bbox"}} = ("x", "y", "height", "width");
+@{$hasharray_inline_attributes{"BoundingBox"}} = @{$hasharray_inline_attributes{"bbox"}};
+@{$hasharray_inline_attributes{"point"}} = ("x", "y");
+@{$hasharray_inline_attributes{"Point"}} = @{$hasharray_inline_attributes{"point"}};
+@{$hasharray_inline_attributes{"fvalue"}} = ("value");
+@{$hasharray_inline_attributes{"DetectionScore"}} = @{$hasharray_inline_attributes{"fvalue"}};
+@{$hasharray_inline_attributes{"bvalue"}} = ("value");
+@{$hasharray_inline_attributes{"DetectionDecision"}} = @{$hasharray_inline_attributes{"bvalue"}};
+@{$hasharray_inline_attributes{"dvalue"}} = ("value");
+
+########################################
+# Options processing
+
+# Default values for variables
+
+my $usage = &set_usage();
+my $verb = 0;
+my $show = 0;
+my $debug_level = 0;
+my $debug_file = "/tmp/validator-$$";
+my $debug_counter = 0;
+my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision information set
+my $xmllint = "";
+my $xsdpath = ".";
+my $writeback = -1;
+my $xmlbasefile = -1;
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+# USed:    D               T V X     d  gh   l      s  vwx  
+
+my %opt;
+my $dbgftmp = "";
+GetOptions
+  (
+   \%opt,
+   'help',
+   'version',
+   "XMLbase:s"       => \$xmlbasefile,
+   'xmllint=s'       => \$xmllint,
+   'TrecVid08xsd=s'  => \$xsdpath,
+   'gtf'             => \$isgtf,
+   'show_seen'       => \$show,
+   'write:s'         => \$writeback,
+   'limitto=s'       => \@asked_events,
+   'Verbose'         => \$verb,
+   # Hidden otpions
+   'debug+'          => \$debug_level,
+   'Debugfile=s'     => \$dbgftmp,
+  ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+
+die("\n$usage\n") if ($opt{'help'});
+die("$versionid\n") if ($opt{'version'});
+
+# Get all asked_events
+if (scalar @asked_events == 0) {
+  @asked_events = @ok_events;
+} else {
+  @asked_events = split(m%\,%, join(",", @asked_events));
+  @asked_events = &make_array_of_unique_values(@asked_events);
+  my ($in, $out) = &compare_arrays(\@asked_events, @ok_events);
+  error_quit("Found some unknown event type: ", join(" ", @$out))
+    if (scalar @$out > 0);
+}
+
+ok_quit(&writeback2xml($xmlbasefile, ()) ) if ($xmlbasefile != -1);
+
+error_quit("Not enough arguments on the command line\n$usage\n")
+  if (scalar @ARGV < 1);
+
+if (($writeback != -1) && ($writeback ne "")) {
+  # Check the directory
+  error_quit("Provided \'write\' option directory ($writeback) does not exist")
+    if (! -e $writeback);
+  error_quit("Provided \'write\' option ($writeback) is not a directoru")
+    if (! -d $writeback);
+  error_quit("Provided \'write\' option directory ($writeback) is not writable")
+    if (! -w $writeback);
+  $writeback .= "/" if ($writeback !~ m%\/$%); # Add a trailing slash
+}
+
+if ($dbgftmp ne "") {
+  $debug_file = $dbgftmp;
+  $debug_level++ if ($debug_level == 0);
+}
+
+##########
+
+# Confirm xmllint is present and at least 2.6.30
+$xmllint = &check_xmllint($xmllint);
+# Confirm that the required xsdfiles are available
+$xsdpath = &check_xsdfiles($xsdpath, @xsdfilesl);
 
 ##########
 # Default values to compare against
@@ -199,9 +236,18 @@ while ($tmp = shift @ARGV) {
   my ($text, %current) = &validate_file($tmp);
   next if ($text !~ m%^\s*$%);
 
+  %current = &prune_hash(%current)
+    if (scalar @ok_events != scalar @asked_events);
+
   print("** Memory Representation:\n", Dumper(\%current)) if ($show);
 
-  print("** XML re-Representation:\n", &writeback2xml(%current)) if ($writeback);
+  if ($writeback != -1) {
+    my $tmp2 = $tmp;
+    $tmp2 =~ s%^.+\/([^\/]+)$%$1%;
+    my $fname = ($writeback eq "") ? "" : "$writeback$tmp2";
+    print("** XML re-Representation:\n") if ($fname eq "");
+    print &writeback2xml($fname, %current);
+  }
 
   %{$all{$tmp}} = %current;
   $ndone++;
@@ -592,6 +638,19 @@ sub parse_sourcefile_section {
 
 ####################
 
+sub make_array_of_unique_values {
+  my @a = @_;
+
+  my %tmp;
+  foreach my $key (@a) {
+    $tmp{$key}++;
+  }
+
+  return (keys %tmp);
+}
+
+#####
+
 sub compare_arrays {
   my $rexp = shift @_;
   my @list = @_;
@@ -963,7 +1022,11 @@ sub data_process_array_core {
 sub data_process_type {
   my $type = shift @_;
   my %attr = @_;
-  my @expected = @{$array_inline_attributes{$type}};
+
+  return ("Found some unknown \'data\:\' type ($type)", ())
+    if (! exists $hasharray_inline_attributes{$type});
+
+  my @expected = @{$hasharray_inline_attributes{$type}};
 
   return &data_process_array_core($type, \%attr, @expected);
 }
@@ -973,6 +1036,9 @@ sub data_process_type {
 sub extract_data {
   my $str = shift @_;
   my $fspan = shift @_;
+  my $allow_nofspan = shift @_;
+  my $type = shift @_;
+
   my %attr;
   my @afspan;
 
@@ -989,6 +1055,9 @@ sub extract_data {
     # All within a data: entry is inlined, so get the inlined content
     my ($text, %iattr) = &get_inline_xml_attributes($name, $section);
     return($text, ()) if ($text !~ m%^\s*$%);
+
+    # From here we work per 'data:' type
+    $name =~ s%^data\:%%;
 
     # Check the framespan (if any)
     my $lfspan;
@@ -1007,13 +1076,24 @@ sub extract_data {
       push @afspan, $lfspan;
 
       delete $iattr{$key};
+    } elsif ($allow_nofspan) {
+      # This is an element for which we know at this point we do not have to worry about its framespan status
+      # (most likely not processing any "object" but a "file"), make it valid for the entire provided framespan
+      $lfspan = $fspan;
     } else {
-      # if none was specified, it means that it is valid for the entire provided framespan
+      # if none was specified, check if the type is dynamic
+      return("Can not confirm the dynamic status of found \'data\:\' type ($name)", ())
+	if (! exists $hash_objects_attributes_types_dynamic{$type});
+
+      # If it is, a framespan should have been provided
+      return("No framespan provided for dynamic \'data\:\' type ($name)", ())
+	if ($hash_objects_attributes_types_dynamic{$type} == 1);
+
+      # otherwise, it means that it is valid for the entire provided framespan
       $lfspan = $fspan;
     }
 
-    # From here we work per 'data:' type
-    $name =~ s%^data\:%%;
+    # Process the leftover elements
     ($text, @{$attr{$name}{$lfspan}}) = &data_process_type($name, %iattr);
     return($text, ()) if ($text !~ m%^\s*$%);
     
@@ -1031,12 +1111,14 @@ sub parse_attributes {
   my $fspan = shift @_;
   my %attrs;
 
+  my $allow_nofspan = 0;
   if ($fspan =~ m%^\s*$%) {
     if ($framespan_max eq $framespan_max_default) {
       $fspan = $framespan_max;
     } else {
       return("WEIRD: At this point the framespan range should be defined", ());
     }
+    $allow_nofspan = 1;
   }
   
   # We process all the "attributes"
@@ -1065,7 +1147,7 @@ sub parse_attributes {
     if ($sec =~ m%^\s*$%) {
       $attrs{$name} = undef;
     } else {
-      ($text, my %tmp) = &extract_data($sec, $fspan);
+      ($text, my %tmp) = &extract_data($sec, $fspan, $allow_nofspan, $name);
       return("Error while processing the \'data\:\' content of the \'$name\' \'attribute\' ($text)", ())
 	if ($text !~ m%^\s*$%);
       %{$attrs{$name}} = %tmp;
@@ -1190,24 +1272,29 @@ sub check_xsdfiles {
 ########################################
 
 sub set_usage {
+  my $ro = join(" ", @ok_events);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--Verbose] [--gtf] [--xmllint location] [--TrecVid08xsd location] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help] [--version] [--XMLbase [file]] [--Verbose] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--limitto event1[,event2[...]]] [--write [directory]] viper_source_file.xml [viper_source_file.xml [...]]
 
-Will perform a semantic validation of the XML file(s) provided.
+Will perform a semantic validation of the Viper XML file(s) provided.
 
  Where:
+  --gtf           Specify that the file to validate is a Ground Truth File
   --xmllint       Full location of the \'xmllint\' executable
   --TrecVid08xsd  Path where the XSD files can be found ($xsdfiles)
-  --gtf           File to validate is a Ground Truth File
-  --version       Print version number and exit
+  --limitto       Only care about provided list of events
+  --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
+  --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
   --Verbose       Be a little more verbose
-  --help          This usage information
+  --version       Print version number and exit
+  --help          Print this usage information and exit
 
 Note:
 - This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
 - Program will ignore the <config> section of the XML file.
+- List of recognized events: $ro
 EOF
 ;
 
@@ -1312,27 +1399,39 @@ sub wbi { # writeback indent
 
 #####
 
+sub wb_print { # writeback print
+  my $indent = shift @_;
+  my @content = @_;
+
+  my $txt = "";
+
+  $txt .= &wbi($indent);
+  $txt .= join("", @content);
+
+  return $txt;
+}
+
+#####
+
 sub writeback_file {
   my $indent = shift @_;
   my %file_hash = @_;
   my $txt = "";
 
-  $txt .= &wbi($indent++) . "<file id=\"" . $file_hash{'file_id'} 
-    . "\" name=\"Information\">\n";
+  $txt .= &wb_print($indent++, "<file id=\"" . $file_hash{'file_id'} . "\" name=\"Information\">\n");
 
   foreach my $key (sort keys %hash_file_attributes) {
-    $txt .= &wbi($indent) . "<attribute name=\"$key\"";
+    $txt .= &wb_print($indent, "<attribute name=\"$key\"");
     if (defined $file_hash{$key}) {
       $txt .= ">\n";
-      $txt .= &wbi(++$indent) . "<data:" . $hash_file_attributes{$key}
-	. " value=\"" . $file_hash{$key} . "\"/>\n";
-      $txt .= &wbi(--$indent) . "</attribute>\n";
+      $txt .= &wb_print(++$indent, "<data:" . $hash_file_attributes{$key} . " value=\"" . $file_hash{$key} . "\"/>\n");
+      $txt .= &wb_print(--$indent, "</attribute>\n");
     } else {
       $txt .= "/>\n";
     }
   }
 
-  $txt .= &wbi(--$indent) . "</file>\n";
+  $txt .= &wb_print(--$indent, "</file>\n");
 
   return $txt;
 }
@@ -1347,22 +1446,24 @@ sub writeback_object {
 
   my $txt = "";
 
-  $txt .= &wbi($indent++) . "<object framespan=\"" . $object_hash{'framespan'}
-    . "\" id=\"$id\" name=\"$event\">\n";
+  $txt .= &wb_print($indent++, "<object framespan=\"" . $object_hash{'framespan'} . "\" id=\"$id\" name=\"$event\">\n");
 
   foreach my $key (sort keys %hash_objects_attributes_types) {
-    $txt .= &wbi($indent) . "<attribute name=\"$key\"";
+    $txt .= &wb_print($indent, "<attribute name=\"$key\"");
     if (defined $object_hash{$key}) {
       $txt .= ">\n";
 
       $indent++;
       my @afs = keys %{$object_hash{$key}};
       foreach my $fs (sort framespan_sort @afs) {
-	$txt .= &wbi($indent) . "<data:" . $hash_objects_attributes_types{$key}
-	  . " framespan=\"$fs\" ";
+	$txt .= &wb_print
+	  ($indent,
+	   "<data:" . $hash_objects_attributes_types{$key},
+	   ($hash_objects_attributes_types_dynamic{$key}) ? " framespan=\"$fs\"" : "",
+	   " ");
 
 	my @subtxta;
-	my @name_a = @{$array_inline_attributes{$key}};
+	my @name_a = @{$hasharray_inline_attributes{$key}};
 	my @value_a = @{$object_hash{$key}{$fs}};
 	while (scalar @name_a > 0) {
 	  my $name= shift @name_a;
@@ -1374,14 +1475,14 @@ sub writeback_object {
 	$txt .= "/>\n";
       }
 
-      $txt .= &wbi(--$indent) . "</attribute>\n";
+      $txt .= &wb_print(--$indent, "</attribute>\n");
     } else {
       $txt .= "/>\n";
     }
   }
   
 
-  $txt .= &wbi(--$indent) . "</object>\n";
+  $txt .= &wb_print(--$indent, "</object>\n");
 
   return $txt;
 }
@@ -1389,27 +1490,99 @@ sub writeback_object {
 ##########
 
 sub writeback2xml {
+  my $wto = shift @_;
   my %it = @_;
   my $txt = "";
   my $indent = 0;
-  
-  $txt .= &wbi($indent) . "<sourcefile filename=\"" . $it{'file'}{'filename'} . "\">\n";
 
-  # file
-  $txt .= &writeback_file(++$indent, %{$it{'file'}});
+  # Common header
+  $txt .= &wb_print($indent, "<?xml version\=\"1.0\" encoding=\"UTF-8\"?>\n");
+  $txt .= &wb_print($indent, "<viper xmlns=\"http://lamp.cfar.umd.edu/viper\#\" xmlns:data=\"http://lamp.cfar.umd.edu/viperdata\#\">\n");
+  $txt .= &wb_print(++$indent, "<config>\n");
+  $txt .= &wb_print(++$indent, "<descriptor name=\"Information\" type=\"FILE\">\n");
+  $txt .= &wb_print(++$indent, "<attribute dynamic=\"false\" name=\"SOURCETYPE\" type=\"http://lamp.cfar.umd.edu/viperdata#lvalue\">\n");
+  $txt .= &wb_print(++$indent, "<data:lvalue-possibles>\n");
+  $txt .= &wb_print(++$indent, "<data:lvalue-enum value=\"SEQUENCE\"/>\n");
+  $txt .= &wb_print($indent, "<data:lvalue-enum value=\"FRAMES\"/>\n");
+  $txt .= &wb_print(--$indent, "</data:lvalue-possibles>\n");
+  $txt .= &wb_print(--$indent, "</attribute>\n");
+  $txt .= &wb_print($indent, "<attribute dynamic=\"false\" name=\"NUMFRAMES\" type=\"http://lamp.cfar.umd.edu/viperdata#dvalue\"/>\n");
+  $txt .= &wb_print($indent, "<attribute dynamic=\"false\" name=\"FRAMERATE\" type=\"http://lamp.cfar.umd.edu/viperdata#fvalue\"/>\n");
+  $txt .= &wb_print($indent, "<attribute dynamic=\"false\" name=\"H-FRAME-SIZE\" type=\"http://lamp.cfar.umd.edu/viperdata#dvalue\"/>\n");
+  $txt .= &wb_print($indent, "<attribute dynamic=\"false\" name=\"V-FRAME-SIZE\" type=\"http://lamp.cfar.umd.edu/viperdata#dvalue\"/>\n");
+  $txt .= &wb_print(--$indent, "</descriptor>\n");
+
+  # Write all objects
+  foreach my $object (@asked_events) {
+    $txt .= &wb_print($indent++, "<descriptor name=\"$object\" type=\"OBJECT\">\n");
+    foreach my $key (sort keys %hash_objects_attributes_types) {
+      $txt .= &wb_print
+	($indent,
+	 "<attribute dynamic=\"",
+	 ($hash_objects_attributes_types_dynamic{$key}) ? "true" : "false",
+	 "\" name=\"$key\" type=\"http://lamp.cfar.umd.edu/viperdata#",
+	 $hash_objects_attributes_types{$key}, 
+	 "\"/>\n");
+    }
+    $txt .= &wb_print(--$indent, "</descriptor>\n");
+  }
+
+  # End 'config', begin 'data'
+  $txt .= &wb_print(--$indent, "</config>\n");
+  $txt .= &wb_print($indent++, "<data>\n");
   
-  # Objects
-  foreach my $object (@ok_events) {
-    if (exists $it{$object}) {
-      my @ids = keys %{$it{$object}};
-      foreach my $id (sort @ids) {
-	$txt .= &writeback_object($indent, $object, $id, %{$it{$object}{$id}});
+  if (scalar %it > 0) { # Are we just writting a spec XML file ?
+		      
+    $txt .= &wb_print($indent, "<sourcefile filename=\"" . $it{'file'}{'filename'} . "\">\n");
+    
+    # file
+    $txt .= &writeback_file(++$indent, %{$it{'file'}});
+    
+    # Objects
+    foreach my $object (@asked_events) {
+      if (exists $it{$object}) {
+	my @ids = keys %{$it{$object}};
+	foreach my $id (sort @ids) {
+	  $txt .= &writeback_object($indent, $object, $id, %{$it{$object}{$id}});
+	}
       }
     }
+    
+    # End the sourcefile
+    $txt .= &wb_print(--$indent, "</sourcefile>\n");
   }
   
-  # End the sourcefile
-  $txt .= &wbi(--$indent) . "</sourcefile>\n";
+  # end data and viper
+  $txt .= &wb_print(--$indent, "</data>\n");
+  $txt .= &wb_print(--$indent, "</viper>\n");
+  
+  warn_print("(WEIRD) End indentation is not equal to 0 ? (= $indent)\n") if ($indent != 0);
+  
+  if ($wto eq "") {
+    return($txt);
+  } else {
+    open FILE, ">$wto"
+      or die "ERROR: Could not create 'write\' output file ($wto): $!\n";
+    print FILE $txt;
+    close FILE;
+    return("");
+  }
+}
 
-  return($txt);
+########################################
+
+sub prune_hash {
+  my %in_hash = @_;
+
+  my %out_hash;
+
+  %{$out_hash{"file"}} = %{$in_hash{"file"}};
+
+  foreach my $event (@asked_events) {
+    if (exists $in_hash{$event}) {
+        %{$out_hash{$event}} = %{$in_hash{$event}};
+      }
+  }
+
+  return %out_hash;
 }
