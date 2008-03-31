@@ -27,6 +27,22 @@ my $have_everything = 1;
 my @xsdfilesl = ( "TrecVid08.xsd", "TrecVid08-viper.xsd", "TrecVid08-viperdata.xsd" ); # Important that the main file be first
 my $xsdfiles = join(", ", @xsdfilesl);
 
+# "Framespan.pm" (part of this program sources)
+unless (eval "use Framespan; 1")
+  {
+    warn_print
+      (
+       "\"Framespan\" is not available on your Perl installation. ",
+       "It is part of the validation tool sources. ",
+      );
+    $have_everything = 0;
+  }
+# A note about 'Framespan': 
+# we are using functions to facilitate work on framespans but are always storing a text value
+# in memory to make it easier to process the first level information.
+# (it is easy to recreate a 'Framespan' from the text value, which we do multiple times in this code)
+# This choice to make an object of it was driven by re-usability of the framespan code for other needs.
+
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1")
   {
@@ -60,6 +76,7 @@ unless (eval "use Data::Dumper; 1")
       );
     $have_everything = 0;
   }
+
 
 # Something missing ? Abort
 error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
@@ -211,6 +228,7 @@ $xsdpath = &check_xsdfiles($xsdpath, @xsdfilesl);
 ##########
 # Default values to compare against
 my $default_error_value = "default_error_value";
+my $fs_framespan_max = new Framespan();
 my $framespan_max_default = "all";
 my $framespan_max = $framespan_max_default;
 
@@ -742,6 +760,7 @@ sub parse_file_section {
     if ($val < 0);
 
   $framespan_max = "1:$val";
+  $fs_framespan_max->set_value($framespan_max);
 
   return ("", %file_hash);
 }
@@ -782,11 +801,12 @@ sub parse_object_section {
   return("WEIRD: Could not obtain the \'framespan\' inline \'$wtag\' attribute", ())
     if (! exists $attr{$expected[2]});
   my $tmp = $attr{$expected[2]};
-  ($text, $tmp) = &fix_framespan($tmp);
-  return($text, ()) if ($text !~ m%^\s*$%);
-  $text = &framespan_is_within($tmp, $framespan_max);
-  return($text, ()) if ($text !~ m%^\s*$%);
-  $object_framespan = $tmp;
+
+  my $fs_tmp = new Framespan;
+  $fs_tmp->set_value($tmp);
+  return ($fs_tmp->get_errormsg()) if (! $fs_tmp->fix($fs_framespan_max));
+  return ($fs_tmp->get_errormsg()) if (! $fs_tmp->is_within($fs_framespan_max));
+  $object_framespan = $fs_tmp->get_value();
 
   # Remove the \'object\' header and trailer tags
   return("WEIRD: could not remove the \'$wtag\' header and trailer tags", ())
@@ -838,166 +858,6 @@ sub parse_object_section {
 
 ####################
 
-sub framespan_sort {
-  my ($e1) = ($a =~ m%^(\d+)\:%);
-  my ($e2) = ($b =~ m%^(\d+)\:%);
-
-  return ($e1 <=> $e2);
-}
-
-#####
-
-sub framespan_reorder {
-  my $fs = shift @_;
-
-  my @ftodo = split(/[\s|\t]+/, $fs);
-
-  my @o = sort framespan_sort @ftodo;
-
-  return("While shifting frames, not the same number of elements between the original array and the result array", "")
-    if (scalar @ftodo != scalar @o);
-
-  my $res = join(" ", @o);
-
-  return("", $res);
-}
-
-##########
-
-sub framespan_shorten_check {
-  my ($b, $e, $txt) = @_;
-
-  return("badly formed range pair")
-    if (($b =~ m%^\s*$%) || ($e =~ m%^\s*$%));
-  
-  return("framespan range pair values can not be negative")
-    if (($b < 0) || ($e < 0));
-
-  return("framespan range pair is not ordered")
-    if ($e < $b);
-
-  return("");
-}
-
-#####
-
-sub framespan_shorten {
-  my $fs = shift @_;
-
-  my @ftodo = split(/[\s|\t]+/, $fs);
-
-  my $ftc = scalar @ftodo;
-
-  # no elements ?
-  return("No values in framespan range", "")
-    if ($ftc == 0);
-
-  my $entry = shift @ftodo;
-  my ($b, $e) = ($entry =~ m%^(\d+)\:(\d+)$%);
-  my $text = &framespan_shorten_check($b, $e, $entry);
-  return ($text, "") if ($text !~ m%^\s*$%);
-
-  # Only 1 element ?
-  return ("", $fs) if ($ftc == 1);
-
-  # More than one element: compute
-  my @o = ();
-
-  foreach $entry (@ftodo) {
-    my ($nb, $ne) = ($entry =~ m%^(\d+)\:(\d+)$%);
-    $text = &framespan_shorten_check($b, $e, $entry);
-    return ($text, "") if ($text !~ m%^\s*$%);
-
-    if ($nb == $e) { # ex: 1:2 2:6 -> 1:6
-      $e = $ne;
-    } elsif ($nb == 1 + $e) { # ex: 1:1 2:3 -> 1:3
-      $e = $ne;
-    } else { # ex: 1:2 12:24 -> 1:2 12:24
-      push @o, "$b:$e";
-      ($b, $e) = ($nb, $ne);
-    }
-  }
-  push @o, "$b:$e";
-  
-  my $res = join(" ", @o);
-  
-  return ("", $res);
-}
-
-#####
-
-sub fix_framespan {
-  my $fs = shift @_;
-
-  return ("", $fs) if ($fs eq $framespan_max);
-
-  my $text;
-
-  # Reorder (just in case)
-  ($text, $fs) = &framespan_reorder($fs);
-  return ($text, "") if ($text !~ m%^\s*$%);
-
-  # Shorten range of framespan entries (Also performs a check on pair ordering)
-  # NOTE: must be done after full reorder since it relies on entries to be ordered to work
-  ($text, $fs) = &framespan_shorten($fs);
-  return ($text, "") if ($text !~ m%^\s*$%);
-
-  my ($bf, $ef) = &framespan_get_begend($fs);
-  return("framespan start at frame \#1", "") if ($bf < 1);
-
-  return ("", $fs);
-}
-
-##########
-
-sub framespan_get_begend {
-  my $fs = shift @_;
-
-  my ($bf) = ($fs =~ m%^(\d+)\:%);
-  my ($ef) = ($fs =~ m%\:(\d+)$%);
-
-  return ($bf, $ef);
-}
-
-#####
-
-sub framespan_check_no_overlap {
-  my $ifs = shift @_;
-  my @afs = shift @_;
-
-  return ("") if (scalar @afs == 0);
-
-  my ($i_beg, $i_end) = framespan_get_begend($ifs);
-
-  foreach my $cfs (@afs) {
-    my ($c_beg, $c_end) = framespan_get_begend($cfs);
-
-    # No overlap possible
-    next if (($c_end < $i_beg) || ($i_end < $c_beg));
-
-    # Overlap
-    return("framespan overlap detected");
-  }
-
-  return("");
-}
-
-#####
-
-sub framespan_is_within {
-  my $v = shift @_;
-  my $range = shift @_;
-
-  my ($v_beg, $v_end) = framespan_get_begend($v);
-  my ($r_beg, $r_end) = framespan_get_begend($range);
-
-  return("") if (($v_beg >= $r_beg) && ($v_end <= $r_end));
-
-  return("framespan is not within the given range");
-}
-
-##########
-
 sub data_process_array_core {
   my $name = shift @_;
   my $rattr = shift @_;
@@ -1042,6 +902,9 @@ sub extract_data {
   my %attr;
   my @afspan;
 
+  my $fs_fspan = new Framespan;
+  $fs_fspan->set_value($fspan);
+
   while ($str !~ m%^\s*$%) {
     my $name = &get_next_xml_name($str);
     return("Problem obtaining a valid XML name, aborting", $str)
@@ -1064,18 +927,16 @@ sub extract_data {
     my $key = "framespan";
     if (exists $iattr{$key}) {
       $lfspan = $iattr{$key};
-      ($text, $lfspan) = &fix_framespan($lfspan);
-      return($text, ()) if ($text !~ m%^\s*$%);
-      
-      $text = &framespan_is_within($lfspan, $fspan);
-      return($text, ()) if ($text !~ m%^\s*$%);
 
-      $text = &framespan_check_no_overlap($lfspan, @afspan);
-      return($text, ()) if ($text !~ m%^\s*$%);
-
-      push @afspan, $lfspan;
+      my $fs_lfspan = new Framespan;
+      $fs_lfspan->set_value($lfspan);
+      return ($fs_lfspan->get_errormsg()) if (! $fs_lfspan->fix($fs_framespan_max));
+      return ($fs_lfspan->get_errormsg()) if (! $fs_lfspan->is_within($fs_fspan));
+      return ($fs_lfspan->get_errormsg()) if (! $fs_lfspan->check_no_overlap(@afspan));
+      push @afspan, $fs_lfspan;
 
       delete $iattr{$key};
+      $lfspan = $fs_lfspan->get_value();
     } elsif ($allow_nofspan) {
       # This is an element for which we know at this point we do not have to worry about its framespan status
       # (most likely not processing any "object" but a "file"), make it valid for the entire provided framespan
@@ -1383,6 +1244,12 @@ sub numerically {
   return ($a <=> $b);
 }
 
+##########
+
+sub framespan_sort {
+  return $a->sort_cmp($b);
+}
+
 ########################################
 
 sub wbi { # writeback indent
@@ -1454,8 +1321,12 @@ sub writeback_object {
       $txt .= ">\n";
 
       $indent++;
-      my @afs = keys %{$object_hash{$key}};
-      foreach my $fs (sort framespan_sort @afs) {
+      my @afs;
+      foreach my $fs (keys %{$object_hash{$key}}) {
+	push @afs, new Framespan($fs);
+      }
+      foreach my $fs_fs (sort framespan_sort @afs) {
+	my $fs = $fs_fs->get_value();
 	$txt .= &wb_print
 	  ($indent,
 	   "<data:" . $hash_objects_attributes_types{$key},
