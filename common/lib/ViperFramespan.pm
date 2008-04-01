@@ -2,16 +2,31 @@ package Framespan;
 
 use strict;
 
+my %error_msgs =
+  (
+   "EmptyValue"        => "Must provide a non empty \'value\'",
+   "NotFramespan"      => "Entry is not a valid framespan",
+   "NoFramespanSet"    => "No framespan set",
+   "BadRangePair"      => "Badly formed range pair",
+   "NegativeValue"     => "Framespan range pair values can not be negative",
+   "NotOrdered"        => "Framespan range pair is not ordered",
+   "StartAt0"          => "Framespan can not start at 0",
+   "Overlap"           => "Framespan overlap detected",
+   "NotWithin"         => "Framespan is not within the given range",
+  );
+   
+
 ## Constructor
 sub new {
   my ($class) = shift @_;
 
   my $tmp = shift @_;
-  my ($value, $errormsg) = _fs_check_value($tmp, 1);
+  my ($value, $errormsg) = _fs_check_and_optimize_value($tmp, 1);
 
   my $self =
     {
      value => $value,
+     original_value => $tmp,
      errormsg => $errormsg,
     };
   
@@ -21,6 +36,57 @@ sub new {
 
 ####################
 
+sub _fs_check_pair {
+  my ($b, $e) = @_;
+
+  return($error_msgs{"BadRangePair"})
+    if (($b =~ m%^\s*$%) || ($e =~ m%^\s*$%));
+  
+  return($error_msgs{"NegativeValue"})
+    if (($b < 0) || ($e < 0));
+
+  return($error_msgs{"NotOrdered"})
+    if ($e < $b);
+
+  return($error_msgs{"StartAt0"})
+    if ($b == 0);
+
+  return("");
+}
+
+#####
+
+sub _fs_split_pair {
+  my ($pair) = shift @_;
+
+  return(0,0, $error_msgs{"NotFramespan"})
+    if ($pair !~ m%^\d+\:\d+$%);
+
+  my ($b, $e) = ($pair =~ m%^(\d+)\:(\d+)$%);
+
+  return ($b, $e, "");
+}
+
+#####
+
+sub _fs_split_line {
+  my $line = shift @_;
+
+  my @o = split(/[\s|\t]+/, $line);
+
+  return @o;
+}
+
+#####
+
+sub _fs_split_line_count {
+  my $line = shift @_;
+
+  return scalar &_fs_split_line($line);
+}
+
+#####
+
 sub _fs_check_value {
   my $value = shift @_;
   my $from_new = shift @_;
@@ -29,19 +95,107 @@ sub _fs_check_value {
     # If called from new, it is ok
     return ($value, "") if ($from_new);
     # Otherwise it should not happen
-    return ("", "Must provide a non empty value");
+    return ("", $error_msgs{"EmptyValue"});
   }
 
-  # Split entry
-  my @todo = split(/[\s|\t]+/, $value);
-
+  # Process pair per pair
+  my @todo = &_fs_split_line($value);
   foreach my $key (@todo) {
-    return ("", "Entry is not a framespan")
-      if ($key !~ m%^\d+\:\d+$%);
+    my ($b, $e, $txt) = &_fs_split_pair($key);
+    return ("", $txt) if ($txt !~ m%^\s*$%);
+    $txt = &_fs_check_pair($b, $e);
+    return ("", $txt) if ($txt !~ m%^\s*$%);
   }
 
+  # Recreate a usable string
   $value = join(" ", @todo);
+
   return ($value, "");
+}
+
+##########
+
+sub _fs_reorder_value {
+  my $fs = shift @_;
+
+  # Only 1 element, nothing to do
+  return ($fs, "") if (&_fs_split_line_count($fs) == 1);
+
+  # More than 1 element, reorder
+  my @ftodo = &_fs_split_line($fs);
+  my @o = sort _fs_sort @ftodo;
+  return ($fs, "WEIRD: While reordering frames, did not find the same number of elements between the original array and the result array")
+    if (scalar @ftodo != scalar @o);
+
+  $fs = join(" ", @o);
+
+  return($fs, "");
+}
+
+##########
+
+sub _fs_shorten_value {
+  my $fs = shift @_;
+
+  my ($b, $e, $errormsg);
+
+  ($fs, $errormsg) = &_fs_reorder_value($fs);
+  return ($fs, $errormsg) if ($errormsg !~ m%^\s*$%);
+
+  # Only 1 element, nothing to do
+  return ($fs, "") if (&_fs_split_line_count($fs) == 1);
+
+  # More than one element: compute
+  my @o = ();
+
+  my @ftodo = &_fs_split_line($fs);
+  my $ftc = scalar @ftodo;
+
+  # Get the first element
+  my $entry = shift @ftodo;
+  ($b, $e, $errormsg) = &_fs_split_pair($entry);
+  return ($fs, $errormsg) if ($errormsg !~ m%^\s*$%);
+
+  my ($nb, $ne);
+  foreach $entry (@ftodo) {
+    ($nb, $ne, $errormsg) = &_fs_split_pair($entry);
+    return ($fs, $errormsg) if ($errormsg !~ m%^\s*$%);
+
+    if ($nb == $e) { # ex: 1:2 2:6 -> 1:6
+      $e = $ne;
+    } elsif ($nb == 1 + $e) { # ex: 1:1 2:3 -> 1:3
+      $e = $ne;
+    } else { # ex: 1:2 12:24 -> 1:2 12:24
+      push @o, "$b:$e";
+      ($b, $e) = ($nb, $ne);
+    }
+  }
+  push @o, "$b:$e";
+  
+  $fs = join(" ", @o);
+
+  return ($fs, "");
+}
+
+#####
+
+sub _fs_check_and_optimize_value {
+  my $value = shift @_;
+  my $from_new = shift @_;
+
+  my $errormsg = "";
+
+  # Check the value
+  ($value, $errormsg) = &_fs_check_value($value, $from_new);
+  return ($value, $errormsg) if ($errormsg !~ m%^\s*$%);
+
+  # Then optimize it (if a value is present)
+  if ($value ne "") {
+    ($value, $errormsg) = &_fs_shorten_value($value);
+    return ($value, $errormsg) if ($errormsg !~ m%^\s*$%);
+  }
+
+  return ($value, $errormsg);
 }
 
 ##########
@@ -49,10 +203,11 @@ sub _fs_check_value {
 sub set_value {
   my ($self, $tmp) = @_;
 
-  my ($value, $errormsg) = _fs_check_value($tmp, 0);
-  $self->_set_errormsg($errormsg) if ($errormsg ne "");
+  my ($value, $errormsg) = _fs_check_and_optimize_value($tmp, 0);
+  $self->_set_errormsg($errormsg) if ($errormsg !~ m%^\s*$%);
 
-  $self ->{value} = $value;
+  $self->{value} = $value;
+  $self->{original_value} = $tmp;
 }
 
 ##########
@@ -71,6 +226,14 @@ sub get_value {
   return ($self->{value});
 }
 
+#####
+
+sub get_original_value {
+  my ($self) = @_;
+
+  return ($self->{original_value});
+}
+
 ##########
 
 sub get_errormsg {
@@ -84,14 +247,27 @@ sub get_errormsg {
 sub _is_value_set {
   my ($self) = @_;
 
-  return (0) if ($self->get_errormsg() ne "");
+  return (0) if ($self->_is_errormsg_set());
 
   my $v = $self->get_value();
 
   return (0)
     if ($v eq "");
 
+  return (0)
+    if (&_fs_split_line_count($v) == 0);
+
   return (1);
+}
+
+##########
+
+sub _is_errormsg_set {
+  my ($self) = @_;
+
+  return (1) if ($self->get_errormsg() ne "");
+
+  return (0);
 }
 
 ####################
@@ -99,6 +275,8 @@ sub _is_value_set {
 sub _fs_sort {
   return _fs_sort_core($a, $b);
 }
+
+#####
 
 sub _fs_sort_core {
   my ($a, $b) = @_;
@@ -125,168 +303,6 @@ sub sort_cmp {
 
 ##########
 
-sub reorder {
-  my ($self) = @_;
-
-  return (0) if ($self->get_errormsg() ne "");
-
-  if (! $self->_is_value_set()) {
-    $self->_set_errormsg("No framespan set");
-    return(0);
-  }
-
-  my $fs = $self->get_value();
-
-  my @ftodo = split(/[\s|\t]+/, $fs);
-
-  my @o = sort _fs_sort @ftodo;
-
-  if (scalar @ftodo != scalar @o) {
-    $self->_set_errormsg("WEIRD: While reordering frames, did not find the same number of elements between the original array and the result array");
-    return(0);
-  }
-
-  my $res = join(" ", @o);
-
-  $self->set_value($res);
-
-  return (1);
-}
-
-##########
-
-sub _fs_shorten_check {
-  my ($b, $e, $txt) = @_;
-
-  return("badly formed range pair")
-    if (($b =~ m%^\s*$%) || ($e =~ m%^\s*$%));
-  
-  return("framespan range pair values can not be negative")
-    if (($b < 0) || ($e < 0));
-
-  return("framespan range pair is not ordered")
-    if ($e < $b);
-
-  return("");
-}
-
-#####
-
-sub shorten {
-  my ($self) = @_;
-
-  return (0) if ($self->get_errormsg() ne "");
-
-  if (! $self->_is_value_set()) {
-    $self->_set_errormsg("No framespan set");
-    return(0);
-  }
-
-  my $fs = $self->get_value();
-
-  my @ftodo = split(/[\s|\t]+/, $fs);
-
-  my $ftc = scalar @ftodo;
-
-  # no elements ?
-  if ($ftc == 0) {
-    $self->_set_errormsg("No values in framespan range");
-    return(0);
-  }
-
-  my $entry = shift @ftodo;
-  my ($b, $e) = ($entry =~ m%^(\d+)\:(\d+)$%);
-  my $text = &_fs_shorten_check($b, $e, $entry);
-  if ($text !~ m%^\s*$%) {
-    $self->_set_errormsg($text);
-    return (0);
-  }
-
-  # Only 1 element ?
-  if ($ftc == 1) {
-    $self->set_value($fs);
-    return (1);
-  }
-
-  # More than one element: compute
-  my @o = ();
-
-  foreach $entry (@ftodo) {
-    my ($nb, $ne) = ($entry =~ m%^(\d+)\:(\d+)$%);
-    $text = &_fs_shorten_check($b, $e, $entry);
-    if ($text !~ m%^\s*$%) {
-      $self->_set_errormsg($text);
-      return (0);
-    }
-
-    if ($nb == $e) { # ex: 1:2 2:6 -> 1:6
-      $e = $ne;
-    } elsif ($nb == 1 + $e) { # ex: 1:1 2:3 -> 1:3
-      $e = $ne;
-    } else { # ex: 1:2 12:24 -> 1:2 12:24
-      push @o, "$b:$e";
-      ($b, $e) = ($nb, $ne);
-    }
-  }
-  push @o, "$b:$e";
-  
-  my $res = join(" ", @o);
-  
-  $self->set_value($res);
-
-  return (1);
-}
-
-##########
-
-sub fix {
-  my ($self, $max) = @_;
-
-  return (0) if ($self->get_errormsg() ne "");
-
-  if (! defined($max)) {
-    $self->set_errormsg("[Framespan.pm] fix function require the maximum framespan to compare to");
-    return (0);
-  }
-
-  if (! $self->_is_value_set()) {
-    $self->_set_errormsg("No framespan set");
-    return(0);
-  }
-
-  if (! $max->_is_value_set()) {
-    $self->_set_errormsg("No framespan set for max framespan");
-    return(0);
-  }
-
-  my $fs = $self->get_value();
-  my $mfs = $max->get_value();
-
-  return (1)
-    if ($fs eq $mfs);
-
-  my $text;
-
-  # Reorder (just in case)
-  return (0) if (! $self->reorder());
-
-  # Shorten range of framespan entries (Also performs a check on pair ordering)
-  # NOTE: must be done after full reorder since it relies on entries to be ordered to work
-  return (0) if (! $self->shorten());
-
-  my ($bf, $ef) = &_fs_get_begend($fs);
-  if ($bf < 1) {
-    $self->set_errormsg("A framespan must always start at frame \#1");
-    return (0);
-  }
-
-  $self->set_value($fs);
-
-  return (1);
-}
-
-##########
-
 sub _fs_get_begend {
   my $fs = shift @_;
 
@@ -301,10 +317,10 @@ sub _fs_get_begend {
 sub check_no_overlap {
   my ($self, @others) = @_;
 
-  return (0) if ($self->get_errormsg() ne "");
+  return (0) if ($self->_is_errormsg_set());
 
   if (! $self->_is_value_set()) {
-    $self->_set_errormsg("No framespan set");
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(0);
   }
 
@@ -316,7 +332,7 @@ sub check_no_overlap {
 
   foreach my $fcfs (@others) {
     if (! $fcfs->_is_value_set()) {
-      $self->_set_errormsg("No framespan set");
+      $self->_set_errormsg($error_msgs{"NoFramespanSet"});
       return(0);
     }
     my $cfs = $fcfs->get_value();
@@ -326,7 +342,7 @@ sub check_no_overlap {
     next if (($c_end < $i_beg) || ($i_end < $c_beg));
 
     # Overlap
-    $self->_set_errormsg("framespan overlap detected");
+    $self->_set_errormsg($error_msgs{"Overlap"});
     return(0);
   }
 
@@ -338,15 +354,15 @@ sub check_no_overlap {
 sub is_within {
   my ($self, $other) = @_;
 
-  return (0) if ($self->get_errormsg() ne "");
+  return (0) if ($self->_is_errormsg_set());
 
   if (! $self->_is_value_set()) {
-    $self->_set_errormsg("No framespan set");
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(0);
   }
 
   if (! $other->_is_value_set()) {
-    $self->_set_errormsg("No framespan set for comparable");
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(0);
   }
 
@@ -361,7 +377,7 @@ sub is_within {
     if (($v_beg >= $r_beg) && ($v_end <= $r_end));
 
   # is not within
-  $self->_set_errormsg("framespan is not within the given range");
+  $self->_set_errormsg($error_msgs{"NotWithin"});
   return (0);
 }
 

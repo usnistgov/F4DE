@@ -804,7 +804,6 @@ sub parse_object_section {
 
   my $fs_tmp = new Framespan;
   $fs_tmp->set_value($tmp);
-  return ($fs_tmp->get_errormsg()) if (! $fs_tmp->fix($fs_framespan_max));
   return ($fs_tmp->get_errormsg()) if (! $fs_tmp->is_within($fs_framespan_max));
   $object_framespan = $fs_tmp->get_value();
 
@@ -930,7 +929,6 @@ sub extract_data {
 
       my $fs_lfspan = new Framespan;
       $fs_lfspan->set_value($lfspan);
-      return ($fs_lfspan->get_errormsg()) if (! $fs_lfspan->fix($fs_framespan_max));
       return ($fs_lfspan->get_errormsg()) if (! $fs_lfspan->is_within($fs_fspan));
       return ($fs_lfspan->get_errormsg()) if (! $fs_lfspan->check_no_overlap(@afspan));
       push @afspan, $fs_lfspan;
