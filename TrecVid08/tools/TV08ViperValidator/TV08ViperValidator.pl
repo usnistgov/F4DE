@@ -81,6 +81,11 @@ unless (eval "use Data::Dumper; 1")
 # Something missing ? Abort
 error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
 
+## Run the framespan test_unit just to be sure
+my $tmp_fs = new Framespan();
+error_quit($tmp_fs->get_errormsg(), "\n")
+  if (! $tmp_fs->unit_test());
+
 # Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
@@ -760,7 +765,8 @@ sub parse_file_section {
     if ($val < 0);
 
   $framespan_max = "1:$val";
-  $fs_framespan_max->set_value($framespan_max);
+  return ("Framespan ($framespan_max) error (" . $fs_framespan_max->get_errormsg() . ")", ())
+    if (! $fs_framespan_max->set_value($framespan_max));
 
   return ("", %file_hash);
 }
@@ -802,9 +808,12 @@ sub parse_object_section {
     if (! exists $attr{$expected[2]});
   my $tmp = $attr{$expected[2]};
 
-  my $fs_tmp = new Framespan;
-  $fs_tmp->set_value($tmp);
-  return ($fs_tmp->get_errormsg()) if (! $fs_tmp->is_within($fs_framespan_max));
+  my $fs_tmp = new Framespan();
+  return ("Framespan ($tmp) error (" . $fs_tmp->get_errormsg() . ")", ())
+    if (! $fs_tmp->set_value($tmp));
+  my ($ok, $fserr) = $fs_tmp->is_within($fs_framespan_max);
+  return ("Framespan ($tmp) error (" . $fs_tmp->get_errormsg() . ")", ()) if ($fserr);
+  return("Framespan ($tmp) is not within range (" . $fs_framespan_max->get_original_value() . ")", ()) if (! $ok);
   $object_framespan = $fs_tmp->get_value();
 
   # Remove the \'object\' header and trailer tags
@@ -901,8 +910,11 @@ sub extract_data {
   my %attr;
   my @afspan;
 
-  my $fs_fspan = new Framespan;
-  $fs_fspan->set_value($fspan);
+  my $fs_fspan = new Framespan();
+  if (! $allow_nofspan) {
+    return ("Framespan ($fspan) error (" . $fs_fspan->get_errormsg() . ")", ())
+      if (! $fs_fspan->set_value($fspan));
+  }
 
   while ($str !~ m%^\s*$%) {
     my $name = &get_next_xml_name($str);
@@ -927,10 +939,18 @@ sub extract_data {
     if (exists $iattr{$key}) {
       $lfspan = $iattr{$key};
 
-      my $fs_lfspan = new Framespan;
-      $fs_lfspan->set_value($lfspan);
-      return ($fs_lfspan->get_errormsg()) if (! $fs_lfspan->is_within($fs_fspan));
-      return ($fs_lfspan->get_errormsg()) if (! $fs_lfspan->check_no_overlap(@afspan));
+      my $fs_lfspan = new Framespan();
+      return ("Framespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ())
+	if (! $fs_lfspan->set_value($lfspan));
+      my ($iw, $fserr) = $fs_lfspan->is_within($fs_fspan);
+      return("Framespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fserr);
+      return("Framespan ($lfspan) is not within range (" . $fs_fspan->get_original_value() . ")", ()) if (! $iw);
+
+      foreach my $fs_tmp (@afspan) {
+	my ($ov, $fserr) = $fs_lfspan->check_if_overlap($fs_tmp);
+	return("Framespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fserr);
+	return("Framespan ($lfspan) overlap another framespan (" . $fs_tmp->get_original_value() . ") within the same object attribute", ()) if ($ov);
+      }
       push @afspan, $fs_lfspan;
 
       delete $iattr{$key};
@@ -1311,7 +1331,7 @@ sub writeback_object {
 
   my $txt = "";
 
-  $txt .= &wb_print($indent++, "<object framespan=\"" . $object_hash{'framespan'} . "\" id=\"$id\" name=\"$event\">\n");
+  $txt .= &wb_print($indent++, "<object name=\"$event\" id=\"$id\" framespan=\"" . $object_hash{'framespan'} . "\">\n");
 
   foreach my $key (sort keys %hash_objects_attributes_types) {
     $txt .= &wb_print($indent, "<attribute name=\"$key\"");
@@ -1321,7 +1341,11 @@ sub writeback_object {
       $indent++;
       my @afs;
       foreach my $fs (keys %{$object_hash{$key}}) {
-	push @afs, new Framespan($fs);
+	my $fs_tmp = new Framespan();
+	if (! $fs_tmp->set_value($fs)) {
+	  error_quit("WEIRD: In \'writeback_object\' (" . $fs_tmp->get_errormsg() .")");
+	}
+	push @afs, $fs_tmp;
       }
       foreach my $fs_fs (sort framespan_sort @afs) {
 	my $fs = $fs_fs->get_value();
