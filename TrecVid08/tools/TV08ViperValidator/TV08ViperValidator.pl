@@ -236,6 +236,7 @@ my $default_error_value = "default_error_value";
 my $fs_framespan_max = new Framespan();
 my $framespan_max_default = "all";
 my $framespan_max = $framespan_max_default;
+my $max_pair_per_fs = 1; # For Trecvid08, only one pair (ie one framespan range) is authorized per framespan
 
 ##########
 # Main processing
@@ -811,9 +812,12 @@ sub parse_object_section {
   my $fs_tmp = new Framespan();
   return ("Framespan ($tmp) error (" . $fs_tmp->get_errormsg() . ")", ())
     if (! $fs_tmp->set_value($tmp));
-  my ($ok, $fserr) = $fs_tmp->is_within($fs_framespan_max);
-  return ("Framespan ($tmp) error (" . $fs_tmp->get_errormsg() . ")", ()) if ($fserr);
+  my $ok = $fs_tmp->is_within($fs_framespan_max);
+  return("Framespan ($tmp) error (" . $fs_tmp->get_errormsg() . ")", ()) if ($fs_tmp->error());
   return("Framespan ($tmp) is not within range (" . $fs_framespan_max->get_original_value() . ")", ()) if (! $ok);
+  my $pc = $fs_tmp->count_pairs_in_original_value();
+  return("Framespan ($tmp) error (" . $fs_tmp->get_errormsg() . ")", ()) if ($fs_tmp->error());
+  return("Framespan ($tmp) contains more than $max_pair_per_fs range pair(s)") if ($pc > $max_pair_per_fs);
   $object_framespan = $fs_tmp->get_value();
 
   # Remove the \'object\' header and trailer tags
@@ -942,13 +946,16 @@ sub extract_data {
       my $fs_lfspan = new Framespan();
       return ("Framespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ())
 	if (! $fs_lfspan->set_value($lfspan));
-      my ($iw, $fserr) = $fs_lfspan->is_within($fs_fspan);
-      return("Framespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fserr);
+      my $iw = $fs_lfspan->is_within($fs_fspan);
+      return("Framespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_lfspan->error());
       return("Framespan ($lfspan) is not within range (" . $fs_fspan->get_original_value() . ")", ()) if (! $iw);
+      my $pc = $fs_lfspan->count_pairs_in_original_value();
+      return("Framespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_lfspan->error());
+      return("Framespan ($lfspan) contains more than $max_pair_per_fs range pair(s)") if ($pc > $max_pair_per_fs);
 
       foreach my $fs_tmp (@afspan) {
-	my ($ov, $fserr) = $fs_lfspan->check_if_overlap($fs_tmp);
-	return("Framespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fserr);
+	my $ov = $fs_lfspan->check_if_overlap($fs_tmp);
+	return("Framespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_tmp->error());
 	return("Framespan ($lfspan) overlap another framespan (" . $fs_tmp->get_original_value() . ") within the same object attribute", ()) if ($ov);
       }
       push @afspan, $fs_lfspan;
@@ -1342,9 +1349,8 @@ sub writeback_object {
       my @afs;
       foreach my $fs (keys %{$object_hash{$key}}) {
 	my $fs_tmp = new Framespan();
-	if (! $fs_tmp->set_value($fs)) {
-	  error_quit("WEIRD: In \'writeback_object\' (" . $fs_tmp->get_errormsg() .")");
-	}
+	error_quit("WEIRD: In \'writeback_object\' (" . $fs_tmp->get_errormsg() .")")
+	  if (! $fs_tmp->set_value($fs));
 	push @afs, $fs_tmp;
       }
       foreach my $fs_fs (sort framespan_sort @afs) {
