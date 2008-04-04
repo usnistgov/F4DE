@@ -1,6 +1,8 @@
-package Framespan;
+package ViperFramespan;
 
 use strict;
+
+# $Id$
 
 my %error_msgs =
   (
@@ -470,30 +472,6 @@ sub middlepoint_distance {
   return($m2 - $m1);
 }
 
-#####
-
-sub middlepoint_abs_distance {
-  my ($self, $other) = @_;
-
-  return(-1) if ($self->error());
-
-  if (! $self->_is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
-    return(-1);
-  }
-
-  if (! $other->_is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
-    return(-1);
-  }
-
-  my $m = $self->middlepoint_distance($other);
-
-  $m =~ s%^\-%%; # Drop the sign
-
-  return($m);
-}
-
 ########################################
 
 sub unit_test { # Xtreme coding and us ;)
@@ -504,13 +482,13 @@ sub unit_test { # Xtreme coding and us ;)
   my $otxt = "";
 
   # Let us try to set a bad value
-  my $fs_tmp1 = new Framespan("Not a framespan");
+  my $fs_tmp1 = new ViperFramespan("Not a framespan");
   my $err1 = $fs_tmp1->get_errormsg();
   $otxt .= "$eh Error while checking \'set_value\'[1] ($err1). "
     if ($err1 ne $error_msgs{"NotFramespan"});
 
   # Or an empty framespan
-  my $fs_tmp2 = new Framespan();
+  my $fs_tmp2 = new ViperFramespan();
   $fs_tmp2->set_value("");
   my $err2 = $fs_tmp2->get_errormsg();
   $otxt .= "$eh Error while checking \'set_value\'[2] ($err2). "
@@ -518,14 +496,14 @@ sub unit_test { # Xtreme coding and us ;)
 
   # Not ordered framespan
   my $in3 = "5:4";
-  my $fs_tmp3 = new Framespan($in3);
+  my $fs_tmp3 = new ViperFramespan($in3);
   my $err3 = $fs_tmp3->get_errormsg();
   $otxt .= "$eh Error while checking \'set_value\'[3] ($err3). "
     if ($err3 ne $error_msgs{"NotOrdered"});
 
   # Start a 0
   my $in4 = "0:1";
-  my $fs_tmp4 = new Framespan();
+  my $fs_tmp4 = new ViperFramespan();
   $fs_tmp4->set_value($in4);
   my $err4 = $fs_tmp4->get_errormsg();
   $otxt .= "$eh Error while checking \'new\'[4] ($err4). "
@@ -534,7 +512,7 @@ sub unit_test { # Xtreme coding and us ;)
   # Reorder
   my $in5 = "4:5 1:2 12:26 8:8";
   my $exp_out5 = "1:2 4:5 8:8 12:26";
-  my $fs_tmp5 = new Framespan();
+  my $fs_tmp5 = new ViperFramespan();
   $fs_tmp5->set_value($in5);
   my $out5 = $fs_tmp5->get_value();
   $otxt .= "$eh Error while checking \'new\'[reorder] (expected: $exp_out5 / Got: $out5). "
@@ -551,7 +529,7 @@ sub unit_test { # Xtreme coding and us ;)
   # Shorten
   my $in6 = "1:2 2:3 4:5";
   my $exp_out6 = "1:5";
-  my $fs_tmp6 = new Framespan();
+  my $fs_tmp6 = new ViperFramespan();
   $fs_tmp6->set_value($in6);
   my $out6 = $fs_tmp6->get_value();
   $otxt .= "$eh Error while checking \'new\'[shorten] (expected: $exp_out6 / Got: $out6). "
@@ -566,7 +544,7 @@ sub unit_test { # Xtreme coding and us ;)
     if ($out6 ne $exp_out6);
 
   # No Framespan Set
-  my $fs_tmp7 = new Framespan();
+  my $fs_tmp7 = new ViperFramespan();
   my $test7 = $fs_tmp7->check_if_overlap(); # We are checking against nothing here
   my $err7 = $fs_tmp7->get_errormsg();
   $otxt .= "$eh Error while checking \'check_if_overlap\' ($err7). "
@@ -576,9 +554,9 @@ sub unit_test { # Xtreme coding and us ;)
   my $in8  = "1:10";
   my $in9  = "4:16";
   my $in10 = "11:15";
-  my $fs_tmp8  = new Framespan();
-  my $fs_tmp9  = new Framespan();
-  my $fs_tmp10 = new Framespan();
+  my $fs_tmp8  = new ViperFramespan();
+  my $fs_tmp9  = new ViperFramespan();
+  my $fs_tmp10 = new ViperFramespan();
   $fs_tmp8->set_value($in8);
   $fs_tmp9->set_value($in9);
   $fs_tmp10->set_value($in10);
@@ -602,7 +580,7 @@ sub unit_test { # Xtreme coding and us ;)
   # optimize + count_pairs
   my $in11 = "20:40 1:2 1:1 2:6 8:12 20:40"; # 6 pairs (not optimized)
   my $exp_out11 = "1:6 8:12 20:40"; # 3 pairs (once optimized)
-  my $fs_tmp11 = new Framespan();
+  my $fs_tmp11 = new ViperFramespan();
   $fs_tmp11->set_value($in11);
   my $out11 = $fs_tmp11->get_value();
   $otxt .= "$eh Error while checking \'new\'[count_pairs] (expected: $exp_out11 / Got: $out11). "
@@ -618,16 +596,16 @@ sub unit_test { # Xtreme coding and us ;)
   $otxt .= "$eh Error while checking \'count_pairs_in_value\' (expected: $etmp11b / Got: $tmp11b). "
     if ($etmp11b != $tmp11b);
 
-  # middlepoint + middlepoint_distance + middlepoint_abs_distance
+  # middlepoint + middlepoint_distance
   my $in12 = "20:40";
-  my $fs_tmp12 = new Framespan($in12);
+  my $fs_tmp12 = new ViperFramespan($in12);
   my $exp_out12 = 30; # = 20 + ((40 - 20) / 2)
   my $out12 = $fs_tmp12->middlepoint();
   $otxt .= "$eh Error while checking \'middlepoint\' (expected: $exp_out12 / Got: $out12). "
     if ($exp_out12 != $out12);
 
   my $in13 = "100:200"; # middlepoint: 150
-  my $fs_tmp13 = new Framespan($in13);
+  my $fs_tmp13 = new ViperFramespan($in13);
 
   my $out13 = $fs_tmp12->middlepoint_distance($fs_tmp13);
   my $exp_out13 = 120; # from 30 to 150 : +120
@@ -638,11 +616,6 @@ sub unit_test { # Xtreme coding and us ;)
   my $exp_out14 = -120; # from 150 to 30 : -120
   $otxt .= "$eh Error while checking \'middlepoint_distance\'[2] (expected: $exp_out14 / Got: $out14). "
     if ($exp_out14 != $out14);
-
-  my $out15 = $fs_tmp13->middlepoint_abs_distance($fs_tmp12);
-  my $exp_out15 = 120; # from 150 to 30 : |-120| = 120
-  $otxt .= "$eh Error while checking \'middlepoint_abs_distance\' (expected: $exp_out15 / Got: $out15). "
-    if ($exp_out15 != $out15);
 
   #####
   # End
