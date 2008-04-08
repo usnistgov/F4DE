@@ -54,6 +54,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Get some values from TrecVid08ViperFile
 my $dummy = new TrecVid08ViperFile();
+$versionid .= "\nusing:\n" . $dummy->get_version();
 my @ok_events = $dummy->get_full_events_list();
 my @xsdfilesl = $dummy->get_required_xsd_files_list();
 # We will use the '$dummy' to do checks before processing files
@@ -89,7 +90,7 @@ GetOptions
    'write:s'         => \$writeback,
    'limitto=s'       => \@asked_events,
    # Hidden option
-   'show_seen'       => \$show,
+   'show_seen+'      => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 die("\n$usage\n") if ($opt{'help'});
@@ -179,8 +180,20 @@ while ($tmp = shift @ARGV) {
     &valok($tmp, "validates");
   }
 
-  # This is really if you are a debugger :)
+  # This is really if you are a debugger
   print("** Memory Representation:\n", $object->_display(@asked_events)) if ($show);
+
+  # This is really if you are a debugger 
+  if ($show > 1) {
+    print("** Observation representation:\n");
+    foreach my $i (@asked_events) {
+      print("-- EVENT: $i\n");
+      my @bucket = $object->get_event_observations($i);
+      foreach my $obs (@bucket) {
+	print $obs->_display();
+      }
+    }
+  }
 
   if ($writeback != -1) {
     my $txt = $object->reformat_xml(@asked_events);
