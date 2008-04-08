@@ -4,6 +4,15 @@ package TrecVid08ViperFile;
 
 use strict;
 
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "TrecVid08ViperFile.pm Version: $version";
+
 # "ViperFramespan.pm" (part of this program sources)
 use ViperFramespan;
 # A note about 'ViperFramespan': 
@@ -11,6 +20,9 @@ use ViperFramespan;
 # in memory to make it easier to process the first level information.
 # (it is easy to recreate a 'ViperFramespan' from the text value, which we do multiple times in this code)
 # This choice to make an object of it was driven by re-usability of the framespan code for other needs.
+
+# "TrecVid08Observation.pm" (part of this program sources)
+use TrecVid08Observation;
 
 # For the '_display()' function
 use Data::Dumper;
@@ -94,20 +106,22 @@ my $max_pair_per_fs = 1; # For Trecvid08, only one pair (ie one framespan range)
 sub new {
   my ($class) = shift @_;
 
-  my $errormsg = (scalar @_ > 0) ? "TrecVid08ViperFile does not accept parameters" : "";
+  my $errormsg = (scalar @_ > 0) ? &_set_errormsg_txt("", "TrecVid08ViperFile does not accept parameters") : "";
 
   my $self =
     {
      xmllint        => "",
      xsdpath        => "",
-     gtf            => 0,
-     filename       => "",
-     fhash          => (),
+     gtf            => 0, # By default, files are not GTF
+     file           => "",
+     fhash          => undef,
+     validated      => 0, # To confirm file was validated
      errormsg       => $errormsg,
     };
 
   ## Run the ViperFramespan test_unit just to be sure
   my $tmp_fs = new ViperFramespan();
+  $versionid .= "\n" . $tmp_fs->get_version();
   $self->{errormsg} .= $tmp_fs->get_errormsg() if (! $tmp_fs->unit_test());
 
   bless $self;
@@ -116,10 +130,35 @@ sub new {
 
 ####################
 
+sub get_version {
+  my ($self) = @_;
+
+  return($versionid);
+}
+
+####################
+
+sub _set_errormsg_txt {
+  my ($oh, $add) = @_;
+
+  my $txt = "$oh$add";
+#  print "VF * [$oh | $add]\n";
+
+  $txt =~ s%\[TrecVid08ViperFile\]\s+%%g;
+
+  return("") if ($txt =~ m%^\s*$%);
+
+  $txt = "[TrecVid08ViperFile] $txt";
+#  print "VF -> [$txt]\n";
+  return($txt);
+}
+
+#####
+
 sub _set_errormsg {
   my ($self, $txt) = @_;
 
-  $self->{errormsg} = $txt;
+  $self->{errormsg} = &_set_errormsg_txt($self->{errormsg}, $txt);
 }
 
 #####
@@ -181,7 +220,7 @@ sub get_full_events_list {
 sub set_xmllint {
   my ($self, $xmllint) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my $error = "";
   # Confirm xmllint is present and at least 2.6.30
@@ -197,25 +236,29 @@ sub set_xmllint {
 
 #####
 
+sub _is_xmllint_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if ($self->{xmllint} !~ m%^\s*$%);
+
+  return(0);
+}
+
+#####
 
 sub get_xmllint {
   my ($self) = @_;
 
   return(-1) if ($self->error());
 
+  if (! $self->_is_xmllint_set()) {
+    $self->_set_errormsg("\'xmllint\' is not set");
+    return(0);
+  }
+
   return($self->{xmllint});
-}
-
-#####
-
-sub _is_xmllint_set {
-  my ($self) = @_;
-
-  return(0) if ($self->error());
-
-  return(1) if ($self->get_xmllint() !~ m%^\s*$%);
-
-  return(0);
 }
 
 ########## 'xsdpath'
@@ -223,7 +266,7 @@ sub _is_xmllint_set {
 sub set_xsdpath {
   my ($self, $xsdpath) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my $error = "";
   # Confirm that the required xsdfiles are available
@@ -239,25 +282,29 @@ sub set_xsdpath {
 
 #####
 
+sub _is_xsdpath_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if ($self->{xsdpath} !~ m%^\s*$%);
+
+  return(0);
+}
+
+#####
 
 sub get_xsdpath {
   my ($self) = @_;
 
   return(-1) if ($self->error());
 
+  if (! $self->_is_xsdpath_set()) {
+    $self->_set_errormsg("\'xsdpath\' is not set");
+    return(0);
+  }
+
   return($self->{xsdpath});
-}
-
-#####
-
-sub _is_xsdpath_set {
-  my ($self) = @_;
-
-  return(0) if ($self->error());
-
-  return(1) if ($self->get_xsdpath() !~ m%^\s*$%);
-
-  return(0);
 }
 
 ########## 'gtf'
@@ -276,33 +323,32 @@ sub set_as_gtf {
 sub check_if_gtf {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return($self->{gtf});
 }
 
 ########## 'fhash'
 
-sub _is_fhash_set {
-  my ($self) = @_;
+sub _set_fhash {
+  my ($self, %fhash) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
-  my $rfhash = $self->{fhash};
-  return(0) if (scalar %{$rfhash} == 0);
-
+  $self->{fhash} = \%fhash;
   return(1);
 }
 
 #####
 
-sub _set_fhash {
-  my ($self, %fhash) = @_;
+sub _is_fhash_set {
+  my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
-  $self->{fhash} = \%fhash;
-  return(1);
+  return(1) if (defined $self->{fhash});
+
+  return(0);
 }
 
 #####
@@ -312,7 +358,10 @@ sub _get_fhash {
 
   return(-1) if ($self->error());
 
-  return(0) if (! $self->_is_fhash_set());
+  if (! $self->_is_fhash_set()) {
+    $self->_set_erromsg("\'fhash\' is not set");
+    return(0);
+  }
 
   my $rfhash = $self->{fhash};
 
@@ -323,22 +372,10 @@ sub _get_fhash {
 
 ########## 'file'
 
-sub _is_file_set {
-  my ($self) = @_;
-
-  return(-1) if ($self->error());
-
-  return(0) if ($self->{file} =~ m%^\s*$%);
-
-  return(1);
-}
-
-#####
-
 sub set_file {
   my ($self, $file) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! -e $file) {
     $self->_set_errormsg("File does not exists ($file)");
@@ -353,7 +390,19 @@ sub set_file {
     return(0);
   }
 
-  $self->{filename} = $file;
+  $self->{file} = $file;
+  return(1);
+}
+
+#####
+
+sub _is_file_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(0) if ($self->{file} =~ m%^\s*$%);
+
   return(1);
 }
 
@@ -364,27 +413,35 @@ sub get_file {
 
   return(-1) if ($self->error());
 
-  return($self->{filename});
-}
+  if (! $self->_is_file_set()) {
+    $self->_set_errormsg("\'file\' is not set");
+    return(0);
+  }
 
-#####
-
-sub _is_file_set {
-  my ($self) = @_;
-
-  return(0) if ($self->error());
-
-  return(1) if ($self->get_file() !~ m%^\s*$%);
-
-  return(0);
+  return($self->{file});
 }
 
 ########################################
 
+sub validated {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if ($self->{validated} == 1);
+
+  return(0);
+}
+
+#####
+
 sub validate {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
+
+  # No need to re-validate if the file was already validated :)
+  return(1) if ($self->validated());
 
   if (! $self->_is_file_set()) {
     $self->_set_errormsg("No file set (use \'set_file\') before calling the \'validate\' function");
@@ -428,6 +485,8 @@ sub validate {
   }
 
   $self->_set_fhash(%fdata);
+  $self->{validated} = 1;
+
   return(1);
 }
 
@@ -435,53 +494,206 @@ sub validate {
 
 sub reformat_xml {
   my ($self) = shift @_;
-  my @asked_events = @_;
+  my @limitto_events = @_;
 
   return(-1) if ($self->error());
 
-  @asked_events = $self->validate_events_list(@asked_events);
-  return(0) if ($self->error());
+  if (scalar @limitto_events == 0) {
+    @limitto_events = @ok_events;
+  } else {
+    @limitto_events = $self->validate_events_list(@limitto_events);
+    return(0) if ($self->error());
+  }
 
-  if (! $self->_is_fhash_set()) {
+  if (! $self->validated()) {
     $self->_set_errormsg("Can only rewrite the XML for a validated file");
     return(0);
   }
 
   my %tmp = $self->_get_fhash();
-  return(&_writeback2xml(\%tmp, @asked_events));
+  return(&_writeback2xml(\%tmp, @limitto_events));
 }
 
 ##########
 
 sub get_base_xml {
   my ($self) = shift @_;
-  my @asked_events = @_;
+  my @limitto_events = @_;
 
   return(-1) if ($self->error());
 
-  @asked_events = $self->validate_events_list(@asked_events);
-  return(0) if ($self->error());
+  if (scalar @limitto_events == 0) {
+    @limitto_events = @ok_events;
+  } else {
+    @limitto_events = $self->validate_events_list(@limitto_events);
+    return(0) if ($self->error());
+  }
 
   my %tmp = ();
-  return(&_writeback2xml(\%tmp, @asked_events));
+  return(&_writeback2xml(\%tmp, @limitto_events));
 }
 
 ####################
 
 sub _display {
   my ($self) = shift @_;
-  my @asked_events = @_;
+  my @limitto_events = @_;
 
   return(-1) if ($self->error());
 
-  @asked_events = $self->validate_events_list(@asked_events);
-  return(0) if ($self->error());
+  if (scalar @limitto_events == 0) {
+    @limitto_events = @ok_events;
+  } else {
+    @limitto_events = $self->validate_events_list(@limitto_events);
+    return(0) if ($self->error());
+  }
+
+  if (! $self->validated()) {
+    $self->_set_errormsg("Can only call \'_display\' for a validated file");
+    return(0);
+  }
 
   my %in = $self->_get_fhash();
-  my %out = _prune_hash(\%in, @asked_events);
+  my %out = &_prune_events(\%in, @limitto_events);
 
   return(Dumper(\%out));
 }
+
+########################################
+
+sub _get_short_sf_file {
+  my ($txt) = shift @_;
+
+  # Remove all 'file:' or related
+  $txt =~ s%^.+\:%%g;
+
+  # Remove all paths
+  $txt =~ s%^.+\/%%g;
+
+  return($txt);
+}
+
+#####
+
+sub get_sourcefile_filename {
+  my ($self) = shift @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->validated()) {
+    $self->_set_errormsg("Can only call \'get_sourcefile_filename\' for a validated file");
+    return(0);
+  }
+
+  my %lk = $self->_get_fhash();
+
+  if (! defined $lk{"file"}{"filename"}) {
+    $self->_set_errormsg("WEIRD: In \'get_sourcefile_filename\': Could not find the filename");
+    return(0);
+  }
+
+  my $fname = $lk{"file"}{"filename"};
+
+  $fname = &_get_short_sf_file($fname);
+
+  return($fname);
+}
+
+#####
+
+sub get_event_observations {
+  my ($self, $event) = @_;
+
+   return(-1) if ($self->error());
+
+  if (! $self->validated()) {
+    $self->_set_errormsg("Can only call \'_display\' for a validated file");
+    return(0);
+  }
+
+  if (! grep(m%^$event$%, @ok_events)) {
+    $self->set_errormsg("Requested event ($event) is not a recognized event");
+    return(0);
+  }
+
+  my $xmlfile = $self->get_file();
+  my $filename = $self->get_sourcefile_filename();
+
+  return(0) if ($self->error());
+
+  my %in = $self->_get_fhash();
+  my %out = &_prune_events(\%in, $event);
+
+  my %file_info = %{$out{"file"}};
+
+  my @res = ();
+  return(@res) if (! defined $out{$event});
+  
+  my %all_obs = %{$out{$event}};
+  foreach my $id (keys %all_obs) {
+    my $obs = new TrecVid08Observation();
+
+    if (! $obs->set_filename($filename) ) {
+      $self->_set_errormsg("Problem adding \'file\' ($filename) to observation (" . $obs->get_errormsg() .")");
+      return(0);
+    }
+
+    if (! $obs->set_xmlfilename($xmlfile) ) {
+      $self->_set_errormsg("Problem adding \'xmlfile\' ($xmlfile) to observation (" . $obs->get_errormsg() .")");
+      return(0);
+    }
+
+    if (! $obs->set_eventtype($event) ) {
+      $self->_set_errormsg("Problem adding \'eventtype\' ($event) to observation (" . $obs->get_errormsg() .")");
+      return(0);
+    }
+
+    if (! $obs->set_id($id) ) {
+      $self->_set_errormsg("Problem adding \'id\' ($id) to observation (" . $obs->get_errormsg() .")");
+      return(0);
+    }
+
+    if (! $obs->set_ofi(%file_info) ) {
+      $self->_set_errormsg("Problem adding \'other file informations\' to observation (" . $obs->get_errormsg() .")");
+      return(0);
+    }
+
+    my $isgtf = $self->check_if_gtf();
+    if (! $obs->set_isgtf($isgtf) ) {
+      $self->_set_errormsg("Problem adding \'isgtf\' to observation (" . $obs->get_errormsg() .")");
+      return(0);
+    }
+
+    if (! exists $all_obs{$id}{"framespan"} ) { 
+      $self->_set_errormsg("WEIRD: Could not get the 'framespan' for event: $event and id: $id");
+      return(0);
+    }
+    my $fs = $all_obs{$id}{"framespan"};
+    my $fs_fs = new ViperFramespan();
+    if (! $fs_fs->set_value($fs)) {
+      $self->_set_errormsg("In observation creation: ViperFramespan ($fs) error (" . $fs_fs->get_errormsg() . ")");
+      return(0);
+    }
+    if (! $obs->set_framespan($fs_fs) ) {
+      $self->_set_errormsg("Problem adding \'framespan\' to observation (" . $obs->get_errormsg() .")");
+      return(0);
+    }
+
+    if (! $isgtf) {
+      ##################### TODO ####################
+    }
+
+    if (! $obs->validate()) {
+      $self->_set_errormsg("Problem validating observation (" . $obs->get_errormsg() .")");
+      return(0);
+    }
+
+    push @res, $obs;
+  }
+
+  return(@res);
+}
+
 
 ############################################################
 # Internals
@@ -1514,7 +1726,7 @@ sub _writeback2xml {
 
 ########################################
 
-sub _prune_hash {
+sub _prune_events {
   my $rin_hash = shift @_;
   my @asked_events = @_;
 
