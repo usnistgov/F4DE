@@ -1,8 +1,17 @@
 package ViperFramespan;
 
+# $Id$
+
 use strict;
 
-# $Id$
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "ViperFramespan.pm Version: $version";
 
 my %error_msgs =
   (
@@ -22,7 +31,8 @@ sub new {
   my ($class) = shift @_;
 
   my $tmp = shift @_;
-  my ($value, $errormsg) = &_fs_check_and_optimize_value($tmp, 1);
+  my ($value, $errmsg) = &_fs_check_and_optimize_value($tmp, 1);
+  my $errormsg = &_set_errormsg_txt("", $errmsg);
 
   my $self =
     {
@@ -33,6 +43,14 @@ sub new {
 
   bless $self;
   return($self);
+}
+
+####################
+
+sub get_version {
+  my ($self) = @_;
+
+  return($versionid);
 }
 
 ####################
@@ -240,10 +258,27 @@ sub set_value {
 
 ##########
 
+sub _set_errormsg_txt {
+  my ($oh, $add) = @_;
+
+  my $txt = "$oh$add";
+#  print "FS * [$oh | $add]\n";
+
+  $txt =~ s%\[ViperFramespan\]\s+%%g;
+
+  return("") if ($txt =~ m%^\s*$%);
+
+  $txt = "[ViperFramespan] $txt";
+#  print "FS -> [$txt]\n";
+  return($txt);
+}
+
+#####
+
 sub _set_errormsg {
   my ($self, $txt) = @_;
 
-  $self->{errormsg} = $txt;
+  $self->{errormsg} = &_set_errormsg_txt($self->{errormsg}, $txt);
 }
 
 ##########
@@ -478,28 +513,28 @@ sub unit_test { # Xtreme coding and us ;)
   my ($self) = @_;
   # We get $self and ignore it entirely (unless we encounter an error of course ;) )
   
-  my $eh = "[Framespan] unit_test:";
+  my $eh = "unit_test:";
   my $otxt = "";
 
   # Let us try to set a bad value
   my $fs_tmp1 = new ViperFramespan("Not a framespan");
   my $err1 = $fs_tmp1->get_errormsg();
   $otxt .= "$eh Error while checking \'set_value\'[1] ($err1). "
-    if ($err1 ne $error_msgs{"NotFramespan"});
+    if ($err1 ne &_set_errormsg_txt("", $error_msgs{"NotFramespan"}));
 
   # Or an empty framespan
   my $fs_tmp2 = new ViperFramespan();
   $fs_tmp2->set_value("");
   my $err2 = $fs_tmp2->get_errormsg();
   $otxt .= "$eh Error while checking \'set_value\'[2] ($err2). "
-    if ($err2 ne $error_msgs{"EmptyValue"});
+    if ($err2 ne &_set_errormsg_txt("", $error_msgs{"EmptyValue"}));
 
   # Not ordered framespan
   my $in3 = "5:4";
   my $fs_tmp3 = new ViperFramespan($in3);
   my $err3 = $fs_tmp3->get_errormsg();
   $otxt .= "$eh Error while checking \'set_value\'[3] ($err3). "
-    if ($err3 ne $error_msgs{"NotOrdered"});
+    if ($err3 ne &_set_errormsg_txt("", $error_msgs{"NotOrdered"}));
 
   # Start a 0
   my $in4 = "0:1";
@@ -507,7 +542,7 @@ sub unit_test { # Xtreme coding and us ;)
   $fs_tmp4->set_value($in4);
   my $err4 = $fs_tmp4->get_errormsg();
   $otxt .= "$eh Error while checking \'new\'[4] ($err4). "
-    if ($err4 ne $error_msgs{"StartAt0"});
+    if ($err4 ne &_set_errormsg_txt("", $error_msgs{"StartAt0"}));
 
   # Reorder
   my $in5 = "4:5 1:2 12:26 8:8";
@@ -548,7 +583,7 @@ sub unit_test { # Xtreme coding and us ;)
   my $test7 = $fs_tmp7->check_if_overlap(); # We are checking against nothing here
   my $err7 = $fs_tmp7->get_errormsg();
   $otxt .= "$eh Error while checking \'check_if_overlap\' ($err7). "
-    if ($err7 ne $error_msgs{"NoFramespanSet"});
+    if ($err7 ne &_set_errormsg_txt("", $error_msgs{"NoFramespanSet"}));
 
   # Overlap & Within
   my $in8  = "1:10";
