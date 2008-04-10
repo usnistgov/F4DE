@@ -24,6 +24,11 @@ my %error_msgs =
    "StartAt0"          => "Framespan can not start at 0",
    # Other
    "NoFramespanSet"    => "No framespan set",
+   # 'fps'
+   "negFPS"            => "FPS can not negative",
+   "zeroFPS"           => "FPS can not be equal to 0",
+   "FPSNotSet"         => "FPS not set, can not perform time based operations",
+   "NotAFrame"         => "Value is no a single frame value",
   );
 
 ## Constructor
@@ -38,6 +43,7 @@ sub new {
     {
      value => $value,
      original_value => $tmp,
+     fps => -1,
      errormsg => $errormsg,
     };
 
@@ -59,7 +65,7 @@ sub _fs_check_pair {
   my ($b, $e) = @_;
 
   return($error_msgs{"BadRangePair"})
-    if (($b =~ m%^\s*$%) || ($e =~ m%^\s*$%));
+    if ((&_is_blank($b)) || (&_is_blank($e)));
   
   return($error_msgs{"NegativeValue"})
     if (($b < 0) || ($e < 0));
@@ -121,9 +127,9 @@ sub _fs_check_value {
   my @todo = &_fs_split_line($value);
   foreach my $key (@todo) {
     my ($b, $e, $txt) = &_fs_split_pair($key);
-    return("", $txt) if ($txt !~ m%^\s*$%);
+    return("", $txt) if (! &_is_blank($txt));
     $txt = &_fs_check_pair($b, $e);
-    return("", $txt) if ($txt !~ m%^\s*$%);
+    return("", $txt) if (! &_is_blank($txt));
   }
 
   # Recreate a usable string
@@ -173,7 +179,7 @@ sub _fs_shorten_value {
   my ($b, $e, $errormsg);
 
   ($fs, $errormsg) = &_fs_reorder_value($fs);
-  return($fs, $errormsg) if ($errormsg !~ m%^\s*$%);
+  return($fs, $errormsg) if (! &_is_blank($errormsg));
 
   # Only 1 element, nothing to do
   return($fs, "") if (&_fs_split_line_count($fs) == 1);
@@ -187,12 +193,12 @@ sub _fs_shorten_value {
   # Get the first element
   my $entry = shift @ftodo;
   ($b, $e, $errormsg) = &_fs_split_pair($entry);
-  return($fs, $errormsg) if ($errormsg !~ m%^\s*$%);
+  return($fs, $errormsg) if (! &_is_blank($errormsg));
 
   my ($nb, $ne);
   foreach $entry (@ftodo) {
     ($nb, $ne, $errormsg) = &_fs_split_pair($entry);
-    return($fs, $errormsg) if ($errormsg !~ m%^\s*$%);
+    return($fs, $errormsg) if (! &_is_blank($errormsg));
 
     if ($nb == $e) { # ex: 1:2 2:6 -> 1:6
       $e = $ne;
@@ -224,12 +230,12 @@ sub _fs_check_and_optimize_value {
 
   # Check the value
   ($value, $errormsg) = &_fs_check_value($value, $from_new);
-  return($value, $errormsg) if ($errormsg !~ m%^\s*$%);
+  return($value, $errormsg) if (! &_is_blank($errormsg));
 
   # Then optimize it (if a value is present)
   if ($value ne "") {
     ($value, $errormsg) = &_fs_shorten_value($value);
-    return($value, $errormsg) if ($errormsg !~ m%^\s*$%);
+    return($value, $errormsg) if (! &_is_blank($errormsg));
   }
 
   return($value, $errormsg);
@@ -245,7 +251,7 @@ sub set_value {
   my $ok = 1;
 
   my ($value, $errormsg) = &_fs_check_and_optimize_value($tmp, 0);
-  if ($errormsg !~ m%^\s*$%) {
+  if (! &_is_blank($errormsg)) {
     $self->_set_errormsg($errormsg);
     $ok = 0;
   }
@@ -254,6 +260,56 @@ sub set_value {
   $self->{original_value} = $tmp;
 
   return($ok);
+}
+
+########## 'fps'
+
+sub set_fps {
+  my ($self, $fps) = @_;
+  
+  return(0) if ($self->error());
+
+  if ($fps =~ m%^pal$%i) {
+    $fps = 25;
+  } elsif ($fps =~ m%^ntsc$%i) {
+    $fps = 30000 / 1001;
+  } elsif ($fps < 0) {
+    $self->_set_errormsg($error_msgs{"negFPS"});
+    return(0);
+  } elsif ($fps == 0) {
+    $self->_set_errormsg($error_msgs{"zeroFPS"});
+    return(0);
+  }
+
+  $self->{fps} = $fps;
+  return(1);
+}
+
+#####
+
+sub _is_fps_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if ($self->{fps} != -1);
+
+  return(0);
+}
+
+#####
+
+sub get_fps {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_fps_set()) {
+    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    return(0);
+  }
+
+  return($self->{fps});
 }
 
 ##########
@@ -266,7 +322,7 @@ sub _set_errormsg_txt {
 
   $txt =~ s%\[ViperFramespan\]\s+%%g;
 
-  return("") if ($txt =~ m%^\s*$%);
+  return("") if (&_is_blank($txt));
 
   $txt = "[ViperFramespan] $txt";
 #  print "FS -> [$txt]\n";
@@ -314,7 +370,7 @@ sub _is_value_set {
 
   my $v = $self->get_value();
 
-  return(0) if ($v =~ m%^\s*$%);
+  return(0) if (&_is_blank($v));
 
   return(0) if (&_fs_split_line_count($v) == 0);
 
@@ -326,7 +382,7 @@ sub _is_value_set {
 sub error {
   my ($self) = @_;
 
-  return(1) if ($self->get_errormsg() !~ m%^\s*$%);
+  return(1) if (! &_is_blank($self->get_errormsg()));
 
   return(0);
 }
@@ -507,6 +563,106 @@ sub middlepoint_distance {
   return($m2 - $m1);
 }
 
+######################################## 'ts' functions
+
+sub frame_to_ts {
+  my ($self, $frame) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_fps_set()) {
+    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    return(0);
+  }
+
+  if ($frame !~ m%^\d+$%) {
+    $self->_set_errormsg($error_msgs{"NotAFrame"});
+    return(0);
+  }
+
+  my $fps = $self->get_fps();
+
+  return ($frame / $fps);
+}
+
+##########
+
+sub _get_begend_ts_core {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_fps_set()) {
+    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    return(0);
+  }
+  if (! $self->_is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(0);
+  }
+
+  my $v = $self->get_value();
+
+  return(&_fs_get_begend($v));
+}
+
+#####
+
+sub get_beg_ts {
+  my ($self) = @_;
+
+  my ($beg, $end) = $self->_get_begend_ts_core();
+  return($beg) if ($self->error());
+
+  return($self->frame_to_ts($beg));
+}
+
+#####
+
+sub get_end_ts {
+  my ($self) = @_;
+
+  my ($beg, $end) = $self->_get_begend_ts_core();
+  return($beg) if ($self->error());
+
+  return($self->frame_to_ts($end));
+}
+
+##########
+
+sub middlepoint_ts {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_fps_set()) {
+    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    return(-1);
+  }
+
+  my $mf = $self->middlepoint();
+  return($mf) if ($self->error());
+
+  return($self->frame_to_ts($mf));
+}
+
+#####
+
+sub middlepoint_distance_ts {
+  my ($self, $other) = @_;
+
+  my $m1 = $self->middlepoint_ts();
+  return($m1) if ($self->error());
+
+  my $m2 = $other->middlepoint_ts();
+  if ($other->error()) {
+    $self->_set_errormsg($other->get_errormsg());
+    return($m2);
+  }
+
+  return($m2 - $m1);
+}
+
 ########################################
 
 sub unit_test { # Xtreme coding and us ;)
@@ -652,9 +808,11 @@ sub unit_test { # Xtreme coding and us ;)
   $otxt .= "$eh Error while checking \'middlepoint_distance\'[2] (expected: $exp_out14 / Got: $out14). "
     if ($exp_out14 != $out14);
 
+  ########## TODO: unit_test for all 'fps' functions ##########
+
   #####
   # End
-  if ($otxt !~ m%^\s*$%) {
+  if (! &_is_blank($otxt)) {
     $self->_set_errormsg($otxt);
     return(0);
   }
@@ -663,6 +821,13 @@ sub unit_test { # Xtreme coding and us ;)
   return(1);
 }
 
+############################################################
 
-####################
+sub _is_blank {
+  my $txt = shift @_;
+  return(($txt =~ m%^\s*$%));
+}
+
+################################################################################
+
 1;
