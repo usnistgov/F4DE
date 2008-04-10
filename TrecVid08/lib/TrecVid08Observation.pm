@@ -18,6 +18,8 @@ if ($version =~ m/b$/) {
 my $versionid = "TrecVid08Observation.pm Version: $version";
 
 my @ok_events;
+my %hasharray_inline_attributes;
+my %hash_objects_attributes_types_dynamic;
 
 ## Constructor
 sub new {
@@ -28,7 +30,7 @@ sub new {
   $errormsg .= "TrecVid08Observation's new does not accept any parameter. "
     if (scalar @_ > 0);
 
-  my $tmp = &_set_ok_events();
+  my $tmp = &_get_TrecVid08ViperFile_infos();
   $errormsg .= "Could not obtain the list authorized events ($tmp). "
     if ($tmp !~ m%^\s*$%);
 
@@ -57,9 +59,11 @@ sub new {
 
 #####
 
-sub _set_ok_events {
+sub _get_TrecVid08ViperFile_infos {
   my $dummy = new TrecVid08ViperFile();
   @ok_events = $dummy->get_full_events_list();
+  %hasharray_inline_attributes = $dummy->_get_hasharray_inline_attributes();
+  %hash_objects_attributes_types_dynamic = $dummy->_get_hash_objects_attributes_types_dynamic();
   return($dummy->get_errormsg());
 }
 
@@ -591,6 +595,124 @@ sub get_Point {
   return(%res);
 }
 
+##########
+
+sub _get_1keyhash_content {
+  my %tmp = @_; # Only one key in this hash, return its content
+
+  my @keys = keys %tmp;
+
+  return ("Found more than 1 key in the hash", ())
+    if (scalar @keys > 1);
+  return ("Found no key in the hash", ())
+    if (scalar @keys > 1);
+
+  return("", %{$tmp{$keys[0]}});
+}
+
+#####
+
+sub key_attr_framespan {
+  my ($self) = shift @_;
+  return("ViperFramspan");
+}
+
+#####
+
+sub key_attr_content {
+  my ($self) = shift @_;
+  return("Content");
+}
+
+#####
+
+sub _get_set_selected_ok_choices {
+  my @ok_choices = ("DetectionScore", "DetectionDecision", "BoundingBox", "Point"); # Order matters
+  return(@ok_choices);
+}
+
+#####
+
+sub _set_selected_core {
+  my ($self) = shift @_;
+  my $choice = shift @_;
+
+  my @ok_choices = &_get_set_selected_ok_choices();
+
+  if ($choice =~ m%^$ok_choices[0]$%) { # 'DetectionScore'
+    return($self->set_DetectionScore(@_));
+  } elsif ($choice =~ m%^$ok_choices[1]$%) { # 'DetectionDecision'
+    return($self->set_DetectionDecision(@_));
+  } elsif ($choice =~ m%^$ok_choices[2]$%) { # 'BoundingBox'
+    return($self->set_BoundingBox(@_));
+  } elsif ($choice =~ m%^$ok_choices[3]$%) { # 'Point'
+    return($self->set_Point(@_));
+  } else{
+    $self->_set_errormsg("WEIRD: Could not select a choice in \'set_selected\' ($choice)");
+    return(0);
+  }
+}
+
+#####
+
+sub set_selected {
+  my ($self) = shift @_;
+  my $choice = shift @_;
+
+  return(0) if ($self->error());
+
+  my @ok_choices = &_get_set_selected_ok_choices();
+  if (! grep(m%^$choice$%, @ok_choices)) {
+    $self->_set_errormsg("In \'set_selected\', choice ($choice) is not recognized");
+    return(0);
+  }
+
+  # We have to worry about the "dynamic" and "number of inline attributes"
+
+  if (! exists $hash_objects_attributes_types_dynamic{$choice}) {
+    $self->_set_errormsg("In \'set_selected\', can not confirm the dynmaic status of choice ($choice)");
+    return(0);
+  }
+  my $isd = $hash_objects_attributes_types_dynamic{$choice};
+
+  if (! exists $hasharray_inline_attributes{$choice}) {
+    $self->_set_errormsg("In \'set_selected\', can not confirm the number of inline attributes of choice ($choice)");
+    return(0);
+  }
+  my @attrs = $hasharray_inline_attributes{$choice};
+  my $nattr = scalar @attrs;
+
+  my %inhash = @_;
+  # Master key is the "framespan" (string)
+  # Sub level keys are obtained via key_attr_framespan and key_attr_content
+
+  # For dynamic ones, we keep everything as is (including the number of inlines attributes)
+  if ($isd) {
+    return($self->_set_selected_core($choice, %inhash));
+  } else {
+    # For non dynamic elements we always drop the Viper framespan
+    my ($errtxt , %oneelt) = &_get_1keyhash_content(%inhash);
+    if ($errtxt !~ m%^\s*$%) {
+      $self->_set_errormsg("In \'set_selected\', problem while extracting the one hash element for choice ($choice) ($errtxt)");
+      return(0);
+    }
+    if (! exists $oneelt{$self->key_attr_content()}) {
+      $self->_set_errormsg("WEIRD: In \'set_selected\' can not obtain the \'content\' key");
+      return(0);
+    }
+    my $rvalues = $oneelt{$self->key_attr_content()};
+    my @values = @$rvalues;
+    # For non dynamic 1 inline attribute, we only care about that one element
+    if ($nattr == 1) {
+      my $v = shift @values;
+      return($self->_set_selected_core($choice, $v));
+    } else {
+      # For non dynamic multiple inline attributes, we keep the array
+      return($self->_set_selected_core($choice, @values));
+    }
+  }
+}
+
 ########################################
 
 sub _is_validated {
@@ -646,11 +768,11 @@ sub validate {
   # For non GTF
   if (! $self->get_isgtf) { 
     if (! $self->_is_DetectionScore_set()) {
-      $self->set_errormsg("While \'validate\': \'DetectionScore\' not set (and observation is not a GTF)");
+      $self->_set_errormsg("While \'validate\': \'DetectionScore\' not set (and observation is not a GTF)");
       return(0);
     }
     if (! $self->_is_DetectionDecision_set()) {
-      $self->set_errormsg("While \'validate\': \'DetectionDecision\' not set (and observation is not a GTF)");
+      $self->_set_errormsg("While \'validate\': \'DetectionDecision\' not set (and observation is not a GTF)");
       return(0);
     }
   }
