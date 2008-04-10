@@ -69,9 +69,10 @@ my $show = 0;
 my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision information set
 my $xmllint = "";
 my $xsdpath = ".";
+my $fps = -1;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T            gh          s  v x  
+# USed:                    T           fgh          s  v x  
 
 my %opt;
 my $dbgftmp = "";
@@ -83,6 +84,7 @@ GetOptions
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
    'gtf'             => \$isgtf,
+   'fps=s'           => \$fps,
    # Hidden option
    'show_internals+' => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -91,6 +93,8 @@ die("\n$usage\n") if ($opt{'help'});
 die("$versionid\n") if ($opt{'version'});
 
 die("\n$usage\n") if (scalar @ARGV == 0);
+
+die("ERROR: \'fps\' must set in order to do any scoring work") if ($fps == -1);
 
 if ($xmllint ne "") {
   error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
@@ -130,7 +134,9 @@ while ($tmp = shift @ARGV) {
     if ( ($xsdpath ne "") && (! $object->set_xsdpath($xsdpath)) );
   error_quit("While setting \'gtf\' status (" . $object->get_errormsg() . ")")
     if ( ($isgtf) && ( ! $object->set_as_gtf()) );
-  error_quit("While setting \'file\' (" . $object->get_errormsg() . ")")
+  error_quit("While setting \'fps\' ($fps) (" . $object->get_errormsg() . ")")
+    if ( ! $object->set_fps($fps) );
+  error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
     if ( ! $object->set_file($tmp) );
 
   # Validate (important to confirm that we can have a memory representation)
@@ -142,7 +148,7 @@ while ($tmp = shift @ARGV) {
   }
 
   # This is really if you are a debugger
-  print("** Memory Representation:\n", $object->_display()) if ($show);
+  print("** Memory Representation:\n", $object->_display_all()) if ($show);
 
   # This is really if you are a debugger 
   if ($show > 1) {
