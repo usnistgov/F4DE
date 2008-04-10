@@ -215,6 +215,26 @@ sub get_full_events_list {
   return(@ok_events);
 }
 
+#####
+
+sub _get_hasharray_inline_attributes {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  return(%hasharray_inline_attributes);
+}
+
+#####
+
+sub _get_hash_objects_attributes_types_dynamic {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  return(%hash_objects_attributes_types_dynamic);
+}
+
 ########## 'xmllint'
 
 sub set_xmllint {
@@ -679,8 +699,42 @@ sub get_event_observations {
       return(0);
     }
 
-    if (! $isgtf) {
-      ##################### TODO ####################
+    ## This is past the validation step, so we know that types are ok, so simply process the dynamic vs non dynamic elements
+    my @all_obj_attrs = keys %hash_objects_attributes_types_dynamic;
+    foreach my $okey (@all_obj_attrs) {
+      if (exists $all_obs{$id}{$okey}) {
+	my %ih = %{$all_obs{$id}{$okey}};
+	my %oh = ();
+	my $isd = $hash_objects_attributes_types{$okey};
+
+	if ((! $isd) && (scalar keys %ih > 1)) {
+	  $self->_set_errormsg("WEIRD: There should only be one framepsan per non dynamic attribute ($okey)");
+	  return(0);
+	}
+
+	foreach my $afs (keys %ih) {
+	  # Here we do not worry about dynamic & non dynamic object, nor about the number of inline attributes
+	  my $fs_afs = new ViperFramespan();
+	  if (! $fs_afs->set_value($afs)) {
+	    $self->_set_errormsg("In observation creation ($okey): ViperFramespan ($afs) error (" . $fs_afs->get_errormsg() . ")");
+	    return(0);
+	  }
+	  # Since I can not have '@{$oh{$fs_afs}} = @{$ih{$afs}}', ie use the 'ViperFramespan' object as the hash key
+	  # (which would have been great, but is not authorized by perl since a key has to be a scalar)
+	  # we will have to rely on a two dimensionnal hash with '$afs' (the string) as its master key
+	  # (wasteful but insure a proper database key, and more useable/searchable than an array
+	  # and we can always go from the 'ViperFramespan' to its 'string' value easily)
+	  my $mkey = "$afs";
+	  $oh{$mkey}{$obs->key_attr_framespan()} = $fs_afs;
+	  $oh{$mkey}{$obs->key_attr_content()} = $ih{$afs};
+	}
+
+	# Done processing all framespans, now add the entity to the observation
+	if (! $obs->set_selected($okey, %oh) ) {
+	  $self->_set_errormsg("Problem adding \'$okey\' to observation (" . $obs->get_errormsg() .")");
+	  return(0);
+	}
+      }
     }
 
     if (! $obs->validate()) {
@@ -1216,6 +1270,10 @@ sub _parse_object_section {
       return("Expected \'$wtag\' required attribute ($key) does not have a value", ())
 	if (grep(m%^$key$%, @det_sub));
       next;
+    } else {
+      # GTF must not have the Detection attributes set
+      return("\'$wtag\' attribute ($key) should not have a value for GTF", ())
+	if (($isgtf) && (grep(m%^$key$%, @det_sub)));
     }
     my @expected2;
     push @expected2, $val;
