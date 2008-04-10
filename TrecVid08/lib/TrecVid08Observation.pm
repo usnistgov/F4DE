@@ -32,7 +32,7 @@ sub new {
 
   my $tmp = &_get_TrecVid08ViperFile_infos();
   $errormsg .= "Could not obtain the list authorized events ($tmp). "
-    if ($tmp !~ m%^\s*$%);
+    if (! &_is_blank($tmp));
 
   $errormsg = &_set_errormsg_txt("", $errormsg);
 
@@ -112,7 +112,7 @@ sub get_errormsg {
 sub error {
   my ($self) = @_;
 
-  return(1) if ($self->get_errormsg() !~ m%^\s*$%);
+  return(1) if (! &_is_blank($self->get_errormsg()));
 
   return(0);
 }
@@ -140,7 +140,7 @@ sub _is_eventtype_set {
 
   return(0) if ($self->error());
 
-  return(1) if ($self->{eventtype} !~ m%^\s*$%);
+  return(1) if (! &_is_blank($self->{eventtype}));
 
   return(0);
 }
@@ -224,7 +224,7 @@ sub _is_filename_set {
 
   return(0) if ($self->error());
 
-  return(1) if ($self->{filename} !~ m%^\s*$%);
+  return(1) if (! &_is_blank($self->{filename}));
 
   return(0);
 }
@@ -266,7 +266,7 @@ sub _is_xmlfilename_set {
 
   return(0) if ($self->error());
 
-  return(1) if ($self->{xmlfilename} !~ m%^\s*$%);
+  return(1) if (! &_is_blank($self->{xmlfilename}));
 
   return(0);
 }
@@ -292,8 +292,8 @@ sub set_framespan {
 
   return(0) if ($self->error());
 
-  if ( (! defined $fs_fs) || (! $fs_fs->_is_value_set() ) ) {
-    $self->_set_errormsg("Empty \'framespan\'");
+  if ( (! defined $fs_fs) || (! $fs_fs->_is_value_set() ) || (! $fs_fs->_is_fps_set() ) ) {
+    $self->_set_errormsg("Invalid \'framespan\'");
     return(0);
   }
   
@@ -692,7 +692,7 @@ sub set_selected {
   } else {
     # For non dynamic elements we always drop the Viper framespan
     my ($errtxt , %oneelt) = &_get_1keyhash_content(%inhash);
-    if ($errtxt !~ m%^\s*$%) {
+    if (! &_is_blank($errtxt)) {
       $self->_set_errormsg("In \'set_selected\', problem while extracting the one hash element for choice ($choice) ($errtxt)");
       return(0);
     }
@@ -715,7 +715,7 @@ sub set_selected {
 
 ########################################
 
-sub _is_validated {
+sub is_validated {
   my ($self) = @_;
 
   return(0) if ($self->error());
@@ -732,7 +732,7 @@ sub validate {
 
   return(0) if ($self->error());
 
-  return(1) if ($self->_is_validated());
+  return(1) if ($self->is_validated());
   # Confirm all is set in the observation
   
   # Required types:
@@ -794,5 +794,47 @@ sub _display {
   return Dumper(\$self);
 }
 
+########################################
+## Scoring part
+
+sub joint_kernel {
+  my ($self, $other, $delta_t) = @_;
+
+  my $etxt = "";
+
+  # Error ?
+  $etxt .= "Problem in calling object (" . $self->get_errormsg() ."). "
+    if ($self->error());
+  $etxt .= "Problem in compared to object (" . $other->get_errormsg() ."). "
+    if ($other->error());
+  # Validated ?
+  $etxt .= "Can not use calling object, it has not been validated yet. "
+    if (! $self->is_validated());
+  $etxt .= "Can not use compared to object, it has not been validated yet. "
+    if (! $other->is_validated());
+  # Return yet ?
+  return($etxt, 0) if (! &_is_blank($etxt));
+
+  # Can only compare REF->SYS
+  $etxt .= "Calling object can not be a SYSTEM observation"
+    if ($self->get_isgtf());
+  $etxt .= "Compared to object has to be a SYSTEM observation"
+    if (! $other->get_isgtf());
+  # Return yet ?
+  return($etxt, 0) if (! &_is_blank($etxt));
+
+  
+
+
+}
+
 ############################################################
+
+sub _is_blank {
+  my $txt = shift @_;
+  return(($txt =~ m%^\s*$%));
+}
+
+################################################################################
+
 1;
