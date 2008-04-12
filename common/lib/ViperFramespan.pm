@@ -563,6 +563,30 @@ sub middlepoint_distance {
   return($m2 - $m1);
 }
 
+#####
+
+sub duration {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(-1);
+  }
+
+  my $v = $self->get_value();
+
+  my ($v_beg, $v_end) = &_fs_get_begend($v);
+
+  my $d = $v_end - $v_beg;
+  # 1:3 is 1:2:3 so duration 3, and
+  # 1:1 is of duration 1 still, so:
+  $d++;
+
+  return($d); 
+}
+  
 ######################################## 'ts' functions
 
 sub frame_to_ts {
@@ -661,6 +685,24 @@ sub middlepoint_distance_ts {
   }
 
   return($m2 - $m1);
+}
+
+#####
+
+sub duration_ts {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+  
+  if (! $self->_is_fps_set()) {
+    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    return(-1);
+  }
+
+  my $d = $self->duration();
+  return($d) if ($self->error());
+
+  return($self->frame_to_ts($d));
 }
 
 ########################################

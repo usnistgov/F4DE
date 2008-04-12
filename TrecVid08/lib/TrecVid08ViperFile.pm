@@ -636,7 +636,7 @@ sub _display {
   }
 
   my %in = $self->_get_fhash();
-  my %out = &_prune_events(\%in, @limitto_events);
+  my %out = &_clone_fhash_selected_events(\%in, @limitto_events);
 
   return(Dumper(\%out));
 }
@@ -651,6 +651,9 @@ sub _get_short_sf_file {
 
   # Remove all paths
   $txt =~ s%^.+\/%%g;
+
+  # lowercase
+#  $txt = lc($txt);
 
   return($txt);
 }
@@ -689,7 +692,7 @@ sub get_event_observations {
    return(-1) if ($self->error());
 
   if (! $self->validated()) {
-    $self->_set_errormsg("Can only call \'_display\' for a validated file");
+    $self->_set_errormsg("Can only create observations for a validated file");
     return(0);
   }
 
@@ -710,7 +713,7 @@ sub get_event_observations {
   return(0) if ($self->error());
 
   my %in = $self->_get_fhash();
-  my %out = &_prune_events(\%in, $event);
+  my %out = &_clone_fhash_selected_events(\%in, $event);
 
   my %file_info = %{$out{"file"}};
 
@@ -824,6 +827,100 @@ sub get_event_observations {
   return(@res);
 }
 
+####################
+
+sub remove_all_events {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->validated()) {
+    $self->_set_errormsg("Can only \"remove all events\" for a validated file");
+    return(0);
+  }
+
+  my %in = $self->_get_fhash();
+  my %out = &_clone_fhash_selected_events(\%in);
+
+  $self->_set_fhash(%out);
+  return(1);
+}
+
+##########
+
+sub _clone_core {
+  my ($self, $keep_events) = @_;
+
+  return(undef) if ($self->error());
+
+  if (! $self->validated()) {
+    $self->_set_errormsg("Can only \'clone\' a validated file");
+    return(undef);
+  }
+  
+  my $clone = new TrecVide08ViperFile();
+  
+  $clone->set_xmllint($self->get_xmllint());
+  $clone->set_xsdpath($self->get_xsdpath());
+  $clone->set_as_gtf() if ($self->check_a_gtf());
+  $clone->set_fps($self->get_fps()) if ($self->_is_fps_set());
+  $clone->set_file($self->get_file());
+  my %in = $self->_get_fhash();
+  my %out;
+  if ($keep_events) {
+    %out = &_clone_fhash_selected_events(\%in, @ok_events);
+  } else {
+    %out = &_clone_fhash_selected_events(\%in);
+  }
+  $clone->_set_fhash(%out);
+  $clone->{validated} = 1;
+
+  return(undef) if ($self->error());
+  if ($clone->error()) {
+    $self->_set_errormsg("A problem occurred while \'clone\'-ing (" . $clone->get_errormsg() .")");
+    return(undef);
+  }
+
+  return($clone);
+}
+
+#####
+
+sub clone {
+  my ($self) = @_;
+
+  return($self->_clone_core(1));
+}
+
+#####
+
+sub clone_with_no_events {
+ my ($self) = @_;
+
+  return($self->_clone_core(0));
+} 
+
+#####
+
+sub add_observation {
+  my ($self, $obs) = @_;
+
+  return(-1) if ($self->error());
+
+  if ($obs->error()) {
+    $self->_set_errormsg("Proposed Observation seems to have problems (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only add an observation to an already validated file");
+    return(0);
+  }
+
+  ##### TODO #####
+  ## Check it is the same file at least 
+  ## add at first available id (change id)
+}
 
 ############################################################
 # Internals
@@ -1860,7 +1957,7 @@ sub _writeback2xml {
 
 ########################################
 
-sub _prune_events {
+sub _clone_fhash_selected_events {
   my $rin_hash = shift @_;
   my @asked_events = @_;
 
@@ -1871,8 +1968,8 @@ sub _prune_events {
 
   foreach my $event (@asked_events) {
     if (exists $in_hash{$event}) {
-        %{$out_hash{$event}} = %{$in_hash{$event}};
-      }
+      %{$out_hash{$event}} = %{$in_hash{$event}};
+    }
   }
 
   return(%out_hash);

@@ -326,6 +326,7 @@ sub get_framespan {
     $self->_set_errormsg("\'framespan\' not set");
     return(0);
   }
+
   return($self->{framespan});
 }
 
@@ -794,28 +795,229 @@ sub _display {
   return Dumper(\$self);
 }
 
+####################
+
+sub is_comparable_to {
+  my ($self, $other) = @_;
+
+  # Error (pre)
+  return(0) if ($self->error());
+  if ($other->error()) {
+    $self->_set_errormsg("Problem in the compared to object (" . $other->get_errormsg() .")");
+    return(0);
+  }
+
+  # Validated ?
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can not use calling object, it has not been validated yet");
+    return(0);
+  }
+  if (! $other->is_validated()) {
+    $self->_set_errormsg("Can not use compared to object, it has not been validated yet");
+    return(0);
+  }
+
+  # Same eventtype ?
+  my $e1 = $self->get_eventtype();
+  my $e2 = $other->get_eventtype();
+  if ($e1 ne $e2) {
+    $self->_set_errormsg("Can not compare observations of different eventtypes ($e1 / $e2)");
+    return(0);
+  }
+
+  # Same filename ?
+  my $f1 = $self->get_filename();
+  my $f2 = $other->get_filename();
+  if ($f1 ne $f2) {
+    $self->_set_errormsg("Can not compare observations for different files ($f1 / $f2)");
+    return(0);
+  }
+  
+  # Error (post)
+  return(0) if ($self->error());
+  if ($other->error()) {
+    $self->_set_errormsg("Problem in the compared to object (" . $other->get_errormsg() .")");
+    return(0);
+  }
+
+  return(1);
+}
+
 ########################################
-## Scoring part
+## Scoring prerequisites
+
+sub _numerically {
+  return ($a <=> $b);
+}
+
+#####
+
+sub _min_max_core {
+  my $mode = shift @_; # Either 'min' or 'max'
+  my @ts = @_;
+
+  @ts = sort _numerically @ts;
+
+  my $v = ($mode eq "min") ? $ts[0] : $ts[-1];
+
+  return($v);
+}
+
+#####
+
+sub _min {
+  return(&_min_max_core("min", @_));
+}
+
+#####
+
+sub _max {
+  return(&_min_max_core("max", @_));
+}
+
+#####
+
+sub _get_obs_framespan_core {
+  my ($self) = @_;
+
+  return(0, undef) if ($self->error());
+  
+  if (! $self->_is_framespan_set()) {
+    $self->_set_errormsg("\'framespan\' not set");
+    return(0, undef);
+  }
+
+  my $fs_v = $self->get_framespan();
+
+  return (1, $fs_v);
+}
+
+#####
+
+sub Dur {
+  my ($self) = @_;
+
+  my ($ok, $fs_v) = $self->_get_obs_framespan_core();
+  return($ok) if (! $ok);
+
+  my $d = $fs_v->duration_ts();
+  if ($fs_v->error()) {
+    $self->_set_errormsg("While getting framespan's duration (" . $fs_v->get_errormsg() . ")");
+    return(0);
+  }
+
+  return($d);
+}
+
+#####
+
+sub Beg {
+  my ($self) = @_;
+
+  my ($ok, $fs_v) = $self->_get_obs_framespan_core();
+  return($ok) if (! $ok);
+
+  my $d = $fs_v->get_beg_ts();
+  if ($fs_v->error()) {
+    $self->_set_errormsg("While getting framespan's beginning timestamp (" . $fs_v->get_errormsg() . ")");
+    return(0);
+  }
+
+  return($d);
+}
+  
+#####
+
+sub End {
+  my ($self) = @_;
+
+  my ($ok, $fs_v) = $self->_get_obs_framespan_core();
+  return($ok) if (! $ok);
+
+  my $d = $fs_v->get_end_ts();
+  if ($fs_v->error()) {
+    $self->_set_errormsg("While getting framespan's end timestamp (" . $fs_v->get_errormsg() . ")");
+    return(0);
+  }
+
+  return($d);
+}
+
+#####
+
+sub Mid {
+  my ($self) = @_;
+
+  my ($ok, $fs_v) = $self->_get_obs_framespan_core();
+  return($ok) if (! $ok);
+
+  my $d = $fs_v->middlepoint_ts();
+  if ($fs_v->error()) {
+    $self->_set_errormsg("While getting framespan's middlepoint (" . $fs_v->get_errormsg() . ")");
+    return(0);
+  }
+
+  return($d);
+}
+
+#####
+
+sub Dec {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  my $isgtf = $self->get_isgtf();
+  return($isgtf) if ($self->error());
+
+  if ($isgtf) {
+    $self->_set_errormsg("Can not get the \'DetectionScore' for a GTF observation");
+    return(0);
+  }
+
+  my $ds = $self->get_DetectionScore();
+  return($ds) if ($self->error());
+
+  return($ds);
+}
+
+#####
+
+# A get it all function
+sub get_Beg_Mid_End_Dur_Dec {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  my $b = $self->Beg();
+  return(-1) if ($self->error());
+
+  my $m = $self->Mid();
+  return(-1) if ($self->error());
+
+  my $e = $self->End();
+  return(-1) if ($self->error());
+
+  my $du = $self->Dur();
+  return(-1) if ($self->error());
+
+  my $de = $self->Dec();
+  return(-1) if ($self->error());
+
+  return ($b, $m, $e, $du, $de);
+}
+
+########## Scoring core
 
 sub joint_kernel {
-  my ($self, $other, $delta_t) = @_;
+  my ($self, $other, $delta_t, $MinDec_s, $RangeDec_s, $E_t, $E_d) = @_;
 
+  # Check the base for a possible comparison (validate, no error, same file, same eventtype)
+  return($self->get_errormsg(), 0)
+    if (! $self->is_comparable_to($other));
+
+  # For kernel: Can only compare REF to SYS ($self -> $other)
   my $etxt = "";
-
-  # Error ?
-  $etxt .= "Problem in calling object (" . $self->get_errormsg() ."). "
-    if ($self->error());
-  $etxt .= "Problem in compared to object (" . $other->get_errormsg() ."). "
-    if ($other->error());
-  # Validated ?
-  $etxt .= "Can not use calling object, it has not been validated yet. "
-    if (! $self->is_validated());
-  $etxt .= "Can not use compared to object, it has not been validated yet. "
-    if (! $other->is_validated());
-  # Return yet ?
-  return($etxt, 0) if (! &_is_blank($etxt));
-
-  # Can only compare REF->SYS
   $etxt .= "Calling object can not be a SYSTEM observation"
     if ($self->get_isgtf());
   $etxt .= "Compared to object has to be a SYSTEM observation"
@@ -823,9 +1025,84 @@ sub joint_kernel {
   # Return yet ?
   return($etxt, 0) if (! &_is_blank($etxt));
 
+  # Error ?
+  $etxt .= "Problem in calling object (" . $self->get_errormsg() ."). "
+    if ($self->error());
+  $etxt .= "Problem in compared to object (" . $other->get_errormsg() ."). "
+    if ($other->error());
+  # Return yet ?
+  return($etxt, 0) if (! &_is_blank($etxt));
+
+  ########## Now the scoring can begin 
+
+  # Kernel (O(s,i), O(r,j)) <=> ($self, $other)
+  my ($Beg_Osi, $Mid_Osi, $End_Osi, $Dur_Osi, $Dec_Osi)
+    = $self->get_Beg_Mid_End_Dur_Dec();
+  return("Problem obtaining some element related to the SYS Observation (" . $self->get_errormsg() . ")") if ($self->error());
+  my ($Beg_Orj, $Mid_Orj, $End_Orj, $Dur_Orj, $Dec_Orj)
+    = $other->get_Beg_Mid_End_Dur_Dec();
+  return("Problem obtaining some element related to the REF Observation (" . $other->get_errormsg() . ")") if ($other->error());
   
+  if ($Mid_Osi > ($End_Orj - $delta_t)) {
+    return("", undef);
+  } elsif ($Mid_Osi < ($Beg_Orj + $delta_t)) {
+    return("", undef);
+  } # implicit "else"
 
+  my $TimeCongru_Osi_Orj 
+    = ( _min($End_Orj, $End_Osi) - _max($Beg_Orj, $Beg_Osi) )
+      / _max((1/25), $Dur_Orj);
 
+  my $DecScoreCongru_Osi
+    = ( $Dec_Osi - $MinDec_s )
+      / $RangeDec_s;
+
+  my $kernel 
+    = 1
+      + $E_t * $TimeCongru_Osi_Orj
+      + $E_d * $DecScoreCongru_Osi;
+
+  return("", $kernel);
+}
+
+#####
+
+sub falsealarms_kernel {
+  my ($self) = @_;
+
+  return($self->get_errormsg(), 0) if ($self->error());
+
+  my $isgtf = $self->get_isgtf();
+  return($self->get_errormsg(), $isgtf) if ($self->error());
+
+  if ($isgtf) {
+    $self->_set_errormsg("Can not generate the \'false alarms kernel' for a GTF observation");
+    return($self->get_errormsg(), 0);
+  }
+
+  my $kernel = -1;
+
+  return("", $kernel);
+}
+
+#####
+
+sub misseddetections_kernel {
+  my ($self) = @_;
+
+  return($self->get_errormsg(), 0) if ($self->error());
+
+  my $isgtf = $self->get_isgtf();
+  return($self->get_errormsg(), $isgtf) if ($self->error());
+
+  if (! $isgtf) {
+    $self->_set_errormsg("Can only generate the \'false alarm kernel' for a GTF observation");
+    return($self->get_errormsg(), 0);
+  }
+
+  my $kernel = 0;
+
+  return("", $kernel);
 }
 
 ############################################################
