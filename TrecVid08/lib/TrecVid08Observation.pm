@@ -292,7 +292,7 @@ sub set_framespan {
 
   return(0) if ($self->error());
 
-  if ( (! defined $fs_fs) || (! $fs_fs->_is_value_set() ) || (! $fs_fs->_is_fps_set() ) ) {
+  if ( (! defined $fs_fs) || (! $fs_fs->is_value_set() ) || (! $fs_fs->is_fps_set() ) ) {
     $self->_set_errormsg("Invalid \'framespan\'");
     return(0);
   }
@@ -310,7 +310,7 @@ sub _is_framespan_set {
 
   return(0) if (! defined $self->{framespan});
 
-  return(1) if ($self->{framespan}->_is_value_set());
+  return(1) if ($self->{framespan}->is_value_set());
 
   return(0);
 }
@@ -711,6 +711,32 @@ sub set_selected {
       # For non dynamic multiple inline attributes, we keep the array
       return($self->_set_selected_core($choice, @values));
     }
+  }
+}
+
+##########
+
+sub get_selected {
+  my ($self) = shift @_;
+  my $choice = shift @_;
+
+  my @ok_choices = &_get_set_selected_ok_choices();
+
+  if ($choice =~ m%^$ok_choices[0]$%) { # 'DetectionScore'
+    return(0, ()) if (! $self->_is_DetectionScore_set());
+    return(1, $self->get_DetectionScore());
+  } elsif ($choice =~ m%^$ok_choices[1]$%) { # 'DetectionDecision'
+    return(0, ()) if (! $self->_is_DetectionDecision_set());
+    return(1, $self->get_DetectionDecision());
+  } elsif ($choice =~ m%^$ok_choices[2]$%) { # 'BoundingBox'
+    return(0, ()) if (! $self->_is_BoundingBox_set());
+    return(1, $self->get_BoundingBox());
+  } elsif ($choice =~ m%^$ok_choices[3]$%) { # 'Point'
+    return(0, ()) if (! $self->_is_Point_set());
+    return(1, $self->get_Point());
+  } else{
+    $self->_set_errormsg("WEIRD: Could not select a choice in \'get_selected\' ($choice)");
+    return(0, ());
   }
 }
 
