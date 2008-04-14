@@ -50,7 +50,8 @@ my @ok_events =
   );
 
 ##### Memory representations
-my %hash_file_attributes = 
+
+my %hash_file_attributes_types = 
   (
    "NUMFRAMES" => "dvalue",
    "SOURCETYPE" => undef,
@@ -60,7 +61,7 @@ my %hash_file_attributes =
   );
 
 my @array_file_inline_attributes =
-  ("id", "name"); # 'id' is to be first
+  ( "id", "name" ); # 'id' is to be first
 
 my %hash_objects_attributes_types = 
   (
@@ -93,11 +94,9 @@ my %hasharray_inline_attributes;
 @{$hasharray_inline_attributes{"dvalue"}} = ("value");
 
 ##########
-# Default values to compare against
+# Default values to compare against (constant values)
 my $default_error_value = "default_error_value";
-my $fs_framespan_max = new ViperFramespan();
 my $framespan_max_default = "all";
-my $framespan_max = $framespan_max_default;
 my $max_pair_per_fs = 1; # For Trecvid08, only one pair (ie one framespan range) is authorized per framespan
 
 ########################################
@@ -106,7 +105,12 @@ my $max_pair_per_fs = 1; # For Trecvid08, only one pair (ie one framespan range)
 sub new {
   my ($class) = shift @_;
 
-  my $errormsg = (scalar @_ > 0) ? &_set_errormsg_txt("", "TrecVid08ViperFile does not accept parameters") : "";
+  my $errormsg = (scalar @_ > 0) ? "TrecVid08ViperFile does not accept parameters" : "";
+
+  ## Run the ViperFramespan test_unit just to be sure
+  my $fs_tmp = new ViperFramespan();
+  $versionid .= "\n" . $fs_tmp->get_version();
+  $errormsg .= $fs_tmp->get_errormsg() if (! $fs_tmp->unit_test());
 
   my $self =
     {
@@ -117,13 +121,9 @@ sub new {
      file           => "",
      fhash          => undef,
      validated      => 0, # To confirm file was validated
-     errormsg       => $errormsg,
+     fs_framespan_max => $fs_tmp,
+     errormsg       => &_set_errormsg_txt("", $errormsg),
     };
-
-  ## Run the ViperFramespan test_unit just to be sure
-  my $tmp_fs = new ViperFramespan();
-  $versionid .= "\n" . $tmp_fs->get_version();
-  $self->{errormsg} .= $tmp_fs->get_errormsg() if (! $tmp_fs->unit_test());
 
   bless $self;
   return($self);
@@ -296,7 +296,7 @@ sub set_xsdpath {
     $self->_set_errormsg($error);
     return(0);
   }
-  
+
   $self->{xsdpath} = $xsdpath;
   return(1);
 }
@@ -493,9 +493,97 @@ sub get_file {
   return($self->{file});
 }
 
+########## 'framespan_max'
+
+sub _is_framespan_max_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  my $fs_tmp = $self->{fs_framespan_max};
+
+  if ($fs_tmp->error()) {
+    $self->_set_errormsg("Error accessing the \'framespan_max\' object (" . $fs_tmp->get_errormsg() . ")");
+    return(0);
+  }
+
+  return(1) if ($fs_tmp->is_value_set());
+
+  return(0);
+}
+
+#####
+
+sub _get_framespan_max_value {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->_is_framespan_max_set()) {
+    $self->_set_errormsg("Can not get \'framespan_max\', it appears not to be set yet");
+    return(0);
+  }
+
+  my $fs_tmp = $self->{fs_framespan_max};
+
+  my $v = $fs_tmp->get_value();
+
+  if ($fs_tmp->error()) {
+    $self->_set_errormsg("Error accessing the \'framespan_max\' object (" . $fs_tmp->get_errormsg() . ")");
+    return(0);
+  }
+
+  return($v);
+}
+
+#####
+
+sub _get_framespan_max_object {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->_is_framespan_max_set()) {
+    $self->_set_errormsg("Can not get \'framespan_max\', it appears not to be set yet");
+    return(0);
+  }
+
+  my $fs_tmp = $self->{fs_framespan_max};
+
+  if ($fs_tmp->error()) {
+    $self->_set_errormsg("Error accessing the \'framespan_max\' object (" . $fs_tmp->get_errormsg() . ")");
+    return(0);
+  }
+
+  return($fs_tmp);
+}
+
+#####
+
+sub _set_framespan_max_value {
+  my ($self, $fs) = @_;
+
+  return(0) if ($self->error());
+
+  my $fs_tmp = $self->{fs_framespan_max};
+
+  if ($fs_tmp->error()) {
+    $self->_set_errormsg("Error accessing the \'framespan_max\' object (" . $fs_tmp->get_errormsg() . ")");
+    return(0);
+  }
+
+  my $v = $fs_tmp->set_value($fs);
+  if ($fs_tmp->error()) {
+    $self->_set_errormsg("Error setting the \'framespan_max\' (" . $fs_tmp->get_errormsg() . ")");
+    return(0);
+  }
+
+  return(1);
+}
+
 ########################################
 
-sub validated {
+sub is_validated {
   my ($self) = @_;
 
   return(0) if ($self->error());
@@ -513,7 +601,7 @@ sub validate {
   return(0) if ($self->error());
 
   # No need to re-validate if the file was already validated :)
-  return(1) if ($self->validated());
+  return(1) if ($self->is_validated());
 
   if (! $self->_is_file_set()) {
     $self->_set_errormsg("No file set (use \'set_file\') before calling the \'validate\' function");
@@ -525,7 +613,7 @@ sub validate {
     # We will try to set it up from PATH
     return(0) if (! $self->set_xmllint());
   }
-  
+
   if (! $self->_is_xsdpath_set()) {
     # We will try to set it up from '.'
     return(0) if (! $self->set_xsdpath("."));
@@ -550,7 +638,7 @@ sub validate {
   # Process the data part
   my %fdata;
   my $isgtf = $self->check_if_gtf();
-  ($res, %fdata) = &_data_processor($bigstring, $isgtf);
+  ($res, %fdata) = $self->_data_processor($bigstring, $isgtf);
   if (! &_is_blank($res)) {
     $self->_set_errormsg($res);
     return(0);
@@ -577,7 +665,7 @@ sub reformat_xml {
     return(0) if ($self->error());
   }
 
-  if (! $self->validated()) {
+  if (! $self->is_validated()) {
     $self->_set_errormsg("Can only rewrite the XML for a validated file");
     return(0);
   }
@@ -630,7 +718,7 @@ sub _display {
     return(0) if ($self->error());
   }
 
-  if (! $self->validated()) {
+  if (! $self->is_validated()) {
     $self->_set_errormsg("Can only call \'_display\' for a validated file");
     return(0);
   }
@@ -665,7 +753,7 @@ sub get_sourcefile_filename {
 
   return(-1) if ($self->error());
 
-  if (! $self->validated()) {
+  if (! $self->is_validated()) {
     $self->_set_errormsg("Can only call \'get_sourcefile_filename\' for a validated file");
     return(0);
   }
@@ -691,7 +779,7 @@ sub get_event_observations {
 
    return(-1) if ($self->error());
 
-  if (! $self->validated()) {
+  if (! $self->is_validated()) {
     $self->_set_errormsg("Can only create observations for a validated file");
     return(0);
   }
@@ -721,7 +809,8 @@ sub get_event_observations {
   return(@res) if (! defined $out{$event});
   
   my %all_obs = %{$out{$event}};
-  foreach my $id (keys %all_obs) {
+  foreach my $id (sort _numerically keys %all_obs) {
+    # Note: we sort the 'id' to keep the same order in the output array (should we need to recreate it later)
     my $obs = new TrecVid08Observation();
 
     if (! $obs->set_filename($filename) ) {
@@ -755,11 +844,12 @@ sub get_event_observations {
       return(0);
     }
 
-    if (! exists $all_obs{$id}{"framespan"} ) { 
-      $self->_set_errormsg("WEIRD: Could not get the 'framespan' for event: $event and id: $id");
+    my $key = "framespan";
+    if (! exists $all_obs{$id}{$key} ) { 
+      $self->_set_errormsg("WEIRD: Could not get the \'$key\' for event: $event and id: $id");
       return(0);
     }
-    my $fs = $all_obs{$id}{"framespan"};
+    my $fs = $all_obs{$id}{$key};
     my $fs_fs = new ViperFramespan();
     if (! $fs_fs->set_value($fs)) {
       $self->_set_errormsg("In observation creation: ViperFramespan ($fs) error (" . $fs_fs->get_errormsg() . ")");
@@ -770,7 +860,7 @@ sub get_event_observations {
       return(0);
     }
     if (! $obs->set_framespan($fs_fs) ) {
-      $self->_set_errormsg("Problem adding \'framespan\' to observation (" . $obs->get_errormsg() .")");
+      $self->_set_errormsg("Problem adding \'$key\' to observation (" . $obs->get_errormsg() .")");
       return(0);
     }
 
@@ -834,7 +924,7 @@ sub remove_all_events {
 
   return(-1) if ($self->error());
 
-  if (! $self->validated()) {
+  if (! $self->is_validated()) {
     $self->_set_errormsg("Can only \"remove all events\" for a validated file");
     return(0);
   }
@@ -853,16 +943,16 @@ sub _clone_core {
 
   return(undef) if ($self->error());
 
-  if (! $self->validated()) {
+  if (! $self->is_validated()) {
     $self->_set_errormsg("Can only \'clone\' a validated file");
     return(undef);
   }
   
-  my $clone = new TrecVide08ViperFile();
+  my $clone = new TrecVid08ViperFile();
   
   $clone->set_xmllint($self->get_xmllint());
   $clone->set_xsdpath($self->get_xsdpath());
-  $clone->set_as_gtf() if ($self->check_a_gtf());
+  $clone->set_as_gtf() if ($self->check_if_gtf());
   $clone->set_fps($self->get_fps()) if ($self->_is_fps_set());
   $clone->set_file($self->get_file());
   my %in = $self->_get_fhash();
@@ -898,7 +988,120 @@ sub clone_with_no_events {
  my ($self) = @_;
 
   return($self->_clone_core(0));
-} 
+}
+
+##########
+
+sub _get_fhash_file_numframes {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only extend \'numframes\' for a validated file");
+    return(0);
+  }
+
+  my %tmp = $self->_get_fhash();
+
+  if (! exists $tmp{"file"}{"NUMFRAMES"}) {
+    $self->_set_errormsg("WEIRD: Can not access file's \'numframes\'");
+    return(0);
+  }
+
+  return($tmp{"file"}{"NUMFRAMES"});
+}
+
+####
+
+sub _set_fhash_file_numframes {
+  my ($self, $numframes, $ignoresmallervalues) = @_;
+
+  if ($numframes <= 0) {
+    $self->_set_errormsg("Can not set file's \'numframes\' to a negative or zero value");
+    return(0);
+  }
+
+  my $cnf = $self->_get_fhash_file_numframes();
+  return(0) if ($self->error());
+
+  if ($cnf < $numframes) {
+    return(1) if ($ignoresmallervalues);
+
+    $self->_set_errormsg("Can not reduce the file\'s \'numframes\' value");
+    return(0);
+  }
+
+  my %tmp = $self->_get_fhash();
+
+  if (! exists $tmp{"file"}{"NUMFRAMES"}) {
+    $self->_set_errormsg("WEIRD: Can not access file's \'numframes\'");
+    return(0);
+  }
+
+  $tmp{"file"}{"NUMFRAMES"} = $numframes;
+
+  $self->_set_fhash(%tmp);
+  return(0) if ($self->error());
+
+  return(1);
+}
+
+#####
+
+sub extend_numframes {
+  my ($self, $numframes) = @_;
+
+  return($self->_set_fhash_file_numframes($numframes, 1));
+}
+
+##########
+
+sub get_first_available_event_id {
+  my ($self, $event) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only get first available event id for a validated file");
+    return(-1);
+  }
+
+  if (! grep(m%^$event$%, @ok_events)) {
+    $self->set_errormsg("Eventtype ($event) is not a recognized one");
+    return(-1);
+  }
+
+  my %tmp = $self->_get_fhash();
+
+  # No event of this type set yet, so the first id available (0)
+  return(0) if (! exists $tmp{$event});
+
+  my @keys = sort _numerically  keys %{$tmp{$event}};
+
+  return(1 + $keys[-1]);
+}
+
+##########
+
+sub _bvalue_convert {
+  my ($attr, @values) = @_;
+
+  return(@values) if ($hash_objects_attributes_types{$attr} ne "bvalue");
+
+  my @out;
+  foreach my $i (@values) {
+    if ($i == 1) {
+      push @out, "true";
+    } elsif ($i == 0) {
+      push @out, "false";
+    } else {
+      push @out, $i;
+    }
+  }
+
+  return(@out);
+}
 
 #####
 
@@ -917,9 +1120,107 @@ sub add_observation {
     return(0);
   }
 
-  ##### TODO #####
-  ## Check it is the same file at least 
-  ## add at first available id (change id)
+  if (! $obs->is_validated()) {
+    $self->_set_errormsg("Can only add a validated observation");
+    return(0);
+  }
+
+  # Get observation's eventtype
+  my $event = $obs->get_eventtype();
+
+  # Now get the observation's file information (to access \'filename\' and \'numframes\')
+  my %ofi = $obs->get_ofi();
+  if ($obs->error()) {
+    $self->_set_errormsg("Proposed Observation encountered a problems (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  # Confirm the cleaned up filename is the same
+  my $obs_filename = $obs->get_filename();
+  my $self_filename = $self->get_sourcefile_filename();
+  if ($obs_filename ne $self_filename) {
+    $self->_set_errormsg("Can only add an observation to a file which \'filename\' match");
+    return(0);
+  }
+
+  # Confirm that the GTF status is the same
+  my $obs_gtf = $obs->get_isgtf();
+  my $self_gtf = $self->check_if_gtf();
+  if ($obs_gtf ne $self_gtf) {
+    $self->_set_errormsg("Can only add an observation to a file whose \'GTF status\' match");
+    return(0);
+  }
+
+  # Get the next available event id
+  my $id = $self->get_first_available_event_id($event);
+  return(0) if ($self->error());
+
+  ##### From now on we make changes to the structure
+  
+  # Try to extend the "NUMFRAMES" (if required)
+  my $key = "NUMFRAMES";
+  if (! exists $ofi{$key}) {
+    $self->_set_errormsg("WEIRD: Problem accessing the observation's file \'$key\' information");
+    return(0);
+  }
+  return(0) if (! $self->extend_numframes($ofi{$key}));
+
+  my %tmp = $self->_get_fhash();
+  my %sp_out; # will be added to $fhash{event}{id}
+
+  # Get the global framespan
+  my $fs_obs = $obs->get_framespan();
+  if ($obs->error()) {
+    $self->_set_errormsg("Problem accessing the observation's framespan (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+  my $obs_fs = $fs_obs->get_value();
+  if ($fs_obs->error()) {
+    $self->_set_errormsg("Problem accessing the observation's framespan value (" . $fs_obs->get_errormsg() .")");
+    return(0);
+  }
+  # Set it into the event representation
+  $sp_out{"framespan"} = $obs_fs;
+  
+  # Now process the attributes information
+  foreach my $attr (keys %hash_objects_attributes_types) {
+    if ($hash_objects_attributes_types_dynamic{$attr}) {
+      # Dynamic objects
+      my ($set, %values) = $obs->get_selected($attr);
+      if ($obs->error()) {
+	$self->_set_errormsg("Problem obtaining the \'$attr\' observation attribute[1] (" . $obs->get_errormsg() .")");
+	return(0);
+      }
+      next if (! $set);
+      foreach my $akey (keys %values) {
+	if (! defined $values{$akey}{$obs->key_attr_content()}) {
+	  $self->_set_errormsg("WEIRD: Could not obtain the \'$attr\' observation attribute value");
+	  return(0);
+	}
+	my @a = @{$values{$akey}{$obs->key_attr_content()}};
+	@a = &_bvalue_convert($attr, @a);
+	@{$sp_out{$attr}{$akey}} = @a;
+      }
+    } else {
+      # Non-Dynamic objects
+      my ($set, @values) = $obs->get_selected($attr);
+      if ($obs->error()) {
+	$self->_set_errormsg("Problem obtaining the \'$attr\' observation attribute[2] (" . $obs->get_errormsg() .")");
+	return(0);
+      }
+      next if (! $set);
+      @values = &_bvalue_convert($attr, @values);
+      @{$sp_out{$attr}{$obs_fs}} = @values;
+    }
+  }
+
+  ## Finished setting %sp_out, commit it to the local copy of fhash before recreating fhash
+  %{$tmp{$event}{$id}} = %sp_out;
+
+  $self->_set_fhash(%tmp);
+  return(0) if ($self->error());
+
+  return(1);
 }
 
 ############################################################
@@ -1000,6 +1301,7 @@ sub _remove_xml_section {
 ########################################
 
 sub _data_processor {
+  my ($self) = shift @_;
   my $string = shift @_;
   my $isgtf = shift @_;
 
@@ -1031,7 +1333,7 @@ sub _data_processor {
   return("Data left in addition to the \'sourcefile\' XML section, aborting", $string)
     if (! &_is_blank($string));
   # Parse it
-  ($res, %fdata) = &_parse_sourcefile_section($name, $section, $isgtf);
+  ($res, %fdata) = $self->_parse_sourcefile_section($name, $section, $isgtf);
   return("Problem while processing the \'sourcefile\' XML section (" . &_clean_begend_spaces($res) .")", $section)
     if (! &_is_blank($res));
 
@@ -1168,6 +1470,7 @@ sub _find_hash_key {
 ####################
 
 sub _parse_sourcefile_section {
+  my ($self) = shift @_;
   my $name = shift @_;
   my $str = shift @_;
   my $isgtf = shift @_;
@@ -1198,7 +1501,7 @@ sub _parse_sourcefile_section {
   my $sec = &_get_named_xml_section("file", \$str);
   return("No \'file\' section found in the \'sourcefile\'", ())
     if ($sec eq $default_error_value);
-  ($text, my %fattr) = &_parse_file_section($sec);
+  ($text, my %fattr) = $self->_parse_file_section($sec);
   return($text, ()) if (! &_is_blank($text));
   
   # Complete %fattr and start filling %res
@@ -1213,7 +1516,7 @@ sub _parse_sourcefile_section {
     return("No \'object\' section left in the \'sourcefile\'", ())
       if ($sec eq $default_error_value);
     ($text, my $object_type, my $object_id, my $object_framespan, my %oattr)
-      = &_parse_object_section($sec, $isgtf);
+      = $self->_parse_object_section($sec, $isgtf);
     return($text, ()) if (! &_is_blank($text));
 
     ##### Sanity
@@ -1286,6 +1589,7 @@ sub _compare_arrays {
 #####
 
 sub _parse_file_section {
+  my ($self) = shift @_;
   my $str = shift @_;
 
   my $wtag = "file";
@@ -1293,6 +1597,8 @@ sub _parse_file_section {
 
   my ($text, %attr) = &_get_inline_xml_attributes($wtag, $str);
   return($text, ()) if (! &_is_blank($text));
+
+  my $framespan_max = $framespan_max_default;
 
   my @expected = @array_file_inline_attributes;
   my ($in, $out) = &_compare_arrays(\@expected, keys %attr);
@@ -1315,12 +1621,12 @@ sub _parse_file_section {
 
   #####
   # Process each "attribute" left now
-  ($text, %attr) = &_parse_attributes(\$str);
+  ($text, %attr) = $self->_parse_attributes(\$str);
   return("While parsing the \'$wtag\' \'attribute\'s : $text", ())
     if (! &_is_blank($text));
 
   # Confirm they are the ones we want
-  my %expected_hash = %hash_file_attributes;
+  my %expected_hash = %hash_file_attributes_types;
   @expected = keys %expected_hash;
   ($in, $out) = &_compare_arrays(\@expected, keys %attr);
   return("Could not find all the expected \'$wtag\' attributes", ())
@@ -1357,8 +1663,8 @@ sub _parse_file_section {
     if ($val < 0);
 
   $framespan_max = "1:$val";
-  return("ViperFramespan ($framespan_max) error (" . $fs_framespan_max->get_errormsg() . ")", ())
-    if (! $fs_framespan_max->set_value($framespan_max));
+  return("Problem setting the framespan_max object value ($framespan_max)")
+    if (! $self->_set_framespan_max_value($framespan_max));
 
   return("", %file_hash);
 }
@@ -1366,6 +1672,7 @@ sub _parse_file_section {
 ##########
 
 sub _parse_object_section {
+  my ($self) = shift @_;
   my $str = shift @_;
   my $isgtf = shift @_;
 
@@ -1378,6 +1685,11 @@ sub _parse_object_section {
 
   my ($text, %attr) = &_get_inline_xml_attributes($wtag, $str);
   return($text, ()) if (! &_is_blank($text));
+
+  my $framespan_max = $self->_get_framespan_max_value();
+  return("Problem obtaining the \'framespan_max\' value", ()) if ($self->error());
+  my $fs_framespan_max = $self->_get_framespan_max_object();
+  return("Problem obtaining the \'framespan_max\' object", ()) if ($self->error());
 
   my @expected = @array_objects_inline_attributes;
   my ($in, $out) = &_compare_arrays(\@expected, keys %attr);
@@ -1418,7 +1730,7 @@ sub _parse_object_section {
 
   #####
   # Process each "attribute" left now
-  ($text, %attr) = &_parse_attributes(\$str, $object_framespan);
+  ($text, %attr) = $self->_parse_attributes(\$str, $object_framespan);
   return("While parsing the \'$wtag\' \'attribute\'s : $text", ())
     if (! &_is_blank($text));
   
@@ -1502,6 +1814,7 @@ sub _data_process_type {
 #####
 
 sub _extract_data {
+  my ($self) = shift @_;
   my $str = shift @_;
   my $fspan = shift @_;
   my $allow_nofspan = shift @_;
@@ -1586,14 +1899,15 @@ sub _extract_data {
 #####
 
 sub _parse_attributes {
+  my ($self) = shift @_;
   my $rstr = shift @_;
   my $fspan = shift @_;
   my %attrs;
 
   my $allow_nofspan = 0;
   if (&_is_blank($fspan)) {
-    if ($framespan_max eq $framespan_max_default) {
-      $fspan = $framespan_max;
+    if (! $self->_is_framespan_max_set()) {
+      $fspan = $framespan_max_default;
     } else {
       return("WEIRD: At this point the framespan range should be defined", ());
     }
@@ -1626,7 +1940,7 @@ sub _parse_attributes {
     if (&_is_blank($sec)) {
       $attrs{$name} = undef;
     } else {
-      ($text, my %tmp) = &_extract_data($sec, $fspan, $allow_nofspan, $name);
+      ($text, my %tmp) = $self->_extract_data($sec, $fspan, $allow_nofspan, $name);
       return("Error while processing the \'data\:\' content of the \'$name\' \'attribute\' ($text)", ())
 	if (! &_is_blank($text));
       %{$attrs{$name}} = %tmp;
@@ -1804,11 +2118,11 @@ sub _writeback_file {
 
   $txt .= &_wb_print($indent++, "<file id=\"" . $file_hash{'file_id'} . "\" name=\"Information\">\n");
 
-  foreach my $key (sort keys %hash_file_attributes) {
+  foreach my $key (sort keys %hash_file_attributes_types) {
     $txt .= &_wb_print($indent, "<attribute name=\"$key\"");
     if (defined $file_hash{$key}) {
       $txt .= ">\n";
-      $txt .= &_wb_print(++$indent, "<data:" . $hash_file_attributes{$key} . " value=\"" . $file_hash{$key} . "\"/>\n");
+      $txt .= &_wb_print(++$indent, "<data:" . $hash_file_attributes_types{$key} . " value=\"" . $file_hash{$key} . "\"/>\n");
       $txt .= &_wb_print(--$indent, "</attribute>\n");
     } else {
       $txt .= "/>\n";
