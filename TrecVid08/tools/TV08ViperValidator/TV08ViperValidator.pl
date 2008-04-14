@@ -141,7 +141,7 @@ if (($writeback != -1) && ($writeback ne "")) {
 # Main processing
 my $tmp;
 my %all = ();
-my @ntodo = scalar @ARGV;
+my $ntodo = scalar @ARGV;
 my $ndone = 0;
 while ($tmp = shift @ARGV) {
   if (! -e $tmp) {
@@ -196,7 +196,7 @@ while ($tmp = shift @ARGV) {
   %{$all{$tmp}} = $object;
   $ndone++;
 }
-die("All files processed (Validated: $ndone | Total: ", scalar @ntodo, ")\n");
+die("All files processed (Validated: $ndone | Total: $ntodo)\n");
 
 ########## END
 
