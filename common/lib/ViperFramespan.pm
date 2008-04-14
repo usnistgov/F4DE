@@ -287,7 +287,7 @@ sub set_fps {
 
 #####
 
-sub _is_fps_set {
+sub is_fps_set {
   my ($self) = @_;
 
   return(0) if ($self->error());
@@ -304,7 +304,7 @@ sub get_fps {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_fps_set()) {
+  if (! $self->is_fps_set()) {
     $self->_set_errormsg($error_msgs{"FPSNotSet"});
     return(0);
   }
@@ -363,7 +363,7 @@ sub get_errormsg {
 
 ##########
 
-sub _is_value_set {
+sub is_value_set {
   my ($self) = @_;
 
   return(0) if ($self->error());
@@ -434,7 +434,7 @@ sub count_pairs_in_value {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_value_set()) {
+  if (! $self->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(-1);
   }
@@ -451,7 +451,7 @@ sub count_pairs_in_original_value {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_value_set()) {
+  if (! $self->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(-1);
   }
@@ -468,12 +468,12 @@ sub check_if_overlap {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_value_set()) {
+  if (! $self->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(-1);
   }
 
-  if (! $other->_is_value_set()) {
+  if (! $other->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(-1);
   }
@@ -498,12 +498,12 @@ sub is_within {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_value_set()) {
+  if (! $self->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(-1);
   }
 
-  if (! $other->_is_value_set()) {
+  if (! $other->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(-1);
   }
@@ -528,7 +528,7 @@ sub middlepoint {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_value_set()) {
+  if (! $self->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(-1);
   }
@@ -547,12 +547,12 @@ sub middlepoint_distance {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_value_set()) {
+  if (! $self->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(-1);
   }
 
-  if (! $other->_is_value_set()) {
+  if (! $other->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(-1);
   }
@@ -570,7 +570,7 @@ sub duration {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_value_set()) {
+  if (! $self->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(-1);
   }
@@ -594,7 +594,7 @@ sub frame_to_ts {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_fps_set()) {
+  if (! $self->is_fps_set()) {
     $self->_set_errormsg($error_msgs{"FPSNotSet"});
     return(0);
   }
@@ -616,11 +616,11 @@ sub _get_begend_ts_core {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_fps_set()) {
+  if (! $self->is_fps_set()) {
     $self->_set_errormsg($error_msgs{"FPSNotSet"});
     return(0);
   }
-  if (! $self->_is_value_set()) {
+  if (! $self->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(0);
   }
@@ -659,7 +659,7 @@ sub middlepoint_ts {
 
   return(-1) if ($self->error());
 
-  if (! $self->_is_fps_set()) {
+  if (! $self->is_fps_set()) {
     $self->_set_errormsg($error_msgs{"FPSNotSet"});
     return(-1);
   }
@@ -694,7 +694,7 @@ sub duration_ts {
 
   return(-1) if ($self->error());
   
-  if (! $self->_is_fps_set()) {
+  if (! $self->is_fps_set()) {
     $self->_set_errormsg($error_msgs{"FPSNotSet"});
     return(-1);
   }
