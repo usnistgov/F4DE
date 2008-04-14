@@ -110,7 +110,7 @@ if ($xsdpath ne "") {
 # Main processing
 my $tmp;
 my %all = ();
-my @ntodo = scalar @ARGV;
+my $ntodo = scalar @ARGV;
 my $ndone = 0;
 while ($tmp = shift @ARGV) {
   if (! -e $tmp) {
@@ -165,8 +165,8 @@ while ($tmp = shift @ARGV) {
   }
   $ndone++;
 }
-print "All files processed: $ndone ok / ", scalar @ntodo, "\n";
-die("Can not continue, not all files passed the loading/validation step, aborting\n") if ($ndone != scalar @ntodo);
+print "All files processed: $ndone ok / $ntodo\n";
+die("Can not continue, not all files passed the loading/validation step, aborting\n") if ($ndone != $ntodo);
 
 
 
@@ -197,7 +197,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] viper_source_file.xml [viper_source_file.xml [...]] -fps fps
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -205,6 +205,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --gtf           Specify that the file to score is a Ground Truth File
   --xmllint       Full location of the \'xmllint\' executable
   --TrecVid08xsd  Path where the XSD files can be found ($xsdfiles)
+  --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
   --version       Print version number and exit
   --help          Print this usage information and exit
 
