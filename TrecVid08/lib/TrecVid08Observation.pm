@@ -21,6 +21,8 @@ my @ok_events;
 my %hasharray_inline_attributes;
 my %hash_objects_attributes_types_dynamic;
 
+my @kernel_params_list = ("delta_t", "MinDec_s", "RangeDec_s", "E_t", "E_d"); # Order is important
+
 ## Constructor
 sub new {
   my ($class) = shift @_;
@@ -45,7 +47,7 @@ sub new {
      framespan   => undef, # ViperFramespan object
      isgtf       => -1,
      ofi         => undef, # hash ref / Other File Information
-     DetectionScore      => -1, # float
+     DetectionScore      => undef, # float
      DetectionDecision   => -1, # binary
      BoundingBox => undef, # hash ref (with "real" ViperFramespan this time)
      Point       => undef, # hash ref (with "real" ViperFramespan this time)
@@ -151,6 +153,7 @@ sub get_eventtype {
   my ($self) = @_;
 
   return(-1) if ($self->error());
+
   if (! $self->_is_eventtype_set()) {
     $self->_set_errormsg("\'eventtype\' not set");
     return(0);
@@ -364,6 +367,7 @@ sub get_isgtf {
     $self->_set_errormsg("\'isgtf\' not set");
     return(0);
   }
+
   return($self->{isgtf});
 }
 
@@ -421,11 +425,6 @@ sub set_DetectionScore {
 
   return(0) if ($self->error());
 
-  if ($DetectionScore < 0) {
-    $self->_set_errormsg("\'DetectionScore\' can not be negative");
-    return(0);
-  }
-  
   $self->{DetectionScore} = $DetectionScore;
   return(1);
 }
@@ -437,7 +436,7 @@ sub _is_DetectionScore_set {
 
   return(0) if ($self->error());
 
-  return(1) if ($self->{DetectionScore} != -1);
+  return(1) if (defined $self->{DetectionScore});
 
   return(0);
 }
@@ -453,6 +452,7 @@ sub get_DetectionScore {
     $self->_set_errormsg("\'DetectionScore\' not set");
     return(0);
   }
+
   return($self->{DetectionScore});
 }
 
@@ -878,27 +878,36 @@ sub _numerically {
 
 #####
 
-sub _min_max_core {
-  my $mode = shift @_; # Either 'min' or 'max'
+sub _reorder_array {
   my @ts = @_;
 
   @ts = sort _numerically @ts;
 
-  my $v = ($mode eq "min") ? $ts[0] : $ts[-1];
+  return(@ts);
+}
 
-  return($v);
+#####
+
+sub _min_max {
+  my @v = &_reorder_array(@_);
+
+  return($v[0], $v[-1]);
 }
 
 #####
 
 sub _min {
-  return(&_min_max_core("min", @_));
+  my @v = &_min_max(@_);
+
+  return($v[0]);
 }
 
 #####
 
 sub _max {
-  return(&_min_max_core("max", @_));
+  my @v = &_min_max(@_);
+
+  return($v[-1]);
 }
 
 #####
@@ -907,7 +916,7 @@ sub _get_obs_framespan_core {
   my ($self) = @_;
 
   return(0, undef) if ($self->error());
-  
+
   if (! $self->_is_framespan_set()) {
     $self->_set_errormsg("\'framespan\' not set");
     return(0, undef);
@@ -1035,6 +1044,46 @@ sub get_Beg_Mid_End_Dur_Dec {
 
 ########## Scoring core
 
+sub get_kp_key_delta_t {
+  return($kernel_params_list[0]);
+}
+
+#####
+
+sub get_kp_key_MinDec_s {
+  return($kernel_params_list[1]);
+}
+
+#####
+
+sub get_kp_key_RangeDec_s {
+  return($kernel_params_list[2]);
+}
+
+#####
+
+sub get_kp_key_E_t {
+  return($kernel_params_list[3]);
+}
+
+#####
+
+sub get_kp_key_E_d {
+  return($kernel_params_list[4]);
+}
+
+#####
+
+sub get_kernel_params_list {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(@kernel_params_list);
+}
+
+#####
+
 sub joint_kernel {
   my ($self, $other, $delta_t, $MinDec_s, $RangeDec_s, $E_t, $E_d) = @_;
 
@@ -1042,11 +1091,11 @@ sub joint_kernel {
   return($self->get_errormsg(), 0)
     if (! $self->is_comparable_to($other));
 
-  # For kernel: Can only compare REF to SYS ($self -> $other)
+  # For kernel: Can only compare SYS to REF ($self -> $other)
   my $etxt = "";
-  $etxt .= "Calling object can not be a SYSTEM observation"
+  $etxt .= "Calling object has to be a SYSTEM observation"
     if ($self->get_isgtf());
-  $etxt .= "Compared to object has to be a SYSTEM observation"
+  $etxt .= "Compared to object can not be a SYSTEM observation"
     if (! $other->get_isgtf());
   # Return yet ?
   return($etxt, 0) if (! &_is_blank($etxt));
@@ -1102,7 +1151,7 @@ sub falsealarms_kernel {
   return($self->get_errormsg(), $isgtf) if ($self->error());
 
   if ($isgtf) {
-    $self->_set_errormsg("Can not generate the \'false alarms kernel' for a GTF observation");
+    $self->_set_errormsg("Can not generate the \'false alarms kernel\' for a GTF observation");
     return($self->get_errormsg(), 0);
   }
 
@@ -1122,13 +1171,32 @@ sub misseddetections_kernel {
   return($self->get_errormsg(), $isgtf) if ($self->error());
 
   if (! $isgtf) {
-    $self->_set_errormsg("Can only generate the \'false alarm kernel' for a GTF observation");
+    $self->_set_errormsg("Can only generate the \'missed detections kernel\' for a GTF observation");
     return($self->get_errormsg(), 0);
   }
 
   my $kernel = 0;
 
   return("", $kernel);
+}
+
+#####
+
+# Class method (to hide implementation details to calling function)
+sub kernel_function {
+  my ($sys, $ref, @params) = @_;
+
+  # 4 cases
+  if ((defined $sys) && (defined $ref)) {
+    return($sys->joint_kernel($ref, @params));
+  } elsif ((defined $sys) && (! defined $ref)) {
+    return($sys->falsealarms_kernel());
+  } elsif ((! defined $sys) && (defined $ref)) {
+    return($ref->misseddetections_kernel());
+  }
+
+  # 4th case: both values are undefined
+  return("This case is undefined", undef);
 }
 
 ############################################################
