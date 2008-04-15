@@ -1,0 +1,798 @@
+package TrecVid08EventList;
+
+# $Id$
+
+use strict;
+use TrecVid08ViperFile;
+use TrecVid08Observation;
+
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "TrecVid08EventList.pm Version: $version";
+
+my @ok_events;
+my @kernel_params_list;
+
+## Constructor
+sub new {
+  my ($class) = shift @_;
+
+  my $errormsg = "";
+
+  $errormsg .= "TrecVid08EventList's \'new\' does not accept any parameter. "
+    if (scalar @_ > 0);
+
+  my $tmp = &_set_infos();
+  $errormsg .= "Could not obtain the list authorized events ($tmp). "
+    if (! &_is_blank($tmp));
+
+  $errormsg = &_set_errormsg_txt("", $errormsg);
+
+  my $self =
+    {
+     delta_t     => undef,
+     MinDec_s    => undef,
+     RangeDec_s  => undef,
+     E_t         => undef,
+     E_d         => undef,
+     isgtf       => -1,
+     ihash       => undef,
+     ihash_changed  => 0,
+     errormsg    => $errormsg,
+    };
+
+  bless $self;
+  return($self);
+}
+
+#####
+
+sub _set_infos_Observations {
+  my $dummy = new TrecVid08Observation();
+  @kernel_params_list = $dummy->get_kernel_params_list();
+  return($dummy->get_errormsg());
+}
+
+#####
+
+sub _set_infos_ViperFile {
+  my $dummy = new TrecVid08ViperFile();
+  @ok_events = $dummy->get_full_events_list();
+  return($dummy->get_errormsg());
+}
+
+#####
+
+sub _set_infos {
+  my $txt = "";
+
+  $txt .= &_set_infos_Observations();
+  $txt .= &_set_infos_ViperFile();
+
+  return($txt);
+}
+
+##########
+
+sub get_version {
+  my ($self) = @_;
+
+  return($versionid);
+}
+
+########## 'errormsg'
+
+sub _set_errormsg_txt {
+  my ($oh, $add) = @_;
+
+  my $txt = "$oh$add";
+
+  $txt =~ s%\[TrecVid08EventList\]\s+%%g;
+
+  return("") if ($txt =~ m%^\s*$%);
+
+  $txt = "[TrecVid08EventList] $txt";
+
+  return($txt);
+}
+
+#####
+
+sub _set_errormsg {
+  my ($self, $txt) = @_;
+
+  $self->{errormsg} = &_set_errormsg_txt($self->{errormsg}, $txt);
+}
+
+#####
+
+sub get_errormsg {
+  my ($self) = @_;
+
+  return($self->{errormsg});
+}
+
+#####
+
+sub error {
+  my ($self) = @_;
+
+  return(1) if (! &_is_blank($self->get_errormsg()));
+
+  return(0);
+}
+
+########## 'changed'
+
+sub _set_ihash_changed_core {
+  my ($self, $val) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{ihash_changed} = $val;
+  return(1);
+}
+
+#####
+
+sub _has_ihash_changed {
+  my ($self) = @_;
+
+  return($self->{ihash_changed});
+}
+
+#####
+
+sub _set_ihash_changed {
+  my ($self) = @_;
+
+  return($self->_set_ihash_changed_core(1));
+}
+
+#####
+
+sub _set_ihash_unchanged {
+  my ($self) = @_;
+
+  return($self->_set_ihash_changed_core(0));
+}
+
+########## 'ihash'
+
+sub _set_ihash {
+  my ($self, %ihash) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{ihash} = \%ihash;
+
+  # Every single time we modify the hash, the number of entries has changed and we have to recalculate MinDec and RangeDec
+  $self->_set_ihash_changed();
+  return(0) if ($self->error());
+
+  return(1);
+}
+
+#####
+
+sub _is_ihash_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (defined $self->{ihash});
+
+  return(0);
+}
+
+#####
+
+sub _get_ihash {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_ihash_set()) {
+    $self->_set_erromsg("\'ihash\' is not set");
+    return(0);
+  }
+
+  my $rihash = $self->{ihash};
+
+  my %res = %{$rihash};
+
+  return(%res);
+}
+
+########## 'isgtf'
+
+sub set_isgtf {
+  my ($self, $status) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{isgtf} = $status;
+  return(1);
+}
+
+#####
+
+sub _is_isgtf_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if ($self->{isgtf} != -1);
+
+  return(0);
+}
+
+#####
+
+sub get_isgtf {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_isgtf_set()) {
+    $self->_set_errormsg("\'isgtf\' not set");
+    return(0);
+  }
+
+  return($self->{isgtf});
+}
+
+########## 'delta_t'
+
+sub set_delta_t {
+  my ($self, $value) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{delta_t} = $value;
+  return(1);
+}
+
+#####
+
+sub _is_delta_t_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (! defined $self->{delta_t});
+
+  return(0);
+}
+
+#####
+
+sub get_delta_t {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_delta_t_set()) {
+    $self->_set_errormsg("\'delta_t\' not set");
+    return(0);
+  }
+
+  return($self->{delta_t});
+}
+
+########## 'E_t'
+
+sub set_E_t {
+  my ($self, $value) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{E_t} = $value;
+  return(1);
+}
+
+#####
+
+sub _is_E_t_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (! defined $self->{E_t});
+
+  return(0);
+}
+
+#####
+
+sub get_E_t {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_E_t_set()) {
+    $self->_set_errormsg("\'E_t\' not set");
+    return(0);
+  }
+
+  return($self->{E_t});
+}
+
+########## 'E_d'
+
+sub set_E_d {
+  my ($self, $value) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{E_d} = $value;
+  return(1);
+}
+
+#####
+
+sub _is_E_d_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (! defined $self->{E_d});
+
+  return(0);
+}
+
+#####
+
+sub get_E_d {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_E_d_set()) {
+    $self->_set_errormsg("\'E_d\' not set");
+    return(0);
+  }
+
+  return($self->{E_d});
+}
+
+########## 'MinDec_s'
+
+sub _is_MinDec_s_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (! defined $self->{MinDec_s});
+
+  return(0);
+}
+
+#####
+
+sub get_MinDec_s {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  return($self->_compute_Min_Range_Dec_s("MinDec_s"));
+}
+
+########## 'RangeDec_s'
+
+sub _is_RangeDec_s_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (! defined $self->{RangeDec_s});
+
+  return(0);
+}
+
+#####
+
+sub get_RangeDec_s {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  return($self->_compute_Min_Range_Dec_s("RangeDec_s"));
+}
+
+########################################
+########## 'Observations' function
+
+sub _add_observation_core {
+  my ($self, $obs, %ihash) = @_;
+
+  my $filename = $obs->get_filename();
+  my $eventtype = $obs->get_eventtype();
+  my $o_isgtf = $obs->get_isgtf();
+  if ($obs->error()) {
+    $self->_set_errormsg("Problem obtaining Observation's \'filename\', \'eventtype\' or \'isgtf\' information (" . $obs->get_errormsg() . ")");
+    return(0);
+  }
+
+  my $s_isgtf = $self->get_isgtf();
+  return(0) if ($self->error());
+
+  if ($s_isgtf != $o_isgtf) {
+    $self->_set_errormsg("Can not add an Observation to the EventList if their GTF status is different");
+    return(0);
+  }
+
+  push @{$ihash{$filename}{$eventtype}}, $obs;
+
+  return($self->_set_ihash(%ihash));
+}
+
+#####
+
+sub _add_first_observation {
+  my ($self, $obs) = @_;
+
+  my $isgtf = $obs->get_isgtf();
+  if ($obs->error()) {
+    $self->_set_errormsg("Problem obtaining Observation's \'isgtf\' information (" . $obs->get_errormsg() . ")");
+    return(0);
+  }
+
+  $self->set_isgtf($isgtf);
+  return(0) if ($self->error());
+
+  return($self->_add_observation_core($obs, ()));
+}
+
+#####
+
+sub _add_new_observation {
+  my ($self, $obs) = @_;
+
+  my %ihash = $self->_get_ihash();
+  return(0) if ($self->error());
+
+  return($self->_add_observation_core($obs, %ihash));
+}
+
+#####
+
+sub add_Observation {
+  my ($self, $obs) = @_;
+
+  return(0) if ($self->error());
+
+  if (! defined $obs) {
+    $self->_set_errormsg("Can not add an undefined observation");
+    return(0);
+  }
+
+  if ($obs->error()) {
+    $self->_set_errormsg("Observation seems to have issue(s) (" . $obs->get_errormsg() . ")");
+    return(0);
+  }
+
+  if (! $obs->is_validated()) {
+    $self->_set_errormsg("Can not add a non validated Observation");
+    return(0);
+  }
+
+  if (! $self->_is_ihash_set()) {
+    return($self->_add_first_observation($obs));
+  } else {
+    return($self->_add_new_observation($obs));
+  }
+}
+
+#####
+
+sub add_Observations {
+  my ($self, @obsl) = @_;
+
+  return(0) if ($self->error());
+
+  foreach my $obs (@obsl) {
+    return(0) if (! $self->add_Observation($obs));
+  }
+
+  return(1);
+}
+
+##########
+
+sub _get_selected_param {
+  my ($self, $key) = @_;
+
+  if (! grep(m%^$key$%, @kernel_params_list)) {
+    $self->_set_errormsg("Unknown parameter list ($key). ");
+    return(0);
+  }
+
+  my $dummy = new TrecVid08Observation();
+
+  if ($key eq $dummy->get_kp_key_delta_t()) {
+    return($self->get_delta_t());
+  } elsif ($key eq $dummy->get_kp_key_MinDec_s()) {
+    return($self->get_MinDec_s());
+  } elsif ($key eq $dummy->get_kp_key_RangeDec_s()) {
+    return($self->get_RangeDec_s());
+  } elsif ($key eq $dummy->get_kp_key_E_t()) {
+    return($self->get_E_t());
+  } elsif ($key eq $dummy->get_kp_key_E_d()) {
+    return($self->get_E_d());
+  }
+
+  $self->_set_errormsg("WEIRD: Unknow parameter key ($key)");
+  return(0);
+}
+
+#####
+
+sub get_kernel_params {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  my $isgtf = $self->isgtf();
+  return(0) if ($self->error());
+
+  if ($isgtf) {
+    $self->_set_errormsg("Can not get the kernel parameters list from a GTF EventList");
+    return(0);
+  }
+
+  my @out;
+  foreach my $key (@kernel_params_list) {
+    my $val = $self->_get_selected_param($key);
+    if ($self->error()) {
+      $self->_set_errormsg("Problem trying to obtain the kernel parameters list for \'$key\'. ");
+      return(0);
+    }
+    push @out, $val;
+  }
+
+  return(@out);
+}
+
+##########
+
+sub get_filenames_list {
+  my ($self) = @_;
+
+  return() if ($self->error());
+
+  return() if (! $self->_is_ihash_set());
+
+  my %ihash = $self->_get_ihash();
+
+  my @list = keys %ihash;
+
+  return(@list);
+}
+
+#####
+
+sub is_filename_in {
+  my ($self, $filename) = @_;
+
+  return(0) if ($self->error());
+
+  my @list = $self->get_filenames_list();
+  return(0) if ($self->error());
+
+  return(1) if (grep(m%^$filename$%, @list));
+
+  return(0);
+}
+
+##########
+
+sub get_events_list {
+  my ($self, $filename) = @_;
+
+  my $in = $self->is_filename_in($filename);
+  return() if ($self->error());
+  if (! $in) {
+    $self->_set_errormsg("No such filename ($filename) in this EventList");
+    return();
+  }
+
+  my %ihash = $self->_get_ihash();
+  if (! exists $ihash{$filename}) {
+    $self->_set_errormsg("WEIRD: key ($filename) is not in first level of \%ihash. ");
+    return();
+  }
+  my %subset = %{$ihash{$filename}};
+
+  my @list = keys %subset;
+
+  return(@list);
+}
+
+#####
+
+sub is_event_in {
+ my ($self, $filename, $event) = @_;
+
+ return(0) if ($self->error());
+
+ if (! grep(m%^$event$%, @ok_events) ) {
+   $self->_set_errormsg("Requested event ($event) is not a recognized event. ");
+   return(0);
+ }
+
+ my @list = $self->get_events_list($filename);
+ return(0) if ($self->error());
+
+ return(1) if (grep(m%^$event$%, @list));
+
+ return(0);
+}
+
+##########
+
+sub get_Observations_list {
+  my ($self, $filename, $event) = @_;
+
+  my $in = $self->is_event_in($filename, $event);
+  return() if ($self->error());
+  if (! $in) {
+    $self->_set_errormsg("No such event ($event) for filename ($filename) in this EventList");
+    return();
+  }
+
+  my %ihash = $self->_get_ihash();
+  if (! exists $ihash{$filename}{$event}) {
+    $self->_set_errormsg("WEIRD: key ($filename / $event) is not in \%ihash. ");
+    return();
+  }
+
+  my @list = @{$ihash{$filename}{$event}};
+
+  return(@list);
+}
+
+#####
+
+sub count_Observations {
+  my ($self, $filename, $event) = @_;
+
+  my @list = $self->get_Observation_list($filename, $event);
+  return(0) if ($self->error());
+
+  return(scalar @list);
+}
+
+#####
+
+sub has_Observations {
+  my ($self, $filename, $event) = @_;
+
+  my $count = $self->count_Observations($filename, $event);
+
+  my $res = ($count > 0) ? 1 : 0;
+
+  return($res);
+}
+
+############################################################
+
+sub _numerically {
+  return ($a <=> $b);
+}
+
+#####
+
+sub _reorder_array {
+  my @ts = @_;
+
+  @ts = sort _numerically @ts;
+
+  return(@ts);
+}
+
+#####
+
+sub _min_max {
+  my @v = &_reorder_array(@_);
+
+  return($v[0], $v[-1]);
+}
+
+#####
+
+sub _min {
+  my @v = &_min_max(@_);
+
+  return($v[0]);
+}
+
+#####
+
+sub _max {
+  my @v = &_min_max(@_);
+
+  return($v[-1]);
+}
+
+#####
+
+sub _get_Min_Range_Dec_s_value {
+  my ($self, $key) = @_;
+
+  return($self->{$key});
+}
+
+#####
+
+sub _compute_Min_Range_Dec_s {
+  my ($self, $key) = @_;
+
+  return(0) if ($self->error());
+
+  my $MD_isset = $self->_is_MinDec_s_set();
+  my $RD_isset = $self->_is_RangeDec_s_set();
+  my $hchanged = $self->_has_ihash_changed();
+  return(0) if ($self->error());
+
+  # We do not need to compute it if (it is already set) && (ihash has not changed since last time we called this function)
+  return($self->_get_Min_Range_Dec_s_value($key)) if (($MD_isset) && ($RD_isset) && (! $hchanged));
+
+  my ($min, $max) = $self->_get_global_DetectionScore_minMax();
+  return(0) if ($self->error());
+
+  my $MinDec_s = _min(abs($min), abs($max));
+  my $RangeDec_s = abs ( _max(abs($min), abs($max)) - _min(abs($min), abs($max)) );
+
+  $self->_set_ihash_unchanged();
+  return(0) if ($self->error());
+
+  $self->{MinDec_s} = $MinDec_s;
+  $self->{RangeDec_s} = $RangeDec_s;
+  return(1);
+}
+
+#####
+
+sub _get_global_DetectionScore_minMax {
+  my ($self) = @_;
+
+  my @all_ds;
+
+  my @filelist = $self->get_filenames_list();
+  return() if ($self->error());
+
+  foreach my $file (@filelist) {
+    my @eventlist = $self->get_events_list($file);
+    return() if ($self->error());
+
+    foreach my $event (@eventlist) {
+      my @obs_list = $self->get_Observations_list($file, $event);
+      return() if ($self->error());
+
+      foreach my $obs (@obs_list) {
+	my $ds = $obs->Dec();
+	if ($obs->error()) {
+	  $self->_set_errormsg("Problem obtaining the \'Dec\' value for an Observation (" . $obs->get_errormsg() . ")");
+	  return();
+	}
+	push @all_ds, $ds;
+      }
+    }
+  }
+
+  return() if ($self->error());
+
+  my ($min, $max) = _min_max(@all_ds);
+
+  return($min. $max);
+}
+
+############################################################
+
+1;
