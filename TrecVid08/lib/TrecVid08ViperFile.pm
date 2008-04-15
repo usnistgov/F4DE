@@ -1156,7 +1156,7 @@ sub add_observation {
   return(0) if ($self->error());
 
   ##### From now on we make changes to the structure
-  
+
   # Try to extend the "NUMFRAMES" (if required)
   my $key = "NUMFRAMES";
   if (! exists $ofi{$key}) {
@@ -1181,7 +1181,7 @@ sub add_observation {
   }
   # Set it into the event representation
   $sp_out{"framespan"} = $obs_fs;
-  
+
   # Now process the attributes information
   foreach my $attr (keys %hash_objects_attributes_types) {
     if ($hash_objects_attributes_types_dynamic{$attr}) {
@@ -1251,11 +1251,11 @@ sub _data_cleanup {
   # Remove <?xml ...?> header
   return("Could not find a proper \'<?xml ... ?>\' header, skipping", $bigstring)
     if (! ($bigstring =~ s%^\s*\<\?xml.+?\?\>%%is));
-  
+
   # Remove <viper ...> and </viper> header and trailer
   return("Could not find a proper \'viper\' tag, aborting", $bigstring)
     if (! &_remove_xml_tags("viper", \$bigstring));
-  
+
   # Remove <config> section
   return("Could not find a proper \'config\' section, aborting", $bigstring)
     if (! &_remove_xml_section("config", \$bigstring));
@@ -1307,7 +1307,7 @@ sub _data_processor {
 
   my $res = "";
   my %fdata = ();
-  
+
   #####
   # First off, confirm the first section is 'data' and remove it
   my $name = &_get_next_xml_name($string);
@@ -1317,7 +1317,7 @@ sub _data_processor {
     if ($name !~ m%^data$%i);
   return("Problem cleaning \'data\' tags", $string)
     if (! &_remove_xml_tags($name, \$string));
-  
+
   #####
   # Now, the next --and only-- section is to be a 'sourcefile'
   my $name = &_get_next_xml_name($string);
