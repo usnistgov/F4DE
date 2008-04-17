@@ -6,6 +6,9 @@ use strict;
 use TrecVid08ViperFile;
 use TrecVid08Observation;
 
+# For the '_display()' function
+use Data::Dumper;
+
 my $version     = "0.1b";
 
 if ($version =~ m/b$/) {
@@ -265,7 +268,7 @@ sub _is_delta_t_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! defined $self->{delta_t});
+  return(1) if (defined $self->{delta_t});
 
   return(0);
 }
@@ -303,7 +306,7 @@ sub _is_E_t_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! defined $self->{E_t});
+  return(1) if (defined $self->{E_t});
 
   return(0);
 }
@@ -341,7 +344,7 @@ sub _is_E_d_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! defined $self->{E_d});
+  return(1) if (defined $self->{E_d});
 
   return(0);
 }
@@ -368,7 +371,7 @@ sub _is_MinDec_s_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! defined $self->{MinDec_s});
+  return(1) if (defined $self->{MinDec_s});
 
   return(0);
 }
@@ -390,7 +393,7 @@ sub _is_RangeDec_s_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! defined $self->{RangeDec_s});
+  return(1) if (defined $self->{RangeDec_s});
 
   return(0);
 }
@@ -405,8 +408,7 @@ sub get_RangeDec_s {
   return($self->_compute_Min_Range_Dec_s("RangeDec_s"));
 }
 
-########################################
-########## 'Observations' function
+################################################## 'Observations' function
 
 sub _add_observation_core {
   my ($self, $obs, %ihash) = @_;
@@ -503,7 +505,7 @@ sub add_Observations {
   return(1);
 }
 
-##########
+########################################
 
 sub _get_selected_param {
   my ($self, $key) = @_;
@@ -538,7 +540,7 @@ sub get_kernel_params {
 
   return(0) if ($self->error());
 
-  my $isgtf = $self->isgtf();
+  my $isgtf = $self->get_isgtf();
   return(0) if ($self->error());
 
   if ($isgtf) {
@@ -682,6 +684,57 @@ sub has_Observations {
 
 ############################################################
 
+sub comparable_filenames {
+  my ($self, $other) = @_;
+
+  return(0) if ($self->error());
+
+  if ($other->error()) {
+    $self->_set_errormsg("Comparable EventList problem (" . $other->get_errormsg() . ")");
+    return(0);
+  }
+
+  # Get the file list
+  my @sl = $self->get_filenames_list();
+  return(0) if ($self->error());
+
+  my @ol = $other->get_filenames_list();
+  if ($other->error()) {
+    $self->_set_errormsg("Comparable EventList problem (" . $other->get_errormsg() . ")");
+    return(0);
+  }
+
+  # Convert the list to hash for easy comparison
+  my %hsl;
+  foreach my $f (@sl) {
+    $hsl{$f}++;
+  }
+  my %hol;
+  foreach my $f (@ol) {
+    $hol{$f}++;
+  }
+
+  # Compare
+  my @common;
+  my @only_in_sl;
+  my @only_in_ol;
+  foreach my $key (keys %hsl) {
+    if (exists $hol{$key}) {
+      push @common, $key;
+      delete $hsl{$key};
+      delete $hol{$key};
+    } else {
+      push @only_in_sl, $key;
+      delete $hsl{$key};
+    }
+  }
+  push @only_in_ol, keys %hol;
+
+  return(\@common, \@only_in_sl, \@only_in_ol);
+}
+
+############################################################
+
 sub _numerically {
   return ($a <=> $b);
 }
@@ -746,15 +799,16 @@ sub _compute_Min_Range_Dec_s {
   my ($min, $max) = $self->_get_global_DetectionScore_minMax();
   return(0) if ($self->error());
 
-  my $MinDec_s = _min(abs($min), abs($max));
-  my $RangeDec_s = abs ( _max(abs($min), abs($max)) - _min(abs($min), abs($max)) );
+  my $MinDec_s = $min; # ok to be negative
+  my $RangeDec_s = $max - $min;
 
   $self->_set_ihash_unchanged();
   return(0) if ($self->error());
 
   $self->{MinDec_s} = $MinDec_s;
   $self->{RangeDec_s} = $RangeDec_s;
-  return(1);
+
+  return($self->_get_Min_Range_Dec_s_value($key));
 }
 
 #####
@@ -788,11 +842,26 @@ sub _get_global_DetectionScore_minMax {
 
   return() if ($self->error());
 
-  my ($min, $max) = _min_max(@all_ds);
+  return(&_min_max(@all_ds));
+}
 
-  return($min. $max);
+####################
+
+sub _display_all {
+  my ($self) = shift @_;
+
+  return(-1) if ($self->error());
+
+  return(Dumper(\$self));
 }
 
 ############################################################
+
+sub _is_blank {
+  my $txt = shift @_;
+  return(($txt =~ m%^\s*$%));
+}
+
+################################################################################
 
 1;
