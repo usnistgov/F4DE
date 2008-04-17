@@ -917,6 +917,28 @@ sub get_event_observations {
   return(@res);
 }
 
+##########
+
+sub get_all_events_observations {
+  my ($self) = @_;
+
+   return(-1) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only create observations for a validated file");
+    return(0);
+  }
+
+  my @res;
+  foreach my $event (@ok_events) {
+    my @tmp = $self->get_event_observations($event);
+    return(0) if ($self->error());
+    push @res, @tmp;
+  }
+
+  return(@res);
+}
+
 ####################
 
 sub remove_all_events {
