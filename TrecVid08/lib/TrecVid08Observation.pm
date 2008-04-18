@@ -1,5 +1,22 @@
 package TrecVid08Observation;
 
+# TrecVid08 Observation
+#
+# Author(s): Martial Michel
+#
+# This software was developed at the National Institute of Standards and Technology by
+# employees and/or contractors of the Federal Government in the course of their official duties.
+# Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
+# copyright protection within the United States and is in the public domain.
+#
+# "TrecVid08Observation.pm" is an experimental system.
+# NIST assumes no responsibility whatsoever for its use by any party.
+#
+# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
+# OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
+# OR FITNESS FOR A PARTICULAR PURPOSE.
+
+
 # $Id$
 
 use strict;
@@ -870,7 +887,29 @@ sub is_comparable_to {
 }
 
 ########################################
-## Scoring prerequisites
+
+sub get_unique_id {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(0) if (!$self->is_validated());
+
+  my $fn = $self->get_xmlfilename();
+  my $et = $self->get_eventtype();
+  my $id = $self->get_id();
+
+  if ($self->error()) {
+    $self->_set_errormsg("Problem while generating a unique id");
+    return(0);
+  }
+
+  my $uid = "FILENAME: $fn | EVENT: $et | ID: $id";
+
+  return($uid);
+}
+
+######################################## Scoring prerequisites
 
 sub _numerically {
   return ($a <=> $b);
@@ -1019,7 +1058,7 @@ sub Dec {
 #####
 
 # A get it all function
-sub get_Beg_Mid_End_Dur_Dec {
+sub _get_BOTH_Beg_Mid_End_Dur{
   my ($self) = @_;
 
   return(-1) if ($self->error());
@@ -1036,10 +1075,33 @@ sub get_Beg_Mid_End_Dur_Dec {
   my $du = $self->Dur();
   return(-1) if ($self->error());
 
+  return ($b, $m, $e, $du);
+}
+
+#####
+
+sub get_REF_Beg_Mid_End_Dur {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  return($self->_get_BOTH_Beg_Mid_End_Dur());
+}
+
+#####
+
+sub get_SYS_Beg_Mid_End_Dur_Dec {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  my @o = $self->_get_BOTH_Beg_Mid_End_Dur();
+  return(-1) if ($self->error());
+
   my $de = $self->Dec();
   return(-1) if ($self->error());
 
-  return ($b, $m, $e, $du, $de);
+  return(@o, $de);
 }
 
 ########## Scoring core
@@ -1112,10 +1174,10 @@ sub joint_kernel {
 
   # Kernel (O(s,i), O(r,j)) <=> ($self, $other)
   my ($Beg_Osi, $Mid_Osi, $End_Osi, $Dur_Osi, $Dec_Osi)
-    = $self->get_Beg_Mid_End_Dur_Dec();
+    = $self->get_SYS_Beg_Mid_End_Dur_Dec();
   return("Problem obtaining some element related to the SYS Observation (" . $self->get_errormsg() . ")") if ($self->error());
-  my ($Beg_Orj, $Mid_Orj, $End_Orj, $Dur_Orj, $Dec_Orj)
-    = $other->get_Beg_Mid_End_Dur_Dec();
+  my ($Beg_Orj, $Mid_Orj, $End_Orj, $Dur_Orj)
+    = $other->get_REF_Beg_Mid_End_Dur();
   return("Problem obtaining some element related to the REF Observation (" . $other->get_errormsg() . ")") if ($other->error());
   
   if ($Mid_Osi > ($End_Orj - $delta_t)) {
@@ -1184,7 +1246,7 @@ sub misseddetections_kernel {
 
 # Class method (to hide implementation details to calling function)
 sub kernel_function {
-  my ($sys, $ref, @params) = @_;
+  my ($ref, $sys, @params) = @_;
 
   # 4 cases
   if ((defined $sys) && (defined $ref)) {
