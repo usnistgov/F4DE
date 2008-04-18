@@ -1,5 +1,21 @@
 #!/usr/bin/env perl
 
+# TrecVid08 Scorer
+#
+# Author(s): Martial Michel
+#
+# This software was developed at the National Institute of Standards and Technology by
+# employees and/or contractors of the Federal Government in the course of their official duties.
+# Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
+# copyright protection within the United States and is in the public domain.
+#
+# "TrecVid08 Scorer" is an experimental system.
+# NIST assumes no responsibility whatsoever for its use by any party.
+#
+# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
+# OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
+# OR FITNESS FOR A PARTICULAR PURPOSE.
+
 use strict;
 
 # Note: Designed for UNIX style environments (ie use cygwin under Windows).
@@ -40,6 +56,17 @@ unless (eval "use TrecVid08EventList; 1")
     warn_print
       (
        "\"TrecVid08ViperFile\" is not available in your Perl installation. ",
+       "It should have been part of this tools' files."
+      );
+    $have_everything = 0;
+  }
+
+# BipartiteMatch (part of this tool)
+unless (eval "use BipartiteMatch; 1")
+  {
+    warn_print
+      (
+       "\"BipartiteMatch\" is not available in your Perl installation. ",
        "It should have been part of this tools' files."
       );
     $have_everything = 0;
@@ -182,6 +209,44 @@ $sysEL->set_E_d($E_d);
 my @kp = $sysEL->get_kernel_params();
 error_quit("Error while obtaining the EventList kernel function parameters (" . $sysEL->get_errormsg() . ")")
   if ($sysEL->error());
+
+my %all_bpm;
+foreach my $file (@common) {
+  my @sys_events = $sysEL->get_events_list($file);
+  error_quit("While trying to obtain a list of SYS events for file ($file) (" . $sysEL->get_errormsg() . ")")
+    if ($sysEL->error());
+  my @ref_events = $refEL->get_events_list($file);
+  error_quit("While trying to obtain a list of REF events for file ($file) (" . $refEL->get_errormsg() . ")")
+    if ($refEL->error());
+
+  my @listed_events = &uniquer(@sys_events, @ref_events);
+
+  foreach my $evt (@listed_events) {
+    my @sys_events_obs = $sysEL->get_Observations_list($file, $evt);
+    error_quit("While trying to obtain a list of observations for SYS event ($evt) and file ($file) (" . $sysEL->get_errormsg() . ")")
+      if ($sysEL->error());
+    my @ref_events_obs = $refEL->get_Observations_list($file, $evt);
+    error_quit("While trying to obtain a list of observations for REF event ($evt) and file ($file) (" . $refEL->get_errormsg() . ")")
+      if ($refEL->error());
+
+    my %sys_bpm = &Obs_array_to_hash(@sys_events_obs);
+    my %ref_bpm = &Obs_array_to_hash(@ref_events_obs);
+
+    print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, "\n";
+    my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&TrecVid08Observation::kernel_function, \@kp);
+    error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
+      if ($bpm->error());
+
+    $bpm->compute();
+    error_quit("While computing the Bipartite Matching for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
+      if ($bpm->error());
+
+    # I am the coder, I know what I want to display/debug ... trust me !
+    $bpm->_display("joint_values", "mapped", "unmapped_ref", "unmapped_sys");
+    
+    $all_bpm{$file}{$evt} = $bpm;
+  }
+}
 
 #### TODO #####
 
@@ -376,4 +441,37 @@ sub generate_EventList {
   }
 
   return($tmpEL);
+}
+
+########################################
+
+sub uniquer {
+  my @all = @_;
+
+  my %it;
+  foreach my $e (@all) {
+    $it{$e}++;
+  }
+
+  my @u = keys %it;
+
+  return(@u);
+}
+
+####################
+
+sub Obs_array_to_hash {
+  my @all = @_;
+
+  my %ohash;
+
+  foreach my $o (@all) {
+    my $key = $o->get_unique_id();
+    error_quit("While trying to obtain a unique Observation id (". $o->get_errormsg() . ")")
+      if ($o->error());
+
+    $ohash{$key} = $o;
+  }
+
+  return(%ohash);
 }
