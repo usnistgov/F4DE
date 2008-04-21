@@ -554,7 +554,10 @@ sub middlepoint {
 
   my ($v_beg, $v_end) = &_fs_get_begend($v);
 
-  return($v_beg + (($v_end - $v_beg) / 2));
+  my $d = $self->duration();
+  return($d) if ($self->error());
+
+  return($v_beg + ($d / 2));
 }
 
 #####
@@ -598,12 +601,13 @@ sub duration {
 
   my $d = $v_end - $v_beg;
   # 1:3 is 1:2:3 so duration 3, and
-  # 1:1 is of duration 1 still, so:
+  # 1:1 is 1, so duration 1
+  # therefore end - beg + 1
   $d++;
 
-  return($d); 
+  return($d);
 }
-  
+
 ######################################## 'ts' functions
 
 sub frame_to_ts {
@@ -667,7 +671,9 @@ sub get_end_ts {
   my ($beg, $end) = $self->_get_begend_ts_core();
   return($beg) if ($self->error());
 
-  return($self->frame_to_ts($end));
+  # '+1' because the frame is valid until the end of the framespan end value
+  # ie "1:1" is from beginning of 1 to end of 1 (ie: beg_ts + 1x(1/fps) )
+  return($self->frame_to_ts(1+$end));
 }
 
 ##########
@@ -848,14 +854,14 @@ sub unit_test { # Xtreme coding and us ;)
     if ($etmp11b != $tmp11b);
 
   # middlepoint + middlepoint_distance
-  my $in12 = "20:40";
+  my $in12 = "20:39";
   my $fs_tmp12 = new ViperFramespan($in12);
-  my $exp_out12 = 30; # = 20 + ((40 - 20) / 2)
+  my $exp_out12 = 30; # = 20 + (((39+1) - 20) / 2)
   my $out12 = $fs_tmp12->middlepoint();
   $otxt .= "$eh Error while checking \'middlepoint\' (expected: $exp_out12 / Got: $out12). "
     if ($exp_out12 != $out12);
 
-  my $in13 = "100:200"; # middlepoint: 150
+  my $in13 = "100:199"; # middlepoint: 150
   my $fs_tmp13 = new ViperFramespan($in13);
 
   my $out13 = $fs_tmp12->middlepoint_distance($fs_tmp13);
@@ -867,6 +873,12 @@ sub unit_test { # Xtreme coding and us ;)
   my $exp_out14 = -120; # from 150 to 30 : -120
   $otxt .= "$eh Error while checking \'middlepoint_distance\'[2] (expected: $exp_out14 / Got: $out14). "
     if ($exp_out14 != $out14);
+
+  my $out15 = $fs_tmp12->duration();
+  my $exp_out15 = 20; # 20 [0] to 39 [19] = 20
+  $otxt .= "$eh Error while checking \'duration\' (expected: $exp_out15 / Got: $out15). "
+    if ($exp_out15 != $out15);
+
 
   ########## TODO: unit_test for all 'fps' functions ##########
 
