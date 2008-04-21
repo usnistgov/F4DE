@@ -898,13 +898,22 @@ sub get_unique_id {
   my $fn = $self->get_xmlfilename();
   my $et = $self->get_eventtype();
   my $id = $self->get_id();
-
+  my $isgtf = $self->get_isgtf();
+  my $dec = (! $isgtf) ? $self->Dec() : "N/A";
+  my $fs_fs = $self->get_framespan();
+  
   if ($self->error()) {
     $self->_set_errormsg("Problem while generating a unique id");
     return(0);
   }
 
-  my $uid = "FILENAME: $fn | EVENT: $et | ID: $id";
+  my $fs = $fs_fs->get_value();
+  if ($fs_fs->error()) {
+    $self->_set_errormsg("Problem while generating a unique id to obtain the fs value (" . $fs_fs->get_errormsg() . ")");
+    return(0);
+  }
+
+  my $uid = "EVENT: $et | ID: $id | FS: $fs | GTF : $isgtf | Dec: $dec | FILENAME: $fn";
 
   return($uid);
 }
