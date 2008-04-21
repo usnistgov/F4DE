@@ -114,7 +114,17 @@ my %hasharray_inline_attributes;
 # Default values to compare against (constant values)
 my $default_error_value = "default_error_value";
 my $framespan_max_default = "all";
-my $max_pair_per_fs = 1; # For Trecvid08, only one pair (ie one framespan range) is authorized per framespan
+
+########## Some rules that can be changed (here, specific for TrecVid08)
+# Maximum number of pair per framespan found
+# For Trecvid08, only one pair (ie one framespan range) is authorized per framespan (0 for unlimited)
+my $max_pair_per_fs = 1; # positive number / 0 for unlimited
+## Update (20080421): After talking with Jon, we decided that IDs do not have to start at 0 or be consecutive after all
+# Check if IDs list have to start at 0
+my $check_ids_start_at_zero = 0;
+# Check that IDs are consecutive
+my $check_ids_are_consecutive = 0;
+
 
 ########################################
 
@@ -1292,6 +1302,9 @@ sub _run_xmllint {
 sub _data_cleanup {
   my $bigstring = shift @_;
 
+  # Remove all comments
+  $bigstring =~ s%\<\!\-\-.+?\-\-\>%%sg;
+
   # Remove <?xml ...?> header
   return("Could not find a proper \'<?xml ... ?>\' header, skipping", $bigstring)
     if (! ($bigstring =~ s%^\s*\<\?xml.+?\?\>%%is));
@@ -1597,18 +1610,22 @@ sub _parse_sourcefile_section {
   }
 
   ##### Final Sanity Checks
-  
-  # Check that for each event type, there is no id gap
-  foreach my $event (@ok_events) {
-    next if (! exists $res{$event});
-    my @list = sort _numerically keys %{$res{$event}};
-
-    return("Event ID list must always start at 0 (for event \'$event\', start at " . $list[0] . ")", ())
-      if ($list[0] != 0);
-
-    return("Event ID list must always start at 0 and have no gap (for event \'$event\', seen "
-	    . scalar @list . " elements (0 -> " . $list[-1] . ")", ())
-      if (scalar @list != $list[-1] + 1); 
+  if (($check_ids_start_at_zero) || ($check_ids_are_consecutive)) {
+    foreach my $event (@ok_events) {
+      next if (! exists $res{$event});
+      my @list = sort _numerically keys %{$res{$event}};
+      
+      if ($check_ids_start_at_zero) {
+	return("Event ID list must always start at 0 (for event \'$event\', start at " . $list[0] . ")", ())
+	  if ($list[0] != 0);
+      }
+      
+      if ($check_ids_are_consecutive) {
+	return("Event ID list must always start at 0 and have no gap (for event \'$event\', seen "
+	       . scalar @list . " elements (0 -> " . $list[-1] . ")", ())
+	  if (scalar @list != $list[-1] + 1); 
+      }
+    }
   }
 
   return("", %res);
@@ -1781,7 +1798,7 @@ sub _parse_object_section {
   return("ViperFramespan ($tmp) is not within range (" . $fs_framespan_max->get_original_value() . ")", ()) if (! $ok);
   my $pc = $fs_tmp->count_pairs_in_original_value();
   return("ViperFramespan ($tmp) error (" . $fs_tmp->get_errormsg() . ")", ()) if ($fs_tmp->error());
-  return("ViperFramespan ($tmp) contains more than $max_pair_per_fs range pair(s)") if ($pc > $max_pair_per_fs);
+  return("ViperFramespan ($tmp) contains more than $max_pair_per_fs range pair(s)") if (($max_pair_per_fs) && ($pc > $max_pair_per_fs));
   $object_framespan = $fs_tmp->get_value();
 
   # Remove the \'object\' header and trailer tags
@@ -1920,7 +1937,7 @@ sub _extract_data {
       return("ViperFramespan ($lfspan) is not within range (" . $fs_fspan->get_original_value() . ")", ()) if (! $iw);
       my $pc = $fs_lfspan->count_pairs_in_original_value();
       return("ViperFramespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_lfspan->error());
-      return("ViperFramespan ($lfspan) contains more than $max_pair_per_fs range pair(s)") if ($pc > $max_pair_per_fs);
+      return("ViperFramespan ($lfspan) contains more than $max_pair_per_fs range pair(s)") if (($max_pair_per_fs) && ($pc > $max_pair_per_fs));
 
       foreach my $fs_tmp (@afspan) {
 	my $ov = $fs_lfspan->check_if_overlap($fs_tmp);
