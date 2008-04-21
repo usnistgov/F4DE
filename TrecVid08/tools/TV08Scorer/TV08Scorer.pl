@@ -92,7 +92,6 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Get some values from TrecVid08ViperFile
 my $dummy = new TrecVid08ViperFile();
-$versionid .= "\nusing:\n" . $dummy->get_version();
 my @ok_events = $dummy->get_full_events_list();
 my @xsdfilesl = $dummy->get_required_xsd_files_list();
 # We will use the '$dummy' to do checks before processing files
@@ -469,6 +468,9 @@ sub Obs_array_to_hash {
     my $key = $o->get_unique_id();
     error_quit("While trying to obtain a unique Observation id (". $o->get_errormsg() . ")")
       if ($o->error());
+
+    error_quit("WEIRD: This key ($key) already exists, was this file already loaded ?")
+      if (exists $ohash{$key});
 
     $ohash{$key} = $o;
   }
