@@ -660,10 +660,7 @@ sub get_Observations_list {
 
   my $in = $self->is_event_in($filename, $event);
   return() if ($self->error());
-  if (! $in) {
-    $self->_set_errormsg("No such event ($event) for filename ($filename) in this EventList");
-    return();
-  }
+  return() if (! $in);
 
   my %ihash = $self->_get_ihash();
   if (! exists $ihash{$filename}{$event}) {
