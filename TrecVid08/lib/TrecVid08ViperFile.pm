@@ -57,7 +57,7 @@ my @xsdfilesl = ( "TrecVid08.xsd", "TrecVid08-viper.xsd", "TrecVid08-viperdata.x
 my @ok_events = 
   (
    # Required events
-   "PersonRuns", "CellToEar", "ObjectPut", "PeopleMeet", "PeopleSplitup", 
+   "PersonRuns", "CellToEar", "ObjectPut", "PeopleMeet", "PeopleSplitUp", 
    "Embrace", "Pointing", "ElevatorNoEntry", "OpposingFlow", "TakePicture", 
    # Optional events
    "DoorOpenClose", "UseATM", "ObjectGet", "VestAppears", "SitDown", 
@@ -642,6 +642,11 @@ sub validate {
   my ($res, $bigstring) = &_run_xmllint($xmllint, $xsdpath, $ifile);
   if (! &_is_blank($res)) {
     $self->_set_errormsg($res);
+    return(0);
+  }
+  # No data from xmllint ?
+  if (&_is_blank($bigstring)) {
+    $self->_set_errormsg("WEIRD: The XML data returned by xmllint seems empty");
     return(0);
   }
 
@@ -1467,6 +1472,21 @@ sub _split_xml_tag_list_to_hash {
 
 #####
 
+sub _split_line_into_tags {
+  my $line = shift @_;
+  my @all;
+
+  while ($line =~ s%([^\s]+?)\s*(\=)\s*(\"[^\"]+?\")%%) {
+    push @all, "$1$2$3";
+  }
+  return("Leftover text after tag extraction ($line)", ())
+    if (! &_is_blank($line));
+  
+  return("", @all);
+}
+
+#####
+
 sub _get_inline_xml_attributes {
   my $name = shift @_;
   my $str = shift @_;
@@ -1480,7 +1500,8 @@ sub _get_inline_xml_attributes {
   $txt =~ s%^\s+%%;
   $txt =~ s%\/?\>$%%;
 
-  my @all = split(m%\s+%, $txt);
+  my ($err, @all) = &_split_line_into_tags($txt);
+  return($err, ()) if (! &_is_blank($err));
   return("", ()) if (scalar @all == 0); # None found
 
   my ($res, %hash) = &_split_xml_tag_list_to_hash(@all);
@@ -1585,8 +1606,8 @@ sub _parse_sourcefile_section {
     return("Event ID list must always start at 0 (for event \'$event\', start at " . $list[0] . ")", ())
       if ($list[0] != 0);
 
-    return("Event ID list must always start at 0 and have not gap (for event \'$event\', seen "
-	    . scalar @list . " elements, while last one listed is " .  $list[-1] . " (starting from 0))", ())
+    return("Event ID list must always start at 0 and have no gap (for event \'$event\', seen "
+	    . scalar @list . " elements (0 -> " . $list[-1] . ")", ())
       if (scalar @list != $list[-1] + 1); 
   }
 
@@ -1994,7 +2015,7 @@ sub _parse_attributes {
 # xmllint check
 
 sub _get_tmpfilename {
-  my ($fh, $name) = tempfile( UNLINK => 1 );
+  my (undef, $name) = tempfile( OPEN => 0 );
 
   return($name);
 }
@@ -2023,6 +2044,7 @@ sub _do_system_call {
   my $cmdline = join(" ", @args);
 
   my $retcode = -1;
+  # Get temporary filenames (created by the command line call)
   my $stdoutfile = &_get_tmpfilename();
   my $stderrfile = &_get_tmpfilename();
 
@@ -2030,8 +2052,13 @@ sub _do_system_call {
   close CMD;
   $retcode = $?;
 
+  # Get the content of those temporary files
   my $stdout = &_slurp_file($stdoutfile);
   my $stderr = &_slurp_file($stderrfile);
+
+  # Erase the temporary files
+  unlink($stdoutfile);
+  unlink($stderrfile);
 
   return($retcode, $stdout, $stderr);
 }
