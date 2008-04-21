@@ -95,6 +95,9 @@ $spacer<attribute name="DetectionDecision"/>
 EOF
 ;
     }
+  } elsif ($line =~ m%\"PersonRun\"%) { # PersonRun -> PersonRuns
+    $out = "$line\n";
+    $out =~ s%(\"PersonRun)(\")%$1s$2%g;
   } else {
     $out = "$line\n";
   }
