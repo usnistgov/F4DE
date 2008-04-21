@@ -160,37 +160,8 @@ my %all = ();
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
 while ($tmp = shift @ARGV) {
-  if (! -e $tmp) {
-    &valerr($tmp, "file does not exists, skipping");
-    next;
-  }
-  if (! -f $tmp) {
-    &valerr($tmp, "is not a file, skipping\n");
-    next;
-  }
-  if (! -r $tmp) {
-    &valerr($tmp, "file is not readable, skipping\n");
-    next;
-  }
-
-  # Prepare the object
-  my $object = new TrecVid08ViperFile();
-  error_quit("While trying to set \'xmllint\' (" . $object->get_errormsg() . ")")
-    if ( ($xmllint ne "") && (! $object->set_xmllint($xmllint)) );
-  error_quit("While trying to set \'TrecVid08xsd\' (" . $object->get_errormsg() . ")")
-    if ( ($xsdpath ne "") && (! $object->set_xsdpath($xsdpath)) );
-  error_quit("While setting \'gtf\' status (" . $object->get_errormsg() . ")")
-    if ( ($isgtf) && ( ! $object->set_as_gtf()) );
-  error_quit("While setting \'file\' (" . $object->get_errormsg() . ")")
-    if ( ! $object->set_file($tmp) );
-
-  # Validate
-  if (! $object->validate()) {
-    &valerr($tmp, $object->get_errormsg());
-    next;
-  } else {
-    &valok($tmp, "validates");
-  }
+  my ($ok, $object) = &load_file($isgtf, $tmp);
+  next if (! $ok);
 
   if ($writeback != -1) {
     my $txt = $object->reformat_xml(@asked_events);
@@ -209,7 +180,7 @@ while ($tmp = shift @ARGV) {
     }
   }
 
-  %{$all{$tmp}} = $object;
+  $all{$tmp} = $object;
   $ndone++;
 }
 die("All files processed (Validated: $ndone | Total: $ntodo)\n");
@@ -228,6 +199,46 @@ sub valerr {
   my ($fname, $txt) = @_;
 
   &valok($fname, "[ERROR] $txt");
+}
+
+##########
+
+sub load_file {
+  my ($isgtf, $tmp) = @_;
+
+  if (! -e $tmp) {
+    &valerr($tmp, $isgtf, "file does not exists, skipping");
+    return(0, ());
+  }
+  if (! -f $tmp) {
+    &valerr($tmp, $isgtf, "is not a file, skipping\n");
+    return(0, ());
+  }
+  if (! -r $tmp) {
+    &valerr($tmp, $isgtf, "file is not readable, skipping\n");
+    return(0, ());
+  }
+  
+  # Prepare the object
+  my $object = new TrecVid08ViperFile();
+  error_quit("While trying to set \'xmllint\' (" . $object->get_errormsg() . ")")
+    if ( ($xmllint ne "") && (! $object->set_xmllint($xmllint)) );
+  error_quit("While trying to set \'TrecVid08xsd\' (" . $object->get_errormsg() . ")")
+    if ( ($xsdpath ne "") && (! $object->set_xsdpath($xsdpath)) );
+  error_quit("While setting \'gtf\' status (" . $object->get_errormsg() . ")")
+    if ( ($isgtf) && ( ! $object->set_as_gtf()) );
+  error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
+    if ( ! $object->set_file($tmp) );
+
+  # Validate
+  if (! $object->validate()) {
+    &valerr($tmp, $object->get_errormsg());
+    return(0, ());
+  }
+
+  &valok($tmp, "validates");
+
+  return(1, $object);
 }
 
 ########################################
