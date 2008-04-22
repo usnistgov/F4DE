@@ -895,6 +895,7 @@ sub get_unique_id {
 
   return(0) if (!$self->is_validated());
 
+  my $fl = $self->get_filename();
   my $fn = $self->get_xmlfilename();
   my $et = $self->get_eventtype();
   my $id = $self->get_id();
@@ -913,8 +914,9 @@ sub get_unique_id {
     return(0);
   }
 
-  my $uid = "EVENT: $et | ID: $id | FS: $fs | GTF : $isgtf | Dec: $dec | FILENAME: $fn";
+  my $uid = "FILE: $fl | EVENT: $et | ID: $id | FS: $fs | GTF : $isgtf | Dec: $dec | XML FILE: $fn";
 
+  # One advantage of this unique string ID is that it can be 'sort'-ed
   return($uid);
 }
 
