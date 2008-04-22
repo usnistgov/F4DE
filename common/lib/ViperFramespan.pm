@@ -649,7 +649,18 @@ sub _get_begend_ts_core {
 
   my $v = $self->get_value();
 
-  return(&_fs_get_begend($v));
+  my ($beg, $end) = &_fs_get_begend($v);
+
+  # Rule 1: Frames start at 1 but ts start at 0
+  $beg -= 1;
+
+  # For 'end' we ought to add 1 because the frame is valid until
+  # the end of the framespan end value (example "1:1" is from beginning of 1
+  # to end of 1), but we still apply rule #1 so we ought to have
+  # $end = $end + 1 - 1;
+  # Therefore we do not touch $end
+
+  return($beg, $end);
 }
 
 #####
@@ -671,9 +682,7 @@ sub get_end_ts {
   my ($beg, $end) = $self->_get_begend_ts_core();
   return($beg) if ($self->error());
 
-  # '+1' because the frame is valid until the end of the framespan end value
-  # ie "1:1" is from beginning of 1 to end of 1 (ie: beg_ts + 1x(1/fps) )
-  return($self->frame_to_ts(1+$end));
+  return($self->frame_to_ts($end));
 }
 
 ##########
