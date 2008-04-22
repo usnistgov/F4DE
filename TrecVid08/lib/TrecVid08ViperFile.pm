@@ -147,6 +147,7 @@ sub new {
      fps            => -1, # Not needed to validate a file, but needed for observations creation
      file           => "",
      fhash          => undef,
+     comment        => "", # Comment to be written to write (or to each 'Observation' when generated)
      validated      => 0, # To confirm file was validated
      fs_framespan_max => $fs_tmp,
      errormsg       => &_set_errormsg_txt("", $errormsg),
@@ -608,6 +609,46 @@ sub _set_framespan_max_value {
   return(1);
 }
 
+########## 'comment'
+
+sub _addto_comment {
+  my ($self, $comment) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{comment} .= "\n" if ($self->_is_comment_set());
+
+  $self->{comment} .= $comment;
+  return(1);
+}
+
+#####
+
+sub _is_comment_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (! &_is_blank($self->{comment}));
+
+  return(0);
+}
+
+#####
+
+sub _get_comment {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_comment_set()) {
+    $self->_set_errormsg("\'comment\' not set");
+    return(0);
+  }
+
+  return($self->{comment});
+}
+
 ########################################
 
 sub is_validated {
@@ -702,8 +743,12 @@ sub reformat_xml {
     return(0);
   }
 
+  my $comment = "";
+  $comment = $self->_get_comment() if ($self->_is_comment_set());
+
   my %tmp = $self->_get_fhash();
-  return(&_writeback2xml(\%tmp, @limitto_events));
+
+  return(&_writeback2xml($comment, \%tmp, @limitto_events));
 }
 
 ##########
@@ -874,6 +919,23 @@ sub get_event_observations {
     if (! $obs->set_isgtf($isgtf) ) {
       $self->_set_errormsg("Problem adding \'isgtf\' to observation (" . $obs->get_errormsg() .")");
       return(0);
+    }
+
+    # 'comment' is an optional key of the hash
+    my $key = "comment";
+    if ($self->_is_comment_set()) {
+      my $comment = $self->_get_comment();
+      if (! $obs->addto_comment($comment) ) {
+	$self->_set_errormsg("Problem adding \'comment\' to observation (" . $obs->get_errormsg() .")");
+	return(0);
+      }
+    }
+    if (exists $all_obs{$id}{$key} ) {
+      my $comment = $all_obs{$id}{$key};
+      if (! $obs->addto_comment($comment) ) {
+	$self->_set_errormsg("Problem adding \'comment\' to observation (" . $obs->get_errormsg() .")");
+	return(0);
+      }
     }
 
     my $key = "framespan";
@@ -1223,6 +1285,7 @@ sub add_observation {
   my %sp_out; # will be added to $fhash{event}{id}
 
   # Get the global framespan
+  $key = "framespan";
   my $fs_obs = $obs->get_framespan();
   if ($obs->error()) {
     $self->_set_errormsg("Problem accessing the observation's framespan (" . $obs->get_errormsg() .")");
@@ -1234,7 +1297,18 @@ sub add_observation {
     return(0);
   }
   # Set it into the event representation
-  $sp_out{"framespan"} = $obs_fs;
+  $sp_out{$key} = $obs_fs;
+
+  # 'comment' is an optional Observation 'attribute'
+  $key = "comment";
+  if ($obs->is_comment_set()) {
+    my $comment = $obs->get_comment();
+    if ($obs->error()) {
+      $self->_set_errormsg("Problem accessing the observation's comment (" . $obs->get_errormsg() .")");
+      return(0);
+    }
+    $sp_out{$key} = $comment;
+  }
 
   # Now process the attributes information
   foreach my $attr (keys %hash_objects_attributes_types) {
@@ -1277,6 +1351,39 @@ sub add_observation {
   return(1);
 }
 
+##############################
+
+sub change_sourcefile_filename {
+  my ($self, $nfname) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'change_sourcefile_filename\' for a validated file");
+    return(0);
+  }
+
+  my %lk = $self->_get_fhash();
+
+  if (! defined $lk{"file"}{"filename"}) {
+    $self->_set_errormsg("WEIRD: In \'get_sourcefile_filename\': Could not find the filename");
+    return(0);
+  }
+
+  my $oname = $lk{"file"}{"filename"};
+  my $soname = &_get_short_sf_file($oname);
+
+  $lk{"file"}{"filename"} = $nfname;
+  $self->_set_fhash(%lk);
+
+  $self->_addto_comment("\'sourcefile\' changed from \'$oname\' (short: \'$soname\') to \'$nfname\'");
+
+  return(-1) if ($self->error());
+
+  return(1);
+}
+
+
 ############################################################
 # Internals
 ########################################
@@ -1302,7 +1409,7 @@ sub _run_xmllint {
 sub _data_cleanup {
   my $bigstring = shift @_;
 
-  # Remove all comments
+  # Remove all XML comments
   $bigstring =~ s%\<\!\-\-.+?\-\-\>%%sg;
 
   # Remove <?xml ...?> header
@@ -2229,6 +2336,11 @@ sub _writeback_object {
 
   $txt .= &_wb_print($indent++, "<object name=\"$event\" id=\"$id\" framespan=\"" . $object_hash{'framespan'} . "\">\n");
 
+  # comment (optional)
+  $txt .= &_wb_print($indent, "<!-- " . $object_hash{"comment"} . " -->\n")
+    if (exists $object_hash{"comment"});
+
+  # attributes
   foreach my $key (sort keys %hash_objects_attributes_types) {
     $txt .= &_wb_print($indent, "<attribute name=\"$key\"");
     if (defined $object_hash{$key}) {
@@ -2278,6 +2390,7 @@ sub _writeback_object {
 ##########
 
 sub _writeback2xml {
+  my $comment = shift @_;
   my $rlhash = shift @_;
   my @asked_events = @_;
 
@@ -2321,34 +2434,38 @@ sub _writeback2xml {
   # End 'config', begin 'data'
   $txt .= &_wb_print(--$indent, "</config>\n");
   $txt .= &_wb_print($indent++, "<data>\n");
-  
+
   if (scalar %lhash > 0) { # Are we just writting a spec XML file ?
-    $txt .= &_wb_print($indent, "<sourcefile filename=\"" . $lhash{'file'}{'filename'} . "\">\n");
-    
+    $txt .= &_wb_print($indent++, "<sourcefile filename=\"" . $lhash{'file'}{'filename'} . "\">\n");
+
+    # comment (optional)
+    $txt .= &_wb_print($indent, "<!-- " . $comment . " -->\n")
+      if (! &_is_blank($comment));
+
     # file
-    $txt .= &_writeback_file(++$indent, %{$lhash{'file'}});
-    
+    $txt .= &_writeback_file($indent, %{$lhash{'file'}});
+
     # Objects
     foreach my $object (@asked_events) {
       if (exists $lhash{$object}) {
 	my @ids = keys %{$lhash{$object}};
-	foreach my $id (sort @ids) {
+	foreach my $id (sort _numerically @ids) {
 	  $txt .= &_writeback_object($indent, $object, $id, %{$lhash{$object}{$id}});
 	}
       }
     }
-    
+
     # End the sourcefile
     $txt .= &_wb_print(--$indent, "</sourcefile>\n");
   }
-  
+
   # end data and viper
   $txt .= &_wb_print(--$indent, "</data>\n");
   $txt .= &_wb_print(--$indent, "</viper>\n");
-  
+
   # We discard this warning for all but debug runs
   #warn_print("(WEIRD) End indentation is not equal to 0 ? (= $indent)\n") if ($indent != 0);
-  
+
   return($txt);
 }
 
