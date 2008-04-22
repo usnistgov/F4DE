@@ -86,6 +86,7 @@ my $xsdpath = ".";
 my $writeback = -1;
 my $xmlbasefile = -1;
 my @asked_events;
+my $show = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 # USed:                    T   X        gh   l         vwx  
@@ -103,6 +104,8 @@ GetOptions
    'gtf'             => \$isgtf,
    'write:s'         => \$writeback,
    'limitto=s'       => \@asked_events,
+   # Hiden Option(s)
+   'show_internals'  => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 die("\n$usage\n") if ($opt{'help'});
@@ -238,6 +241,9 @@ sub load_file {
 
   &valok($tmp, "validates");
 
+  # This is really if you are a debugger
+  print("** Memory Representation:\n", $object->_display_all()) if ($show);
+
   return(1, $object);
 }
 
@@ -264,8 +270,9 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --help          Print this usage information and exit
 
 Note:
-- This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
+- This prerequisite that the file can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
 - Program will ignore the <config> section of the XML file.
+- Program will disard any xml comment(s).
 - List of recognized events: $ro
 EOF
 ;
