@@ -64,6 +64,7 @@ sub new {
      framespan   => undef, # ViperFramespan object
      isgtf       => -1,
      ofi         => undef, # hash ref / Other File Information
+     comment     => "", # Text that will be added to the XML file when rewritting it (used by merger)
      DetectionScore      => undef, # float
      DetectionDecision   => -1, # binary
      BoundingBox => undef, # hash ref (with "real" ViperFramespan this time)
@@ -433,6 +434,46 @@ sub get_ofi {
   my %res = %{$rofi};
 
   return(%res);
+}
+
+########## 'comment'
+
+sub addto_comment {
+  my ($self, $comment) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{comment} .= "\n" if ($self->is_comment_set());
+
+  $self->{comment} .= $comment;
+  return(1);
+}
+
+#####
+
+sub is_comment_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (! &_is_blank($self->{comment}));
+
+  return(0);
+}
+
+#####
+
+sub get_comment {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->is_comment_set()) {
+    $self->_set_errormsg("\'comment\' not set");
+    return(0);
+  }
+
+  return($self->{comment});
 }
 
 ########## 'DetectionScore'
