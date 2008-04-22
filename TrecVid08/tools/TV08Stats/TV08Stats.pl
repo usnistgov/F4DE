@@ -403,7 +403,7 @@ sub do_csv {
   $txt .= &generate_csvline(@header);
   $txt .= "\n";
 
-  foreach my $uid (keys %ohash) {
+  foreach my $uid (sort keys %ohash) {
     $txt .= &get_csvline($rord, $uid, %ohash);
     $txt .= "\n";
   }
