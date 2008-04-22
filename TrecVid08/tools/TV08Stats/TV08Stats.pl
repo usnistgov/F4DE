@@ -106,9 +106,10 @@ my $xsdpath = ".";
 my $fps = -1;
 my $isgtf = 0;
 my $docsv = -1;
+my $discardErr = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T        c  fgh          s  v x  
+# USed:                    T        cd fgh             v x  
 
 my %opt;
 my $dbgftmp = "";
@@ -123,8 +124,7 @@ GetOptions
    'gtf'             => \$isgtf,
    'fps=s'           => \$fps,
    'csv:s'           => \$docsv,
-   # Hidden option
-   'show_internals+' => \$show,
+   'discardErrors'   => \$discardErr,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 die("\n$usage\n") if ($opt{'help'});
@@ -165,6 +165,10 @@ while ($tmp = shift @ARGV) {
   $ndone++;
 }
 print "All files loaded (ok: $ndone / $ntodo)\n";
+error_quit("Can not continue, not all files passed the loading/validation step, aborting\n")
+  if (! ($discardErr) && ($ndone != $ntodo));
+error_quit("No files ok, can not continue, aborting\n")
+  if ($ndone == 0);
 
 # Re-represent all observations into a flat format
 my %ohash;
@@ -235,7 +239,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 --fps fps [--help] [--version] [--xmllint location] [--TrecVid08xsd location] [-csv [file.csv]] file.xml [file.xml [...]]
+Usage: $0 --fps fps [--help] [--version] [--xmllint location] [--TrecVid08xsd location] [--discardErrors] [-csv [file.csv]] file.xml [file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -245,6 +249,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --TrecVid08xsd  Path where the XSD files can be found ($xsdfiles)
   --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
   --csv           Generate output representation as CSV (to file if given)
+  --discardErrors Continue processing even if not all xml files can be properly loaded
   --version       Print version number and exit
   --help          Print this usage information and exit
 
