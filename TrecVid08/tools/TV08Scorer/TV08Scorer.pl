@@ -435,7 +435,7 @@ sub generate_EventList {
       if ($vf->error());
 
     $tmpEL->add_Observations(@ao);
-    error_quit("Problem add Observations to $mode EventList (" . $tmpEL->get_errormsg() . ")")
+    error_quit("Problem adding Observations to $mode EventList (" . $tmpEL->get_errormsg() . ")")
       if ($tmpEL->error());
   }
 
