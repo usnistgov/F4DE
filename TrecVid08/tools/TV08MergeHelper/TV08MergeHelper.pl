@@ -129,7 +129,7 @@ die("$versionid\n") if ($opt{'version'});
 die("\n$usage\n") if (scalar @ARGV == 0);
 
 die("ERROR: \'fps\' must set in order to do be able to use \'observations\' objects\n\n$usage") if ($fps == -1);
-die("ERROR: No \'writeto\' set, aborting\n\n$usage\n") if ($writetodir =~ m%^\s*$%);
+die("ERROR: No \'writetodir\' set, aborting\n\n$usage\n") if ($writetodir =~ m%^\s*$%);
 
 die("ERROR: \'ForceFilename\' option selected but no value set\n$usage") if (($opt{'ForceFilename'}) && ($forceFilename eq ""));
 
@@ -172,7 +172,7 @@ while ($tmp = shift @ARGV) {
   $all_fs_shift{$fname} = $fs_shift;
   $ndone++;
 
-  if ($show > 1) {
+  if ($show > 3) {
     print "** FILE: $fname\n";
     print $object->_display();
   }
@@ -195,6 +195,7 @@ error_quit("Problem creating the EventList (" . $EL->get_errormsg() . ")")
 
 foreach my $key (keys %all_vf) {
   my $object = $all_vf{$key};
+  my $step2add = "";
 
   if ($forceFilename ne "") {
     $object->change_sourcefile_filename($forceFilename);
@@ -221,8 +222,21 @@ foreach my $key (keys %all_vf) {
     if ($object->error());
   my @kept = ();
 
+  # Debugging
+  if ($show > 2) {
+    foreach my $obs (@ao) {
+      print "** OBSERVATION MEMORY REPRESENATION (Before Processing):\n", $obs->_display();
+    }
+  }
+
   # Timeshift
   if ($all_fs_shift{$key} != 0) {
+    foreach my $obs (@ao) {
+      $obs->shift_framespan($all_fs_shift{$key});
+      error_quit("While shifitng an observation's framespan (" . $obs->get_errormsg() .")")
+	if ($obs->error());
+    }
+    $step2add .= " [Timeshifted]";
   }
 
   # Overlap
@@ -230,13 +244,20 @@ foreach my $key (keys %all_vf) {
   } else {
     @kept = @ao;
   }
-  
+
+  # Debugging
+  if (($show > 2) && ($step2add !~ m%^\s*$%)) {
+    foreach my $obs (@ao) {
+      print "** OBSERVATION MEMORY REPRESENATION (Post Processing):\n", $obs->_display();
+    }
+  }
+
   # Add the observations to the EventList
   $EL->add_Observations(@kept);
   error_quit("Problem adding Observations to EventList (" . $EL->get_errormsg() . ")")
     if ($EL->error());
 
-  print "- Done processing Observations from '$key' (Found: ", scalar @ao, (($checkOverlap) ? (" / Kept: " . scalar @kept) : ""), ")\n";
+  print "- Done processing Observations from '$key' (Found: ", scalar @ao, (($checkOverlap) ? (" / Kept: " . scalar @kept) : ""), ")$step2add\n";
   $adone += scalar @ao;
   $akept += scalar @kept;
 }
@@ -262,7 +283,12 @@ foreach my $key (keys %mergefiles) {
       $obs->addto_comment($comment);
       error_quit("While adding a comment to observation (" . $obs->get_errormsg() .")")
 	if ($obs->error());
-      
+
+      # Debugging
+      if ($show > 1) {
+	print "** OBSERVATION MEMORY REPRESENATION:\n", $obs->_display();
+      }
+
       $mf->add_observation($obs);
       error_quit("While \'add_observation\' (" . $mf->get_errormsg() .")")
 	if ($mf->error());
