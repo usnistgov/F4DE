@@ -921,6 +921,22 @@ sub get_event_observations {
       return(0);
     }
 
+    my $file_fs = $self->_get_fhash_file_numframes();
+    return(0) if ($self->error());
+    my $fs_file = new ViperFramespan();
+    if (! $fs_file->set_value_from_beg_to($file_fs)) {
+      $self->_set_errormsg("In observation creation: File ViperFramespan ($file_fs) error (" . $fs_file->get_errormsg() . ")");
+      return(0);
+    }
+    if (! $fs_file->set_fps($fps)) {
+      $self->_set_errormsg("In observation creation: File ViperFramespan ($file_fs) error (" . $fs_file->get_errormsg() . ")");
+      return(0);
+    }
+    if (! $obs->set_fs_file($fs_file) ) {
+      $self->_set_errormsg("Problem adding \'fs_file\' to observation (" . $obs->get_errormsg() .")");
+      return(0);
+    }
+
     # 'comment' is an optional key of the hash
     my $key = "comment";
     if ($self->_is_comment_set()) {
@@ -987,7 +1003,7 @@ sub get_event_observations {
 	  # we will have to rely on a two dimensionnal hash with '$afs' (the string) as its master key
 	  # (wasteful but insure a proper database key, and more useable/searchable than an array
 	  # and we can always go from the 'ViperFramespan' to its 'string' value easily)
-	  my $mkey = "$afs";
+	  my $mkey = $fs_afs->get_value();
 	  $oh{$mkey}{$obs->key_attr_framespan()} = $fs_afs;
 	  $oh{$mkey}{$obs->key_attr_content()} = $ih{$afs};
 	}
@@ -1114,7 +1130,7 @@ sub _get_fhash_file_numframes {
   return(0) if ($self->error());
 
   if (! $self->is_validated()) {
-    $self->_set_errormsg("Can only extend \'numframes\' for a validated file");
+    $self->_set_errormsg("Can only get \'numframes\' for a validated file");
     return(0);
   }
 
@@ -1141,7 +1157,7 @@ sub _set_fhash_file_numframes {
   my $cnf = $self->_get_fhash_file_numframes();
   return(0) if ($self->error());
 
-  if ($cnf < $numframes) {
+  if ($numframes <= $cnf) {
     return(1) if ($ignoresmallervalues);
 
     $self->_set_errormsg("Can not reduce the file\'s \'numframes\' value");
