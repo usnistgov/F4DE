@@ -62,6 +62,7 @@ sub new {
      filename    => "", # The 'sourcefile' referenced file
      xmlfilename => "", # The xml file that described this observation
      framespan   => undef, # ViperFramespan object
+     fs_file     => undef, # 'sourcefile filename' framespan (important for overlap computation and shift operations)
      isgtf       => -1,
      ofi         => undef, # hash ref / Other File Information
      comment     => "", # Text that will be added to the XML file when rewritting it (used by merger)
@@ -349,6 +350,51 @@ sub get_framespan {
   }
 
   return($self->{framespan});
+}
+
+########## 'fs_file'
+
+sub set_fs_file {
+  my ($self, $fs_file) = @_;
+
+  return(0) if ($self->error());
+
+  if ( (! defined $fs_file) || (! $fs_file->is_value_set() ) || (! $fs_file->is_fps_set() ) ) {
+    $self->_set_errormsg("Invalid \'fs_file\'");
+    return(0);
+  }
+  
+  $self->{fs_file} = $fs_file;
+  return(1);
+}
+
+#####
+
+sub _is_fs_file_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(0) if (! defined $self->{fs_file});
+
+  return(1) if ($self->{fs_file}->is_value_set());
+
+  return(0);
+}
+
+#####
+
+sub get_fs_file {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->_is_fs_file_set()) {
+    $self->_set_errormsg("\'fs_file\' not set");
+    return(0);
+  }
+
+  return($self->{fs_file});
 }
 
 ########## 'isgtf'
@@ -822,42 +868,46 @@ sub validate {
   
   # Required types:
   if (! $self->_is_eventtype_set()) {
-    $self->set_errormsg("While \'validate\': \'eventtype\' not set");
+    $self->set_errormsg("In \'validate\': \'eventtype\' not set");
     return(0);
   }
   if (! $self->_is_id_set()) {
-    $self->set_errormsg("While \'validate\': \'id\' not set");
+    $self->set_errormsg("In \'validate\': \'id\' not set");
     return(0);
   }
   if (! $self->_is_filename_set()) {
-    $self->set_errormsg("While \'validate\': \'filename\' not set");
+    $self->set_errormsg("In \'validate\': \'filename\' not set");
     return(0);
   }
   if (! $self->_is_xmlfilename_set()) {
-    $self->set_errormsg("While \'validate\': \'xmlfilename\' not set");
+    $self->set_errormsg("In \'validate\': \'xmlfilename\' not set");
     return(0);
   }
   if (! $self->_is_framespan_set()) {
-    $self->set_errormsg("While \'validate\': \'framespan\' not set");
+    $self->set_errormsg("In \'validate\': \'framespan\' not set");
+    return(0);
+  }
+  if (! $self->_is_fs_file_set()) {
+    $self->set_errormsg("In \'validate\': \'fs_file\' not set");
     return(0);
   }
    if (! $self->_is_isgtf_set()) {
-    $self->set_errormsg("While \'validate\': \'isgtf\' not set");
+    $self->set_errormsg("In \'validate\': \'isgtf\' not set");
     return(0);
   }
   if (! $self->_is_ofi_set()) {
-    $self->set_errormsg("While \'validate\': \'ofi\' not set");
+    $self->set_errormsg("In \'validate\': \'ofi\' not set");
     return(0);
   }
 
   # For non GTF
   if (! $self->get_isgtf) { 
     if (! $self->_is_DetectionScore_set()) {
-      $self->_set_errormsg("While \'validate\': \'DetectionScore\' not set (and observation is not a GTF)");
+      $self->_set_errormsg("In \'validate\': \'DetectionScore\' not set (and observation is not a GTF)");
       return(0);
     }
     if (! $self->_is_DetectionDecision_set()) {
-      $self->_set_errormsg("While \'validate\': \'DetectionDecision\' not set (and observation is not a GTF)");
+      $self->_set_errormsg("In \'validate\': \'DetectionDecision\' not set (and observation is not a GTF)");
       return(0);
     }
   }
@@ -943,7 +993,8 @@ sub get_unique_id {
   my $isgtf = $self->get_isgtf();
   my $dec = (! $isgtf) ? $self->Dec() : "N/A";
   my $fs_fs = $self->get_framespan();
-  
+  my $fs_file = $self->get_fs_file();
+
   if ($self->error()) {
     $self->_set_errormsg("Problem while generating a unique id");
     return(0);
@@ -955,7 +1006,13 @@ sub get_unique_id {
     return(0);
   }
 
-  my $uid = "FILE: $fl | EVENT: $et | ID: $id | FS: $fs | GTF : $isgtf | Dec: $dec | XML FILE: $fn";
+  my $fsf = $fs_file->get_value();
+  if ($fs_file->error()) {
+    $self->_set_errormsg("Problem while generating a unique id to obtain the fs value (" . $fs_file->get_errormsg() . ")");
+    return(0);
+  }
+
+  my $uid = "FILE: $fl | EVENT: $et | ID: $id | FS: $fs | FILE FS: $fsf | GTF : $isgtf | Dec: $dec | XML FILE: $fn";
 
   # One advantage of this unique string ID is that it can be 'sort'-ed
   return($uid);
@@ -1311,6 +1368,104 @@ sub kernel_function {
 
   # 4th case: both values are undefined
   return("This case is undefined", undef);
+}
+
+############################################################ framespan shift function
+
+sub _shift_framespan_selected {
+  my ($self, $choice, $val) = @_;
+
+  my @ok_choices = &_get_set_selected_ok_choices();
+  if (! grep(m%^$choice$%, @ok_choices)) {
+    $self->_set_errormsg("In \'set_selected\', choice ($choice) is not recognized");
+    return(0);
+  }
+
+  # We only need to worry about dynamic elements
+  my $isd = $hash_objects_attributes_types_dynamic{$choice};
+  return(1) if (! $isd);
+
+  # Here we only have to worry about 'BoundingBox' and 'Point'
+  # No ViperFramespan object is embedded in the structure itself (other that the key)
+  # therefore we can simply perform a simple shift on the ViperFramespan "keys"
+  # and regenerate the primary key from the shifted value
+  my ($isset, %chash) = $self->get_selected($choice);
+  return(0) if ($self->error());
+  return(1) if (! $isset);
+
+  my %ohash;
+  my $key_fs = $self->key_attr_framespan();
+  my $key_ct = $self->key_attr_content();
+  foreach my $key (keys %chash) {
+    my $fs_tmp = $chash{$key}{$key_fs};
+    my $ct = $chash{$key}{$key_ct};
+
+    $fs_tmp->value_shift($val);
+    if ($fs_tmp->error()) {
+      $self->_set_errormsg("Problem while shifting the framespan of $key (" . $fs_tmp->get_errormsg() . ")");
+      return(0);
+    }
+
+    my $txt_fs = $fs_tmp->get_value();
+
+    $ohash{$txt_fs}{$key_fs} = $fs_tmp;
+    $ohash{$txt_fs}{$key_ct} = $ct;
+  }
+
+  $self->set_selected($choice, %ohash);
+  return(1);
+}
+
+#####
+
+sub shift_framespan {
+  my ($self, $val) = @_;
+
+  return(0) if ($self->error());
+
+  return(0) if (!$self->is_validated());
+
+  my $fs_fs = $self->get_framespan();
+  return(0) if ($self->error());
+
+  my $fs_file = $self->get_fs_file();
+  return(0) if ($self->error());
+
+  $fs_fs->value_shift($val);
+  if ($fs_fs->error()) {
+    $self->_set_errormsg("Problem while shifting the framespan (" . $fs_fs->get_errormsg() . ")");
+    return(0);
+  }
+
+  $fs_file->value_shift($val);
+  if ($fs_file->error()) {
+    $self->_set_errormsg("Problem while shifting the file framespan (" . $fs_file->get_errormsg() . ")");
+    return(0);
+  }
+  # Since we work with objects, no need to set the values back
+
+  # 'ofi' NUMFRAMES
+  my $key = "NUMFRAMES";
+  my %ofi = $self->get_ofi();
+  if (! exists $ofi{$key}) {
+    $self->_set_errormsg("WEIRD: Problem accessing the ofi \'$key\' information");
+    return(0);
+  }
+  $ofi{$key} += $val;
+  $self->set_ofi(%ofi);
+
+  # other attributes
+  my @ok_choices = &_get_set_selected_ok_choices();
+  foreach my $choice (@ok_choices) {
+    $self->_shift_framespan_selected($choice, $val);
+    return(0) if ($self->error());
+  }
+
+  # Add a comment
+  $self->addto_comment("Framespan was shifted by $val");
+  return(0) if ($self->error());
+
+  return(1);
 }
 
 ############################################################
