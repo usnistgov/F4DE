@@ -39,6 +39,7 @@ my %error_msgs =
    "NegativeValue"     => "Framespan range pair values can not be negative",
    "NotOrdered"        => "Framespan range pair is not ordered",
    "StartAt0"          => "Framespan can not start at 0",
+   "WeirdValue"        => "Strange value provided",
    # Other
    "NoFramespanSet"    => "No framespan set",
    # 'fps'
@@ -101,12 +102,12 @@ sub _fs_check_pair {
 sub _fs_split_pair {
   my ($pair) = shift @_;
 
-  return(0,0, $error_msgs{"NotFramespan"})
+  return($error_msgs{"NotFramespan"}, 0, 0)
     if ($pair !~ m%^\d+\:\d+$%);
 
   my ($b, $e) = ($pair =~ m%^(\d+)\:(\d+)$%);
 
-  return($b, $e, "");
+  return("", $b, $e);
 }
 
 #####
@@ -143,7 +144,7 @@ sub _fs_check_value {
   # Process pair per pair
   my @todo = &_fs_split_line($value);
   foreach my $key (@todo) {
-    my ($b, $e, $txt) = &_fs_split_pair($key);
+    my ($txt, $b, $e) = &_fs_split_pair($key);
     return("", $txt) if (! &_is_blank($txt));
     $txt = &_fs_check_pair($b, $e);
     return("", $txt) if (! &_is_blank($txt));
@@ -209,12 +210,12 @@ sub _fs_shorten_value {
 
   # Get the first element
   my $entry = shift @ftodo;
-  ($b, $e, $errormsg) = &_fs_split_pair($entry);
+  ($errormsg, $b, $e) = &_fs_split_pair($entry);
   return($fs, $errormsg) if (! &_is_blank($errormsg));
 
   my ($nb, $ne);
   foreach $entry (@ftodo) {
-    ($nb, $ne, $errormsg) = &_fs_split_pair($entry);
+    ($errormsg, $nb, $ne) = &_fs_split_pair($entry);
     return($fs, $errormsg) if (! &_is_blank($errormsg));
 
     if ($nb == $e) { # ex: 1:2 2:6 -> 1:6
@@ -277,6 +278,21 @@ sub set_value {
   $self->{original_value} = $tmp;
 
   return($ok);
+}
+
+#####
+
+sub set_value_from_beg_to {
+  my ($self, $v) = @_;
+
+  if ($v !~ m%^\d+$%) {
+    $self->_set_errormsg($error_msgs{"WeirdValue"});
+    return(0);
+  }
+
+  my $fs = "1:$v";
+
+  return($self->set_value($fs));
 }
 
 ########## 'fps'
@@ -736,6 +752,41 @@ sub duration_ts {
   return($d) if ($self->error());
 
   return($self->frame_to_ts($d));
+}
+
+######################################## framespan shift function
+
+sub value_shift {
+  my ($self, $val) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(0);
+  }
+
+  my $fs = $self->get_value();
+
+  my @in = &_fs_split_line($fs);
+  my @out = ();
+  foreach my $entry (@in) {
+    my ($errormsg, $b, $e) = &_fs_split_pair($entry);
+
+    if (! &_is_blank($errormsg)) {
+      $self->_set_errormsg($errormsg);
+      return(0);
+    }
+
+    $b += $val;
+    $e += $val;
+
+    push @out, "$b:$e";
+  }
+
+  $fs = join(" ", @out);
+
+  return($self->set_value($fs));
 }
 
 ########################################
