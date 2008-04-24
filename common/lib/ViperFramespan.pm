@@ -351,14 +351,13 @@ sub _set_errormsg_txt {
   my ($oh, $add) = @_;
 
   my $txt = "$oh$add";
-#  print "FS * [$oh | $add]\n";
 
   $txt =~ s%\[ViperFramespan\]\s+%%g;
 
   return("") if (&_is_blank($txt));
 
   $txt = "[ViperFramespan] $txt";
-#  print "FS -> [$txt]\n";
+
   return($txt);
 }
 
@@ -496,6 +495,21 @@ sub count_pairs_in_original_value {
 
 ##########
 
+sub _does_overlap {
+  my ($ifs, $cfs) = @_;
+
+  my ($i_beg, $i_end) = &_fs_get_begend($ifs);
+  my ($c_beg, $c_end) = &_fs_get_begend($cfs);
+
+  # No overlap possible
+  return(0) if (($c_end < $i_beg) || ($i_end < $c_beg));
+
+  # Othwise: Overlap
+  return(1);
+}
+
+#####
+
 sub check_if_overlap {
   my ($self, $other) = @_;
 
@@ -514,14 +528,86 @@ sub check_if_overlap {
   my $ifs = $self->get_value();
   my $cfs = $other->get_value();
 
+  return(&_does_overlap($ifs, $cfs));
+}
+
+##########
+
+sub _get_overlap {
+  my ($ifs, $cfs) = @_;
+
+  # return if no overlap possible
+  return(undef) if (! _does_overlap($ifs, $cfs));
+
   my ($i_beg, $i_end) = &_fs_get_begend($ifs);
   my ($c_beg, $c_end) = &_fs_get_begend($cfs);
 
-  # No overlap possible
-  return(0) if (($c_end < $i_beg) || ($i_end < $c_beg));
+  if (($c_beg >= $i_beg) && ($c_beg <= $i_end)) {
+    if ($c_end >= $i_end) {
+      #  ib----------ie
+      #     cb--------------ce
+      #ov:    -------
+      return("$c_beg:$i_end");
+    } else {
+      #  ib----------ie
+      #     cb-----ce
+      #ov:    -----
+      return("$c_beg:$c_end");
+    }
+  } elsif ($c_beg < $i_end) {
+    if ($c_end < $i_end) {
+      #        ib----------ie
+      #     cb---------ce
+      #ov:       ------
+      return("$i_beg:$c_end");
+    } else {
+      #        ib----------ie
+      #     cb------------------ce
+      #ov:       ----------
+      return("$i_beg:$i_end");
+    }
+  }
 
-  # Othwise: Overlap
-  return(1);
+  # No idea what else is left since we already treated the no overlap case
+  return("WEIRD"); # sure to make it crash
+}
+
+#####
+
+sub get_overlap {
+  my ($self, $other) = @_;
+
+  # We only need to worry about overlap if there is even one possible
+  return(undef) if (! $self->check_if_overlap($other));
+  return(undef) if ($self->error());
+
+  # Now in order to compute the overlap we work pair per pair
+  my $sv = $self->get_value();
+  my $ov = $other->get_value();
+
+  my @spl = &_fs_split_line_count($sv);
+  my @opl = &_fs_split_line_count($ov);
+
+  my @ov;
+  foreach my $sp (@spl) {
+    foreach my $op (@opl) {
+      my $pair = &_get_overlap($sp, $op);
+      next if (! defined $pair);
+      push @ov, $pair;
+    }
+  }
+
+  return(undef) if (scalar @ov == 0);
+
+  my $ovp = join(" ", @ov);
+
+  my $tmp = new ViperFramespan($ovp);
+  if ($tmp->error()) {
+    $self->_set_errormsg("Problem creating new ViperFramespan for overlap value (" . $tmp->get_errormsg() . ")");
+    return(undef);
+  }
+
+  return($tmp);
 }
 
 ##########
