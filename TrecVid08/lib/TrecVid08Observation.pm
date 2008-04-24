@@ -954,19 +954,13 @@ sub is_comparable_to {
   # Same eventtype ?
   my $e1 = $self->get_eventtype();
   my $e2 = $other->get_eventtype();
-  if ($e1 ne $e2) {
-    $self->_set_errormsg("Can not compare observations of different eventtypes ($e1 / $e2)");
-    return(0);
-  }
+  return(0) if ($e1 ne $e2);
 
   # Same filename ?
   my $f1 = $self->get_filename();
   my $f2 = $other->get_filename();
-  if ($f1 ne $f2) {
-    $self->_set_errormsg("Can not compare observations for different files ($f1 / $f2)");
-    return(0);
-  }
-  
+  return(0) if ($f1 ne $f2);
+
   # Error (post)
   return(0) if ($self->error());
   if ($other->error()) {
@@ -1279,7 +1273,7 @@ sub joint_kernel {
   # Return yet ?
   return($etxt, 0) if (! &_is_blank($etxt));
 
-  ########## Now the scoring can begin 
+  ########## Now the scoring can begin
 
   # Kernel (O(s,i), O(r,j)) <=> ($self, $other)
   my ($Beg_Osi, $Mid_Osi, $End_Osi, $Dur_Osi, $Dec_Osi)
@@ -1386,7 +1380,7 @@ sub _shift_framespan_selected {
   return(1) if (! $isd);
 
   # Here we only have to worry about 'BoundingBox' and 'Point'
-  # No ViperFramespan object is embedded in the structure itself (other that the key)
+  # No ViperFramespan object is embedded in the structure itself (other than the key)
   # therefore we can simply perform a simple shift on the ViperFramespan "keys"
   # and regenerate the primary key from the shifted value
   my ($isset, %chash) = $self->get_selected($choice);
@@ -1467,6 +1461,217 @@ sub shift_framespan {
 
   return(1);
 }
+
+############################################################ overlap functions
+
+#################### 'fs_file'
+
+sub _ov_get_fs_file {
+  my ($self) = @_;
+
+  # Error (pre)
+  return(0) if ($self->error());
+
+  # Validated ?
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Observation has not been validated yet");
+    return(0);
+  }
+
+  my $fs_self = $self->get_fs_file();
+  return(0) if ($self->error());
+
+  return($fs_self);
+}
+
+##########
+
+sub get_fs_file_middlepoint_distance {
+  my ($self, $fs_self, $fs_other) = @_;
+
+  my $mpd = $fs_self->middplepoint_distance($fs_other);
+  if ($fs_self->error()) {
+    $self->_set_errormsg("Problem obtaining \'fs_file\' 's \'middlepoint_distance\' (" . $self->get_errormsg() .")");
+    return(undef);
+  }
+
+  return($mpd);
+}
+
+#####
+
+sub get_fs_file_middlepoint_distance_from_obs {
+  my ($self, $other) = @_;
+
+  my $fs_self = $self->_ov_get_fs_file();
+  return(undef) if ($self->error());
+
+  my $fs_other = $other->_ov_get_fs_file();
+  if ($other->error()) {
+    $self->_set_errormsg("Error in compared to Observation (" . $other->get_errormsg() . ")");
+    return(undef);
+  }
+
+  return($self->get_fs_file_middlepoint_distance($fs_self, $fs_other));
+}
+
+#####
+
+sub get_fs_file_middlepoint_distance_from_ts {
+  my ($self, $fs_other) = @_;
+
+  my $fs_self = $self->_ov_get_fs_file();
+  return(undef) if ($self->error());
+
+  return($self->get_fs_file_middlepoint_distance($fs_self, $fs_other));
+}
+
+##########
+
+sub get_fs_file_overlap {
+  my ($self, $fs_self, $fs_other) = @_;
+
+  my $ov = $fs_self->overlap($fs_other);
+  if ($fs_self->error()) {
+    $self->_set_errormsg("Problem obtaining \'fs_file\' 's \'overlap\' (" . $self->get_errormsg() .")");
+    return(undef);
+  }
+
+  return($ov);
+}
+
+#####
+
+sub get_fs_file_overlap_from_obs {
+  my ($self, $other) = @_;
+
+  my $fs_self = $self->_ov_get_fs_file();
+  return(undef) if ($self->error());
+
+  my $fs_other = $other->_ov_get_fs_file();
+  if ($other->error()) {
+    $self->_set_errormsg("Error in compared to Observation (" . $other->get_errormsg() . ")");
+    return(undef);
+  }
+
+  return($self->get_fs_file_overlap($fs_self, $fs_other));
+}
+
+#####
+
+sub get_fs_file_overlap_from_fs {
+  my ($self, $fs_other) = @_;
+
+  my $fs_self = $self->_ov_get_fs_file();
+  return(undef) if ($self->error());
+
+  return($self->get_fs_file_overlap($fs_self, $fs_other));
+}
+
+#################### 'framespan'
+
+sub _ov_get_framespan {
+  my ($self) = @_;
+
+  # Error (pre)
+  return(0) if ($self->error());
+
+  # Validated ?
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Observation has not been validated yet");
+    return(0);
+  }
+
+  my $fs_self = $self->get_framespan();
+  return(0) if ($self->error());
+
+  return($fs_self);
+}
+
+##########
+
+sub get_framespan_middlepoint_distance {
+  my ($self, $fs_self, $fs_other) = @_;
+
+  my $mpd = $fs_self->middplepoint_distance($fs_other);
+  if ($fs_self->error()) {
+    $self->_set_errormsg("Problem obtaining \'framespan\' 's \'middlepoint_distance\' (" . $self->get_errormsg() .")");
+    return(undef);
+  }
+
+  return($mpd);
+}
+
+#####
+
+sub get_framespan_middlepoint_distance_from_obs {
+  my ($self, $other) = @_;
+
+  my $fs_self = $self->_ov_get_framespan();
+  return(undef) if ($self->error());
+
+  my $fs_other = $other->_ov_get_framespan();
+  if ($other->error()) {
+    $self->_set_errormsg("Error in compared to Observation (" . $other->get_errormsg() . ")");
+    return(undef);
+  }
+
+  return($self->get_framespan_middlepoint_distance($fs_self, $fs_other));
+}
+
+#####
+
+sub get_framespan_middlepoint_distance_from_fs {
+  my ($self, $fs_other) = @_;
+
+  my $fs_self = $self->_ov_get_framespan();
+  return(undef) if ($self->error());
+
+  return($self->get_framespan_middlepoint_distance($fs_self, $fs_other));
+}
+
+##########
+
+sub get_framespan_overlap {
+  my ($self, $fs_self, $fs_other) = @_;
+
+  my $ov = $fs_self->get_overlap($fs_other);
+  if ($fs_self->error()) {
+    $self->_set_errormsg("Problem obtaining \'framespan\' 's \'overlap\' (" . $self->get_errormsg() .")");
+    return(undef);
+  }
+
+  return($ov);
+}
+
+#####
+
+sub get_framespan_overlap_from_obs {
+  my ($self, $other) = @_;
+
+  my $fs_self = $self->_ov_get_framespan();
+  return(undef) if ($self->error());
+
+  my $fs_other = $other->_ov_get_framespan();
+  if ($other->error()) {
+    $self->_set_errormsg("Error in compared to Observation (" . $other->get_errormsg() . ")");
+    return(undef);
+  }
+
+  return($self->get_framespan_overlap($fs_self, $fs_other));
+}
+
+#####
+
+sub get_framespan_overlap_from_fs {
+  my ($self, $fs_other) = @_;
+
+  my $fs_self = $self->_ov_get_framespan();
+  return(undef) if ($self->error());
+
+  return($self->get_framespan_overlap($fs_self, $fs_other));
+}
+
 
 ############################################################
 
