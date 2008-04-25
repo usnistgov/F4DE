@@ -1489,7 +1489,7 @@ sub _ov_get_fs_file {
 sub get_fs_file_middlepoint_distance {
   my ($self, $fs_self, $fs_other) = @_;
 
-  my $mpd = $fs_self->middplepoint_distance($fs_other);
+  my $mpd = $fs_self->middlepoint_distance($fs_other);
   if ($fs_self->error()) {
     $self->_set_errormsg("Problem obtaining \'fs_file\' 's \'middlepoint_distance\' (" . $self->get_errormsg() .")");
     return(undef);
@@ -1531,9 +1531,9 @@ sub get_fs_file_middlepoint_distance_from_ts {
 sub get_fs_file_overlap {
   my ($self, $fs_self, $fs_other) = @_;
 
-  my $ov = $fs_self->overlap($fs_other);
+  my $ov = $fs_self->get_overlap($fs_other);
   if ($fs_self->error()) {
-    $self->_set_errormsg("Problem obtaining \'fs_file\' 's \'overlap\' (" . $self->get_errormsg() .")");
+    $self->_set_errormsg("Problem obtaining \'fs_file\' 's \'overlap\' (" . $fs_self->get_errormsg() .")");
     return(undef);
   }
 
