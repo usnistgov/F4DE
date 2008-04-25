@@ -101,12 +101,13 @@ my $xsdpath = ".";
 my $writetodir = "";
 my $fps = -1;
 my $forceFilename = "";
-my $checkOverlap = 0;
-my @tmp_ov_modes;
+my $olfile = undef;
 my $show = 0;
+my $do_shift_ov = 0;
+my $do_same_ov = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T   X        gh   l      s  vwx  
+# USed:      F            ST   X       fgh      o   s  vwx  
 
 my %opt;
 my $dbgftmp = "";
@@ -121,9 +122,11 @@ GetOptions
    'writetodir=s'    => \$writetodir,
    'fps=s'           => \$fps,
    'ForceFilename=s' => \$forceFilename,
-   'overlaplist:s'   => \@tmp_ov_modes,
+   'shift_overlap'   => \$do_shift_ov,
+   'Same_overlap'    => \$do_same_ov,
+   'overlaplistfile:s' => \$olfile,
    # Hidden option
-   'show_internals+' => \$show,
+   'X_show_internals+' => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 die("\n$usage\n") if ($opt{'help'});
@@ -136,25 +139,13 @@ die("ERROR: No \'writetodir\' set, aborting\n\n$usage\n") if ($writetodir =~ m%^
 
 die("ERROR: \'ForceFilename\' option selected but no value set\n$usage") if (($opt{'ForceFilename'}) && ($forceFilename eq ""));
 
-my %cOv_todo;
-if (scalar @tmp_ov_modes > 0) {
-  foreach my $key (@tmp_ov_modes) {
-    if ($key =~ m%^\s*$%) {
-      $cOv_todo{$ov_modes[0]}++;
-      next;
-    }
-    if ($key eq $ov_modes[-1]) { # All key
-      foreach my $keytoo (@ov_modes) {
-	$cOv_todo{$keytoo}++;
-      }
-      next;
-    }
-    die("ERROR: Unknown mode ($key) for \'checkOverlap\'\n\n$usage")
-      if (! grep(m%^$key$%, @ov_modes));
-    $cOv_todo{$key}++;
-  }
-  $checkOverlap = 1;
-}
+my %cov_todo;
+$cov_todo{$ov_modes[0]}++ if ($do_shift_ov);
+$cov_todo{$ov_modes[1]}++ if ($do_same_ov);
+my $checkOverlap = scalar keys %cov_todo;
+
+die("ERROR: \'overlaplistfile\' can only be used in conjunction with one of the overlap check mode\n$usage")
+  if ((defined $olfile) && ($checkOverlap == 0));
 
 if ($xmllint ne "") {
   error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
@@ -175,28 +166,21 @@ my $tmp;
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
 my %all_vf;
-my %all_fs_shift;
 
 ##########
 print "\n\n** STEP 1: Load all files to be merged\n";
 while ($tmp = shift @ARGV) {
-  my $fname = $tmp;
-  my $fs_shift = 0;
+  error_quit("File key ($tmp) seems to have already been loaded; can not load same file key multiple times, aborting")
+    if (exists $all_vf{$tmp});
 
-  if ($tmp =~ m%^(.+?)\:(\d+)$%) {
-    $fname = $1;
-    $fs_shift = $2;
-  }
-
-  my ($ok, $object) = &load_file($isgtf, $fname);
+   my ($ok, $object) = &load_file($isgtf, $tmp);
   next if (! $ok);
 
-  $all_vf{$fname} = $object;
-  $all_fs_shift{$fname} = $fs_shift;
+  $all_vf{$tmp} = $object;
   $ndone++;
 
   if ($show > 3) {
-    print "** FILE: $fname\n";
+    print "** FILE Key: $tmp\n";
     print $object->_display();
   }
 }
@@ -215,22 +199,25 @@ my ($adone, $akept);
 error_quit("Problem creating the EventList (" . $EL->get_errormsg() . ")")
   if ($EL->error());
 my %overlap_list;
+my %overlap_ids;
 
 foreach my $key (keys %all_vf) {
+  my ($fname, $fsshift) = &get_fname_fsshift($key);
+
   my $object = $all_vf{$key};
   my $step2add = "";
-
+  
   if ($forceFilename ne "") {
     $object->change_sourcefile_filename($forceFilename);
     error_quit("Problem while changing the sourcefile filename (" . $object->get_errormsg() .")")
       if ($object->error());
   }
-
+    
   # Get the sourcefile filename
   my $sffn = $object->get_sourcefile_filename();
   error_quit("Problem obtaining the sourcefile filename (" . $object->get_errormsg() .")")
     if ($object->error());
-
+    
   # Create the mergefile object for this sourcefile filename (if not existant yet)
   if (! defined $mergefiles{$sffn}) {
     my $mf = $object->clone_with_no_events();
@@ -238,58 +225,60 @@ foreach my $key (keys %all_vf) {
       if ($object->error());
     $mergefiles{$sffn} = $mf;
   }
-
+    
   # Get the observation list for this viper file
   my @ao = $object->get_all_events_observations();
   error_quit("While duplicating the source object (" . $object->get_errormsg() .")")
     if ($object->error());
   my @kept = ();
-
+    
   # Debugging
   if ($show > 2) {
     foreach my $obs (@ao) {
       print "** OBSERVATION MEMORY REPRESENATION (Before Processing):\n", $obs->_display();
     }
   }
-
+    
   # Frameshift
-  if ($all_fs_shift{$key} != 0) {
+  if ($fsshift != 0) {
     foreach my $obs (@ao) {
-      $obs->shift_framespan($all_fs_shift{$key});
+      $obs->shift_framespan($fsshift);
       error_quit("While shifitng an observation's framespan (" . $obs->get_errormsg() .")")
 	if ($obs->error());
     }
-    $step2add .= " [FrameShifted]";
+    $step2add .= " [FrameShifted ($fsshift frames)]";
   }
-
+    
   # Overlap
   my $ovf = 0;
   if ($checkOverlap) {
-    $step2add .= "[OverlapCheck:";
-    if (exists $cOv_todo{$ov_modes[0]}) { # frameshift
-      $ovf += &check_frameshift_overlap($sffn, @ao);
-      $step2add .= " " . $ov_modes[0];
+    $step2add .= " [OverlapCheck:";
+    if (exists $cov_todo{$ov_modes[0]}) { # frameshift
+      my $tovf = &check_frameshift_overlap($sffn, @ao);
+      $step2add .= " " . $ov_modes[0] . " ($tovf found)";
+      $ovf += $tovf;
     }
-    if (exists $cOv_todo{$ov_modes[1]}) { # same fs
-      $ovf += &check_samefs_overlap($sffn, @ao);
-      $step2add .= " " . $ov_modes[1];
+    if (exists $cov_todo{$ov_modes[1]}) { # same fs
+      my $tovf = &check_samefs_overlap($sffn, @ao);
+      $step2add .= " " . $ov_modes[1] . " ($tovf found)";
+      $ovf += $tovf;
     }
     $step2add .= "]";
   }
-
+    
   # Debugging
   if (($show > 2) && ($step2add !~ m%^\s*$%)) {
     foreach my $obs (@ao) {
       print "** OBSERVATION MEMORY REPRESENATION (Post Processing):\n", $obs->_display();
     }
   }
-
+    
   # Add the observations to the EventList
   $EL->add_Observations(@ao);
   error_quit("Problem adding Observations to EventList (" . $EL->get_errormsg() . ")")
     if ($EL->error());
-
-  print "- Done processing Observations from '$key' (Found: ", scalar @ao, (($checkOverlap) ? " | Possible Overlap Found: $ovf" : ""), ")$step2add\n";
+    
+  print "- Done processing Observations from '$fname'" . (($fsshift != 0) ? " [requested frameshift: $fsshift]" : "") . " (Found: ", scalar @ao, (($checkOverlap) ? " | Possible Overlap Found: $ovf" : ""), ")$step2add\n";
   $adone += scalar @ao;
 }
 print "* -> Found $adone Observations\n";
@@ -300,7 +289,7 @@ print "\n\n** STEP 3: Writting merge file(s)\n";
 
 my $fdone;
 my $ftodo = scalar keys %mergefiles;
-foreach my $key (keys %mergefiles) {
+foreach my $key (sort keys %mergefiles) {
   my $mf = $mergefiles{$key};
 
   # Now add all observations from the current file to the output file
@@ -348,9 +337,33 @@ print "* -> Wrote $fdone files (out of $ftodo)\n";
 error_quit("Not all file could be written, aborting")
   if ($fdone != $ftodo);
 
-die("\nDone.\n") if (! $checkOverlap);
+die("\nDone.\n") if (! defined $olfile);
+
+##########
 # Optional step only performed if overlap list is requested
 
+print "\n\n** STEP 4: Overlap List\n";
+my %ovl;
+foreach my $key (keys %overlap_list) {
+  $ovl{$key}++;
+}
+foreach my $key (sort keys %mergefiles) {
+  my ($seen, $txt) = &prepare_overlap_list($key);
+  next if (! $seen);
+
+  if ($olfile ne "") {
+    open OLF, ">$olfile"
+      or die "ERROR: Could not create output \'overlaplistfile\' ($olfile): $!\n";
+    print OLF $txt;
+    close OLF;
+    print "Wrote \'overlaplistfile\': $olfile\n";
+  } else {
+    print $txt
+  }
+  delete $ovl{$key};
+}
+error_quit("Some filenames left in overlap list ? (" . join(" ", keys %ovl), "), aborting")
+  if (scalar keys %ovl > 0);
 
 die("\nDone.\n");
 
@@ -359,7 +372,7 @@ die("\nDone.\n");
 sub valok {
   my ($fname, $txt) = @_;
 
-  print "$fname: $txt\n";
+  print "\'$fname\': $txt\n";
 }
 
 #####
@@ -375,12 +388,10 @@ sub valerr {
 sub set_usage {
   my $ro = join(" ", @ok_events);
   my $xsdfiles = join(" ", @xsdfilesl);
-  my $ovmodes = join(" ", @ov_modes);
-  my $ovdft = $ov_modes[0];
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--overlaplist [mode]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] --fps fps --writetodir dir
+Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap [-Same_overlap] --overlaplistfile [file]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] --fps fps --writetodir dir
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -391,18 +402,15 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --writetodir    Once processed in memory, print the new XML dump files to this directory
   --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
   --ForceFilename Specify that all files loaded refers to the same 'sourcefile' file
-  --overlaplist   List recognized overlaps, where \'mode\' can be: $ovmodes (default: $ovdft)
+  --shift_overlap Will consider possible overlap for frameshifted files which overlap
+  --same_overlap  Will consider possible overlap for files that have the same framespan
+  --overlaplistfile   Save list of overlap found into file (or stdout if not provided)
   --version       Print version number and exit
   --help          Print this usage information and exit
 
 Note:
 - This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
 - Program will ignore the <config> section of the XML file.
-
-Overlap List \'modes\':
-- \'$ov_modes[0]\' consider possible overlap for frameshifted files which overlap
-- \'$ov_modes[1]\' consider possible overlap for files that have the same framespan
-- \'$ov_modes[-1]\' does all previous listed modes
 EOF
 ;
 
@@ -435,19 +443,36 @@ sub ok_quit {
 
 ########################################
 
+sub get_fname_fsshift {
+  my $tmp = shift @_;
+
+  my $fname = $tmp;
+  my $fsshift = 0;
+
+  if ($tmp =~ m%^(.+?)\:(\d+)$%) {
+    $fname = $1;
+    $fsshift = $2;
+  }
+
+  return($fname, $fsshift);
+}
+
+#####
 
 sub load_file {
   my ($isgtf, $tmp) = @_;
 
-  if (! -e $tmp) {
+  my ($fname, $fsshift) = &get_fname_fsshift($tmp);
+
+  if (! -e $fname) {
     &valerr($tmp, "file does not exists, skipping");
     return(0, ());
   }
-  if (! -f $tmp) {
+  if (! -f $fname) {
     &valerr($tmp, "is not a file, skipping\n");
     return(0, ());
   }
-  if (! -r $tmp) {
+  if (! -r $fname) {
     &valerr($tmp, "file is not readable, skipping\n");
     return(0, ());
   }
@@ -462,8 +487,8 @@ sub load_file {
     if ( ($isgtf) && ( ! $object->set_as_gtf()) );
   error_quit("While setting \'fps\' ($fps) (" . $object->get_errormsg() . ")")
     if ( ! $object->set_fps($fps) );
-  error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
-    if ( ! $object->set_file($tmp) );
+  error_quit("While setting \'file\' ($fname) (" . $object->get_errormsg() . ")")
+    if ( ! $object->set_file($fname) );
   
   # Validate (important to confirm that we can have a memory representation)
   if (! $object->validate()) {
@@ -490,7 +515,7 @@ sub _ovc_core_get_eventlist {
   return() if (! $ifi);
 
   # Get the event list
-  my @el = $EL->get_events_list();
+  my @el = $EL->get_events_list($sffn);
   error_quit("While trying to obtain the events from the EventList (" . $EL->get_errormsg() . ")")
     if ($EL->error());
 
@@ -518,13 +543,32 @@ sub _check_overlap_core {
 	  if ($ao_obs->error());
 	next if (! $iscmp); # If those are not comparable (different filename or event), no need to keep going
 
-	if ($mode eq $ov_modes[0]) {
-	  $pov += &_ovc_frameshift($ao_obs, $el_obs);
-	} elsif ($mode eq $ov_modes[1]) {
-	  $pov += &_ovc_samefs($ao_obs, $el_obs);
+	my $lpov = 0;
+	my $fs_ov = undef;
+	if ($mode eq $ov_modes[0]) { # frameshift
+	  $fs_ov = &_ovc_frameshift($ao_obs, $el_obs);
+	} elsif ($mode eq $ov_modes[1]) { # samefs
+	  $fs_ov = &_ovc_samefs($ao_obs, $el_obs);
 	} else {
 	  error_quit("WEIRD: Not a recognized overlapcheck mode while checking the overlap");
 	}
+	if (defined $fs_ov) { # Overlap detected
+	  my $ao_id = $ao_obs->get_unique_id();
+	  my $el_id = $el_obs->get_unique_id();
+	  my $ovr_txt = $fs_ov->get_value();
+	  error_quit("Problem obtaining Framespan value (" . $fs_ov->get_errormsg() . ")")
+	    if ($fs_ov->error());
+	  my $ov_id = "${mode}-${event}-" . sprintf("%03d", $overlap_ids{$sffn}{$mode}{$event}++);
+	  @{$overlap_list{$sffn}{$mode}{$event}{$ov_id}} = ($ao_id, $el_id, $ovr_txt);
+	  $ao_obs->addto_comment("Possible \'$mode\' Overlap [ID: $ov_id] with \"$el_id\" [overlap: $ovr_txt]");
+	  error_quit("Problem adding a comment to observation (" . $ao_obs->get_errormsg() . ")")
+	    if ($ao_obs->error());
+	  $el_obs->addto_comment("Possible \'$mode\' Overlap [ID: $ov_id] with \"$ao_id\" [overlap: $ovr_txt]");
+	  error_quit("Problem adding a comment to observation (" . $el_obs->get_errormsg() . ")")
+	    if ($el_obs->error());
+	  $lpov = 1;
+	}
+	$pov += $lpov;
       }
     }
   }
@@ -558,8 +602,26 @@ sub _ovc_get_file_ov {
 
 #####
 
-sub _ovc_do_overlap {
-  ## TODO ##
+sub _ovc_do_fs_overlap_obs2obs {
+  my ($ao, $el) = @_;
+
+  my $ov = $ao->get_framespan_overlap_from_obs($el);
+  error_quit("Problem obtaining the fs overlap [obs2obs] (" . $ao->get_errormsg() . ")")
+    if ($ao->error());
+
+  return($ov);
+}
+
+#####
+
+sub _ovc_do_fs_overlap_obs2fs {
+  my ($ao, $fs) = @_;
+
+  my $ov = $ao->get_framespan_overlap_from_fs($fs);
+  error_quit("Problem obtaining the fs overlap [obs2fs] (" . $ao->get_errormsg() . ")")
+    if ($ao->error());
+
+  return($ov);
 }
 
 ##########
@@ -567,24 +629,25 @@ sub _ovc_do_overlap {
 sub _ovc_frameshift {
   my ($ao, $el) = @_;
 
-  my $pov = 0;
-
   my $mpd = &_ovc_get_file_mpd($ao, $el);
   # If the file's framespan middlepoint distance is 0, it means they use they have the same framespan, so they are not shifted from one to the other
-  return($pov) if ($mpd == 0);
+  return(undef) if ($mpd == 0);
 
-  my $ov = &_ovs_get_file_ov($ao, $el);
+  my $ov = &_ovc_get_file_ov($ao, $el);
   # We get a ViperFramespan if there is an overlap at all or 'undef' otherwise
   # if the files do not overlap, we should not have to worry about a possible observation continuation
-  return($pov) if (! defined $ov);
+  return(undef) if (! defined $ov);
 
-  # Now let us see if the first observation overlaps with the file overlap
+  # Do the observations overlap with the file overlap areas ?
+  my $ao_ov = &_ovc_do_fs_overlap_obs2fs($ao, $ov);
+  return(undef) if (! defined $ao_ov);
+  my $el_ov = &_ovc_do_fs_overlap_obs2fs($el, $ov);
+  return(undef) if (! defined $el_ov);
   
-  ## TODO ##
-
-  
-
-  return($pov);
+  # They do, Now let us see if the observations overlaps
+  # If they do, the function returns either undef or a ViperFramespan
+  # which is what we return also, so ...
+  return(&_ovc_do_fs_overlap_obs2obs($ao, $el));
 }
 
 #####
@@ -592,11 +655,14 @@ sub _ovc_frameshift {
 sub _ovc_samefs {
   my ($ao, $el) = @_;
 
-  my $pov = 0;
+  my $mpd = &_ovc_get_file_mpd($ao, $el);
+  # If the file's framespan middlepoint distance is 0, it means they use they have the same framespan, so they are not shifted from one to the other
+  return(undef) if ($mpd != 0);
 
-  ## TODO ## 
-
-  return($pov);
+  # Both observations are in the same fs_file; let us see if the observations overlaps
+  # If they do, the function returns either undef or a ViperFramespan
+  # which is what we return also, so ...
+  return(&_ovc_do_fs_overlap_obs2obs($ao, $el));
 }
 
 ##########
@@ -615,4 +681,58 @@ sub check_samefs_overlap {
   my @ao = @_;
 
   return(&_check_overlap_core($ov_modes[1], $sffn, @ao));
+}
+
+########################################
+
+sub _get_modes_list {
+  my @res;
+
+  foreach (my $i = 0; $i < scalar @ov_modes; $i++) { 
+    push @res, $ov_modes[$i]
+      if (exists $cov_todo{$ov_modes[$i]});
+  }
+
+  return(@res);
+}
+
+#####
+
+sub prepare_overlap_list {
+  my $file = shift @_;
+
+  my $txt = "";
+
+  $txt .=  "|--> File: $file\n";
+
+  my @todo_files = keys %overlap_list;
+  if (! grep(m%^$file$%, @todo_files)) {
+    $txt .= "| |--> No Overlap found\n";
+    return(0, $txt);
+  }
+
+  my @modes = _get_modes_list();
+  foreach my $mode (@modes) {
+    my @smodes = keys %{$overlap_list{$file}};
+    if (! grep(m%^$mode$%, @smodes)) {
+      $txt .= "| |--> Mode: $mode -- No Overlap found\n";
+      next;
+    }
+    $txt .= "| |--> Mode: $mode\n";
+    foreach my $event (sort keys %{$overlap_list{$file}{$mode}}) {
+      $txt .= "| | |--> Event: $event\n";
+      foreach my $ov_id (sort keys %{$overlap_list{$file}{$mode}{$event}}) {
+	my ($ao_id, $el_id, $ovr_txt) = @{$overlap_list{$file}{$mode}{$event}{$ov_id}};
+	$txt .= "| | | |--> ID: [$ov_id]\n";
+	$txt .= "| | | |  Overlap range: $ovr_txt\n";
+	$txt .= "| | | |  Between: \"$ao_id\"\n";
+	$txt .= "| | | |      And: \"$el_id\"\n";
+      }
+      $txt .= "| | |\n";
+    }
+    $txt .= "| |\n";
+  }
+  $txt .= "|\n";
+
+  return(1, $txt);
 }
