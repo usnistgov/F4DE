@@ -282,17 +282,25 @@ sub set_value {
 
 #####
 
-sub set_value_from_beg_to {
-  my ($self, $v) = @_;
+sub set_value_beg_end {
+  my ($self, $beg, $end) = @_;
 
-  if ($v !~ m%^\d+$%) {
+  if (($beg !~ m%^\d+$%) || ($end !~ m%^\d+$%)) {
     $self->_set_errormsg($error_msgs{"WeirdValue"});
     return(0);
   }
 
-  my $fs = "1:$v";
+  my $fs = "$beg:$end";
 
   return($self->set_value($fs));
+}
+
+#####
+
+sub set_value_from_beg_to {
+  my ($self, $v) = @_;
+
+  return($self->set_value_beg_end(1, $v));
 }
 
 ########## 'fps'
@@ -585,8 +593,8 @@ sub get_overlap {
   my $sv = $self->get_value();
   my $ov = $other->get_value();
 
-  my @spl = &_fs_split_line_count($sv);
-  my @opl = &_fs_split_line_count($ov);
+  my @spl = &_fs_split_line($sv);
+  my @opl = &_fs_split_line($ov);
 
   my @ov;
   foreach my $sp (@spl) {
