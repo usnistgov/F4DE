@@ -278,7 +278,7 @@ foreach my $key (keys %all_vf) {
   error_quit("Problem adding Observations to EventList (" . $EL->get_errormsg() . ")")
     if ($EL->error());
     
-  print "- Done processing Observations from '$fname'" . (($fsshift != 0) ? " [requested frameshift: $fsshift]" : "") . " (Found: ", scalar @ao, (($checkOverlap) ? " | Possible Overlap Found: $ovf" : ""), ")$step2add\n";
+  print "- Done processing Observations from '$fname'" . (($fsshift != 0) ? " [requested frameshift: $fsshift]" : "") . " (Found: ", scalar @ao, (($checkOverlap) ? " | Overlap Found: $ovf" : ""), ")$step2add\n";
   $adone += scalar @ao;
 }
 print "* -> Found $adone Observations\n";
@@ -391,7 +391,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap [-Same_overlap] --overlaplistfile [file]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] --fps fps --writetodir dir
+Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] --fps fps --writetodir dir
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -402,8 +402,8 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --writetodir    Once processed in memory, print the new XML dump files to this directory
   --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
   --ForceFilename Specify that all files loaded refers to the same 'sourcefile' file
-  --shift_overlap Will consider possible overlap for frameshifted files which overlap
-  --same_overlap  Will consider possible overlap for files that have the same framespan
+  --shift_overlap Will find overlap for frameshifted file's sourcefile which obersvations overlap in the file overlap section
+  --Same_overlap  Will find overlap for the same file's sourcefile (ie not framshifted) which observations overlap
   --overlaplistfile   Save list of overlap found into file (or stdout if not provided)
   --version       Print version number and exit
   --help          Print this usage information and exit
@@ -529,7 +529,7 @@ sub _check_overlap_core {
   my $sffn = shift @_;
   my @ao = @_;
 
-  my $pov = 0; # possible overlap found
+  my $pov = 0; # overlap found
 
   my @events = &_ovc_core_get_eventlist($sffn);
   return($pov) if (scalar @events == 0); # No events for this file
@@ -560,10 +560,10 @@ sub _check_overlap_core {
 	    if ($fs_ov->error());
 	  my $ov_id = "${mode}-${event}-" . sprintf("%03d", $overlap_ids{$sffn}{$mode}{$event}++);
 	  @{$overlap_list{$sffn}{$mode}{$event}{$ov_id}} = ($ao_id, $el_id, $ovr_txt);
-	  $ao_obs->addto_comment("Possible \'$mode\' Overlap [ID: $ov_id] with \"$el_id\" [overlap: $ovr_txt]");
+	  $ao_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$el_id\" [overlap: $ovr_txt]");
 	  error_quit("Problem adding a comment to observation (" . $ao_obs->get_errormsg() . ")")
 	    if ($ao_obs->error());
-	  $el_obs->addto_comment("Possible \'$mode\' Overlap [ID: $ov_id] with \"$ao_id\" [overlap: $ovr_txt]");
+	  $el_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$ao_id\" [overlap: $ovr_txt]");
 	  error_quit("Problem adding a comment to observation (" . $el_obs->get_errormsg() . ")")
 	    if ($el_obs->error());
 	  $lpov = 1;
