@@ -226,6 +226,13 @@ sub _fs_shorten_value {
       $e = $ne;
       # Works because we can not have multiple same entries (ex: '1:2 1:2' was fixed in _fs_reorder_value)
       # and because the reorder insure that '1:2 1:3' is fully ordered properly (ex: no '1:3 1:2' possible)
+    } elsif ($nb < $e) {
+      # All this also work because we have an insured a full re-ordering of pairs
+      if ($ne >= $e) {  # ex: 10:30 20:40 -> 10:40
+	$e = $ne;
+      }
+      # The else here would be ex: 10:30 20:25 -> 10:30
+      # Do nothing, simply forget this value
     } else { # ex: 1:2 12:24 -> 1:2 12:24
       push @o, "$b:$e";
       ($b, $e) = ($nb, $ne);
@@ -301,6 +308,56 @@ sub set_value_from_beg_to {
   my ($self, $v) = @_;
 
   return($self->set_value_beg_end(1, $v));
+}
+
+
+#####
+
+sub add_fs_to_value {
+  my ($self, $v) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(0);
+  }
+
+  my $value = $self->get_value();
+
+  $value .= " $v";
+
+  return($self->set_value($value));
+}
+
+#########
+
+sub union {
+  my ($self, $other) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(-1);
+  }
+
+  if (! $other->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(-1);
+  }
+
+  my $cfs = $other->get_value();
+
+  return($self->add_fs_to_value($cfs));
+}
+
+#####
+
+sub intersection {
+  my ($self, $other) = @_;
+
+  return($self->get_overlap($other));
 }
 
 ########## 'fps'
@@ -620,8 +677,8 @@ sub get_overlap {
 
 ##########
 
-sub is_within {
-  my ($self, $other) = @_;
+sub get_beg_end_fs {
+  my ($self) = @_;
 
   return(-1) if ($self->error());
 
@@ -630,16 +687,24 @@ sub is_within {
     return(-1);
   }
 
-  if (! $other->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+  my $v = $self->get_value();
+
+  return(&_fs_get_begend($v));
+}
+
+#####
+
+sub is_within {
+  my ($self, $other) = @_;
+
+  my ($v_beg, $v_end) = $self->get_beg_end_fs();
+  return(-1) if ($self->error());
+
+  my ($r_beg, $r_end) = $other->get_beg_end_fs();
+  if ($other->error()) {
+    $self->_set_errormsg($other->get_errormsg());
     return(-1);
   }
-
-  my $v = $self->get_value();
-  my $range = $other->get_value();
-
-  my ($v_beg, $v_end) = &_fs_get_begend($v);
-  my ($r_beg, $r_end) = &_fs_get_begend($range);
 
   # is within
   return(1) if (($v_beg >= $r_beg) && ($v_end <= $r_end));
@@ -653,16 +718,8 @@ sub is_within {
 sub middlepoint {
   my ($self) = @_;
 
+  my ($v_beg, $v_end) = $self->get_beg_end_fs();
   return(-1) if ($self->error());
-
-  if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
-    return(-1);
-  }
-
-  my $v = $self->get_value();
-
-  my ($v_beg, $v_end) = &_fs_get_begend($v);
 
   my $d = $self->duration();
   return($d) if ($self->error());
@@ -693,21 +750,14 @@ sub middlepoint_distance {
   return($m2 - $m1);
 }
 
+
 #####
 
 sub duration {
   my ($self) = @_;
 
+  my ($v_beg, $v_end) = $self->get_beg_end_fs();
   return(-1) if ($self->error());
-
-  if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
-    return(-1);
-  }
-
-  my $v = $self->get_value();
-
-  my ($v_beg, $v_end) = &_fs_get_begend($v);
 
   my $d = $v_end - $v_beg;
   # 1:3 is 1:2:3 so duration 3, and
@@ -716,6 +766,28 @@ sub duration {
   $d++;
 
   return($d);
+}
+
+#####
+
+sub get_beg_fs {
+  my ($self) = @_;
+
+  my ($v_beg, $v_end) = $self->get_beg_end_fs();
+  return(0) if ($self->error());
+
+  return($v_beg);
+}
+
+#####
+
+sub get_end_fs {
+  my ($self) = @_;
+
+  my ($v_beg, $v_end) = $self->get_beg_end_fs();
+  return(0) if ($self->error());
+
+  return($v_end);
 }
 
 ######################################## 'ts' functions
@@ -793,6 +865,20 @@ sub get_end_ts {
   return($beg) if ($self->error());
 
   return($self->frame_to_ts($end));
+}
+
+#####
+
+sub get_beg_end_ts {
+  my ($self) = @_;
+
+  my ($beg, $end) = $self->_get_begend_ts_core();
+  return($beg) if ($self->error());
+
+  my $beg_ts = $self->frame_to_ts($beg);
+  my $end_ts = $self->frame_to_ts($end);
+
+  return($beg_ts, $end_ts);
 }
 
 ##########
