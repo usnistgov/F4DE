@@ -986,6 +986,7 @@ sub get_unique_id {
   my $id = $self->get_id();
   my $isgtf = $self->get_isgtf();
   my $dec = (! $isgtf) ? $self->Dec() : "N/A";
+  my $decd =(! $isgtf) ? (($self->get_DetectionDecision()) ? "true" : "false") : "N/A";
   my $fs_fs = $self->get_framespan();
   my $fs_file = $self->get_fs_file();
 
@@ -1006,7 +1007,7 @@ sub get_unique_id {
     return(0);
   }
 
-  my $uid = "FILE: $fl | EVENT: $et | ID: $id | FS: $fs | FILE FS: $fsf | GTF : $isgtf | Dec: $dec | XML FILE: $fn";
+  my $uid = "FILE: $fl | EVENT: $et | ID: $id | FS: $fs | FILE FS: $fsf | GTF : $isgtf | Dec: $dec ($decd) | XML FILE: $fn";
 
   # One advantage of this unique string ID is that it can be 'sort'-ed
   return($uid);
