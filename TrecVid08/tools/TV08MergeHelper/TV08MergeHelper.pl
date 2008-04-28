@@ -105,9 +105,10 @@ my $olfile = undef;
 my $show = 0;
 my $do_shift_ov = 0;
 my $do_same_ov = 0;
+my $ecff = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:      F            ST   X       fgh      o   s  vwx  
+# USed:      F            ST   X      efgh      o   s  vwx  
 
 my %opt;
 my $dbgftmp = "";
@@ -125,26 +126,27 @@ GetOptions
    'shift_overlap'   => \$do_shift_ov,
    'Same_overlap'    => \$do_same_ov,
    'overlaplistfile:s' => \$olfile,
+   'ecfhelperfile=s' => \$ecff,
    # Hidden option
    'X_show_internals+' => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-die("\n$usage\n") if ($opt{'help'});
-die("$versionid\n") if ($opt{'version'});
+ok_quit("\n$usage\n") if ($opt{'help'});
+ok_quit("$versionid\n") if ($opt{'version'});
 
-die("\n$usage\n") if (scalar @ARGV == 0);
+error_quit("Not enough arguments\n$usage\n") if (scalar @ARGV == 0);
 
-die("ERROR: \'fps\' must set in order to do be able to use \'observations\' objects\n\n$usage") if ($fps == -1);
-die("ERROR: No \'writetodir\' set, aborting\n\n$usage\n") if ($writetodir =~ m%^\s*$%);
+error_quit("\'fps\' must set in order to do be able to use \'observations\' objects\n\n$usage") if ($fps == -1);
+error_quit("No \'writetodir\' set, aborting\n\n$usage\n") if ($writetodir =~ m%^\s*$%);
 
-die("ERROR: \'ForceFilename\' option selected but no value set\n$usage") if (($opt{'ForceFilename'}) && ($forceFilename eq ""));
+error_quit("\'ForceFilename\' option selected but no value set\n$usage") if (($opt{'ForceFilename'}) && ($forceFilename eq ""));
 
 my %cov_todo;
 $cov_todo{$ov_modes[0]}++ if ($do_shift_ov);
 $cov_todo{$ov_modes[1]}++ if ($do_same_ov);
 my $checkOverlap = scalar keys %cov_todo;
 
-die("ERROR: \'overlaplistfile\' can only be used in conjunction with one of the overlap check mode\n$usage")
+error_quit("\'overlaplistfile\' can only be used in conjunction with one of the overlap check mode\n$usage")
   if ((defined $olfile) && ($checkOverlap == 0));
 
 if ($xmllint ne "") {
@@ -167,13 +169,14 @@ my $ntodo = scalar @ARGV;
 my $ndone = 0;
 my %all_vf;
 
+my $step = 1;
 ##########
-print "\n\n** STEP 1: Load all files to be merged\n";
+print "\n\n** STEP ", $step++, ": Load all files to be merged\n";
 while ($tmp = shift @ARGV) {
   error_quit("File key ($tmp) seems to have already been loaded; can not load same file key multiple times, aborting")
     if (exists $all_vf{$tmp});
 
-   my ($ok, $object) = &load_file($isgtf, $tmp);
+  my ($ok, $object) = &load_file($isgtf, $tmp);
   next if (! $ok);
 
   $all_vf{$tmp} = $object;
@@ -191,7 +194,7 @@ error_quit("No file loaded, aborting\n")
   if ($ndone == 0);
 
 ##########
-print "\n\n** STEP 2: Process all observations\n";
+print "\n\n** STEP ", $step++, ": Process all observations\n";
 
 my %mergefiles;
 my $EL = new TrecVid08EventList();
@@ -201,23 +204,26 @@ error_quit("Problem creating the EventList (" . $EL->get_errormsg() . ")")
 my %overlap_list;
 my %overlap_ids;
 
+my @ecfh = ("SourceFile Filename", "Framespan", "XGTF File"); # Order is important
+my %ecfv;
+
 foreach my $key (keys %all_vf) {
   my ($fname, $fsshift) = &get_fname_fsshift($key);
 
   my $object = $all_vf{$key};
   my $step2add = "";
-  
+
   if ($forceFilename ne "") {
     $object->change_sourcefile_filename($forceFilename);
     error_quit("Problem while changing the sourcefile filename (" . $object->get_errormsg() .")")
       if ($object->error());
   }
-    
+
   # Get the sourcefile filename
   my $sffn = $object->get_sourcefile_filename();
   error_quit("Problem obtaining the sourcefile filename (" . $object->get_errormsg() .")")
     if ($object->error());
-    
+
   # Create the mergefile object for this sourcefile filename (if not existant yet)
   if (! defined $mergefiles{$sffn}) {
     my $mf = $object->clone_with_no_events();
@@ -225,20 +231,20 @@ foreach my $key (keys %all_vf) {
       if ($object->error());
     $mergefiles{$sffn} = $mf;
   }
-    
+
   # Get the observation list for this viper file
   my @ao = $object->get_all_events_observations();
   error_quit("While duplicating the source object (" . $object->get_errormsg() .")")
     if ($object->error());
   my @kept = ();
-    
+
   # Debugging
   if ($show > 2) {
     foreach my $obs (@ao) {
       print "** OBSERVATION MEMORY REPRESENATION (Before Processing):\n", $obs->_display();
     }
   }
-    
+
   # Frameshift
   if ($fsshift != 0) {
     foreach my $obs (@ao) {
@@ -248,7 +254,31 @@ foreach my $key (keys %all_vf) {
     }
     $step2add .= " [FrameShifted ($fsshift frames)]";
   }
-    
+
+  # ECF Helper File
+  if (($ecff ne "") && (scalar @ao > 0)) {
+    my $obs = $ao[0];
+
+    my $fl = $obs->get_filename();
+    my $fn = $obs->get_xmlfilename();
+    my $fs_file = $obs->get_fs_file();
+
+    error_quit("Problem obtaining Observation's information (" . $obs->get_errormsg() . ")")
+      if ($obs->error());
+
+    my $value = $fs_file->get_value();
+
+    error_quit("Problem obtaining Observation's Framespan's information (" . $fs_file->get_errormsg() . ")")
+      if ($fs_file->error());
+
+    my $key = "$fl-$value-$fn";
+
+    my $inc = 0;
+    $ecfv{$key}{$ecfh[$inc++]} = $fl;
+    $ecfv{$key}{$ecfh[$inc++]} = $value;
+    $ecfv{$key}{$ecfh[$inc++]} = $fn;
+  }
+
   # Overlap
   my $ovf = 0;
   if ($checkOverlap) {
@@ -265,19 +295,19 @@ foreach my $key (keys %all_vf) {
     }
     $step2add .= "]";
   }
-    
+
   # Debugging
   if (($show > 2) && ($step2add !~ m%^\s*$%)) {
     foreach my $obs (@ao) {
       print "** OBSERVATION MEMORY REPRESENATION (Post Processing):\n", $obs->_display();
     }
   }
-    
+
   # Add the observations to the EventList
   $EL->add_Observations(@ao);
   error_quit("Problem adding Observations to EventList (" . $EL->get_errormsg() . ")")
     if ($EL->error());
-    
+
   print "- Done processing Observations from '$fname'" . (($fsshift != 0) ? " [requested frameshift: $fsshift]" : "") . " (Found: ", scalar @ao, (($checkOverlap) ? " | Overlap Found: $ovf" : ""), ")$step2add\n";
   $adone += scalar @ao;
 }
@@ -285,7 +315,7 @@ print "* -> Found $adone Observations\n";
 
 
 ##########
-print "\n\n** STEP 3: Writting merge file(s)\n";
+print "\n\n** STEP ", $step++, ": Writting merge file(s)\n";
 
 my $fdone;
 my $ftodo = scalar keys %mergefiles;
@@ -337,23 +367,38 @@ print "* -> Wrote $fdone files (out of $ftodo)\n";
 error_quit("Not all file could be written, aborting")
   if ($fdone != $ftodo);
 
-die("\nDone.\n") if (! defined $olfile);
+####################
+# Optional step: write ecf helper file
+
+if ($ecff ne "") {
+  print "\n\n** STEP ", $step++, ": ECF Helper File\n";
+  open ECFF, ">$ecff"
+    or error_quit("Can not create \'ecfhelperfile\' ($ecff): $!");
+
+  my $txt = &do_csv(\@ecfh, %ecfv);
+
+  print ECFF $txt;
+  close ECCF;
+  print "Wrote: $ecff\n";
+}
+
+ok_quit("\nDone.\n") if (! defined $olfile);
 
 ##########
 # Optional step only performed if overlap list is requested
 
-print "\n\n** STEP 4: Overlap List\n";
+print "\n\n** STEP ", $step++, ": Overlap List\n";
 my %ovl;
 foreach my $key (keys %overlap_list) {
   $ovl{$key}++;
 }
 foreach my $key (sort keys %mergefiles) {
   my ($seen, $txt) = &prepare_overlap_list($key);
-  next if (! $seen);
+#  next if (! $seen); # Write the file even if no overlap is found
 
   if ($olfile ne "") {
     open OLF, ">$olfile"
-      or die "ERROR: Could not create output \'overlaplistfile\' ($olfile): $!\n";
+      or error_quit("Could not create output \'overlaplistfile\' ($olfile): $!\n");
     print OLF $txt;
     close OLF;
     print "Wrote \'overlaplistfile\': $olfile\n";
@@ -365,7 +410,7 @@ foreach my $key (sort keys %mergefiles) {
 error_quit("Some filenames left in overlap list ? (" . join(" ", keys %ovl), "), aborting")
   if (scalar keys %ovl > 0);
 
-die("\nDone.\n");
+ok_quit("\nDone.\n");
 
 ########## END
 
@@ -391,7 +436,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] --fps fps --writetodir dir
+Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]]] [--ecfhelperfile file.csv] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] --fps fps --writetodir dir
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -405,6 +450,7 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --shift_overlap Will find overlap for frameshifted file's sourcefile which obersvations overlap in the file overlap section
   --Same_overlap  Will find overlap for the same file's sourcefile (ie not framshifted) which observations overlap
   --overlaplistfile   Save list of overlap found into file (or stdout if not provided)
+  --ecfhelperfile Save a CSV file thaf contains information needed to generate the ECF file
   --version       Print version number and exit
   --help          Print this usage information and exit
 
@@ -735,4 +781,75 @@ sub prepare_overlap_list {
   $txt .= "|\n";
 
   return(1, $txt);
+}
+
+########################################
+
+sub quc { # Quote clean
+  my $in = shift @_;
+
+  $in =~ s%\"%\'%g;
+
+  return($in);
+}
+
+#####
+
+sub qua { # Quote Array
+  my @todo = @_;
+
+  my @out = ();
+  foreach my $in (@todo) {
+    $in = &quc($in);
+    push @out, "\"$in\"";
+  }
+
+  return(@out);
+}
+
+#####
+
+sub generate_csvline {
+  my @in = @_;
+
+  @in = &qua(@in);
+  my $txt = join(",", @in), "\n";
+
+  return($txt);
+}
+
+#####
+
+sub get_csvline {
+  my ($rord, $uid, %ohash) = @_;
+
+  my @keys = @{$rord};
+
+  my @todo;
+  foreach my $key (@keys) {
+    error_quit("Problem accessing key ($key) from observation hash")
+      if (! exists $ohash{$uid}{$key});
+    push @todo, $ohash{$uid}{$key};
+  }
+
+  return(&generate_csvline(@todo));
+}
+
+#####
+
+sub do_csv {
+  my ($rord, %ohash) = @_;
+
+  my @header = @{$rord};
+  my $txt = "";
+
+  $txt .= &generate_csvline(@header);
+  $txt .= "\n";
+
+  foreach my $uid (sort keys %ohash) {
+    $txt .= &get_csvline($rord, $uid, %ohash);
+    $txt .= "\n";
+  }
+
+  return($txt);
 }
