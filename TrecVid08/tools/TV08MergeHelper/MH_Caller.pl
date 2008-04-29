@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# LCD Files Merger
+# Merge Helper Caller
 #
 # Author(s): Martial Michel
 #
@@ -9,7 +9,7 @@
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "LDC Files Merger" is an experimental system.
+# "Merge Helper Caller" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -31,7 +31,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "LDC Files Merger (Version: $version)";
+my $versionid = "Merge Helper Caller (Version: $version)";
 
 ##########
 # Check we have every module (perl wise)
@@ -72,7 +72,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case permute));
 
 # Default values for variables
 
-my $merger = "./merger.pl";
+my $merger = "./TV08MergeHelper.pl";
 my $logdir = ".";
 my $usage = &set_usage();
 my $show = 0;
@@ -92,7 +92,7 @@ GetOptions
    \%opt,
    'help',
    'version',
-   'merger'       => \$merger,
+   'mergehelper'  => \$merger,
    'show_cmdline' => \$show,
    'logdir=s'     => \$logdir,
    'overlaplistdir=s' => \$ovdir,
@@ -104,7 +104,7 @@ die("\n$usage\n") if ($opt{'help'});
 die("$versionid\n") if ($opt{'version'});
 
 error_quit("No XML files seen on the command line\n\n$usage\n") if (scalar @fileslist == 0);
-error_quit("No \'merger\' parameters on the command line\n\n$usage\n") if (scalar @ARGV == 0);
+error_quit("No \'mergehelper\' parameters on the command line\n\n$usage\n") if (scalar @ARGV == 0);
 my @merger_cmds = @ARGV;
 
 
@@ -195,12 +195,12 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--merger fullpath] [--show_cmdline] [--logdir dir] [--overlaplistdir dir] [--ecfhelperdir dir] file.xml [file.xml [...]] -- merger_parameters
+Usage: $0 [--mergehelper fullcommandpath] [--show_cmdline] [--logdir dir] [--overlaplistdir dir] [--ecfhelperdir dir] file.xml [file.xml [...]] -- merger_parameters
 
 Will Score the XML file(s) provided (Truth vs System)
 
  Where:
-  --merger        Provide the merger script location (Default: $merger)
+  --mergehelper   Provide the mergehelper command location (Default: $merger)
   --show_cmdline  Display the merger command line that will be used
   --logdir        Specify the log directory (Default: $logdir)
   --overlaplistdir Specify the directory in which to ask the merger to generate the overlaplistfile
