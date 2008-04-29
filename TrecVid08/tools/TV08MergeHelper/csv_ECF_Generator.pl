@@ -36,17 +36,23 @@ my $versionid = "ECF Generator (Version: $version)";
 ##########
 # Check we have every module (perl wise)
 
+## First insure that we add the proper values to @INC
+my ($f4depl, $f4deplv);
+BEGIN {
+  $f4depl = "F4DE_PERL_LIB";
+  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+}
+use lib ($f4deplv);
+
+## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
+my $partofthistool = "It should have been part of this tools' files (please check your $f4depl environment variable).";
 
 # ViperFramespan (part of this tool)
 unless (eval "use ViperFramespan; 1")
   {
-    warn_print
-      (
-       "\"TrecVid08ViperFile\" is not available in your Perl installation. ",
-       "It should have been part of this tools' files."
-      );
+    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool);
     $have_everything = 0;
   }
 
@@ -190,6 +196,8 @@ EOF
 
 sub warn_print {
   print "WARNING: ", @_;
+
+  print "\n";
 }
 
 ##########
