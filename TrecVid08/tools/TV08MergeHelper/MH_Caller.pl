@@ -70,11 +70,11 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case permute));
 ########################################
 # Options processing
 
-# Default values for variables
-
 my $merger = "./TV08MergeHelper.pl";
 my $logdir = ".";
 my $usage = &set_usage();
+
+# Default values for variables
 my $show = 0;
 my $ovdir = "";
 my $ecfdir = "";

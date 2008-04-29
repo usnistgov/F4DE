@@ -97,10 +97,9 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 my @ov_modes = ("FrameShiftedFiles", "SameFramespanFiles", "All"); # Order is important
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
+my $usage = &set_usage();
 
 # Default values for variables
-
-my $usage = &set_usage();
 my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision informations set
 my $xmllint = &_get_env_val($xmllint_env, "");
 my $xsdpath = &_get_env_val($xsdpath_env, "../../data");

@@ -76,9 +76,9 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
-# Default values for variables
-
 my $usage = &set_usage();
+
+# Default values for variables
 my $ecff = "";
 my $fps = -1;
 
