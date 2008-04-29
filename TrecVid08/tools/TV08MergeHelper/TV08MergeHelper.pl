@@ -36,28 +36,32 @@ my $versionid = "TrecVid08 Viper XML File Merger Version: $version";
 ##########
 # Check we have every module (perl wise)
 
+## First insure that we add the proper values to @INC
+my ($tv08pl, $tv08plv, $f4depl, $f4deplv);
+BEGIN {
+  $tv08pl = "TV08_PERL_LIB";
+  $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
+  $f4depl = "F4DE_PERL_LIB";
+  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+}
+use lib ($tv08plv, $f4deplv);
+
+## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
+my $partofthistool = "It should have been part of this tools' files (please check your $tv08pl and $f4depl environment variables).";
 
 # TrecVid08ViperFile (part of this tool)
 unless (eval "use TrecVid08ViperFile; 1")
   {
-    warn_print
-      (
-       "\"TrecVid08ViperFile\" is not available in your Perl installation. ",
-       "It should have been part of this tools' files."
-      );
+    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool);
     $have_everything = 0;
   }
 
 # TrecVid08EventList (part of this tool)
 unless (eval "use TrecVid08EventList; 1")
   {
-    warn_print
-      (
-       "\"TrecVid08EventList\" is not available in your Perl installation. ",
-       "It should have been part of this tools' files."
-      );
+    warn_print("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool);
     $have_everything = 0;
   }
 
@@ -91,13 +95,15 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 # Options processing
 
 my @ov_modes = ("FrameShiftedFiles", "SameFramespanFiles", "All"); # Order is important
+my $xmllint_env = "TV08_XMLLINT";
+my $xsdpath_env = "TV08_XSDPATH";
 
 # Default values for variables
 
 my $usage = &set_usage();
 my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision informations set
-my $xmllint = "";
-my $xsdpath = ".";
+my $xmllint = &_get_env_val($xmllint_env, "");
+my $xsdpath = &_get_env_val($xsdpath_env, "../../data");
 my $writetodir = "";
 my $fps = -1;
 my $forceFilename = "";
@@ -434,6 +440,7 @@ sub set_usage {
   my $ro = join(" ", @ok_events);
   my $xsdfiles = join(" ", @xsdfilesl);
   my $tmp=<<EOF
+
 $versionid
 
 Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]]] [--ecfhelperfile file.csv] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] --fps fps --writetodir dir
@@ -442,10 +449,10 @@ Will perform a semantic validation of the Viper XML file(s) provided.
 
  Where:
   --gtf           Specify that the file to validate is a Ground Truth File
-  --xmllint       Full location of the \'xmllint\' executable
-  --TrecVid08xsd  Path where the XSD files can be found ($xsdfiles)
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
   --writetodir    Once processed in memory, print the new XML dump files to this directory
-  --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
+  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --ForceFilename Specify that all files loaded refers to the same 'sourcefile' file
   --shift_overlap Will find overlap for frameshifted file's sourcefile which obersvations overlap in the file overlap section
   --Same_overlap  Will find overlap for the same file's sourcefile (ie not framshifted) which observations overlap
@@ -457,6 +464,7 @@ Will perform a semantic validation of the Viper XML file(s) provided.
 Note:
 - This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
 - Program will ignore the <config> section of the XML file.
+- 'TrecVid08xsd' files are: $xsdfiles
 EOF
 ;
 
@@ -467,6 +475,8 @@ EOF
 
 sub warn_print {
   print "WARNING: ", @_;
+
+  print "\n";
 }
 
 ##########
@@ -852,4 +862,17 @@ sub do_csv {
   }
 
   return($txt);
+}
+
+########################################
+
+sub _get_env_val {
+  my $envv = shift @_;
+  my $default = shift @_;
+
+  my $var = $default;
+
+  $var = $ENV{$envv} if (exists $ENV{$envv});
+
+  return($var);
 }
