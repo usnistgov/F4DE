@@ -36,39 +36,39 @@ my $versionid = "TrecVid08 Scorer (Version: $version)";
 ##########
 # Check we have every module (perl wise)
 
+## First insure that we add the proper values to @INC
+my ($tv08pl, $tv08plv, $f4depl, $f4deplv);
+BEGIN {
+  $tv08pl = "TV08_PERL_LIB";
+  $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
+  $f4depl = "F4DE_PERL_LIB";
+  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+}
+use lib ($tv08plv, $f4deplv);
+
+## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
+my $partofthistool = "It should have been part of this tools' files (please check your $tv08pl and $f4depl environment variables).";
 
 # TrecVid08ViperFile (part of this tool)
 unless (eval "use TrecVid08ViperFile; 1")
   {
-    warn_print
-      (
-       "\"TrecVid08ViperFile\" is not available in your Perl installation. ",
-       "It should have been part of this tools' files."
-      );
+    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool);
     $have_everything = 0;
   }
 
 # TrecVid08EventList (part of this tool)
 unless (eval "use TrecVid08EventList; 1")
   {
-    warn_print
-      (
-       "\"TrecVid08ViperFile\" is not available in your Perl installation. ",
-       "It should have been part of this tools' files."
-      );
+    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool);
     $have_everything = 0;
   }
 
 # BipartiteMatch (part of this tool)
 unless (eval "use BipartiteMatch; 1")
   {
-    warn_print
-      (
-       "\"BipartiteMatch\" is not available in your Perl installation. ",
-       "It should have been part of this tools' files."
-      );
+    warn_print("\"BipartiteMatch\" is not available in your Perl installation. ", $partofthistool);
     $have_everything = 0;
   }
 
@@ -106,12 +106,14 @@ my $E_t = 1E-8;
 ########################################
 # Options processing
 
-# Default values for variables
-
+my $xmllint_env = "TV08_XMLLINT";
+my $xsdpath_env = "TV08_XSDPATH";
 my $usage = &set_usage();
+
+# Default values for variables
 my $show = 0;
-my $xmllint = "";
-my $xsdpath = ".";
+my $xmllint = &_get_env_val($xmllint_env, "");
+my $xsdpath = &_get_env_val($xsdpath_env, "../../data");
 my $fps = -1;
 my $gtfs = 0;
 my $delta_t = undef;
@@ -267,8 +269,8 @@ Will Score the XML file(s) provided (Truth vs System)
 
  Where:
   --gtf           Specify that the files post this marker on the command line are Ground Truth Files
-  --xmllint       Full location of the \'xmllint\' executable
-  --TrecVid08xsd  Path where the XSD files can be found ($xsdfiles)
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
   --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
   --deltat        Set the deltat value (required for the scoring part)
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
@@ -279,6 +281,7 @@ Note:
 - This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
 - Program will ignore the <config> section of the XML file.
 - List of recognized events: $ro
+- 'TrecVid08xsd' files are: $xsdfiles
 EOF
 ;
 
@@ -289,6 +292,8 @@ EOF
 
 sub warn_print {
   print "WARNING: ", @_;
+
+  print "\n";
 }
 
 ##########
@@ -476,4 +481,17 @@ sub Obs_array_to_hash {
   }
 
   return(%ohash);
+}
+
+########################################
+
+sub _get_env_val {
+  my $envv = shift @_;
+  my $default = shift @_;
+
+  my $var = $default;
+
+  $var = $ENV{$envv} if (exists $ENV{$envv});
+
+  return($var);
 }
