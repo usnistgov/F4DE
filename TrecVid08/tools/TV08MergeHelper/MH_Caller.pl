@@ -92,7 +92,7 @@ GetOptions
    \%opt,
    'help',
    'version',
-   'mergehelper'  => \$merger,
+   'mergehelper=s'  => \$merger,
    'show_cmdline' => \$show,
    'logdir=s'     => \$logdir,
    'overlaplistdir=s' => \$ovdir,
@@ -128,7 +128,7 @@ foreach my $fn (@fileslist) {
   }
 
   if ($file !~ m%^(.+?${camkey}\d+)\_(\d+)\_(\d+)\_.+\.\w+%) {
-    &valerr("Filename does not follow the expected pattern, skipping");
+    &valerr("Filename '$file' does not follow the expected pattern, skipping");
     next;
   }
 
