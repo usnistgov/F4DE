@@ -636,7 +636,7 @@ sub _check_overlap_core {
 sub _ovc_get_file_mpd {
   my ($ao, $el) = @_;
 
-  my $mpd = $ao->get_fs_file_middlepoint_distance_from_obs($el);
+  my $mpd = $ao->get_fs_file_extent_middlepoint_distance_from_obs($el);
   error_quit("Problem obtaining the observation's middlepoint distance (" . $ao->get_errormsg() . ")")
     if ($ao->error());
 
