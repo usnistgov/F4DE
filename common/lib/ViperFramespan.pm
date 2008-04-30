@@ -84,7 +84,7 @@ sub _fs_check_pair {
 
   return($error_msgs{"BadRangePair"})
     if ((&_is_blank($b)) || (&_is_blank($e)));
-  
+
   return($error_msgs{"NegativeValue"})
     if (($b < 0) || ($e < 0));
 
@@ -364,7 +364,7 @@ sub intersection {
 
 sub set_fps {
   my ($self, $fps) = @_;
-  
+
   return(0) if ($self->error());
 
   if ($fps =~ m%^pal$%i) {
@@ -715,13 +715,13 @@ sub is_within {
 
 ##########
 
-sub middlepoint {
+sub extent_middlepoint {
   my ($self) = @_;
 
   my ($v_beg, $v_end) = $self->get_beg_end_fs();
   return(-1) if ($self->error());
 
-  my $d = $self->duration();
+  my $d = $self->extent_duration();
   return($d) if ($self->error());
 
   return($v_beg + ($d / 2));
@@ -729,7 +729,7 @@ sub middlepoint {
 
 #####
 
-sub middlepoint_distance {
+sub extent_middlepoint_distance {
   my ($self, $other) = @_;
 
   return(-1) if ($self->error());
@@ -744,8 +744,8 @@ sub middlepoint_distance {
     return(-1);
   }
 
-  my $m1 = $self->middlepoint();
-  my $m2 = $other->middlepoint();
+  my $m1 = $self->extent_middlepoint();
+  my $m2 = $other->extent_middlepoint();
 
   return($m2 - $m1);
 }
@@ -753,17 +753,16 @@ sub middlepoint_distance {
 
 #####
 
-sub duration {
+sub extent_duration {
   my ($self) = @_;
 
   my ($v_beg, $v_end) = $self->get_beg_end_fs();
   return(-1) if ($self->error());
 
-  my $d = $v_end - $v_beg;
   # 1:3 is 1:2:3 so duration 3, and
   # 1:1 is 1, so duration 1
   # therefore end - beg + 1
-  $d++;
+  my $d = 1 + $v_end - $v_beg;
 
   return($d);
 }
@@ -788,6 +787,40 @@ sub get_end_fs {
   return(0) if ($self->error());
 
   return($v_end);
+}
+
+##########
+
+sub duration {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(0);
+  }
+
+  my $v = $self->get_value();
+
+  my @pairs = &_fs_split_line($v);
+
+  my $d = 0;
+  foreach my $p (@pairs) {
+    my ($err, $b, $e) = &_fs_split_pair($p);
+    if (! &_is_blank($err)) {
+      $self->_set_errormsg($err);
+      return(0);
+    }
+
+    # As for extent_duration:
+    # 1:3 is 1:2:3 so duration 3, and
+    # 1:1 is 1, so duration 1
+    # therefore end - beg + 1
+    $d += 1 + $e - $b;
+  }
+
+  return($d);
 }
 
 ######################################## 'ts' functions
@@ -883,7 +916,7 @@ sub get_beg_end_ts {
 
 ##########
 
-sub middlepoint_ts {
+sub extent_middlepoint_ts {
   my ($self) = @_;
 
   return(-1) if ($self->error());
@@ -893,7 +926,7 @@ sub middlepoint_ts {
     return(-1);
   }
 
-  my $mf = $self->middlepoint();
+  my $mf = $self->extent_middlepoint();
   return($mf) if ($self->error());
 
   return($self->frame_to_ts($mf));
@@ -901,13 +934,13 @@ sub middlepoint_ts {
 
 #####
 
-sub middlepoint_distance_ts {
+sub extent_middlepoint_distance_ts {
   my ($self, $other) = @_;
 
-  my $m1 = $self->middlepoint_ts();
+  my $m1 = $self->extent_middlepoint_ts();
   return($m1) if ($self->error());
 
-  my $m2 = $other->middlepoint_ts();
+  my $m2 = $other->extent_middlepoint_ts();
   if ($other->error()) {
     $self->_set_errormsg($other->get_errormsg());
     return($m2);
@@ -918,11 +951,29 @@ sub middlepoint_distance_ts {
 
 #####
 
+sub extent_duration_ts {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->is_fps_set()) {
+    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    return(-1);
+  }
+
+  my $d = $self->extent_duration();
+  return($d) if ($self->error());
+
+  return($self->frame_to_ts($d));
+}
+
+#####
+
 sub duration_ts {
   my ($self) = @_;
 
   return(-1) if ($self->error());
-  
+
   if (! $self->is_fps_set()) {
     $self->_set_errormsg($error_msgs{"FPSNotSet"});
     return(-1);
@@ -1093,32 +1144,36 @@ sub unit_test { # Xtreme coding and us ;)
   $otxt .= "$eh Error while checking \'count_pairs_in_value\' (expected: $etmp11b / Got: $tmp11b). "
     if ($etmp11b != $tmp11b);
 
-  # middlepoint + middlepoint_distance
+  # extent_middlepoint + extent_middlepoint_distance
   my $in12 = "20:39";
   my $fs_tmp12 = new ViperFramespan($in12);
   my $exp_out12 = 30; # = 20 + (((39+1) - 20) / 2)
-  my $out12 = $fs_tmp12->middlepoint();
-  $otxt .= "$eh Error while checking \'middlepoint\' (expected: $exp_out12 / Got: $out12). "
+  my $out12 = $fs_tmp12->extent_middlepoint();
+  $otxt .= "$eh Error while checking \'extent_middlepoint\' (expected: $exp_out12 / Got: $out12). "
     if ($exp_out12 != $out12);
 
-  my $in13 = "100:199"; # middlepoint: 150
+  my $in13 = "100:199"; # extent_middlepoint: 150
   my $fs_tmp13 = new ViperFramespan($in13);
 
-  my $out13 = $fs_tmp12->middlepoint_distance($fs_tmp13);
+  my $out13 = $fs_tmp12->extent_middlepoint_distance($fs_tmp13);
   my $exp_out13 = 120; # from 30 to 150 : +120
-  $otxt .= "$eh Error while checking \'middlepoint_distance\'[1] (expected: $exp_out13 / Got: $out13). "
+  $otxt .= "$eh Error while checking \'extent_middlepoint_distance\'[1] (expected: $exp_out13 / Got: $out13). "
     if ($exp_out13 != $out13);
 
-  my $out14 = $fs_tmp13->middlepoint_distance($fs_tmp12);
+  my $out14 = $fs_tmp13->extent_middlepoint_distance($fs_tmp12);
   my $exp_out14 = -120; # from 150 to 30 : -120
-  $otxt .= "$eh Error while checking \'middlepoint_distance\'[2] (expected: $exp_out14 / Got: $out14). "
+  $otxt .= "$eh Error while checking \'extent_middlepoint_distance\'[2] (expected: $exp_out14 / Got: $out14). "
     if ($exp_out14 != $out14);
 
-  my $out15 = $fs_tmp12->duration();
+  my $out15 = $fs_tmp12->extent_duration();
   my $exp_out15 = 20; # 20 [0] to 39 [19] = 20
-  $otxt .= "$eh Error while checking \'duration\' (expected: $exp_out15 / Got: $out15). "
+  $otxt .= "$eh Error while checking \'extent_duration\' (expected: $exp_out15 / Got: $out15). "
     if ($exp_out15 != $out15);
 
+  my $out15 = $fs_tmp12->duration();
+  my $exp_out15 = 20; # 20 [0] to 39 [19] = 20 (same as extent_duration because there is no gap in the framespan)
+  $otxt .= "$eh Error while checking \'duration\' (expected: $exp_out15 / Got: $out15). "
+    if ($exp_out15 != $out15);
 
   ########## TODO: unit_test for all 'fps' functions ##########
 
