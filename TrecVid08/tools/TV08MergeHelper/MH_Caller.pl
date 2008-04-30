@@ -92,7 +92,7 @@ GetOptions
    \%opt,
    'help',
    'version',
-   'mergehelper=s'  => \$merger,
+   'mergehelper=s'=> \$merger,
    'show_cmdline' => \$show,
    'logdir=s'     => \$logdir,
    'overlaplistdir=s' => \$ovdir,
