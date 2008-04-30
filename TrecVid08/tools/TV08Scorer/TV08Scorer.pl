@@ -72,6 +72,13 @@ unless (eval "use BipartiteMatch; 1")
     $have_everything = 0;
   }
 
+# Trials (part of this tool)
+unless (eval "use Trials; 1")
+  {
+    warn_print("\"Trials\" is not available in your Perl installation. ", $partofthistool);
+    $have_everything = 0;
+  }
+
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1")
   {
@@ -212,6 +219,8 @@ error_quit("Error while obtaining the EventList kernel function parameters (" . 
   if ($sysEL->error());
 
 my %all_bpm;
+my %metrics_params;
+my $trials = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
 foreach my $file (@common) {
   my @sys_events = $sysEL->get_events_list($file);
   error_quit("While trying to obtain a list of SYS events for file ($file) (" . $sysEL->get_errormsg() . ")")
@@ -243,11 +252,55 @@ foreach my $file (@common) {
       if ($bpm->error());
 
     # I am the coder, I know what I want to display/debug ... trust me !
-    $bpm->_display("joint_values", "mapped", "unmapped_ref", "unmapped_sys");
-    
+    $bpm->_display("joint_values", "mapped", "unmapped_ref", "unmapped_sys") if ($show);
+
+    ##### Add values to the 'Trials'
+    # First, the mapped sys observations
+    my @mapped = $bpm->get_mapped_objects();
+    error_quit("Problem obtaining the mapped objects from the BPM (" . $bpm->get_errormsg() . ")")
+      if ($bpm->error());
+    for (my $i = 0; $i < scalar @mapped; $i++) {
+      my ($sys_obj, $ref_obj) = @{$mapped[$i]};
+
+      my $detscr = $sys_obj->get_DetectionScore();
+      my $detdec = $sys_obj->get_DetectionDecision();
+      error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
+	if ($sys_obj->error());
+
+      $trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
+      # The last '1' is because the elements match an element in the ref list (target)
+    }
+
+    # Second, the False Alarms
+    my @unmapped_sys = $bpm->get_unmapped_sys_objects();
+    error_quit("Problem obtaining the unmapped_sys objects from the BPM (" . $bpm->get_errormsg() . ")")
+      if ($bpm->error());
+    foreach my $sys_obj (@unmapped_sys) {
+      my $detscr = $sys_obj->get_DetectionScore();
+      my $detdec = $sys_obj->get_DetectionDecision();
+      error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
+	if ($sys_obj->error());
+
+      $trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
+      # The last '0' is because the elements does not match an element in the ref list (target)
+    }
+
+    # Third, the Missed Detects
+    my @unmapped_ref = $bpm->get_unmapped_ref_objects();
+    error_quit("Problem obtaining the unmapped_ref objects from the BPM (" . $bpm->get_errormsg() . ")")
+      if ($bpm->error());
+    foreach my $ref_obj (@unmapped_ref) {
+      $trials->addTrial($evt, undef, "OMITTED", 1);
+      # Here we only care about the number of entries in this array
+    }
+    # 'Trials' done
+
     $all_bpm{$file}{$evt} = $bpm;
   }
 }
+
+$trials->dumpGrid();
+$trials->dump(*STDOUT);
 
 #### TODO #####
 
@@ -272,7 +325,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
   --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
-  --deltat        Set the deltat value (required for the scoring part)
+  --deltat        Set the deltat value
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
   --version       Print version number and exit
   --help          Print this usage information and exit
@@ -400,10 +453,10 @@ sub load_preprocessing {
     }
 
     # This is really if you are a debugger
-    print("** Memory Representation:\n", $object->_display_all()) if ($show);
+    print("** Memory Representation:\n", $object->_display_all()) if ($show > 1);
     
     # This is really if you are a debugger 
-    if ($show > 1) {
+    if ($show > 2) {
       print("** Observation representation:\n");
       foreach my $i (@ok_events) {
 	print("-- EVENT: $i\n");
