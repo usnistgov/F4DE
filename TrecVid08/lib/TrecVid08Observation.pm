@@ -1078,7 +1078,7 @@ sub Dur {
   my ($ok, $fs_v) = $self->_get_obs_framespan_core();
   return($ok) if (! $ok);
 
-  my $d = $fs_v->duration_ts();
+  my $d = $fs_v->extent_duration_ts();
   if ($fs_v->error()) {
     $self->_set_errormsg("While getting framespan's duration (" . $fs_v->get_errormsg() . ")");
     return(0);
@@ -1129,7 +1129,7 @@ sub Mid {
   my ($ok, $fs_v) = $self->_get_obs_framespan_core();
   return($ok) if (! $ok);
 
-  my $d = $fs_v->middlepoint_ts();
+  my $d = $fs_v->extent_middlepoint_ts();
   if ($fs_v->error()) {
     $self->_set_errormsg("While getting framespan's middlepoint (" . $fs_v->get_errormsg() . ")");
     return(0);
@@ -1487,12 +1487,12 @@ sub _ov_get_fs_file {
 
 ##########
 
-sub get_fs_file_middlepoint_distance {
+sub get_fs_file_extent_middlepoint_distance {
   my ($self, $fs_self, $fs_other) = @_;
 
-  my $mpd = $fs_self->middlepoint_distance($fs_other);
+  my $mpd = $fs_self->extent_middlepoint_distance($fs_other);
   if ($fs_self->error()) {
-    $self->_set_errormsg("Problem obtaining \'fs_file\' 's \'middlepoint_distance\' (" . $self->get_errormsg() .")");
+    $self->_set_errormsg("Problem obtaining \'fs_file\' 's \'extent_middlepoint_distance\' (" . $self->get_errormsg() .")");
     return(undef);
   }
 
@@ -1501,7 +1501,7 @@ sub get_fs_file_middlepoint_distance {
 
 #####
 
-sub get_fs_file_middlepoint_distance_from_obs {
+sub get_fs_file_extent_middlepoint_distance_from_obs {
   my ($self, $other) = @_;
 
   my $fs_self = $self->_ov_get_fs_file();
@@ -1513,18 +1513,18 @@ sub get_fs_file_middlepoint_distance_from_obs {
     return(undef);
   }
 
-  return($self->get_fs_file_middlepoint_distance($fs_self, $fs_other));
+  return($self->get_fs_file_extent_middlepoint_distance($fs_self, $fs_other));
 }
 
 #####
 
-sub get_fs_file_middlepoint_distance_from_ts {
+sub get_fs_file_extent_middlepoint_distance_from_ts {
   my ($self, $fs_other) = @_;
 
   my $fs_self = $self->_ov_get_fs_file();
   return(undef) if ($self->error());
 
-  return($self->get_fs_file_middlepoint_distance($fs_self, $fs_other));
+  return($self->get_fs_file_extent_middlepoint_distance($fs_self, $fs_other));
 }
 
 ##########
@@ -1591,12 +1591,12 @@ sub _ov_get_framespan {
 
 ##########
 
-sub get_framespan_middlepoint_distance {
+sub get_framespan_extent_middlepoint_distance {
   my ($self, $fs_self, $fs_other) = @_;
 
   my $mpd = $fs_self->middplepoint_distance($fs_other);
   if ($fs_self->error()) {
-    $self->_set_errormsg("Problem obtaining \'framespan\' 's \'middlepoint_distance\' (" . $self->get_errormsg() .")");
+    $self->_set_errormsg("Problem obtaining \'framespan\' 's \'extent_middlepoint_distance\' (" . $self->get_errormsg() .")");
     return(undef);
   }
 
@@ -1605,7 +1605,7 @@ sub get_framespan_middlepoint_distance {
 
 #####
 
-sub get_framespan_middlepoint_distance_from_obs {
+sub get_framespan_extent_middlepoint_distance_from_obs {
   my ($self, $other) = @_;
 
   my $fs_self = $self->_ov_get_framespan();
@@ -1617,18 +1617,18 @@ sub get_framespan_middlepoint_distance_from_obs {
     return(undef);
   }
 
-  return($self->get_framespan_middlepoint_distance($fs_self, $fs_other));
+  return($self->get_framespan_extent_middlepoint_distance($fs_self, $fs_other));
 }
 
 #####
 
-sub get_framespan_middlepoint_distance_from_fs {
+sub get_framespan_extent_middlepoint_distance_from_fs {
   my ($self, $fs_other) = @_;
 
   my $fs_self = $self->_ov_get_framespan();
   return(undef) if ($self->error());
 
-  return($self->get_framespan_middlepoint_distance($fs_self, $fs_other));
+  return($self->get_framespan_extent_middlepoint_distance($fs_self, $fs_other));
 }
 
 ##########
