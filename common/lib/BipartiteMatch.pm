@@ -60,6 +60,7 @@ sub new {
      unmapped_ref   => undef,
      unmapped_sys   => undef,
      mapped         => undef,
+     # Error Handler
      errormsg       => &_set_errormsg_txt("", $errormsg),
     };
 
@@ -117,6 +118,135 @@ sub error {
   return(0);
 }
 
+########## 'mapped', 'unmapped_ref', 'unmapped_sys' IDs
+
+sub _get_XXX_ids {
+  my ($self, $xxx) = @_;
+
+  return(undef) if ($self->error());
+
+  if (! $self->is_computed()) {
+    $self->_set_errormsg("Can not call \'get_${xxx}_ids\' on a non \'computed\' value");
+    return(undef);
+  }
+
+  my $rxxx = $self->{$xxx};
+  my @res = @{$rxxx};
+
+  return(@res);
+}
+
+#####
+
+sub get_mapped_ids {
+  my ($self) = @_;
+
+  return($self->_get_XXX_ids("mapped"));
+}
+
+#####
+
+sub get_unmapped_ref_ids {
+  my ($self) = @_;
+
+  return($self->_get_XXX_ids("unmapped_ref"));
+}
+
+#####
+
+sub get_unmapped_sys_ids {
+  my ($self) = @_;
+
+  return($self->_get_XXX_ids("unmapped_sys"));
+}
+
+########## 'mapped', 'unmapped_ref', 'unmapped_sys' Objects
+
+sub _get_known_key_in_hash {
+  my ($self, $key, %inhash) = @_;
+
+  if (! exists $inhash{$key}) {
+    $self->_set_errormsg("Can not find requested known existing key ($key) in given hash");
+    return(undef);
+  }
+
+  my $val = $inhash{$key};
+
+  return($val);
+}
+
+#####
+
+sub get_mapped_objects {
+  my ($self) = @_;
+
+  my @out;
+
+  my @mapped = $self->get_mapped_ids();
+  return(@out) if (($self->error()) || (scalar @mapped == 0));
+
+  my %sysObj = %{$self->{sysObj}};
+  my %refObj = %{$self->{refObj}};
+
+  my @tmp;
+  # mapped is the only two dimensional array
+  for (my $i = 0; $i < scalar @mapped; $i++) {
+    my ($sys_id, $ref_id) = @{$mapped[$i]};
+
+    my $sys_obj = $self->_get_known_key_in_hash($sys_id, %sysObj);
+    return(@out) if ($self->error());
+
+    my $ref_obj = $self->_get_known_key_in_hash($ref_id, %refObj);
+    return(@out) if ($self->error());
+
+    push @tmp, [ ($sys_obj, $ref_obj) ];
+  }
+
+  @out = @tmp;
+
+  return(@out);
+}
+
+#####
+
+sub _get_XXX_objects {
+  my ($self, $xxx, %inhash) = @_;
+
+  my @out;
+
+  my @xxxs = $self->_get_XXX_ids($xxx);
+  return(@out) if (($self->error()) || (scalar @xxxs == 0));
+
+  foreach my $obj_id (@xxxs) {
+    my $obj = $self->_get_known_key_in_hash($obj_id, %inhash);
+    return(undef) if ($self->error());
+
+    push @out, $obj;
+  }
+
+  return(@out);
+}
+
+#####
+
+sub get_unmapped_ref_objects {
+  my ($self) = @_;
+
+  my %refObj = %{$self->{refObj}};
+
+  return($self->_get_XXX_objects("unmapped_ref", %refObj));
+}
+
+#####
+
+sub get_unmapped_sys_objects {
+  my ($self) = @_;
+
+  my %sysObj = %{$self->{sysObj}};
+
+  return($self->_get_XXX_objects("unmapped_sys", %sysObj));
+}
+
 ########## 'computed'
 
 sub is_computed {
@@ -141,14 +271,14 @@ sub compute {
   return(1) if ($self->is_computed());
 
   my @kp = @{$self->{KernelAddParam}};
-  my %refObj = %{$self->{refObj}};
   my %sysObj = %{$self->{sysObj}};
+  my %refObj = %{$self->{refObj}};
 
   ##### Compute joint values
   my %joint_values;
-  while (my ($ref_id, $ref_occ) = each %refObj) {
-    while (my ($sys_id, $sys_occ) = each %sysObj) {
-      my ($err, $res) = &{$self->{KernelFunction}}($ref_occ, $sys_occ, @kp);
+  while (my ($ref_id, $ref_obj) = each %refObj) {
+    while (my ($sys_id, $sys_obj) = each %sysObj) {
+      my ($err, $res) = &{$self->{KernelFunction}}($ref_obj, $sys_obj, @kp);
       if (! &_is_blank($err)) {
 	$self->_set_errormsg("While computing the joint values for sys ID ($sys_id) and ref ID ($ref_id): $err");
 	return(0);
@@ -160,8 +290,8 @@ sub compute {
 
   ##### Compute false alarms values
   my %fa_values;
-  while (my ($sys_id, $sys_occ) = each %sysObj) {
-    my ($err, $res) = &{$self->{KernelFunction}}(undef, $sys_occ, @kp);
+  while (my ($sys_id, $sys_obj) = each %sysObj) {
+    my ($err, $res) = &{$self->{KernelFunction}}(undef, $sys_obj, @kp);
     if (! &_is_blank($err)) {
       $self->_set_errormsg("While computing the false alarm values for sys ID ($sys_id): $err");
       return(0);
@@ -172,8 +302,8 @@ sub compute {
 
   ##### Compute missed detect values
   my %md_values;
-  while (my ($ref_id, $ref_occ) = each %refObj) {
-    my ($err, $res) = &{$self->{KernelFunction}}($ref_occ, undef, @kp);
+  while (my ($ref_id, $ref_obj) = each %refObj) {
+    my ($err, $res) = &{$self->{KernelFunction}}($ref_obj, undef, @kp);
     if (! &_is_blank($err)) {
       $self->_set_errormsg("While computing the missed detect values for ref ID ($ref_id): $err");
       return(0);
@@ -205,8 +335,8 @@ sub compute {
   my @unmapped_sys;
   while (my ($ref_id, $sys_id) = each %map) {
     push @mapped, [ ($sys_id, $ref_id) ];
-    delete $ref_ids{$ref_id};
     delete $sys_ids{$sys_id};
+    delete $ref_ids{$ref_id};
   }
   # 'unmapped_ref'
   push @unmapped_ref, keys %ref_ids;
@@ -236,6 +366,7 @@ sub _map_ref_to_sys {
 
   # Create ref_info, sys_info and reversed_values
   my (%ref_info, %sys_info, %reversed_values);
+
   foreach my $ref_id (keys %joint_values) {
     return("No missed detect value for ref ID \'$ref_id\'", ())
       if (! defined $md_values{$ref_id});
@@ -250,7 +381,7 @@ sub _map_ref_to_sys {
       $reversed_values{$sys_id}{$ref_id} = $value;
     }
   }
-#  print "[%reversed_values] ", Dumper(\%reversed_values);
+
   foreach my $sys_id (keys %reversed_values) {
     return("No false alarm value for sys ID \'$sys_id\'", ())
       if (! defined $fa_values{$sys_id});
@@ -261,10 +392,6 @@ sub _map_ref_to_sys {
 	 val => $fa_values{$sys_id}
 	};
   }
-
-#  print "[%ref_info] ", Dumper(\%ref_info);
-#  print "[%sys_info] ", Dumper(\%sys_info);
-
 
   # Group ref and sys IDs into "cohort sets" and map each set independently
   my %map;
