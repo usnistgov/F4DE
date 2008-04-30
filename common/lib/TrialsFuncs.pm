@@ -91,7 +91,7 @@ sub addTrial
 {
     my ($self, $block, $sysscore, $decision, $isTarg) = @_;
 
-    die "Error: Decision must be \"YES|NO|OMITED\" not '$decision'" if ($decision !~ /^(YES|NO|OMITTED)$/);
+    die "Error: Decision must be \"YES|NO|OMITTED\" not '$decision'" if ($decision !~ /^(YES|NO|OMITTED)$/);
     my $attr = ($isTarg ? "TARG" : "NONTARG");
 
     if (! defined($self->{"trials"}{$block}{"title"}))
