@@ -108,7 +108,10 @@ sub addTrial
     ## update the counts
     $self->{"isSorted"} = 0;
     if ($decision ne "OMITTED"){
-	push(@{ $self->{"trials"}{$block}{$attr} }, $sysscore);
+  	    push(@{ $self->{"trials"}{$block}{$attr} }, $sysscore);
+    } else {
+        die "Error: Adding an OMITTED target trail with and defined decision score is illegal" if (defined($sysscore));
+        die "Error: OMITTED trials must be Target trials" if (! $isTarg);
     }
     $self->{"trials"}{$block}{$decision." $attr"} ++;
 }
