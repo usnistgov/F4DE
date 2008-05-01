@@ -128,7 +128,7 @@ foreach my $fn (@fileslist) {
   }
 
   if ($file !~ m%^(.+?${camkey}\d+)\_(\d+)\_(\d+)\_.+\.\w+%) {
-    &valerr("Filename '$file' does not follow the expected pattern, skipping");
+    &valerr($file, "Filename does not follow the expected pattern, skipping");
     next;
   }
 
@@ -144,10 +144,11 @@ foreach my $fn (@fileslist) {
   # Create the hash that contains the 'to merge' list 
   push @{$tomerge{$file_key}}, "$fn:$shift_fs";
 
+  &valok($file, "ok" . (($shift_fs) ? " (will request a frameshift of $shift_fs)" : ""));
   $ndone++;
 }
 
-print "\n*-> All files loaded ( $ndone ok / $ntodo)\n";
+print "*-> All files loaded ( $ndone ok / $ntodo)\n";
 error_quit("Can not continue, not all files patterns were recognized\n")
   if ($ndone != $ntodo);
 
