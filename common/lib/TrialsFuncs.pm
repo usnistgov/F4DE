@@ -40,7 +40,7 @@ sub new
 sub unitTest
 {
     print "Test Trials\n";
-    my $trial = new Trials("Term Detection", "Term", "Occurrence");
+    my $trial = new Trials("Term Detection", "Term", "Occurrence", { (TOTAL_TRIALS => 78) } );
     
     ## How to handle cases in STDEval
     ## Mapped 
@@ -57,8 +57,6 @@ sub unitTest
     $trial->addTrial("second", 0.3, "YES", 0);
     $trial->addTrial("second", 0.2, "NO", 0);
     $trial->addTrial("second", 0.3, "NO", 1);
-
-    $trial->setPooledTotalTrials(78);
 
     ### Test the contents
     print " Copying structure...  ";
@@ -80,7 +78,8 @@ sub unitTest
 	    die "Error: TARGs not sorted" if ($tr->{"trials"}{"second"}{"TARG"}[0] > $tr->{"trials"}{"second"}{"TARG"}[1]);
 	    die "Error: NONTARGs not sorted" if ($tr->{"trials"}{"second"}{"NONTARG"}[0] > $tr->{"trials"}{"second"}{"NONTARG"}[1]);
 	}
-	die "Error: pooledTotal trials not set" if ($tr->{pooledTotalTrials} != 78);
+	die "Error: pooledTotal trials does not exist" if (! $tr->getMetricParamValueExists("TOTAL_TRIALS"));
+	die "Error: pooledTotal trials not set" if ($tr->getMetricParamValue("TOTAL_TRIALS") != 78);
 
     }
     print "OK\n";
@@ -114,6 +113,21 @@ sub addTrial
     $self->{"trials"}{$block}{$decision." $attr"} ++;
 }
 
+sub getTaskID(){
+    my($self) = @_;
+    $self->{TaskID};
+}
+
+sub getBlockID(){
+    my($self) = @_;
+    $self->{BlockID};
+}
+
+sub getDecisionID(){
+    my($self) = @_;
+    $self->{DecisionID};
+}
+
 sub getMetricParams(){
     my($self) = @_;
     $self->{metricParams};
@@ -127,6 +141,21 @@ sub getMetricParamsStr(){
     }
     $str .= ') }';
     $str;   
+}
+
+sub setMetricParamValue(){
+    my($self, $key, $val) = @_;
+    $self->{metricParams}->{$key} = $val;
+}
+
+sub getMetricParamValueExists(){
+    my($self, $key) = @_;
+    exists($self->{metricParams}->{$key});
+}
+
+sub getMetricParamValue(){
+    my($self, $key) = @_;
+    $self->{metricParams}->{$key};
 }
 
 sub dump
@@ -190,7 +219,7 @@ sub dump
 sub copy()
 {
     my ($self, $block) = @_;
-    my ($copy) = new Trials($self->{TaskID}, $self->{BlockID}, $self->{DecisionID});
+    my ($copy) = new Trials($self->getTaskID(), $self->getBlockID(), $self->getDecisionID(), $self->getMetricParams());
     
     my @blocks;
     if (defined($block))
