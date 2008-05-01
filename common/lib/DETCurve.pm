@@ -19,7 +19,7 @@ package DETCurve;
 
 use strict;
 use Trials;
-use MetricSTD;
+use MetricTestStub;
 use Data::Dumper;
 
 my(@tics) = (0.00001, 0.0001, 0.001, 0.004, .01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 60, 80, 90, 95, 98, 99, 99.5, 99.9);
@@ -204,7 +204,7 @@ sub blockWeightedUnitTest()
     $emptyTrial->addTrial("she", undef, "OMITTED", 1);
 
     my $emptydet = new DETCurve($emptyTrial, 
-				new MetricSTD({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial),
+				new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial),
 				"blocked", undef, "footitle", \@isolinecoef);
     die "Error: Empty det should not be successful()" if ($emptydet->successful());
     print "  OK\n";
@@ -244,7 +244,7 @@ sub blockWeightedUnitTest()
     $trial->addTrial("notskip", undef, "OMITTED", 1);
 
     my $blockdetOrig = new DETCurve($trial, 
-				    new MetricSTD({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
+				    new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
 				    "blocked", undef, "footitle", \@isolinecoef);
     print "  OK\n";
     print " Serializing to a file...";
@@ -286,7 +286,7 @@ sub blockWeightedUnitTest()
 		thisabs($points[$i][6] - sprintf("%.3f",$blockdet->{POINTS}[$i][6])) > 0.001 ||
 		thisabs($points[$i][7] - sprintf("%.3f",$blockdet->{POINTS}[$i][7])) > 0.001);
     }
-	$blockdet->writeGNUGraph("fooblock");
+	#$blockdet->writeGNUGraph("fooblock");
     
     print "  OK\n";
 }
@@ -1261,7 +1261,7 @@ sub writeGNUGraph{
 	if (! (defined($options) && exists($options->{lTitleNoBestComb})));
     $ltitle .= sprintf("=($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr)
 	if (! (defined($options) && exists($options->{lTitleNoPointInfo})));
-    printf PLT "    '$fileRoot.dat.1' using 3:2 Standardtitle '$ltitle' with lines 2, \\\n";
+    printf PLT "    '$fileRoot.dat.1' using 3:2 title '$ltitle' with lines 2, \\\n";
     printf PLT "    '$fileRoot.dat.2' using 6:5 notitle with points 2";
     
     if ($self->{STYLE} ne "pooled"){
