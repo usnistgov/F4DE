@@ -313,7 +313,7 @@ foreach my $key (keys %all_vf) {
   error_quit("Problem adding Observations to EventList (" . $EL->get_errormsg() . ")")
     if ($EL->error());
 
-  print "- Done processing Observations from '$fname'" . (($fsshift != 0) ? " [requested frameshift: $fsshift]" : "") . " (Found: ", scalar @ao, (($checkOverlap) ? " | Overlap Found: $ovf" : ""), ")$step2add\n";
+  print "- Done processing Observations from '$fname' [File key: $sffn]" . (($fsshift != 0) ? " [requested frameshift: $fsshift]" : "") . " (Found: ", scalar @ao, (($checkOverlap) ? " | Overlap Found: $ovf" : ""), ")$step2add\n";
   $adone += scalar @ao;
 }
 print "* -> Found $adone Observations\n";
@@ -322,10 +322,16 @@ print "* -> Found $adone Observations\n";
 ##########
 print "\n\n** STEP ", $step++, ": Writting merge file(s)\n";
 
-my $fdone;
+my $fdone = 0;
+my $fproc = 0;
 my $ftodo = scalar keys %mergefiles;
 foreach my $key (sort keys %mergefiles) {
   my $mf = $mergefiles{$key};
+  if (! $EL->is_filename_in($key)) {
+    print "|-> File key ($key)'s EventList does not exist (no observations found for this file ?)\n";
+    $fproc++;
+    next;
+  }
 
   # Now add all observations from the current file to the output file
   foreach my $i (@ok_events) {
@@ -365,12 +371,13 @@ foreach my $key (sort keys %mergefiles) {
   close WRITETO;
   print "Wrote: $writeto\n";
 
+  $fproc++;
   $fdone++;
 }
-print "* -> Wrote $fdone files (out of $ftodo)\n";
+print "* -> Processed $fproc file and Wrote $fdone files (out of $ftodo)\n";
 
-error_quit("Not all file could be written, aborting")
-  if ($fdone != $ftodo);
+error_quit("Not all file could be processed, aborting")
+  if ($fproc != $ftodo);
 
 ####################
 # Optional step: write ecf helper file
