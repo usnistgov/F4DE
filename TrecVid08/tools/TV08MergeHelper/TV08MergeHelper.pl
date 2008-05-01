@@ -169,26 +169,28 @@ error_quit("Problem with \'writetodir\': $!")
 
 ##############################
 # Main processing
-my $tmp;
-my $ntodo = scalar @ARGV;
-my $ndone = 0;
-my %all_vf;
 
 my $step = 1;
 ##########
 print "\n\n** STEP ", $step++, ": Load all files to be merged\n";
-while ($tmp = shift @ARGV) {
-  error_quit("File key ($tmp) seems to have already been loaded; can not load same file key multiple times, aborting")
-    if (exists $all_vf{$tmp});
+my $ntodo = scalar @ARGV;
+my $ndone = 0;
+my %all_vf;
+foreach my $tmp (@ARGV) {
+  my ($fname, $fsshift) = &get_fname_fsshift($tmp);
+  my $key = &make_key_from_fname_fsshift($fname, $fsshift);
 
-  my ($ok, $object) = &load_file($isgtf, $tmp);
+  error_quit("File key ($key) seems to have already been loaded; can not load same file key multiple times, aborting")
+    if (exists $all_vf{$key});
+
+  my ($ok, $object) = &load_file($isgtf, $tmp, $fname, $fsshift);
   next if (! $ok);
 
-  $all_vf{$tmp} = $object;
+  $all_vf{$key} = $object;
   $ndone++;
 
   if ($show > 3) {
-    print "** FILE Key: $tmp\n";
+    print "** FILE Key: $key\n";
     print $object->_display();
   }
 }
@@ -212,8 +214,8 @@ my %overlap_ids;
 my @ecfh = ("SourceFile Filename", "Framespan", "XGTF File"); # Order is important
 my %ecfv;
 
-foreach my $key (keys %all_vf) {
-  my ($fname, $fsshift) = &get_fname_fsshift($key);
+foreach my $key (sort keys %all_vf) {
+  my ($fname, $fsshift) = &get_fname_fsshift_from_key($key);
 
   my $object = $all_vf{$key};
   my $step2add = "";
@@ -238,10 +240,17 @@ foreach my $key (keys %all_vf) {
   }
 
   # Get the observation list for this viper file
-  my @ao = $object->get_all_events_observations();
-  error_quit("While duplicating the source object (" . $object->get_errormsg() .")")
+  my @ao;
+  # Starting with the dummy one
+  my $dummy_obs = $object->get_dummy_observation();
+  error_quit("While obtaining the dummy observation (" . $object->get_errormsg() .")")
     if ($object->error());
-  my @kept = ();
+  push @ao, $dummy_obs;
+  # Now all the others
+  my @tao = $object->get_all_events_observations();
+  error_quit("While obtaining all events' observations (" . $object->get_errormsg() .")")
+    if ($object->error());
+  push @ao, @tao;
 
   # Debugging
   if ($show > 2) {
@@ -261,8 +270,8 @@ foreach my $key (keys %all_vf) {
   }
 
   # ECF Helper File
-  if (($ecff ne "") && (scalar @ao > 0)) {
-    my $obs = $ao[0];
+  if ($ecff ne "") {
+    my $obs = $ao[0]; # Always true thanks to the dummy observation
 
     my $fl = $obs->get_filename();
     my $fn = $obs->get_xmlfilename();
@@ -313,8 +322,9 @@ foreach my $key (keys %all_vf) {
   error_quit("Problem adding Observations to EventList (" . $EL->get_errormsg() . ")")
     if ($EL->error());
 
-  print "- Done processing Observations from '$fname' [File key: $sffn]" . (($fsshift != 0) ? " [requested frameshift: $fsshift]" : "") . " (Found: ", scalar @ao, (($checkOverlap) ? " | Overlap Found: $ovf" : ""), ")$step2add\n";
-  $adone += scalar @ao;
+  my $fobs = scalar @ao - 1; # Remove the dummy obs
+  print "- Done processing Observations from '$fname' [File key: $sffn]" . (($fsshift != 0) ? " [requested frameshift: $fsshift]" : "") . " (Found: $fobs", (($checkOverlap) ? " | Overlap Found: $ovf" : ""), ")$step2add\n";
+  $adone += $fobs;
 }
 print "* -> Found $adone Observations\n";
 
@@ -327,31 +337,40 @@ my $ftodo = scalar keys %mergefiles;
 foreach my $key (sort keys %mergefiles) {
   my $mf = $mergefiles{$key};
 
-  my $txtadd = "";
-  if (! $EL->is_filename_in($key)) {
-    $txtadd .= " (no observations found for this file)";
-  } else {
-    # Now add all observations from the current file to the output file
-    foreach my $i (@ok_events) {
-      my @bucket = $EL->get_Observations_list($key, $i);
-      error_quit("While obatining Observations list ($key / $i) (" . $EL->get_errormsg() .")")
-	if ($EL->error());
-      foreach my $obs (@bucket) {
-	# Add a comment to the observation to indicate where it came from
-	my $comment = "Was originally: " . $obs->get_unique_id();
-	$obs->addto_comment($comment);
-	error_quit("While adding a comment to observation (" . $obs->get_errormsg() .")")
-	  if ($obs->error());
-	
-	# Debugging
-	if ($show > 1) {
-	  print "** OBSERVATION MEMORY REPRESENATION:\n", $obs->_display();
-	}
-	
-	$mf->add_observation($obs);
-	error_quit("While \'add_observation\' (" . $mf->get_errormsg() .")")
-	  if ($mf->error());
+  my $fobs = 0;
+  # Now add all observations from the current file to the output file
+  # Note that thanks to the dummy observation we always have an entry in the EL
+  ## We start by the dummy observation, and we only want to extend the
+  # mergefile's NUMFRAMES with it
+  my @bucket = $EL->get_dummy_Observations_list($key);
+  error_quit("While obtaining dummy Observations list ($key) (" . $EL->get_errormsg() .")")
+    if ($EL->error());
+  foreach my $obs (@bucket) {
+    $mf->extend_numframes_from_observation($obs);
+    error_quit("While \'extend_numframes_from_observation\' (" . $mf->get_errormsg() .")")
+      if ($mf->error());
+  }    
+  # Then we add the rest of the observations
+  foreach my $i (@ok_events) {
+    my @bucket = $EL->get_Observations_list($key, $i);
+    $fobs += scalar @bucket;
+    error_quit("While obatining Observations list ($key / $i) (" . $EL->get_errormsg() .")")
+      if ($EL->error());
+    foreach my $obs (@bucket) {
+      # Add a comment to the observation to indicate where it came from
+      my $comment = "Was originally: " . $obs->get_unique_id();
+      $obs->addto_comment($comment);
+      error_quit("While adding a comment to observation (" . $obs->get_errormsg() .")")
+	if ($obs->error());
+      
+      # Debugging
+      if ($show > 1) {
+	print "** OBSERVATION MEMORY REPRESENATION:\n", $obs->_display();
       }
+      
+      $mf->add_observation($obs);
+      error_quit("While \'add_observation\' (" . $mf->get_errormsg() .")")
+	if ($mf->error());
     }
   }
 
@@ -369,7 +388,7 @@ foreach my $key (sort keys %mergefiles) {
     or error_quit("Could not create output XML file ($writeto): $!\n");
   print WRITETO $txt;
   close WRITETO;
-  print "Wrote: $writeto$txtadd\n";
+  print "Wrote: $writeto", (($fobs == 0) ? " (No observation)" : ""), "\n";
 
   $fdone++;
 }
@@ -520,10 +539,31 @@ sub get_fname_fsshift {
 
 #####
 
-sub load_file {
-  my ($isgtf, $tmp) = @_;
+sub make_key_from_fname_fsshift {
+  my ($fname, $fsshift) = @_;
 
-  my ($fname, $fsshift) = &get_fname_fsshift($tmp);
+  my $key = sprintf("%012d:%s", $fsshift, $fname);
+
+  return($key);
+}
+
+#####
+
+sub get_fname_fsshift_from_key {
+  my ($key) = @_;
+
+  my ($fsshift, $fname, @rest) = split(m%\:+%, $key);
+
+  error_quit("WEIRD: Left over in file key ? (" . join(" ", @rest) .")")
+    if (scalar @rest > 0);
+
+  return($fname, 0 + $fsshift);
+}
+
+#####
+
+sub load_file {
+  my ($isgtf, $tmp, $fname, $fsshift) = @_;
 
   if (! -e $fname) {
     &valerr($tmp, "file does not exists, skipping");
