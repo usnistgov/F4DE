@@ -80,35 +80,37 @@ my %hash_file_attributes_types =
 my @array_file_inline_attributes =
   ( "id", "name" ); # 'id' is to be first
 
-my %hash_objects_attributes_types = 
-  (
-   "Point" => "point",
-   "BoundingBox" => "bbox",
-   "DetectionScore" => "fvalue",
-   "DetectionDecision" => "bvalue",
-  );
+my @list_objects_attributes = # Order is important
+  ("DetectionScore", "DetectionDecision", "Point", "BoundingBox");
 
-my %hash_objects_attributes_types_dynamic = 
-  (
-   "Point" => 1,
-   "BoundingBox" => 1,
-   "DetectionScore" => 0,
-   "DetectionDecision" => 0,
-  );
+my @list_objects_attributes_types = # Order is important (has to match previous)
+  ("fvalue", "bvalue", "point", "bbox");
+
+my @list_objects_attributes_isd = # Order is important (has to match previous too)
+  (0, 0, 1, 1);
+
+my @not_gtf_required_objects_attributes =
+  ($list_objects_attributes[0], $list_objects_attributes[1]);
+
+my %hash_objects_attributes_types;
+
+my %hash_objects_attributes_types_dynamic;
+
+my %hasharray_inline_attributes;
+@{$hasharray_inline_attributes{"bbox"}} = ("x", "y", "height", "width");
+@{$hasharray_inline_attributes{"point"}} = ("x", "y");
+@{$hasharray_inline_attributes{"fvalue"}} = ("value");
+@{$hasharray_inline_attributes{"bvalue"}} = ("value");
+@{$hasharray_inline_attributes{"dvalue"}} = ("value");
 
 my @array_objects_inline_attributes = 
   ("name", "id", "framespan"); # order is important
 
-my %hasharray_inline_attributes;
-@{$hasharray_inline_attributes{"bbox"}} = ("x", "y", "height", "width");
-@{$hasharray_inline_attributes{"BoundingBox"}} = @{$hasharray_inline_attributes{"bbox"}};
-@{$hasharray_inline_attributes{"point"}} = ("x", "y");
-@{$hasharray_inline_attributes{"Point"}} = @{$hasharray_inline_attributes{"point"}};
-@{$hasharray_inline_attributes{"fvalue"}} = ("value");
-@{$hasharray_inline_attributes{"DetectionScore"}} = @{$hasharray_inline_attributes{"fvalue"}};
-@{$hasharray_inline_attributes{"bvalue"}} = ("value");
-@{$hasharray_inline_attributes{"DetectionDecision"}} = @{$hasharray_inline_attributes{"bvalue"}};
-@{$hasharray_inline_attributes{"dvalue"}} = ("value");
+my %not_gtf_required_dummy_values =
+  (
+   $not_gtf_required_objects_attributes[0] => 0,
+   $not_gtf_required_objects_attributes[1] => 0,
+  );
 
 ##########
 # Default values to compare against (constant values)
@@ -136,8 +138,9 @@ sub new {
 
   ## Run the ViperFramespan test_unit just to be sure
   my $fs_tmp = new ViperFramespan();
-  $versionid .= "\n" . $fs_tmp->get_version();
   $errormsg .= $fs_tmp->get_errormsg() if (! $fs_tmp->unit_test());
+
+  &_fill_required_hashes();
 
   my $self =
     {
@@ -155,6 +158,24 @@ sub new {
 
   bless $self;
   return($self);
+}
+
+#####
+
+sub _fill_required_hashes {
+  for (my $i = 0; $i < scalar @list_objects_attributes; $i++) {
+    my $key  = $list_objects_attributes[$i];
+    my $keyt = $list_objects_attributes_types[$i];
+
+    $hash_objects_attributes_types{$key} = 
+      $keyt;
+
+    $hash_objects_attributes_types_dynamic{$key} =
+      $list_objects_attributes_isd[$i];
+
+    @{$hasharray_inline_attributes{$key}} =
+      @{$hasharray_inline_attributes{$keyt}};
+  }
 }
 
 ####################
@@ -849,20 +870,13 @@ sub get_sourcefile_filename {
   return($fname);
 }
 
-#####
+##########
 
-sub get_event_observations {
-  my ($self, $event) = @_;
-
-   return(-1) if ($self->error());
+sub _get_event_observation_common {
+  my ($self) = @_;
 
   if (! $self->is_validated()) {
     $self->_set_errormsg("Can only create observations for a validated file");
-    return(0);
-  }
-
-  if (! grep(m%^$event$%, @ok_events)) {
-    $self->_set_errormsg("Requested event ($event) is not a recognized event");
     return(0);
   }
 
@@ -874,7 +888,126 @@ sub get_event_observations {
   my $xmlfile = $self->get_file();
   my $filename = $self->get_sourcefile_filename();
   my $fps = $self->get_fps();
+  my $isgtf = $self->check_if_gtf();
+  my $file_fs = $self->_get_fhash_file_numframes();
+  
+  return(0) if ($self->error());
 
+  return($xmlfile, $filename, $fps, $isgtf, $file_fs);
+}
+
+#####
+
+sub get_dummy_observation {
+  my ($self) = @_;
+  # This function is really only used by the merger in case there are no observations in a file
+
+  my ($xmlfile, $filename, $fps, $isgtf, $file_fs) = $self->_get_event_observation_common();
+  return(0) if ($self->error());
+
+  my $id = 0;
+  my %in = $self->_get_fhash();
+  my %file_info = %{$in{"file"}};
+
+  my $obs = new TrecVid08Observation();
+  my $event = $obs->get_key_dummy_eventtype();
+  if ($obs->error()) {
+    $self->_set_errormsg("Problem getting \'dummy eventtype\' from observation (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  if (! $obs->set_filename($filename) ) {
+    $self->_set_errormsg("Problem adding \'file\' ($filename) to observation (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  if (! $obs->set_xmlfilename($xmlfile) ) {
+    $self->_set_errormsg("Problem adding \'xmlfile\' ($xmlfile) to observation (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  if (! $obs->set_eventtype($event) ) {
+    $self->_set_errormsg("Problem adding \'eventtype\' ($event) to observation (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  if (! $obs->set_id($id) ) {
+    $self->_set_errormsg("Problem adding \'id\' ($id) to observation (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  if (! $obs->set_ofi(%file_info) ) {
+    $self->_set_errormsg("Problem adding \'other file informations\' to observation (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  if (! $obs->set_isgtf($isgtf) ) {
+    $self->_set_errormsg("Problem adding \'isgtf\' to observation (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  my $fs_file = new ViperFramespan();
+  if (! $fs_file->set_value_from_beg_to($file_fs)) {
+    $self->_set_errormsg("In observation creation: File's ViperFramespan ($file_fs) error (" . $fs_file->get_errormsg() . ")");
+    return(0);
+  }
+  if (! $fs_file->set_fps($fps)) {
+    $self->_set_errormsg("In observation creation: File's ViperFramespan ($file_fs) error (" . $fs_file->get_errormsg() . ")");
+    return(0);
+  }
+  if (! $obs->set_fs_file($fs_file) ) {
+    $self->_set_errormsg("Problem adding \'fs_file\' to observation (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  my $fs = $file_fs; # to validate, it needs a obs' framespan
+  my $fs_fs = new ViperFramespan();
+  if (! $fs_fs->set_value_from_beg_to($fs)) {
+    $self->_set_errormsg("In observation creation: ViperFramespan ($fs) error (" . $fs_fs->get_errormsg() . ")");
+    return(0);
+  }
+  if (! $fs_fs->set_fps($fps)) {
+    $self->_set_errormsg("In observation creation: ViperFramespan ($fs) error (" . $fs_fs->get_errormsg() . ")");
+    return(0);
+  }
+  if (! $obs->set_framespan($fs_fs) ) {
+    $self->_set_errormsg("Problem adding \'framespan\' to observation (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  # No a GTF ? Add required fake infos to the observation
+  # Note that we do not worry about dynamic ojects here (ie: TODO)
+  if (! $isgtf) {
+    foreach my $key (@not_gtf_required_objects_attributes) {
+      $obs->set_selected($key, $not_gtf_required_dummy_values{$key});
+      if ($obs->error()) {
+	$self->_set_errormsg("Problem while using \'set_selected\' ($key) on observation (" . $obs->get_errormsg() .")");
+	return(0);
+      }
+    }
+  }
+
+  if (! $obs->validate()) {
+    $self->_set_errormsg("Problem validating observation (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  return($obs);
+}
+
+#####
+
+sub get_event_observations {
+  my ($self, $event) = @_;
+
+  return(0) if ($self->error());
+
+  if (! grep(m%^$event$%, @ok_events)) {
+    $self->_set_errormsg("Requested event ($event) is not a recognized event");
+    return(0);
+  }
+
+  my ($xmlfile, $filename, $fps, $isgtf, $file_fs) = $self->_get_event_observation_common();
   return(0) if ($self->error());
 
   my %in = $self->_get_fhash();
@@ -915,14 +1048,11 @@ sub get_event_observations {
       return(0);
     }
 
-    my $isgtf = $self->check_if_gtf();
     if (! $obs->set_isgtf($isgtf) ) {
       $self->_set_errormsg("Problem adding \'isgtf\' to observation (" . $obs->get_errormsg() .")");
       return(0);
     }
 
-    my $file_fs = $self->_get_fhash_file_numframes();
-    return(0) if ($self->error());
     my $fs_file = new ViperFramespan();
     if (! $fs_file->set_value_from_beg_to($file_fs)) {
       $self->_set_errormsg("In observation creation: File ViperFramespan ($file_fs) error (" . $fs_file->get_errormsg() . ")");
@@ -1147,7 +1277,7 @@ sub _get_fhash_file_numframes {
 ####
 
 sub _set_fhash_file_numframes {
-  my ($self, $numframes, $ignoresmallervalues) = @_;
+  my ($self, $numframes, $ignoresmallervalues, $commentadd) = @_;
 
   if ($numframes <= 0) {
     $self->_set_errormsg("Can not set file's \'numframes\' to a negative or zero value");
@@ -1174,6 +1304,7 @@ sub _set_fhash_file_numframes {
   $tmp{"file"}{"NUMFRAMES"} = $numframes;
 
   $self->_set_fhash(%tmp);
+  $self->_addto_comment("NUMFRAMES extended from $cnf to $numframes" . ((! &_is_blank($commentadd)) ? " ($commentadd)" : ""));
   return(0) if ($self->error());
 
   return(1);
@@ -1182,9 +1313,9 @@ sub _set_fhash_file_numframes {
 #####
 
 sub extend_numframes {
-  my ($self, $numframes) = @_;
+  my ($self, $numframes, $commentadd) = @_;
 
-  return($self->_set_fhash_file_numframes($numframes, 1));
+  return($self->_set_fhash_file_numframes($numframes, 1, $commentadd));
 }
 
 ##########
@@ -1237,10 +1368,10 @@ sub _bvalue_convert {
 
 #####
 
-sub add_observation {
+sub _add_obs_core {
   my ($self, $obs) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if ($obs->error()) {
     $self->_set_errormsg("Proposed Observation seems to have problems (" . $obs->get_errormsg() .")");
@@ -1257,15 +1388,52 @@ sub add_observation {
     return(0);
   }
 
-  # Get observation's eventtype
-  my $event = $obs->get_eventtype();
+  return(1);
+}
 
-  # Now get the observation's file information (to access \'filename\' and \'numframes\')
+#####
+
+sub extend_numframes_from_observation {
+  my ($self, $obs) = @_;
+
+  $self->_add_obs_core($obs);
+  return(-1) if ($self->error());
+
   my %ofi = $obs->get_ofi();
   if ($obs->error()) {
     $self->_set_errormsg("Proposed Observation encountered a problems (" . $obs->get_errormsg() .")");
     return(0);
   }
+
+  my $uid = $obs->get_unique_id();
+  if ($obs->error()) {
+    $self->_set_errormsg("Problem getting the Observation's unique_id (" . $obs->get_errormsg() .")");
+    return(0);
+  }
+
+  # Try to extend the "NUMFRAMES" (if required)
+  my $key = "NUMFRAMES";
+  if (! exists $ofi{$key}) {
+    $self->_set_errormsg("WEIRD: Problem accessing the observation's file \'$key\' information");
+    return(0);
+  }
+  my $nf = $ofi{$key};
+
+  return(0) if (! $self->extend_numframes($nf, $uid) );
+
+  return(1);
+}
+
+#####
+
+sub add_observation {
+  my ($self, $obs) = @_;
+
+  $self->_add_obs_core($obs);
+  return(-1) if ($self->error());
+
+  # Get observation's eventtype
+  my $event = $obs->get_eventtype();
 
   # Confirm the cleaned up filename is the same
   my $obs_filename = $obs->get_filename();
@@ -1289,19 +1457,13 @@ sub add_observation {
 
   ##### From now on we make changes to the structure
 
-  # Try to extend the "NUMFRAMES" (if required)
-  my $key = "NUMFRAMES";
-  if (! exists $ofi{$key}) {
-    $self->_set_errormsg("WEIRD: Problem accessing the observation's file \'$key\' information");
-    return(0);
-  }
-  return(0) if (! $self->extend_numframes($ofi{$key}));
+  return(0) if (! $self->extend_numframes_from_observation($obs));
 
   my %tmp = $self->_get_fhash();
   my %sp_out; # will be added to $fhash{event}{id}
 
   # Get the global framespan
-  $key = "framespan";
+  my $key = "framespan";
   my $fs_obs = $obs->get_framespan();
   if ($obs->error()) {
     $self->_set_errormsg("Problem accessing the observation's framespan (" . $obs->get_errormsg() .")");
@@ -1943,7 +2105,7 @@ sub _parse_object_section {
   return("Found some unexpected \'$wtag\' attributes", ())
     if (scalar @$out > 0);
 
-  my @det_sub = grep (/^detection/i, keys %expected_hash);
+  my @det_sub = @not_gtf_required_objects_attributes;
 
   # Check they are of valid type & reformat them for the output object hash
   foreach my $key (@expected) {
