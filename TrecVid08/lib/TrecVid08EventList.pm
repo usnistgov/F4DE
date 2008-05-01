@@ -37,6 +37,8 @@ my $versionid = "TrecVid08EventList.pm Version: $version";
 
 my @ok_events;
 my @kernel_params_list;
+my @full_ok_events;
+my $obs_dummy_key;
 
 ## Constructor
 sub new {
@@ -72,14 +74,6 @@ sub new {
 
 #####
 
-sub _set_infos_Observations {
-  my $dummy = new TrecVid08Observation();
-  @kernel_params_list = $dummy->get_kernel_params_list();
-  return($dummy->get_errormsg());
-}
-
-#####
-
 sub _set_infos_ViperFile {
   my $dummy = new TrecVid08ViperFile();
   @ok_events = $dummy->get_full_events_list();
@@ -88,11 +82,24 @@ sub _set_infos_ViperFile {
 
 #####
 
+sub _set_infos_Observations {
+  my $dummy = new TrecVid08Observation();
+  @kernel_params_list = $dummy->get_kernel_params_list();
+  $obs_dummy_key = $dummy->get_key_dummy_eventtype();
+  @full_ok_events = @ok_events;
+  push @full_ok_events, $obs_dummy_key;
+  return($dummy->get_errormsg());
+}
+
+#####
+
 sub _set_infos {
   my $txt = "";
 
-  $txt .= &_set_infos_Observations();
+  # the viperfile one need to be run first to get ok_events
   $txt .= &_set_infos_ViperFile();
+  # now we can set full_ok_events
+  $txt .= &_set_infos_Observations();
 
   return($txt);
 }
@@ -438,6 +445,11 @@ sub _add_observation_core {
     return(0);
   }
 
+  if (! grep(m%^$eventtype$%, @full_ok_events) ) {
+    $self->_set_errormsg("Can not add Observation to EventList, it has an invalid eventtype ($eventtype)");
+    return(0);
+  }
+
   my $s_isgtf = $self->get_isgtf();
   return(0) if ($self->error());
 
@@ -465,7 +477,8 @@ sub _add_first_observation {
   $self->set_isgtf($isgtf);
   return(0) if ($self->error());
 
-  return($self->_add_observation_core($obs, ()));
+  my %ihash; # Empty hash
+  return($self->_add_observation_core($obs, %ihash));
 }
 
 #####
@@ -611,7 +624,7 @@ sub is_filename_in {
 
 ##########
 
-sub get_events_list {
+sub _get_events_list_core {
   my ($self, $filename) = @_;
 
   my $in = $self->is_filename_in($filename);
@@ -635,17 +648,42 @@ sub get_events_list {
 
 #####
 
+sub get_full_events_list { # Include $obs_dummy_key if in it
+  my ($self, $filename) = @_;
+
+  return($self->_get_events_list_core($filename));
+}
+
+#####
+
+sub get_events_list { # Remove $obs_dummy_key if it is in the list
+  my ($self, $filename) = @_;
+
+  my @in = $self->_get_events_list_core($filename);
+  return() if ($self->error());
+
+  my @out;
+  foreach my $key (@in) {
+    next if ($key eq $obs_dummy_key);
+    push @out, $key;
+  }
+
+  return(@out);
+}
+
+#####
+
 sub is_event_in {
  my ($self, $filename, $event) = @_;
 
  return(0) if ($self->error());
 
- if (! grep(m%^$event$%, @ok_events) ) {
+ if (! grep(m%^$event$%, @full_ok_events) ) {
    $self->_set_errormsg("Requested event ($event) is not a recognized event. ");
    return(0);
  }
 
- my @list = $self->get_events_list($filename);
+ my @list = $self->get_full_events_list($filename);
  return(0) if ($self->error());
 
  return(1) if (grep(m%^$event$%, @list));
@@ -671,6 +709,14 @@ sub get_Observations_list {
   my @list = @{$ihash{$filename}{$event}};
 
   return(@list);
+}
+
+#####
+
+sub get_dummy_Observations_list {
+  my ($self, $filename) = @_;
+
+  return($self->get_Observations_list($filename, $obs_dummy_key));
 }
 
 #####

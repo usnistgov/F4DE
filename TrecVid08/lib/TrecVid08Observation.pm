@@ -35,8 +35,10 @@ if ($version =~ m/b$/) {
 my $versionid = "TrecVid08Observation.pm Version: $version";
 
 my @ok_events;
+my @full_ok_events;
 my %hasharray_inline_attributes;
 my %hash_objects_attributes_types_dynamic;
+my $dummy_et = "Fake_Event-Merger_Dummy_Type";
 
 my @kernel_params_list = ("delta_t", "MinDec_s", "RangeDec_s", "E_t", "E_d"); # Order is important
 
@@ -83,6 +85,8 @@ sub new {
 sub _get_TrecVid08ViperFile_infos {
   my $dummy = new TrecVid08ViperFile();
   @ok_events = $dummy->get_full_events_list();
+  @full_ok_events = @ok_events;
+  push @full_ok_events, $dummy_et;
   %hasharray_inline_attributes = $dummy->_get_hasharray_inline_attributes();
   %hash_objects_attributes_types_dynamic = $dummy->_get_hash_objects_attributes_types_dynamic();
   return($dummy->get_errormsg());
@@ -145,7 +149,7 @@ sub set_eventtype {
 
   return(0) if ($self->error());
 
-  if (! grep(m%^$etype$%, @ok_events) ) {
+  if (! grep(m%^$etype$%, @full_ok_events) ) {
     $self->_set_errormsg("Type given ($etype) is not part of the authorized events list");
     return(0);
   }
@@ -164,6 +168,16 @@ sub _is_eventtype_set {
   return(1) if (! &_is_blank($self->{eventtype}));
 
   return(0);
+}
+
+#####
+
+sub get_key_dummy_eventtype {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  return($dummy_et);
 }
 
 #####
