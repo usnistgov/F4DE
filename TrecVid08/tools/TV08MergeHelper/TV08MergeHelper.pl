@@ -323,38 +323,38 @@ print "* -> Found $adone Observations\n";
 print "\n\n** STEP ", $step++, ": Writting merge file(s)\n";
 
 my $fdone = 0;
-my $fproc = 0;
 my $ftodo = scalar keys %mergefiles;
 foreach my $key (sort keys %mergefiles) {
   my $mf = $mergefiles{$key};
+
+  my $txtadd = "";
   if (! $EL->is_filename_in($key)) {
-    print "|-> File key ($key)'s EventList does not exist (no observations found for this file ?)\n";
-    $fproc++;
-    next;
-  }
-
-  # Now add all observations from the current file to the output file
-  foreach my $i (@ok_events) {
-    my @bucket = $EL->get_Observations_list($key, $i);
-    error_quit("While obatining Observations list ($key / $i) (" . $EL->get_errormsg() .")")
-      if ($EL->error());
-    foreach my $obs (@bucket) {
-      # Add a comment to the observation to indicate where it came from
-      my $comment = "Was originally: " . $obs->get_unique_id();
-      $obs->addto_comment($comment);
-      error_quit("While adding a comment to observation (" . $obs->get_errormsg() .")")
-	if ($obs->error());
-
-      # Debugging
-      if ($show > 1) {
-	print "** OBSERVATION MEMORY REPRESENATION:\n", $obs->_display();
+    $txtadd .= " (no observations found for this file)";
+  } else {
+    # Now add all observations from the current file to the output file
+    foreach my $i (@ok_events) {
+      my @bucket = $EL->get_Observations_list($key, $i);
+      error_quit("While obatining Observations list ($key / $i) (" . $EL->get_errormsg() .")")
+	if ($EL->error());
+      foreach my $obs (@bucket) {
+	# Add a comment to the observation to indicate where it came from
+	my $comment = "Was originally: " . $obs->get_unique_id();
+	$obs->addto_comment($comment);
+	error_quit("While adding a comment to observation (" . $obs->get_errormsg() .")")
+	  if ($obs->error());
+	
+	# Debugging
+	if ($show > 1) {
+	  print "** OBSERVATION MEMORY REPRESENATION:\n", $obs->_display();
+	}
+	
+	$mf->add_observation($obs);
+	error_quit("While \'add_observation\' (" . $mf->get_errormsg() .")")
+	  if ($mf->error());
       }
-
-      $mf->add_observation($obs);
-      error_quit("While \'add_observation\' (" . $mf->get_errormsg() .")")
-	if ($mf->error());
     }
   }
+
   if ($show) {
     print "** MERGED FILE MEMORY REPRESENTATION:\n";
     print $mf->_display();
@@ -369,15 +369,14 @@ foreach my $key (sort keys %mergefiles) {
     or error_quit("Could not create output XML file ($writeto): $!\n");
   print WRITETO $txt;
   close WRITETO;
-  print "Wrote: $writeto\n";
+  print "Wrote: $writeto$txtadd\n";
 
-  $fproc++;
   $fdone++;
 }
-print "* -> Processed $fproc file and Wrote $fdone files (out of $ftodo)\n";
+print "* -> Wrote $fdone files (out of $ftodo)\n";
 
 error_quit("Not all file could be processed, aborting")
-  if ($fproc != $ftodo);
+  if ($fdone != $ftodo);
 
 ####################
 # Optional step: write ecf helper file
