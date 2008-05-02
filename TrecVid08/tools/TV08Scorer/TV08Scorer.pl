@@ -37,19 +37,21 @@ my $versionid = "TrecVid08 Scorer (Version: $version)";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($tv08pl, $tv08plv, $f4depl, $f4deplv);
+my ($f4b, $f4bv, $tv08pl, $tv08plv, $f4depl, $f4deplv);
 BEGIN {
+  $f4b = "F4DE_BASE";
+  $f4bv = $ENV{$f4b} . "/lib";
   $tv08pl = "TV08_PERL_LIB";
   $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
   $f4depl = "F4DE_PERL_LIB";
   $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
 }
-use lib ($tv08plv, $f4deplv);
+use lib ($tv08plv, $f4deplv, $f4bv);
 
 ## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files (please check your $tv08pl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
 # TrecVid08ViperFile (part of this tool)
 unless (eval "use TrecVid08ViperFile; 1")
@@ -119,8 +121,10 @@ my $usage = &set_usage();
 
 # Default values for variables
 my $show = 0;
-my $xmllint = &_get_env_val($xmllint_env, "");
+my $xmllint =  &_get_env_val($xmllint_env, "");
 my $xsdpath = &_get_env_val($xsdpath_env, "../../data");
+$xsdpath = "$f4bv/data" 
+  if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
 my $fps = -1;
 my $gtfs = 0;
 my $delta_t = undef;

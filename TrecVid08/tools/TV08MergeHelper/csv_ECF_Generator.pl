@@ -37,17 +37,21 @@ my $versionid = "ECF Generator (Version: $version)";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4depl, $f4deplv);
+my ($f4b, $f4bv, $tv08pl, $tv08plv, $f4depl, $f4deplv);
 BEGIN {
+  $f4b = "F4DE_BASE";
+  $f4bv = $ENV{$f4b} . "/lib";
+  $tv08pl = "TV08_PERL_LIB";
+  $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
   $f4depl = "F4DE_PERL_LIB";
   $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
 }
-use lib ($f4deplv);
+use lib ($tv08plv, $f4deplv, $f4bv);
 
 ## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files (please check your $f4depl environment variable).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
 # ViperFramespan (part of this tool)
 unless (eval "use ViperFramespan; 1")
