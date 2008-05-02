@@ -40,6 +40,7 @@ foreach my $edd (@tdd) {
 
 print("\nDone.\n");
 print("\nIf you have not done so, yet, please set up the \'$envv\' environment variable to \'$bdd\'\n");
+print("and extend your PATH to use \'$bdd/bin\' for easy access to the tools\n");
 
 exit(0);
 
