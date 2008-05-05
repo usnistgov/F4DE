@@ -34,7 +34,7 @@ foreach my $edd (@tdd) {
   push @rdd, $dd;
 }
 
-&_cp($rdd[0], "pl", 1, @tbs);
+&_cp($rdd[0], "", 1, @tbs);
 &_cp($rdd[1], "", 0, @tls);
 &_cp($rdd[2], "", 0, @tds);
 
