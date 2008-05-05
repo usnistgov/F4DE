@@ -1676,9 +1676,15 @@ sub _data_processor {
     if (! &_is_blank($string));
   # Parse it
   ($res, %fdata) = $self->_parse_sourcefile_section($name, $section, $isgtf);
-  return("Problem while processing the \'sourcefile\' XML section (" . &_clean_begend_spaces($res) .")", $section)
-    if (! &_is_blank($res));
-
+  if (! &_is_blank($res)){
+    my @resA = split(/\n/, $res);
+    my $str = "";
+    for (my $_i=0; $_i<@resA; $_i++){  
+        $str .= "Problem while processing the \'sourcefile\' XML section (" . 
+                "Error ".($_i+1)." of ".scalar(@resA).": $resA[$_i])\n";
+    }
+    return($str, ());
+  }
   return($res, %fdata);
 }
 
@@ -1869,31 +1875,44 @@ sub _parse_sourcefile_section {
   ##########
   # Process all that is left in the string (should only be objects)
   $str = &_clean_begend_spaces($str);
+  
+  my @error_list = ();
   while (! &_is_blank($str)) {
     my $sec = &_get_named_xml_section("object", \$str);
-    return("No \'object\' section left in the \'sourcefile\'", ())
-      if ($sec eq $default_error_value);
-    ($text, my $object_type, my $object_id, my $object_framespan, my %oattr)
-      = $self->_parse_object_section($sec, $isgtf);
-    return($text, ()) if (! &_is_blank($text));
+    if ($sec eq $default_error_value) {
+       push (@error_list, ("No \'object\' section left in the \'sourcefile\'"));
+    } else {
+        ($text, my $object_type, my $object_id, my $object_framespan, my %oattr)
+          = $self->_parse_object_section($sec, $isgtf);
+        if (! &_is_blank($text)){
+            push (@error_list, $text);
+        } else {
 
-    ##### Sanity
+            ##### Sanity
     
-    # Check that the object name is an authorized event name
-    return("Found unknown event type ($object_type) in \'object\'", ())
-      if (! grep(/^$object_type$/, @ok_events));
-    # Check that the object type/id key does not already exist
-    return("Only one unique (event type, id) key authorized ($object_type, $object_id)", ())
-      if (exists $res{$object_type}{$object_id});
-    
-    ##### Add to %res
-    %{$res{$object_type}{$object_id}} = %oattr;
-    $res{$object_type}{$object_id}{"framespan"} = $object_framespan;
+            # Check that the object name is an authorized event name
+            if (! grep(/^$object_type$/, @ok_events)){
+                push (@error_list, "Found unknown event type ($object_type) in \'object\'");
+            } else {
+               # Check that the object type/id key does not already exist
+               if (exists $res{$object_type}{$object_id}){
+                  push (@error_list, "Only one unique (event type, id) key authorized ($object_type, $object_id)");
+               } else {
+                  ##### Add to %res
+                  %{$res{$object_type}{$object_id}} = %oattr;
+                  $res{$object_type}{$object_id}{"framespan"} = $object_framespan;
+               }
+            }
+        }
+    }        
 
     # Prepare string for the next run
     $str = &_clean_begend_spaces($str);
   }
-
+  if (@error_list > 0){
+     return(join("\n",@error_list), ());
+  }
+  
   ##### Final Sanity Checks
   if (($check_ids_start_at_zero) || ($check_ids_are_consecutive)) {
     foreach my $event (@ok_events) {
