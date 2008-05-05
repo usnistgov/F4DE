@@ -214,8 +214,9 @@ sub valok {
 
 sub valerr {
   my ($fname, $txt) = @_;
-
-  &valok($fname, "[ERROR] $txt");
+  foreach (split(/\n/, $txt)){ 
+    &valok($fname, "[ERROR] $_");
+  }
 }
 
 ##########
