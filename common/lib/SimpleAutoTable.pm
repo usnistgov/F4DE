@@ -183,10 +183,10 @@ sub renderTxtTable(){
     my $numColLev = $self->_getNumColLev();
     my $numRowLev = $self->_getNumRowLev();
     
-    print Dumper($self);
+#    print Dumper($self);
     
-    print "Col num lev = $numColLev\n";
-    print "Row num lev = $numRowLev\n";
+#    print "Col num lev = $numColLev\n";
+#    print "Row num lev = $numRowLev\n";
     
     ### Compute the max width of the row labels for each level
     my $maxRowLabWidth = $interColGap;
@@ -196,7 +196,7 @@ sub renderTxtTable(){
         push @rowLabWidth, $w; 
         $maxRowLabWidth += $w + ($rl > 1 ? $interColGap : 0);    
     }
-    print "MaxRowWidth    $maxRowLabWidth = ".join(" ",@rowLabWidth)."\n";
+#    print "MaxRowWidth    $maxRowLabWidth = ".join(" ",@rowLabWidth)."\n";
 
     #######################################################
     my ($r, $c, $fmt, $str, $rowIDStr, $colIDStr);
