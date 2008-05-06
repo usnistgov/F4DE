@@ -109,7 +109,7 @@ sub _getOrderedLabelIDs(){
     my ($self, $ht) = @_;
     my @ids = ();
         
-    my @sortedKeys = keys %{ $ht->{SubID} };
+    my @sortedKeys = sort { $ht->{SubID}{$a}->{thisIDNum} <=> $ht->{SubID}{$b}->{thisIDNum}} keys %{ $ht->{SubID} };
     
     foreach my $sid(@sortedKeys){
         if ($ht->{SubID}->{$sid}->{SubIDCount} > 0){
