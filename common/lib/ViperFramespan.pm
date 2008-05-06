@@ -541,6 +541,31 @@ sub count_pairs_in_value {
   return(&_fs_split_line_count($value));
 }
 
+##########
+
+sub get_list_of_framespans {
+  my ($self) = @_;
+
+  my @list = ();
+  return(undef) if ($self->error());
+
+  if (! $self->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(undef);
+  }
+
+  my $value = $self->get_value();
+  foreach my $p(&_fs_split_line($value)){
+    my $nfs = new ViperFramespan();
+    if (! $nfs->set_value($p)){
+       $self->_set_errormsg("Failed to set sub framespan value '$p'");
+       return(undef); 
+    }
+    push @list, $nfs;
+  }
+  return(\@list);
+}
+
 #####
 
 sub count_pairs_in_original_value {
@@ -1175,6 +1200,15 @@ sub unit_test { # Xtreme coding and us ;)
   $otxt .= "$eh Error while checking \'duration\' (expected: $exp_out15 / Got: $out15). "
     if ($exp_out15 != $out15);
 
+  my $out16 = $fs_tmp11->get_list_of_framespans();
+  $otxt .= "$eh Error getting a list of framespan expected: 3 / got: ".scalar(@$out16) 
+    if (3 != scalar(@$out16));
+  my @expSub = split(/ /, $exp_out11);
+  for (my $_i=0; $_i<@expSub; $_i++){
+      $otxt .= "$eh Error get_list_of_framespan list[$_i] incorrect.  expected '$expSub[$_i]' / got '".$out16->[$_i]->get_value()."'. " 
+          if ($expSub[$_i] ne $out16->[$_i]->get_value())
+  }
+  
   ########## TODO: unit_test for all 'fps' functions ##########
 
   #####
