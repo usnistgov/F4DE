@@ -85,9 +85,10 @@ my $usage = &set_usage();
 # Default values for variables
 my $ecff = "";
 my $fps = -1;
+my $ecfVersionAttr = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                               ef h             v    
+# USed:     E                         ef h             v    
 
 my %opt;
 my @leftover;
@@ -98,6 +99,7 @@ GetOptions
    'version',
    'fps=s'           => \$fps,
    'ecffile:s'       => \$ecff,
+   'EcfVersion:s'    => \$ecfVersionAttr,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 die("\n$usage\n") if ($opt{'help'});
@@ -164,12 +166,48 @@ foreach my $fn (sort keys %all) {
 }
 my $csvtxt = &do_csv(\@chead, %csvh);
 if ($ecff ne "") {
-  open ECFF, ">$ecff"
+  open ECFF, ">-"
     or error_quit("Could not open \'ecffile\' ($ecff): $!");
   print ECFF $csvtxt;
   close ECFF;
 } else {
   print $csvtxt;
+}
+
+
+########## Generating ECF
+if ($ecff ne ""){
+    print "\n\n** STEP ", $step++, ": Geneating ECF in '$ecff'\n";
+    open (ECF, ">$ecff") || die "Error: Unable to open the ecf file '$ecff' for output";
+    
+    my $ssd = 0;
+    foreach my $fn (sort keys %all) {
+        my $fs_fs = $all{$fn};
+        $ssd += $fs_fs->duration_ts();
+    }
+    
+    print ECF "<ecf>\n";
+    print ECF "   <source_signal_duration>".sprintf("%.3f",$ssd)."</source_signal_duration>\n";
+    print ECF "   <version>$ecfVersionAttr</version>\n";
+    print ECF "   <excerpts>\n";
+    foreach my $fn (sort keys %all) {
+        my $fs_fs = $all{$fn};
+        my $sub_fs_list = $fs_fs->get_list_of_framespans();
+        die "Error: Failed to get sub framespans " . $fs_fs->get_errormsg() if (! defined($sub_fs_list));
+        foreach my $fs(@$sub_fs_list){
+            print ECF "       <excerpt>\n";
+            print ECF "           <!--  Framespan ".$fs->get_value()." -->\n";
+            print ECF "           <filename>$fn</filename>\n";
+            print ECF "           <begin>".$fs->get_beg_ts()."</begin>\n";
+            print ECF "           <dur>".$fs->duration_ts()."</dur>\n";
+            print ECF "           <language>english</english>\n";
+            print ECF "           <source_type>surveillance</source_type>\n";
+            print ECF "       </excerpt>\n";
+        }
+    }
+    print ECF "   </excerpts>\n";
+    print ECF "</ecf>\n";
+    close ECF;
 }
 
 die("Done.\n");
