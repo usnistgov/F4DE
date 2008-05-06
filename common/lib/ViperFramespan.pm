@@ -555,10 +555,16 @@ sub get_list_of_framespans {
   }
 
   my $value = $self->get_value();
+  my $fps = undef;
+  $fps = $self->get_fps() if ($self->is_fps_set());
   foreach my $p(&_fs_split_line($value)){
     my $nfs = new ViperFramespan();
     if (! $nfs->set_value($p)){
        $self->_set_errormsg("Failed to set sub framespan value '$p'");
+       return(undef); 
+    }
+    if (defined($fps) && (! $nfs->set_fps($fps))){
+       $self->_set_errormsg("Failed to set sub framespan fps '$fps'");
        return(undef); 
     }
     push @list, $nfs;
