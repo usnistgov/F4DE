@@ -72,6 +72,12 @@ unless (eval "use ViperFramespan; 1")
     $have_everything = 0;
   }
 
+unless (eval "use SimpleAutoTable; 1")
+  {
+    warn_print("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool);
+    $have_everything = 0;
+  }
+
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1")
   {
@@ -79,6 +85,28 @@ unless (eval "use Getopt::Long; 1")
       (
        "\"Getopt::Long\" is not available on your Perl installation. ",
        "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
+      );
+    $have_everything = 0;
+  }
+
+# Statistics::Descriptive::Discrete (is part of CPAN)
+unless (eval "use Statistics::Descriptive::Discrete; 1")
+  {
+    warn_print
+      (
+       "\"Statistics::Descriptive::Discrete\" is not available on your Perl installation. ",
+       "Please see \"http://search.cpan.org/search?query=descriptive+discrete&mode=all\" for installation information\n"
+      );
+    $have_everything = 0;
+  }
+
+# Data::Dumper (is part of CPAN)
+unless (eval "use Data::Dumper; 1")
+  {
+    warn_print
+      (
+       "\"Data::Dumper\" is not available on your Perl installation. ",
+       "Please see \"http://search.cpan.org/search?query=data+dumper&mode=all\" for installation information\n"
       );
     $have_everything = 0;
   }
@@ -157,10 +185,25 @@ my %all = ();
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
 my @all_observations;
+my %fileStatsDB = ();
+my %camDurStatsDB = ();
 while ($tmp = shift @ARGV) {
   my ($ok, $object) = &load_file($isgtf, $tmp);
   next if (! $ok);
 
+  my $fname = $object->get_sourcefile_filename();
+  $fileStatsDB{$fname} = $object->_get_framespan_max_object();    
+  die "Unable to set the FPS for the file framespan" if (!$fileStatsDB{$fname}->set_fps($fps));
+  my $cam = $fname;
+  $cam =~ s/.*(CAM.).*$/$1/;
+  my $day = $fname;
+  $day =~ s/_CAM.*//;
+  if (! exists($camDurStatsDB{$cam}{$day})){
+    $camDurStatsDB{$cam}{$day} = Statistics::Descriptive::Discrete->new();
+  }
+  $camDurStatsDB{$cam}{$day}->add_data($fileStatsDB{$fname}->duration_ts());
+  
+  
   my @ao = $object->get_all_events_observations();
   error_quit("Problem obtaining all Observations from $tmp ViperFile (" . $object->get_errormsg() . ")")
     if ($object->error());
@@ -178,6 +221,10 @@ error_quit("No files ok, can not continue, aborting\n")
 
 # Re-represent all observations into a flat format
 my %ohash;
+my %statsDB = ();
+my %overallStatsDB = ();
+my %camStatsDB = ();
+
 foreach my $obs (@all_observations) {
   my $uid  = $obs->get_unique_id();
   my $et   = $obs->get_eventtype();
@@ -189,15 +236,34 @@ foreach my $obs (@all_observations) {
   my $dd   = (! $gtfs) ? $obs->get_DetectionDecision() : undef;
   my $fs_fs = $obs->get_framespan();
   my $fs   = $fs_fs->get_value();
+  my $file_fs = $obs->get_fs_file();
   my $dur  = $obs->Dur();
   my $beg  = $obs->Beg();
   my $end  = $obs->End();
   my $mid  = $obs->Mid();
+
+  my $cam = $fn;
+  $cam =~ s/.*(CAM.).*$/$1/;
   
   error_quit("Problem obtaining Observation information (" . $obs->get_errormsg() . ")")
     if ($obs->error());
   error_quit("Problem obtaining Observation's framespan information (" . $fs_fs->get_errormsg() . ")")
     if ($fs_fs->error());
+
+    if (! exists($statsDB{$fn}{$et})){
+        $statsDB{$fn}{$et}{dur} = Statistics::Descriptive::Discrete->new();
+    }
+    $statsDB{$fn}{$et}{dur}->add_data($dur);
+
+    if (! exists($overallStatsDB{$et})){
+        $overallStatsDB{$et}{dur} = Statistics::Descriptive::Discrete->new();
+    }
+    $overallStatsDB{$et}{dur}->add_data($dur);
+
+    if (! exists($camStatsDB{$cam}{$et}{dur})){
+        $camStatsDB{$cam}{$et}{dur} = Statistics::Descriptive::Discrete->new();
+    }
+    $camStatsDB{$cam}{$et}{dur}->add_data($dur);
 
   %{$ohash{$uid}} =
     (
@@ -234,7 +300,64 @@ if ($docsv != -1) {
   }
 }
 
-die "Done\n";
+my $sat;
+
+print "\n";
+print "-----------------------------------------------------------------------------------------------\n";
+print "      Event observation duratiosn\n";
+$sat = new SimpleAutoTable();
+my $sumDur = 0;
+foreach my $fn(keys %fileStatsDB){
+    my $dur = $fileStatsDB{$fn}->duration_ts();
+    $sumDur += $dur;
+    foreach my $ev(sort keys %{ $statsDB{$fn} }){
+        $sat->addData($statsDB{$fn}{$ev}{dur}->count(),                               "Obs|count",  sprintf("%20s %s",$ev, $fn));
+        $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->count() / $dur * 3600), "Obs|Obs/hr", sprintf("%20s %s",$ev, $fn));
+        $sat->addData("|",                                                            "",           sprintf("%20s %s",$ev, $fn));
+        $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->min()),                 "Dur|min",    sprintf("%20s %s",$ev, $fn));
+        $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->mean()),                "Dur|mean",   sprintf("%20s %s",$ev, $fn));
+        $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->max()),                 "Dur|max",    sprintf("%20s %s",$ev, $fn));
+    }
+}
+$sat->renderTxtTable(2);
+
+print "\n";
+print "-----------------------------------------------------------------------------------------------\n";
+print "Overall Files\n";
+$sat = new SimpleAutoTable();
+foreach my $ev(sort keys %overallStatsDB){
+    $sat->addData($overallStatsDB{$ev}{dur}->count(),                                  "Obs|count",  $ev);
+    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->count() / $sumDur * 3600), "Obs|Obs/hr", $ev);
+    $sat->addData("|",                                                                 "",           $ev);
+    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->min()),                    "Dur|min",    $ev);
+    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->mean()),                   "Dur|mean",   $ev);
+    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->max()),                    "Dur|max",    $ev);
+}
+$sat->renderTxtTable(2);
+
+print "\n";
+print "-----------------------------------------------------------------------------------------------\n";
+print "Camera by event type (observations)\n";
+$sat = new SimpleAutoTable();
+foreach my $cam(sort keys %camStatsDB){
+    foreach my $ev(sort keys %{ $camStatsDB{$cam} }){
+        $sat->addData($camStatsDB{$cam}{$ev}{dur}->count(),                               $cam,  $ev);
+    }
+}
+$sat->renderTxtTable(2);
+
+print "\n";
+print "-----------------------------------------------------------------------------------------------\n";
+print "Camera annotated durations by file\n";
+$sat = new SimpleAutoTable();
+foreach my $cam(sort keys %camDurStatsDB){
+    foreach my $da(sort keys %{ $camDurStatsDB{$cam} }){
+        $sat->addData($camDurStatsDB{$cam}{$da}->sum(),                               $cam,  $da);
+    }
+}
+$sat->renderTxtTable(2);
+
+exit 0;
 ########## END
 
 ########################################
