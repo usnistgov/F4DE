@@ -186,10 +186,11 @@ if ($ecff ne ""){
         $ssd += $fs_fs->duration_ts();
     }
     
+    print ECF "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     print ECF "<ecf>\n";
     print ECF "   <source_signal_duration>".sprintf("%.3f",$ssd)."</source_signal_duration>\n";
     print ECF "   <version>$ecfVersionAttr</version>\n";
-    print ECF "   <excerpts>\n";
+    print ECF "   <excerpt_list>\n";
     foreach my $fn (sort keys %all) {
         my $fs_fs = $all{$fn};
         my $sub_fs_list = $fs_fs->get_list_of_framespans();
@@ -199,13 +200,13 @@ if ($ecff ne ""){
             print ECF "           <!--  Framespan ".$fs->get_value()." -->\n";
             print ECF "           <filename>$fn</filename>\n";
             print ECF "           <begin>".$fs->get_beg_ts()."</begin>\n";
-            print ECF "           <dur>".$fs->duration_ts()."</dur>\n";
-            print ECF "           <language>english</english>\n";
+            print ECF "           <duration>".$fs->duration_ts()."</duration>\n";
+            print ECF "           <language>english</language>\n";
             print ECF "           <source_type>surveillance</source_type>\n";
             print ECF "       </excerpt>\n";
         }
     }
-    print ECF "   </excerpts>\n";
+    print ECF "   </excerpt_list>\n";
     print ECF "</ecf>\n";
     close ECF;
 }
