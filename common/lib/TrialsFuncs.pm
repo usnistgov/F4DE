@@ -15,6 +15,7 @@
 package Trials;
 use strict;
 use Data::Dumper;
+use SimpleAutoTable;
  
 
 sub new
@@ -253,6 +254,41 @@ sub copy()
     $copy->{isSorted} = $self->{isSorted}; 
     $copy->{pooledTotalTrials} = $self->{pooledTotalTrials}; 
     $copy;
+}
+
+sub dumpCountSummary()
+{
+    my ($self) = @_;
+    
+    my $at = new SimpleAutoTable();
+    my ($TY, $OT, $NT, $YNT, $NNT) = (0, 0, 0, 0, 0);
+    foreach my $block(sort keys %{ $self->{"trials"} })
+    {
+        $at->addData($self->getNumYesTarg($block),     "Corr:YesTarg", $block);
+        $at->addData($self->getNumOmittedTarg($block), "Miss:OmitTarg", $block);
+        $at->addData($self->getNumNoTarg($block),      "Miss:NoTarg", $block);
+        $at->addData($self->getNumYesNonTarg($block),  "FA:YesNontarg", $block);
+        $at->addData($self->getNumNoNonTarg($block),   "Corr:NoNontarg", $block);
+
+        $TY += $self->getNumYesTarg($block);
+        $OT += $self->getNumOmittedTarg($block);
+        $NT += $self->getNumNoTarg($block);
+        $YNT += $self->getNumYesNonTarg($block);
+        $NNT += $self->getNumNoNonTarg($block);
+    }
+    $at->addData("------",  "Corr:YesTarg", "-----");
+    $at->addData("------",  "Miss:OmitTarg", "-----");
+    $at->addData("------",  "Miss:NoTarg", "-----");
+    $at->addData("------", "FA:YesNontarg", "-----");
+    $at->addData("------", "Corr:NoNontarg", "-----");
+
+    $at->addData($TY,  "Corr:YesTarg", "Total");
+    $at->addData($OT,  "Miss:OmitTarg", "Total");
+    $at->addData($NT,  "Miss:NoTarg", "Total");
+    $at->addData($YNT, "FA:YesNontarg", "Total");
+    $at->addData($NNT, "Corr:NoNontarg", "Total");
+    
+    $at->renderTxtTable(2)
 }
 
 sub dumpGrid()
