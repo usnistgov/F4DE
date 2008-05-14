@@ -302,9 +302,7 @@ if ($docsv != -1) {
 
 my $sat;
 
-print "\n";
-print "-----------------------------------------------------------------------------------------------\n";
-print "      Event observation duratiosn\n";
+print "\n\n\n                               Event observation duration statsitics by file\n\n";
 $sat = new SimpleAutoTable();
 my $sumDur = 0;
 foreach my $fn(keys %fileStatsDB){
@@ -321,10 +319,9 @@ foreach my $fn(keys %fileStatsDB){
 }
 $sat->renderTxtTable(2);
 
-print "\n";
-print "-----------------------------------------------------------------------------------------------\n";
-print "Overall Files\n";
+print "\n\n\n       Event observation duration statsitics over all files\n\n";
 $sat = new SimpleAutoTable();
+my $sumStat = Statistics::Descriptive::Discrete->new();
 foreach my $ev(sort keys %overallStatsDB){
     $sat->addData($overallStatsDB{$ev}{dur}->count(),                                  "Obs|count",  $ev);
     $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->count() / $sumDur * 3600), "Obs|Obs/hr", $ev);
@@ -332,12 +329,17 @@ foreach my $ev(sort keys %overallStatsDB){
     $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->min()),                    "Dur|min",    $ev);
     $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->mean()),                   "Dur|mean",   $ev);
     $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->max()),                    "Dur|max",    $ev);
+    $sumStat->add_data($overallStatsDB{$ev}{dur}->get_data());
 }
+$sat->addData($sumStat->count(),                                  "Obs|count",  "All Events");
+$sat->addData("",                                                 "Obs|Obs/hr", "All Events");
+$sat->addData("|",                                                "",           "All Events");
+$sat->addData(sprintf("%.2f",$sumStat->min()),                    "Dur|min",    "All Events");
+$sat->addData(sprintf("%.2f",$sumStat->mean()),                   "Dur|mean",   "All Events");
+$sat->addData(sprintf("%.2f",$sumStat->max()),                    "Dur|max",    "All Events");
 $sat->renderTxtTable(2);
 
-print "\n";
-print "-----------------------------------------------------------------------------------------------\n";
-print "Camera by event type (observations)\n";
+print "\n\n\nEvent occurrences as a function of camera\n\n";
 $sat = new SimpleAutoTable();
 foreach my $cam(sort keys %camStatsDB){
     foreach my $ev(sort keys %{ $camStatsDB{$cam} }){
@@ -346,9 +348,7 @@ foreach my $cam(sort keys %camStatsDB){
 }
 $sat->renderTxtTable(2);
 
-print "\n";
-print "-----------------------------------------------------------------------------------------------\n";
-print "Camera annotated durations by file\n";
+print "\n\n\n                 Durations of annotated files\n\n";
 $sat = new SimpleAutoTable();
 foreach my $cam(sort keys %camDurStatsDB){
     foreach my $da(sort keys %{ $camDurStatsDB{$cam} }){
