@@ -1298,9 +1298,9 @@ sub joint_kernel {
     = $other->get_REF_Beg_Mid_End_Dur();
   return("Problem obtaining some element related to the REF Observation (" . $other->get_errormsg() . ")") if ($other->error());
   
-  if ($Mid_Osi > ($End_Orj - $delta_t)) {
+  if ($Mid_Osi > ($End_Orj + $delta_t)) {
     return("", undef);
-  } elsif ($Mid_Osi < ($Beg_Orj + $delta_t)) {
+  } elsif ($Mid_Osi < ($Beg_Orj - $delta_t)) {
     return("", undef);
   } # implicit "else"
 
@@ -1309,8 +1309,8 @@ sub joint_kernel {
       / _max((1/25), $Dur_Orj);
 
   my $DecScoreCongru_Osi
-    = ( $Dec_Osi - $MinDec_s )
-      / $RangeDec_s;
+    = ($RangeDec_s == 0) ? 1 :
+        ( $Dec_Osi - $MinDec_s ) / $RangeDec_s;
 
   my $kernel 
     = 1
