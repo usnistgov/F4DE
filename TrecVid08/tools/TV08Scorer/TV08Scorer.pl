@@ -81,6 +81,13 @@ unless (eval "use Trials; 1")
     $have_everything = 0;
   }
 
+# SimpleAutoTable (part of this tool)
+unless (eval "use SimpleAutoTable; 1")
+  {
+    warn_print("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool);
+    $have_everything = 0;
+  }
+
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1")
   {
@@ -225,6 +232,9 @@ error_quit("Error while obtaining the EventList kernel function parameters (" . 
 my %all_bpm;
 my %metrics_params;
 my $trials = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
+my $alignmentRep = new SimpleAutoTable();
+my $numTrial = 0;
+my $trialID;
 foreach my $file (@common) {
   my @sys_events = $sysEL->get_events_list($file);
   error_quit("While trying to obtain a list of SYS events for file ($file) (" . $sysEL->get_errormsg() . ")")
@@ -273,6 +283,25 @@ foreach my $file (@common) {
 
       $trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
       # The last '1' is because the elements match an element in the ref list (target)
+      
+      $trialID = sprintf("Obs. %05d",$numTrial++);
+      $alignmentRep->addData($evt, "Event", $trialID);
+      $alignmentRep->addData($file, "File", $trialID);
+      $alignmentRep->addData($ref_obj->get_framespan()->get_value(), "R.range", $trialID);
+      $alignmentRep->addData($ref_obj->get_framespan()->duration(),
+                             "Dur.r", $trialID);
+      $alignmentRep->addData($sys_obj->get_framespan()->get_value(), "S.range", $trialID);
+      $alignmentRep->addData($sys_obj->get_framespan()->duration(),
+                             "Dur.s", $trialID);
+      my $ov = $ref_obj->get_framespan()->get_overlap($sys_obj->get_framespan());
+      $alignmentRep->addData((defined($ov) ? $ov->get_value() : "NULL"),
+                             "ISec.range", $trialID);
+      $alignmentRep->addData((defined($ov) ? $ov->duration() : "NULL"),
+                             "Dur.ISec", $trialID);
+      $alignmentRep->addData($ref_obj->get_framespan()->get_beg_fs() - $sys_obj->get_framespan()->get_beg_fs(),
+                             "Beg.r-Beg.s", $trialID);
+      $alignmentRep->addData($ref_obj->get_framespan()->get_end_fs() - $sys_obj->get_framespan()->get_end_fs(),
+                             "End.r-End.s", $trialID);
     }
 
     # Second, the False Alarms
@@ -287,6 +316,19 @@ foreach my $file (@common) {
 
       $trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
       # The last '0' is because the elements does not match an element in the ref list (target)
+
+      $trialID = sprintf("Obs. %05d",$numTrial++);
+      $alignmentRep->addData($evt, "Event", $trialID);
+      $alignmentRep->addData($file, "File", $trialID);
+      $alignmentRep->addData("", "R.range", $trialID);
+      $alignmentRep->addData("", "Dur.r", $trialID);
+      $alignmentRep->addData($sys_obj->get_framespan()->get_value(), "S.range", $trialID);
+      $alignmentRep->addData($sys_obj->get_framespan()->duration(),
+                             "Dur.s", $trialID);
+      $alignmentRep->addData("", "ISec.range", $trialID);
+      $alignmentRep->addData("", "Dur.ISec", $trialID);
+      $alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
+      $alignmentRep->addData("", "End.r-End.s", $trialID);
     }
 
     # Third, the Missed Detects
@@ -296,6 +338,18 @@ foreach my $file (@common) {
     foreach my $ref_obj (@unmapped_ref) {
       $trials->addTrial($evt, undef, "OMITTED", 1);
       # Here we only care about the number of entries in this array
+      $trialID = sprintf("Obs. %05d",$numTrial++);
+      $alignmentRep->addData($evt, "Event", $trialID);
+      $alignmentRep->addData($file, "File", $trialID);
+      $alignmentRep->addData($ref_obj->get_framespan()->get_value(), "R.range", $trialID);
+      $alignmentRep->addData($ref_obj->get_framespan()->duration(),
+                             "Dur.r", $trialID);
+      $alignmentRep->addData("", "S.range", $trialID);
+      $alignmentRep->addData("", "Dur.s", $trialID);
+      $alignmentRep->addData("", "ISec.range", $trialID);
+      $alignmentRep->addData("", "Dur.ISec", $trialID);
+      $alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
+      $alignmentRep->addData("", "End.r-End.s", $trialID);
     }
     # 'Trials' done
 
@@ -303,10 +357,12 @@ foreach my $file (@common) {
   }
 }
 
-$trials->dumpGrid();
-$trials->dump(*STDOUT);
-
+$alignmentRep->renderTxtTable(2);
 #### TODO #####
+
+print "\n\nDump of Alignment Counts\n\n";
+$trials->dumpCountSummary();
+#$trials->dump(*STDOUT);
 
 die("Done\n");
 
