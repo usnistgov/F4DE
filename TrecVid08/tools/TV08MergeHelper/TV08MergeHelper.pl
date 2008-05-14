@@ -41,6 +41,7 @@ my ($f4b, $f4bv, $tv08pl, $tv08plv, $f4depl, $f4deplv);
 BEGIN {
   $f4b = "F4DE_BASE";
   $f4bv = $ENV{$f4b} . "/lib";
+  $tv08pl = "TV08_PERL_LIB";
   $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
   $f4depl = "F4DE_PERL_LIB";
   $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
