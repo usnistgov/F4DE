@@ -1214,7 +1214,30 @@ sub unit_test { # Xtreme coding and us ;)
       $otxt .= "$eh Error get_list_of_framespan list[$_i] incorrect.  expected '$expSub[$_i]' / got '".$out16->[$_i]->get_value()."'. " 
           if ($expSub[$_i] ne $out16->[$_i]->get_value())
   }
-  
+
+  ### unit test overlap
+  my $fs_tmp17 = new ViperFramespan();
+  my $fs_tmp18 = new ViperFramespan();
+  my @pairs = ( [ "3:6", "3:6", "3:6" ], 
+                [ "3:6", "4:6", "4:6" ], 
+                [ "3:6", "6:6", "6:6" ], 
+                [ "3:6", "4:7", "4:6" ], 
+                [ "3:6", "6:7", "6:6" ], 
+                [ "3:6", "7:6", undef ] );
+  for (my $p=0; $p<@pairs; $p++){
+    $fs_tmp17->set_value($pairs[$p][0]);
+    $fs_tmp18->set_value($pairs[$p][1]);
+    my $fs_new = $fs_tmp17->get_overlap($fs_tmp18);
+    if (!defined($fs_new) && !defined($pairs[$p][2])){ 
+        ;
+    } else {
+        my $ret = $fs_tmp17->get_overlap($fs_tmp18)->get_value();
+        $otxt .= "$eh Error overlap calc for (".join(", ",@{ $pairs[$p] }).") returned ".$ret."\n" 
+            if ($ret ne $pairs[$p][2]);
+    }
+  }
+    
+    
   ########## TODO: unit_test for all 'fps' functions ##########
 
   #####
