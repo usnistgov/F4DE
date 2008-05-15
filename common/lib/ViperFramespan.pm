@@ -1054,9 +1054,7 @@ sub value_shift {
 ########################################
 
 sub unit_test { # Xtreme coding and us ;)
-  my ($self) = @_;
-  # We get $self and ignore it entirely (unless we encounter an error of course ;) )
-  
+  my $notverb = shift @_;
   my $eh = "unit_test:";
   my $otxt = "";
 
@@ -1243,7 +1241,7 @@ sub unit_test { # Xtreme coding and us ;)
   #####
   # End
   if (! &_is_blank($otxt)) {
-    $self->_set_errormsg($otxt);
+    print "[ViperFramespan] unit_test errors:", $otxt if (! $notverb);
     return(0);
   }
  
