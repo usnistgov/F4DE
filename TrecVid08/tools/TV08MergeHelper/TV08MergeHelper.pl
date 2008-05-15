@@ -48,6 +48,13 @@ BEGIN {
 }
 use lib ($tv08plv, $f4deplv, $f4bv);
 
+sub eo2pe {
+  my @a = @_;
+  my $oe = join(" ", @a);
+  my $pe = ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "";
+  return($pe);
+}
+
 ## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
@@ -56,14 +63,16 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 # TrecVid08ViperFile (part of this tool)
 unless (eval "use TrecVid08ViperFile; 1")
   {
-    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool);
+    my $pe = &eo2pe($@);
+    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
   }
 
 # TrecVid08EventList (part of this tool)
 unless (eval "use TrecVid08EventList; 1")
   {
-    warn_print("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool);
+    my $pe = &eo2pe($@);
+    warn_print("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
   }
 
