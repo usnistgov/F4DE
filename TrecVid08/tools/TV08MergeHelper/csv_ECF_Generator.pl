@@ -48,6 +48,13 @@ BEGIN {
 }
 use lib ($tv08plv, $f4deplv, $f4bv);
 
+sub eo2pe {
+  my @a = @_;
+  my $oe = join(" ", @a);
+  my $pe = ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "";
+  return($pe);
+}
+
 ## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
@@ -56,7 +63,8 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 # ViperFramespan (part of this tool)
 unless (eval "use ViperFramespan; 1")
   {
-    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool);
+    my $pe = &eo2pe($@);
+    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
   }
 
@@ -83,12 +91,13 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 my $usage = &set_usage();
 
 # Default values for variables
+my $csvf = -1;
 my $ecff = "";
 my $fps = -1;
 my $ecfVersionAttr = "";
 
-# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:     E                         ef h             v    
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
+# USed:     E                       c ef h             v     #
 
 my %opt;
 my @leftover;
@@ -98,16 +107,18 @@ GetOptions
    'help',
    'version',
    'fps=s'           => \$fps,
-   'ecffile:s'       => \$ecff,
-   'EcfVersion:s'    => \$ecfVersionAttr,
+   'csv:s'           => \$csvf,
+   'ecffile=s'       => \$ecff,
+   'EcfVersion=s'    => \$ecfVersionAttr,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-die("\n$usage\n") if ($opt{'help'});
-die("$versionid\n") if ($opt{'version'});
+ok_quit("\n$usage\n") if ($opt{'help'});
+ok_quit("$versionid\n") if ($opt{'version'});
+ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
-die("\n$usage\n") if (scalar @ARGV == 0);
-
-die("ERROR: \'fps\' must set in order to do any scoring work") if ($fps == -1);
+error_quit("\'fps\' must set in order to do any scoring work") if ($fps == -1);
+error_quit("No mode selected, must at least do one of csv or ecf output") if (($csvf == -1) && ($ecff eq ""));
+error_quit("\'EcfVersion\' must be set if \'ecffile\' selected") if (($ecff ne "") && ($ecfVersionAttr eq ""));
 
 #################### Main processing
 
@@ -164,54 +175,60 @@ foreach my $fn (sort keys %all) {
   $csvh{$key}{$chead[$inc++]} = $end_ts;
   $csvh{$key}{$chead[$inc++]} = $txt;
 }
-my $csvtxt = &do_csv(\@chead, %csvh);
-if ($ecff ne "") {
-  open ECFF, ">-"
-    or error_quit("Could not open \'ecffile\' ($ecff): $!");
-  print ECFF $csvtxt;
-  close ECFF;
-} else {
-  print $csvtxt;
-}
 
+if ($csvf != -1) {
+  my $csvtxt = &do_csv(\@chead, %csvh);
+  if ($csvf ne "") {
+    open ECFF, ">$csvf"
+      or error_quit("Could not open \'csv\' file ($csvf): $!");
+    print ECFF $csvtxt;
+    close ECFF;
+    print "Wrote: $csvf\n";
+  } else {
+    print $csvtxt;
+  }
+}
 
 ########## Generating ECF
 if ($ecff ne ""){
-    print "\n\n** STEP ", $step++, ": Geneating ECF in '$ecff'\n";
-    open (ECF, ">$ecff") || die "Error: Unable to open the ecf file '$ecff' for output";
-    
-    my $ssd = 0;
-    foreach my $fn (sort keys %all) {
-        my $fs_fs = $all{$fn};
-        $ssd += $fs_fs->duration_ts();
+  print "\n\n** STEP ", $step++, ": Geneating ECF in '$ecff'\n";
+  open ECF, ">$ecff"
+    or error_quit("Error: Unable to open the ecf file '$ecff' for output: $!");
+
+  my $ssd = 0;
+  foreach my $fn (sort keys %all) {
+    my $fs_fs = $all{$fn};
+    $ssd += $fs_fs->duration_ts();
+  }
+
+  print ECF "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+  print ECF "<ecf>\n";
+  print ECF "   <source_signal_duration>" . sprintf("%.3f",$ssd) . "</source_signal_duration>\n";
+  print ECF "   <version>$ecfVersionAttr</version>\n";
+  print ECF "   <excerpt_list>\n";
+  foreach my $fn (sort keys %all) {
+    my $fs_fs = $all{$fn};
+    my $sub_fs_list = $fs_fs->get_list_of_framespans();
+    error_quit("Failed to get sub framespans " . $fs_fs->get_errormsg())
+      if (! defined($sub_fs_list));
+    foreach my $fs(@$sub_fs_list){
+      print ECF "       <excerpt>\n";
+      print ECF "           <!--  Framespan " . $fs->get_value() . " -->\n";
+      print ECF "           <filename>$fn</filename>\n";
+      print ECF "           <begin>" . $fs->get_beg_ts() . "</begin>\n";
+      print ECF "           <duration>" . $fs->duration_ts() . "</duration>\n";
+      print ECF "           <language>english</language>\n";
+      print ECF "           <source_type>surveillance</source_type>\n";
+      print ECF "       </excerpt>\n";
     }
-    
-    print ECF "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    print ECF "<ecf>\n";
-    print ECF "   <source_signal_duration>".sprintf("%.3f",$ssd)."</source_signal_duration>\n";
-    print ECF "   <version>$ecfVersionAttr</version>\n";
-    print ECF "   <excerpt_list>\n";
-    foreach my $fn (sort keys %all) {
-        my $fs_fs = $all{$fn};
-        my $sub_fs_list = $fs_fs->get_list_of_framespans();
-        die "Error: Failed to get sub framespans " . $fs_fs->get_errormsg() if (! defined($sub_fs_list));
-        foreach my $fs(@$sub_fs_list){
-            print ECF "       <excerpt>\n";
-            print ECF "           <!--  Framespan ".$fs->get_value()." -->\n";
-            print ECF "           <filename>$fn</filename>\n";
-            print ECF "           <begin>".$fs->get_beg_ts()."</begin>\n";
-            print ECF "           <duration>".$fs->duration_ts()."</duration>\n";
-            print ECF "           <language>english</language>\n";
-            print ECF "           <source_type>surveillance</source_type>\n";
-            print ECF "       </excerpt>\n";
-        }
-    }
-    print ECF "   </excerpt_list>\n";
-    print ECF "</ecf>\n";
-    close ECF;
+  }
+  print ECF "   </excerpt_list>\n";
+  print ECF "</ecf>\n";
+  close ECF;
+  print "Wrote: $ecff\n";
 }
 
-die("Done.\n");
+ok_quit("Done.\n");
 
 
 ########################################
@@ -220,13 +237,15 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 --fps fps [--help] [--version] [--ecffile file.csv] file.csv [file.csv [...]]
+Usage: $0 --fps fps [--help] [--version] [--csv [file.csv]] [--ecffile file --EcfVersion versionid] file.csv [file.csv [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
  Where:
   --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
-  --ecffile       Specify the output CSV file (stdout by default)
+  --ecffile       Specify the output ECF file
+  --EcfVersion    Specify the version ID to add in the ECF file
+  --csv           Specify the output CSV file (stdout by default)
   --version       Print version number and exit
   --help          Print this usage information and exit
 EOF
