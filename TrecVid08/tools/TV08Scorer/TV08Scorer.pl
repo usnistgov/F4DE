@@ -244,8 +244,6 @@ error_quit("Error while obtaining the EventList kernel function parameters (" . 
 my %all_bpm;
 my %metrics_params;
 my $trials = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
-my $numTrial = 0;
-my $trialID;
 my %all_alignmentReps;
 
 print "** Scoring \"Common referred to files\"\n";
@@ -262,7 +260,7 @@ foreach my $file (keys %all_alignmentReps) {
   foreach my $event (keys %{$all_alignmentReps{$file}}) {
     print "|-> Event: $event\n";
     my $alignmentRep = $all_alignmentReps{$file}{$event};
-    $alignmentRep->renderTxtTable(2);
+    $alignmentRep->sorted_renderTxtTable(2, 1);
   }
 }
 
@@ -559,18 +557,20 @@ sub do_scoring {
 	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
 	# The last '1' is because the elements match an element in the ref list (target)
 
-	$trialID = sprintf("Obs. %05d",$numTrial++);
+	my $trialID = &make_trialID($ref_obj, $sys_obj);
 	$alignmentRep->addData($evt, "Event", $trialID);
 	$alignmentRep->addData($file, "File", $trialID);
-	$alignmentRep->addData($ref_obj->get_framespan()->get_value(), "R.range", $trialID);
-	$alignmentRep->addData($ref_obj->get_framespan()->duration(),  "Dur.r", $trialID);
-	$alignmentRep->addData($sys_obj->get_framespan()->get_value(), "S.range", $trialID);
-	$alignmentRep->addData($sys_obj->get_framespan()->duration(),  "Dur.s", $trialID);
-	my $ov = $ref_obj->get_framespan()->get_overlap($sys_obj->get_framespan());
-	$alignmentRep->addData((defined($ov) ? $ov->get_value() : "NULL"), "ISec.range", $trialID);
-	$alignmentRep->addData((defined($ov) ? $ov->duration() : "NULL"), "Dur.ISec", $trialID);
-	$alignmentRep->addData($ref_obj->get_framespan()->get_beg_fs() - $sys_obj->get_framespan()->get_beg_fs(), "Beg.r-Beg.s", $trialID);
-	$alignmentRep->addData($ref_obj->get_framespan()->get_end_fs() - $sys_obj->get_framespan()->get_end_fs(), "End.r-End.s", $trialID);
+	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
+	$alignmentRep->addData(&get_obj_fs_duration($ref_obj),  "Dur.r", $trialID);
+	$alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
+	$alignmentRep->addData(&get_obj_fs_duration($sys_obj),  "Dur.s", $trialID);
+	my $ov = &get_obj_fs_ov($ref_obj, $sys_obj);
+	$alignmentRep->addData((defined($ov) ? &get_fs_value($ov) : "NULL"), "ISec.range", $trialID);
+	$alignmentRep->addData((defined($ov) ? &get_fs_duration($ov): "NULL"), "Dur.ISec", $trialID);
+	my ($rb, $re) = &get_obj_fs_beg_end($ref_obj);
+	my ($sb, $se) = &get_obj_fs_beg_end($sys_obj);
+	$alignmentRep->addData($rb - $sb, "Beg.r-Beg.s", $trialID);
+	$alignmentRep->addData($re - $se, "End.r-End.s", $trialID);
       }
 
       # Second, the False Alarms
@@ -586,13 +586,13 @@ sub do_scoring {
 	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
 	# The last '0' is because the elements does not match an element in the ref list (target)
 
-	$trialID = sprintf("Obs. %05d",$numTrial++);
+	my $trialID = &make_trialID(undef, $sys_obj);
 	$alignmentRep->addData($evt, "Event", $trialID);
 	$alignmentRep->addData($file, "File", $trialID);
 	$alignmentRep->addData("", "R.range", $trialID);
 	$alignmentRep->addData("", "Dur.r", $trialID);
-	$alignmentRep->addData($sys_obj->get_framespan()->get_value(), "S.range", $trialID);
-	$alignmentRep->addData($sys_obj->get_framespan()->duration(), "Dur.s", $trialID);
+	$alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
+	$alignmentRep->addData(&get_obj_fs_duration($sys_obj), "Dur.s", $trialID);
 	$alignmentRep->addData("", "ISec.range", $trialID);
 	$alignmentRep->addData("", "Dur.ISec", $trialID);
 	$alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
@@ -606,11 +606,12 @@ sub do_scoring {
       foreach my $ref_obj (@unmapped_ref) {
 	$trials->addTrial($evt, undef, "OMITTED", 1);
 	# Here we only care about the number of entries in this array
-	$trialID = sprintf("Obs. %05d",$numTrial++);
+
+	my $trialID = &make_trialID($ref_obj, undef);
 	$alignmentRep->addData($evt, "Event", $trialID);
 	$alignmentRep->addData($file, "File", $trialID);
-	$alignmentRep->addData($ref_obj->get_framespan()->get_value(), "R.range", $trialID);
-	$alignmentRep->addData($ref_obj->get_framespan()->duration(), "Dur.r", $trialID);
+	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
+	$alignmentRep->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
 	$alignmentRep->addData("", "S.range", $trialID);
 	$alignmentRep->addData("", "Dur.s", $trialID);
 	$alignmentRep->addData("", "ISec.range", $trialID);
@@ -624,6 +625,127 @@ sub do_scoring {
       $all_alignmentReps{$file}{$evt} = $alignmentRep;
     }
   }
+}
+
+#####
+
+sub get_fs_value {
+  my ($fs_fs) = @_;
+
+  my $v = $fs_fs->get_value();
+  error_quit("Error obtaining the framespan's value (" . $fs_fs->get_errormsg() . ")")
+    if ($fs_fs->error());
+
+  return($v);
+}  
+
+#####
+
+sub get_fs_duration {
+  my ($fs_fs) = @_;
+
+  my $d = $fs_fs->duration();
+  error_quit("Error obtaining the framespan's duration (" . $fs_fs->get_errormsg() . ")")
+    if ($fs_fs->error());
+
+  return($d);
+}  
+
+#####
+
+sub get_obj_fs {
+  my ($obj) = @_;
+
+  error_quit("Can not call \'get_framespan\' on an undefined object")
+    if (! defined $obj);
+
+  my $fs_fs = $obj->get_framespan();
+  error_quit("Error obtaining the object's framespan (" . $obj->get_errormsg() . ")")
+    if ($obj->error());
+
+  return($fs_fs);
+}
+
+#####
+
+sub get_obj_fs_value {
+  my ($obj) = @_;
+
+  error_quit("Can not obtain a framespan value for an undefined object")
+    if (! defined $obj);
+
+  my $fs_fs = &get_obj_fs($obj);
+
+  return(&get_fs_value($fs_fs));
+}
+
+#####
+
+sub get_obj_fs_duration {
+  my ($obj) = @_;
+
+  error_quit("Can not obtain a framespan duration for an undefined object")
+    if (! defined $obj);
+
+  my $fs_fs = &get_obj_fs($obj);
+
+  return(&get_fs_duration($fs_fs));
+}
+
+#####
+
+sub get_obj_fs_ov {
+  my ($obj1, $obj2) = @_;
+
+  error_quit("Can not obtain overlap for undefined objects")
+    if ((! defined $obj1) || (! defined $obj2));
+
+  my $fs_fs1 = &get_obj_fs($obj1);
+  my $fs_fs2 = &get_obj_fs($obj2);
+
+  my $ov = $fs_fs1->get_overlap($fs_fs2);
+  error_quit("Error obtaining overlap (" . $fs_fs1->get_errormsg() . ")")
+    if ($fs_fs1->error());
+
+  return($ov);
+}
+
+#####
+
+sub get_obj_fs_beg_end {
+  my ($obj) = @_;
+
+  error_quit("Can not obtain framespan beg/end for undefined object")
+    if (! defined $obj);
+
+  my $fs_fs = &get_obj_fs($obj);
+
+  my ($b, $e) = $fs_fs->get_beg_end_fs();
+  error_quit("Error obtaining framespan's beg/end (" . $fs_fs->get_errormsg() . ")")
+    if ($fs_fs->error());
+
+  return($b, $e);
+}
+
+#####
+
+sub _num {return ($a <=> $b);}
+
+#####
+
+sub make_trialID {
+  my ($ref_obj, $sys_obj) = @_;
+
+  my @ar;
+
+  push @ar, &get_obj_fs_beg_end($ref_obj) if (defined $ref_obj);
+  push @ar, &get_obj_fs_beg_end($sys_obj) if (defined $sys_obj);
+
+  my @o = sort _num @ar;
+
+  my $txt = sprintf("MIN: %012d | MAX: %012d", $o[0], $o[-1]);
+
+  return($txt);
 }
 
 
