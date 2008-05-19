@@ -227,13 +227,13 @@ my @common = @{$rc};
 my @only_in_sys = @{$rs};
 my @only_in_ref = @{$rr};
 print "\n** SUMMARY: All EventLists generated\n";
-print "** Common referred to files [Scorable] (", scalar @common, "): ", join(" ", @common), "\n";
-print "** Only in SYS [Can not Score] (", scalar @only_in_sys, "): ", join(" ", @only_in_sys), "\n";
-print "** Only in REF [Can not Score] (", scalar @only_in_ref, "): ", join(" ", @only_in_ref), "\n\n";
+print "** Common referred to files (", scalar @common, "): ", join(" ", @common), "\n";
+print "** Only in SYS (", scalar @only_in_sys, "): ", join(" ", @only_in_sys), "\n";
+print "** Only in REF (", scalar @only_in_ref, "): ", join(" ", @only_in_ref), "\n\n";
 error_quit("Can not continue, no file in the \"Scorable\" list") if (scalar @common == 0);
 
 ## Prepare event lists for scoring
-print "\n\n***** STEP 3: Scoring \"scorable\"\n";
+print "\n\n***** STEP 3: Scoring\n";
 $sysEL->set_delta_t($delta_t);
 $sysEL->set_E_t($E_t);
 $sysEL->set_E_d($E_d);
@@ -244,132 +244,28 @@ error_quit("Error while obtaining the EventList kernel function parameters (" . 
 my %all_bpm;
 my %metrics_params;
 my $trials = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
-my $alignmentRep = new SimpleAutoTable();
 my $numTrial = 0;
 my $trialID;
-foreach my $file (@common) {
-  my @sys_events = $sysEL->get_events_list($file);
-  error_quit("While trying to obtain a list of SYS events for file ($file) (" . $sysEL->get_errormsg() . ")")
-    if ($sysEL->error());
-  my @ref_events = $refEL->get_events_list($file);
-  error_quit("While trying to obtain a list of REF events for file ($file) (" . $refEL->get_errormsg() . ")")
-    if ($refEL->error());
+my %all_alignmentReps;
 
-  my @listed_events = &uniquer(@sys_events, @ref_events);
+print "** Scoring \"Common referred to files\"\n";
+&do_scoring(@common);
 
-  foreach my $evt (@listed_events) {
-    my @sys_events_obs = $sysEL->get_Observations_list($file, $evt);
-    error_quit("While trying to obtain a list of observations for SYS event ($evt) and file ($file) (" . $sysEL->get_errormsg() . ")")
-      if ($sysEL->error());
-    my @ref_events_obs = $refEL->get_Observations_list($file, $evt);
-    error_quit("While trying to obtain a list of observations for REF event ($evt) and file ($file) (" . $refEL->get_errormsg() . ")")
-      if ($refEL->error());
+print "** Scoring \"Only in SYS\"\n";
+&do_scoring(@only_in_sys);
 
-    my %sys_bpm = &Obs_array_to_hash(@sys_events_obs);
-    my %ref_bpm = &Obs_array_to_hash(@ref_events_obs);
+print "** Scoring \"Only in REF\"\n";
+&do_scoring(@only_in_ref);
 
-    print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, "\n";
-    my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&TrecVid08Observation::kernel_function, \@kp);
-    error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
-      if ($bpm->error());
-
-    $bpm->compute();
-    error_quit("While computing the Bipartite Matching for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
-      if ($bpm->error());
-
-    # I am the coder, I know what I want to display/debug ... trust me !
-    $bpm->_display("joint_values", "mapped", "unmapped_ref", "unmapped_sys") if ($show);
-
-    ##### Add values to the 'Trials'
-    # First, the mapped sys observations
-    my @mapped = $bpm->get_mapped_objects();
-    error_quit("Problem obtaining the mapped objects from the BPM (" . $bpm->get_errormsg() . ")")
-      if ($bpm->error());
-    for (my $i = 0; $i < scalar @mapped; $i++) {
-      my ($sys_obj, $ref_obj) = @{$mapped[$i]};
-
-      my $detscr = $sys_obj->get_DetectionScore();
-      my $detdec = $sys_obj->get_DetectionDecision();
-      error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
-	if ($sys_obj->error());
-
-      $trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
-      # The last '1' is because the elements match an element in the ref list (target)
-      
-      $trialID = sprintf("Obs. %05d",$numTrial++);
-      $alignmentRep->addData($evt, "Event", $trialID);
-      $alignmentRep->addData($file, "File", $trialID);
-      $alignmentRep->addData($ref_obj->get_framespan()->get_value(), "R.range", $trialID);
-      $alignmentRep->addData($ref_obj->get_framespan()->duration(),
-                             "Dur.r", $trialID);
-      $alignmentRep->addData($sys_obj->get_framespan()->get_value(), "S.range", $trialID);
-      $alignmentRep->addData($sys_obj->get_framespan()->duration(),
-                             "Dur.s", $trialID);
-      my $ov = $ref_obj->get_framespan()->get_overlap($sys_obj->get_framespan());
-      $alignmentRep->addData((defined($ov) ? $ov->get_value() : "NULL"),
-                             "ISec.range", $trialID);
-      $alignmentRep->addData((defined($ov) ? $ov->duration() : "NULL"),
-                             "Dur.ISec", $trialID);
-      $alignmentRep->addData($ref_obj->get_framespan()->get_beg_fs() - $sys_obj->get_framespan()->get_beg_fs(),
-                             "Beg.r-Beg.s", $trialID);
-      $alignmentRep->addData($ref_obj->get_framespan()->get_end_fs() - $sys_obj->get_framespan()->get_end_fs(),
-                             "End.r-End.s", $trialID);
-    }
-
-    # Second, the False Alarms
-    my @unmapped_sys = $bpm->get_unmapped_sys_objects();
-    error_quit("Problem obtaining the unmapped_sys objects from the BPM (" . $bpm->get_errormsg() . ")")
-      if ($bpm->error());
-    foreach my $sys_obj (@unmapped_sys) {
-      my $detscr = $sys_obj->get_DetectionScore();
-      my $detdec = $sys_obj->get_DetectionDecision();
-      error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
-	if ($sys_obj->error());
-
-      $trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
-      # The last '0' is because the elements does not match an element in the ref list (target)
-
-      $trialID = sprintf("Obs. %05d",$numTrial++);
-      $alignmentRep->addData($evt, "Event", $trialID);
-      $alignmentRep->addData($file, "File", $trialID);
-      $alignmentRep->addData("", "R.range", $trialID);
-      $alignmentRep->addData("", "Dur.r", $trialID);
-      $alignmentRep->addData($sys_obj->get_framespan()->get_value(), "S.range", $trialID);
-      $alignmentRep->addData($sys_obj->get_framespan()->duration(),
-                             "Dur.s", $trialID);
-      $alignmentRep->addData("", "ISec.range", $trialID);
-      $alignmentRep->addData("", "Dur.ISec", $trialID);
-      $alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
-      $alignmentRep->addData("", "End.r-End.s", $trialID);
-    }
-
-    # Third, the Missed Detects
-    my @unmapped_ref = $bpm->get_unmapped_ref_objects();
-    error_quit("Problem obtaining the unmapped_ref objects from the BPM (" . $bpm->get_errormsg() . ")")
-      if ($bpm->error());
-    foreach my $ref_obj (@unmapped_ref) {
-      $trials->addTrial($evt, undef, "OMITTED", 1);
-      # Here we only care about the number of entries in this array
-      $trialID = sprintf("Obs. %05d",$numTrial++);
-      $alignmentRep->addData($evt, "Event", $trialID);
-      $alignmentRep->addData($file, "File", $trialID);
-      $alignmentRep->addData($ref_obj->get_framespan()->get_value(), "R.range", $trialID);
-      $alignmentRep->addData($ref_obj->get_framespan()->duration(),
-                             "Dur.r", $trialID);
-      $alignmentRep->addData("", "S.range", $trialID);
-      $alignmentRep->addData("", "Dur.s", $trialID);
-      $alignmentRep->addData("", "ISec.range", $trialID);
-      $alignmentRep->addData("", "Dur.ISec", $trialID);
-      $alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
-      $alignmentRep->addData("", "End.r-End.s", $trialID);
-    }
-    # 'Trials' done
-
-    $all_bpm{$file}{$evt} = $bpm;
+foreach my $file (keys %all_alignmentReps) {
+  print "\n** Alignment for FILE: $file\n";
+  foreach my $event (keys %{$all_alignmentReps{$file}}) {
+    print "|-> Event: $event\n";
+    my $alignmentRep = $all_alignmentReps{$file}{$event};
+    $alignmentRep->renderTxtTable(2);
   }
 }
 
-$alignmentRep->renderTxtTable(2);
 #### TODO #####
 
 print "\n\nDump of Alignment Counts\n\n";
@@ -469,7 +365,7 @@ return (\@ref, \@sys);
 sub valok {
   my ($fname, $isgtf, $txt) = @_;
 
-  print "(" . ($isgtf ? "SYS" : "REF") . ") $fname: $txt\n";
+  print "(" . ($isgtf ? "REF" : "SYS") . ") $fname: $txt\n";
 }
 
 #####
@@ -502,7 +398,7 @@ sub load_preprocessing {
       &valerr($tmp, $isgtf, "file is not readable, skipping\n");
       next;
     }
-    
+
     # Prepare the object
     my $object = new TrecVid08ViperFile();
     error_quit("While trying to set \'xmllint\' (" . $object->get_errormsg() . ")")
@@ -515,7 +411,7 @@ sub load_preprocessing {
       if ( ! $object->set_fps($fps) );
     error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
       if ( ! $object->set_file($tmp) );
-    
+
     # Validate (important to confirm that we can have a memory representation)
     if (! $object->validate()) {
       &valerr($tmp, $isgtf, $object->get_errormsg());
@@ -526,8 +422,8 @@ sub load_preprocessing {
 
     # This is really if you are a debugger
     print("** Memory Representation:\n", $object->_display_all()) if ($show > 1);
-    
-    # This is really if you are a debugger 
+
+    # This is really if you are a debugger
     if ($show > 2) {
       print("** Observation representation:\n");
       foreach my $i (@ok_events) {
@@ -608,7 +504,130 @@ sub Obs_array_to_hash {
   return(%ohash);
 }
 
-########################################
+############################################################
+
+sub do_scoring {
+  my @todo = @_;
+
+  foreach my $file (@todo) {
+    my @sys_events = ($sysEL->is_filename_in($file)) ? $sysEL->get_events_list($file) : ();
+    error_quit("While trying to obtain a list of SYS events for file ($file) (" . $sysEL->get_errormsg() . ")")
+      if ($sysEL->error());
+    my @ref_events = ($refEL->is_filename_in($file)) ? $refEL->get_events_list($file) : ();
+    error_quit("While trying to obtain a list of REF events for file ($file) (" . $refEL->get_errormsg() . ")")
+      if ($refEL->error());
+
+    my @listed_events = &uniquer(@sys_events, @ref_events);
+
+    foreach my $evt (@listed_events) {
+      my @sys_events_obs = ($sysEL->is_filename_in($file)) ? $sysEL->get_Observations_list($file, $evt) : ();
+      error_quit("While trying to obtain a list of observations for SYS event ($evt) and file ($file) (" . $sysEL->get_errormsg() . ")")
+	if ($sysEL->error());
+      my @ref_events_obs = ($refEL->is_filename_in($file)) ? $refEL->get_Observations_list($file, $evt) : ();
+      error_quit("While trying to obtain a list of observations for REF event ($evt) and file ($file) (" . $refEL->get_errormsg() . ")")
+	if ($refEL->error());
+
+      my %sys_bpm = &Obs_array_to_hash(@sys_events_obs);
+      my %ref_bpm = &Obs_array_to_hash(@ref_events_obs);
+
+      print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, "\n";
+      my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&TrecVid08Observation::kernel_function, \@kp);
+      error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
+	if ($bpm->error());
+
+      $bpm->compute();
+      error_quit("While computing the Bipartite Matching for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
+	if ($bpm->error());
+
+      # I am the coder, I know what I want to display/debug ... trust me !
+      $bpm->_display("joint_values", "mapped", "unmapped_ref", "unmapped_sys") if ($show);
+
+      ##### Add values to the 'Trials' (and 'SimpleAutoTable')
+      my $alignmentRep = new SimpleAutoTable();
+      # First, the mapped sys observations
+      my @mapped = $bpm->get_mapped_objects();
+      error_quit("Problem obtaining the mapped objects from the BPM (" . $bpm->get_errormsg() . ")")
+	if ($bpm->error());
+      for (my $i = 0; $i < scalar @mapped; $i++) {
+	my ($sys_obj, $ref_obj) = @{$mapped[$i]};
+
+	my $detscr = $sys_obj->get_DetectionScore();
+	my $detdec = $sys_obj->get_DetectionDecision();
+	error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
+	  if ($sys_obj->error());
+
+	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
+	# The last '1' is because the elements match an element in the ref list (target)
+
+	$trialID = sprintf("Obs. %05d",$numTrial++);
+	$alignmentRep->addData($evt, "Event", $trialID);
+	$alignmentRep->addData($file, "File", $trialID);
+	$alignmentRep->addData($ref_obj->get_framespan()->get_value(), "R.range", $trialID);
+	$alignmentRep->addData($ref_obj->get_framespan()->duration(),  "Dur.r", $trialID);
+	$alignmentRep->addData($sys_obj->get_framespan()->get_value(), "S.range", $trialID);
+	$alignmentRep->addData($sys_obj->get_framespan()->duration(),  "Dur.s", $trialID);
+	my $ov = $ref_obj->get_framespan()->get_overlap($sys_obj->get_framespan());
+	$alignmentRep->addData((defined($ov) ? $ov->get_value() : "NULL"), "ISec.range", $trialID);
+	$alignmentRep->addData((defined($ov) ? $ov->duration() : "NULL"), "Dur.ISec", $trialID);
+	$alignmentRep->addData($ref_obj->get_framespan()->get_beg_fs() - $sys_obj->get_framespan()->get_beg_fs(), "Beg.r-Beg.s", $trialID);
+	$alignmentRep->addData($ref_obj->get_framespan()->get_end_fs() - $sys_obj->get_framespan()->get_end_fs(), "End.r-End.s", $trialID);
+      }
+
+      # Second, the False Alarms
+      my @unmapped_sys = $bpm->get_unmapped_sys_objects();
+      error_quit("Problem obtaining the unmapped_sys objects from the BPM (" . $bpm->get_errormsg() . ")")
+	if ($bpm->error());
+      foreach my $sys_obj (@unmapped_sys) {
+	my $detscr = $sys_obj->get_DetectionScore();
+	my $detdec = $sys_obj->get_DetectionDecision();
+	error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
+	  if ($sys_obj->error());
+
+	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
+	# The last '0' is because the elements does not match an element in the ref list (target)
+
+	$trialID = sprintf("Obs. %05d",$numTrial++);
+	$alignmentRep->addData($evt, "Event", $trialID);
+	$alignmentRep->addData($file, "File", $trialID);
+	$alignmentRep->addData("", "R.range", $trialID);
+	$alignmentRep->addData("", "Dur.r", $trialID);
+	$alignmentRep->addData($sys_obj->get_framespan()->get_value(), "S.range", $trialID);
+	$alignmentRep->addData($sys_obj->get_framespan()->duration(), "Dur.s", $trialID);
+	$alignmentRep->addData("", "ISec.range", $trialID);
+	$alignmentRep->addData("", "Dur.ISec", $trialID);
+	$alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
+	$alignmentRep->addData("", "End.r-End.s", $trialID);
+      }
+
+      # Third, the Missed Detects
+      my @unmapped_ref = $bpm->get_unmapped_ref_objects();
+      error_quit("Problem obtaining the unmapped_ref objects from the BPM (" . $bpm->get_errormsg() . ")")
+	if ($bpm->error());
+      foreach my $ref_obj (@unmapped_ref) {
+	$trials->addTrial($evt, undef, "OMITTED", 1);
+	# Here we only care about the number of entries in this array
+	$trialID = sprintf("Obs. %05d",$numTrial++);
+	$alignmentRep->addData($evt, "Event", $trialID);
+	$alignmentRep->addData($file, "File", $trialID);
+	$alignmentRep->addData($ref_obj->get_framespan()->get_value(), "R.range", $trialID);
+	$alignmentRep->addData($ref_obj->get_framespan()->duration(), "Dur.r", $trialID);
+	$alignmentRep->addData("", "S.range", $trialID);
+	$alignmentRep->addData("", "Dur.s", $trialID);
+	$alignmentRep->addData("", "ISec.range", $trialID);
+	$alignmentRep->addData("", "Dur.ISec", $trialID);
+	$alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
+	$alignmentRep->addData("", "End.r-End.s", $trialID);
+      }
+      # 'Trials' done
+
+      $all_bpm{$file}{$evt} = $bpm;
+      $all_alignmentReps{$file}{$evt} = $alignmentRep;
+    }
+  }
+}
+
+
+############################################################
 
 sub _get_env_val {
   my $envv = shift @_;
@@ -620,3 +639,4 @@ sub _get_env_val {
 
   return($var);
 }
+
