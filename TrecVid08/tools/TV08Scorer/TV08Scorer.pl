@@ -172,13 +172,13 @@ GetOptions
    'Show_internals+' => \$showi,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-die("\n$usage\n") if ($opt{'help'});
-die("$versionid\n") if ($opt{'version'});
+ok_quit("\n$usage\n") if ($opt{'help'});
+ok_quit("$versionid\n") if ($opt{'version'});
 
-die("\n$usage\n") if (scalar @ARGV == 0);
+ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
-die("ERROR: \'fps\' must set in order to do any scoring work") if ($fps == -1);
-die("ERROR: \'delta_t\' must set in order to do any scoring work") if (! defined $delta_t);
+error_quit("\'fps\' must set in order to do any scoring work") if ($fps == -1);
+error_quit("\'delta_t\' must set in order to do any scoring work") if (! defined $delta_t);
 
 if ($xmllint ne "") {
   error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
@@ -264,7 +264,7 @@ print "\n\n***** STEP ", $stepc++, ": Dump of Alignment Counts\n\n";
 $trials->dumpCountSummary();
 #$trials->dump(*STDOUT);
 
-die("Done\n");
+ok_quit("\n\n***** Done *****\n");
 
 ########## END
 
