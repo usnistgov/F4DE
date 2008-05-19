@@ -140,6 +140,7 @@ my $usage = &set_usage();
 
 # Default values for variables
 my $show = 0;
+my $showi = 0;
 my $xmllint =  &_get_env_val($xmllint_env, "");
 my $xsdpath = &_get_env_val($xsdpath_env, "../../data");
 $xsdpath = "$f4bv/data" 
@@ -149,7 +150,7 @@ my $gtfs = 0;
 my $delta_t = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:     E              T         d fgh          s  v x  
+# USed:     E             ST         d fgh          s  v x  
 
 my %opt;
 my $dbgftmp = "";
@@ -166,8 +167,9 @@ GetOptions
    'deltat=f'        => \$delta_t,
    'Ed=f'            => \$E_d,
    'Et=f'            => \$E_t,
+   'show'            => \$show,
    # Hidden option
-   'show_internals+' => \$show,
+   'Show_internals+' => \$showi,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 die("\n$usage\n") if ($opt{'help'});
@@ -200,9 +202,10 @@ error_quit("No REF file(s) provided, can not perform scoring")
   if (scalar @ref == 0);
 
 ########## Main processing
+my $stepc = 1;
 
 ## Load Pre-processing
-print "***** STEP 1: Loading files in Memory\n";
+print "***** STEP ", $stepc++, ": Loading files in Memory\n";
 my ($sysdone, $systodo, %sys_hash) = &load_preprocessing(0, @sys);
 my ($refdone, $reftodo, %ref_hash) = &load_preprocessing(1, @ref);
 
@@ -216,7 +219,7 @@ error_quit("Can not continue, not all files passed the loading/validation step, 
   if ($ndone != $ntodo);
 
 ## Generate event lists
-print "\n\n***** STEP 2: Generating EventLists\n";
+print "\n\n***** STEP ", $stepc++, ": Generating EventLists\n";
 my $sysEL = &generate_EventList("SYS", %sys_hash);
 my $refEL = &generate_EventList("REF", %ref_hash);
 ## Can we score after all ?
@@ -233,7 +236,7 @@ print "** Only in REF (", scalar @only_in_ref, "): ", join(" ", @only_in_ref), "
 error_quit("Can not continue, no file in the \"Scorable\" list") if (scalar @common == 0);
 
 ## Prepare event lists for scoring
-print "\n\n***** STEP 3: Scoring\n";
+print "\n\n***** STEP ", $stepc++, ": Scoring\n";
 $sysEL->set_delta_t($delta_t);
 $sysEL->set_E_t($E_t);
 $sysEL->set_E_d($E_d);
@@ -255,18 +258,9 @@ print "** Scoring \"Only in SYS\"\n";
 print "** Scoring \"Only in REF\"\n";
 &do_scoring(@only_in_ref);
 
-foreach my $file (keys %all_alignmentReps) {
-  print "\n** Alignment for FILE: $file\n";
-  foreach my $event (keys %{$all_alignmentReps{$file}}) {
-    print "|-> Event: $event\n";
-    my $alignmentRep = $all_alignmentReps{$file}{$event};
-    $alignmentRep->sorted_renderTxtTable(2, 1);
-  }
-}
-
 #### TODO #####
 
-print "\n\nDump of Alignment Counts\n\n";
+print "\n\n***** STEP ", $stepc++, ": Dump of Alignment Counts\n\n";
 $trials->dumpCountSummary();
 #$trials->dump(*STDOUT);
 
@@ -282,7 +276,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 --deltat deltat --fps fps [--help] [--version] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 --deltat deltat --fps fps [--help] [--version] [--show] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -293,6 +287,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
   --deltat        Set the deltat value
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
+  --show          Show Alignment table
   --version       Print version number and exit
   --help          Print this usage information and exit
 
@@ -419,10 +414,10 @@ sub load_preprocessing {
     }
 
     # This is really if you are a debugger
-    print("** Memory Representation:\n", $object->_display_all()) if ($show > 1);
+    print("** Memory Representation:\n", $object->_display_all()) if ($showi > 1);
 
     # This is really if you are a debugger
-    if ($show > 2) {
+    if ($showi > 2) {
       print("** Observation representation:\n");
       foreach my $i (@ok_events) {
 	print("-- EVENT: $i\n");
@@ -507,6 +502,8 @@ sub Obs_array_to_hash {
 sub do_scoring {
   my @todo = @_;
 
+  my $ksep = 0;
+
   foreach my $file (@todo) {
     my @sys_events = ($sysEL->is_filename_in($file)) ? $sysEL->get_events_list($file) : ();
     error_quit("While trying to obtain a list of SYS events for file ($file) (" . $sysEL->get_errormsg() . ")")
@@ -538,16 +535,18 @@ sub do_scoring {
 	if ($bpm->error());
 
       # I am the coder, I know what I want to display/debug ... trust me !
-      $bpm->_display("joint_values", "mapped", "unmapped_ref", "unmapped_sys") if ($show);
+      $bpm->_display("joint_values") if ($showi > 1);
+      $bpm->_display("mapped", "unmapped_ref", "unmapped_sys") if ($showi);
 
       ##### Add values to the 'Trials' (and 'SimpleAutoTable')
       my $alignmentRep = new SimpleAutoTable();
+
       # First, the mapped sys observations
       my @mapped = $bpm->get_mapped_objects();
       error_quit("Problem obtaining the mapped objects from the BPM (" . $bpm->get_errormsg() . ")")
 	if ($bpm->error());
-      for (my $i = 0; $i < scalar @mapped; $i++) {
-	my ($sys_obj, $ref_obj) = @{$mapped[$i]};
+      foreach my $mop (@mapped) {
+	my ($sys_obj, $ref_obj) = @{$mop};
 
 	my $detscr = $sys_obj->get_DetectionScore();
 	my $detdec = $sys_obj->get_DetectionDecision();
@@ -557,11 +556,14 @@ sub do_scoring {
 	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
 	# The last '1' is because the elements match an element in the ref list (target)
 
-	my $trialID = &make_trialID($ref_obj, $sys_obj);
-	$alignmentRep->addData($evt, "Event", $trialID);
-	$alignmentRep->addData($file, "File", $trialID);
+	my $trialID = &make_trialID($ref_obj, $sys_obj, $ksep++);
+#	$alignmentRep->addData($evt, "Event", $trialID);
+#	$alignmentRep->addData($file, "File", $trialID);
+	$alignmentRep->addData("Mapped", "TYPE", $trialID);
+	$alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
 	$alignmentRep->addData(&get_obj_fs_duration($ref_obj),  "Dur.r", $trialID);
+	$alignmentRep->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
 	$alignmentRep->addData(&get_obj_fs_duration($sys_obj),  "Dur.s", $trialID);
 	my $ov = &get_obj_fs_ov($ref_obj, $sys_obj);
@@ -586,11 +588,14 @@ sub do_scoring {
 	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
 	# The last '0' is because the elements does not match an element in the ref list (target)
 
-	my $trialID = &make_trialID(undef, $sys_obj);
-	$alignmentRep->addData($evt, "Event", $trialID);
-	$alignmentRep->addData($file, "File", $trialID);
+	my $trialID = &make_trialID(undef, $sys_obj, $ksep++);
+#	$alignmentRep->addData($evt, "Event", $trialID);
+#	$alignmentRep->addData($file, "File", $trialID);
+	$alignmentRep->addData("FalseAlarm", "TYPE", $trialID);
+	$alignmentRep->addData("", "R.ID", $trialID);
 	$alignmentRep->addData("", "R.range", $trialID);
 	$alignmentRep->addData("", "Dur.r", $trialID);
+	$alignmentRep->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
 	$alignmentRep->addData(&get_obj_fs_duration($sys_obj), "Dur.s", $trialID);
 	$alignmentRep->addData("", "ISec.range", $trialID);
@@ -607,11 +612,14 @@ sub do_scoring {
 	$trials->addTrial($evt, undef, "OMITTED", 1);
 	# Here we only care about the number of entries in this array
 
-	my $trialID = &make_trialID($ref_obj, undef);
-	$alignmentRep->addData($evt, "Event", $trialID);
-	$alignmentRep->addData($file, "File", $trialID);
+	my $trialID = &make_trialID($ref_obj, undef, $ksep++);
+#	$alignmentRep->addData($evt, "Event", $trialID);
+#	$alignmentRep->addData($file, "File", $trialID);
+	$alignmentRep->addData("MissedDetect", "TYPE", $trialID);
+	$alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
 	$alignmentRep->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
+	$alignmentRep->addData("", "S.ID", $trialID);
 	$alignmentRep->addData("", "S.range", $trialID);
 	$alignmentRep->addData("", "Dur.s", $trialID);
 	$alignmentRep->addData("", "ISec.range", $trialID);
@@ -623,6 +631,11 @@ sub do_scoring {
 
       $all_bpm{$file}{$evt} = $bpm;
       $all_alignmentReps{$file}{$evt} = $alignmentRep;
+      $alignmentRep->sorted_renderTxtTable(2,1) if ($show);
+      print " -- Summary: ",
+	scalar @mapped, " Mapped (Pairs) / ",
+	  scalar @unmapped_sys, " False Alarm(s) / ",
+	    scalar @unmapped_ref, " Missed Detect(s)\n\n";
     }
   }
 }
@@ -729,12 +742,27 @@ sub get_obj_fs_beg_end {
 
 #####
 
+sub get_obj_id {
+  my ($obj) = @_;
+
+  error_quit("Can not obtain framespan beg/end for undefined object")
+    if (! defined $obj);
+
+  my $id = $obj->get_id();
+  error_quit("Error obtaining object's ID (" . $obj->get_errormsg() . ")")
+    if ($obj->error());
+
+  return($id)
+}
+
+#####
+
 sub _num {return ($a <=> $b);}
 
 #####
 
 sub make_trialID {
-  my ($ref_obj, $sys_obj) = @_;
+  my ($ref_obj, $sys_obj, $ksep) = @_;
 
   my @ar;
 
@@ -743,7 +771,7 @@ sub make_trialID {
 
   my @o = sort _num @ar;
 
-  my $txt = sprintf("MIN: %012d | MAX: %012d", $o[0], $o[-1]);
+  my $txt = sprintf("MIN: %012d | MAX: %012d | KeySeparator: %012d", $o[0], $o[-1], $ksep);
 
   return($txt);
 }
