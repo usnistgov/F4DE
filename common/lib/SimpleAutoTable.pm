@@ -173,8 +173,54 @@ sub _centerJust(){
     my $right = $len - (length($str) + $left);
     $self->_nChrStr($left, " ") . $str . $self->_nChrStr($right, " ");
 }
-    
-sub renderTxtTable(){
+
+sub renderTxtTable {
+  my ($self, $interColGap) = @_;
+
+  print $self->renderTxtTable_core($interColGap);
+}
+
+sub _rem1col {
+  my ($length, $text) = @_;
+
+  $text =~ s%^.{$length}%%;
+
+  return($text);
+}
+
+sub sorted_renderTxtTable {
+  my ($self, $interColGap, $rem1col) = @_;
+  my $rl = 0;
+
+  my $txt = $self->renderTxtTable_core($interColGap);
+
+  my @all = split(m%\n%, $txt);
+  my $header = shift @all;
+  my $separator = shift @all;
+
+  # Remove initial column ?
+  if ($rem1col) {
+    if ($separator =~ m%^(.+\+)%) {
+      $rl = length($1);
+      $rl += $interColGap;
+    } else {
+      die "Could not find separator ?";
+    }
+  }
+
+  my @sorted = sort @all;
+
+  my $out = "";
+  $out .= &_rem1col($rl, $header) . "\n";
+  $out .= &_rem1col($rl, $separator) . "\n";
+  foreach my $line (@sorted) {
+    $out .= &_rem1col($rl, $line) . "\n";
+  }
+
+  print $out;
+}
+
+sub renderTxtTable_core(){
     my ($self, $interColGap) = @_;
 
     my $fmt_x;
@@ -182,6 +228,8 @@ sub renderTxtTable(){
 
     my $numColLev = $self->_getNumColLev();
     my $numRowLev = $self->_getNumRowLev();
+
+    my $out = "";
     
 #    print Dumper($self);
     
@@ -207,35 +255,37 @@ sub renderTxtTable(){
 #    print "ColIDs ".join(" ",@colIDs)."\n";
 
     ### Header output
-    print $self->_nChrStr($maxRowLabWidth, " ") . "|" . $gapStr;
+    $out .= $self->_nChrStr($maxRowLabWidth, " ") . "|" . $gapStr;
     
     my $data_len = 0;            
     for ($c=0; $c<@colIDs; $c++){
-        print $self->_centerJust($colIDs[$c], $self->_getColLabelWidth($colIDs[$c]));
-        print $gapStr;
+        $out .= $self->_centerJust($colIDs[$c], $self->_getColLabelWidth($colIDs[$c]));
+        $out .= $gapStr;
         $data_len += $self->_getColLabelWidth($colIDs[$c]) + $interColGap;
     }
-    print "\n";
+    $out .= "\n";
         
     ### Header separator
-    print $self->_nChrStr($maxRowLabWidth, "-") . "+" . $self->_nChrStr($data_len, "-");
-    print "\n";
+    $out .= $self->_nChrStr($maxRowLabWidth, "-") . "+" . $self->_nChrStr($data_len, "-");
+    $out .= "\n";
     
     
     ### The data
     foreach $rowIDStr(@rowIDs){
         for ($c=1; $c<=$numRowLev; $c++){
-            print $self->_leftJust($rowIDStr, $maxRowLabWidth);
+            $out .= $self->_leftJust($rowIDStr, $maxRowLabWidth);
         }
-        print "|";
+        $out .= "|";
         
         foreach $colIDStr(@colIDs){
-            print "$gapStr" . $self->_rightJust($self->{data}{$rowIDStr."-".$colIDStr}, 
+            $out .= "$gapStr" . $self->_rightJust($self->{data}{$rowIDStr."-".$colIDStr}, 
                                               $self->_getColLabelWidth($colIDStr));
         }
         
-        print "\n";
+        $out .= "\n";
     }   
+
+    return($out);
 }
 
 1;
