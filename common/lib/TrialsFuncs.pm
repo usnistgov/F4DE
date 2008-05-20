@@ -372,10 +372,74 @@ sub getNumYesNonTarg(){
     $self->{"trials"}->{$block}->{"YES NONTARG"};
 }
 
+sub getNumFalseAlarm(){
+    my ($self, $block) = @_;
+    $self->getNumYesNonTarg($block);
+}
+
+sub getNumMiss(){
+    my ($self, $block) = @_;
+    $self->getNumNoTarg($block) + $self->getNumOmittedTarg($block);
+}
+
+sub getNumCorr(){
+    my ($self, $block) = @_;
+    $self->getNumYesTarg($block);
+}
+
 sub getNumNonTarg(){
     my ($self, $block) = @_;
     ($self->{"trials"}->{$block}->{"NO NONTARG"} + 
      $self->{"trials"}->{$block}->{"YES NONTARG"})
+}
+
+sub _stater(){
+    my ($self, $data) = @_;
+    my $sum = 0;
+    my $sumsqr = 0;
+    my $n = 0;
+    foreach my $d(@$data){
+        $sum += $d;
+        $sumsqr += $d * $d;
+        $n++;
+    }
+    ($sum, $sum/$n, sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1))));
+}
+
+sub getTotNumTarg(){
+    my ($self) = @_;
+    my @data = ();
+    foreach my $block($self->getBlockIDs()){
+        push @data, $self->getNumTarg($block);
+    }
+    $self->_stater(\@data);
+}
+
+sub getTotNumCorr(){
+    my ($self) = @_;
+    my @data = ();
+    foreach my $block($self->getBlockIDs()){
+        push @data, $self->getNumCorr($block);
+    }
+    $self->_stater(\@data);
+}
+
+sub getTotNumFalseAlarm(){
+    my ($self) = @_;
+    my @data = ();
+    foreach my $block($self->getBlockIDs()){
+        push @data, $self->getNumFalseAlarm($block);
+    }
+    $self->_stater(\@data);
+}
+
+sub getTotNumMiss(){
+    my ($self) = @_;
+    my @data = ();
+    foreach my $block($self->getBlockIDs()){
+        push @data, $self->getNumMiss($block);
+    }
+    $self->_stater(\@data);
 }
 
 sub getTargDecScr(){
