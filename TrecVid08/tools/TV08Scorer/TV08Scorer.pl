@@ -525,7 +525,8 @@ sub do_scoring {
       my %sys_bpm = &Obs_array_to_hash(@sys_events_obs);
       my %ref_bpm = &Obs_array_to_hash(@ref_events_obs);
 
-      print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, "\n";
+      my $tomatch = scalar @sys_events_obs + scalar @ref_events_obs;
+      print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, " | To Match: $tomatch elements\n";
       my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&TrecVid08Observation::kernel_function, \@kp);
       error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
 	if ($bpm->error());
@@ -632,10 +633,14 @@ sub do_scoring {
       $all_bpm{$file}{$evt} = $bpm;
       $all_alignmentReps{$file}{$evt} = $alignmentRep;
       $alignmentRep->sorted_renderTxtTable(2,1) if ($show);
+      my $matched = (2 * scalar @mapped)
+	+ scalar @unmapped_sys + scalar @unmapped_ref;
       print " -- Summary: ",
 	scalar @mapped, " Mapped (Pairs) / ",
 	  scalar @unmapped_sys, " False Alarm(s) / ",
-	    scalar @unmapped_ref, " Missed Detect(s)\n\n";
+	    scalar @unmapped_ref, " Missed Detect(s) | Matched: $matched elements\n\n";
+      error_quit("WEIRD: To match ($tomatch) != Matched ($matched) ?")
+	if ($tomatch != $matched);
     }
   }
 }
