@@ -72,7 +72,15 @@ unless (eval "use TrecVid08ViperFile; 1")
 unless (eval "use TrecVid08EventList; 1")
   {
     my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
+    warn_print("\"TrecVid08ViperList\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# MetricTV08 (part of this tool)
+unless (eval "use MetricTV08; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MetricTV08\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
   }
 
@@ -89,6 +97,14 @@ unless (eval "use Trials; 1")
   {
     my $pe = &eo2pe($@);
     warn_print("\"Trials\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# TrialSummaryTable (part of this tool)
+unless (eval "use TrialSummaryTable; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"TrialSummaryTable\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
   }
 
@@ -245,8 +261,10 @@ error_quit("Error while obtaining the EventList kernel function parameters (" . 
   if ($sysEL->error());
 
 my %all_bpm;
-my %metrics_params;
+my %metrics_params = ( TOTALTRIALS => 1000) ;
 my $trials = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
+my $metric = new MetricTV08({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trials),
+
 my %all_alignmentReps;
 
 print "** Scoring \"Common referred to files\"\n";
@@ -262,7 +280,11 @@ print "** Scoring \"Only in REF\"\n";
 
 print "\n\n***** STEP ", $stepc++, ": Dump of Alignment Counts\n\n";
 $trials->dumpCountSummary();
-#$trials->dump(*STDOUT);
+my $trep = new TrialSummaryTable($trials, $metric);
+print "\n\n***** STEP ", $stepc++, ": Dump of Performance Statistics\n\n";
+print $trep->renderAsTxt();
+
+#my $trials->dump(*STDOUT);
 
 ok_quit("\n\n***** Done *****\n");
 
