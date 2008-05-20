@@ -72,7 +72,7 @@ unless (eval "use TrecVid08ViperFile; 1")
 unless (eval "use TrecVid08EventList; 1")
   {
     my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08ViperList\" is not available in your Perl installation. ", $partofthistool, $pe);
+    warn_print("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
   }
 
@@ -157,6 +157,7 @@ my $usage = &set_usage();
 # Default values for variables
 my $show = 0;
 my $showi = 0;
+my $perfStat = 0;
 my $xmllint =  &_get_env_val($xmllint_env, "");
 my $xsdpath = &_get_env_val($xsdpath_env, "../../data");
 $xsdpath = "$f4bv/data" 
@@ -166,7 +167,7 @@ my $gtfs = 0;
 my $delta_t = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:     E             ST         d fgh          s  v x  
+# USed:     E             ST         d fgh       p  s  v x  
 
 my %opt;
 my $dbgftmp = "";
@@ -184,6 +185,7 @@ GetOptions
    'Ed=f'            => \$E_d,
    'Et=f'            => \$E_t,
    'show'            => \$show,
+   'perfStat'        => \$perfStat,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -276,15 +278,23 @@ print "** Scoring \"Only in SYS\"\n";
 print "** Scoring \"Only in REF\"\n";
 &do_scoring(@only_in_ref);
 
-#### TODO #####
+## Dump Alignment Counts
 
 print "\n\n***** STEP ", $stepc++, ": Dump of Alignment Counts\n\n";
 $trials->dumpCountSummary();
-my $trep = new TrialSummaryTable($trials, $metric);
-print "\n\n***** STEP ", $stepc++, ": Dump of Performance Statistics\n\n";
-print $trep->renderAsTxt();
+
+## Dump Performance Statistics (optional)
+
+if ($perfStat) {
+  print "\n\n***** STEP ", $stepc++, ": Dump of Performance Statistics\n\n";
+  my $trep = new TrialSummaryTable($trials, $metric);
+  print $trep->renderAsTxt();
+}
 
 #my $trials->dump(*STDOUT);
+
+#### TODO #####
+
 
 ok_quit("\n\n***** Done *****\n");
 
@@ -298,7 +308,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 --deltat deltat --fps fps [--help] [--version] [--show] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 --deltat deltat --fps fps [--help] [--version] [--showAT] [--perfStat] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -309,7 +319,8 @@ Will Score the XML file(s) provided (Truth vs System)
   --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
   --deltat        Set the deltat value
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
-  --show          Show Alignment table
+  --showAT        Show Alignment Table (per File/Event processed)
+  --perfStat      Dump Performance Statistics
   --version       Print version number and exit
   --help          Print this usage information and exit
 
@@ -589,6 +600,8 @@ sub do_scoring {
 	$alignmentRep->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
 	$alignmentRep->addData(&get_obj_fs_duration($sys_obj),  "Dur.s", $trialID);
+	$alignmentRep->addData($detscr, "S.DetScr", $trialID);
+	$alignmentRep->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
 	my $ov = &get_obj_fs_ov($ref_obj, $sys_obj);
 	$alignmentRep->addData((defined($ov) ? &get_fs_value($ov) : "NULL"), "ISec.range", $trialID);
 	$alignmentRep->addData((defined($ov) ? &get_fs_duration($ov): "NULL"), "Dur.ISec", $trialID);
@@ -621,6 +634,8 @@ sub do_scoring {
 	$alignmentRep->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
 	$alignmentRep->addData(&get_obj_fs_duration($sys_obj), "Dur.s", $trialID);
+	$alignmentRep->addData($detscr, "S.DetScr", $trialID);
+	$alignmentRep->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
 	$alignmentRep->addData("", "ISec.range", $trialID);
 	$alignmentRep->addData("", "Dur.ISec", $trialID);
 	$alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
@@ -642,6 +657,8 @@ sub do_scoring {
 	$alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
 	$alignmentRep->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
+	$alignmentRep->addData("", "S.DetScr", $trialID);
+	$alignmentRep->addData("", "S.DetDec", $trialID);
 	$alignmentRep->addData("", "S.ID", $trialID);
 	$alignmentRep->addData("", "S.range", $trialID);
 	$alignmentRep->addData("", "Dur.s", $trialID);
