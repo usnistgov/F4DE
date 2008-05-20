@@ -11,7 +11,7 @@
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-package MetricSTD;
+package MetricTV08;
 use strict;
 use Data::Dumper;
  
@@ -55,6 +55,7 @@ sub getParamsStr(){
 
 sub errMissLab(){ "PMiss"; }
 sub errMissUnit(){ "Prob" };
+sub errMissPrintFormat(){ "%6.4f" };
 sub errMissBlockCalc(){
     my ($self, $nMiss, $block) = @_;
     my $NTarg =  $self->{TRIALS}->getNumTarg($block);
@@ -68,12 +69,13 @@ sub errMissBlockSetCalc(){
 
 	my ($sum, $sumsqr, $n) = (0, 0);
 	foreach my $block(keys %$data){
-	    my $lu = $data->{$block}{MMISS};
-	    die "Error: Can't calculate errMissBlockSetCalc: key 'MMISS' for block '$block' missing" if (! defined($lu));
+        my $nmiss = $data->{$block}{MMISS};
+	    die "Error: Can't calculate errMissBlockSetCalc: key 'MMISS' for block '$block' missing" if (! defined($nmiss));
 
  	    if ($self->{TRIALS}->getNumTarg($block) > 0){
-		     $sum += $lu;
-		     $sumsqr += $lu * $lu;
+		     my $miss = $self->errMissBlockCalc($nmiss,$block);
+	         $sum += $miss;
+		     $sumsqr += $miss * $miss;
 		     $n ++;
 	    }
 	}
@@ -83,6 +85,7 @@ sub errMissBlockSetCalc(){
 
 sub errFALab() { "PFA"; }
 sub errFAUnit(){ "Prob" };
+sub errFAPrintFormat(){ "%6.4f" };
 sub errFABlockCalc(){
     my ($self, $nFa, $block) = @_;
     my $NNonTargTrials = (defined($self->{TRIALPARAMS}->{TOTALTRIALS}) ? 
@@ -97,12 +100,11 @@ sub errFABlockSetCalc(){
     my ($sum, $sumsqr, $n) = (0, 0, 0);
     foreach my $block(keys %$data){
    	    my $lu = $data->{$block}{MFA};
-	    my $Ntarg =  $self->{TRIALS}->getNumTarg($block);
         die "Error: Can't calculate errFABlockSetCalc: key '".$self->errFALab()."' for block '$block' missing" if (! defined($lu));
-   	    
-   	    next if ($self->{TRIALS}->getNumTarg($block) == 0);
+
+        my $fa = $self->errFABlockCalc($lu, $block);   	    
 	    
-	    $sum += $lu;
+	    $sum += $fa;
 	    $sumsqr += $lu * $lu;
 	    $n ++;
     }
@@ -113,6 +115,7 @@ sub errFABlockSetCalc(){
 ### Either 'maximizable' or 'minimizable'
 sub combType() { "maximizable"; }
 sub combLab() { "Value"; }
+sub combPrintFormat(){ "%6.4f" };
 sub combCalc(){
     my ($self, $missErr, $faErr) = @_;
     if (defined($missErr)){
@@ -123,11 +126,11 @@ sub combCalc(){
 }
 sub combBlockCalc(){
     my ($self, $nMiss, $nFa, $block) = @_;
-    $self->combErrCalc($self->errMissCalc($nMiss, $block), $self->errFACalc($nFa, $block));
+    $self->combCalc($self->errMissBlockCalc($nMiss, $block), $self->errFABlockCalc($nFa, $block));
 }
 sub combBlockSetCalc(){
     my ($self, $data) = @_;
-    #### Data is a hass ref with the primary key being a block and for each block there 
+    #### Data is a hash ref with the primary key being a block and for each block there 
     #### MUST be a 2 secondary keys, 'MMISS' and 'MFA'
     my ($missAvg, $missSSD) = $self->errMissBlockSetCalc($data);
     my ($faAvg,   $faSSD)   = $self->errFABlockSetCalc($data);    
@@ -143,8 +146,11 @@ sub combBlockSetCalc(){
 
    	    next if ($self->{TRIALS}->getNumTarg($block) == 0);
 
-   	    $sum += $self->combCalc($luMiss, $luFA);
-	    $sumsqr += $self->combCalc($luMiss, $luFA) * $self->combCalc($luMiss, $luFA);
+        my $miss = $self->errMissBlockCalc($luMiss, $block); 
+        my $fa = $self->errFABlockCalc($luFA, $block); 
+   	    my $comb = $self->combCalc($miss, $fa);
+   	    $sum += $comb;
+	    $sumsqr += $comb * $comb;
 	    $n ++;
     }
     die "Error: Can't calculate errFABlockSetCalc: zero blocks" if ($n == 0);
