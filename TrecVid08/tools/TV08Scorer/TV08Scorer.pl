@@ -278,9 +278,9 @@ print "** Scoring \"Only in SYS\"\n";
 print "** Scoring \"Only in REF\"\n";
 &do_scoring(@only_in_ref);
 
-## Dump Alignment Counts
+## Dump Trial Contingency Table
 
-print "\n\n***** STEP ", $stepc++, ": Dump of Alignment Counts\n\n";
+print "\n\n***** STEP ", $stepc++, ": Dump of Trial Contingency Table\n\n";
 $trials->dumpCountSummary();
 
 ## Dump Performance Statistics (optional)
@@ -574,6 +574,8 @@ sub do_scoring {
 
       ##### Add values to the 'Trials' (and 'SimpleAutoTable')
       my $alignmentRep = new SimpleAutoTable();
+      $alignmentRep->setProp_RemoveKeyColumn();
+      $alignmentRep->setProp_SortRowKeyAlpha();
 
       # First, the mapped sys observations
       my @mapped = $bpm->get_mapped_objects();
@@ -671,7 +673,7 @@ sub do_scoring {
 
       $all_bpm{$file}{$evt} = $bpm;
       $all_alignmentReps{$file}{$evt} = $alignmentRep;
-      $alignmentRep->sorted_renderTxtTable(2,1) if ($show);
+      $alignmentRep->renderTxtTable(2) if ($show);
       my $matched = (2 * scalar @mapped)
 	+ scalar @unmapped_sys + scalar @unmapped_ref;
       print " -- Summary: ",
