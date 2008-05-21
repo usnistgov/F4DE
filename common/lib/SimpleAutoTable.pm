@@ -1,19 +1,189 @@
 package SimpleAutoTable;
 
+use PropList;
 use Data::Dumper;
+
 use strict;
 
+my $key_KeyColumn = "KeyColumn";
+my @av_KeyColumn = ("Keep", "Remove"); # Order is Important
+my $key_SortRowKey = "SortRowKey";
+my @av_SortRowKey = ("AsAdded", "Num", "Alpha"); # Order is Important
+
 sub new {
-    my ($class) = shift @_;
-    my $self = {
-	   data => { },
-       rowLabOrder => { ThisIDNum => 0, SubIDCount => 0, SubID => {}, width => { icgMult => 0, icgSepMult => 0, charLen => 0 } },
-       colLabOrder => { ThisIDNum => 0, SubIDCount => 0, SubID => {}, width => { icgMult => 0, icgSepMult => 0, charLen => 0 } },
-       
+  my ($class) = shift @_;
+
+  my $prop = new PropList();
+  $prop->addProp($key_KeyColumn, $av_KeyColumn[0], @av_KeyColumn);
+  $prop->addProp($key_SortRowKey, $av_SortRowKey[0], @av_SortRowKey);
+
+  my $errormsg = &_set_errormsg_txt("", $prop->get_errormsg());
+
+  my $self =
+    {
+     data => { },
+     rowLabOrder => 
+     {
+      ThisIDNum    => 0,
+      SubIDCount   => 0,
+      SubID        => {},
+      width        => { icgMult => 0, icgSepMult => 0, charLen => 0 },
+     },
+     colLabOrder => 
+     {
+      ThisIDNum    => 0,
+      SubIDCount   => 0,
+      SubID        => {},
+      width        => { icgMult => 0, icgSepMult => 0, charLen => 0 },
+     },
+     Properties  => $prop,
+     errormsg    => $errormsg,
     };
-    bless $self;
-    return $self;
+
+  bless $self;
+  return($self);
 }
+
+##########
+
+sub error {
+  my ($self) = @_;
+
+  return(1) if (! &_is_blank($self->get_errormsg()));
+
+  return(0);
+}
+
+#####
+
+sub get_errormsg {
+  my ($self) = @_;
+
+  return($self->{errormsg});
+}
+
+#####
+
+sub _set_errormsg_txt {
+  my ($oh, $add) = @_;
+
+  my $txt = "$oh$add";
+
+  $txt =~ s%\[SimpleAutoTable\]\s+%%g;
+
+  return("") if (&_is_blank($txt));
+
+  $txt = "[SimpleAutoTable] $txt";
+
+  return($txt);
+}
+
+#####
+
+sub _set_errormsg {
+  my ($self, $txt) = @_;
+
+  $self->{errormsg} = &_set_errormsg_txt($self->{errormsg}, $txt);
+}
+
+##########
+
+sub getProp_KeyColumn {
+  my ($self) = @_;
+
+  my $prop = $self->{Properties};
+
+  my $v = $prop->getValue($key_KeyColumn);
+  if ($prop->error()) {
+    $self->_set_erromsg("Could not get the KeyColumn Property (" . $prop->get_errormsg() . ")");
+    return(0);
+  }
+  
+  return($v);
+}
+
+#####
+
+sub _setProp_KeyColumn {
+  my ($self, $val) = @_;
+
+  my $prop = $self->{Properties};
+
+  if ((! $prop->setValue($key_KeyColumn, $val)) || ($prop->error())) {
+    $self->_set_erromsg("Could not set the KeyColumn Property (" . $prop->get_errormsg() . ")");
+    return(0);
+  }
+
+  return(1);
+}
+
+#####
+
+sub setProp_KeepKeyColumn {
+  my ($self) = @_;
+  return($self->_setProp_KeyColumn($av_KeyColumn[0]));
+}
+
+#####
+
+sub setProp_RemoveKeyColumn {
+  my ($self) = @_;
+  return($self->_setProp_KeyColumn($av_KeyColumn[1]));
+}
+
+##########
+
+sub getProp_SortRowKey {
+  my ($self) = @_;
+
+  my $prop = $self->{Properties};
+
+  my $v = $prop->getValue($key_SortRowKey);
+  if ($prop->error()) {
+    $self->_set_erromsg("Could not get the SortRowKey Property (" . $prop->get_errormsg() . ")");
+    return(0);
+  }
+  
+  return($v);
+}
+
+#####
+
+sub _setProp_SortRowKey {
+  my ($self, $val) = @_;
+
+  my $prop = $self->{Properties};
+
+  if ((! $prop->setValue($key_SortRowKey, $val)) || ($prop->error())) {
+    $self->_set_erromsg("Could not set the SortRowKey Property (" . $prop->get_errormsg() . ")");
+    return(0);
+  }
+
+  return(1);
+}
+
+#####
+
+sub setProp_SortRowKeyAsAdded {
+  my ($self) = @_;
+  return($self->_setProp_SortRowKey($av_SortRowKey[0]));
+}
+
+#####
+
+sub setProp_SortRowKeyNum {
+  my ($self) = @_;
+  return($self->_setProp_SortRowKey($av_SortRowKey[1]));
+}
+
+#####
+
+sub setProp_SortRowKeyAlpha {
+  my ($self) = @_;
+  return($self->_setProp_SortRowKey($av_SortRowKey[2]));
+}
+
+##########
 
 sub unitTest(){
     my $sg = new SimpleAutoTable();
@@ -174,118 +344,98 @@ sub _centerJust(){
     $self->_nChrStr($left, " ") . $str . $self->_nChrStr($right, " ");
 }
 
-sub renderTxtTable {
+sub renderTxtTable(){
   my ($self, $interColGap) = @_;
-
-  print $self->renderTxtTable_core($interColGap);
-}
-
-sub _rem1col {
-  my ($length, $text) = @_;
-
-  $text =~ s%^.{$length}%%;
-
-  return($text);
-}
-
-sub sorted_renderTxtTable {
-  my ($self, $interColGap, $rem1col) = @_;
-  my $rl = 0;
-
-  my $txt = $self->renderTxtTable_core($interColGap);
-
-  my @all = split(m%\n%, $txt);
-  my $header = shift @all;
-  my $separator = shift @all;
-
-  # Remove initial column ?
-  if ($rem1col) {
-    if ($separator =~ m%^(.+\+)%) {
-      $rl = length($1);
-      $rl += $interColGap;
-    } else {
-      die "Could not find separator ?";
-    }
-  }
-
-  my @sorted = sort @all;
-
+  
+  my $fmt_x;
+  my $gapStr = sprintf("%${interColGap}s","");
+  
+  my $numColLev = $self->_getNumColLev();
+  my $numRowLev = $self->_getNumRowLev();
+  
   my $out = "";
-  $out .= &_rem1col($rl, $header) . "\n";
-  $out .= &_rem1col($rl, $separator) . "\n";
-  foreach my $line (@sorted) {
-    $out .= &_rem1col($rl, $line) . "\n";
-  }
-
-  print $out;
-}
-
-sub renderTxtTable_core(){
-    my ($self, $interColGap) = @_;
-
-    my $fmt_x;
-    my $gapStr = sprintf("%${interColGap}s","");
-
-    my $numColLev = $self->_getNumColLev();
-    my $numRowLev = $self->_getNumRowLev();
-
-    my $out = "";
-    
+  
 #    print Dumper($self);
-    
+  
 #    print "Col num lev = $numColLev\n";
 #    print "Row num lev = $numRowLev\n";
+
+  my $r1c = (($self->getProp_KeyColumn()) eq $av_KeyColumn[1]) ? 1 : 0;
+  my $sm = $self->getProp_SortRowKey();
     
-    ### Compute the max width of the row labels for each level
-    my $maxRowLabWidth = $interColGap;
-    my @rowLabWidth = ();
-    for (my $rl=1; $rl <= $numRowLev; $rl++){
-        my $w = $self->_getRowLabelWidth($self->{rowLabOrder}, $rl);
-        push @rowLabWidth, $w; 
-        $maxRowLabWidth += $w + ($rl > 1 ? $interColGap : 0);    
-    }
+  ### Compute the max width of the row labels for each level
+  my $maxRowLabWidth = $interColGap;
+  my @rowLabWidth = ();
+  for (my $rl= ($r1c ? 2 : 1); $rl <= $numRowLev; $rl++){
+    my $w = $self->_getRowLabelWidth($self->{rowLabOrder}, $rl);
+    push @rowLabWidth, $w; 
+    $maxRowLabWidth += $w + ($rl > 1 ? $interColGap : 0);    
+  }
 #    print "MaxRowWidth    $maxRowLabWidth = ".join(" ",@rowLabWidth)."\n";
 
-    #######################################################
-    my ($r, $c, $fmt, $str, $rowIDStr, $colIDStr);
+  #######################################################
+  my ($r, $c, $fmt, $str, $rowIDStr, $colIDStr);
 
 #    print "The Report\n";
-    my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"});
-    my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"});
+  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"});
+  my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"});
 #    print "ColIDs ".join(" ",@colIDs)."\n";
 
-    ### Header output
-    $out .= $self->_nChrStr($maxRowLabWidth, " ") . "|" . $gapStr;
-    
-    my $data_len = 0;            
-    for ($c=0; $c<@colIDs; $c++){
-        $out .= $self->_centerJust($colIDs[$c], $self->_getColLabelWidth($colIDs[$c]));
-        $out .= $gapStr;
-        $data_len += $self->_getColLabelWidth($colIDs[$c]) + $interColGap;
-    }
-    $out .= "\n";
-        
-    ### Header separator
-    $out .= $self->_nChrStr($maxRowLabWidth, "-") . "+" . $self->_nChrStr($data_len, "-");
-    $out .= "\n";
-    
-    
-    ### The data
-    foreach $rowIDStr(@rowIDs){
-        for ($c=1; $c<=$numRowLev; $c++){
-            $out .= $self->_leftJust($rowIDStr, $maxRowLabWidth);
-        }
-        $out .= "|";
-        
-        foreach $colIDStr(@colIDs){
-            $out .= "$gapStr" . $self->_rightJust($self->{data}{$rowIDStr."-".$colIDStr}, 
-                                              $self->_getColLabelWidth($colIDStr));
-        }
-        
-        $out .= "\n";
-    }   
+  ### Header output
+  $out .= ((! $r1c) 
+	   ? ($self->_nChrStr($maxRowLabWidth, " ") . "|" . $gapStr)
+	   : $gapStr);
 
-    return($out);
+  my $data_len = 0;            
+  for ($c= 0; $c<@colIDs; $c++){
+    $out .= $self->_centerJust($colIDs[$c],
+			       $self->_getColLabelWidth($colIDs[$c]));
+    $out .= $gapStr;
+    $data_len += $self->_getColLabelWidth($colIDs[$c]) + $interColGap;
+  }
+  $out .= "\n";
+        
+  ### Header separator
+  $out .= ((! $r1c) 
+	   ? ($self->_nChrStr($maxRowLabWidth, "-") . "+")
+	   : "") . $self->_nChrStr($data_len, "-");
+  $out .= "\n";
+  
+  ### The data
+  my @srowIDs 
+    = ($sm eq $av_SortRowKey[0]) # As Added
+      ? @rowIDs 
+	: (($sm eq $av_SortRowKey[1]) # Num
+	   ? sort _num @rowIDs
+	   : sort @rowIDs); # Alpha
+
+  foreach $rowIDStr (@srowIDs){
+    if (! $r1c) {
+      for ($c=1; $c<=$numRowLev; $c++){
+	$out .= $self->_leftJust($rowIDStr, $maxRowLabWidth);
+      }
+      $out .= "|";
+    }
+
+    foreach $colIDStr (@colIDs){
+      $out .= "$gapStr" 
+	. $self->_rightJust($self->{data}{$rowIDStr."-".$colIDStr}, 
+			    $self->_getColLabelWidth($colIDStr));
+    }
+      
+    $out .= "\n";
+  }   
+    
+  print($out);
 }
+
+############################################################
+
+sub _is_blank {
+  my $txt = shift @_;
+  return(($txt =~ m%^\s*$%));
+}
+
+################################################################################
 
 1;
