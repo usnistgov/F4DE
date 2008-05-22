@@ -259,7 +259,7 @@ sub copy()
 sub dumpCountSummary()
 {
     my ($self) = @_;
-    
+
     my $at = new SimpleAutoTable();
     my ($TY, $OT, $NT, $YNT, $NNT) = (0, 0, 0, 0, 0);
     foreach my $block(sort keys %{ $self->{"trials"} })
@@ -288,7 +288,11 @@ sub dumpCountSummary()
     $at->addData($YNT, "FA:YesNontarg", "Total");
     $at->addData($NNT, "Corr:NoNontarg", "Total");
     
-    $at->renderTxtTable(2)
+    my $txt = $at->renderTxtTable(2);
+    if (! defined($txt)){
+        print "Error:  Dump of Count Summary Failed with ".$at->get_errormsg();
+    }
+    $txt;
 }
 
 sub dumpGrid()
