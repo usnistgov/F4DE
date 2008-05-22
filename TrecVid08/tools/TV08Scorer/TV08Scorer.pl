@@ -281,14 +281,20 @@ print "** Scoring \"Only in REF\"\n";
 ## Dump Trial Contingency Table
 
 print "\n\n***** STEP ", $stepc++, ": Dump of Trial Contingency Table\n\n";
-$trials->dumpCountSummary();
+print $trials->dumpCountSummary();
 
 ## Dump Performance Statistics (optional)
 
 if ($perfStat) {
   print "\n\n***** STEP ", $stepc++, ": Dump of Performance Statistics\n\n";
   my $trep = new TrialSummaryTable($trials, $metric);
-  print $trep->renderAsTxt();
+  my $txt = $trep->renderAsTxt();
+  if (! defined($txt)){
+    print "Error Generating Table:\n". $trep->get_errormsg();
+  } else {
+    print "here\n";
+    print $txt;
+  }
 }
 
 #my $trials->dump(*STDOUT);
@@ -574,8 +580,9 @@ sub do_scoring {
 
       ##### Add values to the 'Trials' (and 'SimpleAutoTable')
       my $alignmentRep = new SimpleAutoTable();
-      $alignmentRep->setProp_RemoveKeyColumn();
-      $alignmentRep->setProp_SortRowKeyAlpha();
+      if (! $alignmentRep->setProperties({ "SortRowKey" => "Alpha", "KeyColumn" => "Remove" })){
+        print "Error building alignment table: ".$alignmentRep->get_errormsg()."\n";
+      }
 
       # First, the mapped sys observations
       my @mapped = $bpm->get_mapped_objects();
@@ -673,7 +680,13 @@ sub do_scoring {
 
       $all_bpm{$file}{$evt} = $bpm;
       $all_alignmentReps{$file}{$evt} = $alignmentRep;
-      $alignmentRep->renderTxtTable(2) if ($show);
+      if ($show){
+        my $tbl = $alignmentRep->renderTxtTable(2);
+        if (! defined($tbl)){
+           print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
+        }
+        print $tbl;
+      }
       my $matched = (2 * scalar @mapped)
 	+ scalar @unmapped_sys + scalar @unmapped_ref;
       print " -- Summary: ",
