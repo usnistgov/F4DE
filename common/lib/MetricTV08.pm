@@ -32,7 +32,7 @@ sub new
     die "Error: parameter 'ValueC' not defined"     if (! exists($self->{PARAMS}->{ValueC}));
     die "Error: parameter 'ProbOfTerm' not defined" if (! exists($self->{PARAMS}->{ProbOfTerm}));
 
-    print Dumper($self->{TRIALPARAMS});
+#    print Dumper($self->{TRIALPARAMS});
     die "Error: trials parameter 'TOTALTRIALS' does not exist" if (! exists($self->{TRIALPARAMS}->{TOTALTRIALS}));
 
     $self->{PARAMS}->{BETA} = $self->{PARAMS}->{ValueC} / $self->{PARAMS}->{ValueV} * 
