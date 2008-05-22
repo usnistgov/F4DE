@@ -788,7 +788,7 @@ sub get_base_xml {
   }
 
   my %tmp = ();
-  return(&_writeback2xml(\%tmp, @limitto_events));
+  return(&_writeback2xml("", \%tmp, @limitto_events));
 }
 
 ####################
