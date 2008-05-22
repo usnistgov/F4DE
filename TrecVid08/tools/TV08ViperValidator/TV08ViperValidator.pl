@@ -130,8 +130,8 @@ GetOptions
    'show_internals'  => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-die("\n$usage\n") if ($opt{'help'});
-die("$versionid\n") if ($opt{'version'});
+ok_quit("\n$usage\n") if ($opt{'help'});
+ok_quit("$versionid\n") if ($opt{'version'});
 
 if (scalar @asked_events == 0) {
   @asked_events = @ok_events;
@@ -155,7 +155,7 @@ if ($xmlbasefile != -1) {
   ok_quit($txt);
 }
 
-die("\n$usage\n") if (scalar @ARGV == 0);
+ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 if ($xmllint ne "") {
   error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
@@ -208,7 +208,7 @@ while ($tmp = shift @ARGV) {
   $all{$tmp} = $object;
   $ndone++;
 }
-die("All files processed (Validated: $ndone | Total: $ntodo)\n");
+ok_quit("All files processed (Validated: $ndone | Total: $ntodo)\n");
 
 ########## END
 
