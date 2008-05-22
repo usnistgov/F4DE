@@ -130,7 +130,7 @@ my @ecfh = ("SourceFile Filename", "Framespan"); # Order is important
 my %all;
 foreach my $csv (@ARGV) {
   open FILE, "<$csv"
-    or die "ERROR: Could not open input CSV file ($csv): $!\n";
+    or error_quit("ERROR: Could not open input CSV file ($csv): $!\n");
 
   # Check the CVS header is fine and get the position of the keys
   my $header = <FILE>;

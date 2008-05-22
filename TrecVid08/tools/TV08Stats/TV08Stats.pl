@@ -172,12 +172,12 @@ GetOptions
    'discardErrors'   => \$discardErr,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-die("\n$usage\n") if ($opt{'help'});
-die("$versionid\n") if ($opt{'version'});
+ok_quit("\n$usage\n") if ($opt{'help'});
+ok_quit("$versionid\n") if ($opt{'version'});
 
-die("\n$usage\n") if (scalar @ARGV == 0);
+ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
-die("ERROR: \'fps\' must set in order to do any scoring work") if ($fps == -1);
+error_quit("ERROR: \'fps\' must set in order to do any scoring work") if ($fps == -1);
 
 if ($xmllint ne "") {
   error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
@@ -204,7 +204,7 @@ while ($tmp = shift @ARGV) {
 
   my $fname = $object->get_sourcefile_filename();
   $fileStatsDB{$fname} = $object->_get_framespan_max_object();    
-  die "Unable to set the FPS for the file framespan" if (!$fileStatsDB{$fname}->set_fps($fps));
+  error_quit("Unable to set the FPS for the file framespan") if (!$fileStatsDB{$fname}->set_fps($fps));
   my $cam = $fname;
   $cam =~ s/.*(CAM.).*$/$1/;
   my $day = $fname;
@@ -302,7 +302,7 @@ if ($docsv != -1) {
 
   if ($docsv ne "") {
     open CSV, ">$docsv"
-      or die("Problem opening csv file ($docsv): $!\n");
+      or error_quit("Problem opening csv file ($docsv): $!\n");
     print CSV $txt;
     close CSV;
     print "Wrote CSV file: $docsv\n";

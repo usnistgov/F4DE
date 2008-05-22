@@ -120,8 +120,8 @@ GetOptions
    '<>'   => \&setfileslist,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-die("\n$usage\n") if ($opt{'help'});
-die("$versionid\n") if ($opt{'version'});
+ok_quit("\n$usage\n") if ($opt{'help'});
+ok_quit("$versionid\n") if ($opt{'version'});
 
 error_quit("No XML files seen on the command line\n\n$usage\n") if (scalar @fileslist == 0);
 error_quit("No \'mergehelper\' parameters on the command line\n\n$usage\n") if (scalar @ARGV == 0);
@@ -272,7 +272,7 @@ sub _slurp_file {
   my $fname = shift @_;
 
   open FILE, "<$fname"
-    or die("[TrecVid08ViperFile] Internal error: Can not open file to slurp ($fname): $!\n");
+    or error_quit("[TrecVid08ViperFile] Internal error: Can not open file to slurp ($fname): $!\n");
   my @all = <FILE>;
   close FILE;
 
