@@ -139,10 +139,10 @@ sub getValue {
 
   if (! exists $self->{KEYS}{$key}) {
     $self->_set_errormsg("Key ($key) does not exist in Defined List. ");
-    return(0, undef);
+    return(undef);
   }
 
-  return(1, $self->{KEYS}{$key});
+  return($self->{KEYS}{$key});
 }
 
 ##########
@@ -162,7 +162,7 @@ sub getAuthorizedValues {
 
   if (! exists $self->{KEYS}{$key}) {
     $self->_set_errormsg("Key ($key) does not exist in Defined list. ");
-    return(0);
+    return();
   }
 
   return()
