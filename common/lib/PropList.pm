@@ -120,15 +120,29 @@ sub setValue {
 
 ##########
 
+sub setValueFromHash(){
+    my ($self, $ht) = @_;
+    my $err = 0;
+    
+    foreach my $key(keys %$ht){
+        if (! $self->setValue($key, $ht->{$key})){
+            $err ++; 
+        }
+    }
+    ($err == 0) ? 1 : 0;
+}
+
+##########
+
 sub getValue {
   my ($self, $key) = @_;
 
   if (! exists $self->{KEYS}{$key}) {
     $self->_set_errormsg("Key ($key) does not exist in Defined List. ");
-    return(0);
+    return(0, undef);
   }
 
-  return($self->{KEYS}{$key});
+  return(1, $self->{KEYS}{$key});
 }
 
 ##########
