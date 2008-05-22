@@ -98,7 +98,7 @@ sub renderAsTxt()
     $at->addData(sprintf($metric->errFAPrintFormat(), $faSSD),     $metric->errFALab(),   "SSD");
     $at->addData(sprintf($metric->errMissPrintFormat(), $missSSD), $metric->errMissLab(), "SSD");
     
-    $at->renderTxtTable_core(2);
+    $at->renderTxtTable(2);
 }
 
 1;
