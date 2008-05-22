@@ -1,0 +1,24 @@
+# From within: test/TV08ViperValidator
+
+TV08ViperValidator_tester=TV08ViperValidator_tester.pl
+
+TV08ViperValidator_exec=TV08ViperValidator.pl
+TV08ViperValidator_reldir=../../tools/TV08ViperValidator
+TV08ViperValidator=${TV08ViperValidator_reldir}/${TV08ViperValidator_exec}
+
+TV08_XSDPATH_rel=../../data
+
+TV08TC_lib=../lib
+PERL=perl -I${TV08TC_lib}
+
+all:
+	@echo "Nothing to do"
+
+install:
+	@echo "Nothing to do for install"
+
+check:	${TV08ViperValidator_tester_exec} ${TV08ViperValidator}
+	(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} check)
+
+makecheckfiles:	${TV08ViperValidator_tester_exec}
+	(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} makecheckfiles)
