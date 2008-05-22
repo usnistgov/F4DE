@@ -6,9 +6,7 @@ use Data::Dumper;
 use strict;
 
 my $key_KeyColumn = "KeyColumn";
-#my @av_KeyColumn = ("Keep", "Remove"); # Order is Important
 my $key_SortRowKey = "SortRowKey";
-#my @av_SortRowKey = ("AsAdded", "Num", "Alpha"); # Order is Important
 
 sub new {
   my ($class) = shift @_;
@@ -91,39 +89,6 @@ sub setProperties(){
     return (1);
 }
     
-
-############
-##
-##sub _getProp_KeyColumn {
-##  my ($self) = @_;
-##
-##  my $prop = $self->{Properties};
-##
-##  my $v = $prop->getValue($key_KeyColumn);
-##  if ($prop->error()) {
-##    $self->_set_erromsg("Could not get the KeyColumn Property (" . $prop->get_errormsg() . ")");
-##    return(0);
-##  }
-##  
-##  return($v);
-##}
-##
-############
-##
-##sub _getProp_SortRowKey {
-##  my ($self) = @_;
-##
-##  my $prop = $self->{Properties};
-##
-##  my $v = $prop->getValue($key_SortRowKey);
-##  if ($prop->error()) {
-##    $self->_set_erromsg("Could not get the SortRowKey Property (" . $prop->get_errormsg() . ")");
-##    return(0);
-##  }
-##  
-##  return($v);
-##}
-
 ##########
 
 sub unitTest(){
@@ -310,8 +275,8 @@ sub renderTxtTable(){
 #    print "Col num lev = $numColLev\n";
 #    print "Row num lev = $numRowLev\n";
 
-  my ($keyColReturnCode, $keyCol) = $self->{Properties}->getValue($key_KeyColumn);
-  if (! $keyColReturnCode){
+  my $keyCol = $self->{Properties}->getValue($key_KeyColumn);
+  if ($self->{Properties}->error()) {
      $self->_set_errormsg("Unable to get the ".$key_KeyColumn." property.  Message is ".$self->{Properties}->get_errormsg());
      return(undef);
   }
@@ -331,8 +296,8 @@ sub renderTxtTable(){
   my ($r, $c, $fmt, $str, $rowIDStr, $colIDStr);
 
 #    print "The Report\n";
-  my ($rowReturnCode, $rowSort) = $self->{Properties}->getValue($key_SortRowKey);
-  if (! $rowReturnCode){
+  my $rowSort = $self->{Properties}->getValue($key_SortRowKey);
+  if ($self->{Properties}->error()) {
      $self->_set_errormsg("Unable to to return get RowSort property.  Message is ".$self->{Properties}->get_errormsg());
      return(undef);
   }
