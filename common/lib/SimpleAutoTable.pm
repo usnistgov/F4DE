@@ -5,14 +5,17 @@ use Data::Dumper;
 
 use strict;
 
-my $key_KeyColumn = "KeyColumn";
-my $key_SortRowKey = "SortRowKey";
+my $key_KeyColumnTxt = "KeyColumnTxt";
+my $key_KeyColumnCsv = "KeyColumnCsv";
+my $key_SortRowKeyTxt = "SortRowKeyTxt";
+my $key_SortRowKeyCsv = "SortRowKeyCsv";
 
 sub new {
   my ($class) = shift @_;
 
   my $self =
     {
+     hasData => 0,
      data => { },
      rowLabOrder => 
      {
@@ -34,8 +37,10 @@ sub new {
 
   bless $self;
 
-  $self->{Properties}->addProp($key_KeyColumn, "Keep", ("Keep", "Remove"));
-  $self->{Properties}->addProp($key_SortRowKey, "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_KeyColumnCsv, "Keep", ("Keep", "Remove"));
+  $self->{Properties}->addProp($key_KeyColumnTxt, "Keep", ("Keep", "Remove"));
+  $self->{Properties}->addProp($key_SortRowKeyTxt, "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_SortRowKeyCsv, "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->_set_errormsg($self->{Properties}->get_errormsg());
 
   return($self);
@@ -226,7 +231,9 @@ sub addData{
         return 1;
     }
     $self->{data}{$rowid."-".$colid} = $val;
-    1;    
+    $self->{hasData}++;
+
+    return(1);    
 }
 
 sub dump(){
@@ -275,9 +282,9 @@ sub renderTxtTable(){
 #    print "Col num lev = $numColLev\n";
 #    print "Row num lev = $numRowLev\n";
 
-  my $keyCol = $self->{Properties}->getValue($key_KeyColumn);
+  my $keyCol = $self->{Properties}->getValue($key_KeyColumnTxt);
   if ($self->{Properties}->error()) {
-     $self->_set_errormsg("Unable to get the ".$key_KeyColumn." property.  Message is ".$self->{Properties}->get_errormsg());
+     $self->_set_errormsg("Unable to get the ".$key_KeyColumnTxt." property.  Message is ".$self->{Properties}->get_errormsg());
      return(undef);
   }
   my $r1c = ($keyCol eq "Remove") ? 1 : 0;
@@ -296,7 +303,7 @@ sub renderTxtTable(){
   my ($r, $c, $fmt, $str, $rowIDStr, $colIDStr);
 
 #    print "The Report\n";
-  my $rowSort = $self->{Properties}->getValue($key_SortRowKey);
+  my $rowSort = $self->{Properties}->getValue($key_SortRowKeyTxt);
   if ($self->{Properties}->error()) {
      $self->_set_errormsg("Unable to to return get RowSort property.  Message is ".$self->{Properties}->get_errormsg());
      return(undef);
@@ -342,7 +349,173 @@ sub renderTxtTable(){
     $out .= "\n";
   }   
     
-  $out;
+  return($out);
+}
+
+##########
+
+sub _badfile {
+  my ($self, $txt) = @_;
+
+  $self->_seterrormsg($txt);
+  return(0);
+}
+
+#####
+
+sub extract_csv_line {
+  my $line = shift @_;
+
+  my @split = split(m%\"\s*\,\s*\"%, $line);
+  my @out;
+  foreach my $elt (@split) {
+    $elt =~ s%^\"%%;
+    $elt =~ s%\"$%%;
+    push @out, $elt;
+  }
+
+  return(@out);
+}
+
+#####
+
+sub loadCSV {
+  my ($self, $file) = @_;
+
+  if ($self->{hasData}) {
+    $self->_set_errormsg("Can not load a CSV to a SimpleAutoTable which already has data");
+    return(0);
+  }
+  
+  open FILE, "<$file"
+    or return(&_badfile("Could not open CSV file ($file): $!\n"));
+  my @filec = <FILE>;
+  close FILE;
+
+  chomp @filec;
+  my %csv;
+  my %elt1;
+  my $inc = 0;
+  my $nc = -1;
+  foreach my $line (@filec) {
+    next if ($line =~ m%^\s*$%);
+    my $key = sprintf("File: $file | Line: %012d", $inc++);
+    my @cols = &extract_csv_line($line);
+    if ($nc != -1) {
+      if ($nc != scalar @cols) {
+	$self->_set_errormsg("File ($file) is not a CSV, not all lines contains the same amount of information");
+	return(0);
+      }
+      $elt1{$cols[0]}++;
+    } 
+    push @{$csv{$key}}, @cols;
+
+    $nc = scalar @cols;
+  }
+
+  my $cu1cak = 1; # Can use 1st column as key
+  foreach my $key (keys %elt1) {
+    $cu1cak = 0 if ($elt1{$key} > 1);
+  }
+  $self->setProperties({ "$key_KeyColumnCsv" => "Remove", "$key_KeyColumnTxt" => "Remove"}) if (! $cu1cak);
+
+  my @colIDs;
+  foreach my $key (sort keys %csv) {
+     my @a = @{$csv{$key}};
+
+    if (scalar @colIDs == 0) {
+      @colIDs = @a;
+      my $discard = shift @colIDs if ($cu1cak);
+      next;
+    }
+
+    my $ID;
+    if ($cu1cak) {
+      $ID = shift @a;
+    } else {
+      $ID = $key;
+    }
+
+    for (my $i = 0; $i < scalar @a; $i++) {
+       $self->addData($a[$i], $colIDs[$i], $ID);
+    }
+  }
+  
+  return(1);
+}
+
+##########
+
+sub renderCSV {
+  my ($self) = @_;
+  
+  my $out = "";
+  
+  my $keyCol = $self->{Properties}->getValue($key_KeyColumnCsv);
+  if ($self->{Properties}->error()) {
+     $self->_set_errormsg("Unable to get the $key_KeyColumnCsv property.  Message is ".$self->{Properties}->get_errormsg());
+     return(undef);
+  }
+  my $k1c = ($keyCol eq "Keep") ? 1 : 0;
+
+  my $rowSort = $self->{Properties}->getValue($key_SortRowKeyCsv);
+  if ($self->{Properties}->error()) {
+     $self->_set_errormsg("Unable to to return get the $key_SortRowKeyCsv property.  Message is ".$self->{Properties}->get_errormsg());
+     return(undef);
+  }
+  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort);
+  my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded");
+
+  ### Header output
+  my @line;
+  push @line, "MasterKey" if ($k1c);
+  push @line, @colIDs;
+  $out .= &generate_csvline(@line);
+  
+  # line per line
+  foreach my $rowIDStr (@rowIDs){
+    my @line;
+    push @line, $rowIDStr if ($k1c);
+    foreach my $colIDStr (@colIDs) {
+      push @line, $self->{data}{$rowIDStr."-".$colIDStr};
+    }
+    $out .= &generate_csvline(@line);
+  }   
+    
+  return($out);
+}
+
+sub quc { # Quote clean
+  my $in = shift @_;
+
+  $in =~ s%\"%\'%g;
+
+  return($in);
+}
+
+#####
+
+sub qua { # Quote Array
+  my @todo = @_;
+
+  my @out = ();
+  foreach my $in (@todo) {
+    $in = &quc($in);
+    push @out, "\"$in\"";
+  }
+
+  return(@out);
+}
+
+#####
+
+sub generate_csvline {
+  my @in = @_;
+
+  @in = &qua(@in);
+  my $txt = join(",", @in);
+  
+  return("$txt\n");
 }
 
 ############################################################
