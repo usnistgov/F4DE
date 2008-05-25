@@ -580,7 +580,7 @@ sub do_scoring {
 
       ##### Add values to the 'Trials' (and 'SimpleAutoTable')
       my $alignmentRep = new SimpleAutoTable();
-      if (! $alignmentRep->setProperties({ "SortRowKey" => "Alpha", "KeyColumn" => "Remove" })){
+      if (! $alignmentRep->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" })){
         print "Error building alignment table: ".$alignmentRep->get_errormsg()."\n";
       }
 
@@ -599,9 +599,7 @@ sub do_scoring {
 	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
 	# The last '1' is because the elements match an element in the ref list (target)
 
-	my $trialID = &make_trialID($ref_obj, $sys_obj, $ksep++);
-#	$alignmentRep->addData($evt, "Event", $trialID);
-#	$alignmentRep->addData($file, "File", $trialID);
+	my $trialID = &make_trialID($file, $evt, $ref_obj, $sys_obj, $ksep++);
 	$alignmentRep->addData("Mapped", "TYPE", $trialID);
 	$alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
@@ -633,9 +631,7 @@ sub do_scoring {
 	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
 	# The last '0' is because the elements does not match an element in the ref list (target)
 
-	my $trialID = &make_trialID(undef, $sys_obj, $ksep++);
-#	$alignmentRep->addData($evt, "Event", $trialID);
-#	$alignmentRep->addData($file, "File", $trialID);
+	my $trialID = &make_trialID($file, $evt, undef, $sys_obj, $ksep++);
 	$alignmentRep->addData("FalseAlarm", "TYPE", $trialID);
 	$alignmentRep->addData("", "R.ID", $trialID);
 	$alignmentRep->addData("", "R.range", $trialID);
@@ -659,9 +655,7 @@ sub do_scoring {
 	$trials->addTrial($evt, undef, "OMITTED", 1);
 	# Here we only care about the number of entries in this array
 
-	my $trialID = &make_trialID($ref_obj, undef, $ksep++);
-#	$alignmentRep->addData($evt, "Event", $trialID);
-#	$alignmentRep->addData($file, "File", $trialID);
+	my $trialID = &make_trialID($file, $evt, $ref_obj, undef, $ksep++);
 	$alignmentRep->addData("MissedDetect", "TYPE", $trialID);
 	$alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
@@ -687,6 +681,7 @@ sub do_scoring {
         }
         print $tbl;
       }
+
       my $matched = (2 * scalar @mapped)
 	+ scalar @unmapped_sys + scalar @unmapped_ref;
       print " -- Summary: ",
@@ -821,7 +816,7 @@ sub _num {return ($a <=> $b);}
 #####
 
 sub make_trialID {
-  my ($ref_obj, $sys_obj, $ksep) = @_;
+  my ($fn, $evt, $ref_obj, $sys_obj, $ksep) = @_;
 
   my @ar;
 
@@ -830,7 +825,7 @@ sub make_trialID {
 
   my @o = sort _num @ar;
 
-  my $txt = sprintf("MIN: %012d | MAX: %012d | KeySeparator: %012d", $o[0], $o[-1], $ksep);
+  my $txt = sprintf("Filename: $fn | Event: $evt | MIN: %012d | MAX: %012d | KeySeparator: %012d", $o[0], $o[-1], $ksep);
 
   return($txt);
 }
