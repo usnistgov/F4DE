@@ -116,6 +116,14 @@ unless (eval "use SimpleAutoTable; 1")
     $have_everything = 0;
   }
 
+# DETCurve (part of this tool)
+unless (eval "use DETCurve; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"DETCurve\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1")
   {
@@ -292,10 +300,15 @@ if ($perfStat) {
   if (! defined($txt)){
     print "Error Generating Table:\n". $trep->get_errormsg();
   } else {
-    print "here\n";
     print $txt;
   }
 }
+
+print "\n\n***** STEP ", $stepc++, ": Dump of DET Curve\n\n";
+my $det = new DETCurve($trials, $metric, "blocked", "Title from system name", [(10, 1, 0.1)]);
+my $detRoot = "DETPLOT-NAME.det";
+$det->writeGNUGraph($detRoot, undef);
+$det->serialize($detRoot);
 
 #my $trials->dump(*STDOUT);
 
