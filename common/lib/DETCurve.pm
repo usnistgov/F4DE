@@ -26,7 +26,7 @@ my(@tics) = (0.00001, 0.0001, 0.001, 0.004, .01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2
 
 sub new
 {
-	my ($class, $trials, $metric, $style, $block, $lineTitle, $listIsolineCoef) = @_;
+	my ($class, $trials, $metric, $style, $lineTitle, $listIsolineCoef) = @_;
 	
 	my $self =
 	{ 
@@ -99,7 +99,7 @@ sub unitTest
 ###POOLED###	print " Computing pooled curve...";
 ###POOLED####	print $trial->dump(*STDOUT,"");
 ###POOLED###	
-###POOLED###	my $det = new DETCurve($trial, "pooled", undef, "footitle", 1, 0.1, 0.0001, \@isolinecoef);
+###POOLED###	my $det = new DETCurve($trial, "pooled", "footitle", 1, 0.1, 0.0001, \@isolinecoef);
 ###POOLED###	print "  OK\n";
 ###POOLED###
 ###POOLED###    ## This was built from DETtesting-v2 with MissingTarg=0, MissingNonTarg=0
@@ -205,7 +205,7 @@ sub blockWeightedUnitTest()
 
     my $emptydet = new DETCurve($emptyTrial, 
 				new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial),
-				"blocked", undef, "footitle", \@isolinecoef);
+				"blocked", "footitle", \@isolinecoef);
     die "Error: Empty det should not be successful()" if ($emptydet->successful());
     print "  OK\n";
 
@@ -245,7 +245,7 @@ sub blockWeightedUnitTest()
 
     my $blockdetOrig = new DETCurve($trial, 
 				    new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
-				    "blocked", undef, "footitle", \@isolinecoef);
+				    "blocked", "footitle", \@isolinecoef);
     print "  OK\n";
     print " Serializing to a file...";
     my $sroot = "/tmp/serialize";
@@ -341,10 +341,10 @@ sub unitTestMultiDet{
 
     my $det1 = new DETCurve($trial, 
 			    new MetricSTD({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
-			    "pooled", undef, "DET1", \@isolinecoef);
+			    "pooled", "DET1", \@isolinecoef);
     my $det2 = new DETCurve($trial2, 
 			    new MetricSTD({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
-			    "pooled", undef, "DET2", \@isolinecoef);
+			    "pooled", "DET2", \@isolinecoef);
     
     DETCurve::writeMultiDetGraph("foomerge", [($det1, $det2)]);
     print DETCurve::writeMultiDetSummary([($det1, $det2)], "text");
