@@ -16,65 +16,29 @@
 # MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING
 # MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
+# $Id$
+
 package PropList;
 
 use strict;
+
+use MErrorH;
 use Data::Dumper;
 
 sub new {
   my ($class) = @_;
   
+  my $errormsg = new MErrorH("PropList");
+
   my $self =
     {
      KEYS       => undef, # The key hash (and default values)
      authval    => undef, # List of authorized values per key
-     errormsg   => "",
+     errormsg   => $errormsg,
     };
   
   bless $self;
   return $self;
-}
-
-##########
-
-sub error {
-  my ($self) = @_;
-
-  return(1) if (! &_is_blank($self->get_errormsg()));
-
-  return(0);
-}
-
-#####
-
-sub get_errormsg {
-  my ($self) = @_;
-
-  return($self->{errormsg});
-}
-
-#####
-
-sub _set_errormsg_txt {
-  my ($oh, $add) = @_;
-
-  my $txt = "$oh$add";
-
-  $txt =~ s%\[PropList\]\s+%%g;
-
-  return("") if (&_is_blank($txt));
-
-  $txt = "[PropList] $txt";
-
-  return($txt);
-}
-
-#####
-
-sub _set_errormsg {
-  my ($self, $txt) = @_;
-
-  $self->{errormsg} = &_set_errormsg_txt($self->{errormsg}, $txt);
 }
 
 ##########
@@ -241,13 +205,27 @@ sub printPropList {
   }
 }
 
-##########
+############################################################
 
-sub _is_blank {
-  my $txt = shift @_;
-  return(($txt =~ m%^\s*$%));
+sub _set_errormsg {
+  my ($self, $txt) = @_;
+  $self->{errormsg}->set_errormsg($txt);
 }
 
-################################################################################
+##########
+
+sub get_errormsg {
+  my ($self) = @_;
+  return($self->{errormsg}->errormsg());
+}
+
+##########
+
+sub error {
+  my ($self) = @_;
+  return($self->{errormsg}->error());
+}
+
+############################################################
 
 1;

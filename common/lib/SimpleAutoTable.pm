@@ -1,9 +1,30 @@
 package SimpleAutoTable;
 
+# Simple Auto Table
+#
+# Original Author: Jonathan Fiscus 
+# Adds: Martial Michel
+#
+# This software was developed at the National Institute of Standards and Technology by
+# employees and/or contractors of the Federal Government in the course of their official duties.
+# Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
+# copyright protection within the United States and is in the public domain.
+#
+# "SimplAutoTable.pm" is an experimental system.
+# NIST assumes no responsibility whatsoever for its use by any party.
+#
+# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
+# OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
+# OR FITNESS FOR A PARTICULAR PURPOSE.
+
+# $Id$
+
+use strict;
+
+use MErrorH;
 use PropList;
 use Data::Dumper;
 
-use strict;
 
 my $key_KeyColumnTxt = "KeyColumnTxt";
 my $key_KeyColumnCsv = "KeyColumnCsv";
@@ -12,6 +33,8 @@ my $key_SortRowKeyCsv = "SortRowKeyCsv";
 
 sub new {
   my ($class) = shift @_;
+
+  my $errormsg = new MErrorH("SimpleAutoTable");
 
   my $self =
     {
@@ -32,7 +55,7 @@ sub new {
       width        => { icgMult => 0, icgSepMult => 0, charLen => 0 },
      },
      Properties  => new PropList(),
-     errormsg    => "",
+     errormsg    => $errormsg,
     };
 
   bless $self;
@@ -44,42 +67,6 @@ sub new {
   $self->_set_errormsg($self->{Properties}->get_errormsg());
 
   return($self);
-}
-
-##########
-
-sub error {
-  my ($self) = @_;
-
-  return(1) if (! &_is_blank($self->get_errormsg()));
-
-  return(0);
-}
-
-#####
-
-sub get_errormsg {
-  my ($self) = @_;
-
-  return($self->{errormsg});
-}
-
-#####
-
-sub _set_errormsg {
-  my ($self, $txt) = @_;
-
-  my $newTxt = $self->{errormsg}.$txt;
-
-  $newTxt =~ s%\[SimpleAutoTable\]\s+%%g;
-
-  if (&_is_blank($newTxt)){
-    $newTxt = "";
-  } else {
-    $newTxt = "[SimpleAutoTable] $txt";
-  }
-  
-  $self->{errormsg} = $newTxt;
 }
 
 ##########
@@ -520,11 +507,25 @@ sub generate_csvline {
 
 ############################################################
 
-sub _is_blank {
-  my $txt = shift @_;
-  return(($txt =~ m%^\s*$%));
+sub _set_errormsg {
+  my ($self, $txt) = @_;
+  $self->{errormsg}->set_errormsg($txt);
 }
 
-################################################################################
+##########
+
+sub get_errormsg {
+  my ($self) = @_;
+  return($self->{errormsg}->errormsg());
+}
+
+##########
+
+sub error {
+  my ($self) = @_;
+  return($self->{errormsg}->error());
+}
+
+############################################################
 
 1;
