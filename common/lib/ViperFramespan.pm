@@ -21,6 +21,8 @@ package ViperFramespan;
 
 use strict;
 
+use MErrorH;
+
 my $version     = "0.1b";
 
 if ($version =~ m/b$/) {
@@ -33,20 +35,20 @@ my $versionid = "ViperFramespan.pm Version: $version";
 my %error_msgs =
   (
    # from 'new'
-   "NotFramespan"      => "Entry is not a valid framespan",
-   "EmptyValue"        => "Must provide a non empty \'value\'",
-   "BadRangePair"      => "Badly formed range pair",
-   "NegativeValue"     => "Framespan range pair values can not be negative",
-   "NotOrdered"        => "Framespan range pair is not ordered",
-   "StartAt0"          => "Framespan can not start at 0",
-   "WeirdValue"        => "Strange value provided",
+   "NotFramespan"      => "Entry is not a valid framespan. ",
+   "EmptyValue"        => "Must provide a non empty \'value\'. ",
+   "BadRangePair"      => "Badly formed range pair. ",
+   "NegativeValue"     => "Framespan range pair values can not be negative. ",
+   "NotOrdered"        => "Framespan range pair is not ordered. ",
+   "StartAt0"          => "Framespan can not start at 0. ",
+   "WeirdValue"        => "Strange value provided. ",
    # Other
-   "NoFramespanSet"    => "No framespan set",
+   "NoFramespanSet"    => "No framespan set. ",
    # 'fps'
-   "negFPS"            => "FPS can not negative",
-   "zeroFPS"           => "FPS can not be equal to 0",
-   "FPSNotSet"         => "FPS not set, can not perform time based operations",
-   "NotAFrame"         => "Value is no a single frame value",
+   "negFPS"            => "FPS can not negative. ",
+   "zeroFPS"           => "FPS can not be equal to 0. ",
+   "FPSNotSet"         => "FPS not set, can not perform time based operations. ",
+   "NotAFrame"         => "Value is no a single frame value. ",
   );
 
 ## Constructor
@@ -55,7 +57,8 @@ sub new {
 
   my $tmp = shift @_;
   my ($value, $errmsg) = &_fs_check_and_optimize_value($tmp, 1);
-  my $errormsg = &_set_errormsg_txt("", $errmsg);
+  my $errormsg = new MErrorH("ViperFramespan");
+  $errormsg->set_errormsg($errmsg) if (! MErrorH::is_blank($errmsg));
 
   my $self =
     {
@@ -83,7 +86,7 @@ sub _fs_check_pair {
   my ($b, $e) = @_;
 
   return($error_msgs{"BadRangePair"})
-    if ((&_is_blank($b)) || (&_is_blank($e)));
+    if ((MErrorH::is_blank($b)) || (MErrorH::is_blank($e)));
 
   return($error_msgs{"NegativeValue"})
     if (($b < 0) || ($e < 0));
@@ -145,9 +148,9 @@ sub _fs_check_value {
   my @todo = &_fs_split_line($value);
   foreach my $key (@todo) {
     my ($txt, $b, $e) = &_fs_split_pair($key);
-    return("", $txt) if (! &_is_blank($txt));
+    return("", $txt) if (! MErrorH::is_blank($txt));
     $txt = &_fs_check_pair($b, $e);
-    return("", $txt) if (! &_is_blank($txt));
+    return("", $txt) if (! MErrorH::is_blank($txt));
   }
 
   # Recreate a usable string
@@ -197,7 +200,7 @@ sub _fs_shorten_value {
   my ($b, $e, $errormsg);
 
   ($fs, $errormsg) = &_fs_reorder_value($fs);
-  return($fs, $errormsg) if (! &_is_blank($errormsg));
+  return($fs, $errormsg) if (! MErrorH::is_blank($errormsg));
 
   # Only 1 element, nothing to do
   return($fs, "") if (&_fs_split_line_count($fs) == 1);
@@ -211,12 +214,12 @@ sub _fs_shorten_value {
   # Get the first element
   my $entry = shift @ftodo;
   ($errormsg, $b, $e) = &_fs_split_pair($entry);
-  return($fs, $errormsg) if (! &_is_blank($errormsg));
+  return($fs, $errormsg) if (! MErrorH::is_blank($errormsg));
 
   my ($nb, $ne);
   foreach $entry (@ftodo) {
     ($errormsg, $nb, $ne) = &_fs_split_pair($entry);
-    return($fs, $errormsg) if (! &_is_blank($errormsg));
+    return($fs, $errormsg) if (! MErrorH::is_blank($errormsg));
 
     if ($nb == $e) { # ex: 1:2 2:6 -> 1:6
       $e = $ne;
@@ -255,12 +258,12 @@ sub _fs_check_and_optimize_value {
 
   # Check the value
   ($value, $errormsg) = &_fs_check_value($value, $from_new);
-  return($value, $errormsg) if (! &_is_blank($errormsg));
+  return($value, $errormsg) if (! MErrorH::is_blank($errormsg));
 
   # Then optimize it (if a value is present)
   if ($value ne "") {
     ($value, $errormsg) = &_fs_shorten_value($value);
-    return($value, $errormsg) if (! &_is_blank($errormsg));
+    return($value, $errormsg) if (! MErrorH::is_blank($errormsg));
   }
 
   return($value, $errormsg);
@@ -276,7 +279,7 @@ sub set_value {
   my $ok = 1;
 
   my ($value, $errormsg) = &_fs_check_and_optimize_value($tmp, 0);
-  if (! &_is_blank($errormsg)) {
+  if (! MErrorH::is_blank($errormsg)) {
     $self->_set_errormsg($errormsg);
     $ok = 0;
   }
@@ -412,30 +415,6 @@ sub get_fps {
 
 ##########
 
-sub _set_errormsg_txt {
-  my ($oh, $add) = @_;
-
-  my $txt = "$oh$add";
-
-  $txt =~ s%\[ViperFramespan\]\s+%%g;
-
-  return("") if (&_is_blank($txt));
-
-  $txt = "[ViperFramespan] $txt";
-
-  return($txt);
-}
-
-#####
-
-sub _set_errormsg {
-  my ($self, $txt) = @_;
-
-  $self->{errormsg} = &_set_errormsg_txt($self->{errormsg}, $txt);
-}
-
-##########
-
 sub get_value {
   my ($self) = @_;
 
@@ -452,14 +431,6 @@ sub get_original_value {
 
 ##########
 
-sub get_errormsg {
-  my ($self) = @_;
-
-  return($self->{errormsg});
-}
-
-##########
-
 sub is_value_set {
   my ($self) = @_;
 
@@ -467,21 +438,11 @@ sub is_value_set {
 
   my $v = $self->get_value();
 
-  return(0) if (&_is_blank($v));
+  return(0) if (MErrorH::is_blank($v));
 
   return(0) if (&_fs_split_line_count($v) == 0);
 
   return(1);
-}
-
-##########
-
-sub error {
-  my ($self) = @_;
-
-  return(1) if (! &_is_blank($self->get_errormsg()));
-
-  return(0);
 }
 
 ####################
@@ -839,7 +800,7 @@ sub duration {
   my $d = 0;
   foreach my $p (@pairs) {
     my ($err, $b, $e) = &_fs_split_pair($p);
-    if (! &_is_blank($err)) {
+    if (! MErrorH::is_blank($err)) {
       $self->_set_errormsg($err);
       return(0);
     }
@@ -1035,7 +996,7 @@ sub value_shift {
   foreach my $entry (@in) {
     my ($errormsg, $b, $e) = &_fs_split_pair($entry);
 
-    if (! &_is_blank($errormsg)) {
+    if (! MErrorH::is_blank($errormsg)) {
       $self->_set_errormsg($errormsg);
       return(0);
     }
@@ -1061,30 +1022,34 @@ sub unit_test { # Xtreme coding and us ;)
   # Let us try to set a bad value
   my $fs_tmp1 = new ViperFramespan("Not a framespan");
   my $err1 = $fs_tmp1->get_errormsg();
+  my $ee = $error_msgs{"NotFramespan"};
   $otxt .= "$eh Error while checking \'set_value\'[1] ($err1). "
-    if ($err1 ne &_set_errormsg_txt("", $error_msgs{"NotFramespan"}));
+    if ($err1 !~ m%$ee$%);
 
   # Or an empty framespan
   my $fs_tmp2 = new ViperFramespan();
   $fs_tmp2->set_value("");
   my $err2 = $fs_tmp2->get_errormsg();
+  $ee = $error_msgs{"EmptyValue"};
   $otxt .= "$eh Error while checking \'set_value\'[2] ($err2). "
-    if ($err2 ne &_set_errormsg_txt("", $error_msgs{"EmptyValue"}));
+    if ($err2 !~ m%$ee$%);
 
   # Not ordered framespan
   my $in3 = "5:4";
   my $fs_tmp3 = new ViperFramespan($in3);
   my $err3 = $fs_tmp3->get_errormsg();
+  $ee = $error_msgs{"NotOrdered"};
   $otxt .= "$eh Error while checking \'set_value\'[3] ($err3). "
-    if ($err3 ne &_set_errormsg_txt("", $error_msgs{"NotOrdered"}));
+    if ($err3 !~ m%$ee$%);
 
   # Start a 0
   my $in4 = "0:1";
   my $fs_tmp4 = new ViperFramespan();
   $fs_tmp4->set_value($in4);
   my $err4 = $fs_tmp4->get_errormsg();
+  $ee = $error_msgs{"StartAt0"};
   $otxt .= "$eh Error while checking \'new\'[4] ($err4). "
-    if ($err4 ne &_set_errormsg_txt("", $error_msgs{"StartAt0"}));
+    if ($err4 !~ m%$ee$%);
 
   # Reorder
   my $in5 = "4:5 1:2 12:26 8:8";
@@ -1124,8 +1089,9 @@ sub unit_test { # Xtreme coding and us ;)
   my $fs_tmp7 = new ViperFramespan();
   my $test7 = $fs_tmp7->check_if_overlap(); # We are checking against nothing here
   my $err7 = $fs_tmp7->get_errormsg();
+  $ee = $error_msgs{"NoFramespanSet"};
   $otxt .= "$eh Error while checking \'check_if_overlap\' ($err7). "
-    if ($err7 ne &_set_errormsg_txt("", $error_msgs{"NoFramespanSet"}));
+    if ($err7 !~ m%$ee$%);
 
   # Overlap & Within
   my $in8  = "1:10";
@@ -1240,7 +1206,7 @@ sub unit_test { # Xtreme coding and us ;)
 
   #####
   # End
-  if (! &_is_blank($otxt)) {
+  if (! MErrorH::is_blank($otxt)) {
     print "[ViperFramespan] unit_test errors:", $otxt if (! $notverb);
     return(0);
   }
@@ -1251,11 +1217,25 @@ sub unit_test { # Xtreme coding and us ;)
 
 ############################################################
 
-sub _is_blank {
-  my $txt = shift @_;
-  return(($txt =~ m%^\s*$%));
+sub _set_errormsg {
+  my ($self, $txt) = @_;
+  $self->{errormsg}->set_errormsg($txt);
 }
 
-################################################################################
+##########
+
+sub get_errormsg {
+  my ($self) = @_;
+  return($self->{errormsg}->errormsg());
+}
+
+##########
+
+sub error {
+  my ($self) = @_;
+  return($self->{errormsg}->error());
+}
+
+############################################################
 
 1;
