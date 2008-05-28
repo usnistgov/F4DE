@@ -41,6 +41,9 @@ use ViperFramespan;
 # "TrecVid08Observation.pm" (part of this program sources)
 use TrecVid08Observation;
 
+# "MErrorH.pm" (part of this program sources)
+use MErrorH;
+
 # For the '_display()' function
 use Data::Dumper;
 
@@ -134,13 +137,15 @@ my $check_ids_are_consecutive = 0;
 sub new {
   my ($class) = shift @_;
 
-  my $errormsg = (scalar @_ > 0) ? "TrecVid08ViperFile does not accept parameters" : "";
+  my $errortxt = (scalar @_ > 0) ? "TrecVid08ViperFile does not accept parameters" : "";
 
   ## Run the ViperFramespan test_unit just to be sure
   my $fs_tmp = new ViperFramespan();
-  $errormsg .= $fs_tmp->get_errormsg() if (! $fs_tmp->unit_test());
 
   &_fill_required_hashes();
+
+  my $errormsg = new MErrorH("TrecVid08ViperFile");
+  $errormsg->set_errormsg($errortxt);
 
   my $self =
     {
@@ -153,7 +158,7 @@ sub new {
      comment        => "", # Comment to be written to write (or to each 'Observation' when generated)
      validated      => 0, # To confirm file was validated
      fs_framespan_max => $fs_tmp,
-     errormsg       => &_set_errormsg_txt("", $errormsg),
+     errormsg       => $errormsg,
     };
 
   bless $self;
@@ -184,49 +189,6 @@ sub get_version {
   my ($self) = @_;
 
   return($versionid);
-}
-
-####################
-
-sub _set_errormsg_txt {
-  my ($oh, $add) = @_;
-
-  my $txt = "$oh$add";
-#  print "VF * [$oh | $add]\n";
-
-  $txt =~ s%\[TrecVid08ViperFile\]\s+%%g;
-
-  return("") if (&_is_blank($txt));
-
-  $txt = "[TrecVid08ViperFile] $txt";
-#  print "VF -> [$txt]\n";
-  return($txt);
-}
-
-#####
-
-sub _set_errormsg {
-  my ($self, $txt) = @_;
-
-  $self->{errormsg} = &_set_errormsg_txt($self->{errormsg}, $txt);
-}
-
-#####
-
-sub get_errormsg {
-  my ($self) = @_;
-
-  return($self->{errormsg});
-}
-
-#####
-
-sub error {
-  my ($self) = @_;
-
-  return(1) if (! &_is_blank($self->get_errormsg()));
-
-  return(0);
 }
 
 ########################################
@@ -295,7 +257,7 @@ sub set_xmllint {
   my $error = "";
   # Confirm xmllint is present and at least 2.6.30
   ($xmllint, $error) = &_check_xmllint($xmllint);
-  if (! &_is_blank($error)) {
+  if (! MErrorH::is_blank($error)) {
     $self->_set_errormsg($error);
     return(0);
   }
@@ -311,7 +273,7 @@ sub _is_xmllint_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! &_is_blank($self->{xmllint}));
+  return(1) if (! MErrorH::is_blank($self->{xmllint}));
 
   return(0);
 }
@@ -341,7 +303,7 @@ sub set_xsdpath {
   my $error = "";
   # Confirm that the required xsdfiles are available
   ($xsdpath, $error) = &_check_xsdfiles($xsdpath, @xsdfilesl);
-  if (! &_is_blank($error)) {
+  if (! MErrorH::is_blank($error)) {
     $self->_set_errormsg($error);
     return(0);
   }
@@ -357,7 +319,7 @@ sub _is_xsdpath_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! &_is_blank($self->{xsdpath}));
+  return(1) if (! MErrorH::is_blank($self->{xsdpath}));
 
   return(0);
 }
@@ -522,7 +484,7 @@ sub _is_file_set {
 
   return(0) if ($self->error());
 
-  return(0) if (&_is_blank($self->{file}));
+  return(0) if (MErrorH::is_blank($self->{file}));
 
   return(1);
 }
@@ -650,7 +612,7 @@ sub _is_comment_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! &_is_blank($self->{comment}));
+  return(1) if (! MErrorH::is_blank($self->{comment}));
 
   return(0);
 }
@@ -712,19 +674,19 @@ sub validate {
   my $xsdpath = $self->get_xsdpath();
   # Load the XML through xmllint
   my ($res, $bigstring) = &_run_xmllint($xmllint, $xsdpath, $ifile);
-  if (! &_is_blank($res)) {
+  if (! MErrorH::is_blank($res)) {
     $self->_set_errormsg($res);
     return(0);
   }
   # No data from xmllint ?
-  if (&_is_blank($bigstring)) {
+  if (MErrorH::is_blank($bigstring)) {
     $self->_set_errormsg("WEIRD: The XML data returned by xmllint seems empty");
     return(0);
   }
 
   # Initial Cleanups & Check
   ($res, $bigstring) = &_data_cleanup($bigstring);
-  if (! &_is_blank($res)) {
+  if (! MErrorH::is_blank($res)) {
     $self->_set_errormsg($res);
     return(0);
   }
@@ -733,7 +695,7 @@ sub validate {
   my %fdata;
   my $isgtf = $self->check_if_gtf();
   ($res, %fdata) = $self->_data_processor($bigstring, $isgtf);
-  if (! &_is_blank($res)) {
+  if (! MErrorH::is_blank($res)) {
     $self->_set_errormsg($res);
     return(0);
   }
@@ -1304,7 +1266,7 @@ sub _set_fhash_file_numframes {
   $tmp{"file"}{"NUMFRAMES"} = $numframes;
 
   $self->_set_fhash(%tmp);
-  $self->_addto_comment("NUMFRAMES extended from $cnf to $numframes" . ((! &_is_blank($commentadd)) ? " ($commentadd)" : ""));
+  $self->_addto_comment("NUMFRAMES extended from $cnf to $numframes" . ((! MErrorH::is_blank($commentadd)) ? " ($commentadd)" : ""));
   return(0) if ($self->error());
 
   return(1);
@@ -1673,10 +1635,10 @@ sub _data_processor {
     if ($name eq $default_error_value);
   # And nothing else should be left in the file
   return("Data left in addition to the \'sourcefile\' XML section, aborting", $string)
-    if (! &_is_blank($string));
+    if (! MErrorH::is_blank($string));
   # Parse it
   ($res, %fdata) = $self->_parse_sourcefile_section($name, $section, $isgtf);
-  if (! &_is_blank($res)){
+  if (! MErrorH::is_blank($res)){
     my @resA = split(/\n/, $res);
     my $str = "";
     for (my $_i=0; $_i<@resA; $_i++){  
@@ -1763,7 +1725,7 @@ sub _split_xml_tag_list_to_hash {
   foreach my $tag (@list) {
     my ($name, $value) = &_split_xml_tag($tag);
     return("Problem splitting inlined attribute ($tag)", ())
-      if (&_is_blank($name));
+      if (MErrorH::is_blank($name));
 
     return("Inlined attribute ($name) appears to be present multiple times")
       if (exists $hash{$name});
@@ -1784,7 +1746,7 @@ sub _split_line_into_tags {
     push @all, "$1$2$3";
   }
   return("Leftover text after tag extraction ($line)", ())
-    if (! &_is_blank($line));
+    if (! MErrorH::is_blank($line));
   
   return("", @all);
 }
@@ -1805,11 +1767,11 @@ sub _get_inline_xml_attributes {
   $txt =~ s%\/?\>$%%;
 
   my ($err, @all) = &_split_line_into_tags($txt);
-  return($err, ()) if (! &_is_blank($err));
+  return($err, ()) if (! MErrorH::is_blank($err));
   return("", ()) if (scalar @all == 0); # None found
 
   my ($res, %hash) = &_split_xml_tag_list_to_hash(@all);
-  return($res, ()) if (! &_is_blank($res));
+  return($res, ()) if (! MErrorH::is_blank($res));
 
   return("", %hash);
 }
@@ -1844,14 +1806,14 @@ sub _parse_sourcefile_section {
   #####
   # First, get the inline attributes from the 'sourcefile' inline attribute itself
   my ($text, %iattr) = &_get_inline_xml_attributes($name, $str);
-  return($text, ()) if (! &_is_blank($text));
+  return($text, ()) if (! MErrorH::is_blank($text));
 
   # We should only have a \'filename\'
   my @keys = keys %iattr;
   return("Found multiple keys in the \'sourcefile\' inlined attributes", ())
     if (scalar @keys > 1);
   ($text, my $found) = &_find_hash_key("filename", %iattr);
-  return($text, ()) if (! &_is_blank($text));
+  return($text, ()) if (! MErrorH::is_blank($text));
 
   my $filename = $iattr{$found};
 
@@ -1866,7 +1828,7 @@ sub _parse_sourcefile_section {
   return("No \'file\' section found in the \'sourcefile\'", ())
     if ($sec eq $default_error_value);
   ($text, my %fattr) = $self->_parse_file_section($sec);
-  return($text, ()) if (! &_is_blank($text));
+  return($text, ()) if (! MErrorH::is_blank($text));
   
   # Complete %fattr and start filling %res
   $fattr{"filename"} = $filename;
@@ -1877,14 +1839,14 @@ sub _parse_sourcefile_section {
   $str = &_clean_begend_spaces($str);
   
   my @error_list = ();
-  while (! &_is_blank($str)) {
+  while (! MErrorH::is_blank($str)) {
     my $sec = &_get_named_xml_section("object", \$str);
     if ($sec eq $default_error_value) {
        push (@error_list, ("No \'object\' section left in the \'sourcefile\'"));
     } else {
         ($text, my $object_type, my $object_id, my $object_framespan, my %oattr)
           = $self->_parse_object_section($sec, $isgtf);
-        if (! &_is_blank($text)){
+        if (! MErrorH::is_blank($text)){
             push (@error_list, $text);
         } else {
 
@@ -1977,7 +1939,7 @@ sub _parse_file_section {
   my %file_hash;
 
   my ($text, %attr) = &_get_inline_xml_attributes($wtag, $str);
-  return($text, ()) if (! &_is_blank($text));
+  return($text, ()) if (! MErrorH::is_blank($text));
 
   my $framespan_max = $framespan_max_default;
 
@@ -2004,7 +1966,7 @@ sub _parse_file_section {
   # Process each "attribute" left now
   ($text, %attr) = $self->_parse_attributes(\$str);
   return("While parsing the \'$wtag\' \'attribute\'s : $text", ())
-    if (! &_is_blank($text));
+    if (! MErrorH::is_blank($text));
 
   # Confirm they are the ones we want
   my %expected_hash = %hash_file_attributes_types;
@@ -2065,7 +2027,7 @@ sub _parse_object_section {
   my %object_hash;
 
   my ($text, %attr) = &_get_inline_xml_attributes($wtag, $str);
-  return($text, ()) if (! &_is_blank($text));
+  return($text, ()) if (! MErrorH::is_blank($text));
 
   my $framespan_max = $self->_get_framespan_max_value();
   return("Problem obtaining the \'framespan_max\' value", ()) if ($self->error());
@@ -2113,7 +2075,7 @@ sub _parse_object_section {
   # Process each "attribute" left now
   ($text, %attr) = $self->_parse_attributes(\$str, $object_framespan);
   return("While parsing the \'$wtag\' \'attribute\'s : $text", ())
-    if (! &_is_blank($text));
+    if (! MErrorH::is_blank($text));
   
   # Confirm they are the ones we want
   my %expected_hash = %hash_objects_attributes_types;
@@ -2210,7 +2172,7 @@ sub _extract_data {
       if (! $fs_fspan->set_value($fspan));
   }
 
-  while (! &_is_blank($str)) {
+  while (! MErrorH::is_blank($str)) {
     my $name = &_get_next_xml_name($str);
     return("Problem obtaining a valid XML name, aborting", $str)
       if ($name eq $default_error_value);
@@ -2222,7 +2184,7 @@ sub _extract_data {
 
     # All within a data: entry is inlined, so get the inlined content
     my ($text, %iattr) = &_get_inline_xml_attributes($name, $section);
-    return($text, ()) if (! &_is_blank($text));
+    return($text, ()) if (! MErrorH::is_blank($text));
 
     # From here we work per 'data:' type
     $name =~ s%^data\:%%;
@@ -2271,7 +2233,7 @@ sub _extract_data {
 
     # Process the leftover elements
     ($text, @{$attr{$name}{$lfspan}}) = &_data_process_type($name, %iattr);
-    return($text, ()) if (! &_is_blank($text));
+    return($text, ()) if (! MErrorH::is_blank($text));
   }
 
   return("", %attr);
@@ -2286,7 +2248,7 @@ sub _parse_attributes {
   my %attrs;
 
   my $allow_nofspan = 0;
-  if (&_is_blank($fspan)) {
+  if (MErrorH::is_blank($fspan)) {
     if (! $self->_is_framespan_max_set()) {
       $fspan = $framespan_max_default;
     } else {
@@ -2296,13 +2258,13 @@ sub _parse_attributes {
   }
   
   # We process all the "attributes"
-  while (! &_is_blank($$rstr)) {
+  while (! MErrorH::is_blank($$rstr)) {
     my $sec = &_get_named_xml_section("attribute", $rstr);
     return("Could not find an \'attribute\'", ()) if ($sec eq $default_error_value);
 
     # Get its name
     my ($text, %iattr) = &_get_inline_xml_attributes("attribute", $sec);
-    return($text, ()) if (! &_is_blank($text));
+    return($text, ()) if (! MErrorH::is_blank($text));
 
     return("Found more than one inline attribute for \'attribute\'", ())
       if (scalar %iattr != 1);
@@ -2318,12 +2280,12 @@ sub _parse_attributes {
     # Process the content
     $sec = &_clean_begend_spaces($sec);
     
-    if (&_is_blank($sec)) {
+    if (MErrorH::is_blank($sec)) {
       $attrs{$name} = undef;
     } else {
       ($text, my %tmp) = $self->_extract_data($sec, $fspan, $allow_nofspan, $name);
       return("Error while processing the \'data\:\' content of the \'$name\' \'attribute\' ($text)", ())
-	if (! &_is_blank($text));
+	if (! MErrorH::is_blank($text));
       %{$attrs{$name}} = %tmp;
     }
     
@@ -2637,7 +2599,7 @@ sub _writeback2xml {
 
     # comment (optional)
     $txt .= &_wb_print($indent, "<!-- " . $comment . " -->\n")
-      if (! &_is_blank($comment));
+      if (! MErrorH::is_blank($comment));
 
     # file
     $txt .= &_writeback_file($indent, %{$lhash{'file'}});
@@ -2688,11 +2650,25 @@ sub _clone_fhash_selected_events {
 
 ############################################################
 
-sub _is_blank {
-  my $txt = shift @_;
-  return(($txt =~ m%^\s*$%));
+sub _set_errormsg {
+  my ($self, $txt) = @_;
+  $self->{errormsg}->set_errormsg($txt);
 }
 
-################################################################################
+##########
+
+sub get_errormsg {
+  my ($self) = @_;
+  return($self->{errormsg}->errormsg());
+}
+
+##########
+
+sub error {
+  my ($self) = @_;
+  return($self->{errormsg}->error());
+}
+
+############################################################
 
 1;

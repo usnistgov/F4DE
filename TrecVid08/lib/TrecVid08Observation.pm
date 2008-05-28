@@ -23,6 +23,8 @@ use strict;
 use ViperFramespan;
 use TrecVid08ViperFile;
 
+use MErrorH;
+
 use Data::Dumper;
 
 my $version     = "0.1b";
@@ -46,16 +48,17 @@ my @kernel_params_list = ("delta_t", "MinDec_s", "RangeDec_s", "E_t", "E_d"); # 
 sub new {
   my ($class) = shift @_;
 
-  my $errormsg = "";
+  my $errortxt = "";
 
-  $errormsg .= "TrecVid08Observation's new does not accept any parameter. "
+  $errortxt .= "TrecVid08Observation's new does not accept any parameter. "
     if (scalar @_ > 0);
 
   my $tmp = &_get_TrecVid08ViperFile_infos();
-  $errormsg .= "Could not obtain the list authorized events ($tmp). "
-    if (! &_is_blank($tmp));
+  $errortxt .= "Could not obtain the list authorized events ($tmp). "
+    if (! MErrorH::is_blank($tmp));
 
-  $errormsg = &_set_errormsg_txt("", $errormsg);
+  my $errormsg = new MErrorH("TrecVid08Observation");
+  $errormsg->set_errormsg($errortxt);
 
   my $self =
     {
@@ -100,48 +103,6 @@ sub get_version {
   return($versionid);
 }
 
-########## 'errormsg'
-
-sub _set_errormsg_txt {
-  my ($oh, $add) = @_;
-
-  my $txt = "$oh$add";
-
-  $txt =~ s%\[TrecVid08Observation\]\s+%%g;
-
-  return("") if ($txt =~ m%^\s*$%);
-
-  $txt = "[TrecVid08Observation] $txt";
-
-  return($txt);
-}
-
-#####
-
-sub _set_errormsg {
-  my ($self, $txt) = @_;
-
-  $self->{errormsg} = &_set_errormsg_txt($self->{errormsg}, $txt);
-}
-
-#####
-
-sub get_errormsg {
-  my ($self) = @_;
-
-  return($self->{errormsg});
-}
-
-#####
-
-sub error {
-  my ($self) = @_;
-
-  return(1) if (! &_is_blank($self->get_errormsg()));
-
-  return(0);
-}
-
 ########## 'eventtype'
 
 sub set_eventtype {
@@ -165,7 +126,7 @@ sub _is_eventtype_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! &_is_blank($self->{eventtype}));
+  return(1) if (! MErrorH::is_blank($self->{eventtype}));
 
   return(0);
 }
@@ -260,7 +221,7 @@ sub _is_filename_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! &_is_blank($self->{filename}));
+  return(1) if (! MErrorH::is_blank($self->{filename}));
 
   return(0);
 }
@@ -302,7 +263,7 @@ sub _is_xmlfilename_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! &_is_blank($self->{xmlfilename}));
+  return(1) if (! MErrorH::is_blank($self->{xmlfilename}));
 
   return(0);
 }
@@ -516,7 +477,7 @@ sub is_comment_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! &_is_blank($self->{comment}));
+  return(1) if (! MErrorH::is_blank($self->{comment}));
 
   return(0);
 }
@@ -811,7 +772,7 @@ sub set_selected {
   } else {
     # For non dynamic elements we always drop the Viper framespan
     my ($errtxt , %oneelt) = &_get_1keyhash_content(%inhash);
-    if (! &_is_blank($errtxt)) {
+    if (! MErrorH::is_blank($errtxt)) {
       $self->_set_errormsg("In \'set_selected\', problem while extracting the one hash element for choice ($choice) ($errtxt)");
       return(0);
     }
@@ -1278,7 +1239,7 @@ sub joint_kernel {
   $etxt .= "Compared to object can not be a SYSTEM observation"
     if (! $other->get_isgtf());
   # Return yet ?
-  return($etxt, 0) if (! &_is_blank($etxt));
+  return($etxt, 0) if (! MErrorH::is_blank($etxt));
 
   # Error ?
   $etxt .= "Problem in calling object (" . $self->get_errormsg() ."). "
@@ -1286,7 +1247,7 @@ sub joint_kernel {
   $etxt .= "Problem in compared to object (" . $other->get_errormsg() ."). "
     if ($other->error());
   # Return yet ?
-  return($etxt, 0) if (! &_is_blank($etxt));
+  return($etxt, 0) if (! MErrorH::is_blank($etxt));
 
   ########## Now the scoring can begin
 
@@ -1687,14 +1648,27 @@ sub get_framespan_overlap_from_fs {
   return($self->get_framespan_overlap($fs_self, $fs_other));
 }
 
-
 ############################################################
 
-sub _is_blank {
-  my $txt = shift @_;
-  return(($txt =~ m%^\s*$%));
+sub _set_errormsg {
+  my ($self, $txt) = @_;
+  $self->{errormsg}->set_errormsg($txt);
 }
 
-################################################################################
+##########
+
+sub get_errormsg {
+  my ($self) = @_;
+  return($self->{errormsg}->errormsg());
+}
+
+##########
+
+sub error {
+  my ($self) = @_;
+  return($self->{errormsg}->error());
+}
+
+############################################################
 
 1;

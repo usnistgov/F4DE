@@ -23,6 +23,8 @@ use strict;
 use TrecVid08ViperFile;
 use TrecVid08Observation;
 
+use MErrorH;
+
 # For the '_display()' function
 use Data::Dumper;
 
@@ -44,16 +46,12 @@ my $obs_dummy_key;
 sub new {
   my ($class) = shift @_;
 
-  my $errormsg = "";
+  my $errormsg = new MErrorH("TrecVid08EventList");
 
-  $errormsg .= "TrecVid08EventList's \'new\' does not accept any parameter. "
-    if (scalar @_ > 0);
+  $errormsg->set_errormsg("TrecVid08EventList's \'new\' does not accept any parameter. ") if (scalar @_ > 0);
 
   my $tmp = &_set_infos();
-  $errormsg .= "Could not obtain the list authorized events ($tmp). "
-    if (! &_is_blank($tmp));
-
-  $errormsg = &_set_errormsg_txt("", $errormsg);
+  $errormsg->set_errormsg("Could not obtain the list authorized events ($tmp). ") if (! MErrorH::is_blank($tmp));
 
   my $self =
     {
@@ -110,48 +108,6 @@ sub get_version {
   my ($self) = @_;
 
   return($versionid);
-}
-
-########## 'errormsg'
-
-sub _set_errormsg_txt {
-  my ($oh, $add) = @_;
-
-  my $txt = "$oh$add";
-
-  $txt =~ s%\[TrecVid08EventList\]\s+%%g;
-
-  return("") if ($txt =~ m%^\s*$%);
-
-  $txt = "[TrecVid08EventList] $txt";
-
-  return($txt);
-}
-
-#####
-
-sub _set_errormsg {
-  my ($self, $txt) = @_;
-
-  $self->{errormsg} = &_set_errormsg_txt($self->{errormsg}, $txt);
-}
-
-#####
-
-sub get_errormsg {
-  my ($self) = @_;
-
-  return($self->{errormsg});
-}
-
-#####
-
-sub error {
-  my ($self) = @_;
-
-  return(1) if (! &_is_blank($self->get_errormsg()));
-
-  return(0);
 }
 
 ########## 'changed'
@@ -917,11 +873,25 @@ sub _display_all {
 
 ############################################################
 
-sub _is_blank {
-  my $txt = shift @_;
-  return(($txt =~ m%^\s*$%));
+sub _set_errormsg {
+  my ($self, $txt) = @_;
+  $self->{errormsg}->set_errormsg($txt);
 }
 
-################################################################################
+##########
+
+sub get_errormsg {
+  my ($self) = @_;
+  return($self->{errormsg}->errormsg());
+}
+
+##########
+
+sub error {
+  my ($self) = @_;
+  return($self->{errormsg}->error());
+}
+
+############################################################
 
 1;
