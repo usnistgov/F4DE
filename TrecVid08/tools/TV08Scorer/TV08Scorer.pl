@@ -272,9 +272,19 @@ error_quit("Error while obtaining the EventList kernel function parameters (" . 
 
 my %all_bpm;
 my %metrics_params = ( TOTALTRIALS => 1000) ;
-my $trials = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
-my $metric = new MetricTV08({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trials),
-
+my @all_events;
+my $key_allevents= "AllEvents";
+push @all_events, $key_allevents;
+push @all_events, @ok_events;
+my %all_trials;
+my %all_metric;
+my %trials_c;
+foreach my $event (@all_events) {
+  my $trial = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
+  $all_trials{$event} = $trial;
+  $all_metric{$event} = new MetricTV08({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial);
+}
+my $gtrial = $all_trials{$key_allevents};
 my %all_alignmentReps;
 
 print "** Scoring \"Common referred to files\"\n";
@@ -288,27 +298,50 @@ print "** Scoring \"Only in REF\"\n";
 
 ## Dump Trial Contingency Table
 
-print "\n\n***** STEP ", $stepc++, ": Dump of Trial Contingency Table\n\n";
-print $trials->dumpCountSummary();
+print "\n\n***** STEP ", $stepc++, ": Dump of Trial Contingency Table\n";
+if ($trials_c{$key_allevents} == 0) {
+  print "No Trials ever added ?";
+} else {
+  my $trials = $all_trials{$key_allevents};
+  print $trials->dumpCountSummary();
+  print "\n";
+}
 
 ## Dump Performance Statistics (optional)
 
 if ($perfStat) {
-  print "\n\n***** STEP ", $stepc++, ": Dump of Performance Statistics\n\n";
-  my $trep = new TrialSummaryTable($trials, $metric);
-  my $txt = $trep->renderAsTxt();
-  if (! defined($txt)){
-    print "Error Generating Table:\n". $trep->get_errormsg();
+  print "\n\n***** STEP ", $stepc++, ": Dump of Performance Statistics\n";
+  if ($trials_c{$key_allevents} == 0) {
+    print "No Trials ever added ?";
   } else {
-    print $txt;
+    my $trials = $all_trials{$key_allevents};
+    my $metric = $all_metric{$key_allevents};
+    my $trep = new TrialSummaryTable($trials, $metric);
+    my $txt = $trep->renderAsTxt();
+    if (! defined($txt)){
+      print "Error Generating Table:\n". $trep->get_errormsg();
+    } else {
+      print $txt;
+    }
+    print "\n";
   }
 }
 
-print "\n\n***** STEP ", $stepc++, ": Dump of DET Curve\n\n";
-my $det = new DETCurve($trials, $metric, "blocked", "Title from system name", [(10, 1, 0.1)]);
-my $detRoot = "DETPLOT-NAME.det";
-$det->writeGNUGraph($detRoot, undef);
-$det->serialize($detRoot);
+## Dump of DET Curves
+
+print "\n\n***** STEP ", $stepc++, ": Dump of DET Curve\n";
+print " (only printing seen events)\n\n";
+foreach my $event (@all_events) {
+  next if ($trials_c{$event} == 0);
+  my $trials = $all_trials{$event};
+  my $metric = $all_metric{$event};
+  print "** Event: $event";
+  my $det = new DETCurve($trials, $metric, "blocked", "Title from system name", [(10, 1, 0.1)]);
+  my $detRoot = "DETPLOT-NAME-Event_$event.det";
+  $det->writeGNUGraph($detRoot, undef);
+  $det->serialize($detRoot);
+  print " (target files: $detRoot*)\n";
+}
 
 #my $trials->dump(*STDOUT);
 
@@ -597,6 +630,8 @@ sub do_scoring {
         print "Error building alignment table: ".$alignmentRep->get_errormsg()."\n";
       }
 
+      my $trials = $all_trials{$evt};
+
       # First, the mapped sys observations
       my @mapped = $bpm->get_mapped_objects();
       error_quit("Problem obtaining the mapped objects from the BPM (" . $bpm->get_errormsg() . ")")
@@ -609,7 +644,10 @@ sub do_scoring {
 	error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
 	  if ($sys_obj->error());
 
-	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
+	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1);
+	$trials_c{$evt}++;
+	$gtrial->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
+	$trials_c{$key_allevents}++;
 	# The last '1' is because the elements match an element in the ref list (target)
 
 	my $trialID = &make_trialID($file, $evt, $ref_obj, $sys_obj, $ksep++);
@@ -642,6 +680,9 @@ sub do_scoring {
 	  if ($sys_obj->error());
 
 	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
+	$trials_c{$evt}++;
+	$gtrial->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
+	$trials_c{$key_allevents}++;
 	# The last '0' is because the elements does not match an element in the ref list (target)
 
 	my $trialID = &make_trialID($file, $evt, undef, $sys_obj, $ksep++);
@@ -666,6 +707,9 @@ sub do_scoring {
 	if ($bpm->error());
       foreach my $ref_obj (@unmapped_ref) {
 	$trials->addTrial($evt, undef, "OMITTED", 1);
+	$trials_c{$evt}++;
+	$gtrial->addTrial($evt, undef, "OMITTED", 1);
+	$trials_c{$key_allevents}++;
 	# Here we only care about the number of entries in this array
 
 	my $trialID = &make_trialID($file, $evt, $ref_obj, undef, $ksep++);
