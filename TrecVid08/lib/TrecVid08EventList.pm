@@ -24,6 +24,7 @@ use TrecVid08ViperFile;
 use TrecVid08Observation;
 
 use MErrorH;
+use MMisc;
 
 # For the '_display()' function
 use Data::Dumper;
@@ -51,7 +52,7 @@ sub new {
   $errormsg->set_errormsg("TrecVid08EventList's \'new\' does not accept any parameter. ") if (scalar @_ > 0);
 
   my $tmp = &_set_infos();
-  $errormsg->set_errormsg("Could not obtain the list authorized events ($tmp). ") if (! MErrorH::is_blank($tmp));
+  $errormsg->set_errormsg("Could not obtain the list authorized events ($tmp). ") if (! MMisc::is_blank($tmp));
 
   my $self =
     {

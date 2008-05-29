@@ -44,11 +44,11 @@ use TrecVid08Observation;
 # "MErrorH.pm" (part of this program sources)
 use MErrorH;
 
+# "MMisc.pm" (part of this program sources)
+use MMisc;
+
 # For the '_display()' function
 use Data::Dumper;
-
-# File::Temp (usualy part of the Perl Core)
-use File::Temp qw / tempfile /;
 
 ########################################
 ##########
@@ -257,7 +257,7 @@ sub set_xmllint {
   my $error = "";
   # Confirm xmllint is present and at least 2.6.30
   ($xmllint, $error) = &_check_xmllint($xmllint);
-  if (! MErrorH::is_blank($error)) {
+  if (! MMisc::is_blank($error)) {
     $self->_set_errormsg($error);
     return(0);
   }
@@ -273,7 +273,7 @@ sub _is_xmllint_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MErrorH::is_blank($self->{xmllint}));
+  return(1) if (! MMisc::is_blank($self->{xmllint}));
 
   return(0);
 }
@@ -303,7 +303,7 @@ sub set_xsdpath {
   my $error = "";
   # Confirm that the required xsdfiles are available
   ($xsdpath, $error) = &_check_xsdfiles($xsdpath, @xsdfilesl);
-  if (! MErrorH::is_blank($error)) {
+  if (! MMisc::is_blank($error)) {
     $self->_set_errormsg($error);
     return(0);
   }
@@ -319,7 +319,7 @@ sub _is_xsdpath_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MErrorH::is_blank($self->{xsdpath}));
+  return(1) if (! MMisc::is_blank($self->{xsdpath}));
 
   return(0);
 }
@@ -484,7 +484,7 @@ sub _is_file_set {
 
   return(0) if ($self->error());
 
-  return(0) if (MErrorH::is_blank($self->{file}));
+  return(0) if (MMisc::is_blank($self->{file}));
 
   return(1);
 }
@@ -612,7 +612,7 @@ sub _is_comment_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MErrorH::is_blank($self->{comment}));
+  return(1) if (! MMisc::is_blank($self->{comment}));
 
   return(0);
 }
@@ -674,19 +674,19 @@ sub validate {
   my $xsdpath = $self->get_xsdpath();
   # Load the XML through xmllint
   my ($res, $bigstring) = &_run_xmllint($xmllint, $xsdpath, $ifile);
-  if (! MErrorH::is_blank($res)) {
+  if (! MMisc::is_blank($res)) {
     $self->_set_errormsg($res);
     return(0);
   }
   # No data from xmllint ?
-  if (MErrorH::is_blank($bigstring)) {
+  if (MMisc::is_blank($bigstring)) {
     $self->_set_errormsg("WEIRD: The XML data returned by xmllint seems empty");
     return(0);
   }
 
   # Initial Cleanups & Check
   ($res, $bigstring) = &_data_cleanup($bigstring);
-  if (! MErrorH::is_blank($res)) {
+  if (! MMisc::is_blank($res)) {
     $self->_set_errormsg($res);
     return(0);
   }
@@ -695,7 +695,7 @@ sub validate {
   my %fdata;
   my $isgtf = $self->check_if_gtf();
   ($res, %fdata) = $self->_data_processor($bigstring, $isgtf);
-  if (! MErrorH::is_blank($res)) {
+  if (! MMisc::is_blank($res)) {
     $self->_set_errormsg($res);
     return(0);
   }
@@ -1266,7 +1266,7 @@ sub _set_fhash_file_numframes {
   $tmp{"file"}{"NUMFRAMES"} = $numframes;
 
   $self->_set_fhash(%tmp);
-  $self->_addto_comment("NUMFRAMES extended from $cnf to $numframes" . ((! MErrorH::is_blank($commentadd)) ? " ($commentadd)" : ""));
+  $self->_addto_comment("NUMFRAMES extended from $cnf to $numframes" . ((! MMisc::is_blank($commentadd)) ? " ($commentadd)" : ""));
   return(0) if ($self->error());
 
   return(1);
@@ -1535,8 +1535,9 @@ sub _run_xmllint {
 
   $file =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
 
-  my ($retcode, $stdout, $stderr) =
-    &_do_system_call($xmllint, "--path", "\"$xsdpath\"", "--schema", $xsdpath . "/" . $xsdfilesl[0], $file);
+  my ($retcode, $stdout, $stderr) = MMisc::do_system_call
+    ($xmllint, "--path", "\"$xsdpath\"", 
+     "--schema", $xsdpath . "/" . $xsdfilesl[0], $file);
 
   return("Problem validating file with \'xmllint\' ($stderr), aborting", "")
     if ($retcode != 0);
@@ -1635,10 +1636,10 @@ sub _data_processor {
     if ($name eq $default_error_value);
   # And nothing else should be left in the file
   return("Data left in addition to the \'sourcefile\' XML section, aborting", $string)
-    if (! MErrorH::is_blank($string));
+    if (! MMisc::is_blank($string));
   # Parse it
   ($res, %fdata) = $self->_parse_sourcefile_section($name, $section, $isgtf);
-  if (! MErrorH::is_blank($res)){
+  if (! MMisc::is_blank($res)){
     my @resA = split(/\n/, $res);
     my $str = "";
     for (my $_i=0; $_i<@resA; $_i++){  
@@ -1725,7 +1726,7 @@ sub _split_xml_tag_list_to_hash {
   foreach my $tag (@list) {
     my ($name, $value) = &_split_xml_tag($tag);
     return("Problem splitting inlined attribute ($tag)", ())
-      if (MErrorH::is_blank($name));
+      if (MMisc::is_blank($name));
 
     return("Inlined attribute ($name) appears to be present multiple times")
       if (exists $hash{$name});
@@ -1746,7 +1747,7 @@ sub _split_line_into_tags {
     push @all, "$1$2$3";
   }
   return("Leftover text after tag extraction ($line)", ())
-    if (! MErrorH::is_blank($line));
+    if (! MMisc::is_blank($line));
   
   return("", @all);
 }
@@ -1767,11 +1768,11 @@ sub _get_inline_xml_attributes {
   $txt =~ s%\/?\>$%%;
 
   my ($err, @all) = &_split_line_into_tags($txt);
-  return($err, ()) if (! MErrorH::is_blank($err));
+  return($err, ()) if (! MMisc::is_blank($err));
   return("", ()) if (scalar @all == 0); # None found
 
   my ($res, %hash) = &_split_xml_tag_list_to_hash(@all);
-  return($res, ()) if (! MErrorH::is_blank($res));
+  return($res, ()) if (! MMisc::is_blank($res));
 
   return("", %hash);
 }
@@ -1806,14 +1807,14 @@ sub _parse_sourcefile_section {
   #####
   # First, get the inline attributes from the 'sourcefile' inline attribute itself
   my ($text, %iattr) = &_get_inline_xml_attributes($name, $str);
-  return($text, ()) if (! MErrorH::is_blank($text));
+  return($text, ()) if (! MMisc::is_blank($text));
 
   # We should only have a \'filename\'
   my @keys = keys %iattr;
   return("Found multiple keys in the \'sourcefile\' inlined attributes", ())
     if (scalar @keys > 1);
   ($text, my $found) = &_find_hash_key("filename", %iattr);
-  return($text, ()) if (! MErrorH::is_blank($text));
+  return($text, ()) if (! MMisc::is_blank($text));
 
   my $filename = $iattr{$found};
 
@@ -1828,7 +1829,7 @@ sub _parse_sourcefile_section {
   return("No \'file\' section found in the \'sourcefile\'", ())
     if ($sec eq $default_error_value);
   ($text, my %fattr) = $self->_parse_file_section($sec);
-  return($text, ()) if (! MErrorH::is_blank($text));
+  return($text, ()) if (! MMisc::is_blank($text));
   
   # Complete %fattr and start filling %res
   $fattr{"filename"} = $filename;
@@ -1839,14 +1840,14 @@ sub _parse_sourcefile_section {
   $str = &_clean_begend_spaces($str);
   
   my @error_list = ();
-  while (! MErrorH::is_blank($str)) {
+  while (! MMisc::is_blank($str)) {
     my $sec = &_get_named_xml_section("object", \$str);
     if ($sec eq $default_error_value) {
        push (@error_list, ("No \'object\' section left in the \'sourcefile\'"));
     } else {
         ($text, my $object_type, my $object_id, my $object_framespan, my %oattr)
           = $self->_parse_object_section($sec, $isgtf);
-        if (! MErrorH::is_blank($text)){
+        if (! MMisc::is_blank($text)){
             push (@error_list, $text);
         } else {
 
@@ -1939,7 +1940,7 @@ sub _parse_file_section {
   my %file_hash;
 
   my ($text, %attr) = &_get_inline_xml_attributes($wtag, $str);
-  return($text, ()) if (! MErrorH::is_blank($text));
+  return($text, ()) if (! MMisc::is_blank($text));
 
   my $framespan_max = $framespan_max_default;
 
@@ -1966,7 +1967,7 @@ sub _parse_file_section {
   # Process each "attribute" left now
   ($text, %attr) = $self->_parse_attributes(\$str);
   return("While parsing the \'$wtag\' \'attribute\'s : $text", ())
-    if (! MErrorH::is_blank($text));
+    if (! MMisc::is_blank($text));
 
   # Confirm they are the ones we want
   my %expected_hash = %hash_file_attributes_types;
@@ -2027,7 +2028,7 @@ sub _parse_object_section {
   my %object_hash;
 
   my ($text, %attr) = &_get_inline_xml_attributes($wtag, $str);
-  return($text, ()) if (! MErrorH::is_blank($text));
+  return($text, ()) if (! MMisc::is_blank($text));
 
   my $framespan_max = $self->_get_framespan_max_value();
   return("Problem obtaining the \'framespan_max\' value", ()) if ($self->error());
@@ -2075,7 +2076,7 @@ sub _parse_object_section {
   # Process each "attribute" left now
   ($text, %attr) = $self->_parse_attributes(\$str, $object_framespan);
   return("While parsing the \'$wtag\' \'attribute\'s : $text", ())
-    if (! MErrorH::is_blank($text));
+    if (! MMisc::is_blank($text));
   
   # Confirm they are the ones we want
   my %expected_hash = %hash_objects_attributes_types;
@@ -2172,7 +2173,7 @@ sub _extract_data {
       if (! $fs_fspan->set_value($fspan));
   }
 
-  while (! MErrorH::is_blank($str)) {
+  while (! MMisc::is_blank($str)) {
     my $name = &_get_next_xml_name($str);
     return("Problem obtaining a valid XML name, aborting", $str)
       if ($name eq $default_error_value);
@@ -2184,7 +2185,7 @@ sub _extract_data {
 
     # All within a data: entry is inlined, so get the inlined content
     my ($text, %iattr) = &_get_inline_xml_attributes($name, $section);
-    return($text, ()) if (! MErrorH::is_blank($text));
+    return($text, ()) if (! MMisc::is_blank($text));
 
     # From here we work per 'data:' type
     $name =~ s%^data\:%%;
@@ -2233,7 +2234,7 @@ sub _extract_data {
 
     # Process the leftover elements
     ($text, @{$attr{$name}{$lfspan}}) = &_data_process_type($name, %iattr);
-    return($text, ()) if (! MErrorH::is_blank($text));
+    return($text, ()) if (! MMisc::is_blank($text));
   }
 
   return("", %attr);
@@ -2248,7 +2249,7 @@ sub _parse_attributes {
   my %attrs;
 
   my $allow_nofspan = 0;
-  if (MErrorH::is_blank($fspan)) {
+  if (MMisc::is_blank($fspan)) {
     if (! $self->_is_framespan_max_set()) {
       $fspan = $framespan_max_default;
     } else {
@@ -2258,13 +2259,13 @@ sub _parse_attributes {
   }
   
   # We process all the "attributes"
-  while (! MErrorH::is_blank($$rstr)) {
+  while (! MMisc::is_blank($$rstr)) {
     my $sec = &_get_named_xml_section("attribute", $rstr);
     return("Could not find an \'attribute\'", ()) if ($sec eq $default_error_value);
 
     # Get its name
     my ($text, %iattr) = &_get_inline_xml_attributes("attribute", $sec);
-    return($text, ()) if (! MErrorH::is_blank($text));
+    return($text, ()) if (! MMisc::is_blank($text));
 
     return("Found more than one inline attribute for \'attribute\'", ())
       if (scalar %iattr != 1);
@@ -2280,12 +2281,12 @@ sub _parse_attributes {
     # Process the content
     $sec = &_clean_begend_spaces($sec);
     
-    if (MErrorH::is_blank($sec)) {
+    if (MMisc::is_blank($sec)) {
       $attrs{$name} = undef;
     } else {
       ($text, my %tmp) = $self->_extract_data($sec, $fspan, $allow_nofspan, $name);
       return("Error while processing the \'data\:\' content of the \'$name\' \'attribute\' ($text)", ())
-	if (! MErrorH::is_blank($text));
+	if (! MMisc::is_blank($text));
       %{$attrs{$name}} = %tmp;
     }
     
@@ -2297,63 +2298,12 @@ sub _parse_attributes {
 ########################################
 # xmllint check
 
-sub _get_tmpfilename {
-  my (undef, $name) = tempfile( OPEN => 0 );
-
-  return($name);
-}
-
-#####
-
-sub _slurp_file {
-  my $fname = shift @_;
-
-  open FILE, "<$fname"
-    or die("[TrecVid08ViperFile] Internal error: Can not open file to slurp ($fname): $!\n");
-  my @all = <FILE>;
-  close FILE;
-
-  my $tmp = join(" ", @all);
-  chomp $tmp;
-
-  return($tmp);
-}
-
-#####
-
-sub _do_system_call {
-  my @args = @_;
-  
-  my $cmdline = join(" ", @args);
-
-  my $retcode = -1;
-  # Get temporary filenames (created by the command line call)
-  my $stdoutfile = &_get_tmpfilename();
-  my $stderrfile = &_get_tmpfilename();
-
-  open (CMD, "$cmdline 1> $stdoutfile 2> $stderrfile |");
-  close CMD;
-  $retcode = $?;
-
-  # Get the content of those temporary files
-  my $stdout = &_slurp_file($stdoutfile);
-  my $stderr = &_slurp_file($stderrfile);
-
-  # Erase the temporary files
-  unlink($stdoutfile);
-  unlink($stderrfile);
-
-  return($retcode, $stdout, $stderr);
-}
-
-#####
-
 sub _check_xmllint {
   my $xmllint = shift @_;
 
   # If none provided, check if it is available in the path
   if ($xmllint eq "") {
-    my ($retcode, $stdout, $stderr) = &_do_system_call('which', 'xmllint');
+    my ($retcode, $stdout, $stderr) = MMisc::do_system_call('which', 'xmllint');
     return("", "Could not find a valid \'xmllint\' command in the PATH, aborting\n")
       if ($retcode != 0);
     $xmllint = $stdout;
@@ -2372,7 +2322,7 @@ sub _check_xmllint {
     if (! -x $xmllint);
 
   # Now check that it actually is xmllint
-  my ($retcode, $stdout, $stderr) = &_do_system_call($xmllint, '--version');
+  my ($retcode, $stdout, $stderr) = MMisc::do_system_call($xmllint, '--version');
   return("", "\'xmllint\' ($xmllint) does not seem to be a valid \'xmllint\' command, aborting\n")
     if ($retcode != 0);
   
@@ -2599,7 +2549,7 @@ sub _writeback2xml {
 
     # comment (optional)
     $txt .= &_wb_print($indent, "<!-- " . $comment . " -->\n")
-      if (! MErrorH::is_blank($comment));
+      if (! MMisc::is_blank($comment));
 
     # file
     $txt .= &_writeback_file($indent, %{$lhash{'file'}});

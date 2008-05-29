@@ -24,6 +24,7 @@ use ViperFramespan;
 use TrecVid08ViperFile;
 
 use MErrorH;
+use MMisc;
 
 use Data::Dumper;
 
@@ -55,7 +56,7 @@ sub new {
 
   my $tmp = &_get_TrecVid08ViperFile_infos();
   $errortxt .= "Could not obtain the list authorized events ($tmp). "
-    if (! MErrorH::is_blank($tmp));
+    if (! MMisc::is_blank($tmp));
 
   my $errormsg = new MErrorH("TrecVid08Observation");
   $errormsg->set_errormsg($errortxt);
@@ -126,7 +127,7 @@ sub _is_eventtype_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MErrorH::is_blank($self->{eventtype}));
+  return(1) if (! MMisc::is_blank($self->{eventtype}));
 
   return(0);
 }
@@ -221,7 +222,7 @@ sub _is_filename_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MErrorH::is_blank($self->{filename}));
+  return(1) if (! MMisc::is_blank($self->{filename}));
 
   return(0);
 }
@@ -263,7 +264,7 @@ sub _is_xmlfilename_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MErrorH::is_blank($self->{xmlfilename}));
+  return(1) if (! MMisc::is_blank($self->{xmlfilename}));
 
   return(0);
 }
@@ -477,7 +478,7 @@ sub is_comment_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MErrorH::is_blank($self->{comment}));
+  return(1) if (! MMisc::is_blank($self->{comment}));
 
   return(0);
 }
@@ -772,7 +773,7 @@ sub set_selected {
   } else {
     # For non dynamic elements we always drop the Viper framespan
     my ($errtxt , %oneelt) = &_get_1keyhash_content(%inhash);
-    if (! MErrorH::is_blank($errtxt)) {
+    if (! MMisc::is_blank($errtxt)) {
       $self->_set_errormsg("In \'set_selected\', problem while extracting the one hash element for choice ($choice) ($errtxt)");
       return(0);
     }
@@ -1239,7 +1240,7 @@ sub joint_kernel {
   $etxt .= "Compared to object can not be a SYSTEM observation"
     if (! $other->get_isgtf());
   # Return yet ?
-  return($etxt, 0) if (! MErrorH::is_blank($etxt));
+  return($etxt, 0) if (! MMisc::is_blank($etxt));
 
   # Error ?
   $etxt .= "Problem in calling object (" . $self->get_errormsg() ."). "
@@ -1247,7 +1248,7 @@ sub joint_kernel {
   $etxt .= "Problem in compared to object (" . $other->get_errormsg() ."). "
     if ($other->error());
   # Return yet ?
-  return($etxt, 0) if (! MErrorH::is_blank($etxt));
+  return($etxt, 0) if (! MMisc::is_blank($etxt));
 
   ########## Now the scoring can begin
 
