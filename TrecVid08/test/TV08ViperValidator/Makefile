@@ -9,7 +9,8 @@ TV08ViperValidator=${TV08ViperValidator_reldir}/${TV08ViperValidator_exec}
 TV08_XSDPATH_rel=../../data
 
 TV08TC_lib=../lib
-PERL=perl -I${TV08TC_lib}
+F4DEC_lib=../../../common/lib
+PERL=perl -I${TV08TC_lib} -I${F4DEC_lib}
 
 all:
 	@echo "Nothing to do"
