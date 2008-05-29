@@ -1,0 +1,116 @@
+package MMisc;
+
+# M's Misc Functions
+#
+# Author(s): Martial Michel
+#
+# This software was developed at the National Institute of Standards and Technology by
+# employees and/or contractors of the Federal Government in the course of their official duties.
+# Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
+# copyright protection within the United States and is in the public domain.
+#
+# "MMisc.pm" is an experimental system.
+# NIST assumes no responsibility whatsoever for its use by any party.
+#
+# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
+# OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
+# OR FITNESS FOR A PARTICULAR PURPOSE.
+
+
+# $Id$
+
+use strict;
+
+# File::Temp (usualy part of the Perl Core)
+use File::Temp qw / tempfile /;
+
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "MMisc.pm Version: $version";
+
+########## No 'new' ... only functions to be useful
+
+sub get_tmpfilename {
+  my (undef, $name) = tempfile( OPEN => 0 );
+
+  return($name);
+}
+
+#####
+
+sub slurp_file {
+  my $fname = shift @_;
+
+  open FILE, "<$fname"
+    or die("MMisc Internal error: Can not open file to slurp ($fname): $!\n");
+  my @all = <FILE>;
+  close FILE;
+  chomp @all;
+
+  my $tmp = join("\n", @all);
+
+  return($tmp);
+}
+
+#####
+
+sub do_system_call {
+  my @args = @_;
+  
+  my $cmdline = join(" ", @args);
+
+  my $retcode = -1;
+  # Get temporary filenames (created by the command line call)
+  my $stdoutfile = &get_tmpfilename();
+  my $stderrfile = &get_tmpfilename();
+
+  open (CMD, "$cmdline 1> $stdoutfile 2> $stderrfile |");
+  close CMD;
+  $retcode = $?;
+
+  # Get the content of those temporary files
+  my $stdout = &slurp_file($stdoutfile);
+  my $stderr = &slurp_file($stderrfile);
+
+  # Erase the temporary files
+  unlink($stdoutfile);
+  unlink($stderrfile);
+
+  return($retcode, $stdout, $stderr);
+}
+
+##########
+
+sub check_package {
+  my ($package) = @_;
+  unless (eval "use $package; 1")
+  {
+    return(0);
+  }
+  return(1);
+}
+
+##########
+
+sub get_env_val {
+  my $envv = shift @_;
+  my $default = shift @_;
+
+  my $var = $default;
+
+  $var = $ENV{$envv} if (exists $ENV{$envv});
+
+  return($var);
+}
+
+##########
+
+sub is_blank {
+  my $txt = shift @_;
+  return(($txt =~ m%^\s*$%));
+}
