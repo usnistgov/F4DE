@@ -60,6 +60,14 @@ my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
+# MMisc (part of this tool)
+unless (eval "use MMisc; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
 # TrecVid08ViperFile (part of this tool)
 unless (eval "use TrecVid08ViperFile; 1")
   {
@@ -166,8 +174,8 @@ my $usage = &set_usage();
 my $show = 0;
 my $showi = 0;
 my $perfStat = 0;
-my $xmllint =  &_get_env_val($xmllint_env, "");
-my $xsdpath = &_get_env_val($xsdpath_env, "../../data");
+my $xmllint = MMisc::get_env_val($xmllint_env, "");
+my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../data");
 $xsdpath = "$f4bv/data" 
   if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
 my $fps = -1;
@@ -886,18 +894,3 @@ sub make_trialID {
 
   return($txt);
 }
-
-
-############################################################
-
-sub _get_env_val {
-  my $envv = shift @_;
-  my $default = shift @_;
-
-  my $var = $default;
-
-  $var = $ENV{$envv} if (exists $ENV{$envv});
-
-  return($var);
-}
-

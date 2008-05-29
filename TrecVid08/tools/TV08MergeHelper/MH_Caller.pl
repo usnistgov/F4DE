@@ -51,6 +51,15 @@ use lib ($tv08plv, $f4deplv, $f4bv);
 ## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+
+# MMisc (part of this tool)
+unless (eval "use MMisc; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1")
@@ -260,60 +269,6 @@ sub ok_quit {
 
 ########################################
 
-sub _get_tmpfilename {
-  my (undef, $name) = tempfile( OPEN => 0 );
-
-  return($name);
-}
-
-#####
-
-sub _slurp_file {
-  my $fname = shift @_;
-
-  open FILE, "<$fname"
-    or error_quit("[TrecVid08ViperFile] Internal error: Can not open file to slurp ($fname): $!\n");
-  my @all = <FILE>;
-  close FILE;
-
-  my $tmp = join(" ", @all);
-  chomp $tmp;
-
-  return($tmp);
-}
-
-#####
-
-sub _do_system_call {
-  my @args = @_;
-  
-  my $cmdline = join(" ", @args);
-
-  print "| |--> cmdline: [$cmdline]\n"
-    if ($show);
-
-  my $retcode = -1;
-  # Get temporary filenames (created by the command line call)
-  my $stdoutfile = &_get_tmpfilename();
-  my $stderrfile = &_get_tmpfilename();
-
-  open (CMD, "$cmdline 1> $stdoutfile 2> $stderrfile |");
-  close CMD;
-  $retcode = $?;
-
-  # Get the content of those temporary files
-  my $stdout = &_slurp_file($stdoutfile);
-  my $stderr = &_slurp_file($stderrfile);
-
-  # Erase the temporary files
-  unlink($stdoutfile);
-  unlink($stderrfile);
-
-  return($retcode, $stdout, $stderr, $cmdline);
-}
-
-########################################
-
 sub write_file {
   my $fname = shift @_;
   my $txt = shift @_;
@@ -350,8 +305,11 @@ sub call_merger {
   push @addcmdline, ("--overlaplistfile" , "$ovdir/$key.overlap.log") if ($ovdir ne "");
   push @addcmdline, ("--ecfhelperfile", "$ecfdir/$key.ecf.csv") if ($ecfdir ne "");
 
-  my ($retcode, $stdout, $stderr, $cmdline) = &_do_system_call($merger, @merger_cmds, @addcmdline, @files);
+  my @itcl = ($merger, @merger_cmds, @addcmdline, @files);
+  my ($retcode, $stdout, $stderr) = MMisc::do_system_call(@itcl);
+  my $cmdline = join(" ", @itcl);
 
+  print "| |--> Command line: $cmdline\n" if ($show);
   &_cm_wf("commandline", "$logdir/${key}.cmdline", $cmdline);
   &_cm_wf("run log", "$logdir/${key}.run.log", $stdout);
   &_cm_wf("error output", "$logdir/${key}.run.error", $stderr);
