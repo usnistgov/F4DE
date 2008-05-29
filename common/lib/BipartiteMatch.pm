@@ -33,9 +33,11 @@ my $versionid = "BipartiteMatch.pm Version: $version";
 
 ########################################
 # The trick it to keep the code totaly independent from any other package
-# (except for Dumper)
+# (except for Dumper, 
 use Data::Dumper;
-# (and the Error Handler)
+# the Misc Functions
+use MMisc;
+# and the Error Handler
 use MErrorH;
 
 ## Constructor
@@ -242,7 +244,7 @@ sub compute {
   while (my ($ref_id, $ref_obj) = each %refObj) {
     while (my ($sys_id, $sys_obj) = each %sysObj) {
       my ($err, $res) = &{$self->{KernelFunction}}($ref_obj, $sys_obj, @kp);
-      if (! MErrorH::is_blank($err)) {
+      if (! MMisc::is_blank($err)) {
 	$self->_set_errormsg("While computing the joint values for sys ID ($sys_id) and ref ID ($ref_id): $err");
 	return(0);
       }
@@ -255,7 +257,7 @@ sub compute {
   my %fa_values;
   while (my ($sys_id, $sys_obj) = each %sysObj) {
     my ($err, $res) = &{$self->{KernelFunction}}(undef, $sys_obj, @kp);
-    if (! MErrorH::is_blank($err)) {
+    if (! MMisc::is_blank($err)) {
       $self->_set_errormsg("While computing the false alarm values for sys ID ($sys_id): $err");
       return(0);
     }
@@ -267,7 +269,7 @@ sub compute {
   my %md_values;
   while (my ($ref_id, $ref_obj) = each %refObj) {
     my ($err, $res) = &{$self->{KernelFunction}}($ref_obj, undef, @kp);
-    if (! MErrorH::is_blank($err)) {
+    if (! MMisc::is_blank($err)) {
       $self->_set_errormsg("While computing the missed detect values for ref ID ($ref_id): $err");
       return(0);
     }
@@ -277,7 +279,7 @@ sub compute {
 
   ##### Compute mapping
   my ($err, %map) = &_map_ref_to_sys(\%joint_values, \%fa_values, \%md_values);
-  if (! MErrorH::is_blank($err)) {
+  if (! MMisc::is_blank($err)) {
     $self->_set_errormsg("While computing mapping: $err");
     return(0);
   }
@@ -406,7 +408,7 @@ sub _map_ref_to_sys {
 
     my ($err, %cohort_map) = &_weighted_bipartite_graph_matching(\%costs);
     return("Cohort mapping through Weighted Bipartite Graph Matching failed ($err)", ())
-      if (! MErrorH::is_blank($err));
+      if (! MMisc::is_blank($err));
     while (my ($ref_id, $sys_id) = each %cohort_map) {
       $map{$ref_id} = $sys_id;
     }

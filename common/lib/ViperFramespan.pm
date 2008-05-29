@@ -22,6 +22,7 @@ package ViperFramespan;
 use strict;
 
 use MErrorH;
+use MMisc;
 
 my $version     = "0.1b";
 
@@ -58,7 +59,7 @@ sub new {
   my $tmp = shift @_;
   my ($value, $errmsg) = &_fs_check_and_optimize_value($tmp, 1);
   my $errormsg = new MErrorH("ViperFramespan");
-  $errormsg->set_errormsg($errmsg) if (! MErrorH::is_blank($errmsg));
+  $errormsg->set_errormsg($errmsg) if (! MMisc::is_blank($errmsg));
 
   my $self =
     {
@@ -86,7 +87,7 @@ sub _fs_check_pair {
   my ($b, $e) = @_;
 
   return($error_msgs{"BadRangePair"})
-    if ((MErrorH::is_blank($b)) || (MErrorH::is_blank($e)));
+    if ((MMisc::is_blank($b)) || (MMisc::is_blank($e)));
 
   return($error_msgs{"NegativeValue"})
     if (($b < 0) || ($e < 0));
@@ -148,9 +149,9 @@ sub _fs_check_value {
   my @todo = &_fs_split_line($value);
   foreach my $key (@todo) {
     my ($txt, $b, $e) = &_fs_split_pair($key);
-    return("", $txt) if (! MErrorH::is_blank($txt));
+    return("", $txt) if (! MMisc::is_blank($txt));
     $txt = &_fs_check_pair($b, $e);
-    return("", $txt) if (! MErrorH::is_blank($txt));
+    return("", $txt) if (! MMisc::is_blank($txt));
   }
 
   # Recreate a usable string
@@ -200,7 +201,7 @@ sub _fs_shorten_value {
   my ($b, $e, $errormsg);
 
   ($fs, $errormsg) = &_fs_reorder_value($fs);
-  return($fs, $errormsg) if (! MErrorH::is_blank($errormsg));
+  return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
 
   # Only 1 element, nothing to do
   return($fs, "") if (&_fs_split_line_count($fs) == 1);
@@ -214,12 +215,12 @@ sub _fs_shorten_value {
   # Get the first element
   my $entry = shift @ftodo;
   ($errormsg, $b, $e) = &_fs_split_pair($entry);
-  return($fs, $errormsg) if (! MErrorH::is_blank($errormsg));
+  return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
 
   my ($nb, $ne);
   foreach $entry (@ftodo) {
     ($errormsg, $nb, $ne) = &_fs_split_pair($entry);
-    return($fs, $errormsg) if (! MErrorH::is_blank($errormsg));
+    return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
 
     if ($nb == $e) { # ex: 1:2 2:6 -> 1:6
       $e = $ne;
@@ -258,12 +259,12 @@ sub _fs_check_and_optimize_value {
 
   # Check the value
   ($value, $errormsg) = &_fs_check_value($value, $from_new);
-  return($value, $errormsg) if (! MErrorH::is_blank($errormsg));
+  return($value, $errormsg) if (! MMisc::is_blank($errormsg));
 
   # Then optimize it (if a value is present)
   if ($value ne "") {
     ($value, $errormsg) = &_fs_shorten_value($value);
-    return($value, $errormsg) if (! MErrorH::is_blank($errormsg));
+    return($value, $errormsg) if (! MMisc::is_blank($errormsg));
   }
 
   return($value, $errormsg);
@@ -279,7 +280,7 @@ sub set_value {
   my $ok = 1;
 
   my ($value, $errormsg) = &_fs_check_and_optimize_value($tmp, 0);
-  if (! MErrorH::is_blank($errormsg)) {
+  if (! MMisc::is_blank($errormsg)) {
     $self->_set_errormsg($errormsg);
     $ok = 0;
   }
@@ -438,7 +439,7 @@ sub is_value_set {
 
   my $v = $self->get_value();
 
-  return(0) if (MErrorH::is_blank($v));
+  return(0) if (MMisc::is_blank($v));
 
   return(0) if (&_fs_split_line_count($v) == 0);
 
@@ -800,7 +801,7 @@ sub duration {
   my $d = 0;
   foreach my $p (@pairs) {
     my ($err, $b, $e) = &_fs_split_pair($p);
-    if (! MErrorH::is_blank($err)) {
+    if (! MMisc::is_blank($err)) {
       $self->_set_errormsg($err);
       return(0);
     }
@@ -996,7 +997,7 @@ sub value_shift {
   foreach my $entry (@in) {
     my ($errormsg, $b, $e) = &_fs_split_pair($entry);
 
-    if (! MErrorH::is_blank($errormsg)) {
+    if (! MMisc::is_blank($errormsg)) {
       $self->_set_errormsg($errormsg);
       return(0);
     }
@@ -1206,7 +1207,7 @@ sub unit_test { # Xtreme coding and us ;)
 
   #####
   # End
-  if (! MErrorH::is_blank($otxt)) {
+  if (! MMisc::is_blank($otxt)) {
     print "[ViperFramespan] unit_test errors:", $otxt if (! $notverb);
     return(0);
   }

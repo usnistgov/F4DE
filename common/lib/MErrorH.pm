@@ -21,6 +21,8 @@ package MErrorH;
 
 use strict;
 
+use MMisc;
+
 my $version     = "0.1b";
 
 if ($version =~ m/b$/) {
@@ -71,9 +73,9 @@ sub _set_errormsg_txt {
 
   $txt = &_remove_header($txt, $header);
 
-  return("") if (&is_blank($txt));
+  return("") if (MMisc::is_blank($txt));
 
-  $txt = "[$header] $txt" if (! &is_blank($header));
+  $txt = "[$header] $txt" if (! MMisc::is_blank($header));
 
   return($txt);
 }
@@ -83,7 +85,7 @@ sub _set_errormsg_txt {
 sub _remove_header {
   my ($txt, $header) = @_;
 
-  $txt =~ s%\[$header\]\s+%%g if (! &is_blank($header));
+  $txt =~ s%\[$header\]\s+%%g if (! MMisc::is_blank($header));
 
   return($txt);
 }
@@ -120,16 +122,9 @@ sub clean_errormsg {
 sub error {
   my ($self) = @_;
 
-  return(1) if (! &is_blank($self->errormsg()));
+  return(1) if (! MMisc::is_blank($self->errormsg()));
 
   return(0);
-}
-
-##########
-
-sub is_blank {
-  my $txt = shift @_;
-  return(($txt =~ m%^\s*$%));
 }
 
 ############################################################
