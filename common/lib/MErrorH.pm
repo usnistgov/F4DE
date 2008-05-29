@@ -34,7 +34,7 @@ my $versionid = "MErrorH.pm Version: $version";
 
 ## Constructor
 sub new {
-  my ($class, $header) = shift @_;
+  my ($class, $header) = @_;
 
    my $self =
     {
