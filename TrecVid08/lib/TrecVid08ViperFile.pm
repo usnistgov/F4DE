@@ -41,6 +41,9 @@ use ViperFramespan;
 # "TrecVid08Observation.pm" (part of this program sources)
 use TrecVid08Observation;
 
+# "TrecVid08xmllint.pm" (part of this program sources)
+use TrecVid08xmllint;
+
 # "MErrorH.pm" (part of this program sources)
 use MErrorH;
 
@@ -139,18 +142,20 @@ sub new {
 
   my $errortxt = (scalar @_ > 0) ? "TrecVid08ViperFile does not accept parameters" : "";
 
-  ## Run the ViperFramespan test_unit just to be sure
-  my $fs_tmp = new ViperFramespan();
-
   &_fill_required_hashes();
+
+  my $fs_tmp = new ViperFramespan();
+  my $xmllintobj = new TrecVid08xmllint();
+  $xmllintobj->set_xsdfilesl(@xsdfilesl);
+  $errortxt .= $xmllintobj->get_errormsg() if ($xmllintobj->error());
 
   my $errormsg = new MErrorH("TrecVid08ViperFile");
   $errormsg->set_errormsg($errortxt);
 
+
   my $self =
     {
-     xmllint        => "",
-     xsdpath        => "",
+     xmllintobj     => $xmllintobj,
      gtf            => 0, # By default, files are not GTF
      fps            => -1, # Not needed to validate a file, but needed for observations creation
      file           => "",
@@ -254,15 +259,13 @@ sub set_xmllint {
 
   return(0) if ($self->error());
 
-  my $error = "";
-  # Confirm xmllint is present and at least 2.6.30
-  ($xmllint, $error) = &_check_xmllint($xmllint);
-  if (! MMisc::is_blank($error)) {
-    $self->_set_errormsg($error);
+  $self->{xmllintobj}->set_xmllint($xmllint);
+
+  if ($self->{xmllintobj}->error()) {
+    $self->_set_errormsg($self->{xmllintobj}->get_errormsg());
     return(0);
   }
   
-  $self->{xmllint} = $xmllint;
   return(1);
 }
 
@@ -273,9 +276,7 @@ sub _is_xmllint_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MMisc::is_blank($self->{xmllint}));
-
-  return(0);
+  return($self->{xmllintobj}->is_xmllint_set());
 }
 
 #####
@@ -290,7 +291,7 @@ sub get_xmllint {
     return(0);
   }
 
-  return($self->{xmllint});
+  return($self->{xmllintobj}->get_xmllint());
 }
 
 ########## 'xsdpath'
@@ -300,15 +301,12 @@ sub set_xsdpath {
 
   return(0) if ($self->error());
 
-  my $error = "";
-  # Confirm that the required xsdfiles are available
-  ($xsdpath, $error) = &_check_xsdfiles($xsdpath, @xsdfilesl);
-  if (! MMisc::is_blank($error)) {
-    $self->_set_errormsg($error);
+  $self->{xmllintobj}->set_xsdpath($xsdpath);
+  if ($self->{xmllintobj}->error()) {
+    $self->_set_errormsg($self->{xmllintobj}->get_errormsg());
     return(0);
   }
 
-  $self->{xsdpath} = $xsdpath;
   return(1);
 }
 
@@ -319,9 +317,7 @@ sub _is_xsdpath_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MMisc::is_blank($self->{xsdpath}));
-
-  return(0);
+  return($self->{xmllintobj}->is_xsdpath_set());
 }
 
 #####
@@ -336,7 +332,7 @@ sub get_xsdpath {
     return(0);
   }
 
-  return($self->{xsdpath});
+  return($self->{xmllintobj}->get_xsdpath());
 }
 
 ########## 'gtf'
@@ -670,12 +666,10 @@ sub validate {
     return(0) if (! $self->set_xsdpath("."));
   }
 
-  my $xmllint = $self->get_xmllint();
-  my $xsdpath = $self->get_xsdpath();
   # Load the XML through xmllint
-  my ($res, $bigstring) = &_run_xmllint($xmllint, $xsdpath, $ifile);
-  if (! MMisc::is_blank($res)) {
-    $self->_set_errormsg($res);
+  my ($bigstring) = $self->{xmllintobj}->run_xmllint($ifile);
+  if ($self->{xmllintobj}->error()) {
+    $self->_set_errormsg($self->{xmllintobj}->get_errormsg());
     return(0);
   }
   # No data from xmllint ?
@@ -684,6 +678,7 @@ sub validate {
     return(0);
   }
 
+  my $res;
   # Initial Cleanups & Check
   ($res, $bigstring) = &_data_cleanup($bigstring);
   if (! MMisc::is_blank($res)) {
@@ -1528,25 +1523,6 @@ sub change_sourcefile_filename {
 # Internals
 ########################################
 
-sub _run_xmllint {
-  my $xmllint = shift @_;
-  my $xsdpath = shift @_;
-  my $file = shift @_;
-
-  $file =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
-
-  my ($retcode, $stdout, $stderr) = MMisc::do_system_call
-    ($xmllint, "--path", "\"$xsdpath\"", 
-     "--schema", $xsdpath . "/" . $xsdfilesl[0], $file);
-
-  return("Problem validating file with \'xmllint\' ($stderr), aborting", "")
-    if ($retcode != 0);
-
-  return("", $stdout);
-}
-
-########################################
-
 sub _data_cleanup {
   my $bigstring = shift @_;
 
@@ -2294,68 +2270,6 @@ sub _parse_attributes {
 
   return("", %attrs);
 }
-
-########################################
-# xmllint check
-
-sub _check_xmllint {
-  my $xmllint = shift @_;
-
-  # If none provided, check if it is available in the path
-  if ($xmllint eq "") {
-    my ($retcode, $stdout, $stderr) = MMisc::do_system_call('which', 'xmllint');
-    return("", "Could not find a valid \'xmllint\' command in the PATH, aborting\n")
-      if ($retcode != 0);
-    $xmllint = $stdout;
-  }
-
-  $xmllint =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
-
-  # Check that the file for xmllint exists and is an executable file
-  return("", "\'xmllint\' ($xmllint) does not exist, aborting\n")
-    if (! -e $xmllint);
-
-  return("", "\'xmllint\' ($xmllint) is not a file, aborting\n")
-    if (! -f $xmllint);
-
-  return("", "\'xmllint\' ($xmllint) is not executable, aborting\n")
-    if (! -x $xmllint);
-
-  # Now check that it actually is xmllint
-  my ($retcode, $stdout, $stderr) = MMisc::do_system_call($xmllint, '--version');
-  return("", "\'xmllint\' ($xmllint) does not seem to be a valid \'xmllint\' command, aborting\n")
-    if ($retcode != 0);
-  
-  if ($stderr =~ m%using\s+libxml\s+version\s+(\d+)%) {
-    # xmllint print the command name followed by the version number
-    my $version = $1;
-    return("", "\'xmllint\' ($xmllint) version too old: requires at least 2.6.30 (ie 20630, installed $version), aborting\n")
-      if ($version <= 20630);
-  } else {
-    return("", "Could not confirm that \'xmllint\' is valid, aborting\n");
-  }
-
-  return($xmllint, "");
-}
-
-#####
-
-sub _check_xsdfiles {
-  my $xsdpath = shift @_;
-  my @xsdfiles = @_;
-
-  $xsdpath =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
-  $xsdpath =~ s%(.)\/$%$1%;
-
-  foreach my $fname (@xsdfiles) {
-    my $file = "$xsdpath/$fname";
-    return("", "Could not find required XSD file ($fname) at selected path ($xsdpath), aborting\n")
-      if (! -e $file);
-  }
-
-  return($xsdpath, "");
-}
-
 
 ########################################
 
