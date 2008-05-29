@@ -114,3 +114,14 @@ sub is_blank {
   my $txt = shift @_;
   return(($txt =~ m%^\s*$%));
 }
+
+##########
+
+sub clean_begend_spaces {
+  my $txt = shift @_;
+
+  $txt =~ s%^\s+%%s;
+  $txt =~ s%\s+$%%s;
+
+  return($txt);
+}
