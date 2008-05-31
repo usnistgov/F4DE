@@ -1,49 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-    <xs:element  name="ecf">
-        <xs:complexType>
-        <xs:sequence>
-            
-            <xs:element name="source_signal_duration" type="xs:float">
-                
-            </xs:element>
-            <xs:element name="version" type="xs:string">
-                
-            </xs:element>
-            <xs:element name="excerpt_list" maxOccurs="unbounded" minOccurs="1">
-                
-                <xs:complexType>
-                    
-                    <xs:sequence>
-                        
-                        <xs:element name="excerpt" maxOccurs="unbounded" minOccurs="0">
-                            
-                            <xs:complexType>
-                                
-                                <xs:sequence>
-                                    
-                                    <xs:element name="filename" type="xs:string">
-                                        
-                                    </xs:element>
-                                    <xs:element name="begin" type="xs:float">
-                                        
-                                    </xs:element>
-                                    <xs:element name="duration" type="xs:float">
-                                        
-                                    </xs:element>
-                                    <xs:element name="language" type="xs:string">
-                                        
-                                    </xs:element>
-                                    <xs:element name="source_type" type="xs:string">
-                                        
-                                    </xs:element>
-                                </xs:sequence>
-                            </xs:complexType>
-                        </xs:element>
-                    </xs:sequence>
-                </xs:complexType>
-            </xs:element>
-        </xs:sequence>
-        </xs:complexType>      
-    </xs:element>
+  <xs:element name="ecf">
+    <xs:complexType>
+      <xs:sequence>
+	<xs:element name="source_signal_duration" type="xs:float" minOccurs="1" maxOccurs="1"/>
+	<xs:element name="version" type="xs:string" minOccurs="0" maxOccurs="1"/>
+	<xs:element name="excerpt_list" minOccurs="1" maxOccurs="1">
+	  <xs:complexType>
+	    <xs:sequence>
+	      <xs:element name="excerpt" minOccurs="0" maxOccurs="unbounded">
+		<xs:complexType>
+		  <xs:sequence>
+		    <xs:element name="filename" type="xs:string" minOccurs="1" maxOccurs="1"/>
+		    <xs:element name="begin" type="xs:float" minOccurs="1" maxOccurs="1"/>
+		    <xs:element name="duration" type="xs:float" minOccurs="1" maxOccurs="1"/>
+		    <xs:element name="language" type="xs:string" minOccurs="0" maxOccurs="1"/>
+		    <xs:element name="source_type" type="xs:string" minOccurs="0" maxOccurs="1"/>
+		    <xs:element name="sample_rate" type="xs:float" minOccurs="0" maxOccurs="1"/>
+		  </xs:sequence>
+		</xs:complexType>
+	      </xs:element>
+	    </xs:sequence>
+	  </xs:complexType>
+	</xs:element>
+      </xs:sequence>
+    </xs:complexType>      
+  </xs:element>
 </xs:schema>
