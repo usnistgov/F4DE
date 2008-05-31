@@ -76,6 +76,14 @@ unless (eval "use TrecVid08ViperFile; 1")
     $have_everything = 0;
   }
 
+# TrecVid08ECF (part of this tool)
+unless (eval "use TrecVid08ECF; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
 # TrecVid08EventList (part of this tool)
 unless (eval "use TrecVid08EventList; 1")
   {
@@ -156,6 +164,10 @@ my @ok_events = $dummy->get_full_events_list();
 my @xsdfilesl = $dummy->get_required_xsd_files_list();
 # We will use the '$dummy' to do checks before processing files
 
+# Get some values from TrecVid08ECF
+my $ecfobj = new TrecVid08ECF();
+my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
+
 ##########
 
 # Required parameters
@@ -181,9 +193,12 @@ $xsdpath = "$f4bv/data"
 my $fps = -1;
 my $gtfs = 0;
 my $delta_t = undef;
+my $ecffile = "";
+my $duration = 0;
+my $doDC = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:     E             ST         d fgh       p  s  v x  
+# USed:    DEF            ST        cdefgh       p  s  v x  
 
 my %opt;
 my $dbgftmp = "";
@@ -202,6 +217,9 @@ GetOptions
    'Et=f'            => \$E_t,
    'show'            => \$show,
    'perfStat'        => \$perfStat,
+   'Duration=f'      => \$duration,
+   'ecf=s'           => \$ecffile,
+   'computeDETCurve' => \$doDC,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -252,6 +270,28 @@ print "** SYS: $reftodo files (", ($refdone == $reftodo) ? "all" : $refdone, " o
 error_quit("Can not continue, not all files passed the loading/validation step, aborting\n")
   if ($ndone != $ntodo);
 
+## Loading of the ECF file
+if (! MMisc::is_blank($ecffile)) {
+  print "\n\n***** STEP ", $stepc++, ": Loading the ECF file\n";
+  $ecfobj->set_default_fps($fps);
+  error_quit("Problem setting the ECF object's default FPS (" . $ecfobj->get_errormsg() . ")")
+    if ($ecfobj->error());
+  my ($errmsg) = &load_ecf($ecffile, $ecfobj);
+  error_quit("Problem loading the ECF file: $errmsg")
+    if (! MMisc::is_blank($errmsg));
+  my $td = $ecfobj->get_duration();
+  error_quit("Problem obtaining the ECF duration (" . $ecfobj->get_errormsg() . ")")
+    if ($ecfobj->error());
+  if ($duration == 0) {
+    $duration = $td;
+  } else {
+    warn_print("Command line \'Duration\' ($duration) overrides (for scoring) the one found in the ECF file ($td)")
+      if ($td != $duration);
+  }
+  print "\n** SUMMARY: ECF file loaded\n";
+#  $ecfobj->_display();
+}
+
 ## Generate event lists
 print "\n\n***** STEP ", $stepc++, ": Generating EventLists\n";
 my $sysEL = &generate_EventList("SYS", %sys_hash);
@@ -279,7 +319,7 @@ error_quit("Error while obtaining the EventList kernel function parameters (" . 
   if ($sysEL->error());
 
 my %all_bpm;
-my %metrics_params = ( TOTALTRIALS => 1000) ;
+my %metrics_params = ( TOTALTRIALS => 1000, TOTALDURATION => $duration ) ;
 my @all_events;
 my $key_allevents= "AllEvents";
 push @all_events, $key_allevents;
@@ -337,18 +377,20 @@ if ($perfStat) {
 
 ## Dump of DET Curves
 
-print "\n\n***** STEP ", $stepc++, ": Dump of DET Curve\n";
-print " (only printing seen events)\n\n";
-foreach my $event (@all_events) {
-  next if ($trials_c{$event} == 0);
-  my $trials = $all_trials{$event};
-  my $metric = $all_metric{$event};
-  print "** Event: $event";
-  my $det = new DETCurve($trials, $metric, "blocked", "Title from system name", [(10, 1, 0.1)]);
-  my $detRoot = "DETPLOT-NAME-Event_$event.det";
-  $det->writeGNUGraph($detRoot, undef);
-  $det->serialize($detRoot);
-  print " (target files: $detRoot*)\n";
+if ($doDC) {
+  print "\n\n***** STEP ", $stepc++, ": Dump of DET Curve\n";
+  print " (only printing seen events)\n\n";
+  foreach my $event (@all_events) {
+    next if ($trials_c{$event} == 0);
+    my $trials = $all_trials{$event};
+    my $metric = $all_metric{$event};
+    print "** Event: $event";
+    my $det = new DETCurve($trials, $metric, "blocked", "Title from system name", [(10, 1, 0.1)]);
+    my $detRoot = "DETPLOT-NAME-Event_$event.det";
+    $det->writeGNUGraph($detRoot, undef);
+    $det->serialize($detRoot);
+    print " (target files: $detRoot*)\n";
+  }
 }
 
 #my $trials->dump(*STDOUT);
@@ -365,10 +407,11 @@ ok_quit("\n\n***** Done *****\n");
 sub set_usage {
   my $ro = join(" ", @ok_events);
   my $xsdfiles = join(" ", @xsdfilesl);
+  my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 --deltat deltat --fps fps [--help] [--version] [--showAT] [--perfStat] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile]  [--help] [--version] [--showAT] [--perfStat] [--computeDETCurve] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -376,19 +419,21 @@ Will Score the XML file(s) provided (Truth vs System)
   --gtf           Specify that the files post this marker on the command line are Ground Truth Files
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
+  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
+  --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
+  --ecf           Specify the ECF file to load and perform scoring against
   --deltat        Set the deltat value
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
   --showAT        Show Alignment Table (per File/Event processed)
   --perfStat      Dump Performance Statistics
+  --computeDETCurve  Generate DETCurve (requires GNUPlot with PNG support)
   --version       Print version number and exit
   --help          Print this usage information and exit
 
 Note:
-- This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
 - Program will ignore the <config> section of the XML file.
 - List of recognized events: $ro
-- 'TrecVid08xsd' files are: $xsdfiles
+- 'TrecVid08xsd' files are: $xsdfiles (and if the 'ecf' option is used, also: $ecf_xsdf)
 EOF
 ;
 
@@ -893,4 +938,32 @@ sub make_trialID {
   my $txt = sprintf("Filename: $fn | Event: $evt | MIN: %012d | MAX: %012d | KeySeparator: %012d", $o[0], $o[-1], $ksep);
 
   return($txt);
+}
+
+############################################################
+
+sub load_ecf {
+  my ($ecffile, $ecfobj) = @_;
+
+  return("file does not exists")
+    if (! -e $ecffile);
+
+  return("is not a file")
+    if (! -f $ecffile);
+
+  return("file is not readable")
+    if (! -r $ecffile);
+
+  error_quit("While trying to set \'xmllint\' (" . $ecfobj->get_errormsg() . ")")
+    if ( ($xmllint ne "") && (! $ecfobj->set_xmllint($xmllint)) );
+  error_quit("While trying to set \'TrecVid08xsd\' (" . $ecfobj->get_errormsg() . ")")
+    if ( ($xsdpath ne "") && (! $ecfobj->set_xsdpath($xsdpath)) );
+  error_quit("While setting \'file\' ($ecffile) (" . $ecfobj->get_errormsg() . ")")
+    if ( ! $ecfobj->set_file($ecffile) );
+
+  # Validate (important to confirm that we can have a memory representation)
+  return("file did not validate (" . $ecfobj->get_errormsg() . ")")
+    if (! $ecfobj->validate());
+
+  return("");
 }
