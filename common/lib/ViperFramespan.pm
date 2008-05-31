@@ -49,7 +49,8 @@ my %error_msgs =
    "negFPS"            => "FPS can not negative. ",
    "zeroFPS"           => "FPS can not be equal to 0. ",
    "FPSNotSet"         => "FPS not set, can not perform time based operations. ",
-   "NotAFrame"         => "Value is no a single frame value. ",
+   "NotAFrame"         => "Value is not a valid frame value. ",
+   "NotAts"            => "Value is not a valid value in seconds. ",
   );
 
 ## Constructor
@@ -828,7 +829,6 @@ sub frame_to_ts {
     return(0);
   }
 
-
   if ($frame !~ m%^[\d\.]+$%) {
     $self->_set_errormsg($error_msgs{"NotAFrame"});
     return(0);
@@ -836,7 +836,34 @@ sub frame_to_ts {
 
   my $fps = $self->get_fps();
 
-  return ($frame / $fps);
+  return($frame / $fps);
+}
+
+#####
+
+sub ts_to_frame {
+  my ($self, $ts) = @_;
+
+  return(-1) if ($self->error());
+
+  if (! $self->is_fps_set()) {
+    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    return(0);
+  }
+
+  if ($ts !~ m%^[\d\.]+$%) {
+    $self->_set_errormsg($error_msgs{"NotAts"});
+    return(0);
+  }
+
+  my $fps = $self->get_fps();
+
+  my $frame = $fps * $ts;
+
+  # Convert to dec and add 1 because a '0' ts is a '1' frame
+  $frame++;
+
+  return($frame);
 }
 
 ##########
