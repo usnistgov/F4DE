@@ -373,7 +373,7 @@ sub set_fps {
     return(0);
   }
   # And get it back
-  $fps = $fs_tmp->get_fps($fps);
+  $fps = $fs_tmp->get_fps();
   if ($fs_tmp->error()) {
     $self->_set_errormsg("While obtaining back the file fps ($fps) error (" . $fs_tmp->get_errormsg() . ")");
     return(0);
@@ -1695,7 +1695,7 @@ sub _parse_sourcefile_section {
     $str = MMisc::clean_begend_spaces($str);
   }
   if (@error_list > 0){
-     return(join("\n",@error_list), ());
+     return(join(". ",@error_list), ());
   }
   
   ##### Final Sanity Checks
