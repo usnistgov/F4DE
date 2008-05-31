@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element  name="ecf">
+        <xs:complexType>
+        <xs:sequence>
+            
+            <xs:element name="source_signal_duration" type="xs:float">
+                
+            </xs:element>
+            <xs:element name="version" type="xs:string">
+                
+            </xs:element>
+            <xs:element name="excerpt_list" maxOccurs="unbounded" minOccurs="1">
+                
+                <xs:complexType>
+                    
+                    <xs:sequence>
+                        
+                        <xs:element name="excerpt" maxOccurs="unbounded" minOccurs="0">
+                            
+                            <xs:complexType>
+                                
+                                <xs:sequence>
+                                    
+                                    <xs:element name="filename" type="xs:string">
+                                        
+                                    </xs:element>
+                                    <xs:element name="begin" type="xs:float">
+                                        
+                                    </xs:element>
+                                    <xs:element name="duration" type="xs:float">
+                                        
+                                    </xs:element>
+                                    <xs:element name="language" type="xs:string">
+                                        
+                                    </xs:element>
+                                    <xs:element name="source_type" type="xs:string">
+                                        
+                                    </xs:element>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        </xs:complexType>      
+    </xs:element>
+</xs:schema>
