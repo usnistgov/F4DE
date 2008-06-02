@@ -475,9 +475,11 @@ sub _excerpt_processor {
     if ($fs_tmp->error());
 
   my $beg = $fs_tmp->ts_to_frame($beg_ts);
-  my $end = $fs_tmp->ts_to_frame($end_ts);
+  my $end = $fs_tmp->end_ts_to_frame($end_ts);
   return("Problem converting ts to frame (" . $fs_tmp->get_errormsg() . ")")
     if ($fs_tmp->error());
+
+#  print "[$beg / $beg_ts -> $end / $end_ts]\n";
   
   $fs_tmp->set_value_beg_end($beg, $end);
   return("Problem setting a ViperFramespan (" . $fs_tmp->get_errormsg() . ")")
@@ -517,7 +519,7 @@ sub _excerpt_processor {
   $k = $optional_excerpt_tags[2]; # source_type
   $fhash{$fn}{$k} = $stype if ($stype ne $default_error_value);
   push @{$fhash{$fn}{$key_fs}}, $fs_tmp; # the framespan itself
-  push @{$fhash{$fn}{$key_ots}}, "$beg_ts : $end_ts"; # the original ts
+  push @{$fhash{$fn}{$key_ots}}, "[$beg_ts : $end_ts]"; # the original ts
 
   return("Problem adding the 'excerpt' information to the object")
     if (! $self->_set_fhash(%fhash));
@@ -534,7 +536,7 @@ sub _get_named_xml_value {
   return("Could not find \'$name\' data", $$rstring)
     if ($sec eq $default_error_value);
 
-  return("Could not remvoe the \'$name\' tag, aborting", $$rstring)
+  return("Could not remove the \'$name\' tag, aborting", $$rstring)
     if (! MtXML::remove_xml_tags($name, \$sec));  
   
   return("", $sec);
@@ -550,7 +552,7 @@ sub _get_XXX {
     return(0);
   }
 
-  return($self->{XXX});
+  return($self->{$XXX});
 }
 
 #####
@@ -611,10 +613,81 @@ sub _get_fhash {
 
 ####################
 
+sub txt_summary {
+  my ($self) = @_;
+  
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only obtain a summary from a validated ECF");
+    return("");
+  }
+
+  my $txt = "";
+
+  my $fn = $self->get_file();
+  return("") if ($self->error());
+  $txt .= " - source file: $fn\n";
+
+  my $d = $self->get_duration();
+  return("") if ($self->error());
+  $txt .= " - Duration: $d\n";
+
+
+  my %fhash = $self->_get_fhash();
+  return("") if ($self->error());
+
+  foreach my $fk (sort keys %fhash) {
+    my @a = @{$fhash{$fk}{$key_ots}};
+    $txt .= " - File key: $fk | Time range(s): " . join(" ", @a) . "\n";
+  }
+
+  return($txt);
+}
+
+#####
+
 sub _display {
   my ($self) = @_;
 
   print Dumper(\$self);
+}
+
+########################################
+
+# Access functions
+
+sub is_filename_in {
+  my ($self, $fn) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'is_filename_in\' on a validated file");
+    return(0);
+  }
+
+  my %fhash = $self->_get_fhash();
+  return(0) if ($self->error());
+
+  return(1) if (exists $fhash{$fn});
+
+  return(0);
+}
+
+#####
+
+sub get_file_ViperFramespans {
+  my ($self, $fn) = @_;
+
+  my @res;
+
+  return(@res) if (! $self->is_filename_in($fn));
+
+  my %fhash = $self->_get_fhash();
+  return(@res) if ($self->error());
+  
+  push @res, @{$fhash{$fn}{$key_fs}};
+
+  return(@res);
 }
 
 ############################################################
