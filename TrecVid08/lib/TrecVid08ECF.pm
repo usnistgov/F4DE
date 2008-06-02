@@ -348,6 +348,9 @@ sub validate {
     $self->_set_errormsg($res);
     return(0);
   }
+
+  # Sanity check
+  return(0) if (! $self->_file_fs_sanity_check());
   
   $self->{validated} = 1;
   return(1);
@@ -542,6 +545,59 @@ sub _get_named_xml_value {
   return("", $sec);
 }
 
+########## 'framespan' sanity check
+
+sub _file_fs_sanity_check {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  my %fhash = $self->_get_fhash();
+  return(0) if ($self->error());
+
+  my $txt = "";
+  foreach my $fk (sort keys %fhash) {
+    my @a = @{$fhash{$fk}{$key_fs}};
+    my $la = scalar @a;
+    next if ($la < 2); # We can only compare if there are at least 2 elements
+
+    for (my $i = 0; $i < $la; $i++) {
+      for (my $j = $i + 1; $j < $la; $j++) {
+	my $fs1 = $a[$i];
+	my $fs2 = $a[$j];
+	
+	my $v = $fs1->check_if_overlap($fs2);
+	if ($fs1->error()) {
+	  $self->_set_errormsg("Error checking fs overlap (" . $fs1->get_errormsg() . ")");
+	  return(0);
+	}
+	
+	if ($v) {
+	  my ($b1, $e1) = $fs1->get_beg_end_ts();
+	  my ($b2, $e2) = $fs2->get_beg_end_ts();
+	  if ($fs1->error()) {
+	    $self->_set_errormsg("Error obtaining fs beg and end ts (" . $fs1->get_errormsg() . ")");
+	    return(0);
+	  }
+	  if ($fs2->error()) {
+	    $self->_set_errormsg("Error obtaining fs beg and end ts (" . $fs2->get_errormsg() . ")");
+	    return(0);
+	  }
+	  $txt .= "Found framespan overlap for file key $fk 's \[$b1:$e1\] and \[$b2:$e2\]. ";
+	}
+
+      }
+    }
+  }
+
+  if (! MMisc::is_blank($txt)) {
+    $self->_set_errormsg($txt);
+    return(0);
+  }
+
+  return(1);
+}
+
 ########## 'duration', 'version'
 
 sub _get_XXX {
@@ -613,6 +669,30 @@ sub _get_fhash {
 
 ####################
 
+sub _sptsord {
+  my $v = shift @_;
+
+  my ($b, $e) = ($v =~ m%\[\s*([\d\.]+)\s*\:\s*([\d\.]+)\s*\]%);
+
+  return($b, $e);
+}
+
+#####
+
+sub _tsord {
+  my $t1 = $a;
+  my $t2 = $b;
+
+  my ($b1, $e1) = &_sptsord($t1);
+  my ($b2, $e2) = &_sptsord($t2);
+
+  return ($e1 <=> $e2)
+    if ($b1 == $b2);
+  return($b1 <=> $b2);
+}
+
+#####
+
 sub txt_summary {
   my ($self) = @_;
   
@@ -637,7 +717,7 @@ sub txt_summary {
 
   foreach my $fk (sort keys %fhash) {
     my @a = @{$fhash{$fk}{$key_ots}};
-    $txt .= " - File key: $fk | Time range(s): " . join(" ", @a) . "\n";
+    $txt .= " - File key: $fk | Time range(s): " . join(" ", sort _tsord @a) . "\n";
   }
 
   return($txt);
