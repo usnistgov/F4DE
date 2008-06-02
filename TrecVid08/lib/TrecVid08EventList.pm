@@ -22,6 +22,8 @@ package TrecVid08EventList;
 use strict;
 use TrecVid08ViperFile;
 use TrecVid08Observation;
+use TrecVid08ECF;
+use ViperFramespan;
 
 use MErrorH;
 use MMisc;
@@ -42,6 +44,10 @@ my @ok_events;
 my @kernel_params_list;
 my @full_ok_events;
 my $obs_dummy_key;
+
+my $obs_added = 1;
+my $obs_SPadd = 101;
+my $obs_rejected = 99;
 
 ## Constructor
 sub new {
@@ -64,6 +70,7 @@ sub new {
      isgtf       => -1,
      ihash       => undef,
      ihash_changed  => 0,
+     ecfobj      => undef,
      errormsg    => $errormsg,
     };
 
@@ -391,6 +398,27 @@ sub get_RangeDec_s {
 
 ################################################## 'Observations' function
 
+sub Observation_Added {
+  my ($self) = @_;
+  return($obs_added);
+}
+
+#####
+
+sub Observation_SpecialAdd {
+  my ($self) = @_;
+  return($obs_SPadd);
+}
+
+#####
+
+sub Observation_Rejected {
+  my ($self) = @_;
+  return($obs_rejected);
+}
+
+#####
+
 sub _add_observation_core {
   my ($self, $obs, %ihash) = @_;
 
@@ -415,9 +443,26 @@ sub _add_observation_core {
     return(0);
   }
 
-  push @{$ihash{$filename}{$eventtype}}, $obs;
+  # Check according to the ECF (if any) [and bypass for the dummy event]
+  if (($eventtype ne $obs_dummy_key) && ($self->is_ECF_set())) {
+    if (! $self->is_filename_in_ECF($filename)) {
+      return(0) if ($self->error());
+      return($obs_rejected);
+    }
+    if (! $self->_is_obs_fs_within_ECF_fs($obs)) {
+      return(0) if ($self->error());
+      return($obs_rejected);
+    }
+  }
 
-  return($self->_set_ihash(%ihash));
+  push @{$ihash{$filename}{$eventtype}}, $obs;
+  $self->_set_ihash(%ihash);
+  return(0) if ($self->error());
+
+  # Was added, select the return value
+  my $res = ($eventtype eq $obs_dummy_key) ? $obs_SPadd : $obs_added;
+
+  return($res);
 }
 
 #####
@@ -476,20 +521,6 @@ sub add_Observation {
   } else {
     return($self->_add_new_observation($obs));
   }
-}
-
-#####
-
-sub add_Observations {
-  my ($self, @obsl) = @_;
-
-  return(0) if ($self->error());
-
-  foreach my $obs (@obsl) {
-    return(0) if (! $self->add_Observation($obs));
-  }
-
-  return(1);
 }
 
 ########################################
@@ -870,6 +901,147 @@ sub _display_all {
   return(-1) if ($self->error());
 
   return(Dumper(\$self));
+}
+
+########################################
+
+# ECF
+
+sub is_ECF_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (defined $self->{ecfobj});
+
+  return(0);
+}
+
+#####
+
+sub _get_ECF_handler {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_ECF_set()) {
+    $self->_set_errormsg("EventList not tied to any ECF Handler");
+    return(0);
+  }
+
+  return($self->{ecfobj});
+}
+
+#####
+
+sub tie_to_ECF {
+  my ($self, $ecfobj) = @_;
+
+  return(0) if ($self->error());
+
+  if ($self->is_ECF_set()) {
+    $self->_set_errormsg("EventList already tied to one ECF");
+    return(0);
+  }
+
+  if ($self->_is_ihash_set()) {
+    $self->_set_errormsg("Can not \'tie_to_ECF\' if the EventList already contains any Observation");
+    return(0);
+  }
+
+  if (! $ecfobj->is_validated()) {
+    $self->_set_errormsg("Can not add an non validated ECF");
+    return(0);
+  }
+
+  $self->{ecfobj} = $ecfobj;
+
+  return(1);
+}
+
+#####
+
+sub is_filename_in_ECF {
+  my ($self, $fn) = @_;
+
+  return(0) if ($self->error());
+
+  my $ecfobj = $self->_get_ECF_handler();
+  return(0) if ($self->error());
+
+  my $ifi = $ecfobj->is_filename_in($fn);
+  if ($ecfobj->error()) {
+    $self->_set_errormsg("Problem while checking if the filename was within the ECF (" . $ecfobj->get_errormsg() . ")");
+    return(0);
+  }
+
+  return($ifi);
+}
+
+#####
+
+sub get_ECF_file_ViperFramespans {
+  my ($self, $fn) = @_;
+
+  return(0) if ($self->error());
+
+  my $ecfobj = $self->_get_ECF_handler();
+  return(0) if ($self->error());
+
+  my @fs_ecfs = $ecfobj->get_file_ViperFramespans($fn);
+  if ($ecfobj->error()) {
+    $self->_set_errormsg("Problem obtaining the ECF's framespans (" . $ecfobj->get_errormsg() . ")");
+    return(0);
+  }
+  
+  return(@fs_ecfs);
+}
+
+#####
+
+sub _is_obs_fs_within_ECF_fs {
+  my ($self, $obs) = @_;
+
+  return(0) if ($self->error());
+
+  my $filename = $obs->get_filename();
+  my $fs_obs = $obs->get_framespan();
+  if ($obs->error()) {
+    $self->_set_errormsg("Problem obtaining Observation's \'filename\' or \'framespan\' information (" . $obs->get_errormsg() . ")");
+    return(0);
+  }
+
+  my @fs_ecfs = $self->get_ECF_file_ViperFramespans($filename);
+  return(0) if ($self->error());
+
+  # We get the observation's middlepoint in order to check
+  # that it is within the ECF's framespan in order to
+  # accept or reject it (and we work in seconds)
+  my $mp = $fs_obs->extent_middlepoint_ts();
+  if ($fs_obs->error()) {
+    $self->_set_errormsg("Problem obtaining the Observation's Framespan's ts middlepoint (" . $fs_obs->get_errormsg() .")");
+    return(0);
+  }
+
+#  my $uid = $obs->get_unique_id();
+#  print "[$uid]\n $mp ";
+
+  foreach my $fs_fs (@fs_ecfs) {
+    my ($bts, $ets) = $fs_fs->get_beg_end_ts();
+    if ($fs_fs->error()) {
+      $self->_set_errormsg("Problem obtaining the ECF's framespan beg and end ts (" . $fs_fs->get_errormsg() .")");
+      return(0);
+    }
+#    print "[ $bts : $ets ] ";
+    if (($mp >= $bts) && ($mp <= $ets)) { # No need to continue, simply return true if is_within
+#      print " **\n";
+      return(1);
+    }
+  }
+#  print "\n";
+
+  # Could never find it within ...
+  return(0);
 }
 
 ############################################################
