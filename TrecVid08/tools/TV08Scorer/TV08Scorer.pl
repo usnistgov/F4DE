@@ -271,7 +271,8 @@ error_quit("Can not continue, not all files passed the loading/validation step, 
   if ($ndone != $ntodo);
 
 ## Loading of the ECF file
-if (! MMisc::is_blank($ecffile)) {
+my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
+if ($useECF) {
   print "\n\n***** STEP ", $stepc++, ": Loading the ECF file\n";
   $ecfobj->set_default_fps($fps);
   error_quit("Problem setting the ECF object's default FPS (" . $ecfobj->get_errormsg() . ")")
@@ -289,13 +290,16 @@ if (! MMisc::is_blank($ecffile)) {
       if ($td != $duration);
   }
   print "\n** SUMMARY: ECF file loaded\n";
+  print $ecfobj->txt_summary();
 #  $ecfobj->_display();
 }
 
 ## Generate event lists
-print "\n\n***** STEP ", $stepc++, ": Generating EventLists\n";
-my $sysEL = &generate_EventList("SYS", %sys_hash);
-my $refEL = &generate_EventList("REF", %ref_hash);
+print "\n\n***** STEP ", $stepc++, ": Generating EventLists",
+  (($useECF) ? " (only adding observations matching loaded ECF)" : ""), "\n";
+my $tmpecfobj = ($useECF) ? $ecfobj : undef;
+my $sysEL = &generate_EventList("SYS", $tmpecfobj, %sys_hash);
+my $refEL = &generate_EventList("REF", $tmpecfobj, %ref_hash);
 ## Can we score after all ?
 my ($rc, $rs, $rr) = $sysEL->comparable_filenames($refEL);
 error_quit("While trying to obtain a list of scorable referred to files (" . $sysEL->get_errormsg() .")")
@@ -307,7 +311,8 @@ print "\n** SUMMARY: All EventLists generated\n";
 print "** Common referred to files (", scalar @common, "): ", join(" ", @common), "\n";
 print "** Only in SYS (", scalar @only_in_sys, "): ", join(" ", @only_in_sys), "\n";
 print "** Only in REF (", scalar @only_in_ref, "): ", join(" ", @only_in_ref), "\n\n";
-error_quit("Can not continue, no file in the \"Scorable\" list") if (scalar @common == 0);
+my $fcount = (scalar @common) + (scalar @only_in_sys) + (scalar @only_in_ref);
+error_quit("Can not continue, no file in any list ?") if ($fcount == 0);
 
 ## Prepare event lists for scoring
 print "\n\n***** STEP ", $stepc++, ": Scoring\n";
@@ -578,12 +583,26 @@ sub load_preprocessing {
 ########################################
 
 sub generate_EventList {
-  my ($mode, %ohash) = @_;
+  my ($mode, $lecfobj, %ohash) = @_;
 
   my $tmpEL = new TrecVid08EventList();
   error_quit("Problem creating the $mode EventList (" . $tmpEL->get_errormsg() . ")")
     if ($tmpEL->error());
 
+  my $rej_val = $tmpEL->Observation_Rejected();
+  my $acc_val = $tmpEL->Observation_Added();
+  my $spa_val = $tmpEL->Observation_SpecialAdd();
+  error_quit("Problem obtaining EventList's Observation \'Added\', \'SpecialAdd\' or \'Rejected\' values (" . $tmpEL->get_errormsg() . ")")
+    if ($tmpEL->error());
+  if (defined $lecfobj) {
+    error_quit("Problem tying $mode EventList to ECF " . $tmpEL->get_errormsg() . ")")
+      if (! $tmpEL->tie_to_ECF($lecfobj));
+  }
+
+  my $added = 0;
+  my $rejected = 0;
+  my $sfile = 0;
+  my $tobs = 0;
   foreach my $key (keys %ohash) {
     my $vf = $ohash{$key};
 
@@ -591,10 +610,31 @@ sub generate_EventList {
     error_quit("Problem obtaining all Observations from $mode ViperFile object (" . $vf->get_errormsg() . ")")
       if ($vf->error());
 
-    $tmpEL->add_Observations(@ao);
-    error_quit("Problem adding Observations to $mode EventList (" . $tmpEL->get_errormsg() . ")")
-      if ($tmpEL->error());
+    foreach my $o (@ao) {
+      my $status = $tmpEL->add_Observation($o);
+      error_quit("Problem adding Observation to $mode EventList (" . $tmpEL->get_errormsg() . ")")
+	if ($tmpEL->error());
+
+#      print "[$status] ";
+      my $toadd = 1;
+      if ($status == $rej_val) {
+	$rejected++;
+      } elsif ($status == $acc_val) {
+	$added++;
+      } elsif ($status == $spa_val) {
+	$toadd = 0;
+      } else {
+	error_quit("Weird EventList \'add_Observation\' return code ($status) at this stage");
+      }
+      $tobs += $toadd;
+    }
+    $sfile++;
   }
+
+  print "* $mode EventList: $added Observation(s) added";
+  print " ($rejected rejected)" if (($rejected > 0) || (defined $lecfobj));
+  print " [Seen $tobs Observations inside $sfile file(s)]";
+  print "\n";
 
   return($tmpEL);
 }
