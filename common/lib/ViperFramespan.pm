@@ -19,6 +19,10 @@ package ViperFramespan;
 
 # $Id$
 
+
+## IMPORTANT NOTE: none of the frames comparison functions check
+##   if the fps match, it is the user's responsibility to check it
+
 use strict;
 
 use MErrorH;
@@ -819,8 +823,8 @@ sub duration {
 
 ######################################## 'ts' functions
 
-sub frame_to_ts {
-  my ($self, $frame) = @_;
+sub _frame_to_ts {
+  my ($self, $frame, $inc) = @_;
 
   return(-1) if ($self->error());
 
@@ -834,6 +838,8 @@ sub frame_to_ts {
     return(0);
   }
 
+  $frame += $inc;
+
   my $fps = $self->get_fps();
 
   return($frame / $fps);
@@ -841,8 +847,25 @@ sub frame_to_ts {
 
 #####
 
-sub ts_to_frame {
-  my ($self, $ts) = @_;
+sub frame_to_ts {
+  my ($self, $frame) = @_;
+
+  # Decrease 1 because a '0' ts is a '1' frame
+  return($self->_frame_to_ts($frame, -1.0));
+}
+
+#####
+
+sub end_frame_to_ts {
+  my ($self, $fl) = @_;
+
+  return($self->_frame_to_ts($fl, 0.0));
+}
+
+#####
+
+sub _ts_to_frame {
+  my ($self, $ts, $inc) = @_;
 
   return(-1) if ($self->error());
 
@@ -860,10 +883,26 @@ sub ts_to_frame {
 
   my $frame = $fps * $ts;
 
-  # Convert to dec and add 1 because a '0' ts is a '1' frame
-  $frame++;
+  $frame += $inc;
+  # Convert to dec 
+  $frame = sprintf("%d", $frame);
 
   return($frame);
+}
+
+#####
+
+sub ts_to_frame {
+  my ($self, $ts) = @_;
+  # add 1 because a '0' ts is a '1' frame
+  return($self->_ts_to_frame($ts, 1.0));
+}
+
+#####
+
+sub end_ts_to_frame {
+  my ($self, $ts) = @_;
+  return($self->_ts_to_frame($ts, 0.0));
 }
 
 ##########
@@ -886,38 +925,15 @@ sub _get_begend_ts_core {
 
   my ($beg, $end) = &_fs_get_begend($v);
 
-  # Rule 1: Frames start at 1 but ts start at 0
-  $beg -= 1;
+  # Frames start at 1 but ts start at 0 (but frame_to_ts takes care of it)
+  # So we do not touch beg
 
-  # For 'end' we ought to add 1 because the frame is valid until
+  # For 'end' we add 1 because the frame is valid until
   # the end of the framespan end value (example "1:1" is from beginning of 1
-  # to end of 1), but we still apply rule #1 so we ought to have
-  # $end = $end + 1 - 1;
-  # Therefore we do not touch $end
+  # to end of 1)
+  $end++;
 
   return($beg, $end);
-}
-
-#####
-
-sub get_beg_ts {
-  my ($self) = @_;
-
-  my ($beg, $end) = $self->_get_begend_ts_core();
-  return($beg) if ($self->error());
-
-  return($self->frame_to_ts($beg));
-}
-
-#####
-
-sub get_end_ts {
-  my ($self) = @_;
-
-  my ($beg, $end) = $self->_get_begend_ts_core();
-  return($beg) if ($self->error());
-
-  return($self->frame_to_ts($end));
 }
 
 #####
@@ -932,6 +948,28 @@ sub get_beg_end_ts {
   my $end_ts = $self->frame_to_ts($end);
 
   return($beg_ts, $end_ts);
+}
+
+#####
+
+sub get_beg_ts {
+  my ($self) = @_;
+
+  my ($beg, $end) = $self->get_beg_end_ts();
+  return($beg) if ($self->error());
+
+  return($beg);
+}
+
+#####
+
+sub get_end_ts {
+  my ($self) = @_;
+
+  my ($beg, $end) = $self->get_beg_end_ts();
+  return($beg) if ($self->error());
+
+  return($end);
 }
 
 ##########
@@ -949,7 +987,7 @@ sub extent_middlepoint_ts {
   my $mf = $self->extent_middlepoint();
   return($mf) if ($self->error());
 
-  return($self->frame_to_ts($mf));
+  return($self->end_frame_to_ts($mf));
 }
 
 #####
@@ -984,7 +1022,7 @@ sub extent_duration_ts {
   my $d = $self->extent_duration();
   return($d) if ($self->error());
 
-  return($self->frame_to_ts($d));
+  return($self->end_frame_to_ts($d));
 }
 
 #####
@@ -1002,7 +1040,7 @@ sub duration_ts {
   my $d = $self->duration();
   return($d) if ($self->error());
 
-  return($self->frame_to_ts($d));
+  return($self->end_frame_to_ts($d));
 }
 
 ######################################## framespan shift function
