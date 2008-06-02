@@ -339,9 +339,11 @@ foreach my $key (sort keys %all_vf) {
   }
 
   # Add the observations to the EventList
-  $EL->add_Observations(@ao);
-  error_quit("Problem adding Observations to EventList (" . $EL->get_errormsg() . ")")
-    if ($EL->error());
+  foreach my $obs (@ao) {
+    $EL->add_Observation($obs);
+    error_quit("Problem adding Observations to EventList (" . $EL->get_errormsg() . ")")
+      if ($EL->error());
+  }
 
   my $fobs = scalar @ao - 1; # Remove the dummy obs
   print "- Done processing Observations from '$fname' [File key: $sffn]" . (($fsshift != 0) ? " [requested frameshift: $fsshift]" : "") . " (Found: $fobs", (($checkOverlap) ? " | Overlap Found: $ovf" : ""), ")$step2add\n";
