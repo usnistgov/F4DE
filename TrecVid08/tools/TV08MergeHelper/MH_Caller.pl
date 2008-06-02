@@ -165,7 +165,7 @@ foreach my $fn (@fileslist) {
   my $beg_fs = $2;
   my $end_fs = $3;
 
-  my $shift_fs = 0 + $beg_fs; # convert it into a number
+  my $shift_fs = sprintf("%d", $beg_fs); # convert it into a number
 
   # Add ".mpeg" to the filekey
   $file_key .= ".mpeg";
