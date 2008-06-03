@@ -39,10 +39,10 @@ sub run_simpletest {
   if ($mode eq $magicmode) {
     print "makecheckfile ... ";
     if ($retcode != 0) {
-      print "failed ! (see $ofile)\n";
+      print "##### failed ! ##### (see $ofile)\n";
       return(0);
     }
-    print "ok\n";
+    print "ok [wrote: $ofile]\n";
     return(1);
   }
 
