@@ -241,15 +241,15 @@ sub load_file {
   my ($isgtf, $tmp) = @_;
 
   if (! -e $tmp) {
-    &valerr($tmp, $isgtf, "file does not exists, skipping");
+    &valerr($tmp, "file does not exists, skipping");
     return(0, ());
   }
   if (! -f $tmp) {
-    &valerr($tmp, $isgtf, "is not a file, skipping\n");
+    &valerr($tmp, "is not a file, skipping\n");
     return(0, ());
   }
   if (! -r $tmp) {
-    &valerr($tmp, $isgtf, "file is not readable, skipping\n");
+    &valerr($tmp, "file is not readable, skipping\n");
     return(0, ());
   }
   
