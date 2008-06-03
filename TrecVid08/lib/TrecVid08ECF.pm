@@ -23,6 +23,7 @@ use strict;
 
 use ViperFramespan;
 use TrecVid08xmllint;
+use MtXML;
 use MErrorH;
 use MMisc;
 use Data::Dumper;
