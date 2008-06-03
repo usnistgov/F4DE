@@ -22,4 +22,5 @@ check:	${TV08ViperValidator_tester_exec} ${TV08ViperValidator}
 	(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} check)
 
 makecheckfiles:	${TV08ViperValidator_tester_exec}
+	rm -f res_*.txt
 	(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} makecheckfiles)
