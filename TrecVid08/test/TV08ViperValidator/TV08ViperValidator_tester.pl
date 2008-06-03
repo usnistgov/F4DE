@@ -19,9 +19,17 @@ $totest++;
 $testr += &do_test1("Test 1 (Not a Viper File)", "TV08ViperValidator_tester.pl", "res_test1.txt");
 $totest++;
 
+$testr += &do_test1("Test 2 (GTF files check)", "../../test/common/test1-gtf.xml ../../test/common/test2-gtf.xml -g -w", "res_test2.txt");
+$totest++;
+
+$testr += &do_test1("Test 3 (SYS file check)", "../../test/common/test1-1fa-sys.xml ../../test/common/test1-1md-sys.xml ../../test/common/test1-same-sys.xml ../../test/common/test2-1md_1fa-sys.xml ../../test/common/test2-same-sys.xml -w", "res_test3.txt");
+$totest++;
+
+$testr += &do_test1("Test 4 (limitto check)", "../../test/common/test1-gtf.xml ../../test/common/test2-gtf.xml -g -w -l ObjectPut", "res_test4.txt");
+$totest++;
 
 if ($testr == $totest) {
-  ok_quit("All test ok\n\n");
+  ok_quit("All tests ok\n\n");
 } else {
   error_quit("Not all test ok\n\n");
 }
