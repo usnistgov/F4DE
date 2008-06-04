@@ -13,19 +13,25 @@ print "** Running TV08Scorer tests:\n";
 my $totest = 0;
 my $testr = 0;
 
-$testr += &do_test("Test 1a (same)", "test1-gtf.xml", "test1-same-sys.xml", "TV08res-test1-same.txt");
+$testr += &do_test("Test 1a (same)", "test1-gtf.xml", "test1-same-sys.xml", "-D 1000", "res-test1a.txt");
 $totest++;
 
-$testr += &do_test("Test 1b (1x False Alarm)",  "test1-gtf.xml", "test1-1fa-sys.xml", "TV08res-test1-1fa.txt");
+$testr += &do_test("Test 1b (1x False Alarm)",  "test1-gtf.xml", "test1-1fa-sys.xml", "-D 1000", "res-test1b.txt");
 $totest++;
 
-$testr += &do_test("Test 1c (1x Missed Detect)",  "test1-gtf.xml", "test1-1md-sys.xml", "TV08res-test1-1md.txt");
+$testr += &do_test("Test 1c (1x Missed Detect)",  "test1-gtf.xml", "test1-1md-sys.xml", "-D 1000", "res-test1c.txt");
 $totest++;
 
-$testr += &do_test("Test 2a (same)",  "test2-gtf.xml", "test2-same-sys.xml", "TV08res-test2-same.txt");
+$testr += &do_test("Test 2a (same)",  "test2-gtf.xml", "test2-same-sys.xml", "-D 1000", "res-test2a.txt");
 $totest++;
 
-$testr += &do_test("Test 2b (1x Missed Detect + 1x False Alarm)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "TV08res-test2-1md_1fa.txt");
+$testr += &do_test("Test 2b (1x Missed Detect + 1x False Alarm)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000", "res-test2b.txt");
+$totest++;
+
+$testr += &do_test("Test 3a (ECF check 1)",  "test2-gtf.xml", "test2-same-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-test3a.txt");
+$totest++;
+
+$testr += &do_test("Test 3b (ECF check 2)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-test3b.txt");
 $totest++;
 
 if ($testr == $totest) {
@@ -39,11 +45,11 @@ die("You should never see this :)");
 ##########
 
 sub do_test {
-  my ($testname, $rf, $sf, $res) = @_;
+  my ($testname, $rf, $sf, $ao, $res) = @_;
   my $frf = "../common/$rf";
   my $fsf = "../common/$sf";
 
-  my $command = "$scorer -f 25 -d 1 $fsf -g $frf -s -p";
+  my $command = "$scorer -f 25 -d 1 $fsf -g $frf -s -p $ao";
 
   return(TV08TestCore::run_simpletest($testname, $command, $res, $mode));
 }
