@@ -19,8 +19,11 @@ install:
 	@echo "Nothing to do for install"
 
 check:	${TV08Scorer_tester_exec} ${TV08Scorer}
-	(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08Scorer_tester} ${TV08Scorer} check)
+	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08Scorer_tester} ${TV08Scorer} check)
 
 makecheckfiles:	${TV08Scorer_tester_exec}
-	rm -f res_*.txt
-	(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08Scorer_tester} ${TV08Scorer} makecheckfiles)
+	@make cleanresfiles
+	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08Scorer_tester} ${TV08Scorer} makecheckfiles)
+
+cleanresfiles:
+	@rm -f res*.txt

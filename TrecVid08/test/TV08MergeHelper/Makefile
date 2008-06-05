@@ -19,8 +19,11 @@ install:
 	@echo "Nothing to do for install"
 
 check:	${TV08MergeHelper_tester_exec} ${TV08MergeHelper}
-	(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} check)
+	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} check)
 
 makecheckfiles:	${TV08MergeHelper_tester_exec}
-	rm -f res_*.txt
-	(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} makecheckfiles)
+	@make cleanresfiles
+	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} makecheckfiles)
+
+cleanresfiles:
+	@rm -f res_*
