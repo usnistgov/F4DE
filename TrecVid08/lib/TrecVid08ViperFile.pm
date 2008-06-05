@@ -117,8 +117,8 @@ my @array_objects_inline_attributes =
 
 my %not_gtf_required_dummy_values =
   (
-   $not_gtf_required_objects_attributes[0] => 0,
-   $not_gtf_required_objects_attributes[1] => 0,
+   $not_gtf_required_objects_attributes[0] => [ 0 ],
+   $not_gtf_required_objects_attributes[1] => [ 0 ],
   );
 
 ##########
@@ -871,6 +871,7 @@ sub get_dummy_observation {
 
   my $obs = new TrecVid08Observation();
   my $event = $obs->get_key_dummy_eventtype();
+  my $key_attr_content = $obs->key_attr_content();
   if ($obs->error()) {
     $self->_set_errormsg("Problem getting \'dummy eventtype\' from observation (" . $obs->get_errormsg() .")");
     return(0);
@@ -939,7 +940,9 @@ sub get_dummy_observation {
   # Note that we do not worry about dynamic ojects here (ie: TODO)
   if (! $isgtf) {
     foreach my $key (@not_gtf_required_objects_attributes) {
-      $obs->set_selected($key, $not_gtf_required_dummy_values{$key});
+      my %dtmp;
+      $dtmp{"dummytxtfs"}{$key_attr_content} = \@{$not_gtf_required_dummy_values{$key}};
+      $obs->set_selected($key, %dtmp);
       if ($obs->error()) {
 	$self->_set_errormsg("Problem while using \'set_selected\' ($key) on observation (" . $obs->get_errormsg() .")");
 	return(0);
