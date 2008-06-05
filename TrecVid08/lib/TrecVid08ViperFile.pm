@@ -1214,6 +1214,44 @@ sub clone_with_no_events {
 
 ##########
 
+sub fill_empty {
+  my ($self, $sf_filename, $isgtf, $numframes, $framerate,
+      $sourcetype, $hframesize, $vframesize) = @_;
+
+  return(0) if ($self->error());
+  
+  if (defined $self->{fhash}) {
+    $self->_set_errormsg("Can only call \'set_empty_file\' with an empty ViperFile");
+    return(0);
+  }
+
+  if (MMisc::is_blank($sf_filename)) {
+    $self->_set_errormsg("\'set_empty_file\' needs a non empty sourcefile filename");
+    return(0);
+  }
+
+  my %fhash;
+  $fhash{"file"}{"filename"} = $sf_filename;
+  $fhash{"file"}{"file_id"} = 0;
+  $fhash{"file"}{"NUMFRAMES"} = ($numframes) ? $numframes : 1; # At least 1
+  $fhash{"file"}{"FRAMERATE"} = ($framerate) ? $framerate : undef;
+  $fhash{"file"}{"SOURCETYPE"} = (! MMisc::is_blank($sourcetype)) ? $sourcetype : undef;
+  $fhash{"file"}{"H-FRAME-SIZE"} = ($hframesize) ? $hframesize : undef;
+  $fhash{"file"}{"V-FRAME-SIZE"} = ($vframesize) ? $vframesize : undef;
+  $self->_set_fhash(%fhash);
+
+  $self->set_as_gtf() if ($isgtf);
+
+  return(0) if ($self->error());
+
+  # We have added the strict minimum information required to work
+  $self->{"validated"} = 1;
+  
+  return(1);
+}
+
+##########
+
 sub _get_fhash_file_numframes {
   my ($self) = @_;
 
