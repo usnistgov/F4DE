@@ -547,7 +547,7 @@ sub set_DetectionDecision {
     $DetectionDecision = 1;
   } elsif ($DetectionDecision =~ m%^false$%i) {
     $DetectionDecision = 0;
-  } elsif (($DetectionDecision != 0) || ($DetectionDecision != 1)) {
+  } elsif (($DetectionDecision != 0) && ($DetectionDecision != 1)) {
     $self->_set_errormsg("Strange \'DetectionDecision\' value ($DetectionDecision)");
     return(0);
   }
@@ -686,7 +686,7 @@ sub _get_1keyhash_content {
   return ("Found more than 1 key in the hash", ())
     if (scalar @keys > 1);
   return ("Found no key in the hash", ())
-    if (scalar @keys > 1);
+    if (scalar @keys == 0);
 
   return("", %{$tmp{$keys[0]}});
 }
@@ -715,7 +715,7 @@ sub _get_set_selected_ok_choices {
 #####
 
 sub _set_selected_core {
-  my ($self) = shift @_;
+  my $self = shift @_;
   my $choice = shift @_;
 
   my @ok_choices = &_get_set_selected_ok_choices();
@@ -737,7 +737,8 @@ sub _set_selected_core {
 #####
 
 sub set_selected {
-  my ($self) = shift @_;
+  my $self = shift @_;
+  
   my $choice = shift @_;
 
   return(0) if ($self->error());
@@ -751,7 +752,7 @@ sub set_selected {
   # We have to worry about the "dynamic" and "number of inline attributes"
 
   if (! exists $hash_objects_attributes_types_dynamic{$choice}) {
-    $self->_set_errormsg("In \'set_selected\', can not confirm the dynmaic status of choice ($choice)");
+    $self->_set_errormsg("In \'set_selected\', can not confirm the dynamic status of choice ($choice)");
     return(0);
   }
   my $isd = $hash_objects_attributes_types_dynamic{$choice};
