@@ -125,7 +125,7 @@ error_quit("\'EcfVersion\' must be set if \'ecffile\' selected") if (($ecff ne "
 ########## Read Input CSV Files
 my $step = 1;
 print "\n\n** STEP ", $step++, ": Read Input CSV files\n";
-my @ecfh = ("SourceFile Filename", "Framespan"); # Order is important
+my @ecfh = ("SourceFile Filename", "Framespan", "FPS"); # Order is important
 
 my %all;
 foreach my $csv (@ARGV) {
@@ -211,12 +211,13 @@ if ($ecff ne ""){
     my $sub_fs_list = $fs_fs->get_list_of_framespans();
     error_quit("Failed to get sub framespans " . $fs_fs->get_errormsg())
       if (! defined($sub_fs_list));
-    foreach my $fs(@$sub_fs_list){
+    foreach my $fs (@$sub_fs_list){
       print ECF "       <excerpt>\n";
       print ECF "           <!--  Framespan " . $fs->get_value() . " -->\n";
       print ECF "           <filename>$fn</filename>\n";
       print ECF "           <begin>" . $fs->get_beg_ts() . "</begin>\n";
       print ECF "           <duration>" . $fs->duration_ts() . "</duration>\n";
+      print ECF "           <sample_rate>" . $fs->get_fps() . "<sample_rate>\n";
       print ECF "           <language>english</language>\n";
       print ECF "           <source_type>surveillance</source_type>\n";
       print ECF "       </excerpt>\n";
@@ -237,7 +238,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 --fps fps [--help] [--version] [--csv [file.csv]] [--ecffile file --EcfVersion versionid] file.csv [file.csv [...]]
+Usage: $0 --fps fps [--help] [--version] [[--csv [file.csv]] | [--ecffile file --EcfVersion versionid]] file.csv [file.csv [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -324,8 +325,12 @@ sub check_csv_header {
   my %pos;
   foreach my $key (@ecfh) {
     my $val = &find_key($key, @elts);
-    error_quit("Could not find required CSV key header ($key)")
-      if ($val == -1);
+    if ($val == -1) {
+      error_quit("Could not find required CSV key header ($key)")
+	if ($key ne $ecfh[-1]);
+      # FPS was optional for a while, so skip if not found
+      next;
+    }
     $pos{$key} = $val;
   }
 
@@ -342,17 +347,27 @@ sub process_csv_line {
 
   my $fn = $elts[$pos{$ecfh[0]}];
   my $fs = $elts[$pos{$ecfh[1]}];
+  my $ffps = $fps; # Set a default value
+  # and override if it was given
+  $ffps = $elts[$pos{$ecfh[2]}]
+    if (exists $pos{$ecfh[2]});
 
   if (! exists $all{$fn}) {
     my $fs_fs = new ViperFramespan($fs);
     error_quit("Problem creating a ViperFramespan [$fs] (" . $fs_fs->get_errormsg() . ")")
       if ($fs_fs->error());
-    $fs_fs->set_fps($fps);
+    $fs_fs->set_fps($ffps);
     error_quit("Problem setting the ViperFramespan's fps (" . $fs_fs->get_errormsg() . ")")
       if ($fs_fs->error());
     $all{$fn} = $fs_fs;
   } else {
     my $fs_fs = $all{$fn};
+    my $tfps = $fs_fs->get_fps();
+    error_quit("Problem obtaining framespan's fps (" . $fs_fs->get_errormsg() . ")")
+      if ($fs_fs->error());
+    error_quit("New entry's fps ($tfps) is different from the previously given value ($ffps)")
+      if ($tfps != $ffps);
+
     $fs_fs->add_fs_to_value($fs);
     error_quit("Problem adding framespan ranges to ViperFramespan (" . $fs_fs->get_errormsg() . ")")
       if ($fs_fs->error());
