@@ -232,7 +232,7 @@ error_quit("Problem creating the EventList (" . $EL->get_errormsg() . ")")
 my %overlap_list;
 my %overlap_ids;
 
-my @ecfh = ("SourceFile Filename", "Framespan", "XGTF File"); # Order is important
+my @ecfh = ("SourceFile Filename", "Framespan", "XGTF File", "FPS"); # Order is important
 my %ecfv;
 
 foreach my $key (sort keys %all_vf) {
@@ -291,27 +291,30 @@ foreach my $key (sort keys %all_vf) {
   }
 
   # ECF Helper File
-  if ($ecff ne "") {
+  if (! MMisc::is_blank($ecff)) {
     my $obs = $ao[0]; # Always true thanks to the dummy observation
 
     my $fl = $obs->get_filename();
     my $fn = $obs->get_xmlfilename();
     my $fs_file = $obs->get_fs_file();
-
     error_quit("Problem obtaining Observation's information (" . $obs->get_errormsg() . ")")
       if ($obs->error());
 
     my $value = $fs_file->get_value();
-
+    my $ofps = $fs_file->get_fps();
     error_quit("Problem obtaining Observation's Framespan's information (" . $fs_file->get_errormsg() . ")")
       if ($fs_file->error());
 
-    my $key = "$fl-$value-$fn";
+    my $key = "$fl-$value-$fn-$ofps";
+
+    error_quit("WEIRD: This \'unique id\' ($key) seem to already have been added")
+      if (exists $ecfv{$key});
 
     my $inc = 0;
     $ecfv{$key}{$ecfh[$inc++]} = $fl;
     $ecfv{$key}{$ecfh[$inc++]} = $value;
     $ecfv{$key}{$ecfh[$inc++]} = $fn;
+    $ecfv{$key}{$ecfh[$inc++]} = $ofps;
   }
 
   # Overlap
