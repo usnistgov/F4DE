@@ -116,6 +116,7 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 my @ov_modes = ("FrameShiftedFiles", "SameFramespanFiles", "All"); # Order is important
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
+my $mancmd = "perldoc -F $0";
 my $usage = &set_usage();
 
 # Default values for variables
@@ -134,7 +135,7 @@ my $do_same_ov = 0;
 my $ecff = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:      F            ST   X      efgh      o   s  vwx  
+# Used:      F            ST   X      efgh    m o   s  vwx  
 
 my %opt;
 my $dbgftmp = "";
@@ -143,6 +144,7 @@ GetOptions
    \%opt,
    'help',
    'version',
+   'man',
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
    'gtf'             => \$isgtf,
@@ -159,6 +161,11 @@ GetOptions
 
 ok_quit("\n$usage\n") if ($opt{'help'});
 ok_quit("$versionid\n") if ($opt{'version'});
+if ($opt{'man'}) {
+  my ($r, $o, $e) = MMisc::do_system_call($mancmd);
+  error_quit("Could not run \'$mancmd\'") if ($r);
+  ok_quit($o);
+}
 
 error_quit("Not enough arguments\n$usage\n") if (scalar @ARGV == 0);
 
@@ -493,15 +500,15 @@ sub set_usage {
 
 $versionid
 
-Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]]] [--ecfhelperfile file.csv] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] --fps fps --writetodir dir
+Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]]] [--ecfhelperfile [file.csv]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] --fps fps --writetodir dir
 
-Will perform a semantic validation of the Viper XML file(s) provided.
+Will merge event observations found in given files related to the same sourcefile's filename, and will try to provide help in merging overlapping or repeating observations.
 
  Where:
   --gtf           Specify that the file to validate is a Ground Truth File
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --writetodir    Once processed in memory, print the new XML dump files to this directory
+  --writetodir    Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension)
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --ForceFilename Specify that all files loaded refers to the same 'sourcefile' file
   --shift_overlap Will find overlap for frameshifted file's sourcefile which obersvations overlap in the file overlap section
@@ -510,6 +517,7 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --ecfhelperfile Save a CSV file thaf contains information needed to generate the ECF file
   --version       Print version number and exit
   --help          Print this usage information and exit
+  --man           Print a more detailled manual page and exit (same as running: $mancmd)
 
 Note:
 - This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
@@ -934,3 +942,174 @@ sub do_csv {
 
   return($txt);
 }
+
+############################################################ Manual
+
+=pod
+
+=head1 NAME
+
+TV08Mergehelper - TrecVid08 Viper XML Events Observations Merger Helper
+
+=head1 SYNOPSIS
+
+B<TV08Mergehelper> S<[ B<--help> | B<--man> | B<--version> ]>
+        S<B<--fps> I<fps> B<--writetodir> I<directory>>
+        S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
+        S<[B<--gtf>] [B<--ForceFilename> I<filename>]>
+        S<[B<--shift_overlap> B<--Same_overlap> [B<--overlaplistfile> [I<file>]]]>
+        S<[B<--ecfhelperfile> [I<file.csv>]]>
+        I<viper_source_file.xml[I<:frame_shift>]> [I<...>]
+
+=head1 DESCRIPTION
+
+B<TV08MergeHelper> will load Viper XML files, extract all their I<Event> I<Observations> and for each I<Sourcefile filename> will generate a new Viper XML file containing all its I<Event> I<Observations>.
+The program can also perform I<frame shift> of input files, and if requested provide a list of possible overlaps found in the file's overlap framespans.
+It can also geneate a CVS file to help the generation of an I<ECF> (used by B<TV08Scorer>).
+XML comments are added within output files for each modifications to I<Events>, making it easier to find modifications and adaptations to I<Event> I<Observations>.
+
+=head1 PREREQUISITES
+
+B<TV08MergeHelper> input files need to pass the B<TV08ViperValidator> validation process, and relies on a few external software and files.
+
+=over
+
+=item B<SOFTWARE> 
+
+I<xmllint> (part of I<libxml2>) (at least version 2.6.30) is required to perform the syntaxic validation of the source file.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
+
+=item B<FILES>
+
+The syntaxic validation requires some XML schema files (full list can be obtained using the B<--usage> option).
+It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> envitonment varialbe.
+You should not have to specify their location, if you have performed an install and have set the global environment variables.
+
+=item B<GLOBAL ENVIRONMENT VARIABLES>
+
+B<TV08MergeHelper> relies on some internal and external Perl libraries to function.
+
+Simply running the B<TV08MergeHelper> script should provide you with the list of missing libraries. 
+The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
+
+=over
+
+=item B<F4DE_BASE>
+
+The main variable once you have installed the software, it should be sufficient to run this program.
+
+=item B<F4DE_PERL_LIB>
+
+Allows you to specify a different directory for the B<F4DE> libraries.
+
+=item B<TV08_PERL_LIB>
+
+Allows you to specify a different directory for the B<TrecVid08> libraries.
+
+=back
+
+=back
+
+=head1 GENERAL NOTES
+
+B<TV08MergeHelper> expect that the file can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--usage> for files list).
+
+B<TV08MergeHelper> will ignore the I<config> section of the XML file, as well as disard any xml comment(s).
+
+=head1 OPTIONS
+
+=over
+
+=item B<--ecfhelperfile> [I<file.csv>]
+
+Ask B<TV08MergeHelper> to generate a CVS I<file.csv> (if provided, standard output otherwise) containing an entry per Viper file read containing information required to help in the generation of an ECF file.
+
+=item B<--fps> I<fps>
+
+Specify the default sample rate of the Viper files.
+
+=item B<--ForceFilename> I<filename>
+
+Force every Viper XML file loaded to use I<filename> as its I<sourcefile> I<filename>.
+
+=item B<--gtf>
+
+Specify that the file to validate is a Reference file (also known as a Ground Truth File)
+
+=item B<--help>
+
+Display the usage page for this program. Also display some default values and information.
+
+=item B<--man>
+
+Display this man page.
+
+=item B<--overlaplistfile> [I<file>]
+
+Generate a report (written to I<file> if provided, standard output otherwise) listing all possible I<Event> I<Observation> overlaps seen according to the B<--shift_overlap> and B<--Same_overlap> heuristics.
+
+=item B<--shift_overlap>
+
+Find I<Event> I<Observation> overlap found within the framespan where the I<Observation>'s Viper file overlaps, for files whose framespan's middlepoint does not match.
+
+=item B<--Same_overlap>
+
+Find I<Event> I<Observation> overlap found within the framespan where the I<Observation>'s Viper file overlaps, for files whose framespan's middlepoint does match.
+
+=item B<--TrecVid08xsd> I<location>
+
+Specify the default location of the required XSD files (use B<--usage> to get the list of required files).
+Can also be set using the B<TV08_XSDPATH> environment variable.
+
+=item B<--version>
+
+Display B<TV08MergeHelper> version information.
+
+=item B<--writetodir> I<directory>
+
+Once merging has been completed, B<TV08MergeHelper> will write a new XML representation of the sourcefile's filename file to the provided I<directory>.
+
+=item B<--xmllint> I<location>
+
+Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
+Can also be set using the B<TV08_XMLLINT> environment variable.
+
+=back
+
+=head1 USAGE
+
+=item B<TV08MergeHelper --xmllint /local/bin/xmllint --TrecVid08xsd /local/F4DE-CVS/data sys_test1.xml sys_test2.xml sys_test3.xml --fps PAL --writetodir /tmp>
+
+Will load the three I<system> files (specifying the default sample rate at the I<PAL> frame rate), using the I<xmllint> executable located at I</local/bin/xmllint> and the required XSD files found in the I</local/F4DE/data> directory. It will then write to the I</tmp> directory, one file per sourcefile's filename found in the input file. If I<sys_test1.xml> sourcefile's filename is I<testa.mpg>, and I<sys_test2.xml> and I<sys_test3.xml> sourcefile's filename is I<testb.mpg>, the program will write the files I</tmp/testas.mpg.xml> and I</tmp/testb.mpg.xml> containing the I<Event> I<Observations> seen in the I<system> files.
+
+=item B<TV08MergeHelper --gtf -ForceFilename myvideo.mpg ref_test1.xml ref_test2.xml:2500 ref_test3.xml --fps NTSC --writetodir /tmp --shift_overlap --Same_overlap --overlaplistfile /tmp/ovlist.txt --ecfhelperfile ecfbase.csv>
+
+Will load the three I<reference> files (specifying the default sample rate at the I<NTSC> frame rate), shifting I<ref_test2.xml> by I<2500> frames.
+It will write a CVS file I<ecfbase.csv> that contains one entry per viper XML file (here one for I<rest_test1.xml>, I<ref_test2.xml> and I<ref_test3.xml>) containing among other things the viper file's sourcefile's filename, as well as the file's framespan range.
+It forces all viper file's sourcefile's filename to be I<myvideo.mpg>, meaning that there will be only one output file I</tmp/myideo.mpg.xml>.
+It will also write an B<overlaplistfile> I</tmp/ovlist.txt> that will contain both:
+
+=over
+
+=item * 
+the list of B<Same_overlap> I<Event> I<Observations> overlaps.
+By checking that for each pair of comparable I<Observations>, their file framespan range is the same for both related file (ie the viper file's I<NUMFRAMES> is equal), it will find I<Event> I<Observations> overlap within the files overlap zone (here the full file framespan range).
+
+=item *
+the list of B<shift_overlap> I<Event> I<Observations> overlaps.
+By checking that for each pair of comparable I<Observations>, the file framespan range is different for two I<Observations>' file (ie the files middlepoint distance is not zero), it will find the I<Event> I<Observations> that overlap wihtin the files overlap zone (if file1 as a framespan range of 1:100 and file2 50:200, the overlap zone is 50:100).
+
+=back
+
+Note that the program will give a unique ID to each overlap it found and store them within the output XML file.
+The B<overlaplistfile> is just a way to easily see the list of overlap found. 
+
+=head1 BUGS
+
+Please send bug reports to <nist_f4de@nist.gov>
+
+=head1 AUTHORS
+
+Martial Michel <martial.michel@nist.gov>
+
+=cut
