@@ -105,6 +105,7 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
+my $mancmd = "perldoc -F $0";
 my $usage = &set_usage();
 
 # Default values for variables
@@ -119,7 +120,7 @@ my @asked_events;
 my $show = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T   X        gh   l         vwx  
+# USed:                    T   X        gh   lm        vwx  
 
 my %opt;
 my $dbgftmp = "";
@@ -128,6 +129,7 @@ GetOptions
    \%opt,
    'help',
    'version',
+   'man',
    "XMLbase:s"       => \$xmlbasefile,
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
@@ -140,6 +142,11 @@ GetOptions
 
 ok_quit("\n$usage\n") if ($opt{'help'});
 ok_quit("$versionid\n") if ($opt{'version'});
+if ($opt{'man'}) {
+  my ($r, $o, $e) = MMisc::do_system_call($mancmd);
+  error_quit("Could not run \'$mancmd\'") if ($r);
+  ok_quit($o);
+}
 
 if (scalar @asked_events == 0) {
   @asked_events = @ok_events;
@@ -286,7 +293,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--limitto event1[,event2[...]]] [--write [directory]] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--limitto event1[,event2[...]]] [--write [directory]] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -299,6 +306,7 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
   --version       Print version number and exit
   --help          Print this usage information and exit
+  --man           Print a more detailled manual page and exit (same as running: $mancmd)
 
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
@@ -337,3 +345,150 @@ sub ok_quit {
   print "\n";
   exit(0);
 }
+
+############################################################ Manual
+
+=pod
+
+=head1 NAME
+
+TV08ViperValidator - TrecVid08 Viper XML Validator
+
+=head1 SYNOPSIS
+
+B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
+        S<[B<--XMLbase> [I<file]>]>
+        S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
+        S<[B<--gtf>] [B<--limitto> I<event1>[,I<event2>[I<...>]]]>
+        S<[B<--write> [I<directory>]]>
+        I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
+
+=head1 DESCRIPTION
+
+B<TV08ViperValidator> performs a syntaxic and semantic validation of the Viper XML file(s) provided on the command line. It can I<validate> reference files (see B<--gtf>) as well as system files. It can also rewrite validated files into another directory using the same filename as the original (see B<--write>), and only keep a few selected events into the output file (see B<--limitto>). To obtain a list of recognized events, see B<--usage>.
+
+=head1 PREREQUISITES
+
+B<TV08ViperValidator> relies on a few external software and files.
+
+=over
+
+=item B<SOFTWARE> 
+
+I<xmllint> (part of I<libxml2>) (at least version 2.6.30) is required to perform the syntaxic validation of the source file.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
+
+=item B<FILES>
+
+The syntaxic validation requires some XML schema files (full list can be obtained using the B<--usage> option).
+It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> envitonment varialbe.
+You should not have to specify their location, if you have performed an install and have set the global environment variables.
+
+=item B<GLOBAL ENVIRONMENT VARIABLES>
+
+B<TV08ViperValidator> relies on some internal and external Perl libraries to function.
+
+Simply running the B<TV08ViperValidator> script should provide you with the list of missing libraries. 
+The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
+
+=over
+
+=item B<F4DE_BASE>
+
+The main variable once you have installed the software, it should be sufficient to run this program.
+
+=item B<F4DE_PERL_LIB>
+
+Allows you to specify a different directory for the B<F4DE> libraries.
+
+=item B<TV08_PERL_LIB>
+
+Allows you to specify a different directory for the B<TrecVid08> libraries.
+
+=back
+
+=back
+
+=head1 GENERAL NOTES
+
+B<TV08ViperValidator> expect that the file can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--usage> for files list).
+
+B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well as disard any xml comment(s).
+
+=head1 OPTIONS
+
+=over
+
+=item B<--gtf>
+
+Specify that the file to validate is a Reference file (also known as a Ground Truth File)
+
+=item B<--help>
+
+Display the usage page for this program. Also display some default values and information.
+
+=item B<--limito> I<event1>[,I<event2>[I<,...>]]
+
+Used with B<--write> or B<--XMLbase>, only add provided list of events to output files.
+Note that B<TV08ViperValidator> will still check the entire viper file before it can limit itself to the selected list of events.
+
+=item B<--man>
+
+Display this man page.
+
+=item B<--TrecVid08xsd> I<location>
+
+Specify the default location of the required XSD files (use B<--usage> to get the list of required files).
+Can also be set using the B<TV08_XSDPATH> environment variable.
+
+=item B<--version>
+
+Display B<TV08ViperValidator> version information.
+
+=item B<--write> I<directory>
+
+Once validation has been completed for a given file, B<TV08ViperValidator> will write a new XML representation of this file to either the standard output (if I<directory> is not set), or will create a file with the same name as the input file in I<directory> (if specified).
+
+=item B<--xmllint> I<location>
+
+Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
+Can also be set using the B<TV08_XMLLINT> environment variable.
+
+=item B<--XMLbase> I<file>
+
+Print a XML Viper file with an empty I<data> section but a populated I<config> section, and exit.
+It will write the text content to I<file> if provided.
+
+=back
+
+=head1 USAGE
+
+=item B<TV08ViperValidator --XMLbase TrecVid08_Base.xml>
+
+Will generate an I<data> empty valid TrecVid08 Viper XML file, containing all the events in the <config> section.
+
+=item B<TV08ViperValidator --XMLbase TrecVid08_ObjectPut_Embrace_only.xml --limitto ObjectPut,Embrace>
+
+Will generate an I<data> empty valid TrecVid08 Viper XML file, containing only the I<ObjectPut> and I<Embrace> events in its <config> section.
+
+=item B<TV08ViperValidator --xmllint /local/bin/xmllint --TrecVid08xsd /local/F4DE-CVS/data sys_test1.xml>
+
+Will try to validate the I<system> file I<sys_test1.xml> using the I<xmllint> executable located at I</local/bin/xmllint> and the required XSD files found in the I</local/F4DE/data> directory.
+
+=item B<TV08ViperValidator --gtf ref_test1.xml ref_test2.xml --write /tmp>
+
+Will try to validate the I<reference> files I<ref_test1.xml> and I<ref_test2.xml> and will write into the I</tmp> directory, the files I</tmp/ref_test1.xml> and I</tmp/ref_test2.xml> if they both pass the validation step.
+
+=item B<TV08ViperValidator sys_test1.xml sys_test2.xl --write /tmp --limitto Embrace>
+
+Will try to validate the I<system> files I<sys_test1.xml> and I<sys_test2.xml>, and will write into the I</tmp> directory the files I</tmp/sys_test1.xml> and I</tmp/sys_test2.xml> containing only the I<Embrace> event (if they both pass the validation step).
+
+=head1 BUGS
+
+Please send bug reports to <nist_f4de@nist.gov>
+
+=head1 AUTHORS
+
+Martial Michel <martial.michel@nist.gov>
+
+=cut
