@@ -140,6 +140,15 @@ unless (eval "use DETCurve; 1")
     $have_everything = 0;
   }
 
+
+# DETCurveSet (part of this tool)
+unless (eval "use DETCurveSet; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"DETCurveSet\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1")
   {
@@ -324,7 +333,7 @@ error_quit("Error while obtaining the EventList kernel function parameters (" . 
   if ($sysEL->error());
 
 my %all_bpm;
-my %metrics_params = ( TOTALTRIALS => 1000, TOTALDURATION => $duration ) ;
+my %metrics_params = ( TOTALDURATION => $duration ) ;
 my @all_events;
 my $key_allevents= "AllEvents";
 push @all_events, $key_allevents;
@@ -335,7 +344,7 @@ my %trials_c;
 foreach my $event (@all_events) {
   my $trial = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
   $all_trials{$event} = $trial;
-  $all_metric{$event} = new MetricTV08({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial);
+  $all_metric{$event} = new MetricTV08({ ('CostMiss' => 10, 'CostFA' => 1, 'Rtarget' => 1.8 ) }, $trial);
 }
 my $gtrial = $all_trials{$key_allevents};
 my %all_alignmentReps;
@@ -382,20 +391,31 @@ if ($perfStat) {
 
 ## Dump of DET Curves
 
-if ($doDC) {
+if ($doDC) { 
   print "\n\n***** STEP ", $stepc++, ": Dump of DET Curve\n";
+  my $detSet = new DETCurveSet();
+  
   print " (only printing seen events)\n\n";
   foreach my $event (@all_events) {
     next if ($trials_c{$event} == 0);
+    next if ($event eq $key_allevents);
     my $trials = $all_trials{$event};
     my $metric = $all_metric{$event};
-    print "** Event: $event";
-    my $det = new DETCurve($trials, $metric, "blocked", "Title from system name", [(10, 1, 0.1)]);
-    my $detRoot = "DETPLOT-NAME-Event_$event.det";
-    $det->writeGNUGraph($detRoot, undef);
-    $det->serialize($detRoot);
-    print " (target files: $detRoot*)\n";
+    print "** Computing DET Curves for event: $event\n";
+    my $det = new DETCurve($trials, $metric, "blocked", "Event $event: ". "Title from system name", [(10, 1, 0.1)]);
+    if ($det->getMessages() ne "") { 
+        print $det->getMessages();
+    }
+    my $rtn = $detSet->addDET($event." Event", $det);
+    error_quit("Error adding Event '$event' to the DETSet: $rtn") if ($rtn ne "success");                     
   }
+
+#    my $detRoot = "DETPLOT-NAME-Event_$event.det";
+#    $det->writeGNUGraph($detRoot, undef);
+#    $det->serialize($detRoot);
+#    print " (target files: $detRoot*)\n";
+### skip png    print $detSet->renderAsTxt("DETS", { (xScale => "log", Ymin => "0.01", BuildPNG => 0) });
+    print $detSet->renderAsTxt("DETS", { (xScale => "log", Ymin => "0.01") });
 }
 
 #my $trials->dump(*STDOUT);
