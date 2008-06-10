@@ -783,46 +783,6 @@ sub comparable_filenames {
 
 ############################################################
 
-sub _numerically {
-  return ($a <=> $b);
-}
-
-#####
-
-sub _reorder_array {
-  my @ts = @_;
-
-  @ts = sort _numerically @ts;
-
-  return(@ts);
-}
-
-#####
-
-sub _min_max {
-  my @v = &_reorder_array(@_);
-
-  return($v[0], $v[-1]);
-}
-
-#####
-
-sub _min {
-  my @v = &_min_max(@_);
-
-  return($v[0]);
-}
-
-#####
-
-sub _max {
-  my @v = &_min_max(@_);
-
-  return($v[-1]);
-}
-
-#####
-
 sub _get_Min_Range_Dec_s_value {
   my ($self, $key) = @_;
 
@@ -890,7 +850,7 @@ sub _get_global_DetectionScore_minMax {
 
   return() if ($self->error());
 
-  return(&_min_max(@all_ds));
+  return(MMisc::min_max(@all_ds));
 }
 
 ####################
