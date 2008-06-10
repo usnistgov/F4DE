@@ -28,12 +28,12 @@ sub new
 
     #######  customizations
 
-    die "Error: parameter 'ValueV' not defined"     if (! exists($self->{PARAMS}->{ValueV}));
-    die "Error: parameter 'ValueC' not defined"     if (! exists($self->{PARAMS}->{ValueC}));
-    die "Error: parameter 'ProbOfTerm' not defined" if (! exists($self->{PARAMS}->{ProbOfTerm}));
+    return "Error: parameter 'ValueV' not defined"     if (! exists($self->{PARAMS}->{ValueV}));
+    return "Error: parameter 'ValueC' not defined"     if (! exists($self->{PARAMS}->{ValueC}));
+    return "Error: parameter 'ProbOfTerm' not defined" if (! exists($self->{PARAMS}->{ProbOfTerm}));
 
-    print Dumper($self->{TRIALPARAMS});
-    die "Error: trials parameter 'TOTALTRIALS' does not exist" if (! exists($self->{TRIALPARAMS}->{TOTALTRIALS}));
+#    print Dumper($self->{TRIALPARAMS});
+    return "Error: trials parameter 'TOTALTRIALS' does not exist" if (! exists($self->{TRIALPARAMS}->{TOTALTRIALS}));
 
     $self->{PARAMS}->{BETA} = $self->{PARAMS}->{ValueC} / $self->{PARAMS}->{ValueV} * 
 	((1 / $self->{PARAMS}->{ProbOfTerm}) - 1);
@@ -55,6 +55,7 @@ sub getParamsStr(){
 
 sub errMissLab(){ "PMiss"; }
 sub errMissUnit(){ "Prob" };
+sub errMissUnitLabel(){ "%" };
 sub errMissBlockCalc(){
     my ($self, $nMiss, $block) = @_;
     my $NTarg =  $self->{TRIALS}->getNumTarg($block);
@@ -83,6 +84,7 @@ sub errMissBlockSetCalc(){
 
 sub errFALab() { "PFA"; }
 sub errFAUnit(){ "Prob" };
+sub errFAUnitLabel(){ "%" };
 sub errFABlockCalc(){
     my ($self, $nFa, $block) = @_;
     my $NNonTargTrials = (defined($self->{TRIALPARAMS}->{TOTALTRIALS}) ? 
