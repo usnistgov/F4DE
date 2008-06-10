@@ -125,3 +125,47 @@ sub clean_begend_spaces {
 
   return($txt);
 }
+
+##########
+
+sub _numerically {
+  return ($a <=> $b);
+}
+
+#####
+
+sub reorder_array_numerically {
+  my @ts = @_;
+
+  @ts = sort _numerically @ts;
+
+  return(@ts);
+}
+
+#####
+
+sub min_max {
+  my @v = &reorder_array_numerically(@_);
+
+  return($v[0], $v[-1]);
+}
+
+#####
+
+sub min {
+  my @v = &min_max(@_);
+
+  return($v[0]);
+}
+
+#####
+
+sub max {
+  my @v = &min_max(@_);
+
+  return($v[-1]);
+}
+
+############################################################
+
+1;
