@@ -87,6 +87,23 @@ sub unitTest
     return 1;
 }
 
+sub isCompatible(){
+    my ($self, $tr2) = @_;
+
+    return 0 if (ref($self) ne ref($tr2));
+
+    foreach my $k($self->getMetricParamKeys()){
+        return 0 if (! $tr2->getMetricParamValueExists($k));
+        return 0 if ($self->getMetricParamValue($k) ne $tr2->getMetricParamValue($k));
+    }
+    foreach my $k($tr2->getMetricParamKeys()){
+        return 0 if (! $self->getMetricParamValueExists($k));
+        return 0 if ($self->getMetricParamValue($k) ne $tr2->getMetricParamValue($k));
+    }
+
+    return 1;    
+}
+
 sub addTrial
 {
     my ($self, $block, $sysscore, $decision, $isTarg) = @_;
@@ -135,6 +152,11 @@ sub getDecisionID(){
 sub getMetricParams(){
     my($self) = @_;
     $self->{metricParams};
+}
+
+sub getMetricParamKeys(){
+    my($self) = @_;
+    keys %{ $self->{metricParams} };
 }
 
 sub getMetricParamsStr(){
