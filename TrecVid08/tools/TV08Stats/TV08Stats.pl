@@ -336,7 +336,7 @@ foreach my $fn(keys %fileStatsDB){
         $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->max()),                 "Dur|max",    sprintf("%20s %s",$ev, $fn));
     }
 }
-$sat->renderTxtTable(2);
+print $sat->renderTxtTable(2);
 
 print "\n\n\n       Event observation duration statsitics over all files\n\n";
 $sat = new SimpleAutoTable();
@@ -356,7 +356,7 @@ $sat->addData("|",                                                "",           
 $sat->addData(sprintf("%.2f",$sumStat->min()),                    "Dur|min",    "All Events");
 $sat->addData(sprintf("%.2f",$sumStat->mean()),                   "Dur|mean",   "All Events");
 $sat->addData(sprintf("%.2f",$sumStat->max()),                    "Dur|max",    "All Events");
-$sat->renderTxtTable(2);
+print $sat->renderTxtTable(2);
 
 print "\n\n\nEvent occurrences as a function of camera\n\n";
 $sat = new SimpleAutoTable();
@@ -365,7 +365,7 @@ foreach my $cam(sort keys %camStatsDB){
         $sat->addData($camStatsDB{$cam}{$ev}{dur}->count(),                               $cam,  $ev);
     }
 }
-$sat->renderTxtTable(2);
+print $sat->renderTxtTable(2);
 
 print "\n\n\n                 Durations of annotated files\n\n";
 $sat = new SimpleAutoTable();
@@ -374,7 +374,7 @@ foreach my $cam(sort keys %camDurStatsDB){
         $sat->addData($camDurStatsDB{$cam}{$da}->sum(),                               $cam,  $da);
     }
 }
-$sat->renderTxtTable(2);
+print $sat->renderTxtTable(2);
 
 exit 0;
 ########## END
