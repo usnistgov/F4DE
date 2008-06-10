@@ -34,8 +34,16 @@ sub new
     return $self;
 }
 
-sub renderAsTxt()
-{
+sub _PN(){
+    my ($fmt, $value) = @_;
+    if (! defined($value)){
+        "NA";
+    } else {
+        sprintf($fmt, $value);
+    }
+}
+
+sub _buildAutoTable(){
     my ($self) = @_;
     
     my $at = new SimpleAutoTable();
@@ -49,20 +57,26 @@ sub renderAsTxt()
         $at->addData($trial->getNumCorr($block),                   "#Cor", $block);
         $at->addData($trial->getNumFalseAlarm($block),             "#FA", $block);
         $at->addData($trial->getNumMiss($block),                   "#Miss", $block);
-        $str = sprintf($metric->combPrintFormat(),
-                       $metric->combBlockCalc($trial->getNumMiss($block), $trial->getNumFalseAlarm($block), $block));
-        $at->addData($str,                                         $metric->combLab(), $block);
-        $str = sprintf($metric->errFAPrintFormat(),
+
+        $str = &_PN($metric->errFAPrintFormat(),
                        $metric->errFABlockCalc($trial->getNumFalseAlarm($block), $block));
         $at->addData($str,                                         $metric->errFALab(), $block);
-        $str = sprintf($metric->errMissPrintFormat(),
+
+        $str = &_PN($metric->errMissPrintFormat(),
                        $metric->errMissBlockCalc($trial->getNumMiss($block), $block));
         $at->addData($str,                                         $metric->errMissLab(), $block);
+
+        $str = &_PN($metric->combPrintFormat(),
+                       $metric->combBlockCalc($trial->getNumMiss($block), $trial->getNumFalseAlarm($block), $block));
+        $at->addData($str,                            
+                     $metric->combLab(), $block);
+
         $combData{$block}{MMISS} = $trial->getNumMiss($block);
         $combData{$block}{MFA} = $trial->getNumFalseAlarm($block);
     }
-    my ($combAvg, $combSSD, $missAvg, $missSSD, $faAvg, $faSSD) = 
+    my ($BScombAvg, $BScombSSD, $BSmissAvg, $BSmissSSD, $BSfaAvg, $BSfaSSD) = 
         $metric->combBlockSetCalc(\%combData);
+        
     my ($refSum, $refAvg, $refSSD) = $trial->getTotNumTarg(); 
     my ($corrSum, $corrAvg, $corrSSD) = $trial->getTotNumCorr(); 
     my ($faSum, $faAvg, $faSSD) = $trial->getTotNumFalseAlarm(); 
@@ -73,32 +87,50 @@ sub renderAsTxt()
     $at->addData("--------",                "#Cor",  "----------");
     $at->addData("--------",                "#FA",   "----------");
     $at->addData("--------",                "#Miss", "----------");
-    $at->addData("--------",     $metric->combLab(), "----------");
     $at->addData("--------",    $metric->errFALab(), "----------");
     $at->addData("--------",  $metric->errMissLab(), "----------");
+    $at->addData("--------",     $metric->combLab(), "----------");
 
     $at->addData($refSum,                   "#Ref",  "Sum");
     $at->addData($corrSum,                  "#Cor",  "Sum");
     $at->addData($faSum,                    "#FA",   "Sum");
     $at->addData($missSum,                  "#Miss", "Sum");
 
-    $at->addData(sprintf("%.2f", $refAvg),    "#Ref",    "Average");
-    $at->addData(sprintf("%.2f", $corrAvg),   "#Cor",    "Average");
-    $at->addData(sprintf("%.2f", $faAvg),     "#FA",     "Average");
-    $at->addData(sprintf("%.2f", $missAvg),   "#Miss",   "Average");
-    $at->addData(sprintf($metric->combPrintFormat(), $combAvg),    $metric->combLab(),    "Average");
-    $at->addData(sprintf($metric->errFAPrintFormat(), $faAvg),     $metric->errFALab(),   "Average");
-    $at->addData(sprintf($metric->errMissPrintFormat(), $missAvg), $metric->errMissLab(), "Average");
+    $at->addData(&_PN("%.2f", $refAvg),    "#Ref",    "Average");
+    $at->addData(&_PN("%.2f", $corrAvg),   "#Cor",    "Average");
+    $at->addData(&_PN("%.2f", $faAvg),     "#FA",     "Average");
+    $at->addData(&_PN("%.2f", $missAvg),   "#Miss",   "Average");
+    $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     $metric->errFALab(),   "Average");
+    $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissAvg), $metric->errMissLab(), "Average");
+    $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    $metric->combLab(),    "Average");
 
-    $at->addData(sprintf("%.2f", $refSSD),    "#Ref",    "SSD");
-    $at->addData(sprintf("%.2f", $corrSSD),   "#Cor",    "SSD");
-    $at->addData(sprintf("%.2f", $faSSD),     "#FA",     "SSD");
-    $at->addData(sprintf("%.2f", $missSSD),   "#Miss",   "SSD");
-    $at->addData(sprintf($metric->combPrintFormat(), $combSSD),    $metric->combLab(),    "SSD");
-    $at->addData(sprintf($metric->errFAPrintFormat(), $faSSD),     $metric->errFALab(),   "SSD");
-    $at->addData(sprintf($metric->errMissPrintFormat(), $missSSD), $metric->errMissLab(), "SSD");
+    $at->addData(&_PN("%.2f", $refSSD),    "#Ref",    "SSD");
+    $at->addData(&_PN("%.2f", $corrSSD),   "#Cor",    "SSD");
+    $at->addData(&_PN("%.2f", $faSSD),     "#FA",     "SSD");
+    $at->addData(&_PN("%.2f", $missSSD),   "#Miss",   "SSD");
+    $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaSSD),     $metric->errFALab(),   "SSD");
+    $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissSSD), $metric->errMissLab(), "SSD");
+    $at->addData(&_PN($metric->combPrintFormat(), $BScombSSD),    $metric->combLab(),    "SSD");
+
+    $at;
+}
+
+sub renderAsTxt(){
+    my ($self) = @_;
     
-    $at->renderTxtTable(2);
+    my $at = $self->_buildAutoTable();
+    
+    ### Add all the parameters:
+    my $info = "Constant parameters:\n";
+    foreach my $key($self->{Trial}->getMetricParamKeys()){
+        $info .= "   $key = ".$self->{Trial}->getMetricParamValue($key)."\n";
+    }
+    foreach my $key($self->{Metric}->getParamKeys()){
+        $info .= "   $key = ".$self->{Metric}->getParamValue($key)."\n";
+    }
+    $info .= "\n";
+    
+    $info . $at->renderTxtTable(2);
 }
 
 1;
