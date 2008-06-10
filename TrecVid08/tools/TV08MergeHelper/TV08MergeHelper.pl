@@ -765,12 +765,14 @@ sub _ovc_frameshift {
   my ($ao, $el) = @_;
 
   my $mpd = &_ovc_get_file_mpd($ao, $el);
-  # If the file's framespan middlepoint distance is 0, it means they use they have the same framespan, so they are not shifted from one to the other
+  # If the file's framespan middlepoint distance is differnt from 0,
+  # it means they are shifted from one to the other
   return(undef) if ($mpd == 0);
 
   my $ov = &_ovc_get_file_ov($ao, $el);
   # We get a ViperFramespan if there is an overlap at all or 'undef' otherwise
-  # if the files do not overlap, we should not have to worry about a possible observation continuation
+  # if the files do not overlap, we should not have to worry
+  # about a possible observation continuation
   return(undef) if (! defined $ov);
 
   # Do the observations overlap with the file overlap areas ?
@@ -791,10 +793,13 @@ sub _ovc_samefs {
   my ($ao, $el) = @_;
 
   my $mpd = &_ovc_get_file_mpd($ao, $el);
-  # If the file's framespan middlepoint distance is 0, it means they use they have the same framespan, so they are not shifted from one to the other
+  # If the file's framespan middlepoint distance is 0, it means they use 
+  # they have the same framespan (or that one is exactly at the center of
+  # the other), so they are not shifted from one to the other
   return(undef) if ($mpd != 0);
 
-  # Both observations are in the same fs_file; let us see if the observations overlaps
+  # Both observations are in the same fs_file; let us see if the
+  # observations overlaps
   # If they do, the function returns either undef or a ViperFramespan
   # which is what we return also, so ...
   return(&_ovc_do_fs_overlap_obs2obs($ao, $el));
@@ -970,19 +975,19 @@ XML comments are added within output files for each modifications to I<Events>, 
 
 =head1 PREREQUISITES
 
-B<TV08MergeHelper> input files need to pass the B<TV08ViperValidator> validation process, and relies on a few external software and files.
+B<TV08MergeHelper> input files need to pass the B<TV08ViperValidator> validation process, and relies on some external software and files.
 
 =over
 
 =item B<SOFTWARE> 
 
-I<xmllint> (part of I<libxml2>) (at least version 2.6.30) is required to perform the syntaxic validation of the source file.
+I<xmllint> (part of I<libxml2>, see S<http://www.xmlsoft.org/>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
 If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
 
 =item B<FILES>
 
-The syntaxic validation requires some XML schema files (full list can be obtained using the B<--usage> option).
-It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> envitonment varialbe.
+The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
+It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> environment variable.
 You should not have to specify their location, if you have performed an install and have set the global environment variables.
 
 =item B<GLOBAL ENVIRONMENT VARIABLES>
@@ -1012,9 +1017,9 @@ Allows you to specify a different directory for the B<TrecVid08> libraries.
 
 =head1 GENERAL NOTES
 
-B<TV08MergeHelper> expect that the file can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--usage> for files list).
+B<TV08MergeHelper> expects that the file can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
 
-B<TV08MergeHelper> will ignore the I<config> section of the XML file, as well as disard any xml comment(s).
+B<TV08MergeHelper> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
 
 =head1 OPTIONS
 
@@ -1022,7 +1027,7 @@ B<TV08MergeHelper> will ignore the I<config> section of the XML file, as well as
 
 =item B<--ecfhelperfile> [I<file.csv>]
 
-Ask B<TV08MergeHelper> to generate a CVS I<file.csv> (if provided, standard output otherwise) containing an entry per Viper file read containing information required to help in the generation of an ECF file.
+Ask B<TV08MergeHelper> to generate a CVS I<file.csv> (if provided, standard output otherwise) containing an entry per Viper file with information required to help in the generation of an ECF file.
 
 =item B<--fps> I<fps>
 
@@ -1058,7 +1063,7 @@ Find I<Event> I<Observation> overlap found within the framespan where the I<Obse
 
 =item B<--TrecVid08xsd> I<location>
 
-Specify the default location of the required XSD files (use B<--usage> to get the list of required files).
+Specify the default location of the required XSD files (use B<--help> to get the list of required files).
 Can also be set using the B<TV08_XSDPATH> environment variable.
 
 =item B<--version>
@@ -1097,7 +1102,7 @@ By checking that for each pair of comparable I<Observations>, their file framesp
 
 =item *
 the list of B<shift_overlap> I<Event> I<Observations> overlaps.
-By checking that for each pair of comparable I<Observations>, the file framespan range is different for two I<Observations>' file (ie the files middlepoint distance is not zero), it will find the I<Event> I<Observations> that overlap wihtin the files overlap zone (if file1 as a framespan range of 1:100 and file2 50:200, the overlap zone is 50:100).
+By checking that for each pair of comparable I<Observations>, the file framespan range is different for two I<Observations>' file (ie the files middlepoint distance is not zero), it will find the I<Event> I<Observations> that overlap within the files overlap zone (if file1 as a framespan range of 1:100 and file2 50:200, the overlap zone is 50:100).
 
 =back
 

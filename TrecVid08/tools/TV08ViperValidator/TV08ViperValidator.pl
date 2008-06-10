@@ -311,7 +311,7 @@ Will perform a semantic validation of the Viper XML file(s) provided.
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
 - Program will ignore the <config> section of the XML file.
-- Program will disard any xml comment(s).
+- Program will discard any xml comment(s).
 - List of recognized events: $ro
 - 'TrecVid08xsd' files are: $xsdfiles
 EOF
@@ -365,23 +365,23 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
 
 =head1 DESCRIPTION
 
-B<TV08ViperValidator> performs a syntaxic and semantic validation of the Viper XML file(s) provided on the command line. It can I<validate> reference files (see B<--gtf>) as well as system files. It can also rewrite validated files into another directory using the same filename as the original (see B<--write>), and only keep a few selected events into the output file (see B<--limitto>). To obtain a list of recognized events, see B<--usage>.
+B<TV08ViperValidator> performs a syntactic and semantic validation of the Viper XML file(s) provided on the command line. It can I<validate> reference files (see B<--gtf>) as well as system files. It can also rewrite validated files into another directory using the same filename as the original (see B<--write>), and only keep a few selected events into the output file (see B<--limitto>). To obtain a list of recognized events, see B<--help>.
 
 =head1 PREREQUISITES
 
-B<TV08ViperValidator> relies on a few external software and files.
+B<TV08ViperValidator> relies on some external software and files.
 
 =over
 
 =item B<SOFTWARE> 
 
-I<xmllint> (part of I<libxml2>) (at least version 2.6.30) is required to perform the syntaxic validation of the source file.
+I<xmllint> (part of I<libxml2>, see S<http://www.xmlsoft.org/>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
 If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
 
 =item B<FILES>
 
-The syntaxic validation requires some XML schema files (full list can be obtained using the B<--usage> option).
-It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> envitonment varialbe.
+The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
+It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> environment variable.
 You should not have to specify their location, if you have performed an install and have set the global environment variables.
 
 =item B<GLOBAL ENVIRONMENT VARIABLES>
@@ -411,9 +411,9 @@ Allows you to specify a different directory for the B<TrecVid08> libraries.
 
 =head1 GENERAL NOTES
 
-B<TV08ViperValidator> expect that the file can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--usage> for files list).
+B<TV08ViperValidator> expect that the file can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
 
-B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well as disard any xml comment(s).
+B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
 
 =head1 OPTIONS
 
@@ -438,7 +438,7 @@ Display this man page.
 
 =item B<--TrecVid08xsd> I<location>
 
-Specify the default location of the required XSD files (use B<--usage> to get the list of required files).
+Specify the default location of the required XSD files (use B<--help> to get the list of required files).
 Can also be set using the B<TV08_XSDPATH> environment variable.
 
 =item B<--version>
