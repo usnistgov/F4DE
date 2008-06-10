@@ -992,46 +992,6 @@ sub get_unique_id {
 
 ######################################## Scoring prerequisites
 
-sub _numerically {
-  return ($a <=> $b);
-}
-
-#####
-
-sub _reorder_array {
-  my @ts = @_;
-
-  @ts = sort _numerically @ts;
-
-  return(@ts);
-}
-
-#####
-
-sub _min_max {
-  my @v = &_reorder_array(@_);
-
-  return($v[0], $v[-1]);
-}
-
-#####
-
-sub _min {
-  my @v = &_min_max(@_);
-
-  return($v[0]);
-}
-
-#####
-
-sub _max {
-  my @v = &_min_max(@_);
-
-  return($v[-1]);
-}
-
-#####
-
 sub _get_obs_framespan_core {
   my ($self) = @_;
 
@@ -1268,8 +1228,8 @@ sub joint_kernel {
   } # implicit "else"
 
   my $TimeCongru_Osi_Orj 
-    = ( _min($End_Orj, $End_Osi) - _max($Beg_Orj, $Beg_Osi) )
-      / _max((1/25), $Dur_Orj);
+    = ( MMisc::min($End_Orj, $End_Osi) - MMisc::max($Beg_Orj, $Beg_Osi) )
+      / MMisc::max((1/25), $Dur_Orj);
 
   my $DecScoreCongru_Osi
     = ($RangeDec_s == 0) ? 1 :
