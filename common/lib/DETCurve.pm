@@ -56,7 +56,7 @@ sub new
 	die "Error: Style must be '(pooled|blocked|block=\\S+)' not '$style'" if ($style !~ /^(pooled|blocked|block=(\S+))$/);
 	die "Error: Combined metric must have the output of combType() be 'maximizable|minimizable'" 
 	   if ($metric->combType() !~ /^(maximizable|minimizable)$/);
-    $self->{MAXIMIZEBESTCOMB} = ($metric->combType() eq "maximizable");
+    $self->{MAXIMIZEBESTC} = ($metric->combType() eq "maximizable");
 	
 	if ($style =~ /^(pooled|blocked)$/)
 	{
@@ -203,9 +203,11 @@ sub blockWeightedUnitTest()
     $emptyTrial->addTrial("she", undef, "OMITTED", 1);
     $emptyTrial->addTrial("she", undef, "OMITTED", 1);
 
-    my $emptydet = new DETCurve($emptyTrial, 
-				new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial),
-				"blocked", "footitle", \@isolinecoef);
+    my $met = new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial);
+    if (ref($met) ne "MetricTestStub"){
+        die "Error: Unable to create a MetricTestStub object with message '$met'\n";
+    }
+    my $emptydet = new DETCurve($emptyTrial, $met, "blocked", "footitle", \@isolinecoef);
     die "Error: Empty det should not be successful()" if ($emptydet->successful());
     print "  OK\n";
 
@@ -386,6 +388,16 @@ sub readFromFile
     $VAR1;
 }
 
+sub isCompatible(){
+    my ($self, $DET2) = @_;
+
+    #Make sure the metric objects are the same
+    return 0 if (! $self->{METRIC}->isCompatible($DET2->{METRIC}));
+    return 0 if (! $self->{TRIALS}->isCompatible($DET2->{TRIALS}));
+    
+    return 1;    
+}
+
 sub successful
 {
     my ($self) = @_;
@@ -420,6 +432,16 @@ sub getBestCombMFA{
 sub getStyle{
     my $self = shift;
     $self->{STYLE}
+}
+
+sub getTrials(){
+    my ($self) = @_;
+    $self->{TRIALS};
+}
+
+sub getMetric(){
+    my ($self) = @_;
+    $self->{METRIC};
 }
 
 sub getDETPng(){
@@ -590,6 +612,7 @@ sub Compute_blocked_DET_points
     my $numBlocks = 0;
     my $previousAvgMmiss = 0;
     my $previousAvgMfa = 0;
+    my $findMaxComb = ($self->{METRIC}->combType() eq "maximizable" ? 1 : 0);
     
     ### Reduce the block set to only ones with targets and setup the DS!
     foreach $block($trial->getBlockIDs())
@@ -616,15 +639,15 @@ sub Compute_blocked_DET_points
     $self->{MINSCORE} = $minScore;
     $self->{MAXSCORE} = $maxScore;
     
-    if ($numBlocks <= 1)
-    {
-		$self->{MESSAGES} .= "WARNING: '".$self->{TRIALS}->getBlockId()."' weighted DET curves can not be computed with $numBlocks ".$self->{TRIALS}->getBlockId()."s\n";
-		return undef;
-    }
+#    if ($numBlocks <= 1)
+#    {
+#		$self->{MESSAGES} .= "WARNING: '".$self->{TRIALS}->getBlockId()."' weighted DET curves can not be computed with $numBlocks ".$self->{TRIALS}->getBlockId()."s\n";
+#		return undef;
+#    }
 
     if (!defined($self->{MINSCORE}) || !defined($self->{MAXSCORE}))
     {
-		$self->{MESSAGES} .= "WARNING: '".$self->{TRIALS}->getBlockId()."' weighted DET curves can not be computed, no scores exist\n";
+		$self->{MESSAGES} .= "WARNING: '".$self->{TRIALS}->getBlockId()."' weighted DET curves can not be computed, no detection scores exist for block\n";
 		return undef;
     }
 
@@ -655,13 +678,21 @@ sub Compute_blocked_DET_points
 		
 		push(@Outputs, [ ( $minScore, $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks ) ] );
 
-		if ($TWComb > $self->{BESTCOMB}{COMB})
-		{
+		if ($findMaxComb){
+		  if ($TWComb > $self->{BESTCOMB}{COMB}) {
 			$self->{BESTCOMB}{DETECTIONSCORE} = $minScore;
 			$self->{BESTCOMB}{COMB} = $TWComb;
 			$self->{BESTCOMB}{MFA} = $mFa;
 			$self->{BESTCOMB}{MMISS} = $mMiss;
-		}
+		  }
+        } else {
+		  if ($TWComb < $self->{BESTCOMB}{COMB}) {
+			$self->{BESTCOMB}{DETECTIONSCORE} = $minScore;
+			$self->{BESTCOMB}{COMB} = $TWComb;
+			$self->{BESTCOMB}{MFA} = $mFa;
+			$self->{BESTCOMB}{MMISS} = $mMiss;
+		  }
+        } 
 		
 		$prevMin = $minScore;
     }
@@ -911,7 +942,7 @@ sub write_gnuplot_threshold_header{
 }
 
 sub write_gnuplot_DET_header{
-    my($self, $FP, $title, $x_min, $x_max, $y_min, $y_max, $keyLoc) = @_;
+    my($self, $FP, $title, $x_min, $x_max, $y_min, $y_max, $keyLoc, $includeRandom, $xScale, $yScale) = @_;
 
     my($p_x_min, $p_x_max) = ( ppndf($x_min/100), ppndf($x_max/100) );
     my($p_y_min, $p_y_max) = ( ppndf($y_min/100), ppndf($y_max/100) );
@@ -925,23 +956,49 @@ sub write_gnuplot_DET_header{
     print $FP "set noxzeroaxis\n";
     print $FP "set noyzeroaxis\n";
     if (defined($keyLoc)){
-	print $FP "set key $keyLoc spacing .5\n";
+  	  print $FP "set key $keyLoc spacing .5\n";
     }
-    print $FP "set size ratio $ratio\n";
-    print $FP "set noxtics\n"; 
-    print $FP "set noytics\n";
+    if ($xScale eq "nd" && $yScale eq "nd"){
+        $ratio = ($p_y_max - $p_y_min) / ($p_x_max - $p_x_min);
+        print $FP "set size ratio $ratio\n";
+    } elsif ($xScale eq "log" && $yScale eq "log"){
+        $ratio = (log($y_max) - log($y_min)) / (log($x_max) - log($x_min));
+        print $FP "set size ratio $ratio\n";
+    } elsif ($xScale eq "lin" && $yScale eq "lin"){
+        $ratio = ($y_max - $y_min) / ($x_max - $x_min);
+        print $FP "set size ratio $ratio\n";
+    }
     print $FP "set title '$title'\n";
-    print $FP "set ylabel '".$self->{METRIC}->errMissLab()." (in %)'\n";
-    print $FP "set xlabel '".$self->{METRIC}->errFALab()." (in %)'\n";
     print $FP "set grid\n";
     print $FP "set pointsize 3\n";
-    
-### Write the tic marks
-    &write_tics($FP, 'ytics', $y_min, $y_max);
-    &write_tics($FP, 'xtics', $x_min, $x_max);
+    print $FP "set ylabel '".$self->{METRIC}->errMissLab()." (in ".$self->{METRIC}->errMissUnitLabel().")'\n";
+    print $FP "set xlabel '".$self->{METRIC}->errFALab()." (in ".$self->{METRIC}->errFAUnitLabel().")'\n";
 
-    print $FP "plot [${p_x_min}:${p_x_max}] [${p_y_min}:${p_y_max}] \\\n";
-    print $FP "   -x title 'Random Performance' with lines 1";
+    if ($xScale eq "nd"){
+        print $FP "set noxtics\n"; 
+        &write_tics($FP, 'xtics', $x_min, $x_max);
+    } elsif ($xScale eq "log"){
+        print $FP "set xtics\n"; 
+        print $FP "set logscale x\n"; 
+    } else {  # linear
+        print $FP "set xtics\n"; 
+    }
+### Write the tic marks
+
+    if ($yScale eq "nd"){
+        print $FP "set noytics\n"; 
+        &write_tics($FP, 'ytics', $y_min, $y_max);
+    } elsif ($yScale eq "log"){
+        print $FP "set ytics\n"; 
+        print $FP "set logscale y\n"; 
+    } else {  # linear
+        print $FP "set ytics\n"; 
+    }
+    
+    my $xrange = ($xScale eq "nd" ? "[${p_x_min}:${p_x_max}]" : "[${x_min}:${x_max}]");
+    my $yrange = ($yScale eq "nd" ? "[${p_y_min}:${p_y_max}]" : "[${y_min}:${y_max}]");
+    print $FP "plot $xrange $yrange \\\n";
+    print $FP "   -x title 'Random Performance' with lines 1" if ($includeRandom);
 
 }
 
@@ -995,24 +1052,39 @@ sub writeMultiDetGraph
 {
     ### $options is a pointer to a hash table to tweak the graph
     my ($fileRoot, $dets, $options) = @_;
-    my ($missStr, $faStr, $combStr) = ( $dets->[0]->{METRIC}->errMissLab(), $dets->[0]->{METRIC}->errFALab(), $dets->[0]->{METRIC}->errCombLab());
+    my ($missStr, $faStr, $combStr) = ( $dets->[0]->{METRIC}->errMissLab(), $dets->[0]->{METRIC}->errFALab(), $dets->[0]->{METRIC}->combLab());
+    my $combType = ($dets->[0]->{METRIC}->combType() eq "minimizable" ? "Min" : "Max");
     my %multiInfo = ();
 
     ### If there's one, do one!!!
     if (scalar(@{ $dets }) == 1){
-	if (! $dets->[0]->writeGNUGraph($fileRoot, $options)){
-	    die "Failed to write single GNUGraph for multidet";
-	}
-	$multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
-	return \%multiInfo;	
+	   if (! $dets->[0]->writeGNUGraph($fileRoot, $options)){
+	        die "Failed to write single GNUGraph for multidet";
+	   }
+	   $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
+	   return \%multiInfo;	
     }
     
     ### Use the options
     my $title = "Combined DET Plot";
     my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $Isolines, $Isopoints) = (0.0001, 40, 5, 98, "top", undef, undef);
+    my ($gnuplotPROG, $xScale, $yScale, $makePNG) = (undef, "nd", "nd", 1);
     
     if (defined $options)
     {
+        if (exists($options->{yScale})){
+           if ($options->{yScale} eq "nd") { $yScale = "nd";         $ymin = 5;   $ymax = 98}
+           elsif ($options->{yScale} eq "log") { $yScale = "log";    $ymin = 0.001; $ymax = 100}
+           elsif ($options->{yScale} eq "linear") { $yScale = "lin"; $ymin = 0;   $ymax = 100}
+           else { print STDERR "Warning: Unknown DET yScale '$options->{yScale}' defaulting to normal deviate\n"; }
+        }    
+        if (exists($options->{xScale})){
+           if ($options->{xScale} eq "nd") { $xScale = "nd";         $xmin = 0.0001; $xmax = 40}
+           elsif ($options->{xScale} eq "log") { $xScale = "log";    $xmin = 0.001;    $xmax = 100}
+           elsif ($options->{xScale} eq "linear") { $xScale = "lin"; $xmin = 0;      $xmax = 100}
+           else { print STDERR "Warning: Unknown DET xScale '$options->{xScale}' defaulting to normal deviate\n"; }
+        }    
+
 		$title = $options->{title} if (exists($options->{title}));
 		$xmin = $options->{Xmin} if (exists($options->{Xmin}));
 		$xmax = $options->{Xmax} if (exists($options->{Xmax}));
@@ -1022,14 +1094,20 @@ sub writeMultiDetGraph
 		$keyLoc = $options->{KeyLoc} if (exists($options->{KeyLoc}));
 		$Isolines = $options->{Isolines} if (exists($options->{Isolines}));
 		$Isopoints = $options->{Isopoints} if (exists($options->{Isopoints}));
+	    $makePNG = $options->{BuildPNG} if (exists($options->{BuildPNG}));
+        $gnuplotPROG = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
     }
 
+    ### Check the metric types to see if the random curve is defined
+    my $includeRandomCurve = 1;
+    $includeRandomCurve = 0 if ($dets->[0]->{METRIC}->errMissUnit() ne "Prob" || $dets->[0]->{METRIC}->errFAUnit() ne "Prob");
+    my $needComma = ($includeRandomCurve ? 1 : 0);
+        
     ### open  the jointPlot
 #    print "Writing DET to GNUPLOT file $fileRoot.*\n";
     open (MAINPLT,"> $fileRoot.plt") ||
 	die("unable to open DET gnuplot file $fileRoot.plt");
-    $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
-    $dets->[0]->write_gnuplot_DET_header(*MAINPLT, $title, $xmin, $xmax, $ymin, $ymax, $keyLoc);
+    $dets->[0]->write_gnuplot_DET_header(*MAINPLT, $title, $xmin, $xmax, $ymin, $ymax, $keyLoc, $includeRandomCurve, $xScale, $yScale);
 
     my @colors = (1..40);  splice(@colors, 0, 1);
 
@@ -1073,7 +1151,11 @@ sub writeMultiDetGraph
 		}
 		
 		close( ISODAT );
-		printf MAINPLT ",\\\n  '$troot' title 'isolines' with lines lt $color";
+		if ($needComma){
+		  printf MAINPLT ",\\\n";
+		}
+		printf MAINPLT "  '$troot' title 'isolines' with lines lt $color";
+		$needComma = 1;
 	}
 	
 	### Draw the isopoints
@@ -1132,10 +1214,14 @@ sub writeMultiDetGraph
 		close( POINTS1DAT );
 		close( POINTS2DAT );
 		close( LINESDAT );
-		printf MAINPLT ",\\\n  '$trootlines' title 'no diff' with lines lt $colorlines" if( $isnodiff );
+		if ($needComma){
+		  printf MAINPLT ",\\\n";
+		}
+		printf MAINPLT "  '$trootlines' title 'no diff' with lines lt $colorlines" if( $isnodiff );
 		printf MAINPLT ",\\\n  '$trootpoints1' notitle with points lt $colorpoints1 pt 6 ps 1";
 		printf MAINPLT ",\\\n  '$trootpoints2' notitle with points lt $colorpoints2 pt 6 ps 1";
-	}
+	    $needComma = 1;
+    }
 	
 	### Write Individual Dets
     for (my $d=0; $d < @$dets; $d++)
@@ -1144,34 +1230,48 @@ sub writeMultiDetGraph
 		
 		if ($dets->[$d]->writeGNUGraph($troot, $options))
 		{
-			my $typeStr = ($dets->[$d]->{STYLE} eq "pooled" ? 
-				   "Pooled ".$dets->[$d]->{TRIALS}->getBlockId()." ".$dets->[$d]->{TRIALS}->getDecisionId() :
-				   $dets->[$d]->{TRIALS}->getBlockId()." Wtd.");
+#			my $typeStr = ($dets->[$d]->{STYLE} eq "pooled" ? 
+#				   "Pooled ".$dets->[$d]->{TRIALS}->getBlockId()." ".$dets->[$d]->{TRIALS}->getDecisionId() :
+#				   $dets->[$d]->{TRIALS}->getBlockId()." Wtd.");
 			my ($scr, $comb, $miss, $fa) = ($dets->[$d]->getBestCombDetectionScore(),
 							 $dets->[$d]->getBestCombComb(),
 							 $dets->[$d]->getBestCombMMiss(),
 							 $dets->[$d]->getBestCombMFA());
 			
 			my $ltitle = "";
-			$ltitle .= $typeStr if (! (defined($options) && exists($options->{lTitleNoDETType})));
+#			$ltitle .= $typeStr if (! (defined($options) && exists($options->{lTitleNoDETType})));
 			$ltitle .= " ".$dets->[$d]->{LINETITLE};
-			$ltitle .= " ".sprintf("Max $combStr=%.3f", $comb) if (! (defined($options) && exists($options->{lTitleNoBestComb})));
-			$ltitle .= " ".sprintf("Scr=%.3f", $scr) if (! (defined($options) && exists($options->{lTitleNoPointInfo})));
-			printf MAINPLT ",\\\n  '$troot.dat.1' using 3:2 title '$ltitle' with lines $colors[$d]";
-			printf MAINPLT ",\\\n  '$troot.dat.2' using 6:5 notitle with points $colors[$d]";
+			$ltitle .= " ".sprintf("$combType $combStr=%.3f", $comb) if (! (defined($options) && exists($options->{lTitleNoBestComb})));
+            $ltitle .= sprintf("=($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr) if (! (defined($options) && exists($options->{lTitleNoPointInfo})));
+  		    if ($needComma){
+		      printf MAINPLT ",\\\n";
+		    }
+		    
+            my ($xcol, $ycol);
+            $xcol = ($xScale eq "nd" ? "3" : "5");
+            $ycol = ($yScale eq "nd" ? "2" : "4");
+    		printf MAINPLT "  '$troot.dat.1' using $xcol:$ycol title '$ltitle' with lines $colors[$d]";
+            $xcol = ($xScale eq "nd" ? "6" : "4");
+            $ycol = ($yScale eq "nd" ? "5" : "3");
+    		printf MAINPLT ",\\\n  '$troot.dat.2' using $xcol:$ycol notitle with points $colors[$d]";
+			$needComma = 1;
 		}
     }
 	
 	print MAINPLT "\n";
     
     close MAINPLT;
-    buildPNG($fileRoot);
+    if ($makePNG){
+        $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
+        buildPNG($fileRoot, (exists($options->{gnuplotPROG}) ? $options->{gnuplotPROG} : undef));
+    }
     \%multiInfo;
 }
 
 sub writeGNUGraph{
     my ($self, $fileRoot, $options) = @_;
     my ($missStr, $faStr, $ combStr) = ( $self->{METRIC}->errMissLab(), $self->{METRIC}->errFALab(), $self->{METRIC}->combLab());
+    my $combType = ($self->{METRIC}->combType() eq "minimizable" ? "Min" : "Max");
 
     if (!defined($self->{POINTS})){
 	print STDERR "WARNING: Writing DET plot to $fileRoot.* failed.  Points not computed\n";
@@ -1181,37 +1281,58 @@ sub writeGNUGraph{
     ### Serialize the file for later usage
     $self->serialize("$fileRoot.srl") unless (defined $options && exists($options->{noSerialize}));
 
-    my $typeStr = ($self->{STYLE} eq "pooled" ? "Pooled ".$self->{TRIALS}->getBlockId()." ".$self->{TRIALS}->getDecisionId() : 
-		   $self->{TRIALS}->getBlockId()." Wtd.");
-    my $title = $typeStr . " Detection Error Tradeoff Curve"; 
-    my ($xmin, $xmax, $ymin, $ymax, $keyLoc) = (0.0001, 40, 5, 98, "top");
+#    my $typeStr = ($self->{STYLE} eq "pooled" ? "Pooled ".$self->{TRIALS}->getBlockId()." ".$self->{TRIALS}->getDecisionId() : 
+#		   $self->{TRIALS}->getBlockId()." Wtd.");
+#    my $title = $typeStr . " Detection Error Tradeoff Curve"; 
+    my $title = "Detection Error Tradeoff Curve"; 
+    my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $makePNG) = (0.0001, 40, 5, 98, "top", 1);
+    my ($gnuplotPROG, $xScale, $yScale) = (undef, "nd", "nd");
     if (defined $options){
 	$title = $options->{title} if (exists($options->{title}));
-	$title = $options->{title} if (exists($options->{title}));
+
+    if (exists($options->{yScale})){
+        if ($options->{yScale} eq "nd") { $yScale = "nd";         $ymin = 5;   $ymax = 98}
+        elsif ($options->{yScale} eq "log") { $yScale = "log";    $ymin = 0.001; $ymax = 100}
+        elsif ($options->{yScale} eq "linear") { $yScale = "lin"; $ymin = 0;   $ymax = 100}
+        else { print STDERR "Warning: Unknown DET yScale '$options->{yScale}' defaulting to normal deviate\n"; }
+    }    
+    if (exists($options->{xScale})){
+        if ($options->{xScale} eq "nd") { $xScale = "nd";         $xmin = 0.0001; $xmax = 40}
+        elsif ($options->{xScale} eq "log") { $xScale = "log";    $xmin = 0.001;    $xmax = 100}
+        elsif ($options->{xScale} eq "linear") { $xScale = "lin"; $xmin = 0;      $xmax = 100}
+        else { print STDERR "Warning: Unknown DET xScale '$options->{xScale}' defaulting to normal deviate\n"; }
+    }    
+
 	$xmin = $options->{Xmin} if (exists($options->{Xmin}));
 	$xmax = $options->{Xmax} if (exists($options->{Xmax}));
 	$ymin = $options->{Ymin} if (exists($options->{Ymin}));
 	$ymax = $options->{Ymax} if (exists($options->{Ymax}));
 	$keyLoc = $options->{KeyLoc} if (exists($options->{KeyLoc}));
+	$makePNG = $options->{BuildPNG} if (exists($options->{BuildPNG}));
+    $gnuplotPROG = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
     }    
     
+    ### Check the metric types to see if the random curve is defined
+    my $includeRandomCurve = 1;
+    $includeRandomCurve = 0 if ($self->{METRIC}->errMissUnit() ne "Prob" || $self->{METRIC}->errFAUnit() ne "Prob");
+        
 #    print "Writing DET to GNUPLOT file $fileRoot.*\n";
     open(PLT,"> $fileRoot.plt") ||
 	die("unable to open DET gnuplot file $fileRoot.plt");
     open(THRESHPLT,"> $fileRoot.thresh.plt") ||
 	die("unable to open DET gnuplot file $fileRoot.thresh.plt");
-    $self->{LAST_GNU_DETFILE_PNG} = "$fileRoot.png";
-    $self->{LAST_GNU_THRESHPLOT_PNG} = "$fileRoot.thresh.png";
-    $self->write_gnuplot_DET_header(*PLT, $title, $xmin, $xmax, $ymin, $ymax, $keyLoc);
+    $self->write_gnuplot_DET_header(*PLT, $title, $xmin, $xmax, $ymin, $ymax, $keyLoc, $includeRandomCurve, $xScale, $yScale);
 
     ### The line data file
+    my $withErrorCurve = 1;
     open(DAT,"> $fileRoot.dat.1") ||
 	die("unable to open DET gnuplot file $fileRoot.dat.1"); 
     print DAT "# DET Graph made by DETCurve\n";
     print DAT "# Trial Params = ".($self->{TRIALS}->getMetricParamsStr())."\n";
     print DAT "# Metric Params = ".($self->{METRIC}->getParamsStr())."\n";
-    print DAT "# DET Type: $typeStr\n";
+#    print DAT "# DET Type: $typeStr\n";
     if ($self->{STYLE} eq "pooled"){
+        $withErrorCurve = 0;
 	print DAT "# score ppndf($missStr) ppndf($faStr) $missStr $faStr $combStr\n";
 	for (my $i=0; $i<@{ $self->{POINTS} }; $i++){
 	    print DAT $self->{POINTS}[$i][0]." ".
@@ -1224,8 +1345,9 @@ sub writeGNUGraph{
     } else {
 	print DAT "# Abbreviations: ssd() is the sample Standard Deviation of a Variable\n";
 	print DAT "#                ppndf() is the normal deviant of a probability. ppndf(.5)=0\n";	
-	print DAT "#                -2SE(v) is v - 2(StandardError(v)) = v - 2 * (sampleStandardDev / sqrt(n))\n";
-	print DAT "# score ppndf($missStr) ppndf($faStr) $missStr $faStr $combStr ppndf(-2SE($missStr)) ppndf(-2SE($faStr)) ppndf(+2SE($missStr)) ppndf(+2SE($faStr)) SE($combStr)\n";
+	print DAT "#                -2SE(v) is v - 2(StandardError(v)) = v - 2 * (sampleStandardDev / sqrt(n-1)\n";
+	print DAT "#                        the value \"NA\" is used when n <= 1\n"; 
+	print DAT "# 1:score 2:ppndf($missStr) 3:ppndf($faStr) 4:$missStr 5:$faStr 6:$combStr 7:ppndf(-2SE($missStr)) 8:ppndf(-2SE($faStr)) 9:ppndf(+2SE($missStr)) 10:ppndf(+2SE($faStr)) 11:-2SE($missStr) 12:-2SE($faStr) 13:+2SE($missStr) 14:+2SE($faStr) 15:SE($combStr)\n";
 	for (my $i=0; $i<@{ $self->{POINTS} }; $i++){
 	    print DAT $self->{POINTS}[$i][0]." ".
 		ppndf($self->{POINTS}[$i][1])." ".
@@ -1233,23 +1355,28 @@ sub writeGNUGraph{
 		$self->{POINTS}[$i][1]." ".
 		$self->{POINTS}[$i][2]." ".
 		$self->{POINTS}[$i][3]." ".
-		ppndf($self->{POINTS}[$i][1] - 2*($self->{POINTS}[$i][4] / sqrt($self->{POINTS}[$i][7]-1)))." ".
-		ppndf($self->{POINTS}[$i][2] - 2*($self->{POINTS}[$i][5] / sqrt($self->{POINTS}[$i][7]-1)))." ".
-		ppndf($self->{POINTS}[$i][1] + 2*($self->{POINTS}[$i][4] / sqrt($self->{POINTS}[$i][7]-1)))." ".
-		ppndf($self->{POINTS}[$i][2] + 2*($self->{POINTS}[$i][5] / sqrt($self->{POINTS}[$i][7]-1)))." ".
-		($self->{POINTS}[$i][2] - 2*($self->{POINTS}[$i][6] / sqrt($self->{POINTS}[$i][7]-1)))." ".
+    	(($self->{POINTS}[$i][7]-1 <= 0) ? "NA" : ppndf($self->{POINTS}[$i][1] - 2*($self->{POINTS}[$i][4] / sqrt($self->{POINTS}[$i][7]-1))))." ".
+		(($self->{POINTS}[$i][7]-1 <= 0) ? "NA" : ppndf($self->{POINTS}[$i][2] - 2*($self->{POINTS}[$i][5] / sqrt($self->{POINTS}[$i][7]-1))))." ".
+		(($self->{POINTS}[$i][7]-1 <= 0) ? "NA" : ppndf($self->{POINTS}[$i][1] + 2*($self->{POINTS}[$i][4] / sqrt($self->{POINTS}[$i][7]-1))))." ".
+		(($self->{POINTS}[$i][7]-1 <= 0) ? "NA" : ppndf($self->{POINTS}[$i][2] + 2*($self->{POINTS}[$i][5] / sqrt($self->{POINTS}[$i][7]-1))))." ".
+    	(($self->{POINTS}[$i][7]-1 <= 0) ? "NA" : ($self->{POINTS}[$i][1] - 2*($self->{POINTS}[$i][4] / sqrt($self->{POINTS}[$i][7]-1))))." ".
+		(($self->{POINTS}[$i][7]-1 <= 0) ? "NA" : ($self->{POINTS}[$i][2] - 2*($self->{POINTS}[$i][5] / sqrt($self->{POINTS}[$i][7]-1))))." ".
+		(($self->{POINTS}[$i][7]-1 <= 0) ? "NA" : ($self->{POINTS}[$i][1] + 2*($self->{POINTS}[$i][4] / sqrt($self->{POINTS}[$i][7]-1))))." ".
+		(($self->{POINTS}[$i][7]-1 <= 0) ? "NA" : ($self->{POINTS}[$i][2] + 2*($self->{POINTS}[$i][5] / sqrt($self->{POINTS}[$i][7]-1))))." ".
+		(($self->{POINTS}[$i][7]-1 <= 0) ? "NA" : ($self->{POINTS}[$i][2] - 2*($self->{POINTS}[$i][6] / sqrt($self->{POINTS}[$i][7]-1))))." ".
 		"\n";
+		$withErrorCurve = 0 if ($self->{POINTS}[$i][7]-1 <= 0)
 	}
     }
     close DAT;
-    print PLT ",\\\n";
+    print PLT ",\\\n" if ($includeRandomCurve);
     
     ### The points data file
     open(DAT,"> $fileRoot.dat.2") ||
 	die("unable to open DET gnuplot file $fileRoot.dat.2"); 
     print DAT "# Points for DET Graph made by DETCurve\n";
-    print DAT "# DET Type: $typeStr\n";
-    print DAT "# Max${combStr}DetectionScore Max${combStr}Value $missStr $faStr ppndf($missStr) ppndf($missStr)\n";
+#     print DAT "# DET Type: $typeStr\n";
+    print DAT "# 1:Max${combStr}DetectionScore 2:Max${combStr}Value 3:$missStr 4:$faStr 5:ppndf($missStr) 6:ppndf($missStr)\n";
     my ($scr, $comb, $miss, $fa) = ($self->getBestCombDetectionScore(),
 				     $self->getBestCombComb(),
 				     $self->getBestCombMMiss(),
@@ -1257,49 +1384,68 @@ sub writeGNUGraph{
     print DAT "$scr $comb $miss $fa ".ppndf($miss)." ".ppndf($fa)."\n";
     close DAT; 
     my $ltitle = "$self->{LINETITLE}";
-    $ltitle .= sprintf(" Max $combStr=%.3f", $comb)
-	if (! (defined($options) && exists($options->{lTitleNoBestComb})));
+    $ltitle .= sprintf(" $combType $combStr=%.3f", $comb)
+	  if (! (defined($options) && exists($options->{lTitleNoBestComb})));
     $ltitle .= sprintf("=($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr)
-	if (! (defined($options) && exists($options->{lTitleNoPointInfo})));
-    printf PLT "    '$fileRoot.dat.1' using 3:2 title '$ltitle' with lines 2, \\\n";
-    printf PLT "    '$fileRoot.dat.2' using 6:5 notitle with points 2";
+	  if (! (defined($options) && exists($options->{lTitleNoPointInfo})));
     
-    if ($self->{STYLE} ne "pooled"){
-	print PLT ", \\\n";
-        printf PLT "    '$fileRoot.dat.1' using 8:7 title '+/- 2 Standard Error' with lines 3, \\\n";
-	printf PLT "    '$fileRoot.dat.1' using 10:9 notitle with lines 3";
+    my ($xcol, $ycol);
+    $xcol = ($xScale eq "nd" ? "3" : "5");
+    $ycol = ($yScale eq "nd" ? "2" : "4");
+    printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol title '$ltitle' with lines 2, \\\n";
+    $xcol = ($xScale eq "nd" ? "6" : "4");
+    $ycol = ($yScale eq "nd" ? "5" : "3");
+    printf PLT "    '$fileRoot.dat.2' using $xcol:$ycol notitle with points 2";
+    
+    if ($withErrorCurve){
+	    print PLT ", \\\n";
+        $xcol = ($xScale eq "nd" ? "8" : "12");
+        $ycol = ($yScale eq "nd" ? "7" : "13");
+        printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol title '+/- 2 Standard Error' with lines 3, \\\n"; 
+        $xcol = ($xScale eq "nd" ? "10" : "14");
+        $ycol = ($yScale eq "nd" ? "9" : "13");
+  	    printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol notitle with lines 3";
     }
     print PLT "\n";
     close PLT;
-    buildPNG($fileRoot);
-
+    if ($makePNG){
+        buildPNG($fileRoot, $gnuplotPROG);
+        $self->{LAST_GNU_DETFILE_PNG} = "$fileRoot.png";
+    }
+    
     my $pad = 0.00;
     if ($self->{MINSCORE} == $self->{MAXSCORE}){
 	$pad = 0.000001;
     }
-    $self->write_gnuplot_threshold_header(*THRESHPLT, "$typeStr Threshold Plot for $self->{LINETITLE}", $self->{MINSCORE}-$pad, $self->{MAXSCORE}+$pad);
-    print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title 'P($missStr)', \\\n";
-    print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title 'P($faStr)', \\\n";
+#    $self->write_gnuplot_threshold_header(*THRESHPLT, "$typeStr Threshold Plot for $self->{LINETITLE}", $self->{MINSCORE}-$pad, $self->{MAXSCORE}+$pad);
+    $self->write_gnuplot_threshold_header(*THRESHPLT, "Threshold Plot for $self->{LINETITLE}", $self->{MINSCORE}-$pad, $self->{MAXSCORE}+$pad);
+    print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title '$missStr', \\\n";
+    print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title '$faStr', \\\n";
     print THRESHPLT "  '$fileRoot.dat.1' using 1:6 title '$combStr', \\\n";
-    print THRESHPLT "  '$fileRoot.dat.2' using 1:2 title 'Max $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points";
+    print THRESHPLT "  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points";
     if (defined($self->getSystemDecisionValue())){
 	print THRESHPLT ", \\\n  ".$self->getSystemDecisionValue().
 	    " with lines title 'Hard Decsion Value'";
     }
     print THRESHPLT "\n";
     close THRESHPLT;
-    buildPNG($fileRoot.".thresh");
+    if ($makePNG){
+        buildPNG($fileRoot.".thresh", $gnuplotPROG);
+        $self->{LAST_GNU_THRESHPLOT_PNG} = "$fileRoot.thresh.png";
+    }
     1;
 }
 
 ## This is NOT and instance method
 sub buildPNG
 {
-	my ($fileRoot) = @_;
+	my ($fileRoot, $gnuplot) = @_;
 
+    $gnuplot = "gnuplot" if (!defined($gnuplot));
+    
 	## Use this with gnuplot 3.X
 #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
-    system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium size 768,2048 crop\n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
+    system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium size 768,2048 crop\n\" if (\$_ =~ /set terminal/)\' | $gnuplot > $fileRoot.png");
 }
 
 1;
