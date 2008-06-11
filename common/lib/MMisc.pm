@@ -166,6 +166,43 @@ sub max {
   return($v[-1]);
 }
 
+##########
+
+sub writeTo {
+  my ($file, $ext, $printfn, $append, $txt) = @_;
+
+  my $ofile = "";
+  if ((defined $file) && (! &is_blank($file))) {
+    if (-d $file) {
+      print "WARNING: Provided file ($file) is a directory, will write to STDOUT\n";
+    } else {
+      $ofile = $file;
+      $ofile .= $ext;
+    }
+  }
+
+  my $da = 0;
+  if (! &is_blank($ofile)) {
+    my $tofile = $ofile;
+    if ($append) {
+      $da = 1 if (-f $ofile);
+      open FILE, ">>$ofile" or ($ofile = "");
+    } else {
+      open FILE, ">$ofile" or ($ofile = "");
+    }
+    print "WARNING: Could not create \'$tofile\' (will write to STDOUT): $!\n"
+      if (&is_blank($ofile));
+  }
+
+  if (! &is_blank($ofile)) {
+    print FILE $txt;
+    close FILE;
+    print((($da) ? "Appended to file:" : "Wrote:") . "$ofile\n") if ($printfn);
+  } else {
+    print $txt;
+  }
+}
+
 ############################################################
 
 1;
