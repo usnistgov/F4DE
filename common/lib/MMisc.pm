@@ -169,15 +169,18 @@ sub max {
 ##########
 
 sub writeTo {
-  my ($file, $ext, $printfn, $append, $txt) = @_;
+  my ($file, $addend, $printfn, $append, $txt, $filecomment, $stdoutcomment) = @_;
+
+  my $rv = 1;
 
   my $ofile = "";
   if ((defined $file) && (! &is_blank($file))) {
     if (-d $file) {
       print "WARNING: Provided file ($file) is a directory, will write to STDOUT\n";
+      $rv = 0;
     } else {
       $ofile = $file;
-      $ofile .= $ext;
+      $ofile .= $addend if (! &is_blank($addend));
     }
   }
 
@@ -190,17 +193,24 @@ sub writeTo {
     } else {
       open FILE, ">$ofile" or ($ofile = "");
     }
-    print "WARNING: Could not create \'$tofile\' (will write to STDOUT): $!\n"
-      if (&is_blank($ofile));
+    if (&is_blank($ofile)) {
+      print "WARNING: Could not create \'$tofile\' (will write to STDOUT): $!\n";
+      $rv = 0;
+    }
   }
 
   if (! &is_blank($ofile)) {
     print FILE $txt;
     close FILE;
-    print((($da) ? "Appended to file:" : "Wrote:") . "$ofile\n") if ($printfn);
-  } else {
-    print $txt;
+    print((($da) ? "Appended to file:" : "Wrote:") . " $ofile$filecomment\n") 
+      if ($printfn);
+    return(1); # Always return ok: we requested to write to a file and could
   }
+
+  # Default: write to STDOUT
+  print $stdoutcomment;
+  print $txt;
+  return($rv); # Return 0 only if we requested a file write and could not, 1 otherwise
 }
 
 ############################################################
