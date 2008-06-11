@@ -26,7 +26,7 @@ my(@tics) = (0.00001, 0.0001, 0.001, 0.004, .01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2
 
 sub new
 {
-	my ($class, $trials, $metric, $style, $lineTitle, $listIsolineCoef) = @_;
+	my ($class, $trials, $metric, $style, $lineTitle, $listIsolineCoef, $gzipPROG) = @_;
 	
 	my $self =
 	{ 
@@ -47,6 +47,8 @@ sub new
 		ISOLINE_COEFFICIENTS => $listIsolineCoef,
 		ISOLINE_COEFFICIENTS_INDEX => 0,		
 		ISOPOINTS => {},
+		GZIPPROG => (defined($gzipPROG) ? $gzipPROG : "gzip"),
+		POINT_COMPUTATION_ATTEMPTED => 0,
 	};
 	
 	bless $self;
@@ -66,8 +68,6 @@ sub new
 	{
 		die "Error: Curve style '$style' not implemented";
 	}
-	
-	$self->computePoints();
 	
 	return $self;
 }
@@ -99,7 +99,7 @@ sub unitTest
 ###POOLED###	print " Computing pooled curve...";
 ###POOLED####	print $trial->dump(*STDOUT,"");
 ###POOLED###	
-###POOLED###	my $det = new DETCurve($trial, "pooled", "footitle", 1, 0.1, 0.0001, \@isolinecoef);
+###POOLED###	my $det = new DETCurve($trial, "pooled", "footitle", 1, 0.1, 0.0001, \@isolinecoef, undef );
 ###POOLED###	print "  OK\n";
 ###POOLED###
 ###POOLED###    ## This was built from DETtesting-v2 with MissingTarg=0, MissingNonTarg=0
@@ -149,7 +149,7 @@ sub unitTest
 ###POOLED###    $trial->addTrial("he", undef, "OMITTED", 1);
 ###POOLED###    $trial->addTrial("he", undef, "OMITTED", 1);
 ###POOLED###    $trial->addTrial("he", undef, "OMITTED", 1);
-###POOLED###    my $detFixDenom = new DETCurve($trial, "pooled", undef, "TargetDenom", 1.0, 0.1, 0.0001, \@isolinecoef);
+###POOLED###    my $detFixDenom = new DETCurve($trial, "pooled", undef, "TargetDenom", 1.0, 0.1, 0.0001, \@isolinecoef, undef);
 ###POOLED###    print "  OK\n";
 ###POOLED####	$detFixDenom->writeGNUGraph("fooDen");
 ###POOLED###    @points = ();
@@ -207,7 +207,7 @@ sub blockWeightedUnitTest()
     if (ref($met) ne "MetricTestStub"){
         die "Error: Unable to create a MetricTestStub object with message '$met'\n";
     }
-    my $emptydet = new DETCurve($emptyTrial, $met, "blocked", "footitle", \@isolinecoef);
+    my $emptydet = new DETCurve($emptyTrial, $met, "blocked", "footitle", \@isolinecoef, undef);
     die "Error: Empty det should not be successful()" if ($emptydet->successful());
     print "  OK\n";
 
@@ -247,7 +247,7 @@ sub blockWeightedUnitTest()
 
     my $blockdetOrig = new DETCurve($trial, 
 				    new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
-				    "blocked", "footitle", \@isolinecoef);
+				    "blocked", "footitle", \@isolinecoef, undef);
     print "  OK\n";
     print " Serializing to a file...";
     my $sroot = "/tmp/serialize";
@@ -343,10 +343,10 @@ sub unitTestMultiDet{
 
     my $det1 = new DETCurve($trial, 
 			    new MetricSTD({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
-			    "pooled", "DET1", \@isolinecoef);
+			    "pooled", "DET1", \@isolinecoef, undef);
     my $det2 = new DETCurve($trial2, 
 			    new MetricSTD({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
-			    "pooled", "DET2", \@isolinecoef);
+			    "pooled", "DET2", \@isolinecoef, undef);
     
     DETCurve::writeMultiDetGraph("foomerge", [($det1, $det2)]);
     print DETCurve::writeMultiDetSummary([($det1, $det2)], "text");
@@ -362,18 +362,18 @@ sub serialize
     print FILE Dumper($self); 
     $Data::Dumper::Indent = $orig;
     close FILE;
-    system("gzip -9 -f $file > /dev/null");
+    system("$self->{GZIPPROG} -9 -f $file > /dev/null");
 }
 
 sub readFromFile
 {
-    my ($file) = @_;
+    my ($file, $gzipPROG) = @_;
     my $str = "";
     my $compressed = 0;
     
 	if( ( $file =~ /.+\.gz$/ ) && ( -e $file ) && ( -f $file ) && ( -r $file ) )
 	{
-		system("gzip -d -f $file > /dev/null");
+		system("$gzipPROG -d -f $file > /dev/null");
 		$compressed = 1;
 	}
 
@@ -382,7 +382,7 @@ sub readFromFile
     open (FILE, "$file") || die "Failed to open $file for read";
     while (<FILE>) { $str .= $_ ; }
     close FILE;
-    system("gzip -9 -f $file > /dev/null") if( $compressed );
+    system("$gzipPROG -9 -f $file > /dev/null") if( $compressed );
     my $VAR1;
     eval $str;
     $VAR1;
@@ -401,6 +401,7 @@ sub isCompatible(){
 sub successful
 {
     my ($self) = @_;
+	$self->computePoints();
     defined($self->{POINTS});
 }
 
@@ -411,21 +412,25 @@ sub getMessages{
 
 sub getBestCombDetectionScore{
     my $self = shift;
-    $self->{BESTCOMB}{DETECTIONSCORE}
+	$self->computePoints();
+	$self->{BESTCOMB}{DETECTIONSCORE}
 }
 
 sub getBestCombComb{
     my $self = shift;
+	$self->computePoints();
     $self->{BESTCOMB}{COMB}
 }
 
 sub getBestCombMMiss{
     my $self = shift;
+	$self->computePoints();
     $self->{BESTCOMB}{MMISS}
 }
 
 sub getBestCombMFA{
     my $self = shift;
+	$self->computePoints();
     $self->{BESTCOMB}{MFA}
 }
 
@@ -462,11 +467,13 @@ sub getSerializedDET(){
 sub setSystemDecisionValue{
     my $self = shift;
     my $val = shift;
+	$self->computePoints();
     $self->{SYSTEMDECISIONVALUE} = $val;
 }
 
 sub getSystemDecisionValue{
     my $self = shift;
+	$self->computePoints();
     $self->{SYSTEMDECISIONVALUE};
 }
 
@@ -556,8 +563,8 @@ sub AddIsolineInformation
 	foreach my $b ( keys %{ $blocks } )
 	{
 		# Add info of previous in the block id
-		$self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MFA} = (1-$paramt)*($blocks->{$b}{PREVPFA}) + $paramt*($blocks->{$b}{MFA});
-		$self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MMISS} = (1-$paramt)*($blocks->{$b}{PREVPMISS}) + $paramt*($blocks->{$b}{MMISS});
+		$self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MFA} = (1-$paramt)*($blocks->{$b}{PREVMFA}) + $paramt*($blocks->{$b}{MFA});
+		$self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MMISS} = (1-$paramt)*($blocks->{$b}{PREVMMISS}) + $paramt*($blocks->{$b}{MMISS});
 		# Value function
 		$self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{COMB} = $self->{METRIC}->combCalc($self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MMISS},
 												   $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MFA});
@@ -567,6 +574,12 @@ sub AddIsolineInformation
 sub computePoints
 {
 	my $self = shift;
+	
+	### This function implements the delayed point computation which only occurs IFF the data is requested
+    if ($self->{POINT_COMPUTATION_ATTEMPTED}){
+        return;
+    }
+	$self->{POINT_COMPUTATION_ATTEMPTED} = 1;
 	
 	## For faster computation;
 	$self->{TRIALS}->sortTrials();
@@ -767,11 +780,11 @@ sub computeBlockWeighted
 		    my $NMiss = $blocks->{$b}{TARGi} + $trial->getNumOmittedTarg($b);
 		    my $NFalse = $blocks->{$b}{NONTARGNScr} - $blocks->{$b}{NONTARGi};                                                                                                                                   
 		        ## Caching: Calculate is not yet calculated
-			$blocks->{$b}{MMISS} = $self->{METRIC}->errMissBlockCalc($NMiss, $b);
-			$blocks->{$b}{MFA}   = $self->{METRIC}->errFABlockCalc  ($NFalse, $b);
+			$blocks->{$b}{MMISS} = $NMiss; #$self->{METRIC}->errMissBlockCalc($NMiss, $b);
+			$blocks->{$b}{MFA}   = $NFalse; #$self->{METRIC}->errFABlockCalc  ($NFalse, $b);
 			
 			## Cost function
-			$blocks->{$b}{COMB} = $self->{METRIC}->combCalc($blocks->{$b}{PMISS}, $blocks->{$b}{PFA});
+#			$blocks->{$b}{COMB} = $self->{METRIC}->combCalc($blocks->{$b}{MMISS}, $blocks->{$b}{MFA});
 			
 #		}
 #		else 
@@ -934,7 +947,7 @@ sub write_gnuplot_threshold_header{
     print $FP "set data style lines\n";
     print $FP "set key 1,1\n";
     print $FP "set title '$title'\n";
-    print $FP "set xlabel 'Decision Score'\n";
+    print $FP "set xlabel 'Detection Score'\n";
     print $FP "set grid\n";
 
     print $FP "plot [$min_x:$max_x] [0:1] \\\n";
@@ -1272,14 +1285,12 @@ sub writeGNUGraph{
     my ($self, $fileRoot, $options) = @_;
     my ($missStr, $faStr, $ combStr) = ( $self->{METRIC}->errMissLab(), $self->{METRIC}->errFALab(), $self->{METRIC}->combLab());
     my $combType = ($self->{METRIC}->combType() eq "minimizable" ? "Min" : "Max");
+	$self->computePoints();
 
     if (!defined($self->{POINTS})){
 	print STDERR "WARNING: Writing DET plot to $fileRoot.* failed.  Points not computed\n";
 	return 0;
     }
-
-    ### Serialize the file for later usage
-    $self->serialize("$fileRoot.srl") unless (defined $options && exists($options->{noSerialize}));
 
 #    my $typeStr = ($self->{STYLE} eq "pooled" ? "Pooled ".$self->{TRIALS}->getBlockId()." ".$self->{TRIALS}->getDecisionId() : 
 #		   $self->{TRIALS}->getBlockId()." Wtd.");
@@ -1312,6 +1323,9 @@ sub writeGNUGraph{
     $gnuplotPROG = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
     }    
     
+    ### Serialize the file for later usage
+    $self->serialize("$fileRoot.srl") unless (defined $options && exists($options->{noSerialize}));
+
     ### Check the metric types to see if the random curve is defined
     my $includeRandomCurve = 1;
     $includeRandomCurve = 0 if ($self->{METRIC}->errMissUnit() ne "Prob" || $self->{METRIC}->errFAUnit() ne "Prob");
@@ -1376,17 +1390,18 @@ sub writeGNUGraph{
 	die("unable to open DET gnuplot file $fileRoot.dat.2"); 
     print DAT "# Points for DET Graph made by DETCurve\n";
 #     print DAT "# DET Type: $typeStr\n";
-    print DAT "# 1:Max${combStr}DetectionScore 2:Max${combStr}Value 3:$missStr 4:$faStr 5:ppndf($missStr) 6:ppndf($missStr)\n";
+    print DAT "# 1:Best${combStr}DetectionScore 2:Best${combStr}Value 3:Best$missStr 4:Best$faStr 5:ppndf(Best$missStr) 6:ppndf(Best$faStr) 7:ActualComb 8:Actual$missStr 9:Actual$faStr 10:ppndf(Actual$missStr) 11:ppndf(Actual$faStr)\n";
     my ($scr, $comb, $miss, $fa) = ($self->getBestCombDetectionScore(),
 				     $self->getBestCombComb(),
 				     $self->getBestCombMMiss(),
 				     $self->getBestCombMFA());
-    print DAT "$scr $comb $miss $fa ".ppndf($miss)." ".ppndf($fa)."\n";
+    my ($actComb, $actCombSSD, $actMiss, $actMissSSD, $actFa, $actFaSSD) = $self->{METRIC}->getActualDecisionPerformance();
+    print DAT "$scr $comb $miss $fa ".ppndf($miss)." ".ppndf($fa)." $actComb $actMiss $actFa ".ppndf($actMiss)." ".ppndf($actFa)."\n";
     close DAT; 
     my $ltitle = "$self->{LINETITLE}";
     $ltitle .= sprintf(" $combType $combStr=%.3f", $comb)
 	  if (! (defined($options) && exists($options->{lTitleNoBestComb})));
-    $ltitle .= sprintf("=($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr)
+    $ltitle .= sprintf(" ($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr)
 	  if (! (defined($options) && exists($options->{lTitleNoPointInfo})));
     
     my ($xcol, $ycol);
@@ -1395,7 +1410,10 @@ sub writeGNUGraph{
     printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol title '$ltitle' with lines 2, \\\n";
     $xcol = ($xScale eq "nd" ? "6" : "4");
     $ycol = ($yScale eq "nd" ? "5" : "3");
-    printf PLT "    '$fileRoot.dat.2' using $xcol:$ycol notitle with points 2";
+    printf PLT "    '$fileRoot.dat.2' using $xcol:$ycol notitle with points 2, ";
+    $xcol = ($xScale eq "nd" ? "11" : "9");
+    $ycol = ($yScale eq "nd" ? "10" : "8");
+    printf PLT "    '$fileRoot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points 3";
     
     if ($withErrorCurve){
 	    print PLT ", \\\n";
@@ -1422,7 +1440,8 @@ sub writeGNUGraph{
     print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title '$missStr', \\\n";
     print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title '$faStr', \\\n";
     print THRESHPLT "  '$fileRoot.dat.1' using 1:6 title '$combStr', \\\n";
-    print THRESHPLT "  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points";
+    print THRESHPLT "  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points, \\\n";
+    print THRESHPLT "  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with points";
     if (defined($self->getSystemDecisionValue())){
 	print THRESHPLT ", \\\n  ".$self->getSystemDecisionValue().
 	    " with lines title 'Hard Decsion Value'";
