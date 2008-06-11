@@ -204,8 +204,8 @@ and it returns C<undef>.
 
 sub errFABlockCalc(){
     my ($self, $nFa, $block) = @_;
-    ### The denominator is already checked so no need to return undef
-    $nFa / $self->{TRIALPARAMS}->{TOTALDURATION};
+    ### The denominator is already checked so no need to return undef.  TotalDuration is in seconds!!!!
+    $nFa / ($self->{TRIALPARAMS}->{TOTALDURATION} / 3600);
 }
 
 ####################################################################################################
