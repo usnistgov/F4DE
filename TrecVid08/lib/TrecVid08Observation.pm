@@ -1191,7 +1191,7 @@ sub joint_kernel {
   my ($self, $other, $delta_t, $MinDec_s, $RangeDec_s, $E_t, $E_d) = @_;
 
   # Check the base for a possible comparison (validate, no error, same file, same eventtype)
-  return($self->get_errormsg(), 0)
+  return($self->get_errormsg(), undef)
     if (! $self->is_comparable_to($other));
 
   # For kernel: Can only compare SYS to REF ($self -> $other)
@@ -1201,7 +1201,7 @@ sub joint_kernel {
   $etxt .= "Compared to object can not be a SYSTEM observation"
     if (! $other->get_isgtf());
   # Return yet ?
-  return($etxt, 0) if (! MMisc::is_blank($etxt));
+  return($etxt, undef) if (! MMisc::is_blank($etxt));
 
   # Error ?
   $etxt .= "Problem in calling object (" . $self->get_errormsg() ."). "
@@ -1209,17 +1209,17 @@ sub joint_kernel {
   $etxt .= "Problem in compared to object (" . $other->get_errormsg() ."). "
     if ($other->error());
   # Return yet ?
-  return($etxt, 0) if (! MMisc::is_blank($etxt));
+  return($etxt, undef) if (! MMisc::is_blank($etxt));
 
   ########## Now the scoring can begin
 
   # Kernel (O(s,i), O(r,j)) <=> ($self, $other)
   my ($Beg_Osi, $Mid_Osi, $End_Osi, $Dur_Osi, $Dec_Osi)
     = $self->get_SYS_Beg_Mid_End_Dur_Dec();
-  return("Problem obtaining some element related to the SYS Observation (" . $self->get_errormsg() . ")") if ($self->error());
+  return("Problem obtaining some element related to the SYS Observation (" . $self->get_errormsg() . ")", undef) if ($self->error());
   my ($Beg_Orj, $Mid_Orj, $End_Orj, $Dur_Orj)
     = $other->get_REF_Beg_Mid_End_Dur();
-  return("Problem obtaining some element related to the REF Observation (" . $other->get_errormsg() . ")") if ($other->error());
+  return("Problem obtaining some element related to the REF Observation (" . $other->get_errormsg() . ")", undef) if ($other->error());
   
   if ($Mid_Osi > ($End_Orj + $delta_t)) {
     return("", undef);
@@ -1248,14 +1248,14 @@ sub joint_kernel {
 sub falsealarms_kernel {
   my ($self) = @_;
 
-  return($self->get_errormsg(), 0) if ($self->error());
+  return($self->get_errormsg(), undef) if ($self->error());
 
   my $isgtf = $self->get_isgtf();
-  return($self->get_errormsg(), $isgtf) if ($self->error());
+  return($self->get_errormsg(), undef) if ($self->error());
 
   if ($isgtf) {
     $self->_set_errormsg("Can not generate the \'false alarms kernel\' for a GTF observation");
-    return($self->get_errormsg(), 0);
+    return($self->get_errormsg(), undef);
   }
 
   my $kernel = -1;
@@ -1268,14 +1268,14 @@ sub falsealarms_kernel {
 sub misseddetections_kernel {
   my ($self) = @_;
 
-  return($self->get_errormsg(), 0) if ($self->error());
+  return($self->get_errormsg(), undef) if ($self->error());
 
   my $isgtf = $self->get_isgtf();
-  return($self->get_errormsg(), $isgtf) if ($self->error());
+  return($self->get_errormsg(), undef) if ($self->error());
 
   if (! $isgtf) {
     $self->_set_errormsg("Can only generate the \'missed detections kernel\' for a GTF observation");
-    return($self->get_errormsg(), 0);
+    return($self->get_errormsg(), undef);
   }
 
   my $kernel = 0;
