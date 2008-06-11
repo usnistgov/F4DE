@@ -238,11 +238,13 @@ print SYS &head("TestBT", $durFrame);
                      [ fillArray($distm0s1, 25 * $durHr) ], 0.5 , 
          0.0);
 
-#&makeCSV("ObjectGet", \@miss, 0.3, \@fa, 0.2 , 0);
+&makeCSV("ObjectGet", [ fillArray($distm0s1, 25 * $durHr)  ], 0.3, 
+                      [ fillArray($distm0s1, 25 * $durHr) ], 0.3 , 
+         0.0);
 
-#&makeCSV("CellToEar", \@miss, 0.2, \@fa, 0.1 , 0);
-
-#&makeCSV("ObjectPut", [()], 0.0, \@fa, 0.1   , 0);
+&makeCSV("CellToEar", [ ()  ], 0.0, 
+                      [ fillArray($distm0s1, 25 * $durHr) ], 0.3 , 
+         0.0);
 
 print REF tail();
 print SYS tail();
