@@ -205,9 +205,10 @@ my $delta_t = undef;
 my $ecffile = "";
 my $duration = 0;
 my $doDC = 0;
+my $gzipPROG = "gzip";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:    DEF            ST        cdefgh       p  s  v x  
+# USed:    DEF            ST        cdefgh       p  s  v x z 
 
 my %opt;
 my $dbgftmp = "";
@@ -229,6 +230,7 @@ GetOptions
    'Duration=f'      => \$duration,
    'ecf=s'           => \$ecffile,
    'computeDETCurve' => \$doDC,
+   'zipPROG=f'       => \$gzipPROG,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -402,7 +404,7 @@ if ($doDC) {
     my $trials = $all_trials{$event};
     my $metric = $all_metric{$event};
     print "** Computing DET Curves for event: $event\n";
-    my $det = new DETCurve($trials, $metric, "blocked", "Event $event: ". "Title from system name", [(10, 1, 0.1)]);
+    my $det = new DETCurve($trials, $metric, "blocked", "Event $event: ". "Title from system name", [()], $gzipPROG);
     if ($det->getMessages() ne "") { 
         print $det->getMessages();
     }
@@ -410,12 +412,7 @@ if ($doDC) {
     error_quit("Error adding Event '$event' to the DETSet: $rtn") if ($rtn ne "success");                     
   }
 
-#    my $detRoot = "DETPLOT-NAME-Event_$event.det";
-#    $det->writeGNUGraph($detRoot, undef);
-#    $det->serialize($detRoot);
-#    print " (target files: $detRoot*)\n";
-### skip png    print $detSet->renderAsTxt("DETS", { (xScale => "log", Ymin => "0.01", BuildPNG => 0) });
-    print $detSet->renderAsTxt("DETS", { (xScale => "log", Ymin => "0.01") });
+  print $detSet->renderAsTxt("DETS", { (xScale => "log", Ymin => "0.00001", Ymax => "90", Xmin => "0.00001", Xmax => "100") });
 }
 
 #my $trials->dump(*STDOUT);
@@ -724,7 +721,7 @@ sub do_scoring {
       my %ref_bpm = &Obs_array_to_hash(@ref_events_obs);
 
       my $tomatch = scalar @sys_events_obs + scalar @ref_events_obs;
-      print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, " | To Match: $tomatch elements\n";
+      print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, " | Total Observations: $tomatch elements\n";
       my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&TrecVid08Observation::kernel_function, \@kp);
       error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
 	if ($bpm->error());
@@ -799,7 +796,7 @@ sub do_scoring {
 	# The last '0' is because the elements does not match an element in the ref list (target)
 
 	my $trialID = &make_trialID($file, $evt, undef, $sys_obj, $ksep++);
-	$alignmentRep->addData("FalseAlarm", "TYPE", $trialID);
+	$alignmentRep->addData("Unmapped_Sys", "TYPE", $trialID);
 	$alignmentRep->addData("", "R.ID", $trialID);
 	$alignmentRep->addData("", "R.range", $trialID);
 	$alignmentRep->addData("", "Dur.r", $trialID);
@@ -826,7 +823,7 @@ sub do_scoring {
 	# Here we only care about the number of entries in this array
 
 	my $trialID = &make_trialID($file, $evt, $ref_obj, undef, $ksep++);
-	$alignmentRep->addData("MissedDetect", "TYPE", $trialID);
+	$alignmentRep->addData("Unmapped_Ref", "TYPE", $trialID);
 	$alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
 	$alignmentRep->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
@@ -850,14 +847,15 @@ sub do_scoring {
            print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
         }
         print $tbl;
+        print $alignmentRep->renderCSV();
       }
 
       my $matched = (2 * scalar @mapped)
 	+ scalar @unmapped_sys + scalar @unmapped_ref;
       print " -- Summary: ",
 	scalar @mapped, " Mapped (Pairs) / ",
-	  scalar @unmapped_sys, " False Alarm(s) / ",
-	    scalar @unmapped_ref, " Missed Detect(s) | Matched: $matched elements\n\n";
+	  scalar @unmapped_sys, " Unmapped Sys  / ",
+	    scalar @unmapped_ref, " Unmapped Ref | Total Observations: $matched elements\n\n";
       error_quit("WEIRD: To match ($tomatch) != Matched ($matched) ?")
 	if ($tomatch != $matched);
     }
