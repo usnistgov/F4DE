@@ -368,9 +368,12 @@ sub getNumNoTarg(){
 
 sub getNumTarg(){
     my ($self, $block) = @_;
-    ($self->{"trials"}->{$block}->{"NO TARG"} + 
-     $self->{"trials"}->{$block}->{"YES TARG"} +
-     $self->{"trials"}->{$block}->{"OMITTED TARG"})
+    ($self->getNumNoTarg($block) + $self->getNumYesTarg($block) + $self->getNumOmittedTarg($block) );
+}
+
+sub getNumSys(){
+    my ($self, $block) = @_;
+    ($self->getNumNoTarg($block) + $self->getNumYesTarg($block) + $self->getNumYesNonTarg($block) + $self->getNumNoNonTarg($block));
 }
 
 sub getNumYesTarg(){
@@ -429,7 +432,7 @@ sub _stater(){
         $sumsqr += $d * $d;
         $n++;
     }
-    ($sum, $sum/$n, sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1))));
+    ($sum, $sum/$n, ($n <= 1 ? undef : sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1)))));
 }
 
 sub getTotNumTarg(){
@@ -437,6 +440,15 @@ sub getTotNumTarg(){
     my @data = ();
     foreach my $block($self->getBlockIDs()){
         push @data, $self->getNumTarg($block);
+    }
+    $self->_stater(\@data);
+}
+
+sub getTotNumSys(){
+    my ($self) = @_;
+    my @data = ();
+    foreach my $block($self->getBlockIDs()){
+        push @data, $self->getNumSys($block);
     }
     $self->_stater(\@data);
 }
