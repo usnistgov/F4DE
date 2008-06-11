@@ -34,7 +34,7 @@ $totest++;
 $testr += &do_test("Test 3b (ECF check 2)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-test3b.txt");
 $totest++;
 
-$testr += &do_test("Test BT",  "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve" , "TV08res-test4-BigTest.txt");
+$testr += &do_test("Test BT",  "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG" , "TV08res-test4-BigTest.txt");
 $totest++;
 
 if ($testr == $totest) {
