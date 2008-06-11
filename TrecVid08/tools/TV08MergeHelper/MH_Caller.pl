@@ -269,18 +269,6 @@ sub ok_quit {
 
 ########################################
 
-sub write_file {
-  my $fname = shift @_;
-  my $txt = shift @_;
-
-  open FILE, ">$fname"
-    or error_quit("Could not create output file ($fname): $!");
-  print FILE $txt;
-  close FILE;
-}
-
-#####
-
 sub _cm_wf {
   my $header = shift @_;
   my $fname = shift @_;
@@ -289,7 +277,7 @@ sub _cm_wf {
   # Do not write empty files
   return if ($txt =~ m%^\s*$%);
 
-  &write_file($fname, $txt);
+  MMisc::writeTo($fname, "", 0, 0, $txt);
 
   print "| |--> Wrote \"$header\" to \'$fname\'\n";
 }

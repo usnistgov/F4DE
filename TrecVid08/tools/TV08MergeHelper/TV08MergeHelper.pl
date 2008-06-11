@@ -417,11 +417,9 @@ foreach my $key (sort keys %mergefiles) {
     if ($mf->error());
 
   my $writeto = "$writetodir/$key.xml";
-  open WRITETO, ">$writeto"
-    or error_quit("Could not create output XML file ($writeto): $!\n");
-  print WRITETO $txt;
-  close WRITETO;
-  print "Wrote: $writeto", (($fobs == 0) ? " (No observation)" : ""), "\n";
+  my $cmt = ($fobs == 0) ? " (No observation)" : "";
+  error_quit("Problem writing reformatted XML file\n")
+    if (! MMisc::writeTo($writeto, "", 1, 0, $txt, $cmt));
 
   $fdone++;
 }
@@ -435,14 +433,9 @@ error_quit("Not all file could be processed, aborting")
 
 if ($ecff ne "") {
   print "\n\n** STEP ", $step++, ": ECF Helper File\n";
-  open ECFF, ">$ecff"
-    or error_quit("Can not create \'ecfhelperfile\' ($ecff): $!");
-
   my $txt = &do_csv(\@ecfh, %ecfv);
-
-  print ECFF $txt;
-  close ECCF;
-  print "Wrote: $ecff\n";
+  error_quit("Problem writing \'ecfhelperfile\'\n")
+    if (! MMisc::writeTo($ecff, "", 1, 0, $txt));
 }
 
 ok_quit("\nDone.\n") if (! defined $olfile);
@@ -457,17 +450,9 @@ foreach my $key (keys %overlap_list) {
 }
 foreach my $key (sort keys %mergefiles) {
   my ($seen, $txt) = &prepare_overlap_list($key);
-#  next if (! $seen); # Write the file even if no overlap is found
 
-  if ($olfile ne "") {
-    open OLF, ">$olfile"
-      or error_quit("Could not create output \'overlaplistfile\' ($olfile): $!\n");
-    print OLF $txt;
-    close OLF;
-    print "Wrote \'overlaplistfile\': $olfile\n";
-  } else {
-    print $txt
-  }
+  MMisc::writeTo($olfile, "", 1, 0, $txt);
+
   delete $ovl{$key};
 }
 error_quit("Some filenames left in overlap list ? (" . join(" ", keys %ovl), "), aborting")

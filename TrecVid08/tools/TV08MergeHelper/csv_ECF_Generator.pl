@@ -178,22 +178,12 @@ foreach my $fn (sort keys %all) {
 
 if ($csvf != -1) {
   my $csvtxt = &do_csv(\@chead, %csvh);
-  if ($csvf ne "") {
-    open ECFF, ">$csvf"
-      or error_quit("Could not open \'csv\' file ($csvf): $!");
-    print ECFF $csvtxt;
-    close ECFF;
-    print "Wrote: $csvf\n";
-  } else {
-    print $csvtxt;
-  }
+  MMisc::writeTo($csvf, "", 1, 0, $csvtxt);
 }
 
 ########## Generating ECF
 if ($ecff ne ""){
   print "\n\n** STEP ", $step++, ": Geneating ECF in '$ecff'\n";
-  open ECF, ">$ecff"
-    or error_quit("Error: Unable to open the ecf file '$ecff' for output: $!");
 
   my $ssd = 0;
   foreach my $fn (sort keys %all) {
@@ -201,32 +191,34 @@ if ($ecff ne ""){
     $ssd += $fs_fs->duration_ts();
   }
 
-  print ECF "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-  print ECF "<ecf>\n";
-  print ECF "   <source_signal_duration>" . sprintf("%.3f",$ssd) . "</source_signal_duration>\n";
-  print ECF "   <version>$ecfVersionAttr</version>\n";
-  print ECF "   <excerpt_list>\n";
+  my $ecftxt = "";
+  $ecftxt .= "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+  $ecftxt .= "<ecf>\n";
+  $ecftxt .= "   <source_signal_duration>" . sprintf("%.3f",$ssd) . "</source_signal_duration>\n";
+  $ecftxt .= "   <version>$ecfVersionAttr</version>\n";
+  $ecftxt .= "   <excerpt_list>\n";
   foreach my $fn (sort keys %all) {
     my $fs_fs = $all{$fn};
     my $sub_fs_list = $fs_fs->get_list_of_framespans();
     error_quit("Failed to get sub framespans " . $fs_fs->get_errormsg())
       if (! defined($sub_fs_list));
     foreach my $fs (@$sub_fs_list){
-      print ECF "       <excerpt>\n";
-      print ECF "           <!--  Framespan " . $fs->get_value() . " -->\n";
-      print ECF "           <filename>$fn</filename>\n";
-      print ECF "           <begin>" . $fs->get_beg_ts() . "</begin>\n";
-      print ECF "           <duration>" . $fs->duration_ts() . "</duration>\n";
-      print ECF "           <sample_rate>" . $fs->get_fps() . "<sample_rate>\n";
-      print ECF "           <language>english</language>\n";
-      print ECF "           <source_type>surveillance</source_type>\n";
-      print ECF "       </excerpt>\n";
+      $ecftxt .= "       <excerpt>\n";
+      $ecftxt .= "           <!--  Framespan " . $fs->get_value() . " -->\n";
+      $ecftxt .= "           <filename>$fn</filename>\n";
+      $ecftxt .= "           <begin>" . $fs->get_beg_ts() . "</begin>\n";
+      $ecftxt .= "           <duration>" . $fs->duration_ts() . "</duration>\n";
+      $ecftxt .= "           <sample_rate>" . $fs->get_fps() . "<sample_rate>\n";
+      $ecftxt .= "           <language>english</language>\n";
+      $ecftxt .= "           <source_type>surveillance</source_type>\n";
+      $ecftxt .= "       </excerpt>\n";
     }
   }
-  print ECF "   </excerpt_list>\n";
-  print ECF "</ecf>\n";
-  close ECF;
-  print "Wrote: $ecff\n";
+  $ecftxt .= "   </excerpt_list>\n";
+  $ecftxt .= "</ecf>\n";
+
+  error_quit("Error: Unable to do the ECF file")
+    if (! MMisc::writeTo($ecff, "", 1, 0, $ecftxt));
 }
 
 ok_quit("Done.\n");
