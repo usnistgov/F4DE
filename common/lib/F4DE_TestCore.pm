@@ -42,13 +42,13 @@ sub make_syscall {
 
   my ($retcode, $stdout, $stderr) = MMisc::do_system_call(@command);
 
-  open OFILE, ">$ofile"
-    or die("TV08TestCore Internal Error: Could not create output file ($ofile) : $!\n");
-  print OFILE "[[COMMANDLINE]] ", join(" ", @command), "\n"
-    , "[[RETURN CODE]] $retcode\n"
-      , "[[STDOUT]]\n$stdout\n\n"
-	, "[[STDERR]]\n$stderr\n";
-  close OFILE;
+  my $otxt = "[[COMMANDLINE]] " . join(" ", @command) . "\n"
+    . "[[RETURN CODE]] $retcode\n"
+      . "[[STDOUT]]\n$stdout\n\n"
+	. "[[STDERR]]\n$stderr\n";
+
+  die("TV08TestCore Internal Error\n")
+    if (! MMisc::writeTo($ofile, "", 0, 0, $otxt));
  
   my @toshow = &get_txt_last_Xlines($stdout, $lts);
 
@@ -166,10 +166,8 @@ sub _mcfgetf {
     my ($sf, $df) = &_split_fn($v);
     my $sfc = &_get_sfc($v);
     return(0) if ($sfc eq $dev);
-    open FILE, ">$df"
-      or die("TV08TestCore Internal Error: Could not create output file ($df) : $!\n");
-    print FILE $sfc;
-    close FILE;
+    die("TV08TestCore Internal Error\n")
+      if (! MMisc::writeTo($df, "", 0, 0, $sfc));
   }
 
   return(1);
