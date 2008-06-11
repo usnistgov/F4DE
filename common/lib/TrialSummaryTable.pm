@@ -54,7 +54,8 @@ sub _buildAutoTable(){
     foreach my $block(sort $trial->getBlockIDs())
     {
         $at->addData($trial->getNumTarg($block),                   "#Ref", $block);
-        $at->addData($trial->getNumCorr($block),                   "#Cor", $block);
+        $at->addData($trial->getNumSys($block),                    "#Sys", $block);
+        $at->addData($trial->getNumCorr($block),                   "#CorDet", $block);
         $at->addData($trial->getNumFalseAlarm($block),             "#FA", $block);
         $at->addData($trial->getNumMiss($block),                   "#Miss", $block);
 
@@ -78,13 +79,15 @@ sub _buildAutoTable(){
         $metric->combBlockSetCalc(\%combData);
         
     my ($refSum, $refAvg, $refSSD) = $trial->getTotNumTarg(); 
+    my ($sysSum, $sysAvg, $sysSSD) = $trial->getTotNumCorr(); 
     my ($corrSum, $corrAvg, $corrSSD) = $trial->getTotNumCorr(); 
     my ($faSum, $faAvg, $faSSD) = $trial->getTotNumFalseAlarm(); 
     my ($missSum, $missAvg, $missSSD) = $trial->getTotNumMiss(); 
     
     
     $at->addData("--------",                "#Ref",  "----------");
-    $at->addData("--------",                "#Cor",  "----------");
+    $at->addData("--------",                "#Sys",  "----------");
+    $at->addData("--------",                "#CorDet",  "----------");
     $at->addData("--------",                "#FA",   "----------");
     $at->addData("--------",                "#Miss", "----------");
     $at->addData("--------",    $metric->errFALab(), "----------");
@@ -92,12 +95,14 @@ sub _buildAutoTable(){
     $at->addData("--------",     $metric->combLab(), "----------");
 
     $at->addData($refSum,                   "#Ref",  "Sum");
-    $at->addData($corrSum,                  "#Cor",  "Sum");
+    $at->addData($sysSum,                   "#Sys",  "Sum");
+    $at->addData($corrSum,                  "#CorDet",  "Sum");
     $at->addData($faSum,                    "#FA",   "Sum");
     $at->addData($missSum,                  "#Miss", "Sum");
 
     $at->addData(&_PN("%.2f", $refAvg),    "#Ref",    "Average");
-    $at->addData(&_PN("%.2f", $corrAvg),   "#Cor",    "Average");
+    $at->addData(&_PN("%.2f", $sysAvg),    "#Sys",    "Average");
+    $at->addData(&_PN("%.2f", $corrAvg),   "#CorDet",    "Average");
     $at->addData(&_PN("%.2f", $faAvg),     "#FA",     "Average");
     $at->addData(&_PN("%.2f", $missAvg),   "#Miss",   "Average");
     $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     $metric->errFALab(),   "Average");
@@ -105,7 +110,8 @@ sub _buildAutoTable(){
     $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    $metric->combLab(),    "Average");
 
     $at->addData(&_PN("%.2f", $refSSD),    "#Ref",    "SSD");
-    $at->addData(&_PN("%.2f", $corrSSD),   "#Cor",    "SSD");
+    $at->addData(&_PN("%.2f", $sysSSD),    "#Sys",    "SSD");
+    $at->addData(&_PN("%.2f", $corrSSD),   "#CorDet",    "SSD");
     $at->addData(&_PN("%.2f", $faSSD),     "#FA",     "SSD");
     $at->addData(&_PN("%.2f", $missSSD),   "#Miss",   "SSD");
     $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaSSD),     $metric->errFALab(),   "SSD");
