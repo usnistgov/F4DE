@@ -1,18 +1,19 @@
 all:
 	@echo "Possible options are:"
-	@echo "  check     to run a check on all included evaluation tools"
-	@echo "  install   to install the software (requires the F4DE_BASE environment variable set)"
+	@echo "  check       to run a check on all included evaluation tools"
+	@echo "  TV08check   only run checks for the TrecVid08 subsection"
+	@echo "  install     to install the software (requires the F4DE_BASE environment variable set)"
 
 install:
 	@echo "Nothing to do for install"
 
 check:
-	@echo "***** Running TV08check tests ..."
 	@(make TV08check)
 	@echo ""
 	@echo "***** All check tests successful"
 
 TV08check:
+	@echo "***** Running TV08check tests ..."
 	@(cd TrecVid08/test; make check)
 	@echo "***** All TV08check tests ran succesfully"
 
@@ -47,12 +48,12 @@ dist_common:
 	@echo "Building the tar.bz2 file"
 	@echo `cat .f4de_version`"-"`date +%Y%m%d-%H%M`.tar.bz2 > /tmp/.f4de_distname
 	@echo `pwd` > /tmp/.f4de_pwd
-	@(cd /tmp; tar cfj `cat /tmp/.f4de_pwd`/`cat /tmp/.f4de_distname` --exclude CVS --exclude .DS_Store -exclude "*~" `cat .f4de_version`)
+	@(cd /tmp; tar cfj `cat /tmp/.f4de_pwd`/`cat /tmp/.f4de_distname` --exclude CVS --exclude .DS_Store --exclude "*~" `cat .f4de_version`)
 	@echo ""
 	@echo ""
-	@make dist_clean
 	@echo "** Release ready:" `cat /tmp/.f4de_distname`
+	@make dist_clean
 
 dist_clean:
-	rm -rf /tmp/`cat .f4de_version`
-	rm -f /tmp/.f4de_{distname,version,pwd}
+	@rm -rf /tmp/`cat .f4de_version`
+	@rm -f /tmp/.f4de_{distname,version,pwd}
