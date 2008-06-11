@@ -206,9 +206,14 @@ my $ecffile = "";
 my $duration = 0;
 my $doDC = 0;
 my $gzipPROG = "gzip";
+my $gnuplotPROG = "gnuplot";
+my $noPNG = 0;
+my $sysTitle = "";
+my $outputRootFile = undef;
+my $observationContingencyTable = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:    DEF            ST        cdefgh       p  s  v x z 
+# USed:    DEFG       O   ST     Z  cdefgh     nop  st v x  
 
 my %opt;
 my $dbgftmp = "";
@@ -230,7 +235,12 @@ GetOptions
    'Duration=f'      => \$duration,
    'ecf=s'           => \$ecffile,
    'computeDETCurve' => \$doDC,
-   'zipPROG=f'       => \$gzipPROG,
+   'ZipPROG=s'       => \$gzipPROG,
+   'GnuplotPROG=s'   => \$gnuplotPROG,
+   'noPNG'           => \$noPNG,
+   'titleOfSys=s'    => \$sysTitle,
+   'OutputFileRoot=s' => \$outputRootFile,
+   'observationCont' => \$observationContingencyTable,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -263,6 +273,9 @@ error_quit("No SYS file(s) provided, can not perform scoring")
   if (scalar @sys == 0);
 error_quit("No REF file(s) provided, can not perform scoring")
   if (scalar @ref == 0);
+
+error_quit("Option OutputFileRoot required to compute produce the PNGs")
+    if ($doDC && !$noPNG && (!defined($outputRootFile)));
 
 ########## Main processing
 my $stepc = 1;
@@ -349,62 +362,31 @@ foreach my $event (@all_events) {
   $all_metric{$event} = new MetricTV08({ ('CostMiss' => 10, 'CostFA' => 1, 'Rtarget' => 1.8 ) }, $trial);
 }
 my $gtrial = $all_trials{$key_allevents};
-my %all_alignmentReps;
 
-print "** Scoring \"Common referred to files\"\n";
-&do_scoring(@common);
+print "** Aligning Files\n";
+&do_alignment(@common, @only_in_sys, @only_in_ref);
 
-print "** Scoring \"Only in SYS\"\n";
-&do_scoring(@only_in_sys);
-
-print "** Scoring \"Only in REF\"\n";
-&do_scoring(@only_in_ref);
-
-## Dump Trial Contingency Table
-
-print "\n\n***** STEP ", $stepc++, ": Dump of Trial Contingency Table\n";
 if ($trials_c{$key_allevents} == 0) {
-  print "No Trials ever added ?";
-} else {
-  my $trials = $all_trials{$key_allevents};
-  print $trials->dumpCountSummary();
-  print "\n";
+  error_quit("No Trials ever added");
 }
 
-## Dump Performance Statistics (optional)
-
-if ($perfStat) {
-  print "\n\n***** STEP ", $stepc++, ": Dump of Performance Statistics\n";
-  if ($trials_c{$key_allevents} == 0) {
-    print "No Trials ever added ?";
-  } else {
-    my $trials = $all_trials{$key_allevents};
-    my $metric = $all_metric{$key_allevents};
-    my $trep = new TrialSummaryTable($trials, $metric);
-    my $txt = $trep->renderAsTxt();
-    if (! defined($txt)){
-      print "Error Generating Table:\n". $trep->get_errormsg();
-    } else {
-      print $txt;
-    }
-    print "\n";
-  }
+if ($observationContingencyTable) {
+## Dump Trial Contingency Table
+  print "\n\n***** STEP ", $stepc++, ": Dump of Trial Contingency Table\n";
+  MMisc::writeTo($outputRootFile, ".contigency.txt", 1, 0, $all_trials{$key_allevents}->dumpCountSummary());
 }
 
-## Dump of DET Curves
-
-if ($doDC) { 
-  print "\n\n***** STEP ", $stepc++, ": Dump of DET Curve\n";
-  my $detSet = new DETCurveSet();
+print "\n\n***** STEP ", $stepc++, ": Dump of Analysis Report\n";
+my $detSet = new DETCurveSet($sysTitle);
   
-  print " (only printing seen events)\n\n";
-  foreach my $event (@all_events) {
+print " (only printing seen events)\n\n";
+foreach my $event (@all_events) {
     next if ($trials_c{$event} == 0);
     next if ($event eq $key_allevents);
     my $trials = $all_trials{$event};
     my $metric = $all_metric{$event};
-    print "** Computing DET Curves for event: $event\n";
-    my $det = new DETCurve($trials, $metric, "blocked", "Event $event: ". "Title from system name", [()], $gzipPROG);
+    # print "** Computing DET Curves for event: $event\n";
+    my $det = new DETCurve($trials, $metric, "blocked", "Event $event: ". $sysTitle, [()], $gzipPROG);
     if ($det->getMessages() ne "") { 
         print $det->getMessages();
     }
@@ -412,8 +394,10 @@ if ($doDC) {
     error_quit("Error adding Event '$event' to the DETSet: $rtn") if ($rtn ne "success");                     
   }
 
-  print $detSet->renderAsTxt("DETS", { (xScale => "log", Ymin => "0.00001", Ymax => "90", Xmin => "0.00001", Xmax => "100") });
-}
+MMisc::writeTo($outputRootFile, ".scores.txt", 1, 0, 
+               $detSet->renderAsTxt($outputRootFile.".det", $doDC, 1, 
+                                    { (xScale => "log", Ymin => "0.00001", Ymax => "90", Xmin => "0.00001", Xmax => "100", 
+                                       gnuplotPROG => $gnuplotPROG, BuildPNG => ($noPNG ? 0 : 1)) }));
 
 #my $trials->dump(*STDOUT);
 
@@ -433,7 +417,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile]  [--help] [--version] [--showAT] [--perfStat] [--computeDETCurve] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile]  [--help] [--version] [--showAT] [--perfStat] [--computeDETCurve rfile] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -448,8 +432,12 @@ Will Score the XML file(s) provided (Truth vs System)
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
   --showAT        Show Alignment Table (per File/Event processed)
   --perfStat      Dump Performance Statistics
-  --computeDETCurve  Generate DETCurve (requires GNUPlot with PNG support)
+  --computeDETCurve  Generate DETCurve (requires GNUPlot and PNG support)
   --version       Print version number and exit
+  --GnuplotPROG   Specify the full path name to gnuplot.  Default is to have 'gnuplot' in your path 
+  --ZipPROG       Specify the full path name to gzip.  Default is to have 'gzip' in your path
+  --noPNG         Do not create PNGs if a DET Curve is computed 
+  --titleOfSys    Specifiy the title of the system for use in the reports
   --help          Print this usage information and exit
 
 Note:
@@ -694,10 +682,16 @@ sub Obs_array_to_hash {
 
 ############################################################
 
-sub do_scoring {
+sub do_alignment {
   my @todo = @_;
 
   my $ksep = 0;
+  
+  ##### Add values to the 'Trials' (and 'SimpleAutoTable')
+  my $alignmentRep = new SimpleAutoTable();
+  if (! $alignmentRep->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" })){
+     print "Error building alignment table: ".$alignmentRep->get_errormsg()."\n";
+   }
 
   foreach my $file (@todo) {
     my @sys_events = ($sysEL->is_filename_in($file)) ? $sysEL->get_events_list($file) : ();
@@ -734,12 +728,6 @@ sub do_scoring {
       $bpm->_display("joint_values") if ($showi > 1);
       $bpm->_display("mapped", "unmapped_ref", "unmapped_sys") if ($showi);
 
-      ##### Add values to the 'Trials' (and 'SimpleAutoTable')
-      my $alignmentRep = new SimpleAutoTable();
-      if (! $alignmentRep->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" })){
-        print "Error building alignment table: ".$alignmentRep->get_errormsg()."\n";
-      }
-
       my $trials = $all_trials{$evt};
 
       # First, the mapped sys observations
@@ -761,6 +749,8 @@ sub do_scoring {
 	# The last '1' is because the elements match an element in the ref list (target)
 
 	my $trialID = &make_trialID($file, $evt, $ref_obj, $sys_obj, $ksep++);
+	$alignmentRep->addData($file, "File", $trialID);
+	$alignmentRep->addData($evt, "Event", $trialID);
 	$alignmentRep->addData("Mapped", "TYPE", $trialID);
 	$alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
@@ -796,6 +786,8 @@ sub do_scoring {
 	# The last '0' is because the elements does not match an element in the ref list (target)
 
 	my $trialID = &make_trialID($file, $evt, undef, $sys_obj, $ksep++);
+	$alignmentRep->addData($file, "File", $trialID);
+	$alignmentRep->addData($evt, "Event", $trialID);
 	$alignmentRep->addData("Unmapped_Sys", "TYPE", $trialID);
 	$alignmentRep->addData("", "R.ID", $trialID);
 	$alignmentRep->addData("", "R.range", $trialID);
@@ -823,6 +815,8 @@ sub do_scoring {
 	# Here we only care about the number of entries in this array
 
 	my $trialID = &make_trialID($file, $evt, $ref_obj, undef, $ksep++);
+	$alignmentRep->addData($file, "File", $trialID);
+	$alignmentRep->addData($evt, "Event", $trialID);
 	$alignmentRep->addData("Unmapped_Ref", "TYPE", $trialID);
 	$alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
 	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
@@ -840,16 +834,7 @@ sub do_scoring {
       # 'Trials' done
 
       $all_bpm{$file}{$evt} = $bpm;
-      $all_alignmentReps{$file}{$evt} = $alignmentRep;
-      if ($show){
-        my $tbl = $alignmentRep->renderTxtTable(2);
-        if (! defined($tbl)){
-           print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
-        }
-        print $tbl;
-        print $alignmentRep->renderCSV();
-      }
-
+      
       my $matched = (2 * scalar @mapped)
 	+ scalar @unmapped_sys + scalar @unmapped_ref;
       print " -- Summary: ",
@@ -860,6 +845,21 @@ sub do_scoring {
 	if ($tomatch != $matched);
     }
   }
+
+  if ($show){
+     my $tbl = $alignmentRep->renderTxtTable(2);
+     if (! defined($tbl)){
+        print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
+     }
+     MMisc::writeTo($outputRootFile, ".ali.txt", 1, 0, $tbl);
+     if (defined($outputRootFile) && $outputRootFile ne ""){
+        my $tbl = $alignmentRep->renderCSV(2);
+        if (! defined($tbl)){
+           print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
+         }
+        MMisc::writeTo($outputRootFile, ".ali.csv", 1, 0, $tbl);
+      }
+   }
 }
 
 #####
