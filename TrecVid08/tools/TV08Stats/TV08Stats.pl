@@ -308,15 +308,7 @@ if ($docsv != -1) {
      "DetectionScore", "DetectionDecision", "Filename", "XMLFile");
   my $txt = &do_csv(\@csv_header, %ohash);
 
-  if ($docsv ne "") {
-    open CSV, ">$docsv"
-      or error_quit("Problem opening csv file ($docsv): $!\n");
-    print CSV $txt;
-    close CSV;
-    print "Wrote CSV file: $docsv\n";
-  } else {
-    print $txt;
-  }
+  MMisc::writeTo($docsv, "", 1, 0, $txt);
 }
 
 my $sat;

@@ -160,14 +160,10 @@ if ($xmlbasefile != -1) {
   my $txt = $dummy->get_base_xml(@asked_events);
   error_quit("While trying to obtain the base XML file (" . $dummy->get_errormsg() . ")")
     if ($dummy->error());
-  if ($xmlbasefile ne "") {
-    open FILE, ">$xmlbasefile"
-      or error_quit("While trying to open \'XMLbase\' output file: $!\n");
-    print FILE $txt;
-    close FILE;
-    ok_quit("");
-  }
-  ok_quit($txt);
+
+  MMisc::writeTo($xmlbasefile, "", 0, 0, $txt);
+
+  ok_quit("");
 }
 
 ok_quit("\n$usage\n") if (scalar @ARGV == 0);
@@ -207,17 +203,14 @@ while ($tmp = shift @ARGV) {
     my $txt = $object->reformat_xml(@asked_events);
     error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
       if ($object->error());
+    my $fname = "";
     if ($writeback ne "") {
       my $tmp2 = $tmp;
       $tmp2 =~ s%^.+\/([^\/]+)$%$1%;
-      my $fname = "$writeback$tmp2";
-      open FILE, ">$fname"
-	or error_quit("While trying to \'write\', problem creating file ($fname): $!");
-      print FILE $txt;
-      close FILE;
-    } else {
-      print("** XML re-Representation:\n$txt\n");
+      $fname = "$writeback$tmp2";
     }
+    error_quit("Problem while trying to \'write\'")
+      if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
   }
 
   $all{$tmp} = $object;
