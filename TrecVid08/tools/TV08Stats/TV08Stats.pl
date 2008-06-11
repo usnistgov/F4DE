@@ -367,7 +367,7 @@ foreach my $cam(sort keys %camStatsDB){
 }
 print $sat->renderTxtTable(2);
 
-print "\n\n\n                 Durations of annotated files\n\n";
+print "\n\n\n                 Durations of annotated files in seconds\n\n";
 $sat = new SimpleAutoTable();
 foreach my $cam(sort keys %camDurStatsDB){
     foreach my $da(sort keys %{ $camDurStatsDB{$cam} }){
