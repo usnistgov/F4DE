@@ -34,7 +34,7 @@ $totest++;
 $testr += &do_test("Test 3b (ECF check 2)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-test3b.txt");
 $totest++;
 
-$testr += &do_test("Test BT",  "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG" , "TV08res-test4-BigTest.txt");
+$testr += &do_test("Test 4 (Big Test)",  "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG" , "res-test4-BigTest.txt");
 $totest++;
 
 if ($testr == $totest) {
@@ -52,7 +52,7 @@ sub do_test {
   my $frf = "../common/$rf";
   my $fsf = "../common/$sf";
 
-  my $command = "$scorer -f 25 -d 1 $fsf -g $frf -s -p $ao";
+  my $command = "$scorer -a -f 25 -d 1 $fsf -g $frf -s -p $ao";
 
   return(TV08TestCore::run_simpletest($testname, $command, $res, $mode));
 }
