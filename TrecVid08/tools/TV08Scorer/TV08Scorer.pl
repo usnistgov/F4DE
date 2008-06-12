@@ -44,7 +44,7 @@ BEGIN {
   $tv08pl = "TV08_PERL_LIB";
   $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
   $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
 }
 use lib ($tv08plv, $f4deplv, $f4bv);
 
@@ -192,7 +192,8 @@ my $xsdpath_env = "TV08_XSDPATH";
 my $usage = &set_usage();
 
 # Default values for variables
-my $show = 0;
+my $showAT = 0;
+my $allAT = 0;
 my $showi = 0;
 my $perfStat = 0;
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
@@ -213,7 +214,7 @@ my $outputRootFile = undef;
 my $observationContingencyTable = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:    DEFG       O   ST     Z  cdefgh     nop  st v x  
+# Used:    DEFG       O   ST     Za  cdefgh     nop  st v x  
 
 my %opt;
 my $dbgftmp = "";
@@ -230,7 +231,8 @@ GetOptions
    'deltat=f'        => \$delta_t,
    'Ed=f'            => \$E_d,
    'Et=f'            => \$E_t,
-   'show'            => \$show,
+   'allAT'           => \$allAT,
+   'showAT'          => \$showAT,
    'perfStat'        => \$perfStat,
    'Duration=f'      => \$duration,
    'ecf=s'           => \$ecffile,
@@ -275,7 +277,7 @@ error_quit("No REF file(s) provided, can not perform scoring")
   if (scalar @ref == 0);
 
 error_quit("Option OutputFileRoot required to compute produce the PNGs")
-    if ($doDC && !$noPNG && (!defined($outputRootFile)));
+  if ($doDC && !$noPNG && (!defined($outputRootFile)));
 
 ########## Main processing
 my $stepc = 1;
@@ -339,7 +341,7 @@ my $fcount = (scalar @common) + (scalar @only_in_sys) + (scalar @only_in_ref);
 error_quit("Can not continue, no file in any list ?") if ($fcount == 0);
 
 ## Prepare event lists for scoring
-print "\n\n***** STEP ", $stepc++, ": Scoring\n";
+print "\n\n***** STEP ", $stepc++, ": Aligning Files and Events\n\n";
 $sysEL->set_delta_t($delta_t);
 $sysEL->set_E_t($E_t);
 $sysEL->set_E_d($E_d);
@@ -363,15 +365,15 @@ foreach my $event (@all_events) {
 }
 my $gtrial = $all_trials{$key_allevents};
 
-print "** Aligning Files\n";
 &do_alignment(@common, @only_in_sys, @only_in_ref);
 
 if ($trials_c{$key_allevents} == 0) {
   error_quit("No Trials ever added");
 }
 
+## Dump Trial Contingency Table (optional)
+
 if ($observationContingencyTable) {
-## Dump Trial Contingency Table
   print "\n\n***** STEP ", $stepc++, ": Dump of Trial Contingency Table\n";
   MMisc::writeTo($outputRootFile, ".contigency.txt", 1, 0, $all_trials{$key_allevents}->dumpCountSummary());
 }
@@ -381,18 +383,18 @@ my $detSet = new DETCurveSet($sysTitle);
   
 print " (only printing seen events)\n\n";
 foreach my $event (@all_events) {
-    next if ($trials_c{$event} == 0);
-    next if ($event eq $key_allevents);
-    my $trials = $all_trials{$event};
-    my $metric = $all_metric{$event};
-    # print "** Computing DET Curves for event: $event\n";
-    my $det = new DETCurve($trials, $metric, "blocked", "Event $event: ". $sysTitle, [()], $gzipPROG);
-    if ($det->getMessages() ne "") { 
-        print $det->getMessages();
-    }
-    my $rtn = $detSet->addDET($event." Event", $det);
-    error_quit("Error adding Event '$event' to the DETSet: $rtn") if ($rtn ne "success");                     
+  next if ($trials_c{$event} == 0);
+  next if ($event eq $key_allevents);
+  my $trials = $all_trials{$event};
+  my $metric = $all_metric{$event};
+  # print "** Computing DET Curves for event: $event\n";
+  my $det = new DETCurve($trials, $metric, "blocked", "Event $event: ". $sysTitle, [()], $gzipPROG);
+  if ($det->getMessages() ne "") { 
+    print $det->getMessages();
   }
+  my $rtn = $detSet->addDET($event." Event", $det);
+  error_quit("Error adding Event '$event' to the DETSet: $rtn") if ($rtn ne "success");                     
+}
 
 MMisc::writeTo($outputRootFile, ".scores.txt", 1, 0, 
                $detSet->renderAsTxt($outputRootFile.".det", $doDC, 1, 
@@ -446,7 +448,7 @@ Note:
 - 'TrecVid08xsd' files are: $xsdfiles (and if the 'ecf' option is used, also: $ecf_xsdf)
 EOF
 ;
-
+  
   return $tmp;
 }
 
@@ -498,7 +500,7 @@ sub get_sys_ref_filelist {
   @ref = reverse @ref;
   @sys = reverse @args;
 
-return (\@ref, \@sys);
+  return(\@ref, \@sys);
 }
 
 ########################################
@@ -689,9 +691,8 @@ sub do_alignment {
   
   ##### Add values to the 'Trials' (and 'SimpleAutoTable')
   my $alignmentRep = new SimpleAutoTable();
-  if (! $alignmentRep->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" })){
-     print "Error building alignment table: ".$alignmentRep->get_errormsg()."\n";
-   }
+  error_quit("Error building alignment table: ".$alignmentRep->get_errormsg()."\n")
+    if (! $alignmentRep->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
 
   foreach my $file (@todo) {
     my @sys_events = ($sysEL->is_filename_in($file)) ? $sysEL->get_events_list($file) : ();
@@ -728,6 +729,13 @@ sub do_alignment {
       $bpm->_display("joint_values") if ($showi > 1);
       $bpm->_display("mapped", "unmapped_ref", "unmapped_sys") if ($showi);
 
+      my $lsat;
+      if ($allAT) {
+	$lsat = new SimpleAutoTable();
+	error_quit("Error building alignment table: ".$lsat->get_errormsg()."\n")
+	  if (! $lsat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
+      }
+      
       my $trials = $all_trials{$evt};
 
       # First, the mapped sys observations
@@ -767,6 +775,21 @@ sub do_alignment {
 	my ($sb, $se) = &get_obj_fs_beg_end($sys_obj);
 	$alignmentRep->addData($rb - $sb, "Beg.r-Beg.s", $trialID);
 	$alignmentRep->addData($re - $se, "End.r-End.s", $trialID);
+	if ($allAT) {
+	  $lsat->addData("Mapped", "TYPE", $trialID);
+	  $lsat->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
+	  $lsat->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
+	  $lsat->addData(&get_obj_fs_duration($ref_obj),  "Dur.r", $trialID);
+	  $lsat->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
+	  $lsat->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
+	  $lsat->addData(&get_obj_fs_duration($sys_obj),  "Dur.s", $trialID);
+	  $lsat->addData($detscr, "S.DetScr", $trialID);
+	  $lsat->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
+	  $lsat->addData((defined($ov) ? &get_fs_value($ov) : "NULL"), "ISec.range", $trialID);
+	  $lsat->addData((defined($ov) ? &get_fs_duration($ov): "NULL"), "Dur.ISec", $trialID);
+	  $lsat->addData($rb - $sb, "Beg.r-Beg.s", $trialID);
+	  $lsat->addData($re - $se, "End.r-End.s", $trialID);
+	}
       }
 
       # Second, the False Alarms
@@ -801,6 +824,21 @@ sub do_alignment {
 	$alignmentRep->addData("", "Dur.ISec", $trialID);
 	$alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
 	$alignmentRep->addData("", "End.r-End.s", $trialID);
+	if ($allAT) {
+	  $lsat->addData("Unmapped_Sys", "TYPE", $trialID);
+	  $lsat->addData("", "R.ID", $trialID);
+	  $lsat->addData("", "R.range", $trialID);
+	  $lsat->addData("", "Dur.r", $trialID);
+	  $lsat->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
+	  $lsat->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
+	  $lsat->addData(&get_obj_fs_duration($sys_obj), "Dur.s", $trialID);
+	  $lsat->addData($detscr, "S.DetScr", $trialID);
+	  $lsat->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
+	  $lsat->addData("", "ISec.range", $trialID);
+	  $lsat->addData("", "Dur.ISec", $trialID);
+	  $lsat->addData("", "Beg.r-Beg.s", $trialID);
+	  $lsat->addData("", "End.r-End.s", $trialID);
+	}
       }
 
       # Third, the Missed Detects
@@ -830,11 +868,32 @@ sub do_alignment {
 	$alignmentRep->addData("", "Dur.ISec", $trialID);
 	$alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
 	$alignmentRep->addData("", "End.r-End.s", $trialID);
+	if ($allAT) {
+	  $lsat->addData("Unmapped_Ref", "TYPE", $trialID);
+	  $lsat->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
+	  $lsat->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
+	  $lsat->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
+	  $lsat->addData("", "S.DetScr", $trialID);
+	  $lsat->addData("", "S.DetDec", $trialID);
+	  $lsat->addData("", "S.ID", $trialID);
+	  $lsat->addData("", "S.range", $trialID);
+	  $lsat->addData("", "Dur.s", $trialID);
+	  $lsat->addData("", "ISec.range", $trialID);
+	  $lsat->addData("", "Dur.ISec", $trialID);
+	  $lsat->addData("", "Beg.r-Beg.s", $trialID);
+	  $lsat->addData("", "End.r-End.s", $trialID);
+	}
       }
       # 'Trials' done
 
       $all_bpm{$file}{$evt} = $bpm;
       
+      if ($allAT) {
+	my $tbl = $lsat->renderTxtTable(2);
+	error_quit("ERROR: Generating Alignment Report (". $lsat->get_errormsg() . ")") if (! defined($tbl));
+	print $tbl; 	 
+      }      
+
       my $matched = (2 * scalar @mapped)
 	+ scalar @unmapped_sys + scalar @unmapped_ref;
       print " -- Summary: ",
@@ -845,21 +904,21 @@ sub do_alignment {
 	if ($tomatch != $matched);
     }
   }
-
-  if ($show){
-     my $tbl = $alignmentRep->renderTxtTable(2);
-     if (! defined($tbl)){
-        print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
-     }
-     MMisc::writeTo($outputRootFile, ".ali.txt", 1, 0, $tbl);
-     if (defined($outputRootFile) && $outputRootFile ne ""){
-        my $tbl = $alignmentRep->renderCSV(2);
-        if (! defined($tbl)){
-           print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
-         }
-        MMisc::writeTo($outputRootFile, ".ali.csv", 1, 0, $tbl);
+    
+  if ($showAT) {
+    my $tbl = $alignmentRep->renderTxtTable(2);
+    if (! defined($tbl)) {
+      print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
+    }
+    MMisc::writeTo($outputRootFile, ".ali.txt", 1, 0, $tbl);
+    if (defined($outputRootFile) && $outputRootFile ne "") {
+      my $tbl = $alignmentRep->renderCSV(2);
+      if (! defined($tbl)) {
+	print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
       }
-   }
+      MMisc::writeTo($outputRootFile, ".ali.csv", 1, 0, $tbl);
+    }
+  }
 }
 
 #####
