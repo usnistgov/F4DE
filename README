@@ -18,11 +18,11 @@ INSTALLATION
 
 Installation is a 4 step process:
 
-  1. Set the the environment variable 'F4DE_BASE' to be the base directory
-     of the F4DE software package.
-  2. Test the code by executing 'make check' to make sure all required
+  1. Test the code by executing 'make check' to make sure all required
      libraries and executables are available on the system and that
      all software checks pass.
+  2. Set the environment variable 'F4DE_BASE' to be the base directory
+     of the F4DE software package.
   3. Execute the command 'make install' to copy the executables into 
      '$F4DE_BASE/bin', perl modules into '$F4DE_BASE/lib', and XSD/Data files
      into '$F4DE_BASE/lib/data'.
@@ -45,6 +45,9 @@ CONTACT
 -------
 
        Please send bug reports to <nist_f4de@nist.gov>
+
+For the bug report to be useful, please include the command line,
+files and text output, including the error message in your email.
 
 AUTHORS
 -------
