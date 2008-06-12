@@ -9,6 +9,7 @@ install:
 
 check:
 	@(make TV08check)
+	@(make commoncheck)
 	@echo ""
 	@echo "***** All check tests successful"
 
@@ -16,6 +17,11 @@ TV08check:
 	@echo "***** Running TV08check tests ..."
 	@(cd TrecVid08/test; make check)
 	@echo "***** All TV08check tests ran succesfully"
+
+commoncheck:
+	@echo "***** Running Common tests ..."
+	@(cd common/test; make check)
+	@echo "***** All common tests ran succesfully"
 
 cvsdist:
 	@make dist_head
