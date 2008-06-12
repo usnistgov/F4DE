@@ -20,14 +20,20 @@ Installation is a 4 step process:
 
   1. Test the code by executing 'make check' to make sure all required
      libraries and executables are available on the system and that
-     all software checks pass. Please note that the 'F4DE_BASE' environment
-     variable should not be set for this step.
+     all software checks pass [*]. Please note that the 'F4DE_BASE' 
+     environment variable should not be set for this step.
   2. Set the environment variable 'F4DE_BASE' to be the base directory
      of the F4DE software package.
   3. Execute the command 'make install' to copy the executables into 
      '$F4DE_BASE/bin', perl modules into '$F4DE_BASE/lib', and XSD/Data files
      into '$F4DE_BASE/lib/data'.
   4. Add '$F4DE_BASE/bin' to your path environment variable.
+
+[*] If one of the Tools tests fails, please follow the bug reports submission 
+instructions detailed in the CONTACT section. The command line 
+that we would like you to run for each test can be found in the corresponding
+test number "res * .txt" file as its first line in the COMMANDLINE section.
+
 
 USAGE
 -----
