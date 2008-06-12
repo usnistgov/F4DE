@@ -1,15 +1,50 @@
+F4DE_BASE ?= "notset"
+
+##########
+
 all:
 	@echo "Possible options are:"
-	@echo "  check       to run a check on all included evaluation tools"
-	@echo "  TV08check   only run checks for the TrecVid08 subsection"
-	@echo "  install     to install the software (requires the F4DE_BASE environment variable set)"
+	@echo ""
+	@echo "  check         to run a check on all included evaluation tools"
+	@echo "  TV08check     only run checks for the TrecVid08 subsection"
+	@echo ""
+	@echo "  install       to install the softwares (requires the F4DE_BASE environment variable set)"
+	@echo "  TV08install   only install the TrecVid08 subsection"
+
+########## Install
 
 install:
-	@echo "Nothing to do for install"
+	@make TV08install
+
+
+commoninstall:
+	@make install_head
+	@echo "** Installing common files"
+	@perl installer.pl ${F4DE_BASE} lib common/lib/*.pm
+
+TV08install:
+	@make commoninstall
+	@echo "** Installing TrecVid08 files"
+	@perl installer.pl ${F4DE_BASE} lib TrecVid08/lib/*.pm
+	@perl installer.pl ${F4DE_BASE} lib/data TrecVid08/data/*.xsd
+	@perl installer.pl -x -r ${F4DE_BASE} bin TrecVid08/tools/TV08MergeHelper/TV08MergeHelper.pl TrecVid08/tools/TV08ViperValidator/TV08ViperValidator.pl TrecVid08/tools/TV08Scorer/TV08Scorer.pl 
+
+install_head:
+	@echo "** Checking that the F4DE_BASE environment variable is set"
+	@test ${F4DE_BASE}
+	@test ${F4DE_BASE} != "notset"
+	@echo "** Checking that the F4DE_BASE is a writable directory"
+	@test -d ${F4DE_BASE}
+	@test -w ${F4DE_BASE}
+	@echo "** Checking that install is called from the source directory"
+	@test -f .f4de_version
+
+
+########## Checks
 
 check:
-	@(make TV08check)
 	@(make commoncheck)
+	@(make TV08check)
 	@echo ""
 	@echo "***** All check tests successful"
 
@@ -23,6 +58,14 @@ commoncheck:
 	@(cd common/test; make check)
 	@echo "***** All common tests ran succesfully"
 
+
+
+
+########################################
+########## For distribution purpose
+
+
+# 'cvsdist' can only be run by developpers
 cvsdist:
 	@make dist_head
 	@echo "Building a CVS release:" `cat .f4de_version`
