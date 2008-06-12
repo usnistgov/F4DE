@@ -10,7 +10,7 @@ my $err = 0;
 print "** Checking for Perl Packages:\n";
 my $ms;
 print "[F4DE Provided Packages]\n";
-$ms = &_chkpkg("BipartiteMatch", "DETCurve", "MMisc", "MtXML", "SimpleAutoTable", "Trials", "MErrorH", "MetricTestStub", "PropList", "TrialSummaryTable", "ViperFramespan", "MetricTV08","TrecVid08ECF", "TrecVid08EventList", "TrecVid08Observation", "TrecVid08ViperFile", "TrecVid08xmllint");
+$ms = &_chkpkg("BipartiteMatch", "DETCurve", "MMisc", "MtXML", "SimpleAutoTable", "Trials", "MErrorH", "MetricTestStub", "PropList", "TrialSummaryTable", "ViperFramespan", "MetricFuncs", "MetricTV08", "TrecVid08ECF", "TrecVid08EventList", "TrecVid08Observation", "TrecVid08ViperFile", "TrecVid08xmllint");
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the program, please install the missing ones\n\n";
   $err++;
@@ -18,7 +18,7 @@ if ($ms > 0) {
   print "  Found all packages\n\n";
 }
 print "[Required Packages]\n";
-$ms = _chkpkg("Getopt::Long", "Data::Dumper", "File::Temp");
+$ms = &_chkpkg("Getopt::Long", "Data::Dumper", "File::Temp");
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the program, please install the missing ones\n\n";
   $err++;
