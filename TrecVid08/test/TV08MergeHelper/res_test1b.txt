@@ -1,0 +1,35 @@
+[[COMMANDLINE]] ../../tools/TV08MergeHelper/TV08MergeHelper.pl ../common/test1-1md-sys.xml ../common/test1-same-sys.xml ../common/test3-sys.xml ../common/test1-1fa-sys.xml ../common/test2-1md_1fa-sys.xml ../common/test2-same-sys.xml -f PAL -w /tmp
+[[RETURN CODE]] 0
+[[STDOUT]]
+
+
+** STEP 1: Load all files to be merged
+'../common/test1-1md-sys.xml': Loaded
+'../common/test1-same-sys.xml': Loaded
+'../common/test3-sys.xml': Loaded
+'../common/test1-1fa-sys.xml': Loaded
+'../common/test2-1md_1fa-sys.xml': Loaded
+'../common/test2-same-sys.xml': Loaded
+* -> Loaded 6 ok / 6
+
+
+** STEP 2: Process all observations
+- Done processing Observations from '../common/test1-1fa-sys.xml' [File key: 20050519-1503-Excerpt.mpg] (Found: 6)
+- Done processing Observations from '../common/test1-1md-sys.xml' [File key: 20050519-1503-Excerpt.mpg] (Found: 4)
+- Done processing Observations from '../common/test1-same-sys.xml' [File key: 20050519-1503-Excerpt.mpg] (Found: 5)
+- Done processing Observations from '../common/test2-1md_1fa-sys.xml' [File key: 20050519-1503-Excerpt.mpg] (Found: 5)
+- Done processing Observations from '../common/test2-same-sys.xml' [File key: 20050519-1503-Excerpt.mpg] (Found: 5)
+- Done processing Observations from '../common/test3-sys.xml' [File key: 20061212.mpg] (Found: 6)
+* -> Found 31 Observations
+
+
+** STEP 3: Writting merge file(s)
+Wrote: /tmp/20050519-1503-Excerpt.mpg.xml
+Wrote: /tmp/20061212.mpg.xml
+* -> Wrote 2 files (out of 2)
+
+Done.
+
+
+[[STDERR]]
+

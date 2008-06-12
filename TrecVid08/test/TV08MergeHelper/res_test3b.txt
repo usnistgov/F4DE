@@ -1,0 +1,213 @@
+[[COMMANDLINE]] ../../tools/TV08MergeHelper/TV08MergeHelper.pl ../common/test1-1md-sys.xml ../common/test3-sys.xml ../common/test1-same-sys.xml:40 ../common/test1-1fa-sys.xml:10000 ../common/test2-1md_1fa-sys.xml:5000 ../common/test2-same-sys.xml:1500 -f PAL -w /tmp -s -S -o -F samefile
+[[RETURN CODE]] 0
+[[STDOUT]]
+
+
+** STEP 1: Load all files to be merged
+'../common/test1-1md-sys.xml': Loaded
+'../common/test3-sys.xml': Loaded
+'../common/test1-same-sys.xml:40': Loaded
+'../common/test1-1fa-sys.xml:10000': Loaded
+'../common/test2-1md_1fa-sys.xml:5000': Loaded
+'../common/test2-same-sys.xml:1500': Loaded
+* -> Loaded 6 ok / 6
+
+
+** STEP 2: Process all observations
+- Done processing Observations from '../common/test1-1md-sys.xml' [File key: samefile] (Found: 4 | Overlap Found: 0) [OverlapCheck: FrameShiftedFiles (0 found) SameFramespanFiles (0 found)]
+- Done processing Observations from '../common/test3-sys.xml' [File key: samefile] (Found: 6 | Overlap Found: 7) [OverlapCheck: FrameShiftedFiles (0 found) SameFramespanFiles (7 found)]
+- Done processing Observations from '../common/test1-same-sys.xml' [File key: samefile] [requested frameshift: 40] (Found: 5 | Overlap Found: 18) [FrameShifted (40 frames)] [OverlapCheck: FrameShiftedFiles (18 found) SameFramespanFiles (0 found)]
+- Done processing Observations from '../common/test2-same-sys.xml' [File key: samefile] [requested frameshift: 1500] (Found: 5 | Overlap Found: 12) [FrameShifted (1500 frames)] [OverlapCheck: FrameShiftedFiles (12 found) SameFramespanFiles (0 found)]
+- Done processing Observations from '../common/test2-1md_1fa-sys.xml' [File key: samefile] [requested frameshift: 5000] (Found: 5 | Overlap Found: 3) [FrameShifted (5000 frames)] [OverlapCheck: FrameShiftedFiles (3 found) SameFramespanFiles (0 found)]
+- Done processing Observations from '../common/test1-1fa-sys.xml' [File key: samefile] [requested frameshift: 10000] (Found: 6 | Overlap Found: 0) [FrameShifted (10000 frames)] [OverlapCheck: FrameShiftedFiles (0 found) SameFramespanFiles (0 found)]
+* -> Found 31 Observations
+
+
+** STEP 3: Writting merge file(s)
+Wrote: /tmp/samefile.xml
+* -> Wrote 1 files (out of 1)
+
+
+** STEP 4: Overlap List
+|--> File: samefile
+| |--> Mode: FrameShiftedFiles
+| | |--> Event: CellToEar
+| | | |--> ID: [FrameShiftedFiles-CellToEar-000]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-001]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-002]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-003]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-004]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-005]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-006]
+| | | |  Overlap range: 3543:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-007]
+| | | |  Overlap range: 3543:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-008]
+| | | |  Overlap range: 3543:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-009]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-010]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-011]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-012]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-013]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-014]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-015]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-016]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-017]
+| | | |  Overlap range: 1703:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-018]
+| | | |  Overlap range: 2503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-019]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-020]
+| | | |  Overlap range: 3543:3778
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-021]
+| | | |  Overlap range: 3543:3779
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-022]
+| | | |  Overlap range: 3543:3779
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-023]
+| | | |  Overlap range: 5203:5238
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-024]
+| | | |  Overlap range: 5203:5239
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 4003:5239 | FILE FS: 1501:6621 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-same-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-025]
+| | | |  Overlap range: 5203:5239
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 5003:5239 | FILE FS: 1501:6621 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-same-sys.xml"
+| | |
+| | |--> Event: ObjectGet
+| | | |--> ID: [FrameShiftedFiles-ObjectGet-000]
+| | | |  Overlap range: 1533:3327
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-ObjectGet-001]
+| | | |  Overlap range: 1533:3327
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-ObjectGet-002]
+| | | |  Overlap range: 2600:3327
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-ObjectGet-003]
+| | | |  Overlap range: 2600:3327
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-ObjectGet-004]
+| | | |  Overlap range: 2600:3367
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | |
+| | |--> Event: ObjectPut
+| | | |--> ID: [FrameShiftedFiles-ObjectPut-000]
+| | | |  Overlap range: 978:1493
+| | | |  Between: "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-ObjectPut-001]
+| | | |  Overlap range: 1501:1533
+| | | |  Between: "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 1501:2500 | FILE FS: 1501:6621 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | |
+| |
+| |--> Mode: SameFramespanFiles
+| | |--> Event: CellToEar
+| | | |--> ID: [SameFramespanFiles-CellToEar-000]
+| | | |  Overlap range: 3503:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [SameFramespanFiles-CellToEar-001]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [SameFramespanFiles-CellToEar-002]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [SameFramespanFiles-CellToEar-003]
+| | | |  Overlap range: 3503:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [SameFramespanFiles-CellToEar-004]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [SameFramespanFiles-CellToEar-005]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | |
+| | |--> Event: ObjectGet
+| | | |--> ID: [SameFramespanFiles-ObjectGet-000]
+| | | |  Overlap range: 1493:3327
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | |
+| |
+|
+
+Done.
+
+
+[[STDERR]]
+

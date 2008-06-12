@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PersonRuns" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="CellToEar" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectPut" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="PeopleMeet" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="PeopleSplitUp" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="Embrace" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="Pointing" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ElevatorNoEntry" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="OpposingFlow" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="TakePicture" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="DoorOpenClose" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="UseATM" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectGet" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="VestAppears" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="SitDown" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="StandUp" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectTransfer" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="file:20050519-1503-Excerpt.mpg">
+      <!-- NUMFRAMES extended from 5121 to 5521 (FILE: 20050519-1503-Excerpt.mpg | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 401:5521 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml) -->
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="5521"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="CellToEar" id="0" framespan="3503:3738">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-000] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 603:4138 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" [overlap: 3503:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-001] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 2903:4139 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" [overlap: 3503:3738]
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3503:3738 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision"/>
+        <attribute name="DetectionScore"/>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="1" framespan="3503:3739">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-002] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 603:4138 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-003] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 2903:4139 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" [overlap: 3503:3739]
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision"/>
+        <attribute name="DetectionScore"/>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="2" framespan="3503:3739">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-004] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 603:4138 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-005] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 2903:4139 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" [overlap: 3503:3739]
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision"/>
+        <attribute name="DetectionScore"/>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="3" framespan="603:4138">
+        <!-- Framespan was shifted by 400
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-000] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3503:3738 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml" [overlap: 3503:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-002] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-004] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml" [overlap: 3503:3739]
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 603:4138 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision"/>
+        <attribute name="DetectionScore"/>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="4" framespan="2903:4139">
+        <!-- Framespan was shifted by 400
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-001] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3503:3738 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml" [overlap: 3503:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-003] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-005] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml" [overlap: 3503:3739]
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 2903:4139 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision"/>
+        <attribute name="DetectionScore"/>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="5" framespan="3903:4139">
+        <!-- Framespan was shifted by 400
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3903:4139 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision"/>
+        <attribute name="DetectionScore"/>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectPut" id="0" framespan="938:1493">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectPut-000] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 401:1400 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" [overlap: 938:1400]
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="1116:1116" x="105" y="168" height="101" width="131"/>
+          <data:bbox framespan="1117:1117" x="99" y="168" height="89" width="166"/>
+          <data:bbox framespan="1118:1118" x="38" y="298" height="81" width="158"/>
+          <data:bbox framespan="1119:1119" x="98" y="56" height="138" width="187"/>
+          <data:bbox framespan="1120:1120" x="78" y="178" height="88" width="234"/>
+          <data:bbox framespan="1121:1121" x="32" y="281" height="81" width="195"/>
+          <data:bbox framespan="1122:1122" x="202" y="292" height="115" width="110"/>
+          <data:bbox framespan="1123:1123" x="163" y="216" height="52" width="123"/>
+        </attribute>
+        <attribute name="DetectionDecision"/>
+        <attribute name="DetectionScore"/>
+        <attribute name="Point">
+          <data:point framespan="1124:1124" x="263" y="353"/>
+        </attribute>
+      </object>
+      <object name="ObjectPut" id="1" framespan="401:1400">
+        <!-- Framespan was shifted by 400
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectPut-000] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml" [overlap: 938:1400]
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 401:1400 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision"/>
+        <attribute name="DetectionScore"/>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="0" framespan="1493:3327">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-000] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1500:3727 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" [overlap: 1500:3327]
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="3327:3327" x="126" y="337" height="101" width="138"/>
+        </attribute>
+        <attribute name="DetectionDecision"/>
+        <attribute name="DetectionScore"/>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="1" framespan="1500:3727">
+        <!-- Framespan was shifted by 400
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-000] with "FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test1-gtf.xml" [overlap: 1500:3327]
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1500:3727 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision"/>
+        <attribute name="DetectionScore"/>
+        <attribute name="Point"/>
+      </object>
+    </sourcefile>
+  </data>
+</viper>

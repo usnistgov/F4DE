@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PersonRuns" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="CellToEar" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectPut" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="PeopleMeet" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="PeopleSplitUp" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="Embrace" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="Pointing" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ElevatorNoEntry" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="OpposingFlow" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="TakePicture" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="DoorOpenClose" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="UseATM" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectGet" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="VestAppears" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="SitDown" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="StandUp" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectTransfer" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="file:20050519-1503-Excerpt.mpg">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="5121"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PersonRuns" id="0" framespan="1:1000">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: PersonRuns | ID: 0 | FS: 1:1000 | FILE FS: 1:5121 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-10"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="0" framespan="3503:3738">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3503:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.01"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="1" framespan="3503:3739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="2" framespan="3503:3739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="3" framespan="3:739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 4 | FS: 3:739 | FILE FS: 1:5121 | GTF : 0 | Dec: -250 (false) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-250"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="4" framespan="3503:3739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="5" framespan="3503:3739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="6" framespan="3503:3738">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3503:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.01"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="7" framespan="3503:3739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="8" framespan="3503:3739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="9" framespan="203:3738">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="10" framespan="2503:3739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="101"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="11" framespan="3503:3739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="12" framespan="203:3738">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="13" framespan="2503:3739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="101"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="14" framespan="3503:3739">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectPut" id="0" framespan="938:1493">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="1116:1116" x="105" y="168" height="101" width="131"/>
+          <data:bbox framespan="1117:1117" x="99" y="168" height="89" width="166"/>
+          <data:bbox framespan="1118:1118" x="38" y="298" height="81" width="158"/>
+          <data:bbox framespan="1119:1119" x="98" y="56" height="138" width="187"/>
+          <data:bbox framespan="1120:1120" x="78" y="178" height="88" width="234"/>
+          <data:bbox framespan="1121:1121" x="32" y="281" height="81" width="195"/>
+          <data:bbox framespan="1122:1122" x="202" y="292" height="115" width="110"/>
+          <data:bbox framespan="1123:1123" x="163" y="216" height="52" width="123"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.45"/>
+        </attribute>
+        <attribute name="Point">
+          <data:point framespan="1124:1124" x="263" y="353"/>
+        </attribute>
+      </object>
+      <object name="ObjectPut" id="1" framespan="938:1493">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-1md-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="1116:1116" x="105" y="168" height="101" width="131"/>
+          <data:bbox framespan="1117:1117" x="99" y="168" height="89" width="166"/>
+          <data:bbox framespan="1118:1118" x="38" y="298" height="81" width="158"/>
+          <data:bbox framespan="1119:1119" x="98" y="56" height="138" width="187"/>
+          <data:bbox framespan="1120:1120" x="78" y="178" height="88" width="234"/>
+          <data:bbox framespan="1121:1121" x="32" y="281" height="81" width="195"/>
+          <data:bbox framespan="1122:1122" x="202" y="292" height="115" width="110"/>
+          <data:bbox framespan="1123:1123" x="163" y="216" height="52" width="123"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.45"/>
+        </attribute>
+        <attribute name="Point">
+          <data:point framespan="1124:1124" x="263" y="353"/>
+        </attribute>
+      </object>
+      <object name="ObjectPut" id="2" framespan="938:1493">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="1116:1116" x="105" y="168" height="101" width="131"/>
+          <data:bbox framespan="1117:1117" x="99" y="168" height="89" width="166"/>
+          <data:bbox framespan="1118:1118" x="38" y="298" height="81" width="158"/>
+          <data:bbox framespan="1119:1119" x="98" y="56" height="138" width="187"/>
+          <data:bbox framespan="1120:1120" x="78" y="178" height="88" width="234"/>
+          <data:bbox framespan="1121:1121" x="32" y="281" height="81" width="195"/>
+          <data:bbox framespan="1122:1122" x="202" y="292" height="115" width="110"/>
+          <data:bbox framespan="1123:1123" x="163" y="216" height="52" width="123"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.45"/>
+        </attribute>
+        <attribute name="Point">
+          <data:point framespan="1124:1124" x="263" y="353"/>
+        </attribute>
+      </object>
+      <object name="ObjectPut" id="3" framespan="1:1000">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 1:1000 | FILE FS: 1:5121 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test2-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-10"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="0" framespan="1493:3327">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="3327:3327" x="126" y="337" height="101" width="138"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.78"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="1" framespan="1493:3327">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="3327:3327" x="126" y="337" height="101" width="138"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.78"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="2" framespan="1493:3327">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="3327:3327" x="126" y="337" height="101" width="138"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.78"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="3" framespan="1100:3327">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="4" framespan="1100:3327">
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+    </sourcefile>
+  </data>
+</viper>

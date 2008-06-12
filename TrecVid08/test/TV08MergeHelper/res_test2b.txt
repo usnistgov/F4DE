@@ -1,0 +1,32 @@
+[[COMMANDLINE]] ../../tools/TV08MergeHelper/TV08MergeHelper.pl ../common/test1-1md-sys.xml ../common/test1-same-sys.xml:40 ../common/test1-1fa-sys.xml:10000 ../common/test2-1md_1fa-sys.xml:5000 ../common/test2-same-sys.xml:1500 -f PAL -w /tmp
+[[RETURN CODE]] 0
+[[STDOUT]]
+
+
+** STEP 1: Load all files to be merged
+'../common/test1-1md-sys.xml': Loaded
+'../common/test1-same-sys.xml:40': Loaded
+'../common/test1-1fa-sys.xml:10000': Loaded
+'../common/test2-1md_1fa-sys.xml:5000': Loaded
+'../common/test2-same-sys.xml:1500': Loaded
+* -> Loaded 5 ok / 5
+
+
+** STEP 2: Process all observations
+- Done processing Observations from '../common/test1-1md-sys.xml' [File key: 20050519-1503-Excerpt.mpg] (Found: 4)
+- Done processing Observations from '../common/test1-same-sys.xml' [File key: 20050519-1503-Excerpt.mpg] [requested frameshift: 40] (Found: 5) [FrameShifted (40 frames)]
+- Done processing Observations from '../common/test2-same-sys.xml' [File key: 20050519-1503-Excerpt.mpg] [requested frameshift: 1500] (Found: 5) [FrameShifted (1500 frames)]
+- Done processing Observations from '../common/test2-1md_1fa-sys.xml' [File key: 20050519-1503-Excerpt.mpg] [requested frameshift: 5000] (Found: 5) [FrameShifted (5000 frames)]
+- Done processing Observations from '../common/test1-1fa-sys.xml' [File key: 20050519-1503-Excerpt.mpg] [requested frameshift: 10000] (Found: 6) [FrameShifted (10000 frames)]
+* -> Found 25 Observations
+
+
+** STEP 3: Writting merge file(s)
+Wrote: /tmp/20050519-1503-Excerpt.mpg.xml
+* -> Wrote 1 files (out of 1)
+
+Done.
+
+
+[[STDERR]]
+

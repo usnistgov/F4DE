@@ -1,0 +1,91 @@
+[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test1-same-sys.xml -g ../common/test1-gtf.xml -s -o -D 1000
+[[RETURN CODE]] 0
+[[STDOUT]]
+***** STEP 1: Loading files in Memory
+(SYS) ../common/test1-same-sys.xml: Loaded
+(REF) ../common/test1-gtf.xml: Loaded
+
+** SUMMARY: All files loaded
+** REF: 1 files (all ok)
+** SYS: 1 files (all ok)
+
+
+
+***** STEP 2: Generating EventLists
+* SYS EventList: 5 Observation(s) added [Seen 5 Observations inside 1 file(s)]
+* REF EventList: 5 Observation(s) added [Seen 5 Observations inside 1 file(s)]
+
+** SUMMARY: All EventLists generated
+** Common referred to files (1): 20050519-1503-Excerpt.mpg
+** Only in SYS (0): 
+** Only in REF (0): 
+
+
+
+***** STEP 3: Aligning Files and Events
+
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectPut | SYS elements: 1 | REF elements: 1 | Total Observations: 2 elements
+   TYPE   R.ID  R.range   Dur.r  S.ID  S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+--------------------------------------------------------------------------------------------------------------------------
+  Mapped     0  938:1493    556     0  938:1493    556      0.45       YES    938:1493       556            0            0
+ -- Summary: 1 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 2 elements
+
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectGet | SYS elements: 1 | REF elements: 1 | Total Observations: 2 elements
+   TYPE   R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+----------------------------------------------------------------------------------------------------------------------------
+  Mapped     0  1493:3327   1835     0  1493:3327   1835      0.78        NO   1493:3327      1835            0            0
+ -- Summary: 1 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 2 elements
+
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: CellToEar | SYS elements: 3 | REF elements: 3 | Total Observations: 6 elements
+   TYPE   R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+----------------------------------------------------------------------------------------------------------------------------
+  Mapped     0  3503:3738    236     0  3503:3738    236      0.01       YES   3503:3738       236            0            0
+  Mapped     2  3503:3739    237     1  3503:3739    237      0.23        NO   3503:3739       237            0            0
+  Mapped     1  3503:3739    237     2  3503:3739    237      0.99        NO   3503:3739       237            0            0
+ -- Summary: 3 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 6 elements
+
+            File               Event     TYPE   R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  20050519-1503-Excerpt.mpg  CellToEar  Mapped     0  3503:3738    236     0  3503:3738    236      0.01       YES   3503:3738       236            0            0
+  20050519-1503-Excerpt.mpg  CellToEar  Mapped     2  3503:3739    237     1  3503:3739    237      0.23        NO   3503:3739       237            0            0
+  20050519-1503-Excerpt.mpg  CellToEar  Mapped     1  3503:3739    237     2  3503:3739    237      0.99        NO   3503:3739       237            0            0
+  20050519-1503-Excerpt.mpg  ObjectGet  Mapped     0  1493:3327   1835     0  1493:3327   1835      0.78        NO   1493:3327      1835            0            0
+  20050519-1503-Excerpt.mpg  ObjectPut  Mapped     0   938:1493    556     0   938:1493    556      0.45       YES    938:1493       556            0            0
+
+
+***** STEP 4: Dump of Trial Contingency Table
+           |  Corr:YesTarg  Miss:OmitTarg  Miss:NoTarg  FA:YesNontarg  Corr:NoNontarg  
+-----------+-------------------------------------------------------------------------
+CellToEar  |             1              0            2              0               0
+ObjectGet  |             0              0            1              0               0
+ObjectPut  |             1              0            0              0               0
+-----      |        ------         ------       ------         ------          ------
+Total      |             2              0            3              0               0
+
+
+***** STEP 5: Dump of Analysis Report
+ (only printing seen events)
+
+Performance Summary Over and Ensemble of Subsets
+
+System Title: 
+
+Constant parameters:
+   TOTALDURATION = 1000
+   BETA = 0.0555555555555556
+   CostFA = 1
+   CostMiss = 10
+   Rtarget = 1.8
+
+                 |  #Ref  #Sys  #CorDet  #FA  #Miss  Act. RFA  Act. PMiss  Act. DCR  
+-----------------+-----------------------------------------------------------------
+CellToEar Event  |     3     1        1    0      2    0.0000      0.6667    0.6667
+ObjectPut Event  |     1     1        1    0      0    0.0000      0.0000    0.0000
+ObjectGet Event  |     1     0        0    0      1    0.0000      1.0000    1.0000
+
+
+***** Done *****
+
+
+[[STDERR]]
+

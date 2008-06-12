@@ -1,0 +1,7 @@
+"SourceFile Filename","Framespan","XGTF File","FPS"
+"samefile","10001:15121","../common/test1-1fa-sys.xml","25"
+"samefile","1501:6621","../common/test2-same-sys.xml","25"
+"samefile","1:5121","../common/test1-1md-sys.xml","25"
+"samefile","1:5121","../common/test3-sys.xml","25"
+"samefile","41:5161","../common/test1-same-sys.xml","25"
+"samefile","5001:10121","../common/test2-1md_1fa-sys.xml","25"

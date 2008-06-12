@@ -1,0 +1,26 @@
+[[COMMANDLINE]] ../../tools/TV08MergeHelper/TV08MergeHelper.pl -g ../common/test1-gtf.xml ../common/test2-gtf.xml -f PAL -w /tmp
+[[RETURN CODE]] 0
+[[STDOUT]]
+
+
+** STEP 1: Load all files to be merged
+'../common/test1-gtf.xml': Loaded
+'../common/test2-gtf.xml': Loaded
+* -> Loaded 2 ok / 2
+
+
+** STEP 2: Process all observations
+- Done processing Observations from '../common/test1-gtf.xml' [File key: 20050519-1503-Excerpt.mpg] (Found: 5)
+- Done processing Observations from '../common/test2-gtf.xml' [File key: 20050519-1503-Excerpt.mpg] (Found: 5)
+* -> Found 10 Observations
+
+
+** STEP 3: Writting merge file(s)
+Wrote: /tmp/20050519-1503-Excerpt.mpg.xml
+* -> Wrote 1 files (out of 1)
+
+Done.
+
+
+[[STDERR]]
+
