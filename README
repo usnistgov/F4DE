@@ -1,0 +1,68 @@
+File:  README
+Date:  June 12, 2008
+F4DE Version: 1.0
+
+This directory contains the Framework for Detection Evaluation (F4DE)
+software package.  It contains a set of evaluation tools for detection
+evaluations and for specific NIST-coordinated evaluations listed below.
+	
+  - 2008 TRECVid Event Detection Evaluation. 
+    - TV08Scorer - The main evaluation script. 
+    - TV08ViperValidator - A syntactic and semantic validator for 
+      both system output viper files and reference annotation files.
+    - TV08MergeHelper - A TRECVid '08 VIPeR-formatted file merging program.  
+
+
+INSTALLATION
+------------
+
+Installation is a 4 step process:
+
+  1. Set the the environment variable 'F4DE_BASE' to be the base directory
+     of the F4DE software package.
+  2. Test the code by executing 'make check' to make sure all required
+     libraries and executables are available on the system and that
+     all software checks pass.
+  3. Execute the command 'make install' to copy the executables into 
+     '$F4DE_BASE/bin', perl modules into '$F4DE_BASE/lib', and XSD/Data files
+     into '$F4DE_BASE/lib/data'.
+  4. Add '$F4DE_BASE/bin' to your path environment variable.
+
+USAGE
+-----
+
+A manual page can be printed by each command by executing the command
+with the option '--man'.  For example:
+
+   %  TV08Scorer --man
+
+The manual pages contain command line examples for each tool.  To try
+some command lines with data files, go to the testing directories in
+'TrecVid08/test/<TOOLNAME>' and try the command lines printed on the
+first line of the res*.txt test case files.
+
+CONTACT
+-------
+
+       Please send bug reports to <nist_f4de@nist.gov>
+
+AUTHORS
+-------
+
+       Martial Michel <martial.michel@nist.gov>
+
+       Jonathan Fiscus <jonathan.fiscus@nist.gov>
+
+COPYRIGHT 
+---------
+
+This software was developed at the National Institute of Standards and
+Technology by employees of the Federal Government in the course of their
+official duties.  Pursuant to Title 17 Section 105 of the United States Code
+this software is not subject to copyright protection within the United States
+and is in the public domain. F4DE is an experimental system.  NIST assumes
+no responsibility whatsoever for its use by any party.
+
+THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES
+NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING
+MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
