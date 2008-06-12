@@ -318,11 +318,128 @@ sub compute {
 
 ################################################################################
 
+sub _map_ref_to_sys {
+  my ($rjv, $rfa, $rmd) = @_;
+  return(&_map_ref_to_sys_cohorts($rjv, $rfa, $rmd));
+}
+
+##########
+
+sub _clique_sys2ref {
+ my ($cid, $rjv, $sys_id, $rtdr, $rtds, $cr, $cs) = @_;
+
+#  print "S[$cid][$sys_id]\n";
+  foreach my $ref_id (keys %{$rtdr}) {
+    next if (! exists $$rtdr{$ref_id});
+    if (defined $$rjv{$ref_id}{$sys_id}) {
+      delete $$rtds{$sys_id} if (exists $$rtds{$sys_id});
+      delete $$rtdr{$ref_id} if (exists $$rtdr{$ref_id});
+      $$cs{$cid}{$sys_id}++;
+      $$cr{$cid}{$ref_id}++;
+      &_clique_ref2sys($cid, $rjv, $ref_id, $rtdr, $rtds, $cr, $cs);
+    }
+  }
+
+}
+
+#####
+
+sub _clique_ref2sys {
+  my ($cid, $rjv, $ref_id, $rtdr, $rtds, $cr, $cs) = @_;
+  
+#  print "R[$cid][$ref_id]\n";
+  foreach my $sys_id (keys %{$rtds}) {
+    next if (! exists $$rtds{$sys_id});
+    if (defined $$rjv{$ref_id}{$sys_id}) {
+      delete $$rtdr{$ref_id} if (exists $$rtdr{$ref_id});
+      delete $$rtds{$sys_id} if (exists $$rtds{$sys_id});
+      $$cr{$cid}{$ref_id}++;
+      $$cs{$cid}{$sys_id}++;
+      &_clique_sys2ref($cid, $rjv, $sys_id, $rtdr, $rtds, $cr, $cs);
+    }
+  }
+
+}
+
+##########
+
+sub _map_ref_to_sys_clique_cohorts {
+  my ($rjv, $rfa, $rmd) = @_;
+
+  my %td_ref;
+  my %td_sys;
+  foreach my $ref_id (keys %{$rjv}) { 
+    $td_ref{$ref_id}++;
+    foreach my $sys_id (keys %{$$rjv{$ref_id}}) {
+      $td_sys{$sys_id}++;
+    }
+  }
+  
+  ###### Split into 'cliques'
+  my $cid = 0;
+  my %c_ref;
+  my %c_sys;
+  
+  # Process all refs first
+  foreach my $ref_id (keys %td_ref) {
+    next if (! exists $td_ref{$ref_id});
+    &_clique_ref2sys($cid, $rjv, $ref_id, \%td_ref, \%td_sys, \%c_ref, \%c_sys);
+    $cid++;
+  }
+  
+  # Then the leftover sys
+  foreach my $sys_id (keys %td_sys) {
+    next if (! exists $td_sys{$sys_id});
+    &_clique_sys2ref($cid, $rjv, $sys_id, \%td_ref, \%td_sys, \%c_ref, \%c_sys);
+    $cid++;
+  }
+  
+  # Now process clique per clique
+  my %map;
+  for (my $i = 0; $i < $cid; $i++) {
+    my @rl;
+    @rl = keys %{$c_ref{$i}} if (exists $c_ref{$i});
+    my @sl;
+    @sl = keys %{$c_sys{$i}} if (exists $c_sys{$i});
+    
+    # We can only map if there is at least one entry per array
+    next if ((scalar @rl == 0) || (scalar @sl == 0));
+
+    my %tmp_jv;
+    foreach my $ref_id (@rl) {
+      foreach my $sys_id (@sl) {
+	$tmp_jv{$ref_id}{$sys_id} = $$rjv{$ref_id}{$sys_id};
+      }
+    }
+    my %tmp_fa;
+    foreach my $sys_id (@sl) {
+      $tmp_fa{$sys_id} = $$rfa{$sys_id};
+    }
+    my %tmp_md;
+    foreach my $ref_id (@rl) {
+      $tmp_md{$ref_id} = $$rmd{$ref_id};
+    }
+    
+    my ($err, %tmp_map) = &_map_ref_to_sys_cohorts(\%tmp_jv, \%tmp_fa, \%tmp_md);
+    return($err, %map) if (! MMisc::is_blank($err));
+
+    # Add the temp result to the global result
+    foreach my $ref_id (keys %tmp_map) {
+      $map{$ref_id} = $tmp_map{$ref_id};
+    }
+    
+  }
+
+  return("", %map);
+}
+
+####################
+
 # Original Author: George Doddington
 # Adapted by: Martial Michel
 # (was Part of STDEval : Mapping.pm)
 
-sub _map_ref_to_sys {
+sub _map_ref_to_sys_cohorts {
   my ($rjv, $rfa, $rmd) = @_;
 
   my %joint_values = %{$rjv};
@@ -465,7 +582,7 @@ sub _weighted_bipartite_graph_matching {
   my $min_score = $INF;
   foreach $row (@rows) {
     foreach $col (keys %{$score{$row}}) {
-      $min_score = _min($min_score, $score{$row}{$col});
+      $min_score = MMisc::min($min_score, $score{$row}{$col});
       $hcols{$col} = $col;
     }
   }
@@ -489,7 +606,7 @@ sub _weighted_bipartite_graph_matching {
   
   my $nrows = scalar @rows;
   my $ncols = scalar @cols;
-  my $nmax = _max($nrows,$ncols);
+  my $nmax = MMisc::max($nrows, $ncols);
   my $no_match_cost = - $min_score * (1 + $required_precision);
   
   # subtract the column minimas
@@ -640,7 +757,7 @@ sub _weighted_bipartite_graph_matching {
       $col = ($l < $ncols) ? $cols[$l] : undef;
       $cost = (((defined $row) and (defined $col) and (defined $hcost{$row}{$col})) ? $hcost{$row}{$col} : $no_match_cost) - $col_min[$l];
       if ($cost < ($row_dec[$k] - $col_inc[$l])) {
-	next if ( $cost > (($row_dec[$k] - $col_inc[$l]) - $required_precision * _max(abs($row_dec[$k]), abs($col_inc[$l]))) );
+	next if ( $cost > (($row_dec[$k] - $col_inc[$l]) - $required_precision * MMisc::max(abs($row_dec[$k]), abs($col_inc[$l]))) );
 	return("BGM: this cannot happen: cost{$row}{$col} ($cost) cannot be less than row_dec{$row} ($row_dec[$k]) - col_inc{$col} ($col_inc[$l])", ());
       }
     }
@@ -652,7 +769,7 @@ sub _weighted_bipartite_graph_matching {
     $col = ($l < $ncols) ? $cols[$l] : undef;
     $cost = (((defined $row) and (defined $col) and (defined $hcost{$row}{$col})) ? $hcost{$row}{$col} : $no_match_cost) - $col_min[$l];
     if (($l < 0) or ($cost != ($row_dec[$k] - $col_inc[$l]))) {
-      next if (! ( ($l<0) or abs($cost - ($row_dec[$k] - $col_inc[$l])) > ($required_precision * _max(abs($row_dec[$k]), abs($col_inc[$l]))) ) );
+      next if (! ( ($l<0) or abs($cost - ($row_dec[$k] - $col_inc[$l])) > ($required_precision * MMisc::max(abs($row_dec[$k]), abs($col_inc[$l]))) ) );
       return("BGM: every row should have a column mate: row $row doesn't, col: $col", ());
     }
   }
@@ -675,46 +792,6 @@ sub _weighted_bipartite_graph_matching {
 
 
 ################################################################################
-
-sub _numerically {
-  return ($a <=> $b);
-}
-
-#####
-
-sub _reorder_array {
-  my @ts = @_;
-
-  @ts = sort _numerically @ts;
-
-  return(@ts);
-}
-
-#####
-
-sub _min_max {
-  my @v = &_reorder_array(@_);
-
-  return($v[0], $v[-1]);
-}
-
-#####
-
-sub _min {
-  my @v = &_min_max(@_);
-
-  return($v[0]);
-}
-
-#####
-
-sub _max {
-  my @v = &_min_max(@_);
-
-  return($v[-1]);
-}
-
-########################################
 
 sub _display {
   my ($self, @todisplay) = @_;
