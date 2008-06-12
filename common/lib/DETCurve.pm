@@ -247,12 +247,13 @@ sub blockWeightedUnitTest()
 
     my $blockdetOrig = new DETCurve($trial, 
 				    new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
-				    "blocked", "footitle", \@isolinecoef, undef);
+				    "blocked", "footitle", \@isolinecoef, "gzip");
+    $blockdetOrig->computePoints();
     print "  OK\n";
     print " Serializing to a file...";
     my $sroot = "/tmp/serialize";
     $blockdetOrig->serialize($sroot);
-    my $blockdetSrl = DETCurve::readFromFile("$sroot.gz");
+    my $blockdetSrl = DETCurve::readFromFile("$sroot.gz", "gzip");
     print "  OK\n";
     if (unlink("$sroot.gz") != 1){
 	print "!!!!Warning: Serialization tests passed but file removal of '$sroot.gz' failed\n";
