@@ -73,8 +73,9 @@ sub errMissBlockSetCalc(){
 	    die "Error: Can't calculate errMissBlockSetCalc: key 'MMISS' for block '$block' missing" if (! defined($lu));
 
  	    if ($self->{TRIALS}->getNumTarg($block) > 0){
-		     $sum += $lu;
-		     $sumsqr += $lu * $lu;
+ 	       my $miss = $self->errMissBlockCalc($lu, $block);
+		     $sum += $miss;
+		     $sumsqr += $miss * $miss;
 		     $n ++;
 	    }
 	}
@@ -103,9 +104,9 @@ sub errFABlockSetCalc(){
         die "Error: Can't calculate errFABlockSetCalc: key '".$self->errFALab()."' for block '$block' missing" if (! defined($lu));
    	    
    	    next if ($self->{TRIALS}->getNumTarg($block) == 0);
-	    
-	    $sum += $lu;
-	    $sumsqr += $lu * $lu;
+	    my $fa = $self->errFABlockCalc($lu, $block);
+	    $sum += $fa;
+	    $sumsqr += $fa * $fa;
 	    $n ++;
     }
     die "Error: Can't calculate errFABlockSetCalc: zero blocks" if ($n == 0);
@@ -145,8 +146,11 @@ sub combBlockSetCalc(){
 
    	    next if ($self->{TRIALS}->getNumTarg($block) == 0);
 
-   	    $sum += $self->combCalc($luMiss, $luFA);
-	    $sumsqr += $self->combCalc($luMiss, $luFA) * $self->combCalc($luMiss, $luFA);
+        my $miss = $self->errMissBlockCalc($luMiss, $block); 
+        my $fa = $self->errFABlockCalc($luFA, $block); 
+
+   	    $sum += $self->combCalc($miss, $fa);
+	    $sumsqr += $self->combCalc($miss, $fa) * $self->combCalc($miss, $fa);
 	    $n ++;
     }
     die "Error: Can't calculate errFABlockSetCalc: zero blocks" if ($n == 0);
