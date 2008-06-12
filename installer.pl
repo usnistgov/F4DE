@@ -1,92 +1,106 @@
 #!/usr/bin/env perl
 
 use strict;
+use Getopt::Long;
+Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
-my $envv = "F4DE_BASE";
+my $remext = 0;
+my $isexec = 0;
+GetOptions
+  (
+   'removeext'  => \$remext,
+   'xecec'      => \$isexec,
+  ) or error_quit("Wrong option(s) on the command line, aborting\n");
 
-my @tdd = ("bin", "lib", "lib/data");
-die("ERROR: Set the $envv environment variable with the base destination directory before continuing\nThe script will create the following directories in it: " . join (", ", @tdd) . "\n")
-  if (! $ENV{$envv});
+error_quit("Usage: $0 [options] basedestdir adddestdir files\n")
+  if (scalar @ARGV < 3);
 
-my $bdd = $ENV{$envv};
-die("ERROR: Destination dir can not be \'\/\', sorry")
+my ($bdd, $destdir, @srcfiles) = @ARGV;
+error_quit("ERROR: Destination dir can not be \'\/\', sorry")
   if ($bdd eq "/");
 
-my @needd = ("common", "TrecVid08");
-my (@tbs, @tls, @tds);
-foreach my $nd (@needd) {
-  die("ERROR: Script must be run in base source directory (did not find $nd)\n")
-    if ((! -e $nd) || (! -d $nd));
-  push @tbs, &_find_files($nd, ".pl");
-  push @tls, &_find_files($nd, ".pm");
-  push @tds, &_find_files($nd, "data");
+$bdd =~ s%/$%%;
+
+# Checks
+my $etxt = "";
+$etxt .= "Directory \'$bdd\' is not a directory" if (! -d $bdd);
+$etxt .= "Directory \'$bdd\' not writable" if (! -w $bdd);
+foreach my $f (@srcfiles) {
+  $etxt .= "File \'$f\' missing\n" if (! -e $f);
+  $etxt .= "File \'$f\' not a file\n" if (! -f $f);
+  $etxt .= "File \'$f\' readable\n" if (! -r $f);
 }
-foreach my $ra (\@tbs,\@tls,\@tds) {
-  die("Could not find some elements\n")
-    if (scalar @{$ra} == 0);
+error_quit($etxt) if ($etxt ne "");
+
+#ok_quit("[*] ", join("  |  ", @ARGV), "\n");
+
+# Make the destination directory
+my $fdd = "$bdd/$destdir";
+&_mkdir($fdd);
+foreach my $f (@srcfiles) {
+  &_cp($f, $fdd);
 }
 
-my @rdd;
-$bdd =~ s%\/$%%;
-foreach my $edd (@tdd) {
-  my $dd = "$bdd/$edd";
-  &_mkdir($dd);
-  push @rdd, $dd;
-}
+ok_quit();
 
-&_cp($rdd[0], "", 1, @tbs);
-&_cp($rdd[1], "", 0, @tls);
-&_cp($rdd[2], "", 0, @tds);
-
-print("\nDone.\n");
-print("\nIf you have not done so, yet, please set up the \'$envv\' environment variable to \'$bdd\'\n");
-print("and extend your PATH to use \'$bdd/bin\' for easy access to the tools\n");
-
-exit(0);
+##########
 
 sub _mkdir {
   my $dir = shift @_;
 
-  die("ERROR: Not a directory ($dir)\n") if ((-e $dir) && (! -d $dir));
-  return("") if (-e $dir);
+  error_quit("ERROR: Not a directory ($dir)\n") if ((-e $dir) && (! -d $dir));
+  return() if (-e $dir);
 
-  print "Creating Directory: $dir\n";
   `mkdir -p $dir`;
 
-  die("ERROR: Could not create requested directory ($dir)")
+  error_quit("ERROR: Could not create requested directory ($dir)")
     if ((! -e $dir) || (! -d $dir));
 }
 
-sub _find_files {
-  my $sd = shift @_;
-  my $ext = shift @_;
+#####
 
-  my @l = `find $sd -type f | grep -i $ext | grep -v CVS | grep -v '\~'`;
-  chomp @l;
+sub _chmodx {
+  my $dfile = shift @_;
 
-  return(@l);
+  if ($isexec) {
+    return if (-x $dfile);
+    `chmod a+x $dfile`;
+    error_quit("ERROR: could not make file ($dfile) executable")
+      if (! -x $dfile);
+  } else {
+    return if (! -x $dfile);
+    `chmod a-x $dfile`;
+    error_quit("ERROR: could not make file ($dfile) not executable")
+      if (-x $dfile);
+  }
 }
 
-sub _cp {
-  my $ddir = shift @_;
-  my $ext = shift @_;
-  my $x = shift @_;
-  my @files = @_;
+#####
 
-  foreach my $file (@files) {
-    my $dfile = $file;
-    $dfile =~ s%\.$ext$%%; # remove the extension if given
-    my $fd = $dfile;
-    $fd =~ s%^(.+)/([^\/]+)$%$2%;
-    $fd = "$ddir/$fd";
-    `cp $file $fd`;
-    die("ERROR: copying file ($file) to dir ($ddir) [ie: $fd]\n")
-      if ((! -e $fd) && (! -f $fd));
-    if ($x) {
-      `chmod a+x $fd`;
-      die("ERROR: could not make file ($fd) exectubale")
-	if (! -x $fd);
-    }
-    print "Installed: $fd\n";
-  }
+sub _cp {
+  my $file = shift @_;
+  my $fdd  = shift @_;
+
+  my $fe = $file;
+  $fe =~ s%^.+/([^/]+)$%$1%;
+  my $dfile = "$fdd/$fe";
+  $dfile =~ s%\.[^\.]+$%% if ($remext);
+  `cp $file $dfile`;
+  error_quit("ERROR: copying file ($file -> $dfile)\n")
+    if ((! -e $dfile) && (! -f $dfile));
+  &_chmodx($dfile);
+}
+
+##########
+
+sub ok_quit {
+  print @_;
+  exit(0);
+}
+
+#####
+
+sub error_quit {
+  print @_;
+  exit(1);
 }
