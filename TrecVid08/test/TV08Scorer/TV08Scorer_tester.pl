@@ -52,7 +52,7 @@ sub do_test {
   my $frf = "../common/$rf";
   my $fsf = "../common/$sf";
 
-  my $command = "$scorer -a -f 25 -d 1 $fsf -g $frf -s -p $ao";
+  my $command = "$scorer -a -f 25 -d 1 $fsf -g $frf -s -o $ao";
 
   return(TV08TestCore::run_simpletest($testname, $command, $res, $mode));
 }
