@@ -180,8 +180,7 @@ sub unitTest
 ###POOLED###			thisabs($points[$i][2] - $detFixDenom->{POINTS}[$i][2]) > 0.001 ||
 ###POOLED###			thisabs($points[$i][3] - $detFixDenom->{POINTS}[$i][3]) > 0.001);
 ###POOLED###    }
-    
-    print "  OK\n";
+###POOLED###  print "  OK\n";
 	blockWeightedUnitTest();
 #	unitTestMultiDet();
 
