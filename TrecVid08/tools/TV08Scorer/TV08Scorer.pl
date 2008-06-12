@@ -189,13 +189,13 @@ my $E_t = 1E-8;
 
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
+my $mancmd = "perldoc -F $0";
 my $usage = &set_usage();
 
 # Default values for variables
 my $showAT = 0;
 my $allAT = 0;
 my $showi = 0;
-my $perfStat = 0;
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
 my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../data");
 $xsdpath = "$f4bv/data" 
@@ -214,7 +214,7 @@ my $outputRootFile = undef;
 my $observationContingencyTable = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:    DEFG       O   ST     Za  cdefgh     nop  st v x  
+# Used:    DEFG       O   ST     Za  cdefgh   mno   st v x  
 
 my %opt;
 my $dbgftmp = "";
@@ -224,6 +224,7 @@ GetOptions
    \%opt,
    'help',
    'version',
+   'man',
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
    'gtf'             => sub {$gtfs++; @leftover = @ARGV},
@@ -233,7 +234,6 @@ GetOptions
    'Et=f'            => \$E_t,
    'allAT'           => \$allAT,
    'showAT'          => \$showAT,
-   'perfStat'        => \$perfStat,
    'Duration=f'      => \$duration,
    'ecf=s'           => \$ecffile,
    'computeDETCurve' => \$doDC,
@@ -249,6 +249,11 @@ GetOptions
 
 ok_quit("\n$usage\n") if ($opt{'help'});
 ok_quit("$versionid\n") if ($opt{'version'});
+if ($opt{'man'}) {
+  my ($r, $o, $e) = MMisc::do_system_call($mancmd);
+  error_quit("Could not run \'$mancmd\'") if ($r);
+  ok_quit($o);
+}
 
 ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
@@ -276,8 +281,8 @@ error_quit("No SYS file(s) provided, can not perform scoring")
 error_quit("No REF file(s) provided, can not perform scoring")
   if (scalar @ref == 0);
 
-error_quit("Option OutputFileRoot required to compute produce the PNGs")
-  if ($doDC && !$noPNG && (!defined($outputRootFile)));
+error_quit("\'OutputFileRoot\' required to produce the PNGs")
+  if ($doDC && (! $noPNG) && (! defined $outputRootFile));
 
 ########## Main processing
 my $stepc = 1;
@@ -389,9 +394,8 @@ foreach my $event (@all_events) {
   my $metric = $all_metric{$event};
   # print "** Computing DET Curves for event: $event\n";
   my $det = new DETCurve($trials, $metric, "blocked", "Event $event: ". $sysTitle, [()], $gzipPROG);
-  if ($det->getMessages() ne "") { 
-    print $det->getMessages();
-  }
+  print $det->getMessages()
+    if (! MMisc::is_blank($det->getMessages()));
   my $rtn = $detSet->addDET($event." Event", $det);
   error_quit("Error adding Event '$event' to the DETSet: $rtn") if ($rtn ne "success");                     
 }
@@ -400,11 +404,6 @@ MMisc::writeTo($outputRootFile, ".scores.txt", 1, 0,
                $detSet->renderAsTxt($outputRootFile.".det", $doDC, 1, 
                                     { (xScale => "log", Ymin => "0.00001", Ymax => "90", Xmin => "0.00001", Xmax => "100", 
                                        gnuplotPROG => $gnuplotPROG, BuildPNG => ($noPNG ? 0 : 1)) }));
-
-#my $trials->dump(*STDOUT);
-
-#### TODO #####
-
 
 ok_quit("\n\n***** Done *****\n");
 
@@ -419,7 +418,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile]  [--help] [--version] [--showAT] [--perfStat] [--computeDETCurve rfile] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--showAT] [--allAT] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -432,14 +431,16 @@ Will Score the XML file(s) provided (Truth vs System)
   --ecf           Specify the ECF file to load and perform scoring against
   --deltat        Set the deltat value
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
-  --showAT        Show Alignment Table (per File/Event processed)
-  --perfStat      Dump Performance Statistics
-  --computeDETCurve  Generate DETCurve (requires GNUPlot and PNG support)
-  --version       Print version number and exit
-  --GnuplotPROG   Specify the full path name to gnuplot.  Default is to have 'gnuplot' in your path 
-  --ZipPROG       Specify the full path name to gzip.  Default is to have 'gzip' in your path
-  --noPNG         Do not create PNGs if a DET Curve is computed 
+  --showAT        Show Gloabl Alignment Table
+  --allAT         Show Alignment Table per File and Event processed
+  --observationCont  Dump the Trials Contingency Table
+  --OutputFileRoot   Specify the file base of most output files generated (default is to print)
+  --computeDETCurve  Generate DETCurve 
   --titleOfSys    Specifiy the title of the system for use in the reports
+  --ZipPROG       Specify the full path name to gzip (Default is to have 'gzip' in your path)
+  --GnuplotPROG   Specify the full path name to gnuplot (Default is to have 'gnuplot' in your path)
+  --noPNG         Do not create PNGs if a DET Curve is computed 
+  --version       Print version number and exit
   --help          Print this usage information and exit
 
 Note:
@@ -1084,3 +1085,213 @@ sub load_ecf {
 
   return("");
 }
+
+############################################################ Manual
+
+=pod
+
+=head1 NAME
+
+TV08Scorer - TrecVid08 Viper XML System to Reference Scoring Tool
+
+=head1 SYNOPSIS
+
+B<TV08Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
+    S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
+    S<[B<--Duration> I<seconds>] [B<--Ed> S<value>] [B<--Et> S<value>]>
+    S<[B<--showAT>] [B<--allAT>] [B<--observationCont>]>
+    S<[B<--OutputFileRoot> I<filebase>]>
+    S<[B<--computeDETCurve> [B<--titleOfSys> I<title>] [B<--ZipPROG> I<gzip>] [B<--noPNG> | B<--GnuplotPROG> I<gnuplot>]]>
+    S<[B<--ecf> I<ecffile>]>
+    S<B<--deltat> I<deltat> B<--fps> I<fps>>
+    S<I<sys_file.xml> [I<...>] B<--gtf> I<ref_file.xml> [I<...>]>
+
+=head1 DESCRIPTION
+
+B<TV08Scorer> performs an alignment scoring comparing I<reference> and I<system> I<Event> I<Observations>.
+It requires either an I<ECF> with a definition of files and sections to use for scoring, or it will process all scorable items given on the command line.
+It can print a global alignment table, as well as a per file, per event alignment table.
+It can print a per event I<Trial Contingency Table>, listing mapped observations (I<Corr:YesTarg>), unmapped reference observations (I<Miss:OmitTarg> and I<Miss:NoTarg>), and unmapped system observations (I<FA:YesNontarg> and I<Corr:NoNontarg>).
+It can also generate a I<DETCurve> score (and plot upon request).
+
+=head1 PREREQUISITES
+
+B<TV08Scorer> input files need to pass the B<TV08ViperValidator> validation process, and relies on some external software and files.
+
+=over
+
+=item B<SOFTWARE>
+
+I<xmllint> (part of I<libxml2>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
+
+For I<DETCurve> files generation, I<gzip> is required.
+For I<DETCurve> PNG generation, a recent version of I<GNUPlot> is required.
+
+=item B<FILES>
+
+The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
+It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> environment variable.
+You should not have to specify their location, if you have performed an install and have set the global environment variables.
+
+=item B<GLOBAL ENVIRONMENT VARIABLES>
+
+B<TV08Scorer> relies on some internal and external Perl libraries to function.
+
+Simply running the B<TV08Scorer> script should provide you with the list of missing libraries.
+The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
+
+=over
+
+=item B<F4DE_BASE>
+
+The main variable once you have installed the software, it should be sufficient to run this program.
+
+=item B<F4DE_PERL_LIB>
+
+Allows you to specify a different directory for the B<F4DE> libraries.
+
+=item B<TV08_PERL_LIB>
+
+Allows you to specify a different directory for the B<TrecVid08> libraries.
+
+=back
+
+=back
+
+=head1 GENERAL NOTES
+
+B<TV08Scorer> expect that the file can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
+
+B<TV08Scorer> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
+
+=head1 OPTIONS
+
+=over
+
+=item B<--allAT>
+
+Show I<Alignment Table>, per File/Event as they are being processed.
+
+=item B<--computeDETCurve>
+
+Generates I<DETCurve> plot data files as well as png files (requires GNUPlot with PNG support)
+
+=item B<--Duration> I<seconds>
+
+Specify the I<duration> value (required for the I<DETCurve> metric).
+If an I<ECF> is specified, override its I<duration> value.
+
+=item B<--deltat> I<deltat>
+
+Specify the I<delta t> value required for the Event Alignment (see Eval Plan).
+
+=item B<--Ed> I<value>
+
+Override the default value for I<E d> required for the Event Alignment (see Eval Plan).
+Default value can be obtained by the B<--help> option.
+
+=item B<--Et> I<value>
+
+Override the default value for I<E t> required for the Event Alignment (see Eval Plan).
+Default value can be obtained by the B<--help> option.
+
+=item B<--ecf> I<ecffile>
+
+Specify the I<ECF> to load. This will limit scoring to only those I<Event> I<Observations> whose sourcefile is listed in the ECF, but also whose time range's middlepoint is within the time range specified in the ECF.
+
+=item B<--fps> I<fps>
+
+Specify the default sample rate of the Viper files.
+
+=item B<--GnuplotPROG> I<gnuplot>
+
+Specify the full path location of S<gnuplot> if the version you want to use is not first in your PATH.
+
+=item B<--gtf>
+
+Specify that the files past this marker are reference files.
+
+=item B<--help>
+
+Display the usage page for this program. Also display some default values and information.
+
+=item B<--man>
+
+Display this man page.
+
+=item B<--noPNG>
+
+Do not create PNG files if a DET Curve is computed .
+
+=item B<--observationCont>
+
+Show a I<Trials Contingency Table>, listing per event: mapped observations (I<Corr:YesTarg>), unmapped reference observations (I<Miss:OmitTarg> and I<Miss:NoTarg>), and unmapped system observations (I<FA:YesNontarg> and I<Corr:NoNontarg>).
+
+=item B<--OutputFileRoot> I<filebase>
+
+Will generate a file to disk for most reports, using I<filebase> as the file's basename and adding to it a task extension.
+
+=item B<--showAT>
+
+Show a global I<Alignment Table>.
+
+=item B<--titleOfSys> I<title>
+
+When creating a DETCurve, using I<title> for the result's title.
+
+=item B<--TrecVid08xsd> I<location>
+
+Specify the default location of the required XSD files (use B<--help> to get the list of required files).
+Can also be set using the B<TV08_XSDPATH> environment variable.
+
+=item B<--version>
+
+Display B<TV08Scorer> version information.
+
+=item B<--xmllint> I<location>
+
+Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
+Can also be set using the B<TV08_XMLLINT> environment variable.
+
+=item B<--ZipPROG> I<gzip>
+
+Specify the full path location of gzip if it is not your PATH.
+
+=back
+
+=head1 USAGE
+
+=item B<TV08Scorer --fps 25 --deltat 1 test1-sys.xml --gtf test1-gtf.xml --showAT -allAT --observationCont --Duration 1000 --Ed 0.0002 --Et 0.004>
+
+Will score the I<test1-sys.xml> I<system> file against the I<test1-gtf.xml> I<refefence> file, specifying that the default sample rate is 25 fps, I<delta t> is 1 frame, I<duration> is 1000 seconds, I<E d> is 0.0002 and I<E t> is 0.004.
+It will print an I<Alignment Table> as it process each sourcefile's filename event type, as well as a I<Global Alignment Table>.
+It will also print the I<Trial Contingency Table> table once all the scoring/alignment are done.
+
+=item B<TV08Scorer --xmllint /local/bin/xmllint --TrecVid08xsd /local/F4DE-CVS/data --fps 25 --deltat 10 test1-sys.xml test2-sys.xml test3-sys.xml test4-sys.xml test5-sys.xml --gtf test1-gtf.xml test2-gtf.xml test3-gtf.xml test4-gtf.xml --showAT --computeDETCurve --noPNG --ecf test.ecf>
+
+Will load the I<test1-sys.xml>, I<test2-sys.xml>, I<test3-sys.xml>, I<test4-sys.xml> and I<test5-sys.xml> I<system> files against the I<test1-gtf.xml>, I<test2-gtf.xml>, I<test3-gtf.xml> and I<test4-gtf.xml> I<refefence> files, specifying that the default sample rate is 25 fps, I<delta t> is 10 frames, using the I<xmllint> executable located at I</local/bin/xmllint> and the required XSD files found in the I</local/F4DE/data> directory.
+It will load the I<test.ecf> I<ECF> file and only score the I<Event> I<Observations> whose sourcefile's filename and time range match the ones listed in the I<ECF> file.
+It will print the I<Global Alignment Table>.
+It will also try to generate a I<DETCurve> result table but not plot PNGs.
+
+=item B<TV08Scorer --fps 29.97 --deltat 50 test1-sys.xml test2-sys.xml --gtf test1-gtf.xml test2-gtf.xml --showAT --observationCont --OutputFileRoot results --computeDETCurve --titleOfSys "Analysis result" --zipPROG /local/bin/gzip --GnuplotPROG /local/bin/gnuplot --ecf test.ecf>
+
+Will load the I<test1-sys.xml> and I<test2-sys.xml> I<system> files against the I<test1-gtf.xml> and I<test2-gtf.xml> I<refefence> files, specifying that the default sample rate is 29.97 fps, I<delta t> is 50 frames.
+It will load the I<test.ecf> I<ECF> file and only score the I<Event> I<Observations> whose sourcefile's filename and time range match the ones listed in the I<ECF> file.
+It specify that the base output filename is I<results>
+It will write a I<Global Alignment Table> in the I<results.ali.txt> file.
+It will write a I<Trial Contingency Table> in the I<results.contingency.txt> file.
+It will use the title S<Analysis result> when generated the I<DETCurve> result tables and PNGs (using S</local/bin/gzip> and S</local/bin/gnuplot> for the B<gzip> and B<gnuplot> commands).
+
+=head1 BUGS
+
+Please send bug reports to <nist_f4de@nist.gov>
+
+=head1 AUTHORS
+
+Martial Michel <martial.michel@nist.gov>
+
+Jonathan Fiscus <jonathan.fiscus@nist.gov>
+
+=cut
