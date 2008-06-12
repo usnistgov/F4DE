@@ -1069,14 +1069,14 @@ sub writeMultiDetGraph
     my $combType = ($dets->[0]->{METRIC}->combType() eq "minimizable" ? "Min" : "Max");
     my %multiInfo = ();
 
-    ### If there's one, do one!!!
-    if (scalar(@{ $dets }) == 1){
-	   if (! $dets->[0]->writeGNUGraph($fileRoot, $options)){
-	        die "Failed to write single GNUGraph for multidet";
-	   }
-	   $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
-	   return \%multiInfo;	
-    }
+#    ### If there's one, do one!!!
+#    if (scalar(@{ $dets }) == 1){
+#	   if (! $dets->[0]->writeGNUGraph($fileRoot, $options)){
+#	        die "Failed to write single GNUGraph for multidet";
+#	   }
+#	   $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
+#	   return \%multiInfo;	
+#    }
     
     ### Use the options
     my $title = "Combined DET Plot";
