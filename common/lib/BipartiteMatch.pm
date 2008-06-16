@@ -245,8 +245,8 @@ sub compute {
     while (my ($sys_id, $sys_obj) = each %sysObj) {
       my ($err, $res) = &{$self->{KernelFunction}}($ref_obj, $sys_obj, @kp);
       if (! MMisc::is_blank($err)) {
-	$self->_set_errormsg("While computing the joint values for sys ID ($sys_id) and ref ID ($ref_id): $err");
-	return(0);
+        $self->_set_errormsg("While computing the joint values for sys ID ($sys_id) and ref ID ($ref_id): $err");
+        return(0);
       }
       $joint_values{$ref_id}{$sys_id} = $res;
     }
@@ -326,9 +326,9 @@ sub _map_ref_to_sys {
 ##########
 
 sub _clique_sys2ref {
- my ($cid, $rjv, $sys_id, $rtdr, $rtds, $cr, $cs) = @_;
+  my ($cid, $rjv, $sys_id, $rtdr, $rtds, $cr, $cs) = @_;
 
-#  print "S[$cid][$sys_id]\n";
+  #  print "S[$cid][$sys_id]\n";
   foreach my $ref_id (keys %{$rtdr}) {
     next if (! exists $$rtdr{$ref_id});
     if (defined $$rjv{$ref_id}{$sys_id}) {
@@ -347,7 +347,7 @@ sub _clique_sys2ref {
 sub _clique_ref2sys {
   my ($cid, $rjv, $ref_id, $rtdr, $rtds, $cr, $cs) = @_;
   
-#  print "R[$cid][$ref_id]\n";
+  #  print "R[$cid][$ref_id]\n";
   foreach my $sys_id (keys %{$rtds}) {
     next if (! exists $$rtds{$sys_id});
     if (defined $$rjv{$ref_id}{$sys_id}) {
@@ -408,7 +408,7 @@ sub _map_ref_to_sys_clique_cohorts {
     my %tmp_jv;
     foreach my $ref_id (@rl) {
       foreach my $sys_id (@sl) {
-	$tmp_jv{$ref_id}{$sys_id} = $$rjv{$ref_id}{$sys_id};
+        $tmp_jv{$ref_id}{$sys_id} = $$rjv{$ref_id}{$sys_id};
       }
     }
     my %tmp_fa;
@@ -455,9 +455,9 @@ sub _map_ref_to_sys_cohorts {
 
     $ref_info{$ref_id}
       = {
-	 id  => $ref_id,
-	 val => $md_values{$ref_id}
-	};
+         id  => $ref_id,
+         val => $md_values{$ref_id}
+        };
 
     while (my ($sys_id, $value) = each %{$joint_values{$ref_id}}) {
       $reversed_values{$sys_id}{$ref_id} = $value;
@@ -470,9 +470,9 @@ sub _map_ref_to_sys_cohorts {
 
     $sys_info{$sys_id}
       = {
-	 id  => $sys_id,
-	 val => $fa_values{$sys_id}
-	};
+         id  => $sys_id,
+         val => $fa_values{$sys_id}
+        };
   }
 
   # Group ref and sys IDs into "cohort sets" and map each set independently
@@ -489,26 +489,26 @@ sub _map_ref_to_sys_cohorts {
     $ref_map{$ref->{id}} = 1;
     while (@queue > 0) {
       my ($id, $ref_type) = splice(@queue, 0, 2); # Remove (and returns) the first two elements of @queue
-      if ($ref_type) { # Find sys cohorts for this ref
-	foreach my $sys_id (keys %{$joint_values{$id}}) {
-	  next if ((defined $sys_map{$sys_id}) or (not defined $joint_values{$id}{$sys_id}));
-	  $sys_map{$sys_id} = 1;
-	  my $sys = $sys_info{$sys_id};
-	  $sys->{cohort} = 1;
-	  $sys->{mapped} = 1;
-	  push @sys_cohorts, $sys;
-	  splice(@queue, scalar @queue, 0, $sys_id, 0); # eq 'push @queue, $sys_id, 0'
-	}
-      } else { # find ref cohorts for this sys
-	foreach my $ref_id (keys %{$reversed_values{$id}}) {
-	  next if ((defined $ref_map{$ref_id}) or (not defined $reversed_values{$id}{$ref_id}));
-	  $ref_map{$ref_id} = 1;
-	  my $ref = $ref_info{$ref_id};
-	  $ref->{cohort} = 1;
-	  $ref->{mapped} = 1;
-	  push @ref_cohorts, $ref;
-	  splice(@queue, scalar @queue, 0, $ref_id, 1);
-	}
+      if ($ref_type) {          # Find sys cohorts for this ref
+        foreach my $sys_id (keys %{$joint_values{$id}}) {
+          next if ((defined $sys_map{$sys_id}) or (not defined $joint_values{$id}{$sys_id}));
+          $sys_map{$sys_id} = 1;
+          my $sys = $sys_info{$sys_id};
+          $sys->{cohort} = 1;
+          $sys->{mapped} = 1;
+          push @sys_cohorts, $sys;
+          splice(@queue, scalar @queue, 0, $sys_id, 0); # eq 'push @queue, $sys_id, 0'
+        }
+      } else {                  # find ref cohorts for this sys
+        foreach my $ref_id (keys %{$reversed_values{$id}}) {
+          next if ((defined $ref_map{$ref_id}) or (not defined $reversed_values{$id}{$ref_id}));
+          $ref_map{$ref_id} = 1;
+          my $ref = $ref_info{$ref_id};
+          $ref->{cohort} = 1;
+          $ref->{mapped} = 1;
+          push @ref_cohorts, $ref;
+          splice(@queue, scalar @queue, 0, $ref_id, 1);
+        }
       }
     }
 
@@ -517,9 +517,9 @@ sub _map_ref_to_sys_cohorts {
     foreach my $ref_cohort (@ref_cohorts) {
       my ($ref_id, $md_value) = ($ref_cohort->{id}, $ref_cohort->{val});
       foreach my $sys_cohort (@sys_cohorts) {
-	my ($sys_id, $fa_value) = ($sys_cohort->{id}, $sys_cohort->{val});
-	$costs{$ref_id}{$sys_id} = $md_value + $fa_value - $joint_values{$ref_id}{$sys_id}
-	  if (defined $joint_values{$ref_id}{$sys_id});
+        my ($sys_id, $fa_value) = ($sys_cohort->{id}, $sys_cohort->{val});
+        $costs{$ref_id}{$sys_id} = $md_value + $fa_value - $joint_values{$ref_id}{$sys_id}
+          if (defined $joint_values{$ref_id}{$sys_id});
       }
     }
 
@@ -549,7 +549,7 @@ sub _weighted_bipartite_graph_matching {
   my %score = %{$rscore};
   my @keys = keys %score;
 
-#  print "[%score] ", Dumper(\%score);
+  #  print "[%score] ", Dumper(\%score);
 
   # No element
   return ("", ()) 
@@ -593,7 +593,7 @@ sub _weighted_bipartite_graph_matching {
   foreach $row (@rows) {
     foreach $col (keys %{$score{$row}}) {
       ($reverse_search ? $hcost{$col}{$row} : $hcost{$row}{$col})
-	= $score{$row}{$col} - $min_score;
+        = $score{$row}{$col} - $min_score;
     }
   }
   push @rows, $md;
@@ -641,10 +641,10 @@ sub _weighted_bipartite_graph_matching {
       $col = ($l < $ncols) ? $cols[$l] : undef;
       $cost = ( ((defined $row) and (defined $col) and (defined $hcost{$row}{$col})) ? $hcost{$row}{$col} : $no_match_cost) - $col_min[$l];
       if (($cost == $row_min) and (not defined $row_mate[$l])) {
-	$col_mate[$k] = $l;
-	$row_mate[$l] = $k;
-	# matching row $k with column $l
-	next ROW;
+        $col_mate[$k] = $l;
+        $row_mate[$l] = $k;
+        # matching row $k with column $l
+        next ROW;
       }
     }
     $col_mate[$k] = -1;
@@ -661,65 +661,65 @@ sub _weighted_bipartite_graph_matching {
     
     while (1) {
       while ($q < $t) {
-	# explore node q of forest; if matching can be increased, update matching
-	$k = $unchosen_row[$q];
-	$row = ($k < $nrows) ? $rows[$k] : undef;
-	$s = $row_dec[$k];
-	for ($l = 0; $l < $nmax; $l++) {
-	  if ($slack[$l] > 0) {
-	    $col = ($l < $ncols) ? $cols[$l] : undef;
-	    $cost = (((defined $row) and (defined $col) and (defined $hcost{$row}{$col})) ? $hcost{$row}{$col} : $no_match_cost) - $col_min[$l];
-	    my $del = $cost - $s + $col_inc[$l];
-	    if ($del < $slack[$l]) {
-	      if ($del == 0) {
-		goto UPDATE_MATCHING if (! defined $row_mate[$l]);
-		$slack[$l] = 0;
-		$parent_row[$l] = $k;
-		$unchosen_row[$t++] = $row_mate[$l];
-	      } else {
-		$slack[$l] = $del;
-		$slack_row[$l] = $k;
-	      }
-	    }
-	  }
-	}
-	
-	$q++;
+        # explore node q of forest; if matching can be increased, update matching
+        $k = $unchosen_row[$q];
+        $row = ($k < $nrows) ? $rows[$k] : undef;
+        $s = $row_dec[$k];
+        for ($l = 0; $l < $nmax; $l++) {
+          if ($slack[$l] > 0) {
+            $col = ($l < $ncols) ? $cols[$l] : undef;
+            $cost = (((defined $row) and (defined $col) and (defined $hcost{$row}{$col})) ? $hcost{$row}{$col} : $no_match_cost) - $col_min[$l];
+            my $del = $cost - $s + $col_inc[$l];
+            if ($del < $slack[$l]) {
+              if ($del == 0) {
+                goto UPDATE_MATCHING if (! defined $row_mate[$l]);
+                $slack[$l] = 0;
+                $parent_row[$l] = $k;
+                $unchosen_row[$t++] = $row_mate[$l];
+              } else {
+                $slack[$l] = $del;
+                $slack_row[$l] = $k;
+              }
+            }
+          }
+        }
+        
+        $q++;
       }
       
       # introduce a new zero into the matrix by modifying row_dec and col_inc
       # if the matching can be increased update matching
       $s = $INF;
       for ($l = 0; $l < $nmax; $l++) {
-	if (($slack[$l]) and ($slack[$l] < $s)) {
-	  $s = $slack[$l];
-	}
+        if (($slack[$l]) and ($slack[$l] < $s)) {
+          $s = $slack[$l];
+        }
       }
       for ($q = 0; $q < $t; $q++) {
-	$row_dec[$unchosen_row[$q]] += $s;
+        $row_dec[$unchosen_row[$q]] += $s;
       }
       
       for ($l = 0; $l < $nmax; $l++) {
-	if ($slack[$l]) {
-	  $slack[$l] -= $s;
-	  if ($slack[$l] == 0) {
-	    # look at a new zero and update matching with col_inc uptodate if there's a breakthrough
-	    $k = $slack_row[$l];
-	    if (! defined $row_mate[$l]) {
-	      for (my $j = $l + 1; $j < $nmax; $j++) {
-		if ($slack[$j] == 0) {
-		  $col_inc[$j] += $s;
-		}
-	      }
-	      goto UPDATE_MATCHING;
-	    } else {
-	      $parent_row[$l] = $k;
-	      $unchosen_row[$t++] = $row_mate[$l];
-	    }
-	  }
-	} else {
-	  $col_inc[$l] += $s;
-	}
+        if ($slack[$l]) {
+          $slack[$l] -= $s;
+          if ($slack[$l] == 0) {
+            # look at a new zero and update matching with col_inc uptodate if there's a breakthrough
+            $k = $slack_row[$l];
+            if (! defined $row_mate[$l]) {
+              for (my $j = $l + 1; $j < $nmax; $j++) {
+                if ($slack[$j] == 0) {
+                  $col_inc[$j] += $s;
+                }
+              }
+              goto UPDATE_MATCHING;
+            } else {
+              $parent_row[$l] = $k;
+              $unchosen_row[$t++] = $row_mate[$l];
+            }
+          }
+        } else {
+          $col_inc[$l] += $s;
+        }
       }
     }
     
@@ -738,7 +738,7 @@ sub _weighted_bipartite_graph_matching {
     $unmatched--;
     goto CHECK_RESULT if ($unmatched == 0);
     
-    $t = 0;			
+    $t = 0;                     
     # get ready for another stage
     for ($l = 0; $l < $nmax; $l++) {
       $parent_row[$l] = -1;
@@ -747,7 +747,7 @@ sub _weighted_bipartite_graph_matching {
     for ($k = 0; $k < $nmax; $k++) {
       $unchosen_row[$t++] = $k if ($col_mate[$k] < 0);
     }
-  } # cycle to next stage
+  }                             # cycle to next stage
   
  CHECK_RESULT:
   # rigorously check results before handing them back
@@ -757,8 +757,8 @@ sub _weighted_bipartite_graph_matching {
       $col = ($l < $ncols) ? $cols[$l] : undef;
       $cost = (((defined $row) and (defined $col) and (defined $hcost{$row}{$col})) ? $hcost{$row}{$col} : $no_match_cost) - $col_min[$l];
       if ($cost < ($row_dec[$k] - $col_inc[$l])) {
-	next if ( $cost > (($row_dec[$k] - $col_inc[$l]) - $required_precision * MMisc::max(abs($row_dec[$k]), abs($col_inc[$l]))) );
-	return("BGM: this cannot happen: cost{$row}{$col} ($cost) cannot be less than row_dec{$row} ($row_dec[$k]) - col_inc{$col} ($col_inc[$l])", ());
+        next if ( $cost > (($row_dec[$k] - $col_inc[$l]) - $required_precision * MMisc::max(abs($row_dec[$k]), abs($col_inc[$l]))) );
+        return("BGM: this cannot happen: cost{$row}{$col} ($cost) cannot be less than row_dec{$row} ($row_dec[$k]) - col_inc{$col} ($col_inc[$l])", ());
       }
     }
   }

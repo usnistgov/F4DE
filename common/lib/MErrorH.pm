@@ -36,7 +36,7 @@ my $versionid = "MErrorH.pm Version: $version";
 sub new {
   my ($class, $header) = @_;
 
-   my $self =
+  my $self =
     {
      header   => $header,
      errormsg => "",

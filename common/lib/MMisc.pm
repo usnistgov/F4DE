@@ -89,9 +89,9 @@ sub do_system_call {
 sub check_package {
   my ($package) = @_;
   unless (eval "use $package; 1")
-  {
-    return(0);
-  }
+    {
+      return(0);
+    }
   return(1);
 }
 

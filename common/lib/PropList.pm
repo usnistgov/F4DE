@@ -32,8 +32,8 @@ sub new {
 
   my $self =
     {
-     KEYS       => undef, # The key hash (and default values)
-     authval    => undef, # List of authorized values per key
+     KEYS       => undef,       # The key hash (and default values)
+     authval    => undef,       # List of authorized values per key
      errormsg   => $errormsg,
     };
   
@@ -85,15 +85,15 @@ sub setValue {
 ##########
 
 sub setValueFromHash(){
-    my ($self, $ht) = @_;
-    my $err = 0;
+  my ($self, $ht) = @_;
+  my $err = 0;
     
-    foreach my $key(keys %$ht){
-        if (! $self->setValue($key, $ht->{$key})){
-            $err ++; 
-        }
+  foreach my $key (keys %$ht) {
+    if (! $self->setValue($key, $ht->{$key})) {
+      $err ++; 
     }
-    ($err == 0) ? 1 : 0;
+  }
+  ($err == 0) ? 1 : 0;
 }
 
 ##########
@@ -147,12 +147,12 @@ sub unit_test {
     $err++;
   }
 
-  if (! $p->addProp("key2", 'value2')){
+  if (! $p->addProp("key2", 'value2')) {
     print STDERR "Error: $cl: Unable to add a key\n";
     $err++;
   }
 
-  if ($p->addProp("key1", undef)){
+  if ($p->addProp("key1", undef)) {
     print STDERR "Error: $cl: re-add of 'key1' succeeded but shouldn't have\n";
     $err++;
   }
@@ -168,7 +168,7 @@ sub unit_test {
     }
   }
   
- # $p->_display();
+  # $p->_display();
   $p->printPropList();
 
   print STDERR "$err Unit Test Errors\n";

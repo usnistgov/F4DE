@@ -227,22 +227,22 @@ sub _fs_shorten_value {
     ($errormsg, $nb, $ne) = &_fs_split_pair($entry);
     return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
 
-    if ($nb == $e) { # ex: 1:2 2:6 -> 1:6
+    if ($nb == $e) {            # ex: 1:2 2:6 -> 1:6
       $e = $ne;
-    } elsif ($nb == 1 + $e) { # ex: 1:1 2:3 -> 1:3
+    } elsif ($nb == 1 + $e) {   # ex: 1:1 2:3 -> 1:3
       $e = $ne;
-    } elsif ($nb == $b) { # ex: 1:2 1:3 -> 1:3
+    } elsif ($nb == $b) {       # ex: 1:2 1:3 -> 1:3
       $e = $ne;
       # Works because we can not have multiple same entries (ex: '1:2 1:2' was fixed in _fs_reorder_value)
       # and because the reorder insure that '1:2 1:3' is fully ordered properly (ex: no '1:3 1:2' possible)
     } elsif ($nb < $e) {
       # All this also work because we have an insured a full re-ordering of pairs
-      if ($ne >= $e) {  # ex: 10:30 20:40 -> 10:40
-	$e = $ne;
+      if ($ne >= $e) {          # ex: 10:30 20:40 -> 10:40
+        $e = $ne;
       }
       # The else here would be ex: 10:30 20:25 -> 10:30
       # Do nothing, simply forget this value
-    } else { # ex: 1:2 12:24 -> 1:2 12:24
+    } else {                    # ex: 1:2 12:24 -> 1:2 12:24
       push @o, "$b:$e";
       ($b, $e) = ($nb, $ne);
     }
@@ -524,15 +524,15 @@ sub get_list_of_framespans {
   my $value = $self->get_value();
   my $fps = undef;
   $fps = $self->get_fps() if ($self->is_fps_set());
-  foreach my $p(&_fs_split_line($value)){
+  foreach my $p (&_fs_split_line($value)) {
     my $nfs = new ViperFramespan();
-    if (! $nfs->set_value($p)){
-       $self->_set_errormsg("Failed to set sub framespan value '$p'");
-       return(undef); 
+    if (! $nfs->set_value($p)) {
+      $self->_set_errormsg("Failed to set sub framespan value '$p'");
+      return(undef); 
     }
-    if (defined($fps) && (! $nfs->set_fps($fps))){
-       $self->_set_errormsg("Failed to set sub framespan fps '$fps'");
-       return(undef); 
+    if (defined($fps) && (! $nfs->set_fps($fps))) {
+      $self->_set_errormsg("Failed to set sub framespan fps '$fps'");
+      return(undef); 
     }
     push @list, $nfs;
   }
@@ -632,7 +632,7 @@ sub _get_overlap {
   }
 
   # No idea what else is left since we already treated the no overlap case
-  return("WEIRD"); # sure to make it crash
+  return("WEIRD");              # sure to make it crash
 }
 
 #####
@@ -1080,7 +1080,7 @@ sub value_shift {
 
 ########################################
 
-sub unit_test { # Xtreme coding and us ;)
+sub unit_test {                 # Xtreme coding and us ;)
   my $notverb = shift @_;
   my $eh = "unit_test:";
   my $otxt = "";
@@ -1172,19 +1172,19 @@ sub unit_test { # Xtreme coding and us ;)
 
   my $testa = $fs_tmp8->check_if_overlap($fs_tmp9);
   $otxt .= "$eh Error while checking \'check_if_overlap\' ($in8 and $in9 do overlap, but test says otherwise). "
-  if (! $testa);
+    if (! $testa);
 
   my $testb = $fs_tmp8->check_if_overlap($fs_tmp10);
   $otxt .= "$eh Error while checking \'check_if_overlap\' ($in8 and $in10 do not overlap, but test says otherwise). "
-  if ($testb);
+    if ($testb);
 
   my $testc = $fs_tmp10->is_within($fs_tmp9);
   $otxt .= "$eh Error while checking \'is_within\' ($in10 is within $in9, but test says otherwise). "
-  if (! $testc);
+    if (! $testc);
 
   my $testd = $fs_tmp9->is_within($fs_tmp10);
   $otxt .= "$eh Error while checking \'is_within\' ($in9 is not within $in10, but test says otherwise). "
-  if ($testd);
+    if ($testd);
 
   # optimize + count_pairs
   my $in11 = "20:40 1:2 1:1 2:6 8:12 20:40"; # 6 pairs (not optimized)
@@ -1208,26 +1208,26 @@ sub unit_test { # Xtreme coding and us ;)
   # extent_middlepoint + extent_middlepoint_distance
   my $in12 = "20:39";
   my $fs_tmp12 = new ViperFramespan($in12);
-  my $exp_out12 = 30; # = 20 + (((39+1) - 20) / 2)
+  my $exp_out12 = 30;           # = 20 + (((39+1) - 20) / 2)
   my $out12 = $fs_tmp12->extent_middlepoint();
   $otxt .= "$eh Error while checking \'extent_middlepoint\' (expected: $exp_out12 / Got: $out12). "
     if ($exp_out12 != $out12);
 
-  my $in13 = "100:199"; # extent_middlepoint: 150
+  my $in13 = "100:199";         # extent_middlepoint: 150
   my $fs_tmp13 = new ViperFramespan($in13);
 
   my $out13 = $fs_tmp12->extent_middlepoint_distance($fs_tmp13);
-  my $exp_out13 = 120; # from 30 to 150 : +120
+  my $exp_out13 = 120;          # from 30 to 150 : +120
   $otxt .= "$eh Error while checking \'extent_middlepoint_distance\'[1] (expected: $exp_out13 / Got: $out13). "
     if ($exp_out13 != $out13);
 
   my $out14 = $fs_tmp13->extent_middlepoint_distance($fs_tmp12);
-  my $exp_out14 = -120; # from 150 to 30 : -120
+  my $exp_out14 = -120;         # from 150 to 30 : -120
   $otxt .= "$eh Error while checking \'extent_middlepoint_distance\'[2] (expected: $exp_out14 / Got: $out14). "
     if ($exp_out14 != $out14);
 
   my $out15 = $fs_tmp12->extent_duration();
-  my $exp_out15 = 20; # 20 [0] to 39 [19] = 20
+  my $exp_out15 = 20;           # 20 [0] to 39 [19] = 20
   $otxt .= "$eh Error while checking \'extent_duration\' (expected: $exp_out15 / Got: $out15). "
     if ($exp_out15 != $out15);
 
@@ -1240,10 +1240,10 @@ sub unit_test { # Xtreme coding and us ;)
   $otxt .= "$eh Error getting a list of framespan expected: 3 / got: ".scalar(@$out16) 
     if (3 != scalar(@$out16));
   my @expSub = split(/ /, $exp_out11);
-  for (my $_i=0; $_i<@expSub; $_i++){
-      $otxt .= "$eh Error get_list_of_framespan list[$_i] incorrect.  expected '$expSub[$_i]' / got '".$out16->[$_i]->get_value()."'. " 
-          if ($expSub[$_i] ne $out16->[$_i]->get_value())
-  }
+  for (my $_i=0; $_i<@expSub; $_i++) {
+    $otxt .= "$eh Error get_list_of_framespan list[$_i] incorrect.  expected '$expSub[$_i]' / got '".$out16->[$_i]->get_value()."'. " 
+      if ($expSub[$_i] ne $out16->[$_i]->get_value())
+    }
 
   ### unit test overlap
   my $fs_tmp17 = new ViperFramespan();
@@ -1254,16 +1254,16 @@ sub unit_test { # Xtreme coding and us ;)
                 [ "3:6", "4:7", "4:6" ], 
                 [ "3:6", "6:7", "6:6" ], 
                 [ "3:6", "7:6", undef ] );
-  for (my $p=0; $p<@pairs; $p++){
+  for (my $p=0; $p<@pairs; $p++) {
     $fs_tmp17->set_value($pairs[$p][0]);
     $fs_tmp18->set_value($pairs[$p][1]);
     my $fs_new = $fs_tmp17->get_overlap($fs_tmp18);
-    if (!defined($fs_new) && !defined($pairs[$p][2])){ 
-        ;
+    if (!defined($fs_new) && !defined($pairs[$p][2])) { 
+      ;
     } else {
-        my $ret = $fs_tmp17->get_overlap($fs_tmp18)->get_value();
-        $otxt .= "$eh Error overlap calc for (".join(", ",@{ $pairs[$p] }).") returned ".$ret."\n" 
-            if ($ret ne $pairs[$p][2]);
+      my $ret = $fs_tmp17->get_overlap($fs_tmp18)->get_value();
+      $otxt .= "$eh Error overlap calc for (".join(", ",@{ $pairs[$p] }).") returned ".$ret."\n" 
+        if ($ret ne $pairs[$p][2]);
     }
   }
     

@@ -25,8 +25,8 @@ use MMisc;
 # No 'new', simply functions
 
 sub remove_xml_tags {
-  my $name = shift @_; # tag name
-  my $rstr = shift @_; # reference to the string
+  my $name = shift @_;          # tag name
+  my $rstr = shift @_;          # reference to the string
 
   if ($$rstr =~ s%\s*\<${name}(\/\>|\s+[^\>]+\/\>)%%s) {
     return(1);
@@ -40,8 +40,8 @@ sub remove_xml_tags {
 ##########
 
 sub remove_xml_section {
-  my $name = shift @_; # tag name
-  my $rstr = shift @_; # reference to the string
+  my $name = shift @_;          # tag name
+  my $rstr = shift @_;          # reference to the string
 
   if ($$rstr =~ s%\s*\<${name}(\/\>|\s+[^\>]+\/\>)%%s) {
     return(1);
@@ -55,7 +55,7 @@ sub remove_xml_section {
 ##########
 
 sub get_next_xml_name {
-  my $str = shift @_; # String
+  my $str = shift @_;           # String
   my $txt = shift @_; # Default error string (returned if nothing found)
 
   if ($str =~ m%^\s*\<\s*([^\>]+)%s) {
@@ -70,9 +70,9 @@ sub get_next_xml_name {
 ##########
 
 sub get_named_xml_section {
-  my $name = shift @_; # tag name
-  my $rstr = shift @_; # reference to the string
-  my $txt = shift @_; # Default error string
+  my $name = shift @_;          # tag name
+  my $rstr = shift @_;          # reference to the string
+  my $txt = shift @_;           # Default error string
   
   if ($$rstr =~ s%\s*(\<${name}(\/\>|\s+[^\>]+\/\>))%%s) {
     $txt = $1;
@@ -86,8 +86,8 @@ sub get_named_xml_section {
 ##########
 
 sub get_next_xml_section {
-  my $rstr = shift @_; # reference to the string
-  my $des = shift @_; # Default error string
+  my $rstr = shift @_;          # reference to the string
+  my $des = shift @_;           # Default error string
 
   my $name = $des;
   my $section = $des;
