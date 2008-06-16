@@ -32,8 +32,10 @@ if ($version =~ m/b$/) {
 my $versionid = "BipartiteMatch.pm Version: $version";
 
 ########################################
-# The trick it to keep the code totaly independent from any other package
-# (except for Dumper, 
+# The trick it to keep the code totaly independent from knowing what
+# the objects it works on are, so try to rely on not object related
+# packages
+# such as Dumper, 
 use Data::Dumper;
 # the Misc Functions
 use MMisc;
