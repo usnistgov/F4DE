@@ -5,7 +5,7 @@ use MMisc;
 
 my $magicmode = "makecheckfiles"; # And the magic word is ...
 my $dev = "TV08TestCore default error value";
-my $lts = 10; # lines to show
+my $lts = 10;                   # lines to show
 
 #####
 
@@ -45,7 +45,7 @@ sub make_syscall {
   my $otxt = "[[COMMANDLINE]] " . join(" ", @command) . "\n"
     . "[[RETURN CODE]] $retcode\n"
       . "[[STDOUT]]\n$stdout\n\n"
-	. "[[STDERR]]\n$stderr\n";
+        . "[[STDERR]]\n$stderr\n";
 
   die("TV08TestCore Internal Error\n")
     if (! MMisc::writeTo($ofile, "", 0, 0, $otxt));

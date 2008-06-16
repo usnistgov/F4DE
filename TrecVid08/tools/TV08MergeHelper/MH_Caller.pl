@@ -44,12 +44,12 @@ BEGIN {
   $tv08pl = "TV08_PERL_LIB";
   $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
   $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
 }
 use lib ($tv08plv, $f4deplv, $f4bv);
 
 ## Then try to load everything
-my $ekw = "ERROR"; # Error Key Work
+my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
@@ -238,9 +238,9 @@ Will Score the XML file(s) provided (Truth vs System)
   --version       Print version number and exit
   --help          Print this usage information and exit
 EOF
-;
+    ;
 
-  return $tmp;
+    return $tmp;
 }
 
 ####################

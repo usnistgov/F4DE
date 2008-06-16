@@ -44,7 +44,7 @@ BEGIN {
   $tv08pl = "TV08_PERL_LIB";
   $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
   $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
 }
 use lib ($tv08plv, $f4deplv, $f4bv);
 
@@ -56,7 +56,7 @@ sub eo2pe {
 }
 
 ## Then try to load everything
-my $ekw = "ERROR"; # Error Key Work
+my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
@@ -217,7 +217,7 @@ while ($tmp = shift @ARGV) {
   $cam =~ s/.*(CAM.).*$/$1/;
   my $day = $fname;
   $day =~ s/_CAM.*//;
-  if (! exists($camDurStatsDB{$cam}{$day})){
+  if (! exists($camDurStatsDB{$cam}{$day})) {
     $camDurStatsDB{$cam}{$day} = Statistics::Descriptive::Discrete->new();
   }
   $camDurStatsDB{$cam}{$day}->add_data($fileStatsDB{$fname}->duration_ts());
@@ -269,20 +269,20 @@ foreach my $obs (@all_observations) {
   error_quit("Problem obtaining Observation's framespan information (" . $fs_fs->get_errormsg() . ")")
     if ($fs_fs->error());
 
-    if (! exists($statsDB{$fn}{$et})){
-        $statsDB{$fn}{$et}{dur} = Statistics::Descriptive::Discrete->new();
-    }
-    $statsDB{$fn}{$et}{dur}->add_data($dur);
+  if (! exists($statsDB{$fn}{$et})) {
+    $statsDB{$fn}{$et}{dur} = Statistics::Descriptive::Discrete->new();
+  }
+  $statsDB{$fn}{$et}{dur}->add_data($dur);
 
-    if (! exists($overallStatsDB{$et})){
-        $overallStatsDB{$et}{dur} = Statistics::Descriptive::Discrete->new();
-    }
-    $overallStatsDB{$et}{dur}->add_data($dur);
+  if (! exists($overallStatsDB{$et})) {
+    $overallStatsDB{$et}{dur} = Statistics::Descriptive::Discrete->new();
+  }
+  $overallStatsDB{$et}{dur}->add_data($dur);
 
-    if (! exists($camStatsDB{$cam}{$et}{dur})){
-        $camStatsDB{$cam}{$et}{dur} = Statistics::Descriptive::Discrete->new();
-    }
-    $camStatsDB{$cam}{$et}{dur}->add_data($dur);
+  if (! exists($camStatsDB{$cam}{$et}{dur})) {
+    $camStatsDB{$cam}{$et}{dur} = Statistics::Descriptive::Discrete->new();
+  }
+  $camStatsDB{$cam}{$et}{dur}->add_data($dur);
 
   %{$ohash{$uid}} =
     (
@@ -316,31 +316,31 @@ my $sat;
 print "\n\n\n                               Event observation duration statsitics by file\n\n";
 $sat = new SimpleAutoTable();
 my $sumDur = 0;
-foreach my $fn(keys %fileStatsDB){
-    my $dur = $fileStatsDB{$fn}->duration_ts();
-    $sumDur += $dur;
-    foreach my $ev(sort keys %{ $statsDB{$fn} }){
-        $sat->addData($statsDB{$fn}{$ev}{dur}->count(),                               "Obs|count",  sprintf("%20s %s",$ev, $fn));
-        $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->count() / $dur * 3600), "Obs|Obs/hr", sprintf("%20s %s",$ev, $fn));
-        $sat->addData("|",                                                            "",           sprintf("%20s %s",$ev, $fn));
-        $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->min()),                 "Dur|min",    sprintf("%20s %s",$ev, $fn));
-        $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->mean()),                "Dur|mean",   sprintf("%20s %s",$ev, $fn));
-        $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->max()),                 "Dur|max",    sprintf("%20s %s",$ev, $fn));
-    }
+foreach my $fn (keys %fileStatsDB) {
+  my $dur = $fileStatsDB{$fn}->duration_ts();
+  $sumDur += $dur;
+  foreach my $ev (sort keys %{ $statsDB{$fn} }) {
+    $sat->addData($statsDB{$fn}{$ev}{dur}->count(),                               "Obs|count",  sprintf("%20s %s",$ev, $fn));
+    $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->count() / $dur * 3600), "Obs|Obs/hr", sprintf("%20s %s",$ev, $fn));
+    $sat->addData("|",                                                            "",           sprintf("%20s %s",$ev, $fn));
+    $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->min()),                 "Dur|min",    sprintf("%20s %s",$ev, $fn));
+    $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->mean()),                "Dur|mean",   sprintf("%20s %s",$ev, $fn));
+    $sat->addData(sprintf("%.2f",$statsDB{$fn}{$ev}{dur}->max()),                 "Dur|max",    sprintf("%20s %s",$ev, $fn));
+  }
 }
 print $sat->renderTxtTable(2);
 
 print "\n\n\n       Event observation duration statsitics over all files\n\n";
 $sat = new SimpleAutoTable();
 my $sumStat = Statistics::Descriptive::Discrete->new();
-foreach my $ev(sort keys %overallStatsDB){
-    $sat->addData($overallStatsDB{$ev}{dur}->count(),                                  "Obs|count",  $ev);
-    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->count() / $sumDur * 3600), "Obs|Obs/hr", $ev);
-    $sat->addData("|",                                                                 "",           $ev);
-    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->min()),                    "Dur|min",    $ev);
-    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->mean()),                   "Dur|mean",   $ev);
-    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->max()),                    "Dur|max",    $ev);
-    $sumStat->add_data($overallStatsDB{$ev}{dur}->get_data());
+foreach my $ev (sort keys %overallStatsDB) {
+  $sat->addData($overallStatsDB{$ev}{dur}->count(),                                  "Obs|count",  $ev);
+  $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->count() / $sumDur * 3600), "Obs|Obs/hr", $ev);
+  $sat->addData("|",                                                                 "",           $ev);
+  $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->min()),                    "Dur|min",    $ev);
+  $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->mean()),                   "Dur|mean",   $ev);
+  $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->max()),                    "Dur|max",    $ev);
+  $sumStat->add_data($overallStatsDB{$ev}{dur}->get_data());
 }
 $sat->addData($sumStat->count(),                                  "Obs|count",  "All Events");
 $sat->addData("",                                                 "Obs|Obs/hr", "All Events");
@@ -352,19 +352,19 @@ print $sat->renderTxtTable(2);
 
 print "\n\n\nEvent occurrences as a function of camera\n\n";
 $sat = new SimpleAutoTable();
-foreach my $cam(sort keys %camStatsDB){
-    foreach my $ev(sort keys %{ $camStatsDB{$cam} }){
-        $sat->addData($camStatsDB{$cam}{$ev}{dur}->count(),                               $cam,  $ev);
-    }
+foreach my $cam (sort keys %camStatsDB) {
+  foreach my $ev (sort keys %{ $camStatsDB{$cam} }) {
+    $sat->addData($camStatsDB{$cam}{$ev}{dur}->count(),                               $cam,  $ev);
+  }
 }
 print $sat->renderTxtTable(2);
 
 print "\n\n\n                 Durations of annotated files in seconds\n\n";
 $sat = new SimpleAutoTable();
-foreach my $cam(sort keys %camDurStatsDB){
-    foreach my $da(sort keys %{ $camDurStatsDB{$cam} }){
-        $sat->addData($camDurStatsDB{$cam}{$da}->sum(),                               $cam,  $da);
-    }
+foreach my $cam (sort keys %camDurStatsDB) {
+  foreach my $da (sort keys %{ $camDurStatsDB{$cam} }) {
+    $sat->addData($camDurStatsDB{$cam}{$da}->sum(),                               $cam,  $da);
+  }
 }
 print $sat->renderTxtTable(2);
 
@@ -399,9 +399,9 @@ Note:
 - List of recognized events: $ro
 - 'TrecVid08xsd' files are: $xsdfiles
 EOF
-;
+    ;
 
-  return $tmp;
+    return $tmp;
 }
 
 ####################
@@ -490,7 +490,7 @@ sub load_file {
 
 ########################################
 
-sub quc { # Quote clean
+sub quc {                       # Quote clean
   my $in = shift @_;
 
   $in =~ s%\"%\'%g;
@@ -500,7 +500,7 @@ sub quc { # Quote clean
 
 #####
 
-sub qua { # Quote Array
+sub qua {                       # Quote Array
   my @todo = @_;
 
   my @out = ();

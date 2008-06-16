@@ -44,7 +44,7 @@ BEGIN {
   $tv08pl = "TV08_PERL_LIB";
   $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
   $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
 }
 use lib ($tv08plv, $f4deplv, $f4bv);
 
@@ -56,7 +56,7 @@ sub eo2pe {
 }
 
 ## Then try to load everything
-my $ekw = "ERROR"; # Error Key Work
+my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
@@ -292,14 +292,14 @@ foreach my $key (sort keys %all_vf) {
     foreach my $obs (@ao) {
       $obs->shift_framespan($fsshift);
       error_quit("While shifitng an observation's framespan (" . $obs->get_errormsg() .")")
-	if ($obs->error());
+        if ($obs->error());
     }
     $step2add .= " [FrameShifted ($fsshift frames)]";
   }
 
   # ECF Helper File
   if (! MMisc::is_blank($ecff)) {
-    my $obs = $ao[0]; # Always true thanks to the dummy observation
+    my $obs = $ao[0];    # Always true thanks to the dummy observation
 
     my $fl = $obs->get_filename();
     my $fn = $obs->get_xmlfilename();
@@ -355,7 +355,7 @@ foreach my $key (sort keys %all_vf) {
       if ($EL->error());
   }
 
-  my $fobs = scalar @ao - 1; # Remove the dummy obs
+  my $fobs = scalar @ao - 1;    # Remove the dummy obs
   print "- Done processing Observations from '$fname' [File key: $sffn]" . (($fsshift != 0) ? " [requested frameshift: $fsshift]" : "") . " (Found: $fobs", (($checkOverlap) ? " | Overlap Found: $ovf" : ""), ")$step2add\n";
   $adone += $fobs;
 }
@@ -394,16 +394,16 @@ foreach my $key (sort keys %mergefiles) {
       my $comment = "Was originally: " . $obs->get_unique_id();
       $obs->addto_comment($comment);
       error_quit("While adding a comment to observation (" . $obs->get_errormsg() .")")
-	if ($obs->error());
+        if ($obs->error());
       
       # Debugging
       if ($show > 1) {
-	print "** OBSERVATION MEMORY REPRESENATION:\n", $obs->_display();
+        print "** OBSERVATION MEMORY REPRESENATION:\n", $obs->_display();
       }
       
       $mf->add_observation($obs);
       error_quit("While \'add_observation\' (" . $mf->get_errormsg() .")")
-	if ($mf->error());
+        if ($mf->error());
     }
   }
 
@@ -509,9 +509,9 @@ Note:
 - Program will ignore the <config> section of the XML file.
 - 'TrecVid08xsd' files are: $xsdfiles
 EOF
-;
+    ;
 
-  return $tmp;
+    return $tmp;
 }
 
 ####################
@@ -649,7 +649,7 @@ sub _check_overlap_core {
   my $sffn = shift @_;
   my @ao = @_;
 
-  my $pov = 0; # overlap found
+  my $pov = 0;                  # overlap found
 
   my @events = &_ovc_core_get_eventlist($sffn);
   return($pov) if (scalar @events == 0); # No events for this file
@@ -658,37 +658,37 @@ sub _check_overlap_core {
     my @obsl = $EL->get_Observations_list($sffn, $event);
     foreach my $el_obs (@obsl) {
       foreach my $ao_obs (@ao) {
-	my $iscmp = $ao_obs->is_comparable_to($el_obs);
-	error_quit("Problem comparing observations while checking overlap (" . $ao_obs->get_errormsg() . ")")
-	  if ($ao_obs->error());
-	next if (! $iscmp); # If those are not comparable (different filename or event), no need to keep going
+        my $iscmp = $ao_obs->is_comparable_to($el_obs);
+        error_quit("Problem comparing observations while checking overlap (" . $ao_obs->get_errormsg() . ")")
+          if ($ao_obs->error());
+        next if (! $iscmp); # If those are not comparable (different filename or event), no need to keep going
 
-	my $lpov = 0;
-	my $fs_ov = undef;
-	if ($mode eq $ov_modes[0]) { # frameshift
-	  $fs_ov = &_ovc_frameshift($ao_obs, $el_obs);
-	} elsif ($mode eq $ov_modes[1]) { # samefs
-	  $fs_ov = &_ovc_samefs($ao_obs, $el_obs);
-	} else {
-	  error_quit("WEIRD: Not a recognized overlapcheck mode while checking the overlap");
-	}
-	if (defined $fs_ov) { # Overlap detected
-	  my $ao_id = $ao_obs->get_unique_id();
-	  my $el_id = $el_obs->get_unique_id();
-	  my $ovr_txt = $fs_ov->get_value();
-	  error_quit("Problem obtaining Framespan value (" . $fs_ov->get_errormsg() . ")")
-	    if ($fs_ov->error());
-	  my $ov_id = "${mode}-${event}-" . sprintf("%03d", $overlap_ids{$sffn}{$mode}{$event}++);
-	  @{$overlap_list{$sffn}{$mode}{$event}{$ov_id}} = ($ao_id, $el_id, $ovr_txt);
-	  $ao_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$el_id\" [overlap: $ovr_txt]");
-	  error_quit("Problem adding a comment to observation (" . $ao_obs->get_errormsg() . ")")
-	    if ($ao_obs->error());
-	  $el_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$ao_id\" [overlap: $ovr_txt]");
-	  error_quit("Problem adding a comment to observation (" . $el_obs->get_errormsg() . ")")
-	    if ($el_obs->error());
-	  $lpov = 1;
-	}
-	$pov += $lpov;
+        my $lpov = 0;
+        my $fs_ov = undef;
+        if ($mode eq $ov_modes[0]) { # frameshift
+          $fs_ov = &_ovc_frameshift($ao_obs, $el_obs);
+        } elsif ($mode eq $ov_modes[1]) { # samefs
+          $fs_ov = &_ovc_samefs($ao_obs, $el_obs);
+        } else {
+          error_quit("WEIRD: Not a recognized overlapcheck mode while checking the overlap");
+        }
+        if (defined $fs_ov) {   # Overlap detected
+          my $ao_id = $ao_obs->get_unique_id();
+          my $el_id = $el_obs->get_unique_id();
+          my $ovr_txt = $fs_ov->get_value();
+          error_quit("Problem obtaining Framespan value (" . $fs_ov->get_errormsg() . ")")
+            if ($fs_ov->error());
+          my $ov_id = "${mode}-${event}-" . sprintf("%03d", $overlap_ids{$sffn}{$mode}{$event}++);
+          @{$overlap_list{$sffn}{$mode}{$event}{$ov_id}} = ($ao_id, $el_id, $ovr_txt);
+          $ao_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$el_id\" [overlap: $ovr_txt]");
+          error_quit("Problem adding a comment to observation (" . $ao_obs->get_errormsg() . ")")
+            if ($ao_obs->error());
+          $el_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$ao_id\" [overlap: $ovr_txt]");
+          error_quit("Problem adding a comment to observation (" . $el_obs->get_errormsg() . ")")
+            if ($el_obs->error());
+          $lpov = 1;
+        }
+        $pov += $lpov;
       }
     }
   }
@@ -847,11 +847,11 @@ sub prepare_overlap_list {
     foreach my $event (sort keys %{$overlap_list{$file}{$mode}}) {
       $txt .= "| | |--> Event: $event\n";
       foreach my $ov_id (sort keys %{$overlap_list{$file}{$mode}{$event}}) {
-	my ($ao_id, $el_id, $ovr_txt) = @{$overlap_list{$file}{$mode}{$event}{$ov_id}};
-	$txt .= "| | | |--> ID: [$ov_id]\n";
-	$txt .= "| | | |  Overlap range: $ovr_txt\n";
-	$txt .= "| | | |  Between: \"$ao_id\"\n";
-	$txt .= "| | | |      And: \"$el_id\"\n";
+        my ($ao_id, $el_id, $ovr_txt) = @{$overlap_list{$file}{$mode}{$event}{$ov_id}};
+        $txt .= "| | | |--> ID: [$ov_id]\n";
+        $txt .= "| | | |  Overlap range: $ovr_txt\n";
+        $txt .= "| | | |  Between: \"$ao_id\"\n";
+        $txt .= "| | | |      And: \"$el_id\"\n";
       }
       $txt .= "| | |\n";
     }
@@ -864,7 +864,7 @@ sub prepare_overlap_list {
 
 ########################################
 
-sub quc { # Quote clean
+sub quc {                       # Quote clean
   my $in = shift @_;
 
   $in =~ s%\"%\'%g;
@@ -874,7 +874,7 @@ sub quc { # Quote clean
 
 #####
 
-sub qua { # Quote Array
+sub qua {                       # Quote Array
   my @todo = @_;
 
   my @out = ();

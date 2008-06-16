@@ -67,16 +67,16 @@ sub new {
      id          => -1,
      filename    => "", # The 'sourcefile' referenced file
      xmlfilename => "", # The xml file that described this observation
-     framespan   => undef, # ViperFramespan object
+     framespan   => undef,      # ViperFramespan object
      fs_file     => undef, # 'sourcefile filename' framespan (important for overlap computation and shift operations)
      isgtf       => -1,
-     ofi         => undef, # hash ref / Other File Information
+     ofi         => undef,      # hash ref / Other File Information
      comment     => "", # Text that will be added to the XML file when rewritting it (used by merger)
      DetectionScore      => undef, # float
-     DetectionDecision   => -1, # binary
+     DetectionDecision   => -1,    # binary
      BoundingBox => undef, # hash ref (with "real" ViperFramespan this time)
      Point       => undef, # hash ref (with "real" ViperFramespan this time)
-     validated   => 0, # To confirm all the values required are set
+     validated   => 0,    # To confirm all the values required are set
      errormsg    => $errormsg,
     };
 
@@ -679,7 +679,7 @@ sub get_Point {
 ##########
 
 sub _get_1keyhash_content {
-  my %tmp = @_; # Only one key in this hash, return its content
+  my %tmp = @_;        # Only one key in this hash, return its content
 
   my @keys = keys %tmp;
 
@@ -728,7 +728,7 @@ sub _set_selected_core {
     return($self->set_BoundingBox(@_));
   } elsif ($choice =~ m%^$ok_choices[3]$%) { # 'Point'
     return($self->set_Point(@_));
-  } else{
+  } else {
     $self->_set_errormsg("WEIRD: Could not select a choice in \'set_selected\' ($choice)");
     return(0);
   }
@@ -815,7 +815,7 @@ sub get_selected {
   } elsif ($choice =~ m%^$ok_choices[3]$%) { # 'Point'
     return(0, ()) if (! $self->_is_Point_set());
     return(1, $self->get_Point());
-  } else{
+  } else {
     $self->_set_errormsg("WEIRD: Could not select a choice in \'get_selected\' ($choice)");
     return(0, ());
   }
@@ -868,7 +868,7 @@ sub validate {
     $self->set_errormsg("In \'validate\': \'fs_file\' not set");
     return(0);
   }
-   if (! $self->_is_isgtf_set()) {
+  if (! $self->_is_isgtf_set()) {
     $self->set_errormsg("In \'validate\': \'isgtf\' not set");
     return(0);
   }
@@ -1225,7 +1225,7 @@ sub joint_kernel {
     return("", undef);
   } elsif ($Mid_Osi < ($Beg_Orj - $delta_t)) {
     return("", undef);
-  } # implicit "else"
+  }                             # implicit "else"
 
   my $TimeCongru_Osi_Orj 
     = ( MMisc::min($End_Orj, $End_Osi) - MMisc::max($Beg_Orj, $Beg_Osi) )
@@ -1233,12 +1233,12 @@ sub joint_kernel {
 
   my $DecScoreCongru_Osi
     = ($RangeDec_s == 0) ? 1 :
-        ( $Dec_Osi - $MinDec_s ) / $RangeDec_s;
+      ( $Dec_Osi - $MinDec_s ) / $RangeDec_s;
 
   my $kernel 
     = 1
       + $E_t * $TimeCongru_Osi_Orj
-      + $E_d * $DecScoreCongru_Osi;
+        + $E_d * $DecScoreCongru_Osi;
 
   return("", $kernel);
 }

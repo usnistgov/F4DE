@@ -56,7 +56,7 @@ sub eo2pe {
 }
 
 ## Then try to load everything
-my $ekw = "ERROR"; # Error Key Work
+my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
@@ -322,7 +322,7 @@ if ($useECF) {
   }
   print "\n** SUMMARY: ECF file loaded\n";
   print $ecfobj->txt_summary();
-#  $ecfobj->_display();
+  #  $ecfobj->_display();
 }
 
 ## Generate event lists
@@ -448,9 +448,9 @@ Note:
 - List of recognized events: $ro
 - 'TrecVid08xsd' files are: $xsdfiles (and if the 'ecf' option is used, also: $ecf_xsdf)
 EOF
-;
+    ;
   
-  return $tmp;
+    return $tmp;
 }
 
 ####################
@@ -571,13 +571,13 @@ sub load_preprocessing {
     if ($showi > 2) {
       print("** Observation representation:\n");
       foreach my $i (@ok_events) {
-	print("-- EVENT: $i\n");
-	my @bucket = $object->get_event_observations($i);
-	error_quit("While \'get_event\'observations\' (" . $object->get_errormsg() .")")
-	  if ($object->error());
-	foreach my $obs (@bucket) {
-	  print $obs->_display();
-	}
+        print("-- EVENT: $i\n");
+        my @bucket = $object->get_event_observations($i);
+        error_quit("While \'get_event\'observations\' (" . $object->get_errormsg() .")")
+          if ($object->error());
+        foreach my $obs (@bucket) {
+          print $obs->_display();
+        }
       }
     }
 
@@ -621,18 +621,18 @@ sub generate_EventList {
     foreach my $o (@ao) {
       my $status = $tmpEL->add_Observation($o);
       error_quit("Problem adding Observation to $mode EventList (" . $tmpEL->get_errormsg() . ")")
-	if ($tmpEL->error());
+        if ($tmpEL->error());
 
-#      print "[$status] ";
+      #      print "[$status] ";
       my $toadd = 1;
       if ($status == $rej_val) {
-	$rejected++;
+        $rejected++;
       } elsif ($status == $acc_val) {
-	$added++;
+        $added++;
       } elsif ($status == $spa_val) {
-	$toadd = 0;
+        $toadd = 0;
       } else {
-	error_quit("Weird EventList \'add_Observation\' return code ($status) at this stage");
+        error_quit("Weird EventList \'add_Observation\' return code ($status) at this stage");
       }
       $tobs += $toadd;
     }
@@ -708,10 +708,10 @@ sub do_alignment {
     foreach my $evt (@listed_events) {
       my @sys_events_obs = ($sysEL->is_filename_in($file)) ? $sysEL->get_Observations_list($file, $evt) : ();
       error_quit("While trying to obtain a list of observations for SYS event ($evt) and file ($file) (" . $sysEL->get_errormsg() . ")")
-	if ($sysEL->error());
+        if ($sysEL->error());
       my @ref_events_obs = ($refEL->is_filename_in($file)) ? $refEL->get_Observations_list($file, $evt) : ();
       error_quit("While trying to obtain a list of observations for REF event ($evt) and file ($file) (" . $refEL->get_errormsg() . ")")
-	if ($refEL->error());
+        if ($refEL->error());
 
       my %sys_bpm = &Obs_array_to_hash(@sys_events_obs);
       my %ref_bpm = &Obs_array_to_hash(@ref_events_obs);
@@ -720,11 +720,11 @@ sub do_alignment {
       print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, " | Total Observations: $tomatch elements\n";
       my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&TrecVid08Observation::kernel_function, \@kp);
       error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
-	if ($bpm->error());
+        if ($bpm->error());
 
       $bpm->compute();
       error_quit("While computing the Bipartite Matching for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
-	if ($bpm->error());
+        if ($bpm->error());
 
       # I am the coder, I know what I want to display/debug ... trust me !
       $bpm->_display("joint_values") if ($showi > 1);
@@ -732,9 +732,9 @@ sub do_alignment {
 
       my $lsat;
       if ($allAT) {
-	$lsat = new SimpleAutoTable();
-	error_quit("Error building alignment table: ".$lsat->get_errormsg()."\n")
-	  if (! $lsat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
+        $lsat = new SimpleAutoTable();
+        error_quit("Error building alignment table: ".$lsat->get_errormsg()."\n")
+          if (! $lsat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
       }
       
       my $trials = $all_trials{$evt};
@@ -742,167 +742,167 @@ sub do_alignment {
       # First, the mapped sys observations
       my @mapped = $bpm->get_mapped_objects();
       error_quit("Problem obtaining the mapped objects from the BPM (" . $bpm->get_errormsg() . ")")
-	if ($bpm->error());
+        if ($bpm->error());
       foreach my $mop (@mapped) {
-	my ($sys_obj, $ref_obj) = @{$mop};
+        my ($sys_obj, $ref_obj) = @{$mop};
 
-	my $detscr = $sys_obj->get_DetectionScore();
-	my $detdec = $sys_obj->get_DetectionDecision();
-	error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
-	  if ($sys_obj->error());
+        my $detscr = $sys_obj->get_DetectionScore();
+        my $detdec = $sys_obj->get_DetectionDecision();
+        error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
+          if ($sys_obj->error());
 
-	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1);
-	$trials_c{$evt}++;
-	$gtrial->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
-	$trials_c{$key_allevents}++;
-	# The last '1' is because the elements match an element in the ref list (target)
+        $trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1);
+        $trials_c{$evt}++;
+        $gtrial->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1); 
+        $trials_c{$key_allevents}++;
+        # The last '1' is because the elements match an element in the ref list (target)
 
-	my $trialID = &make_trialID($file, $evt, $ref_obj, $sys_obj, $ksep++);
-	$alignmentRep->addData($file, "File", $trialID);
-	$alignmentRep->addData($evt, "Event", $trialID);
-	$alignmentRep->addData("Mapped", "TYPE", $trialID);
-	$alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
-	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
-	$alignmentRep->addData(&get_obj_fs_duration($ref_obj),  "Dur.r", $trialID);
-	$alignmentRep->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
-	$alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
-	$alignmentRep->addData(&get_obj_fs_duration($sys_obj),  "Dur.s", $trialID);
-	$alignmentRep->addData($detscr, "S.DetScr", $trialID);
-	$alignmentRep->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
-	my $ov = &get_obj_fs_ov($ref_obj, $sys_obj);
-	$alignmentRep->addData((defined($ov) ? &get_fs_value($ov) : "NULL"), "ISec.range", $trialID);
-	$alignmentRep->addData((defined($ov) ? &get_fs_duration($ov): "NULL"), "Dur.ISec", $trialID);
-	my ($rb, $re) = &get_obj_fs_beg_end($ref_obj);
-	my ($sb, $se) = &get_obj_fs_beg_end($sys_obj);
-	$alignmentRep->addData($rb - $sb, "Beg.r-Beg.s", $trialID);
-	$alignmentRep->addData($re - $se, "End.r-End.s", $trialID);
-	if ($allAT) {
-	  $lsat->addData("Mapped", "TYPE", $trialID);
-	  $lsat->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
-	  $lsat->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
-	  $lsat->addData(&get_obj_fs_duration($ref_obj),  "Dur.r", $trialID);
-	  $lsat->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
-	  $lsat->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
-	  $lsat->addData(&get_obj_fs_duration($sys_obj),  "Dur.s", $trialID);
-	  $lsat->addData($detscr, "S.DetScr", $trialID);
-	  $lsat->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
-	  $lsat->addData((defined($ov) ? &get_fs_value($ov) : "NULL"), "ISec.range", $trialID);
-	  $lsat->addData((defined($ov) ? &get_fs_duration($ov): "NULL"), "Dur.ISec", $trialID);
-	  $lsat->addData($rb - $sb, "Beg.r-Beg.s", $trialID);
-	  $lsat->addData($re - $se, "End.r-End.s", $trialID);
-	}
+        my $trialID = &make_trialID($file, $evt, $ref_obj, $sys_obj, $ksep++);
+        $alignmentRep->addData($file, "File", $trialID);
+        $alignmentRep->addData($evt, "Event", $trialID);
+        $alignmentRep->addData("Mapped", "TYPE", $trialID);
+        $alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
+        $alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
+        $alignmentRep->addData(&get_obj_fs_duration($ref_obj),  "Dur.r", $trialID);
+        $alignmentRep->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
+        $alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
+        $alignmentRep->addData(&get_obj_fs_duration($sys_obj),  "Dur.s", $trialID);
+        $alignmentRep->addData($detscr, "S.DetScr", $trialID);
+        $alignmentRep->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
+        my $ov = &get_obj_fs_ov($ref_obj, $sys_obj);
+        $alignmentRep->addData((defined($ov) ? &get_fs_value($ov) : "NULL"), "ISec.range", $trialID);
+        $alignmentRep->addData((defined($ov) ? &get_fs_duration($ov): "NULL"), "Dur.ISec", $trialID);
+        my ($rb, $re) = &get_obj_fs_beg_end($ref_obj);
+        my ($sb, $se) = &get_obj_fs_beg_end($sys_obj);
+        $alignmentRep->addData($rb - $sb, "Beg.r-Beg.s", $trialID);
+        $alignmentRep->addData($re - $se, "End.r-End.s", $trialID);
+        if ($allAT) {
+          $lsat->addData("Mapped", "TYPE", $trialID);
+          $lsat->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
+          $lsat->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
+          $lsat->addData(&get_obj_fs_duration($ref_obj),  "Dur.r", $trialID);
+          $lsat->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
+          $lsat->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
+          $lsat->addData(&get_obj_fs_duration($sys_obj),  "Dur.s", $trialID);
+          $lsat->addData($detscr, "S.DetScr", $trialID);
+          $lsat->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
+          $lsat->addData((defined($ov) ? &get_fs_value($ov) : "NULL"), "ISec.range", $trialID);
+          $lsat->addData((defined($ov) ? &get_fs_duration($ov): "NULL"), "Dur.ISec", $trialID);
+          $lsat->addData($rb - $sb, "Beg.r-Beg.s", $trialID);
+          $lsat->addData($re - $se, "End.r-End.s", $trialID);
+        }
       }
 
       # Second, the False Alarms
       my @unmapped_sys = $bpm->get_unmapped_sys_objects();
       error_quit("Problem obtaining the unmapped_sys objects from the BPM (" . $bpm->get_errormsg() . ")")
-	if ($bpm->error());
+        if ($bpm->error());
       foreach my $sys_obj (@unmapped_sys) {
-	my $detscr = $sys_obj->get_DetectionScore();
-	my $detdec = $sys_obj->get_DetectionDecision();
-	error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
-	  if ($sys_obj->error());
+        my $detscr = $sys_obj->get_DetectionScore();
+        my $detdec = $sys_obj->get_DetectionDecision();
+        error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
+          if ($sys_obj->error());
 
-	$trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
-	$trials_c{$evt}++;
-	$gtrial->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
-	$trials_c{$key_allevents}++;
-	# The last '0' is because the elements does not match an element in the ref list (target)
+        $trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
+        $trials_c{$evt}++;
+        $gtrial->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
+        $trials_c{$key_allevents}++;
+        # The last '0' is because the elements does not match an element in the ref list (target)
 
-	my $trialID = &make_trialID($file, $evt, undef, $sys_obj, $ksep++);
-	$alignmentRep->addData($file, "File", $trialID);
-	$alignmentRep->addData($evt, "Event", $trialID);
-	$alignmentRep->addData("Unmapped_Sys", "TYPE", $trialID);
-	$alignmentRep->addData("", "R.ID", $trialID);
-	$alignmentRep->addData("", "R.range", $trialID);
-	$alignmentRep->addData("", "Dur.r", $trialID);
-	$alignmentRep->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
-	$alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
-	$alignmentRep->addData(&get_obj_fs_duration($sys_obj), "Dur.s", $trialID);
-	$alignmentRep->addData($detscr, "S.DetScr", $trialID);
-	$alignmentRep->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
-	$alignmentRep->addData("", "ISec.range", $trialID);
-	$alignmentRep->addData("", "Dur.ISec", $trialID);
-	$alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
-	$alignmentRep->addData("", "End.r-End.s", $trialID);
-	if ($allAT) {
-	  $lsat->addData("Unmapped_Sys", "TYPE", $trialID);
-	  $lsat->addData("", "R.ID", $trialID);
-	  $lsat->addData("", "R.range", $trialID);
-	  $lsat->addData("", "Dur.r", $trialID);
-	  $lsat->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
-	  $lsat->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
-	  $lsat->addData(&get_obj_fs_duration($sys_obj), "Dur.s", $trialID);
-	  $lsat->addData($detscr, "S.DetScr", $trialID);
-	  $lsat->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
-	  $lsat->addData("", "ISec.range", $trialID);
-	  $lsat->addData("", "Dur.ISec", $trialID);
-	  $lsat->addData("", "Beg.r-Beg.s", $trialID);
-	  $lsat->addData("", "End.r-End.s", $trialID);
-	}
+        my $trialID = &make_trialID($file, $evt, undef, $sys_obj, $ksep++);
+        $alignmentRep->addData($file, "File", $trialID);
+        $alignmentRep->addData($evt, "Event", $trialID);
+        $alignmentRep->addData("Unmapped_Sys", "TYPE", $trialID);
+        $alignmentRep->addData("", "R.ID", $trialID);
+        $alignmentRep->addData("", "R.range", $trialID);
+        $alignmentRep->addData("", "Dur.r", $trialID);
+        $alignmentRep->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
+        $alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
+        $alignmentRep->addData(&get_obj_fs_duration($sys_obj), "Dur.s", $trialID);
+        $alignmentRep->addData($detscr, "S.DetScr", $trialID);
+        $alignmentRep->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
+        $alignmentRep->addData("", "ISec.range", $trialID);
+        $alignmentRep->addData("", "Dur.ISec", $trialID);
+        $alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
+        $alignmentRep->addData("", "End.r-End.s", $trialID);
+        if ($allAT) {
+          $lsat->addData("Unmapped_Sys", "TYPE", $trialID);
+          $lsat->addData("", "R.ID", $trialID);
+          $lsat->addData("", "R.range", $trialID);
+          $lsat->addData("", "Dur.r", $trialID);
+          $lsat->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
+          $lsat->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
+          $lsat->addData(&get_obj_fs_duration($sys_obj), "Dur.s", $trialID);
+          $lsat->addData($detscr, "S.DetScr", $trialID);
+          $lsat->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
+          $lsat->addData("", "ISec.range", $trialID);
+          $lsat->addData("", "Dur.ISec", $trialID);
+          $lsat->addData("", "Beg.r-Beg.s", $trialID);
+          $lsat->addData("", "End.r-End.s", $trialID);
+        }
       }
 
       # Third, the Missed Detects
       my @unmapped_ref = $bpm->get_unmapped_ref_objects();
       error_quit("Problem obtaining the unmapped_ref objects from the BPM (" . $bpm->get_errormsg() . ")")
-	if ($bpm->error());
+        if ($bpm->error());
       foreach my $ref_obj (@unmapped_ref) {
-	$trials->addTrial($evt, undef, "OMITTED", 1);
-	$trials_c{$evt}++;
-	$gtrial->addTrial($evt, undef, "OMITTED", 1);
-	$trials_c{$key_allevents}++;
-	# Here we only care about the number of entries in this array
+        $trials->addTrial($evt, undef, "OMITTED", 1);
+        $trials_c{$evt}++;
+        $gtrial->addTrial($evt, undef, "OMITTED", 1);
+        $trials_c{$key_allevents}++;
+        # Here we only care about the number of entries in this array
 
-	my $trialID = &make_trialID($file, $evt, $ref_obj, undef, $ksep++);
-	$alignmentRep->addData($file, "File", $trialID);
-	$alignmentRep->addData($evt, "Event", $trialID);
-	$alignmentRep->addData("Unmapped_Ref", "TYPE", $trialID);
-	$alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
-	$alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
-	$alignmentRep->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
-	$alignmentRep->addData("", "S.DetScr", $trialID);
-	$alignmentRep->addData("", "S.DetDec", $trialID);
-	$alignmentRep->addData("", "S.ID", $trialID);
-	$alignmentRep->addData("", "S.range", $trialID);
-	$alignmentRep->addData("", "Dur.s", $trialID);
-	$alignmentRep->addData("", "ISec.range", $trialID);
-	$alignmentRep->addData("", "Dur.ISec", $trialID);
-	$alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
-	$alignmentRep->addData("", "End.r-End.s", $trialID);
-	if ($allAT) {
-	  $lsat->addData("Unmapped_Ref", "TYPE", $trialID);
-	  $lsat->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
-	  $lsat->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
-	  $lsat->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
-	  $lsat->addData("", "S.DetScr", $trialID);
-	  $lsat->addData("", "S.DetDec", $trialID);
-	  $lsat->addData("", "S.ID", $trialID);
-	  $lsat->addData("", "S.range", $trialID);
-	  $lsat->addData("", "Dur.s", $trialID);
-	  $lsat->addData("", "ISec.range", $trialID);
-	  $lsat->addData("", "Dur.ISec", $trialID);
-	  $lsat->addData("", "Beg.r-Beg.s", $trialID);
-	  $lsat->addData("", "End.r-End.s", $trialID);
-	}
+        my $trialID = &make_trialID($file, $evt, $ref_obj, undef, $ksep++);
+        $alignmentRep->addData($file, "File", $trialID);
+        $alignmentRep->addData($evt, "Event", $trialID);
+        $alignmentRep->addData("Unmapped_Ref", "TYPE", $trialID);
+        $alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
+        $alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
+        $alignmentRep->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
+        $alignmentRep->addData("", "S.DetScr", $trialID);
+        $alignmentRep->addData("", "S.DetDec", $trialID);
+        $alignmentRep->addData("", "S.ID", $trialID);
+        $alignmentRep->addData("", "S.range", $trialID);
+        $alignmentRep->addData("", "Dur.s", $trialID);
+        $alignmentRep->addData("", "ISec.range", $trialID);
+        $alignmentRep->addData("", "Dur.ISec", $trialID);
+        $alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
+        $alignmentRep->addData("", "End.r-End.s", $trialID);
+        if ($allAT) {
+          $lsat->addData("Unmapped_Ref", "TYPE", $trialID);
+          $lsat->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
+          $lsat->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
+          $lsat->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
+          $lsat->addData("", "S.DetScr", $trialID);
+          $lsat->addData("", "S.DetDec", $trialID);
+          $lsat->addData("", "S.ID", $trialID);
+          $lsat->addData("", "S.range", $trialID);
+          $lsat->addData("", "Dur.s", $trialID);
+          $lsat->addData("", "ISec.range", $trialID);
+          $lsat->addData("", "Dur.ISec", $trialID);
+          $lsat->addData("", "Beg.r-Beg.s", $trialID);
+          $lsat->addData("", "End.r-End.s", $trialID);
+        }
       }
       # 'Trials' done
 
       $all_bpm{$file}{$evt} = $bpm;
       
       if ($allAT) {
-	my $tbl = $lsat->renderTxtTable(2);
-	error_quit("ERROR: Generating Alignment Report (". $lsat->get_errormsg() . ")") if (! defined($tbl));
-	print $tbl; 	 
+        my $tbl = $lsat->renderTxtTable(2);
+        error_quit("ERROR: Generating Alignment Report (". $lsat->get_errormsg() . ")") if (! defined($tbl));
+        print $tbl;      
       }      
 
       my $matched = (2 * scalar @mapped)
-	+ scalar @unmapped_sys + scalar @unmapped_ref;
+        + scalar @unmapped_sys + scalar @unmapped_ref;
       print " -- Summary: ",
-	scalar @mapped, " Mapped (Pairs) / ",
-	  scalar @unmapped_sys, " Unmapped Sys  / ",
-	    scalar @unmapped_ref, " Unmapped Ref | Total Observations: $matched elements\n\n";
+        scalar @mapped, " Mapped (Pairs) / ",
+          scalar @unmapped_sys, " Unmapped Sys  / ",
+            scalar @unmapped_ref, " Unmapped Ref | Total Observations: $matched elements\n\n";
       error_quit("WEIRD: To match ($tomatch) != Matched ($matched) ?")
-	if ($tomatch != $matched);
+        if ($tomatch != $matched);
     }
   }
     
@@ -915,7 +915,7 @@ sub do_alignment {
     if (defined($outputRootFile) && $outputRootFile ne "") {
       my $tbl = $alignmentRep->renderCSV(2);
       if (! defined($tbl)) {
-	print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
+        print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
       }
       MMisc::writeTo($outputRootFile, ".ali.csv", 1, 0, $tbl);
     }

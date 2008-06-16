@@ -53,15 +53,15 @@ whether or not the object was created.
 =cut
 
 sub new
-{
+  {
     my ($class, $parameters, $trial) = @_;
 
     my $self =
-    {
-        "PARAMS" => $parameters,
-        "TRIALS" => $trial,
-        "TRIALPARAMS" => $trial->getMetricParams(),
-    };
+      {
+       "PARAMS" => $parameters,
+       "TRIALS" => $trial,
+       "TRIALPARAMS" => $trial->getMetricParams(),
+      };
 
     #######  customizations
     die "Error: parameter 'CostMiss' not defined"     if (! exists($self->{PARAMS}->{CostMiss}));
@@ -74,11 +74,11 @@ sub new
     die "Error: Rtarget must be > 0"       if ($self->{PARAMS}->{Rtarget} <= 0);
 
     $self->{PARAMS}->{BETA} = $self->{PARAMS}->{CostFA} / 
-        ($self->{PARAMS}->{CostMiss} * $self->{PARAMS}->{Rtarget});
+      ($self->{PARAMS}->{CostMiss} * $self->{PARAMS}->{Rtarget});
         
     bless $self;
     return $self;
-}
+  }
 
 
 ####################################################################################################
@@ -90,7 +90,7 @@ Returns a free-form label string for the MissError statistic.  The method is req
 
 =cut
 
-sub errMissLab(){ "PMiss"; }
+  sub errMissLab(){ "PMiss"; }
 
 ####################################################################################################
 =pod
@@ -102,7 +102,7 @@ time based rate.
 
 =cut
 
-sub errMissUnit(){ "Prob" };
+  sub errMissUnit(){ "Prob" };
 
 ####################################################################################################
 =pod
@@ -114,7 +114,7 @@ to print the units.
 
 =cut
 
-sub errMissUnitLabel(){ "%" };
+  sub errMissUnitLabel(){ "%" };
 
 ####################################################################################################
 =pod
@@ -125,7 +125,7 @@ Returns a printf() format string for printing out miss error measurements.
 
 =cut
 
-sub errMissPrintFormat(){ "%6.4f" };
+  sub errMissPrintFormat(){ "%6.4f" };
 
 ####################################################################################################
 =pod
@@ -138,12 +138,12 @@ and it returns C<undef>.
 
 =cut
 
-sub errMissBlockCalc(){
+  sub errMissBlockCalc(){
     my ($self, $nMiss, $block) = @_;
     my $NTarg =  $self->{TRIALS}->getNumTarg($block);
   
     ($NTarg > 0) ? $nMiss / $NTarg : undef;
-}
+  }
 
 ####################################################################################################
 =pod
@@ -154,7 +154,7 @@ Returns a free-form label string for the FAError statistic.  The method is requi
 
 =cut
 
-sub errFALab() { "RFA"; }
+  sub errFALab() { "RFA"; }
 
 ####################################################################################################
 =pod
@@ -166,7 +166,7 @@ time based rate.
 
 =cut
 
-sub errFAUnit(){ "Rate" };
+  sub errFAUnit(){ "Rate" };
 
 ####################################################################################################
 =pod
@@ -178,7 +178,7 @@ to print the units.
 
 =cut
 
-sub errFAUnitLabel(){ "Events/Hour" };
+  sub errFAUnitLabel(){ "Events/Hour" };
 
 ####################################################################################################
 =pod
@@ -189,7 +189,7 @@ Returns a printf() format string for printing out false alarm error measurements
 
 =cut
 
-sub errFAPrintFormat(){ "%6.4f" };
+  sub errFAPrintFormat(){ "%6.4f" };
 
 ####################################################################################################
 =pod
@@ -202,11 +202,11 @@ and it returns C<undef>.
 
 =cut
 
-sub errFABlockCalc(){
+  sub errFABlockCalc(){
     my ($self, $nFa, $block) = @_;
     ### The denominator is already checked so no need to return undef.  TotalDuration is in seconds!!!!
     $nFa / ($self->{TRIALPARAMS}->{TOTALDURATION} / 3600);
-}
+  }
 
 ####################################################################################################
 =pod
@@ -220,7 +220,7 @@ The legal values are /minimizable/ or /maximizable/.
 
 =cut
 
-sub combType() { "minimizable"; }
+  sub combType() { "minimizable"; }
 
 ####################################################################################################
 =pod
@@ -231,7 +231,7 @@ Returns a free-form label string for the combined performance statistic.
 
 =cut
 
-sub combLab() { "DCR"; }
+  sub combLab() { "DCR"; }
 
 
 ####################################################################################################
@@ -242,7 +242,7 @@ sub combLab() { "DCR"; }
 Returns a printf() format string for printing out combined performance statistic. 
 
 =cut
-sub combPrintFormat(){ "%6.4f" };
+  sub combPrintFormat(){ "%6.4f" };
 
 ####################################################################################################
 =pod
@@ -255,14 +255,14 @@ C<$faErr> is undefined, then the combined calculation returns C<undef>,
 
 =cut
 
-sub combCalc(){
+  sub combCalc(){
     my ($self, $missErr, $faErr) = @_;
-    if (defined($missErr) && defined($faErr)){
-	    $missErr + $self->{PARAMS}->{BETA} * $faErr;
+    if (defined($missErr) && defined($faErr)) {
+      $missErr + $self->{PARAMS}->{BETA} * $faErr;
     } else {
-	    undef;
+      undef;
     }
-}
+  }
 
 ####################################################################################################
 =pod
@@ -277,10 +277,10 @@ The method returns C<undef> if either miss or fa error is undefined.
 
 =cut
 
-sub combBlockCalc(){
+  sub combBlockCalc(){
     my ($self, $nMiss, $nFa, $block) = @_;
     $self->combCalc($self->errMissBlockCalc($nMiss, $block), $self->errFABlockCalc($nFa, $block));
-}
+  }
 
 ####################################################################################################
 =pod
@@ -318,7 +318,7 @@ the CODE DIES as this should never happen.
 
 =cut
 
-sub combBlockSetCalc(){
+  sub combBlockSetCalc(){
     my ($self, $data) = @_;
     #### Data is a hash ref with the primary key being a block and for each block there 
     #### MUST be a 2 secondary keys, 'MMISS' and 'MFA'
@@ -327,39 +327,39 @@ sub combBlockSetCalc(){
     my ($missSum, $missSumSqr, $missN) = (0, 0, 0);
     my ($faSum,   $faSumSqr,   $faN) =   (0, 0, 0);
     
-#    my $combAvg = $self->combErrCalc($missAvg, $faAvg);
-#    ($combAvg, undef, $missAvg, $missSSD, $faAvg, $faSSD);
+    #    my $combAvg = $self->combErrCalc($missAvg, $faAvg);
+    #    ($combAvg, undef, $missAvg, $missSSD, $faAvg, $faSSD);
 
-    foreach my $block(keys %$data){
-	    my $luFA = $data->{$block}{MFA};
-	    my $luMiss = $data->{$block}{MMISS};
-	    die "Error: Can't calculate errCombBlockSetCalc: key 'MFA' for block '$block' missing" if (! defined($luFA));
-	    die "Error: Can't calculate errCombBlockSetCalc: key 'MMISS' for block '$block' missing" if (! defined($luMiss));
+    foreach my $block (keys %$data) {
+      my $luFA = $data->{$block}{MFA};
+      my $luMiss = $data->{$block}{MMISS};
+      die "Error: Can't calculate errCombBlockSetCalc: key 'MFA' for block '$block' missing" if (! defined($luFA));
+      die "Error: Can't calculate errCombBlockSetCalc: key 'MMISS' for block '$block' missing" if (! defined($luMiss));
 
-        my $miss = $self->errMissBlockCalc($luMiss, $block); 
-        if (defined($miss)){
-            $missSum += $miss;
-            $missSumSqr += $miss * $miss;
-            $missN++;
+      my $miss = $self->errMissBlockCalc($luMiss, $block); 
+      if (defined($miss)) {
+        $missSum += $miss;
+        $missSumSqr += $miss * $miss;
+        $missN++;
+      }
+      my $fa = $self->errFABlockCalc($luFA, $block); 
+      if (defined($fa)) {
+        $faSum += $fa;
+        $faSumSqr += $fa * $fa;
+        $faN ++;
+      }        
+      ### Try to calculate the SSD of the combined metric IFF the miss and fa errors are allways defined.  If they
+      ### are not for one block, then punt!
+      if (defined($fa) && defined($miss)) {
+        if (defined($combSum)) {
+          my $comb = $self->combCalc($miss, $fa);
+          $combSum += $comb;
+          $combSumSqr += $comb;
+          $combN ++;
         }
-        my $fa = $self->errFABlockCalc($luFA, $block); 
-        if (defined($fa)){
-            $faSum += $fa;
-            $faSumSqr += $fa * $fa;
-            $faN ++;
-        }        
-        ### Try to calculate the SSD of the combined metric IFF the miss and fa errors are allways defined.  If they
-        ### are not for one block, then punt!
-        if (defined($fa) && defined($miss)){
-            if (defined($combSum)){
-                my $comb = $self->combCalc($miss, $fa);
-                $combSum += $comb;
-                $combSumSqr += $comb;
-                $combN ++;
-            }
-        } else {
-            $combSum = undef;
-        }
+      } else {
+        $combSum = undef;
+      }
     }
     
     my ($faBSet, $faBSetSSD) = (undef, undef); 
@@ -375,7 +375,7 @@ sub combBlockSetCalc(){
     $combBSetSSD = sqrt((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1))) if (defined($combSum)  && $combN > 1);
 
     ($combBSet, $combBSetSSD, $missBSet, $missBSetSSD, $faBSet, $faBSetSSD);
-}
+  }
 
 #POD# =back 4
 #POD# 

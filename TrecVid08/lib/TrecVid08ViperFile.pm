@@ -87,9 +87,9 @@ my %hash_file_attributes_types =
   );
 
 my @array_file_inline_attributes =
-  ( "id", "name" ); # 'id' is to be first
+  ( "id", "name" );             # 'id' is to be first
 
-my @list_objects_attributes = # Order is important
+my @list_objects_attributes =   # Order is important
   ("DetectionScore", "DetectionDecision", "Point", "BoundingBox");
 
 my @list_objects_attributes_types = # Order is important (has to match previous)
@@ -113,7 +113,7 @@ my %hasharray_inline_attributes;
 @{$hasharray_inline_attributes{"dvalue"}} = ("value");
 
 my @array_objects_inline_attributes = 
-  ("name", "id", "framespan"); # order is important
+  ("name", "id", "framespan");  # order is important
 
 my %not_gtf_required_dummy_values =
   (
@@ -129,7 +129,7 @@ my $framespan_max_default = "all";
 ########## Some rules that can be changed (here, specific for TrecVid08)
 # Maximum number of pair per framespan found
 # For Trecvid08, only one pair (ie one framespan range) is authorized per framespan (0 for unlimited)
-my $max_pair_per_fs = 1; # positive number / 0 for unlimited
+my $max_pair_per_fs = 1;        # positive number / 0 for unlimited
 ## Update (20080421): After talking with Jon, we decided that IDs do not have to start at 0 or be consecutive after all
 # Check if IDs list have to start at 0
 my $check_ids_start_at_zero = 0;
@@ -159,12 +159,12 @@ sub new {
   my $self =
     {
      xmllintobj     => $xmllintobj,
-     gtf            => 0, # By default, files are not GTF
+     gtf            => 0,       # By default, files are not GTF
      fps            => -1, # Not needed to validate a file, but needed for observations creation
      file           => "",
      fhash          => undef,
      comment        => "", # Comment to be written to write (or to each 'Observation' when generated)
-     validated      => 0, # To confirm file was validated
+     validated      => 0,  # To confirm file was validated
      fs_framespan_max => $fs_tmp,
      errormsg       => $errormsg,
     };
@@ -799,7 +799,7 @@ sub _get_short_sf_file {
   $txt =~ s%^.+\/%%g;
 
   # lowercase
-#  $txt = lc($txt);
+  #  $txt = lc($txt);
 
   return($txt);
 }
@@ -921,7 +921,7 @@ sub get_dummy_observation {
     return(0);
   }
 
-  my $fs = $file_fs; # to validate, it needs a obs' framespan
+  my $fs = $file_fs;          # to validate, it needs a obs' framespan
   my $fs_fs = new ViperFramespan();
   if (! $fs_fs->set_value_from_beg_to($fs)) {
     $self->_set_errormsg("In observation creation: ViperFramespan ($fs) error (" . $fs_fs->get_errormsg() . ")");
@@ -944,8 +944,8 @@ sub get_dummy_observation {
       $dtmp{"dummytxtfs"}{$key_attr_content} = \@{$not_gtf_required_dummy_values{$key}};
       $obs->set_selected($key, %dtmp);
       if ($obs->error()) {
-	$self->_set_errormsg("Problem while using \'set_selected\' ($key) on observation (" . $obs->get_errormsg() .")");
-	return(0);
+        $self->_set_errormsg("Problem while using \'set_selected\' ($key) on observation (" . $obs->get_errormsg() .")");
+        return(0);
       }
     }
   }
@@ -1035,15 +1035,15 @@ sub get_event_observations {
     if ($self->_is_comment_set()) {
       my $comment = $self->_get_comment();
       if (! $obs->addto_comment($comment) ) {
-	$self->_set_errormsg("Problem adding \'comment\' to observation (" . $obs->get_errormsg() .")");
-	return(0);
+        $self->_set_errormsg("Problem adding \'comment\' to observation (" . $obs->get_errormsg() .")");
+        return(0);
       }
     }
     if (exists $all_obs{$id}{$key} ) {
       my $comment = $all_obs{$id}{$key};
       if (! $obs->addto_comment($comment) ) {
-	$self->_set_errormsg("Problem adding \'comment\' to observation (" . $obs->get_errormsg() .")");
-	return(0);
+        $self->_set_errormsg("Problem adding \'comment\' to observation (" . $obs->get_errormsg() .")");
+        return(0);
       }
     }
 
@@ -1071,41 +1071,41 @@ sub get_event_observations {
     my @all_obj_attrs = keys %hash_objects_attributes_types_dynamic;
     foreach my $okey (@all_obj_attrs) {
       if (exists $all_obs{$id}{$okey}) {
-	my %ih = %{$all_obs{$id}{$okey}};
-	my %oh = ();
-	my $isd = $hash_objects_attributes_types{$okey};
+        my %ih = %{$all_obs{$id}{$okey}};
+        my %oh = ();
+        my $isd = $hash_objects_attributes_types{$okey};
 
-	if ((! $isd) && (scalar keys %ih > 1)) {
-	  $self->_set_errormsg("WEIRD: There should only be one framepsan per non dynamic attribute ($okey)");
-	  return(0);
-	}
+        if ((! $isd) && (scalar keys %ih > 1)) {
+          $self->_set_errormsg("WEIRD: There should only be one framepsan per non dynamic attribute ($okey)");
+          return(0);
+        }
 
-	foreach my $afs (keys %ih) {
-	  # Here we do not worry about dynamic & non dynamic object, nor about the number of inline attributes
-	  my $fs_afs = new ViperFramespan();
-	  if (! $fs_afs->set_value($afs)) {
-	    $self->_set_errormsg("In observation creation ($okey): ViperFramespan ($afs) error (" . $fs_afs->get_errormsg() . ")");
-	    return(0);
-	  }
-	  if (! $fs_afs->set_fps($fps)) {
-	    $self->_set_errormsg("In observation creation ($okey): ViperFramespan ($afs) error (" . $fs_afs->get_errormsg() . ")");
-	    return(0);
-	  }
-	  # Since I can not have '@{$oh{$fs_afs}} = @{$ih{$afs}}', ie use the 'ViperFramespan' object as the hash key
-	  # (which would have been great, but is not authorized by perl since a key has to be a scalar)
-	  # we will have to rely on a two dimensionnal hash with '$afs' (the string) as its master key
-	  # (wasteful but insure a proper database key, and more useable/searchable than an array
-	  # and we can always go from the 'ViperFramespan' to its 'string' value easily)
-	  my $mkey = $fs_afs->get_value();
-	  $oh{$mkey}{$obs->key_attr_framespan()} = $fs_afs;
-	  $oh{$mkey}{$obs->key_attr_content()} = $ih{$afs};
-	}
+        foreach my $afs (keys %ih) {
+          # Here we do not worry about dynamic & non dynamic object, nor about the number of inline attributes
+          my $fs_afs = new ViperFramespan();
+          if (! $fs_afs->set_value($afs)) {
+            $self->_set_errormsg("In observation creation ($okey): ViperFramespan ($afs) error (" . $fs_afs->get_errormsg() . ")");
+            return(0);
+          }
+          if (! $fs_afs->set_fps($fps)) {
+            $self->_set_errormsg("In observation creation ($okey): ViperFramespan ($afs) error (" . $fs_afs->get_errormsg() . ")");
+            return(0);
+          }
+          # Since I can not have '@{$oh{$fs_afs}} = @{$ih{$afs}}', ie use the 'ViperFramespan' object as the hash key
+          # (which would have been great, but is not authorized by perl since a key has to be a scalar)
+          # we will have to rely on a two dimensionnal hash with '$afs' (the string) as its master key
+          # (wasteful but insure a proper database key, and more useable/searchable than an array
+          # and we can always go from the 'ViperFramespan' to its 'string' value easily)
+          my $mkey = $fs_afs->get_value();
+          $oh{$mkey}{$obs->key_attr_framespan()} = $fs_afs;
+          $oh{$mkey}{$obs->key_attr_content()} = $ih{$afs};
+        }
 
-	# Done processing all framespans, now add the entity to the observation
-	if (! $obs->set_selected($okey, %oh) ) {
-	  $self->_set_errormsg("Problem adding \'$okey\' to observation (" . $obs->get_errormsg() .")");
-	  return(0);
-	}
+        # Done processing all framespans, now add the entity to the observation
+        if (! $obs->set_selected($okey, %oh) ) {
+          $self->_set_errormsg("Problem adding \'$okey\' to observation (" . $obs->get_errormsg() .")");
+          return(0);
+        }
       }
     }
 
@@ -1125,7 +1125,7 @@ sub get_event_observations {
 sub get_all_events_observations {
   my ($self) = @_;
 
-   return(-1) if ($self->error());
+  return(-1) if ($self->error());
 
   if (! $self->is_validated()) {
     $self->_set_errormsg("Can only create observations for a validated file");
@@ -1210,7 +1210,7 @@ sub clone {
 #####
 
 sub clone_with_no_events {
- my ($self) = @_;
+  my ($self) = @_;
 
   return($self->_clone_core(0));
 }
@@ -1461,7 +1461,7 @@ sub add_observation {
   return(0) if (! $self->extend_numframes_from_observation($obs));
 
   my %tmp = $self->_get_fhash();
-  my %sp_out; # will be added to $fhash{event}{id}
+  my %sp_out;                   # will be added to $fhash{event}{id}
 
   # Get the global framespan
   my $key = "framespan";
@@ -1495,25 +1495,25 @@ sub add_observation {
       # Dynamic objects
       my ($set, %values) = $obs->get_selected($attr);
       if ($obs->error()) {
-	$self->_set_errormsg("Problem obtaining the \'$attr\' observation attribute[1] (" . $obs->get_errormsg() .")");
-	return(0);
+        $self->_set_errormsg("Problem obtaining the \'$attr\' observation attribute[1] (" . $obs->get_errormsg() .")");
+        return(0);
       }
       next if (! $set);
       foreach my $akey (keys %values) {
-	if (! defined $values{$akey}{$obs->key_attr_content()}) {
-	  $self->_set_errormsg("WEIRD: Could not obtain the \'$attr\' observation attribute value");
-	  return(0);
-	}
-	my @a = @{$values{$akey}{$obs->key_attr_content()}};
-	@a = &_bvalue_convert($attr, @a);
-	@{$sp_out{$attr}{$akey}} = @a;
+        if (! defined $values{$akey}{$obs->key_attr_content()}) {
+          $self->_set_errormsg("WEIRD: Could not obtain the \'$attr\' observation attribute value");
+          return(0);
+        }
+        my @a = @{$values{$akey}{$obs->key_attr_content()}};
+        @a = &_bvalue_convert($attr, @a);
+        @{$sp_out{$attr}{$akey}} = @a;
       }
     } else {
       # Non-Dynamic objects
       my ($set, @values) = $obs->get_selected($attr);
       if ($obs->error()) {
-	$self->_set_errormsg("Problem obtaining the \'$attr\' observation attribute[2] (" . $obs->get_errormsg() .")");
-	return(0);
+        $self->_set_errormsg("Problem obtaining the \'$attr\' observation attribute[2] (" . $obs->get_errormsg() .")");
+        return(0);
       }
       next if (! $set);
       @values = &_bvalue_convert($attr, @values);
@@ -1628,12 +1628,12 @@ sub _data_processor {
     if (! MMisc::is_blank($string));
   # Parse it
   ($res, %fdata) = $self->_parse_sourcefile_section($name, $section, $isgtf);
-  if (! MMisc::is_blank($res)){
+  if (! MMisc::is_blank($res)) {
     my @resA = split(/\n/, $res);
     my $str = "";
-    for (my $_i=0; $_i<@resA; $_i++){  
-        $str .= "Problem while processing the \'sourcefile\' XML section (" . 
-                "Error ".($_i+1)." of ".scalar(@resA).": $resA[$_i])\n";
+    for (my $_i=0; $_i<@resA; $_i++) {  
+      $str .= "Problem while processing the \'sourcefile\' XML section (" . 
+        "Error ".($_i+1)." of ".scalar(@resA).": $resA[$_i])\n";
     }
     return($str, ());
   }
@@ -1706,37 +1706,37 @@ sub _parse_sourcefile_section {
   while (! MMisc::is_blank($str)) {
     my $sec = MtXML::get_named_xml_section("object", \$str, $default_error_value);
     if ($sec eq $default_error_value) {
-       push (@error_list, ("No \'object\' section left in the \'sourcefile\'"));
+      push (@error_list, ("No \'object\' section left in the \'sourcefile\'"));
     } else {
-        ($text, my $object_type, my $object_id, my $object_framespan, my %oattr)
-          = $self->_parse_object_section($sec, $isgtf);
-        if (! MMisc::is_blank($text)){
-            push (@error_list, $text);
-        } else {
+      ($text, my $object_type, my $object_id, my $object_framespan, my %oattr)
+        = $self->_parse_object_section($sec, $isgtf);
+      if (! MMisc::is_blank($text)) {
+        push (@error_list, $text);
+      } else {
 
-            ##### Sanity
+        ##### Sanity
     
-            # Check that the object name is an authorized event name
-            if (! grep(/^$object_type$/, @ok_events)){
-                push (@error_list, "Found unknown event type ($object_type) in \'object\'");
-            } else {
-               # Check that the object type/id key does not already exist
-               if (exists $res{$object_type}{$object_id}){
-                  push (@error_list, "Only one unique (event type, id) key authorized ($object_type, $object_id)");
-               } else {
-                  ##### Add to %res
-                  %{$res{$object_type}{$object_id}} = %oattr;
-                  $res{$object_type}{$object_id}{"framespan"} = $object_framespan;
-               }
-            }
+        # Check that the object name is an authorized event name
+        if (! grep(/^$object_type$/, @ok_events)) {
+          push (@error_list, "Found unknown event type ($object_type) in \'object\'");
+        } else {
+          # Check that the object type/id key does not already exist
+          if (exists $res{$object_type}{$object_id}) {
+            push (@error_list, "Only one unique (event type, id) key authorized ($object_type, $object_id)");
+          } else {
+            ##### Add to %res
+            %{$res{$object_type}{$object_id}} = %oattr;
+            $res{$object_type}{$object_id}{"framespan"} = $object_framespan;
+          }
         }
+      }
     }        
 
     # Prepare string for the next run
     $str = MMisc::clean_begend_spaces($str);
   }
-  if (@error_list > 0){
-     return(join(". ",@error_list), ());
+  if (@error_list > 0) {
+    return(join(". ",@error_list), ());
   }
   
   ##### Final Sanity Checks
@@ -1746,14 +1746,14 @@ sub _parse_sourcefile_section {
       my @list = sort _numerically keys %{$res{$event}};
       
       if ($check_ids_start_at_zero) {
-	return("Event ID list must always start at 0 (for event \'$event\', start at " . $list[0] . ")", ())
-	  if ($list[0] != 0);
+        return("Event ID list must always start at 0 (for event \'$event\', start at " . $list[0] . ")", ())
+          if ($list[0] != 0);
       }
       
       if ($check_ids_are_consecutive) {
-	return("Event ID list must always start at 0 and have no gap (for event \'$event\', seen "
-	       . scalar @list . " elements (0 -> " . $list[-1] . ")", ())
-	  if (scalar @list != $list[-1] + 1); 
+        return("Event ID list must always start at 0 and have no gap (for event \'$event\', seen "
+               . scalar @list . " elements (0 -> " . $list[-1] . ")", ())
+          if (scalar @list != $list[-1] + 1); 
       }
     }
   }
@@ -1851,7 +1851,7 @@ sub _parse_file_section {
     my @expected2;
     push @expected2, $val;
     ($in, $out) = &_compare_arrays(\@expected2, @comp);
-   return("Could not confirm all the expected \'$wtag\' attributes", ())
+    return("Could not confirm all the expected \'$wtag\' attributes", ())
       if (scalar @$in != scalar @expected2);
     return("Found some unexpected \'$wtag\' attributes type", ())
       if (scalar @$out > 0);
@@ -1960,17 +1960,17 @@ sub _parse_object_section {
     if (scalar @comp == 0) {
       next if ($isgtf);
       return("Expected \'$wtag\' required attribute ($key) does not have a value", ())
-	if (grep(m%^$key$%, @det_sub));
+        if (grep(m%^$key$%, @det_sub));
       next;
     } else {
       # GTF must not have the Detection attributes set
       return("\'$wtag\' attribute ($key) should not have a value for GTF", ())
-	if (($isgtf) && (grep(m%^$key$%, @det_sub)));
+        if (($isgtf) && (grep(m%^$key$%, @det_sub)));
     }
     my @expected2;
     push @expected2, $val;
     ($in, $out) = &_compare_arrays(\@expected2, @comp);
-   return("Could not confirm all the expected \'$wtag\' attributes", ())
+    return("Could not confirm all the expected \'$wtag\' attributes", ())
       if (scalar @$in != scalar @expected2);
     return("Found some unexpected \'$wtag\' attributes type", ())
       if (scalar @$out > 0);
@@ -2061,7 +2061,7 @@ sub _extract_data {
 
       my $fs_lfspan = new ViperFramespan();
       return("ViperFramespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ())
-	if (! $fs_lfspan->set_value($lfspan));
+        if (! $fs_lfspan->set_value($lfspan));
       my $iw = $fs_lfspan->is_within($fs_fspan);
       return("ViperFramespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_lfspan->error());
       return("ViperFramespan ($lfspan) is not within range (" . $fs_fspan->get_original_value() . ")", ()) if (! $iw);
@@ -2070,9 +2070,9 @@ sub _extract_data {
       return("ViperFramespan ($lfspan) contains more than $max_pair_per_fs range pair(s)") if (($max_pair_per_fs) && ($pc > $max_pair_per_fs));
 
       foreach my $fs_tmp (@afspan) {
-	my $ov = $fs_lfspan->check_if_overlap($fs_tmp);
-	return("ViperFramespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_tmp->error());
-	return("ViperFramespan ($lfspan) overlap another framespan (" . $fs_tmp->get_original_value() . ") within the same object attribute", ()) if ($ov);
+        my $ov = $fs_lfspan->check_if_overlap($fs_tmp);
+        return("ViperFramespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_tmp->error());
+        return("ViperFramespan ($lfspan) overlap another framespan (" . $fs_tmp->get_original_value() . ") within the same object attribute", ()) if ($ov);
       }
       push @afspan, $fs_lfspan;
 
@@ -2085,11 +2085,11 @@ sub _extract_data {
     } else {
       # if none was specified, check if the type is dynamic
       return("Can not confirm the dynamic status of found \'data\:\' type ($name)", ())
-	if (! exists $hash_objects_attributes_types_dynamic{$type});
+        if (! exists $hash_objects_attributes_types_dynamic{$type});
 
       # If it is, a framespan should have been provided
       return("No framespan provided for dynamic \'data\:\' type ($name)", ())
-	if ($hash_objects_attributes_types_dynamic{$type} == 1);
+        if ($hash_objects_attributes_types_dynamic{$type} == 1);
 
       # otherwise, it means that it is valid for the entire provided framespan
       $lfspan = $fspan;
@@ -2149,11 +2149,11 @@ sub _parse_attributes {
     } else {
       ($text, my %tmp) = $self->_extract_data($sec, $fspan, $allow_nofspan, $name);
       return("Error while processing the \'data\:\' content of the \'$name\' \'attribute\' ($text)", ())
-	if (! MMisc::is_blank($text));
+        if (! MMisc::is_blank($text));
       %{$attrs{$name}} = %tmp;
     }
     
-  } # while
+  }                             # while
 
   return("", %attrs);
 }
@@ -2172,7 +2172,7 @@ sub _framespan_sort {
 
 ########################################
 
-sub _wbi { # writeback indent
+sub _wbi {                      # writeback indent
   my $indent = shift @_;
   my $spacer = "  ";
   my $txt = "";
@@ -2186,7 +2186,7 @@ sub _wbi { # writeback indent
 
 #####
 
-sub _wb_print { # writeback print
+sub _wb_print {                 # writeback print
   my $indent = shift @_;
   my @content = @_;
 
@@ -2248,30 +2248,30 @@ sub _writeback_object {
       $indent++;
       my @afs;
       foreach my $fs (keys %{$object_hash{$key}}) {
-	my $fs_tmp = new ViperFramespan();
-	die("[TrecVid08ViperFile] Internal Error: WEIRD: In \'_writeback_object\' (" . $fs_tmp->get_errormsg() .")")
-	  if (! $fs_tmp->set_value($fs));
-	push @afs, $fs_tmp;
+        my $fs_tmp = new ViperFramespan();
+        die("[TrecVid08ViperFile] Internal Error: WEIRD: In \'_writeback_object\' (" . $fs_tmp->get_errormsg() .")")
+          if (! $fs_tmp->set_value($fs));
+        push @afs, $fs_tmp;
       }
       foreach my $fs_fs (sort _framespan_sort @afs) {
-	my $fs = $fs_fs->get_value();
-	$txt .= &_wb_print
-	  ($indent,
-	   "<data:" . $hash_objects_attributes_types{$key},
-	   ($hash_objects_attributes_types_dynamic{$key}) ? " framespan=\"$fs\"" : "",
-	   " ");
+        my $fs = $fs_fs->get_value();
+        $txt .= &_wb_print
+          ($indent,
+           "<data:" . $hash_objects_attributes_types{$key},
+           ($hash_objects_attributes_types_dynamic{$key}) ? " framespan=\"$fs\"" : "",
+           " ");
 
-	my @subtxta;
-	my @name_a = @{$hasharray_inline_attributes{$key}};
-	my @value_a = @{$object_hash{$key}{$fs}};
-	while (scalar @name_a > 0) {
-	  my $name= shift @name_a;
-	  my $value = shift @value_a;
-	  push @subtxta, "$name\=\"$value\"";
-	}
-	$txt .= join(" ", @subtxta);
+        my @subtxta;
+        my @name_a = @{$hasharray_inline_attributes{$key}};
+        my @value_a = @{$object_hash{$key}{$fs}};
+        while (scalar @name_a > 0) {
+          my $name= shift @name_a;
+          my $value = shift @value_a;
+          push @subtxta, "$name\=\"$value\"";
+        }
+        $txt .= join(" ", @subtxta);
 
-	$txt .= "/>\n";
+        $txt .= "/>\n";
       }
 
       $txt .= &_wb_print(--$indent, "</attribute>\n");
@@ -2320,12 +2320,12 @@ sub _writeback2xml {
     $txt .= &_wb_print($indent++, "<descriptor name=\"$object\" type=\"OBJECT\">\n");
     foreach my $key (sort keys %hash_objects_attributes_types) {
       $txt .= &_wb_print
-	($indent,
-	 "<attribute dynamic=\"",
-	 ($hash_objects_attributes_types_dynamic{$key}) ? "true" : "false",
-	 "\" name=\"$key\" type=\"http://lamp.cfar.umd.edu/viperdata#",
-	 $hash_objects_attributes_types{$key}, 
-	 "\"/>\n");
+        ($indent,
+         "<attribute dynamic=\"",
+         ($hash_objects_attributes_types_dynamic{$key}) ? "true" : "false",
+         "\" name=\"$key\" type=\"http://lamp.cfar.umd.edu/viperdata#",
+         $hash_objects_attributes_types{$key}, 
+         "\"/>\n");
     }
     $txt .= &_wb_print(--$indent, "</descriptor>\n");
   }
@@ -2334,7 +2334,7 @@ sub _writeback2xml {
   $txt .= &_wb_print(--$indent, "</config>\n");
   $txt .= &_wb_print($indent++, "<data>\n");
 
-  if (scalar %lhash > 0) { # Are we just writting a spec XML file ?
+  if (scalar %lhash > 0) {    # Are we just writting a spec XML file ?
     $txt .= &_wb_print($indent++, "<sourcefile filename=\"" . $lhash{'file'}{'filename'} . "\">\n");
 
     # comment (optional)
@@ -2347,10 +2347,10 @@ sub _writeback2xml {
     # Objects
     foreach my $object (@asked_events) {
       if (exists $lhash{$object}) {
-	my @ids = keys %{$lhash{$object}};
-	foreach my $id (sort _numerically @ids) {
-	  $txt .= &_writeback_object($indent, $object, $id, %{$lhash{$object}{$id}});
-	}
+        my @ids = keys %{$lhash{$object}};
+        foreach my $id (sort _numerically @ids) {
+          $txt .= &_writeback_object($indent, $object, $id, %{$lhash{$object}{$id}});
+        }
       }
     }
 

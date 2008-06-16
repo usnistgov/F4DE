@@ -69,7 +69,7 @@ sub new {
      duration       => 0,
      dfps           => -1,
      fhash          => undef,
-     validated      => 0, # To confirm file was validated
+     validated      => 0,       # To confirm file was validated
      errormsg       => $errormsg,
     };
 
@@ -395,7 +395,7 @@ sub _data_cleanup_globalextract {
   $name = "excerpt_list";
   return("After initial cleanup, we found more than just viper \'excerpt_list\', aborting", $bigstring)
     if (! ( ($bigstring =~ m%^\s*\<excerpt_list>%is) 
-	    && ($bigstring =~ m%\<\/excerpt_list\>\s*$%is) ) );
+            && ($bigstring =~ m%\<\/excerpt_list\>\s*$%is) ) );
 
   return("", $bigstring);
 }
@@ -408,7 +408,7 @@ sub _excerpt_list_processor {
   # Remove the excerpt_list header/trailer tags
   my $name = "excerpt_list";
   return("Could not remvoe the \'$name\' tag, aborting", $string)
-      if (! MtXML::remove_xml_tags($name, \$string));  
+    if (! MtXML::remove_xml_tags($name, \$string));  
 
   ##### Process all that is left in the string (should only be excerpts)
   $name = "excerpt";
@@ -435,7 +435,7 @@ sub _excerpt_processor {
   # Remove the excerpt header/trailer tags
   my $name = "excerpt";
   return("Could not remvoe the \'$name\' tag, aborting", $string)
-      if (! MtXML::remove_xml_tags($name, \$string));  
+    if (! MtXML::remove_xml_tags($name, \$string));  
 
   foreach my $tag (@required_excerpt_tags) {
     my ($err, $value) = &_get_named_xml_value($tag, \$string);
@@ -449,7 +449,7 @@ sub _excerpt_processor {
     next if (! MMisc::is_blank($err)); 
     $tmp{$tag} = $value;
   }
-#  print "[*]", Dumper(\%tmp), "\n";
+  #  print "[*]", Dumper(\%tmp), "\n";
 
   my %fhash;
   %fhash = $self->_get_fhash() if ($self->_is_fhash_set());
@@ -483,7 +483,7 @@ sub _excerpt_processor {
   return("Problem converting ts to frame (" . $fs_tmp->get_errormsg() . ")")
     if ($fs_tmp->error());
 
-#  print "[$beg / $beg_ts -> $end / $end_ts]\n";
+  #  print "[$beg / $beg_ts -> $end / $end_ts]\n";
   
   $fs_tmp->set_value_beg_end($beg, $end);
   return("Problem setting a ViperFramespan (" . $fs_tmp->get_errormsg() . ")")
@@ -496,21 +496,21 @@ sub _excerpt_processor {
     if (exists $fhash{$fn}{$k}) {
       my $tv = $fhash{$fn}{$k};
       $terr .= "A previous \'$k\' value existed ($tv) for this 'excerpt' (file: $fn), and the value differs from the new found value ($fps). "
-	if ($fps != $tv);
+        if ($fps != $tv);
     }
       
     $k = $optional_excerpt_tags[1]; # language
     if ((exists $fhash{$fn}{$k}) && ($lang ne $default_error_value)) {
       my $tv = $fhash{$fn}{$k};
       $terr .= "A previous \'$k\' value existed ($tv) for this 'excerpt' (file: $fn), and the value differs from the new found value ($lang). "
-	if ($lang != $tv);
+        if ($lang != $tv);
     }
 
     $k = $optional_excerpt_tags[2]; # source type
     if ((exists $fhash{$fn}{$k}) && ($stype ne $default_error_value)) {
       my $tv = $fhash{$fn}{$k};
       $terr .= "A previous \'$k\' value existed ($tv) for this 'excerpt' (file: $fn), and the value differs from the new found value ($stype). "
-	if ($stype != $tv);
+        if ($stype != $tv);
     }
   }
   return($terr) if (! MMisc::is_blank($terr));
@@ -564,28 +564,28 @@ sub _file_fs_sanity_check {
 
     for (my $i = 0; $i < $la; $i++) {
       for (my $j = $i + 1; $j < $la; $j++) {
-	my $fs1 = $a[$i];
-	my $fs2 = $a[$j];
-	
-	my $v = $fs1->check_if_overlap($fs2);
-	if ($fs1->error()) {
-	  $self->_set_errormsg("Error checking fs overlap (" . $fs1->get_errormsg() . ")");
-	  return(0);
-	}
-	
-	if ($v) {
-	  my ($b1, $e1) = $fs1->get_beg_end_ts();
-	  my ($b2, $e2) = $fs2->get_beg_end_ts();
-	  if ($fs1->error()) {
-	    $self->_set_errormsg("Error obtaining fs beg and end ts (" . $fs1->get_errormsg() . ")");
-	    return(0);
-	  }
-	  if ($fs2->error()) {
-	    $self->_set_errormsg("Error obtaining fs beg and end ts (" . $fs2->get_errormsg() . ")");
-	    return(0);
-	  }
-	  $txt .= "Found framespan overlap for file key $fk 's \[$b1:$e1\] and \[$b2:$e2\]. ";
-	}
+        my $fs1 = $a[$i];
+        my $fs2 = $a[$j];
+        
+        my $v = $fs1->check_if_overlap($fs2);
+        if ($fs1->error()) {
+          $self->_set_errormsg("Error checking fs overlap (" . $fs1->get_errormsg() . ")");
+          return(0);
+        }
+        
+        if ($v) {
+          my ($b1, $e1) = $fs1->get_beg_end_ts();
+          my ($b2, $e2) = $fs2->get_beg_end_ts();
+          if ($fs1->error()) {
+            $self->_set_errormsg("Error obtaining fs beg and end ts (" . $fs1->get_errormsg() . ")");
+            return(0);
+          }
+          if ($fs2->error()) {
+            $self->_set_errormsg("Error obtaining fs beg and end ts (" . $fs2->get_errormsg() . ")");
+            return(0);
+          }
+          $txt .= "Found framespan overlap for file key $fk 's \[$b1:$e1\] and \[$b2:$e2\]. ";
+        }
 
       }
     }

@@ -44,7 +44,7 @@ BEGIN {
   $tv08pl = "TV08_PERL_LIB";
   $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
   $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
 }
 use lib ($tv08plv, $f4deplv, $f4bv);
 
@@ -56,7 +56,7 @@ sub eo2pe {
 }
 
 ## Then try to load everything
-my $ekw = "ERROR"; # Error Key Work
+my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
@@ -230,7 +230,7 @@ sub valok {
 
 sub valerr {
   my ($fname, $txt) = @_;
-  foreach (split(/\n/, $txt)){ 
+  foreach (split(/\n/, $txt)) { 
     &valok($fname, "[ERROR] $_");
   }
 }
@@ -308,9 +308,9 @@ Note:
 - List of recognized events: $ro
 - 'TrecVid08xsd' files are: $xsdfiles
 EOF
-;
+    ;
 
-  return $tmp;
+    return $tmp;
 }
 
 ####################

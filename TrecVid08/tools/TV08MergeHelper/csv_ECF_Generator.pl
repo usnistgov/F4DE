@@ -44,7 +44,7 @@ BEGIN {
   $tv08pl = "TV08_PERL_LIB";
   $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
   $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
 }
 use lib ($tv08plv, $f4deplv, $f4bv);
 
@@ -56,7 +56,7 @@ sub eo2pe {
 }
 
 ## Then try to load everything
-my $ekw = "ERROR"; # Error Key Work
+my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
@@ -182,7 +182,7 @@ if ($csvf != -1) {
 }
 
 ########## Generating ECF
-if ($ecff ne ""){
+if ($ecff ne "") {
   print "\n\n** STEP ", $step++, ": Geneating ECF in '$ecff'\n";
 
   my $ssd = 0;
@@ -202,7 +202,7 @@ if ($ecff ne ""){
     my $sub_fs_list = $fs_fs->get_list_of_framespans();
     error_quit("Failed to get sub framespans " . $fs_fs->get_errormsg())
       if (! defined($sub_fs_list));
-    foreach my $fs (@$sub_fs_list){
+    foreach my $fs (@$sub_fs_list) {
       $ecftxt .= "       <excerpt>\n";
       $ecftxt .= "           <!--  Framespan " . $fs->get_value() . " -->\n";
       $ecftxt .= "           <filename>$fn</filename>\n";
@@ -242,9 +242,9 @@ Will Score the XML file(s) provided (Truth vs System)
   --version       Print version number and exit
   --help          Print this usage information and exit
 EOF
-;
+    ;
 
-  return $tmp;
+    return $tmp;
 }
 
 ####################
@@ -319,7 +319,7 @@ sub check_csv_header {
     my $val = &find_key($key, @elts);
     if ($val == -1) {
       error_quit("Could not find required CSV key header ($key)")
-	if ($key ne $ecfh[-1]);
+        if ($key ne $ecfh[-1]);
       # FPS was optional for a while, so skip if not found
       next;
     }
@@ -339,7 +339,7 @@ sub process_csv_line {
 
   my $fn = $elts[$pos{$ecfh[0]}];
   my $fs = $elts[$pos{$ecfh[1]}];
-  my $ffps = $fps; # Set a default value
+  my $ffps = $fps;              # Set a default value
   # and override if it was given
   $ffps = $elts[$pos{$ecfh[2]}]
     if (exists $pos{$ecfh[2]});
@@ -369,7 +369,7 @@ sub process_csv_line {
 ########################################
 
 
-sub quc { # Quote clean
+sub quc {                       # Quote clean
   my $in = shift @_;
 
   $in =~ s%\"%\'%g;
@@ -379,7 +379,7 @@ sub quc { # Quote clean
 
 #####
 
-sub qua { # Quote Array
+sub qua {                       # Quote Array
   my @todo = @_;
 
   my @out = ();

@@ -105,7 +105,7 @@ sub _check_xmllint {
 
   return("", "\'xmllint\' ($xmllint) is not executable, aborting\n")
     if (! -x $xmllint);
-	 
+         
   # Now check that it actually is xmllint
   my ($retcode, $stdout, $stderr) = MMisc::do_system_call($xmllint, '--version');
   return("", "\'xmllint\' ($xmllint) does not seem to be a valid \'xmllint\' command, aborting\n")

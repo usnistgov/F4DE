@@ -479,7 +479,7 @@ sub _add_first_observation {
   $self->set_isgtf($isgtf);
   return(0) if ($self->error());
 
-  my %ihash; # Empty hash
+  my %ihash;                    # Empty hash
   return($self->_add_observation_core($obs, %ihash));
 }
 
@@ -636,7 +636,7 @@ sub _get_events_list_core {
 
 #####
 
-sub get_full_events_list { # Include $obs_dummy_key if in it
+sub get_full_events_list {      # Include $obs_dummy_key if in it
   my ($self, $filename) = @_;
 
   return($self->_get_events_list_core($filename));
@@ -644,7 +644,7 @@ sub get_full_events_list { # Include $obs_dummy_key if in it
 
 #####
 
-sub get_events_list { # Remove $obs_dummy_key if it is in the list
+sub get_events_list {     # Remove $obs_dummy_key if it is in the list
   my ($self, $filename) = @_;
 
   my @in = $self->_get_events_list_core($filename);
@@ -662,21 +662,21 @@ sub get_events_list { # Remove $obs_dummy_key if it is in the list
 #####
 
 sub is_event_in {
- my ($self, $filename, $event) = @_;
+  my ($self, $filename, $event) = @_;
 
- return(0) if ($self->error());
+  return(0) if ($self->error());
 
- if (! grep(m%^$event$%, @full_ok_events) ) {
-   $self->_set_errormsg("Requested event ($event) is not a recognized event. ");
-   return(0);
- }
+  if (! grep(m%^$event$%, @full_ok_events) ) {
+    $self->_set_errormsg("Requested event ($event) is not a recognized event. ");
+    return(0);
+  }
 
- my @list = $self->get_full_events_list($filename);
- return(0) if ($self->error());
+  my @list = $self->get_full_events_list($filename);
+  return(0) if ($self->error());
 
- return(1) if (grep(m%^$event$%, @list));
+  return(1) if (grep(m%^$event$%, @list));
 
- return(0);
+  return(0);
 }
 
 ##########
@@ -807,7 +807,7 @@ sub _compute_Min_Range_Dec_s {
   my ($min, $max) = $self->_get_global_DetectionScore_minMax();
   return(0) if ($self->error());
 
-  my $MinDec_s = $min; # ok to be negative
+  my $MinDec_s = $min;          # ok to be negative
   my $RangeDec_s = $max - $min;
 
   $self->_set_ihash_unchanged();
@@ -838,12 +838,12 @@ sub _get_global_DetectionScore_minMax {
       return() if ($self->error());
 
       foreach my $obs (@obs_list) {
-	my $ds = $obs->Dec();
-	if ($obs->error()) {
-	  $self->_set_errormsg("Problem obtaining the \'Dec\' value for an Observation (" . $obs->get_errormsg() . ")");
-	  return();
-	}
-	push @all_ds, $ds;
+        my $ds = $obs->Dec();
+        if ($obs->error()) {
+          $self->_set_errormsg("Problem obtaining the \'Dec\' value for an Observation (" . $obs->get_errormsg() . ")");
+          return();
+        }
+        push @all_ds, $ds;
       }
     }
   }
@@ -983,8 +983,8 @@ sub _is_obs_fs_within_ECF_fs {
     return(0);
   }
 
-#  my $uid = $obs->get_unique_id();
-#  print "[$uid]\n $mp ";
+  #  my $uid = $obs->get_unique_id();
+  #  print "[$uid]\n $mp ";
 
   foreach my $fs_fs (@fs_ecfs) {
     my ($bts, $ets) = $fs_fs->get_beg_end_ts();
@@ -992,13 +992,13 @@ sub _is_obs_fs_within_ECF_fs {
       $self->_set_errormsg("Problem obtaining the ECF's framespan beg and end ts (" . $fs_fs->get_errormsg() .")");
       return(0);
     }
-#    print "[ $bts : $ets ] ";
+    #    print "[ $bts : $ets ] ";
     if (($mp >= $bts) && ($mp <= $ets)) { # No need to continue, simply return true if is_within
-#      print " **\n";
+      #      print " **\n";
       return(1);
     }
   }
-#  print "\n";
+  #  print "\n";
 
   # Could never find it within ...
   return(0);
