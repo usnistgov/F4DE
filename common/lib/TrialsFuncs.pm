@@ -16,7 +16,28 @@ package Trials;
 use strict;
 use Data::Dumper;
 use SimpleAutoTable;
- 
+
+=pod
+
+=head1 NAME
+
+common/lib/Trials - A database object for holding detection decision trials.  
+
+=head1 SYNOPSIS
+
+This object contains a data stucture to hold a database of trials.  A trial is....
+
+=head1 DESCRIPTION
+
+=head2 METHODS
+
+=over 4
+
+=item B<new>(...)  
+
+This is the new
+
+=cut
 
 sub new
 {
@@ -103,6 +124,39 @@ sub isCompatible(){
 
     return 1;    
 }
+
+
+####################################################################################################
+
+=item B<addTrial>(I<$blockID>, I<$sysScore>, I<$decision>, I<$isTarg>)  
+
+Addes a trail, which is a decision made by a system on a specific input, to the trials object.  
+The variables are as follows:
+
+I<$blockID> is the statistical sampling block ID for the trial.  This trial structure is designed to handle 
+averaging over statistical blocks.  If you don't want to average over blocks, then use a single blockID for 
+all trials.
+
+I<$sysScore> is the system's belief that the trial is an instance of the target object.  It can be any floating point # or if 
+I<$decision> is /OMITTED/ it can be C<undef>.
+
+I<$decision> is the system's actual decision for the trial.  Please read the detection evaluation framework papers to 
+understand the implications of this variable.  The possible values are:
+
+=over
+
+B<YES> Indicating the trial is above the system's threshold for declaring the trial to be an instance.
+
+B<NO> Indicating the trial is below the system's threshold for declaring the trial to be an instance.
+
+B<OMITTED> Indicating the system did not provide an output for this trial.  If the decision is /OMITTED/, then the 
+I<$sysScore> is ignored.
+
+=back 
+
+I<$isTarg> is a boolean indicating if the trial is an instance of the target or not.
+
+=cut
 
 sub addTrial
 {
