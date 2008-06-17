@@ -214,6 +214,49 @@ sub get_unmapped_sys_objects {
   return($self->_get_XXX_objects("unmapped_sys", %sysObj));
 }
 
+########## 'joint_values'
+
+sub _get_XXX_hash {
+  my ($self, $xxx) = @_;
+
+  if (! $self->is_computed()) {
+    $self->_set_errormsg("Can only obtain values from a computed BPM");
+    return(undef);
+  }
+  
+  my $rxxx = $self->{$xxx};
+  my %res = %{$rxxx};
+
+  return(%res);
+}
+
+#####
+
+sub get_jointvalues_refsys_value {
+  my ($self, $ref_id, $sys_id) = @_;
+
+  my %jv = _get_XXX_hash("join_values");
+  return(undef) if ($self->error());
+
+  if (! exists $jv{$ref_id}{$sys_id}) {
+    $self->_set_errormsg("Can not find key pair (ref_id: $ref_id / sys_id: $sys_id)");
+    return(undef);
+  }
+
+  return($jv{$ref_id}{$sys_id});
+}
+
+#####
+
+sub is_jointvalues_refsys_defined {
+  my ($self, $ref_id, $sys_id) = @_;
+
+  my $v = $self->get_jointvalues_refsys_value($ref_id, $sys_id);
+  return(undef) if ($self->error());
+
+  return((defined $v) ? 1 : 0);
+}
+
 ########## 'computed'
 
 sub is_computed {
@@ -330,7 +373,7 @@ sub _map_ref_to_sys {
 sub _clique_sys2ref {
   my ($cid, $rjv, $sys_id, $rtdr, $rtds, $cr, $cs) = @_;
 
-  #  print "S[$cid][$sys_id]\n";
+  my $done = 0;
   foreach my $ref_id (keys %{$rtdr}) {
     next if (! exists $$rtdr{$ref_id});
     if (defined $$rjv{$ref_id}{$sys_id}) {
@@ -339,9 +382,11 @@ sub _clique_sys2ref {
       $$cs{$cid}{$sys_id}++;
       $$cr{$cid}{$ref_id}++;
       &_clique_ref2sys($cid, $rjv, $ref_id, $rtdr, $rtds, $cr, $cs);
+      $done++;
     }
   }
 
+  return($done);
 }
 
 #####
@@ -349,7 +394,7 @@ sub _clique_sys2ref {
 sub _clique_ref2sys {
   my ($cid, $rjv, $ref_id, $rtdr, $rtds, $cr, $cs) = @_;
   
-  #  print "R[$cid][$ref_id]\n";
+  my $done = 0;
   foreach my $sys_id (keys %{$rtds}) {
     next if (! exists $$rtds{$sys_id});
     if (defined $$rjv{$ref_id}{$sys_id}) {
@@ -358,9 +403,11 @@ sub _clique_ref2sys {
       $$cr{$cid}{$ref_id}++;
       $$cs{$cid}{$sys_id}++;
       &_clique_sys2ref($cid, $rjv, $sys_id, $rtdr, $rtds, $cr, $cs);
+      $done++;
     }
   }
 
+  return($done);
 }
 
 ##########
@@ -385,15 +432,13 @@ sub _map_ref_to_sys_clique_cohorts {
   # Process all refs first
   foreach my $ref_id (keys %td_ref) {
     next if (! exists $td_ref{$ref_id});
-    &_clique_ref2sys($cid, $rjv, $ref_id, \%td_ref, \%td_sys, \%c_ref, \%c_sys);
-    $cid++;
+    $cid++ if (&_clique_ref2sys($cid, $rjv, $ref_id, \%td_ref, \%td_sys, \%c_ref, \%c_sys));
   }
   
   # Then the leftover sys
   foreach my $sys_id (keys %td_sys) {
     next if (! exists $td_sys{$sys_id});
-    &_clique_sys2ref($cid, $rjv, $sys_id, \%td_ref, \%td_sys, \%c_ref, \%c_sys);
-    $cid++;
+    $cid++ if (&_clique_sys2ref($cid, $rjv, $sys_id, \%td_ref, \%td_sys, \%c_ref, \%c_sys));
   }
   
   # Now process clique per clique
@@ -740,7 +785,7 @@ sub _weighted_bipartite_graph_matching {
     $unmatched--;
     goto CHECK_RESULT if ($unmatched == 0);
     
-    $t = 0;                     
+    $t = 0;
     # get ready for another stage
     for ($l = 0; $l < $nmax; $l++) {
       $parent_row[$l] = -1;
@@ -831,6 +876,46 @@ sub error {
   my ($self) = @_;
   return($self->{errormsg}->error());
 }
+
+################################################################################
+
+sub _unit_test_kernel {
+  my ($ref, $sys, @params) = @_;
+
+  return("", -1) if (! defined $sys);
+  return("", 0) if (! defined $ref);
+
+
+  if ((($ref % 10) < 5) || (($sys % 10) < 5)) {
+    return("", 1);
+  } else {
+    return("", undef);
+  }
+}
+
+sub unit_test {
+  my $i = 10;
+
+  my %sys_bpm;
+  my %ref_bpm;
+  for (my $j = 0; $j < $i; $j++) {
+    $sys_bpm{$j} = $j;
+    $ref_bpm{$j} = $j;
+  }
+  my @kp;
+
+  my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&_unit_test_kernel, \@kp);
+  die("While creating the Bipartite Matching object (" . $bpm->get_errormsg() . ")")
+    if ($bpm->error());
+
+  $bpm->compute();
+  die("While computing the Bipartite Matching (" . $bpm->get_errormsg() . ")")
+    if ($bpm->error());
+
+  $bpm->_display("joint_values");
+  $bpm->_display("mapped", "unmapped_ref", "unmapped_sys");
+}
+
 
 ############################################################
 
