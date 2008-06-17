@@ -62,13 +62,16 @@ sub new {
      computed       => 0,
      # Computation results
      joint_values   => undef,
-     false_alarms_values   => undef,
-     missed_detect_values  => undef,
+     false_alarm_values   => undef,
+     missed_detect_values => undef,
      mapping        => undef,
      # 'MappedRecords'
      unmapped_ref   => undef,
      unmapped_sys   => undef,
      mapped         => undef,
+     # Convenience access
+     rev_joint_values => undef,
+     rev_mapping    => undef,
      # Error Handler
      errormsg       => $errormsg,
     };
@@ -214,7 +217,7 @@ sub get_unmapped_sys_objects {
   return($self->_get_XXX_objects("unmapped_sys", %sysObj));
 }
 
-########## 'joint_values'
+########## 'joint_values', 'false_alarm_values', 'missed_detect_values', 'mapping'
 
 sub _get_XXX_hash {
   my ($self, $xxx) = @_;
@@ -232,10 +235,28 @@ sub _get_XXX_hash {
 
 #####
 
+sub _set_rev_hash {
+  my ($self, $hname, $rev_hname) = @_;
+
+  my %tmp = _get_XXX_hash($hname);
+  return(undef) if ($self->error());
+
+  my %rev_tmp;
+  foreach my $ref_id (keys %tmp) {
+    foreach my $sys_id (keys %{$tmp{$ref_id}}) {
+      $rev_tmp{$sys_id}{$ref_id} = $tmp{$ref_id}{$sys_id};
+    }
+  }
+
+  $self->{$rev_hname} = \%rev_tmp;
+}
+
+##### 'joint_values'
+
 sub get_jointvalues_refsys_value {
   my ($self, $ref_id, $sys_id) = @_;
 
-  my %jv = _get_XXX_hash("join_values");
+  my %jv = _get_XXX_hash("joint_values");
   return(undef) if ($self->error());
 
   if (! exists $jv{$ref_id}{$sys_id}) {
@@ -255,6 +276,148 @@ sub is_jointvalues_refsys_defined {
   return(undef) if ($self->error());
 
   return((defined $v) ? 1 : 0);
+}
+
+#####
+
+sub get_jointvalues_ref_defined_list {
+  my ($self, $ref_id) = @_;
+
+  my %jv = _get_XXX_hash("joint_values");
+  return(undef) if ($self->error());
+
+  if (! exists $jv{$ref_id}) {
+    $self->_set_errormsg("Can not find ref_id ($ref_id)");
+    return(undef);
+  }
+
+  my @res;
+  foreach my $sys_id (keys %{$jv{$ref_id}}) {
+    my $v = $self->is_jointvalues_refsys_defined($ref_id, $sys_id);
+    return(undef) if ($self->error());
+    push @res, $sys_id if ($v);
+  }
+
+  return(@res);
+}
+
+#####  
+
+sub get_jointvalues_sys_defined_list {
+  my ($self, $sys_id) = @_;
+
+  # First create it if not set yet
+  $self->_set_rev_hash("joint_values", "rev_joint_values")
+    if (! defined $self->{rev_joint_values});
+  return(undef) if ($self->error());
+
+  my %rev_jv = _get_XXX_hash("rev_joint_values");
+  return(undef) if ($self->error());
+
+  if (! exists $rev_jv{$sys_id}) {
+    $self->_set_errormsg("Can not find sys_id ($sys_id)");
+    return(undef);
+  }
+
+  my @res;
+  foreach my $ref_id (keys %{$rev_jv{$sys_id}}) {
+    my $v = $self->is_jointvalues_refsys_defined($ref_id, $sys_id);
+    return(undef) if ($self->error());
+    push @res, $ref_id if ($v);
+  }
+
+  return(@res);
+}
+
+##### 'false_alarm_values'
+
+sub get_sys_falsealarmvalues {
+  my ($self, $sys_id) = @_;
+
+  my %fav= _get_XXX_hash("false_alarm_values");
+  return(undef) if ($self->error());
+
+  if (! exists $fav{$sys_id}) {
+    $self->_set_errormsg("Can not find sys_id ($sys_id)");
+    return(undef);
+  }
+
+  return($fav{$sys_id});
+}
+
+##### 'missed_detect_values'
+
+sub get_ref_misseddetectvalues {
+  my ($self, $ref_id) = @_;
+
+  my %mdv= _get_XXX_hash("missed_detect_values");
+  return(undef) if ($self->error());
+
+  if (! exists $mdv{$ref_id}) {
+    $self->_set_errormsg("Can not find ref_id ($ref_id)");
+    return(undef);
+  }
+
+  return($mdv{$ref_id});
+}
+
+##### 'mapping'
+
+sub get_ref_mapping {
+  my ($self, $ref_id) = @_;
+
+  my %map = &_get_XXX_hash("mapping");
+  return(undef) if ($self->error());
+
+  return(undef)
+    if (! exists $map{$ref_id});
+
+  return($map{$ref_id});
+}
+
+#####
+
+sub is_ref_mapped {
+  my ($self, $ref_id) = @_;
+
+  my $v = $self->get_ref_mapping($ref_id);
+  return(undef) if ($self->error());
+
+  return(0) if (! defined $v);
+
+  return(1);
+}
+
+#####  
+
+sub get_sys_mapping {
+  my ($self, $sys_id) = @_;
+
+  # First create it if not set yet
+  $self->_set_rev_hash("mapping", "rev_mapping")
+    if (! defined $self->{rev_mapping});
+  return(undef) if ($self->error());
+
+  my %rev_map = _get_XXX_hash("rev_mapping");
+  return(undef) if ($self->error());
+
+  return(undef)
+    if (! exists $rev_map{$sys_id});
+
+  return($rev_map{$sys_id});
+}
+
+#####
+
+sub is_sys_mapped {
+  my ($self, $sys_id) = @_;
+
+  my $v = $self->get_sys_mapping($sys_id);
+  return(undef) if ($self->error());
+
+  return(0) if (! defined $v);
+
+  return(1);
 }
 
 ########## 'computed'
@@ -308,7 +471,7 @@ sub compute {
     }
     $fa_values{$sys_id} = $res;
   }
-  $self->{false_alarms_values} = \%fa_values;
+  $self->{false_alarm_values} = \%fa_values;
 
   ##### Compute missed detect values
   my %md_values;
