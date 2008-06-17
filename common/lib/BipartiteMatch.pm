@@ -238,7 +238,7 @@ sub _get_XXX_hash {
 sub _set_rev_hash {
   my ($self, $hname, $rev_hname) = @_;
 
-  my %tmp = _get_XXX_hash($hname);
+  my %tmp = $self->_get_XXX_hash($hname);
   return(undef) if ($self->error());
 
   my %rev_tmp;
@@ -256,7 +256,7 @@ sub _set_rev_hash {
 sub get_jointvalues_refsys_value {
   my ($self, $ref_id, $sys_id) = @_;
 
-  my %jv = _get_XXX_hash("joint_values");
+  my %jv = $self->_get_XXX_hash("joint_values");
   return(undef) if ($self->error());
 
   if (! exists $jv{$ref_id}{$sys_id}) {
@@ -283,7 +283,7 @@ sub is_jointvalues_refsys_defined {
 sub get_jointvalues_ref_defined_list {
   my ($self, $ref_id) = @_;
 
-  my %jv = _get_XXX_hash("joint_values");
+  my %jv = $self->_get_XXX_hash("joint_values");
   return(undef) if ($self->error());
 
   if (! exists $jv{$ref_id}) {
@@ -311,7 +311,7 @@ sub get_jointvalues_sys_defined_list {
     if (! defined $self->{rev_joint_values});
   return(undef) if ($self->error());
 
-  my %rev_jv = _get_XXX_hash("rev_joint_values");
+  my %rev_jv = $self->_get_XXX_hash("rev_joint_values");
   return(undef) if ($self->error());
 
   if (! exists $rev_jv{$sys_id}) {
@@ -334,7 +334,7 @@ sub get_jointvalues_sys_defined_list {
 sub get_sys_falsealarmvalues {
   my ($self, $sys_id) = @_;
 
-  my %fav= _get_XXX_hash("false_alarm_values");
+  my %fav= $self->_get_XXX_hash("false_alarm_values");
   return(undef) if ($self->error());
 
   if (! exists $fav{$sys_id}) {
@@ -350,7 +350,7 @@ sub get_sys_falsealarmvalues {
 sub get_ref_misseddetectvalues {
   my ($self, $ref_id) = @_;
 
-  my %mdv= _get_XXX_hash("missed_detect_values");
+  my %mdv= $self->_get_XXX_hash("missed_detect_values");
   return(undef) if ($self->error());
 
   if (! exists $mdv{$ref_id}) {
@@ -366,7 +366,7 @@ sub get_ref_misseddetectvalues {
 sub get_ref_mapping {
   my ($self, $ref_id) = @_;
 
-  my %map = &_get_XXX_hash("mapping");
+  my %map = $self->_get_XXX_hash("mapping");
   return(undef) if ($self->error());
 
   return(undef)
@@ -398,7 +398,7 @@ sub get_sys_mapping {
     if (! defined $self->{rev_mapping});
   return(undef) if ($self->error());
 
-  my %rev_map = _get_XXX_hash("rev_mapping");
+  my %rev_map = $self->_get_XXX_hash("rev_mapping");
   return(undef) if ($self->error());
 
   return(undef)
