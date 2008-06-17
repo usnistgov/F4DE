@@ -957,6 +957,8 @@ sub write_gnuplot_DET_header{
   } elsif ($xScale eq "lin" && $yScale eq "lin") {
     $ratio = ($y_max - $y_min) / ($x_max - $x_min);
     print $FP "set size ratio $ratio\n";
+  } else {
+    print $FP "set size ratio 0.85\n";
   }
   print $FP "set title '$title'\n";
   print $FP "set grid\n";
@@ -1266,12 +1268,12 @@ sub writeMultiDetGraph
         printf MAINPLT "  '$troot.dat.1' using $xcol:$ycol title '$ltitle' with lines $colors[$d]";
         $xcol = ($xScale eq "nd" ? "6" : "4");
         $ycol = ($yScale eq "nd" ? "5" : "3");
-        printf MAINPLT ",\\\n  '$troot.dat.2' using $xcol:$ycol notitle with points lc $colors[$d] pt 9";
+        printf MAINPLT ",\\\n  '$troot.dat.2' using $xcol:$ycol notitle with points lc $colors[$d] pt 7";
 
         if ($reportActual){
           $xcol = ($xScale eq "nd" ? "11" : "9");
           $ycol = ($yScale eq "nd" ? "10" : "8");
-          printf MAINPLT ", \\\n    '$troot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $colors[$d] pt 5";
+          printf MAINPLT ", \\\n    '$troot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $colors[$d] pt 6";
         }
         $needComma = 1;
       }
@@ -1427,11 +1429,11 @@ sub writeGNUGraph{
   printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol title '$ltitle' with lines 2";
   $xcol = ($xScale eq "nd" ? "6" : "4");
   $ycol = ($yScale eq "nd" ? "5" : "3");
-  printf PLT ", \\\n    '$fileRoot.dat.2' using $xcol:$ycol notitle with points lc 2 pt 9";
+  printf PLT ", \\\n    '$fileRoot.dat.2' using $xcol:$ycol notitle with points lc 2 pt 7";
   if ($reportActual){
     $xcol = ($xScale eq "nd" ? "11" : "9");
     $ycol = ($yScale eq "nd" ? "10" : "8");
-    printf PLT ", \\\n    '$fileRoot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc 2  pt 9";
+    printf PLT ", \\\n    '$fileRoot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc 2  pt 6";
   }
   if ($withErrorCurve) {
     $xcol = ($xScale eq "nd" ? "8" : "12");
@@ -1474,6 +1476,7 @@ sub writeGNUGraph{
 }
 
 ## This is NOT and instance method
+### To see the test pattern: (echo set terminal png medium size 600,400; echo test) | gnuplot > foo.png
 sub buildPNG
   {
     my ($fileRoot, $gnuplot) = @_;
