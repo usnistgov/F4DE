@@ -61,7 +61,7 @@ sub _PN(){
 }
 
 sub _buildAutoTable(){
-  my ($self, $buildCurves, $includeCounts) = @_;
+  my ($self, $buildCurves, $includeCounts, $reportActual) = @_;
     
   my $at = new SimpleAutoTable();
 
@@ -94,11 +94,12 @@ sub _buildAutoTable(){
            
     }
     
-    my $act = "Act. ";
-    $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     $act . $metric->errFALab(),   $key);
-    $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissAvg), $act . $metric->errMissLab(), $key);
-    $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    $act . $metric->combLab(),    $key);
-        
+    if ($reportActual){
+      my $act = "Act. ";
+      $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     $act . $metric->errFALab(),   $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissAvg), $act . $metric->errMissLab(), $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    $act . $metric->combLab(),    $key);
+  }    
     if ($buildCurves) {
       my $opt = ($metric->combType() eq "maximizable" ? "Max " : "Min ");
       $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),     $opt . $metric->errFALab(),   $key);
@@ -124,6 +125,9 @@ sub renderAsTxt(){
   if (@{ $self->{DETList} } == 0) {
     return "Error: No DETs provided to produce a report from";
   }
+  
+  my $reportActual = 1;
+  $reportActual = $DETOptions->{ReportActual} if (exists($DETOptions->{ReportActual}));
 
   ### Biuld the combined and separate DET PNGs
   my $multiInfo = {()};
@@ -135,7 +139,7 @@ sub renderAsTxt(){
     $multiInfo = DETCurve::writeMultiDetGraph($fileRoot, \@DETs, $DETOptions);
   }
     
-  my $at = $self->_buildAutoTable($buildCurves, $includeCounts);
+  my $at = $self->_buildAutoTable($buildCurves, $includeCounts, $reportActual);
     
   my $trial = $self->{DETList}[0]->{DET}->getTrials();
   my $metric = $self->{DETList}[0]->{DET}->getMetric();

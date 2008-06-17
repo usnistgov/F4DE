@@ -1058,7 +1058,7 @@ sub writeMultiDetGraph
     ### Use the options
     my $title = "Combined DET Plot";
     my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $Isolines, $Isopoints) = (0.0001, 40, 5, 98, "top", undef, undef);
-    my ($gnuplotPROG, $xScale, $yScale, $makePNG) = (undef, "nd", "nd", 1);
+    my ($gnuplotPROG, $xScale, $yScale, $makePNG, $reportActual) = (undef, "nd", "nd", 1, 1);
     
     if (defined $options) {
       if (exists($options->{yScale})) {
@@ -1095,6 +1095,7 @@ sub writeMultiDetGraph
       $Isopoints = $options->{Isopoints} if (exists($options->{Isopoints}));
       $makePNG = $options->{BuildPNG} if (exists($options->{BuildPNG}));
       $gnuplotPROG = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
+      $reportActual = $options->{ReportActual} if (exists($options->{ReportActual}));
     }
 
     ### Check the metric types to see if the random curve is defined
@@ -1239,6 +1240,7 @@ sub writeMultiDetGraph
     ### Write Individual Dets
     for (my $d=0; $d < @$dets; $d++) {
       my $troot = sprintf("%s.sub%02d",$fileRoot,$d);
+      my ($actComb, $actCombSSD, $actMiss, $actMissSSD, $actFa, $actFaSSD) = $dets->[$d]->getMetric()->getActualDecisionPerformance();
                 
       if ($dets->[$d]->writeGNUGraph($troot, $options)) {
         #                       my $typeStr = ($dets->[$d]->{STYLE} eq "pooled" ? 
@@ -1264,7 +1266,13 @@ sub writeMultiDetGraph
         printf MAINPLT "  '$troot.dat.1' using $xcol:$ycol title '$ltitle' with lines $colors[$d]";
         $xcol = ($xScale eq "nd" ? "6" : "4");
         $ycol = ($yScale eq "nd" ? "5" : "3");
-        printf MAINPLT ",\\\n  '$troot.dat.2' using $xcol:$ycol notitle with points $colors[$d]";
+        printf MAINPLT ",\\\n  '$troot.dat.2' using $xcol:$ycol notitle with points lc $colors[$d] pt 9";
+
+        if ($reportActual){
+          $xcol = ($xScale eq "nd" ? "11" : "9");
+          $ycol = ($yScale eq "nd" ? "10" : "8");
+          printf MAINPLT ", \\\n    '$troot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $colors[$d] pt 5";
+        }
         $needComma = 1;
       }
     }
@@ -1295,7 +1303,7 @@ sub writeGNUGraph{
   #    my $title = $typeStr . " Detection Error Tradeoff Curve"; 
   my $title = "Detection Error Tradeoff Curve"; 
   my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $makePNG) = (0.0001, 40, 5, 98, "top", 1);
-  my ($gnuplotPROG, $xScale, $yScale) = (undef, "nd", "nd");
+  my ($gnuplotPROG, $xScale, $yScale, $reportActual) = (undef, "nd", "nd", 1);
   if (defined $options) {
     $title = $options->{title} if (exists($options->{title}));
 
@@ -1329,6 +1337,7 @@ sub writeGNUGraph{
     $keyLoc = $options->{KeyLoc} if (exists($options->{KeyLoc}));
     $makePNG = $options->{BuildPNG} if (exists($options->{BuildPNG}));
     $gnuplotPROG = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
+    $reportActual = $options->{ReportActual} if (exists($options->{ReportActual}));
   }    
     
   ### Serialize the file for later usage
@@ -1391,7 +1400,6 @@ sub writeGNUGraph{
     }
   }
   close DAT;
-  print PLT ",\\\n" if ($includeRandomCurve);
     
   ### The points data file
   open(DAT,"> $fileRoot.dat.2") ||
@@ -1415,22 +1423,23 @@ sub writeGNUGraph{
   my ($xcol, $ycol);
   $xcol = ($xScale eq "nd" ? "3" : "5");
   $ycol = ($yScale eq "nd" ? "2" : "4");
-  printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol title '$ltitle' with lines 2, \\\n";
+  print PLT ",\\\n" if ($includeRandomCurve);
+  printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol title '$ltitle' with lines 2";
   $xcol = ($xScale eq "nd" ? "6" : "4");
   $ycol = ($yScale eq "nd" ? "5" : "3");
-  printf PLT "    '$fileRoot.dat.2' using $xcol:$ycol notitle with points 2, ";
-  $xcol = ($xScale eq "nd" ? "11" : "9");
-  $ycol = ($yScale eq "nd" ? "10" : "8");
-  printf PLT "    '$fileRoot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points 3";
-    
+  printf PLT ", \\\n    '$fileRoot.dat.2' using $xcol:$ycol notitle with points lc 2 pt 9";
+  if ($reportActual){
+    $xcol = ($xScale eq "nd" ? "11" : "9");
+    $ycol = ($yScale eq "nd" ? "10" : "8");
+    printf PLT ", \\\n    '$fileRoot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc 2  pt 9";
+  }
   if ($withErrorCurve) {
-    print PLT ", \\\n";
     $xcol = ($xScale eq "nd" ? "8" : "12");
     $ycol = ($yScale eq "nd" ? "7" : "13");
-    printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol title '+/- 2 Standard Error' with lines 3, \\\n"; 
+    printf PLT ", \\\n    '$fileRoot.dat.1' using $xcol:$ycol title '+/- 2 Standard Error' with lines 3"; 
     $xcol = ($xScale eq "nd" ? "10" : "14");
     $ycol = ($yScale eq "nd" ? "9" : "13");
-    printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol notitle with lines 3";
+    printf PLT ", \\\n    '$fileRoot.dat.1' using $xcol:$ycol notitle with lines 3";
   }
   print PLT "\n";
   close PLT;
@@ -1445,14 +1454,15 @@ sub writeGNUGraph{
   }
   #    $self->write_gnuplot_threshold_header(*THRESHPLT, "$typeStr Threshold Plot for $self->{LINETITLE}", $self->{MINSCORE}-$pad, $self->{MAXSCORE}+$pad);
   $self->write_gnuplot_threshold_header(*THRESHPLT, "Threshold Plot for $self->{LINETITLE}", $self->{MINSCORE}-$pad, $self->{MAXSCORE}+$pad);
-  print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title '$missStr', \\\n";
-  print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title '$faStr', \\\n";
-  print THRESHPLT "  '$fileRoot.dat.1' using 1:6 title '$combStr', \\\n";
-  print THRESHPLT "  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points, \\\n";
-  print THRESHPLT "  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with points";
-  if (defined($self->getSystemDecisionValue())) {
-    print THRESHPLT ", \\\n  ".$self->getSystemDecisionValue().
-      " with lines title 'Hard Decsion Value'";
+  print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines 2, \\\n";
+  print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines 3, \\\n";
+  print THRESHPLT "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines 4";
+  if ($reportActual){
+    print THRESHPLT ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines 5";
+  }
+  if (defined($self->getBestCombComb())) {
+    print THRESHPLT ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points 6";
+    print THRESHPLT ", \\\n  ".$self->getBestCombComb()." title '$combType $combStr' with lines 6";
   }
   print THRESHPLT "\n";
   close THRESHPLT;
