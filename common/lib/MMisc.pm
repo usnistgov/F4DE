@@ -168,6 +168,16 @@ sub max {
 
 ##########
 
+sub sum {
+  my $out;
+  foreach my $v (@_) {
+    $out += $v;
+  }
+  return($out);
+}
+
+##########
+
 sub writeTo {
   my ($file, $addend, $printfn, $append, $txt, $filecomment, $stdoutcomment) = @_;
 
