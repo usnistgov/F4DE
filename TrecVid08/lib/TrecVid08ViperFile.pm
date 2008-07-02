@@ -75,6 +75,13 @@ my @ok_events =
    ##
   );
 
+# Authorized sub Events List (usualy those would be results from the scorer)
+my @ok_subevents = 
+  (
+   "Undefined", "Mapped", "Unmapped_Ref", "Unmapped_Sys"
+  ); # order is important (esp for the first element which is used in case no sub type is set but sub type writing as been requested)
+
+
 ##### Memory representations
 
 my %hash_file_attributes_types = 
@@ -121,6 +128,11 @@ my %not_gtf_required_dummy_values =
    $not_gtf_required_objects_attributes[1] => [ 0 ],
   );
 
+my $key_framespan = $array_objects_inline_attributes[2];
+my $key_subtype = "subtype";
+
+my $full_event_separator = "\:";
+
 ##########
 # Default values to compare against (constant values)
 my $default_error_value = "default_error_value";
@@ -165,6 +177,7 @@ sub new {
      fhash          => undef,
      comment        => "", # Comment to be written to write (or to each 'Observation' when generated)
      validated      => 0,  # To confirm file was validated
+     force_subtype  => 0,
      fs_framespan_max => $fs_tmp,
      errormsg       => $errormsg,
     };
@@ -233,6 +246,16 @@ sub get_full_events_list {
   return(-1) if ($self->error());
 
   return(@ok_events);
+}
+
+#####
+
+sub get_full_subevents_list {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  return(@ok_subevents);
 }
 
 #####
@@ -351,12 +374,68 @@ sub set_as_gtf {
 
 #####
 
+sub set_as_sys {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{gtf} = 0;
+  return(1);
+}
+
+#####
+
 sub check_if_gtf {
   my ($self) = @_;
 
   return(0) if ($self->error());
 
   return($self->{gtf});
+}
+
+#####
+
+sub check_if_sys {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  my $r = ($self->{gtf}) ? 0 : 1;
+
+  return($r);
+}
+
+
+########## 'force_subtype'
+
+sub set_force_subtype {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{force_subtype} = 1;
+  return(1);
+}
+
+#####
+
+sub unset_force_subtype {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{force_subtype} = 0;
+  return(1);
+}
+
+#####
+
+sub check_force_subtype {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->{force_subtype});
 }
 
 ########## 'fps'
@@ -707,8 +786,7 @@ sub validate {
 ####################
 
 sub reformat_xml {
-  my ($self) = shift @_;
-  my @limitto_events = @_;
+  my ($self, @limitto_events) = @_;
 
   return(-1) if ($self->error());
 
@@ -729,14 +807,16 @@ sub reformat_xml {
 
   my %tmp = $self->_get_fhash();
 
-  return(&_writeback2xml($comment, \%tmp, @limitto_events));
+  my $fst = $self->check_force_subtype();
+  return(0) if ($self->error());
+
+  return(&_writeback2xml($comment, $fst, \%tmp, @limitto_events));
 }
 
 ##########
 
 sub get_base_xml {
-  my ($self) = shift @_;
-  my @limitto_events = @_;
+  my ($self, @limitto_events) = @_;
 
   return(-1) if ($self->error());
 
@@ -747,8 +827,11 @@ sub get_base_xml {
     return(0) if ($self->error());
   }
 
+  my $fst = $self->check_force_subtype();
+  return(0) if ($self->error());
+
   my %tmp = ();
-  return(&_writeback2xml("", \%tmp, @limitto_events));
+  return(&_writeback2xml("", $fst, \%tmp, @limitto_events));
 }
 
 ####################
@@ -764,8 +847,7 @@ sub _display_all {
 #####
 
 sub _display {
-  my ($self) = shift @_;
-  my @limitto_events = @_;
+  my ($self, @limitto_events) = @_;
 
   return(-1) if ($self->error());
 
@@ -850,7 +932,7 @@ sub _get_event_observation_common {
   my $fps = $self->get_fps();
   my $isgtf = $self->check_if_gtf();
   my $file_fs = $self->_get_fhash_file_numframes();
-  
+
   return(0) if ($self->error());
 
   return($xmlfile, $filename, $fps, $isgtf, $file_fs);
@@ -960,14 +1042,53 @@ sub get_dummy_observation {
 
 #####
 
+sub split_full_event {
+  my ($fevent) = @_;
+
+  my ($e, $s) = ($fevent =~ m%^(.+?)(${full_event_separator}.+)?$%);
+  $s =~ s%^${full_event_separator}%%;
+  $s = "" if (! defined $s);
+  
+  return($e, $s);
+}
+
+#####
+
+sub get_printable_full_event {
+  my ($e, $s, $mode) = @_;
+
+  my $out = $e;
+
+  if (MMisc::is_blank($s)) {
+    if ($mode) {
+      $out .= $full_event_separator . $ok_subevents[0];
+    } 
+  } else {
+    $out .= $full_event_separator . $s;
+  }
+
+  return($out) 
+}
+
+#####
+
 sub get_event_observations {
-  my ($self, $event) = @_;
+  my ($self, $full_event) = @_;
 
   return(0) if ($self->error());
+
+  my ($event, $stype) = &split_full_event($full_event);
 
   if (! grep(m%^$event$%, @ok_events)) {
     $self->_set_errormsg("Requested event ($event) is not a recognized event");
     return(0);
+  }
+
+  if (! MMisc::is_blank($stype)) {
+    if (! grep(m%^$stype$%, @ok_subevents)) {
+      $self->_set_errormsg("Requested subevent ($stype) is not recognized");
+      return(0);
+    }
   }
 
   my ($xmlfile, $filename, $fps, $isgtf, $file_fs) = $self->_get_event_observation_common();
@@ -983,6 +1104,9 @@ sub get_event_observations {
   
   my %all_obs = %{$out{$event}};
   foreach my $id (sort _numerically keys %all_obs) {
+    # If subtype was requested, only process events of this subtype
+    next if ((! MMisc::is_blank($stype)) && ($stype ne $all_obs{$id}{$key_subtype}));
+
     # Note: we sort the 'id' to keep the same order in the output array (should we need to recreate it later)
     my $obs = new TrecVid08Observation();
 
@@ -996,8 +1120,8 @@ sub get_event_observations {
       return(0);
     }
 
-    if (! $obs->set_eventtype($event) ) {
-      $self->_set_errormsg("Problem adding \'eventtype\' ($event) to observation (" . $obs->get_errormsg() .")");
+    if (! $obs->set_full_eventtype($full_event) ) {
+      $self->_set_errormsg("Problem adding \'full_eventtype\' ($full_event) to observation (" . $obs->get_errormsg() .")");
       return(0);
     }
 
@@ -1047,7 +1171,7 @@ sub get_event_observations {
       }
     }
 
-    my $key = "framespan";
+    my $key = $key_framespan;
     if (! exists $all_obs{$id}{$key} ) { 
       $self->_set_errormsg("WEIRD: Could not get the \'$key\' for event: $event and id: $id");
       return(0);
@@ -1123,9 +1247,17 @@ sub get_event_observations {
 ##########
 
 sub get_all_events_observations {
-  my ($self) = @_;
+  my ($self) = shift @_;
+  my @limitto_events = @_;
 
   return(-1) if ($self->error());
+
+  if (scalar @limitto_events == 0) {
+    @limitto_events = @ok_events;
+  } else {
+    @limitto_events = $self->validate_events_list(@limitto_events);
+    return(0) if ($self->error());
+  }
 
   if (! $self->is_validated()) {
     $self->_set_errormsg("Can only create observations for a validated file");
@@ -1133,7 +1265,7 @@ sub get_all_events_observations {
   }
 
   my @res;
-  foreach my $event (@ok_events) {
+  foreach my $event (@limitto_events) {
     my @tmp = $self->get_event_observations($event);
     return(0) if ($self->error());
     push @res, @tmp;
@@ -1164,9 +1296,18 @@ sub remove_all_events {
 ##########
 
 sub _clone_core {
-  my ($self, $keep_events) = @_;
+  my ($self) = shift @_;
+  my @limitto_events = @_;
 
   return(undef) if ($self->error());
+
+  my $keep_events = 1;
+  if (scalar @limitto_events == 0) {
+    $keep_events = 0;
+  } else {
+    @limitto_events = $self->validate_events_list(@limitto_events);
+    return(undef) if ($self->error());
+  }
 
   if (! $self->is_validated()) {
     $self->_set_errormsg("Can only \'clone\' a validated file");
@@ -1183,7 +1324,7 @@ sub _clone_core {
   my %in = $self->_get_fhash();
   my %out;
   if ($keep_events) {
-    %out = &_clone_fhash_selected_events(\%in, @ok_events);
+    %out = &_clone_fhash_selected_events(\%in, @limitto_events);
   } else {
     %out = &_clone_fhash_selected_events(\%in);
   }
@@ -1204,7 +1345,7 @@ sub _clone_core {
 sub clone {
   my ($self) = @_;
 
-  return($self->_clone_core(1));
+  return($self->_clone_core(@ok_events));
 }
 
 #####
@@ -1212,7 +1353,15 @@ sub clone {
 sub clone_with_no_events {
   my ($self) = @_;
 
-  return($self->_clone_core(0));
+  return($self->_clone_core());
+}
+
+#####
+
+sub clone_with_selected_events {
+  my ($self, @limitto_events) = @_;
+
+  return($self->_clone_core(@limitto_events));
 }
 
 ##########
@@ -1435,6 +1584,7 @@ sub add_observation {
 
   # Get observation's eventtype
   my $event = $obs->get_eventtype();
+  my $stype = ($obs->is_eventsubtype_set()) ? $obs->get_eventsubtype() : "";
 
   # Confirm the cleaned up filename is the same
   my $obs_filename = $obs->get_filename();
@@ -1464,7 +1614,7 @@ sub add_observation {
   my %sp_out;                   # will be added to $fhash{event}{id}
 
   # Get the global framespan
-  my $key = "framespan";
+  my $key = $key_framespan;
   my $fs_obs = $obs->get_framespan();
   if ($obs->error()) {
     $self->_set_errormsg("Problem accessing the observation's framespan (" . $obs->get_errormsg() .")");
@@ -1523,6 +1673,16 @@ sub add_observation {
 
   ## Finished setting %sp_out, commit it to the local copy of fhash before recreating fhash
   %{$tmp{$event}{$id}} = %sp_out;
+
+  # Add the subtype
+  if  (! MMisc::is_blank($stype)) {
+    if (! grep(/^$stype$/, @ok_subevents)) {
+      $self->_set_errormsg("Found unknown event subtype ($stype) in \'observation\'");
+      return(0);
+    }
+    $self->set_force_subtype();
+  }
+  $tmp{$event}{$id}{$key_subtype} = $stype;
 
   $self->_set_fhash(%tmp);
   return(0) if ($self->error());
@@ -1705,36 +1865,51 @@ sub _parse_sourcefile_section {
   my @error_list = ();
   while (! MMisc::is_blank($str)) {
     my $sec = MtXML::get_named_xml_section("object", \$str, $default_error_value);
-    if ($sec eq $default_error_value) {
-      push (@error_list, ("No \'object\' section left in the \'sourcefile\'"));
-    } else {
-      ($text, my $object_type, my $object_id, my $object_framespan, my %oattr)
-        = $self->_parse_object_section($sec, $isgtf);
-      if (! MMisc::is_blank($text)) {
-        push (@error_list, $text);
-      } else {
-
-        ##### Sanity
-    
-        # Check that the object name is an authorized event name
-        if (! grep(/^$object_type$/, @ok_events)) {
-          push (@error_list, "Found unknown event type ($object_type) in \'object\'");
-        } else {
-          # Check that the object type/id key does not already exist
-          if (exists $res{$object_type}{$object_id}) {
-            push (@error_list, "Only one unique (event type, id) key authorized ($object_type, $object_id)");
-          } else {
-            ##### Add to %res
-            %{$res{$object_type}{$object_id}} = %oattr;
-            $res{$object_type}{$object_id}{"framespan"} = $object_framespan;
-          }
-        }
-      }
-    }        
-
     # Prepare string for the next run
     $str = MMisc::clean_begend_spaces($str);
+    
+    # Now process the extracted section
+    if ($sec eq $default_error_value) {
+      push (@error_list, ("No \'object\' section left in the \'sourcefile\'"));
+      next;
+    }
+    
+    ($text, my $object_type, my $object_subtype, my $object_id, my $object_framespan, my %oattr)
+      = $self->_parse_object_section($sec, $isgtf);
+    if (! MMisc::is_blank($text)) {
+      push (@error_list, $text);
+      next;
+    }
+    
+    ##### Sanity
+    
+    # Check that the object name is an authorized event name
+    if (! grep(/^$object_type$/, @ok_events)) {
+      push (@error_list, "Found unknown event type ($object_type) in \'object\'");
+      next;
+    }
+    
+    # Check that the object type/id key does not already exist
+    if (exists $res{$object_type}{$object_id}) {
+      push (@error_list, "Only one unique (event type, id) key authorized ($object_type, $object_id)");
+      next;
+    }
+    
+    # Check the subtype
+    if  (! MMisc::is_blank($object_subtype)) {
+      if (! grep(/^$object_subtype$/, @ok_subevents)) {
+	push (@error_list, "Found unknown event subtype ($object_subtype) in \'object\'");
+	next;
+      }
+      $self->set_force_subtype();
+    }
+	 
+    ##### Add to %res
+    %{$res{$object_type}{$object_id}} = %oattr;
+    $res{$object_type}{$object_id}{$key_framespan} = $object_framespan;
+    $res{$object_type}{$object_id}{$key_subtype} = $object_subtype;
   }
+
   if (@error_list > 0) {
     return(join(". ",@error_list), ());
   }
@@ -1980,7 +2155,9 @@ sub _parse_object_section {
     }
   }
 
-  return("", $object_name, $object_id, $object_framespan, %object_hash);
+  my ($etype, $stype) = &split_full_event($object_name); 
+
+  return("", $etype, $stype, $object_id, $object_framespan, %object_hash);
 }
 
 ####################
@@ -2055,7 +2232,7 @@ sub _extract_data {
 
     # Check the framespan (if any)
     my $lfspan;
-    my $key = "framespan";
+    my $key = $key_framespan;
     if (exists $iattr{$key}) {
       $lfspan = $iattr{$key};
 
@@ -2172,7 +2349,7 @@ sub _framespan_sort {
 
 ########################################
 
-sub _wbi {                      # writeback indent
+sub _wbi { # writeback indent
   my $indent = shift @_;
   my $spacer = "  ";
   my $txt = "";
@@ -2229,11 +2406,15 @@ sub _writeback_object {
   my $indent = shift @_;
   my $event = shift @_;
   my $id = shift @_;
+  my $fst = shift @_;
   my %object_hash = @_;
 
   my $txt = "";
 
-  $txt .= &_wb_print($indent++, "<object name=\"$event\" id=\"$id\" framespan=\"" . $object_hash{'framespan'} . "\">\n");
+  my $stype = $object_hash{$key_subtype};
+  my $ftype = &get_printable_full_event($event, $stype, $fst);
+
+  $txt .= &_wb_print($indent++, "<object name=\"$ftype\" id=\"$id\" framespan=\"" . $object_hash{'framespan'} . "\">\n");
 
   # comment (optional)
   $txt .= &_wb_print($indent, "<!-- " . $object_hash{"comment"} . " -->\n")
@@ -2290,6 +2471,7 @@ sub _writeback_object {
 
 sub _writeback2xml {
   my $comment = shift @_;
+  my $fst = shift @_;
   my $rlhash = shift @_;
   my @asked_events = @_;
 
@@ -2317,17 +2499,26 @@ sub _writeback2xml {
 
   # Write all objects
   foreach my $object (@asked_events) {
-    $txt .= &_wb_print($indent++, "<descriptor name=\"$object\" type=\"OBJECT\">\n");
-    foreach my $key (sort keys %hash_objects_attributes_types) {
-      $txt .= &_wb_print
-        ($indent,
-         "<attribute dynamic=\"",
-         ($hash_objects_attributes_types_dynamic{$key}) ? "true" : "false",
-         "\" name=\"$key\" type=\"http://lamp.cfar.umd.edu/viperdata#",
-         $hash_objects_attributes_types{$key}, 
-         "\"/>\n");
+    my @stypes;
+    if ($fst) {
+      push @stypes, @ok_subevents;
+    } else {
+      push @stypes, "";
     }
-    $txt .= &_wb_print(--$indent, "</descriptor>\n");
+    foreach my $stype (@stypes) {
+      my $ftype = &get_printable_full_event($object, $stype);
+      $txt .= &_wb_print($indent++, "<descriptor name=\"$ftype\" type=\"OBJECT\">\n");
+      foreach my $key (sort keys %hash_objects_attributes_types) {
+	$txt .= &_wb_print
+	  ($indent,
+	   "<attribute dynamic=\"",
+	   ($hash_objects_attributes_types_dynamic{$key}) ? "true" : "false",
+	   "\" name=\"$key\" type=\"http://lamp.cfar.umd.edu/viperdata#",
+	   $hash_objects_attributes_types{$key}, 
+	   "\"/>\n");
+      }
+      $txt .= &_wb_print(--$indent, "</descriptor>\n");
+    }
   }
 
   # End 'config', begin 'data'
@@ -2349,7 +2540,7 @@ sub _writeback2xml {
       if (exists $lhash{$object}) {
         my @ids = keys %{$lhash{$object}};
         foreach my $id (sort _numerically @ids) {
-          $txt .= &_writeback_object($indent, $object, $id, %{$lhash{$object}{$id}});
+          $txt .= &_writeback_object($indent, $object, $id, $fst, %{$lhash{$object}{$id}});
         }
       }
     }
