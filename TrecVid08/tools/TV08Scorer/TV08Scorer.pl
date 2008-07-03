@@ -212,9 +212,10 @@ my $noPNG = 0;
 my $sysTitle = "";
 my $outputRootFile = undef;
 my $observationContingencyTable = 0;
+my $writexml = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:    DEFG       O   ST     Za  cdefgh   mno   st v x  
+# Used:    DEFG       O   ST     Za  cdefgh   mno   st vwx  
 
 my %opt;
 my $dbgftmp = "";
@@ -243,6 +244,7 @@ GetOptions
    'titleOfSys=s'    => \$sysTitle,
    'OutputFileRoot=s' => \$outputRootFile,
    'observationCont' => \$observationContingencyTable,
+   'writexml:s'      => \$writexml,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -259,6 +261,8 @@ ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 error_quit("\'fps\' must set in order to do any scoring work") if ($fps == -1);
 error_quit("\'delta_t\' must set in order to do any scoring work") if (! defined $delta_t);
+error_quit("\'duration\' must be set unless \'ecf'\ is used") 
+  if (($duration == 0) && (MMisc::is_blank($ecffile)));
 
 if ($xmllint ne "") {
   error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
@@ -370,6 +374,7 @@ foreach my $event (@all_events) {
 }
 my $gtrial = $all_trials{$key_allevents};
 
+my %xmlwriteback;
 &do_alignment(@common, @only_in_sys, @only_in_ref);
 
 if ($trials_c{$key_allevents} == 0) {
@@ -383,6 +388,8 @@ if ($observationContingencyTable) {
   MMisc::writeTo($outputRootFile, ".contigency.txt", 1, 0, $all_trials{$key_allevents}->dumpCountSummary());
 }
 
+## Dump of Analysis Report
+
 print "\n\n***** STEP ", $stepc++, ": Dump of Analysis Report\n";
 my $detSet = new DETCurveSet($sysTitle);
   
@@ -392,7 +399,7 @@ foreach my $event (@all_events) {
   next if ($event eq $key_allevents);
   my $trials = $all_trials{$event};
   my $metric = $all_metric{$event};
-  # print "** Computing DET Curves for event: $event\n";
+#  print "** Computing DET Curves for event: $event\n";
   my $det = new DETCurve($trials, $metric, "blocked", "Event $event: ". $sysTitle, [()], $gzipPROG);
   print $det->getMessages()
     if (! MMisc::is_blank($det->getMessages()));
@@ -404,6 +411,19 @@ MMisc::writeTo($outputRootFile, ".scores.txt", 1, 0,
                $detSet->renderAsTxt($outputRootFile.".det", $doDC, 1, 
                                     { (xScale => "log", Ymin => "0.00001", Ymax => "90", Xmin => "0.00001", Xmax => "100", 
                                        gnuplotPROG => $gnuplotPROG, BuildPNG => ($noPNG ? 0 : 1)) }));
+
+## reWrite XML files
+if (defined $writexml) {
+  print "\n\n***** STEP ", $stepc++, ": reWrite of XML files\n";
+
+  foreach my $key (keys %xmlwriteback) {
+    my $vf = $xmlwriteback{$key};
+    my $txt = $vf->reformat_xml();
+
+    my $of = (! MMisc::is_blank($writexml)) ? "$writexml/$key.xml" : "";
+    MMisc::writeTo($of, "", 1, 0, $txt, "", "");
+  }
+}
 
 ok_quit("\n\n***** Done *****\n");
 
@@ -418,7 +438,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--showAT] [--allAT] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--showAT] [--allAT] [--writexml [dir]] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -433,6 +453,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
   --showAT        Show Gloabl Alignment Table
   --allAT         Show Alignment Table per File and Event processed
+  --writexml      Write a ViperFile XML containing the Mapped, UnmappedRef and UnmappedSys to disk (if dir is specified), stdout otherwise
   --observationCont  Dump the Trials Contingency Table
   --OutputFileRoot   Specify the file base of most output files generated (default is to print)
   --computeDETCurve  Generate DETCurve 
@@ -685,6 +706,37 @@ sub Obs_array_to_hash {
 
 ############################################################
 
+sub add_obs2vf {
+  my ($obs) = @_;
+  
+  error_quit("Observation error (" . $obs->get_errormsg(). ")")
+    if ($obs->error());
+  error_quit("Observation is not validated")
+    if (! $obs->is_validated());
+
+  my $file = $obs->get_filename();
+  if (! exists $xmlwriteback{$file}) {
+    my ($numframes, $framerate, $sourcetype, $hframesize, $vframesize) 
+      = $obs->get_ofi_VF_empty_order();
+
+    my $tmp_vf = new TrecVid08ViperFile();
+    $tmp_vf->fill_empty($file, 0, $numframes, $framerate, $sourcetype, $hframesize, $vframesize);
+
+    error_quit("Problem creating a new TrecVid08ViperFile (" . $tmp_vf->get_errormsg() . ")")
+      if ($tmp_vf->error());
+
+    $xmlwriteback{$file} = $tmp_vf;
+  }
+ 
+  my $vf = $xmlwriteback{$file};
+
+  $vf->add_observation($obs);
+  error_quit("Problem while adding obserbation to viper file (" . $vf->get_errormsg() . ")")
+    if ($vf->error());
+}
+
+#####
+
 sub do_alignment {
   my @todo = @_;
 
@@ -757,6 +809,14 @@ sub do_alignment {
         $trials_c{$key_allevents}++;
         # The last '1' is because the elements match an element in the ref list (target)
 
+	if (defined $writexml) {
+	  my $tmp_obs = $sys_obj->clone();
+	  $tmp_obs->set_eventsubtype(TrecVid08ViperFile::get_Mapped_subeventkey());
+	  error_quit("Problem adding sub event type to Observation (" . $tmp_obs->get_errormsg() . ")")
+	    if ($tmp_obs->error());
+	  &add_obs2vf($tmp_obs);
+	}
+
         my $trialID = &make_trialID($file, $evt, $ref_obj, $sys_obj, $ksep++);
         $alignmentRep->addData($file, "File", $trialID);
         $alignmentRep->addData($evt, "Event", $trialID);
@@ -809,6 +869,14 @@ sub do_alignment {
         $trials_c{$key_allevents}++;
         # The last '0' is because the elements does not match an element in the ref list (target)
 
+	if (defined $writexml) {
+	  my $tmp_obs = $sys_obj->clone();
+	  $tmp_obs->set_eventsubtype(TrecVid08ViperFile::get_UnmappedSys_subeventkey());
+	  error_quit("Problem adding sub event type to Observation (" . $tmp_obs->get_errormsg() . ")")
+	    if ($tmp_obs->error());
+	  &add_obs2vf($tmp_obs);
+	}
+
         my $trialID = &make_trialID($file, $evt, undef, $sys_obj, $ksep++);
         $alignmentRep->addData($file, "File", $trialID);
         $alignmentRep->addData($evt, "Event", $trialID);
@@ -852,6 +920,20 @@ sub do_alignment {
         $gtrial->addTrial($evt, undef, "OMITTED", 1);
         $trials_c{$key_allevents}++;
         # Here we only care about the number of entries in this array
+
+	if (defined $writexml) {
+	  my $tmp_obs = $ref_obj->clone();
+	  $tmp_obs->set_eventsubtype(TrecVid08ViperFile::get_UnmappedRef_subeventkey());
+	  error_quit("Problem adding sub event type to Observation (" . $tmp_obs->get_errormsg() . ")")
+	    if ($tmp_obs->error());
+	  $tmp_obs->set_DetectionScore(0);
+	  $tmp_obs->set_DetectionDecision(0);
+	  $tmp_obs->set_isgtf(0);
+	  $tmp_obs->validate();
+	  error_quit("Problem validating REF->SYS converted Observation (" . $tmp_obs->get_errormsg() . ")")
+	    if ($tmp_obs->error());
+	  &add_obs2vf($tmp_obs);
+	}
 
         my $trialID = &make_trialID($file, $evt, $ref_obj, undef, $ksep++);
         $alignmentRep->addData($file, "File", $trialID);
