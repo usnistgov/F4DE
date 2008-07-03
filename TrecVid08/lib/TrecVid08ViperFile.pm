@@ -76,21 +76,36 @@ my @ok_events =
   );
 
 # Authorized sub Events List (usualy those would be results from the scorer)
+my $key_subevent_Undefined = "Undefined";
+my $key_subevent_Mapped = "Mapped";
+my $key_subevent_UnmappedRef = "Unmapped_Ref";
+my $key_subevent_UnmappedSys = "Unmapped_Sys";
 my @ok_subevents = 
   (
-   "Undefined", "Mapped", "Unmapped_Ref", "Unmapped_Sys"
+   # No set mode
+   $key_subevent_Undefined,
+   # Know set mode
+   $key_subevent_Mapped,
+   $key_subevent_UnmappedRef,
+   $key_subevent_UnmappedSys,
   ); # order is important (esp for the first element which is used in case no sub type is set but sub type writing as been requested)
 
 
 ##### Memory representations
 
+my $key_fat_numframes  = "NUMFRAMES";
+my $key_fat_sourcetype = "SOURCETYPE";
+my $key_fat_hframesize = "H-FRAME-SIZE";
+my $key_fat_vframesize = "V-FRAME-SIZE";
+my $key_fat_framerate  = "FRAMERATE";
+
 my %hash_file_attributes_types = 
   (
-   "NUMFRAMES" => "dvalue",
-   "SOURCETYPE" => undef,
-   "H-FRAME-SIZE" => "dvalue",
-   "V-FRAME-SIZE" => "dvalue",
-   "FRAMERATE" => "fvalue",
+   $key_fat_numframes   => "dvalue",
+   $key_fat_sourcetype  => undef,
+   $key_fat_hframesize  => "dvalue",
+   $key_fat_vframesize => "dvalue",
+   $key_fat_framerate  => "fvalue",
   );
 
 my @array_file_inline_attributes =
@@ -277,6 +292,19 @@ sub _get_hash_objects_attributes_types_dynamic {
 
   return(%hash_objects_attributes_types_dynamic);
 }
+
+#####
+
+sub get_Undefined_subeventkey { return($key_subevent_Undefined); }
+sub get_Mapped_subeventkey { return($key_subevent_Mapped); }
+sub get_UnmappedRef_subeventkey { return($key_subevent_UnmappedRef); }
+sub get_UnmappedSys_subeventkey { return($key_subevent_UnmappedSys); }
+
+sub get_Numframes_fileattrkey { return($key_fat_numframes); }
+sub get_Sourcetype_fileattrkey { return($key_fat_sourcetype); }
+sub get_HFramesize_fileattrkey { return($key_fat_hframesize); }
+sub get_VFramesize_fileattrkey { return($key_fat_vframesize); }
+sub get_Framerate_fileattrkey { return($key_fat_framerate); }
 
 ########## 'xmllint'
 
@@ -1947,6 +1975,28 @@ sub _make_array_of_unique_values {
   }
 
   return(keys %tmp);
+}
+
+#####
+
+sub _compare_both_arrays {
+  my $rexp = shift @_;
+  my @list = @_;
+
+  my @in;
+  foreach my $elt (@$rexp) {
+    if (grep(m%^$elt$%i, @list)) {
+      push @in, $elt;
+    }
+  }
+
+  my @out;
+  foreach my $elt (@list) {
+    if (! grep(m%^$elt$%i, @$rexp)) {
+      push @out, $elt;
+    }
+  }
+  return(\@in, \@out);
 }
 
 #####
