@@ -223,6 +223,13 @@ sub writeTo {
   return($rv); # Return 0 only if we requested a file write and could not, 1 otherwise
 }
 
+##########
+
+sub clone {
+  # Clone hash and arrays
+  map { ! ref() ? $_ : ref eq 'HASH' ? {clone(%$_)} : ref eq 'ARRAY' ? [clone(@$_)] : die "Cloning ($_) not supported" } @_;
+}
+
 ############################################################
 
 1;
