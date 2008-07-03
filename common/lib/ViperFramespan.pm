@@ -1281,6 +1281,19 @@ sub unit_test {                 # Xtreme coding and us ;)
   return(1);
 }
 
+#################### 'clone'
+
+sub clone {
+  my ($self) = @_;
+
+  return(undef) if ($self->error());
+
+  my $clone = new ViperFramespan($self->get_original_value());
+  $clone->set_fps($self->get_fps()) if ($self->is_fps_set());
+
+  return($clone);
+}
+
 ############################################################
 
 sub _set_errormsg {
