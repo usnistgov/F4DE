@@ -580,6 +580,20 @@ sub get_comment {
   return($self->{comment});
 }
 
+#####
+
+sub clear_comment {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  return(1) if (! $self->is_comment_set());
+
+  $self->{comment} = "";
+
+  return(1);
+}
+
 ########## 'DetectionScore'
 
 sub set_DetectionScore {
@@ -1692,6 +1706,58 @@ sub get_framespan_overlap_from_fs {
   return(undef) if ($self->error());
 
   return($self->get_framespan_overlap($fs_self, $fs_other));
+}
+
+##########
+
+sub get_extended_framespan {
+  my ($self, $fs_self, $fs_other) = @_;
+
+  my @s_be = $fs_self->get_beg_end_fs();
+  my @o_be = $fs_other->get_beg_end_fs();
+
+  my $fps = $fs_self->get_fps();
+
+  my ($min, $max) = MMisc::min_max(@s_be, @o_be);
+
+  my $fs_fs = new ViperFramespan();
+  $fs_fs->set_value_beg_end($min, $max);
+  $fs_fs->set_fps($fps);
+
+  if ($fs_fs->error()) {
+    $self->set_errormsg("Problem creating a ViperFramespan (" . $fs_fs->get_errormsg() .")");
+    return(undef);
+  }
+    
+  return($fs_fs);
+}
+
+#####
+
+sub get_extended_framespan_from_obs {
+  my ($self, $other) = @_;
+
+  my $fs_self = $self->_ov_get_framespan();
+  return(undef) if ($self->error());
+
+  my $fs_other = $other->_ov_get_framespan();
+  if ($other->error()) {
+    $self->_set_errormsg("Error in compared to Observation (" . $other->get_errormsg() . "). ");
+    return(undef);
+  }
+
+  return($self->get_extended_framespan($fs_self, $fs_other));
+}
+
+#####
+
+sub get_extended_framespan_from_fs {
+  my ($self, $fs_other) = @_;
+
+  my $fs_self = $self->_ov_get_framespan();
+  return(undef) if ($self->error());
+
+  return($self->get_extended_framespan($fs_self, $fs_other));
 }
 
 ############################################################ 'clone'
