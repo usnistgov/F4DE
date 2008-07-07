@@ -230,6 +230,60 @@ sub clone {
   map { ! ref() ? $_ : ref eq 'HASH' ? {clone(%$_)} : ref eq 'ARRAY' ? [clone(@$_)] : die "Cloning ($_) not supported" } @_;
 }
 
+##########
+
+sub make_array_of_unique_values {
+  my @a = @_;
+
+  my %tmp;
+  foreach my $key (@a) {
+    $tmp{$key}++;
+  }
+
+  return(keys %tmp);
+}
+
+##########
+
+sub compare_arrays {
+  my $rexp = shift @_;
+  my @list = @_;
+
+  my @in;
+  foreach my $elt (@$rexp) {
+    if (grep(m%^$elt$%i, @list)) {
+      push @in, $elt;
+    }
+  }
+
+  my @out;
+  foreach my $elt (@list) {
+    if (! grep(m%^$elt$%i, @$rexp)) {
+      push @out, $elt;
+    }
+  }
+  return(\@in, \@out);
+}
+
+#####
+
+sub confirm_first_array_values {
+  my $rexp = shift @_;
+  my @list = @_;
+
+  my @in;
+  my @out;
+  foreach my $elt (@$rexp) {
+    if (grep(m%^$elt$%, @list)) {
+      push @in, $elt;
+    } else {
+      push @out, $elt;
+    }
+  }
+
+  return(\@in, \@out);
+}
+
 ############################################################
 
 1;
