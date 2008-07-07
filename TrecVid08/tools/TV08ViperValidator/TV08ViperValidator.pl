@@ -117,10 +117,12 @@ $xsdpath = "$f4bv/data"
 my $writeback = -1;
 my $xmlbasefile = -1;
 my @asked_events;
+my $autolt = 0;
 my $show = 0;
+my $remse = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T   X        gh   lm        vwx  
+# USed:                    T   X        gh   lm  p     vwx  
 
 my %opt;
 my $dbgftmp = "";
@@ -136,6 +138,8 @@ GetOptions
    'gtf'             => \$isgtf,
    'write:s'         => \$writeback,
    'limitto=s'       => \@asked_events,
+   'pruneEvents'     => \$autolt,
+   'removeSubEventtypes' => \$remse,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -151,6 +155,8 @@ if ($opt{'man'}) {
 if (scalar @asked_events == 0) {
   @asked_events = @ok_events;
 } else {
+  error_quit("Can not use \'limitto\' in conjunction with \'pruneEvents\'")
+    if ($autolt);
   @asked_events = $dummy->validate_events_list(@asked_events);
   error_quit("While checking \'limitto\' events list (" . $dummy->get_errormsg() .")")
     if ($dummy->error());
@@ -200,7 +206,10 @@ while ($tmp = shift @ARGV) {
   next if (! $ok);
 
   if ($writeback != -1) {
-    my $txt = $object->reformat_xml(@asked_events);
+    # Re-adapt @asked_events for each object if automatic limitto is set
+    $object->unset_force_subtype() if ($remse);
+    @asked_events = $object->list_used_full_events() if ($autolt);
+   my $txt = $object->reformat_xml(@asked_events);
     error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
       if ($object->error());
     my $fname = "";
@@ -286,7 +295,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--limitto event1[,event2[...]]] [--write [directory]] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory]] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -294,7 +303,9 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --gtf           Specify that the file to validate is a Ground Truth File
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --pruneEvents   Only keep in the new file's config section events for which observations are seen
   --limitto       Only care about provided list of events
+  --removeSubEventtypes  Useful when working with specialized Scorer outputs to remove specialized sub types
   --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
   --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
   --version       Print version number and exit
@@ -428,6 +439,14 @@ Note that B<TV08ViperValidator> will still check the entire viper file before it
 =item B<--man>
 
 Display this man page.
+
+=item B<--pruneEvents>
+
+For each validated that is re-written, only add to this file's config section, events for which observations are seen
+
+=item B<--removeSubEventtypes>
+
+Only useful for specialized Scorer XML files containing subtypes information; option will remove those subtypes
 
 =item B<--TrecVid08xsd> I<location>
 
