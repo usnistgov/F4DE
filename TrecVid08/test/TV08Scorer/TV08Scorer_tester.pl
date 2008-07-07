@@ -14,28 +14,24 @@ my $totest = 0;
 my $testr = 0;
 
 $testr += &do_test("Test 1a (same)", "test1-gtf.xml", "test1-same-sys.xml", "-D 1000", "res-test1a.txt");
-$totest++;
 
 $testr += &do_test("Test 1b (1x False Alarm)",  "test1-gtf.xml", "test1-1fa-sys.xml", "-D 1000", "res-test1b.txt");
-$totest++;
 
 $testr += &do_test("Test 1c (1x Missed Detect)",  "test1-gtf.xml", "test1-1md-sys.xml", "-D 1000", "res-test1c.txt");
-$totest++;
 
 $testr += &do_test("Test 2a (same)",  "test2-gtf.xml", "test2-same-sys.xml", "-D 1000", "res-test2a.txt");
-$totest++;
 
 $testr += &do_test("Test 2b (1x Missed Detect + 1x False Alarm)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000", "res-test2b.txt");
-$totest++;
 
 $testr += &do_test("Test 3a (ECF check 1)",  "test2-gtf.xml", "test2-same-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-test3a.txt");
-$totest++;
 
 $testr += &do_test("Test 3b (ECF check 2)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-test3b.txt");
-$totest++;
 
 $testr += &do_test("Test 4 (Big Test)",  "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG" , "res-test4-BigTest.txt");
-$totest++;
+
+$testr += &do_test("Test 5a (writexml)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w", "res-test5a.txt");
+
+$testr += &do_test("Test 5b (writexml + pruneEvents)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w -p", "res-test5b.txt");
 
 if ($testr == $totest) {
   ok_quit("All test ok\n\n");
@@ -53,6 +49,7 @@ sub do_test {
   my $fsf = "../common/$sf";
 
   my $command = "$scorer -a -f 25 -d 1 $fsf -g $frf -s -o $ao";
+  $totest++;
 
   return(TV08TestCore::run_simpletest($testname, $command, $res, $mode));
 }

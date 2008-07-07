@@ -1,0 +1,226 @@
+[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test2-1md_1fa-sys.xml -g ../common/test2-gtf.xml -s -o -D 1000 -w -p
+[[RETURN CODE]] 0
+[[STDOUT]]
+***** STEP 1: Loading files in Memory
+(SYS) ../common/test2-1md_1fa-sys.xml: Loaded
+(REF) ../common/test2-gtf.xml: Loaded
+
+** SUMMARY: All files loaded
+** REF: 1 files (all ok)
+** SYS: 1 files (all ok)
+
+
+
+***** STEP 2: Generating EventLists
+* SYS EventList: 5 Observation(s) added [Seen 5 Observations inside 1 file(s)]
+* REF EventList: 5 Observation(s) added [Seen 5 Observations inside 1 file(s)]
+
+** SUMMARY: All EventLists generated
+** Common referred to files (1): 20050519-1503-Excerpt.mpg
+** Only in SYS (0): 
+** Only in REF (0): 
+
+
+
+***** STEP 3: Aligning Files and Events
+
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectPut | SYS elements: 0 | REF elements: 1 | Total Observations: 1 elements
+      TYPE      R.ID  R.range  Dur.r  S.DetScr  S.DetDec  S.ID  S.range  Dur.s  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+------------------------------------------------------------------------------------------------------------------------------
+  Unmapped_Ref     0   1:1000   1000                                                                                          
+ -- Summary: 0 Mapped (Pairs) / 0 Unmapped Sys  / 1 Unmapped Ref | Total Observations: 1 elements
+
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectGet | SYS elements: 1 | REF elements: 1 | Total Observations: 2 elements
+   TYPE   R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+----------------------------------------------------------------------------------------------------------------------------
+  Mapped     0  1100:3327   2228     0  1100:3327   2228        99        NO   1100:3327      2228            0            0
+ -- Summary: 1 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 2 elements
+
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: PersonRuns | SYS elements: 1 | REF elements: 0 | Total Observations: 1 elements
+      TYPE      R.ID  R.range  Dur.r  S.ID  S.range  Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+------------------------------------------------------------------------------------------------------------------------------
+  Unmapped_Sys                           0   1:1000   1000       -10       YES                                                
+ -- Summary: 0 Mapped (Pairs) / 1 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 1 elements
+
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: CellToEar | SYS elements: 3 | REF elements: 3 | Total Observations: 6 elements
+   TYPE   R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+----------------------------------------------------------------------------------------------------------------------------
+  Mapped     0   203:3738   3536     0   203:3738   3536      -100       YES    203:3738      3536            0            0
+  Mapped     1  2503:3739   1237     1  2503:3739   1237       101        NO   2503:3739      1237            0            0
+  Mapped     2  3503:3739    237     2  3503:3739    237     -0.99        NO   3503:3739       237            0            0
+ -- Summary: 3 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 6 elements
+
+            File               Event         TYPE      R.ID   R.range   Dur.r  S.DetScr  S.DetDec  S.ID   S.range   Dur.s  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  20050519-1503-Excerpt.mpg   CellToEar        Mapped     0   203:3738   3536      -100       YES     0   203:3738   3536    203:3738      3536            0            0
+  20050519-1503-Excerpt.mpg   CellToEar        Mapped     1  2503:3739   1237       101        NO     1  2503:3739   1237   2503:3739      1237            0            0
+  20050519-1503-Excerpt.mpg   CellToEar        Mapped     2  3503:3739    237     -0.99        NO     2  3503:3739    237   3503:3739       237            0            0
+  20050519-1503-Excerpt.mpg   ObjectGet        Mapped     0  1100:3327   2228        99        NO     0  1100:3327   2228   1100:3327      2228            0            0
+  20050519-1503-Excerpt.mpg   ObjectPut  Unmapped_Ref     0     1:1000   1000                                                                                            
+  20050519-1503-Excerpt.mpg  PersonRuns  Unmapped_Sys                               -10       YES     0     1:1000   1000                                                
+
+
+***** STEP 4: Dump of Trial Contingency Table
+            |  Corr:YesTarg  Miss:OmitTarg  Miss:NoTarg  FA:YesNontarg  Corr:NoNontarg  
+------------+-------------------------------------------------------------------------
+CellToEar   |             1              0            2              0               0
+ObjectGet   |             0              0            1              0               0
+ObjectPut   |             0              1            0              0               0
+PersonRuns  |             0              0            0              1               0
+-----       |        ------         ------       ------         ------          ------
+Total       |             1              1            3              1               0
+
+
+***** STEP 5: Dump of Analysis Report
+ (only printing seen events)
+
+Performance Summary Over and Ensemble of Subsets
+
+System Title: 
+
+Constant parameters:
+   TOTALDURATION = 1000
+   BETA = 0.0555555555555556
+   CostFA = 1
+   CostMiss = 10
+   Rtarget = 1.8
+
+                  |  #Ref  #Sys  #CorDet  #FA  #Miss  Act. RFA  Act. PMiss  Act. DCR  
+------------------+-----------------------------------------------------------------
+PersonRuns Event  |     0     0        0    1      0    3.6000          NA        NA
+CellToEar Event   |     3     1        1    0      2    0.0000      0.6667    0.6667
+ObjectPut Event   |     1     0        0    0      1    0.0000      1.0000    1.0000
+ObjectGet Event   |     1     0        0    0      1    0.0000      1.0000    1.0000
+
+
+***** STEP 6: reWrite of XML files
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PersonRuns:Unmapped_Sys" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="CellToEar:Mapped" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectPut:Unmapped_Ref" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectGet:Mapped" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="20050519-1503-Excerpt.mpg">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="5121"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PersonRuns:Unmapped_Sys" id="0" framespan="1:1000">
+        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: PersonRuns | ID: 0 | FS: 1:1000 | FILE FS: 1:5121 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml) -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-10"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar:Mapped" id="0" framespan="203:3738">
+        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml) -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar:Mapped" id="1" framespan="3503:3739">
+        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml) -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar:Mapped" id="2" framespan="2503:3739">
+        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml) -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="101"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectPut:Unmapped_Ref" id="0" framespan="1:1000">
+        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 1:1000 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml)
+Observation converted from REF to SYS: DetectionScore and DetectionDecision are faked values -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet:Mapped" id="0" framespan="1100:3327">
+        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml) -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+
+
+***** Done *****
+
+
+[[STDERR]]
+
