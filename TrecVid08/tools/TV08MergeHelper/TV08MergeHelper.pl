@@ -133,9 +133,11 @@ my $show = 0;
 my $do_shift_ov = 0;
 my $do_same_ov = 0;
 my $ecff = "";
+my $autolt = 0;
+my $ovoxml = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:      F            ST   X      efgh    m o   s  vwx  
+# Used:      F        O   ST   X      efgh    m op  s  vwx  
 
 my %opt;
 my $dbgftmp = "";
@@ -155,6 +157,8 @@ GetOptions
    'Same_overlap'    => \$do_same_ov,
    'overlaplistfile:s' => \$olfile,
    'ecfhelperfile=s' => \$ecff,
+   'pruneEvents'     => \$autolt,
+   'OverlapOnlyXML'  => \$ovoxml,
    # Hidden option
    'X_show_internals+' => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -170,7 +174,6 @@ if ($opt{'man'}) {
 error_quit("Not enough arguments\n$usage\n") if (scalar @ARGV == 0);
 
 error_quit("\'fps\' must set in order to do be able to use \'observations\' objects\n\n$usage") if ($fps == -1);
-error_quit("No \'writetodir\' set, aborting\n\n$usage\n") if ($writetodir =~ m%^\s*$%);
 
 error_quit("\'ForceFilename\' option selected but no value set\n$usage") if (($opt{'ForceFilename'}) && ($forceFilename eq ""));
 
@@ -181,6 +184,8 @@ my $checkOverlap = scalar keys %cov_todo;
 
 error_quit("\'overlaplistfile\' can only be used in conjunction with one of the overlap check mode\n$usage")
   if ((defined $olfile) && ($checkOverlap == 0));
+error_quit("\'OverlapOnlyXML\' can only be used in conjunction with one of the overlap check mode\n$usage")
+  if (($ovoxml) && ($checkOverlap == 0));
 
 if ($xmllint ne "") {
   error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
@@ -193,7 +198,8 @@ if ($xsdpath ne "") {
 }
 
 error_quit("Problem with \'writetodir\': $!")
-  if ((! -e $writetodir) || (! -d $writetodir));
+  if ( (! MMisc::is_blank($writetodir)) 
+       && ((! -e $writetodir) || (! -d $writetodir)) );
 
 ##############################
 # Main processing
@@ -232,6 +238,8 @@ error_quit("No file loaded, aborting\n")
 print "\n\n** STEP ", $step++, ": Process all observations\n";
 
 my %mergefiles;
+my %ovofiles;
+my $ovo_vf; # Global variable (will be used in the overlap detection code)
 my $EL = new TrecVid08EventList();
 my ($adone, $akept);
 error_quit("Problem creating the EventList (" . $EL->get_errormsg() . ")")
@@ -265,6 +273,17 @@ foreach my $key (sort keys %all_vf) {
     error_quit("While duplicating the source object (" . $object->get_errormsg() .")")
       if ($object->error());
     $mergefiles{$sffn} = $mf;
+  }
+
+  # Create the merge Overlap Only file and set the global handler variable
+  if ($ovoxml) {
+    if (! defined $ovofiles{$sffn}) {
+      my $vf = $object->clone_with_no_events();
+      error_quit("While duplicating the source object (" . $object->get_errormsg() .")")
+	if ($object->error());
+      $ovofiles{$sffn} = $vf;
+    }
+    $ovo_vf = $ovofiles{$sffn};
   }
 
   # Get the observation list for this viper file
@@ -412,11 +431,17 @@ foreach my $key (sort keys %mergefiles) {
     print $mf->_display();
   }
 
-  my $txt = $mf->reformat_xml();
+  my $txt;
+  if ($autolt) {
+    my @used_events = $mf->list_used_full_events();
+    $txt = $mf->reformat_xml(@used_events);
+  } else {
+    $txt = $mf->reformat_xml();
+  }
   error_quit("While trying to re-represent XML (" . $mf->get_errormsg() . ")")
     if ($mf->error());
 
-  my $writeto = "$writetodir/$key.xml";
+  my $writeto = (MMisc::is_blank($writetodir)) ? "" : "$writetodir/$key.xml";
   my $cmt = ($fobs == 0) ? " (No observation)" : "";
   error_quit("Problem writing reformatted XML file\n")
     if (! MMisc::writeTo($writeto, "", 1, 0, $txt, $cmt));
@@ -427,6 +452,42 @@ print "* -> Wrote $fdone files (out of $ftodo)\n";
 
 error_quit("Not all file could be processed, aborting")
   if ($fdone != $ftodo);
+
+########## Optional Step: write Overlap Only XML files
+if ($ovoxml) {
+  print "\n\n** STEP ", $step++, ": Writting Overlap Only XML files\n";
+
+  my $fdone = 0;
+  my $ftodo = scalar keys %ovofiles;
+  foreach my $key (sort keys %mergefiles) {
+    my $mf = $ovofiles{$key};
+
+    if ($show) {
+      print "** MERGED FILE MEMORY REPRESENTATION:\n";
+      print $mf->_display();
+    }
+
+    my $txt;
+    if ($autolt) {
+      my @used_events = $mf->list_used_full_events();
+      $txt = $mf->reformat_xml(@used_events);
+    } else {
+      $txt = $mf->reformat_xml();
+    }
+    error_quit("While trying to re-represent XML (" . $mf->get_errormsg() . ")")
+      if ($mf->error());
+    
+    my $writeto = (MMisc::is_blank($writetodir)) ? "" : "$writetodir/${key}_OverlapOnly.xml";
+    error_quit("Problem writing reformatted XML file\n")
+      if (! MMisc::writeTo($writeto, "", 1, 0, $txt, ""));
+
+    $fdone++;
+  }
+  print "* -> Wrote $fdone files (out of $ftodo)\n";
+  
+  error_quit("Not all file could be processed, aborting")
+    if ($fdone != $ftodo);
+}
 
 ####################
 # Optional step: write ecf helper file
@@ -485,7 +546,7 @@ sub set_usage {
 
 $versionid
 
-Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]]] [--ecfhelperfile [file.csv]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] --fps fps --writetodir dir
+Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]] [--OverlapOnlyXML]] [--ecfhelperfile [file.csv]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] [--writetodir dir] [--pruneEvents] --fps fps 
 
 Will merge event observations found in given files related to the same sourcefile's filename, and will try to provide help in merging overlapping or repeating observations.
 
@@ -493,12 +554,14 @@ Will merge event observations found in given files related to the same sourcefil
   --gtf           Specify that the file to validate is a Ground Truth File
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --writetodir    Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension)
+  --writetodir    Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension) (If no writetodir option is specified, print to stdout)
+  --pruneEvents   Only keep in the new file's config section events for which observations are seen
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --ForceFilename Specify that all files loaded refers to the same 'sourcefile' file
   --shift_overlap Will find overlap for frameshifted file's sourcefile which obersvations overlap in the file overlap section
   --Same_overlap  Will find overlap for the same file's sourcefile (ie not framshifted) which observations overlap
   --overlaplistfile   Save list of overlap found into file (or stdout if not provided)
+  --OverlapOnlyXML    Create a XML file containing only overlap observations
   --ecfhelperfile Save a CSV file thaf contains information needed to generate the ECF file
   --version       Print version number and exit
   --help          Print this usage information and exit
@@ -679,6 +742,24 @@ sub _check_overlap_core {
           error_quit("Problem obtaining Framespan value (" . $fs_ov->get_errormsg() . ")")
             if ($fs_ov->error());
           my $ov_id = "${mode}-${event}-" . sprintf("%03d", $overlap_ids{$sffn}{$mode}{$event}++);
+
+	  if ($ovoxml) {
+	    my $new_obs = $ao_obs->clone();
+
+	    $new_obs->clear_comment();
+	    my $no_txt = "\'$mode\' Overlap [ID: $ov_id] between \"$ao_id\" and \"$el_id\" [overlap: $ovr_txt]";
+	    $new_obs->addto_comment($no_txt);
+	    my $fs_no_ov = &_ovc_get_extended_framespan_obs2obs($ao_obs, $el_obs);
+	    $new_obs->set_framespan($fs_no_ov);
+	    error_quit("Problem with OverlapOnly observation (" . $new_obs->get_errormsg() .")")
+	      if ($new_obs->error());
+
+	    # Add new observation to ovo_vf
+	    $ovo_vf->add_observation($new_obs);
+	    error_quit("While adding observation to OverlapOnly XML (" . $ovo_vf->get_errormsg() . ")")
+	      if ($ovo_vf->error());
+	  }
+
           @{$overlap_list{$sffn}{$mode}{$event}{$ov_id}} = ($ao_id, $el_id, $ovr_txt);
           $ao_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$el_id\" [overlap: $ovr_txt]");
           error_quit("Problem adding a comment to observation (" . $ao_obs->get_errormsg() . ")")
@@ -727,6 +808,18 @@ sub _ovc_do_fs_overlap_obs2obs {
 
   my $ov = $ao->get_framespan_overlap_from_obs($el);
   error_quit("Problem obtaining the fs overlap [obs2obs] (" . $ao->get_errormsg() . ")")
+    if ($ao->error());
+
+  return($ov);
+}
+
+#####
+
+sub _ovc_get_extended_framespan_obs2obs {
+  my ($ao, $el) = @_;
+
+  my $ov = $ao->get_extended_framespan_from_obs($el);
+  error_quit("Problem obtaining the fs extended overlap [obs2obs] (" . $ao->get_errormsg() . ")")
     if ($ao->error());
 
   return($ov);
@@ -1037,6 +1130,14 @@ Display this man page.
 =item B<--overlaplistfile> [I<file>]
 
 Generate a report (written to I<file> if provided, standard output otherwise) listing all possible I<Event> I<Observation> overlaps seen according to the B<--shift_overlap> and B<--Same_overlap> heuristics.
+
+=item B<--OverlapOnlyXML>
+
+Create a Viper XML file containing only an extended framespan I<Observation> per I<Observation>s that overlapped. For example, if the first framespan is 10:20 and the second 15:30, the overlap region is 15:20 but the new observation's framespan will be 10:30.
+
+=item B<--pruneEvents>
+
+For each validated that is re-written, only add to this file's config section, events for which observations are seen
 
 =item B<--shift_overlap>
 
