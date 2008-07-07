@@ -1,0 +1,1302 @@
+[[COMMANDLINE]] ../../tools/TV08MergeHelper/TV08MergeHelper.pl ../common/test1-1md-sys.xml ../common/test3-sys.xml ../common/test1-same-sys.xml:40 ../common/test1-1fa-sys.xml:10000 ../common/test2-1md_1fa-sys.xml:5000 ../common/test2-same-sys.xml:1500 -f PAL -s -S -o -F samefile -p -O
+[[RETURN CODE]] 0
+[[STDOUT]]
+
+
+** STEP 1: Load all files to be merged
+'../common/test1-1md-sys.xml': Loaded
+'../common/test3-sys.xml': Loaded
+'../common/test1-same-sys.xml:40': Loaded
+'../common/test1-1fa-sys.xml:10000': Loaded
+'../common/test2-1md_1fa-sys.xml:5000': Loaded
+'../common/test2-same-sys.xml:1500': Loaded
+* -> Loaded 6 ok / 6
+
+
+** STEP 2: Process all observations
+- Done processing Observations from '../common/test1-1md-sys.xml' [File key: samefile] (Found: 4 | Overlap Found: 0) [OverlapCheck: FrameShiftedFiles (0 found) SameFramespanFiles (0 found)]
+- Done processing Observations from '../common/test3-sys.xml' [File key: samefile] (Found: 6 | Overlap Found: 7) [OverlapCheck: FrameShiftedFiles (0 found) SameFramespanFiles (7 found)]
+- Done processing Observations from '../common/test1-same-sys.xml' [File key: samefile] [requested frameshift: 40] (Found: 5 | Overlap Found: 18) [FrameShifted (40 frames)] [OverlapCheck: FrameShiftedFiles (18 found) SameFramespanFiles (0 found)]
+- Done processing Observations from '../common/test2-same-sys.xml' [File key: samefile] [requested frameshift: 1500] (Found: 5 | Overlap Found: 12) [FrameShifted (1500 frames)] [OverlapCheck: FrameShiftedFiles (12 found) SameFramespanFiles (0 found)]
+- Done processing Observations from '../common/test2-1md_1fa-sys.xml' [File key: samefile] [requested frameshift: 5000] (Found: 5 | Overlap Found: 3) [FrameShifted (5000 frames)] [OverlapCheck: FrameShiftedFiles (3 found) SameFramespanFiles (0 found)]
+- Done processing Observations from '../common/test1-1fa-sys.xml' [File key: samefile] [requested frameshift: 10000] (Found: 6 | Overlap Found: 0) [FrameShifted (10000 frames)] [OverlapCheck: FrameShiftedFiles (0 found) SameFramespanFiles (0 found)]
+* -> Found 31 Observations
+
+
+** STEP 3: Writting merge file(s)
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PersonRuns" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="CellToEar" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectPut" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="Embrace" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectGet" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="samefile">
+      <!-- NUMFRAMES extended from 5121 to 5161 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 41:5161 | FILE FS: 41:5161 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test1-same-sys.xml)
+NUMFRAMES extended from 5161 to 6621 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 1501:6621 | FILE FS: 1501:6621 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test2-same-sys.xml)
+NUMFRAMES extended from 6621 to 10121 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 5001:10121 | FILE FS: 5001:10121 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml)
+NUMFRAMES extended from 10121 to 15121 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 10001:15121 | FILE FS: 10001:15121 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test1-1fa-sys.xml) -->
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="15121"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PersonRuns" id="0" framespan="1:1000">
+        <!-- 'sourcefile' changed from 'file:20061212.mpg' (short: '20061212.mpg') to 'samefile'
+Was originally: FILE: samefile | EVENT: PersonRuns | ID: 0 | FS: 1:1000 | FILE FS: 1:5121 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test3-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-10"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="PersonRuns" id="1" framespan="5001:6000">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 5000
+Was originally: FILE: samefile | EVENT: PersonRuns | ID: 0 | FS: 5001:6000 | FILE FS: 5001:10121 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-10"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="0" framespan="3503:3739">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-000] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" [overlap: 3503:3738]
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-001] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3503:3739]
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-002] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-000] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-001] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-002] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-015] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 3503:3739]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="1" framespan="3503:3739">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-003] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" [overlap: 3503:3738]
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-004] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3503:3739]
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-005] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-003] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-004] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-005] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-016] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 3503:3739]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="2" framespan="203:3738">
+        <!-- 'sourcefile' changed from 'file:20061212.mpg' (short: '20061212.mpg') to 'samefile'
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-000] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3738]
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-003] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-006] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-007] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-008] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-017] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 1703:3738]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="3" framespan="2503:3739">
+        <!-- 'sourcefile' changed from 'file:20061212.mpg' (short: '20061212.mpg') to 'samefile'
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-001] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739]
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-004] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-009] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-010] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-011] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-018] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 2503:3739]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="101"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="4" framespan="3503:3739">
+        <!-- 'sourcefile' changed from 'file:20061212.mpg' (short: '20061212.mpg') to 'samefile'
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-002] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739]
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-005] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-012] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-013] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-014] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-019] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 3503:3739]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="5" framespan="3543:3778">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 40
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-000] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-003] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-006] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-009] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-012] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-020] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 3543:3778]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.01"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="6" framespan="3543:3779">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 40
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-001] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-004] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-007] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-010] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-013] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-021] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 3543:3779]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="7" framespan="3543:3779">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 40
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-002] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-005] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-008] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-011] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-014] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-022] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 3543:3779]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="8" framespan="1703:5238">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 1500
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-015] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-016] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-017] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" [overlap: 1703:3738]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-018] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 2503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-019] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3503:3739]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-020] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3778]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-021] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3779]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-022] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3779]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-023] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml" [overlap: 5203:5238]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="9" framespan="4003:5239">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 1500
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-024] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml" [overlap: 5203:5239]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 4003:5239 | FILE FS: 1501:6621 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="101"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="10" framespan="5003:5239">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 1500
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-025] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml" [overlap: 5203:5239]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 5003:5239 | FILE FS: 1501:6621 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="11" framespan="5203:8738">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 5000
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-023] with "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 5203:5238]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-024] with "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 4003:5239 | FILE FS: 1501:6621 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-same-sys.xml" [overlap: 5203:5239]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-025] with "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 5003:5239 | FILE FS: 1501:6621 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-same-sys.xml" [overlap: 5203:5239]
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="12" framespan="7503:8739">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 5000
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 7503:8739 | FILE FS: 5001:10121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="101"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="13" framespan="8503:8739">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 5000
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 8503:8739 | FILE FS: 5001:10121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="14" framespan="13503:13738">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 10000
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 13503:13738 | FILE FS: 10001:15121 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.01"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="15" framespan="13503:13739">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 10000
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 13503:13739 | FILE FS: 10001:15121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="16" framespan="13503:13739">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 10000
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 13503:13739 | FILE FS: 10001:15121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="17" framespan="10003:10739">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 10000
+Was originally: FILE: samefile | EVENT: CellToEar | ID: 4 | FS: 10003:10739 | FILE FS: 10001:15121 | GTF : 0 | Dec: -250 (false) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-250"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectPut" id="0" framespan="938:1493">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectPut-000] with "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml" [overlap: 978:1493]
+Was originally: FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-1md-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="1116:1116" x="105" y="168" height="101" width="131"/>
+          <data:bbox framespan="1117:1117" x="99" y="168" height="89" width="166"/>
+          <data:bbox framespan="1118:1118" x="38" y="298" height="81" width="158"/>
+          <data:bbox framespan="1119:1119" x="98" y="56" height="138" width="187"/>
+          <data:bbox framespan="1120:1120" x="78" y="178" height="88" width="234"/>
+          <data:bbox framespan="1121:1121" x="32" y="281" height="81" width="195"/>
+          <data:bbox framespan="1122:1122" x="202" y="292" height="115" width="110"/>
+          <data:bbox framespan="1123:1123" x="163" y="216" height="52" width="123"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.45"/>
+        </attribute>
+        <attribute name="Point">
+          <data:point framespan="1124:1124" x="263" y="353"/>
+        </attribute>
+      </object>
+      <object name="ObjectPut" id="1" framespan="978:1533">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 40
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectPut-000] with "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 978:1493]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectPut-001] with "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 1501:2500 | FILE FS: 1501:6621 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 1501:1533]
+Was originally: FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="1156:1156" x="105" y="168" height="101" width="131"/>
+          <data:bbox framespan="1157:1157" x="99" y="168" height="89" width="166"/>
+          <data:bbox framespan="1158:1158" x="38" y="298" height="81" width="158"/>
+          <data:bbox framespan="1159:1159" x="98" y="56" height="138" width="187"/>
+          <data:bbox framespan="1160:1160" x="78" y="178" height="88" width="234"/>
+          <data:bbox framespan="1161:1161" x="32" y="281" height="81" width="195"/>
+          <data:bbox framespan="1162:1162" x="202" y="292" height="115" width="110"/>
+          <data:bbox framespan="1163:1163" x="163" y="216" height="52" width="123"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.45"/>
+        </attribute>
+        <attribute name="Point">
+          <data:point framespan="1164:1164" x="263" y="353"/>
+        </attribute>
+      </object>
+      <object name="ObjectPut" id="2" framespan="1501:2500">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 1500
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectPut-001] with "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml" [overlap: 1501:1533]
+Was originally: FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 1501:2500 | FILE FS: 1501:6621 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test2-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-10"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectPut" id="3" framespan="10938:11493">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 10000
+Was originally: FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 10938:11493 | FILE FS: 10001:15121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="11116:11116" x="105" y="168" height="101" width="131"/>
+          <data:bbox framespan="11117:11117" x="99" y="168" height="89" width="166"/>
+          <data:bbox framespan="11118:11118" x="38" y="298" height="81" width="158"/>
+          <data:bbox framespan="11119:11119" x="98" y="56" height="138" width="187"/>
+          <data:bbox framespan="11120:11120" x="78" y="178" height="88" width="234"/>
+          <data:bbox framespan="11121:11121" x="32" y="281" height="81" width="195"/>
+          <data:bbox framespan="11122:11122" x="202" y="292" height="115" width="110"/>
+          <data:bbox framespan="11123:11123" x="163" y="216" height="52" width="123"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.45"/>
+        </attribute>
+        <attribute name="Point">
+          <data:point framespan="11124:11124" x="263" y="353"/>
+        </attribute>
+      </object>
+      <object name="Embrace" id="0" framespan="15:57">
+        <!-- 'sourcefile' changed from 'file:20061212.mpg' (short: '20061212.mpg') to 'samefile'
+Was originally: FILE: samefile | EVENT: Embrace | ID: 0 | FS: 15:57 | FILE FS: 1:5121 | GTF : 0 | Dec: 55.45 (true) | XML FILE: ../common/test3-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="55.45"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="0" framespan="1493:3327">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-ObjectGet-000] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 1493:3327]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-000] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 1533:3327]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-002] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml" [overlap: 2600:3327]
+Was originally: FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="3327:3327" x="126" y="337" height="101" width="138"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.78"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="1" framespan="1100:3327">
+        <!-- 'sourcefile' changed from 'file:20061212.mpg' (short: '20061212.mpg') to 'samefile'
+'SameFramespanFiles' Overlap [ID: SameFramespanFiles-ObjectGet-000] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 1493:3327]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-001] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 1533:3327]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-003] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml" [overlap: 2600:3327]
+Was originally: FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="2" framespan="1533:3367">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 40
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-000] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 1533:3327]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-001] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 1533:3327]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-004] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml" [overlap: 2600:3367]
+Was originally: FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="3367:3367" x="126" y="337" height="101" width="138"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.78"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="3" framespan="2600:4827">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 1500
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-002] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 2600:3327]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-003] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 2600:3327]
+'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-004] with "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 2600:3367]
+Was originally: FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="4" framespan="6100:8327">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 5000
+Was originally: FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 6100:8327 | FILE FS: 5001:10121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="5" framespan="11493:13327">
+        <!-- 'sourcefile' changed from 'file:20050519-1503-Excerpt.mpg' (short: '20050519-1503-Excerpt.mpg') to 'samefile'
+Framespan was shifted by 10000
+Was originally: FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 11493:13327 | FILE FS: 10001:15121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="13327:13327" x="126" y="337" height="101" width="138"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.78"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+* -> Wrote 1 files (out of 1)
+
+
+** STEP 4: Writting Overlap Only XML files
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="CellToEar" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectPut" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectGet" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="samefile">
+      <!-- NUMFRAMES extended from 5121 to 5161 (FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 938:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml [Observation Clone #0001])
+NUMFRAMES extended from 5161 to 6621 (FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 978:2500 | FILE FS: 1501:6621 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test2-same-sys.xml [Observation Clone #0001])
+NUMFRAMES extended from 6621 to 10121 (FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml [Observation Clone #0001]) -->
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="10121"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="CellToEar" id="0" framespan="203:3739">
+        <!-- 'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-000] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3738] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="1" framespan="2503:3739">
+        <!-- 'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-001] between "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="101"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="2" framespan="3503:3739">
+        <!-- 'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-002] between "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="3" framespan="203:3739">
+        <!-- 'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-003] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3738] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="4" framespan="2503:3739">
+        <!-- 'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-004] between "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="101"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="5" framespan="3503:3739">
+        <!-- 'SameFramespanFiles' Overlap [ID: SameFramespanFiles-CellToEar-005] between "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="6" framespan="3503:3778">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-000] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.01"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="7" framespan="3503:3779">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-001] between "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="8" framespan="3503:3779">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-002] between "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="9" framespan="3503:3778">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-003] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.01"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="10" framespan="3503:3779">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-004] between "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="11" framespan="3503:3779">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-005] between "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="12" framespan="203:3778">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-006] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3738] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.01"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="13" framespan="203:3779">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-007] between "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3738] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="14" framespan="203:3779">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-008] between "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3738] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="15" framespan="2503:3778">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-009] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.01"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="16" framespan="2503:3779">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-010] between "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="17" framespan="2503:3779">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-011] between "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="18" framespan="3503:3778">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-012] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.01"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="19" framespan="3503:3779">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-013] between "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.23"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="20" framespan="3503:3779">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-014] between "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3543:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="21" framespan="1703:5238">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-015] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="22" framespan="1703:5238">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-016] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 3503:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="23" framespan="203:5238">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-017] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml" [overlap: 1703:3738] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="24" framespan="1703:5238">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-018] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 2503:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="25" framespan="1703:5238">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-019] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 3503:3739] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="26" framespan="1703:5238">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-020] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3778] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="27" framespan="1703:5238">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-021] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3779] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="28" framespan="1703:5238">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-022] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 3543:3779] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="29" framespan="1703:8738">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-023] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml" [overlap: 5203:5238] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="30" framespan="4003:8738">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-024] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 4003:5239 | FILE FS: 1501:6621 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-same-sys.xml" [overlap: 5203:5239] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="CellToEar" id="31" framespan="5003:8738">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-CellToEar-025] between "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml" and "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 5003:5239 | FILE FS: 1501:6621 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-same-sys.xml" [overlap: 5203:5239] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-100"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectPut" id="0" framespan="938:1533">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectPut-000] between "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 978:1493] -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="1156:1156" x="105" y="168" height="101" width="131"/>
+          <data:bbox framespan="1157:1157" x="99" y="168" height="89" width="166"/>
+          <data:bbox framespan="1158:1158" x="38" y="298" height="81" width="158"/>
+          <data:bbox framespan="1159:1159" x="98" y="56" height="138" width="187"/>
+          <data:bbox framespan="1160:1160" x="78" y="178" height="88" width="234"/>
+          <data:bbox framespan="1161:1161" x="32" y="281" height="81" width="195"/>
+          <data:bbox framespan="1162:1162" x="202" y="292" height="115" width="110"/>
+          <data:bbox framespan="1163:1163" x="163" y="216" height="52" width="123"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.45"/>
+        </attribute>
+        <attribute name="Point">
+          <data:point framespan="1164:1164" x="263" y="353"/>
+        </attribute>
+      </object>
+      <object name="ObjectPut" id="1" framespan="978:2500">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectPut-001] between "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 1501:2500 | FILE FS: 1501:6621 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml" [overlap: 1501:1533] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-10"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="0" framespan="1100:3327">
+        <!-- 'SameFramespanFiles' Overlap [ID: SameFramespanFiles-ObjectGet-000] between "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml" and "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 1493:3327] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="1" framespan="1493:3367">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-000] between "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 1533:3327] -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="3367:3367" x="126" y="337" height="101" width="138"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.78"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="2" framespan="1100:3367">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-001] between "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml" and "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 1533:3327] -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="3367:3367" x="126" y="337" height="101" width="138"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.78"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="3" framespan="1493:4827">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-002] between "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml" [overlap: 2600:3327] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="4" framespan="1100:4827">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-003] between "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml" [overlap: 2600:3327] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectGet" id="5" framespan="1533:4827">
+        <!-- 'FrameShiftedFiles' Overlap [ID: FrameShiftedFiles-ObjectGet-004] between "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml" and "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml" [overlap: 2600:3367] -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="99"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+* -> Wrote 1 files (out of 1)
+
+
+** STEP 5: Overlap List
+|--> File: samefile
+| |--> Mode: FrameShiftedFiles
+| | |--> Event: CellToEar
+| | | |--> ID: [FrameShiftedFiles-CellToEar-000]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-001]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-002]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-003]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-004]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-005]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-006]
+| | | |  Overlap range: 3543:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-007]
+| | | |  Overlap range: 3543:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-008]
+| | | |  Overlap range: 3543:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-009]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-010]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-011]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-012]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-013]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-014]
+| | | |  Overlap range: 3543:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-015]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-016]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-017]
+| | | |  Overlap range: 1703:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-018]
+| | | |  Overlap range: 2503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-019]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-020]
+| | | |  Overlap range: 3543:3778
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-021]
+| | | |  Overlap range: 3543:3779
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-022]
+| | | |  Overlap range: 3543:3779
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3543:3779 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-023]
+| | | |  Overlap range: 5203:5238
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-024]
+| | | |  Overlap range: 5203:5239
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 4003:5239 | FILE FS: 1501:6621 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-same-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-CellToEar-025]
+| | | |  Overlap range: 5203:5239
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 5003:5239 | FILE FS: 1501:6621 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-same-sys.xml"
+| | |
+| | |--> Event: ObjectGet
+| | | |--> ID: [FrameShiftedFiles-ObjectGet-000]
+| | | |  Overlap range: 1533:3327
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-ObjectGet-001]
+| | | |  Overlap range: 1533:3327
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-ObjectGet-002]
+| | | |  Overlap range: 2600:3327
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-ObjectGet-003]
+| | | |  Overlap range: 2600:3327
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-ObjectGet-004]
+| | | |  Overlap range: 2600:3367
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 2600:4827 | FILE FS: 1501:6621 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1533:3367 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-same-sys.xml"
+| | |
+| | |--> Event: ObjectPut
+| | | |--> ID: [FrameShiftedFiles-ObjectPut-000]
+| | | |  Overlap range: 978:1493
+| | | |  Between: "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [FrameShiftedFiles-ObjectPut-001]
+| | | |  Overlap range: 1501:1533
+| | | |  Between: "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 1501:2500 | FILE FS: 1501:6621 | GTF : 0 | Dec: -10 (true) | XML FILE: ../common/test2-same-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml"
+| | |
+| |
+| |--> Mode: SameFramespanFiles
+| | |--> Event: CellToEar
+| | | |--> ID: [SameFramespanFiles-CellToEar-000]
+| | | |  Overlap range: 3503:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [SameFramespanFiles-CellToEar-001]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [SameFramespanFiles-CellToEar-002]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.23 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [SameFramespanFiles-CellToEar-003]
+| | | |  Overlap range: 3503:3738
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [SameFramespanFiles-CellToEar-004]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | | |--> ID: [SameFramespanFiles-CellToEar-005]
+| | | |  Overlap range: 3503:3739
+| | | |  Between: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.99 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | |
+| | |--> Event: ObjectGet
+| | | |--> ID: [SameFramespanFiles-ObjectGet-000]
+| | | |  Overlap range: 1493:3327
+| | | |  Between: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test3-sys.xml"
+| | | |      And: "FILE: samefile | EVENT: ObjectGet | ID: 0 | FS: 1493:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.78 (false) | XML FILE: ../common/test1-1md-sys.xml"
+| | |
+| |
+|
+
+Done.
+
+
+[[STDERR]]
+

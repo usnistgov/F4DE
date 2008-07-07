@@ -18,35 +18,36 @@ my $s = "";
 
 $s = "test1a";
 $testr += &do_test1("Test 1a (GTF: Basic)", "-g $d/test1-gtf.xml $d/test2-gtf.xml -f PAL -w /tmp", "res_$s.txt", "/tmp/20050519-1503-Excerpt.mpg.xml:res_$s-file.xml");
-$totest++;
 
 $s = "test1b";
 $testr += &do_test1("Test 1b (SYS: Basic)", "$d/test1-1md-sys.xml $d/test1-same-sys.xml $d/test3-sys.xml $d/test1-1fa-sys.xml $d/test2-1md_1fa-sys.xml $d/test2-same-sys.xml -f PAL -w /tmp", "res_$s.txt", "/tmp/20050519-1503-Excerpt.mpg.xml:res_$s-file1.xml", "/tmp/20061212.mpg.xml:res_$s-file2.xml");
-$totest++;
 
 $s = "test2a";
 $testr += &do_test1("Test 2a (GTF: Frameshift)", "-g $d/test1-gtf.xml $d/test2-gtf.xml:400 -f PAL -w /tmp", "res_$s.txt", "/tmp/20050519-1503-Excerpt.mpg.xml:res_$s-file.xml");
-$totest++;
 
 $s = "test2b";
 $testr += &do_test1("Test 2b (SYS: FrameShift)", "$d/test1-1md-sys.xml $d/test1-same-sys.xml:40 $d/test1-1fa-sys.xml:10000 $d/test2-1md_1fa-sys.xml:5000 $d/test2-same-sys.xml:1500 -f PAL -w /tmp", "res_$s.txt", "/tmp/20050519-1503-Excerpt.mpg.xml:res_$s-file.xml");
-$totest++;
 
 $s = "test3a";
 $testr += &do_test1("Test 3a (GTF: Frameshift + Overlap check)", "-g $d/test1-gtf.xml $d/test2-gtf.xml:400 -f PAL -w /tmp -s -o", "res_$s.txt", "/tmp/20050519-1503-Excerpt.mpg.xml:res_$s-file.xml");
-$totest++;
 
 $s = "test3b";
 $testr += &do_test1("Test 3b (SYS: FrameShift + ForceFilename + Overlap Check)", "$d/test1-1md-sys.xml $d/test3-sys.xml $d/test1-same-sys.xml:40 $d/test1-1fa-sys.xml:10000 $d/test2-1md_1fa-sys.xml:5000 $d/test2-same-sys.xml:1500 -f PAL -w /tmp -s -S -o -F samefile", "res_$s.txt", "/tmp/samefile.xml:res_$s-file.xml");
-$totest++;
 
 $s = "test4a";
 $testr += &do_test1("Test 4a (GTF: Frameshift + Overlap check + ECF)", "-g $d/test1-gtf.xml $d/test2-gtf.xml:400 -f PAL -w /tmp -s -o -e /tmp/ecf4a.csv", "res_$s.txt", "/tmp/20050519-1503-Excerpt.mpg.xml:res_$s-file1.xml", "/tmp/ecf4a.csv:res_$s-file2.csv");
-$totest++;
 
 $s = "test4b";
 $testr += &do_test1("Test 4b (SYS: FrameShift + ForceFilename + Overlap Check + ECF)", "$d/test1-1md-sys.xml $d/test3-sys.xml $d/test1-same-sys.xml:40 $d/test1-1fa-sys.xml:10000 $d/test2-1md_1fa-sys.xml:5000 $d/test2-same-sys.xml:1500 -f PAL -w /tmp -s -S -o -F samefile -e /tmp/ecf4b.csv", "res_$s.txt", "/tmp/samefile.xml:res_$s-file1.xml", "/tmp/ecf4b.csv:res_$s-file2.csv");
-$totest++;
+
+$s = "test5a";
+$testr += &do_test2("Test 5a (SYS: FrameShift + ForceFilename + Overlap Check / on stdout)", "$d/test1-1md-sys.xml $d/test3-sys.xml $d/test1-same-sys.xml:40 $d/test1-1fa-sys.xml:10000 $d/test2-1md_1fa-sys.xml:5000 $d/test2-same-sys.xml:1500 -f PAL -s -S -o -F samefile", "res_$s.txt");
+
+$s = "test5b";
+$testr += &do_test2("Test 5b (SYS: FrameShift + ForceFilename + Overlap Check / on stdout + pruneEvents)", "$d/test1-1md-sys.xml $d/test3-sys.xml $d/test1-same-sys.xml:40 $d/test1-1fa-sys.xml:10000 $d/test2-1md_1fa-sys.xml:5000 $d/test2-same-sys.xml:1500 -f PAL -s -S -o -F samefile -p", "res_$s.txt");
+
+$s = "test5c";
+$testr += &do_test2("Test 5c (SYS: FrameShift + ForceFilename + Overlap Check / on stdout + pruneEvents + OverlapOnlyXML)", "$d/test1-1md-sys.xml $d/test3-sys.xml $d/test1-same-sys.xml:40 $d/test1-1fa-sys.xml:10000 $d/test2-1md_1fa-sys.xml:5000 $d/test2-same-sys.xml:1500 -f PAL -s -S -o -F samefile -p -O", "res_$s.txt");
 
 if ($testr == $totest) {
   ok_quit("All tests ok\n\n");
@@ -62,8 +63,20 @@ sub do_test1 {
   my ($testname, $args, $res, @sfiles) = @_;
 
   my $command = "$cmd $args";
+  $totest++;
 
   return(TV08TestCore::run_complextest($testname, $command, $res, $mode, @sfiles));
+}
+
+#####
+
+sub do_test2 {
+  my ($testname, $args, $res) = @_;
+
+  my $command = "$cmd $args";
+  $totest++;
+
+  return(TV08TestCore::run_simpletest($testname, $command, $res, $mode));
 }
 
 #####
