@@ -90,6 +90,7 @@ my @ok_subevents =
    $key_subevent_UnmappedSys,
   ); # order is important (esp for the first element which is used in case no sub type is set but sub type writing as been requested)
 
+my %for_event_sort = undef;
 
 ##### Memory representations
 
@@ -243,15 +244,47 @@ sub validate_events_list {
   my ($self, @events) = @_;
 
   @events = split(m%\,%, join(",", @events));
-  @events = &_make_array_of_unique_values(@events);
-  my ($in, $out) = &_compare_arrays(\@events, @ok_events);
+  @events = MMisc::make_array_of_unique_values(@events);
+  my ($rev, $rsev) = $self->split_events_subevents(@events);
+
+  my ($in, $out) = MMisc::confirm_first_array_values($rev, @ok_events);
   if (scalar @$out > 0) {
     $self->_set_errormsg("Found some unknown event type: " . join(" ", @$out));
     return();
   }
 
+  if (($self->check_force_subtype) && (scalar @$rsev > 0)) {
+    my ($in, $out) = MMisc::confirm_first_array_values($rsev, @ok_subevents);
+    if (scalar @$out > 0) {
+      $self->_set_errormsg("Found some unknown sub event type: " . join(" ", @$out));
+      return();
+    }
+  }
+
   return(@events);
 }
+
+#####
+
+sub reformat_events {
+  my ($self, @evl) = @_;
+
+  my %all = $self->make_full_events_hash(@evl);
+
+  my @out;
+  if ($self->check_force_subtype()) {
+    foreach my $ev (keys %all) {
+      foreach my $sev (keys %{$all{$ev}}) {
+	my $v = &get_printable_full_event($ev, $sev, 1);
+	push @out, $v;
+      }
+    }
+  } else {
+    push @out, keys %all;
+  }
+
+  return(@out);
+}  
 
 #####
 
@@ -464,6 +497,58 @@ sub check_force_subtype {
   return(0) if ($self->error());
 
   return($self->{force_subtype});
+}
+
+#####
+
+sub is_subtype_undefined {
+  my ($self, $stype) = @_;
+
+  return(0) if ($self->error());
+
+  if ($self->check_force_subtype()) {
+    return(1) if ($stype eq $ok_subevents[0]);
+  } else {
+    return(1) if (MMisc::is_blank($stype));
+  }
+  
+  return(0);
+}
+
+#####
+
+sub get_printable_full_event {
+  my ($e, $s, $mode) = @_;
+
+  my $out = $e;
+
+  if ($mode) {
+    if (MMisc::is_blank($s)) {
+      $out .= $full_event_separator . $ok_subevents[0];
+    } else {
+      $out .= $full_event_separator . $s;
+    } 
+  }
+
+  return($out);
+}
+
+#####
+
+sub split_full_event {
+  my ($fevent, $mode) = @_;
+
+  my ($e, $s) = ($fevent =~ m%^(.+?)(${full_event_separator}.+)?$%);
+  $s =~ s%^${full_event_separator}%%;
+  if (! defined $s) {
+    if ($mode) {
+      $s = $ok_subevents[0];
+    } else {
+      $s = "";
+    }
+  }
+  
+  return($e, $s);
 }
 
 ########## 'fps'
@@ -806,6 +891,8 @@ sub validate {
   }
 
   $self->_set_fhash(%fdata);
+  $self->_enforce_subtype() if ($self->check_force_subtype());
+
   $self->{validated} = 1;
 
   return(1);
@@ -813,8 +900,8 @@ sub validate {
 
 ####################
 
-sub reformat_xml {
-  my ($self, @limitto_events) = @_;
+sub _call_writeback2xml {
+  my ($self, $comment, $rfhash, @limitto_events) = @_;
 
   return(-1) if ($self->error());
 
@@ -825,41 +912,39 @@ sub reformat_xml {
     return(0) if ($self->error());
   }
 
-  if (! $self->is_validated()) {
-    $self->_set_errormsg("Can only rewrite the XML for a validated file");
-    return(0);
-  }
+  @limitto_events = $self->reformat_events(@limitto_events);
+
+  return(0) if ($self->error());
+
+  return($self->_writeback2xml($comment, $rfhash, @limitto_events));
+}
+
+#####
+
+sub reformat_xml {
+  my ($self, @limitto_events) = @_;
 
   my $comment = "";
   $comment = $self->_get_comment() if ($self->_is_comment_set());
 
   my %tmp = $self->_get_fhash();
 
-  my $fst = $self->check_force_subtype();
-  return(0) if ($self->error());
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only rewrite the XML for a validated file");
+    return(0);
+  }
 
-  return(&_writeback2xml($comment, $fst, \%tmp, @limitto_events));
+  return($self->_call_writeback2xml($comment, \%tmp, @limitto_events));
 }
 
-##########
+#####
 
 sub get_base_xml {
   my ($self, @limitto_events) = @_;
 
-  return(-1) if ($self->error());
-
-  if (scalar @limitto_events == 0) {
-    @limitto_events = @ok_events;
-  } else {
-    @limitto_events = $self->validate_events_list(@limitto_events);
-    return(0) if ($self->error());
-  }
-
-  my $fst = $self->check_force_subtype();
-  return(0) if ($self->error());
-
   my %tmp = ();
-  return(&_writeback2xml("", $fst, \%tmp, @limitto_events));
+
+  return($self->_call_writeback2xml("", \%tmp, @limitto_events));
 }
 
 ####################
@@ -891,8 +976,7 @@ sub _display {
     return(0);
   }
 
-  my %in = $self->_get_fhash();
-  my %out = &_clone_fhash_selected_events(\%in, @limitto_events);
+  my %out = $self->_clone_fhash_selected_events(@limitto_events);
 
   return(Dumper(\%out));
 }
@@ -1070,42 +1154,12 @@ sub get_dummy_observation {
 
 #####
 
-sub split_full_event {
-  my ($fevent) = @_;
-
-  my ($e, $s) = ($fevent =~ m%^(.+?)(${full_event_separator}.+)?$%);
-  $s =~ s%^${full_event_separator}%%;
-  $s = "" if (! defined $s);
-  
-  return($e, $s);
-}
-
-#####
-
-sub get_printable_full_event {
-  my ($e, $s, $mode) = @_;
-
-  my $out = $e;
-
-  if (MMisc::is_blank($s)) {
-    if ($mode) {
-      $out .= $full_event_separator . $ok_subevents[0];
-    } 
-  } else {
-    $out .= $full_event_separator . $s;
-  }
-
-  return($out) 
-}
-
-#####
-
 sub get_event_observations {
   my ($self, $full_event) = @_;
 
   return(0) if ($self->error());
 
-  my ($event, $stype) = &split_full_event($full_event);
+  my ($event, $stype) = &split_full_event($full_event, $self->check_force_subtype());
 
   if (! grep(m%^$event$%, @ok_events)) {
     $self->_set_errormsg("Requested event ($event) is not a recognized event");
@@ -1122,8 +1176,7 @@ sub get_event_observations {
   my ($xmlfile, $filename, $fps, $isgtf, $file_fs) = $self->_get_event_observation_common();
   return(0) if ($self->error());
 
-  my %in = $self->_get_fhash();
-  my %out = &_clone_fhash_selected_events(\%in, $event);
+  my %out = $self->_clone_fhash_selected_events($event);
 
   my %file_info = %{$out{"file"}};
 
@@ -1314,14 +1367,23 @@ sub remove_all_events {
     return(0);
   }
 
-  my %in = $self->_get_fhash();
-  my %out = &_clone_fhash_selected_events(\%in);
+  my %out = $self->_clone_fhash_selected_events();
 
   $self->_set_fhash(%out);
   return(1);
 }
 
 ##########
+
+sub __clone {
+  map { ! ref() ? $_ 
+	  : ref eq 'HASH' ? {__clone(%$_)} 
+	    : ref eq 'ARRAY' ? [__clone(@$_)] 
+	      : ref eq 'ViperFramespan' ? $_->clone() 
+		: die "$_ not supported" } @_;
+}
+
+#####
 
 sub _clone_core {
   my ($self) = shift @_;
@@ -1349,12 +1411,11 @@ sub _clone_core {
   $clone->set_as_gtf() if ($self->check_if_gtf());
   $clone->set_fps($self->get_fps()) if ($self->_is_fps_set());
   $clone->set_file($self->get_file());
-  my %in = $self->_get_fhash();
   my %out;
   if ($keep_events) {
-    %out = &_clone_fhash_selected_events(\%in, @limitto_events);
+    %out = $self->_clone_fhash_selected_events(@limitto_events);
   } else {
-    %out = &_clone_fhash_selected_events(\%in);
+    %out = $self->_clone_fhash_selected_events();
   }
   $clone->_set_fhash(%out);
   $clone->{validated} = 1;
@@ -1639,7 +1700,7 @@ sub add_observation {
   return(0) if (! $self->extend_numframes_from_observation($obs));
 
   my %tmp = $self->_get_fhash();
-  my %sp_out;                   # will be added to $fhash{event}{id}
+  my %sp_out; # will be added to $fhash{event}{id}
 
   # Get the global framespan
   my $key = $key_framespan;
@@ -1713,6 +1774,7 @@ sub add_observation {
   $tmp{$event}{$id}{$key_subtype} = $stype;
 
   $self->_set_fhash(%tmp);
+  $self->_enforce_subtype() if ($self->check_force_subtype()); # Just to be safe
   return(0) if ($self->error());
 
   return(1);
@@ -1750,6 +1812,159 @@ sub change_sourcefile_filename {
   return(1);
 }
 
+##########
+
+sub _make_full_events_hash_core {
+  my ($self, @fevl) = @_;
+
+  my %out;
+  my %ev;
+  my %sev;
+  foreach my $fev (@fevl) {
+    my ($e, $s) = split_full_event($fev, $self->check_force_subtype());
+    if ($e eq $fev) { # Requested all the subtypes of the event
+      foreach my $st (@ok_subevents) {
+	$out{$e}{$st}++;
+	$sev{$st}++;
+      }
+      $ev{$e}++;
+    } else {
+      $out{$e}{$s}++;
+      $ev{$e}++;
+      $sev{$s}++ if (! MMisc::is_blank($s));
+    }
+  }
+
+  my @evl = keys %ev;
+  my @sevl = keys %sev;
+
+  return(\@evl, \@sevl, %out);
+}
+
+#####
+
+sub make_full_events_hash {
+  my ($self, @fevl) = @_;
+  my ($d1, $d2, %out) = $self->_make_full_events_hash_core(@fevl);
+  return(%out);
+}
+
+#####
+
+sub split_events_subevents {
+  my ($self, @fevl) = @_;
+  my ($rev, $rsev, $dummy) = $self->_make_full_events_hash_core(@fevl);
+  return($rev, $rsev);
+}
+
+##########
+
+sub _list_used_full_events {
+  my ($self, $mode) = @_;
+
+  my @out;
+
+  return(@out) if ($self->error());
+  
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'change_sourcefile_filename\' for a validated file");
+    return(@out);
+  }
+
+  foreach my $event (@ok_events) {
+    if ($mode) {
+      foreach my $sev (@ok_subevents) {
+	my $fev = &get_printable_full_event($event, $sev, 1);
+	push @out, $fev if ($self->exists_event($fev));
+      }
+    } else {
+      push @out, $event if ($self->exists_event($event)); 
+    }
+  }
+
+  return(@out);
+}
+
+#####
+
+sub list_used_events {
+  my ($self) = @_;
+
+  return($self->_list_used_full_events(0));
+}
+
+#####
+
+sub list_used_full_events {
+  my ($self) = @_;
+
+  return($self->_list_used_full_events($self->check_force_subtype()));
+}
+
+##########
+
+sub _enforce_subtype {
+  my ($self) = @_;
+
+  return if (! $self->check_force_subtype());
+
+  my %fhash = $self->_get_fhash();
+
+  foreach my $event (@ok_events) {
+    next if (! exists $fhash{$event});
+    foreach my $id (keys %{$fhash{$event}}) {
+      $fhash{$event}{$id}{$key_subtype} = $ok_subevents[0]
+	if (MMisc::is_blank($fhash{$event}{$id}{$key_subtype}));
+    }
+  }
+
+  $self->_set_fhash(%fhash);
+}
+
+##########
+
+sub get_event_ids {
+  my ($self, $fev) = @_;
+
+  my @ids;
+
+  return(@ids) if ($self->error());
+
+  my ($e, $s) = &split_full_event($fev, 0);
+  
+  my %fhash = $self->_get_fhash();
+
+  return(@ids) if (! exists $fhash{$e});
+
+  # At this point we know the event is in fhash
+
+  # return 'true' is no subtype is requested (we know because we requested the subtype value to not be undefined is none given)
+  if (MMisc::is_blank($s)) {
+    @ids = keys %{$fhash{$e}};
+    return(@ids);
+  } 
+
+  # Otherwise, see if we can find it
+  foreach my $id (keys %{$fhash{$e}}) {
+    push @ids, $id if ($fhash{$e}{$id}{$key_subtype} eq $s);
+  }
+  
+  return(@ids);
+}
+
+#####
+
+sub exists_event {
+  my ($self, $fev) = @_;
+
+  my @all = $self->get_event_ids($fev);
+
+  return(0) if ($self->error());
+
+  return(1) if (scalar @all > 0);
+
+  return(0);
+}
 
 ############################################################
 # Internals
@@ -1966,60 +2181,6 @@ sub _parse_sourcefile_section {
 
 ####################
 
-sub _make_array_of_unique_values {
-  my @a = @_;
-
-  my %tmp;
-  foreach my $key (@a) {
-    $tmp{$key}++;
-  }
-
-  return(keys %tmp);
-}
-
-#####
-
-sub _compare_both_arrays {
-  my $rexp = shift @_;
-  my @list = @_;
-
-  my @in;
-  foreach my $elt (@$rexp) {
-    if (grep(m%^$elt$%i, @list)) {
-      push @in, $elt;
-    }
-  }
-
-  my @out;
-  foreach my $elt (@list) {
-    if (! grep(m%^$elt$%i, @$rexp)) {
-      push @out, $elt;
-    }
-  }
-  return(\@in, \@out);
-}
-
-#####
-
-sub _compare_arrays {
-  my $rexp = shift @_;
-  my @list = @_;
-
-  my @in;
-  my @out;
-  foreach my $elt (@$rexp) {
-    if (grep(m%^$elt$%, @list)) {
-      push @in, $elt;
-    } else {
-      push @out, $elt;
-    }
-  }
-
-  return(\@in, \@out);
-}
-
-#####
-
 sub _parse_file_section {
   my ($self) = shift @_;
   my $str = shift @_;
@@ -2033,7 +2194,7 @@ sub _parse_file_section {
   my $framespan_max = $framespan_max_default;
 
   my @expected = @array_file_inline_attributes;
-  my ($in, $out) = &_compare_arrays(\@expected, keys %attr);
+  my ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
   return("Could not find all the expected inline \'$wtag\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected inline \'$wtag\' attributes", ())
@@ -2060,7 +2221,7 @@ sub _parse_file_section {
   # Confirm they are the ones we want
   my %expected_hash = %hash_file_attributes_types;
   @expected = keys %expected_hash;
-  ($in, $out) = &_compare_arrays(\@expected, keys %attr);
+  ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
   return("Could not find all the expected \'$wtag\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected \'$wtag\' attributes", ())
@@ -2075,7 +2236,7 @@ sub _parse_file_section {
     next if (scalar @comp == 0);
     my @expected2;
     push @expected2, $val;
-    ($in, $out) = &_compare_arrays(\@expected2, @comp);
+    ($in, $out) = MMisc::confirm_first_array_values(\@expected2, @comp);
     return("Could not confirm all the expected \'$wtag\' attributes", ())
       if (scalar @$in != scalar @expected2);
     return("Found some unexpected \'$wtag\' attributes type", ())
@@ -2124,7 +2285,7 @@ sub _parse_object_section {
   return("Problem obtaining the \'framespan_max\' object", ()) if ($self->error());
 
   my @expected = @array_objects_inline_attributes;
-  my ($in, $out) = &_compare_arrays(\@expected, keys %attr);
+  my ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
   return("Could not find all the expected inline \'file\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected inline \'file\' attributes", ())
@@ -2169,7 +2330,7 @@ sub _parse_object_section {
   # Confirm they are the ones we want
   my %expected_hash = %hash_objects_attributes_types;
   @expected = keys %expected_hash;
-  ($in, $out) = &_compare_arrays(\@expected, keys %attr);
+  ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
   return("Could not find all the expected \'$wtag\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected \'$wtag\' attributes", ())
@@ -2194,7 +2355,7 @@ sub _parse_object_section {
     }
     my @expected2;
     push @expected2, $val;
-    ($in, $out) = &_compare_arrays(\@expected2, @comp);
+    ($in, $out) = MMisc::confirm_first_array_values(\@expected2, @comp);
     return("Could not confirm all the expected \'$wtag\' attributes", ())
       if (scalar @$in != scalar @expected2);
     return("Found some unexpected \'$wtag\' attributes type", ())
@@ -2205,7 +2366,7 @@ sub _parse_object_section {
     }
   }
 
-  my ($etype, $stype) = &split_full_event($object_name); 
+  my ($etype, $stype) = &split_full_event($object_name, $self->check_force_subtype()); 
 
   return("", $etype, $stype, $object_id, $object_framespan, %object_hash);
 }
@@ -2217,7 +2378,7 @@ sub _data_process_array_core {
   my $rattr = shift @_;
   my @expected = @_;
 
-  my ($in, $out) = &_compare_arrays(\@expected, keys %$rattr);
+  my ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %$rattr);
   return("Could not find all the expected \'data\:$name\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected \'data\:$name\' attributes", ())
@@ -2380,7 +2541,7 @@ sub _parse_attributes {
       %{$attrs{$name}} = %tmp;
     }
     
-  }                             # while
+  } # while
 
   return("", %attrs);
 }
@@ -2395,6 +2556,34 @@ sub _numerically {
 
 sub _framespan_sort {
   return($a->sort_cmp($b));
+}
+
+##########
+
+sub _set_for_event_sort {
+  return() if (exists $for_event_sort{'is_set'});
+  my $inc = 1;
+  foreach my $e (@ok_events) {
+    foreach my $se (@ok_subevents) {
+      my $fev = &get_printable_full_event($e, $se, 1);
+      $for_event_sort{$fev} = $inc++;
+    }
+  }
+  $for_event_sort{'is_set'}++;
+}
+
+#####
+
+sub _event_sort {
+  &_set_for_event_sort();
+
+  my ($a_e, $a_se) = split_full_event($a, 1);
+  my ($b_e, $b_se) = split_full_event($b, 1);
+
+  my $fa = &get_printable_full_event($a_e, $a_se, 1);
+  my $fb = &get_printable_full_event($b_e, $b_se, 1);
+
+  return($for_event_sort{$fa} <=> $for_event_sort{$fb});
 }
 
 ########################################
@@ -2413,7 +2602,7 @@ sub _wbi { # writeback indent
 
 #####
 
-sub _wb_print {                 # writeback print
+sub _wb_print { # writeback print
   my $indent = shift @_;
   my @content = @_;
 
@@ -2520,13 +2709,16 @@ sub _writeback_object {
 ##########
 
 sub _writeback2xml {
+  my $self = shift @_;
   my $comment = shift @_;
-  my $fst = shift @_;
   my $rlhash = shift @_;
   my @asked_events = @_;
 
   my $txt = "";
   my $indent = 0;
+
+  my $fst = $self->check_force_subtype();
+  return($txt) if ($self->error());
 
   my %lhash = %{$rlhash};
 
@@ -2548,34 +2740,25 @@ sub _writeback2xml {
   $txt .= &_wb_print(--$indent, "</descriptor>\n");
 
   # Write all objects
-  foreach my $object (@asked_events) {
-    my @stypes;
-    if ($fst) {
-      push @stypes, @ok_subevents;
-    } else {
-      push @stypes, "";
+  foreach my $ftype (sort _event_sort @asked_events) {
+    $txt .= &_wb_print($indent++, "<descriptor name=\"$ftype\" type=\"OBJECT\">\n");
+    foreach my $key (sort keys %hash_objects_attributes_types) {
+      $txt .= &_wb_print
+	($indent,
+	 "<attribute dynamic=\"",
+	 ($hash_objects_attributes_types_dynamic{$key}) ? "true" : "false",
+	 "\" name=\"$key\" type=\"http://lamp.cfar.umd.edu/viperdata#",
+	 $hash_objects_attributes_types{$key}, 
+	 "\"/>\n");
     }
-    foreach my $stype (@stypes) {
-      my $ftype = &get_printable_full_event($object, $stype);
-      $txt .= &_wb_print($indent++, "<descriptor name=\"$ftype\" type=\"OBJECT\">\n");
-      foreach my $key (sort keys %hash_objects_attributes_types) {
-	$txt .= &_wb_print
-	  ($indent,
-	   "<attribute dynamic=\"",
-	   ($hash_objects_attributes_types_dynamic{$key}) ? "true" : "false",
-	   "\" name=\"$key\" type=\"http://lamp.cfar.umd.edu/viperdata#",
-	   $hash_objects_attributes_types{$key}, 
-	   "\"/>\n");
-      }
-      $txt .= &_wb_print(--$indent, "</descriptor>\n");
-    }
+    $txt .= &_wb_print(--$indent, "</descriptor>\n");
   }
 
   # End 'config', begin 'data'
   $txt .= &_wb_print(--$indent, "</config>\n");
   $txt .= &_wb_print($indent++, "<data>\n");
 
-  if (scalar %lhash > 0) {    # Are we just writting a spec XML file ?
+  if (scalar %lhash > 0) { # Are we just writting more than just a spec XML file ?
     $txt .= &_wb_print($indent++, "<sourcefile filename=\"" . $lhash{'file'}{'filename'} . "\">\n");
 
     # comment (optional)
@@ -2586,12 +2769,11 @@ sub _writeback2xml {
     $txt .= &_writeback_file($indent, %{$lhash{'file'}});
 
     # Objects
-    foreach my $object (@asked_events) {
-      if (exists $lhash{$object}) {
-        my @ids = keys %{$lhash{$object}};
-        foreach my $id (sort _numerically @ids) {
-          $txt .= &_writeback_object($indent, $object, $id, $fst, %{$lhash{$object}{$id}});
-        }
+    foreach my $ftype (sort _event_sort @asked_events) {
+      my @ids = $self->get_event_ids($ftype);
+      my ($ev, $sev) = &split_full_event($ftype, $fst); 
+      foreach my $id (sort _numerically @ids) {
+	$txt .= &_writeback_object($indent, $ev, $id, $fst, %{$lhash{$ev}{$id}});
       }
     }
 
@@ -2612,17 +2794,18 @@ sub _writeback2xml {
 ########################################
 
 sub _clone_fhash_selected_events {
-  my $rin_hash = shift @_;
+  my $self = shift @_;
   my @asked_events = @_;
 
-  my %in_hash = %{$rin_hash};
+  my %in_hash = $self->_get_fhash();
   my %out_hash;
 
-  %{$out_hash{"file"}} = %{$in_hash{"file"}};
+  %{$out_hash{"file"}} = &__clone(%{$in_hash{"file"}});
 
   foreach my $event (@asked_events) {
-    if (exists $in_hash{$event}) {
-      %{$out_hash{$event}} = %{$in_hash{$event}};
+    my @ids = $self->get_event_ids($event);
+    foreach my $id (@ids) {
+      %{$out_hash{$event}{$id}} = &__clone(%{$in_hash{$event}{$id}});
     }
   }
 
