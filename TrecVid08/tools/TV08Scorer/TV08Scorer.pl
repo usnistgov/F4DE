@@ -213,9 +213,10 @@ my $sysTitle = "";
 my $outputRootFile = undef;
 my $observationContingencyTable = 0;
 my $writexml = undef;
+my $autolt = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:    DEFG       O   ST     Za  cdefgh   mno   st vwx  
+# Used:    DEFG       O   ST     Za  cdefgh   mnop  st vwx  
 
 my %opt;
 my $dbgftmp = "";
@@ -245,6 +246,7 @@ GetOptions
    'OutputFileRoot=s' => \$outputRootFile,
    'observationCont' => \$observationContingencyTable,
    'writexml:s'      => \$writexml,
+   'pruneEvents'     => \$autolt,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -273,6 +275,9 @@ if ($xsdpath ne "") {
   error_quit("While trying to set \'TrecVid08xsd\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xsdpath($xsdpath));
 }
+
+error_quit("\'pruneEvents\' is only usable if \'writexml\' is selected")
+  if (($autolt) && ( ! defined $writexml));
 
 error_quit("Only one \'gtf\' separator allowed per command line, aborting")
   if ($gtfs > 1);
@@ -418,7 +423,13 @@ if (defined $writexml) {
 
   foreach my $key (keys %xmlwriteback) {
     my $vf = $xmlwriteback{$key};
-    my $txt = $vf->reformat_xml();
+    my $txt;
+    if ($autolt) {
+      my @used_events = $vf->list_used_full_events();
+      $txt = $vf->reformat_xml(@used_events);
+    } else {
+      $txt = $vf->reformat_xml();
+    }
 
     my $of = (! MMisc::is_blank($writexml)) ? "$writexml/$key.xml" : "";
     MMisc::writeTo($of, "", 1, 0, $txt, "", "");
@@ -438,7 +449,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--showAT] [--allAT] [--writexml [dir]] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--showAT] [--allAT] [--writexml [dir] [--pruneEvents]] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -454,6 +465,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --showAT        Show Gloabl Alignment Table
   --allAT         Show Alignment Table per File and Event processed
   --writexml      Write a ViperFile XML containing the Mapped, UnmappedRef and UnmappedSys to disk (if dir is specified), stdout otherwise
+  --pruneEvents   Only keep in the new file's config section events for which observations are seen
   --observationCont  Dump the Trials Contingency Table
   --OutputFileRoot   Specify the file base of most output files generated (default is to print)
   --computeDETCurve  Generate DETCurve 
@@ -929,6 +941,7 @@ sub do_alignment {
 	  $tmp_obs->set_DetectionScore(0);
 	  $tmp_obs->set_DetectionDecision(0);
 	  $tmp_obs->set_isgtf(0);
+	  $tmp_obs->addto_comment("Observation converted from REF to SYS: DetectionScore and DetectionDecision are faked values");
 	  $tmp_obs->validate();
 	  error_quit("Problem validating REF->SYS converted Observation (" . $tmp_obs->get_errormsg() . ")")
 	    if ($tmp_obs->error());
@@ -1353,6 +1366,10 @@ Show a I<Trials Contingency Table> listing per event: mapped observations (I<Cor
 =item B<--OutputFileRoot> I<filebase>
 
 Will generate a file to disk for most reports, using I<filebase> as the file's basename and adding to it a report-specific extension.  See the report options for naming conventions.
+
+=item B<--pruneEvents>
+
+For each validated that is re-written, only add to this file's config section, events for which observations are seen
 
 =item B<--showAT>
 
