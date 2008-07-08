@@ -2286,9 +2286,9 @@ sub _parse_object_section {
 
   my @expected = @array_objects_inline_attributes;
   my ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
-  return("Could not find all the expected inline \'file\' attributes", ())
+  return("Could not find all the expected inline \'object\' attributes", ())
     if (scalar @$in != scalar @expected);
-  return("Found some unexpected inline \'file\' attributes", ())
+  return("Found some unexpected inline \'object\' attributes", ())
     if (scalar @$out > 0);
 
   # Get the object name
