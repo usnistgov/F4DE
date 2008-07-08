@@ -826,6 +826,15 @@ sub do_alignment {
 	  $tmp_obs->set_eventsubtype(TrecVid08ViperFile::get_Mapped_subeventkey());
 	  error_quit("Problem adding sub event type to Observation (" . $tmp_obs->get_errormsg() . ")")
 	    if ($tmp_obs->error());
+
+	  my $ref_uid = $ref_obj->get_unique_id();
+	  error_quit("While trying to obtain a unique Observation id (". $ref_obj->get_errormsg() . ")")
+	    if ($ref_obj->error());
+
+	  $tmp_obs->addto_comment("Mapped to REF \"$ref_uid\"");
+	  error_quit("Problem adding comment to Observation (" . $tmp_obs->get_errormsg() . ")")
+	    if ($tmp_obs->error());
+
 	  &add_obs2vf($tmp_obs);
 	}
 
