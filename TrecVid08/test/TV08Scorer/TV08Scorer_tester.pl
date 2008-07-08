@@ -27,7 +27,12 @@ $testr += &do_test("Test 3a (ECF check 1)",  "test2-gtf.xml", "test2-same-sys.xm
 
 $testr += &do_test("Test 3b (ECF check 2)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-test3b.txt");
 
-$testr += &do_test("Test 4 (Big Test)",  "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG" , "res-test4-BigTest.txt");
+my $tn = "Test 4 (Big Test)";
+if (! -e ".skip_bigtest") {
+  $testr += &do_test("$tn",  "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG" , "res-test4-BigTest.txt");
+} else {
+  print "$tn: Skipped\n";
+}
 
 $testr += &do_test("Test 5a (writexml)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w", "res-test5a.txt");
 
