@@ -435,6 +435,8 @@ Display the usage page for this program. Also display some default values and in
 
 Used with B<--write> or B<--XMLbase>, only add provided list of events to output files.
 Note that B<TV08ViperValidator> will still check the entire viper file before it can limit itself to the selected list of events.
+B<--limitto> can also use wildcards for sub-Event Types specification such as '*:Mapped' which will request all event types but only I<Mapped> subtype.
+To note, if you request a subtype for a file that does not contain any, that subtype will be ignored, ie if you request I<ObjectGet:Mapped> when the file does not contain any subtype, you will get all I<ObjectGet>s.
 
 =item B<--man>
 
