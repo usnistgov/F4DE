@@ -159,7 +159,8 @@ ObjectGet Event   |     1     0        0    0      1    0.0000      1.0000    1.
         <attribute name="Point"/>
       </object>
       <object name="CellToEar:Mapped" id="0" framespan="203:3738">
-        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml) -->
+        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml)
+Mapped to REF "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="true"/>
@@ -170,7 +171,8 @@ ObjectGet Event   |     1     0        0    0      1    0.0000      1.0000    1.
         <attribute name="Point"/>
       </object>
       <object name="CellToEar:Mapped" id="1" framespan="3503:3739">
-        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml) -->
+        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: -0.99 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml)
+Mapped to REF "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS: 3503:3739 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="false"/>
@@ -181,7 +183,8 @@ ObjectGet Event   |     1     0        0    0      1    0.0000      1.0000    1.
         <attribute name="Point"/>
       </object>
       <object name="CellToEar:Mapped" id="2" framespan="2503:3739">
-        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml) -->
+        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 0 | Dec: 101 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml)
+Mapped to REF "FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 1 | FS: 2503:3739 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="false"/>
@@ -204,7 +207,8 @@ Observation converted from REF to SYS: DetectionScore and DetectionDecision are 
         <attribute name="Point"/>
       </object>
       <object name="ObjectGet:Mapped" id="0" framespan="1100:3327">
-        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml) -->
+        <!-- Clone #0001 of UID (FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 0 | Dec: 99 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml)
+Mapped to REF "FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectGet | ID: 0 | FS: 1100:3327 | FILE FS: 1:5121 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml" -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="false"/>
