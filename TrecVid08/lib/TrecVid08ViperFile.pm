@@ -240,10 +240,42 @@ sub get_required_xsd_files_list {
 
 #####
 
+sub _expand_events_star {
+  my ($self, @events) = @_;
+
+  my @out;
+  foreach my $key (@events) {
+    my ($e, $s) = split_full_event($key, 0);
+    
+    # special cases
+    return(@ok_events) if (($e eq "*") && ($s eq "*"));
+    return(@ok_events) if (($e eq "*") && (MMisc::is_blank($s)));
+
+    if ($e eq "*") { # $s is not blank
+      foreach my $ev (@ok_events) {
+	push @out, get_printable_full_event($ev, $s, 1);
+      }
+      next;
+    }
+
+    if ($s eq "*") { # $e is not blank
+      foreach my $sev (@ok_subevents) {
+	push @out, &get_printable_full_event($e, $sev, 1);
+      }
+      next;
+    }
+
+    push @out, $key;
+  }
+
+  return(@out);
+}
+
 sub validate_events_list {
   my ($self, @events) = @_;
 
   @events = split(m%\,%, join(",", @events));
+  @events = $self-> _expand_events_star(@events);
   @events = MMisc::make_array_of_unique_values(@events);
   my ($rev, $rsev) = $self->split_events_subevents(@events);
 
@@ -253,7 +285,7 @@ sub validate_events_list {
     return();
   }
 
-  if (($self->check_force_subtype) && (scalar @$rsev > 0)) {
+  if (scalar @$rsev > 0) {
     my ($in, $out) = MMisc::confirm_first_array_values($rsev, @ok_subevents);
     if (scalar @$out > 0) {
       $self->_set_errormsg("Found some unknown sub event type: " . join(" ", @$out));
@@ -1821,7 +1853,7 @@ sub _make_full_events_hash_core {
   my %ev;
   my %sev;
   foreach my $fev (@fevl) {
-    my ($e, $s) = split_full_event($fev, $self->check_force_subtype());
+    my ($e, $s) = &split_full_event($fev, $self->check_force_subtype());
     if ($e eq $fev) { # Requested all the subtypes of the event
       foreach my $st (@ok_subevents) {
 	$out{$e}{$st}++;
