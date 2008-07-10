@@ -293,6 +293,34 @@ sub confirm_first_array_values {
   return(\@in, \@out);
 }
 
+##########
+
+sub _uc_lc_array_values {
+  my $mode = shift @_;
+  my @in = @_;
+
+  my @out;
+  foreach my $value (@in) {
+    my $v = ($mode eq "uc") ? uc($value) :
+      ($mode eq "lc") ? lc($value) : $value;
+    push @out, $v;
+  }
+
+  return(@out);
+}
+
+#####
+
+sub uppercase_array_values {
+  return(&_uc_lc_array_values("uc", @_));
+}
+
+#####
+
+sub lowercase_array_values {
+  return(&_uc_lc_array_values("lc", @_));
+}
+
 ############################################################
 
 1;
