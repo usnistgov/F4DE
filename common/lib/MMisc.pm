@@ -232,13 +232,22 @@ sub clone {
 
 ##########
 
-sub make_array_of_unique_values {
-  my @a = @_;
+sub array1d_to_hash {
+  my @all = @_;
 
-  my %tmp;
-  foreach my $key (@a) {
-    $tmp{$key}++;
+  my %ohash;
+
+  foreach my $o (@all) {
+    $ohash{$o}++;
   }
+
+  return(%ohash);
+}
+
+#####
+
+sub make_array_of_unique_values {
+  my %tmp = array1d_to_hash(@_);
 
   return(keys %tmp);
 }
