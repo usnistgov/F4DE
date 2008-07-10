@@ -693,10 +693,19 @@ sub get_beg_end_fs {
 #####
 
 sub is_within {
-  my ($self, $other) = @_;
+  my ($self, $other, $tif) = @_;
+  # tif: tolerance (in frames)
+  # technicaly a double tolerance since the same value is added to the end
+  # and substracted to the beginning
 
   my ($v_beg, $v_end) = $self->get_beg_end_fs();
   return(-1) if ($self->error());
+
+  $ tif = 0 if (! defined $tif);
+  if ($tif < 0) {
+    $self->_set_errormsg("In \'is_within\', the \'tolerance (in frames)\' value has to be >= 0");
+    return(0);
+  }
 
   my ($r_beg, $r_end) = $other->get_beg_end_fs();
   if ($other->error()) {
@@ -704,8 +713,8 @@ sub is_within {
     return(-1);
   }
 
-  # is within
-  return(1) if (($v_beg >= $r_beg) && ($v_end <= $r_end));
+  # is within: tolerate a difference of $tol
+  return(1) if ( ($v_beg >= ($r_beg - $tif)) && ($v_end <= ($r_end + $tif)) );
 
   # is not within
   return(0);
