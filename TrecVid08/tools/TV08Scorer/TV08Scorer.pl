@@ -651,6 +651,13 @@ sub generate_EventList {
     error_quit("Problem obtaining all Observations from $mode ViperFile object (" . $vf->get_errormsg() . ")")
       if ($vf->error());
 
+    # We also want the dummy observation
+    # (to have at least one observation in the event list)
+    my $do = $vf->get_dummy_observation();
+    error_quit("Problem obtaining the dummy Observations from $mode ViperFile object (" . $vf->get_errormsg() . ")")
+      if ($vf->error());
+    push @ao, $do;
+
     foreach my $o (@ao) {
       my $status = $tmpEL->add_Observation($o);
       error_quit("Problem adding Observation to $mode EventList (" . $tmpEL->get_errormsg() . ")")
