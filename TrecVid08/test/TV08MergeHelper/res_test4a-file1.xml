@@ -118,7 +118,7 @@
   </config>
   <data>
     <sourcefile filename="file:20050519-1503-Excerpt.mpg">
-      <!-- NUMFRAMES extended from 5121 to 5521 (FILE: 20050519-1503-Excerpt.mpg | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 401:5521 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml) -->
+      <!-- NUMFRAMES modified from 5121 to 5521 (FILE: 20050519-1503-Excerpt.mpg | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 401:5521 | FILE FS: 401:5521 | GTF : 1 | Dec: N/A (N/A) | XML FILE: ../common/test2-gtf.xml) -->
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
           <data:fvalue value="1.0"/>

@@ -72,10 +72,10 @@
   </config>
   <data>
     <sourcefile filename="samefile">
-      <!-- NUMFRAMES extended from 5121 to 5161 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 41:5161 | FILE FS: 41:5161 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test1-same-sys.xml)
-NUMFRAMES extended from 5161 to 6621 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 1501:6621 | FILE FS: 1501:6621 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test2-same-sys.xml)
-NUMFRAMES extended from 6621 to 10121 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 5001:10121 | FILE FS: 5001:10121 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml)
-NUMFRAMES extended from 10121 to 15121 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 10001:15121 | FILE FS: 10001:15121 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test1-1fa-sys.xml) -->
+      <!-- NUMFRAMES modified from 5121 to 5161 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 41:5161 | FILE FS: 41:5161 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test1-same-sys.xml)
+NUMFRAMES modified from 5161 to 6621 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 1501:6621 | FILE FS: 1501:6621 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test2-same-sys.xml)
+NUMFRAMES modified from 6621 to 10121 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 5001:10121 | FILE FS: 5001:10121 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test2-1md_1fa-sys.xml)
+NUMFRAMES modified from 10121 to 15121 (FILE: samefile | EVENT: Fake_Event-Merger_Dummy_Type | ID: 0 | FS: 10001:15121 | FILE FS: 10001:15121 | GTF : 0 | Dec: 0 (false) | XML FILE: ../common/test1-1fa-sys.xml) -->
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
           <data:fvalue value="1.0"/>
