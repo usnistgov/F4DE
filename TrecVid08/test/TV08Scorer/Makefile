@@ -25,5 +25,8 @@ makecheckfiles:	${TV08Scorer_tester_exec}
 	@make cleanresfiles
 	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08Scorer_tester} ${TV08Scorer} makecheckfiles)
 
+makecompcheckfiles:	${TV08Scorer_tester_exec}
+	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08Scorer_tester} ${TV08Scorer} makecompcheckfiles)
+
 cleanresfiles:
 	@rm -f res*.txt

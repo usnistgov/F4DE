@@ -25,5 +25,8 @@ makecheckfiles:	${TV08MergeHelper_tester_exec}
 	@make cleanresfiles
 	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} makecheckfiles)
 
+makecompcheckfiles:	${TV08MergeHelper_tester_exec}
+	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} makecompcheckfiles)
+
 cleanresfiles:
 	@rm -f res_*

@@ -18,6 +18,13 @@ makecheckfiles:
 	@(cd TV08MergeHelper; make makecheckfiles)
 	@echo "***** All files generated succesfully"
 
+makecompcheckfiles:
+	@(cd Pre; make check)
+	@(cd TV08ViperValidator; make makecompcheckfiles)
+	@(cd TV08Scorer; make makecompcheckfiles)
+	@(cd TV08MergeHelper; make makecompcheckfiles)
+	@echo "***** All files generated succesfully"
+
 cleanresfiles:
 	@(cd TV08ViperValidator; make cleanresfiles)
 	@(cd TV08Scorer; make cleanresfiles)

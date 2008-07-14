@@ -25,5 +25,8 @@ makecheckfiles:	${TV08ViperValidator_tester_exec}
 	@make cleanresfiles
 	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} makecheckfiles)
 
+makecompcheckfiles:	${TV08ViperValidator_tester_exec}
+	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} makecompcheckfiles)
+
 cleanresfiles:
 	@rm -f res_*.txt
