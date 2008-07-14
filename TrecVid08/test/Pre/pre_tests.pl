@@ -8,7 +8,7 @@ my $err = 0;
 
 ##########
 print "** Checking for Perl Packages:\n";
-my $ms;
+my $ms = 1;
 print "[F4DE Provided Packages]\n";
 $ms = &_chkpkg("BipartiteMatch", "DETCurve", "MMisc", "MtXML", "SimpleAutoTable", "Trials", "MErrorH", "MetricTestStub", "PropList", "TrialSummaryTable", "ViperFramespan", "MetricFuncs", "MetricTV08", "TrecVid08ECF", "TrecVid08EventList", "TrecVid08Observation", "TrecVid08ViperFile", "TrecVid08xmllint");
 if ($ms > 0) {
