@@ -90,7 +90,7 @@ my @ok_subevents =
    $key_subevent_UnmappedSys,
   ); # order is important (esp for the first element which is used in case no sub type is set but sub type writing as been requested)
 
-my %for_event_sort = undef;
+my %for_event_sort = ();
 
 ##### Memory representations
 
@@ -124,11 +124,11 @@ my @list_objects_attributes_isd = # Order is important (has to match previous to
 my @not_gtf_required_objects_attributes =
   ($list_objects_attributes[0], $list_objects_attributes[1]);
 
-my %hash_objects_attributes_types;
+my %hash_objects_attributes_types = ();
 
-my %hash_objects_attributes_types_dynamic;
+my %hash_objects_attributes_types_dynamic = ();
 
-my %hasharray_inline_attributes;
+my %hasharray_inline_attributes = ();
 @{$hasharray_inline_attributes{"bbox"}} = ("x", "y", "height", "width");
 @{$hasharray_inline_attributes{"point"}} = ("x", "y");
 @{$hasharray_inline_attributes{"fvalue"}} = ("value");
@@ -243,7 +243,7 @@ sub get_required_xsd_files_list {
 sub _expand_events_star {
   my ($self, @events) = @_;
 
-  my @out;
+  my @out = ();
   foreach my $key (@events) {
     my ($e, $s) = split_full_event($key, 0);
     
@@ -303,7 +303,7 @@ sub reformat_events {
 
   my %all = $self->make_full_events_hash(@evl);
 
-  my @out;
+  my @out = ();
   if ($self->check_force_subtype()) {
     foreach my $ev (keys %all) {
       foreach my $sev (keys %{$all{$ev}}) {
@@ -905,7 +905,7 @@ sub validate {
     return(0);
   }
 
-  my $res;
+  my $res = "";
   # Initial Cleanups & Check
   ($res, $bigstring) = &_data_cleanup($bigstring);
   if (! MMisc::is_blank($res)) {
@@ -914,7 +914,7 @@ sub validate {
   }
 
   # Process the data part
-  my %fdata;
+  my %fdata = ();
   my $isgtf = $self->check_if_gtf();
   ($res, %fdata) = $self->_data_processor($bigstring, $isgtf);
   if (! MMisc::is_blank($res)) {
@@ -1166,7 +1166,7 @@ sub get_dummy_observation {
   # Note that we do not worry about dynamic ojects here (ie: TODO)
   if (! $isgtf) {
     foreach my $key (@not_gtf_required_objects_attributes) {
-      my %dtmp;
+      my %dtmp = ();
       $dtmp{"dummytxtfs"}{$key_attr_content} = \@{$not_gtf_required_dummy_values{$key}};
       $obs->set_selected($key, %dtmp);
       if ($obs->error()) {
@@ -1377,7 +1377,7 @@ sub get_all_events_observations {
     return(0);
   }
 
-  my @res;
+  my @res = ();
   foreach my $event (@limitto_events) {
     my @tmp = $self->get_event_observations($event);
     return(0) if ($self->error());
@@ -1423,17 +1423,17 @@ sub _clone_core {
 
   return(undef) if ($self->error());
 
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only \'clone\' a validated file");
+    return(undef);
+  }
+
   my $keep_events = 1;
   if (scalar @limitto_events == 0) {
     $keep_events = 0;
   } else {
     @limitto_events = $self->validate_events_list(@limitto_events);
     return(undef) if ($self->error());
-  }
-
-  if (! $self->is_validated()) {
-    $self->_set_errormsg("Can only \'clone\' a validated file");
-    return(undef);
   }
   
   my $clone = new TrecVid08ViperFile();
@@ -1443,7 +1443,7 @@ sub _clone_core {
   $clone->set_as_gtf() if ($self->check_if_gtf());
   $clone->set_fps($self->get_fps()) if ($self->_is_fps_set());
   $clone->set_file($self->get_file());
-  my %out;
+  my %out = ();
   if ($keep_events) {
     %out = $self->_clone_fhash_selected_events(@limitto_events);
   } else {
@@ -1503,7 +1503,7 @@ sub fill_empty {
     return(0);
   }
 
-  my %fhash;
+  my %fhash = ();
   $fhash{"file"}{"filename"} = $sf_filename;
   $fhash{"file"}{"file_id"} = 0;
   $fhash{"file"}{"NUMFRAMES"} = ($numframes) ? $numframes : 1; # At least 1
@@ -1545,7 +1545,15 @@ sub _get_fhash_file_numframes {
   return($tmp{"file"}{"NUMFRAMES"});
 }
 
-####
+#####
+
+sub get_numframes_value {
+  my ($self) = @_;
+
+  return($self->_get_fhash_file_numframes());
+}
+
+#####
 
 sub _set_fhash_file_numframes {
   my ($self, $numframes, $ignoresmallervalues, $commentadd) = @_;
@@ -1561,8 +1569,13 @@ sub _set_fhash_file_numframes {
   if ($numframes <= $cnf) {
     return(1) if ($ignoresmallervalues);
 
-    $self->_set_errormsg("Can not reduce the file\'s \'numframes\' value");
-    return(0);
+    my $ha = $self->has_events();
+    return(0) if ($self->error());
+
+    if ($ha) { # We can not shrink numframes is there is any event
+      $self->_set_errormsg("Can not reduce the file\'s \'numframes\' value");
+      return(0);
+    }
   }
 
   my %tmp = $self->_get_fhash();
@@ -1575,7 +1588,7 @@ sub _set_fhash_file_numframes {
   $tmp{"file"}{"NUMFRAMES"} = $numframes;
 
   $self->_set_fhash(%tmp);
-  $self->_addto_comment("NUMFRAMES extended from $cnf to $numframes" . ((! MMisc::is_blank($commentadd)) ? " ($commentadd)" : ""));
+  $self->_addto_comment("NUMFRAMES modified from $cnf to $numframes" . ((! MMisc::is_blank($commentadd)) ? " ($commentadd)" : ""));
   return(0) if ($self->error());
 
   return(1);
@@ -1587,6 +1600,14 @@ sub extend_numframes {
   my ($self, $numframes, $commentadd) = @_;
 
   return($self->_set_fhash_file_numframes($numframes, 1, $commentadd));
+}
+
+#####
+
+sub modify_numframes {
+  my ($self, $numframes, $commentadd) = @_;
+
+  return($self->_set_fhash_file_numframes($numframes, 0, $commentadd));
 }
 
 ##########
@@ -1623,7 +1644,7 @@ sub _bvalue_convert {
 
   return(@values) if ($hash_objects_attributes_types{$attr} ne "bvalue");
 
-  my @out;
+  my @out = ();
   foreach my $i (@values) {
     if ($i == 1) {
       push @out, "true";
@@ -1698,7 +1719,7 @@ sub extend_numframes_from_observation {
 #####
 
 sub add_observation {
-  my ($self, $obs) = @_;
+  my ($self, $obs, $keep_obs_id) = @_;
 
   $self->_add_obs_core($obs);
   return(-1) if ($self->error());
@@ -1723,16 +1744,25 @@ sub add_observation {
     return(0);
   }
 
-  # Get the next available event id
-  my $id = $self->get_first_available_event_id($event);
-  return(0) if ($self->error());
+  my $id = "";
+  if ($keep_obs_id) {
+    $id = $obs->get_id();
+    if ($self->is_event_id_used($event, $id)) {
+      $self->_set_errormsg("Can not keep Observation ID into XML file (already exists)");
+      return(0);
+    }
+  } else {
+    # Get the next available event id
+    $id = $self->get_first_available_event_id($event);
+    return(0) if ($self->error());
+  }
 
   ##### From now on we make changes to the structure
 
   return(0) if (! $self->extend_numframes_from_observation($obs));
 
   my %tmp = $self->_get_fhash();
-  my %sp_out; # will be added to $fhash{event}{id}
+  my %sp_out = (); # will be added to $fhash{event}{id}
 
   # Get the global framespan
   my $key = $key_framespan;
@@ -1849,9 +1879,9 @@ sub change_sourcefile_filename {
 sub _make_full_events_hash_core {
   my ($self, @fevl) = @_;
 
-  my %out;
-  my %ev;
-  my %sev;
+  my %out = ();
+  my %ev = ();
+  my %sev = ();
   foreach my $fev (@fevl) {
     my ($e, $s) = &split_full_event($fev, $self->check_force_subtype());
     if ($e eq $fev) { # Requested all the subtypes of the event
@@ -1894,7 +1924,7 @@ sub split_events_subevents {
 sub _list_used_full_events {
   my ($self, $mode) = @_;
 
-  my @out;
+  my @out = ();
 
   return(@out) if ($self->error());
   
@@ -1933,6 +1963,20 @@ sub list_used_full_events {
   return($self->_list_used_full_events($self->check_force_subtype()));
 }
 
+#####
+
+sub has_events {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  my @used = $self->list_used_events();
+
+  return(1) if (scalar @used > 0);
+
+  return(0);
+}
+
 ##########
 
 sub _enforce_subtype {
@@ -1958,7 +2002,7 @@ sub _enforce_subtype {
 sub get_event_ids {
   my ($self, $fev) = @_;
 
-  my @ids;
+  my @ids = ();
 
   return(@ids) if ($self->error());
 
@@ -1994,6 +2038,20 @@ sub exists_event {
   return(0) if ($self->error());
 
   return(1) if (scalar @all > 0);
+
+  return(0);
+}
+
+#####
+
+sub is_event_id_used {
+  my ($self, $fev, $id) = @_;
+
+  my @all = $self->get_event_ids($fev);
+
+  return(0) if ($self->error());
+
+  return(1) if (grep(m%^$id$%, @all));
 
   return(0);
 }
@@ -2100,7 +2158,7 @@ sub _parse_sourcefile_section {
   my $str = shift @_;
   my $isgtf = shift @_;
 
-  my %res;
+  my %res = ();
   
   #####
   # First, get the inline attributes from the 'sourcefile' inline attribute itself
@@ -2218,7 +2276,7 @@ sub _parse_file_section {
   my $str = shift @_;
 
   my $wtag = "file";
-  my %file_hash;
+  my %file_hash = ();
 
   my ($text, %attr) = MtXML::get_inline_xml_attributes($wtag, $str);
   return($text, ()) if (! MMisc::is_blank($text));
@@ -2266,7 +2324,7 @@ sub _parse_file_section {
     next if (! defined $val);
     my @comp = keys %{$attr{$key}};
     next if (scalar @comp == 0);
-    my @expected2;
+    my @expected2 = ();
     push @expected2, $val;
     ($in, $out) = MMisc::confirm_first_array_values(\@expected2, @comp);
     return("Could not confirm all the expected \'$wtag\' attributes", ())
@@ -2303,10 +2361,10 @@ sub _parse_object_section {
 
   my $wtag = "object";
 
-  my $object_name;
-  my $object_id;
-  my $object_framespan;
-  my %object_hash;
+  my $object_name = "";
+  my $object_id = "";
+  my $object_framespan = "";
+  my %object_hash = ();
 
   my ($text, %attr) = MtXML::get_inline_xml_attributes($wtag, $str);
   return($text, ()) if (! MMisc::is_blank($text));
@@ -2385,7 +2443,7 @@ sub _parse_object_section {
       return("\'$wtag\' attribute ($key) should not have a value for GTF", ())
         if (($isgtf) && (grep(m%^$key$%, @det_sub)));
     }
-    my @expected2;
+    my @expected2 = ();
     push @expected2, $val;
     ($in, $out) = MMisc::confirm_first_array_values(\@expected2, @comp);
     return("Could not confirm all the expected \'$wtag\' attributes", ())
@@ -2416,7 +2474,7 @@ sub _data_process_array_core {
   return("Found some unexpected \'data\:$name\' attributes", ())
     if (scalar @$out > 0);
 
-  my @res;
+  my @res = ();
   foreach my $key (@expected) {
     push @res, $$rattr{$key};
   }
@@ -2447,8 +2505,8 @@ sub _extract_data {
   my $allow_nofspan = shift @_;
   my $type = shift @_;
 
-  my %attr;
-  my @afspan;
+  my %attr = ();
+  my @afspan = ();
 
   my $fs_fspan = new ViperFramespan();
   if (! $allow_nofspan) {
@@ -2474,7 +2532,7 @@ sub _extract_data {
     $name =~ s%^data\:%%;
 
     # Check the framespan (if any)
-    my $lfspan;
+    my $lfspan = "";
     my $key = $key_framespan;
     if (exists $iattr{$key}) {
       $lfspan = $iattr{$key};
@@ -2529,7 +2587,7 @@ sub _parse_attributes {
   my ($self) = shift @_;
   my $rstr = shift @_;
   my $fspan = shift @_;
-  my %attrs;
+  my %attrs = ();
 
   my $allow_nofspan = 0;
   if (MMisc::is_blank($fspan)) {
@@ -2698,7 +2756,7 @@ sub _writeback_object {
       $txt .= ">\n";
 
       $indent++;
-      my @afs;
+      my @afs = ();
       foreach my $fs (keys %{$object_hash{$key}}) {
         my $fs_tmp = new ViperFramespan();
         die("[TrecVid08ViperFile] Internal Error: WEIRD: In \'_writeback_object\' (" . $fs_tmp->get_errormsg() .")")
@@ -2713,7 +2771,7 @@ sub _writeback_object {
            ($hash_objects_attributes_types_dynamic{$key}) ? " framespan=\"$fs\"" : "",
            " ");
 
-        my @subtxta;
+        my @subtxta = ();
         my @name_a = @{$hasharray_inline_attributes{$key}};
         my @value_a = @{$object_hash{$key}{$fs}};
         while (scalar @name_a > 0) {
@@ -2830,7 +2888,7 @@ sub _clone_fhash_selected_events {
   my @asked_events = @_;
 
   my %in_hash = $self->_get_fhash();
-  my %out_hash;
+  my %out_hash = ();
 
   %{$out_hash{"file"}} = &__clone(%{$in_hash{"file"}});
 
