@@ -154,7 +154,7 @@ Returns an array of global miss/fa/comb statistics based on the actual decisions
 
   sub getActualDecisionPerformance(){
     my ($self) = @_;
-    my $b;
+    my $b = "";
     my %blocks = ();
         
     foreach $b ($self->{TRIALS}->getBlockIDs()) {

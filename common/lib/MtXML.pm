@@ -123,7 +123,7 @@ sub split_xml_tag {
 sub split_xml_tag_list_to_hash {
   my @list = @_;
 
-  my %hash;
+  my %hash = ();
   foreach my $tag (@list) {
     my ($name, $value) = &split_xml_tag($tag);
     return("Problem splitting inlined attribute ($tag)", ())
@@ -142,7 +142,7 @@ sub split_xml_tag_list_to_hash {
 
 sub split_line_into_tags {
   my $line = shift @_;
-  my @all;
+  my @all = ();
 
   while ($line =~ s%([^\s]+?)\s*(\=)\s*(\"[^\"]+?\")%%) {
     push @all, "$1$2$3";

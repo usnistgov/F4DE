@@ -381,7 +381,7 @@ sub readFromFile
     }
     close FILE;
     system("$gzipPROG -9 -f $file > /dev/null") if( $compressed );
-    my $VAR1;
+    my $VAR1 = "";
     eval $str;
     $VAR1;
   }
@@ -478,7 +478,7 @@ sub getSystemDecisionValue{
 sub IntersectionIsolineParameter
   {
     my ($self, $x1, $y1, $x2, $y2) = @_;
-    my ($t, $xt, $yt);
+    my ($t, $xt, $yt) = (undef, undef, undef);
     return (undef, undef, undef, undef) if( ( scalar( @{ $self->{ISOLINE_COEFFICIENTS} } ) == 0 ) || ( scalar( @{ $self->{ISOLINE_COEFFICIENTS} } ) == $self->{ISOLINE_COEFFICIENTS_INDEX} ) );
 
     for (my $i=$self->{ISOLINE_COEFFICIENTS_INDEX}; $i<@{ $self->{ISOLINE_COEFFICIENTS} }; $i++) {
@@ -502,8 +502,8 @@ sub IntersectionIsolineParameter
 sub AllIntersectionIsolineParameter
   {
     my ($self, $x1, $y1, $x2, $y2) = @_;
-    my @out;
-    my ($t, $m, $xt, $yt);
+    my @out = ();
+    my ($t, $m, $xt, $yt) = (undef, undef, undef, undef);
         
     do
       {
@@ -518,7 +518,7 @@ sub AllIntersectionIsolineParameter
 sub IntersectionParameter
   {
     my ($m, $x1, $y1, $x2, $y2) = @_;
-    my ($t, $xt, $yt);
+    my ($t, $xt, $yt) = (undef, undef, undef);
     return (undef, undef, undef) if( $m == 0 ); 
         
     if ( $x1 == $x2 ) {
@@ -600,8 +600,8 @@ sub Compute_blocked_DET_points
     my @Outputs = ();
 
     $self->{TRIALS}->sortTrials();
-    my %blocks;
-    my $block;
+    my %blocks = ();
+    my $block = "";
     my $minScore = undef;
     my $maxScore = undef;
     my $numBlocks = 0;
@@ -610,7 +610,7 @@ sub Compute_blocked_DET_points
     my $findMaxComb = ($self->{METRIC}->combType() eq "maximizable" ? 1 : 0);
     
     ### Reduce the block set to only ones with targets and setup the DS!
-    foreach $block($trial->getBlockIDs()) {
+    foreach $block ($trial->getBlockIDs()) {
       next if ($trial->getNumTarg($block) <= 0);
         
       $numBlocks++;
@@ -745,7 +745,7 @@ sub updateMinScoreForBlockWeighted
 sub computeBlockWeighted
   {
     my ($self, $blocks, $numBlocks, $trial) = @_;
-    my $b;
+    my $b = "";
         
     foreach $b (keys %$blocks) {
       if (!defined($blocks->{$b}{MFA})) {
@@ -781,9 +781,9 @@ sub computeBlockWeighted
 ###No Longer supported###     my($PMAX)=0.5;
 ###No Longer supported###     my($SMAX)=9e99;
 ###No Longer supported###     my(@Outputs) = ();
-###No Longer supported###     my(@TARGET);
-###No Longer supported###     my(@NONTARGET);
-###No Longer supported###     my($Pmiss, $Pfa);
+###No Longer supported###     my(@TARGET) = ();
+###No Longer supported###     my(@NONTARGET) = ();
+###No Longer supported###     my($Pmiss, $Pfa) = (undef, undef);
 ###No Longer supported### 
 ###No Longer supported###     if ($presorted){
 ###No Longer supported###       @TARGET = @$ra_Targets;
@@ -851,7 +851,7 @@ sub computeBlockWeighted
 
 sub ppndf
   {
-    my($ival) = @_;
+    my ($ival) = @_;
     ## A lot of predefined variables
 
     my $SPLIT=0.42;
@@ -873,7 +873,7 @@ sub ppndf
     my $C3=2.3212127685;
     my $D1=3.5438892476;
     my $D2=1.6370678189;
-    my ($p, $q, $r, $retval);
+    my ($p, $q, $r, $retval) = (0, 0, 0, 0);
         
     if ($ival >= 1.0) {
       $p = 1 - $EPS;
@@ -915,10 +915,8 @@ sub ppndf
   }
 
 sub write_gnuplot_threshold_header{
-  my($self, $FP, $title, $min_x, $max_x) = @_;
+  my ($self, $FP, $title, $min_x, $max_x) = @_;
 
-  my($i, $prev);
-    
   print $FP "## GNUPLOT command file\n";
   print $FP "set terminal postscript color\n";
   print $FP "set data style lines\n";
@@ -928,7 +926,6 @@ sub write_gnuplot_threshold_header{
   print $FP "set grid\n";
 
   print $FP "plot [$min_x:$max_x] [0:1] \\\n";
-
 }
 
 sub write_gnuplot_DET_header{
@@ -938,7 +935,6 @@ sub write_gnuplot_DET_header{
   my($p_y_min, $p_y_max) = ( ppndf($y_min/100), ppndf($y_max/100) );
     
   my $ratio = ($p_y_max - $p_y_min) / ($p_x_max - $p_x_min);
-  my($i, $prev);
     
   print $FP "## GNUPLOT command file\n";
   print $FP "set terminal postscript color\n";
@@ -996,7 +992,7 @@ sub write_gnuplot_DET_header{
 
 sub write_tics{ 
   my($FP, $axis, $min, $max) = @_;
-  my($lab, $i, $prev);
+  my($lab, $i, $prev) = ("", 0, 0);
 
   print $FP "set $axis (";
   for ($i=0, $prev=0; $i<= $#tics; $i++) {
@@ -1262,9 +1258,8 @@ sub writeMultiDetGraph
           printf MAINPLT ",\\\n";
         }
                     
-        my ($xcol, $ycol);
-        $xcol = ($xScale eq "nd" ? "3" : "5");
-        $ycol = ($yScale eq "nd" ? "2" : "4");
+        my $xcol = ($xScale eq "nd" ? "3" : "5");
+        my $ycol = ($yScale eq "nd" ? "2" : "4");
         printf MAINPLT "  '$troot.dat.1' using $xcol:$ycol title '$ltitle' with lines $colors[$d]";
         $xcol = ($xScale eq "nd" ? "6" : "4");
         $ycol = ($yScale eq "nd" ? "5" : "3");
@@ -1422,9 +1417,8 @@ sub writeGNUGraph{
   $ltitle .= sprintf(" ($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr)
     if (! (defined($options) && exists($options->{lTitleNoPointInfo})));
     
-  my ($xcol, $ycol);
-  $xcol = ($xScale eq "nd" ? "3" : "5");
-  $ycol = ($yScale eq "nd" ? "2" : "4");
+  my $xcol = ($xScale eq "nd" ? "3" : "5");
+  my $ycol = ($yScale eq "nd" ? "2" : "4");
   print PLT ",\\\n" if ($includeRandomCurve);
   printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol title '$ltitle' with lines 2";
   $xcol = ($xScale eq "nd" ? "6" : "4");

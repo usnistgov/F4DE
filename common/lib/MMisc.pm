@@ -169,7 +169,7 @@ sub max {
 ##########
 
 sub sum {
-  my $out;
+  my $out = 0;
   foreach my $v (@_) {
     $out += $v;
   }
@@ -235,8 +235,7 @@ sub clone {
 sub array1d_to_hash {
   my @all = @_;
 
-  my %ohash;
-
+  my %ohash = ();
   foreach my $o (@all) {
     $ohash{$o}++;
   }
@@ -258,14 +257,14 @@ sub compare_arrays {
   my $rexp = shift @_;
   my @list = @_;
 
-  my @in;
+  my @in = ();
   foreach my $elt (@$rexp) {
     if (grep(m%^$elt$%i, @list)) {
       push @in, $elt;
     }
   }
 
-  my @out;
+  my @out = ();
   foreach my $elt (@list) {
     if (! grep(m%^$elt$%i, @$rexp)) {
       push @out, $elt;
@@ -280,8 +279,8 @@ sub confirm_first_array_values {
   my $rexp = shift @_;
   my @list = @_;
 
-  my @in;
-  my @out;
+  my @in = ();
+  my @out = ();
   foreach my $elt (@$rexp) {
     if (grep(m%^$elt$%, @list)) {
       push @in, $elt;
@@ -299,7 +298,7 @@ sub _uc_lc_array_values {
   my $mode = shift @_;
   my @in = @_;
 
-  my @out;
+  my @out = ();
   foreach my $value (@in) {
     my $v = ($mode eq "uc") ? uc($value) :
       ($mode eq "lc") ? lc($value) : $value;

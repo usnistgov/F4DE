@@ -256,7 +256,6 @@ sub _centerJust(){
 sub renderTxtTable(){
   my ($self, $interColGap) = @_;
   
-  my $fmt_x;
   my $gapStr = sprintf("%${interColGap}s","");
   
   my $numColLev = $self->_getNumColLev();
@@ -287,7 +286,7 @@ sub renderTxtTable(){
   #    print "MaxRowWidth    $maxRowLabWidth = ".join(" ",@rowLabWidth)."\n";
 
   #######################################################
-  my ($r, $c, $fmt, $str, $rowIDStr, $colIDStr);
+  my ($r, $c, $fmt, $str, $rowIDStr, $colIDStr) = ("", "", "", "", "", "");
 
   #    print "The Report\n";
   my $rowSort = $self->{Properties}->getValue($key_SortRowKeyTxt);
@@ -354,7 +353,7 @@ sub extract_csv_line {
   my $line = shift @_;
 
   my @split = split(m%\"\s*\,\s*\"%, $line);
-  my @out;
+  my @out = ();
   foreach my $elt (@split) {
     $elt =~ s%^\"%%;
     $elt =~ s%\"$%%;
@@ -380,8 +379,8 @@ sub loadCSV {
   close FILE;
 
   chomp @filec;
-  my %csv;
-  my %elt1;
+  my %csv = ();
+  my %elt1 = ();
   my $inc = 0;
   my $nc = -1;
   foreach my $line (@filec) {
@@ -406,7 +405,7 @@ sub loadCSV {
   }
   $self->setProperties({ "$key_KeyColumnCsv" => "Remove", "$key_KeyColumnTxt" => "Remove"}) if (! $cu1cak);
 
-  my @colIDs;
+  my @colIDs = ();
   foreach my $key (sort keys %csv) {
     my @a = @{$csv{$key}};
 
@@ -416,7 +415,7 @@ sub loadCSV {
       next;
     }
 
-    my $ID;
+    my $ID = "";
     if ($cu1cak) {
       $ID = shift @a;
     } else {
@@ -454,14 +453,14 @@ sub renderCSV {
   my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded");
 
   ### Header output
-  my @line;
+  my @line = ();
   push @line, "MasterKey" if ($k1c);
   push @line, @colIDs;
   $out .= &generate_csvline(@line);
   
   # line per line
   foreach my $rowIDStr (@rowIDs) {
-    my @line;
+    my @line = ();
     push @line, $rowIDStr if ($k1c);
     foreach my $colIDStr (@colIDs) {
       push @line, $self->{data}{$rowIDStr."-".$colIDStr};

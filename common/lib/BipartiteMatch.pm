@@ -150,7 +150,7 @@ sub _get_known_key_in_hash {
 sub get_mapped_objects {
   my ($self) = @_;
 
-  my @out;
+  my @out = ();
 
   my @mapped = $self->get_mapped_ids();
   return(@out) if (($self->error()) || (scalar @mapped == 0));
@@ -158,7 +158,7 @@ sub get_mapped_objects {
   my %sysObj = %{$self->{sysObj}};
   my %refObj = %{$self->{refObj}};
 
-  my @tmp;
+  my @tmp = ();
   # mapped is the only two dimensional array
   for (my $i = 0; $i < scalar @mapped; $i++) {
     my ($sys_id, $ref_id) = @{$mapped[$i]};
@@ -182,7 +182,7 @@ sub get_mapped_objects {
 sub _get_XXX_objects {
   my ($self, $xxx, %inhash) = @_;
 
-  my @out;
+  my @out = ();
 
   my @xxxs = $self->_get_XXX_ids($xxx);
   return(@out) if (($self->error()) || (scalar @xxxs == 0));
@@ -241,7 +241,7 @@ sub _set_rev_hash {
   my %tmp = $self->_get_XXX_hash($hname);
   return(undef) if ($self->error());
 
-  my %rev_tmp;
+  my %rev_tmp = ();
   foreach my $ref_id (keys %tmp) {
     foreach my $sys_id (keys %{$tmp{$ref_id}}) {
       $rev_tmp{$sys_id}{$ref_id} = $tmp{$ref_id}{$sys_id};
@@ -291,7 +291,7 @@ sub get_jointvalues_ref_defined_list {
     return(undef);
   }
 
-  my @res;
+  my @res = ();
   foreach my $sys_id (keys %{$jv{$ref_id}}) {
     my $v = $self->is_jointvalues_refsys_defined($ref_id, $sys_id);
     return(undef) if ($self->error());
@@ -319,7 +319,7 @@ sub get_jointvalues_sys_defined_list {
     return(undef);
   }
 
-  my @res;
+  my @res = ();
   foreach my $ref_id (keys %{$rev_jv{$sys_id}}) {
     my $v = $self->is_jointvalues_refsys_defined($ref_id, $sys_id);
     return(undef) if ($self->error());
@@ -334,7 +334,7 @@ sub get_jointvalues_sys_defined_list {
 sub get_sys_falsealarmvalues {
   my ($self, $sys_id) = @_;
 
-  my %fav= $self->_get_XXX_hash("false_alarm_values");
+  my %fav = $self->_get_XXX_hash("false_alarm_values");
   return(undef) if ($self->error());
 
   if (! exists $fav{$sys_id}) {
@@ -350,7 +350,7 @@ sub get_sys_falsealarmvalues {
 sub get_ref_misseddetectvalues {
   my ($self, $ref_id) = @_;
 
-  my %mdv= $self->_get_XXX_hash("missed_detect_values");
+  my %mdv = $self->_get_XXX_hash("missed_detect_values");
   return(undef) if ($self->error());
 
   if (! exists $mdv{$ref_id}) {
@@ -448,7 +448,7 @@ sub compute {
   my %refObj = %{$self->{refObj}};
 
   ##### Compute joint values
-  my %joint_values;
+  my %joint_values = ();
   while (my ($ref_id, $ref_obj) = each %refObj) {
     while (my ($sys_id, $sys_obj) = each %sysObj) {
       my ($err, $res) = &{$self->{KernelFunction}}($ref_obj, $sys_obj, @kp);
@@ -462,7 +462,7 @@ sub compute {
   $self->{joint_values} = \%joint_values;
 
   ##### Compute false alarms values
-  my %fa_values;
+  my %fa_values = ();
   while (my ($sys_id, $sys_obj) = each %sysObj) {
     my ($err, $res) = &{$self->{KernelFunction}}(undef, $sys_obj, @kp);
     if (! MMisc::is_blank($err)) {
@@ -474,7 +474,7 @@ sub compute {
   $self->{false_alarm_values} = \%fa_values;
 
   ##### Compute missed detect values
-  my %md_values;
+  my %md_values = ();
   while (my ($ref_id, $ref_obj) = each %refObj) {
     my ($err, $res) = &{$self->{KernelFunction}}($ref_obj, undef, @kp);
     if (! MMisc::is_blank($err)) {
@@ -494,18 +494,18 @@ sub compute {
   $self->{mapping} = \%map;
 
   # Set MappedRecord
-  my %ref_ids;
+  my %ref_ids = ();
   foreach my $ref_id (keys %refObj) {
     $ref_ids{$ref_id}++;
   }
-  my %sys_ids;
+  my %sys_ids = ();
   foreach my $sys_id (keys %sysObj) {
     $sys_ids{$sys_id}++;
   }
   # 'mapped'
-  my @mapped;
-  my @unmapped_ref;
-  my @unmapped_sys;
+  my @mapped = ();
+  my @unmapped_ref = ();
+  my @unmapped_sys = ();
   while (my ($ref_id, $sys_id) = each %map) {
     push @mapped, [ ($sys_id, $ref_id) ];
     delete $sys_ids{$sys_id};
@@ -578,8 +578,8 @@ sub _clique_ref2sys {
 sub _map_ref_to_sys_clique_cohorts {
   my ($rjv, $rfa, $rmd) = @_;
 
-  my %td_ref;
-  my %td_sys;
+  my %td_ref = ();
+  my %td_sys = ();
   foreach my $ref_id (keys %{$rjv}) { 
     $td_ref{$ref_id}++;
     foreach my $sys_id (keys %{$$rjv{$ref_id}}) {
@@ -589,8 +589,8 @@ sub _map_ref_to_sys_clique_cohorts {
   
   ###### Split into 'cliques'
   my $cid = 0;
-  my %c_ref;
-  my %c_sys;
+  my %c_ref = ();
+  my %c_sys = ();
   
   # Process all refs first
   foreach my $ref_id (keys %td_ref) {
@@ -605,27 +605,27 @@ sub _map_ref_to_sys_clique_cohorts {
   }
   
   # Now process clique per clique
-  my %map;
+  my %map = ();
   for (my $i = 0; $i < $cid; $i++) {
-    my @rl;
+    my @rl = ();
     @rl = keys %{$c_ref{$i}} if (exists $c_ref{$i});
-    my @sl;
+    my @sl = ();
     @sl = keys %{$c_sys{$i}} if (exists $c_sys{$i});
     
     # We can only map if there is at least one entry per array
     next if ((scalar @rl == 0) || (scalar @sl == 0));
 
-    my %tmp_jv;
+    my %tmp_jv = ();
     foreach my $ref_id (@rl) {
       foreach my $sys_id (@sl) {
         $tmp_jv{$ref_id}{$sys_id} = $$rjv{$ref_id}{$sys_id};
       }
     }
-    my %tmp_fa;
+    my %tmp_fa = ();
     foreach my $sys_id (@sl) {
       $tmp_fa{$sys_id} = $$rfa{$sys_id};
     }
-    my %tmp_md;
+    my %tmp_md = ();
     foreach my $ref_id (@rl) {
       $tmp_md{$ref_id} = $$rmd{$ref_id};
     }
@@ -657,7 +657,9 @@ sub _map_ref_to_sys_cohorts {
   my %md_values = %{$rmd};
 
   # Create ref_info, sys_info and reversed_values
-  my (%ref_info, %sys_info, %reversed_values);
+  my %ref_info = ();
+  my %sys_info = ();
+  my %reversed_values = ();
 
   foreach my $ref_id (keys %joint_values) {
     return("No missed detect value for ref ID \'$ref_id\'", ())
@@ -686,12 +688,16 @@ sub _map_ref_to_sys_cohorts {
   }
 
   # Group ref and sys IDs into "cohort sets" and map each set independently
-  my %map;
+  my %map = ();
   foreach my $ref (values %ref_info) {
     next if (exists $ref->{cohort});
 
     # Collect cohorts
-    my (@ref_cohorts, @sys_cohorts, %sys_map, %ref_map, @queue);
+    my @ref_cohorts = ();
+    my @sys_cohorts = ();
+    my %sys_map = ();
+    my %ref_map = ();
+    my @queue = ();
     @queue = ($ref->{id}, 1);
     $ref->{cohort} = 1;
     $ref->{mapped} = 1;
@@ -723,7 +729,7 @@ sub _map_ref_to_sys_cohorts {
     }
 
     # Map cohorts
-    my %costs;
+    my %costs = ();
     foreach my $ref_cohort (@ref_cohorts) {
       my ($ref_id, $md_value) = ($ref_cohort->{id}, $ref_cohort->{val});
       foreach my $sys_cohort (@sys_cohorts) {
@@ -769,7 +775,8 @@ sub _weighted_bipartite_graph_matching {
   if (scalar @keys == 1) {
     my $key = $keys[0];
     my %costs = %{$score{$key}};
-    my (%map, $imin);
+    my %map = ();
+    my $imin = undef;
     foreach my $i (keys %costs) {
       $imin = $i if ((not defined $imin) or ($costs{$imin} > $costs{$i}));
     }
@@ -780,15 +787,28 @@ sub _weighted_bipartite_graph_matching {
   # More than 1 element
   my $INF = 1E30;
   my $required_precision = 1E-12;
-  my (@row_mate, @col_mate, @row_dec, @col_inc);
-  my (@parent_row, @unchosen_row, @slack_row, @slack);
-  my ($k, $l, $row, $col, @col_min, $cost, %hcost);
+  my @row_mate = ();
+  my @col_mate = ();
+  my @row_dec = ();
+  my @col_inc = ();
+  my @parent_row = ();
+  my @unchosen_row = ();
+  my @slack_row = ();
+  my @slack = ();
+  my $k = 0;
+  my $l = 0;
+  my $row = 0;
+  my $col = 0;
+  my @col_min = ();
+  my $cost = 0;
+  my %hcost = ();
   my $t = 0;
   
   my @rows = keys %score;
   my $md = "md";
   $md .= "0" if (exists $score{$md}); # ?
-  my (@cols, %hcols);
+  my @cols = ();
+  my %hcols = (); 
   my $min_score = $INF;
   foreach $row (@rows) {
     foreach $col (keys %{$score{$row}}) {
@@ -863,7 +883,7 @@ sub _weighted_bipartite_graph_matching {
   
   goto CHECK_RESULT if ($t == 0);
   
-  my $s;
+  my $s = 0;
   my $unmatched = $t;
   # start stages to get the rest of the matching
   while (1) {
@@ -984,7 +1004,7 @@ sub _weighted_bipartite_graph_matching {
     }
   }
   
-  my %map;
+  my %map = ();
   for ($l = 0; $l < scalar @row_mate; $l++) {
     $k = $row_mate[$l];
     $row = ($k < $nrows) ? $rows[$k] : undef;
@@ -1059,13 +1079,13 @@ sub _unit_test_kernel {
 sub unit_test {
   my $i = 10;
 
-  my %sys_bpm;
-  my %ref_bpm;
+  my %sys_bpm = ();
+  my %ref_bpm = ();
   for (my $j = 0; $j < $i; $j++) {
     $sys_bpm{$j} = $j;
     $ref_bpm{$j} = $j;
   }
-  my @kp;
+  my @kp = ();
 
   my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&_unit_test_kernel, \@kp);
   die("While creating the Bipartite Matching object (" . $bpm->get_errormsg() . ")")
