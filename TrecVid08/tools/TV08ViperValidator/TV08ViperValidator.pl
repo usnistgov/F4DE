@@ -76,6 +76,14 @@ unless (eval "use TrecVid08ViperFile; 1")
     $have_everything = 0;
   }
 
+# TrecVid08HelperFunctions (part of this tool)
+unless (eval "use TrecVid08HelperFunctions; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1")
   {
@@ -116,15 +124,17 @@ $xsdpath = "$f4bv/data"
   if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
 my $writeback = -1;
 my $xmlbasefile = -1;
-my @asked_events;
+my @asked_events = ();
 my $autolt = 0;
 my $show = 0;
 my $remse = 0;
+my $crop = "";
+my $fps = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T   X        gh   lm  p     vwx  
+# USed:                    T   X    c   gh   lm  p r   vwx  
 
-my %opt;
+my %opt = ();
 my $dbgftmp = "";
 GetOptions
   (
@@ -140,6 +150,8 @@ GetOptions
    'limitto=s'       => \@asked_events,
    'pruneEvents'     => \$autolt,
    'removeSubEventtypes' => \$remse,
+   'crop=s'          => \$crop,
+   'fps=s'           => \$fps,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -195,9 +207,25 @@ if (($writeback != -1) && ($writeback ne "")) {
   $writeback .= "/" if ($writeback !~ m%\/$%); # Add a trailing slash
 }
 
+my ($crop_beg, $crop_end) = (0, 0);
+if (! MMisc::is_blank($crop)) {
+  error_quit("\'crop\' can only be used in conjunction with \'write\'") if ($writeback == -1);
+
+  my @rest = split(m%\:%, $crop);
+  error_quit("Too many parameters to crop, expected \'beg:end\'") if (scalar @rest > 2);
+  error_quit("Not enough parameters to crop, expected \'beg:end\'") if (scalar @rest < 2);
+
+  ($crop_beg, $crop_end) = @rest;
+  error_quit("\'crop\' beg must be positive and be at least 1") if ($crop_beg < 1);
+  error_quit("\'crop\' beg must be less than the end value") if ($crop_beg > $crop_end);
+
+  error_quit("\'fps\' must set in order to do any \'crop\'") if (! defined $fps);
+
+}
+
 ##########
 # Main processing
-my $tmp;
+my $tmp = "";
 my %all = ();
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
@@ -205,11 +233,16 @@ while ($tmp = shift @ARGV) {
   my ($ok, $object) = &load_file($isgtf, $tmp);
   next if (! $ok);
 
+  if (! MMisc::is_blank($crop)) {
+    (my $err, $object) = TrecVid08HelperFunctions::ViperFile_crop($object, $crop_beg, $crop_end);
+    error_quit("While cropping: $err\n") if (! MMisc::is_blank($err));
+  }
+
   if ($writeback != -1) {
     # Re-adapt @asked_events for each object if automatic limitto is set
     $object->unset_force_subtype() if ($remse);
     @asked_events = $object->list_used_full_events() if ($autolt);
-   my $txt = $object->reformat_xml(@asked_events);
+    my $txt = $object->reformat_xml(@asked_events);
     error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
       if ($object->error());
     my $fname = "";
@@ -272,6 +305,8 @@ sub load_file {
     if ( ($isgtf) && ( ! $object->set_as_gtf()) );
   error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
     if ( ! $object->set_file($tmp) );
+  error_quit("While setting \'fps\' ($fps) (" . $object->get_errormsg() . ")")
+    if ( (defined $fps) &&  ( ! $object->set_fps($fps) ) );
 
   # Validate
   if (! $object->validate()) {
@@ -295,7 +330,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory]] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--crop beg:end]] [--fps fps] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -307,6 +342,8 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --limitto       Only care about provided list of events
   --removeSubEventtypes  Useful when working with specialized Scorer outputs to remove specialized sub types
   --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
+  --crop          Will crop file content to only keep content that is found within the beg and end frames
+  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
   --version       Print version number and exit
   --help          Print this usage information and exit
@@ -422,6 +459,15 @@ B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well
 =head1 OPTIONS
 
 =over
+
+=item B<--crop> beg:end
+
+Will crop all input ViperFiles to the specified range. Only valid when used with the 'write' option.
+Note that cropping consist of trimming all seen events to the selected range and then shifting the file to start at 1 again.
+
+=item B<--fps> I<fps>
+
+Specify the default sample rate (in frames per second) of the Viper files.
 
 =item B<--gtf>
 
