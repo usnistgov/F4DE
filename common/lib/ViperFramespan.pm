@@ -170,7 +170,7 @@ sub _fs_check_value {
 sub _fs_make_uniques {
   my @a = @_;
 
-  my %tmp;
+  my %tmp = ();
   foreach my $key (@a) {
     $tmp{$key}++;
   }
@@ -203,7 +203,7 @@ sub _fs_reorder_value {
 sub _fs_shorten_value {
   my $fs = shift @_;
 
-  my ($b, $e, $errormsg);
+  my $errormsg = "";
 
   ($fs, $errormsg) = &_fs_reorder_value($fs);
   return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
@@ -219,12 +219,11 @@ sub _fs_shorten_value {
 
   # Get the first element
   my $entry = shift @ftodo;
-  ($errormsg, $b, $e) = &_fs_split_pair($entry);
+  ($errormsg, my $b, my $e) = &_fs_split_pair($entry);
   return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
 
-  my ($nb, $ne);
   foreach $entry (@ftodo) {
-    ($errormsg, $nb, $ne) = &_fs_split_pair($entry);
+    ($errormsg, my $nb, my $ne) = &_fs_split_pair($entry);
     return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
 
     if ($nb == $e) {            # ex: 1:2 2:6 -> 1:6
@@ -640,6 +639,31 @@ sub _get_overlap {
 sub get_overlap {
   my ($self, $other) = @_;
 
+  # Worry about the fps first
+  my $sfps = undef;
+  my $ofps = undef;
+  $sfps = $self->get_fps() if ($self->is_fps_set());
+  $ofps = $other->get_fps() if ($other->is_fps_set());
+  my $fps = undef;
+  if ((defined $sfps) && (defined $ofps)) {
+    if ($sfps != $ofps) {
+      $self->_set_errormsg("Can not process a \'get_ovlerap\' function for framespans with different fps");
+      return(undef);
+    }
+    $fps = $sfps;
+  } else {
+    # If one of the two entity has its fps set, copy it
+    # (we hope the caller knows to check comparables)
+    $fps = $sfps if (defined $sfps);
+    $fps = $ofps if (defined $ofps);
+  }
+
+  # Check error in the 'other'
+  if ($other->error()) {
+    $self->_set_errormsg("Can not \'get_overlap\' from bad \'other\' (" . $other->get_errormsg() . ")");
+    return(undef);
+  }
+
   # We only need to worry about overlap if there is even one possible
   return(undef) if (! $self->check_if_overlap($other));
   return(undef) if ($self->error());
@@ -651,7 +675,7 @@ sub get_overlap {
   my @spl = &_fs_split_line($sv);
   my @opl = &_fs_split_line($ov);
 
-  my @ov;
+  my @ov = ();
   foreach my $sp (@spl) {
     foreach my $op (@opl) {
       my $pair = &_get_overlap($sp, $op);
@@ -664,13 +688,17 @@ sub get_overlap {
 
   my $ovp = join(" ", @ov);
 
-  my $tmp = new ViperFramespan($ovp);
-  if ($tmp->error()) {
-    $self->_set_errormsg("Problem creating new ViperFramespan for overlap value (" . $tmp->get_errormsg() . ")");
+  my $nfs = new ViperFramespan($ovp);
+  if ($nfs->error()) {
+    $self->_set_errormsg("Problem creating new ViperFramespan for overlap value (" . $nfs->get_errormsg() . ")");
     return(undef);
   }
+  if (defined($fps) && (! $nfs->set_fps($fps))) {
+    $self->_set_errormsg("Failed to set new ViperFramespan fps '$fps' (" . $nfs->get_errormsg() . ")");
+    return(undef); 
+  }
 
-  return($tmp);
+  return($nfs);
 }
 
 ##########
@@ -713,7 +741,7 @@ sub is_within {
     return(-1);
   }
 
-  # is within: tolerate a difference of $tol
+  # is within: tolerate a difference of $tif
   return(1) if ( ($v_beg >= ($r_beg - $tif)) && ($v_end <= ($r_end + $tif)) );
 
   # is not within
