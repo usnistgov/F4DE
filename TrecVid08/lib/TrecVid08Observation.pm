@@ -37,11 +37,11 @@ if ($version =~ m/b$/) {
 
 my $versionid = "TrecVid08Observation.pm Version: $version";
 
-my @ok_events;
-my @full_ok_events;
-my @ok_subevents;
-my %hasharray_inline_attributes;
-my %hash_objects_attributes_types_dynamic;
+my @ok_events = ();
+my @full_ok_events = ();
+my @ok_subevents = ();
+my %hasharray_inline_attributes = ();
+my %hash_objects_attributes_types_dynamic = ();
 my $dummy_et = "Fake_Event-Merger_Dummy_Type";
 
 my @kernel_params_list = ("delta_t", "MinDec_s", "RangeDec_s", "E_t", "E_d"); # Order is important
@@ -421,7 +421,7 @@ sub set_fs_file {
     $self->_set_errormsg("Invalid \'fs_file\'. ");
     return(0);
   }
-  
+
   $self->{fs_file} = $fs_file;
   return(1);
 }
@@ -1423,7 +1423,7 @@ sub _shift_framespan_selected {
   return(0) if ($self->error());
   return(1) if (! $isset);
 
-  my %ohash;
+  my %ohash = ();
   my $key_fs = $self->key_attr_framespan();
   my $key_ct = $self->key_attr_content();
   foreach my $key (keys %chash) {
@@ -1453,7 +1453,10 @@ sub shift_framespan {
 
   return(0) if ($self->error());
 
-  return(0) if (!$self->is_validated());
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only shift framespan on validated Observations");
+    return(0);
+  }
 
   my $fs_fs = $self->get_framespan();
   return(0) if ($self->error());
@@ -1493,6 +1496,139 @@ sub shift_framespan {
 
   # Add a comment
   $self->addto_comment("Framespan was shifted by $val");
+  return(0) if ($self->error());
+
+  return(1);
+}
+
+############################################################ crop functions
+
+sub _crop_framespan_selected {
+  my ($self, $choice, $fs_ov) = @_;
+
+  my @ok_choices = &_get_set_selected_ok_choices();
+  if (! grep(m%^$choice$%, @ok_choices)) {
+    $self->_set_errormsg("In \'set_selected\', choice ($choice) is not recognized. ");
+    return(0);
+  }
+
+  # We only need to worry about dynamic elements
+  my $isd = $hash_objects_attributes_types_dynamic{$choice};
+  return(1) if (! $isd);
+
+  # No ViperFramespan object is embedded in the structure itself (other than the key)
+  # therefore we can simply perform a prunning
+  # and regenerate the primary key from the shifted value
+  my ($isset, %chash) = $self->get_selected($choice);
+  return(0) if ($self->error());
+  return(1) if (! $isset);
+
+  my %ohash = ();
+  my $key_fs = $self->key_attr_framespan();
+  my $key_ct = $self->key_attr_content();
+  my $doneany = 0;
+  foreach my $key (keys %chash) {
+    my $fs_tmp = $chash{$key}{$key_fs};
+    my $ct = $chash{$key}{$key_ct};
+
+    my $iw = $fs_tmp->is_within($fs_ov);
+    if ($fs_tmp->error()) {
+      $self->_set_errormsg("Problem while checking \'is_within\' for the framespan of $key (" . $fs_tmp->get_errormsg() . "). ");
+      return(0);
+    }
+
+    # We only want to keep framespans that are within
+    next if (! $iw);
+
+    my $txt_fs = $fs_tmp->get_value();
+
+    $ohash{$txt_fs}{$key_fs} = $fs_tmp;
+    $ohash{$txt_fs}{$key_ct} = $ct;
+    $doneany++;
+  }
+
+  # If all elements were cropped, simply return
+  return(1) if ($doneany == 0);
+
+  $self->set_selected($choice, %ohash);
+  return(1);
+}
+
+#####
+
+sub crop_to_fs {
+  my ($self, $lfs) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only crop framespan on validated Observations");
+    return(0);
+  }
+
+  # Obtain a copy of the requested framespan in order not to use
+  # the same object in future operations
+  my $fs = $lfs->clone();
+  if ($lfs->error()) {
+    $self->_set_errormsg("Problem cloning Framespan (" . $lfs->get_errormsg() . "(");
+    return(0);
+  }
+
+  my $fs_ov = $self->get_framespan_overlap_from_fs($fs);
+  return(0) if ($self->error());
+
+  # If there is no overlap possible, simply return '0' but do not set an error
+  return(0) if (! defined $fs_ov);
+  
+  ## From here on, we know there is an overlap possible
+  my $fs_fs = $self->get_framespan();
+  return(0) if ($self->error());
+  my $beg_range = $fs_fs->get_value();
+  if ($fs_fs->error()) {
+    $self->_set_errormsg("Prolem obtaining the Observation framespan value (" . $fs_fs . ")");
+    return(0);
+  }
+  
+  # First, set the file framespan to the requested range
+  $self->set_fs_file($fs);
+  return(0) if ($self->error());
+  
+  # Then, set the observation framespan to the overlap range
+  $self->set_framespan($fs_ov);
+  return(0) if ($self->error());
+
+  # 'ofi' NUMFRAMES
+  my $key = TrecVid08ViperFile::get_Numframes_fileattrkey();
+  my %ofi = $self->get_ofi();
+  if (! exists $ofi{$key}) {
+    $self->_set_errormsg("WEIRD: Problem accessing the ofi \'$key\' information. ");
+    return(0);
+  }
+  my $end = $fs->get_end_fs();
+  if ($fs->error()) {
+    $self->_set_errormsg("Problem obtaining the crop framespan's end value (" . $fs->get_errormsg() . ")");
+    return(0);
+  }
+  $ofi{$key} = $end;
+  $self->set_ofi(%ofi);
+
+  # crop other attributes
+  my @ok_choices = &_get_set_selected_ok_choices();
+  foreach my $choice (@ok_choices) {
+    $self->_crop_framespan_selected($choice, $fs_ov);
+    return(0) if ($self->error());
+  }
+
+  # Add a comment
+  my $fs_fs = $self->get_framespan();
+  return(0) if ($self->error());
+  my $end_range = $fs_fs->get_value();
+  if ($fs_fs->error()) {
+    $self->_set_errormsg("Prolem obtaining the Observation framespan value (" . $fs_fs . ")");
+    return(0);
+  }
+
+  $self->addto_comment("Cropped from [$beg_range] to [$end_range]");
   return(0) if ($self->error());
 
   return(1);
@@ -1904,7 +2040,7 @@ sub get_ofi_sourcetype {
 sub get_ofi_VF_empty_order {
   my ($self) = @_;
 
-  my @out;
+  my @out = ();
   push @out, $self->get_ofi_numframes();
   push @out, $self->get_ofi_framerate();
   push @out, $self->get_ofi_sourcetype();
