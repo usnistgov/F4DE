@@ -99,8 +99,8 @@ my $ecfVersionAttr = "";
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # USed:     E                       c ef h             v     #
 
-my %opt;
-my @leftover;
+my %opt = ();
+my @leftover = ();
 GetOptions
   (
    \%opt,
@@ -127,7 +127,7 @@ my $step = 1;
 print "\n\n** STEP ", $step++, ": Read Input CSV files\n";
 my @ecfh = ("SourceFile Filename", "Framespan", "FPS"); # Order is important
 
-my %all;
+my %all = ();
 foreach my $csv (@ARGV) {
   open FILE, "<$csv"
     or error_quit("ERROR: Could not open input CSV file ($csv): $!\n");
@@ -148,7 +148,7 @@ foreach my $csv (@ARGV) {
 print "\n\n** STEP ", $step++, ": Geneating report\n";
 
 my @chead = ("Sourcefile Filename", "Beg ts", "End ts", "Comment"); # Order is important
-my %csvh;
+my %csvh = ();
 foreach my $fn (sort keys %all) {
   my $fs_fs = $all{$fn};
 
@@ -279,7 +279,7 @@ sub split_csv_line {
   my $line = shift @_;
 
   my @elts = split(m%,%, $line);
-  my @out;
+  my @out = ();
   foreach my $elt (@elts) {
     $elt =~ s%^\s+%%;
     $elt =~ s%\s+$%%;
@@ -314,7 +314,7 @@ sub check_csv_header {
   error_quit("There are not enought columns (", scalar @elts . ") in the CSV file to contained the required keys (" . join(",". @ecfh) . ")")
     if (scalar @elts < scalar @ecfh);
 
-  my %pos;
+  my %pos = ();
   foreach my $key (@ecfh) {
     my $val = &find_key($key, @elts);
     if ($val == -1) {
@@ -409,7 +409,7 @@ sub get_csvline {
 
   my @keys = @{$rord};
 
-  my @todo;
+  my @todo = ();
   foreach my $key (@keys) {
     error_quit("Problem accessing key ($key) from observation hash")
       if (! exists $ohash{$uid}{$key});

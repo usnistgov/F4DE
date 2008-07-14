@@ -164,9 +164,9 @@ my $discardErr = 0;
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 # USed:                    T        cd fgh             v x  
 
-my %opt;
+my %opt = ();
 my $dbgftmp = "";
-my @leftover;
+my @leftover = ();
 GetOptions
   (
    \%opt,
@@ -199,11 +199,11 @@ if ($xsdpath ne "") {
 
 ##########
 # Main processing
-my $tmp;
+my $tmp = "";
 my %all = ();
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
-my @all_observations;
+my @all_observations = ();
 my %fileStatsDB = ();
 my %camDurStatsDB = ();
 while ($tmp = shift @ARGV) {
@@ -239,7 +239,7 @@ error_quit("No files ok, can not continue, aborting\n")
   if ($ndone == 0);
 
 # Re-represent all observations into a flat format
-my %ohash;
+my %ohash = ();
 my %statsDB = ();
 my %overallStatsDB = ();
 my %camStatsDB = ();
@@ -311,10 +311,8 @@ if ($docsv != -1) {
   MMisc::writeTo($docsv, "", 1, 0, $txt);
 }
 
-my $sat;
-
 print "\n\n\n                               Event observation duration statsitics by file\n\n";
-$sat = new SimpleAutoTable();
+my $sat = new SimpleAutoTable();
 my $sumDur = 0;
 foreach my $fn (keys %fileStatsDB) {
   my $dur = $fileStatsDB{$fn}->duration_ts();
@@ -530,7 +528,7 @@ sub get_csvline {
 
   my @keys = @{$rord};
 
-  my @todo;
+  my @todo = ();
   foreach my $key (@keys) {
     error_quit("Problem accessing key ($key) from observation hash")
       if (! exists $ohash{$uid}{$key});

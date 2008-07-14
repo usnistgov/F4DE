@@ -111,11 +111,11 @@ my $ecfdir = "";
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # USed:                               e  h   lm o   s  v     #
 
-my @fileslist;
+my @fileslist = ();
 sub setfileslist {
   push @fileslist, @_;
 }
-my %opt;
+my %opt = ();
 GetOptions
   (
    \%opt,
@@ -143,7 +143,7 @@ my $step = 1;
 ########## Generated XML files list (per site / camera / date / site / excerpt)
 print "\n\n** STEP ", $step++, ": Generate XML files list (per camera)\n";
 
-my %tomerge;
+my %tomerge = ();
 my $camkey = "_CAM";
 my $ntodo = scalar @fileslist;
 my $ndone = 0;
@@ -288,7 +288,7 @@ sub call_merger {
   my $key = shift @_;
   my @files = @_;
 
-  my @addcmdline;
+  my @addcmdline = ();
   push @addcmdline, ("--ForceFilename", "$key");
   push @addcmdline, ("--overlaplistfile" , "$ovdir/$key.overlap.log") if ($ovdir ne "");
   push @addcmdline, ("--ecfhelperfile", "$ecfdir/$key.ecf.csv") if ($ecfdir ne "");

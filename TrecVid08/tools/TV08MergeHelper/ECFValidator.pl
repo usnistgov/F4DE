@@ -118,7 +118,7 @@ my $fps = 0;
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 # USed:                    T           f h             v x  
 
-my %opt;
+my %opt = ();
 my $dbgftmp = "";
 GetOptions
   (
@@ -149,7 +149,7 @@ if ($xsdpath ne "") {
 
 ##########
 # Main processing
-my $tmp;
+my $tmp = "";
 my %all = ();
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
