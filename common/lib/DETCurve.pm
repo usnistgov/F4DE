@@ -381,7 +381,7 @@ sub readFromFile
     }
     close FILE;
     system("$gzipPROG -9 -f $file > /dev/null") if( $compressed );
-    my $VAR1 = "";
+    my $VAR1;
     eval $str;
     $VAR1;
   }
