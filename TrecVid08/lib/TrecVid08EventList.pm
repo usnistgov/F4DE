@@ -40,10 +40,10 @@ if ($version =~ m/b$/) {
 
 my $versionid = "TrecVid08EventList.pm Version: $version";
 
-my @ok_events;
-my @kernel_params_list;
-my @full_ok_events;
-my $obs_dummy_key;
+my @ok_events = ();
+my @kernel_params_list = ();
+my @full_ok_events = ();
+my $obs_dummy_key = "";
 
 my $obs_added = 1;
 my $obs_SPadd = 101;
@@ -479,7 +479,7 @@ sub _add_first_observation {
   $self->set_isgtf($isgtf);
   return(0) if ($self->error());
 
-  my %ihash;                    # Empty hash
+  my %ihash = (); # Empty hash
   return($self->_add_observation_core($obs, %ihash));
 }
 
@@ -566,7 +566,7 @@ sub get_kernel_params {
     return(0);
   }
 
-  my @out;
+  my @out = ();
   foreach my $key (@kernel_params_list) {
     my $val = $self->_get_selected_param($key);
     if ($self->error()) {
@@ -650,7 +650,7 @@ sub get_events_list {     # Remove $obs_dummy_key if it is in the list
   my @in = $self->_get_events_list_core($filename);
   return() if ($self->error());
 
-  my @out;
+  my @out = ();
   foreach my $key (@in) {
     next if ($key eq $obs_dummy_key);
     push @out, $key;
@@ -753,19 +753,19 @@ sub comparable_filenames {
   }
 
   # Convert the list to hash for easy comparison
-  my %hsl;
+  my %hsl = ();
   foreach my $f (@sl) {
     $hsl{$f}++;
   }
-  my %hol;
+  my %hol = ();
   foreach my $f (@ol) {
     $hol{$f}++;
   }
 
   # Compare
-  my @common;
-  my @only_in_sl;
-  my @only_in_ol;
+  my @common = ();
+  my @only_in_sl = ();
+  my @only_in_ol = ();
   foreach my $key (keys %hsl) {
     if (exists $hol{$key}) {
       push @common, $key;
@@ -824,7 +824,7 @@ sub _compute_Min_Range_Dec_s {
 sub _get_global_DetectionScore_minMax {
   my ($self) = @_;
 
-  my @all_ds;
+  my @all_ds = ();
 
   my @filelist = $self->get_filenames_list();
   return() if ($self->error());
@@ -982,9 +982,6 @@ sub _is_obs_fs_within_ECF_fs {
     $self->_set_errormsg("Problem obtaining the Observation's Framespan's ts middlepoint (" . $fs_obs->get_errormsg() .")");
     return(0);
   }
-
-  #  my $uid = $obs->get_unique_id();
-  #  print "[$uid]\n $mp ";
 
   foreach my $fs_fs (@fs_ecfs) {
     my ($bts, $ets) = $fs_fs->get_beg_end_ts();

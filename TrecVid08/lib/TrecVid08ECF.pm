@@ -335,7 +335,7 @@ sub validate {
     return(0);
   }
   
-  my $res;
+  my $res = "";
   # Initial Cleanups, Checks and Global Values Extraction
   ($res, $bigstring) = $self->_data_cleanup_globalextract($bigstring);
   if (! MMisc::is_blank($res)) {
@@ -430,7 +430,7 @@ sub _excerpt_list_processor {
 sub _excerpt_processor {
   my ($self, $string) = @_;
 
-  my %tmp;
+  my %tmp = ();
 
   # Remove the excerpt header/trailer tags
   my $name = "excerpt";
@@ -451,17 +451,17 @@ sub _excerpt_processor {
   }
   #  print "[*]", Dumper(\%tmp), "\n";
 
-  my %fhash;
+  my %fhash = ();
   %fhash = $self->_get_fhash() if ($self->_is_fhash_set());
   
-  my @tmpa;
+  my @tmpa = ();
   foreach my $tag (@required_excerpt_tags) {
     push @tmpa, $tmp{$tag};
   }
   my ($fn, $beg_ts, $duration_ts) = @tmpa;
   my $end_ts = $beg_ts + $duration_ts;
 
-  my @tmpa;
+  my @tmpa = ();
   foreach my $tag (@optional_excerpt_tags) {
     if (! exists $tmp{$tag}) {
       push @tmpa, $default_error_value;
@@ -759,7 +759,7 @@ sub is_filename_in {
 sub get_file_ViperFramespans {
   my ($self, $fn) = @_;
 
-  my @res;
+  my @res = ();
 
   return(@res) if (! $self->is_filename_in($fn));
 
