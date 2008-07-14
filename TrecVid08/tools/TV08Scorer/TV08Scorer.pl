@@ -200,7 +200,7 @@ my $xmllint = MMisc::get_env_val($xmllint_env, "");
 my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../data");
 $xsdpath = "$f4bv/data" 
   if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
-my $fps = -1;
+my $fps = undef;
 my $gtfs = 0;
 my $delta_t = undef;
 my $ecffile = "";
@@ -218,9 +218,9 @@ my $autolt = 0;
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 # Used:    DEFG       O   ST     Za  cdefgh   mnop  st vwx  
 
-my %opt;
+my %opt = ();
 my $dbgftmp = "";
-my @leftover;
+my @leftover = ();
 GetOptions
   (
    \%opt,
@@ -261,7 +261,7 @@ if ($opt{'man'}) {
 
 ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
-error_quit("\'fps\' must set in order to do any scoring work") if ($fps == -1);
+error_quit("\'fps\' must set in order to do any scoring work") if (! defined $fps);
 error_quit("\'delta_t\' must set in order to do any scoring work") if (! defined $delta_t);
 error_quit("\'duration\' must be set unless \'ecf'\ is used") 
   if (($duration == 0) && (MMisc::is_blank($ecffile)));
@@ -363,15 +363,15 @@ my @kp = $sysEL->get_kernel_params();
 error_quit("Error while obtaining the EventList kernel function parameters (" . $sysEL->get_errormsg() . ")")
   if ($sysEL->error());
 
-my %all_bpm;
+my %all_bpm = ();
 my %metrics_params = ( TOTALDURATION => $duration ) ;
-my @all_events;
+my @all_events = ();
 my $key_allevents= "AllEvents";
 push @all_events, $key_allevents;
 push @all_events, @ok_events;
-my %all_trials;
-my %all_metric;
-my %trials_c;
+my %all_trials = ();
+my %all_metric = ();
+my %trials_c = ();
 foreach my $event (@all_events) {
   my $trial = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
   $all_trials{$event} = $trial;
@@ -379,7 +379,7 @@ foreach my $event (@all_events) {
 }
 my $gtrial = $all_trials{$key_allevents};
 
-my %xmlwriteback;
+my %xmlwriteback = ();
 &do_alignment(@common, @only_in_sys, @only_in_ref);
 
 if ($trials_c{$key_allevents} == 0) {
@@ -400,6 +400,7 @@ my $detSet = new DETCurveSet($sysTitle);
   
 print " (only printing seen events)\n\n";
 foreach my $event (@all_events) {
+  next if (! exists $trials_c{$event});
   next if ($trials_c{$event} == 0);
   next if ($event eq $key_allevents);
   my $trials = $all_trials{$event};
@@ -413,7 +414,7 @@ foreach my $event (@all_events) {
 }
 
 MMisc::writeTo($outputRootFile, ".scores.txt", 1, 0, 
-               $detSet->renderAsTxt($outputRootFile.".det", $doDC, 1, 
+               $detSet->renderAsTxt($outputRootFile . ".det", $doDC, 1, 
                                     { (xScale => "log", Ymin => "0.00001", Ymax => "90", Xmin => "0.00001", Xmax => "100", 
                                        gnuplotPROG => $gnuplotPROG, BuildPNG => ($noPNG ? 0 : 1)) }));
 
@@ -423,7 +424,7 @@ if (defined $writexml) {
 
   foreach my $key (keys %xmlwriteback) {
     my $vf = $xmlwriteback{$key};
-    my $txt;
+    my $txt = "";
     if ($autolt) {
       my @used_events = $vf->list_used_full_events();
       $txt = $vf->reformat_xml(@used_events);
@@ -523,8 +524,8 @@ sub get_sys_ref_filelist {
   @args = reverse @args;
   @lo = reverse @lo;
 
-  my @ref;
-  my @sys;
+  my @ref = ();
+  my @sys = ();
   while (my $l = shift @lo) {
     if ($l eq $args[0]) {
       push @ref, $l;
@@ -558,7 +559,7 @@ sub valerr {
 sub load_preprocessing {
   my ($isgtf, @filelist) = @_;
 
-  my $tmp;
+  my $tmp = "";
   my %all = ();
   my $ntodo = scalar @filelist;
   my $ndone = 0;
@@ -689,25 +690,10 @@ sub generate_EventList {
 
 ########################################
 
-sub uniquer {
-  my @all = @_;
-
-  my %it;
-  foreach my $e (@all) {
-    $it{$e}++;
-  }
-
-  my @u = keys %it;
-
-  return(@u);
-}
-
-####################
-
 sub Obs_array_to_hash {
   my @all = @_;
 
-  my %ohash;
+  my %ohash = ();
 
   foreach my $o (@all) {
     my $key = $o->get_unique_id();
@@ -774,7 +760,7 @@ sub do_alignment {
     error_quit("While trying to obtain a list of REF events for file ($file) (" . $refEL->get_errormsg() . ")")
       if ($refEL->error());
 
-    my @listed_events = &uniquer(@sys_events, @ref_events);
+    my @listed_events = MMisc::make_array_of_unique_values(@sys_events, @ref_events);
 
     foreach my $evt (@listed_events) {
       my @sys_events_obs = ($sysEL->is_filename_in($file)) ? $sysEL->get_Observations_list($file, $evt) : ();
@@ -801,7 +787,7 @@ sub do_alignment {
       $bpm->_display("joint_values") if ($showi > 1);
       $bpm->_display("mapped", "unmapped_ref", "unmapped_sys") if ($showi);
 
-      my $lsat;
+      my $lsat = undef;
       if ($allAT) {
         $lsat = new SimpleAutoTable();
         error_quit("Error building alignment table: ".$lsat->get_errormsg()."\n")
@@ -1157,7 +1143,7 @@ sub _num {return ($a <=> $b);}
 sub make_trialID {
   my ($fn, $evt, $ref_obj, $sys_obj, $ksep) = @_;
 
-  my @ar;
+  my @ar = ();
 
   push @ar, &get_obj_fs_beg_end($ref_obj) if (defined $ref_obj);
   push @ar, &get_obj_fs_beg_end($sys_obj) if (defined $sys_obj);
