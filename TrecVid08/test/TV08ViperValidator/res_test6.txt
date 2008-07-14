@@ -1,0 +1,90 @@
+[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl ../../test/common/test1-1fa-sys.xml -w -p -c 1118:2000 -f 25
+[[RETURN CODE]] 0
+[[STDOUT]]
+../../test/common/test1-1fa-sys.xml: validates
+** XML re-Representation:
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="ObjectPut" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectGet" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="file:20050519-1503-Excerpt.mpg">
+      <!-- NUMFRAMES modified from 5121 to 883 (Cropped to [1118:2000], then shifted by -1117 to have the first frame start at 1) -->
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="883"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="ObjectPut" id="0" framespan="1:376">
+        <!-- Cropped from [938:1493] to [1118:1493]
+Framespan was shifted by -1117 -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="1:1" x="38" y="298" height="81" width="158"/>
+          <data:bbox framespan="2:2" x="98" y="56" height="138" width="187"/>
+          <data:bbox framespan="3:3" x="78" y="178" height="88" width="234"/>
+          <data:bbox framespan="4:4" x="32" y="281" height="81" width="195"/>
+          <data:bbox framespan="5:5" x="202" y="292" height="115" width="110"/>
+          <data:bbox framespan="6:6" x="163" y="216" height="52" width="123"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.45"/>
+        </attribute>
+        <attribute name="Point">
+          <data:point framespan="7:7" x="263" y="353"/>
+        </attribute>
+      </object>
+      <object name="ObjectGet" id="0" framespan="376:883">
+        <!-- Cropped from [1493:3327] to [1493:2000]
+Framespan was shifted by -1117 -->
+        <attribute name="BoundingBox">
+          <data:bbox framespan="2210:2210" x="126" y="337" height="101" width="138"/>
+        </attribute>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="0.78"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+All files processed (Validated: 1 | Total: 1)
+
+
+[[STDERR]]
+
