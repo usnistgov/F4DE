@@ -4,6 +4,9 @@ use strict;
 use MMisc;
 
 my $magicmode = "makecheckfiles"; # And the magic word is ...
+my $magicmode_comp = "makecompcheckfiles";
+my @magicmodes = ($magicmode, $magicmode_comp);
+my $mmc_add = "-comp";
 my $dev = "TV08TestCore default error value";
 my $lts = 10;                   # lines to show
 
@@ -12,7 +15,7 @@ my $lts = 10;                   # lines to show
 sub get_txt_last_Xlines {
   my ($txt, $X) = @_;
 
-  my @toshowa;
+  my @toshowa = ();
   my @a = split(m%\n%, $txt);
   my $e = scalar @a;
   my $b = (($e - $X) > 0) ? ($e - $X) : 0;
@@ -60,12 +63,21 @@ sub make_syscall {
 
 ##########
 
-sub _run_core {
-  my ($testname, $cmd, $cmp2resfile, $mode) = @_;
+sub _is_magic {
+  my ($mode) = @_;
 
-  my $ofile;
-  if ($mode eq $magicmode) {
+  return(grep(m%^$mode$%, @magicmodes));
+}
+
+#####
+
+sub _run_core {
+  my ($cmd, $cmp2resfile, $mode) = @_;
+
+  my $ofile = "";
+  if (&_is_magic($mode)) {
     $ofile = $cmp2resfile;
+    $ofile .= $mmc_add if ($mode eq $magicmode_comp);
   } else {
     $ofile = MMisc::get_tmpfilename();
   }
@@ -76,7 +88,7 @@ sub _run_core {
 
   return(0, $ofile, $tst) if ($retcode != 0);
 
-  return(1, $ofile, $tst) if ($mode eq $magicmode);
+  return(1, $ofile, $tst) if (&_is_magic($mode));
 
   my $runfile = &_get_filec($ofile);
   my $resfile = &_get_filec($cmp2resfile);
@@ -90,15 +102,50 @@ sub _run_core {
 }
 
 ##########
+
+sub print_name {
+  my ($name, $comment) = @_;
+
+  $name =~ s%(\d)% $1%;
   
+  print ucfirst($name);
+
+  print " $comment" if (! MMisc::is_blank($comment));
+  
+  print " : ";
+}
+
+#####
+
+sub check_skip {
+  my ($name) = @_;
+
+  my $skipfile = ".skip_" . lc($name);
+
+  return(1) if (-e $skipfile);
+
+  if ($skipfile =~ s%[a-z]$%%) {
+    return(1) if (-e $skipfile);
+  }
+
+  return(0);
+}
+
+#####
+
 sub run_simpletest {
-  my ($testname, $cmd, $cmp2resfile, $mode) = @_;
+  my ($testname, $subtype, $cmd, $cmp2resfile, $mode) = @_;
 
-  print "$testname: ";
+  &print_name($testname, $subtype);
 
-  my ($rv, $ofile, $toshow) = &_run_core(@_);
+  if (&check_skip($testname)) {
+    print "Skipped\n";
+    return(1);
+  }
 
-  if ($mode eq $magicmode) {
+  my ($rv, $ofile, $toshow) = &_run_core($cmd, $cmp2resfile, $mode);
+
+  if (&_is_magic($mode)) {
     print "makecheckfile ... ";
     if ($rv == 0) {
       print "##### failed ! ##### (see $ofile)\n";
@@ -111,7 +158,7 @@ sub run_simpletest {
   }
 
   if ($rv == 0) {
-    print " failed\n";
+    print "failed\n";
     return(0);
   }
 
@@ -160,12 +207,14 @@ sub _get_dfc {
 #####
 
 sub _mcfgetf {
+  my $mode = shift @_;
   my @vs = @_;
   
   foreach my $v (@vs) {
     my ($sf, $df) = &_split_fn($v);
     my $sfc = &_get_sfc($v);
     return(0) if ($sfc eq $dev);
+    $df .= $mmc_add if ($mode eq $magicmode_comp);
     die("TV08TestCore Internal Error\n")
       if (! MMisc::writeTo($df, "", 0, 0, $sfc));
   }
@@ -181,6 +230,7 @@ sub _cmp_sfc_dfc {
   foreach my $v (@vs) {
     my $sfc = &_get_sfc($v);
     return(0) if ($sfc eq $dev);
+
     my $dfc = &_get_dfc($v);
     return(0) if ($dfc eq $dev);
     
@@ -193,15 +243,20 @@ sub _cmp_sfc_dfc {
 #####
 
 sub run_complextest {
-  my ($testname, $cmd, $cmp2resfile, $mode, @sfiles) = @_;
+  my ($testname, $subtype, $cmd, $cmp2resfile, $mode, @sfiles) = @_;
 
-  print "$testname: ";
+  &print_name($testname, $subtype);
 
-  my ($rv, $ofile, $toshow) = &_run_core(@_);
+  if (&check_skip($testname)) {
+    print "Skipped\n";
+    return(1);
+  }
 
-  if ($mode eq $magicmode) {
+  my ($rv, $ofile, $toshow) = &_run_core($cmd, $cmp2resfile, $mode);
+
+  if (&_is_magic($mode)) {
     print "makecheckfile ... ";
-    if (($rv == 0) || (! &_mcfgetf(@sfiles))) {
+    if (($rv == 0) || (! &_mcfgetf($mode, @sfiles))) {
       print "##### failed ! ##### (see $ofile)\n";
       print "## Last $lts lines of stdout run:\n  ## $toshow\n";
       return(0);
@@ -211,8 +266,8 @@ sub run_complextest {
     return(1);
   }
 
-  if (($rv == 0) || (! &_cmp_sfc_dfc(@sfiles))) {
-    print " failed\n";
+  if ( ($rv == 0) || (! &_cmp_sfc_dfc(@sfiles)) ) {
+    print "failed\n";
     return(0);
   }
 
