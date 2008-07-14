@@ -12,23 +12,34 @@ print "** Running TV08ViperValidator tests:\n";
 
 my $totest = 0;
 my $testr = 0;
+my $tn = ""; # Test name
 
-$testr += &do_test1("Test 0 (Base XML Generation)", "-X", "res_test0.txt");
+$tn = "test0";
+$testr += &do_simple_test($tn, "(Base XML Generation)", "-X", "res_$tn.txt");
 
-$testr += &do_test1("Test 1 (Not a Viper File)", "TV08ViperValidator_tester.pl", "res_test1.txt");
+$tn = "test1";
+$testr += &do_simple_test($tn, "(Not a Viper File)", "TV08ViperValidator_tester.pl", "res_${tn}.txt");
 
-$testr += &do_test1("Test 2 (GTF files check)", "../../test/common/test1-gtf.xml ../../test/common/test2-gtf.xml -g -w", "res_test2.txt");
+$tn = "test2";
+$testr += &do_simple_test($tn, "(GTF files check)", "../../test/common/test1-gtf.xml ../../test/common/test2-gtf.xml -g -w", "res_$tn.txt");
 
-$testr += &do_test1("Test 3 (SYS file check)", "../../test/common/test1-1fa-sys.xml ../../test/common/test1-1md-sys.xml ../../test/common/test1-same-sys.xml ../../test/common/test2-1md_1fa-sys.xml ../../test/common/test2-same-sys.xml -w", "res_test3.txt");
+$tn = "test3";
+$testr += &do_simple_test($tn, "(SYS file check)", "../../test/common/test1-1fa-sys.xml ../../test/common/test1-1md-sys.xml ../../test/common/test1-same-sys.xml ../../test/common/test2-1md_1fa-sys.xml ../../test/common/test2-same-sys.xml -w", "res_$tn.txt");
 
-$testr += &do_test1("Test 4 (limitto check)", "../../test/common/test1-gtf.xml ../../test/common/test2-gtf.xml -g -w -l ObjectPut", "res_test4.txt");
+$tn = "test4";
+$testr += &do_simple_test($tn, "(limitto check)", "../../test/common/test1-gtf.xml ../../test/common/test2-gtf.xml -g -w -l ObjectPut", "res_$tn.txt");
 
-$testr += &do_test1("Test 5a (subEventtypes)", "../../test/common/test5-subEventtypes-sys.xml -w", "res_test5a.txt");
+$tn = "test5a";
+$testr += &do_simple_test($tn, "(subEventtypes)", "../../test/common/test5-subEventtypes-sys.xml -w", "res_$tn.txt");
 
-$testr += &do_test1("Test 5b (subEventtypes + pruneEvents)", "../../test/common/test5-subEventtypes-sys.xml -w -p", "res_test5b.txt");
+$tn = "test5b";
+$testr += &do_simple_test($tn, "(subEventtypes + pruneEvents)", "../../test/common/test5-subEventtypes-sys.xml -w -p", "res_$tn.txt");
 
-$testr += &do_test1("Test 5c (subEventtypes + pruneEvents + removeSubEventtypes)", "../../test/common/test5-subEventtypes-sys.xml -w -p -r", "res_test5c.txt");
+$tn = "test5c";
+$testr += &do_simple_test($tn, "(subEventtypes + pruneEvents + removeSubEventtypes)", "../../test/common/test5-subEventtypes-sys.xml -w -p -r", "res_$tn.txt");
 
+$tn = "test6";
+$testr += &do_simple_test($tn, "(crop)", "../../test/common/test1-1fa-sys.xml -w -p -c 1118:2000 -f 25", "res_$tn.txt");
 
 if ($testr == $totest) {
   ok_quit("All tests ok\n\n");
@@ -40,13 +51,13 @@ die("You should never see this :)");
 
 ##########
 
-sub do_test1 {
-  my ($testname, $args, $res) = @_;
+sub do_simple_test {
+  my ($testname, $subtype, $args, $res) = @_;
 
   my $command = "$validator $args";
   $totest++;
 
-  return(TV08TestCore::run_simpletest($testname, $command, $res, $mode));
+  return(TV08TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
 }
 
 #####

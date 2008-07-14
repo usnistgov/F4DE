@@ -3,6 +3,7 @@
 use strict;
 use TV08TestCore;
 
+
 my $scorer = shift @ARGV;
 error_quit("ERROR: Scorer ($scorer) empty or not an executable\n")
   if (($scorer eq "") || (! -f $scorer) || (! -x $scorer));
@@ -12,31 +13,37 @@ print "** Running TV08Scorer tests:\n";
 
 my $totest = 0;
 my $testr = 0;
+my $tn = "";
 
-$testr += &do_test("Test 1a (same)", "test1-gtf.xml", "test1-same-sys.xml", "-D 1000", "res-test1a.txt");
+$tn = "test1a";
+$testr += &do_simple_test($tn, "(same)", "test1-gtf.xml", "test1-same-sys.xml", "-D 1000", "res-$tn.txt");
 
-$testr += &do_test("Test 1b (1x False Alarm)",  "test1-gtf.xml", "test1-1fa-sys.xml", "-D 1000", "res-test1b.txt");
+$tn = "test1b";
+$testr += &do_simple_test($tn, "(1x False Alarm)",  "test1-gtf.xml", "test1-1fa-sys.xml", "-D 1000", "res-$tn.txt");
 
-$testr += &do_test("Test 1c (1x Missed Detect)",  "test1-gtf.xml", "test1-1md-sys.xml", "-D 1000", "res-test1c.txt");
+$tn = "test1c";
+$testr += &do_simple_test($tn, "(1x Missed Detect)",  "test1-gtf.xml", "test1-1md-sys.xml", "-D 1000", "res-$tn.txt");
 
-$testr += &do_test("Test 2a (same)",  "test2-gtf.xml", "test2-same-sys.xml", "-D 1000", "res-test2a.txt");
+$tn = "test2a";
+$testr += &do_simple_test($tn, "(same)",  "test2-gtf.xml", "test2-same-sys.xml", "-D 1000", "res-$tn.txt");
 
-$testr += &do_test("Test 2b (1x Missed Detect + 1x False Alarm)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000", "res-test2b.txt");
+$tn = "test2b";
+$testr += &do_simple_test($tn, "(1x Missed Detect + 1x False Alarm)", "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000", "res-$tn.txt");
 
-$testr += &do_test("Test 3a (ECF check 1)",  "test2-gtf.xml", "test2-same-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-test3a.txt");
+$tn = "test3a";
+$testr += &do_simple_test($tn, "(ECF check 1)",  "test2-gtf.xml", "test2-same-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-$tn.txt");
 
-$testr += &do_test("Test 3b (ECF check 2)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-test3b.txt");
+$tn = "test3b";
+$testr += &do_simple_test($tn, "(ECF check 2)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-$tn.txt");
 
-my $tn = "Test 4 (Big Test)";
-if (! -e ".skip_bigtest") {
-  $testr += &do_test("$tn",  "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG" , "res-test4-BigTest.txt");
-} else {
-  print "$tn: Skipped\n";
-}
+$tn = "test4";
+$testr += &do_simple_test($tn, "(Big Test)", "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG" , "res-$tn-BigTest.txt");
 
-$testr += &do_test("Test 5a (writexml)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w", "res-test5a.txt");
+$tn = "test5a";
+$testr += &do_simple_test($tn, "(writexml)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w", "res-$tn.txt");
 
-$testr += &do_test("Test 5b (writexml + pruneEvents)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w -p", "res-test5b.txt");
+$tn = "test5b";
+$testr += &do_simple_test($tn, "(writexml + pruneEvents)", "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w -p", "res-$tn.txt");
 
 if ($testr == $totest) {
   ok_quit("All test ok\n\n");
@@ -48,15 +55,15 @@ die("You should never see this :)");
 
 ##########
 
-sub do_test {
-  my ($testname, $rf, $sf, $ao, $res) = @_;
+sub do_simple_test {
+  my ($testname, $subtype, $rf, $sf, $ao, $res) = @_;
   my $frf = "../common/$rf";
   my $fsf = "../common/$sf";
 
   my $command = "$scorer -a -f 25 -d 1 $fsf -g $frf -s -o $ao";
   $totest++;
 
-  return(TV08TestCore::run_simpletest($testname, $command, $res, $mode));
+  return(TV08TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
 }
 
 #####
