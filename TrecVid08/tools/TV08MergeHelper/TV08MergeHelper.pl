@@ -126,7 +126,7 @@ my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../data");
 $xsdpath = "$f4bv/data" 
   if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
 my $writetodir = "";
-my $fps = -1;
+my $fps = undef;
 my $forceFilename = "";
 my $olfile = undef;
 my $show = 0;
@@ -139,7 +139,7 @@ my $ovoxml = 0;
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 # Used:      F        O   ST   X      efgh    m op  s  vwx  
 
-my %opt;
+my %opt = ();
 my $dbgftmp = "";
 GetOptions
   (
@@ -173,11 +173,11 @@ if ($opt{'man'}) {
 
 error_quit("Not enough arguments\n$usage\n") if (scalar @ARGV == 0);
 
-error_quit("\'fps\' must set in order to do be able to use \'observations\' objects\n\n$usage") if ($fps == -1);
+error_quit("\'fps\' must set in order to do be able to use \'observations\' objects\n\n$usage") if (! defined $fps);
 
 error_quit("\'ForceFilename\' option selected but no value set\n$usage") if (($opt{'ForceFilename'}) && ($forceFilename eq ""));
 
-my %cov_todo;
+my %cov_todo = ();
 $cov_todo{$ov_modes[0]}++ if ($do_shift_ov);
 $cov_todo{$ov_modes[1]}++ if ($do_same_ov);
 my $checkOverlap = scalar keys %cov_todo;
@@ -209,7 +209,7 @@ my $step = 1;
 print "\n\n** STEP ", $step++, ": Load all files to be merged\n";
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
-my %all_vf;
+my %all_vf = ();
 foreach my $tmp (@ARGV) {
   my ($fname, $fsshift) = &get_fname_fsshift($tmp);
   my $key = &make_key_from_fname_fsshift($fname, $fsshift);
@@ -237,18 +237,18 @@ error_quit("No file loaded, aborting\n")
 ##########
 print "\n\n** STEP ", $step++, ": Process all observations\n";
 
-my %mergefiles;
-my %ovofiles;
-my $ovo_vf; # Global variable (will be used in the overlap detection code)
+my %mergefiles = ();
+my %ovofiles = ();
+my $ovo_vf = undef; # Global variable (will be used in the overlap detection code)
 my $EL = new TrecVid08EventList();
-my ($adone, $akept);
+my $adone = 0;
 error_quit("Problem creating the EventList (" . $EL->get_errormsg() . ")")
   if ($EL->error());
-my %overlap_list;
-my %overlap_ids;
+my %overlap_list = ();
+my %overlap_ids = ();
 
 my @ecfh = ("SourceFile Filename", "Framespan", "XGTF File", "FPS"); # Order is important
-my %ecfv;
+my %ecfv = ();
 
 foreach my $key (sort keys %all_vf) {
   my ($fname, $fsshift) = &get_fname_fsshift_from_key($key);
@@ -287,7 +287,7 @@ foreach my $key (sort keys %all_vf) {
   }
 
   # Get the observation list for this viper file
-  my @ao;
+  my @ao = ();
   # Starting with the dummy one
   my $dummy_obs = $object->get_dummy_observation();
   error_quit("While obtaining the dummy observation (" . $object->get_errormsg() .")")
@@ -431,7 +431,7 @@ foreach my $key (sort keys %mergefiles) {
     print $mf->_display();
   }
 
-  my $txt;
+  my $txt = "";
   if ($autolt) {
     my @used_events = $mf->list_used_full_events();
     $txt = $mf->reformat_xml(@used_events);
@@ -467,7 +467,7 @@ if ($ovoxml) {
       print $mf->_display();
     }
 
-    my $txt;
+    my $txt = "";
     if ($autolt) {
       my @used_events = $mf->list_used_full_events();
       $txt = $mf->reformat_xml(@used_events);
@@ -505,7 +505,7 @@ ok_quit("\nDone.\n") if (! defined $olfile);
 # Optional step only performed if overlap list is requested
 
 print "\n\n** STEP ", $step++, ": Overlap List\n";
-my %ovl;
+my %ovl = ();
 foreach my $key (keys %overlap_list) {
   $ovl{$key}++;
 }
@@ -639,7 +639,7 @@ sub get_fname_fsshift_from_key {
   error_quit("WEIRD: Left over in file key ? (" . join(" ", @rest) .")")
     if (scalar @rest > 0);
 
-  return($fname, 0 + $fsshift);
+  return($fname, sprintf("%d", $fsshift));
 }
 
 #####
@@ -712,7 +712,7 @@ sub _check_overlap_core {
   my $sffn = shift @_;
   my @ao = @_;
 
-  my $pov = 0;                  # overlap found
+  my $pov = 0; # overlap found
 
   my @events = &_ovc_core_get_eventlist($sffn);
   return($pov) if (scalar @events == 0); # No events for this file
@@ -904,7 +904,7 @@ sub check_samefs_overlap {
 ########################################
 
 sub _get_modes_list {
-  my @res;
+  my @res = ();
 
   foreach (my $i = 0; $i < scalar @ov_modes; $i++) { 
     push @res, $ov_modes[$i]
@@ -985,7 +985,7 @@ sub generate_csvline {
   my @in = @_;
 
   @in = &qua(@in);
-  my $txt = join(",", @in), "\n";
+  my $txt = join(",", @in);
 
   return($txt);
 }
@@ -997,7 +997,7 @@ sub get_csvline {
 
   my @keys = @{$rord};
 
-  my @todo;
+  my @todo = ();
   foreach my $key (@keys) {
     error_quit("Problem accessing key ($key) from observation hash")
       if (! exists $ohash{$uid}{$key});
