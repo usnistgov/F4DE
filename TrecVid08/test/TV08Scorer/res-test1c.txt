@@ -24,6 +24,14 @@
 
 ***** STEP 3: Aligning Files and Events
 
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: CellToEar | SYS elements: 2 | REF elements: 3 | Total Observations: 5 elements
+      TYPE      R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+----------------------------------------------------------------------------------------------------------------------------------
+        Mapped     0  3503:3738    236     2  3503:3739    237      0.99        NO   3503:3738       236            0           -1
+        Mapped     2  3503:3739    237     1  3503:3739    237      0.23        NO   3503:3739       237            0            0
+  Unmapped_Ref     1  3503:3739    237                                                                                            
+ -- Summary: 2 Mapped (Pairs) / 0 Unmapped Sys  / 1 Unmapped Ref | Total Observations: 5 elements
+
 |-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectPut | SYS elements: 1 | REF elements: 1 | Total Observations: 2 elements
    TYPE   R.ID  R.range   Dur.r  S.ID  S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
 --------------------------------------------------------------------------------------------------------------------------
@@ -35,14 +43,6 @@
 ----------------------------------------------------------------------------------------------------------------------------
   Mapped     0  1493:3327   1835     0  1493:3327   1835      0.78        NO   1493:3327      1835            0            0
  -- Summary: 1 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 2 elements
-
-|-> Filename: 20050519-1503-Excerpt.mpg | Event: CellToEar | SYS elements: 2 | REF elements: 3 | Total Observations: 5 elements
-      TYPE      R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
-----------------------------------------------------------------------------------------------------------------------------------
-        Mapped     0  3503:3738    236     2  3503:3739    237      0.99        NO   3503:3738       236            0           -1
-        Mapped     2  3503:3739    237     1  3503:3739    237      0.23        NO   3503:3739       237            0            0
-  Unmapped_Ref     1  3503:3739    237                                                                                            
- -- Summary: 2 Mapped (Pairs) / 0 Unmapped Sys  / 1 Unmapped Ref | Total Observations: 5 elements
 
             File               Event        TYPE      R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------

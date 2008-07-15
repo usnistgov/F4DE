@@ -24,18 +24,6 @@
 
 ***** STEP 3: Aligning Files and Events
 
-|-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectPut | SYS elements: 0 | REF elements: 1 | Total Observations: 1 elements
-      TYPE      R.ID  R.range  Dur.r  S.DetScr  S.DetDec  S.ID  S.range  Dur.s  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
-------------------------------------------------------------------------------------------------------------------------------
-  Unmapped_Ref     0   1:1000   1000                                                                                          
- -- Summary: 0 Mapped (Pairs) / 0 Unmapped Sys  / 1 Unmapped Ref | Total Observations: 1 elements
-
-|-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectGet | SYS elements: 1 | REF elements: 1 | Total Observations: 2 elements
-   TYPE   R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
-----------------------------------------------------------------------------------------------------------------------------
-  Mapped     0  1100:3327   2228     0  1100:3327   2228        99        NO   1100:3327      2228            0            0
- -- Summary: 1 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 2 elements
-
 |-> Filename: 20050519-1503-Excerpt.mpg | Event: PersonRuns | SYS elements: 1 | REF elements: 0 | Total Observations: 1 elements
       TYPE      R.ID  R.range  Dur.r  S.ID  S.range  Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
 ------------------------------------------------------------------------------------------------------------------------------
@@ -50,14 +38,26 @@
   Mapped     2  3503:3739    237     2  3503:3739    237     -0.99        NO   3503:3739       237            0            0
  -- Summary: 3 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 6 elements
 
-            File               Event         TYPE      R.ID   R.range   Dur.r  S.DetScr  S.DetDec  S.ID   S.range   Dur.s  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectPut | SYS elements: 0 | REF elements: 1 | Total Observations: 1 elements
+      TYPE      R.ID  R.range  Dur.r  S.ID  S.range  Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+------------------------------------------------------------------------------------------------------------------------------
+  Unmapped_Ref     0   1:1000   1000                                                                                          
+ -- Summary: 0 Mapped (Pairs) / 0 Unmapped Sys  / 1 Unmapped Ref | Total Observations: 1 elements
+
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectGet | SYS elements: 1 | REF elements: 1 | Total Observations: 2 elements
+   TYPE   R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+----------------------------------------------------------------------------------------------------------------------------
+  Mapped     0  1100:3327   2228     0  1100:3327   2228        99        NO   1100:3327      2228            0            0
+ -- Summary: 1 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 2 elements
+
+            File               Event         TYPE      R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  20050519-1503-Excerpt.mpg   CellToEar        Mapped     0   203:3738   3536      -100       YES     0   203:3738   3536    203:3738      3536            0            0
-  20050519-1503-Excerpt.mpg   CellToEar        Mapped     1  2503:3739   1237       101        NO     1  2503:3739   1237   2503:3739      1237            0            0
-  20050519-1503-Excerpt.mpg   CellToEar        Mapped     2  3503:3739    237     -0.99        NO     2  3503:3739    237   3503:3739       237            0            0
-  20050519-1503-Excerpt.mpg   ObjectGet        Mapped     0  1100:3327   2228        99        NO     0  1100:3327   2228   1100:3327      2228            0            0
+  20050519-1503-Excerpt.mpg   CellToEar        Mapped     0   203:3738   3536     0   203:3738   3536      -100       YES    203:3738      3536            0            0
+  20050519-1503-Excerpt.mpg   CellToEar        Mapped     1  2503:3739   1237     1  2503:3739   1237       101        NO   2503:3739      1237            0            0
+  20050519-1503-Excerpt.mpg   CellToEar        Mapped     2  3503:3739    237     2  3503:3739    237     -0.99        NO   3503:3739       237            0            0
+  20050519-1503-Excerpt.mpg   ObjectGet        Mapped     0  1100:3327   2228     0  1100:3327   2228        99        NO   1100:3327      2228            0            0
   20050519-1503-Excerpt.mpg   ObjectPut  Unmapped_Ref     0     1:1000   1000                                                                                            
-  20050519-1503-Excerpt.mpg  PersonRuns  Unmapped_Sys                               -10       YES     0     1:1000   1000                                                
+  20050519-1503-Excerpt.mpg  PersonRuns  Unmapped_Sys                             0     1:1000   1000       -10       YES                                                
 
 
 ***** STEP 4: Dump of Trial Contingency Table

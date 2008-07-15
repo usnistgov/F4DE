@@ -33,12 +33,6 @@ WARNING: Command line 'Duration' (1000) overrides (for scoring) the one found in
 
 ***** STEP 4: Aligning Files and Events
 
-|-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectPut | SYS elements: 0 | REF elements: 1 | Total Observations: 1 elements
-      TYPE      R.ID  R.range  Dur.r  S.DetScr  S.DetDec  S.ID  S.range  Dur.s  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
-------------------------------------------------------------------------------------------------------------------------------
-  Unmapped_Ref     0   1:1000   1000                                                                                          
- -- Summary: 0 Mapped (Pairs) / 0 Unmapped Sys  / 1 Unmapped Ref | Total Observations: 1 elements
-
 |-> Filename: 20050519-1503-Excerpt.mpg | Event: PersonRuns | SYS elements: 1 | REF elements: 0 | Total Observations: 1 elements
       TYPE      R.ID  R.range  Dur.r  S.ID  S.range  Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
 ------------------------------------------------------------------------------------------------------------------------------
@@ -51,11 +45,17 @@ WARNING: Command line 'Duration' (1000) overrides (for scoring) the one found in
   Mapped     2  3503:3739    237     2  3503:3739    237     -0.99        NO   3503:3739       237            0            0
  -- Summary: 1 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 2 elements
 
-            File               Event         TYPE      R.ID   R.range   Dur.r  S.DetScr  S.DetDec  S.ID   S.range   Dur.s  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+|-> Filename: 20050519-1503-Excerpt.mpg | Event: ObjectPut | SYS elements: 0 | REF elements: 1 | Total Observations: 1 elements
+      TYPE      R.ID  R.range  Dur.r  S.ID  S.range  Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
+------------------------------------------------------------------------------------------------------------------------------
+  Unmapped_Ref     0   1:1000   1000                                                                                          
+ -- Summary: 0 Mapped (Pairs) / 0 Unmapped Sys  / 1 Unmapped Ref | Total Observations: 1 elements
+
+            File               Event         TYPE      R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  20050519-1503-Excerpt.mpg   CellToEar        Mapped     2  3503:3739    237     -0.99        NO     2  3503:3739    237   3503:3739       237            0            0
+  20050519-1503-Excerpt.mpg   CellToEar        Mapped     2  3503:3739    237     2  3503:3739    237     -0.99        NO   3503:3739       237            0            0
   20050519-1503-Excerpt.mpg   ObjectPut  Unmapped_Ref     0     1:1000   1000                                                                                            
-  20050519-1503-Excerpt.mpg  PersonRuns  Unmapped_Sys                               -10       YES     0     1:1000   1000                                                
+  20050519-1503-Excerpt.mpg  PersonRuns  Unmapped_Sys                             0     1:1000   1000       -10       YES                                                
 
 
 ***** STEP 5: Dump of Trial Contingency Table
