@@ -1115,6 +1115,34 @@ sub value_shift {
   return($self->set_value($fs));
 }
 
+######################################## list of frames
+
+sub list_frames {
+  my ($self) = @_;
+
+  my @out = ();
+
+  return(@out) if ($self->error());
+
+  my $v = $self->get_value();
+  return(@out) if ($self->error());
+
+  my @todo = &_fs_split_line($v);
+  foreach my $pair (@todo) {
+    my ($txt, $b, $e) = &_fs_split_pair($pair);
+    if (! MMisc::is_blank($txt)) {
+      $self->_set_errormsg("Problem in \'list_frames\' ($txt)");
+      return(@out);
+    }
+    for (my $c = $b; $c <= $e; $c++) {
+      push @out, $c;
+    }
+  }
+  my @res = MMisc::make_array_of_unique_values(@out);
+
+  return(@res);
+}
+
 ########################################
 
 sub unit_test {                 # Xtreme coding and us ;)
@@ -1304,6 +1332,14 @@ sub unit_test {                 # Xtreme coding and us ;)
     }
   }
     
+  # List frames
+  my $in19 = "4:7 1:2 1:2";
+  my $exp_out19 = "1 2 4 5 6 7";
+  my $fs_tmp19 = new ViperFramespan($in19);
+  my @aout19 = $fs_tmp19->list_frames();
+  my $out19 = join(" ", @aout19);
+  $otxt .= "$eh Error while checking \'list_frames\' (expected: $exp_out19 / Got: $out19). "
+    if ($out19 ne $exp_out19);
     
   ########## TODO: unit_test for all 'fps' functions ##########
 
