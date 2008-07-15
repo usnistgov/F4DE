@@ -45,6 +45,9 @@ $testr += &do_simple_test($tn, "(writexml)",  "test2-gtf.xml", "test2-1md_1fa-sy
 $tn = "test5b";
 $testr += &do_simple_test($tn, "(writexml + pruneEvents)", "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w -p", "res-$tn.txt");
 
+$tn = "test6";
+$testr += &do_simple_test($tn, "(limittosysevents)", "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -l", "res-$tn.txt");
+
 if ($testr == $totest) {
   ok_quit("All test ok\n\n");
 } else {
