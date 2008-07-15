@@ -232,7 +232,7 @@ sub clone {
 
 ##########
 
-sub array1d_to_hash {
+sub array1d_to_count_hash {
   my @all = @_;
 
   my %ohash = ();
@@ -245,10 +245,32 @@ sub array1d_to_hash {
 
 #####
 
-sub make_array_of_unique_values {
-  my %tmp = array1d_to_hash(@_);
+sub array1d_to_ordering_hash {
+  my @all = @_;
 
-  return(keys %tmp);
+  my %ohash = ();
+  for (my $i = 0; $i < scalar @all; $i++) {
+    my $v = $all[$i];
+    next if (exists $ohash{$v});
+    $ohash{$v} = $i;
+  }
+
+  return(%ohash);
+}
+
+#####
+
+sub make_array_of_unique_values {
+  my @order = @_;
+
+  return(@order) if (scalar @order <= 1);
+
+  my %tmp = &array1d_to_ordering_hash(@order);
+  my @tosort = keys %tmp;
+
+  my @out = sort {$tmp{$a} <=> $tmp{$b}} @tosort;
+
+  return(@out);
 }
 
 ##########
