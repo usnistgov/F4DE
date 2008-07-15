@@ -214,9 +214,10 @@ my $outputRootFile = undef;
 my $observationContingencyTable = 0;
 my $writexml = undef;
 my $autolt = 0;
+my $ltse = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:    DEFG       O   ST     Za  cdefgh   mnop  st vwx  
+# Used:    DEFG       O   ST     Za  cdefgh  lmnop  st vwx  
 
 my %opt = ();
 my $dbgftmp = "";
@@ -247,6 +248,7 @@ GetOptions
    'observationCont' => \$observationContingencyTable,
    'writexml:s'      => \$writexml,
    'pruneEvents'     => \$autolt,
+   'limittosysevents' => \$ltse,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -450,7 +452,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--showAT] [--allAT] [--writexml [dir] [--pruneEvents]] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--showAT] [--allAT] [--limittosysevents] [--writexml [dir] [--pruneEvents]] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -465,6 +467,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
   --showAT        Show Gloabl Alignment Table
   --allAT         Show Alignment Table per File and Event processed
+  --limittosysevents  For each sourcfile filename, only process events that are listed in the sys Viper files.
   --writexml      Write a ViperFile XML containing the Mapped, UnmappedRef and UnmappedSys to disk (if dir is specified), stdout otherwise
   --pruneEvents   Only keep in the new file's config section events for which observations are seen
   --observationCont  Dump the Trials Contingency Table
@@ -742,6 +745,32 @@ sub add_obs2vf {
 
 #####
 
+sub add_data2sat {
+  my ($sat, $trialid, $file, $event, $type, 
+      $rid, $rrange, $durr,
+      $sid, $srange, $durs, $sdetscr, $sdetdec,
+      $isecrange, $durisec,
+      $begrbegs, $endrends) = @_;
+
+  $sat->addData($file, "File", $trialid) if (defined $file);
+  $sat->addData($event, "Event", $trialid) if (defined $event);
+  $sat->addData($type, "TYPE", $trialid);
+  $sat->addData($rid, "R.ID", $trialid);
+  $sat->addData($rrange, "R.range", $trialid);
+  $sat->addData($durr, "Dur.r", $trialid);
+  $sat->addData($sid, "S.ID", $trialid);
+  $sat->addData($srange, "S.range", $trialid);
+  $sat->addData($durs, "Dur.s", $trialid);
+  $sat->addData($sdetscr, "S.DetScr", $trialid);
+  $sat->addData($sdetdec, "S.DetDec", $trialid);
+  $sat->addData($isecrange, "ISec.range", $trialid);
+  $sat->addData($durisec, "Dur.ISec", $trialid);
+  $sat->addData($begrbegs, "Beg.r-Beg.s", $trialid);
+  $sat->addData($endrends, "End.r-End.s", $trialid);
+}
+
+#####
+
 sub do_alignment {
   my @todo = @_;
 
@@ -760,9 +789,17 @@ sub do_alignment {
     error_quit("While trying to obtain a list of REF events for file ($file) (" . $refEL->get_errormsg() . ")")
       if ($refEL->error());
 
+    # limit to sys events ?
+    if ($ltse) {
+      my ($rla, $rlb) = MMisc::confirm_first_array_values(\@ref_events, @sys_events);
+      my @leftover = @$rlb;
+      print "|-> File: $file\n -- Will not process the following event(s) (not present in the matching sys files): ", join(" ", @leftover), "\n\n" if (scalar @leftover > 0);
+      @ref_events = ();
+    }
+
     my @listed_events = MMisc::make_array_of_unique_values(@sys_events, @ref_events);
 
-    foreach my $evt (@listed_events) {
+    foreach my $evt (TrecVid08ViperFile::sort_events(@listed_events)) {
       my @sys_events_obs = ($sysEL->is_filename_in($file)) ? $sysEL->get_Observations_list($file, $evt) : ();
       error_quit("While trying to obtain a list of observations for SYS event ($evt) and file ($file) (" . $sysEL->get_errormsg() . ")")
         if ($sysEL->error());
@@ -832,39 +869,27 @@ sub do_alignment {
 	}
 
         my $trialID = &make_trialID($file, $evt, $ref_obj, $sys_obj, $ksep++);
-        $alignmentRep->addData($file, "File", $trialID);
-        $alignmentRep->addData($evt, "Event", $trialID);
-        $alignmentRep->addData("Mapped", "TYPE", $trialID);
-        $alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
-        $alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
-        $alignmentRep->addData(&get_obj_fs_duration($ref_obj),  "Dur.r", $trialID);
-        $alignmentRep->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
-        $alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
-        $alignmentRep->addData(&get_obj_fs_duration($sys_obj),  "Dur.s", $trialID);
-        $alignmentRep->addData($detscr, "S.DetScr", $trialID);
-        $alignmentRep->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
-        my $ov = &get_obj_fs_ov($ref_obj, $sys_obj);
-        $alignmentRep->addData((defined($ov) ? &get_fs_value($ov) : "NULL"), "ISec.range", $trialID);
-        $alignmentRep->addData((defined($ov) ? &get_fs_duration($ov): "NULL"), "Dur.ISec", $trialID);
-        my ($rb, $re) = &get_obj_fs_beg_end($ref_obj);
+	my $ov = &get_obj_fs_ov($ref_obj, $sys_obj);
+	my ($rb, $re) = &get_obj_fs_beg_end($ref_obj);
         my ($sb, $se) = &get_obj_fs_beg_end($sys_obj);
-        $alignmentRep->addData($rb - $sb, "Beg.r-Beg.s", $trialID);
-        $alignmentRep->addData($re - $se, "End.r-End.s", $trialID);
-        if ($allAT) {
-          $lsat->addData("Mapped", "TYPE", $trialID);
-          $lsat->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
-          $lsat->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
-          $lsat->addData(&get_obj_fs_duration($ref_obj),  "Dur.r", $trialID);
-          $lsat->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
-          $lsat->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
-          $lsat->addData(&get_obj_fs_duration($sys_obj),  "Dur.s", $trialID);
-          $lsat->addData($detscr, "S.DetScr", $trialID);
-          $lsat->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
-          $lsat->addData((defined($ov) ? &get_fs_value($ov) : "NULL"), "ISec.range", $trialID);
-          $lsat->addData((defined($ov) ? &get_fs_duration($ov): "NULL"), "Dur.ISec", $trialID);
-          $lsat->addData($rb - $sb, "Beg.r-Beg.s", $trialID);
-          $lsat->addData($re - $se, "End.r-End.s", $trialID);
-        }
+	&add_data2sat($alignmentRep, $trialID, $file, $evt, "Mapped",
+		      &get_obj_id($ref_obj), &get_obj_fs_value($ref_obj),
+		      &get_obj_fs_duration($ref_obj),
+		      &get_obj_id($sys_obj), &get_obj_fs_value($sys_obj),
+		      &get_obj_fs_duration($sys_obj), 
+		      $detscr, ($detdec ? "YES" : "NO"),
+		      (defined($ov) ? &get_fs_value($ov) : "NULL"),
+		      (defined($ov) ? &get_fs_duration($ov): "NULL"),
+		      $rb - $sb, $re - $se);
+	&add_data2sat($lsat, $trialID, undef, undef, "Mapped",
+		      &get_obj_id($ref_obj), &get_obj_fs_value($ref_obj),
+		      &get_obj_fs_duration($ref_obj),
+		      &get_obj_id($sys_obj), &get_obj_fs_value($sys_obj),
+		      &get_obj_fs_duration($sys_obj), 
+		      $detscr, ($detdec ? "YES" : "NO"),
+		      (defined($ov) ? &get_fs_value($ov) : "NULL"),
+		      (defined($ov) ? &get_fs_duration($ov): "NULL"),
+		      $rb - $sb, $re - $se) if ($allAT);
       }
 
       # Second, the False Alarms
@@ -892,36 +917,18 @@ sub do_alignment {
 	}
 
         my $trialID = &make_trialID($file, $evt, undef, $sys_obj, $ksep++);
-        $alignmentRep->addData($file, "File", $trialID);
-        $alignmentRep->addData($evt, "Event", $trialID);
-        $alignmentRep->addData("Unmapped_Sys", "TYPE", $trialID);
-        $alignmentRep->addData("", "R.ID", $trialID);
-        $alignmentRep->addData("", "R.range", $trialID);
-        $alignmentRep->addData("", "Dur.r", $trialID);
-        $alignmentRep->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
-        $alignmentRep->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
-        $alignmentRep->addData(&get_obj_fs_duration($sys_obj), "Dur.s", $trialID);
-        $alignmentRep->addData($detscr, "S.DetScr", $trialID);
-        $alignmentRep->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
-        $alignmentRep->addData("", "ISec.range", $trialID);
-        $alignmentRep->addData("", "Dur.ISec", $trialID);
-        $alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
-        $alignmentRep->addData("", "End.r-End.s", $trialID);
-        if ($allAT) {
-          $lsat->addData("Unmapped_Sys", "TYPE", $trialID);
-          $lsat->addData("", "R.ID", $trialID);
-          $lsat->addData("", "R.range", $trialID);
-          $lsat->addData("", "Dur.r", $trialID);
-          $lsat->addData(&get_obj_id($sys_obj), "S.ID", $trialID);
-          $lsat->addData(&get_obj_fs_value($sys_obj), "S.range", $trialID);
-          $lsat->addData(&get_obj_fs_duration($sys_obj), "Dur.s", $trialID);
-          $lsat->addData($detscr, "S.DetScr", $trialID);
-          $lsat->addData($detdec ? "YES" : "NO", "S.DetDec", $trialID);
-          $lsat->addData("", "ISec.range", $trialID);
-          $lsat->addData("", "Dur.ISec", $trialID);
-          $lsat->addData("", "Beg.r-Beg.s", $trialID);
-          $lsat->addData("", "End.r-End.s", $trialID);
-        }
+	&add_data2sat($alignmentRep, $trialID, $file, $evt, "Unmapped_Sys",
+		      "", "", "", 
+		      &get_obj_id($sys_obj), &get_obj_fs_value($sys_obj),
+		      &get_obj_fs_duration($sys_obj), 
+		      $detscr, ($detdec ? "YES" : "NO"),
+		      "", "", "", "");
+	&add_data2sat($lsat, $trialID, undef, undef, "Unmapped_Sys",
+		      "", "", "", 
+		      &get_obj_id($sys_obj), &get_obj_fs_value($sys_obj),
+		      &get_obj_fs_duration($sys_obj), 
+		      $detscr, ($detdec ? "YES" : "NO"),
+		      "", "", "", "") if ($allAT);
       }
 
       # Third, the Missed Detects
@@ -951,36 +958,16 @@ sub do_alignment {
 	}
 
         my $trialID = &make_trialID($file, $evt, $ref_obj, undef, $ksep++);
-        $alignmentRep->addData($file, "File", $trialID);
-        $alignmentRep->addData($evt, "Event", $trialID);
-        $alignmentRep->addData("Unmapped_Ref", "TYPE", $trialID);
-        $alignmentRep->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
-        $alignmentRep->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
-        $alignmentRep->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
-        $alignmentRep->addData("", "S.DetScr", $trialID);
-        $alignmentRep->addData("", "S.DetDec", $trialID);
-        $alignmentRep->addData("", "S.ID", $trialID);
-        $alignmentRep->addData("", "S.range", $trialID);
-        $alignmentRep->addData("", "Dur.s", $trialID);
-        $alignmentRep->addData("", "ISec.range", $trialID);
-        $alignmentRep->addData("", "Dur.ISec", $trialID);
-        $alignmentRep->addData("", "Beg.r-Beg.s", $trialID);
-        $alignmentRep->addData("", "End.r-End.s", $trialID);
-        if ($allAT) {
-          $lsat->addData("Unmapped_Ref", "TYPE", $trialID);
-          $lsat->addData(&get_obj_id($ref_obj), "R.ID", $trialID);
-          $lsat->addData(&get_obj_fs_value($ref_obj), "R.range", $trialID);
-          $lsat->addData(&get_obj_fs_duration($ref_obj), "Dur.r", $trialID);
-          $lsat->addData("", "S.DetScr", $trialID);
-          $lsat->addData("", "S.DetDec", $trialID);
-          $lsat->addData("", "S.ID", $trialID);
-          $lsat->addData("", "S.range", $trialID);
-          $lsat->addData("", "Dur.s", $trialID);
-          $lsat->addData("", "ISec.range", $trialID);
-          $lsat->addData("", "Dur.ISec", $trialID);
-          $lsat->addData("", "Beg.r-Beg.s", $trialID);
-          $lsat->addData("", "End.r-End.s", $trialID);
-        }
+	&add_data2sat($alignmentRep, $trialID, $file, $evt, "Unmapped_Ref",
+		      &get_obj_id($ref_obj), &get_obj_fs_value($ref_obj),
+		      &get_obj_fs_duration($ref_obj),
+		      "", "", "", "", "",
+		      "", "", "", "");
+	&add_data2sat($lsat, $trialID, undef, undef, "Unmapped_Ref",
+		      &get_obj_id($ref_obj), &get_obj_fs_value($ref_obj),
+		      &get_obj_fs_duration($ref_obj),
+		      "", "", "", "", "",
+		      "", "", "", "") if ($allAT);
       }
       # 'Trials' done
 
@@ -1009,7 +996,7 @@ sub do_alignment {
       print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
     }
     MMisc::writeTo($outputRootFile, ".ali.txt", 1, 0, $tbl);
-    if (defined($outputRootFile) && $outputRootFile ne "") {
+    if ( (defined($outputRootFile)) && ($outputRootFile ne "") ) {
       my $tbl = $alignmentRep->renderCSV(2);
       if (! defined($tbl)) {
         print "Error Generating Alignment Report:\n". $alignmentRep->get_errormsg();
@@ -1352,6 +1339,10 @@ Specify that the files past this marker are reference files.
 =item B<--help>
 
 Display the usage page for this program. Also display some default values and information.
+
+=item B<--limittosysevents>
+
+Request that scoring only be done on I<Events> present in the sys files for a given sourcefile filename. In other words, if a ref file contains all event type, and the sys file only a handful of events, only align and score on the events seen in the sys file.
 
 =item B<--man>
 
