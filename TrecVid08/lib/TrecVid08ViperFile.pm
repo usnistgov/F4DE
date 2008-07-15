@@ -271,6 +271,8 @@ sub _expand_events_star {
   return(@out);
 }
 
+#####
+
 sub validate_events_list {
   my ($self, @events) = @_;
 
@@ -2676,6 +2678,14 @@ sub _event_sort {
   return($for_event_sort{$fa} <=> $for_event_sort{$fb});
 }
 
+#####
+
+sub sort_events {
+  my (@events) = @_;
+
+  return(sort _event_sort @events);
+}
+
 ########################################
 
 sub _wbi { # writeback indent
@@ -2830,7 +2840,7 @@ sub _writeback2xml {
   $txt .= &_wb_print(--$indent, "</descriptor>\n");
 
   # Write all objects
-  foreach my $ftype (sort _event_sort @asked_events) {
+  foreach my $ftype (&sort_events(@asked_events)) {
     $txt .= &_wb_print($indent++, "<descriptor name=\"$ftype\" type=\"OBJECT\">\n");
     foreach my $key (sort keys %hash_objects_attributes_types) {
       $txt .= &_wb_print
