@@ -6,7 +6,7 @@ use MMisc;
 my $magicmode = "makecheckfiles"; # And the magic word is ...
 my $magicmode_comp = "makecompcheckfiles";
 my @magicmodes = ($magicmode, $magicmode_comp);
-my $mmc_add = "-comp";
+my $mmc_add = $ENV{TEST_MMC_ADD} || "-comp";
 my $dev = "TV08TestCore default error value";
 my $lts = 10;                   # lines to show
 
@@ -124,7 +124,7 @@ sub check_skip {
 
   return(1) if (-e $skipfile);
 
-  if ($skipfile =~ s%[a-z]$%%) {
+  if ($skipfile =~ s%[a-z]+$%%) {
     return(1) if (-e $skipfile);
   }
 
@@ -138,7 +138,7 @@ sub run_simpletest {
 
   &print_name($testname, $subtype);
 
-  if (&check_skip($testname)) {
+  if ( (&check_skip($testname)) || (! &query_do_test($testname)) ) {
     print "Skipped\n";
     return(1);
   }
@@ -273,6 +273,31 @@ sub run_complextest {
 
   print "OK\n";
   return(1);
+}
+
+########################################
+
+sub query_do_test {
+  my ($testname) = @_;
+
+  return(1) if (! defined $ENV{TEST_ONLY});
+
+  my @todo = split(" ", $ENV{TEST_ONLY});
+
+  # If no limit, simply do them all
+  return(1) if (scalar @todo == 0);
+
+  # only keep the number (and sub test name) part
+  $testname =~ s%^\w+?(\d+)%$1%s;
+  
+  return(1) if (grep(m%^$testname$%, @todo)); # is it in the todo list ?
+
+  # Remove the last alpha digits (test sub name)
+  if ($testname =~ s%[a-z]+$%%) {
+    return(1) if (grep(m%^$testname$%, @todo));
+  }
+  
+  return(0);
 }
 
 ########################################
