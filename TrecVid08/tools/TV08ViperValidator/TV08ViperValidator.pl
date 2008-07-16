@@ -130,9 +130,10 @@ my $show = 0;
 my $remse = 0;
 my $crop = "";
 my $fps = undef;
+my $changetype = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T   X    c   gh   lm  p r   vwx  
+# USed:   C                T   X    c   gh   lm  p r   vwx  
 
 my %opt = ();
 my $dbgftmp = "";
@@ -152,6 +153,7 @@ GetOptions
    'removeSubEventtypes' => \$remse,
    'crop=s'          => \$crop,
    'fps=s'           => \$fps,
+   'ChangeType:s'    => \$changetype,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -229,6 +231,7 @@ my $tmp = "";
 my %all = ();
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
+TrecVid08ViperFile::type_changer_init_randomseed($changetype) if ($changetype);
 while ($tmp = shift @ARGV) {
   my ($ok, $object) = &load_file($isgtf, $tmp);
   next if (! $ok);
@@ -236,6 +239,19 @@ while ($tmp = shift @ARGV) {
   if (! MMisc::is_blank($crop)) {
     (my $err, $object) = TrecVid08HelperFunctions::ViperFile_crop($object, $crop_beg, $crop_end);
     error_quit("While cropping: $err\n") if (! MMisc::is_blank($err));
+  }
+
+  if ($changetype) {
+    my $r = 0;
+    if ($isgtf) {
+      $r = $object->change_ref_to_sys();
+    } else {
+      $r = $object->change_sys_to_ref();
+    }
+    error_quit("Could not change type of the file") if ($r == 0);
+    error_quit("Problem while changing the type of the file: " . $object->get_errormsg()) if ($object->error());
+    # This is really if you are a debugger
+    print("** Memory Representation (post ChangeType):\n", $object->_display_all()) if ($show);
   }
 
   if ($writeback != -1) {
@@ -330,7 +346,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--crop beg:end]] [--fps fps] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed]] [--crop beg:end]] [--fps fps] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -344,6 +360,7 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
   --crop          Will crop file content to only keep content that is found within the beg and end frames
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
+  --ChangeType    Convert a SYS to REF or a REF to SYS.
   --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
   --version       Print version number and exit
   --help          Print this usage information and exit
@@ -401,6 +418,9 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
         S<[B<--XMLbase> [I<file]>]>
         S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
         S<[B<--gtf>] [B<--limitto> I<event1>[,I<event2>[I<...>]]]>
+        S<[B<--pruneEvents>] [B<--removeSubEventtypes>]>
+        S<[B<--ChangeType> [I<randomseed>]]>
+        S<[B<--crop I<beg:end> [B<--fps> I<fps>]]>
         S<[B<--write> [I<directory>]]>
         I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
 
@@ -464,6 +484,12 @@ B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well
 
 Will crop all input ViperFiles to the specified range. Only valid when used with the 'write' option.
 Note that cropping consist of trimming all seen events to the selected range and then shifting the file to start at 1 again.
+
+=item <--ChangeType> [I<randomseed>]
+
+Convert a SYS to REF or a REF to SYS.
+The I<randomseed> is useful if you want to reproduce the result in the future.
+Be forewarned that it is possible to reproduce a same output if reusing the I<randomseed> value but the process and source files have to be the exact same too.
 
 =item B<--fps> I<fps>
 
