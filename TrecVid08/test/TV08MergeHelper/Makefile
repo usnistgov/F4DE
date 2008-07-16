@@ -22,7 +22,6 @@ check:	${TV08MergeHelper_tester_exec} ${TV08MergeHelper}
 	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} check)
 
 makecheckfiles:	${TV08MergeHelper_tester_exec}
-	@make cleanresfiles
 	@(env TV08_XSDPATH=${TV08_XSDPATH_rel} ${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} makecheckfiles)
 
 makecompcheckfiles:	${TV08MergeHelper_tester_exec}
