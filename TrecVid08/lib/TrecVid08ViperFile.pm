@@ -164,6 +164,8 @@ my $check_ids_start_at_zero = 0;
 # Check that IDs are consecutive
 my $check_ids_are_consecutive = 0;
 
+##### Random seed
+my $rseed = undef;
 
 ########################################
 
@@ -2056,6 +2058,117 @@ sub is_event_id_used {
   return(1) if (grep(m%^$id$%, @all));
 
   return(0);
+}
+
+#################### change type
+
+sub type_changer_init_randomseed { ## Class function
+  my ($seed) = @_;
+
+  $rseed = $seed;
+  srand($seed);
+
+  return(1);
+}
+
+#####
+
+sub _get_random_XXX {
+  my ($xxx, $fs) = @_;
+
+  # I cheat a little: I know the required types are not dynamic
+
+  my $v = 0;
+  if ($xxx eq $list_objects_attributes_types[0]) { # fvalue
+    # -127 -> 128
+    $v = rand(256.0) - 128.0;
+  } elsif ($xxx eq $list_objects_attributes_types[1]) { # bvalue
+    # 0 / 1
+    $v = int(rand(256)) % 2;
+  }
+
+  my %out = ();
+  push @{$out{$fs}}, $v;
+
+  return(%out);
+}
+
+#####
+
+sub change_autoswitch {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+  
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can not call \"type changer\" functions on non validated data");
+    return(0);
+  }
+
+  $self->_addto_comment
+    ( (defined $rseed)
+      ? ("REF to SYS Seed : $rseed (first value: " . rand(). ")")
+      : "Random REF to SYS Seed" )
+      if ($self->check_if_gtf());
+  
+  my %fhash = $self->_get_fhash();
+  foreach my $event (@ok_events) {
+    next if (! exists $fhash{$event});
+    foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+      foreach my $key (@not_gtf_required_objects_attributes) {
+	if ($self->check_if_sys()) {
+	  # For sys files, we remove the "Detection" values
+	  delete $fhash{$event}{$id}{$key};
+	} else {
+	  my $fs = $fhash{$event}{$id}{$key_framespan};
+	  # For ref files, we add random "Detection" values
+	  %{$fhash{$event}{$id}{$key}} = &_get_random_XXX($hash_objects_attributes_types{$key}, $fs);
+	}
+      }
+    }
+  }
+  $self->_set_fhash(%fhash);
+  if ($self->check_if_sys()) {
+    $self->set_as_gtf();
+  } else {
+    $self->set_as_sys();
+  }
+
+  return(0) if ($self->error());
+
+  return(1);
+}
+
+#####
+
+sub change_sys_to_ref {
+  my ($self) = @_;
+
+  if (! $self->check_if_sys()) {
+    $self->_set_errormsg("Can not call \'change_sys_to_ref\' on a ref");
+    return(0);
+  }
+
+  $self->_addto_comment("Changed from SYS to REF file");
+  return(0) if ($self->error());
+
+  return($self->change_autoswitch());
+}
+
+#####
+
+sub change_ref_to_sys {
+  my ($self) = @_;
+
+  if (! $self->check_if_gtf()) {
+    $self->_set_errormsg("Can not call \'change_ref_to_sys\' on a sys");
+    return(0);
+  }
+
+  $self->_addto_comment("Changed from REF to SYS file");
+  return(0) if ($self->error());
+
+  return($self->change_autoswitch());
 }
 
 ############################################################
