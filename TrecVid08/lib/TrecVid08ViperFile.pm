@@ -166,6 +166,7 @@ my $check_ids_are_consecutive = 0;
 
 ##### Random seed
 my $rseed = undef;
+my $rseed_lastfound = undef;
 
 ########################################
 
@@ -2063,12 +2064,40 @@ sub is_event_id_used {
 #################### change type
 
 sub type_changer_init_randomseed { ## Class function
-  my ($seed) = @_;
+  my ($seed_found) = @_;
+
+  my ($seed, $lastfound) = split(m%\:%, $seed_found);
 
   $rseed = $seed;
   srand($seed);
 
+  $rseed_lastfound = $lastfound if (defined $lastfound);
+
   return(1);
+}
+
+#####
+
+sub _get_comment_random_value {
+  return(rand()) if (! defined $rseed_lastfound);
+
+  my $tmp = $rseed_lastfound;
+  $tmp =~ s%^\d+(\.)%$1%; # Remove the integer part
+
+  my $v = 0;
+  my $found = 0;
+  my $run = 0;
+  my $maxrun = 1E6;
+  while (! $found) {
+    $v = rand();
+    $found = 1 if (MMisc::are_float_equal($v, $rseed_lastfound, 0));
+    $run++;
+    die("TrecVid08ViperFile Internal Error: Could not find the requested pseudo random value after $maxrun iterations, aborting\n") 
+      if ($run > $maxrun);
+  }
+
+  $rseed_lastfound = undef; # Do not do that step next time
+  return(sprintf("%.12f", $v)); # the printed value is below the float precision
 }
 
 #####
@@ -2076,15 +2105,24 @@ sub type_changer_init_randomseed { ## Class function
 sub _get_random_XXX {
   my ($xxx, $fs) = @_;
 
+  my $type = $hash_objects_attributes_types{$xxx};
+
   # I cheat a little: I know the required types are not dynamic
+  # but just in case they are extended "crash"
+  die("TrecVid08ViperFile Internal Error: Type ($xxx) dynamic status not defined by _get_random_XXX method\n") 
+    if (! exists $hash_objects_attributes_types_dynamic{$xxx});
+  die("TrecVid08ViperFile Internal Error: Type ($xxx) is dynamic and dynamic types are not handled by _get_random_XXX method\n") 
+    if ($hash_objects_attributes_types_dynamic{$xxx});
 
   my $v = 0;
-  if ($xxx eq $list_objects_attributes_types[0]) { # fvalue
+  if ($type eq $list_objects_attributes_types[0]) { # fvalue
     # -127 -> 128
     $v = rand(256.0) - 128.0;
-  } elsif ($xxx eq $list_objects_attributes_types[1]) { # bvalue
+  } elsif ($type eq $list_objects_attributes_types[1]) { # bvalue
     # 0 / 1
     $v = int(rand(256)) % 2;
+  } else {
+    die("TrecVid08ViperFile Internal Error: Type ($type) is yet not handled by _get_random_XXX method\n");
   }
 
   my %out = ();
@@ -2107,7 +2145,7 @@ sub change_autoswitch {
 
   $self->_addto_comment
     ( (defined $rseed)
-      ? ("REF to SYS Seed : $rseed (first value: " . rand(). ")")
+      ? ("REF to SYS Seed : $rseed (first value: " . &_get_comment_random_value(). ")")
       : "Random REF to SYS Seed" )
       if ($self->check_if_gtf());
   
@@ -2122,7 +2160,7 @@ sub change_autoswitch {
 	} else {
 	  my $fs = $fhash{$event}{$id}{$key_framespan};
 	  # For ref files, we add random "Detection" values
-	  %{$fhash{$event}{$id}{$key}} = &_get_random_XXX($hash_objects_attributes_types{$key}, $fs);
+	  %{$fhash{$event}{$id}{$key}} = &_get_random_XXX($key, $fs);
 	}
       }
     }
