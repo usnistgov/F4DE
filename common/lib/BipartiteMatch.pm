@@ -48,10 +48,16 @@ sub new {
   
   my $errormsg = new MErrorH("BipartiteMatch");
 
-  my $errortxt = (scalar @_ != 4) ? "BipartiteMatch \'new\' parameters are: (\\%%refObjects, \\%%sysObjects, \\&KernelFunction, \\\@KernelFunction_AdditionalParameters)" : "";
-  $errormsg->set_errormsg($errortxt);
+  my $errortxt = (scalar @_ != 4) ? "BipartiteMatch \'new\' parameters are: (\\%%refObjects, \\%%sysObjects, \\&KernelFunction, \\\@KernelFunction_AdditionalParameters). " : "";
 
   my ($rrefObjects, $rsysObjects, $rKernelFunction, $rKernelAdditionalParameters) = @_;
+
+  $errortxt .= "The refObjects reference can not be undef, it has to be a reference to an empty hash at minimum. " if (! defined $rrefObjects);
+  $errortxt .= "The sysObjects reference can not be undef, it has to be a reference to an empty hash at minimum. " if (! defined $rsysObjects);
+  $errortxt .= "The KernelFunction reference can not be undef, it has to be a reference to an empty function at minimum" if (! defined $rKernelFunction);
+  $errortxt .= "The KernelFunction Additional Parameters reference can not be undef, it has to be a reference to an empty array at minimum" if (! defined $rKernelAdditionalParameters);
+
+  $errormsg->set_errormsg($errortxt);
 
   my $self =
     {
