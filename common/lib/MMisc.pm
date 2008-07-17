@@ -342,6 +342,55 @@ sub lowercase_array_values {
   return(&_uc_lc_array_values("lc", @_));
 }
 
+##########
+
+sub get_decimal_length {
+  my ($v) = @_;
+
+  my $l = 0;
+
+  if ($v =~ s%^\d+(\.)%$1%) {
+    $l = length($v) - 1;
+  }
+
+  return($l);
+}
+
+#####
+
+sub compute_precision {
+  my ($v1, $v2) = @_;
+
+  my $l1 = &get_decimal_length($v1);
+  my $l2 = &get_decimal_length($v2);
+
+  my $p;
+  if (($l1 == 0) && ($l2 == 0)) { # both ints
+    $p = 0.5;
+  } else {
+    my $v = min($l1, $l2); # if l1 or l2 are not equal to 0
+    $v = max($l1, $l2) if ($v == 0); # otherwise take the non 0 one
+    $p = ($v > 1) 
+      ? (1.0 / (10 ** ($v - 1) ) ) # and go to the 1 depth up
+	: 1.0; # expected for case that are only 1 digit deep
+  }
+
+  return($p);
+}
+
+#####
+
+sub are_float_equal {
+  my ($v1, $v2, $p ) = @_;
+
+  $p = &compute_precision($v1, $v2) if ((defined $p) && ($p == 0));
+  $p = 0.000001 if (! defined $p); # default precision
+
+  return(1) if (abs($v1 - $v2) < $p);
+
+  return(0);
+}
+
 ############################################################
 
 1;
