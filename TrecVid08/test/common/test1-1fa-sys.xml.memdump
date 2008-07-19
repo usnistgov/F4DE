@@ -1,0 +1,201 @@
+#  TrecVid08ViperFile MemDump
+
+$VAR1 = bless( {
+                 'file' => '../../test/common/test1-1fa-sys.xml',
+                 'fhash' => {
+                              'ObjectPut' => {
+                                               '0' => {
+                                                        'framespan' => '938:1493',
+                                                        'DetectionScore' => {
+                                                                              '938:1493' => [
+                                                                                              '0.45'
+                                                                                            ]
+                                                                            },
+                                                        'DetectionDecision' => {
+                                                                                 '938:1493' => [
+                                                                                                 'true'
+                                                                                               ]
+                                                                               },
+                                                        'subtype' => '',
+                                                        'BoundingBox' => {
+                                                                           '1120:1120' => [
+                                                                                            '78',
+                                                                                            '178',
+                                                                                            '88',
+                                                                                            '234'
+                                                                                          ],
+                                                                           '1117:1117' => [
+                                                                                            '99',
+                                                                                            '168',
+                                                                                            '89',
+                                                                                            '166'
+                                                                                          ],
+                                                                           '1123:1123' => [
+                                                                                            '163',
+                                                                                            '216',
+                                                                                            '52',
+                                                                                            '123'
+                                                                                          ],
+                                                                           '1122:1122' => [
+                                                                                            '202',
+                                                                                            '292',
+                                                                                            '115',
+                                                                                            '110'
+                                                                                          ],
+                                                                           '1121:1121' => [
+                                                                                            '32',
+                                                                                            '281',
+                                                                                            '81',
+                                                                                            '195'
+                                                                                          ],
+                                                                           '1119:1119' => [
+                                                                                            '98',
+                                                                                            '56',
+                                                                                            '138',
+                                                                                            '187'
+                                                                                          ],
+                                                                           '1116:1116' => [
+                                                                                            '105',
+                                                                                            '168',
+                                                                                            '101',
+                                                                                            '131'
+                                                                                          ],
+                                                                           '1118:1118' => [
+                                                                                            '38',
+                                                                                            '298',
+                                                                                            '81',
+                                                                                            '158'
+                                                                                          ]
+                                                                         },
+                                                        'Point' => {
+                                                                     '1124:1124' => [
+                                                                                      '263',
+                                                                                      '353'
+                                                                                    ]
+                                                                   }
+                                                      }
+                                             },
+                              'ObjectGet' => {
+                                               '0' => {
+                                                        'framespan' => '1493:3327',
+                                                        'DetectionScore' => {
+                                                                              '1493:3327' => [
+                                                                                               '0.78'
+                                                                                             ]
+                                                                            },
+                                                        'DetectionDecision' => {
+                                                                                 '1493:3327' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'subtype' => '',
+                                                        'BoundingBox' => {
+                                                                           '3327:3327' => [
+                                                                                            '126',
+                                                                                            '337',
+                                                                                            '101',
+                                                                                            '138'
+                                                                                          ]
+                                                                         }
+                                                      }
+                                             },
+                              'file' => {
+                                          'SOURCETYPE' => undef,
+                                          'H-FRAME-SIZE' => undef,
+                                          'FRAMERATE' => '1.0',
+                                          'filename' => 'file:20050519-1503-Excerpt.mpg',
+                                          'V-FRAME-SIZE' => undef,
+                                          'file_id' => 0,
+                                          'NUMFRAMES' => '5121'
+                                        },
+                              'CellToEar' => {
+                                               '1' => {
+                                                        'framespan' => '3503:3739',
+                                                        'DetectionScore' => {
+                                                                              '3503:3739' => [
+                                                                                               '0.23'
+                                                                                             ]
+                                                                            },
+                                                        'DetectionDecision' => {
+                                                                                 '3503:3739' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'subtype' => ''
+                                                      },
+                                               '4' => {
+                                                        'framespan' => '3:739',
+                                                        'DetectionScore' => {
+                                                                              '3:739' => [
+                                                                                           '-250'
+                                                                                         ]
+                                                                            },
+                                                        'DetectionDecision' => {
+                                                                                 '3:739' => [
+                                                                                              'false'
+                                                                                            ]
+                                                                               },
+                                                        'subtype' => ''
+                                                      },
+                                               '0' => {
+                                                        'framespan' => '3503:3738',
+                                                        'DetectionScore' => {
+                                                                              '3503:3738' => [
+                                                                                               '0.01'
+                                                                                             ]
+                                                                            },
+                                                        'DetectionDecision' => {
+                                                                                 '3503:3738' => [
+                                                                                                  'true'
+                                                                                                ]
+                                                                               },
+                                                        'subtype' => ''
+                                                      },
+                                               '2' => {
+                                                        'framespan' => '3503:3739',
+                                                        'DetectionScore' => {
+                                                                              '3503:3739' => [
+                                                                                               '0.99'
+                                                                                             ]
+                                                                            },
+                                                        'DetectionDecision' => {
+                                                                                 '3503:3739' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'subtype' => ''
+                                                      }
+                                             }
+                            },
+                 'xmllintobj' => bless( {
+                                          'xsdpath' => '../../data',
+                                          'errormsg' => bless( {
+                                                                 'errormsg' => '',
+                                                                 'header' => 'TrecVid08xmllint'
+                                                               }, 'MErrorH' ),
+                                          'xsdfilesl' => [
+                                                           'TrecVid08.xsd',
+                                                           'TrecVid08-viper.xsd',
+                                                           'TrecVid08-viperdata.xsd'
+                                                         ],
+                                          'xmllint' => '/opt/local/bin/xmllint'
+                                        }, 'TrecVid08xmllint' ),
+                 'validated' => 1,
+                 'force_subtype' => 0,
+                 'gtf' => 0,
+                 'comment' => '',
+                 'errormsg' => bless( {
+                                        'errormsg' => '',
+                                        'header' => 'TrecVid08ViperFile'
+                                      }, 'MErrorH' ),
+                 'fps' => -1,
+                 'fs_framespan_max' => bless( {
+                                                'errormsg' => bless( {
+                                                                       'errormsg' => '',
+                                                                       'header' => 'ViperFramespan'
+                                                                     }, 'MErrorH' ),
+                                                'fps' => -1,
+                                                'value' => undef,
+                                                'original_value' => undef
+                                              }, 'ViperFramespan' )
+               }, 'TrecVid08ViperFile' );

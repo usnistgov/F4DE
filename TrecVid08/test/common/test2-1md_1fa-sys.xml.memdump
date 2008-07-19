@@ -1,0 +1,123 @@
+#  TrecVid08ViperFile MemDump
+
+$VAR1 = bless( {
+                 'file' => '../../test/common/test2-1md_1fa-sys.xml',
+                 'fhash' => {
+                              'ObjectGet' => {
+                                               '0' => {
+                                                        'framespan' => '1100:3327',
+                                                        'DetectionScore' => {
+                                                                              '1100:3327' => [
+                                                                                               '99'
+                                                                                             ]
+                                                                            },
+                                                        'DetectionDecision' => {
+                                                                                 '1100:3327' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'subtype' => ''
+                                                      }
+                                             },
+                              'PersonRuns' => {
+                                                '0' => {
+                                                         'framespan' => '1:1000',
+                                                         'DetectionScore' => {
+                                                                               '1:1000' => [
+                                                                                             '-10'
+                                                                                           ]
+                                                                             },
+                                                         'DetectionDecision' => {
+                                                                                  '1:1000' => [
+                                                                                                'true'
+                                                                                              ]
+                                                                                },
+                                                         'subtype' => ''
+                                                       }
+                                              },
+                              'file' => {
+                                          'SOURCETYPE' => undef,
+                                          'H-FRAME-SIZE' => undef,
+                                          'FRAMERATE' => '1.0',
+                                          'filename' => 'file:20050519-1503-Excerpt.mpg',
+                                          'V-FRAME-SIZE' => undef,
+                                          'file_id' => 0,
+                                          'NUMFRAMES' => '5121'
+                                        },
+                              'CellToEar' => {
+                                               '1' => {
+                                                        'framespan' => '2503:3739',
+                                                        'DetectionScore' => {
+                                                                              '2503:3739' => [
+                                                                                               '101'
+                                                                                             ]
+                                                                            },
+                                                        'DetectionDecision' => {
+                                                                                 '2503:3739' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'subtype' => ''
+                                                      },
+                                               '0' => {
+                                                        'framespan' => '203:3738',
+                                                        'DetectionScore' => {
+                                                                              '203:3738' => [
+                                                                                              '-100'
+                                                                                            ]
+                                                                            },
+                                                        'DetectionDecision' => {
+                                                                                 '203:3738' => [
+                                                                                                 'true'
+                                                                                               ]
+                                                                               },
+                                                        'subtype' => ''
+                                                      },
+                                               '2' => {
+                                                        'framespan' => '3503:3739',
+                                                        'DetectionScore' => {
+                                                                              '3503:3739' => [
+                                                                                               '-0.99'
+                                                                                             ]
+                                                                            },
+                                                        'DetectionDecision' => {
+                                                                                 '3503:3739' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'subtype' => ''
+                                                      }
+                                             }
+                            },
+                 'xmllintobj' => bless( {
+                                          'xsdpath' => '../../data',
+                                          'errormsg' => bless( {
+                                                                 'errormsg' => '',
+                                                                 'header' => 'TrecVid08xmllint'
+                                                               }, 'MErrorH' ),
+                                          'xsdfilesl' => [
+                                                           'TrecVid08.xsd',
+                                                           'TrecVid08-viper.xsd',
+                                                           'TrecVid08-viperdata.xsd'
+                                                         ],
+                                          'xmllint' => '/opt/local/bin/xmllint'
+                                        }, 'TrecVid08xmllint' ),
+                 'validated' => 1,
+                 'force_subtype' => 0,
+                 'gtf' => 0,
+                 'comment' => '',
+                 'errormsg' => bless( {
+                                        'errormsg' => '',
+                                        'header' => 'TrecVid08ViperFile'
+                                      }, 'MErrorH' ),
+                 'fps' => -1,
+                 'fs_framespan_max' => bless( {
+                                                'errormsg' => bless( {
+                                                                       'errormsg' => '',
+                                                                       'header' => 'ViperFramespan'
+                                                                     }, 'MErrorH' ),
+                                                'fps' => -1,
+                                                'value' => undef,
+                                                'original_value' => undef
+                                              }, 'ViperFramespan' )
+               }, 'TrecVid08ViperFile' );
