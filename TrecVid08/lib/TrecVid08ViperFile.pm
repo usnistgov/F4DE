@@ -236,7 +236,7 @@ sub get_version {
 sub get_required_xsd_files_list {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return(@xsdfilesl);
 }
@@ -328,7 +328,7 @@ sub reformat_events {
 sub get_full_events_list {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return(@ok_events);
 }
@@ -338,7 +338,7 @@ sub get_full_events_list {
 sub get_full_subevents_list {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return(@ok_subevents);
 }
@@ -348,7 +348,7 @@ sub get_full_subevents_list {
 sub _get_hasharray_inline_attributes {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return(%hasharray_inline_attributes);
 }
@@ -358,7 +358,7 @@ sub _get_hasharray_inline_attributes {
 sub _get_hash_objects_attributes_types_dynamic {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return(%hash_objects_attributes_types_dynamic);
 }
@@ -408,7 +408,7 @@ sub _is_xmllint_set {
 sub get_xmllint {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_xmllint_set()) {
     $self->_set_errormsg("\'xmllint\' is not set");
@@ -449,7 +449,7 @@ sub _is_xsdpath_set {
 sub get_xsdpath {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_xsdpath_set()) {
     $self->_set_errormsg("\'xsdpath\' is not set");
@@ -629,7 +629,7 @@ sub _is_fps_set {
 sub get_fps {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_fps_set()) {
     $self->_set_errormsg("\'fps\' is not set");
@@ -667,7 +667,7 @@ sub _is_fhash_set {
 sub _get_fhash {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_fhash_set()) {
     $self->_set_erromsg("\'fhash\' is not set");
@@ -722,7 +722,7 @@ sub _is_file_set {
 sub get_file {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_file_set()) {
     $self->_set_errormsg("\'file\' is not set");
@@ -822,12 +822,12 @@ sub _set_framespan_max_value {
 
 ########## 'comment'
 
-sub _addto_comment {
+sub addto_comment {
   my ($self, $comment) = @_;
 
   return(0) if ($self->error());
 
-  $self->{comment} .= "\n" if ($self->_is_comment_set());
+  $self->{comment} .= "\n" if ($self->is_comment_set());
 
   $self->{comment} .= $comment;
   return(1);
@@ -835,7 +835,7 @@ sub _addto_comment {
 
 #####
 
-sub _is_comment_set {
+sub is_comment_set {
   my ($self) = @_;
 
   return(0) if ($self->error());
@@ -847,17 +847,31 @@ sub _is_comment_set {
 
 #####
 
-sub _get_comment {
+sub get_comment {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
-  if (! $self->_is_comment_set()) {
+  if (! $self->is_comment_set()) {
     $self->_set_errormsg("\'comment\' not set");
     return(0);
   }
 
   return($self->{comment});
+}
+
+#####
+
+sub clear_comment {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (! $self->is_comment_set());
+
+  $self->{comment} = "";
+
+  return(1);
 }
 
 ########################################
@@ -940,7 +954,7 @@ sub validate {
 sub _call_writeback2xml {
   my ($self, $comment, $rfhash, @limitto_events) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (scalar @limitto_events == 0) {
     @limitto_events = @ok_events;
@@ -962,7 +976,7 @@ sub reformat_xml {
   my ($self, @limitto_events) = @_;
 
   my $comment = "";
-  $comment = $self->_get_comment() if ($self->_is_comment_set());
+  $comment = $self->get_comment() if ($self->is_comment_set());
 
   my %tmp = $self->_get_fhash();
 
@@ -989,7 +1003,7 @@ sub get_base_xml {
 sub _display_all {
   my ($self) = shift @_;
 
-  return(-1) if ($self->error());
+  return("") if ($self->error());
 
   return(Dumper(\$self));
 }
@@ -999,7 +1013,7 @@ sub _display_all {
 sub _display {
   my ($self, @limitto_events) = @_;
 
-  return(-1) if ($self->error());
+  return("") if ($self->error());
 
   if (scalar @limitto_events == 0) {
     @limitto_events = @ok_events;
@@ -1040,7 +1054,7 @@ sub _get_short_sf_file {
 sub get_sourcefile_filename {
   my ($self) = shift @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_validated()) {
     $self->_set_errormsg("Can only call \'get_sourcefile_filename\' for a validated file");
@@ -1274,8 +1288,8 @@ sub get_event_observations {
 
     # 'comment' is an optional key of the hash
     my $key = "comment";
-    if ($self->_is_comment_set()) {
-      my $comment = $self->_get_comment();
+    if ($self->is_comment_set()) {
+      my $comment = $self->get_comment();
       if (! $obs->addto_comment($comment) ) {
         $self->_set_errormsg("Problem adding \'comment\' to observation (" . $obs->get_errormsg() .")");
         return(0);
@@ -1368,7 +1382,7 @@ sub get_all_events_observations {
   my ($self) = shift @_;
   my @limitto_events = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (scalar @limitto_events == 0) {
     @limitto_events = @ok_events;
@@ -1397,7 +1411,7 @@ sub get_all_events_observations {
 sub remove_all_events {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_validated()) {
     $self->_set_errormsg("Can only \"remove all events\" for a validated file");
@@ -1448,6 +1462,7 @@ sub _clone_core {
   $clone->set_as_gtf() if ($self->check_if_gtf());
   $clone->set_fps($self->get_fps()) if ($self->_is_fps_set());
   $clone->set_file($self->get_file());
+  $clone->addto_comment($self->get_comment()) if ($self->is_comment_set());
   my %out = ();
   if ($keep_events) {
     %out = $self->_clone_fhash_selected_events(@limitto_events);
@@ -1593,7 +1608,7 @@ sub _set_fhash_file_numframes {
   $tmp{"file"}{"NUMFRAMES"} = $numframes;
 
   $self->_set_fhash(%tmp);
-  $self->_addto_comment("NUMFRAMES modified from $cnf to $numframes" . ((! MMisc::is_blank($commentadd)) ? " ($commentadd)" : ""));
+  $self->addto_comment("NUMFRAMES modified from $cnf to $numframes" . ((! MMisc::is_blank($commentadd)) ? " ($commentadd)" : ""));
   return(0) if ($self->error());
 
   return(1);
@@ -1694,7 +1709,7 @@ sub extend_numframes_from_observation {
   my ($self, $obs) = @_;
 
   $self->_add_obs_core($obs);
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my %ofi = $obs->get_ofi();
   if ($obs->error()) {
@@ -1727,7 +1742,7 @@ sub add_observation {
   my ($self, $obs, $keep_obs_id) = @_;
 
   $self->_add_obs_core($obs);
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   # Get observation's eventtype
   my $event = $obs->get_eventtype();
@@ -1852,7 +1867,7 @@ sub add_observation {
 sub change_sourcefile_filename {
   my ($self, $nfname) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_validated()) {
     $self->_set_errormsg("Can only call \'change_sourcefile_filename\' for a validated file");
@@ -1872,9 +1887,9 @@ sub change_sourcefile_filename {
   $lk{"file"}{"filename"} = $nfname;
   $self->_set_fhash(%lk);
 
-  $self->_addto_comment("\'sourcefile\' changed from \'$oname\' (short: \'$soname\') to \'$nfname\'");
+  $self->addto_comment("\'sourcefile\' changed from \'$oname\' (short: \'$soname\') to \'$nfname\'");
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return(1);
 }
@@ -1973,7 +1988,7 @@ sub list_used_full_events {
 sub has_events {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my @used = $self->list_used_events();
 
@@ -2079,7 +2094,7 @@ sub type_changer_init_randomseed { ## Class function
 #####
 
 sub _get_comment_random_value {
-  return(rand()) if (! defined $rseed_lastfound);
+  return(sprintf("%.12f", rand())) if (! defined $rseed_lastfound);
 
   my $tmp = $rseed_lastfound;
   $tmp =~ s%^\d+(\.)%$1%; # Remove the integer part
@@ -2143,7 +2158,7 @@ sub change_autoswitch {
     return(0);
   }
 
-  $self->_addto_comment
+  $self->addto_comment
     ( (defined $rseed)
       ? ("REF to SYS Seed : $rseed (first value: " . &_get_comment_random_value(). ")")
       : "Random REF to SYS Seed" )
@@ -2187,7 +2202,7 @@ sub change_sys_to_ref {
     return(0);
   }
 
-  $self->_addto_comment("Changed from SYS to REF file");
+  $self->addto_comment("Changed from SYS to REF file");
   return(0) if ($self->error());
 
   return($self->change_autoswitch());
@@ -2203,7 +2218,7 @@ sub change_ref_to_sys {
     return(0);
   }
 
-  $self->_addto_comment("Changed from REF to SYS file");
+  $self->addto_comment("Changed from REF to SYS file");
   return(0) if ($self->error());
 
   return($self->change_autoswitch());
@@ -3055,8 +3070,9 @@ sub _clone_fhash_selected_events {
 
   foreach my $event (@asked_events) {
     my @ids = $self->get_event_ids($event);
+    my ($etype, $stype) = split_full_event($event, 0);
     foreach my $id (@ids) {
-      %{$out_hash{$event}{$id}} = &__clone(%{$in_hash{$event}{$id}});
+      %{$out_hash{$etype}{$id}} = &__clone(%{$in_hash{$etype}{$id}});
     }
   }
 
