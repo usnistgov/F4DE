@@ -33,7 +33,7 @@
   </config>
   <data>
     <sourcefile filename="file:20050519-1503-Excerpt.mpg">
-      <!-- NUMFRAMES modified from 5121 to 883 (Cropped to [1118:2000], then shifted by -1117 to have the first frame start at 1) -->
+      <!-- NUMFRAMES modified from 5121 to 883 (Trimmed to [1118:2000], then shifted by -1117 to have the first frame start at 1) -->
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
           <data:fvalue value="1.0"/>
@@ -46,7 +46,7 @@
         <attribute name="V-FRAME-SIZE"/>
       </file>
       <object name="ObjectPut" id="0" framespan="1:376">
-        <!-- Cropped from [938:1493] to [1118:1493]
+        <!-- Trimmed from [938:1493] to [1118:1493]
 Framespan was shifted by -1117 -->
         <attribute name="BoundingBox">
           <data:bbox framespan="1:1" x="38" y="298" height="81" width="158"/>
@@ -67,11 +67,9 @@ Framespan was shifted by -1117 -->
         </attribute>
       </object>
       <object name="ObjectGet" id="0" framespan="376:883">
-        <!-- Cropped from [1493:3327] to [1493:2000]
+        <!-- Trimmed from [1493:3327] to [1493:2000]
 Framespan was shifted by -1117 -->
-        <attribute name="BoundingBox">
-          <data:bbox framespan="2210:2210" x="126" y="337" height="101" width="138"/>
-        </attribute>
+        <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="false"/>
         </attribute>
