@@ -61,39 +61,35 @@ my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
 # MMisc (part of this tool)
-unless (eval "use MMisc; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+unless (eval "use MMisc; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
-  }
+}
 
 # TrecVid08ViperFile (part of this tool)
-unless (eval "use TrecVid08ViperFile; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrecVid08ViperFile; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # TrecVid08HelperFunctions (part of this tool)
-unless (eval "use TrecVid08HelperFunctions; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrecVid08HelperFunctions; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1")
-  {
-    warn_print
-      (
-       "\"Getopt::Long\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+unless (eval "use Getopt::Long; 1") {
+  warn_print
+    (
+     "\"Getopt::Long\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
+    );
+  $have_everything = 0;
+}
 
 # Something missing ? Abort
 error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
@@ -131,6 +127,7 @@ my $remse = 0;
 my $crop = "";
 my $fps = undef;
 my $changetype = 0;
+my $MemDump = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 # USed:   C                T   X    c   gh   lm  p r   vwx  
@@ -154,6 +151,7 @@ GetOptions
    'crop=s'          => \$crop,
    'fps=s'           => \$fps,
    'ChangeType:s'    => \$changetype,
+   'WriteMemDump'    => \$MemDump,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -209,6 +207,9 @@ if (($writeback != -1) && ($writeback ne "")) {
   $writeback .= "/" if ($writeback !~ m%\/$%); # Add a trailing slash
 }
 
+error_quit("\'WriteMemDump\' can only be used in conjunction with \'write\'")
+  if (($MemDump) && ($writeback == -1));
+
 my ($crop_beg, $crop_end) = (0, 0);
 if (! MMisc::is_blank($crop)) {
   error_quit("\'crop\' can only be used in conjunction with \'write\'") if ($writeback == -1);
@@ -228,13 +229,15 @@ if (! MMisc::is_blank($crop)) {
 ##########
 # Main processing
 my $tmp = "";
-my %all = ();
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
 TrecVid08ViperFile::type_changer_init_randomseed($changetype) if ($changetype);
 while ($tmp = shift @ARGV) {
   my ($ok, $object) = &load_file($isgtf, $tmp);
   next if (! $ok);
+
+  # This is really if you are a debugger
+  print("** Memory Representation:\n", $object->_display_all()) if ($show);
 
   if (! MMisc::is_blank($crop)) {
     (my $err, $object) = TrecVid08HelperFunctions::ViperFile_crop($object, $crop_beg, $crop_end);
@@ -258,6 +261,7 @@ while ($tmp = shift @ARGV) {
     # Re-adapt @asked_events for each object if automatic limitto is set
     $object->unset_force_subtype() if ($remse);
     @asked_events = $object->list_used_full_events() if ($autolt);
+
     my $txt = $object->reformat_xml(@asked_events);
     error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
       if ($object->error());
@@ -269,9 +273,18 @@ while ($tmp = shift @ARGV) {
     }
     error_quit("Problem while trying to \'write\'")
       if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
+
+    if ($MemDump) {
+      # Duplicate the object in memory with only the selected types
+      my $nvf = $object->clone_with_selected_events(@asked_events);
+      error_quit("Problem while \'clone\'-ing the ViperFile")
+	if (! defined $nvf);
+
+      error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
+	if (! TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf));
+    }
   }
 
-  $all{$tmp} = $object;
   $ndone++;
 }
 ok_quit("All files processed (Validated: $ndone | Total: $ntodo)\n");
@@ -298,44 +311,17 @@ sub valerr {
 sub load_file {
   my ($isgtf, $tmp) = @_;
 
-  if (! -e $tmp) {
-    &valerr($tmp, "file does not exists, skipping");
-    return(0, ());
-  }
-  if (! -f $tmp) {
-    &valerr($tmp, "is not a file, skipping\n");
-    return(0, ());
-  }
-  if (! -r $tmp) {
-    &valerr($tmp, "file is not readable, skipping\n");
-    return(0, ());
-  }
-  
-  # Prepare the object
-  my $object = new TrecVid08ViperFile();
-  error_quit("While trying to set \'xmllint\' (" . $object->get_errormsg() . ")")
-    if ( ($xmllint ne "") && (! $object->set_xmllint($xmllint)) );
-  error_quit("While trying to set \'TrecVid08xsd\' (" . $object->get_errormsg() . ")")
-    if ( ($xsdpath ne "") && (! $object->set_xsdpath($xsdpath)) );
-  error_quit("While setting \'gtf\' status (" . $object->get_errormsg() . ")")
-    if ( ($isgtf) && ( ! $object->set_as_gtf()) );
-  error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
-    if ( ! $object->set_file($tmp) );
-  error_quit("While setting \'fps\' ($fps) (" . $object->get_errormsg() . ")")
-    if ( (defined $fps) &&  ( ! $object->set_fps($fps) ) );
+  my ($retstatus, $object, $msg) = 
+    TrecVid08HelperFunctions::load_ViperFile($isgtf, $tmp, 
+					     $fps, $xmllint, $xsdpath);
 
-  # Validate
-  if (! $object->validate()) {
-    &valerr($tmp, $object->get_errormsg());
-    return(0, ());
+  if ($retstatus) { # OK return
+    &valok($tmp, "validates");
+  } else {
+    &valerr($tmp, $msg);
   }
 
-  &valok($tmp, "validates");
-
-  # This is really if you are a debugger
-  print("** Memory Representation:\n", $object->_display_all()) if ($show);
-
-  return(1, $object);
+  return($retstatus, $object);
 }
 
 ########################################
@@ -346,7 +332,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed]] [--crop beg:end]] [--fps fps] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump]] [--fps fps] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -358,9 +344,10 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --limitto       Only care about provided list of events
   --removeSubEventtypes  Useful when working with specialized Scorer outputs to remove specialized sub types
   --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
-  --crop          Will crop file content to only keep content that is found within the beg and end frames
-  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --ChangeType    Convert a SYS to REF or a REF to SYS.
+  --crop          Will crop file content to only keep content that is found within the beg and end frames
+  --WriteMemDump  Write a memory representation of validated Viper Files that can be used by the Scorer and Merger tools
+  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
   --version       Print version number and exit
   --help          Print this usage information and exit
@@ -485,11 +472,12 @@ B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well
 Will crop all input ViperFiles to the specified range. Only valid when used with the 'write' option.
 Note that cropping consist of trimming all seen events to the selected range and then shifting the file to start at 1 again.
 
-=item <--ChangeType> [I<randomseed>]
+=item <--ChangeType> [I<randomseed>[:I<find_value]]
 
 Convert a SYS to REF or a REF to SYS.
 The I<randomseed> is useful if you want to reproduce the result in the future.
 Be forewarned that it is possible to reproduce a same output if reusing the I<randomseed> value but the process and source files have to be the exact same too.
+Also, when trying to reproduce a file, it is possible to ask the program to find the file's first random value (see the XML sourcefile comment) thanks to the I<find_value> argument.
 
 =item B<--fps> I<fps>
 
@@ -534,6 +522,11 @@ Display B<TV08ViperValidator> version information.
 =item B<--write> I<directory>
 
 Once validation has been completed for a given file, B<TV08ViperValidator> will write a new XML representation of this file to either the standard output (if I<directory> is not set), or will create a file with the same name as the input file in I<directory> (if specified).
+
+=item B<--WriteMemDump>
+
+Write to disk a memory representation of the validated Viper File.
+This memory representation file can be used as the input of the Scorer, Merger and Validator tools.
 
 =item B<--xmllint> I<location>
 
