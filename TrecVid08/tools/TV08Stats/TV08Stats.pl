@@ -61,74 +61,73 @@ my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
 # MMisc (part of this tool)
-unless (eval "use MMisc; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use MMisc; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # TrecVid08ViperFile (part of this tool)
-unless (eval "use TrecVid08ViperFile; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrecVid08ViperFile; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
-unless (eval "use TrecVid08Observation; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08Observation\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrecVid08Observation; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08Observation\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
-unless (eval "use ViperFramespan; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"ViperFramespan\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use ViperFramespan; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"ViperFramespan\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
-unless (eval "use SimpleAutoTable; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use SimpleAutoTable; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1")
-  {
-    warn_print
-      (
-       "\"Getopt::Long\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+unless (eval "use Getopt::Long; 1") {
+  warn_print
+    (
+     "\"Getopt::Long\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
+    );
+  $have_everything = 0;
+}
 
 # Statistics::Descriptive::Discrete (is part of CPAN)
-unless (eval "use Statistics::Descriptive::Discrete; 1")
-  {
-    warn_print
-      (
-       "\"Statistics::Descriptive::Discrete\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?query=descriptive+discrete&mode=all\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+unless (eval "use Statistics::Descriptive::Discrete; 1") {
+  warn_print
+    (
+     "\"Statistics::Descriptive::Discrete\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?query=descriptive+discrete&mode=all\" for installation information\n"
+    );
+  $have_everything = 0;
+}
 
 # Data::Dumper (is part of CPAN)
-unless (eval "use Data::Dumper; 1")
-  {
-    warn_print
-      (
-       "\"Data::Dumper\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?query=data+dumper&mode=all\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+unless (eval "use Data::Dumper; 1") {
+  warn_print
+    (
+     "\"Data::Dumper\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?query=data+dumper&mode=all\" for installation information\n"
+    );
+  $have_everything = 0;
+}
+
+# TrecVid08HelperFunctions (part of this tool)
+unless (eval "use TrecVid08HelperFunctions; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Something missing ? Abort
 error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
@@ -449,41 +448,17 @@ sub valerr {
 sub load_file {
   my ($isgtf, $tmp) = @_;
 
-  if (! -e $tmp) {
-    &valerr($tmp, $isgtf, "file does not exists, skipping");
-    return(0, ());
-  }
-  if (! -f $tmp) {
-    &valerr($tmp, $isgtf, "is not a file, skipping\n");
-    return(0, ());
-  }
-  if (! -r $tmp) {
-    &valerr($tmp, $isgtf, "file is not readable, skipping\n");
-    return(0, ());
-  }
+  my ($retstatus, $object, $msg) =
+    TrecVid08HelperFunctions::load_ViperFile($isgtf, $tmp, 
+					     $fps, $xmllint, $xsdpath);
   
-  # Prepare the object
-  my $object = new TrecVid08ViperFile();
-  error_quit("While trying to set \'xmllint\' (" . $object->get_errormsg() . ")")
-    if ( ($xmllint ne "") && (! $object->set_xmllint($xmllint)) );
-  error_quit("While trying to set \'TrecVid08xsd\' (" . $object->get_errormsg() . ")")
-    if ( ($xsdpath ne "") && (! $object->set_xsdpath($xsdpath)) );
-  error_quit("While setting \'gtf\' status (" . $object->get_errormsg() . ")")
-    if ( ($isgtf) && ( ! $object->set_as_gtf()) );
-  error_quit("While setting \'fps\' ($fps) (" . $object->get_errormsg() . ")")
-    if ( ! $object->set_fps($fps) );
-  error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
-    if ( ! $object->set_file($tmp) );
-  
-  # Validate (important to confirm that we can have a memory representation)
-  if (! $object->validate()) {
-    &valerr($tmp, $object->get_errormsg());
-    return(0, ());
+  if ($retstatus) { # OK return
+    &valok($tmp, "Loaded");
+  } else {
+    &valerr($tmp, $msg);
   }
 
-  &valok($tmp, "Loaded");
-  
-  return(1, $object);
+  return($retstatus, $object);
 }
 
 ########################################

@@ -61,104 +61,98 @@ my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
 # MMisc (part of this tool)
-unless (eval "use MMisc; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use MMisc; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # TrecVid08ViperFile (part of this tool)
-unless (eval "use TrecVid08ViperFile; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrecVid08ViperFile; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # TrecVid08ECF (part of this tool)
-unless (eval "use TrecVid08ECF; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrecVid08ECF; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # TrecVid08EventList (part of this tool)
-unless (eval "use TrecVid08EventList; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrecVid08EventList; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # MetricTV08 (part of this tool)
-unless (eval "use MetricTV08; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MetricTV08\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use MetricTV08; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"MetricTV08\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # BipartiteMatch (part of this tool)
-unless (eval "use BipartiteMatch; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"BipartiteMatch\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use BipartiteMatch; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"BipartiteMatch\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Trials (part of this tool)
-unless (eval "use Trials; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"Trials\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use Trials; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"Trials\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # TrialSummaryTable (part of this tool)
-unless (eval "use TrialSummaryTable; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrialSummaryTable\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrialSummaryTable; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrialSummaryTable\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # SimpleAutoTable (part of this tool)
-unless (eval "use SimpleAutoTable; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use SimpleAutoTable; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # DETCurve (part of this tool)
-unless (eval "use DETCurve; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"DETCurve\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
-
+unless (eval "use DETCurve; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"DETCurve\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # DETCurveSet (part of this tool)
-unless (eval "use DETCurveSet; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"DETCurveSet\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use DETCurveSet; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"DETCurveSet\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1")
-  {
-    warn_print
-      (
-       "\"Getopt::Long\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+unless (eval "use Getopt::Long; 1") {
+  warn_print
+    (
+     "\"Getopt::Long\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
+    );
+  $have_everything = 0;
+}
+
+# TrecVid08HelperFunctions (part of this tool)
+unless (eval "use TrecVid08HelperFunctions; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Something missing ? Abort
 error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
@@ -567,38 +561,15 @@ sub load_preprocessing {
   my $ntodo = scalar @filelist;
   my $ndone = 0;
   while ($tmp = shift @filelist) {
-    if (! -e $tmp) {
-      &valerr($tmp, $isgtf, "file does not exists, skipping");
-      next;
-    }
-    if (! -f $tmp) {
-      &valerr($tmp, $isgtf, "is not a file, skipping\n");
-      next;
-    }
-    if (! -r $tmp) {
-      &valerr($tmp, $isgtf, "file is not readable, skipping\n");
-      next;
-    }
+    my ($retstatus, $object, $msg) =
+      TrecVid08HelperFunctions::load_ViperFile($isgtf, $tmp, 
+					       $fps, $xmllint, $xsdpath);
 
-    # Prepare the object
-    my $object = new TrecVid08ViperFile();
-    error_quit("While trying to set \'xmllint\' (" . $object->get_errormsg() . ")")
-      if ( ($xmllint ne "") && (! $object->set_xmllint($xmllint)) );
-    error_quit("While trying to set \'TrecVid08xsd\' (" . $object->get_errormsg() . ")")
-      if ( ($xsdpath ne "") && (! $object->set_xsdpath($xsdpath)) );
-    error_quit("While setting \'gtf\' status (" . $object->get_errormsg() . ")")
-      if ( ($isgtf) && ( ! $object->set_as_gtf()) );
-    error_quit("While setting \'fps\' ($fps) (" . $object->get_errormsg() . ")")
-      if ( ! $object->set_fps($fps) );
-    error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
-      if ( ! $object->set_file($tmp) );
-
-    # Validate (important to confirm that we can have a memory representation)
-    if (! $object->validate()) {
-      &valerr($tmp, $isgtf, $object->get_errormsg());
-      next;
-    } else {
+    if ($retstatus) { # OK return
       &valok($tmp, $isgtf, "Loaded");
+    } else {
+      &valerr($tmp, $isgtf, $msg);
+      next;
     }
 
     # This is really if you are a debugger
