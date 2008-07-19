@@ -61,41 +61,52 @@ my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 
 # MMisc (part of this tool)
-unless (eval "use MMisc; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use MMisc; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # TrecVid08ViperFile (part of this tool)
-unless (eval "use TrecVid08ViperFile; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrecVid08ViperFile; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # TrecVid08EventList (part of this tool)
-unless (eval "use TrecVid08EventList; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrecVid08EventList; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1")
-  {
-    warn_print
-      (
-       "\"Getopt::Long\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+unless (eval "use Getopt::Long; 1") {
+  warn_print
+    (
+     "\"Getopt::Long\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
+    );
+  $have_everything = 0;
+}
 
-use Data::Dumper;
+# Data::Dumper (usualy part of the Perl Core)
+unless (eval "use Data::Dumper; 1") {
+  warn_print
+    (
+     "\"Data::Dumper\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
+    );
+  $have_everything = 0;
+}
+
+# TrecVid08HelperFunctions (part of this tool)
+unless (eval "use TrecVid08HelperFunctions; 1") {
+  my $pe = &eo2pe($@);
+  warn_print("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Something missing ? Abort
 error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
@@ -217,7 +228,7 @@ foreach my $tmp (@ARGV) {
   error_quit("File key ($key) seems to have already been loaded; can not load same file key multiple times, aborting")
     if (exists $all_vf{$key});
 
-  my ($ok, $object) = &load_file($isgtf, $tmp, $fname, $fsshift);
+  my ($ok, $object) = &load_file($isgtf, $fname, $tmp);
   next if (! $ok);
 
   $all_vf{$key} = $object;
@@ -270,8 +281,10 @@ foreach my $key (sort keys %all_vf) {
   # Create the mergefile object for this sourcefile filename (if not existant yet)
   if (! defined $mergefiles{$sffn}) {
     my $mf = $object->clone_with_no_events();
-    error_quit("While duplicating the source object (" . $object->get_errormsg() .")")
+    $mf->clear_comment();
+    error_quit("While duplicating the source ViperFile (" . $object->get_errormsg() .")")
       if ($object->error());
+    
     $mergefiles{$sffn} = $mf;
   }
 
@@ -279,6 +292,7 @@ foreach my $key (sort keys %all_vf) {
   if ($ovoxml) {
     if (! defined $ovofiles{$sffn}) {
       my $vf = $object->clone_with_no_events();
+      $vf->clear_comment();
       error_quit("While duplicating the source object (" . $object->get_errormsg() .")")
 	if ($object->error());
       $ovofiles{$sffn} = $vf;
@@ -645,43 +659,19 @@ sub get_fname_fsshift_from_key {
 #####
 
 sub load_file {
-  my ($isgtf, $tmp, $fname, $fsshift) = @_;
+  my ($isgtf, $tmp, $pname) = @_;
 
-  if (! -e $fname) {
-    &valerr($tmp, "file does not exists, skipping");
-    return(0, ());
-  }
-  if (! -f $fname) {
-    &valerr($tmp, "is not a file, skipping\n");
-    return(0, ());
-  }
-  if (! -r $fname) {
-    &valerr($tmp, "file is not readable, skipping\n");
-    return(0, ());
-  }
-  
-  # Prepare the object
-  my $object = new TrecVid08ViperFile();
-  error_quit("While trying to set \'xmllint\' (" . $object->get_errormsg() . ")")
-    if ( ($xmllint ne "") && (! $object->set_xmllint($xmllint)) );
-  error_quit("While trying to set \'TrecVid08xsd\' (" . $object->get_errormsg() . ")")
-    if ( ($xsdpath ne "") && (! $object->set_xsdpath($xsdpath)) );
-  error_quit("While setting \'gtf\' status (" . $object->get_errormsg() . ")")
-    if ( ($isgtf) && ( ! $object->set_as_gtf()) );
-  error_quit("While setting \'fps\' ($fps) (" . $object->get_errormsg() . ")")
-    if ( ! $object->set_fps($fps) );
-  error_quit("While setting \'file\' ($fname) (" . $object->get_errormsg() . ")")
-    if ( ! $object->set_file($fname) );
-  
-  # Validate (important to confirm that we can have a memory representation)
-  if (! $object->validate()) {
-    &valerr($tmp, $object->get_errormsg());
-    return(0, ());
+  my ($retstatus, $object, $msg) = 
+    TrecVid08HelperFunctions::load_ViperFile($isgtf, $tmp, 
+					     $fps, $xmllint, $xsdpath);
+
+  if ($retstatus) { # OK return
+    &valok($pname, "Loaded");
+  } else {
+    &valerr($pname, $msg);
   }
 
-  &valok($tmp, "Loaded");
-  
-  return(1, $object);
+  return($retstatus, $object);
 }
 
 ########################################
