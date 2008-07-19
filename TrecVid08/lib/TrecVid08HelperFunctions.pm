@@ -38,6 +38,12 @@ if ($version =~ m/b$/) {
 
 my $versionid = "TrecVid08HelperFunctions.pm Version: $version";
 
+##########
+
+my $VF_MemDump_Suffix = ".memdump";
+my $VF_MemDump_FileHeader_cmp = "\#  TrecVid08ViperFile MemDump";
+my $VF_MemDump_FileHeader = $VF_MemDump_FileHeader_cmp . "\n\n";
+
 ####################
 
 sub ViperFile_crop {
@@ -81,7 +87,7 @@ sub ViperFile_crop {
   return("Problem obtaining the ViperFramespan's value (" . $fs_range->get_errormsg() . ")", undef)
     if ($fs_range->error());
 
-  # Crop each observation in turn
+  # Trim each observation in turn
   my @left = ();
   foreach my $obs (@ao) {
     # Check if the observation is even overlapping with the area
@@ -90,11 +96,11 @@ sub ViperFile_crop {
       if ($obs->error());
     next if (! defined $fs_ov);
 
-    # Now, crop to the fs_range
-    my $crop_done = $obs->crop_to_fs($fs_range);
-    return("Problem cropping observation to selected range (" . $obs->get_errormsg() . ")", undef)
+    # Now, Trim to the fs_range
+    my $trim_done = $obs->trim_to_fs($fs_range);
+    return("Problem trimming observation to selected range (" . $obs->get_errormsg() . ")", undef)
       if ($obs->error());
-    next if (! $crop_done);
+    next if (! $trim_done);
 
     push @left, $obs;
   }
@@ -115,7 +121,7 @@ sub ViperFile_crop {
 
   # Next step is to adapt the ViperFile's NUMFRAMES to its new boundaries
   my $nf = $end + $fsshift; # fsshift is negative
-  my $an = $vfc->modify_numframes($nf, "Cropped to [$fsr_txt], then shifted by $fsshift to have the first frame start at 1");
+  my $an = $vfc->modify_numframes($nf, "Trimmed to [$fsr_txt], then shifted by $fsshift to have the first frame start at 1");
   return("Problem modifying numframes (" . $vfc->get_errormsg() . ")", undef)
     if ($vfc->error());
 
@@ -129,3 +135,106 @@ sub ViperFile_crop {
   return("", $vfc);
 }
 
+##########
+
+sub save_ViperFile_MemDump {
+  my ($fname, $object) = @_;
+
+  return(MMisc::dump_memory_object($fname, $VF_MemDump_Suffix,
+				   $object, $VF_MemDump_FileHeader));
+}
+
+##########
+
+sub load_ViperFile {
+  my ($isgtf, $filename, $fps, $xmllint, $xsdpath) = @_;
+
+  return(0, undef, "file does not exists") 
+    if (! -e $filename);
+
+  return(0, undef, "is not a file")
+    if (! -f $filename);
+
+  return(0, undef, "file is not readable")
+    if (! -r $filename);
+
+  open FILE, "<$filename"
+    or return(0, undef, "Problem opening file ($filename) : $!");
+
+  my $header = <FILE>;
+  close FILE;
+  chomp $header;
+
+  return(&_load_MemDump_ViperFile($isgtf, $filename))
+    if ($header eq $VF_MemDump_FileHeader_cmp);
+  
+  return(&_load_XML_ViperFile($isgtf, $filename, $fps, $xmllint, $xsdpath));
+}
+
+#####
+
+sub _load_XML_ViperFile {
+  my ($isgtf, $tmp, $fps, $xmllint, $xsdpath) = @_;
+
+  # Prepare the object
+  my $object = new TrecVid08ViperFile();
+
+  return(0, undef, "While trying to set \'xmllint\' (" 
+	 . $object->get_errormsg() . ")")
+    if ( ($xmllint ne "") && (! $object->set_xmllint($xmllint)) );
+
+  return(0, undef, "While trying to set \'TrecVid08xsd\' (" 
+	 . $object->get_errormsg() . ")")
+    if ( ($xsdpath ne "") && (! $object->set_xsdpath($xsdpath)) );
+
+  return(0, undef, "While setting \'gtf\' status (" 
+	 . $object->get_errormsg() . ")")
+    if ( ($isgtf) && ( ! $object->set_as_gtf()) );
+
+  return(0, undef, "While setting \'file\' ($tmp) (" 
+	 . $object->get_errormsg() . ")")
+    if ( ! $object->set_file($tmp) );
+
+  return(0, undef, "While setting \'fps\' ($fps) (" 
+	 . $object->get_errormsg() . ")")
+    if ( (defined $fps) &&  ( ! $object->set_fps($fps) ) );
+
+  # Validate
+  return(0, undef, $object->get_errormsg())
+    if (! $object->validate());
+
+  return(1, $object, "");
+}
+
+#####
+
+sub _load_MemDump_ViperFile {
+  my ($isgtf, $file) = @_;
+
+  my $object = MMisc::load_memory_object($file);
+
+  my $rtxt = "[MemDump] ";
+
+  return(0, undef, $rtxt . "Problem reading memory representation")
+    if (! defined $object);
+
+  return(0, undef, $rtxt . "Problem reading memory representation: Not a ViperFile MeMDump") 
+    if (ref $object ne "TrecVid08ViperFile");
+
+  # Error ?
+  return(0, undef, $rtxt . $object->get_errormsg())
+    if ($object->error());
+
+  # Validate
+  return(0, undef, $rtxt . $object->get_errormsg())
+    if (! $object->validate());
+
+  # GTF ?
+ return(0, undef, $rtxt . "Object is not a GTF as expected")
+   if ( ($isgtf) && (! $object->check_if_gtf()) );
+  # or SYS ?
+  return(0, undef, $rtxt . "Object is not SYS as expected")
+    if ( (! $isgtf) && (! $object->check_if_sys()) );
+
+  return(1, $object, $rtxt . "validates");
+}
