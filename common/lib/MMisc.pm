@@ -23,6 +23,8 @@ use strict;
 
 # File::Temp (usualy part of the Perl Core)
 use File::Temp qw / tempfile /;
+# Data::Dumper
+use Data::Dumper;
 
 my $version     = "0.1b";
 
@@ -179,7 +181,8 @@ sub sum {
 ##########
 
 sub writeTo {
-  my ($file, $addend, $printfn, $append, $txt, $filecomment, $stdoutcomment) = @_;
+  my ($file, $addend, $printfn, $append, $txt, $filecomment, $stdoutcomment,
+     $fileheader, $filetrailer) = @_;
 
   my $rv = 1;
 
@@ -210,7 +213,9 @@ sub writeTo {
   }
 
   if (! &is_blank($ofile)) {
+    print FILE $fileheader if (! &is_blank($fileheader));
     print FILE $txt;
+    print FILE $filetrailer if (! &is_blank($filetrailer));
     close FILE;
     print((($da) ? "Appended to file:" : "Wrote:") . " $ofile$filecomment\n") 
       if ($printfn);
@@ -389,6 +394,32 @@ sub are_float_equal {
   return(1) if (abs($v1 - $v2) < $p);
 
   return(0);
+}
+
+##########
+
+sub dump_memory_object {
+  my ($file, $ext, $obj, $fileheader) = @_;
+
+  return( &writeTo($file, $ext, 1, 0, Dumper($obj), "", "", $fileheader, "") );
+}
+
+#####
+
+sub load_memory_object {
+  my ($file) = @_;
+
+  my $str = "";
+  open FILE, "<$file"
+    or return(undef);
+  while (my $line = <FILE>) {
+    $str .= $line;
+  }
+  close FILE;
+
+  my $VAR1;
+  eval $str;
+  return($VAR1);
 }
 
 ############################################################
