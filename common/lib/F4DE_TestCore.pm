@@ -247,7 +247,7 @@ sub run_complextest {
 
   &print_name($testname, $subtype);
 
-  if (&check_skip($testname)) {
+  if ( (&check_skip($testname)) || (! &query_do_test($testname)) ) {
     print "Skipped\n";
     return(1);
   }
