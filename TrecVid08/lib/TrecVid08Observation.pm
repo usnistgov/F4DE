@@ -141,7 +141,7 @@ sub _is_eventtype_set {
 sub get_key_dummy_eventtype {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return($dummy_et);
 }
@@ -151,7 +151,7 @@ sub get_key_dummy_eventtype {
 sub get_eventtype {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_eventtype_set()) {
     $self->_set_errormsg("\'eventtype\' not set. ");
@@ -194,7 +194,7 @@ sub is_eventsubtype_set {
 sub get_eventsubtype {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_eventsubtype_set()) {
     $self->_set_errormsg("\'eventsubtype\' not set. ");
@@ -276,7 +276,7 @@ sub get_id {
 
   if (! $self->_is_id_set()) {
     $self->_set_errormsg("\'id\' not set. ");
-    return(0);
+    return(-1);
   }
   return($self->{id});
 }
@@ -314,7 +314,7 @@ sub _is_filename_set {
 sub get_filename {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_filename_set()) {
     $self->_set_errormsg("\'filename\' not set. ");
@@ -356,7 +356,7 @@ sub _is_xmlfilename_set {
 sub get_xmlfilename {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_xmlfilename_set()) {
     $self->_set_errormsg("\'xmlfilename\' not set. ");
@@ -400,7 +400,7 @@ sub _is_framespan_set {
 sub get_framespan {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_framespan_set()) {
     $self->_set_errormsg("\'framespan\' not set. ");
@@ -445,7 +445,7 @@ sub _is_fs_file_set {
 sub get_fs_file {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_fs_file_set()) {
     $self->_set_errormsg("\'fs_file\' not set. ");
@@ -483,7 +483,7 @@ sub _is_isgtf_set {
 sub get_isgtf {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_isgtf_set()) {
     $self->_set_errormsg("\'isgtf\' not set. ");
@@ -526,7 +526,7 @@ sub _is_ofi_set {
 sub get_ofi {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_ofi_set()) {
     $self->_set_errormsg("\'ofi\' not set. ");
@@ -570,7 +570,7 @@ sub is_comment_set {
 sub get_comment {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_comment_set()) {
     $self->_set_errormsg("\'comment\' not set. ");
@@ -585,7 +585,7 @@ sub get_comment {
 sub clear_comment {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return(1) if (! $self->is_comment_set());
 
@@ -622,7 +622,7 @@ sub _is_DetectionScore_set {
 sub get_DetectionScore {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_DetectionScore_set()) {
     $self->_set_errormsg("\'DetectionScore\' not set. ");
@@ -669,7 +669,7 @@ sub _is_DetectionDecision_set {
 sub get_DetectionDecision {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_DetectionDecision_set()) {
     $self->_set_errormsg("\'DetectionDecision\' not set. ");
@@ -711,7 +711,7 @@ sub _is_BoundingBox_set {
 sub get_BoundingBox {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_BoundingBox_set()) {
     $self->_set_errormsg("\'BoundingBox\' not set. ");
@@ -758,7 +758,7 @@ sub _is_Point_set {
 sub get_Point {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->_is_Point_set()) {
     $self->_set_errormsg("\'Point\' not set. ");
@@ -828,6 +828,24 @@ sub _set_selected_core {
     $self->_set_errormsg("WEIRD: Could not select a choice in \'set_selected\' ($choice). ");
     return(0);
   }
+}
+
+#####
+
+sub unset_selected {
+  my $self = shift @_;
+  
+  my $choice = shift @_;
+
+  return(0) if ($self->error());
+
+  my @ok_choices = &_get_set_selected_ok_choices();
+  if (! grep(m%^$choice$%, @ok_choices)) {
+    $self->_set_errormsg("In \'set_selected\', choice ($choice) is not recognized. ");
+    return(0);
+  }
+
+  $self->{$choice} = undef;
 }
 
 #####
@@ -1178,7 +1196,7 @@ sub Mid {
 sub Dec {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my $isgtf = $self->get_isgtf();
   return($isgtf) if ($self->error());
@@ -1200,19 +1218,19 @@ sub Dec {
 sub _get_BOTH_Beg_Mid_End_Dur{
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my $b = $self->Beg();
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my $m = $self->Mid();
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my $e = $self->End();
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my $du = $self->Dur();
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return ($b, $m, $e, $du);
 }
@@ -1222,7 +1240,7 @@ sub _get_BOTH_Beg_Mid_End_Dur{
 sub get_REF_Beg_Mid_End_Dur {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return($self->_get_BOTH_Beg_Mid_End_Dur());
 }
@@ -1232,13 +1250,13 @@ sub get_REF_Beg_Mid_End_Dur {
 sub get_SYS_Beg_Mid_End_Dur_Dec {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my @o = $self->_get_BOTH_Beg_Mid_End_Dur();
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my $de = $self->Dec();
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   return(@o, $de);
 }
@@ -1501,9 +1519,9 @@ sub shift_framespan {
   return(1);
 }
 
-############################################################ crop functions
+############################################################ trim functions
 
-sub _crop_framespan_selected {
+sub _trim_framespan_selected {
   my ($self, $choice, $fs_ov) = @_;
 
   my @ok_choices = &_get_set_selected_ok_choices();
@@ -1531,38 +1549,43 @@ sub _crop_framespan_selected {
     my $fs_tmp = $chash{$key}{$key_fs};
     my $ct = $chash{$key}{$key_ct};
 
-    my $iw = $fs_tmp->is_within($fs_ov);
+    my $fs_nov = $fs_tmp->get_overlap($fs_ov);
     if ($fs_tmp->error()) {
-      $self->_set_errormsg("Problem while checking \'is_within\' for the framespan of $key (" . $fs_tmp->get_errormsg() . "). ");
+      $self->_set_errormsg("Problem while checking \'get_overlap\' for the framespan of $key (" . $fs_tmp->get_errormsg() . "). ");
       return(0);
     }
 
-    # We only want to keep framespans that are within
-    next if (! $iw);
+    # We only want to keep framespans that are overlapping
+    next if (! defined $fs_nov);
 
-    my $txt_fs = $fs_tmp->get_value();
+    my $txt_fs = $fs_nov->get_value();
 
-    $ohash{$txt_fs}{$key_fs} = $fs_tmp;
+    $ohash{$txt_fs}{$key_fs} = $fs_nov;
     $ohash{$txt_fs}{$key_ct} = $ct;
     $doneany++;
   }
 
-  # If all elements were cropped, simply return
-  return(1) if ($doneany == 0);
+  # If all elements were trimmed, make sure to clean the type
+  if ($doneany == 0) {
+    $self->unset_selected($choice);
+  } else {
+    $self->set_selected($choice, %ohash);
+  }
 
-  $self->set_selected($choice, %ohash);
-  return(1);
+  return(0) if ($self->error());
+
+  return(1)
 }
 
 #####
 
-sub crop_to_fs {
+sub trim_to_fs {
   my ($self, $lfs) = @_;
 
   return(0) if ($self->error());
 
   if (! $self->is_validated()) {
-    $self->_set_errormsg("Can only crop framespan on validated Observations");
+    $self->_set_errormsg("Can only trim framespan on validated Observations");
     return(0);
   }
 
@@ -1606,16 +1629,16 @@ sub crop_to_fs {
   }
   my $end = $fs->get_end_fs();
   if ($fs->error()) {
-    $self->_set_errormsg("Problem obtaining the crop framespan's end value (" . $fs->get_errormsg() . ")");
+    $self->_set_errormsg("Problem obtaining the trim framespan's end value (" . $fs->get_errormsg() . ")");
     return(0);
   }
   $ofi{$key} = $end;
   $self->set_ofi(%ofi);
 
-  # crop other attributes
+  # trim other attributes
   my @ok_choices = &_get_set_selected_ok_choices();
   foreach my $choice (@ok_choices) {
-    $self->_crop_framespan_selected($choice, $fs_ov);
+    $self->_trim_framespan_selected($choice, $fs_ov);
     return(0) if ($self->error());
   }
 
@@ -1624,11 +1647,11 @@ sub crop_to_fs {
   return(0) if ($self->error());
   my $end_range = $fs_fs->get_value();
   if ($fs_fs->error()) {
-    $self->_set_errormsg("Prolem obtaining the Observation framespan value (" . $fs_fs . ")");
+    $self->_set_errormsg("Problem obtaining the Observation framespan value (" . $fs_fs . ")");
     return(0);
   }
 
-  $self->addto_comment("Cropped from [$beg_range] to [$end_range]");
+  $self->addto_comment("Trimmed from [$beg_range] to [$end_range]");
   return(0) if ($self->error());
 
   return(1);
