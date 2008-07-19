@@ -343,16 +343,16 @@ sub add_fs_to_value {
 sub union {
   my ($self, $other) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
-    return(-1);
+    return(0);
   }
 
   if (! $other->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
-    return(-1);
+    return(0);
   }
 
   my $cfs = $other->get_value();
@@ -408,7 +408,7 @@ sub is_fps_set {
 sub get_fps {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_fps_set()) {
     $self->_set_errormsg($error_msgs{"FPSNotSet"});
@@ -575,16 +575,16 @@ sub _does_overlap {
 sub check_if_overlap {
   my ($self, $other) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
-    return(-1);
+    return(0);
   }
 
   if (! $other->is_value_set()) {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
-    return(-1);
+    return(0);
   }
 
   my $ifs = $self->get_value();
@@ -727,7 +727,7 @@ sub is_within {
   # and substracted to the beginning
 
   my ($v_beg, $v_end) = $self->get_beg_end_fs();
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   $ tif = 0 if (! defined $tif);
   if ($tif < 0) {
@@ -738,7 +738,7 @@ sub is_within {
   my ($r_beg, $r_end) = $other->get_beg_end_fs();
   if ($other->error()) {
     $self->_set_errormsg($other->get_errormsg());
-    return(-1);
+    return(0);
   }
 
   # is within: tolerate a difference of $tif
@@ -754,7 +754,7 @@ sub extent_middlepoint {
   my ($self) = @_;
 
   my ($v_beg, $v_end) = $self->get_beg_end_fs();
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   my $d = $self->extent_duration();
   return($d) if ($self->error());
@@ -863,7 +863,7 @@ sub duration {
 sub _frame_to_ts {
   my ($self, $frame, $inc) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_fps_set()) {
     $self->_set_errormsg($error_msgs{"FPSNotSet"});
@@ -904,7 +904,7 @@ sub end_frame_to_ts {
 sub _ts_to_frame {
   my ($self, $ts, $inc) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_fps_set()) {
     $self->_set_errormsg($error_msgs{"FPSNotSet"});
@@ -947,7 +947,7 @@ sub end_ts_to_frame {
 sub _get_begend_ts_core {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(0) if ($self->error());
 
   if (! $self->is_fps_set()) {
     $self->_set_errormsg($error_msgs{"FPSNotSet"});
