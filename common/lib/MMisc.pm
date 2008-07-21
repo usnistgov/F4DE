@@ -47,14 +47,16 @@ sub get_tmpfilename {
 
 sub slurp_file {
   my $fname = shift @_;
+  my $mode = shift @_; # Default is text
 
   open FILE, "<$fname"
-    or die("MMisc Internal error: Can not open file to slurp ($fname): $!\n");
+    or return(undef);
   my @all = <FILE>;
   close FILE;
-  chomp @all;
+  chomp @all if ($mode ne "bin");
 
-  my $tmp = join("\n", @all);
+  my $jc = ($mode ne "bin") ? "\n" : "";
+  my $tmp = join($jc, @all);
 
   return($tmp);
 }
@@ -399,27 +401,113 @@ sub are_float_equal {
 ##########
 
 sub dump_memory_object {
-  my ($file, $ext, $obj, $fileheader) = @_;
+  my ($file, $ext, $obj, $txt_fileheader, $gzip_fileheader) = @_;
 
-  return( &writeTo($file, $ext, 1, 0, Dumper($obj), "", "", $fileheader, "") );
+  # The default is to write the basic text version
+  my $str = Dumper($obj);
+  my $fileheader = $txt_fileheader;
+
+  # But if we provide a gzip fileheader, try it
+  if (defined $gzip_fileheader) {
+    my $tmp = &mem_gzip(Dumper($obj));
+    if (defined $tmp) {
+      # If gzip worked, we will write this version
+      $str = $tmp;
+      $fileheader = $gzip_fileheader;
+    }
+    # Otherwise, we will write the text version
+  }
+
+  return( &writeTo($file, $ext, 1, 0, $str, "", "", $fileheader, "") );
 }
 
 #####
 
 sub load_memory_object {
-  my ($file) = @_;
+  my ($file, $gzhdsk) = @_;
 
-  my $str = "";
-  open FILE, "<$file"
-    or return(undef);
-  while (my $line = <FILE>) {
-    $str .= $line;
+  my $str = &slurp_file($file, "bin");
+  return(undef) if (! defined $str);
+
+  if (defined $gzhdsk) {
+    # It is possibly a gzip file => Remove the header ?
+    my $tstr = &strip_header($gzhdsk, $str);
+    if ($tstr ne $str) {
+      # If we could it means it is a gzip file: try to un-gzip
+      my $tmp = &mem_gunzip($tstr);
+      return(undef) if (! defined $tmp);
+      # it is un-gzipped -> work with it
+      $str = $tmp;
+    }
   }
-  close FILE;
 
   my $VAR1;
   eval $str;
   return($VAR1);
+}
+
+##########
+
+sub mem_gzip {
+  my $tozip = shift @_;
+
+  my $filename = &get_tmpfilename();
+
+  open(FH, " | /usr/bin/gzip > $filename")
+    or return(undef);
+  print FH $tozip;
+  close FH;
+
+  return(&slurp_file($filename, "bin"));
+}
+
+#####
+
+sub mem_gunzip {
+  my $tounzip = shift @_;
+
+  my $filename = &get_tmpfilename();
+
+  open FILE, ">$filename"
+    or return(undef);
+  print FILE $tounzip;
+  close FILE;
+
+  my $unzip = "";
+  open(FH, "/usr/bin/gzip -dc $filename |")
+    or return(undef);
+  while (my $line = <FH>) { 
+    $unzip .= $line;
+  }
+  close FH;
+
+  return($unzip);
+}
+
+#####
+
+sub file_gunzip {
+  my ($in) = @_;
+
+  my $str = &slurp_file($in, "bin");
+  return(undef) if (! defined $str);
+  
+  return(&mem_gunzip($str));
+}
+
+##########
+
+sub strip_header {
+  my ($header, $str) = @_;
+
+  my $lh = length($header);
+  
+  my $sh = substr($str, 0, $lh);
+
+  return(substr($str, $lh))
+    if ($sh eq $header);
+  
+  return($str);
 }
 
 ############################################################
