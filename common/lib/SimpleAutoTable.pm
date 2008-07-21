@@ -471,7 +471,9 @@ sub renderCSV {
   return($out);
 }
 
-sub quc {                       # Quote clean
+#####
+
+sub quc { # Quote clean
   my $in = shift @_;
 
   $in =~ s%\"%\'%g;
@@ -481,7 +483,7 @@ sub quc {                       # Quote clean
 
 #####
 
-sub qua {                       # Quote Array
+sub qua { # Quote Array
   my @todo = @_;
 
   my @out = ();
