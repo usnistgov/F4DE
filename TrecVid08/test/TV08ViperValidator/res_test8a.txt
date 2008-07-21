@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl ../../test/common/test1-1fa-sys.xml ../../test/common/test2-1md_1fa-sys.xml -w -W -p
+[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl ../../test/common/test1-1fa-sys.xml ../../test/common/test2-1md_1fa-sys.xml -w -W text -p
 [[RETURN CODE]] 0
 [[STDOUT]]
 ../../test/common/test1-1fa-sys.xml: validates
