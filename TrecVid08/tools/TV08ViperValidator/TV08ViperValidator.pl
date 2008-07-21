@@ -127,7 +127,8 @@ my $remse = 0;
 my $crop = "";
 my $fps = undef;
 my $changetype = 0;
-my $MemDump = 0;
+my $MemDump = undef;
+my @ok_md = ("gzip", "text"); # Default is bin / order is important
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 # USed:   C                T   X    c   gh   lm  p r   vwx  
@@ -151,7 +152,7 @@ GetOptions
    'crop=s'          => \$crop,
    'fps=s'           => \$fps,
    'ChangeType:s'    => \$changetype,
-   'WriteMemDump'    => \$MemDump,
+   'WriteMemDump:s'  => \$MemDump,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -207,8 +208,14 @@ if (($writeback != -1) && ($writeback ne "")) {
   $writeback .= "/" if ($writeback !~ m%\/$%); # Add a trailing slash
 }
 
-error_quit("\'WriteMemDump\' can only be used in conjunction with \'write\'")
-  if (($MemDump) && ($writeback == -1));
+if (defined $MemDump) {
+  error_quit("\'WriteMemDump\' can only be used in conjunction with \'write\'")
+    if ($writeback == -1);
+  $MemDump = $ok_md[0]
+    if (MMisc::is_blank($MemDump));
+  error_quit("Unknown \'WriteMemDump\' mode ($MemDump), authorized: " . join(" ", @ok_md))
+    if (! grep(m%^$MemDump$%, @ok_md));
+}
 
 my ($crop_beg, $crop_end) = (0, 0);
 if (! MMisc::is_blank($crop)) {
@@ -274,14 +281,14 @@ while ($tmp = shift @ARGV) {
     error_quit("Problem while trying to \'write\'")
       if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
 
-    if ($MemDump) {
+    if (defined $MemDump) {
       # Duplicate the object in memory with only the selected types
       my $nvf = $object->clone_with_selected_events(@asked_events);
       error_quit("Problem while \'clone\'-ing the ViperFile")
 	if (! defined $nvf);
 
       error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
-	if (! TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf));
+	if (! TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump));
     }
   }
 
@@ -329,10 +336,11 @@ sub load_file {
 sub set_usage {
   my $ro = join(" ", @ok_events);
   my $xsdfiles = join(" ", @xsdfilesl);
+  my $wmd = join(" ", @ok_md);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump]] [--fps fps] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]]] [--fps fps] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -346,7 +354,7 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
   --ChangeType    Convert a SYS to REF or a REF to SYS.
   --crop          Will crop file content to only keep content that is found within the beg and end frames
-  --WriteMemDump  Write a memory representation of validated Viper Files that can be used by the Scorer and Merger tools
+  --WriteMemDump  Write a memory representation of validated Viper Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
   --version       Print version number and exit
@@ -406,9 +414,11 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
         S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
         S<[B<--gtf>] [B<--limitto> I<event1>[,I<event2>[I<...>]]]>
         S<[B<--pruneEvents>] [B<--removeSubEventtypes>]>
+        S<[[B<--write> [I<directory>]]>
         S<[B<--ChangeType> [I<randomseed>]]>
-        S<[B<--crop I<beg:end> [B<--fps> I<fps>]]>
-        S<[B<--write> [I<directory>]]>
+        S<[B<--crop I<beg:end>]>
+        S<[B<--WriteMemDump> [I<mode>]]]
+        S<[B<--fps> I<fps>]>
         I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
 
 =head1 DESCRIPTION
@@ -523,10 +533,11 @@ Display B<TV08ViperValidator> version information.
 
 Once validation has been completed for a given file, B<TV08ViperValidator> will write a new XML representation of this file to either the standard output (if I<directory> is not set), or will create a file with the same name as the input file in I<directory> (if specified).
 
-=item B<--WriteMemDump>
+=item B<--WriteMemDump> I<mode>
 
 Write to disk a memory representation of the validated Viper File.
 This memory representation file can be used as the input of the Scorer, Merger and Validator tools.
+The mode is the default file representation to disk.
 
 =item B<--xmllint> I<location>
 
