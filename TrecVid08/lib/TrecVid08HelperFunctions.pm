@@ -38,13 +38,9 @@ if ($version =~ m/b$/) {
 
 my $versionid = "TrecVid08HelperFunctions.pm Version: $version";
 
-##########
 
-my $VF_MemDump_Suffix = ".memdump";
-my $VF_MemDump_FileHeader_cmp = "\#  TrecVid08ViperFile MemDump";
-my $VF_MemDump_FileHeader = $VF_MemDump_FileHeader_cmp . "\n\n";
-
-####################
+############################################################
+#################### 'ViperFile_crop' functions
 
 sub ViperFile_crop {
   my ($vf, $beg, $end) = @_;
@@ -135,13 +131,30 @@ sub ViperFile_crop {
   return("", $vfc);
 }
 
+############################################################
+#################### 'save' / 'load' Memmory Dump functions
+
+my $VF_MemDump_Suffix = ".memdump";
+
+my $VF_MemDump_FileHeader_cmp = "\#  TrecVid08ViperFile MemDump";
+my $VF_MemDump_FileHeader_gz_cmp = $VF_MemDump_FileHeader_cmp . " (Gzip)";
+my $VF_MemDump_FileHeader_add = "\n\n";
+
+my $VF_MemDump_FileHeader = $VF_MemDump_FileHeader_cmp 
+  . $VF_MemDump_FileHeader_add;
+my $VF_MemDump_FileHeader_gz = $VF_MemDump_FileHeader_gz_cmp
+  . $VF_MemDump_FileHeader_add;
+
 ##########
 
 sub save_ViperFile_MemDump {
-  my ($fname, $object) = @_;
+  my ($fname, $object, $mode) = @_;
 
-  return(MMisc::dump_memory_object($fname, $VF_MemDump_Suffix,
-				   $object, $VF_MemDump_FileHeader));
+  return(MMisc::dump_memory_object
+	 ($fname, $VF_MemDump_Suffix, $object,
+	  $VF_MemDump_FileHeader,
+	  ($mode eq "gzip") ? $VF_MemDump_FileHeader_gz : undef )
+	);
 }
 
 ##########
@@ -166,7 +179,8 @@ sub load_ViperFile {
   chomp $header;
 
   return(&_load_MemDump_ViperFile($isgtf, $filename))
-    if ($header eq $VF_MemDump_FileHeader_cmp);
+    if ( ($header eq $VF_MemDump_FileHeader_cmp)
+	|| ($header eq $VF_MemDump_FileHeader_gz_cmp) );
   
   return(&_load_XML_ViperFile($isgtf, $filename, $fps, $xmllint, $xsdpath));
 }
@@ -211,7 +225,7 @@ sub _load_XML_ViperFile {
 sub _load_MemDump_ViperFile {
   my ($isgtf, $file) = @_;
 
-  my $object = MMisc::load_memory_object($file);
+  my $object = MMisc::load_memory_object($file, $VF_MemDump_FileHeader_gz);
 
   my $rtxt = "[MemDump] ";
 
