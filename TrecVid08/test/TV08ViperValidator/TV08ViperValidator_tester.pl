@@ -51,7 +51,7 @@ $tn = "test7c";
 $testr += &do_simple_test($tn, "(ChangeType REF -> SYS w/ randomseed + find_value)", "../../test/common/test2-gtf.xml -g -w -C 256:0.120257329 -p", "res_$tn.txt");
 
 $tn = "test8a";
-$testr += &do_simple_test($tn, "(MemDump)", "../../test/common/test1-1fa-sys.xml ../../test/common/test2-1md_1fa-sys.xml -w -W -p", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(MemDump)", "../../test/common/test1-1fa-sys.xml ../../test/common/test2-1md_1fa-sys.xml -w -W text -p", "res_$tn.txt");
 
 $tn = "test8b";
 $testr += &do_simple_test($tn, "(MemDump Load)", "../../test/common/test1-1fa-sys.xml.memdump ../../test/common/test2-1md_1fa-sys.xml.memdump -w -p", "res_$tn.txt");
