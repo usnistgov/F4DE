@@ -110,6 +110,7 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
 my $mancmd = "perldoc -F $0";
+my @ok_md = ("gzip", "text"); # Default is gzip / order is important
 my $usage = &set_usage();
 
 # Default values for variables
@@ -128,7 +129,6 @@ my $crop = "";
 my $fps = undef;
 my $changetype = 0;
 my $MemDump = undef;
-my @ok_md = ("gzip", "text"); # Default is bin / order is important
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 # USed:   C                T   X    c   gh   lm  p r   vwx  
