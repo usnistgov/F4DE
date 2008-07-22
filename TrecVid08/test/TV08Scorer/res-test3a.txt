@@ -12,7 +12,7 @@
 
 
 ***** STEP 2: Loading the ECF file
-WARNING: Command line 'Duration' (1000) overrides (for scoring) the one found in the ECF file (75160.440)
+[Warning] Command line 'Duration' (1000) overrides (for scoring) the one found in the ECF file (75160.440)
 
 ** SUMMARY: ECF file loaded
  - source file: ../common/tests.ecf
