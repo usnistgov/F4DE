@@ -544,7 +544,7 @@ sub get_txt_last_Xlines {
   return(@toshowa);
 }
 
-##########
+####################
 
 sub warn_print {
   print("[Warning] ", join(" ", @_), "\n");
@@ -562,6 +562,235 @@ sub error_quit {
 sub ok_quit {
   print(join(" ", @_), "\n");
   exit(0);
+}
+
+####################
+
+sub is_file_ok {
+  my ($file) = @_;
+
+  return("Empty filename")
+    if (is_blank($file));
+
+  return("File does not exist")
+    if (! -e $file);
+  return("Is not a file")
+    if (! -f $file);
+  return("Is not readable")
+    if (! -r $file);
+
+  return("");
+}
+
+#####
+
+sub get_file_stat {
+  my ($file, $pos) = @_;
+
+  my $err = &is_file_ok($file);
+  return($err, undef) if (! is_blank($err));
+
+  my @a = stat($file);
+
+  return("No stat obtained ($file)", undef)
+    if (scalar @a == 0);
+
+  return("", @a);
+}
+
+#####
+
+sub _get_file_info_core {
+  my ($pos, $file) = @_;
+
+  my ($err, @a) = &get_file_stat($file);
+
+  return(undef, $err)
+    if (! &is_blank($err));
+
+  return($a[$pos], "");
+}
+
+#####
+
+sub get_file_uid   {return(&_get_file_info_core(4, @_));} 
+sub get_file_gid   {return(&_get_file_info_core(5, @_));} 
+sub get_file_size  {return(&_get_file_info_core(7, @_));} 
+sub get_file_atime {return(&_get_file_info_core(8, @_));} 
+sub get_file_mtime {return(&_get_file_info_core(9, @_));} 
+sub get_file_ctime {return(&_get_file_info_core(10, @_));} 
+
+#####  
+
+# Note: will only keep "ok" files in the output list
+sub sort_files {
+  my ($criteria, @files_list) = @_;
+
+  my $func = undef;
+  if ($criteria eq "size") {
+    $func = \&get_file_size;
+  } elsif ($criteria eq "atime") {
+    $func = \&get_file_atime;
+  } elsif ($criteria eq "mtime") {
+    $func = \&get_file_mtime;
+  } elsif ($criteria eq "ctime") {
+    $func = \&get_file_ctime;
+  } else {
+    return("Unknown criteria", undef);
+  }
+
+  my %tmp = ();
+  my @errs = ();
+  foreach my $file (@files_list) {
+    my ($v, $err) = &$func($file);
+    if (! is_blank($err)) {
+      push @errs, $err;
+      next;
+    }
+    if (! defined $v) {
+      push @errs, "Undefined value for \'$file\''s \'$criteria\'";
+      next;
+    }
+    $tmp{$file} = $v;
+  }
+
+  my @out = sort { $tmp{$a} <=> $tmp{$b} } keys %tmp;
+
+  my $errmsg = join(". ", @errs);
+
+  return($errmsg, @out);
+}
+
+#####
+
+# Note: will return undef if any file in the list is not "ok"
+sub _XXXest_core {
+  my ($mode, @in) = @_;
+
+  my ($err, @or) = &sort_files($mode, @in);
+
+  return(undef)
+    if (scalar @or != scalar @in);
+
+  return(@or);
+}
+
+#####
+
+sub newest {
+  my @or = &_XXXest_core("mtime", @_);
+
+  return(undef) if (scalar @or == 0);
+
+  return(@or[-1]);
+}
+
+#####
+
+sub oldest {
+  my @or = &_XXXest_core("mtime", @_);
+
+  return(undef) if (scalar @or == 0);
+
+  return(@or[0]);
+}
+
+#####
+
+sub biggest {
+  my @or = &_XXXest_core("size", @_);
+
+  return(undef) if (scalar @or == 0);
+
+  return(@or[-1]);
+}
+
+#####
+
+sub smallest {
+  my @or = &_XXXest_core("size", @_);
+
+  return(undef) if (scalar @or == 0);
+
+  return(@or[0]);
+}
+
+####################
+
+# Will create directories up to requested depth
+sub make_dir {
+  my ($dest, $perm) = @_;
+
+  return(1, "") if (-d $dest);
+
+  $perm = 0755 if (is_blank($perm)); # default permissions
+
+  my $t = "";
+  my @todo = split(m%/%, $dest);
+  foreach my $d (@todo) {
+    $t .= "$d/";
+    next if (-d $t);
+
+    mkdir($t, $perm);
+    last if (! -d $t);
+  }
+
+  return(0) if (! -d $dest);
+
+  return(1);
+}
+
+##########
+
+sub list_dirs_files {
+  my ($dir) = @_;
+
+  opendir DIR, "$dir"
+    or return("Problem opening directory ($dir) : $!", undef, undef, undef);
+  my @fl = grep(! m%^\.\.?%, readdir(DIR));
+  close DIR;
+
+  my @d = ();
+  my @f = ();
+  my @u = ();
+  foreach my $entry (@fl) {
+    my $ff = "$dir/$entry";
+    if (-d $ff) {
+      push @d, $entry;
+      next;
+    }
+    if (-f $ff) {
+      push @f, $entry;
+      next;
+    }
+    push @u, $entry;
+  }
+
+  return("", \@d, \@f, \@u);
+}
+
+#####
+
+sub get_dirs_list {
+  my ($dir) = @_;
+
+  my ($err, $rd, $rf, $ru) = &list_dirs_files($dir);
+
+  return(undef) if (! is_blank($err));
+
+  return(@{$rd});
+}
+
+#####
+
+sub get_files_list {
+  my ($dir) = @_;
+
+  my ($err, $rd, $rf, $ru) = &list_dirs_files($dir);
+
+  return(undef) if (! is_blank($err));
+
+  return(@{$rf});
 }
 
 ############################################################
