@@ -510,6 +510,60 @@ sub strip_header {
   return($str);
 }
 
+##########
+
+sub write_syscall_logfile {
+  my ($ofile, @command) = @_;
+
+  my ($retcode, $stdout, $stderr) = do_system_call(@command);
+
+  my $otxt = "[[COMMANDLINE]] " . join(" ", @command) . "\n"
+    . "[[RETURN CODE]] $retcode\n"
+      . "[[STDOUT]]\n$stdout\n\n"
+        . "[[STDERR]]\n$stderr\n";
+
+  return(0, $otxt, $stdout, $stderr, $retcode)
+    if (! writeTo($ofile, "", 0, 0, $otxt));
+
+  return(1, $otxt, $stdout, $stderr, $retcode);
+}
+
+#####
+
+sub get_txt_last_Xlines {
+  my ($txt, $X) = @_;
+
+  my @toshowa = ();
+  my @a = split(m%\n%, $txt);
+  my $e = scalar @a;
+  my $b = (($e - $X) > 0) ? ($e - $X) : 0;
+  foreach (my $i = $b; $i < $e; $i++) {
+    push @toshowa, $a[$i];
+  }
+
+  return(@toshowa);
+}
+
+##########
+
+sub warn_print {
+  print("[Warning] ", join(" ", @_), "\n");
+}
+
+##########
+
+sub error_quit {
+  print("[ERROR] ", join(" ", @_), "\n");
+  exit(1);
+}
+
+##########
+
+sub ok_quit {
+  print(join(" ", @_), "\n");
+  exit(0);
+}
+
 ############################################################
 
 1;
