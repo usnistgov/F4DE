@@ -12,22 +12,6 @@ my $lts = 10;                   # lines to show
 
 #####
 
-sub get_txt_last_Xlines {
-  my ($txt, $X) = @_;
-
-  my @toshowa = ();
-  my @a = split(m%\n%, $txt);
-  my $e = scalar @a;
-  my $b = (($e - $X) > 0) ? ($e - $X) : 0;
-  foreach (my $i = $b; $i < $e; $i++) {
-    push @toshowa, $a[$i];
-  }
-
-  return(@toshowa);
-}
-
-##########
-
 sub _get_filec {
   my $f = shift @_;
 
@@ -43,17 +27,13 @@ sub _get_filec {
 sub make_syscall {
   my ($ofile, @command) = @_;
 
-  my ($retcode, $stdout, $stderr) = MMisc::do_system_call(@command);
-
-  my $otxt = "[[COMMANDLINE]] " . join(" ", @command) . "\n"
-    . "[[RETURN CODE]] $retcode\n"
-      . "[[STDOUT]]\n$stdout\n\n"
-        . "[[STDERR]]\n$stderr\n";
+  my ($wrote, $otxt, $stdout, $stderr, $retcode) 
+    = MMisc::write_syscall_logfile($ofile, @command);
 
   die("TV08TestCore Internal Error\n")
-    if (! MMisc::writeTo($ofile, "", 0, 0, $otxt));
+    if (! $wrote);
  
-  my @toshow = &get_txt_last_Xlines($stdout, $lts);
+  my @toshow = MMisc::get_txt_last_Xlines($stdout, $lts);
 
   my $txt = &_get_filec($ofile);
   $retcode = 1 if ($txt eq $dev);
