@@ -56,45 +56,45 @@ sub eo2pe {
 }
 
 ## Then try to load everything
-my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $warn_msg = "";
 
 # MMisc (part of this tool)
 unless (eval "use MMisc; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # TrecVid08ViperFile (part of this tool)
 unless (eval "use TrecVid08ViperFile; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 unless (eval "use TrecVid08Observation; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"TrecVid08Observation\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"TrecVid08Observation\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 unless (eval "use ViperFramespan; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"ViperFramespan\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"ViperFramespan\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 unless (eval "use SimpleAutoTable; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1") {
-  warn_print
+  &_warn_add
     (
      "\"Getopt::Long\" is not available on your Perl installation. ",
      "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
@@ -104,7 +104,7 @@ unless (eval "use Getopt::Long; 1") {
 
 # Statistics::Descriptive::Discrete (is part of CPAN)
 unless (eval "use Statistics::Descriptive::Discrete; 1") {
-  warn_print
+  &_warn_add
     (
      "\"Statistics::Descriptive::Discrete\" is not available on your Perl installation. ",
      "Please see \"http://search.cpan.org/search?query=descriptive+discrete&mode=all\" for installation information\n"
@@ -114,7 +114,7 @@ unless (eval "use Statistics::Descriptive::Discrete; 1") {
 
 # Data::Dumper (is part of CPAN)
 unless (eval "use Data::Dumper; 1") {
-  warn_print
+  &_warn_add
     (
      "\"Data::Dumper\" is not available on your Perl installation. ",
      "Please see \"http://search.cpan.org/search?query=data+dumper&mode=all\" for installation information\n"
@@ -125,12 +125,15 @@ unless (eval "use Data::Dumper; 1") {
 # TrecVid08HelperFunctions (part of this tool)
 unless (eval "use TrecVid08HelperFunctions; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # Something missing ? Abort
-error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
+if (! $have_everything) {
+  print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
+  exit(1);
+}
 
 # Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
@@ -177,22 +180,22 @@ GetOptions
    'fps=s'           => \$fps,
    'csv:s'           => \$docsv,
    'discardErrors'   => \$discardErr,
-  ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-ok_quit("\n$usage\n") if ($opt{'help'});
-ok_quit("$versionid\n") if ($opt{'version'});
+MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
-error_quit("ERROR: \'fps\' must set in order to do any scoring work") if ($fps == -1);
+MMisc::error_quit("ERROR: \'fps\' must set in order to do any scoring work") if ($fps == -1);
 
 if ($xmllint ne "") {
-  error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xmllint($xmllint));
 }
 
 if ($xsdpath ne "") {
-  error_quit("While trying to set \'TrecVid08xsd\' (" . $dummy->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'TrecVid08xsd\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xsdpath($xsdpath));
 }
 
@@ -211,7 +214,7 @@ while ($tmp = shift @ARGV) {
 
   my $fname = $object->get_sourcefile_filename();
   $fileStatsDB{$fname} = $object->_get_framespan_max_object();    
-  error_quit("Unable to set the FPS for the file framespan") if (!$fileStatsDB{$fname}->set_fps($fps));
+  MMisc::error_quit("Unable to set the FPS for the file framespan") if (!$fileStatsDB{$fname}->set_fps($fps));
   my $cam = $fname;
   $cam =~ s/.*(CAM.).*$/$1/;
   my $day = $fname;
@@ -223,7 +226,7 @@ while ($tmp = shift @ARGV) {
   
   
   my @ao = $object->get_all_events_observations();
-  error_quit("Problem obtaining all Observations from $tmp ViperFile (" . $object->get_errormsg() . ")")
+  MMisc::error_quit("Problem obtaining all Observations from $tmp ViperFile (" . $object->get_errormsg() . ")")
     if ($object->error());
 
   push @all_observations, @ao;
@@ -232,9 +235,9 @@ while ($tmp = shift @ARGV) {
   $ndone++;
 }
 print "All files loaded (ok: $ndone / $ntodo)\n";
-error_quit("Can not continue, not all files passed the loading/validation step, aborting\n")
+MMisc::error_quit("Can not continue, not all files passed the loading/validation step, aborting\n")
   if (! ($discardErr) && ($ndone != $ntodo));
-error_quit("No files ok, can not continue, aborting\n")
+MMisc::error_quit("No files ok, can not continue, aborting\n")
   if ($ndone == 0);
 
 # Re-represent all observations into a flat format
@@ -263,9 +266,9 @@ foreach my $obs (@all_observations) {
   my $cam = $fn;
   $cam =~ s/.*(CAM.).*$/$1/;
   
-  error_quit("Problem obtaining Observation information (" . $obs->get_errormsg() . ")")
+  MMisc::error_quit("Problem obtaining Observation information (" . $obs->get_errormsg() . ")")
     if ($obs->error());
-  error_quit("Problem obtaining Observation's framespan information (" . $fs_fs->get_errormsg() . ")")
+  MMisc::error_quit("Problem obtaining Observation's framespan information (" . $fs_fs->get_errormsg() . ")")
     if ($fs_fs->error());
 
   if (! exists($statsDB{$fn}{$et})) {
@@ -365,10 +368,9 @@ foreach my $cam (sort keys %camDurStatsDB) {
 }
 print $sat->renderTxtTable(2);
 
-exit 0;
-########## END
+MMisc::ok_quit(" ********** Done **********\n");
 
-########################################
+########## END
 
 sub set_usage {
   my $ro = join(" ", @ok_events);
@@ -403,28 +405,8 @@ EOF
 
 ####################
 
-sub warn_print {
-  print "WARNING: ", @_;
-
-  print "\n";
-}
-
-##########
-
-sub error_quit {
-  print("${ekw}: ", @_);
-
-  print "\n";
-  exit(1);
-}
-
-##########
-
-sub ok_quit {
-  print @_;
-
-  print "\n";
-  exit(0);
+sub _warn_add {
+  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
 }
 
 ########################################
@@ -505,7 +487,7 @@ sub get_csvline {
 
   my @todo = ();
   foreach my $key (@keys) {
-    error_quit("Problem accessing key ($key) from observation hash")
+    MMisc::error_quit("Problem accessing key ($key) from observation hash")
       if (! exists $ohash{$uid}{$key});
     push @todo, $ohash{$uid}{$key};
   }

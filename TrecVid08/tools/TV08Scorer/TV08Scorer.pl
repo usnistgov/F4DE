@@ -59,87 +59,88 @@ sub eo2pe {
 my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $warn_msg = "";
 
 # MMisc (part of this tool)
 unless (eval "use MMisc; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # TrecVid08ViperFile (part of this tool)
 unless (eval "use TrecVid08ViperFile; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # TrecVid08ECF (part of this tool)
 unless (eval "use TrecVid08ECF; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # TrecVid08EventList (part of this tool)
 unless (eval "use TrecVid08EventList; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # MetricTV08 (part of this tool)
 unless (eval "use MetricTV08; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"MetricTV08\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"MetricTV08\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # BipartiteMatch (part of this tool)
 unless (eval "use BipartiteMatch; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"BipartiteMatch\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"BipartiteMatch\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # Trials (part of this tool)
 unless (eval "use Trials; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"Trials\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"Trials\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # TrialSummaryTable (part of this tool)
 unless (eval "use TrialSummaryTable; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"TrialSummaryTable\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"TrialSummaryTable\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # SimpleAutoTable (part of this tool)
 unless (eval "use SimpleAutoTable; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # DETCurve (part of this tool)
 unless (eval "use DETCurve; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"DETCurve\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"DETCurve\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # DETCurveSet (part of this tool)
 unless (eval "use DETCurveSet; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"DETCurveSet\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"DETCurveSet\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1") {
-  warn_print
+  &_warn_add
     (
      "\"Getopt::Long\" is not available on your Perl installation. ",
      "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
@@ -150,12 +151,15 @@ unless (eval "use Getopt::Long; 1") {
 # TrecVid08HelperFunctions (part of this tool)
 unless (eval "use TrecVid08HelperFunctions; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # Something missing ? Abort
-error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
+if (! $have_everything) {
+  print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
+  exit(1);
+}
 
 # Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
@@ -245,48 +249,48 @@ GetOptions
    'limittosysevents' => \$ltse,
    # Hidden option
    'Show_internals+' => \$showi,
-  ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-ok_quit("\n$usage\n") if ($opt{'help'});
-ok_quit("$versionid\n") if ($opt{'version'});
+MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 if ($opt{'man'}) {
   my ($r, $o, $e) = MMisc::do_system_call($mancmd);
-  error_quit("Could not run \'$mancmd\'") if ($r);
-  ok_quit($o);
+  MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
+  MMisc::ok_quit($o);
 }
 
-ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
-error_quit("\'fps\' must set in order to do any scoring work") if (! defined $fps);
-error_quit("\'delta_t\' must set in order to do any scoring work") if (! defined $delta_t);
-error_quit("\'duration\' must be set unless \'ecf'\ is used") 
+MMisc::error_quit("\'fps\' must set in order to do any scoring work") if (! defined $fps);
+MMisc::error_quit("\'delta_t\' must set in order to do any scoring work") if (! defined $delta_t);
+MMisc::error_quit("\'duration\' must be set unless \'ecf'\ is used") 
   if (($duration == 0) && (MMisc::is_blank($ecffile)));
 
 if ($xmllint ne "") {
-  error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xmllint($xmllint));
 }
 
 if ($xsdpath ne "") {
-  error_quit("While trying to set \'TrecVid08xsd\' (" . $dummy->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'TrecVid08xsd\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xsdpath($xsdpath));
 }
 
-error_quit("\'pruneEvents\' is only usable if \'writexml\' is selected")
+MMisc::error_quit("\'pruneEvents\' is only usable if \'writexml\' is selected")
   if (($autolt) && ( ! defined $writexml));
 
-error_quit("Only one \'gtf\' separator allowed per command line, aborting")
+MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting")
   if ($gtfs > 1);
 
 my ($rref, $rsys) = &get_sys_ref_filelist(\@leftover, @ARGV);
 my @ref = @{$rref};
 my @sys = @{$rsys};
-error_quit("No SYS file(s) provided, can not perform scoring")
+MMisc::error_quit("No SYS file(s) provided, can not perform scoring")
   if (scalar @sys == 0);
-error_quit("No REF file(s) provided, can not perform scoring")
+MMisc::error_quit("No REF file(s) provided, can not perform scoring")
   if (scalar @ref == 0);
 
-error_quit("\'OutputFileRoot\' required to produce the PNGs")
+MMisc::error_quit("\'OutputFileRoot\' required to produce the PNGs")
   if ($doDC && (! $noPNG) && (! defined $outputRootFile));
 
 ########## Main processing
@@ -303,7 +307,7 @@ my $ntodo = $systodo + $reftodo;
 print "\n** SUMMARY: All files loaded\n";
 print "** REF: $systodo files (", ($sysdone == $systodo) ? "all" : $sysdone, " ok)\n";
 print "** SYS: $reftodo files (", ($refdone == $reftodo) ? "all" : $refdone, " ok)\n\n";
-error_quit("Can not continue, not all files passed the loading/validation step, aborting\n")
+MMisc::error_quit("Can not continue, not all files passed the loading/validation step, aborting\n")
   if ($ndone != $ntodo);
 
 ## Loading of the ECF file
@@ -311,18 +315,18 @@ my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
 if ($useECF) {
   print "\n\n***** STEP ", $stepc++, ": Loading the ECF file\n";
   $ecfobj->set_default_fps($fps);
-  error_quit("Problem setting the ECF object's default FPS (" . $ecfobj->get_errormsg() . ")")
+  MMisc::error_quit("Problem setting the ECF object's default FPS (" . $ecfobj->get_errormsg() . ")")
     if ($ecfobj->error());
   my ($errmsg) = &load_ecf($ecffile, $ecfobj);
-  error_quit("Problem loading the ECF file: $errmsg")
+  MMisc::error_quit("Problem loading the ECF file: $errmsg")
     if (! MMisc::is_blank($errmsg));
   my $td = $ecfobj->get_duration();
-  error_quit("Problem obtaining the ECF duration (" . $ecfobj->get_errormsg() . ")")
+  MMisc::error_quit("Problem obtaining the ECF duration (" . $ecfobj->get_errormsg() . ")")
     if ($ecfobj->error());
   if ($duration == 0) {
     $duration = $td;
   } else {
-    warn_print("Command line \'Duration\' ($duration) overrides (for scoring) the one found in the ECF file ($td)")
+    MMisc::warn_print("Command line \'Duration\' ($duration) overrides (for scoring) the one found in the ECF file ($td)")
       if ($td != $duration);
   }
   print "\n** SUMMARY: ECF file loaded\n";
@@ -338,7 +342,7 @@ my $sysEL = &generate_EventList("SYS", $tmpecfobj, %sys_hash);
 my $refEL = &generate_EventList("REF", $tmpecfobj, %ref_hash);
 ## Can we score after all ?
 my ($rc, $rs, $rr) = $sysEL->comparable_filenames($refEL);
-error_quit("While trying to obtain a list of scorable referred to files (" . $sysEL->get_errormsg() .")")
+MMisc::error_quit("While trying to obtain a list of scorable referred to files (" . $sysEL->get_errormsg() .")")
   if ($sysEL->error());
 my @common = @{$rc};
 my @only_in_sys = @{$rs};
@@ -348,7 +352,7 @@ print "** Common referred to files (", scalar @common, "): ", join(" ", @common)
 print "** Only in SYS (", scalar @only_in_sys, "): ", join(" ", @only_in_sys), "\n";
 print "** Only in REF (", scalar @only_in_ref, "): ", join(" ", @only_in_ref), "\n\n";
 my $fcount = (scalar @common) + (scalar @only_in_sys) + (scalar @only_in_ref);
-error_quit("Can not continue, no file in any list ?") if ($fcount == 0);
+MMisc::error_quit("Can not continue, no file in any list ?") if ($fcount == 0);
 
 ## Prepare event lists for scoring
 print "\n\n***** STEP ", $stepc++, ": Aligning Files and Events\n\n";
@@ -356,7 +360,7 @@ $sysEL->set_delta_t($delta_t);
 $sysEL->set_E_t($E_t);
 $sysEL->set_E_d($E_d);
 my @kp = $sysEL->get_kernel_params();
-error_quit("Error while obtaining the EventList kernel function parameters (" . $sysEL->get_errormsg() . ")")
+MMisc::error_quit("Error while obtaining the EventList kernel function parameters (" . $sysEL->get_errormsg() . ")")
   if ($sysEL->error());
 
 my %all_bpm = ();
@@ -379,7 +383,7 @@ my %xmlwriteback = ();
 &do_alignment(@common, @only_in_sys, @only_in_ref);
 
 if ($trials_c{$key_allevents} == 0) {
-  error_quit("No Trials ever added");
+  MMisc::error_quit("No Trials ever added");
 }
 
 ## Dump Trial Contingency Table (optional)
@@ -406,7 +410,7 @@ foreach my $event (@all_events) {
   print $det->getMessages()
     if (! MMisc::is_blank($det->getMessages()));
   my $rtn = $detSet->addDET($event." Event", $det);
-  error_quit("Error adding Event '$event' to the DETSet: $rtn") if ($rtn ne "success");                     
+  MMisc::error_quit("Error adding Event '$event' to the DETSet: $rtn") if ($rtn ne "success");                     
 }
 
 MMisc::writeTo($outputRootFile, ".scores.txt", 1, 0, 
@@ -433,7 +437,7 @@ if (defined $writexml) {
   }
 }
 
-ok_quit("\n\n***** Done *****\n");
+MMisc::ok_quit("\n\n***** Done *****\n");
 
 ########## END
 
@@ -486,28 +490,8 @@ EOF
 
 ####################
 
-sub warn_print {
-  print "WARNING: ", @_;
-
-  print "\n";
-}
-
-##########
-
-sub error_quit {
-  print("${ekw}: ", @_);
-
-  print "\n";
-  exit(1);
-}
-
-##########
-
-sub ok_quit {
-  print @_;
-
-  print "\n";
-  exit(0);
+sub _warn_add {
+  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
 }
 
 ########################################
@@ -581,7 +565,7 @@ sub load_preprocessing {
       foreach my $i (@ok_events) {
         print("-- EVENT: $i\n");
         my @bucket = $object->get_event_observations($i);
-        error_quit("While \'get_event\'observations\' (" . $object->get_errormsg() .")")
+        MMisc::error_quit("While \'get_event\'observations\' (" . $object->get_errormsg() .")")
           if ($object->error());
         foreach my $obs (@bucket) {
           print $obs->_display();
@@ -602,16 +586,16 @@ sub generate_EventList {
   my ($mode, $lecfobj, %ohash) = @_;
 
   my $tmpEL = new TrecVid08EventList();
-  error_quit("Problem creating the $mode EventList (" . $tmpEL->get_errormsg() . ")")
+  MMisc::error_quit("Problem creating the $mode EventList (" . $tmpEL->get_errormsg() . ")")
     if ($tmpEL->error());
 
   my $rej_val = $tmpEL->Observation_Rejected();
   my $acc_val = $tmpEL->Observation_Added();
   my $spa_val = $tmpEL->Observation_SpecialAdd();
-  error_quit("Problem obtaining EventList's Observation \'Added\', \'SpecialAdd\' or \'Rejected\' values (" . $tmpEL->get_errormsg() . ")")
+  MMisc::error_quit("Problem obtaining EventList's Observation \'Added\', \'SpecialAdd\' or \'Rejected\' values (" . $tmpEL->get_errormsg() . ")")
     if ($tmpEL->error());
   if (defined $lecfobj) {
-    error_quit("Problem tying $mode EventList to ECF " . $tmpEL->get_errormsg() . ")")
+    MMisc::error_quit("Problem tying $mode EventList to ECF " . $tmpEL->get_errormsg() . ")")
       if (! $tmpEL->tie_to_ECF($lecfobj));
   }
 
@@ -623,19 +607,19 @@ sub generate_EventList {
     my $vf = $ohash{$key};
 
     my @ao = $vf->get_all_events_observations();
-    error_quit("Problem obtaining all Observations from $mode ViperFile object (" . $vf->get_errormsg() . ")")
+    MMisc::error_quit("Problem obtaining all Observations from $mode ViperFile object (" . $vf->get_errormsg() . ")")
       if ($vf->error());
 
     # We also want the dummy observation
     # (to have at least one observation in the event list)
     my $do = $vf->get_dummy_observation();
-    error_quit("Problem obtaining the dummy Observations from $mode ViperFile object (" . $vf->get_errormsg() . ")")
+    MMisc::error_quit("Problem obtaining the dummy Observations from $mode ViperFile object (" . $vf->get_errormsg() . ")")
       if ($vf->error());
     push @ao, $do;
 
     foreach my $o (@ao) {
       my $status = $tmpEL->add_Observation($o);
-      error_quit("Problem adding Observation to $mode EventList (" . $tmpEL->get_errormsg() . ")")
+      MMisc::error_quit("Problem adding Observation to $mode EventList (" . $tmpEL->get_errormsg() . ")")
         if ($tmpEL->error());
 
       #      print "[$status] ";
@@ -647,7 +631,7 @@ sub generate_EventList {
       } elsif ($status == $spa_val) {
         $toadd = 0;
       } else {
-        error_quit("Weird EventList \'add_Observation\' return code ($status) at this stage");
+        MMisc::error_quit("Weird EventList \'add_Observation\' return code ($status) at this stage");
       }
       $tobs += $toadd;
     }
@@ -671,10 +655,10 @@ sub Obs_array_to_hash {
 
   foreach my $o (@all) {
     my $key = $o->get_unique_id();
-    error_quit("While trying to obtain a unique Observation id (". $o->get_errormsg() . ")")
+    MMisc::error_quit("While trying to obtain a unique Observation id (". $o->get_errormsg() . ")")
       if ($o->error());
 
-    error_quit("WEIRD: This key ($key) already exists, was this file already loaded ?")
+    MMisc::error_quit("WEIRD: This key ($key) already exists, was this file already loaded ?")
       if (exists $ohash{$key});
 
     $ohash{$key} = $o;
@@ -688,9 +672,9 @@ sub Obs_array_to_hash {
 sub add_obs2vf {
   my ($obs) = @_;
   
-  error_quit("Observation error (" . $obs->get_errormsg(). ")")
+  MMisc::error_quit("Observation error (" . $obs->get_errormsg(). ")")
     if ($obs->error());
-  error_quit("Observation is not validated")
+  MMisc::error_quit("Observation is not validated")
     if (! $obs->is_validated());
 
   my $file = $obs->get_filename();
@@ -701,7 +685,7 @@ sub add_obs2vf {
     my $tmp_vf = new TrecVid08ViperFile();
     $tmp_vf->fill_empty($file, 0, $numframes, $framerate, $sourcetype, $hframesize, $vframesize);
 
-    error_quit("Problem creating a new TrecVid08ViperFile (" . $tmp_vf->get_errormsg() . ")")
+    MMisc::error_quit("Problem creating a new TrecVid08ViperFile (" . $tmp_vf->get_errormsg() . ")")
       if ($tmp_vf->error());
 
     $xmlwriteback{$file} = $tmp_vf;
@@ -710,7 +694,7 @@ sub add_obs2vf {
   my $vf = $xmlwriteback{$file};
 
   $vf->add_observation($obs);
-  error_quit("Problem while adding obserbation to viper file (" . $vf->get_errormsg() . ")")
+  MMisc::error_quit("Problem while adding obserbation to viper file (" . $vf->get_errormsg() . ")")
     if ($vf->error());
 }
 
@@ -749,15 +733,15 @@ sub do_alignment {
   
   ##### Add values to the 'Trials' (and 'SimpleAutoTable')
   my $alignmentRep = new SimpleAutoTable();
-  error_quit("Error building alignment table: ".$alignmentRep->get_errormsg()."\n")
+  MMisc::error_quit("Error building alignment table: ".$alignmentRep->get_errormsg()."\n")
     if (! $alignmentRep->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
 
   foreach my $file (@todo) {
     my @sys_events = ($sysEL->is_filename_in($file)) ? $sysEL->get_events_list($file) : ();
-    error_quit("While trying to obtain a list of SYS events for file ($file) (" . $sysEL->get_errormsg() . ")")
+    MMisc::error_quit("While trying to obtain a list of SYS events for file ($file) (" . $sysEL->get_errormsg() . ")")
       if ($sysEL->error());
     my @ref_events = ($refEL->is_filename_in($file)) ? $refEL->get_events_list($file) : ();
-    error_quit("While trying to obtain a list of REF events for file ($file) (" . $refEL->get_errormsg() . ")")
+    MMisc::error_quit("While trying to obtain a list of REF events for file ($file) (" . $refEL->get_errormsg() . ")")
       if ($refEL->error());
 
     # limit to sys events ?
@@ -772,10 +756,10 @@ sub do_alignment {
 
     foreach my $evt (TrecVid08ViperFile::sort_events(@listed_events)) {
       my @sys_events_obs = ($sysEL->is_filename_in($file)) ? $sysEL->get_Observations_list($file, $evt) : ();
-      error_quit("While trying to obtain a list of observations for SYS event ($evt) and file ($file) (" . $sysEL->get_errormsg() . ")")
+      MMisc::error_quit("While trying to obtain a list of observations for SYS event ($evt) and file ($file) (" . $sysEL->get_errormsg() . ")")
         if ($sysEL->error());
       my @ref_events_obs = ($refEL->is_filename_in($file)) ? $refEL->get_Observations_list($file, $evt) : ();
-      error_quit("While trying to obtain a list of observations for REF event ($evt) and file ($file) (" . $refEL->get_errormsg() . ")")
+      MMisc::error_quit("While trying to obtain a list of observations for REF event ($evt) and file ($file) (" . $refEL->get_errormsg() . ")")
         if ($refEL->error());
 
       my %sys_bpm = &Obs_array_to_hash(@sys_events_obs);
@@ -784,11 +768,11 @@ sub do_alignment {
       my $tomatch = scalar @sys_events_obs + scalar @ref_events_obs;
       print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, " | Total Observations: $tomatch elements\n";
       my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&TrecVid08Observation::kernel_function, \@kp);
-      error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
+      MMisc::error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
         if ($bpm->error());
 
       $bpm->compute();
-      error_quit("While computing the Bipartite Matching for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
+      MMisc::error_quit("While computing the Bipartite Matching for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
         if ($bpm->error());
 
       # I am the coder, I know what I want to display/debug ... trust me !
@@ -798,7 +782,7 @@ sub do_alignment {
       my $lsat = undef;
       if ($allAT) {
         $lsat = new SimpleAutoTable();
-        error_quit("Error building alignment table: ".$lsat->get_errormsg()."\n")
+        MMisc::error_quit("Error building alignment table: ".$lsat->get_errormsg()."\n")
           if (! $lsat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
       }
       
@@ -806,14 +790,14 @@ sub do_alignment {
 
       # First, the mapped sys observations
       my @mapped = $bpm->get_mapped_objects();
-      error_quit("Problem obtaining the mapped objects from the BPM (" . $bpm->get_errormsg() . ")")
+      MMisc::error_quit("Problem obtaining the mapped objects from the BPM (" . $bpm->get_errormsg() . ")")
         if ($bpm->error());
       foreach my $mop (@mapped) {
         my ($sys_obj, $ref_obj) = @{$mop};
 
         my $detscr = $sys_obj->get_DetectionScore();
         my $detdec = $sys_obj->get_DetectionDecision();
-        error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
+        MMisc::error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
           if ($sys_obj->error());
 
         $trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 1);
@@ -825,15 +809,15 @@ sub do_alignment {
 	if (defined $writexml) {
 	  my $tmp_obs = $sys_obj->clone();
 	  $tmp_obs->set_eventsubtype(TrecVid08ViperFile::get_Mapped_subeventkey());
-	  error_quit("Problem adding sub event type to Observation (" . $tmp_obs->get_errormsg() . ")")
+	  MMisc::error_quit("Problem adding sub event type to Observation (" . $tmp_obs->get_errormsg() . ")")
 	    if ($tmp_obs->error());
 
 	  my $ref_uid = $ref_obj->get_unique_id();
-	  error_quit("While trying to obtain a unique Observation id (". $ref_obj->get_errormsg() . ")")
+	  MMisc::error_quit("While trying to obtain a unique Observation id (". $ref_obj->get_errormsg() . ")")
 	    if ($ref_obj->error());
 
 	  $tmp_obs->addto_comment("Mapped to REF \"$ref_uid\"");
-	  error_quit("Problem adding comment to Observation (" . $tmp_obs->get_errormsg() . ")")
+	  MMisc::error_quit("Problem adding comment to Observation (" . $tmp_obs->get_errormsg() . ")")
 	    if ($tmp_obs->error());
 
 	  &add_obs2vf($tmp_obs);
@@ -865,12 +849,12 @@ sub do_alignment {
 
       # Second, the False Alarms
       my @unmapped_sys = $bpm->get_unmapped_sys_objects();
-      error_quit("Problem obtaining the unmapped_sys objects from the BPM (" . $bpm->get_errormsg() . ")")
+      MMisc::error_quit("Problem obtaining the unmapped_sys objects from the BPM (" . $bpm->get_errormsg() . ")")
         if ($bpm->error());
       foreach my $sys_obj (@unmapped_sys) {
         my $detscr = $sys_obj->get_DetectionScore();
         my $detdec = $sys_obj->get_DetectionDecision();
-        error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
+        MMisc::error_quit("Could not obtain some of the Observation's information (" . $sys_obj->get_errormsg() . ")")
           if ($sys_obj->error());
 
         $trials->addTrial($evt, $detscr, ($detdec) ? "YES" : "NO", 0);
@@ -882,7 +866,7 @@ sub do_alignment {
 	if (defined $writexml) {
 	  my $tmp_obs = $sys_obj->clone();
 	  $tmp_obs->set_eventsubtype(TrecVid08ViperFile::get_UnmappedSys_subeventkey());
-	  error_quit("Problem adding sub event type to Observation (" . $tmp_obs->get_errormsg() . ")")
+	  MMisc::error_quit("Problem adding sub event type to Observation (" . $tmp_obs->get_errormsg() . ")")
 	    if ($tmp_obs->error());
 	  &add_obs2vf($tmp_obs);
 	}
@@ -904,7 +888,7 @@ sub do_alignment {
 
       # Third, the Missed Detects
       my @unmapped_ref = $bpm->get_unmapped_ref_objects();
-      error_quit("Problem obtaining the unmapped_ref objects from the BPM (" . $bpm->get_errormsg() . ")")
+      MMisc::error_quit("Problem obtaining the unmapped_ref objects from the BPM (" . $bpm->get_errormsg() . ")")
         if ($bpm->error());
       foreach my $ref_obj (@unmapped_ref) {
         $trials->addTrial($evt, undef, "OMITTED", 1);
@@ -916,14 +900,14 @@ sub do_alignment {
 	if (defined $writexml) {
 	  my $tmp_obs = $ref_obj->clone();
 	  $tmp_obs->set_eventsubtype(TrecVid08ViperFile::get_UnmappedRef_subeventkey());
-	  error_quit("Problem adding sub event type to Observation (" . $tmp_obs->get_errormsg() . ")")
+	  MMisc::error_quit("Problem adding sub event type to Observation (" . $tmp_obs->get_errormsg() . ")")
 	    if ($tmp_obs->error());
 	  $tmp_obs->set_DetectionScore(0);
 	  $tmp_obs->set_DetectionDecision(0);
 	  $tmp_obs->set_isgtf(0);
 	  $tmp_obs->addto_comment("Observation converted from REF to SYS: DetectionScore and DetectionDecision are faked values");
 	  $tmp_obs->validate();
-	  error_quit("Problem validating REF->SYS converted Observation (" . $tmp_obs->get_errormsg() . ")")
+	  MMisc::error_quit("Problem validating REF->SYS converted Observation (" . $tmp_obs->get_errormsg() . ")")
 	    if ($tmp_obs->error());
 	  &add_obs2vf($tmp_obs);
 	}
@@ -946,7 +930,7 @@ sub do_alignment {
       
       if ($allAT) {
         my $tbl = $lsat->renderTxtTable(2);
-        error_quit("ERROR: Generating Alignment Report (". $lsat->get_errormsg() . ")") if (! defined($tbl));
+        MMisc::error_quit("ERROR: Generating Alignment Report (". $lsat->get_errormsg() . ")") if (! defined($tbl));
         print $tbl;      
       }      
 
@@ -956,7 +940,7 @@ sub do_alignment {
         scalar @mapped, " Mapped (Pairs) / ",
           scalar @unmapped_sys, " Unmapped Sys  / ",
             scalar @unmapped_ref, " Unmapped Ref | Total Observations: $matched elements\n\n";
-      error_quit("WEIRD: To match ($tomatch) != Matched ($matched) ?")
+      MMisc::error_quit("WEIRD: To match ($tomatch) != Matched ($matched) ?")
         if ($tomatch != $matched);
     }
   }
@@ -983,7 +967,7 @@ sub get_fs_value {
   my ($fs_fs) = @_;
 
   my $v = $fs_fs->get_value();
-  error_quit("Error obtaining the framespan's value (" . $fs_fs->get_errormsg() . ")")
+  MMisc::error_quit("Error obtaining the framespan's value (" . $fs_fs->get_errormsg() . ")")
     if ($fs_fs->error());
 
   return($v);
@@ -995,7 +979,7 @@ sub get_fs_duration {
   my ($fs_fs) = @_;
 
   my $d = $fs_fs->duration();
-  error_quit("Error obtaining the framespan's duration (" . $fs_fs->get_errormsg() . ")")
+  MMisc::error_quit("Error obtaining the framespan's duration (" . $fs_fs->get_errormsg() . ")")
     if ($fs_fs->error());
 
   return($d);
@@ -1006,11 +990,11 @@ sub get_fs_duration {
 sub get_obj_fs {
   my ($obj) = @_;
 
-  error_quit("Can not call \'get_framespan\' on an undefined object")
+  MMisc::error_quit("Can not call \'get_framespan\' on an undefined object")
     if (! defined $obj);
 
   my $fs_fs = $obj->get_framespan();
-  error_quit("Error obtaining the object's framespan (" . $obj->get_errormsg() . ")")
+  MMisc::error_quit("Error obtaining the object's framespan (" . $obj->get_errormsg() . ")")
     if ($obj->error());
 
   return($fs_fs);
@@ -1021,7 +1005,7 @@ sub get_obj_fs {
 sub get_obj_fs_value {
   my ($obj) = @_;
 
-  error_quit("Can not obtain a framespan value for an undefined object")
+  MMisc::error_quit("Can not obtain a framespan value for an undefined object")
     if (! defined $obj);
 
   my $fs_fs = &get_obj_fs($obj);
@@ -1034,7 +1018,7 @@ sub get_obj_fs_value {
 sub get_obj_fs_duration {
   my ($obj) = @_;
 
-  error_quit("Can not obtain a framespan duration for an undefined object")
+  MMisc::error_quit("Can not obtain a framespan duration for an undefined object")
     if (! defined $obj);
 
   my $fs_fs = &get_obj_fs($obj);
@@ -1047,14 +1031,14 @@ sub get_obj_fs_duration {
 sub get_obj_fs_ov {
   my ($obj1, $obj2) = @_;
 
-  error_quit("Can not obtain overlap for undefined objects")
+  MMisc::error_quit("Can not obtain overlap for undefined objects")
     if ((! defined $obj1) || (! defined $obj2));
 
   my $fs_fs1 = &get_obj_fs($obj1);
   my $fs_fs2 = &get_obj_fs($obj2);
 
   my $ov = $fs_fs1->get_overlap($fs_fs2);
-  error_quit("Error obtaining overlap (" . $fs_fs1->get_errormsg() . ")")
+  MMisc::error_quit("Error obtaining overlap (" . $fs_fs1->get_errormsg() . ")")
     if ($fs_fs1->error());
 
   return($ov);
@@ -1065,13 +1049,13 @@ sub get_obj_fs_ov {
 sub get_obj_fs_beg_end {
   my ($obj) = @_;
 
-  error_quit("Can not obtain framespan beg/end for undefined object")
+  MMisc::error_quit("Can not obtain framespan beg/end for undefined object")
     if (! defined $obj);
 
   my $fs_fs = &get_obj_fs($obj);
 
   my ($b, $e) = $fs_fs->get_beg_end_fs();
-  error_quit("Error obtaining framespan's beg/end (" . $fs_fs->get_errormsg() . ")")
+  MMisc::error_quit("Error obtaining framespan's beg/end (" . $fs_fs->get_errormsg() . ")")
     if ($fs_fs->error());
 
   return($b, $e);
@@ -1082,11 +1066,11 @@ sub get_obj_fs_beg_end {
 sub get_obj_id {
   my ($obj) = @_;
 
-  error_quit("Can not obtain framespan beg/end for undefined object")
+  MMisc::error_quit("Can not obtain framespan beg/end for undefined object")
     if (! defined $obj);
 
   my $id = $obj->get_id();
-  error_quit("Error obtaining object's ID (" . $obj->get_errormsg() . ")")
+  MMisc::error_quit("Error obtaining object's ID (" . $obj->get_errormsg() . ")")
     if ($obj->error());
 
   return($id)
@@ -1127,11 +1111,11 @@ sub load_ecf {
   return("file is not readable")
     if (! -r $ecffile);
 
-  error_quit("While trying to set \'xmllint\' (" . $ecfobj->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'xmllint\' (" . $ecfobj->get_errormsg() . ")")
     if ( ($xmllint ne "") && (! $ecfobj->set_xmllint($xmllint)) );
-  error_quit("While trying to set \'TrecVid08xsd\' (" . $ecfobj->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'TrecVid08xsd\' (" . $ecfobj->get_errormsg() . ")")
     if ( ($xsdpath ne "") && (! $ecfobj->set_xsdpath($xsdpath)) );
-  error_quit("While setting \'file\' ($ecffile) (" . $ecfobj->get_errormsg() . ")")
+  MMisc::error_quit("While setting \'file\' ($ecffile) (" . $ecfobj->get_errormsg() . ")")
     if ( ! $ecfobj->set_file($ecffile) );
 
   # Validate (important to confirm that we can have a memory representation)

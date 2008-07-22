@@ -57,39 +57,39 @@ sub eo2pe {
 }
 
 ## Then try to load everything
-my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $warn_msg = "";
 
 # MMisc (part of this tool)
-unless (eval "use MMisc; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use MMisc; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # TrecVid08ECF (part of this tool)
-unless (eval "use TrecVid08ECF; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use TrecVid08ECF; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1")
-  {
-    warn_print
-      (
-       "\"Getopt::Long\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+unless (eval "use Getopt::Long; 1") { 
+  &_warn_add
+    (
+     "\"Getopt::Long\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
+    );
+  $have_everything = 0;
+}
 
 # Something missing ? Abort
-error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
+if (! $have_everything) {
+  print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
+  exit(1);
+}
 
 # Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
@@ -130,20 +130,20 @@ GetOptions
    'fps=i'           => \$fps,
    # Hiden Option(s)
    'show_internals'  => \$show,
-  ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-ok_quit("\n$usage\n") if ($opt{'help'});
-ok_quit("$versionid\n") if ($opt{'version'});
+MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 if ($xmllint ne "") {
-  error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xmllint($xmllint));
 }
 
 if ($xsdpath ne "") {
-  error_quit("While trying to set \'TrecVid08xsd\' (" . $dummy->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'TrecVid08xsd\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xsdpath($xsdpath));
 }
 
@@ -160,7 +160,7 @@ while ($tmp = shift @ARGV) {
   $all{$tmp} = $object;
   $ndone++;
 }
-ok_quit("All files processed (Validated: $ndone | Total: $ntodo)\n");
+MMisc::ok_quit("All files processed (Validated: $ndone | Total: $ntodo)\n");
 
 ########## END
 
@@ -199,13 +199,13 @@ sub load_file {
   
   # Prepare the object
   my $object = new TrecVid08ECF();
-  error_quit("While trying to set \'xmllint\' (" . $object->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'xmllint\' (" . $object->get_errormsg() . ")")
     if ( ($xmllint ne "") && (! $object->set_xmllint($xmllint)) );
-  error_quit("While trying to set \'TrecVid08xsd\' (" . $object->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'TrecVid08xsd\' (" . $object->get_errormsg() . ")")
     if ( ($xsdpath ne "") && (! $object->set_xsdpath($xsdpath)) );
-  error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
+  MMisc::error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
     if ( ! $object->set_file($tmp) );
-  error_quit("While setting \'fps\' ($fps) (" . $object->get_errormsg() . ")")
+  MMisc::error_quit("While setting \'fps\' ($fps) (" . $object->get_errormsg() . ")")
     if ( ! $object->set_default_fps($fps) );
 
   # Validate
@@ -252,26 +252,6 @@ EOF
 
 ####################
 
-sub warn_print {
-  print "WARNING: ", @_;
-
-  print "\n";
-}
-
-##########
-
-sub error_quit {
-  print("${ekw}: ", @_);
-
-  print "\n";
-  exit(1);
-}
-
-##########
-
-sub ok_quit {
-  print @_;
-
-  print "\n";
-  exit(0);
+sub _warn_add {
+  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
 }

@@ -56,31 +56,32 @@ sub eo2pe {
 }
 
 ## Then try to load everything
-my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $warn_msg = "";
 
 # ViperFramespan (part of this tool)
-unless (eval "use ViperFramespan; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use ViperFramespan; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1")
-  {
-    warn_print
-      (
-       "\"Getopt::Long\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+unless (eval "use Getopt::Long; 1") {
+  &_warn_add
+    (
+     "\"Getopt::Long\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
+    );
+  $have_everything = 0;
+}
 
 # Something missing ? Abort
-error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
+if (! $have_everything) {
+  print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
+  exit(1);
+}
 
 # Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
@@ -110,15 +111,15 @@ GetOptions
    'csv:s'           => \$csvf,
    'ecffile=s'       => \$ecff,
    'EcfVersion=s'    => \$ecfVersionAttr,
-  ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-ok_quit("\n$usage\n") if ($opt{'help'});
-ok_quit("$versionid\n") if ($opt{'version'});
-ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+MMisc::ok_quit("$versionid\n") if ($opt{'version'});
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
-error_quit("\'fps\' must set in order to do any scoring work") if ($fps == -1);
-error_quit("No mode selected, must at least do one of csv or ecf output") if (($csvf == -1) && ($ecff eq ""));
-error_quit("\'EcfVersion\' must be set if \'ecffile\' selected") if (($ecff ne "") && ($ecfVersionAttr eq ""));
+MMisc::error_quit("\'fps\' must set in order to do any scoring work") if ($fps == -1);
+MMisc::error_quit("No mode selected, must at least do one of csv or ecf output") if (($csvf == -1) && ($ecff eq ""));
+MMisc::error_quit("\'EcfVersion\' must be set if \'ecffile\' selected") if (($ecff ne "") && ($ecfVersionAttr eq ""));
 
 #################### Main processing
 
@@ -130,7 +131,7 @@ my @ecfh = ("SourceFile Filename", "Framespan", "FPS"); # Order is important
 my %all = ();
 foreach my $csv (@ARGV) {
   open FILE, "<$csv"
-    or error_quit("ERROR: Could not open input CSV file ($csv): $!\n");
+    or MMisc::error_quit("ERROR: Could not open input CSV file ($csv): $!\n");
 
   # Check the CVS header is fine and get the position of the keys
   my $header = <FILE>;
@@ -154,17 +155,17 @@ foreach my $fn (sort keys %all) {
 
   my $txt = "";
   my ($beg_ts, $end_ts) = $fs_fs->get_beg_end_ts();
-  error_quit("Problem while getting the beginning and end timestamps (" . $fs_fs->get_errormsg() .")")
+  MMisc::error_quit("Problem while getting the beginning and end timestamps (" . $fs_fs->get_errormsg() .")")
     if ($fs_fs->error());
   $txt .= "Beginning Timestamp does not start at 0. "
     if ($beg_ts != 0);
 
   my $v = $fs_fs->get_value();
-  error_quit("Problem while getting the framespan's value (" . $fs_fs->get_errormsg() .")")
+  MMisc::error_quit("Problem while getting the framespan's value (" . $fs_fs->get_errormsg() .")")
     if ($fs_fs->error());
 
   my $c = $fs_fs->count_pairs_in_value();
-  error_quit("Problem while getting the framespan's pair count (" . $fs_fs->get_errormsg() .")")
+  MMisc::error_quit("Problem while getting the framespan's pair count (" . $fs_fs->get_errormsg() .")")
     if ($fs_fs->error());
   $txt .= "Gap Detected (multiple pairs framespan: $v). " if ($c > 1);
 
@@ -200,7 +201,7 @@ if ($ecff ne "") {
   foreach my $fn (sort keys %all) {
     my $fs_fs = $all{$fn};
     my $sub_fs_list = $fs_fs->get_list_of_framespans();
-    error_quit("Failed to get sub framespans " . $fs_fs->get_errormsg())
+    MMisc::error_quit("Failed to get sub framespans " . $fs_fs->get_errormsg())
       if (! defined($sub_fs_list));
     foreach my $fs (@$sub_fs_list) {
       $ecftxt .= "       <excerpt>\n";
@@ -217,11 +218,11 @@ if ($ecff ne "") {
   $ecftxt .= "   </excerpt_list>\n";
   $ecftxt .= "</ecf>\n";
 
-  error_quit("Error: Unable to do the ECF file")
+  MMisc::error_quit("Error: Unable to do the ECF file")
     if (! MMisc::writeTo($ecff, "", 1, 0, $ecftxt));
 }
 
-ok_quit("Done.\n");
+MMisc::ok_quit("Done.\n");
 
 
 ########################################
@@ -249,28 +250,8 @@ EOF
 
 ####################
 
-sub warn_print {
-  print "WARNING: ", @_;
-
-  print "\n";
-}
-
-##########
-
-sub error_quit {
-  print("${ekw}: ", @_);
-
-  print "\n";
-  exit(1);
-}
-
-##########
-
-sub ok_quit {
-  print @_;
-
-  print "\n";
-  exit(0);
+sub _warn_add {
+  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
 }
 
 ########################################
@@ -311,14 +292,14 @@ sub check_csv_header {
 
   my @elts = &split_csv_line($header);
 
-  error_quit("There are not enought columns (", scalar @elts . ") in the CSV file to contained the required keys (" . join(",". @ecfh) . ")")
+  MMisc::error_quit("There are not enought columns (", scalar @elts . ") in the CSV file to contained the required keys (" . join(",". @ecfh) . ")")
     if (scalar @elts < scalar @ecfh);
 
   my %pos = ();
   foreach my $key (@ecfh) {
     my $val = &find_key($key, @elts);
     if ($val == -1) {
-      error_quit("Could not find required CSV key header ($key)")
+      MMisc::error_quit("Could not find required CSV key header ($key)")
         if ($key ne $ecfh[-1]);
       # FPS was optional for a while, so skip if not found
       next;
@@ -346,22 +327,22 @@ sub process_csv_line {
 
   if (! exists $all{$fn}) {
     my $fs_fs = new ViperFramespan($fs);
-    error_quit("Problem creating a ViperFramespan [$fs] (" . $fs_fs->get_errormsg() . ")")
+    MMisc::error_quit("Problem creating a ViperFramespan [$fs] (" . $fs_fs->get_errormsg() . ")")
       if ($fs_fs->error());
     $fs_fs->set_fps($ffps);
-    error_quit("Problem setting the ViperFramespan's fps (" . $fs_fs->get_errormsg() . ")")
+    MMisc::error_quit("Problem setting the ViperFramespan's fps (" . $fs_fs->get_errormsg() . ")")
       if ($fs_fs->error());
     $all{$fn} = $fs_fs;
   } else {
     my $fs_fs = $all{$fn};
     my $tfps = $fs_fs->get_fps();
-    error_quit("Problem obtaining framespan's fps (" . $fs_fs->get_errormsg() . ")")
+    MMisc::error_quit("Problem obtaining framespan's fps (" . $fs_fs->get_errormsg() . ")")
       if ($fs_fs->error());
-    error_quit("New entry's fps ($tfps) is different from the previously given value ($ffps)")
+    MMisc::error_quit("New entry's fps ($tfps) is different from the previously given value ($ffps)")
       if ($tfps != $ffps);
 
     $fs_fs->add_fs_to_value($fs);
-    error_quit("Problem adding framespan ranges to ViperFramespan (" . $fs_fs->get_errormsg() . ")")
+    MMisc::error_quit("Problem adding framespan ranges to ViperFramespan (" . $fs_fs->get_errormsg() . ")")
       if ($fs_fs->error());
   }
 }
@@ -411,7 +392,7 @@ sub get_csvline {
 
   my @todo = ();
   foreach my $key (@keys) {
-    error_quit("Problem accessing key ($key) from observation hash")
+    MMisc::error_quit("Problem accessing key ($key) from observation hash")
       if (! exists $ohash{$uid}{$key});
     push @todo, $ohash{$uid}{$key};
   }

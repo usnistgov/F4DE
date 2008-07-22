@@ -56,34 +56,34 @@ sub eo2pe {
 }
 
 ## Then try to load everything
-my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $warn_msg = "";
 
 # MMisc (part of this tool)
 unless (eval "use MMisc; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
 }
 
 # TrecVid08ViperFile (part of this tool)
 unless (eval "use TrecVid08ViperFile; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # TrecVid08HelperFunctions (part of this tool)
 unless (eval "use TrecVid08HelperFunctions; 1") {
   my $pe = &eo2pe($@);
-  warn_print("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  &_warn_add("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1") {
-  warn_print
+  &_warn_add
     (
      "\"Getopt::Long\" is not available on your Perl installation. ",
      "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
@@ -92,7 +92,10 @@ unless (eval "use Getopt::Long; 1") {
 }
 
 # Something missing ? Abort
-error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
+if (! $have_everything) {
+  print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
+  exit(1);
+}
 
 # Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
@@ -155,81 +158,81 @@ GetOptions
    'WriteMemDump:s'  => \$MemDump,
    # Hiden Option(s)
    'show_internals'  => \$show,
-  ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-ok_quit("\n$usage\n") if ($opt{'help'});
-ok_quit("$versionid\n") if ($opt{'version'});
+MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 if ($opt{'man'}) {
   my ($r, $o, $e) = MMisc::do_system_call($mancmd);
-  error_quit("Could not run \'$mancmd\'") if ($r);
-  ok_quit($o);
+  MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
+  MMisc::ok_quit($o);
 }
 
 if (scalar @asked_events == 0) {
   @asked_events = @ok_events;
 } else {
-  error_quit("Can not use \'limitto\' in conjunction with \'pruneEvents\'")
+  MMisc::error_quit("Can not use \'limitto\' in conjunction with \'pruneEvents\'")
     if ($autolt);
   @asked_events = $dummy->validate_events_list(@asked_events);
-  error_quit("While checking \'limitto\' events list (" . $dummy->get_errormsg() .")")
+  MMisc::error_quit("While checking \'limitto\' events list (" . $dummy->get_errormsg() .")")
     if ($dummy->error());
 }
 
 if ($xmlbasefile != -1) {
   my $txt = $dummy->get_base_xml(@asked_events);
-  error_quit("While trying to obtain the base XML file (" . $dummy->get_errormsg() . ")")
+  MMisc::error_quit("While trying to obtain the base XML file (" . $dummy->get_errormsg() . ")")
     if ($dummy->error());
 
   MMisc::writeTo($xmlbasefile, "", 0, 0, $txt);
 
-  ok_quit("");
+  MMisc::ok_quit("");
 }
 
-ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 if ($xmllint ne "") {
-  error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xmllint($xmllint));
 }
 
 if ($xsdpath ne "") {
-  error_quit("While trying to set \'TrecVid08xsd\' (" . $dummy->get_errormsg() . ")")
+  MMisc::error_quit("While trying to set \'TrecVid08xsd\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xsdpath($xsdpath));
 }
 
 if (($writeback != -1) && ($writeback ne "")) {
   # Check the directory
-  error_quit("Provided \'write\' option directory ($writeback) does not exist")
+  MMisc::error_quit("Provided \'write\' option directory ($writeback) does not exist")
     if (! -e $writeback);
-  error_quit("Provided \'write\' option ($writeback) is not a directoru")
+  MMisc::error_quit("Provided \'write\' option ($writeback) is not a directoru")
     if (! -d $writeback);
-  error_quit("Provided \'write\' option directory ($writeback) is not writable")
+  MMisc::error_quit("Provided \'write\' option directory ($writeback) is not writable")
     if (! -w $writeback);
   $writeback .= "/" if ($writeback !~ m%\/$%); # Add a trailing slash
 }
 
 if (defined $MemDump) {
-  error_quit("\'WriteMemDump\' can only be used in conjunction with \'write\'")
+  MMisc::error_quit("\'WriteMemDump\' can only be used in conjunction with \'write\'")
     if ($writeback == -1);
   $MemDump = $ok_md[0]
     if (MMisc::is_blank($MemDump));
-  error_quit("Unknown \'WriteMemDump\' mode ($MemDump), authorized: " . join(" ", @ok_md))
+  MMisc::error_quit("Unknown \'WriteMemDump\' mode ($MemDump), authorized: " . join(" ", @ok_md))
     if (! grep(m%^$MemDump$%, @ok_md));
 }
 
 my ($crop_beg, $crop_end) = (0, 0);
 if (! MMisc::is_blank($crop)) {
-  error_quit("\'crop\' can only be used in conjunction with \'write\'") if ($writeback == -1);
+  MMisc::error_quit("\'crop\' can only be used in conjunction with \'write\'") if ($writeback == -1);
 
   my @rest = split(m%\:%, $crop);
-  error_quit("Too many parameters to crop, expected \'beg:end\'") if (scalar @rest > 2);
-  error_quit("Not enough parameters to crop, expected \'beg:end\'") if (scalar @rest < 2);
+  MMisc::error_quit("Too many parameters to crop, expected \'beg:end\'") if (scalar @rest > 2);
+  MMisc::error_quit("Not enough parameters to crop, expected \'beg:end\'") if (scalar @rest < 2);
 
   ($crop_beg, $crop_end) = @rest;
-  error_quit("\'crop\' beg must be positive and be at least 1") if ($crop_beg < 1);
-  error_quit("\'crop\' beg must be less than the end value") if ($crop_beg > $crop_end);
+  MMisc::error_quit("\'crop\' beg must be positive and be at least 1") if ($crop_beg < 1);
+  MMisc::error_quit("\'crop\' beg must be less than the end value") if ($crop_beg > $crop_end);
 
-  error_quit("\'fps\' must set in order to do any \'crop\'") if (! defined $fps);
+  MMisc::error_quit("\'fps\' must set in order to do any \'crop\'") if (! defined $fps);
 
 }
 
@@ -248,7 +251,7 @@ while ($tmp = shift @ARGV) {
 
   if (! MMisc::is_blank($crop)) {
     (my $err, $object) = TrecVid08HelperFunctions::ViperFile_crop($object, $crop_beg, $crop_end);
-    error_quit("While cropping: $err\n") if (! MMisc::is_blank($err));
+    MMisc::error_quit("While cropping: $err\n") if (! MMisc::is_blank($err));
   }
 
   if ($changetype) {
@@ -258,8 +261,8 @@ while ($tmp = shift @ARGV) {
     } else {
       $r = $object->change_sys_to_ref();
     }
-    error_quit("Could not change type of the file") if ($r == 0);
-    error_quit("Problem while changing the type of the file: " . $object->get_errormsg()) if ($object->error());
+    MMisc::error_quit("Could not change type of the file") if ($r == 0);
+    MMisc::error_quit("Problem while changing the type of the file: " . $object->get_errormsg()) if ($object->error());
     # This is really if you are a debugger
     print("** Memory Representation (post ChangeType):\n", $object->_display_all()) if ($show);
   }
@@ -270,7 +273,7 @@ while ($tmp = shift @ARGV) {
     @asked_events = $object->list_used_full_events() if ($autolt);
 
     my $txt = $object->reformat_xml(@asked_events);
-    error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
+    MMisc::error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
       if ($object->error());
     my $fname = "";
     if ($writeback ne "") {
@@ -278,23 +281,23 @@ while ($tmp = shift @ARGV) {
       $tmp2 =~ s%^.+\/([^\/]+)$%$1%;
       $fname = "$writeback$tmp2";
     }
-    error_quit("Problem while trying to \'write\'")
+    MMisc::error_quit("Problem while trying to \'write\'")
       if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
 
     if (defined $MemDump) {
       # Duplicate the object in memory with only the selected types
       my $nvf = $object->clone_with_selected_events(@asked_events);
-      error_quit("Problem while \'clone\'-ing the ViperFile")
+      MMisc::error_quit("Problem while \'clone\'-ing the ViperFile")
 	if (! defined $nvf);
 
-      error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
+      MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
 	if (! TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump));
     }
   }
 
   $ndone++;
 }
-ok_quit("All files processed (Validated: $ndone | Total: $ntodo)\n");
+MMisc::ok_quit("All files processed (Validated: $ndone | Total: $ntodo)\n");
 
 ########## END
 
@@ -373,30 +376,10 @@ EOF
     return $tmp;
 }
 
-####################
-
-sub warn_print {
-  print "WARNING: ", @_;
-
-  print "\n";
-}
-
 ##########
 
-sub error_quit {
-  print("${ekw}: ", @_);
-
-  print "\n";
-  exit(1);
-}
-
-##########
-
-sub ok_quit {
-  print @_;
-
-  print "\n";
-  exit(0);
+sub _warn_add {
+  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
 }
 
 ############################################################ Manual

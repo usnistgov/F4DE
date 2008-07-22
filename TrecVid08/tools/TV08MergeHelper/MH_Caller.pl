@@ -49,42 +49,42 @@ BEGIN {
 use lib ($tv08plv, $f4deplv, $f4bv);
 
 ## Then try to load everything
-my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $warn_msg = "";
 
 # MMisc (part of this tool)
-unless (eval "use MMisc; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
+unless (eval "use MMisc; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
 
 # Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1")
-  {
-    warn_print
-      (
-       "\"Getopt::Long\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+unless (eval "use Getopt::Long; 1") {
+  &_warn_add
+    (
+     "\"Getopt::Long\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
+    );
+  $have_everything = 0;
+}
 
 # File::Temp (usualy part of the Perl Core)
-unless (eval "use File::Temp qw / tempfile /; 1")
-  {
-    warn_print
-      (
-       "\"File::Temp\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?mode=module&query=file%3A%3Atemp\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+unless (eval "use File::Temp qw / tempfile /; 1") {
+  &_warn_add
+    (
+     "\"File::Temp\" is not available on your Perl installation. ",
+     "Please see \"http://search.cpan.org/search?mode=module&query=file%3A%3Atemp\" for installation information\n"
+    );
+  $have_everything = 0;
+}
 
 # Something missing ? Abort
-error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
+if (! $have_everything) {
+  print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
+  exit(1);
+}
 
 # Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case permute));
@@ -127,13 +127,13 @@ GetOptions
    'overlaplistdir=s' => \$ovdir,
    'ecfhelperdir=s'   => \$ecfdir,
    '<>'   => \&setfileslist,
-  ) or error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-ok_quit("\n$usage\n") if ($opt{'help'});
-ok_quit("$versionid\n") if ($opt{'version'});
+MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-error_quit("No XML files seen on the command line\n\n$usage\n") if (scalar @fileslist == 0);
-error_quit("No \'mergehelper\' parameters on the command line\n\n$usage\n") if (scalar @ARGV == 0);
+MMisc::error_quit("No XML files seen on the command line\n\n$usage\n") if (scalar @fileslist == 0);
+MMisc::error_quit("No \'mergehelper\' parameters on the command line\n\n$usage\n") if (scalar @ARGV == 0);
 my @merger_cmds = @ARGV;
 
 
@@ -178,7 +178,7 @@ foreach my $fn (@fileslist) {
 }
 
 print "*-> All files loaded ( $ndone ok / $ntodo)\n";
-error_quit("Can not continue, not all files patterns were recognized\n")
+MMisc::error_quit("Can not continue, not all files patterns were recognized\n")
   if ($ndone != $ntodo);
 
 ########## Call the merger
@@ -197,10 +197,10 @@ foreach my $key (@atomerge) {
   $ndone++;
 }
 print "\n*-> All files merged ( $ndone ok / $ntodo)\n";
-error_quit("Not all files merged, aborting\n")
+MMisc::error_quit("Not all files merged, aborting\n")
   if ($ndone != $ntodo);
 
-ok_quit("Done.\n");
+MMisc::ok_quit("Done.\n");
 
 
 ########################################
@@ -245,26 +245,8 @@ EOF
 
 ####################
 
-sub warn_print {
-  print "WARNING: ", @_;
-}
-
-##########
-
-sub error_quit {
-  print("${ekw}: ", @_);
-
-  print "\n";
-  exit(1);
-}
-
-##########
-
-sub ok_quit {
-  print @_;
-
-  print "\n";
-  exit(0);
+sub _warn_add {
+  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
 }
 
 ########################################
