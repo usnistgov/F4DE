@@ -721,7 +721,7 @@ sub smallest {
 sub make_dir {
   my ($dest, $perm) = @_;
 
-  return(1, "") if (-d $dest);
+  return(1) if (-d $dest);
 
   $perm = 0755 if (is_blank($perm)); # default permissions
 
