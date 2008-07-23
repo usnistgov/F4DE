@@ -209,7 +209,7 @@ if ($ecff ne "") {
       $ecftxt .= "           <filename>$fn</filename>\n";
       $ecftxt .= "           <begin>" . $fs->get_beg_ts() . "</begin>\n";
       $ecftxt .= "           <duration>" . $fs->duration_ts() . "</duration>\n";
-      $ecftxt .= "           <sample_rate>" . $fs->get_fps() . "<sample_rate>\n";
+      $ecftxt .= "           <sample_rate>" . $fs->get_fps() . "</sample_rate>\n";
       $ecftxt .= "           <language>english</language>\n";
       $ecftxt .= "           <source_type>surveillance</source_type>\n";
       $ecftxt .= "       </excerpt>\n";
