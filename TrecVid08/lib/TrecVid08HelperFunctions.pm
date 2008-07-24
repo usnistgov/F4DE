@@ -178,7 +178,7 @@ sub load_ViperFile {
   close FILE;
   chomp $header;
 
-  return(&_load_MemDump_ViperFile($isgtf, $filename))
+  return(&_load_MemDump_ViperFile($isgtf, $filename, $fps))
     if ( ($header eq $VF_MemDump_FileHeader_cmp)
 	|| ($header eq $VF_MemDump_FileHeader_gz_cmp) );
   
@@ -223,7 +223,7 @@ sub _load_XML_ViperFile {
 #####
 
 sub _load_MemDump_ViperFile {
-  my ($isgtf, $file) = @_;
+  my ($isgtf, $file, $fps) = @_;
 
   my $object = MMisc::load_memory_object($file, $VF_MemDump_FileHeader_gz);
 
@@ -250,5 +250,11 @@ sub _load_MemDump_ViperFile {
   return(0, undef, $rtxt . "Object is not SYS as expected")
     if ( (! $isgtf) && (! $object->check_if_sys()) );
 
-  return(1, $object, $rtxt . "validates");
+  # Set the FPS ?
+  if ( (defined $fps) && (! $object->is_fps_set()) ) {
+    $object->set_fps($fps);
+    return(0, undef, $rtxt . "Problem setting ViperFile's FPS (" . $object->get_errormsg() . ")") if ($object->error());
+  }
+
+  return(1, $object, $rtxt . "loaded");
 }
