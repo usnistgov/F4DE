@@ -132,9 +132,11 @@ my $crop = "";
 my $fps = undef;
 my $changetype = 0;
 my $MemDump = undef;
+my $forceFilename = "";
+my $dosummary = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:   C                T   X    c   gh   lm  p r   vwx  
+# USed:   C  F             T  WX    cd fgh   lm  p r   vwx  
 
 my %opt = ();
 my $dbgftmp = "";
@@ -156,6 +158,8 @@ GetOptions
    'fps=s'           => \$fps,
    'ChangeType:s'    => \$changetype,
    'WriteMemDump:s'  => \$MemDump,
+   'ForceFilename=s' => \$forceFilename,
+   'displaySummary:i' => \$dosummary,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -220,6 +224,11 @@ if (defined $MemDump) {
     if (! grep(m%^$MemDump$%, @ok_md));
 }
 
+if ($opt{'ForceFilename'}) {
+  MMisc::error_quit("\'ForceFilename\' option selected but no value set\n$usage") if ($forceFilename eq "");
+  MMisc::error_quit("\'ForceFilename\' option can only be used in conjunction with \'write\'") if ($writeback == -1);
+}
+
 my ($crop_beg, $crop_end) = (0, 0);
 if (! MMisc::is_blank($crop)) {
   MMisc::error_quit("\'crop\' can only be used in conjunction with \'write\'") if ($writeback == -1);
@@ -254,6 +263,12 @@ while ($tmp = shift @ARGV) {
     MMisc::error_quit("While cropping: $err\n") if (! MMisc::is_blank($err));
   }
 
+  if ($forceFilename ne "") {
+    $object->change_sourcefile_filename($forceFilename);
+    MMisc::error_quit("Problem while changing the sourcefile filename (" . $object->get_errormsg() .")")
+	if ($object->error());
+  }
+  
   if ($changetype) {
     my $r = 0;
     if ($isgtf) {
@@ -267,15 +282,16 @@ while ($tmp = shift @ARGV) {
     print("** Memory Representation (post ChangeType):\n", $object->_display_all()) if ($show);
   }
 
+  my $fname = "";
   if ($writeback != -1) {
     # Re-adapt @asked_events for each object if automatic limitto is set
     $object->unset_force_subtype() if ($remse);
     @asked_events = $object->list_used_full_events() if ($autolt);
-
+    
     my $txt = $object->reformat_xml(@asked_events);
     MMisc::error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
-      if ($object->error());
-    my $fname = "";
+	if ($object->error());
+    
     if ($writeback ne "") {
       my $tmp2 = $tmp;
       $tmp2 =~ s%^.+\/([^\/]+)$%$1%;
@@ -283,16 +299,23 @@ while ($tmp = shift @ARGV) {
     }
     MMisc::error_quit("Problem while trying to \'write\'")
       if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
+  }
 
-    if (defined $MemDump) {
-      # Duplicate the object in memory with only the selected types
-      my $nvf = $object->clone_with_selected_events(@asked_events);
-      MMisc::error_quit("Problem while \'clone\'-ing the ViperFile")
-	if (! defined $nvf);
+  # Duplicate the object in memory with only the selected types
+  my $nvf = $object->clone_with_selected_events(@asked_events);
+  MMisc::error_quit("Problem while \'clone\'-ing the ViperFile")
+      if (! defined $nvf);
 
-      MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
+  if (defined $MemDump) {
+    MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
 	if (! TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump));
-    }
+  }
+
+  # Summary
+  if ($dosummary) {
+    my $sumtxt = $nvf->get_summary($dosummary);
+    MMisc::error_quit("Problem obtaining summary (" . $nvf->get_errormsg() . ")") if ($nvf->error());
+    print $sumtxt;
   }
 
   $ndone++;
@@ -343,7 +366,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]]] [--fps fps] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename]] [--fps fps] [--displaySummary [level]] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -358,8 +381,10 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --ChangeType    Convert a SYS to REF or a REF to SYS.
   --crop          Will crop file content to only keep content that is found within the beg and end frames
   --WriteMemDump  Write a memory representation of validated Viper Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
+  --ForceFilename Replace the 'sourcefile' file value
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
+  --displaySummary  Display a file information summary (level shows information about event type seen, and is a value from 1 to 3)
   --version       Print version number and exit
   --help          Print this usage information and exit
   --man           Print a more detailled manual page and exit (same as running: $mancmd)
@@ -397,11 +422,12 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
         S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
         S<[B<--gtf>] [B<--limitto> I<event1>[,I<event2>[I<...>]]]>
         S<[B<--pruneEvents>] [B<--removeSubEventtypes>]>
-        S<[[B<--write> [I<directory>]]>
+        S<[ [B<--write> [I<directory>]]>
         S<[B<--ChangeType> [I<randomseed>]]>
         S<[B<--crop I<beg:end>]>
-        S<[B<--WriteMemDump> [I<mode>]]]
-        S<[B<--fps> I<fps>]>
+        S<[B<--WriteMemDump> [I<mode>]]
+        S<[B<--ForceFilename> I<filename>] ]>
+        S<[B<--fps> I<fps>] [B<--displaySummary [I<level>]]>
         I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
 
 =head1 DESCRIPTION
@@ -465,16 +491,25 @@ B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well
 Will crop all input ViperFiles to the specified range. Only valid when used with the 'write' option.
 Note that cropping consist of trimming all seen events to the selected range and then shifting the file to start at 1 again.
 
-=item <--ChangeType> [I<randomseed>[:I<find_value]]
+=item B<--ChangeType> [I<randomseed>[:I<find_value]]
 
 Convert a SYS to REF or a REF to SYS.
 The I<randomseed> is useful if you want to reproduce the result in the future.
 Be forewarned that it is possible to reproduce a same output if reusing the I<randomseed> value but the process and source files have to be the exact same too.
 Also, when trying to reproduce a file, it is possible to ask the program to find the file's first random value (see the XML sourcefile comment) thanks to the I<find_value> argument.
 
+=item B<--displaySummary> [I<level>]
+
+Display a file information summary.
+I<level> is a value from 1 to 3 which will show more information about the I<Event> seen.
+
 =item B<--fps> I<fps>
 
 Specify the default sample rate (in frames per second) of the Viper files.
+
+=item B<--ForceFilename> I<fname>
+
+Replace the I<sourcefile>'s I<filename> value by  I<fname>.
 
 =item B<--gtf>
 
