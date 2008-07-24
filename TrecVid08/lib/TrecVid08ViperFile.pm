@@ -167,6 +167,12 @@ my $check_ids_are_consecutive = 0;
 ##### Random seed
 my $rseed = undef;
 my $rseed_lastfound = undef;
+# To avoid any call to 'rand' in any other library to interefere with us
+# we store 10,000 values in advance (and will reuse them -- it should be
+# enough to work with a few files)
+my @rseed_vals = ();
+my $rseed_pos = 0;
+my $rseed_max = 1E4;
 
 ########################################
 
@@ -185,7 +191,6 @@ sub new {
 
   my $errormsg = new MErrorH("TrecVid08ViperFile");
   $errormsg->set_errormsg($errortxt);
-
 
   my $self =
     {
@@ -208,6 +213,8 @@ sub new {
 #####
 
 sub _fill_required_hashes {
+  return() if (scalar keys %hash_objects_attributes_types > 0);
+
   for (my $i = 0; $i < scalar @list_objects_attributes; $i++) {
     my $key  = $list_objects_attributes[$i];
     my $keyt = $list_objects_attributes_types[$i];
@@ -614,7 +621,7 @@ sub set_fps {
 
 #####
 
-sub _is_fps_set {
+sub is_fps_set {
   my ($self) = @_;
 
   return(0) if ($self->error());
@@ -631,7 +638,7 @@ sub get_fps {
 
   return(0) if ($self->error());
 
-  if (! $self->_is_fps_set()) {
+  if (! $self->is_fps_set()) {
     $self->_set_errormsg("\'fps\' is not set");
     return(0);
   }
@@ -1085,7 +1092,7 @@ sub _get_event_observation_common {
     return(0);
   }
 
-  if (! $self->_is_fps_set()) {
+  if (! $self->is_fps_set()) {
     $self->_set_errormsg("\'fps\' need to be set to create any observation");
     return(0);
   }
@@ -1094,7 +1101,7 @@ sub _get_event_observation_common {
   my $filename = $self->get_sourcefile_filename();
   my $fps = $self->get_fps();
   my $isgtf = $self->check_if_gtf();
-  my $file_fs = $self->_get_fhash_file_numframes();
+  my $file_fs = $self->get_numframes_value();
 
   return(0) if ($self->error());
 
@@ -1460,8 +1467,10 @@ sub _clone_core {
   $clone->set_xmllint($self->get_xmllint());
   $clone->set_xsdpath($self->get_xsdpath());
   $clone->set_as_gtf() if ($self->check_if_gtf());
-  $clone->set_fps($self->get_fps()) if ($self->_is_fps_set());
+  $clone->set_fps($self->get_fps()) if ($self->is_fps_set());
   $clone->set_file($self->get_file());
+  $clone->set_force_subtype() if ($self->check_force_subtype);
+  $clone->_set_framespan_max_value($self->_get_framespan_max_value()) if ($self->_is_framespan_max_set());
   $clone->addto_comment($self->get_comment()) if ($self->is_comment_set());
   my %out = ();
   if ($keep_events) {
@@ -1526,11 +1535,11 @@ sub fill_empty {
   my %fhash = ();
   $fhash{"file"}{"filename"} = $sf_filename;
   $fhash{"file"}{"file_id"} = 0;
-  $fhash{"file"}{"NUMFRAMES"} = ($numframes) ? $numframes : 1; # At least 1
-  $fhash{"file"}{"FRAMERATE"} = ($framerate) ? $framerate : undef;
-  $fhash{"file"}{"SOURCETYPE"} = (! MMisc::is_blank($sourcetype)) ? $sourcetype : undef;
-  $fhash{"file"}{"H-FRAME-SIZE"} = ($hframesize) ? $hframesize : undef;
-  $fhash{"file"}{"V-FRAME-SIZE"} = ($vframesize) ? $vframesize : undef;
+  $fhash{"file"}{$key_fat_numframes} = ($numframes) ? $numframes : 1; # At least 1
+  $fhash{"file"}{$key_fat_framerate} = ($framerate) ? $framerate : undef;
+  $fhash{"file"}{$key_fat_sourcetype} = (! MMisc::is_blank($sourcetype)) ? $sourcetype : undef;
+  $fhash{"file"}{$key_fat_hframesize} = ($hframesize) ? $hframesize : undef;
+  $fhash{"file"}{$key_fat_vframesize} = ($vframesize) ? $vframesize : undef;
   $self->_set_fhash(%fhash);
 
   $self->set_as_gtf() if ($isgtf);
@@ -1545,8 +1554,8 @@ sub fill_empty {
 
 ##########
 
-sub _get_fhash_file_numframes {
-  my ($self) = @_;
+sub _get_fhash_file_XXX {
+  my ($self, $xxx) = @_;
 
   return(0) if ($self->error());
 
@@ -1557,20 +1566,19 @@ sub _get_fhash_file_numframes {
 
   my %tmp = $self->_get_fhash();
 
-  if (! exists $tmp{"file"}{"NUMFRAMES"}) {
-    $self->_set_errormsg("WEIRD: Can not access file's \'numframes\'");
+  if (! exists $tmp{"file"}{$xxx}) {
+    $self->_set_errormsg("WEIRD: Can not access file's \'$xxx\'");
     return(0);
   }
 
-  return($tmp{"file"}{"NUMFRAMES"});
+  return($tmp{"file"}{$xxx});
 }
 
 #####
 
 sub get_numframes_value {
   my ($self) = @_;
-
-  return($self->_get_fhash_file_numframes());
+  return($self->_get_fhash_file_XXX($key_fat_numframes));
 }
 
 #####
@@ -1583,7 +1591,7 @@ sub _set_fhash_file_numframes {
     return(0);
   }
 
-  my $cnf = $self->_get_fhash_file_numframes();
+  my $cnf = $self->get_numframes_value();
   return(0) if ($self->error());
 
   if ($numframes <= $cnf) {
@@ -1600,12 +1608,12 @@ sub _set_fhash_file_numframes {
 
   my %tmp = $self->_get_fhash();
 
-  if (! exists $tmp{"file"}{"NUMFRAMES"}) {
+  if (! exists $tmp{"file"}{$key_fat_numframes}) {
     $self->_set_errormsg("WEIRD: Can not access file's \'numframes\'");
     return(0);
   }
 
-  $tmp{"file"}{"NUMFRAMES"} = $numframes;
+  $tmp{"file"}{$key_fat_numframes} = $numframes;
 
   $self->_set_fhash(%tmp);
   $self->addto_comment("NUMFRAMES modified from $cnf to $numframes" . ((! MMisc::is_blank($commentadd)) ? " ($commentadd)" : ""));
@@ -1724,7 +1732,7 @@ sub extend_numframes_from_observation {
   }
 
   # Try to extend the "NUMFRAMES" (if required)
-  my $key = "NUMFRAMES";
+  my $key = $key_fat_numframes;
   if (! exists $ofi{$key}) {
     $self->_set_errormsg("WEIRD: Problem accessing the observation's file \'$key\' information");
     return(0);
@@ -2088,23 +2096,49 @@ sub type_changer_init_randomseed { ## Class function
 
   $rseed_lastfound = $lastfound if (defined $lastfound);
 
+  &_init_rseed_vals();
+
   return(1);
 }
 
 #####
 
-sub _get_comment_random_value {
-  return(sprintf("%.12f", rand())) if (! defined $rseed_lastfound);
+sub _init_rseed_vals {
+  @rseed_vals = ();
+  for (my $i = 0; $i < $rseed_max; $i++) {
+    push @rseed_vals, rand();
+  }
+  $rseed_pos = 0;
+}
 
-  my $tmp = $rseed_lastfound;
-  $tmp =~ s%^\d+(\.)%$1%; # Remove the integer part
+#####
+
+sub _rand {
+  my $mul = shift @_;
+
+  $mul = 1 if (! defined $mul);
+  $mul = 1 if ($mul == 0);
+
+  # If we did not init rseed_vals, we are in true random mode
+  return(rand($mul)) if (scalar @rseed_vals == 0);
+
+  my $v = $rseed_vals[$rseed_pos];
+  $rseed_pos = ($rseed_pos == $rseed_max - 1) ? 0 : $rseed_pos + 1;
+
+  return($mul * $v);
+}
+
+#####
+
+sub _get_comment_random_value {
+  return(sprintf("%.12f", &_rand())) if (! defined $rseed_lastfound);
 
   my $v = 0;
   my $found = 0;
   my $run = 0;
-  my $maxrun = 1E6;
+  my $maxrun = $rseed_max;
   while (! $found) {
-    $v = rand();
+    $v = &_rand();
     $found = 1 if (MMisc::are_float_equal($v, $rseed_lastfound, 0));
     $run++;
     die("TrecVid08ViperFile Internal Error: Could not find the requested pseudo random value after $maxrun iterations, aborting\n") 
@@ -2132,10 +2166,10 @@ sub _get_random_XXX {
   my $v = 0;
   if ($type eq $list_objects_attributes_types[0]) { # fvalue
     # -127 -> 128
-    $v = rand(256.0) - 128.0;
+    $v = &_rand(256.0) - 128.0;
   } elsif ($type eq $list_objects_attributes_types[1]) { # bvalue
     # 0 / 1
-    $v = int(rand(256)) % 2;
+    $v = int(&_rand(256)) % 2;
   } else {
     die("TrecVid08ViperFile Internal Error: Type ($type) is yet not handled by _get_random_XXX method\n");
   }
@@ -2222,6 +2256,62 @@ sub change_ref_to_sys {
   return(0) if ($self->error());
 
   return($self->change_autoswitch());
+}
+
+########## 'Summary'
+
+sub get_summary {
+  my ($self, $v) = @_;
+
+  return("") if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'get_summary\' on a validated file");
+    return("");
+  }
+
+  my $ns = "-- NOT SET --";
+
+  my $txt = "";
+  $txt .= "|--> Summary for file:  " . $self->get_file() . "\n";
+  $txt .= "| |    Sourcefile : " . $self->get_sourcefile_filename() . "\n";
+  $txt .= "| |          Type : " . (($self->check_if_gtf()) ? "REF" : "SYS") . "\n";
+  $txt .= "| |   cmdline FPS : " . (($self->is_fps_set()) ? $self->get_fps() : $ns) . "\n";
+
+  my $tmp = $self->_get_fhash_file_XXX($key_fat_framerate);
+  $txt .= "| |     Framerate : ". (MMisc::is_blank($tmp) ? $ns : $tmp) . "\n";
+
+  $txt .= "| |     NumFrames : " . $self->get_numframes_value() . "\n";
+
+  $tmp = $self->_get_fhash_file_XXX($key_fat_sourcetype);
+  $txt .= "| |    Sourcetype : " . (MMisc::is_blank($tmp) ? $ns : $tmp) . "\n";
+
+  $tmp = $self->_get_fhash_file_XXX($key_fat_hframesize);
+  $txt .= "| |  H Frame Size : " . (MMisc::is_blank($tmp) ? $ns : $tmp) . "\n";
+
+  $tmp = $self->_get_fhash_file_XXX($key_fat_vframesize);
+  $txt .= "| |  V Frame Size : " . (MMisc::is_blank($tmp) ? $ns : $tmp) . "\n";
+
+  $txt .= "| |   Event Types :";
+  my @et = $self->list_used_full_events();
+  my $tot = 0;
+  foreach my $event (sort_events(@et)) {
+    $txt .= " $event";
+    my @ids = $self->get_event_ids($event);
+    $tot += scalar @ids;
+    next if ($v < 2);
+    $txt .= "(x" . scalar @ids . ")";
+    next if ($v < 3);
+    $txt .= "[IDs: " . join(" ", sort {$a <=> $b} @ids) . "]";
+  }
+  $txt .= "\n";
+
+  $txt .= "| |  Total Events : $tot\n";
+  $txt .= "| |       Comment : " . (($self->is_comment_set()) ? $self->get_comment() : $ns) . "\n";
+  
+  return("") if ($self->error());
+
+  return($txt);
 }
 
 ############################################################
@@ -2506,7 +2596,7 @@ sub _parse_file_section {
   }
 
   # Set the "framespan_max" from the NUMFRAMES entry
-  my $key = "NUMFRAMES";
+  my $key = $key_fat_numframes;
   return("No \'$key\' \'$wtag\' attribute defined", ())
     if (! defined $file_hash{$key});
   my $val = $file_hash{$key};
