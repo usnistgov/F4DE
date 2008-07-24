@@ -331,7 +331,6 @@ if ($useECF) {
   }
   print "\n** SUMMARY: ECF file loaded\n";
   print $ecfobj->txt_summary();
-  #  $ecfobj->_display();
 }
 
 ## Generate event lists
@@ -380,7 +379,10 @@ foreach my $event (@all_events) {
 my $gtrial = $all_trials{$key_allevents};
 
 my %xmlwriteback = ();
-&do_alignment(@common, @only_in_sys, @only_in_ref);
+my $ald = &do_alignment(@common, @only_in_sys, @only_in_ref);
+
+MMisc::error_quit("No alignment ever performed, aborting")
+  if ($ald == 0);
 
 if ($trials_c{$key_allevents} == 0) {
   MMisc::error_quit("No Trials ever added");
@@ -744,15 +746,35 @@ sub do_alignment {
     MMisc::error_quit("While trying to obtain a list of REF events for file ($file) (" . $refEL->get_errormsg() . ")")
       if ($refEL->error());
 
+    if (scalar @ref_events + scalar @sys_events == 0) {
+      print "|->File: $file\n -- No Events, skipping\n\n";
+      next;
+    }
+
     # limit to sys events ?
     if ($ltse) {
       my ($rla, $rlb) = MMisc::confirm_first_array_values(\@ref_events, @sys_events);
       my @leftover = @$rlb;
-      print "|-> File: $file\n -- Will not process the following event(s) (not present in the matching sys files): ", join(" ", @leftover), "\n\n" if (scalar @leftover > 0);
       @ref_events = ();
+
+      if (scalar @leftover > 0) {
+	print "|-> File: $file\n -- Will not process the following event(s) (not present in the matching sys files): ", join(" ", @leftover), "\n";
+
+	my @listed_events = MMisc::make_array_of_unique_values(@sys_events, @ref_events);
+	if (scalar @listed_events == 0) {
+	  print " -- No Events left, skipping\n\n";
+	  next;
+	}
+	print "\n";
+      }
     }
 
     my @listed_events = MMisc::make_array_of_unique_values(@sys_events, @ref_events);
+
+    if (scalar @listed_events == 0) {
+      print "|->File: $file\n -- No Events, skipping\n\n";
+      next;
+    }
 
     foreach my $evt (TrecVid08ViperFile::sort_events(@listed_events)) {
       my @sys_events_obs = ($sysEL->is_filename_in($file)) ? $sysEL->get_Observations_list($file, $evt) : ();
@@ -959,6 +981,8 @@ sub do_alignment {
       MMisc::writeTo($outputRootFile, ".ali.csv", 1, 0, $tbl);
     }
   }
+
+  return($ksep);
 }
 
 #####
