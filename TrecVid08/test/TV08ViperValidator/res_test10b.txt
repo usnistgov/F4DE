@@ -1,0 +1,34 @@
+[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl -g ../../test/common/test1-gtf.xml ../../test/common/test2-gtf.xml -d 3
+[[RETURN CODE]] 0
+[[STDOUT]]
+../../test/common/test1-gtf.xml: validates
+|--> Summary for file:  ../../test/common/test1-gtf.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : REF
+| |   cmdline FPS : -- NOT SET --
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : CellToEar(x3)[IDs: 0 1 2] ObjectPut(x1)[IDs: 0] ObjectGet(x1)[IDs: 0]
+| |  Total Events : 5
+| |       Comment : -- NOT SET --
+../../test/common/test2-gtf.xml: validates
+|--> Summary for file:  ../../test/common/test2-gtf.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : REF
+| |   cmdline FPS : -- NOT SET --
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : CellToEar(x3)[IDs: 0 1 2] ObjectPut(x1)[IDs: 0] ObjectGet(x1)[IDs: 0]
+| |  Total Events : 5
+| |       Comment : -- NOT SET --
+All files processed (Validated: 2 | Total: 2)
+
+
+[[STDERR]]
+

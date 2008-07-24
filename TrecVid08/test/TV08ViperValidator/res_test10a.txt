@@ -1,0 +1,47 @@
+[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl ../../test/common/test1-1fa-sys.xml ../../test/common/test2-1md_1fa-sys.xml ../../test/common/test5-subEventtypes-sys.xml -d 3
+[[RETURN CODE]] 0
+[[STDOUT]]
+../../test/common/test1-1fa-sys.xml: validates
+|--> Summary for file:  ../../test/common/test1-1fa-sys.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : SYS
+| |   cmdline FPS : -- NOT SET --
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : CellToEar(x4)[IDs: 0 1 2 4] ObjectPut(x1)[IDs: 0] ObjectGet(x1)[IDs: 0]
+| |  Total Events : 6
+| |       Comment : -- NOT SET --
+../../test/common/test2-1md_1fa-sys.xml: validates
+|--> Summary for file:  ../../test/common/test2-1md_1fa-sys.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : SYS
+| |   cmdline FPS : -- NOT SET --
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : PersonRuns(x1)[IDs: 0] CellToEar(x3)[IDs: 0 1 2] ObjectGet(x1)[IDs: 0]
+| |  Total Events : 5
+| |       Comment : -- NOT SET --
+../../test/common/test5-subEventtypes-sys.xml: validates
+|--> Summary for file:  ../../test/common/test5-subEventtypes-sys.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : SYS
+| |   cmdline FPS : -- NOT SET --
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : PersonRuns:Unmapped_Sys(x1)[IDs: 0] CellToEar:Mapped(x3)[IDs: 0 1 2] ObjectPut:Unmapped_Ref(x1)[IDs: 0] ObjectGet:Undefined(x1)[IDs: 4] ObjectGet:Mapped(x1)[IDs: 0] ObjectGet:Unmapped_Ref(x1)[IDs: 1]
+| |  Total Events : 8
+| |       Comment : -- NOT SET --
+All files processed (Validated: 3 | Total: 3)
+
+
+[[STDERR]]
+

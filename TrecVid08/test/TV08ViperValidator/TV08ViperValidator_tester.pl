@@ -56,6 +56,15 @@ $testr += &do_simple_test($tn, "(MemDump)", "../../test/common/test1-1fa-sys.xml
 $tn = "test8b";
 $testr += &do_simple_test($tn, "(MemDump Load)", "../../test/common/test1-1fa-sys.xml.memdump ../../test/common/test2-1md_1fa-sys.xml.memdump -w -p", "res_$tn.txt");
 
+$tn = "test9";
+$testr += &do_simple_test($tn, "(ForceFilename)", "../../test/common/test1-1fa-sys.xml ../../test/common/test2-1md_1fa-sys.xml -w -p -F newfilename", "res_$tn.txt");
+
+$tn = "test10a";
+$testr += &do_simple_test($tn, "(displaySummary -- SYS)", "../../test/common/test1-1fa-sys.xml ../../test/common/test2-1md_1fa-sys.xml ../../test/common/test5-subEventtypes-sys.xml -d 3", "res_$tn.txt");
+
+$tn = "test10b";
+$testr += &do_simple_test($tn, "(displaySummary -- REF)", "-g ../../test/common/test1-gtf.xml ../../test/common/test2-gtf.xml -d 3", "res_$tn.txt");
+
 if ($testr == $totest) {
   ok_quit("All tests ok\n\n");
 } else {
