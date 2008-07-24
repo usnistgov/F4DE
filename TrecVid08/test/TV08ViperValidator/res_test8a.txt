@@ -321,8 +321,8 @@ $VAR1 = bless( {
                                                                        'header' => 'ViperFramespan'
                                                                      }, 'MErrorH' ),
                                                 'fps' => -1,
-                                                'value' => undef,
-                                                'original_value' => undef
+                                                'value' => '1:5121',
+                                                'original_value' => '1:5121'
                                               }, 'ViperFramespan' )
                }, 'TrecVid08ViperFile' );
 ../../test/common/test2-1md_1fa-sys.xml: validates
@@ -544,8 +544,8 @@ $VAR1 = bless( {
                                                                        'header' => 'ViperFramespan'
                                                                      }, 'MErrorH' ),
                                                 'fps' => -1,
-                                                'value' => undef,
-                                                'original_value' => undef
+                                                'value' => '1:5121',
+                                                'original_value' => '1:5121'
                                               }, 'ViperFramespan' )
                }, 'TrecVid08ViperFile' );
 All files processed (Validated: 2 | Total: 2)
