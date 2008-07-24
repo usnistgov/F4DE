@@ -40,7 +40,7 @@
   <data>
     <sourcefile filename="file:20050519-1503-Excerpt.mpg">
       <!-- Changed from REF to SYS file
-REF to SYS Seed : 256 (first value: 0.113550972355) -->
+REF to SYS Seed : 256 (first value: 0.096219054497) -->
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
           <data:fvalue value="1.0"/>
@@ -55,30 +55,30 @@ REF to SYS Seed : 256 (first value: 0.113550972355) -->
       <object name="CellToEar" id="0" framespan="3503:3738">
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
-          <data:bvalue value="0"/>
+          <data:bvalue value="1"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="28.0061587974087"/>
+          <data:fvalue value="-95.9844283229977"/>
         </attribute>
         <attribute name="Point"/>
       </object>
       <object name="CellToEar" id="1" framespan="3503:3739">
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
-          <data:bvalue value="0"/>
+          <data:bvalue value="1"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-11.634905502362"/>
+          <data:fvalue value="-116.789548731655"/>
         </attribute>
         <attribute name="Point"/>
       </object>
       <object name="CellToEar" id="2" framespan="3503:3739">
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
-          <data:bvalue value="0"/>
+          <data:bvalue value="1"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="69.4579371162035"/>
+          <data:fvalue value="-109.179246548567"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -97,7 +97,7 @@ REF to SYS Seed : 256 (first value: 0.113550972355) -->
           <data:bvalue value="0"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-3.79446673691382"/>
+          <data:fvalue value="4.02576238966685"/>
         </attribute>
         <attribute name="Point">
           <data:point framespan="1124:1124" x="263" y="353"/>
@@ -108,10 +108,10 @@ REF to SYS Seed : 256 (first value: 0.113550972355) -->
           <data:bbox framespan="3327:3327" x="126" y="337" height="101" width="138"/>
         </attribute>
         <attribute name="DetectionDecision">
-          <data:bvalue value="1"/>
+          <data:bvalue value="0"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-93.2736456035091"/>
+          <data:fvalue value="68.3011231573182"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -157,7 +157,7 @@ REF to SYS Seed : 256 (first value: 0.113550972355) -->
   <data>
     <sourcefile filename="file:20050519-1503-Excerpt.mpg">
       <!-- Changed from REF to SYS file
-REF to SYS Seed : 256 (first value: 0.120257329141) -->
+REF to SYS Seed : 256 (first value: 0.575654951846) -->
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
           <data:fvalue value="1.0"/>
@@ -172,10 +172,10 @@ REF to SYS Seed : 256 (first value: 0.120257329141) -->
       <object name="CellToEar" id="0" framespan="203:3738">
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
-          <data:bvalue value="0"/>
+          <data:bvalue value="1"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="24.8009342336054"/>
+          <data:fvalue value="-91.8075395149672"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -185,17 +185,17 @@ REF to SYS Seed : 256 (first value: 0.120257329141) -->
           <data:bvalue value="0"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-26.1247685661447"/>
+          <data:fvalue value="95.6526615807079"/>
         </attribute>
         <attribute name="Point"/>
       </object>
       <object name="CellToEar" id="2" framespan="3503:3739">
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
-          <data:bvalue value="1"/>
+          <data:bvalue value="0"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-3.48453486223934"/>
+          <data:fvalue value="-80.312896258939"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -205,7 +205,7 @@ REF to SYS Seed : 256 (first value: 0.120257329141) -->
           <data:bvalue value="1"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-51.4719381061632"/>
+          <data:fvalue value="-127.462912483502"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -215,7 +215,7 @@ REF to SYS Seed : 256 (first value: 0.120257329141) -->
           <data:bvalue value="1"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-74.1489472073763"/>
+          <data:fvalue value="-125.021703464469"/>
         </attribute>
         <attribute name="Point"/>
       </object>
