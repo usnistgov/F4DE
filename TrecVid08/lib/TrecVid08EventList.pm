@@ -1,4 +1,5 @@
 package TrecVid08EventList;
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # TrecVid08 EventList
 #
@@ -728,6 +729,31 @@ sub has_Observations {
   my $res = ($count > 0) ? 1 : 0;
 
   return($res);
+}
+
+##########
+
+sub get_all_Observations {
+  my ($self, $filename, $incdummy) = @_;
+
+  my @tmp = ();
+
+  my @evl = ();
+  if ($incdummy) {
+    @evl = $self->get_full_events_list($filename);
+  } else {
+    @evl = $self->get_events_list($filename);
+  }
+  return(@tmp) if ($self->error());
+
+  my @out = ();
+  foreach my $ev (@evl) {
+    my @o = $self->get_Observations_list($filename, $ev);
+    return(@tmp) if ($self->error());
+    push @out, @o;
+  }
+
+  return(@out);
 }
 
 ############################################################
