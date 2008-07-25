@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # TrecVid08 Viper XML Validator
 #
@@ -64,7 +65,7 @@ my $warn_msg = "";
 unless (eval "use MMisc; 1") {
   my $pe = &eo2pe($@);
   &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
+  $have_everything = 0;
 }
 
 # TrecVid08ViperFile (part of this tool)
@@ -78,6 +79,20 @@ unless (eval "use TrecVid08ViperFile; 1") {
 unless (eval "use TrecVid08HelperFunctions; 1") {
   my $pe = &eo2pe($@);
   &_warn_add("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
+# TrecVid08ECF (part of this tool)
+unless (eval "use TrecVid08ECF; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
+# TrecVid08EventList (part of this tool)
+unless (eval "use TrecVid08EventList; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
@@ -107,6 +122,11 @@ my @ok_events = $dummy->get_full_events_list();
 my @xsdfilesl = $dummy->get_required_xsd_files_list();
 # We will use the '$dummy' to do checks before processing files
 
+# Get some values from TrecVid08ECF
+my $ecfobj = new TrecVid08ECF();
+my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
+
+
 ########################################
 # Options processing
 
@@ -130,13 +150,14 @@ my $show = 0;
 my $remse = 0;
 my $crop = "";
 my $fps = undef;
-my $changetype = 0;
+my $changetype = undef;
 my $MemDump = undef;
 my $forceFilename = "";
-my $dosummary = 0;
+my $dosummary = undef;
+my $ecffile = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:   C  F             T  WX    cd fgh   lm  p r   vwx  
+# USed:   C  F             T  WX    cdefgh   lm  p r   vwx  
 
 my %opt = ();
 my $dbgftmp = "";
@@ -160,6 +181,7 @@ GetOptions
    'WriteMemDump:s'  => \$MemDump,
    'ForceFilename=s' => \$forceFilename,
    'displaySummary:i' => \$dosummary,
+   'ecf=s'            => \$ecffile,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -225,24 +247,50 @@ if (defined $MemDump) {
 }
 
 if ($opt{'ForceFilename'}) {
-  MMisc::error_quit("\'ForceFilename\' option selected but no value set\n$usage") if ($forceFilename eq "");
-  MMisc::error_quit("\'ForceFilename\' option can only be used in conjunction with \'write\'") if ($writeback == -1);
+  MMisc::error_quit("\'ForceFilename\' option selected but no value set\n$usage")
+    if ($forceFilename eq "");
+  MMisc::error_quit("\'ForceFilename\' option can only be used in conjunction with \'write\'")
+    if ($writeback == -1);
 }
 
 my ($crop_beg, $crop_end) = (0, 0);
 if (! MMisc::is_blank($crop)) {
-  MMisc::error_quit("\'crop\' can only be used in conjunction with \'write\'") if ($writeback == -1);
+  MMisc::error_quit("\'crop\' can only be used in conjunction with \'write\'") 
+    if ($writeback == -1);
 
   my @rest = split(m%\:%, $crop);
-  MMisc::error_quit("Too many parameters to crop, expected \'beg:end\'") if (scalar @rest > 2);
-  MMisc::error_quit("Not enough parameters to crop, expected \'beg:end\'") if (scalar @rest < 2);
+  MMisc::error_quit("Too many parameters to crop, expected \'beg:end\'")
+    if (scalar @rest > 2);
+  MMisc::error_quit("Not enough parameters to crop, expected \'beg:end\'") 
+    if (scalar @rest < 2);
 
   ($crop_beg, $crop_end) = @rest;
-  MMisc::error_quit("\'crop\' beg must be positive and be at least 1") if ($crop_beg < 1);
-  MMisc::error_quit("\'crop\' beg must be less than the end value") if ($crop_beg > $crop_end);
+  MMisc::error_quit("\'crop\' beg must be positive and be at least 1") 
+    if ($crop_beg < 1);
+  MMisc::error_quit("\'crop\' beg must be less than the end value") 
+    if ($crop_beg > $crop_end);
 
-  MMisc::error_quit("\'fps\' must set in order to do any \'crop\'") if (! defined $fps);
+  MMisc::error_quit("\'fps\' must set in order to do any \'crop\'")
+    if (! defined $fps);
+}
 
+if (defined $dosummary) {
+  MMisc::error_quit("\'displaySummary\'\'s \'level\' authorized values are 1 to 6")
+    if (($dosummary < 1) || ($dosummary > 6));
+} else {
+  $dosummary = 0;
+}
+
+my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
+MMisc::error_quit("\'fps\' must set in order to use \'ecf\'")
+    if (($useECF) && (! defined $fps));
+
+## Loading of the ECF file
+if ($useECF) {
+  print "\n* Loading the ECF file\n\n";
+  my ($errmsg) = TrecVid08HelperFunctions::load_ECF($ecffile, $ecfobj, $xmllint, $xsdpath, $fps);
+  MMisc::error_quit("Problem loading the ECF file: $errmsg")
+    if (! MMisc::is_blank($errmsg));
 }
 
 ##########
@@ -250,26 +298,29 @@ if (! MMisc::is_blank($crop)) {
 my $tmp = "";
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
-TrecVid08ViperFile::type_changer_init_randomseed($changetype) if ($changetype);
+TrecVid08ViperFile::type_changer_init_randomseed($changetype) if (defined $changetype);
 while ($tmp = shift @ARGV) {
   my ($ok, $object) = &load_file($isgtf, $tmp);
   next if (! $ok);
 
   # This is really if you are a debugger
-  print("** Memory Representation:\n", $object->_display_all()) if ($show);
-
-  if (! MMisc::is_blank($crop)) {
-    (my $err, $object) = TrecVid08HelperFunctions::ViperFile_crop($object, $crop_beg, $crop_end);
-    MMisc::error_quit("While cropping: $err\n") if (! MMisc::is_blank($err));
+  print("** (Pre) Memory Representation:\n", $object->_display_all()) if ($show);
+  # Summary
+  if ($dosummary > 3) {
+    my $sumtxt = $object->get_summary($dosummary);
+    MMisc::error_quit("Problem obtaining summary (" . $object->get_errormsg() . ")") if ($object->error());
+    print "[Pre Modifications]\n$sumtxt";
   }
 
+  # ForceFilename
   if ($forceFilename ne "") {
     $object->change_sourcefile_filename($forceFilename);
     MMisc::error_quit("Problem while changing the sourcefile filename (" . $object->get_errormsg() .")")
-	if ($object->error());
+      if ($object->error());
   }
   
-  if ($changetype) {
+  # ChangeType
+  if (defined $changetype) {
     my $r = 0;
     if ($isgtf) {
       $r = $object->change_ref_to_sys();
@@ -278,19 +329,41 @@ while ($tmp = shift @ARGV) {
     }
     MMisc::error_quit("Could not change type of the file") if ($r == 0);
     MMisc::error_quit("Problem while changing the type of the file: " . $object->get_errormsg()) if ($object->error());
-    # This is really if you are a debugger
-    print("** Memory Representation (post ChangeType):\n", $object->_display_all()) if ($show);
   }
 
-  my $fname = "";
+  # Remove subtype
+  $object->unset_force_subtype() if ($remse);
+
+  # ECF work ?
+  my $object = ($useECF) ? &process_ECF($object, $ecfobj) : $object;
+  MMisc::error_quit("Problem with ViperFile object")
+    if (! defined $object);
+
+  ###### Then do the rest
+
+  # Crop
+  if (! MMisc::is_blank($crop)) {
+    (my $err, $object) = TrecVid08HelperFunctions::ViperFile_crop($object, $crop_beg, $crop_end);
+    MMisc::error_quit("While cropping: $err\n") if (! MMisc::is_blank($err));
+  }
+
+  # Auto Limit
+  @asked_events = $object->list_used_full_events() if ($autolt);
+
+  # Duplicate the object in memory with only the selected types
+  my $nvf = $object->clone_with_selected_events(@asked_events);
+  MMisc::error_quit("Problem while \'clone\'-ing the ViperFile")
+    if (! defined $nvf);
+  
+  # Writeback & MemDump
   if ($writeback != -1) {
     # Re-adapt @asked_events for each object if automatic limitto is set
-    $object->unset_force_subtype() if ($remse);
-    @asked_events = $object->list_used_full_events() if ($autolt);
     
-    my $txt = $object->reformat_xml(@asked_events);
-    MMisc::error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
-	if ($object->error());
+    my $txt = $nvf->reformat_xml(@asked_events);
+    MMisc::error_quit("While trying to \'write\' (" . $nvf->get_errormsg() . ")")
+      if ($nvf->error());
+    
+    my $fname = "";
     
     if ($writeback ne "") {
       my $tmp2 = $tmp;
@@ -299,25 +372,24 @@ while ($tmp = shift @ARGV) {
     }
     MMisc::error_quit("Problem while trying to \'write\'")
       if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
+    
+    if (defined $MemDump) {
+      MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
+        if (! TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump));
+    }
   }
-
-  # Duplicate the object in memory with only the selected types
-  my $nvf = $object->clone_with_selected_events(@asked_events);
-  MMisc::error_quit("Problem while \'clone\'-ing the ViperFile")
-      if (! defined $nvf);
-
-  if (defined $MemDump) {
-    MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
-	if (! TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump));
-  }
-
+  
   # Summary
   if ($dosummary) {
     my $sumtxt = $nvf->get_summary($dosummary);
     MMisc::error_quit("Problem obtaining summary (" . $nvf->get_errormsg() . ")") if ($nvf->error());
+    print "[Post Modifications]\n" if ($dosummary > 3);
     print $sumtxt;
   }
 
+  # This is really if you are a debugger
+  print("** (Post) Memory Representation:\n", $nvf->_display_all()) if ($show);
+  
   $ndone++;
 }
 MMisc::ok_quit("All files processed (Validated: $ndone | Total: $ntodo)\n");
@@ -357,54 +429,47 @@ sub load_file {
   return($retstatus, $object);
 }
 
-########################################
+####################
 
-sub set_usage {
-  my $ro = join(" ", @ok_events);
-  my $xsdfiles = join(" ", @xsdfilesl);
-  my $wmd = join(" ", @ok_md);
-  my $tmp=<<EOF
-$versionid
+sub process_ECF {
+  my ($vf, $ecfobj) = @_;
 
-Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename]] [--fps fps] [--displaySummary [level]] viper_source_file.xml [viper_source_file.xml [...]]
+  my $el = new TrecVid08EventList();
+  MMisc::error_quit("Problem creating the EventList (" . $el->get_errormsg() . ")")
+    if ($el->error());
 
-Will perform a semantic validation of the Viper XML file(s) provided.
+  MMisc::error_quit("Problem tying EventList to ECF " . $el->get_errormsg() . ")")
+    if (! $el->tie_to_ECF($ecfobj));
 
- Where:
-  --gtf           Specify that the file to validate is a Ground Truth File
-  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --pruneEvents   Only keep in the new file's config section events for which observations are seen
-  --limitto       Only care about provided list of events
-  --removeSubEventtypes  Useful when working with specialized Scorer outputs to remove specialized sub types
-  --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
-  --ChangeType    Convert a SYS to REF or a REF to SYS.
-  --crop          Will crop file content to only keep content that is found within the beg and end frames
-  --WriteMemDump  Write a memory representation of validated Viper Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
-  --ForceFilename Replace the 'sourcefile' file value
-  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
-  --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
-  --displaySummary  Display a file information summary (level shows information about event type seen, and is a value from 1 to 3)
-  --version       Print version number and exit
-  --help          Print this usage information and exit
-  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+  my ($terr, $tobs, $added, $rejected) = 
+    TrecVid08HelperFunctions::add_ViperFileObservations2EventList($vf, $el, 1);
+  MMisc::error_quit("Problem adding ViperFile Observations to EventList: $terr")
+    if (! MMisc::is_blank($terr));
+  
+  my $sffn = $vf->get_sourcefile_filename();
+  MMisc::error_quit("Problem obtaining the sourcefile's filename (" . $vf->get_errormsg() . ")")
+    if ($vf->error());
 
-Note:
-- This prerequisite that the file can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
-- Program will ignore the <config> section of the XML file.
-- Program will discard any xml comment(s).
-- List of recognized events: $ro
-- 'TrecVid08xsd' files are: $xsdfiles
-EOF
-    ;
+  my $tvf = $vf->clone_with_no_events();
+  MMisc::error_quit("Problem while cloning the ECF modifed ViperFile")
+    if (! defined $tvf);
 
-    return $tmp;
+  MMisc::error_quit("File ($sffn) is not in EventList")
+    if (! $el->is_filename_in($sffn));
+
+  my @ao = $el->get_all_Observations($sffn);
+  foreach my $obs (@ao) {
+    MMisc::error_quit("Problem adding EventList Observation to new ViperFile (" . $tvf->get_errormsg() .")")
+      if ( (! $tvf->add_observation($obs, 1)) || ($tvf->error()) );
+  }
+
+  return($tvf);
 }
 
-##########
+########################################
 
 sub _warn_add {
-  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
+  $warn_msg .= "[Warning] " . join(" ", @_) ."\n";
 }
 
 ############################################################ Manual
@@ -427,7 +492,8 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
         S<[B<--crop I<beg:end>]>
         S<[B<--WriteMemDump> [I<mode>]]
         S<[B<--ForceFilename> I<filename>] ]>
-        S<[B<--fps> I<fps>] [B<--displaySummary [I<level>]]>
+        S<[B<--fps> I<fps>] [B<--ecf> I<ecffile>]>
+        S<[B<--displaySummary [I<level>]]>
         I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
 
 =head1 DESCRIPTION
@@ -502,6 +568,11 @@ Also, when trying to reproduce a file, it is possible to ask the program to find
 
 Display a file information summary.
 I<level> is a value from 1 to 3 which will show more information about the I<Event> seen.
+If I<level> is over 3, it will also print a pre-modifications summary.
+
+=item B<--ecf> I<ecffile>
+
+After validating the file, only keep Event Observation within that match the ECF information.
 
 =item B<--fps> I<fps>
 
@@ -600,3 +671,47 @@ Please send bug reports to <nist_f4de@nist.gov>
 Martial Michel <martial.michel@nist.gov>
 
 =cut
+
+sub set_usage {
+  my $ro = join(" ", @ok_events);
+  my $xsdfiles = join(" ", @xsdfilesl);
+  my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
+  my $wmd = join(" ", @ok_md);
+  my $tmp=<<EOF
+$versionid
+
+Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename]] [--fps fps] [--ecf ecffile] [--displaySummary [level]] viper_source_file.xml [viper_source_file.xml [...]]
+
+Will perform a semantic validation of the Viper XML file(s) provided.
+
+ Where:
+  --gtf           Specify that the file to validate is a Ground Truth File
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --pruneEvents   Only keep in the new file's config section events for which observations are seen
+  --limitto       Only care about provided list of events
+  --removeSubEventtypes  Useful when working with specialized Scorer outputs to remove specialized sub types
+  --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
+  --ChangeType    Convert a SYS to REF or a REF to SYS.
+  --crop          Will crop file content to only keep content that is found within the beg and end frames
+  --WriteMemDump  Write a memory representation of validated Viper Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
+  --ForceFilename Replace the 'sourcefile' file value
+  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
+  --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
+  --ecf           Specify the ECF file to load
+  --displaySummary  Display a file information summary (level shows information about event type seen, and is a value from 1 to 3)
+  --version       Print version number and exit
+  --help          Print this usage information and exit
+  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+
+Note:
+- This prerequisite that the file can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
+- Program will ignore the <config> section of the XML file.
+- Program will discard any xml comment(s).
+- List of recognized events: $ro
+- 'TrecVid08xsd' files are: $xsdfiles (and if the 'ecf' option is used, also: $ecf_xsdf)
+EOF
+    ;
+
+    return $tmp;
+}
