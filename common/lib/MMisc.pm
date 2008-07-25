@@ -47,15 +47,16 @@ sub get_tmpfilename {
 
 sub slurp_file {
   my $fname = shift @_;
-  my $mode = shift @_; # Default is text
+  my $mode = shift @_;
+  $mode = "text" if (! defined $mode); # Default is text
 
   open FILE, "<$fname"
     or return(undef);
   my @all = <FILE>;
   close FILE;
-  chomp @all if ( (defined($mode)) && ($mode ne "bin"));
+  chomp @all if ($mode ne "bin");
 
-  my $jc = ( (defined($mode)) && ($mode ne "bin") ) ? "\n" : "";
+  my $jc = ($mode ne "bin") ? "\n" : "";
   my $tmp = join($jc, @all);
 
   return($tmp);
