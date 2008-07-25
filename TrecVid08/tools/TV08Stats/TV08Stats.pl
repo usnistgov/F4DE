@@ -335,20 +335,22 @@ print "\n\n\n       Event observation duration statsitics over all files\n\n";
 $sat = new SimpleAutoTable();
 my $sumStat = Statistics::Descriptive::Discrete->new();
 foreach my $ev (sort keys %overallStatsDB) {
-  $sat->addData($overallStatsDB{$ev}{dur}->count(),                                  "Obs|count",  $ev);
-  $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->count() / $sumDur * 3600), "Obs|Obs/hr", $ev);
-  $sat->addData("|",                                                                 "",           $ev);
-  $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->min()),                    "Dur|min",    $ev);
-  $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->mean()),                   "Dur|mean",   $ev);
-  $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->max()),                    "Dur|max",    $ev);
-  $sumStat->add_data($overallStatsDB{$ev}{dur}->get_data());
+    $sat->addData($overallStatsDB{$ev}{dur}->count(),                                  "Obs|count",  $ev);
+    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->count() / $sumDur * 3600), "Obs|Obs/hr", $ev);
+    $sat->addData("|",                                                                 "",           $ev);
+    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->min()),                    "Dur|min",    $ev);
+    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->mean()),                   "Dur|mean",   $ev);
+    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->max()),                    "Dur|max",    $ev);
+    $sumStat->add_data($overallStatsDB{$ev}{dur}->get_data());
 }
-$sat->addData($sumStat->count(),                                  "Obs|count",  "All Events");
-$sat->addData("",                                                 "Obs|Obs/hr", "All Events");
-$sat->addData("|",                                                "",           "All Events");
-$sat->addData(sprintf("%.2f",$sumStat->min()),                    "Dur|min",    "All Events");
-$sat->addData(sprintf("%.2f",$sumStat->mean()),                   "Dur|mean",   "All Events");
-$sat->addData(sprintf("%.2f",$sumStat->max()),                    "Dur|max",    "All Events");
+if (scalar($sumStat->get_data()) != 0){
+    $sat->addData($sumStat->count(),                                  "Obs|count",  "All Events");
+    $sat->addData("",                                                 "Obs|Obs/hr", "All Events");
+    $sat->addData("|",                                                "",           "All Events");
+    $sat->addData(sprintf("%.2f",$sumStat->min()),                    "Dur|min",    "All Events");
+    $sat->addData(sprintf("%.2f",$sumStat->mean()),                   "Dur|mean",   "All Events");
+    $sat->addData(sprintf("%.2f",$sumStat->max()),                    "Dur|max",    "All Events");
+}
 print $sat->renderTxtTable(2);
 
 print "\n\n\nEvent occurrences as a function of camera\n\n";
