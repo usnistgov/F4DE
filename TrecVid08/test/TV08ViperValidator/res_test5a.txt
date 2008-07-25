@@ -1,7 +1,7 @@
-[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl ../../test/common/test5-subEventtypes-sys.xml -w
+[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl ../common/test5-subEventtypes-sys.xml -w
 [[RETURN CODE]] 0
 [[STDOUT]]
-../../test/common/test5-subEventtypes-sys.xml: validates
+../common/test5-subEventtypes-sys.xml: validates
 ** XML re-Representation:
 <?xml version="1.0" encoding="UTF-8"?>
 <viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">

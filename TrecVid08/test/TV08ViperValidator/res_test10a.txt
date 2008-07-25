@@ -1,8 +1,8 @@
-[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl ../../test/common/test1-1fa-sys.xml ../../test/common/test2-1md_1fa-sys.xml ../../test/common/test5-subEventtypes-sys.xml -d 3
+[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl ../common/test1-1fa-sys.xml ../common/test2-1md_1fa-sys.xml ../common/test5-subEventtypes-sys.xml -d 3
 [[RETURN CODE]] 0
 [[STDOUT]]
-../../test/common/test1-1fa-sys.xml: validates
-|--> Summary for file:  ../../test/common/test1-1fa-sys.xml
+../common/test1-1fa-sys.xml: validates
+|--> Summary for file:  ../common/test1-1fa-sys.xml
 | |    Sourcefile : 20050519-1503-Excerpt.mpg
 | |          Type : SYS
 | |   cmdline FPS : -- NOT SET --
@@ -14,8 +14,8 @@
 | |   Event Types : CellToEar(x4)[IDs: 0 1 2 4] ObjectPut(x1)[IDs: 0] ObjectGet(x1)[IDs: 0]
 | |  Total Events : 6
 | |       Comment : -- NOT SET --
-../../test/common/test2-1md_1fa-sys.xml: validates
-|--> Summary for file:  ../../test/common/test2-1md_1fa-sys.xml
+../common/test2-1md_1fa-sys.xml: validates
+|--> Summary for file:  ../common/test2-1md_1fa-sys.xml
 | |    Sourcefile : 20050519-1503-Excerpt.mpg
 | |          Type : SYS
 | |   cmdline FPS : -- NOT SET --
@@ -27,8 +27,8 @@
 | |   Event Types : PersonRuns(x1)[IDs: 0] CellToEar(x3)[IDs: 0 1 2] ObjectGet(x1)[IDs: 0]
 | |  Total Events : 5
 | |       Comment : -- NOT SET --
-../../test/common/test5-subEventtypes-sys.xml: validates
-|--> Summary for file:  ../../test/common/test5-subEventtypes-sys.xml
+../common/test5-subEventtypes-sys.xml: validates
+|--> Summary for file:  ../common/test5-subEventtypes-sys.xml
 | |    Sourcefile : 20050519-1503-Excerpt.mpg
 | |          Type : SYS
 | |   cmdline FPS : -- NOT SET --

@@ -1,7 +1,7 @@
-[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl ../../test/common/test1-1fa-sys.xml ../../test/common/test2-1md_1fa-sys.xml -w -p -F newfilename
+[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl ../common/test1-1fa-sys.xml ../common/test2-1md_1fa-sys.xml -w -p -F newfilename
 [[RETURN CODE]] 0
 [[STDOUT]]
-../../test/common/test1-1fa-sys.xml: validates
+../common/test1-1fa-sys.xml: validates
 ** XML re-Representation:
 <?xml version="1.0" encoding="UTF-8"?>
 <viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
@@ -127,7 +127,7 @@
     </sourcefile>
   </data>
 </viper>
-../../test/common/test2-1md_1fa-sys.xml: validates
+../common/test2-1md_1fa-sys.xml: validates
 ** XML re-Representation:
 <?xml version="1.0" encoding="UTF-8"?>
 <viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
