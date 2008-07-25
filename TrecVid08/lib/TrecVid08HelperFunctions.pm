@@ -1,4 +1,5 @@
 package TrecVid08HelperFunctions;
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # TrecVid08 HelperFunctions
 #
@@ -23,6 +24,7 @@ use strict;
 use ViperFramespan;
 use TrecVid08ViperFile;
 use TrecVid08Observation;
+use TrecVid08EventList;
 
 use MErrorH;
 use MMisc;
@@ -162,15 +164,10 @@ sub save_ViperFile_MemDump {
 sub load_ViperFile {
   my ($isgtf, $filename, $fps, $xmllint, $xsdpath) = @_;
 
-  return(0, undef, "file does not exists") 
-    if (! -e $filename);
-
-  return(0, undef, "is not a file")
-    if (! -f $filename);
-
-  return(0, undef, "file is not readable")
-    if (! -r $filename);
-
+  my $err = MMisc::is_file_ok($filename);
+  return(0, undef, $err)
+    if (! MMisc::is_blank($err));
+  
   open FILE, "<$filename"
     or return(0, undef, "Problem opening file ($filename) : $!");
 
@@ -257,4 +254,83 @@ sub _load_MemDump_ViperFile {
   }
 
   return(1, $object, $rtxt . "loaded");
+}
+
+############################################################
+#################### ECF
+
+sub load_ECF {
+  my ($ecffile, $ecfobj, $xmllint, $xsdpath, $fps) = @_;
+
+  my $err = MMisc::is_file_ok($ecffile);
+  return($err) if (! MMisc::is_blank($err));
+
+  return("While trying to set \'xmllint\' (" . $ecfobj->get_errormsg() . ")")
+    if ( ($xmllint ne "") && (! $ecfobj->set_xmllint($xmllint)) );
+
+  return("While trying to set \'TrecVid08xsd\' (" . $ecfobj->get_errormsg() . ")")
+    if ( ($xsdpath ne "") && (! $ecfobj->set_xsdpath($xsdpath)) );
+
+  return("While trying to set \'fps\' (" . $ecfobj->get_errormsg() . ")")
+    if ( (defined $fps) && (! $ecfobj->set_default_fps($fps)) );
+
+  return("While setting \'file\' ($ecffile) (" . $ecfobj->get_errormsg() . ")")
+    if ( ! $ecfobj->set_file($ecffile) );
+
+  # Validate (important to confirm that we can have a memory representation)
+  return("file did not validate (" . $ecfobj->get_errormsg() . ")")
+    if (! $ecfobj->validate());
+
+  return("");
+}
+
+##########
+
+sub add_ViperFileObservations2EventList {
+  my ($vf, $el, $dodummy) = @_;
+
+  return("Can only work with validated ViperFile")
+    if (! $vf->is_validated());
+
+  my $rej_val = $el->Observation_Rejected();
+  my $acc_val = $el->Observation_Added();
+  my $spa_val = $el->Observation_SpecialAdd();
+  return("Problem obtaining EventList's Observation \'Added\', \'SpecialAdd\' or \'Rejected\' values (" . $el->get_errormsg() . ")", 0, 0, 0)
+    if ($el->error());
+
+  my @ao = $vf->get_all_events_observations();
+  return("Problem obtaining all Observations from the ViperFile object (" . $vf->get_errormsg() . ")", 0, 0, 0)
+    if ($vf->error());
+
+  if ($dodummy) {
+    # We also want the dummy observation
+    # (to have at least one observation in the event list)
+    my $do = $vf->get_dummy_observation();
+    return("Problem obtaining the dummy Observations from the ViperFile object (" . $vf->get_errormsg() . ")", 0, 0, 0)
+      if ($vf->error());
+    push @ao, $do;
+  }
+
+  my $rejected = 0;
+  my $added = 0;
+  my $tobs = 0;
+  foreach my $o (@ao) {
+    my $status = $el->add_Observation($o);
+    return("Problem adding Observation to EventList (" . $el->get_errormsg() . ")", 0, 0, 0)
+      if ($el->error());
+
+    my $toadd = 1;
+    if ($status == $rej_val) {
+      $rejected++;
+    } elsif ($status == $acc_val) {
+      $added++;
+    } elsif ($status == $spa_val) {
+      $toadd = 0;
+    } else {
+      return("Weird EventList \'add_Observation\' return code ($status) at this stage", 0, 0, 0);
+    }
+    $tobs += $toadd;
+  }
+
+  return("", $tobs, $added, $rejected);
 }
