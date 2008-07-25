@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # TrecVid08 Scorer
 #
@@ -314,10 +315,7 @@ MMisc::error_quit("Can not continue, not all files passed the loading/validation
 my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
 if ($useECF) {
   print "\n\n***** STEP ", $stepc++, ": Loading the ECF file\n";
-  $ecfobj->set_default_fps($fps);
-  MMisc::error_quit("Problem setting the ECF object's default FPS (" . $ecfobj->get_errormsg() . ")")
-    if ($ecfobj->error());
-  my ($errmsg) = &load_ecf($ecffile, $ecfobj);
+  my ($errmsg) = TrecVid08HelperFunctions::load_ECF($ecffile, $ecfobj, $xmllint, $xsdpath, $fps);
   MMisc::error_quit("Problem loading the ECF file: $errmsg")
     if (! MMisc::is_blank($errmsg));
   my $td = $ecfobj->get_duration();
@@ -443,57 +441,8 @@ MMisc::ok_quit("\n\n***** Done *****\n");
 
 ########## END
 
-########################################
-
-sub set_usage {
-  my $ro = join(" ", @ok_events);
-  my $xsdfiles = join(" ", @xsdfilesl);
-  my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
-  my $tmp=<<EOF
-$versionid
-
-Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--showAT] [--allAT] [--limittosysevents] [--writexml [dir] [--pruneEvents]] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
-
-Will Score the XML file(s) provided (Truth vs System)
-
- Where:
-  --gtf           Specify that the files post this marker on the command line are Ground Truth Files
-  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
-  --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
-  --ecf           Specify the ECF file to load and perform scoring against
-  --deltat        Set the deltat value (s) that is a temporal limit observation alignments 
-  --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
-  --showAT        Show Gloabl Alignment Table
-  --allAT         Show Alignment Table per File and Event processed
-  --limittosysevents  For each sourcfile filename, only process events that are listed in the sys Viper files.
-  --writexml      Write a ViperFile XML containing the Mapped, UnmappedRef and UnmappedSys to disk (if dir is specified), stdout otherwise
-  --pruneEvents   Only keep in the new file's config section events for which observations are seen
-  --observationCont  Dump the Trials Contingency Table
-  --OutputFileRoot   Specify the file base of most output files generated (default is to print)
-  --computeDETCurve  Generate DETCurve 
-  --titleOfSys    Specifiy the title of the system for use in the reports
-  --ZipPROG       Specify the full path name to gzip (Default is to have 'gzip' in your path)
-  --GnuplotPROG   Specify the full path name to gnuplot (Default is to have 'gnuplot' in your path)
-  --noPNG         Do not create PNGs if a DET Curve is computed 
-  --version       Print version number and exit
-  --help          Print this usage information and exit
-
-Note:
-- Program will ignore the <config> section of the XML file.
-- List of recognized events: $ro
-- 'TrecVid08xsd' files are: $xsdfiles (and if the 'ecf' option is used, also: $ecf_xsdf)
-EOF
-    ;
-  
-    return $tmp;
-}
-
-####################
-
 sub _warn_add {
-  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
+  $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
 }
 
 ########################################
@@ -591,11 +540,6 @@ sub generate_EventList {
   MMisc::error_quit("Problem creating the $mode EventList (" . $tmpEL->get_errormsg() . ")")
     if ($tmpEL->error());
 
-  my $rej_val = $tmpEL->Observation_Rejected();
-  my $acc_val = $tmpEL->Observation_Added();
-  my $spa_val = $tmpEL->Observation_SpecialAdd();
-  MMisc::error_quit("Problem obtaining EventList's Observation \'Added\', \'SpecialAdd\' or \'Rejected\' values (" . $tmpEL->get_errormsg() . ")")
-    if ($tmpEL->error());
   if (defined $lecfobj) {
     MMisc::error_quit("Problem tying $mode EventList to ECF " . $tmpEL->get_errormsg() . ")")
       if (! $tmpEL->tie_to_ECF($lecfobj));
@@ -607,36 +551,16 @@ sub generate_EventList {
   my $tobs = 0;
   foreach my $key (keys %ohash) {
     my $vf = $ohash{$key};
-
-    my @ao = $vf->get_all_events_observations();
-    MMisc::error_quit("Problem obtaining all Observations from $mode ViperFile object (" . $vf->get_errormsg() . ")")
-      if ($vf->error());
-
-    # We also want the dummy observation
-    # (to have at least one observation in the event list)
-    my $do = $vf->get_dummy_observation();
-    MMisc::error_quit("Problem obtaining the dummy Observations from $mode ViperFile object (" . $vf->get_errormsg() . ")")
-      if ($vf->error());
-    push @ao, $do;
-
-    foreach my $o (@ao) {
-      my $status = $tmpEL->add_Observation($o);
-      MMisc::error_quit("Problem adding Observation to $mode EventList (" . $tmpEL->get_errormsg() . ")")
-        if ($tmpEL->error());
-
-      #      print "[$status] ";
-      my $toadd = 1;
-      if ($status == $rej_val) {
-        $rejected++;
-      } elsif ($status == $acc_val) {
-        $added++;
-      } elsif ($status == $spa_val) {
-        $toadd = 0;
-      } else {
-        MMisc::error_quit("Weird EventList \'add_Observation\' return code ($status) at this stage");
-      }
-      $tobs += $toadd;
-    }
+    
+    my ($terr, $ttobs, $tadded, $trejected) = 
+      TrecVid08HelperFunctions::add_ViperFileObservations2EventList($vf, $tmpEL, 1);
+    MMisc::error_quit("Problem adding $mode ViperFile Observations to EventList: $terr")
+      if (! MMisc::is_blank($terr));
+   
+    $tobs += $ttobs;
+    $added += $tadded;
+    $rejected += $trejected;
+ 
     $sfile++;
   }
 
@@ -1074,7 +998,7 @@ sub get_obj_fs_beg_end {
   my ($obj) = @_;
 
   MMisc::error_quit("Can not obtain framespan beg/end for undefined object")
-    if (! defined $obj);
+      if (! defined $obj);
 
   my $fs_fs = &get_obj_fs($obj);
 
@@ -1119,34 +1043,6 @@ sub make_trialID {
   my $txt = sprintf("Filename: $fn | Event: $evt | MIN: %012d | MAX: %012d | KeySeparator: %012d", $o[0], $o[-1], $ksep);
 
   return($txt);
-}
-
-############################################################
-
-sub load_ecf {
-  my ($ecffile, $ecfobj) = @_;
-
-  return("file does not exists")
-    if (! -e $ecffile);
-
-  return("is not a file")
-    if (! -f $ecffile);
-
-  return("file is not readable")
-    if (! -r $ecffile);
-
-  MMisc::error_quit("While trying to set \'xmllint\' (" . $ecfobj->get_errormsg() . ")")
-    if ( ($xmllint ne "") && (! $ecfobj->set_xmllint($xmllint)) );
-  MMisc::error_quit("While trying to set \'TrecVid08xsd\' (" . $ecfobj->get_errormsg() . ")")
-    if ( ($xsdpath ne "") && (! $ecfobj->set_xsdpath($xsdpath)) );
-  MMisc::error_quit("While setting \'file\' ($ecffile) (" . $ecfobj->get_errormsg() . ")")
-    if ( ! $ecfobj->set_file($ecffile) );
-
-  # Validate (important to confirm that we can have a memory representation)
-  return("file did not validate (" . $ecfobj->get_errormsg() . ")")
-    if (! $ecfobj->validate());
-
-  return("");
 }
 
 ############################################################ Manual
@@ -1406,3 +1302,50 @@ Martial Michel <martial.michel@nist.gov>
 Jonathan Fiscus <jonathan.fiscus@nist.gov>
 
 =cut
+
+########################################
+
+sub set_usage {
+  my $ro = join(" ", @ok_events);
+  my $xsdfiles = join(" ", @xsdfilesl);
+  my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
+  my $tmp=<<EOF
+$versionid
+
+Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--showAT] [--allAT] [--limittosysevents] [--writexml [dir] [--pruneEvents]] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+
+Will Score the XML file(s) provided (Truth vs System)
+
+ Where:
+  --gtf           Specify that the files post this marker on the command line are Ground Truth Files
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
+  --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
+  --ecf           Specify the ECF file to load and perform scoring against
+  --deltat        Set the deltat value (s) that is a temporal limit observation alignments 
+  --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
+  --showAT        Show Gloabl Alignment Table
+  --allAT         Show Alignment Table per File and Event processed
+  --limittosysevents  For each sourcfile filename, only process events that are listed in the sys Viper files.
+  --writexml      Write a ViperFile XML containing the Mapped, UnmappedRef and UnmappedSys to disk (if dir is specified), stdout otherwise
+  --pruneEvents   Only keep in the new file's config section events for which observations are seen
+  --observationCont  Dump the Trials Contingency Table
+  --OutputFileRoot   Specify the file base of most output files generated (default is to print)
+  --computeDETCurve  Generate DETCurve 
+  --titleOfSys    Specifiy the title of the system for use in the reports
+  --ZipPROG       Specify the full path name to gzip (Default is to have 'gzip' in your path)
+  --GnuplotPROG   Specify the full path name to gnuplot (Default is to have 'gnuplot' in your path)
+  --noPNG         Do not create PNGs if a DET Curve is computed 
+  --version       Print version number and exit
+  --help          Print this usage information and exit
+
+Note:
+- Program will ignore the <config> section of the XML file.
+- List of recognized events: $ro
+- 'TrecVid08xsd' files are: $xsdfiles (and if the 'ecf' option is used, also: $ecf_xsdf)
+EOF
+    ;
+  
+    return $tmp;
+}
