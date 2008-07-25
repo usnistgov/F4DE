@@ -1,0 +1,65 @@
+[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6
+[[RETURN CODE]] 0
+[[STDOUT]]
+
+* Loading the ECF file
+
+../common/test1-gtf.xml: validates
+[Pre Modifications]
+|--> Summary for file:  ../common/test1-gtf.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : REF
+| |   cmdline FPS : 29.97002997003
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : CellToEar(x3)[IDs: 0 1 2] ObjectPut(x1)[IDs: 0] ObjectGet(x1)[IDs: 0]
+| |  Total Events : 5
+| |       Comment : -- NOT SET --
+[Post Modifications]
+|--> Summary for file:  ../common/test1-gtf.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : REF
+| |   cmdline FPS : 29.97002997003
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : ObjectPut(x1)[IDs: 0]
+| |  Total Events : 1
+| |       Comment : -- NOT SET --
+../common/test2-gtf.xml: validates
+[Pre Modifications]
+|--> Summary for file:  ../common/test2-gtf.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : REF
+| |   cmdline FPS : 29.97002997003
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : CellToEar(x3)[IDs: 0 1 2] ObjectPut(x1)[IDs: 0] ObjectGet(x1)[IDs: 0]
+| |  Total Events : 5
+| |       Comment : -- NOT SET --
+[Post Modifications]
+|--> Summary for file:  ../common/test2-gtf.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : REF
+| |   cmdline FPS : 29.97002997003
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : CellToEar(x1)[IDs: 0] ObjectPut(x1)[IDs: 0]
+| |  Total Events : 2
+| |       Comment : -- NOT SET --
+All files processed (Validated: 2 | Total: 2)
+
+
+[[STDERR]]
+

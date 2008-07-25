@@ -1,0 +1,207 @@
+[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6 -C word -w -p -c 20:1080
+[[RETURN CODE]] 0
+[[STDOUT]]
+
+* Loading the ECF file
+
+../common/test1-gtf.xml: validates
+[Pre Modifications]
+|--> Summary for file:  ../common/test1-gtf.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : REF
+| |   cmdline FPS : 29.97002997003
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : CellToEar(x3)[IDs: 0 1 2] ObjectPut(x1)[IDs: 0] ObjectGet(x1)[IDs: 0]
+| |  Total Events : 5
+| |       Comment : -- NOT SET --
+** XML re-Representation:
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="ObjectPut" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="file:20050519-1503-Excerpt.mpg">
+      <!-- Changed from REF to SYS file
+REF to SYS Seed : word (first value: 0.170828036106)
+NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 to have the first frame start at 1) -->
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="1061"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="ObjectPut" id="0" framespan="919:1061">
+        <!-- Changed from REF to SYS file
+REF to SYS Seed : word (first value: 0.170828036106)
+Changed from REF to SYS file
+REF to SYS Seed : word (first value: 0.170828036106)
+Trimmed from [938:1493] to [938:1080]
+Framespan was shifted by -19 -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="-33.5958349003722"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+[Post Modifications]
+|--> Summary for file:  ../common/test1-gtf.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : SYS
+| |   cmdline FPS : 29.97002997003
+| |     Framerate : 1.0
+| |     NumFrames : 1061
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : ObjectPut(x1)[IDs: 0]
+| |  Total Events : 1
+| |       Comment : Changed from REF to SYS file
+REF to SYS Seed : word (first value: 0.170828036106)
+NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 to have the first frame start at 1)
+../common/test2-gtf.xml: validates
+[Pre Modifications]
+|--> Summary for file:  ../common/test2-gtf.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : REF
+| |   cmdline FPS : 29.97002997003
+| |     Framerate : 1.0
+| |     NumFrames : 5121
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : CellToEar(x3)[IDs: 0 1 2] ObjectPut(x1)[IDs: 0] ObjectGet(x1)[IDs: 0]
+| |  Total Events : 5
+| |       Comment : -- NOT SET --
+** XML re-Representation:
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="CellToEar" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+    <descriptor name="ObjectPut" type="OBJECT">
+      <attribute dynamic="true" name="BoundingBox" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="false" name="DetectionDecision" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="false" name="DetectionScore" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="true" name="Point" type="http://lamp.cfar.umd.edu/viperdata#point"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="file:20050519-1503-Excerpt.mpg">
+      <!-- Changed from REF to SYS file
+REF to SYS Seed : word (first value: 0.353728203093)
+NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 to have the first frame start at 1) -->
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="1061"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="CellToEar" id="0" framespan="184:1061">
+        <!-- Changed from REF to SYS file
+REF to SYS Seed : word (first value: 0.353728203093)
+Changed from REF to SYS file
+REF to SYS Seed : word (first value: 0.353728203093)
+Trimmed from [203:3738] to [203:1080]
+Framespan was shifted by -19 -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="false"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="59.52502579265"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+      <object name="ObjectPut" id="0" framespan="1:981">
+        <!-- Changed from REF to SYS file
+REF to SYS Seed : word (first value: 0.353728203093)
+Changed from REF to SYS file
+REF to SYS Seed : word (first value: 0.353728203093)
+Trimmed from [1:1000] to [20:1000]
+Framespan was shifted by -19 -->
+        <attribute name="BoundingBox"/>
+        <attribute name="DetectionDecision">
+          <data:bvalue value="true"/>
+        </attribute>
+        <attribute name="DetectionScore">
+          <data:fvalue value="55.1778803631778"/>
+        </attribute>
+        <attribute name="Point"/>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+[Post Modifications]
+|--> Summary for file:  ../common/test2-gtf.xml
+| |    Sourcefile : 20050519-1503-Excerpt.mpg
+| |          Type : SYS
+| |   cmdline FPS : 29.97002997003
+| |     Framerate : 1.0
+| |     NumFrames : 1061
+| |    Sourcetype : -- NOT SET --
+| |  H Frame Size : -- NOT SET --
+| |  V Frame Size : -- NOT SET --
+| |   Event Types : CellToEar(x1)[IDs: 0] ObjectPut(x1)[IDs: 0]
+| |  Total Events : 2
+| |       Comment : Changed from REF to SYS file
+REF to SYS Seed : word (first value: 0.353728203093)
+NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 to have the first frame start at 1)
+All files processed (Validated: 2 | Total: 2)
+
+
+[[STDERR]]
+
