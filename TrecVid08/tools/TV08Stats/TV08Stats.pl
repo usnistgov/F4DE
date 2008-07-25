@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # TrecVid08 Stat Generator
 #
@@ -372,41 +373,8 @@ MMisc::ok_quit(" ********** Done **********\n");
 
 ########## END
 
-sub set_usage {
-  my $ro = join(" ", @ok_events);
-  my $xsdfiles = join(" ", @xsdfilesl);
-  my $tmp=<<EOF
-$versionid
-
-Usage: $0 --fps fps [--help] [--version] [--xmllint location] [--TrecVid08xsd location] [--discardErrors] [-csv [file.csv]] file.xml [file.xml [...]]
-
-Will Score the XML file(s) provided (Truth vs System)
-
- Where:
-  --gtf           Specify that the files are gtf
-  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
-  --csv           Generate output representation as CSV (to file if given)
-  --discardErrors Continue processing even if not all xml files can be properly loaded
-  --version       Print version number and exit
-  --help          Print this usage information and exit
-
-Note:
-- This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
-- Program will ignore the <config> section of the XML file.
-- List of recognized events: $ro
-- 'TrecVid08xsd' files are: $xsdfiles
-EOF
-    ;
-
-    return $tmp;
-}
-
-####################
-
 sub _warn_add {
-  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
+  $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
 }
 
 ########################################
@@ -512,4 +480,37 @@ sub do_csv {
   }
 
   return($txt);
+}
+
+############################################################
+
+sub set_usage {
+  my $ro = join(" ", @ok_events);
+  my $xsdfiles = join(" ", @xsdfilesl);
+  my $tmp=<<EOF
+$versionid
+
+Usage: $0 --fps fps [--help] [--version] [--xmllint location] [--TrecVid08xsd location] [--discardErrors] [-csv [file.csv]] file.xml [file.xml [...]]
+
+Will Score the XML file(s) provided (Truth vs System)
+
+ Where:
+  --gtf           Specify that the files are gtf
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
+  --csv           Generate output representation as CSV (to file if given)
+  --discardErrors Continue processing even if not all xml files can be properly loaded
+  --version       Print version number and exit
+  --help          Print this usage information and exit
+
+Note:
+- This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
+- Program will ignore the <config> section of the XML file.
+- List of recognized events: $ro
+- 'TrecVid08xsd' files are: $xsdfiles
+EOF
+    ;
+
+    return $tmp;
 }
