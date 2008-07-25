@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # Merge Helper Caller
 #
@@ -221,32 +222,8 @@ sub valerr {
 
 ########################################
 
-sub set_usage {
-  my $tmp=<<EOF
-$versionid
-
-Usage: $0 [--mergehelper fullcommandpath] [--show_cmdline] [--logdir dir] [--overlaplistdir dir] [--ecfhelperdir dir] file.xml [file.xml [...]] -- merger_parameters
-
-Will Score the XML file(s) provided (Truth vs System)
-
- Where:
-  --mergehelper   Provide the mergehelper command location (Default: $merger)
-  --show_cmdline  Display the merger command line that will be used
-  --logdir        Specify the log directory (Default: $logdir)
-  --overlaplistdir Specify the directory in which to ask the merger to generate the overlaplistfile
-  --ecfhelperdir  Specify the directory in which to ask the merger to generate the ecfhelperfile
-  --version       Print version number and exit
-  --help          Print this usage information and exit
-EOF
-    ;
-
-    return $tmp;
-}
-
-####################
-
 sub _warn_add {
-  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
+  $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
 }
 
 ########################################
@@ -291,4 +268,28 @@ sub call_merger {
   } else {
     return(0);
   }
+}
+
+############################################################
+
+sub set_usage {
+  my $tmp=<<EOF
+$versionid
+
+Usage: $0 [--mergehelper fullcommandpath] [--show_cmdline] [--logdir dir] [--overlaplistdir dir] [--ecfhelperdir dir] file.xml [file.xml [...]] -- merger_parameters
+
+Will Score the XML file(s) provided (Truth vs System)
+
+ Where:
+  --mergehelper   Provide the mergehelper command location (Default: $merger)
+  --show_cmdline  Display the merger command line that will be used
+  --logdir        Specify the log directory (Default: $logdir)
+  --overlaplistdir Specify the directory in which to ask the merger to generate the overlaplistfile
+  --ecfhelperdir  Specify the directory in which to ask the merger to generate the ecfhelperfile
+  --version       Print version number and exit
+  --help          Print this usage information and exit
+EOF
+    ;
+
+    return $tmp;
 }

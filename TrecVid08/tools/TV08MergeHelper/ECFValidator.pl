@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # TrecVid08 ECF XML Validator
 #
@@ -184,16 +185,9 @@ sub valerr {
 sub load_file {
   my ($tmp) = @_;
 
-  if (! -e $tmp) {
-    &valerr($tmp, "file does not exists, skipping");
-    return(0, ());
-  }
-  if (! -f $tmp) {
-    &valerr($tmp, "is not a file, skipping\n");
-    return(0, ());
-  }
-  if (! -r $tmp) {
-    &valerr($tmp, "file is not readable, skipping\n");
+  my $err = MMisc::is_file_ok($tmp);
+  if (! MMisc::is_blank($err)) {
+    &valerr($tmp, "skipping: $err");
     return(0, ());
   }
   
@@ -224,6 +218,12 @@ sub load_file {
 
 ########################################
 
+sub _warn_add {
+  $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
+}
+
+############################################################
+
 sub set_usage {
   my $xsdfiles = join(" ", @xsdfilesl);
   my $tmp=<<EOF
@@ -248,10 +248,4 @@ EOF
     ;
 
     return $tmp;
-}
-
-####################
-
-sub _warn_add {
-  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
 }

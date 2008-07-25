@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # TrecVid08 Viper XML File Merger
 #
@@ -556,48 +557,8 @@ sub valerr {
 
 ########################################
 
-sub set_usage {
-  my $ro = join(" ", @ok_events);
-  my $xsdfiles = join(" ", @xsdfilesl);
-  my $tmp=<<EOF
-
-$versionid
-
-Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]] [--OverlapOnlyXML]] [--ecfhelperfile [file.csv]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] [--writetodir dir] [--pruneEvents] --fps fps 
-
-Will merge event observations found in given files related to the same sourcefile's filename, and will try to provide help in merging overlapping or repeating observations.
-
- Where:
-  --gtf           Specify that the file to validate is a Ground Truth File
-  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --writetodir    Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension) (If no writetodir option is specified, print to stdout)
-  --pruneEvents   Only keep in the new file's config section events for which observations are seen
-  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
-  --ForceFilename Specify that all files loaded refers to the same 'sourcefile' file
-  --shift_overlap Will find overlap for frameshifted file's sourcefile which obersvations overlap in the file overlap section
-  --Same_overlap  Will find overlap for the same file's sourcefile (ie not framshifted) which observations overlap
-  --overlaplistfile   Save list of overlap found into file (or stdout if not provided)
-  --OverlapOnlyXML    Create a XML file containing only overlap observations
-  --ecfhelperfile Save a CSV file thaf contains information needed to generate the ECF file
-  --version       Print version number and exit
-  --help          Print this usage information and exit
-  --man           Print a more detailled manual page and exit (same as running: $mancmd)
-
-Note:
-- This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
-- Program will ignore the <config> section of the XML file.
-- 'TrecVid08xsd' files are: $xsdfiles
-EOF
-    ;
-
-    return $tmp;
-}
-
-####################
-
 sub _warn_add {
-  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
+  $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
 }
 
 ########################################
@@ -1177,3 +1138,41 @@ Please send bug reports to <nist_f4de@nist.gov>
 Martial Michel <martial.michel@nist.gov>
 
 =cut
+
+sub set_usage {
+  my $ro = join(" ", @ok_events);
+  my $xsdfiles = join(" ", @xsdfilesl);
+  my $tmp=<<EOF
+
+$versionid
+
+Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]] [--OverlapOnlyXML]] [--ecfhelperfile [file.csv]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] [--writetodir dir] [--pruneEvents] --fps fps 
+
+Will merge event observations found in given files related to the same sourcefile's filename, and will try to provide help in merging overlapping or repeating observations.
+
+ Where:
+  --gtf           Specify that the file to validate is a Ground Truth File
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --writetodir    Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension) (If no writetodir option is specified, print to stdout)
+  --pruneEvents   Only keep in the new file's config section events for which observations are seen
+  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
+  --ForceFilename Specify that all files loaded refers to the same 'sourcefile' file
+  --shift_overlap Will find overlap for frameshifted file's sourcefile which obersvations overlap in the file overlap section
+  --Same_overlap  Will find overlap for the same file's sourcefile (ie not framshifted) which observations overlap
+  --overlaplistfile   Save list of overlap found into file (or stdout if not provided)
+  --OverlapOnlyXML    Create a XML file containing only overlap observations
+  --ecfhelperfile Save a CSV file thaf contains information needed to generate the ECF file
+  --version       Print version number and exit
+  --help          Print this usage information and exit
+  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+
+Note:
+- This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
+- Program will ignore the <config> section of the XML file.
+- 'TrecVid08xsd' files are: $xsdfiles
+EOF
+    ;
+
+    return $tmp;
+}

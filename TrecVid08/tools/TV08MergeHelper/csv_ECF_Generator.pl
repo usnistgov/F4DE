@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # ECF Generator
 #
@@ -227,31 +228,8 @@ MMisc::ok_quit("Done.\n");
 
 ########################################
 
-sub set_usage {
-  my $tmp=<<EOF
-$versionid
-
-Usage: $0 --fps fps [--help] [--version] [[--csv [file.csv]] | [--ecffile file --EcfVersion versionid]] file.csv [file.csv [...]]
-
-Will Score the XML file(s) provided (Truth vs System)
-
- Where:
-  --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
-  --ecffile       Specify the output ECF file
-  --EcfVersion    Specify the version ID to add in the ECF file
-  --csv           Specify the output CSV file (stdout by default)
-  --version       Print version number and exit
-  --help          Print this usage information and exit
-EOF
-    ;
-
-    return $tmp;
-}
-
-####################
-
 sub _warn_add {
-  $warn_msg .= sprint("[Warning] ", join(" ", @_), "\n");
+  $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
 }
 
 ########################################
@@ -417,4 +395,27 @@ sub do_csv {
   }
 
   return($txt);
+}
+
+############################################################
+
+sub set_usage {
+  my $tmp=<<EOF
+$versionid
+
+Usage: $0 --fps fps [--help] [--version] [[--csv [file.csv]] | [--ecffile file --EcfVersion versionid]] file.csv [file.csv [...]]
+
+Will Score the XML file(s) provided (Truth vs System)
+
+ Where:
+  --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
+  --ecffile       Specify the output ECF file
+  --EcfVersion    Specify the version ID to add in the ECF file
+  --csv           Specify the output CSV file (stdout by default)
+  --version       Print version number and exit
+  --help          Print this usage information and exit
+EOF
+    ;
+
+    return $tmp;
 }
