@@ -1,8 +1,8 @@
 #!/usr/bin/env perl
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 use strict;
 use TV08TestCore;
-
 
 my $scorer = shift @ARGV;
 error_quit("ERROR: Scorer ($scorer) empty or not an executable\n")
