@@ -53,9 +53,9 @@ sub slurp_file {
     or return(undef);
   my @all = <FILE>;
   close FILE;
-  chomp @all if (defined($mode) && $mode ne "bin");
+  chomp @all if ( (defined($mode)) && ($mode ne "bin"));
 
-  my $jc = (defined($mode) && $mode ne "bin") ? "\n" : "";
+  my $jc = ( (defined($mode)) && ($mode ne "bin") ) ? "\n" : "";
   my $tmp = join($jc, @all);
 
   return($tmp);
@@ -682,7 +682,7 @@ sub newest {
 
   return(undef) if (scalar @or == 0);
 
-  return(@or[-1]);
+  return($or[-1]);
 }
 
 #####
@@ -692,7 +692,7 @@ sub oldest {
 
   return(undef) if (scalar @or == 0);
 
-  return(@or[0]);
+  return($or[0]);
 }
 
 #####
@@ -702,7 +702,7 @@ sub biggest {
 
   return(undef) if (scalar @or == 0);
 
-  return(@or[-1]);
+  return($or[-1]);
 }
 
 #####
@@ -712,7 +712,7 @@ sub smallest {
 
   return(undef) if (scalar @or == 0);
 
-  return(@or[0]);
+  return($or[0]);
 }
 
 ####################
