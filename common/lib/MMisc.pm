@@ -53,9 +53,9 @@ sub slurp_file {
     or return(undef);
   my @all = <FILE>;
   close FILE;
-  chomp @all if ($mode ne "bin");
+  chomp @all if (defined($mode) && $mode ne "bin");
 
-  my $jc = ($mode ne "bin") ? "\n" : "";
+  my $jc = (defined($mode) && $mode ne "bin") ? "\n" : "";
   my $tmp = join($jc, @all);
 
   return($tmp);
