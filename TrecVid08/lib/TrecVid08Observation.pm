@@ -288,7 +288,7 @@ sub set_filename {
 
   return(0) if ($self->error());
 
-  if ($fname =~ m%^\s*$%) {
+  if (MMisc::is_blank($fname)) {
     $self->_set_errormsg("Empty \'filename\'. ");
     return(0);
   }
@@ -330,7 +330,7 @@ sub set_xmlfilename {
 
   return(0) if ($self->error());
 
-  if ($fname =~ m%^\s*$%) {
+  if (MMisc::is_blank($fname)) {
     $self->_set_errormsg("Empty \'xmlfilename\'. ");
     return(0);
   }
