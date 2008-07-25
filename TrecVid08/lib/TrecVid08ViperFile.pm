@@ -1,4 +1,5 @@
 package TrecVid08ViperFile;
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # TrecVid08 ViperFile
 #
@@ -2089,6 +2090,9 @@ sub is_event_id_used {
 sub type_changer_init_randomseed { ## Class function
   my ($seed_found) = @_;
 
+  return(1) if (! defined $seed_found);
+  return(1) if (MMisc::is_blank($seed_found));
+
   my ($seed, $lastfound) = split(m%\:%, $seed_found);
 
   $rseed = $seed;
@@ -2271,6 +2275,7 @@ sub get_summary {
   }
 
   my $ns = "-- NOT SET --";
+  $v -= 3 if ($v > 3);
 
   my $txt = "";
   $txt .= "|--> Summary for file:  " . $self->get_file() . "\n";
