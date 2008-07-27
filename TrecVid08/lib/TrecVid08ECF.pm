@@ -1,4 +1,5 @@
 package TrecVid08ECF;
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # TrecVid08 ECF XML Handler
 #
