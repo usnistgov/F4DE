@@ -160,7 +160,6 @@ my $ecffile = "";
 # USed:   C  F             T  WX    cdefgh   lm  p r   vwx  
 
 my %opt = ();
-my $dbgftmp = "";
 GetOptions
   (
    \%opt,
