@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 use strict;
 use TV08TestCore;
 use TrecVid08xmllint;
@@ -9,15 +9,35 @@ my $err = 0;
 ##########
 print "** Checking for Perl Packages:\n";
 my $ms = 1;
-print "[F4DE Provided Packages]\n";
-$ms = &_chkpkg("BipartiteMatch", "DETCurve", "MMisc", "MtXML", "SimpleAutoTable", "Trials", "MErrorH", "MetricTestStub", "PropList", "TrialSummaryTable", "ViperFramespan", "MetricFuncs", "MetricTV08", "TrecVid08ECF", "TrecVid08EventList", "TrecVid08Observation", "TrecVid08ViperFile", "TrecVid08xmllint");
+print "[F4DE Common Packages]\n";
+$ms = &_chkpkg
+  (
+   # common/lib
+   "BipartiteMatch", "DETCurve", "DETCurveSet", "MErrorH", "MMisc",
+   "MetricFuncs", "MetricTestStub", "MtXML", "PropList",
+   "SimpleAutoTable", "TrialSummaryTable", "Trials", "ViperFramespan",
+  );
 if ($ms > 0) {
-  print "  ** ERROR: Not all packages found, you will not be able to run the program, please install the missing ones\n\n";
+  print "  ** ERROR: Not all packages found, you will not be able to run the programs, please install the missing ones\n\n";
   $err++;
 } else {
   print "  Found all packages\n\n";
 }
-print "[Required Packages]\n";
+print "[F4DE's TrecVid08 Packages]\n";
+$ms = &_chkpkg
+  (
+   # TrecVid08/lib
+   "MetricTV08", "TrecVid08ECF", "TrecVid08EventList", 
+   "TrecVid08HelperFunctions", "TrecVid08Observation",
+   "TrecVid08ViperFile", "TrecVid08xmllint"
+  );
+if ($ms > 0) {
+  print "  ** ERROR: Not all TrecVid08 packages found, you will not be able to run the program, please install the missing ones\n\n";
+  $err++;
+} else {
+  print "  Found all packages\n\n";
+}
+print "[Other Perl Required Packages]\n";
 $ms = &_chkpkg("Getopt::Long", "Data::Dumper", "File::Temp");
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the program, please install the missing ones\n\n";
@@ -26,12 +46,14 @@ if ($ms > 0) {
   print "  Found all packages\n\n";
 }
 
-print "[Optional Packages]\n";
-$ms = &_chkpkg("Statistics::Descriptive::Discrete"); # TV08Scorer
+print "[Optional Perl Packages]\n";
+$ms = &_chkpkg("Statistics::Descriptive::Discrete"); # TV08Stats
 if ($ms > 0) {
-  print "  ** WARNING: Not all TV08Scorer packages found, you will not be able to run this program\n";
-} else {
-  print "  Found all packages\n\n";
+  print "  ** WARNING: Not all TV08Stats packages found, you will not be able to run this program\n";
+}
+$ms = &_chkpkg("Cwd"); # TV08ED-SubmissionChecker
+if ($ms > 0) {
+  print "  ** WARNING: Not all TV08ED-SubmissionChecker packages found, you will not be able to run this program\n";
 }
 
 ##########
