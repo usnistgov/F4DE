@@ -185,7 +185,7 @@ sub valerr {
 sub load_file {
   my ($tmp) = @_;
 
-  my $err = MMisc::is_file_ok($tmp);
+  my $err = MMisc::check_file_r($tmp);
   if (! MMisc::is_blank($err)) {
     &valerr($tmp, "skipping: $err");
     return(0, ());

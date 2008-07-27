@@ -164,7 +164,7 @@ sub save_ViperFile_MemDump {
 sub load_ViperFile {
   my ($isgtf, $filename, $fps, $xmllint, $xsdpath) = @_;
 
-  my $err = MMisc::is_file_ok($filename);
+  my $err = MMisc::check_file_r($filename);
   return(0, undef, $err)
     if (! MMisc::is_blank($err));
   
@@ -262,7 +262,7 @@ sub _load_MemDump_ViperFile {
 sub load_ECF {
   my ($ecffile, $ecfobj, $xmllint, $xsdpath, $fps) = @_;
 
-  my $err = MMisc::is_file_ok($ecffile);
+  my $err = MMisc::check_file_r($ecffile);
   return($err) if (! MMisc::is_blank($err));
 
   return("While trying to set \'xmllint\' (" . $ecfobj->get_errormsg() . ")")
