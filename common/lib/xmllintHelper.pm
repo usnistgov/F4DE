@@ -115,7 +115,7 @@ sub _check_xmllint {
     # xmllint print the command name followed by the version number
     my $version = $1;
     return("", "\'xmllint\' ($xmllint) version too old: requires at least 2.6.30 (ie 20630, installed $version), aborting\n")
-      if ($version <= 20630);
+      if ($version < 20630);
   } else {
     return("", "Could not confirm that \'xmllint\' is valid, aborting\n");
   }
