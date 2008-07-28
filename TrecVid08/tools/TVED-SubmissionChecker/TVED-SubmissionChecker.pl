@@ -155,9 +155,11 @@ my $ecffile = "";
 my $verb = 0;
 my $rtmpdir = undef;
 my $wid = undef;
+my $skipval = 0;
+my $memdump = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                    T V        efgh           t vwx   #
+# Used:                    T VW       efgh          s uvwx   #
 
 my %opt = ();
 GetOptions
@@ -171,8 +173,10 @@ GetOptions
    'fps=s'           => \$fps,
    'ecf=s'           => \$ecffile,
    'Verbose'         => \$verb,
-   'tempdir=s'       => \$rtmpdir,
+   'uncompress_dir=s' => \$rtmpdir,
    'work_in_dir=s'   => \$wid,
+   'skip_validation' => \$skipval,
+   'WriteMemDump=s'  => \$memdump,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -195,7 +199,7 @@ if (defined $rtmpdir) {
   my $de = MMisc::check_dir_w($rtmpdir);
   MMisc::error_quit("Problem with \'temdir\' ($rtmpdir): $de")
     if (! MMisc::is_blank($de));
-  MMisc::error_quit("\'tempdir\' can not be used at the same time as \'work_in_dir\'")
+  MMisc::error_quit("\'uncompress_dir\' can not be used at the same time as \'work_in_dir\'")
     if (defined $wid);
 }
 
@@ -204,6 +208,17 @@ if (defined $wid) {
     if (MMisc::is_blank($wid));
  MMisc::error_quit("When using \'work_in_dir\', only one directory should be left on the command line")
    if (scalar @ARGV > 1);
+}
+
+if ($skipval) {
+  MMisc::error_quit("Can not use \'ecf\' or \'WriteMemDump\' when \'skip_validation\' is selected")
+    if ( (! MMisc::is_blank($ecffile)) || (defined $memdump) );
+}
+
+if (defined $memdump) {
+  my $derr = MMisc::check_dir_w($memdump);
+  MMisc::error_quit("Problem with \'WriteMemDump\' 's directory ($memdump) : $derr")
+    if (! MMisc::is_blank($derr));
 }
 
 my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
@@ -324,7 +339,15 @@ foreach my $sf (@ARGV) {
   $done++;
 }
 
-MMisc::ok_quit("All submission processed (OK: $done / Total: $todo)\n");
+my @lin = ();
+push @lin, "the \'skip_validation\' option was used, therefore the XML files were not checked for accuracy. Submitted \'.tgz\' files must have been XML validated to be accepted" if ($skipval);
+push @lin, "the \'ecf\' option was not used, therefore your XML files were not matched against it. Submitted \.tgz\. files must run this process to avoid missed elements in submission" if (! $useECF);
+MMisc::ok_quit
+  (
+   "All submission processed (OK: $done / Total: $todo)\n" 
+   . ((scalar @lin == 0) ? "" :
+      "\nIMPORTANT NOTES:\n - " . join("\n - ", @lin) . "\n")
+  );
 
 ########## END
 
@@ -385,9 +408,15 @@ sub uncompress_archive {
     $tmpdir = $rtmpdir;
   }
 
+  my $lf = MMisc::concat_dir_file_ext($dir, $file, $ext);
+
   my $pwd = Cwd::cwd();
-  my $f = Cwd::abs_path(MMisc::concat_dir_file_ext($dir, $file, $ext));
-  
+  my $f = Cwd::abs_path($lf);
+
+  my $ferr = MMisc::check_file_r($lf);
+  return("Problem finding requested sourcefile ($lf): $ferr")
+    if (! MMisc::is_blank($ferr));
+
   my $cmdline = "tar xfz $f";
 
   chdir($tmpdir);
@@ -438,6 +467,7 @@ sub check_submission_dir {
   vprint(3, "Checking expected directory files");
   ($lerr, my $lw) = &check_exp_dirfiles($bd, $dir, $data);
   return("[$dir : $lerr]", "") if (! MMisc::is_blank($lerr));
+  $lw = "[$dir : $lw]" if (! MMisc::is_blank($lw));
 
   return("", $lw);
 }
@@ -447,13 +477,16 @@ sub check_submission_dir {
 sub check_name {
   my ($name, $site) = @_;
 
-  my $et = "\'EXP-ID\' not of the form \'<SITE>_<YEAR>_<TASK>_<DATA>_<LANG>_<INPUT>_<SYSID>_<VERSION>\'";
+  my $et = "\'EXP-ID\' not of the form \'<SITE>_<YEAR>_<TASK>_<DATA>_<LANG>_<INPUT>_<SYSID>_<VERSION>\' : ";
 
   my ($lsite, $lyear, $ltask, $ldata, $llang, $linput, $lsysid, $lversion,
       @left) = split(m%\_%, $name);
 
-  return($et . " (leftover entries: " . join(" ", @left) . ")", "")
+  return($et . " leftover entries: " . join(" ", @left) . ". ", "")
     if (scalar @left > 0);
+
+  return($et ." missing parameters ($name). ", "")
+    if (MMisc::any_blank($lsite, $lyear, $ltask, $ldata, $llang, $linput, $lsysid, $lversion));
 
   my $err = "";
 
@@ -471,7 +504,7 @@ sub check_name {
     . join(" ", @expected_sysid_beg) . "). "
       if (! grep(m%^$b$%, @expected_sysid_beg));
   
-  $err . "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
+  $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
     if ( ($lversion !~ m%^\d+$%) || ($lversion =~ m%^0%) || ($lversion > 19) );
   # More than 19 submissions would make anybody suspicious ;)
 
@@ -520,16 +553,18 @@ sub check_exp_dirfiles {
   # Try to validate the XML file
   my $errs = "";
   my $warns = "";
-  foreach my $xf (@xmlf) {
-    vprint(4, "Trying to validate XML file ($xf)");
-    my ($e, $w) = validate_xml("$bd/$exp", $xf, $data);
-    if (! MMisc::is_blank($e)) {
-      vprint(5, "ERROR: $e");
-      $errs .= "[$xf : $e] ";
-    }
-    if (! MMisc::is_blank($w)) {
-      vprint(5, "WARNING: $w");
-      $warns .= "[$xf : $w] ";
+  if (! $skipval) {
+    foreach my $xf (@xmlf) {
+      vprint(4, "Trying to validate XML file ($xf)");
+      my ($e, $w) = validate_xml("$bd/$exp", $xf, $data, $exp);
+      if (! MMisc::is_blank($e)) {
+        vprint(5, "ERROR: $e");
+        $errs .= "[$xf : $e] ";
+      }
+      if (! MMisc::is_blank($w)) {
+        vprint(5, "WARNING: $w");
+        $warns .= "[$xf : $w] ";
+      }
     }
   }
 
@@ -539,7 +574,7 @@ sub check_exp_dirfiles {
 ##########
 
 sub validate_xml {
-  my ($dir, $xf, $data) = @_;
+  my ($dir, $xf, $data, $exp) = @_;
 
   my $warn = "";
 
@@ -574,26 +609,53 @@ sub validate_xml {
 
   $warn .= "Found no events in file. "
     if ($btot == 0);
+
+  $warn .= &write_memdump_file($object, $exp, $xf)
+    if (defined $memdump);
   
   return("", $warn)
     if (! $useECF);
 
   vprint(5, "Applying ECF file ($ecffile) to ViperFile");
-  my ($lerr, $object) =
+  my ($lerr, $nobject) =
     TrecVid08HelperFunctions::get_new_ViperFile_from_ViperFile_and_ECF($object, $ecfobj);
   return($lerr, $warn)
     if (! MMisc::is_blank($lerr));
   return("Problem with ViperFile object", $warn)
-    if (! defined $object);
+    if (! defined $nobject);
 
-  my ($aettxt, $ate, $atot) = $object->get_txt_and_number_of_events(3);
-  return("Problem obtaining the number of events (after ECF) (" . $object->get_errormsg() . ")", $warn)
-    if ($object->error());
+  my ($aettxt, $ate, $atot) = $nobject->get_txt_and_number_of_events(3);
+  return("Problem obtaining the number of events (after ECF) (" . $nobject->get_errormsg() . ")", $warn)
+    if ($nobject->error());
 
   $warn .= "Total number of events changed from before ($btot / list: $bettxt) to after applying the ECF ($atot / list: $aettxt). "
     if ($atot != $btot);
-  
+
   return("", $warn);
+}
+
+##########
+
+sub write_memdump_file {
+  return("") if (! defined $memdump);
+
+  my ($vf, $diradd, $fname) = @_;
+
+  my $dd = "$memdump/$diradd";
+
+  return("In \'WriteMemDump\' problem creating output directory ($dd)")
+    if (! MMisc::make_dir($dd));
+
+  my $derr = MMisc::check_dir_w($dd);
+  return("In \'WriteMemDump\', output directory problem: $derr")
+    if (! MMisc::is_blank($derr));
+
+  my $of = "$dd/$fname";
+  my $ok = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, "gzip", 0);
+  return("In \'WriteMemDump\', a problem occurred while writing the output file ($of)")
+    if (! $ok);
+
+  return("");
 }
 
 ##########
@@ -602,7 +664,7 @@ sub cmp_exp {
   my ($t, $v, @e) = @_;
 
   return("$t ($v) does not compare to expected value (" . join(" ", @e) ."). ")
-    if (! grep(m%$v$%, @e));
+    if (! grep(m%^$v$%, @e));
 
   return("");
 }
@@ -691,7 +753,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-gtf] [--ecf ecffile --fps fps] [--tempdir dir | --work_in_dir site] [--Verbose] file.tgz [file.tgz [...]]
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-gtf] [--ecf ecffile --fps fps] [--uncompress_dir dir | --work_in_dir site] [--Verbose] file.tgz [file.tgz [...]]
 
 Will confirm that a submission file conform to the 'Submission Instructions'
 
@@ -701,7 +763,7 @@ Will confirm that a submission file conform to the 'Submission Instructions'
   --gtf           Specify that the XML files are Ground Truth Files
   --ecf           Specify the ECF file to load
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
-  --tempdir       Specify the directory in which the tgz file will be uncompressed
+  --uncompress_dir  Specify the directory in which the tgz file will be uncompressed
   --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified instead of file.tgz (useful to confirm a submission before generating its tgz)
   --version       Print version number and exit
   --help          Print this usage information and exit
