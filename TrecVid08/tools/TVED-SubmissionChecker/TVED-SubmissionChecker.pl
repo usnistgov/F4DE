@@ -75,10 +75,24 @@ unless (eval "use TrecVid08ViperFile; 1") {
   $have_everything = 0;
 }
 
+# TrecVid08HelperFunctions (part of this tool)
+unless (eval "use TrecVid08HelperFunctions; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
 # TrecVid08ECF (part of this tool)
 unless (eval "use TrecVid08ECF; 1") {
   my $pe = &eo2pe($@);
   &_warn_add("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
+# TrecVid08EventList (part of this tool)
+unless (eval "use TrecVid08EventList; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
@@ -122,7 +136,6 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 my $ecfobj = new TrecVid08ECF();
 my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
 
-
 ########################################
 # Options processing
 
@@ -136,11 +149,13 @@ my $xmllint = MMisc::get_env_val($xmllint_env, "");
 my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../data");
 $xsdpath = "$f4bv/data" 
   if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
-my $vfv = "";
+my $isgtf = 0;
+my $fps = undef;
+my $ecffile = "";
+my $verb = 0;
 
-
-# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:   C  F             T  WX    cdefgh   lm  p r   vwx  
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
+# Used:                    T V        efgh             v x   #
 
 my %opt = ();
 GetOptions
@@ -150,7 +165,10 @@ GetOptions
    'version',
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
-   'ViperValidator=s'      => \$vfv,
+   'gtf'             => \$isgtf,
+   'fps=s'           => \$fps,
+   'ecf=s'           => \$ecffile,
+   'Verb'            => \$verb,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -166,7 +184,17 @@ if ($xsdpath ne "") {
     if (! $dummy->set_xsdpath($xsdpath));
 }
 
+my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
+MMisc::error_quit("\'fps\' must set in order to use \'ecf\'")
+    if (($useECF) && (! defined $fps));
 
+## Loading of the ECF file
+if ($useECF) {
+  print "\n* Loading the ECF file\n\n";
+  my ($errmsg) = TrecVid08HelperFunctions::load_ECF($ecffile, $ecfobj, $xmllint, $xsdpath, $fps);
+  MMisc::error_quit("Problem loading the ECF file: $errmsg")
+    if (! MMisc::is_blank($errmsg));
+}
 
 ########################################
 
@@ -184,6 +212,8 @@ my @expected_dir_output = ( "output" );
 my $todo = scalar @ARGV;
 my $done = 0;
 foreach my $sf (@ARGV) {
+  vprint(1, "Checking \'$sf\'");
+
   my ($err, $dir, $file, $ext) = MMisc::split_dir_file_ext($sf);
   if (! MMisc::is_blank($err)) {
     &valerr($sf, $err);
@@ -191,41 +221,44 @@ foreach my $sf (@ARGV) {
   }
 
 #  print "[$dir | $file | $ext]\n";
+  my @warnings = ();
 
   if (MMisc::is_blank($file)) {
     &valerr($sf, "No filename detected ?");
     next;
   }
 
-  # Check the file extension
+  vprint(1, "Checking the file extension");
   $err = &check_archive_extension($ext);
   if (! MMisc::is_blank($err)) {
     &valerr($sf, $err);
     next;
   }
 
-  # Get the SITE and SUB-NUM information
+  vprint(1, "Get the SITE and SUB-NUM information");
   ($err, my $site, my $subnum) = &check_archive_name($file);
   if (! MMisc::is_blank($err)) {
     &valerr($sf, $err);
     next;
   }
+  vprint(2, "<SITE> = $site / <SUBNUM> = $subnum");
   
-  # Uncompress archive
+  vprint(1, "Uncompress archive");
   ($err, my $tmpdir) = &uncompress_archive($dir, $file, $ext);
- if (! MMisc::is_blank($err)) {
-   &valerr($sf, $err);
-   next;
- }
+  if (! MMisc::is_blank($err)) {
+    &valerr($sf, $err);
+    next;
+  }
+  vprint(2, "Temporary directory: $tmpdir");
 
-  # Check for the output directories
+  vprint(1, "Check for the output directories");
   $err = &check_for_output_dir($tmpdir);
   if (! MMisc::is_blank($err)) {
     &valerr($sf, $err);
     next;
   }
 
-  # Process each output directory
+  vprint(1, "Process each output directory");
   foreach my $odir (@expected_dir_output) {
     my ($derr, $rd, $rf, $ru) = MMisc::list_dirs_files("$tmpdir/$odir");
     if (! MMisc::is_blank($derr)) {
@@ -241,14 +274,17 @@ foreach my $sf (@ARGV) {
       next;
     }
     foreach my $sdir (sort @$rd) {
+      vprint(2, "Checking Submission Directory ($sdir)");
       ($err, my $warn) = &check_submission_dir("$tmpdir/$odir", $sdir, $site);
       if (! MMisc::is_blank($err)) {
         &valerr($sf, $err);
       }
+      push @warnings, $warn
+        if (! MMisc::is_blank($warn));
     }
   }
 
-  &valok($sf, "ok");
+  &valok($sf, "ok" .((scalar @warnings > 0) ? (" -- WARNINGS: " . join(". ", @warnings)) : "") );
   $done++;
 }
 
@@ -355,16 +391,15 @@ sub check_for_output_dir {
 sub check_submission_dir {
   my ($bd, $dir, $site) = @_;
 
-  my $err = "";
-  my $warn = "";
-
+  vprint(3, "Checking name");
   my ($lerr) = &check_name($dir, $site);
-  return($lerr) if (! MMisc::is_blank($lerr));
+  return("[$dir : $lerr]", "") if (! MMisc::is_blank($lerr));
 
-  ($lerr, my $lw) = &check_exp_dirfiles($bd, $dir, $site);
-  return($lerr) if (! MMisc::is_blank($lerr));
+  vprint(3, "Checking expected directory files");
+  ($lerr, my $lw) = &check_exp_dirfiles($bd, $dir);
+  return("[$dir : $lerr]", "") if (! MMisc::is_blank($lerr));
 
-
+  return("", $lw);
 }
 
 ##########
@@ -398,6 +433,9 @@ sub check_name {
   return($et . $err)
     if (! MMisc::is_blank($err));
 
+  vprint(4, "<SITE> = $lsite | <YEAR> = $lyear | <TASK> = $ltask | <DATA> = $ldata | <LANG> = $llang | <INPUT> = $linput | <SYSID> = $lsysid | <VERSION> = $lversion");
+
+  return("");
 }
 
 ##########
@@ -415,6 +453,7 @@ sub check_exp_dirfiles {
   return("Found no submission files")
     if (scalar @$rf == 0);
 
+  vprint(4, "Checking for expected text file");
   my $expected_exp = "$exp.txt";
   my @txtf = grep(m%\.txt$%, @$rf);
   return("Found no \'.txt\' file. ")
@@ -423,16 +462,88 @@ sub check_exp_dirfiles {
     if (scalar @txtf > 1);
   return("Could not find the expected \'.txt\' file ($expected_exp) (seen: " . join(" ", @txtf) . ")")
     if (! grep(m%$expected_exp$%, @txtf));
+  vprint(5, "Found: $expected_exp (note: does not check content of file)");
 
+  vprint(4, "Checking for XML files");
   my @xmlf = grep(m%\.xml$%, @$rf);
   return("Found no \'.xml\' file. ")
     if (scalar @xmlf == 0);
   return("More than just \'.txt\' and \'.xml\' files in directory. ")
     if ((scalar @xmlf + scalar @txtf) != (scalar @$rf));
+  vprint(5, "Found: " . join(" ", @xmlf));
 
+  # Try to validate the XML file
+  my $errs = "";
+  my $warns = "";
+  foreach my $xf (@xmlf) {
+    vprint(4, "Trying to validate XML file ($xf)");
+    my ($e, $w) = validate_xml("$bd/$exp", $xf);
+    $errs .= "[$xf : $e] " if (! MMisc::is_blank($e));
+    $warns .= "[$xf : $w] " if (! MMisc::is_blank($w));
+  }
+
+  return($errs, $warns);
+}
+
+##########
+
+sub validate_xml {
+  my ($dir, $xf) = @_;
+
+  my $warn = "";
+
+  vprint(5, "Loading ViperFile");
+  my $tmp = "$dir/$xf";
+  my ($retstatus, $object, $msg) = 
+    TrecVid08HelperFunctions::load_ViperFile($isgtf, $tmp, 
+					     $fps, $xmllint, $xsdpath);
+
+  return($msg, $warn)
+    if (! $retstatus);
+
+  vprint(5, "Confirming sourcefile filename is proper");
+  my $sffn = $object->get_sourcefile_filename();
+  return("Problem obtaining the sourcefile's filename (" . $object->get_errormsg() . ")", $warn)
+    if ($object->error());
   
+  my $exp_mf = $xf;
+  $exp_mf =~ s%xml$%mpeg%;
 
-  return("");
+  return("Sourcefile's filename is wrong (is: $sffn) (expected: $exp_mf)", $warn)
+    if ($sffn !~ m%$exp_mf$%);
+
+  my ($bettxt, $bte, $btot) = $object->get_txt_and_number_of_events(3);
+  return("Problem obtaining the number of events (" . $object->get_errormsg() . ")", $warn)
+    if ($object->error());
+
+  if ($btot == 0) {
+    my $wt = "Found no events in file. ";
+    vprint(6, "WARNING: $wt");
+    $warn .= $wt;
+  }
+  
+  return("", $warn)
+    if (! $useECF);
+
+  vprint(5, "Applying ECF file ($ecffile) to ViperFile");
+  my ($lerr, $object) =
+    TrecVid08HelperFunctions::get_new_ViperFile_from_ViperFile_and_ECF($object, $ecfobj);
+  return($lerr, $warn)
+    if (! MMisc::is_blank($lerr));
+  return("Problem with ViperFile object", $warn)
+    if (! defined $object);
+
+  my ($aettxt, $ate, $atot) = $object->get_txt_and_number_of_events(3);
+  return("Problem obtaining the number of events (after ECF) (" . $object->get_errormsg() . ")", $warn)
+    if ($object->error());
+
+  if ($atot != $btot) {
+    my $wt = "Total number of events changed from before ($btot / list: $bettxt) to after applying the ECF ($atot / list: $aettxt). ";
+    vprint(6, "WARNING: $wt");
+    $warn .= $wt;
+  }
+
+  return("", $warn);
 }
 
 ##########
@@ -446,6 +557,16 @@ sub cmp_exp {
   return("");
 }
 
+##########
+
+sub vprint {
+  return if (! $verb);
+
+  my $s = "********************";
+
+
+  print substr($s, 0, shift @_), " ", join("", @_), "\n";
+}
 
 ############################################################
 
