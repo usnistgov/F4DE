@@ -150,12 +150,15 @@ my $VF_MemDump_FileHeader_gz = $VF_MemDump_FileHeader_gz_cmp
 ##########
 
 sub save_ViperFile_MemDump {
-  my ($fname, $object, $mode) = @_;
+  my ($fname, $object, $mode, $printw) = @_;
+
+  $printw = MMisc::iuv($printw, 1);
 
   return(MMisc::dump_memory_object
 	 ($fname, $VF_MemDump_Suffix, $object,
 	  $VF_MemDump_FileHeader,
-	  ($mode eq "gzip") ? $VF_MemDump_FileHeader_gz : undef )
+	  ($mode eq "gzip") ? $VF_MemDump_FileHeader_gz : undef,
+          $printw)
 	);
 }
 
