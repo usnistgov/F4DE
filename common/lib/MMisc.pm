@@ -971,6 +971,19 @@ sub split_dir_file_ext {
 
 ##########
 
+sub concat_dir_file_ext {
+  my ($dir, $file, $ext) = &iuav(\@_, "", "", "");
+
+  my $out = "";
+  $out .= "$dir/" if (! &is_blank($dir));
+  $out .= $file;
+  $out .= ".$ext" if (! &is_blank($ext));
+
+  return($out);
+}
+
+##########
+
 sub iuav { # Initialize Undefined Array of Values
   my ($ra, @dv) = @_;
 
