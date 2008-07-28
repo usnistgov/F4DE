@@ -2264,6 +2264,36 @@ sub change_ref_to_sys {
 
 ########## 'Summary'
 
+sub get_txt_and_number_of_events {
+  my ($self, $v) = @_;
+
+  return("", -1, -1) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'get_summary\' on a validated file");
+    return("", -1, -1);
+  }
+
+  my $txt = "";
+
+  my @et = $self->list_used_full_events();
+  my $et = scalar @et;
+  my $tot = 0;
+  foreach my $event (sort_events(@et)) {
+    $txt .= " $event";
+    my @ids = $self->get_event_ids($event);
+    $tot += scalar @ids;
+    next if ($v < 2);
+    $txt .= "(x" . scalar @ids . ")";
+    next if ($v < 3);
+    $txt .= "[IDs: " . join(" ", sort {$a <=> $b} @ids) . "]";
+  }
+  
+  return(MMisc::clean_begend_spaces($txt), $et, $tot);
+}
+
+#####
+
 sub get_summary {
   my ($self, $v) = @_;
 
@@ -2297,21 +2327,10 @@ sub get_summary {
   $tmp = $self->_get_fhash_file_XXX($key_fat_vframesize);
   $txt .= "| |  V Frame Size : " . (MMisc::is_blank($tmp) ? $ns : $tmp) . "\n";
 
-  $txt .= "| |   Event Types :";
-  my @et = $self->list_used_full_events();
-  my $tot = 0;
-  foreach my $event (sort_events(@et)) {
-    $txt .= " $event";
-    my @ids = $self->get_event_ids($event);
-    $tot += scalar @ids;
-    next if ($v < 2);
-    $txt .= "(x" . scalar @ids . ")";
-    next if ($v < 3);
-    $txt .= "[IDs: " . join(" ", sort {$a <=> $b} @ids) . "]";
-  }
-  $txt .= "\n";
-
+  my ($ettxt, $te, $tot) = $self->get_txt_and_number_of_events($v);
+  $txt .= "| |   Event Types : $ettxt\n";
   $txt .= "| |  Total Events : $tot\n";
+
   $txt .= "| |       Comment : " . (($self->is_comment_set()) ? $self->get_comment() : $ns) . "\n";
   
   return("") if ($self->error());
