@@ -153,9 +153,11 @@ my $isgtf = 0;
 my $fps = undef;
 my $ecffile = "";
 my $verb = 0;
+my $rtmpdir = undef;
+my $wid = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                    T V        efgh             v x   #
+# Used:                    T V        efgh           t vwx   #
 
 my %opt = ();
 GetOptions
@@ -168,7 +170,9 @@ GetOptions
    'gtf'             => \$isgtf,
    'fps=s'           => \$fps,
    'ecf=s'           => \$ecffile,
-   'Verb'            => \$verb,
+   'Verbose'         => \$verb,
+   'tempdir=s'       => \$rtmpdir,
+   'work_in_dir=s'   => \$wid,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -182,6 +186,21 @@ if ($xmllint ne "") {
 if ($xsdpath ne "") {
   MMisc::error_quit("While trying to set \'TrecVid08xsd\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xsdpath($xsdpath));
+}
+
+if (defined $rtmpdir) {
+  my $de = MMisc::check_dir_w($rtmpdir);
+  MMisc::error_quit("Problem with \'temdir\' ($rtmpdir): $de")
+    if (! MMisc::is_blank($de));
+  MMisc::error_quit("\'tempdir\' can not be used at the same time as \'work_in_dir\'")
+    if (defined $wid);
+}
+
+if (defined $wid) {
+  MMisc::error_quit("\'work_in_dir\' argument is \'siteid\'")
+    if (MMisc::is_blank($wid));
+ MMisc::error_quit("When using \'work_in_dir\', only one directory should be left on the command line")
+   if (scalar @ARGV > 1);
 }
 
 my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
@@ -209,45 +228,59 @@ my @expected_sysid_beg = ( "p-", "c-" );
 
 my @expected_dir_output = ( "output" );
 
+my %expected_sffn = &_set_expected_sffn();
+
 my $todo = scalar @ARGV;
 my $done = 0;
 foreach my $sf (@ARGV) {
-  vprint(1, "Checking \'$sf\'");
-
-  my ($err, $dir, $file, $ext) = MMisc::split_dir_file_ext($sf);
-  if (! MMisc::is_blank($err)) {
-    &valerr($sf, $err);
-    next;
-  }
-
-#  print "[$dir | $file | $ext]\n";
   my @warnings = ();
 
-  if (MMisc::is_blank($file)) {
-    &valerr($sf, "No filename detected ?");
-    next;
-  }
-
-  vprint(1, "Checking the file extension");
-  $err = &check_archive_extension($ext);
-  if (! MMisc::is_blank($err)) {
-    &valerr($sf, $err);
-    next;
-  }
-
-  vprint(1, "Get the SITE and SUB-NUM information");
-  ($err, my $site, my $subnum) = &check_archive_name($file);
-  if (! MMisc::is_blank($err)) {
-    &valerr($sf, $err);
-    next;
-  }
-  vprint(2, "<SITE> = $site / <SUBNUM> = $subnum");
-  
-  vprint(1, "Uncompress archive");
-  ($err, my $tmpdir) = &uncompress_archive($dir, $file, $ext);
-  if (! MMisc::is_blank($err)) {
-    &valerr($sf, $err);
-    next;
+  my $tmpdir = "";
+  my $site = "";
+  my $err = "";
+  if (! defined $wid) {
+    vprint(1, "Checking \'$sf\'");
+    
+    my ($err, $dir, $file, $ext) = MMisc::split_dir_file_ext($sf);
+    if (! MMisc::is_blank($err)) {
+      &valerr($sf, $err);
+      next;
+    }
+    
+    if (MMisc::is_blank($file)) {
+      &valerr($sf, "No filename detected ?");
+      next;
+    }
+    
+    vprint(1, "Checking the file extension");
+    $err = &check_archive_extension($ext);
+    if (! MMisc::is_blank($err)) {
+      &valerr($sf, $err);
+      next;
+    }
+    
+    vprint(1, "Get the SITE and SUB-NUM information");
+    ($err, $site, my $subnum) = &check_archive_name($file);
+    if (! MMisc::is_blank($err)) {
+      &valerr($sf, $err);
+      next;
+    }
+    vprint(2, "<SITE> = $site / <SUBNUM> = $subnum");
+    
+    vprint(1, "Uncompress archive");
+    ($err, $tmpdir) = &uncompress_archive($dir, $file, $ext, $rtmpdir);
+    if (! MMisc::is_blank($err)) {
+      &valerr($sf, $err);
+      next;
+    }
+  } else {
+    $site = $wid;
+    $tmpdir = $sf;
+    my $de = MMisc::check_dir_r($tmpdir);
+    MMisc::error_quit("Problem with \'work_in_dir\' directory ($tmpdir): $de")
+      if (! MMisc::is_blank($de));
+    vprint(1, "\'work_in_dir\' path");
+    vprint(2, "<SITE> = $site");
   }
   vprint(2, "Temporary directory: $tmpdir");
 
@@ -338,11 +371,16 @@ sub check_archive_name {
 ##########
 
 sub uncompress_archive {
-  my ($dir, $file, $ext) = MMisc::iuav(\@_, "", "", "");
+  my ($dir, $file, $ext, $rtmpdir) = MMisc::iuav(\@_, "", "", "", undef);
 
-  my $tmpdir = MMisc::get_tmpdir();
-  return("Problem creating temporary directory", undef)
-    if (! defined $tmpdir);
+  my $tmpdir = "";
+  if (! defined $rtmpdir) {
+    $tmpdir = MMisc::get_tmpdir();
+    return("Problem creating temporary directory", undef)
+      if (! defined $tmpdir);
+  } else {
+    $tmpdir = $rtmpdir;
+  }
 
   my $pwd = Cwd::getcwd();
 
@@ -392,11 +430,11 @@ sub check_submission_dir {
   my ($bd, $dir, $site) = @_;
 
   vprint(3, "Checking name");
-  my ($lerr) = &check_name($dir, $site);
+  my ($lerr, my $data) = &check_name($dir, $site);
   return("[$dir : $lerr]", "") if (! MMisc::is_blank($lerr));
 
   vprint(3, "Checking expected directory files");
-  ($lerr, my $lw) = &check_exp_dirfiles($bd, $dir);
+  ($lerr, my $lw) = &check_exp_dirfiles($bd, $dir, $data);
   return("[$dir : $lerr]", "") if (! MMisc::is_blank($lerr));
 
   return("", $lw);
@@ -412,10 +450,10 @@ sub check_name {
   my ($lsite, $lyear, $ltask, $ldata, $llang, $linput, $lsysid, $lversion,
       @left) = split(m%\_%, $name);
 
-  return($et . " (leftover entries: " . join(" ", @left) . ")")
+  return($et . " (leftover entries: " . join(" ", @left) . ")", "")
     if (scalar @left > 0);
 
-  return($et . " (<SITE> ($lsite) is different from submission file <SITE> ($site))")
+  return($et . " (<SITE> ($lsite) is different from submission file <SITE> ($site))", "")
     if ($site ne $lsite);
 
   my $err = "";
@@ -430,18 +468,18 @@ sub check_name {
     . join(" ", @expected_sysid_beg) . "). "
       if (! grep(m%^$b$%, @expected_sysid_beg));
   
-  return($et . $err)
+  return($et . $err, "")
     if (! MMisc::is_blank($err));
 
   vprint(4, "<SITE> = $lsite | <YEAR> = $lyear | <TASK> = $ltask | <DATA> = $ldata | <LANG> = $llang | <INPUT> = $linput | <SYSID> = $lsysid | <VERSION> = $lversion");
 
-  return("");
+  return("", $ldata);
 }
 
 ##########
 
 sub check_exp_dirfiles {
-  my ($bd, $exp) = @_;
+  my ($bd, $exp, $data) = @_;
 
   my ($derr, $rd, $rf, $ru) = MMisc::list_dirs_files("$bd/$exp");
   return($derr) 
@@ -477,9 +515,15 @@ sub check_exp_dirfiles {
   my $warns = "";
   foreach my $xf (@xmlf) {
     vprint(4, "Trying to validate XML file ($xf)");
-    my ($e, $w) = validate_xml("$bd/$exp", $xf);
-    $errs .= "[$xf : $e] " if (! MMisc::is_blank($e));
-    $warns .= "[$xf : $w] " if (! MMisc::is_blank($w));
+    my ($e, $w) = validate_xml("$bd/$exp", $xf, $data);
+    if (! MMisc::is_blank($e)) {
+      vprint(5, "ERROR: $e");
+      $errs .= "[$xf : $e] ";
+    }
+    if (! MMisc::is_blank($w)) {
+      vprint(5, "WARNING: $w");
+      $warns .= "[$xf : $w] ";
+    }
   }
 
   return($errs, $warns);
@@ -488,7 +532,7 @@ sub check_exp_dirfiles {
 ##########
 
 sub validate_xml {
-  my ($dir, $xf) = @_;
+  my ($dir, $xf, $data) = @_;
 
   my $warn = "";
 
@@ -506,21 +550,23 @@ sub validate_xml {
   return("Problem obtaining the sourcefile's filename (" . $object->get_errormsg() . ")", $warn)
     if ($object->error());
   
-  my $exp_mf = $xf;
-  $exp_mf =~ s%xml$%mpeg%;
-
-  return("Sourcefile's filename is wrong (is: $sffn) (expected: $exp_mf)", $warn)
-    if ($sffn !~ m%$exp_mf$%);
-
+  my ($derr, $dir, $exp_key, $ext) = MMisc::split_dir_file_ext($xf);
+  return("Problem splitting file and extension for ($xf)", "")
+    if (! MMisc::is_blank($derr));
+  
+  return("Could not find matching sourcefile filename for <DATA> ($data) and xml file ($xf)", "")
+    if (! exists $expected_sffn{$data}{$exp_key});
+  
+  my $exp_sffn = $expected_sffn{$data}{$exp_key};
+  return("Sourcefile's filename is wrong (is: $sffn) (expected: $exp_sffn)", $warn)
+    if ($sffn !~ m%$exp_sffn$%);
+  
   my ($bettxt, $bte, $btot) = $object->get_txt_and_number_of_events(3);
   return("Problem obtaining the number of events (" . $object->get_errormsg() . ")", $warn)
     if ($object->error());
 
-  if ($btot == 0) {
-    my $wt = "Found no events in file. ";
-    vprint(6, "WARNING: $wt");
-    $warn .= $wt;
-  }
+  $warn .= "Found no events in file. "
+    if ($btot == 0);
   
   return("", $warn)
     if (! $useECF);
@@ -537,12 +583,9 @@ sub validate_xml {
   return("Problem obtaining the number of events (after ECF) (" . $object->get_errormsg() . ")", $warn)
     if ($object->error());
 
-  if ($atot != $btot) {
-    my $wt = "Total number of events changed from before ($btot / list: $bettxt) to after applying the ECF ($atot / list: $aettxt). ";
-    vprint(6, "WARNING: $wt");
-    $warn .= $wt;
-  }
-
+  $warn .= "Total number of events changed from before ($btot / list: $bettxt) to after applying the ECF ($atot / list: $aettxt). "
+    if ($atot != $btot);
+  
   return("", $warn);
 }
 
@@ -570,20 +613,89 @@ sub vprint {
 
 ############################################################
 
+sub _set_expected_sffn {
+  my %tmp = (
+    'DEV08' =>
+    {
+     'LGW_20071101_E1_CAM1' => 'LGW_20071101_E1_CAM1.mpeg',
+     'LGW_20071101_E1_CAM2' => 'LGW_20071101_E1_CAM2.mpeg',
+     'LGW_20071101_E1_CAM3' => 'LGW_20071101_E1_CAM3.mpeg',
+     'LGW_20071101_E1_CAM4' => 'LGW_20071101_E1_CAM4.mpeg',
+     'LGW_20071101_E1_CAM5' => 'LGW_20071101_E1_CAM5.mpeg',
+     'LGW_20071106_E1_CAM1' => 'LGW_20071106_E1_CAM1.mpeg',
+     'LGW_20071106_E1_CAM2' => 'LGW_20071106_E1_CAM2.mpeg',
+     'LGW_20071106_E1_CAM3' => 'LGW_20071106_E1_CAM3.mpeg',
+     'LGW_20071106_E1_CAM4' => 'LGW_20071106_E1_CAM4.mpeg',
+     'LGW_20071106_E1_CAM5' => 'LGW_20071106_E1_CAM5.mpeg',
+     'LGW_20071107_E1_CAM1' => 'LGW_20071107_E1_CAM1.mpeg',
+     'LGW_20071107_E1_CAM2' => 'LGW_20071107_E1_CAM2.mpeg',
+     'LGW_20071107_E1_CAM3' => 'LGW_20071107_E1_CAM3.mpeg',
+     'LGW_20071107_E1_CAM4' => 'LGW_20071107_E1_CAM4.mpeg',
+     'LGW_20071107_E1_CAM5' => 'LGW_20071107_E1_CAM5.mpeg',
+     'LGW_20071108_E1_CAM1' => 'LGW_20071108_E1_CAM1.mpeg',
+     'LGW_20071108_E1_CAM2' => 'LGW_20071108_E1_CAM2.mpeg',
+     'LGW_20071108_E1_CAM3' => 'LGW_20071108_E1_CAM3.mpeg',
+     'LGW_20071108_E1_CAM4' => 'LGW_20071108_E1_CAM4.mpeg',
+     'LGW_20071108_E1_CAM5' => 'LGW_20071108_E1_CAM5.mpeg',
+     'LGW_20071112_E1_CAM1' => 'LGW_20071112_E1_CAM1.mpeg',
+     'LGW_20071112_E1_CAM2' => 'LGW_20071112_E1_CAM2.mpeg',
+     'LGW_20071112_E1_CAM3' => 'LGW_20071112_E1_CAM3.mpeg',
+     'LGW_20071112_E1_CAM4' => 'LGW_20071112_E1_CAM4.mpeg',
+     'LGW_20071112_E1_CAM5' => 'LGW_20071112_E1_CAM5.mpeg',
+    },
+    'EVAL08' =>
+    { 
+      'LGW_20071123_E1_CAM1' => 'LGW_20071123_E1_CAM1.mpeg',
+      'LGW_20071123_E1_CAM2' => 'LGW_20071123_E1_CAM2.mpeg',
+      'LGW_20071123_E1_CAM3' => 'LGW_20071123_E1_CAM3.mpeg',
+      'LGW_20071123_E1_CAM4' => 'LGW_20071123_E1_CAM4.mpeg',
+      'LGW_20071123_E1_CAM5' => 'LGW_20071123_E1_CAM5.mpeg',
+      'LGW_20071130_E1_CAM1' => 'LGW_20071130_E1_CAM1.mpeg',
+      'LGW_20071130_E1_CAM2' => 'LGW_20071130_E1_CAM2.mpeg',
+      'LGW_20071130_E1_CAM3' => 'LGW_20071130_E1_CAM3.mpeg',
+      'LGW_20071130_E1_CAM4' => 'LGW_20071130_E1_CAM4.mpeg',
+      'LGW_20071130_E1_CAM5' => 'LGW_20071130_E1_CAM5.mpeg',
+      'LGW_20071130_E2_CAM1' => 'LGW_20071130_E2_CAM1.mpeg',
+      'LGW_20071130_E2_CAM2' => 'LGW_20071130_E2_CAM2.mpeg',
+      'LGW_20071130_E2_CAM3' => 'LGW_20071130_E2_CAM3.mpeg',
+      'LGW_20071130_E2_CAM4' => 'LGW_20071130_E2_CAM4.mpeg',
+      'LGW_20071130_E2_CAM5' => 'LGW_20071130_E2_CAM5.mpeg',
+      'LGW_20071206_E1_CAM1' => 'LGW_20071206_E1_CAM1.mpeg',
+      'LGW_20071206_E1_CAM2' => 'LGW_20071206_E1_CAM2.mpeg',
+      'LGW_20071206_E1_CAM3' => 'LGW_20071206_E1_CAM3.mpeg',
+      'LGW_20071206_E1_CAM4' => 'LGW_20071206_E1_CAM4.mpeg',
+      'LGW_20071206_E1_CAM5' => 'LGW_20071206_E1_CAM5.mpeg',
+      'LGW_20071207_E1_CAM1' => 'LGW_20071207_E1_CAM1.mpeg',
+      'LGW_20071207_E1_CAM2' => 'LGW_20071207_E1_CAM2.mpeg',
+      'LGW_20071207_E1_CAM3' => 'LGW_20071207_E1_CAM3.mpeg',
+      'LGW_20071207_E1_CAM4' => 'LGW_20071207_E1_CAM4.mpeg',
+      'LGW_20071207_E1_CAM5' => 'LGW_20071207_E1_CAM5.mpeg',
+    }
+    );
+
+  return(%tmp);
+}
+
+############################################################
+
 sub set_usage {
   my $xsdfiles = join(" ", @xsdfilesl);
   my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--ViperValidator prog] file.tgz [file.tgz [...]]
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-gtf] [--ecf ecffile --fps fps] [--tempdir dir | --work_in_dir site] [--Verbose] file.tgz [file.tgz [...]]
 
 Will confirm that a submission file conform to the 'Submission Instructions'
 
  Where:
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --ViperValidator  Location of the TV08ViperValidator program
+  --gtf           Specify that the XML files are Ground Truth Files
+  --ecf           Specify the ECF file to load
+  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
+  --tempdir       Specify the directory in which the tgz file will be uncompressed
+  --work_in_dir   By all steps up to and including uncompression and work with files in the specified directory (useful to confirm a submission before generating its tgz)
   --version       Print version number and exit
   --help          Print this usage information and exit
 
