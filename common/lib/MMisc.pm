@@ -143,6 +143,17 @@ sub is_blank {
   return(($txt =~ m%^\s*$%));
 }
 
+#####
+
+sub are_blank {
+  foreach my $i (@_) {
+    my $r = &is_blank($i);
+    return(0) if (! $r);
+  }
+
+  return(1);
+}
+
 ##########
 
 sub clean_begend_spaces {
