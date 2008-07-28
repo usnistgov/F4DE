@@ -57,7 +57,7 @@ if ($ms > 0) {
 }
 
 ##########
-print "** Checking for xmllint:\n";
+print "\n** Checking for xmllint:\n";
 my $xmllint_env = "TV08_XMLLINT";
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
 if ($xmllint ne "") {
