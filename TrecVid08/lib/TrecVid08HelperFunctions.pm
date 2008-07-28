@@ -334,3 +334,40 @@ sub add_ViperFileObservations2EventList {
 
   return("", $tobs, $added, $rejected);
 }
+
+####################
+
+sub get_new_ViperFile_from_ViperFile_and_ECF {
+  my ($vf, $ecfobj) = @_;
+
+  my $el = new TrecVid08EventList();
+  return("Problem creating the EventList (" . $el->get_errormsg() . ")", undef)
+    if ($el->error());
+
+  return("Problem tying EventList to ECF " . $el->get_errormsg() . ")", undef)
+    if (! $el->tie_to_ECF($ecfobj));
+
+  my ($terr, $tobs, $added, $rejected) = 
+    TrecVid08HelperFunctions::add_ViperFileObservations2EventList($vf, $el, 1);
+  return("Problem adding ViperFile Observations to EventList: $terr", undef)
+    if (! MMisc::is_blank($terr));
+  
+  my $sffn = $vf->get_sourcefile_filename();
+  return("Problem obtaining the sourcefile's filename (" . $vf->get_errormsg() . ")", undef)
+    if ($vf->error());
+
+  my $tvf = $vf->clone_with_no_events();
+  return("Problem while cloning the ECF modifed ViperFile", undef)
+    if (! defined $tvf);
+
+  return("File ($sffn) is not in EventList", undef)
+    if (! $el->is_filename_in($sffn));
+
+  my @ao = $el->get_all_Observations($sffn);
+  foreach my $obs (@ao) {
+    return("Problem adding EventList Observation to new ViperFile (" . $tvf->get_errormsg() .")", undef)
+      if ( (! $tvf->add_observation($obs, 1)) || ($tvf->error()) );
+  }
+
+  return("", $tvf);
+}
