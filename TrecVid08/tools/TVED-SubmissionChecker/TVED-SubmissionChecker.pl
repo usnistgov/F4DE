@@ -178,7 +178,7 @@ GetOptions
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-MMisc::error_quit("No arguments left on command line\n$usage\n")
+MMisc::error_quit("No arguments left on command line\n\n$usage\n")
   if (scalar @ARGV == 0);
 
 if ($xmllint ne "") {
@@ -455,10 +455,11 @@ sub check_name {
   return($et . " (leftover entries: " . join(" ", @left) . ")", "")
     if (scalar @left > 0);
 
-  return($et . " (<SITE> ($lsite) is different from submission file <SITE> ($site))", "")
+  my $err = "";
+
+  $err .= " <SITE> ($lsite) is different from submission file <SITE> ($site)."
     if ($site ne $lsite);
 
-  my $err = "";
   $err .= &cmp_exp("<YEAR>", $lyear, @expected_year);
   $err .= &cmp_exp("<TASK>", $ltask, @expected_task);
   $err .= &cmp_exp("<DATA>", $ldata, @expected_data);
@@ -470,6 +471,10 @@ sub check_name {
     . join(" ", @expected_sysid_beg) . "). "
       if (! grep(m%^$b$%, @expected_sysid_beg));
   
+  $err . "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
+    if ( ($lversion !~ m%^\d+$%) || ($lversion =~ m%^0%) || ($lversion > 19) );
+  # More than 19 submissions would make anybody suspicious ;)
+
   return($et . $err, "")
     if (! MMisc::is_blank($err));
 
