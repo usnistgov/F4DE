@@ -178,6 +178,9 @@ GetOptions
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
+MMisc::error_quit("No arguments left on command line\n$usage\n")
+  if (scalar @ARGV == 0);
+
 if ($xmllint ne "") {
   MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xmllint($xmllint));
@@ -382,9 +385,8 @@ sub uncompress_archive {
     $tmpdir = $rtmpdir;
   }
 
-  my $pwd = Cwd::getcwd();
-
-  my $f = ( (MMisc::is_blank($dir)) ? $pwd : $dir) . "/$file.$ext";
+  my $pwd = Cwd::cwd();
+  my $f = Cwd::abs_path(MMisc::concat_dir_file_ext($dir, $file, $ext));
   
   my $cmdline = "tar xfz $f";
 
@@ -695,7 +697,7 @@ Will confirm that a submission file conform to the 'Submission Instructions'
   --ecf           Specify the ECF file to load
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --tempdir       Specify the directory in which the tgz file will be uncompressed
-  --work_in_dir   By all steps up to and including uncompression and work with files in the specified directory (useful to confirm a submission before generating its tgz)
+  --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified instead of file.tgz (useful to confirm a submission before generating its tgz)
   --version       Print version number and exit
   --help          Print this usage information and exit
 
