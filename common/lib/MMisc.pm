@@ -145,7 +145,18 @@ sub is_blank {
 
 #####
 
-sub are_blank {
+sub any_blank {
+  foreach my $i (@_) {
+    my $r = &is_blank($i);
+    return(1) if ($r);
+  }
+
+  return(0);
+}
+
+#####
+
+sub all_blank {
   foreach my $i (@_) {
     my $r = &is_blank($i);
     return(0) if (! $r);
@@ -459,8 +470,8 @@ sub are_float_equal {
 ##########
 
 sub dump_memory_object {
-  my ($file, $ext, $obj, $txt_fileheader, $gzip_fileheader) =
-    &iuav(\@_, "", "", undef, undef, undef);
+  my ($file, $ext, $obj, $txt_fileheader, $gzip_fileheader, $printfn) =
+    &iuav(\@_, "", "", undef, undef, undef, 1);
 
   return(0) if (! defined $obj);
   
@@ -479,7 +490,7 @@ sub dump_memory_object {
     # Otherwise, we will write the text version
   }
 
-  return( &writeTo($file, $ext, 1, 0, $str, "", "", $fileheader, "") );
+  return( &writeTo($file, $ext, $printfn, 0, $str, "", "", $fileheader, "") );
 }
 
 #####
@@ -975,9 +986,18 @@ sub concat_dir_file_ext {
   my ($dir, $file, $ext) = &iuav(\@_, "", "", "");
 
   my $out = "";
-  $out .= "$dir/" if (! &is_blank($dir));
+
+  if (! &is_blank($dir)) {
+    $dir =~ s%/$%%;
+    $out .= "$dir/";
+  }
+
   $out .= $file;
-  $out .= ".$ext" if (! &is_blank($ext));
+
+  if (! &is_blank($ext)) {
+    $ext =~ s%^\.%%;
+    $out .= ".$ext" 
+  }
 
   return($out);
 }
