@@ -126,7 +126,6 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 my $ecfobj = new TrecVid08ECF();
 my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
 
-
 ########################################
 # Options processing
 
@@ -180,7 +179,7 @@ GetOptions
    'WriteMemDump:s'  => \$MemDump,
    'ForceFilename=s' => \$forceFilename,
    'displaySummary:i' => \$dosummary,
-   'ecf=s'            => \$ecffile,
+   'ecf=s'           => \$ecffile,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -334,9 +333,17 @@ while ($tmp = shift @ARGV) {
   $object->unset_force_subtype() if ($remse);
 
   # ECF work ?
-  my $object = ($useECF) ? &process_ECF($object, $ecfobj) : $object;
+  if ($useECF) {
+    my ($lerr, $obj) =
+      TrecVid08HelperFunctions::get_new_ViperFile_from_ViperFile_and_ECF($object, $ecfobj);
+    MMisc::error_quit($lerr)
+      if (! MMisc::is_blank($lerr));
+    $object = $obj;
+  }
   MMisc::error_quit("Problem with ViperFile object")
     if (! defined $object);
+  MMisc::error_quit("Problem with ViperFile object (" . $object->get_errormsg() . ")")
+    if ($object->error());
 
   ###### Then do the rest
 
@@ -426,43 +433,6 @@ sub load_file {
   }
 
   return($retstatus, $object);
-}
-
-####################
-
-sub process_ECF {
-  my ($vf, $ecfobj) = @_;
-
-  my $el = new TrecVid08EventList();
-  MMisc::error_quit("Problem creating the EventList (" . $el->get_errormsg() . ")")
-    if ($el->error());
-
-  MMisc::error_quit("Problem tying EventList to ECF " . $el->get_errormsg() . ")")
-    if (! $el->tie_to_ECF($ecfobj));
-
-  my ($terr, $tobs, $added, $rejected) = 
-    TrecVid08HelperFunctions::add_ViperFileObservations2EventList($vf, $el, 1);
-  MMisc::error_quit("Problem adding ViperFile Observations to EventList: $terr")
-    if (! MMisc::is_blank($terr));
-  
-  my $sffn = $vf->get_sourcefile_filename();
-  MMisc::error_quit("Problem obtaining the sourcefile's filename (" . $vf->get_errormsg() . ")")
-    if ($vf->error());
-
-  my $tvf = $vf->clone_with_no_events();
-  MMisc::error_quit("Problem while cloning the ECF modifed ViperFile")
-    if (! defined $tvf);
-
-  MMisc::error_quit("File ($sffn) is not in EventList")
-    if (! $el->is_filename_in($sffn));
-
-  my @ao = $el->get_all_Observations($sffn);
-  foreach my $obs (@ao) {
-    MMisc::error_quit("Problem adding EventList Observation to new ViperFile (" . $tvf->get_errormsg() .")")
-      if ( (! $tvf->add_observation($obs, 1)) || ($tvf->error()) );
-  }
-
-  return($tvf);
 }
 
 ########################################
