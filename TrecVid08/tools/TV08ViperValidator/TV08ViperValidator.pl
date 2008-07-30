@@ -178,7 +178,7 @@ GetOptions
    'ChangeType:s'    => \$changetype,
    'WriteMemDump:s'  => \$MemDump,
    'ForceFilename=s' => \$forceFilename,
-   'displaySummary:i' => \$dosummary,
+   'displaySummary=i' => \$dosummary,
    'ecf=s'           => \$ecffile,
    # Hiden Option(s)
    'show_internals'  => \$show,
@@ -462,7 +462,7 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
         S<[B<--WriteMemDump> [I<mode>]]
         S<[B<--ForceFilename> I<filename>] ]>
         S<[B<--fps> I<fps>] [B<--ecf> I<ecffile>]>
-        S<[B<--displaySummary [I<level>]]>
+        S<[B<--displaySummary I<level>]>
         I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
 
 =head1 DESCRIPTION
@@ -649,7 +649,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename]] [--fps fps] [--ecf ecffile] [--displaySummary [level]] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename]] [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
