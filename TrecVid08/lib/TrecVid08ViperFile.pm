@@ -1049,7 +1049,7 @@ sub _get_short_sf_file {
   $txt =~ s%^.+\:%%g;
 
   # Remove all paths
-  $txt =~ s%^.+\/%%g;
+  $txt =~ s%^.*\/%%g;
 
   # lowercase
   #  $txt = lc($txt);
