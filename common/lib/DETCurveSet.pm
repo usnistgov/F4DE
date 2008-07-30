@@ -131,7 +131,7 @@ sub renderAsTxt(){
 
   ### Biuld the combined and separate DET PNGs
   my $multiInfo = {()};
-  if ($buildCurves && $DETOptions->{BuildPNG}) {
+  if ($buildCurves) {
     my @DETs = ();
     foreach my $item (@{ $self->{DETList} }) {
       push @DETs, $item->{DET} if ($item->{DET}->successful);
