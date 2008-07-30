@@ -236,10 +236,10 @@ if ($useECF) {
 ########################################
 
 # Expected values
-my @expected_ext = ( "tgz" );
+my @expected_ext = ( "tgz", "tar", "tar.gz", "tar.bz2", "zip" ); # keep Order
 my @expected_year = ( "2008" );
 my @expected_task = ( "retroED" );
-my @expected_data = ( "DEV08", "EVAL08" );
+my @expected_data = ( "DEV08", "EVAL08" ); # keep Order
 my @expected_lang = ( "ENG" );
 my @expected_input = ( "s-camera" );
 my @expected_sysid_beg = ( "p-", "c-" );
@@ -247,12 +247,14 @@ my @expected_sysid_beg = ( "p-", "c-" );
 my @expected_dir_output = ( "output" );
 
 my %expected_sffn = &_set_expected_sffn();
+my %exp_ext_cmd = &_set_exp_ext_cmd();
 
 my $todo = scalar @ARGV;
 my $done = 0;
 foreach my $sf (@ARGV) {
   my @warnings = ();
 
+  my $ok = 1;
   my $tmpdir = "";
   my $site = "";
   my $err = "";
@@ -283,7 +285,7 @@ foreach my $sf (@ARGV) {
       &valerr($sf, $err);
       next;
     }
-    vprint(2, "<SITE> = $site / <SUBNUM> = $subnum");
+    vprint(2, "<SITE> = $site | <SUBNUM> = $subnum");
     
     vprint(1, "Uncompress archive");
     ($err, $tmpdir) = &uncompress_archive($dir, $file, $ext, $rtmpdir);
@@ -314,14 +316,19 @@ foreach my $sf (@ARGV) {
     my ($derr, $rd, $rf, $ru) = MMisc::list_dirs_files("$tmpdir/$odir");
     if (! MMisc::is_blank($derr)) {
       &valerr($sf, $derr);
+      $ok = 0;
       next;
     }
-    if ( (scalar @$rf > 0) || (scalar @$ru > 0) ) {
-      &valerr($sf, "Found more than just directories");
+    my @left = @$rf;
+    push @left, @$ru;
+    if (scalar @left > 0) {
+      &valerr($sf, "Found more than just directories (" . join(" ", @left) . ")");
+      $ok = 0;
       next;
     }
     if (scalar @$rd == 0) {
       &valerr($sf, "Found no submission directory");
+      $ok = 0;
       next;
     }
     foreach my $sdir (sort @$rd) {
@@ -329,14 +336,18 @@ foreach my $sf (@ARGV) {
       ($err, my $warn) = &check_submission_dir("$tmpdir/$odir", $sdir, $site);
       if (! MMisc::is_blank($err)) {
         &valerr($sf, $err);
+        $ok = 0;
+        next;
       }
       push @warnings, $warn
         if (! MMisc::is_blank($warn));
     }
   }
 
-  &valok($sf, "ok" .((scalar @warnings > 0) ? (" -- WARNINGS: " . join(". ", @warnings)) : "") );
-  $done++;
+  if ($ok) {
+    &valok($sf, "ok" .((scalar @warnings > 0) ? (" -- WARNINGS: " . join(". ", @warnings)) : "") );
+    $done ++;
+  }
 }
 
 my @lin = ();
@@ -346,7 +357,8 @@ MMisc::ok_quit
   (
    "All submission processed (OK: $done / Total: $todo)\n" 
    . ((scalar @lin == 0) ? "" :
-      "\nIMPORTANT NOTES:\n - " . join("\n - ", @lin) . "\n")
+      ($done ? "\nIMPORTANT NOTES:\n - " . join("\n - ", @lin) . "\n" : "")
+   )
   );
 
 ########## END
@@ -373,7 +385,7 @@ sub valerr {
 sub check_archive_extension {
   my $ext = MMisc::iuv(shift @_, "");
 
-  return(&cmp_exp("file extension", $ext, @expected_ext));
+  return(&cmp_exp("file extension", lc($ext), @expected_ext));
 }
 
 ##########
@@ -417,7 +429,11 @@ sub uncompress_archive {
   return("Problem finding requested sourcefile ($lf): $ferr")
     if (! MMisc::is_blank($ferr));
 
-  my $cmdline = "tar xfz $f";
+  my $lext = lc($ext);
+  return("Could not find extension ($ext) approved command line ?")
+    if (! exists $exp_ext_cmd{$lext});
+
+  my $cmdline = $exp_ext_cmd{$lext} . " $f";
 
   chdir($tmpdir);
   my ($retcode, $stdout, $stderr) = MMisc::do_system_call($cmdline);
@@ -439,8 +455,10 @@ sub check_for_output_dir {
 
   my ($err, $rd, $rf, $ru) = MMisc::list_dirs_files($tmpdir);
 
-  return("Found files where only directories expected")
-    if ( (scalar @$rf > 0) || (scalar @$ru > 0) );
+  my @left = @$rf;
+  push @left, @$ru;
+  return("Found files where only directories expected (seen: " . join(" ", @left) .")")
+    if (scalar @left > 0);
   
   my @d = @$rd;
 
@@ -525,12 +543,15 @@ sub check_exp_dirfiles {
   return($derr) 
     if (! MMisc::is_blank($derr));
 
-  return("Found more than just files")
-    if ( (scalar @$rd > 0) || (scalar @$ru > 0) );
+  my @left = @$rd;
+  push @left, @$ru;
+  return("Found more than just files (" . join(" ", @left) . ")")
+    if (scalar @left > 0);
 
-  return("Found no submission files")
+  return("Found no files")
     if (scalar @$rf == 0);
 
+  my %leftf = MMisc::array1d_to_count_hash(@$rf);
   vprint(4, "Checking for expected text file");
   my $expected_exp = "$exp.txt";
   my @txtf = grep(m%\.txt$%, @$rf);
@@ -541,13 +562,15 @@ sub check_exp_dirfiles {
   return("Could not find the expected \'.txt\' file ($expected_exp) (seen: " . join(" ", @txtf) . ")")
     if (! grep(m%$expected_exp$%, @txtf));
   vprint(5, "Found: $expected_exp (note: does not check content of file)");
+  delete $leftf{$expected_exp};
 
   vprint(4, "Checking for XML files");
   my @xmlf = grep(m%\.xml$%, @$rf);
   return("Found no \'.xml\' file. ")
     if (scalar @xmlf == 0);
-  return("More than just \'.txt\' and \'.xml\' files in directory. ")
-    if ((scalar @xmlf + scalar @txtf) != (scalar @$rf));
+  foreach my $xf (@xmlf) { delete $leftf{$xf}; }
+  return("More than just \'.txt\' and \'.xml\' files in directory (" . join(" ", keys %leftf) . ")")
+    if (scalar keys %leftf > 0);
   vprint(5, "Found: " . join(" ", @xmlf));
 
   # Try to validate the XML file
@@ -684,7 +707,7 @@ sub vprint {
 
 sub _set_expected_sffn {
   my %tmp = (
-    'DEV08' =>
+    $expected_data[0] =>
     {
      'LGW_20071101_E1_CAM1' => 'LGW_20071101_E1_CAM1.mpeg',
      'LGW_20071101_E1_CAM2' => 'LGW_20071101_E1_CAM2.mpeg',
@@ -712,7 +735,7 @@ sub _set_expected_sffn {
      'LGW_20071112_E1_CAM4' => 'LGW_20071112_E1_CAM4.mpeg',
      'LGW_20071112_E1_CAM5' => 'LGW_20071112_E1_CAM5.mpeg',
     },
-    'EVAL08' =>
+    $expected_data[1] =>
     { 
       'LGW_20071123_E1_CAM1' => 'LGW_20071123_E1_CAM1.mpeg',
       'LGW_20071123_E1_CAM2' => 'LGW_20071123_E1_CAM2.mpeg',
@@ -740,6 +763,19 @@ sub _set_expected_sffn {
       'LGW_20071207_E1_CAM4' => 'LGW_20071207_E1_CAM4.mpeg',
       'LGW_20071207_E1_CAM5' => 'LGW_20071207_E1_CAM5.mpeg',
     }
+    );
+
+  return(%tmp);
+}
+
+sub _set_exp_ext_cmd {
+  my %tmp = 
+    (
+     $expected_ext[0] => "tar xfz",
+     $expected_ext[1] => "tar xf",
+     $expected_ext[2] => "tar xfz",
+     $expected_ext[3] => "tar xfj",
+     $expected_ext[4] => "unzip",
     );
 
   return(%tmp);
