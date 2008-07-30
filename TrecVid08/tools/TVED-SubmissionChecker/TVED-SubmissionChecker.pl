@@ -651,7 +651,7 @@ sub validate_xml {
   return("Problem obtaining the number of events (after ECF) (" . $nobject->get_errormsg() . ")", $warn)
     if ($nobject->error());
 
-  $warn .= "Total number of events changed from before ($btot / list: $bettxt) to after applying the ECF ($atot / list: $aettxt). "
+  $warn .= "Total number of events changed from before ($btot) to after applying the ECF ($atot). "
     if ($atot != $btot);
 
   return("", $warn);
