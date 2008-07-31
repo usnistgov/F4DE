@@ -159,5 +159,8 @@ sub combBlockSetCalc(){
    $missAvg, $missSSD, $faAvg, $faSSD);
 }
 
+sub isCompatible(){
+  1;
+}
 
 1;
