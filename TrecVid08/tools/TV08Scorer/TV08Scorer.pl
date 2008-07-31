@@ -183,6 +183,10 @@ my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
 my $E_d = 1E-6;
 my $E_t = 1E-8;
 
+my $CostMiss = 10;
+my $CostFA = 1;
+my $Rtarget = 1.8;
+
 ########################################
 # Options processing
 
@@ -214,12 +218,12 @@ my $observationContingencyTable = 0;
 my $writexml = undef;
 my $autolt = 0;
 my $ltse = 0;
+my @asked_events = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:    DEFG       O   ST     Za  cdefgh  lmnop  st vwx  
+# Used:   CDEFG    LM O  RST     Za  cdefgh  lmnop  st vwx  
 
 my %opt = ();
-my $dbgftmp = "";
 my @leftover = ();
 GetOptions
   (
@@ -247,7 +251,11 @@ GetOptions
    'observationCont' => \$observationContingencyTable,
    'writexml:s'      => \$writexml,
    'pruneEvents'     => \$autolt,
-   'limittosysevents' => \$ltse,
+   'LimittoSYSEvents' => \$ltse,
+   'limitto=s'       => \@asked_events,
+   'MissCost=f'      => \$CostMiss,
+   'CostFA=f'        => \$CostFA,
+   'Rtarget=f'       => \$Rtarget,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -293,6 +301,16 @@ MMisc::error_quit("No REF file(s) provided, can not perform scoring")
 
 MMisc::error_quit("\'OutputFileRoot\' required to produce the PNGs")
   if ($doDC && (! $noPNG) && (! defined $outputRootFile));
+
+if (scalar @asked_events == 0) {
+  @asked_events = @ok_events;
+} else {
+  MMisc::error_quit("Can not use \'limitto\' in conjunction with \'LimittoSYSEvents\'")
+    if ($ltse);
+  @asked_events = $dummy->validate_events_list(@asked_events);
+  MMisc::error_quit("While checking \'limitto\' events list (" . $dummy->get_errormsg() .")")
+    if ($dummy->error());
+}
 
 ########## Main processing
 my $stepc = 1;
@@ -351,6 +369,16 @@ print "** Only in REF (", scalar @only_in_ref, "): ", join(" ", @only_in_ref), "
 my $fcount = (scalar @common) + (scalar @only_in_sys) + (scalar @only_in_ref);
 MMisc::error_quit("Can not continue, no file in any list ?") if ($fcount == 0);
 
+if ($useECF) {
+  my ($err, $rmiss, $rnotin) = TrecVid08HelperFunctions::confirm_all_ECF_sffn_are_listed($ecfobj, @common);
+  MMisc::error_quit($err)
+    if (! MMisc::is_blank($err));
+  MMisc::error_quit("Can not perform soring (comparing ECF to common list): the following files are present in the ECF but not in the common list: " . join(" ", @$rmiss))
+    if (scalar @$rmiss > 0);
+ MMisc::warn_print("FYI (comparing ECF to common list): the following files are not listed in the ECF, and therefore will not be scored against: " . join(" ", @$rnotin))
+   if (scalar @$rnotin > 0);
+}
+
 ## Prepare event lists for scoring
 print "\n\n***** STEP ", $stepc++, ": Aligning Files and Events\n\n";
 $sysEL->set_delta_t($delta_t);
@@ -365,14 +393,14 @@ my %metrics_params = ( TOTALDURATION => $duration ) ;
 my @all_events = ();
 my $key_allevents= "AllEvents";
 push @all_events, $key_allevents;
-push @all_events, @ok_events;
+push @all_events, @asked_events;
 my %all_trials = ();
 my %all_metric = ();
 my %trials_c = ();
 foreach my $event (@all_events) {
   my $trial = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
   $all_trials{$event} = $trial;
-  $all_metric{$event} = new MetricTV08({ ('CostMiss' => 10, 'CostFA' => 1, 'Rtarget' => 1.8 ) }, $trial);
+  $all_metric{$event} = new MetricTV08({ ('CostMiss' => $CostMiss, 'CostFA' => $CostFA, 'Rtarget' => $Rtarget ) }, $trial);
 }
 my $gtrial = $all_trials{$key_allevents};
 
@@ -397,7 +425,8 @@ if ($observationContingencyTable) {
 
 print "\n\n***** STEP ", $stepc++, ": Dump of Analysis Report\n";
 my $detSet = new DETCurveSet($sysTitle);
-  
+
+print "Computed using:  Rtarget = $Rtarget | CostMiss = $CostMiss | CostFA = $CostFA\n";
 print " (only printing seen events)\n\n";
 foreach my $event (@all_events) {
   next if (! exists $trials_c{$event});
@@ -513,7 +542,7 @@ sub load_preprocessing {
     # This is really if you are a debugger
     if ($showi > 2) {
       print("** Observation representation:\n");
-      foreach my $i (@ok_events) {
+      foreach my $i (@asked_events) {
         print("-- EVENT: $i\n");
         my @bucket = $object->get_event_observations($i);
         MMisc::error_quit("While \'get_event\'observations\' (" . $object->get_errormsg() .")")
@@ -671,7 +700,8 @@ sub do_alignment {
       if ($refEL->error());
 
     if (scalar @ref_events + scalar @sys_events == 0) {
-      print "|->File: $file\n -- No Events, skipping\n\n";
+      print "|->File: $file\n";
+      print " -- No Events, skipping\n\n";
       next;
     }
 
@@ -681,22 +711,35 @@ sub do_alignment {
       my @leftover = @$rlb;
       @ref_events = ();
 
+      print "|->File: $file\n";
       if (scalar @leftover > 0) {
-	print "|-> File: $file\n -- Will not process the following event(s) (not present in the matching sys files): ", join(" ", @leftover), "\n";
-
-	my @listed_events = MMisc::make_array_of_unique_values(@sys_events, @ref_events);
-	if (scalar @listed_events == 0) {
-	  print " -- No Events left, skipping\n\n";
-	  next;
-	}
-	print "\n";
+        print " -- Will not process the following event(s) (not present in the matching sys files): ", join(" ", @leftover), "\n";
       }
+        
+      my @listed_events = MMisc::make_array_of_unique_values(@sys_events, @ref_events);
+      if (scalar @listed_events == 0) {
+        print " -- No Events left, skipping\n\n";
+        next;
+      }
+      print " -- Will only process the following event(s): ", join(" ", @listed_events), "\n";
+      print "\n";
+    } elsif (scalar @asked_events != scalar @ok_events) {
+      print "|->File: $file\n";
+      print " -- Will only score on the following events: ", join(" ", @asked_events), "\n";
+      my ($rla, $rlb) = MMisc::confirm_first_array_values(\@asked_events, @sys_events);
+      @sys_events = @$rla;
+      print " -- Left in SYS Event list: ", join(" ", @sys_events), "\n";
+      
+      my ($rla, $rlb) = MMisc::confirm_first_array_values(\@asked_events, @ref_events);
+      @ref_events = @$rla;
+      print " -- Left in REF Event list: ", join(" ", @ref_events), "\n";
     }
 
     my @listed_events = MMisc::make_array_of_unique_values(@sys_events, @ref_events);
 
     if (scalar @listed_events == 0) {
-      print "|->File: $file\n -- No Events, skipping\n\n";
+      print "|->File: $file\n";
+      print " -- No Events, skipping\n\n";
       next;
     }
 
@@ -1062,6 +1105,8 @@ B<TV08Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
     S<[B<--OutputFileRoot> I<filebase>]>
     S<[B<--computeDETCurve>] [B<--titleOfSys> I<title>]>
     S<[B<--ZipPROG> I<gzip>] [B<--noPNG> | B<--GnuplotPROG> I<gnuplot>]]>
+    S<[B<--LimittoSYSEvents> | B<--limitto> I<event1>[,I<event2>[I<...>]]]>
+    S<[B<--MissCost> I<value>] [B<--CostFA> I<value>] [B<--Rtarget> I<value>]> 
     S<[B<--ecf> I<ecffile>]>
     S<B<--deltat> I<deltat>>
     S<B<--fps> I<fps>>
@@ -1215,7 +1260,7 @@ Specify that the files past this marker are reference files.
 
 Display the usage page for this program. Also display some default values and information.
 
-=item B<--limittosysevents>
+=item B<--LimittoSYSEvents>
 
 Request that scoring only be done on I<Events> present in the sys files for a given sourcefile filename. In other words, if a ref file contains all event type, and the sys file only a handful of events, only align and score on the events seen in the sys file.
 
@@ -1312,7 +1357,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--showAT] [--allAT] [--limittosysevents] [--writexml [dir] [--pruneEvents]] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--MissCost value] [--CostFA value] [--Rtarget value] [--showAT] [--allAT] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--pruneEvents]] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -1323,11 +1368,15 @@ Will Score the XML file(s) provided (Truth vs System)
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
   --ecf           Specify the ECF file to load and perform scoring against
+  --MissCost      Set the Metric's Cost of a Miss Cost value (for DET Curves) (default: $CostMiss)
+  --CostFA        Set the Mertic's Cost of a False Alarm value (for DET Curves) (default: $CostFA)
+  --Rtarget       Set the Rate of Target value (for DET Curves) (default: $Rtarget)
   --deltat        Set the deltat value (s) that is a temporal limit observation alignments 
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
   --showAT        Show Gloabl Alignment Table
   --allAT         Show Alignment Table per File and Event processed
-  --limittosysevents  For each sourcfile filename, only process events that are listed in the sys Viper files.
+  --LimittoSYSEvents  For each sourcfile filename, only process events that are listed in the sys Viper files.
+  --limitto       Only care about provided list of events
   --writexml      Write a ViperFile XML containing the Mapped, UnmappedRef and UnmappedSys to disk (if dir is specified), stdout otherwise
   --pruneEvents   Only keep in the new file's config section events for which observations are seen
   --observationCont  Dump the Trials Contingency Table
