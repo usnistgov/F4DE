@@ -21,6 +21,7 @@ use strict;
 use Trials;
 use MetricTestStub;
 use Data::Dumper;
+use DETCurveSet;
 
 my(@tics) = (0.00001, 0.0001, 0.001, 0.004, .01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 60, 80, 90, 95, 98, 99, 99.5, 99.9);
 
@@ -1039,9 +1040,14 @@ sub write_tics{
 sub writeMultiDetGraph
   {
     ### $options is a pointer to a hash table to tweak the graph
-    my ($fileRoot, $dets, $options) = @_;
-    my ($missStr, $faStr, $combStr) = ( $dets->[0]->{METRIC}->errMissLab(), $dets->[0]->{METRIC}->errFALab(), $dets->[0]->{METRIC}->combLab());
-    my $combType = ($dets->[0]->{METRIC}->combType() eq "minimizable" ? "Min" : "Max");
+    my ($fileRoot, $detset, $options) = @_;
+    
+    my $numDET = scalar(@{ $detset->getDETList() });
+    return undef if ($numDET < 0);
+    
+    my ($missStr, $faStr, $combStr) = ( $detset->getDETForID(0)->{METRIC}->errMissLab(), $detset->getDETForID(0)->{METRIC}->errFALab(), 
+                                        $detset->getDETForID(0)->{METRIC}->combLab());
+    my $combType = ($detset->getDETForID(0)->{METRIC}->combType() eq "minimizable" ? "Min" : "Max");
     my %multiInfo = ();
 
     #    ### If there's one, do one!!!
@@ -1098,14 +1104,14 @@ sub writeMultiDetGraph
 
     ### Check the metric types to see if the random curve is defined
     my $includeRandomCurve = 1;
-    $includeRandomCurve = 0 if ($dets->[0]->{METRIC}->errMissUnit() ne "Prob" || $dets->[0]->{METRIC}->errFAUnit() ne "Prob");
+    $includeRandomCurve = 0 if ($detset->getDETForID(0)->{METRIC}->errMissUnit() ne "Prob" || $detset->getDETForID(0)->{METRIC}->errFAUnit() ne "Prob");
     my $needComma = ($includeRandomCurve ? 1 : 0);
         
     ### open  the jointPlot
     #    print "Writing DET to GNUPLOT file $fileRoot.*\n";
     open (MAINPLT,"> $fileRoot.plt") ||
       die("unable to open DET gnuplot file $fileRoot.plt");
-    $dets->[0]->write_gnuplot_DET_header(*MAINPLT, $title, $xmin, $xmax, $ymin, $ymax, $keyLoc, $includeRandomCurve, $xScale, $yScale);
+    $detset->getDETForID(0)->write_gnuplot_DET_header(*MAINPLT, $title, $xmin, $xmax, $ymin, $ymax, $keyLoc, $includeRandomCurve, $xScale, $yScale);
 
     my @colors = (1..40);  splice(@colors, 0, 1);
 
@@ -1236,22 +1242,23 @@ sub writeMultiDetGraph
     }
         
     ### Write Individual Dets
-    for (my $d=0; $d < @$dets; $d++) {
-      my $troot = sprintf("%s.sub%02d",$fileRoot,$d);
-      my ($actComb, $actCombSSD, $actMiss, $actMissSSD, $actFa, $actFaSSD) = $dets->[$d]->getMetric()->getActualDecisionPerformance();
+    for (my $d=0; $d < $numDET; $d++) {
+#      my $troot = sprintf("%s.sub%02d",$fileRoot,$d);
+       my $troot = sprintf("%s.%s",$fileRoot, $detset->getFSKeyForID($d));
+      my ($actComb, $actCombSSD, $actMiss, $actMissSSD, $actFa, $actFaSSD) = $detset->getDETForID($d)->getMetric()->getActualDecisionPerformance();
                 
-      if ($dets->[$d]->writeGNUGraph($troot, $options)) {
+      if ($detset->getDETForID($d)->writeGNUGraph($troot, $options)) {
         #                       my $typeStr = ($dets->[$d]->{STYLE} eq "pooled" ? 
         #                                  "Pooled ".$dets->[$d]->{TRIALS}->getBlockId()." ".$dets->[$d]->{TRIALS}->getDecisionId() :
         #                                  $dets->[$d]->{TRIALS}->getBlockId()." Wtd.");
-        my ($scr, $comb, $miss, $fa) = ($dets->[$d]->getBestCombDetectionScore(),
-                                        $dets->[$d]->getBestCombComb(),
-                                        $dets->[$d]->getBestCombMMiss(),
-                                        $dets->[$d]->getBestCombMFA());
+        my ($scr, $comb, $miss, $fa) = ($detset->getDETForID($d)->getBestCombDetectionScore(),
+                                        $detset->getDETForID($d)->getBestCombComb(),
+                                        $detset->getDETForID($d)->getBestCombMMiss(),
+                                        $detset->getDETForID($d)->getBestCombMFA());
                         
         my $ltitle = "";
         #                       $ltitle .= $typeStr if (! (defined($options) && exists($options->{lTitleNoDETType})));
-        $ltitle .= " ".$dets->[$d]->{LINETITLE};
+        $ltitle .= " ".$detset->getDETForID($d)->{LINETITLE};
         $ltitle .= " ".sprintf("$combType $combStr=%.3f", $comb) if (! (defined($options) && exists($options->{lTitleNoBestComb})));
         $ltitle .= sprintf("=($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr) if (! (defined($options) && exists($options->{lTitleNoPointInfo})));
         if ($needComma) {
