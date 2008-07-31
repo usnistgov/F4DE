@@ -772,6 +772,27 @@ sub get_file_ViperFramespans {
   return(@res);
 }
 
+#####
+
+sub get_files_list {
+  my ($self) = @_;
+
+  my @res = ();
+
+  return(@res) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'get_files_list\' on a validated file");
+    return(@res);
+  }
+
+  my %fhash = $self->_get_fhash();
+  return(@res) if ($self->error());
+
+  @res = keys %fhash;
+  return(@res);
+}
+
 ############################################################
 
 sub _set_errormsg {
