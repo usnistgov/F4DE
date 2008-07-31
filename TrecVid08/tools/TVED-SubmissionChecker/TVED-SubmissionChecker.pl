@@ -591,6 +591,16 @@ sub check_exp_dirfiles {
     }
   }
 
+  if ($useECF) {
+    my ($err, $rmiss, $rnotin) = TrecVid08HelperFunctions::confirm_all_ECF_sffn_are_listed($ecfobj, @xmlf);
+    return("Problem obtaining file list from ECF", $warns)
+      if (! MMisc::is_blank($err));
+    $warns .= "Will not be able to perform soring (comparing ECF to common list); the following referred to files are present in the ECF but where not found in the submission: " . join(" ", @$rmiss) . ". "
+      if (scalar @$rmiss > 0);
+    $warns .= "FYI: the following referred to files are not listed in the ECF, and therefore will not be scored against: ", join(" ", @$rnotin) . ". " 
+      if (scalar @$rnotin > 0);
+  }
+
   return($errs, $warns);
 }
 
@@ -626,7 +636,7 @@ sub validate_xml {
   return("Sourcefile's filename is wrong (is: $sffn) (expected: $exp_sffn)", $warn)
     if ($sffn !~ m%$exp_sffn$%);
   
-  my ($bettxt, $bte, $btot) = $object->get_txt_and_number_of_events(3);
+  my ($bettxt, $bte, $btot) = $object->get_txt_and_number_of_events(2);
   return("Problem obtaining the number of events (" . $object->get_errormsg() . ")", $warn)
     if ($object->error());
 
@@ -647,11 +657,11 @@ sub validate_xml {
   return("Problem with ViperFile object", $warn)
     if (! defined $nobject);
 
-  my ($aettxt, $ate, $atot) = $nobject->get_txt_and_number_of_events(3);
+  my ($aettxt, $ate, $atot) = $nobject->get_txt_and_number_of_events(2);
   return("Problem obtaining the number of events (after ECF) (" . $nobject->get_errormsg() . ")", $warn)
     if ($nobject->error());
 
-  $warn .= "Total number of events changed from before ($btot) to after applying the ECF ($atot). "
+  $warn .= "Total number of events changed from before ($btot / Events: $bettxt) to after applying the ECF ($atot / Events: $aettxt). "
     if ($atot != $btot);
 
   return("", $warn);
@@ -779,6 +789,12 @@ sub _set_exp_ext_cmd {
     );
 
   return(%tmp);
+}
+
+##############################
+
+sub _warn_add {
+  $warn_msg .= "[Warning] " . join(" ", @_) ."\n";
 }
 
 ############################################################
