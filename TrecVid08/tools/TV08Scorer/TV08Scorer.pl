@@ -212,6 +212,7 @@ my $doDC = 0;
 my $gzipPROG = "gzip";
 my $gnuplotPROG = "gnuplot";
 my $noPNG = 0;
+my $nodetfiles = 0;
 my $sysTitle = "";
 my $outputRootFile = undef;
 my $observationContingencyTable = 0;
@@ -221,7 +222,7 @@ my $ltse = 0;
 my @asked_events = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:   CDEFG    LM O  RST     Za  cdefgh  lmnop  st vwx  
+# Used:   CDEFG    LMNO  RST     Za  cdefgh  lmnop  st vwx  
 
 my %opt = ();
 my @leftover = ();
@@ -245,6 +246,7 @@ GetOptions
    'computeDETCurve' => \$doDC,
    'ZipPROG=s'       => \$gzipPROG,
    'GnuplotPROG=s'   => \$gnuplotPROG,
+   'NoDetFiles'      => \$nodetfiles,
    'noPNG'           => \$noPNG,
    'titleOfSys=s'    => \$sysTitle,
    'OutputFileRoot=s' => \$outputRootFile,
@@ -299,6 +301,10 @@ MMisc::error_quit("No SYS file(s) provided, can not perform scoring")
 MMisc::error_quit("No REF file(s) provided, can not perform scoring")
   if (scalar @ref == 0);
 
+MMisc::error_quit("\'NoDetFiles\' can not be used unless \'noPNG\' is selected too")
+  if ((! $noPNG) && $nodetfiles);
+MMisc::error_quit("\'OutputFileRoot\' required to produce the \'.det\' files")
+  if ($doDC && (! $nodetfiles) && (! defined $outputRootFile));
 MMisc::error_quit("\'OutputFileRoot\' required to produce the PNGs")
   if ($doDC && (! $noPNG) && (! defined $outputRootFile));
 
@@ -443,9 +449,14 @@ foreach my $event (@all_events) {
 }
 
 MMisc::writeTo($outputRootFile, ".scores.txt", 1, 0, 
-               $detSet->renderAsTxt($outputRootFile . ".det", $doDC, 1, 
-                                    { (xScale => "log", Ymin => "0.00001", Ymax => "90", Xmin => "0.00001", Xmax => "100", 
-                                       gnuplotPROG => $gnuplotPROG, BuildPNG => ($noPNG ? 0 : 1)) }));
+               $detSet->renderAsTxt
+               ($outputRootFile . ".det", $doDC, 1, 
+                { (xScale => "log", Ymin => "0.00001", Ymax => "90",
+                   Xmin => "0.00001", Xmax => "100", 
+                   gnuplotPROG => $gnuplotPROG,
+                   createDETfiles => ($nodetfiles ? 0: 1),
+                   BuildPNG => ($noPNG ? 0 : 1))
+                } ) );
 
 ## reWrite XML files
 if (defined $writexml) {
