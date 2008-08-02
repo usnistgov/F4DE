@@ -37,7 +37,7 @@ $tn = "test3b";
 $testr += &do_simple_test($tn, "(ECF check 2)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-$tn.txt");
 
 $tn = "test4";
-$testr += &do_simple_test($tn, "(Big Test)", "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG" , "res-$tn-BigTest.txt");
+$testr += &do_simple_test($tn, "(Big Test)", "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG -N" , "res-$tn-BigTest.txt");
 
 $tn = "test5a";
 $testr += &do_simple_test($tn, "(writexml)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w", "res-$tn.txt");
@@ -46,7 +46,7 @@ $tn = "test5b";
 $testr += &do_simple_test($tn, "(writexml + pruneEvents)", "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w -p", "res-$tn.txt");
 
 $tn = "test6";
-$testr += &do_simple_test($tn, "(limittosysevents)", "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -l", "res-$tn.txt");
+$testr += &do_simple_test($tn, "(Limittosysevents)", "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -L", "res-$tn.txt");
 
 if ($testr == $totest) {
   ok_quit("All test ok\n\n");
