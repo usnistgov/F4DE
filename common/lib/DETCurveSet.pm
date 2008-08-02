@@ -266,9 +266,9 @@ sub renderAsTxt(){
   my $reportActual = 1;
   $reportActual = $DETOptions->{ReportActual} if (exists($DETOptions->{ReportActual}));
 
-  ### Biuld the combined and separate DET PNGs
+  ### Build the combined and separate DET PNGs
   my $multiInfo = {()};
-  if ($buildCurves) {
+  if ($buildCurves && $DETOptions->{createDETfiles}) {
     $multiInfo = DETCurve::writeMultiDetGraph($fileRoot, $self, $DETOptions);
   }
     
