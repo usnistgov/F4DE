@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test4-BigTest.sys.xml -g ../common/test4-BigTest.ref.xml -s -o -D 90000 --computeDETCurve --noPNG
+[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test4-BigTest.sys.xml -g ../common/test4-BigTest.ref.xml -s -o -D 90000 --computeDETCurve --noPNG -N
 [[RETURN CODE]] 0
 [[STDOUT]]
 ***** STEP 1: Loading files in Memory
@@ -2054,6 +2054,7 @@ Total      |           240              0          160            220           
 
 
 ***** STEP 5: Dump of Analysis Report
+Computed using:  Rtarget = 1.8 | CostMiss = 10 | CostFA = 1
  (only printing seen events)
 
 Performance Summary Over and Ensemble of Subsets

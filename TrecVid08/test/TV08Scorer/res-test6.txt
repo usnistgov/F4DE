@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test2-1md_1fa-sys.xml -g ../common/test2-gtf.xml -s -o -D 1000 -l
+[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test2-1md_1fa-sys.xml -g ../common/test2-gtf.xml -s -o -D 1000 -L
 [[RETURN CODE]] 0
 [[STDOUT]]
 ***** STEP 1: Loading files in Memory
@@ -24,8 +24,9 @@
 
 ***** STEP 3: Aligning Files and Events
 
-|-> File: 20050519-1503-Excerpt.mpg
+|->File: 20050519-1503-Excerpt.mpg
  -- Will not process the following event(s) (not present in the matching sys files): ObjectPut
+ -- Will only process the following event(s): ObjectGet PersonRuns CellToEar
 
 |-> Filename: 20050519-1503-Excerpt.mpg | Event: PersonRuns | SYS elements: 1 | REF elements: 0 | Total Observations: 1 elements
       TYPE      R.ID  R.range  Dur.r  S.ID  S.range  Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
@@ -67,6 +68,7 @@ Total       |             1              0            3              1          
 
 
 ***** STEP 5: Dump of Analysis Report
+Computed using:  Rtarget = 1.8 | CostMiss = 10 | CostFA = 1
  (only printing seen events)
 
 Performance Summary Over and Ensemble of Subsets

@@ -64,6 +64,7 @@ Total      |             2              0            3              0           
 
 
 ***** STEP 5: Dump of Analysis Report
+Computed using:  Rtarget = 1.8 | CostMiss = 10 | CostFA = 1
  (only printing seen events)
 
 Performance Summary Over and Ensemble of Subsets
