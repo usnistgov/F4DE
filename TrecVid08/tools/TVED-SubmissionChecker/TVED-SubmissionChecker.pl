@@ -157,9 +157,10 @@ my $rtmpdir = undef;
 my $wid = undef;
 my $skipval = 0;
 my $memdump = undef;
+my $dryrun = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                    T VW       efgh          s uvwx   #
+# Used:                    T VW      defgh          s uvwx   #
 
 my %opt = ();
 GetOptions
@@ -177,6 +178,7 @@ GetOptions
    'work_in_dir=s'   => \$wid,
    'skip_validation' => \$skipval,
    'WriteMemDump=s'  => \$memdump,
+   'dryrun'          => \$dryrun,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -253,11 +255,13 @@ my $todo = scalar @ARGV;
 my $done = 0;
 foreach my $sf (@ARGV) {
   my @warnings = ();
+  my @notes = ();
 
   my $ok = 1;
   my $tmpdir = "";
   my $site = "";
   my $err = "";
+
   if (! defined $wid) {
     vprint(1, "Checking \'$sf\'");
     
@@ -333,7 +337,7 @@ foreach my $sf (@ARGV) {
     }
     foreach my $sdir (sort @$rd) {
       vprint(2, "Checking Submission Directory ($sdir)");
-      ($err, my $warn) = &check_submission_dir("$tmpdir/$odir", $sdir, $site);
+      ($err, my $warn, my $note) = &check_submission_dir("$tmpdir/$odir", $sdir, $site);
       if (! MMisc::is_blank($err)) {
         &valerr($sf, $err);
         $ok = 0;
@@ -341,18 +345,24 @@ foreach my $sf (@ARGV) {
       }
       push @warnings, $warn
         if (! MMisc::is_blank($warn));
+      push @notes, $note
+        if (! MMisc::is_blank($note));
     }
   }
 
   if ($ok) {
-    &valok($sf, "ok" .((scalar @warnings > 0) ? (" -- WARNINGS: " . join(". ", @warnings)) : "") );
+    &valok($sf, "ok" 
+           . ((scalar @notes > 0) ? (" -- NOTES : " . join(". ", @notes)) : "")
+           . ((scalar @warnings > 0) ? (" -- WARNINGS: " . join(". ", @warnings)) : "") );
     $done ++;
   }
 }
 
 my @lin = ();
-push @lin, "the \'skip_validation\' option was used, therefore the XML files were not checked for accuracy. Submitted \'.tgz\' files must have been XML validated to be accepted" if ($skipval);
-push @lin, "the \'ecf\' option was not used, therefore your XML files were not matched against it. Submitted \.tgz\. files must run this process to avoid missed elements in submission" if (! $useECF);
+push @lin, "the \'skip_validation\' option was used, therefore the XML files were not checked for accuracy. Submitted \'.tgz\' files must have been XML validated to be accepted." if ($skipval);
+push @lin, "the \'ecf\' option was not used, therefore your XML files were not matched against it. Submitted \.tgz\. files must run this process to avoid missed elements in submission." if (! $useECF);
+push @lin, "the \'dryrun\' option was used, therefore the \'Event_Processed:\' was not looked for in your submission text file.  Submitted EVAL \.tgz\. files must run this process to obtain the list of Events scored against." if ($dryrun);
+
 MMisc::ok_quit
   (
    "All submission processed (OK: $done / Total: $todo)\n" 
@@ -483,11 +493,14 @@ sub check_submission_dir {
   return("[$dir : $lerr]", "") if (! MMisc::is_blank($lerr));
 
   vprint(3, "Checking expected directory files");
-  ($lerr, my $lw) = &check_exp_dirfiles($bd, $dir, $data);
+  ($lerr, my $lw, my @ep) = &check_exp_dirfiles($bd, $dir, $data);
   return("[$dir : $lerr]", "") if (! MMisc::is_blank($lerr));
   $lw = "[$dir : $lw]" if (! MMisc::is_blank($lw));
+  my $nt = "";
+  $nt = "[$dir : Expected_Events: " . join(" ", @ep) . "]"
+    if (scalar @ep > 0);
 
-  return("", $lw);
+  return("", $lw, $nt);
 }
 
 ##########
@@ -540,36 +553,45 @@ sub check_exp_dirfiles {
   my ($bd, $exp, $data) = @_;
 
   my ($derr, $rd, $rf, $ru) = MMisc::list_dirs_files("$bd/$exp");
-  return($derr) 
+  return($derr, "")
     if (! MMisc::is_blank($derr));
 
   my @left = @$rd;
   push @left, @$ru;
-  return("Found more than just files (" . join(" ", @left) . ")")
+  return("Found more than just files (" . join(" ", @left) . ")", "")
     if (scalar @left > 0);
 
-  return("Found no files")
+  return("Found no files", "")
     if (scalar @$rf == 0);
 
   my %leftf = MMisc::array1d_to_count_hash(@$rf);
   vprint(4, "Checking for expected text file");
   my $expected_exp = "$exp.txt";
   my @txtf = grep(m%\.txt$%, @$rf);
-  return("Found no \'.txt\' file. ")
+  return("Found no \'.txt\' file. ", "")
     if (scalar @txtf == 0);
-  return("Found more than the one expected \'.txt\' file :" . join(" ", @txtf) . ")")
+  return("Found more than the one expected \'.txt\' file :" . join(" ", @txtf) . ")", "")
     if (scalar @txtf > 1);
-  return("Could not find the expected \'.txt\' file ($expected_exp) (seen: " . join(" ", @txtf) . ")")
+  return("Could not find the expected \'.txt\' file ($expected_exp) (seen: " . join(" ", @txtf) . ")", "")
     if (! grep(m%$expected_exp$%, @txtf));
-  vprint(5, "Found: $expected_exp (note: does not check content of file)");
+  vprint(5, "Found: $expected_exp" . (($dryrun) ? " (dryrun: skipping content check)" : "") );
+
+  my @events_processed = ();
+  if (! $dryrun) {
+    ($derr, @events_processed) = &get_events_processed("$bd/$exp", $expected_exp);
+    return($derr, "")
+      if (! MMisc::is_blank($derr));
+    return("No event found in \'Events_Processed:\' line ?", "")
+      if (scalar @events_processed == 0);
+  }
   delete $leftf{$expected_exp};
 
   vprint(4, "Checking for XML files");
   my @xmlf = grep(m%\.xml$%, @$rf);
-  return("Found no \'.xml\' file. ")
+  return("Found no \'.xml\' file. ", "")
     if (scalar @xmlf == 0);
   foreach my $xf (@xmlf) { delete $leftf{$xf}; }
-  return("More than just \'.txt\' and \'.xml\' files in directory (" . join(" ", keys %leftf) . ")")
+  return("More than just \'.txt\' and \'.xml\' files in directory (" . join(" ", keys %leftf) . ")", "")
     if (scalar keys %leftf > 0);
   vprint(5, "Found: " . join(" ", @xmlf));
 
@@ -579,7 +601,7 @@ sub check_exp_dirfiles {
   if (! $skipval) {
     foreach my $xf (@xmlf) {
       vprint(4, "Trying to validate XML file ($xf)");
-      my ($e, $w) = validate_xml("$bd/$exp", $xf, $data, $exp);
+      my ($e, $w) = validate_xml("$bd/$exp", $xf, $data, $exp, @events_processed);
       if (! MMisc::is_blank($e)) {
         vprint(5, "ERROR: $e");
         $errs .= "[$xf : $e] ";
@@ -590,7 +612,7 @@ sub check_exp_dirfiles {
       }
     }
   }
-
+  
   if ($useECF) {
     my ($err, $rmiss, $rnotin) = TrecVid08HelperFunctions::confirm_all_ECF_sffn_are_listed($ecfobj, @xmlf);
     return("Problem obtaining file list from ECF", $warns)
@@ -601,13 +623,52 @@ sub check_exp_dirfiles {
       if (scalar @$rnotin > 0);
   }
 
-  return($errs, $warns);
+  return($errs, $warns, @events_processed);
+}
+
+##########
+
+sub get_events_processed {
+  my $dir = shift @_;
+  my $file = shift @_;
+
+  my $fn = "$dir/$file";
+
+  vprint(4, "Checking for \'Events_Processed:\' line in txt file");
+  
+  my @ep = ();
+
+  my $err = MMisc::check_file_r($fn);
+  return("Problem with file ($file): $err", @ep)
+    if (! MMisc::is_blank($err));
+
+  my $fc = MMisc::slurp_file($fn);
+  return("Problem reading txt file ($file)", @ep)
+    if (! defined $fc);
+
+  if ($fc =~ m%^Events_Processed:(.+)$%m) {
+    my $el = MMisc::clean_begend_spaces($1);
+    print "[$el]\n";
+    $fc =~ s%^Events_Processed:(.+)$%%m;
+    return("Multiple \'Events_Processed:\' lines found in txt file", @ep) 
+      if ($fc =~ m%^Events_Processed:(.+)$%m);
+    my @tep = split(m%\s+%, $el);
+    @tep = $dummy->validate_events_list(@tep);
+    return("Problem validating file's event list (" . $dummy->get_errormsg() . ")", @ep)
+      if ($dummy->error());
+    @ep = @tep;
+  } else {
+    return("Could not find the \'Events_Processed:\' line in file ($file)", @ep);
+  }
+
+  vprint(5, "Events Processed: " . join(" ", @ep));
+  return("", @ep);
 }
 
 ##########
 
 sub validate_xml {
-  my ($dir, $xf, $data, $exp) = @_;
+  my ($dir, $xf, $data, $exp, @events_processed) = @_;
 
   my $warn = "";
 
@@ -663,6 +724,13 @@ sub validate_xml {
 
   $warn .= "Total number of events changed from before ($btot / Events: $bettxt) to after applying the ECF ($atot / Events: $aettxt). "
     if ($atot != $btot);
+
+  if (scalar @events_processed > 0) {
+    my @ue = $nobject->list_used_events();
+    my ($ri, $ro) = MMisc::confirm_first_array_values(\@ue, @events_processed);
+    return("Some events found in file that were not in the \'Events_Processed:\' list: " . join(" ", @$ri) . ".", $warn)
+      if (scalar @$ri > 0);
+  }
 
   return("", $warn);
 }
@@ -805,7 +873,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-gtf] [--ecf ecffile --fps fps] [--uncompress_dir dir | --work_in_dir site] [--skip_validation] [--WriteMemDump dir] [--Verbose] file.tgz [file.tgz [...]]
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-gtf] [--ecf ecffile --fps fps] [--uncompress_dir dir | --work_in_dir site] [--skip_validation] [--WriteMemDump dir] [--dryrun] [--Verbose] file.tgz [file.tgz [...]]
 
 Will confirm that a submission file conform to the 'Submission Instructions'
 
@@ -819,6 +887,8 @@ Will confirm that a submission file conform to the 'Submission Instructions'
   --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified instead of file.tgz (useful to confirm a submission before generating its tgz)
   --skip_validation  Bypass the XML files validation process
   --WriteMemDump  Write a memory dump of each validated XML file into \'dir\'. Note that this option will recreate the <EXP-ID> directory.
+  --dryrun        Do not check for content of txt file
+  --Verbose       Explain step by step what is being checked
   --version       Print version number and exit
   --help          Print this usage information and exit
 
