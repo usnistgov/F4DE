@@ -457,11 +457,11 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--limitto> I<event1>[,I<event2>[I<...>]]]>
   S<[[B<--write> [I<directory>]]>
   S<[B<--ChangeType> [I<randomseed:find_value>]]>
-  S<[B<--crop I<beg:end>] [B<--WriteMemDump> [I<mode>]]>
+  S<[B<--crop> I<beg:end>] [B<--WriteMemDump> [I<mode>]]>
   S<[B<--ForceFilename> I<filename>] [B<--pruneEvents>]>
   S<[B<--removeSubEventtypes>]]>
   S<[B<--fps> I<fps>] [B<--ecf> I<ecffile>]>
-  S<[B<--displaySummary I<level>]>
+  S<[B<--displaySummary> I<level>]>
   I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
   
 =head1 DESCRIPTION
@@ -520,7 +520,7 @@ B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well
 
 =over
 
-=item B<--ChangeType> [I<randomseed>[:I<find_value]]
+=item B<--ChangeType> [I<randomseed>[:I<find_value>]]
 
 Convert a SYS to REF or a REF to SYS.
 The I<randomseed> is useful if you want to reproduce the result in the future.
