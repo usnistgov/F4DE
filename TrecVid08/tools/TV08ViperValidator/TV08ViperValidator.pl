@@ -452,19 +452,18 @@ TV08ViperValidator - TrecVid08 Viper XML Validator
 =head1 SYNOPSIS
 
 B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
-        S<[B<--XMLbase> [I<file]>]>
-        S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
-        S<[B<--gtf>] [B<--limitto> I<event1>[,I<event2>[I<...>]]]>
-        S<[B<--pruneEvents>] [B<--removeSubEventtypes>]>
-        S<[ [B<--write> [I<directory>]]>
-        S<[B<--ChangeType> [I<randomseed>]]>
-        S<[B<--crop I<beg:end>]>
-        S<[B<--WriteMemDump> [I<mode>]]
-        S<[B<--ForceFilename> I<filename>] ]>
-        S<[B<--fps> I<fps>] [B<--ecf> I<ecffile>]>
-        S<[B<--displaySummary I<level>]>
-        I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
-
+  S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
+  S<[B<--XMLbase> [I<file]>] [B<--gtf>]>
+  S<[B<--limitto> I<event1>[,I<event2>[I<...>]]]>
+  S<[[B<--write> [I<directory>]]>
+  S<[B<--ChangeType> [I<randomseed:find_value>]]>
+  S<[B<--crop I<beg:end>] [B<--WriteMemDump> [I<mode>]]>
+  S<[B<--ForceFilename> I<filename>] [B<--pruneEvents>]>
+  S<[B<--removeSubEventtypes>]]>
+  S<[B<--fps> I<fps>] [B<--ecf> I<ecffile>]>
+  S<[B<--displaySummary I<level>]>
+  I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
+  
 =head1 DESCRIPTION
 
 B<TV08ViperValidator> performs a syntactic and semantic validation of the Viper XML file(s) provided on the command line. It can I<validate> reference files (see B<--gtf>) as well as system files. It can also rewrite validated files into another directory using the same filename as the original (see B<--write>), and only keep a few selected events into the output file (see B<--limitto>). To obtain a list of recognized events, see B<--help>.
@@ -521,11 +520,6 @@ B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well
 
 =over
 
-=item B<--crop> beg:end
-
-Will crop all input ViperFiles to the specified range. Only valid when used with the 'write' option.
-Note that cropping consist of trimming all seen events to the selected range and then shifting the file to start at 1 again.
-
 =item B<--ChangeType> [I<randomseed>[:I<find_value]]
 
 Convert a SYS to REF or a REF to SYS.
@@ -533,23 +527,29 @@ The I<randomseed> is useful if you want to reproduce the result in the future.
 Be forewarned that it is possible to reproduce a same output if reusing the I<randomseed> value but the process and source files have to be the exact same too.
 Also, when trying to reproduce a file, it is possible to ask the program to find the file's first random value (see the XML sourcefile comment) thanks to the I<find_value> argument.
 
+=item B<--crop> beg:end
+
+Will crop all input ViperFiles to the specified range. Only valid when used with the 'write' option.
+Note that cropping consist of trimming all seen events to the selected range and then shifting the file to start at 1 again.
+
 =item B<--displaySummary> [I<level>]
 
 Display a file information summary.
-I<level> is a value from 1 to 3 which will show more information about the I<Event> seen.
-If I<level> is over 3, it will also print a pre-modifications summary.
+I<level> is a value from 1 to 6 which will show more information about the I<Event> seen.
+Level 1 will just print the list of event seen (post all modifications applied to the file -- if any), level 2 will also print the number of events per event, and level 3 will add to the print the ID list of such events.
+Level 4, 5, 6 are repeat of level 1, 2, 3 for pre-modifications comparisons.
 
 =item B<--ecf> I<ecffile>
 
 After validating the file, only keep Event Observation within that match the ECF information.
 
-=item B<--fps> I<fps>
-
-Specify the default sample rate (in frames per second) of the Viper files.
-
 =item B<--ForceFilename> I<fname>
 
 Replace the I<sourcefile>'s I<filename> value by  I<fname>.
+
+=item B<--fps> I<fps>
+
+Specify the default sample rate (in frames per second) of the Viper files.
 
 =item B<--gtf>
 
@@ -559,7 +559,7 @@ Specify that the file to validate is a Reference file (also known as a Ground Tr
 
 Display the usage page for this program. Also display some default values and information.
 
-=item B<--limito> I<event1>[,I<event2>[I<,...>]]
+=item B<--limitto> I<event1>[,I<event2>[I<,...>]]
 
 Used with B<--write> or B<--XMLbase>, only add provided list of events to output files.
 Note that B<TV08ViperValidator> will still check the entire viper file before it can limit itself to the selected list of events.
@@ -572,7 +572,7 @@ Display this man page.
 
 =item B<--pruneEvents>
 
-For each validated that is re-written, only add to this file's config section, events for which observations are seen
+For each validated event that is re-written, only add to this file's config section, events for which observations are seen
 
 =item B<--removeSubEventtypes>
 
@@ -587,15 +587,15 @@ Can also be set using the B<TV08_XSDPATH> environment variable.
 
 Display B<TV08ViperValidator> version information.
 
-=item B<--write> I<directory>
+=item B<--write> [I<directory>]
 
 Once validation has been completed for a given file, B<TV08ViperValidator> will write a new XML representation of this file to either the standard output (if I<directory> is not set), or will create a file with the same name as the input file in I<directory> (if specified).
 
-=item B<--WriteMemDump> I<mode>
+=item B<--WriteMemDump> [I<mode>]
 
 Write to disk a memory representation of the validated Viper File.
 This memory representation file can be used as the input of the Scorer, Merger and Validator tools.
-The mode is the default file representation to disk.
+The mode is the file representation to disk and its values and its default can be obtained using the B<--help> option.
 
 =item B<--xmllint> I<location>
 
@@ -649,29 +649,29 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--XMLbase [file]] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--pruneEvents]  [--limitto event1[,event2[...]]] [--removeSubEventtypes] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename]] [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes]]  [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
  Where:
-  --gtf           Specify that the file to validate is a Ground Truth File
+  --help          Print this usage information and exit
+  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+  --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --pruneEvents   Only keep in the new file's config section events for which observations are seen
+  --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
+  --gtf           Specify that the file to validate is a Ground Truth File
   --limitto       Only care about provided list of events
-  --removeSubEventtypes  Useful when working with specialized Scorer outputs to remove specialized sub types
   --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
   --ChangeType    Convert a SYS to REF or a REF to SYS.
   --crop          Will crop file content to only keep content that is found within the beg and end frames
   --WriteMemDump  Write a memory representation of validated Viper Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
   --ForceFilename Replace the 'sourcefile' file value
+  --pruneEvents   Only keep in the new file's config section events for which observations are seen
+  --removeSubEventtypes  Useful when working with specialized Scorer outputs to remove specialized sub types
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
-  --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
   --ecf           Specify the ECF file to load
-  --displaySummary  Display a file information summary (level shows information about event type seen, and is a value from 1 to 3)
-  --version       Print version number and exit
-  --help          Print this usage information and exit
-  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+  --displaySummary  Display a file information summary (level shows information about event type seen, and is a value from 1 to 6)
 
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'TrecVid08.xsd' file

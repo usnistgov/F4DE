@@ -3,7 +3,7 @@
 
 # TrecVid08 Scorer
 #
-# Author(s): Martial Michel
+# Author(s): Martial Michel, Jonathan Fiscus
 #
 # This software was developed at the National Institute of Standards and Technology by
 # employees and/or contractors of the Federal Government in the course of their official duties.
@@ -1110,20 +1110,19 @@ TV08Scorer - TrecVid08 Viper XML System to Reference Scoring Tool
 =head1 SYNOPSIS
 
 B<TV08Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
-    S<[B<--0mllint> I<location>] [B<--TrecVid08xsd> I<location>]>
-    S<[B<--Duration> I<seconds>] [B<--Ed> S<value>] [B<--Et> S<value>]>
-    S<[B<--showAT>] [B<--allAT>] [B<--observationCont>]>
-    S<[B<--OutputFileRoot> I<filebase>]>
-    S<[B<--computeDETCurve>] [B<--titleOfSys> I<title>]>
-    S<[B<--ZipPROG> I<gzip>] [B<--noPNG> | B<--GnuplotPROG> I<gnuplot>]]>
-    S<[B<--LimittoSYSEvents> | B<--limitto> I<event1>[,I<event2>[I<...>]]]>
-    S<[B<--MissCost> I<value>] [B<--CostFA> I<value>] [B<--Rtarget> I<value>]> 
-    S<[B<--ecf> I<ecffile>]>
-    S<B<--deltat> I<deltat>>
-    S<B<--fps> I<fps>>
-    S<B<--gtf> I<ref_file.xml> [I<...>]>
-    S<I<sys_file.xml> [I<...>] >
-
+  S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
+  S<[B<--showAT>] [B<--allAT>] [B<--observationCont>]>
+  S<[B<--LimittoSYSEvents> | B<--limitto> I<event1>[,I<event2>[I<...>]]]>
+  S<[B<--writexml> [I<dir>] [B<--pruneEvents>]]>
+  S<[B<--Duration> I<seconds>] [B<--ecf> I<ecffile>]>
+  S<[B<--MissCost> I<value>] [B<--CostFA> I<value>] [B<--Rtarget> I<value>]> 
+  S<[B<--computeDETCurve> [B<--titleOfSys> I<title>] [B<--ZipPROG> I<gzip>]>
+  S<[B<--OutputFileRoot> I<filebase>]>
+  S<[B<--GnuplotPROG> I<gnuplot>] | [B<--noPNG> B<--NoDetFiles>]]>
+  S<[B<--Ed> S<value>] [B<--Et> S<value>]>
+  S<B<--deltat> I<deltat> B<--fps> I<fps>>
+  S<I<sys_file.xml> [I<...>] B<--gtf> I<ref_file.xml> [I<...>]>
+  
 =head1 DESCRIPTION
 
 B<TV08Scorer> performs an alignment scoring comparing I<reference> and I<system> I<Event> I<Observations> for the 2008 TRECVid Event Detection (ED) Evaluation.
@@ -1137,7 +1136,7 @@ The program does not generate Decision Error Tradeoff (DET) curves by default be
 
 =head1 PREREQUISITES
 
-B<TV08Scorer> system and reference VIPeR files need to pass the B<TV08ViperValidator> validation process.  The scorer will about on validation errors.  The scoring program relies on the following software and files.
+B<TV08Scorer> system and reference VIPeR files need to pass the B<TV08ViperValidator> validation process.  The scorer will quit on validation errors.  The scoring program relies on the following software and files.
  
 =over
 
@@ -1194,6 +1193,11 @@ B<TV08Scorer> will ignore the I<config> section of the XML file, as well as disc
 
 Show I<Alignment Table>, per File/Event as they are being processed.  
 
+=item B<--CostFA> I<value>
+
+Set the Metric's Cost of a False Alarm (for DET Curves computtion).
+Default value can be obtained by the B<--help> option.
+
 =item B<--computeDETCurve>
 
 Generates I<DETCurve> plot data files as well as png files (requires GNUPlot with PNG support).  The option requires either B<--OutputFileRoot> <ROOT> to write the output files, or B<--noPPNG> to skip building the PNGs and writing the plots to file.  When the plots are written to file, the following files will be generated: 
@@ -1243,13 +1247,13 @@ Specify the I<delta t> value (in seconds) required for ref/sys observation align
 
 =item B<--Ed> I<value>
 
-Override the default value for I<E d> required for the ref/sys observation alignment (see Eval Plan).  It is the weight placed
-on the detection decision scores during alignment.  Default value can be obtained by the B<--help> option.
+Override the default value for I<E d> required for the ref/sys observation alignment (see Eval Plan). It is the weight placed on the detection decision scores during alignment.
+Default value can be obtained by the B<--help> option.
 
 =item B<--Et> I<value>
 
-Override the default value for I<E t> required for the ref/sys observation alignment (see Eval Plan).  It is the weight placed on the temporal
-error  between the reference and system observations. Default value can be obtained by the B<--help> option.
+Override the default value for I<E t> required for the ref/sys observation alignment (see Eval Plan).  It is the weight placed on the temporal error between the reference and system observations.
+Default value can be obtained by the B<--help> option.
 
 =item B<--ecf> I<ecffile>
 
@@ -1275,33 +1279,52 @@ Display the usage page for this program. Also display some default values and in
 
 Request that scoring only be done on I<Events> present in the sys files for a given sourcefile filename. In other words, if a ref file contains all event type, and the sys file only a handful of events, only align and score on the events seen in the sys file.
 
+=item B<--limitto> I<event1>[,I<event2>[I<...>]]
+
+Only perform alignment on the events listed on the command line.
+
+=item B<--MissCost> I<value>
+
+Set the Metric's Cost of a Miss (for DET Curves computation).
+Default value can be obtained by the B<--help> option.
+
 =item B<--man>
 
 Display this man page.
+
+=item B<--NoDetFiles>
+
+Do not create .det files if a DET Curve is computed.
+Prevent creation of PNGs.
 
 =item B<--noPNG>
 
 Do not create PNG files if a DET Curve is computed.
 
-=item B<--observationCont>
-
-Show a I<Trials Contingency Table> listing per event: mapped observations (I<Corr:YesTarg>), unmapped reference observations (I<Miss:OmitTarg> and I<Miss:NoTarg>), and unmapped system observations (I<FA:YesNontarg> and I<Corr:NoNontarg>).  If B<--OutputFileRoot> <ROOT> is used, then the file <ROOT>.contigency.txt
-
 =item B<--OutputFileRoot> I<filebase>
 
 Will generate a file to disk for most reports, using I<filebase> as the file's basename and adding to it a report-specific extension.  See the report options for naming conventions.
 
+=item B<--observationCont>
+
+Show a I<Trials Contingency Table> listing per event: mapped observations (I<Corr:YesTarg>), unmapped reference observations (I<Miss:OmitTarg> and I<Miss:NoTarg>), and unmapped system observations (I<FA:YesNontarg> and I<Corr:NoNontarg>).  If B<--OutputFileRoot> <ROOT> is used, then the file <ROOT>.contigency.txt
+
 =item B<--pruneEvents>
 
-For each validated that is re-written, only add to this file's config section, events for which observations are seen
+For each validated event that is written, only add to this file's config section, events for which observations are seen.
+
+=item B<--Rtarget> I<value>
+
+Set the Metric's Rate of Target value (for DET Curves computation).
+Default value can be obtained by the B<--help> option.
 
 =item B<--showAT>
 
-Show a global I<Alignment Table>.  If B<--OutputFileRoot> <ROOT> is used, then the file <ROOT>.ali.txt is a human readable text file of the alignments, and <ROOT>.ali.csv is a Comma Separated Value-formatted file.
+Show a global I<Alignment Table>. If B<--OutputFileRoot> <ROOT> is used, then the file <ROOT>.ali.txt is a human readable text file of the alignments, and <ROOT>.ali.csv is a Comma Separated Value-formatted file.
 
 =item B<--titleOfSys> I<title>
 
-When creating DETCurves ane reports, I<title> is used for the result's title.
+When creating DETCurves reports, I<title> is used for the result's title.
 
 =item B<--TrecVid08xsd> I<location>
 
@@ -1311,6 +1334,10 @@ Can also be set using the B<TV08_XSDPATH> environment variable.
 =item B<--version>
 
 Display B<TV08Scorer> version information.
+
+=item B<--writexml> [I<dir>]
+
+Write a Viper File to disk (or stdout if no I<dir> specified) containing the I<Mapped>, I<Unmapped_Sys> and I<Unmapped_Ref> event observations alignment from scoring the SYS file to the REF file.
 
 =item B<--xmllint> I<location>
 
@@ -1368,37 +1395,39 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] --deltat deltat --fps fps [--Duration seconds] [--ecf ecffile] [--MissCost value] [--CostFA value] [--Rtarget value] [--showAT] [--allAT] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--pruneEvents]] [--observationCont] [--OutputFileRoot filebase] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--noPNG | --GnuplotPROG gnuplot_fullpath]] [--xmllint location] [--TrecVid08xsd location] [-Ed value] [-Et value] sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--pruneEvents]] [--Duration seconds] [--ecf ecffile] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
  Where:
-  --gtf           Specify that the files post this marker on the command line are Ground Truth Files
+  --help          Print this usage information and exit
+  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+  --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
-  --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
-  --ecf           Specify the ECF file to load and perform scoring against
-  --MissCost      Set the Metric's Cost of a Miss Cost value (for DET Curves) (default: $CostMiss)
-  --CostFA        Set the Mertic's Cost of a False Alarm value (for DET Curves) (default: $CostFA)
-  --Rtarget       Set the Rate of Target value (for DET Curves) (default: $Rtarget)
-  --deltat        Set the deltat value (s) that is a temporal limit observation alignments 
-  --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
   --showAT        Show Gloabl Alignment Table
   --allAT         Show Alignment Table per File and Event processed
+  --observationCont  Dump the Trials Contingency Table
   --LimittoSYSEvents  For each sourcfile filename, only process events that are listed in the sys Viper files.
   --limitto       Only care about provided list of events
-  --writexml      Write a ViperFile XML containing the Mapped, UnmappedRef and UnmappedSys to disk (if dir is specified), stdout otherwise
+  --writexml      Write a ViperFile XML containing the Mapped, UnmappedRef and UnmappedSys to disk (if dir is specified, stdout otherwise)
   --pruneEvents   Only keep in the new file's config section events for which observations are seen
-  --observationCont  Dump the Trials Contingency Table
-  --OutputFileRoot   Specify the file base of most output files generated (default is to print)
+  --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
+  --ecf           Specify the ECF file to load and perform scoring against
+  --MissCost      Set the Metric's Cost of a Miss (for DET Curves) (default: $CostMiss)
+  --CostFA        Set the Metric's Cost of a False Alarm (for DET Curves) (default: $CostFA)
+  --Rtarget       Set the Metric's Rate of Target value (for DET Curves) (default: $Rtarget)
   --computeDETCurve  Generate DETCurve 
   --titleOfSys    Specifiy the title of the system for use in the reports
   --ZipPROG       Specify the full path name to gzip (Default is to have 'gzip' in your path)
+  --OutputFileRoot   Specify the file base of most output files generated (default is to print)
   --GnuplotPROG   Specify the full path name to gnuplot (Default is to have 'gnuplot' in your path)
+  --NoDetFiles    Do not write any \'.det\' files (required for gnuplot)
   --noPNG         Do not create PNGs if a DET Curve is computed 
-  --version       Print version number and exit
-  --help          Print this usage information and exit
+  --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
+  --deltat        Set the deltat value (s) that is a temporal limit observation alignments 
+  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
+  --gtf           Specify that the files post this marker on the command line are Ground Truth Files
 
 Note:
 - Program will ignore the <config> section of the XML file.

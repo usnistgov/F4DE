@@ -971,12 +971,12 @@ TV08Mergehelper - TrecVid08 Viper XML Events Observations Merger Helper
 =head1 SYNOPSIS
 
 B<TV08Mergehelper> S<[ B<--help> | B<--man> | B<--version> ]>
-        S<B<--fps> I<fps> B<--writetodir> I<directory>>
-        S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
-        S<[B<--gtf>] [B<--ForceFilename> I<filename>]>
-        S<[B<--shift_overlap> B<--Same_overlap> [B<--overlaplistfile> [I<file>]]]>
-        S<[B<--ecfhelperfile> [I<file.csv>]]>
-        I<viper_source_file.xml[I<:frame_shift>]> [I<...>]
+  S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
+  S<[B<--gtf>] [B<--ForceFilename> I<filename>]>
+  S<[B<--shift_overlap> B<--Same_overlap> [B<--overlaplistfile> [I<file>]]>
+  S<[B<--OverlapOnlyXML>]] [B<--ecfhelperfile> [I<file.csv>]]>
+  S<[B<--writetodir> I<directory>] [B<--pruneEvents>] B<--fps> I<fps>>
+  I<viper_source_file.xml[I<:frame_shift>]> [I<...>]
 
 =head1 DESCRIPTION
 
@@ -1041,13 +1041,13 @@ B<TV08MergeHelper> will ignore the I<config> section of the XML file, as well as
 
 Ask B<TV08MergeHelper> to generate a CVS I<file.csv> (if provided, standard output otherwise) containing an entry per Viper file with information required to help in the generation of an ECF file.
 
-=item B<--fps> I<fps>
-
-Specify the default sample rate of the Viper files.
-
 =item B<--ForceFilename> I<filename>
 
 Force every Viper XML file loaded to use I<filename> as its I<sourcefile> I<filename>.
+
+=item B<--fps> I<fps>
+
+Specify the default sample rate of the Viper files.
 
 =item B<--gtf>
 
@@ -1061,25 +1061,25 @@ Display the usage page for this program. Also display some default values and in
 
 Display this man page.
 
-=item B<--overlaplistfile> [I<file>]
-
-Generate a report (written to I<file> if provided, standard output otherwise) listing all possible I<Event> I<Observation> overlaps seen according to the B<--shift_overlap> and B<--Same_overlap> heuristics.
-
 =item B<--OverlapOnlyXML>
 
 Create a Viper XML file containing only an extended framespan I<Observation> per I<Observation>s that overlapped. For example, if the first framespan is 10:20 and the second 15:30, the overlap region is 15:20 but the new observation's framespan will be 10:30.
+
+=item B<--overlaplistfile> [I<file>]
+
+Generate a report (written to I<file> if provided, standard output otherwise) listing all possible I<Event> I<Observation> overlaps seen according to the B<--shift_overlap> and B<--Same_overlap> heuristics.
 
 =item B<--pruneEvents>
 
 For each validated that is re-written, only add to this file's config section, events for which observations are seen
 
-=item B<--shift_overlap>
-
-Find I<Event> I<Observation> overlap found within the framespan where the I<Observation>'s Viper file overlaps, for files whose framespan's middlepoint does not match.
-
 =item B<--Same_overlap>
 
 Find I<Event> I<Observation> overlap found within the framespan where the I<Observation>'s Viper file overlaps, for files whose framespan's middlepoint does match.
+
+=item B<--shift_overlap>
+
+Find I<Event> I<Observation> overlap found within the framespan where the I<Observation>'s Viper file overlaps, for files whose framespan's middlepoint does not match.
 
 =item B<--TrecVid08xsd> I<location>
 
@@ -1146,26 +1146,26 @@ sub set_usage {
 
 $versionid
 
-Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--TrecVid08xsd location] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]] [--OverlapOnlyXML]] [--ecfhelperfile [file.csv]] viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] [--writetodir dir] [--pruneEvents] --fps fps 
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--gtf] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]] [--OverlapOnlyXML]] [--ecfhelperfile [file.csv]] [--writetodir dir] [--pruneEvents] --fps fps viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] 
 
 Will merge event observations found in given files related to the same sourcefile's filename, and will try to provide help in merging overlapping or repeating observations.
 
  Where:
-  --gtf           Specify that the file to validate is a Ground Truth File
+  --help          Print this usage information and exit
+  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+  --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --writetodir    Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension) (If no writetodir option is specified, print to stdout)
-  --pruneEvents   Only keep in the new file's config section events for which observations are seen
-  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
+  --gtf           Specify that the file to validate is a Ground Truth File
   --ForceFilename Specify that all files loaded refers to the same 'sourcefile' file
   --shift_overlap Will find overlap for frameshifted file's sourcefile which obersvations overlap in the file overlap section
   --Same_overlap  Will find overlap for the same file's sourcefile (ie not framshifted) which observations overlap
   --overlaplistfile   Save list of overlap found into file (or stdout if not provided)
   --OverlapOnlyXML    Create a XML file containing only overlap observations
   --ecfhelperfile Save a CSV file thaf contains information needed to generate the ECF file
-  --version       Print version number and exit
-  --help          Print this usage information and exit
-  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+  --writetodir    Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension) (If no writetodir option is specified, print to stdout)
+  --pruneEvents   Only keep in the new file's config section events for which observations are seen
+  --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
 
 Note:
 - This prerequisite that the file has already been validated against the 'TrecVid08.xsd' file (using xmllint)
