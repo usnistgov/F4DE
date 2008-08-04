@@ -149,7 +149,6 @@ my $xmllint = MMisc::get_env_val($xmllint_env, "");
 my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../data");
 $xsdpath = "$f4bv/data" 
   if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
-my $isgtf = 0;
 my $fps = undef;
 my $ecffile = "";
 my $verb = 0;
@@ -160,7 +159,7 @@ my $memdump = undef;
 my $dryrun = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                    T VW      defgh          s uvwx   #
+# Used:                    T VW      def h          s uvwx   #
 
 my %opt = ();
 GetOptions
@@ -170,7 +169,6 @@ GetOptions
    'version',
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
-   'gtf'             => \$isgtf,
    'fps=s'           => \$fps,
    'ecf=s'           => \$ecffile,
    'Verbose'         => \$verb,
@@ -178,11 +176,16 @@ GetOptions
    'work_in_dir=s'   => \$wid,
    'skip_validation' => \$skipval,
    'WriteMemDump=s'  => \$memdump,
-   'dryrun'          => \$dryrun,
+   'dryrun_mode'     => \$dryrun,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
+if ($opt{'man'}) {
+  my ($r, $o, $e) = MMisc::do_system_call($mancmd);
+  MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
+  MMisc::ok_quit($o);
+}
 
 MMisc::error_quit("No arguments left on command line\n\n$usage\n")
   if (scalar @ARGV == 0);
@@ -359,9 +362,14 @@ foreach my $sf (@ARGV) {
 }
 
 my @lin = ();
-push @lin, "the \'skip_validation\' option was used, therefore the XML files were not checked for accuracy. Submitted \'.tgz\' files must have been XML validated to be accepted." if ($skipval);
-push @lin, "the \'ecf\' option was not used, therefore your XML files were not matched against it. Submitted \.tgz\. files must run this process to avoid missed elements in submission." if (! $useECF);
-push @lin, "the \'dryrun\' option was used, therefore the \'Event_Processed:\' was not looked for in your submission text file.  Submitted EVAL \.tgz\. files must run this process to obtain the list of Events scored against." if ($dryrun);
+push @lin, "the \'skip_validation\' option was used, therefore the XML files were not checked for accuracy. Submitted archive files must have been XML validated to be accepted."
+  if ($skipval);
+push @lin, "the \'ecf\' option was not used, therefore your XML files were not matched against it. Submitted archive files must run this process to avoid missed elements in submission."
+  if (! $useECF);
+push @lin, "the \'dryrun_mode\' option was used, therefore the \'Event_Processed:\' was not looked for in your submission text file.  Submitted EVAL archive files must run this process to obtain the list of Events scored against."
+  if ($dryrun);
+push @lin, "the \'work_in_dir\' option was used, please rerun the program against the final archive file to confirm it is a valid submission file." 
+  if (defined $wid);
 
 MMisc::ok_quit
   (
@@ -574,7 +582,7 @@ sub check_exp_dirfiles {
     if (scalar @txtf > 1);
   return("Could not find the expected \'.txt\' file ($expected_exp) (seen: " . join(" ", @txtf) . ")", "")
     if (! grep(m%$expected_exp$%, @txtf));
-  vprint(5, "Found: $expected_exp" . (($dryrun) ? " (dryrun: skipping content check)" : "") );
+  vprint(5, "Found: $expected_exp" . (($dryrun) ? " (dryrun_mode: skipping content check)" : "") );
 
   my @events_processed = ();
   if (! $dryrun) {
@@ -675,7 +683,7 @@ sub validate_xml {
   vprint(5, "Loading ViperFile");
   my $tmp = "$dir/$xf";
   my ($retstatus, $object, $msg) = 
-    TrecVid08HelperFunctions::load_ViperFile($isgtf, $tmp, 
+    TrecVid08HelperFunctions::load_ViperFile(0, $tmp, 
 					     $fps, $xmllint, $xsdpath);
 
   return($msg, $warn)
@@ -865,35 +873,191 @@ sub _warn_add {
   $warn_msg .= "[Warning] " . join(" ", @_) ."\n";
 }
 
+############################################################ Manual
+
+=pod
+
+=head1 NAME
+
+TV08ED-Submission Checker - TrecVid08 Event Detection Submission Checker
+
+=head1 SYNOPSIS
+
+B<TV08ED-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
+  S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
+  S<[B<--ecf> I<ecffile> B<--fps> I<fps>]>
+  S<[B<--skip_validation>] [B<--WriteMemDump> I<dir>]>
+  S<[B<--dryrun_mode>] [B<--Verbose>]>
+  S<[B<--uncompress_dir> I<dir> | B<--work_in_dir> I<site>]
+  S<last_parameter>
+
+=head1 DESCRIPTION
+
+B<TV08ED-SubmissionChecker> is a I<TrecVid08 Event Detection Sumbission Checker> program designed to confirm that a submission archive follow the guidelines posted in the I<Submission Instructions> (Appendix B) of the I<TRECVid Event Detection Evaluation Plan>.
+The software will confirm that an archive's files and directory structure conforms with the I<Submission Instructions>, and will validate the SYS XML files.
+
+In the case of B<--work_in_dir>, S<last_parameter> is the directory in question.
+In all other cases, S<last_parameter> is the archive file to process (recongized extensions are available using the B<--help> option.
+
+=head1 PREREQUISITES
+
+B<TV08ED-SubmissionChecker> VIPeR files need to pass the B<TV08ViperValidator> validation process. The program relies on the following software and files.
+ 
+=over
+
+=item B<SOFTWARE>
+
+I<xmllint> (part of I<libxml2>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
+
+The program relies on I<gnu tar> and I<unzip> to process the archive files.
+
+=item B<FILES>
+
+The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
+It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> environment variable.
+You should not have to specify their location, if you have performed an install and have set the global environment variables.
+
+=item B<GLOBAL ENVIRONMENT VARIABLES>
+
+B<TV08ED-SubmissionChecker> relies on internal and external Perl libraries to function.
+
+Simply running the B<TV08ED-SubmissionChecker> script should provide you with the list of missing libraries.
+The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
+
+=over
+
+=item B<F4DE_BASE>
+
+The main variable once you have installed the software, it should be sufficient to run this program.
+
+=item B<F4DE_PERL_LIB>
+
+Allows you to specify a different directory for the B<F4DE> libraries.  This is a development environment variable.
+
+=item B<TV08_PERL_LIB>
+
+Allows you to specify a different directory for the B<TrecVid08> libraries.  This is a development environment variable.
+
+=back
+
+=back
+
+=head1 GENERAL NOTES
+
+B<TV08ED-SubmissionChecker> expects that the system and reference VIPeR files can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
+
+B<TV08ED-SubmissionChecker> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
+
+=head1 OPTIONS
+
+=over
+
+=item B<--dryrun_mode>
+
+Perform all regular task related with checking a submission, except for checking the content of the txt file for the S<Events_Processed:> entry.
+
+=item B<--ecf> I<ecffile>
+
+Specify the I<ECF> to load. The ECF provides the duration of the test set for the error calculations and the list of sourcefile filename expected to be seen in the submission. 
+
+=item B<--fps> I<fps>
+
+Specify the default sample rate (in frames per second) of the Viper files.
+
+=item B<--help>
+
+Display the usage page for this program. Also display some default values and information.
+
+=item B<--man>
+
+Display this man page.
+
+=item B<--skip_validation>
+
+Do not perform XML validation on the VIPeR files within the archive.
+
+=item B<--TrecVid08xsd> I<location>
+
+Specify the default location of the required XSD files (use B<--help> to get the list of required files).
+Can also be set using the B<TV08_XSDPATH> environment variable.
+
+=item B<--uncompress_dir> I<dir>
+
+Specify the location of the directory in which to uncompress the archive content (by default a temporary directory is created).
+
+=item B<--Verbose>
+
+Print a verbose log of every task being performed before performing it, and in some case, its results.
+
+=item B<--version>
+
+Display B<TV08ED-SubmissionChecker> version information.
+
+=item B<--WriteMemDump> I<dir>
+
+Write a memory dump of validated XML files into I<dir>.
+Useful to avoid having to re-run the entire validation process on the XML file when using another one F4DE's program that accept such files.
+
+=item B<--work_in_dir> I<site>
+
+Specify the location of the uncompressed files to check.
+This step is designed to help confirm that a directory structure is proper before generating the archive.
+When using this mode, the S<last_parameter> becomes the directory to work in.
+
+=item B<--xmllint> I<location>
+
+Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
+Can also be set using the B<TV08_XMLLINT> environment variable.
+
+=back
+
+=head1 USAGE
+
+=head1 BUGS
+
+Please send bug reports to <nist_f4de@nist.gov>
+
+=head1 AUTHORS
+
+Martial Michel <martial.michel@nist.gov>
+
+=cut
+
 ############################################################
 
 sub set_usage {
+  my $ok_exts = join(" ", @expected_ext);
   my $xsdfiles = join(" ", @xsdfilesl);
   my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-gtf] [--ecf ecffile --fps fps] [--uncompress_dir dir | --work_in_dir site] [--skip_validation] [--WriteMemDump dir] [--dryrun] [--Verbose] file.tgz [file.tgz [...]]
+Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir site] last_parameter
 
-Will confirm that a submission file conform to the 'Submission Instructions'
+Will confirm that a submission file conform to the 'Submission Instructions' (Appendix B) of the 'TRECVid Event Detection Evaluation Plan'.
+
+'last_parameter' is usually the archive file(s) to process.
+Only in the '--work_in_dir' case does it become the actual directory to work in.
 
  Where:
+  --help          Print this usage information and exit
+  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+  --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --gtf           Specify that the XML files are Ground Truth Files
   --ecf           Specify the ECF file to load
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
-  --uncompress_dir  Specify the directory in which the tgz file will be uncompressed
-  --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified instead of file.tgz (useful to confirm a submission before generating its tgz)
   --skip_validation  Bypass the XML files validation process
   --WriteMemDump  Write a memory dump of each validated XML file into \'dir\'. Note that this option will recreate the <EXP-ID> directory.
-  --dryrun        Do not check for content of txt file
+  --dryrun_mode   Do not check for content of txt file
   --Verbose       Explain step by step what is being checked
-  --version       Print version number and exit
-  --help          Print this usage information and exit
+  --uncompress_dir  Specify the directory in which the archive file will be uncompressed
+  --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified (useful to confirm a submission before generating its archive)
 
 Note:
-- This prerequisite that the file can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
+- Recognized archive extensions: $ok_exts
+- This prerequisite that the XML files can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
 - 'TrecVid08xsd' files are: $xsdfiles (and if the 'ecf' option is used, also: $ecf_xsdf)
 EOF
     ;
