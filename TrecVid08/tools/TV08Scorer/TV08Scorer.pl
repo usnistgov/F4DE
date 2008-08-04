@@ -1258,6 +1258,7 @@ Default value can be obtained by the B<--help> option.
 =item B<--ecf> I<ecffile>
 
 Specify the I<ECF> to load. The ECF provides the duration of the test set for the error calculations.  The ECF can also be used as a source file filter for performing conditional scoring by reducing both the reference and system I<Observations> whose sourcefile is listed in the ECF, but also whose time range's middlepoint is within the time range specified in the ECF.
+The program will refuse to score if not all the files listed inside the ECF file have been provided.
 
 =item B<--fps> I<fps>
 
