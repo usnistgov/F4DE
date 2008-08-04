@@ -167,6 +167,7 @@ GetOptions
    \%opt,
    'help',
    'version',
+   'man',
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
    'fps=s'           => \$fps,
@@ -209,9 +210,9 @@ if (defined $rtmpdir) {
 }
 
 if (defined $wid) {
-  MMisc::error_quit("\'work_in_dir\' argument is \'siteid\'")
+  MMisc::error_quit("\'work_in_dir\' argument is \'dir\'")
     if (MMisc::is_blank($wid));
- MMisc::error_quit("When using \'work_in_dir\', only one directory should be left on the command line")
+ MMisc::error_quit("When using \'work_in_dir\', only one information (<SITE>) should be left on the command line")
    if (scalar @ARGV > 1);
 }
 
@@ -292,7 +293,7 @@ foreach my $sf (@ARGV) {
       &valerr($sf, $err);
       next;
     }
-    vprint(2, "<SITE> = $site | <SUBNUM> = $subnum");
+    vprint(2, "<SITE> = $site | <SUB-NUM> = $subnum");
     
     vprint(1, "Uncompress archive");
     ($err, $tmpdir) = &uncompress_archive($dir, $file, $ext, $rtmpdir);
@@ -301,8 +302,8 @@ foreach my $sf (@ARGV) {
       next;
     }
   } else {
-    $site = $wid;
-    $tmpdir = $sf;
+    $site = $sf;
+    $tmpdir = $wid;
     my $de = MMisc::check_dir_r($tmpdir);
     MMisc::error_quit("Problem with \'work_in_dir\' directory ($tmpdir): $de")
       if (! MMisc::is_blank($de));
@@ -888,7 +889,7 @@ B<TV08ED-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
   S<[B<--ecf> I<ecffile> B<--fps> I<fps>]>
   S<[B<--skip_validation>] [B<--WriteMemDump> I<dir>]>
   S<[B<--dryrun_mode>] [B<--Verbose>]>
-  S<[B<--uncompress_dir> I<dir> | B<--work_in_dir> I<site>]
+  S<[B<--uncompress_dir> I<dir> | B<--work_in_dir> I<dir>]>
   S<last_parameter>
 
 =head1 DESCRIPTION
@@ -896,8 +897,8 @@ B<TV08ED-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
 B<TV08ED-SubmissionChecker> is a I<TrecVid08 Event Detection Sumbission Checker> program designed to confirm that a submission archive follow the guidelines posted in the I<Submission Instructions> (Appendix B) of the I<TRECVid Event Detection Evaluation Plan>.
 The software will confirm that an archive's files and directory structure conforms with the I<Submission Instructions>, and will validate the SYS XML files.
 
-In the case of B<--work_in_dir>, S<last_parameter> is the directory in question.
-In all other cases, S<last_parameter> is the archive file to process (recongized extensions are available using the B<--help> option.
+In the case of B<--work_in_dir>, S<last_parameter> is the E<lt>SITEE<gt>.
+In all other cases, S<last_parameter> is the archive file to process in the E<lt>I<SITE>E<gt>_E<lt>I<SUB-NUM>E<gt>.I<extension> form (recognized extensions are available using the B<--help> option).
 
 =head1 PREREQUISITES
 
@@ -999,11 +1000,11 @@ Display B<TV08ED-SubmissionChecker> version information.
 Write a memory dump of validated XML files into I<dir>.
 Useful to avoid having to re-run the entire validation process on the XML file when using another one F4DE's program that accept such files.
 
-=item B<--work_in_dir> I<site>
+=item B<--work_in_dir> I<dir>
 
 Specify the location of the uncompressed files to check.
 This step is designed to help confirm that a directory structure is proper before generating the archive.
-When using this mode, the S<last_parameter> becomes the directory to work in.
+When using this mode, the S<last_parameter> becomes E<lt>SITEE<gt>.
 
 =item B<--xmllint> I<location>
 
@@ -1013,6 +1014,18 @@ Can also be set using the B<TV08_XMLLINT> environment variable.
 =back
 
 =head1 USAGE
+
+=item B<TV08ED-SubmissionChecker SITE_3.tgz>
+
+Will perform a submission check on archive file I<SITE_3.tgz> in a temporarily created directory.
+
+=item B<TV08ED-SubmissionChecker SITE_3.tgz --uncompress_dir testdir --skip_validation --dryrun>
+
+Will perform a submission check on archive file I<SITE_3.tgz>, uncompressing its content in the I<testdir> directory. This will also not try to validate the XML files, it will simply confirm that the directory structure, and that all the files are present. It will not check the content of the E<lt>EXP-IDE<gt> txt file for the S<Events_Processed:> entry. 
+
+=item B<TV08ED-SubmissionChecker SITE --work_in_dir testdir -ecf ecfile.xml --fps 25>
+
+Will check that the files and directories in I<testdir> are the expected ones. It will check the txt file for the S<Events_Processed:> entry. It will also confirm that the XML files validate against the XML strucutre. It will confirm that the content of the XML files be matched against the ECF file (using a frame per second rate of 25) to permit scoring (the scorer will refuse to process those XML files is one or more of the file listed in the ECF is missing).
 
 =head1 BUGS
 
@@ -1033,12 +1046,12 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir site] last_parameter
+Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] last_parameter
 
 Will confirm that a submission file conform to the 'Submission Instructions' (Appendix B) of the 'TRECVid Event Detection Evaluation Plan'.
 
-'last_parameter' is usually the archive file(s) to process.
-Only in the '--work_in_dir' case does it become the actual directory to work in.
+'last_parameter' is usually the archive file(s) to process (of the form <SITE>_<SUB-NUM>.extension, example: NIST_2.tgz)
+Only in the '--work_in_dir' case does it become <SITE>.
 
  Where:
   --help          Print this usage information and exit
