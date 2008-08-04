@@ -3,7 +3,7 @@
 
 # TrecVid08 Stat Generator
 #
-# Author(s): Martial Michel
+# Author(s): Jonathan Fiscus, Martial Michel
 #
 # This software was developed at the National Institute of Standards and Technology by
 # employees and/or contractors of the Federal Government in the course of their official duties.
