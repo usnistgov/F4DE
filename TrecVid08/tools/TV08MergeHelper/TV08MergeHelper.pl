@@ -92,16 +92,6 @@ unless (eval "use Getopt::Long; 1") {
   $have_everything = 0;
 }
 
-# Data::Dumper (usualy part of the Perl Core)
-unless (eval "use Data::Dumper; 1") {
-  &_warn_add
-    (
-     "\"Data::Dumper\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-    );
-  $have_everything = 0;
-}
-
 # TrecVid08HelperFunctions (part of this tool)
 unless (eval "use TrecVid08HelperFunctions; 1") {
   my $pe = &eo2pe($@);

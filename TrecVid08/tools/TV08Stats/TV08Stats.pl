@@ -113,16 +113,6 @@ unless (eval "use Statistics::Descriptive::Discrete; 1") {
   $have_everything = 0;
 }
 
-# Data::Dumper (is part of CPAN)
-unless (eval "use Data::Dumper; 1") {
-  &_warn_add
-    (
-     "\"Data::Dumper\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?query=data+dumper&mode=all\" for installation information\n"
-    );
-  $have_everything = 0;
-}
-
 # TrecVid08HelperFunctions (part of this tool)
 unless (eval "use TrecVid08HelperFunctions; 1") {
   my $pe = &eo2pe($@);
