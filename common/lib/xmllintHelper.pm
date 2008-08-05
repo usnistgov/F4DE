@@ -47,13 +47,16 @@ sub new {
 ##########
 
 sub set_xmllint {
-  my ($self, $xmllint) = @_;
+  my ($self, $xmllint, $nocheck) = MMisc::iuav(\@_, undef, "", 0);
 
-  my ($nxmllint, $error) = &_check_xmllint($xmllint);
+  my $nxmllint = $xmllint;
+  if (! $nocheck) {
+    ($nxmllint, my $error) = &_check_xmllint($xmllint);
 
-  if (! MMisc::is_blank($error)) {
-    $self->_set_errormsg($error);
-    return(0);
+    if (! MMisc::is_blank($error)) {
+      $self->_set_errormsg($error);
+      return(0);
+    }
   }
 
   $self->{xmllint} = $nxmllint;
@@ -164,7 +167,7 @@ sub is_xsdfilesl_set {
 ############################################################
 
 sub set_xsdpath {
-  my ($self, $xsdpath) = @_;
+  my ($self, $xsdpath, $nocheck) = MMisc::iuav(\@_, undef, "", 0);
 
   return(0) if ($self->error());
 
@@ -173,13 +176,15 @@ sub set_xsdpath {
     return(0);
   }
 
-  my @xsdfilesl = $self->get_xsdfilesl();
-  my $error = "";
-  # Confirm that the required xsdfiles are available
-  ($xsdpath, $error) = &_check_xsdfiles($xsdpath, @xsdfilesl);
-  if (! MMisc::is_blank($error)) {
-    $self->_set_errormsg($error);
-    return(0);
+  if (! $nocheck) {
+    my @xsdfilesl = $self->get_xsdfilesl();
+    my $error = "";
+    # Confirm that the required xsdfiles are available
+    ($xsdpath, $error) = &_check_xsdfiles($xsdpath, @xsdfilesl);
+    if (! MMisc::is_blank($error)) {
+      $self->_set_errormsg($error);
+      return(0);
+    }
   }
 
   $self->{xsdpath} = $xsdpath;
