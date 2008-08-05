@@ -54,9 +54,6 @@ use MErrorH;
 # "MMisc.pm" (part of this program sources)
 use MMisc;
 
-# For the '_display()' function
-use Data::Dumper;
-
 ########################################
 ##########
 
@@ -387,11 +384,11 @@ sub get_Framerate_fileattrkey { return($key_fat_framerate); }
 ########## 'xmllint'
 
 sub set_xmllint {
-  my ($self, $xmllint) = @_;
+  my ($self, $xmllint, $nocheck) = MMisc::iuav(\@_, undef, "", 0);
 
   return(0) if ($self->error());
 
-  $self->{xmllintobj}->set_xmllint($xmllint);
+  $self->{xmllintobj}->set_xmllint($xmllint, $nocheck);
 
   if ($self->{xmllintobj}->error()) {
     $self->_set_errormsg($self->{xmllintobj}->get_errormsg());
@@ -429,11 +426,11 @@ sub get_xmllint {
 ########## 'xsdpath'
 
 sub set_xsdpath {
-  my ($self, $xsdpath) = @_;
+  my ($self, $xsdpath, $nocheck) = MMisc::iuav(\@_, undef, "", 0);
 
   return(0) if ($self->error());
 
-  $self->{xmllintobj}->set_xsdpath($xsdpath);
+  $self->{xmllintobj}->set_xsdpath($xsdpath, $nocheck);
   if ($self->{xmllintobj}->error()) {
     $self->_set_errormsg($self->{xmllintobj}->get_errormsg());
     return(0);
@@ -1013,7 +1010,7 @@ sub _display_all {
 
   return("") if ($self->error());
 
-  return(Dumper(\$self));
+  return(MMisc::get_sorted_MemDump(\$self));
 }
 
 #####
@@ -1037,7 +1034,7 @@ sub _display {
 
   my %out = $self->_clone_fhash_selected_events(@limitto_events);
 
-  return(Dumper(\%out));
+  return(MMisc::get_sorted_MemDump(\%out));
 }
 
 ########################################
@@ -1465,8 +1462,8 @@ sub _clone_core {
   
   my $clone = new TrecVid08ViperFile();
   
-  $clone->set_xmllint($self->get_xmllint());
-  $clone->set_xsdpath($self->get_xsdpath());
+  $clone->set_xmllint($self->get_xmllint(), 1);
+  $clone->set_xsdpath($self->get_xsdpath(), 1);
   $clone->set_as_gtf() if ($self->check_if_gtf());
   $clone->set_fps($self->get_fps()) if ($self->is_fps_set());
   $clone->set_file($self->get_file());
