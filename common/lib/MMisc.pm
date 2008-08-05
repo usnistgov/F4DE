@@ -469,6 +469,26 @@ sub are_float_equal {
 
 ##########
 
+sub get_sorted_MemDump {
+  my $obj = shift @_;
+
+  # Save the default sort key
+  my $s_dso = $Data::Dumper::Sortkeys;
+
+  # Force dumper to sort
+  $Data::Dumper::Sortkeys = 1;
+
+  # Get the Dumper dump
+  my $str = Dumper($obj);
+
+  # Reset the sort key to its previous value
+  $Data::Dumper::Sortkeys = $s_dso;
+
+  return($str);
+}
+
+#####
+
 sub dump_memory_object {
   my ($file, $ext, $obj, $txt_fileheader, $gzip_fileheader, $printfn) =
     &iuav(\@_, "", "", undef, undef, undef, 1);
@@ -476,8 +496,8 @@ sub dump_memory_object {
   return(0) if (! defined $obj);
   
   # The default is to write the basic text version
-  my $str = Dumper($obj);
   my $fileheader = $txt_fileheader;
+  my $str = &get_sorted_MemDump($obj);
 
   # But if we provide a gzip fileheader, try it
   if (defined $gzip_fileheader) {
