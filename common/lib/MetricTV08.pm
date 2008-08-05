@@ -15,7 +15,6 @@ package MetricTV08;
 @ISA = qw(MetricFuncs);
 
 use strict;
-use Data::Dumper;
 use MetricFuncs;
 
 =pod
