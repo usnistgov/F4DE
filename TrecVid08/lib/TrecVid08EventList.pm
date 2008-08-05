@@ -29,9 +29,6 @@ use ViperFramespan;
 use MErrorH;
 use MMisc;
 
-# For the '_display()' function
-use Data::Dumper;
-
 my $version     = "0.1b";
 
 if ($version =~ m/b$/) {
@@ -886,7 +883,7 @@ sub _display_all {
 
   return(-1) if ($self->error());
 
-  return(Dumper(\$self));
+  return(MMisc::get_sorted_MemDump(\$self));
 }
 
 ########################################

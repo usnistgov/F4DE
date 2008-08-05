@@ -34,9 +34,7 @@ my $versionid = "BipartiteMatch.pm Version: $version";
 ########################################
 # The trick it to keep the code totaly independent from knowing what
 # the objects it works on are, so try to rely on not object related
-# packages
-# such as Dumper, 
-use Data::Dumper;
+# packages such as
 # the Misc Functions
 use MMisc;
 # and the Error Handler
@@ -771,7 +769,7 @@ sub _weighted_bipartite_graph_matching {
   my %score = %{$rscore};
   my @keys = keys %score;
 
-  #  print "[%score] ", Dumper(\%score);
+  #  print "[%score] ", MMisc::get_sorted_MemDump(\%score);
 
   # No element
   return ("", ()) 
@@ -1033,7 +1031,7 @@ sub _display {
   my ($self, @todisplay) = @_;
 
   foreach my $td (@todisplay) {
-    print "[$td] ", Dumper($self->{$td});
+    print "[$td] ", MMisc::get_sorted_MemDump($self->{$td});
   }
 }
 
@@ -1042,7 +1040,7 @@ sub _display {
 sub _display_all {
   my ($self) = @_;
 
-  print Dumper(\$self);
+  print MMisc::get_sorted_MemDump(\$self);
 }
 
 ############################################################

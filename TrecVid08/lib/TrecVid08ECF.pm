@@ -27,7 +27,6 @@ use TrecVid08xmllint;
 use MtXML;
 use MErrorH;
 use MMisc;
-use Data::Dumper;
 
 my $version     = "0.1b";
 
@@ -450,7 +449,7 @@ sub _excerpt_processor {
     next if (! MMisc::is_blank($err)); 
     $tmp{$tag} = $value;
   }
-  #  print "[*]", Dumper(\%tmp), "\n";
+  #  print "[*]", MMisc::get_sorted_MemDump(\%tmp), "\n";
 
   my %fhash = ();
   %fhash = $self->_get_fhash() if ($self->_is_fhash_set());
@@ -730,7 +729,7 @@ sub txt_summary {
 sub _display {
   my ($self) = @_;
 
-  print Dumper(\$self);
+  print MMisc::get_sorted_MemDump(\$self);
 }
 
 ########################################

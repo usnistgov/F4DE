@@ -26,8 +26,6 @@ use TrecVid08ViperFile;
 use MErrorH;
 use MMisc;
 
-use Data::Dumper;
-
 my $version     = "0.1b";
 
 if ($version =~ m/b$/) {
@@ -1017,7 +1015,7 @@ sub _display {
 
   return(0) if ($self->error());
 
-  return Dumper(\$self);
+  return MMisc::get_sorted_MemDump(\$self);
 }
 
 ####################
