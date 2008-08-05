@@ -30,8 +30,6 @@ use TrecVid08EventList;
 use MErrorH;
 use MMisc;
 
-use Data::Dumper;
-
 my $version     = "0.1b";
 
 if ($version =~ m/b$/) {
@@ -151,9 +149,25 @@ my $VF_MemDump_FileHeader_gz = $VF_MemDump_FileHeader_gz_cmp
 ##########
 
 sub save_ViperFile_MemDump {
-  my ($fname, $object, $mode, $printw) = @_;
+  my ($fname, $aobject, $mode, $printw, $portable) = @_;
 
   $printw = MMisc::iuv($printw, 1);
+  $portable = MMisc::iuv($portable, 0);
+
+  my $object = undef;
+  if ($portable) {
+    $object = $aobject->clone();
+    # In order to make it portable, we remove command paths
+    # ie 'xmllint': force to ""
+    return(0) if (! defined $object);
+    return(0) if ($aobject->error());
+    $object->set_xmllint("", 1);
+    return(0) if ($object->error());
+  } else {
+    $object = $aobject;
+  }
+  return(0) if (! defined $object);
+  return(0) if ($object->error());
 
   return(MMisc::dump_memory_object
 	 ($fname, $VF_MemDump_Suffix, $object,
