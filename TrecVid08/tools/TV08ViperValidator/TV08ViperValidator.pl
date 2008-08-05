@@ -358,6 +358,8 @@ while ($tmp = shift @ARGV) {
 
   # Duplicate the object in memory with only the selected types
   my $nvf = $object->clone_with_selected_events(@asked_events);
+  MMisc::error_quit("Problem while \'clone\'-ing the ViperFile (" . $object->get_errormsg() . ")")
+      if ($object->error());
   MMisc::error_quit("Problem while \'clone\'-ing the ViperFile")
     if (! defined $nvf);
   
@@ -381,7 +383,7 @@ while ($tmp = shift @ARGV) {
     
     if (defined $MemDump) {
       MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
-        if (! TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump));
+        if (! TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump, 1, 1));
     }
   }
   
