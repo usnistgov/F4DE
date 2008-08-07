@@ -894,15 +894,17 @@ B<TV08ED-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
 
 =head1 DESCRIPTION
 
-B<TV08ED-SubmissionChecker> is a I<TrecVid08 Event Detection Sumbission Checker> program designed to confirm that a submission archive follow the guidelines posted in the I<Submission Instructions> (Appendix B) of the I<TRECVid Event Detection Evaluation Plan>.
+B<TV08ED-SubmissionChecker> is a I<TrecVid08 Event Detection Sumbission Checker> program designed to confirm that a submission archive follows the guidelines posted in the I<Submission Instructions> (Appendix B) of the I<TRECVid Event Detection Evaluation Plan>.
 The software will confirm that an archive's files and directory structure conforms with the I<Submission Instructions>, and will validate the SYS XML files.
 
 In the case of B<--work_in_dir>, S<last_parameter> is the E<lt>SITEE<gt>.
 In all other cases, S<last_parameter> is the archive file to process in the E<lt>I<SITE>E<gt>_E<lt>I<SUB-NUM>E<gt>.I<extension> form (recognized extensions are available using the B<--help> option).
 
+Supported archive formats list can be obtained using B<--help>.
+
 =head1 PREREQUISITES
 
-B<TV08ED-SubmissionChecker> VIPeR files need to pass the B<TV08ViperValidator> validation process. The program relies on the following software and files.
+B<TV08ED-SubmissionChecker> ViPER files need to pass the B<TV08ViperValidator> validation process. The program relies on the following software and files.
  
 =over
 
@@ -946,7 +948,7 @@ Allows you to specify a different directory for the B<TrecVid08> libraries.  Thi
 
 =head1 GENERAL NOTES
 
-B<TV08ED-SubmissionChecker> expects that the system and reference VIPeR files can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
+B<TV08ED-SubmissionChecker> expects that the system and reference ViPER files can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
 
 B<TV08ED-SubmissionChecker> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
 
@@ -956,7 +958,7 @@ B<TV08ED-SubmissionChecker> will ignore the I<config> section of the XML file, a
 
 =item B<--dryrun_mode>
 
-Perform all regular task related with checking a submission, except for checking the content of the txt file for the S<Events_Processed:> entry.
+Perform all regular tasks related with checking a submission, except for checking the content of the txt file for the S<Events_Processed:> entry.
 
 =item B<--ecf> I<ecffile>
 
@@ -964,7 +966,7 @@ Specify the I<ECF> to load. The ECF provides the duration of the test set for th
 
 =item B<--fps> I<fps>
 
-Specify the default sample rate (in frames per second) of the Viper files.
+Specify the default sample rate (in frames per second) of the ViPER files.
 
 =item B<--help>
 
@@ -976,7 +978,7 @@ Display this man page.
 
 =item B<--skip_validation>
 
-Do not perform XML validation on the VIPeR files within the archive.
+Do not perform XML validation on the ViPER files within the archive.
 
 =item B<--TrecVid08xsd> I<location>
 
@@ -1025,7 +1027,7 @@ Will perform a submission check on archive file I<SITE_3.tgz>, uncompressing its
 
 =item B<TV08ED-SubmissionChecker SITE --work_in_dir testdir -ecf ecfile.xml --fps 25>
 
-Will check that the files and directories in I<testdir> are the expected ones. It will check the txt file for the S<Events_Processed:> entry. It will also confirm that the XML files validate against the XML strucutre. It will confirm that the content of the XML files be matched against the ECF file (using a frame per second rate of 25) to permit scoring (the scorer will refuse to process those XML files is one or more of the file listed in the ECF is missing).
+Will check that the files and directories in I<testdir> are the expected ones. It will check the txt file for the S<Events_Processed:> entry. It will also confirm that the XML files validate against the XML strucutre. It will confirm that the content of the XML files be matched against the ECF file (using a frame per second rate of 25) to permit scoring (the scorer will refuse to process those XML files if one or more of the file listed in the ECF is missing).
 
 =head1 BUGS
 
@@ -1048,7 +1050,7 @@ $versionid
 
 Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] last_parameter
 
-Will confirm that a submission file conform to the 'Submission Instructions' (Appendix B) of the 'TRECVid Event Detection Evaluation Plan'.
+Will confirm that a submission file conforms to the 'Submission Instructions' (Appendix B) of the 'TRECVid Event Detection Evaluation Plan'.
 
 'last_parameter' is usually the archive file(s) to process (of the form <SITE>_<SUB-NUM>.extension, example: NIST_2.tgz)
 Only in the '--work_in_dir' case does it become <SITE>.
