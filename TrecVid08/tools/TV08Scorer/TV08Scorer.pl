@@ -1105,7 +1105,7 @@ sub make_trialID {
 
 =head1 NAME
 
-TV08Scorer - TrecVid08 Viper XML System to Reference Scoring Tool
+TV08Scorer - TrecVid08 ViPER XML System to Reference Scoring Tool
 
 =head1 SYNOPSIS
 
@@ -1128,7 +1128,7 @@ B<TV08Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
 B<TV08Scorer> performs an alignment scoring comparing I<reference> and I<system> I<Event> I<Observations> for the 2008 TRECVid Event Detection (ED) Evaluation.
 The produced reports implement the evaluation metrics as described on the L<http://www.nist.gov/speech/tests/trecvid/2008/>.
 
-There are 5 required elements to use the program: the limit temporal observation alignment parameter (via B<--delta_t>), the number of frames per second in the video files (via B<--fps>), the ground truth VIPeR files (via B<--gtf>), the duration of the test set (via B<--ecf> or B<--Duration>), and the system generated VIPeR files.
+There are 5 required elements to use the program: the limit temporal observation alignment parameter (via B<--delta_t>), the number of frames per second in the video files (via B<--fps>), the ground truth ViPER files (via B<--gtf>), the duration of the test set (via B<--ecf> or B<--Duration>), and the system generated ViPER files.
 
 The program generates several reports: the default report, alignment reports by file/event or globally (via B<--showATY> and B<--allAT>), and a contingency table of observation decision (via B<--observationCont>).  If the B<--OutputFileRoot> option is used, the reports are written to a file  beginning with the string specified by this option.  See the option descriptions below for the naming conventions.  
 
@@ -1136,7 +1136,7 @@ The program does not generate Decision Error Tradeoff (DET) curves by default be
 
 =head1 PREREQUISITES
 
-B<TV08Scorer> system and reference VIPeR files need to pass the B<TV08ViperValidator> validation process.  The scorer will quit on validation errors.  The scoring program relies on the following software and files.
+B<TV08Scorer> system and reference ViPER files need to pass the B<TV08ViperValidator> validation process.  The scorer will quit on validation errors.  The scoring program relies on the following software and files.
  
 =over
 
@@ -1181,7 +1181,7 @@ Allows you to specify a different directory for the B<TrecVid08> libraries.  Thi
 
 =head1 GENERAL NOTES
 
-B<TV08Scorer> expects that the system and reference VIPeR files can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
+B<TV08Scorer> expects that the system and reference ViPER files can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
 
 B<TV08Scorer> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
 
@@ -1195,7 +1195,7 @@ Show I<Alignment Table>, per File/Event as they are being processed.
 
 =item B<--CostFA> I<value>
 
-Set the Metric's Cost of a False Alarm (for DET Curves computtion).
+Set the Metric's Cost of a False Alarm (for DCR computation).
 Default value can be obtained by the B<--help> option.
 
 =item B<--computeDETCurve>
@@ -1262,7 +1262,7 @@ The program will refuse to score if not all the files listed inside the ECF file
 
 =item B<--fps> I<fps>
 
-Specify the default sample rate (in frames per second) of the Viper files.
+Specify the default sample rate (in frames per second) of the ViPER files.
 
 =item B<--GnuplotPROG> I<gnuplot>
 
@@ -1286,7 +1286,7 @@ Only perform alignment on the events listed on the command line.
 
 =item B<--MissCost> I<value>
 
-Set the Metric's Cost of a Miss (for DET Curves computation).
+Set the Metric's Cost of a Miss (for DCR computation).
 Default value can be obtained by the B<--help> option.
 
 =item B<--man>
@@ -1338,7 +1338,7 @@ Display B<TV08Scorer> version information.
 
 =item B<--writexml> [I<dir>]
 
-Write a Viper File to disk (or stdout if no I<dir> specified) containing the I<Mapped>, I<Unmapped_Sys> and I<Unmapped_Ref> event observations alignment from scoring the SYS file to the REF file.
+Write a ViPER File to disk (or stdout if no I<dir> specified) containing the I<Mapped>, I<Unmapped_Sys> and I<Unmapped_Ref> event observations alignment from scoring the SYS file to the REF file.
 
 =item B<--xmllint> I<location>
 
@@ -1409,15 +1409,15 @@ Will Score the XML file(s) provided (Truth vs System)
   --showAT        Show Gloabl Alignment Table
   --allAT         Show Alignment Table per File and Event processed
   --observationCont  Dump the Trials Contingency Table
-  --LimittoSYSEvents  For each sourcfile filename, only process events that are listed in the sys Viper files.
+  --LimittoSYSEvents  For each sourcfile filename, only process events that are listed in the sys ViPER files.
   --limitto       Only care about provided list of events
-  --writexml      Write a ViperFile XML containing the Mapped, UnmappedRef and UnmappedSys to disk (if dir is specified, stdout otherwise)
+  --writexml      Write a ViPER XML file containing the Mapped, Unmapped Reference and Unmapped System Event Observations to disk (if dir is specified, stdout otherwise)
   --pruneEvents   Only keep in the new file's config section events for which observations are seen
   --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
   --ecf           Specify the ECF file to load and perform scoring against
-  --MissCost      Set the Metric's Cost of a Miss (for DET Curves) (default: $CostMiss)
-  --CostFA        Set the Metric's Cost of a False Alarm (for DET Curves) (default: $CostFA)
-  --Rtarget       Set the Metric's Rate of Target value (for DET Curves) (default: $Rtarget)
+  --MissCost      Set the Metric's Cost of a Miss (for DCR computation) (default: $CostMiss)
+  --CostFA        Set the Metric's Cost of a False Alarm (for DCR computation) (default: $CostFA)
+  --Rtarget       Set the Metric's Rate of Target value (for DCR computation) (default: $Rtarget)
   --computeDETCurve  Generate DETCurve 
   --titleOfSys    Specifiy the title of the system for use in the reports
   --ZipPROG       Specify the full path name to gzip (Default is to have 'gzip' in your path)
