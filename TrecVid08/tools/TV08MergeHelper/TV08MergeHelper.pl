@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
-# TrecVid08 Viper XML File Merger
+# TrecVid08 ViPER XML File Merger
 #
 # Author(s): Martial Michel
 #
@@ -10,7 +10,7 @@
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "TrecVid08 Viper XML File Merger" is an experimental system.
+# "TrecVid08 ViPER XML File Merger" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -32,7 +32,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "TrecVid08 Viper XML File Merger Version: $version";
+my $versionid = "TrecVid08 ViPER XML File Merger Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -956,7 +956,7 @@ sub do_csv {
 
 =head1 NAME
 
-TV08Mergehelper - TrecVid08 Viper XML Events Observations Merger Helper
+TV08Mergehelper - TrecVid08 ViPER XML Events Observations Merger Helper
 
 =head1 SYNOPSIS
 
@@ -970,7 +970,7 @@ B<TV08Mergehelper> S<[ B<--help> | B<--man> | B<--version> ]>
 
 =head1 DESCRIPTION
 
-B<TV08MergeHelper> will load Viper XML files, extract all their I<Event> I<Observations> and for each I<Sourcefile filename> will generate a new Viper XML file containing all its I<Event> I<Observations>.
+B<TV08MergeHelper> will load ViPER XML files, extract all their I<Event> I<Observations> and for each I<Sourcefile filename> will generate a new ViPER XML file containing all its I<Event> I<Observations>.
 The program can also perform I<frame shift> of input files, and if requested provide a list of possible overlaps found in the file's overlap framespans.
 It can also geneate a CVS file to help the generation of an I<ECF> (used by B<TV08Scorer>).
 XML comments are added within output files for each modifications to I<Events>, making it easier to find modifications and adaptations to I<Event> I<Observations>.
@@ -1029,15 +1029,15 @@ B<TV08MergeHelper> will ignore the I<config> section of the XML file, as well as
 
 =item B<--ecfhelperfile> [I<file.csv>]
 
-Ask B<TV08MergeHelper> to generate a CVS I<file.csv> (if provided, standard output otherwise) containing an entry per Viper file with information required to help in the generation of an ECF file.
+Ask B<TV08MergeHelper> to generate a CVS I<file.csv> (if provided, standard output otherwise) containing an entry per ViPER file with information required to help in the generation of an ECF file.
 
 =item B<--ForceFilename> I<filename>
 
-Force every Viper XML file loaded to use I<filename> as its I<sourcefile> I<filename>.
+Force every ViPER XML file loaded to use I<filename> as its I<sourcefile> I<filename>.
 
 =item B<--fps> I<fps>
 
-Specify the default sample rate of the Viper files.
+Specify the default sample rate of the ViPER files.
 
 =item B<--gtf>
 
@@ -1053,7 +1053,7 @@ Display this man page.
 
 =item B<--OverlapOnlyXML>
 
-Create a Viper XML file containing only an extended framespan I<Observation> per I<Observation>s that overlapped. For example, if the first framespan is 10:20 and the second 15:30, the overlap region is 15:20 but the new observation's framespan will be 10:30.
+Create a ViPER XML file containing only an extended framespan I<Observation> per I<Observation>s that overlapped. For example, if the first framespan is 10:20 and the second 15:30, the overlap region is 15:20 but the new observation's framespan will be 10:30.
 
 =item B<--overlaplistfile> [I<file>]
 
@@ -1065,11 +1065,11 @@ For each validated that is re-written, only add to this file's config section, e
 
 =item B<--Same_overlap>
 
-Find I<Event> I<Observation> overlap found within the framespan where the I<Observation>'s Viper file overlaps, for files whose framespan's middlepoint does match.
+Find I<Event> I<Observation> overlap found within the framespan where the I<Observation>'s ViPER file overlaps, for files whose framespan's middlepoint does match.
 
 =item B<--shift_overlap>
 
-Find I<Event> I<Observation> overlap found within the framespan where the I<Observation>'s Viper file overlaps, for files whose framespan's middlepoint does not match.
+Find I<Event> I<Observation> overlap found within the framespan where the I<Observation>'s ViPER file overlaps, for files whose framespan's middlepoint does not match.
 
 =item B<--TrecVid08xsd> I<location>
 
@@ -1100,19 +1100,19 @@ Will load the three I<system> files (specifying the default sample rate at the I
 =item B<TV08MergeHelper --gtf -ForceFilename myvideo.mpg ref_test1.xml ref_test2.xml:2500 ref_test3.xml --fps NTSC --writetodir /tmp --shift_overlap --Same_overlap --overlaplistfile /tmp/ovlist.txt --ecfhelperfile ecfbase.csv>
 
 Will load the three I<reference> files (specifying the default sample rate at the I<NTSC> frame rate), shifting I<ref_test2.xml> by I<2500> frames.
-It will write a CVS file I<ecfbase.csv> that contains one entry per viper XML file (here one for I<rest_test1.xml>, I<ref_test2.xml> and I<ref_test3.xml>) containing among other things the viper file's sourcefile's filename, as well as the file's framespan range.
-It forces all viper file's sourcefile's filename to be I<myvideo.mpg>, meaning that there will be only one output file I</tmp/myideo.mpg.xml>.
+It will write a CVS file I<ecfbase.csv> that contains one entry per ViPER XML file (here one for I<rest_test1.xml>, I<ref_test2.xml> and I<ref_test3.xml>) containing among other things the ViPER file's sourcefile's filename, as well as the file's framespan range.
+It forces all ViPER file's sourcefile's filename to be I<myvideo.mpg>, meaning that there will be only one output file I</tmp/myideo.mpg.xml>.
 It will also write an B<overlaplistfile> I</tmp/ovlist.txt> that will contain both:
 
 =over
 
 =item * 
 the list of B<Same_overlap> I<Event> I<Observations> overlaps.
-By checking that for each pair of comparable I<Observations>, their file framespan range is the same for both related file (ie the viper file's I<NUMFRAMES> is equal), it will find I<Event> I<Observations> overlap within the files overlap zone (here the full file framespan range).
+By checking that for each pair of comparable I<Observations>, their file framespan range is the same for both related file (ie the ViPER file's I<NUMFRAMES> is equal), it will find I<Event> I<Observations> overlap within the files overlap zone (here the full file framespan range).
 
 =item *
 the list of B<shift_overlap> I<Event> I<Observations> overlaps.
-By checking that for each pair of comparable I<Observations>, the file framespan range is different for two I<Observations>' file (ie the files middlepoint distance is not zero), it will find the I<Event> I<Observations> that overlap within the files overlap zone (if file1 as a framespan range of 1:100 and file2 50:200, the overlap zone is 50:100).
+By checking that for each pair of comparable I<Observations>, the file framespan range is different for two I<Observations>' file (ie the files middlepoint distance is not zero), it will find the I<Event> I<Observations> that overlap within the files overlap zone (if file1 has a framespan range of 1:100 and file2 50:200, the overlap zone is 50:100).
 
 =back
 
