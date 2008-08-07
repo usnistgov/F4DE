@@ -1,20 +1,33 @@
 File:  README
-Date:  June 12, 2008
-F4DE Version: 1.0
+Date:  August 7, 2008
+F4DE Version: 1.1
+
 
 This directory contains the Framework for Detection Evaluation (F4DE)
 software package.  It contains a set of evaluation tools for detection
 evaluations and for specific NIST-coordinated evaluations listed below.
 	
-  - 2008 TRECVid Event Detection Evaluation. 
+  *  2008 TRECVid Event Detection Evaluation. 
     - TV08Scorer - The main evaluation script. 
     - TV08ViperValidator - A syntactic and semantic validator for 
-      both system output viper files and reference annotation files.
-    - TV08MergeHelper - A TRECVid '08 VIPeR-formatted file merging program.  
+      both system output ViPER files and reference annotation files.
+    - TV08MergeHelper - A TRECVid '08 ViPER-formatted file merging program.  
+    - TV08ED-SubmissionChecker - A tool designed to help confirm submission
+      archives before transmitting them to NIST. 
 
 
 INSTALLATION
 ------------
+
+F4DE consist of a set of Perl scripts that can be run under a shell terminal.
+It has been confirmed to work under Linux, OS X and Cygwin.
+The only pre-requisites of the tool are:
+-  a recent version of gnuplot (4.2 preferred, with png support)
+   to plot DETCurves for TV08Scorer.
+- a recent version of xmllint (part of libxml2) to validate XML files
+  against their corresponding schema files.
+- some Perl modules (available on CPAN [http://www.cpan.org/]). Availibility
+  of those will be tested during step 1 ('make check') of the installation process.
 
 Installation is a 4 step process:
 
@@ -32,7 +45,21 @@ Installation is a 4 step process:
 [*] If one of the Tools tests fails, please follow the bug reports submission 
 instructions detailed in the CONTACT section. The command line 
 that we would like you to run for each test can be found in the corresponding
-test number "res * .txt" file as its first line in the COMMANDLINE section.
+test number "res* .txt" file as its first line in the COMMANDLINE section.
+
+
+CYGWIN PRE-INSTALLATION NOTES
+----------------------------
+
+The tools have been confirmed to work under windows when running cygwin.
+After downloading the latest "setup.exe" from http://www.cygwin.com/
+make sure to add the following when in the "Select Packages":
+ - in "Devel", select "make" (required)
+ - in "Perl", select "perl" (required)
+ - in "Libs", select "libxml2" (required)
+ - in "Math", select "gnuplot" (to be able to use TV08Scorer)
+ - in "Archive", select "unzip" (to be able to use zip files with
+   TV08ED-SubmissionChecker)
 
 
 USAGE
@@ -48,6 +75,7 @@ some command lines with data files, go to the testing directories in
 'TrecVid08/test/<TOOLNAME>' and try the command lines printed on the
 first line of the res*.txt test case files.
 
+
 CONTACT
 -------
 
@@ -56,12 +84,14 @@ CONTACT
 For the bug report to be useful, please include the command line,
 files and text output, including the error message in your email.
 
+
 AUTHORS
 -------
 
        Martial Michel <martial.michel@nist.gov>
 
        Jonathan Fiscus <jonathan.fiscus@nist.gov>
+
 
 COPYRIGHT 
 ---------
