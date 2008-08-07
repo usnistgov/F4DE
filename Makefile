@@ -90,9 +90,12 @@ dist_head:
 	@fgrep F4DE .f4de_version > /dev/null
 
 dist_common:
+	@cp .f4de_version /tmp
+	@echo ""
+	@echo "***** Removing CLEAR07 Directory (for now)"
+	@(cd /tmp/`cat .f4de_version`; rm -rf CLEAR07)
 	@echo ""
 	@echo "***** Running all tests"
-	@cp .f4de_version /tmp
 	@(cd /tmp/`cat .f4de_version`; make check)
 	@echo "Building the tar.bz2 file"
 	@echo `cat .f4de_version`"-"`date +%Y%m%d-%H%M`.tar.bz2 > /tmp/.f4de_distname
