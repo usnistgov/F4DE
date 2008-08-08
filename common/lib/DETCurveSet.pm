@@ -134,7 +134,7 @@ sub addDET(){
   while (! $done){
     $done = 1;
     foreach (@{ $self->{DETList} }){
-      if ($fskey.$suffix eq $_->{FILESYSSafeKey}){
+      if ($fskey.$suffix eq $_->{FSSafeKey}){
         $suffix = "_$try";
         $try ++;
         $done = 0; 
