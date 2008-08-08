@@ -367,7 +367,7 @@ push @lin, "the \'skip_validation\' option was used, therefore the XML files wer
   if ($skipval);
 push @lin, "the \'ecf\' option was not used, therefore your XML files were not matched against it. Submitted archive files must run this process to avoid missed elements in submission."
   if (! $useECF);
-push @lin, "the \'dryrun_mode\' option was used, therefore the \'Event_Processed:\' was not looked for in your submission text file.  Submitted EVAL archive files must run this process to obtain the list of Events scored against."
+push @lin, "the \'dryrun_mode\' option was used, therefore the \'Events_Processed:\' was not looked for in your submission text file.  Submitted EVAL archive files must run this process to obtain the list of Events scored against."
   if ($dryrun);
 push @lin, "the \'work_in_dir\' option was used, please rerun the program against the final archive file to confirm it is a valid submission file." 
   if (defined $wid);
@@ -657,7 +657,6 @@ sub get_events_processed {
 
   if ($fc =~ m%^Events_Processed:(.+)$%m) {
     my $el = MMisc::clean_begend_spaces($1);
-    print "[$el]\n";
     $fc =~ s%^Events_Processed:(.+)$%%m;
     return("Multiple \'Events_Processed:\' lines found in txt file", @ep) 
       if ($fc =~ m%^Events_Processed:(.+)$%m);
