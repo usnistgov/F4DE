@@ -22,6 +22,7 @@ use Trials;
 use MetricTestStub;
 use Data::Dumper;
 use DETCurveSet;
+use MetricFuncs;
 
 my(@tics) = (0.00001, 0.0001, 0.001, 0.004, .01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 60, 80, 90, 95, 98, 99, 99.5, 99.9);
 
@@ -357,8 +358,16 @@ sub serialize
     open (FILE, ">$file") || die "Error: Unable to open file '$file' to serialize STDDETSet to";
     my $orig = $Data::Dumper::Indent; 
     $Data::Dumper::Indent = 0;
+    
+    ### Purity controls how self referential objects are written;
+    my $origPurity = $Data::Dumper::Purity;
+    $Data::Dumper::Purity = 1;
+             
     print FILE Dumper($self); 
+    
     $Data::Dumper::Indent = $orig;
+    $Data::Dumper::Purity = $origPurity;
+    
     close FILE;
     system("$self->{GZIPPROG} -9 -f $file > /dev/null");
   }
@@ -474,6 +483,12 @@ sub getSystemDecisionValue{
   my $self = shift;
   $self->computePoints();
   $self->{SYSTEMDECISIONVALUE};
+}
+
+sub getLineTitle{
+  my $self = shift;
+  
+  $self->{LINETITLE};
 }
 
 sub IntersectionIsolineParameter
@@ -1116,7 +1131,7 @@ sub writeMultiDetGraph
     my @colors = (1..40);  splice(@colors, 0, 1);
 
     ### Draw the isolines
-    if ( $Isolines == 1 ) {
+    if ( defined($Isolines) && $Isolines == 1 ) {
       my $troot = sprintf( "%s.isolines", $fileRoot );
       my $color = "rgb \"\#DDDDDD\"";
       open( ISODAT, "> $troot" ); 
@@ -1364,7 +1379,7 @@ sub writeGNUGraph{
     die("unable to open DET gnuplot file $fileRoot.dat.1"); 
   print DAT "# DET Graph made by DETCurve\n";
   print DAT "# Trial Params = ".($self->{TRIALS}->getMetricParamsStr())."\n";
-  print DAT "# Metric Params = ".($self->{METRIC}->getParamsStr())."\n";
+  print DAT "# Metric Params = ".($self->{METRIC}->getParamsStr(""))."\n";
   #    print DAT "# DET Type: $typeStr\n";
   if ($self->{STYLE} eq "pooled") {
     $withErrorCurve = 0;
