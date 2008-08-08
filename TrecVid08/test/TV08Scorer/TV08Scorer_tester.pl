@@ -2,7 +2,7 @@
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 use strict;
-use TV08TestCore;
+use F4DE_TestCore;
 
 my $scorer = shift @ARGV;
 error_quit("ERROR: Scorer ($scorer) empty or not an executable\n")
@@ -66,7 +66,7 @@ sub do_simple_test {
   my $command = "$scorer -a -f 25 -d 1 $fsf -g $frf -s -o $ao";
   $totest++;
 
-  return(TV08TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
+  return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
 }
 
 #####

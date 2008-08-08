@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 use strict;
-use TV08TestCore;
+use F4DE_TestCore;
 
 my $cmd = shift @ARGV;
 error_quit("ERROR: MergeHelper ($cmd) empty or not an executable\n")
@@ -65,7 +65,7 @@ sub do_complex_test {
   my $command = "$cmd $args";
   $totest++;
 
-  return(TV08TestCore::run_complextest($testname, $subtype, $command, $res, $mode, @sfiles));
+  return(F4DE_TestCore::run_complextest($testname, $subtype, $command, $res, $mode, @sfiles));
 }
 
 #####
@@ -76,7 +76,7 @@ sub do_simple_test {
   my $command = "$cmd $args";
   $totest++;
 
-  return(TV08TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
+  return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
 }
 
 #####

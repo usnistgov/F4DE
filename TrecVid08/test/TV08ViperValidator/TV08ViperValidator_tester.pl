@@ -2,7 +2,7 @@
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 use strict;
-use TV08TestCore;
+use F4DE_TestCore;
 
 my $validator = shift @ARGV;
 error_quit("ERROR: Validator ($validator) empty or not an executable\n")
@@ -102,7 +102,7 @@ sub do_simple_test {
   my $command = "$validator $args";
   $totest++;
 
-  return(TV08TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
+  return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
 }
 
 #####
