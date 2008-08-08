@@ -204,7 +204,7 @@ sub _getOrderedLabelIDs(){
 sub _getStrForLevel(){
   my ($self, $str, $lev) = @_;
   my @a = split(/\|/, $str);    
-  @a[$lev-1];
+  $a[$lev-1];
 }
 
 sub addData{
