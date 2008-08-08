@@ -1,4 +1,4 @@
-package TV08TestCore;
+package F4DE_TestCore;
 
 use strict;
 use MMisc;
@@ -7,7 +7,7 @@ my $magicmode = "makecheckfiles"; # And the magic word is ...
 my $magicmode_comp = "makecompcheckfiles";
 my @magicmodes = ($magicmode, $magicmode_comp);
 my $mmc_add = $ENV{TEST_MMC_ADD} || "-comp";
-my $dev = "TV08TestCore default error value";
+my $dev = "F4DE_TestCore default error value";
 my $lts = 10;                   # lines to show
 
 #####
@@ -30,7 +30,7 @@ sub make_syscall {
   my ($wrote, $otxt, $stdout, $stderr, $retcode) 
     = MMisc::write_syscall_logfile($ofile, @command);
 
-  die("TV08TestCore Internal Error\n")
+  die("F4DE_TestCore Internal Error\n")
     if (! $wrote);
  
   my @toshow = MMisc::get_txt_last_Xlines($stdout, $lts);
@@ -195,7 +195,7 @@ sub _mcfgetf {
     my $sfc = &_get_sfc($v);
     return(0) if ($sfc eq $dev);
     $df .= $mmc_add if ($mode eq $magicmode_comp);
-    die("TV08TestCore Internal Error\n")
+    die("F4DE_TestCore Internal Error\n")
       if (! MMisc::writeTo($df, "", 0, 0, $sfc));
   }
 
