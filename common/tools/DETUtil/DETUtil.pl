@@ -105,6 +105,7 @@ my $ConclusionOverall = 0;
 my $gzipPROG = "gzip";
 my $gnuplotPROG = "gnuplot";
 my $axisScales = undef;
+my $omitActual = 0;
 
 GetOptions
 (
@@ -124,6 +125,7 @@ GetOptions
   'ZipPROG=s'                          => \$gzipPROG,
   'GnuplotPROG=s'                      => \$gnuplotPROG,
   'AcisScale=s'                        => \$axisScales,
+  'OmitActualCalc'                     => \$omitActual, 
 	'version',                           => sub { print "STDListGenerator version: $VERSION\n"; exit },
 	'help'                               => sub { usage (); exit },
 );
@@ -172,6 +174,10 @@ if (defined($keyLoc))
 {
 	die "Error: Invalid key location '$keyLoc'" if ($keyLoc !~ /^(left|right|top|bottom|outside|below)$/);
 	$options{KeyLoc} = $keyLoc;
+}
+
+if ($omitActual){
+  $options{ReportActual} = 0;
 }
 
 ### make a temporary dirctory
@@ -366,7 +372,7 @@ $SIG{INT} = \&cleanup;
 
 system "mkdir $temp";
 my $report = $ds->renderAsTxt("$temp/merge", 1, 1, \%options);
-# print $report;
+#print $report;
 system "cp $temp/merge.png $OutPNGfile";
 cleanup() if (! $keepFiles);
 
@@ -400,6 +406,7 @@ sub usage
 #	print "  -C, --ConclusionOverall  Make a conclusion on the Sign test analysis.\n"; 
 	print "Graph tweaks:\n";
 	print "  -i, --isolines           Draw the isolines\n";
+	print "  -O, --OmitActualCalc     Omit outputting actual Miss/FA/Costs\n"; 
 	print "  -I, --Isopoints          Draw the isopoints and links\n"; 
 	print "  -T, --Title STR          Use STR for the title of the plot\n";    
 	print "  -l, --lineTitle STR      Modify the output line title by removing default information. STR\n";
