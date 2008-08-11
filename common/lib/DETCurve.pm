@@ -182,9 +182,60 @@ sub unitTest
     ###POOLED###  print "  OK\n";
     blockWeightedUnitTest();
     #   unitTestMultiDet();
+    offGraphLabelUnitTest();
 
     return 1;
   }
+
+sub offGraphLabelUnitTest(){
+  print " Checking off Graph Label tests...";
+  my $ret = "";
+  $ret = _getOffAxisLabel(0.9, 0.1, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
+  $ret = _getOffAxisLabel(0.9, 0.5, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 2 and returned '$ret'"  if ($ret !~ /Q2/);  
+  $ret = _getOffAxisLabel(0.9, 0.9, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 3 and returned '$ret'"  if ($ret !~ /Q3/);  
+
+  $ret = _getOffAxisLabel(0.5, 0.1, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
+  $ret = _getOffAxisLabel(0.5, 0.5, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 5 and returned '$ret'"  if ($ret ne "");  
+  $ret = _getOffAxisLabel(0.5, 0.9, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 6 and returned '$ret'"  if ($ret !~ /Q6/);  
+
+  $ret = _getOffAxisLabel(0.1, 0.1, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.1, 0.5, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
+  $ret = _getOffAxisLabel(0.1, 0.9, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
+
+  $ret = _getOffAxisLabel(0.9, 0.1, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
+  $ret = _getOffAxisLabel(0.9, 0.5, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 2 and returned '$ret'"  if ($ret !~ /Q2/);  
+  $ret = _getOffAxisLabel(0.9, 0.9, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 3 and returned '$ret'"  if ($ret !~ /Q3/);  
+
+  $ret = _getOffAxisLabel(0.5, 0.1, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
+  $ret = _getOffAxisLabel(0.5, 0.5, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 5 and returned '$ret'"  if ($ret ne "");  
+  $ret = _getOffAxisLabel(0.5, 0.9, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 6 and returned '$ret'"  if ($ret !~ /Q6/);  
+
+  $ret = _getOffAxisLabel(0.1, 0.1, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.1, 0.5, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
+  $ret = _getOffAxisLabel(0.1, 0.9, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
+
+  $ret = _getOffAxisLabel(0.9, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
+  $ret = _getOffAxisLabel(0.9, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
+  $ret = _getOffAxisLabel(0.9, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 2 and returned '$ret'"  if ($ret !~ /Q2/);  
+  $ret = _getOffAxisLabel(0.9, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 3 and returned '$ret'"  if ($ret !~ /Q3/);  
+
+  $ret = _getOffAxisLabel(0.5, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
+  $ret = _getOffAxisLabel(0.5, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
+  $ret = _getOffAxisLabel(0.5, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 5 and returned '$ret'"  if ($ret ne "");  
+  $ret = _getOffAxisLabel(0.5, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 6 and returned '$ret'"  if ($ret !~ /Q6/);  
+
+  $ret = _getOffAxisLabel(0.1, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.1, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.1, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
+  $ret = _getOffAxisLabel(0.1, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
+
+  $ret = _getOffAxisLabel(0.0, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.0, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.0, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
+  $ret = _getOffAxisLabel(0.0, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
+
+  print "  Ok\n";
+}
 
 sub blockWeightedUnitTest()
   {
@@ -945,7 +996,7 @@ sub write_gnuplot_threshold_header{
 }
 
 sub write_gnuplot_DET_header{
-  my($self, $FP, $title, $x_min, $x_max, $y_min, $y_max, $keyLoc, $includeRandom, $xScale, $yScale) = @_;
+  my($self, $FP, $title, $x_min, $x_max, $y_min, $y_max, $keyLoc, $includeRandom, $xScale, $yScale, $labels) = @_;
 
   my($p_x_min, $p_x_max) = ( ppndf($x_min/100), ppndf($x_max/100) );
   my($p_y_min, $p_y_max) = ( ppndf($y_min/100), ppndf($y_max/100) );
@@ -978,6 +1029,8 @@ sub write_gnuplot_DET_header{
   print $FP "set ylabel '".$self->{METRIC}->errMissLab()." (in ".$self->{METRIC}->errMissUnitLabel().")'\n";
   print $FP "set xlabel '".$self->{METRIC}->errFALab()." (in ".$self->{METRIC}->errFAUnitLabel().")'\n";
 
+  print $FP join("\n",@$labels)."\n" if (defined($labels));
+  
   if ($xScale eq "nd") {
     print $FP "set noxtics\n"; 
     &write_tics($FP, 'xtics', $x_min, $x_max);
@@ -1038,6 +1091,58 @@ sub write_tics{
   print $FP ")\n";
 }
 
+sub _log10{
+  my ($v) = @_;
+  ($v == 0) ? undef : log($v)/log(10)
+}
+
+## this functions Checks the extent of the graph frame and builds labels for points off the graph
+sub _getOffAxisLabel{
+  my ($yval, $xval, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $pointType, $qstr) = @_;
+
+  ### Convert the yval to graph scale (default is linear)
+  my $gyval = ($yval - $ymin) / ($ymax - $ymin);
+  if ($yScale eq "nd"){
+    $gyval = (ppndf($yval) - ppndf($ymin/100)) / (ppndf($ymax/100) - ppndf($ymin/100));
+  } elsif ($yScale eq "log") {
+    $gyval = (($yval <= 0) ? -1 : (_log10($yval) - _log10($ymin)) / (_log10($ymax) - _log10($ymin)));  
+  }   
+
+  ### Convert the xval to graph scale (default is linear)
+  my $gxval = ($xval - $xmin) / ($xmax - $xmin);
+  if ($xScale eq "nd"){
+    $gxval = (ppndf($xval) - ppndf($xmin/100)) / (ppndf($xmax/100) - ppndf($xmin/100));
+  } elsif ($xScale eq "log") {
+    $gxval = (($xval <= 0) ? -1 : (_log10($xval) - _log10($xmin)) / (_log10($xmax) - _log10($xmin)));  
+  }   
+
+  ### Check to see if the MinBest and actual are off axis
+  ###    Q1   Q2   Q3
+  ###       ------
+  ###    Q4 | Q5 | Q6
+  ###       ------
+  ###    Q7   Q8   Q9
+  # Q1
+  if ($gyval > 1 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q1" : "")."\" point lc $color pt $pointType at graph  -0.02, graph   1.02"; }
+  # Q2
+  if ($gyval > 1 && $gxval < 1) { return "set label \"".($qstr == 1 ? "Q2" : "")."\" point lc $color pt $pointType at graph $gxval, graph   1.02"; }
+  # Q3
+  if ($gyval > 1 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q3" : "")."\" point lc $color pt $pointType at graph   1.02, graph   1.02"; }
+  # Q4
+  if ($gyval > 0 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q4" : "")."\" point lc $color pt $pointType at graph  -0.02, graph $gyval"; }
+  # Q5
+  if ($gyval > 0 && $gxval < 1) { return ""; }
+  # Q6
+  if ($gyval > 0 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q6" : "")."\" point lc $color pt $pointType at graph     1.02, graph $gyval"; }
+  # Q7
+  if ($gyval < 0 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q7" : "")."\" point lc $color pt $pointType at graph    -0.02, graph  -0.02"; }
+  # Q8
+  if ($gyval < 0 && $gxval < 1) { return "set label \"".($qstr == 1 ? "Q8" : "")."\" point lc $color pt $pointType at graph   $gxval, graph  -0.02"; }
+  # Q9
+  if ($gyval < 0 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q9" : "")."\" point lc $color pt $pointType at graph     1.02, graph  -0.02"; }
+  "";
+}
+
 ### Options for graphs:
 ### title  -> the plot title
 ### noSerialize -> do not write the serialized DET Curves if the element exists
@@ -1073,20 +1178,27 @@ sub writeMultiDetGraph
     #      $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
     #      return \%multiInfo;  
     #    }
+   
+    ### Set labels for off-graph points
+    my @offAxisLabels = ();                                                                                                     
     
     ### Use the options
     my $title = "Combined DET Plot";
     my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $Isolines, $Isopoints) = (0.0001, 40, 5, 98, "top", undef, undef);
+    ### $*DisplayScaleConst Sets the scaling in the display.  for ND we print it as a percentage. 
     my ($gnuplotPROG, $xScale, $yScale, $makePNG, $reportActual) = (undef, "nd", "nd", 1, 1);
+
+    ### $this text element constitutes the extra plot commands for the graph
+    my $PLOTCOMS = "";
     
     if (defined $options) {
       if (exists($options->{yScale})) {
         if ($options->{yScale} eq "nd") {
           $yScale = "nd";         $ymin = 5;   $ymax = 98;
         } elsif ($options->{yScale} eq "log") {
-          $yScale = "log";    $ymin = 0.001; $ymax = 100;
+          $yScale = "log";    $ymin = 0.001; $ymax = 100; 
         } elsif ($options->{yScale} eq "linear") {
-          $yScale = "lin"; $ymin = 0;   $ymax = 100;
+          $yScale = "lin"; $ymin = 0;   $ymax = 100;      
         } else {
           print STDERR "Warning: Unknown DET yScale '$options->{yScale}' defaulting to normal deviate\n";
         }
@@ -1095,9 +1207,9 @@ sub writeMultiDetGraph
         if ($options->{xScale} eq "nd") {
           $xScale = "nd";         $xmin = 0.0001; $xmax = 40;
         } elsif ($options->{xScale} eq "log") {
-          $xScale = "log";    $xmin = 0.001;    $xmax = 100;
+          $xScale = "log";    $xmin = 0.001;    $xmax = 100; 
         } elsif ($options->{xScale} eq "linear") {
-          $xScale = "lin"; $xmin = 0;      $xmax = 100;
+          $xScale = "lin"; $xmin = 0;      $xmax = 100;      
         } else {
           print STDERR "Warning: Unknown DET xScale '$options->{xScale}' defaulting to normal deviate\n";
         }
@@ -1122,11 +1234,6 @@ sub writeMultiDetGraph
     $includeRandomCurve = 0 if ($detset->getDETForID(0)->{METRIC}->errMissUnit() ne "Prob" || $detset->getDETForID(0)->{METRIC}->errFAUnit() ne "Prob");
     my $needComma = ($includeRandomCurve ? 1 : 0);
         
-    ### open  the jointPlot
-    #    print "Writing DET to GNUPLOT file $fileRoot.*\n";
-    open (MAINPLT,"> $fileRoot.plt") ||
-      die("unable to open DET gnuplot file $fileRoot.plt");
-    $detset->getDETForID(0)->write_gnuplot_DET_header(*MAINPLT, $title, $xmin, $xmax, $ymin, $ymax, $keyLoc, $includeRandomCurve, $xScale, $yScale);
 
     my @colors = (1..40);  splice(@colors, 0, 1);
 
@@ -1181,9 +1288,9 @@ sub writeMultiDetGraph
                 
       close( ISODAT );
       if ($needComma) {
-        printf MAINPLT ",\\\n";
+        $PLOTCOMS .= ",\\\n";
       }
-      printf MAINPLT "  '$troot' title 'isolines' with lines lt $color";
+      $PLOTCOMS .= "  '$troot' title 'isolines' with lines lt $color";
       $needComma = 1;
     }
         
@@ -1248,11 +1355,11 @@ sub writeMultiDetGraph
       close( POINTS2DAT );
       close( LINESDAT );
       if ($needComma) {
-        printf MAINPLT ",\\\n";
+        $PLOTCOMS .= ",\\\n";
       }
-      printf MAINPLT "  '$trootlines' title 'no diff' with lines lt $colorlines" if( $isnodiff );
-      printf MAINPLT ",\\\n  '$trootpoints1' notitle with points lt $colorpoints1 pt 6 ps 1";
-      printf MAINPLT ",\\\n  '$trootpoints2' notitle with points lt $colorpoints2 pt 6 ps 1";
+      $PLOTCOMS .= "  '$trootlines' title 'no diff' with lines lt $colorlines" if( $isnodiff );
+      $PLOTCOMS .= ",\\\n  '$trootpoints1' notitle with points lt $colorpoints1 pt 6 ps 1";
+      $PLOTCOMS .= ",\\\n  '$trootpoints2' notitle with points lt $colorpoints2 pt 6 ps 1";
       $needComma = 1;
     }
         
@@ -1277,28 +1384,43 @@ sub writeMultiDetGraph
         $ltitle .= " ".sprintf("$combType $combStr=%.3f", $comb) if (! (defined($options) && exists($options->{lTitleNoBestComb})));
         $ltitle .= sprintf("=($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr) if (! (defined($options) && exists($options->{lTitleNoPointInfo})));
         if ($needComma) {
-          printf MAINPLT ",\\\n";
-        }
+          $PLOTCOMS .= ",\\\n";
+        }        
                     
         my $xcol = ($xScale eq "nd" ? "3" : "5");
         my $ycol = ($yScale eq "nd" ? "2" : "4");
-        printf MAINPLT "  '$troot.dat.1' using $xcol:$ycol title '$ltitle' with lines $colors[$d]";
+        $PLOTCOMS .= "  '$troot.dat.1' using $xcol:$ycol title '$ltitle' with lines $colors[$d]";
         $xcol = ($xScale eq "nd" ? "6" : "4");
         $ycol = ($yScale eq "nd" ? "5" : "3");
-        printf MAINPLT ",\\\n  '$troot.dat.2' using $xcol:$ycol notitle with points lc $colors[$d] pt 7";
+        $PLOTCOMS .= ",\\\n  '$troot.dat.2' using $xcol:$ycol notitle with points lc $colors[$d] pt 7";
+        my $bestlab = _getOffAxisLabel($miss, $fa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $colors[$d], 7, 0); 
+        push (@offAxisLabels, $bestlab) if ($bestlab ne "");
 
         if ($reportActual){
           $xcol = ($xScale eq "nd" ? "11" : "9");
           $ycol = ($yScale eq "nd" ? "10" : "8");
-          printf MAINPLT ", \\\n    '$troot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $colors[$d] pt 6";
+  
+          $PLOTCOMS .= ", \\\n    '$troot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $colors[$d] pt 6";
+
+          my $lab = _getOffAxisLabel($actMiss, $actFa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $colors[$d], 6, 0); 
+          push (@offAxisLabels, $lab) if ($lab ne "");
         }
         $needComma = 1;
       }
     }
         
-    print MAINPLT "\n";
-    
+    $PLOTCOMS .= "\n";
+
+
+    ### open  the jointPlot
+    #    print "Writing DET to GNUPLOT file $fileRoot.*\n";
+    open (MAINPLT,"> $fileRoot.plt") ||
+      die("unable to open DET gnuplot file $fileRoot.plt");
+    $detset->getDETForID(0)->write_gnuplot_DET_header(*MAINPLT, $title, $xmin, $xmax, $ymin, $ymax, $keyLoc, $includeRandomCurve, $xScale, $yScale, \@offAxisLabels);
+    print MAINPLT $PLOTCOMS;
     close MAINPLT;
+
+
     if ($makePNG) {
       $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
       buildPNG($fileRoot, (exists($options->{gnuplotPROG}) ? $options->{gnuplotPROG} : undef));
@@ -1322,28 +1444,30 @@ sub writeGNUGraph{
   #    my $title = $typeStr . " Detection Error Tradeoff Curve"; 
   my $title = "Detection Error Tradeoff Curve"; 
   my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $makePNG) = (0.0001, 40, 5, 98, "top", 1);
-  my ($gnuplotPROG, $xScale, $yScale, $reportActual) = (undef, "nd", "nd", 1);
+  
+  ### $*DisplayScaleConst Sets the scaling in the display.  for ND we print it as a percentage. 
+  my ($gnuplotPROG, $xScale, $yScale, $reportActual, $xDisplayScaleConst, $yDisplayScaleConst) = (undef, "nd", "nd", 1, 100, 100);
   if (defined $options) {
     $title = $options->{title} if (exists($options->{title}));
 
     if (exists($options->{yScale})) {
       if ($options->{yScale} eq "nd") {
-        $yScale = "nd";         $ymin = 5;   $ymax = 98;
+        $yScale = "nd";         $ymin = 5;   $ymax = 98; $yDisplayScaleConst = 100;
       } elsif ($options->{yScale} eq "log") {
-        $yScale = "log";    $ymin = 0.001; $ymax = 100;
+        $yScale = "log";    $ymin = 0.001; $ymax = 100;  $yDisplayScaleConst = 1;
       } elsif ($options->{yScale} eq "linear") {
-        $yScale = "lin"; $ymin = 0;   $ymax = 100;
+        $yScale = "lin"; $ymin = 0;   $ymax = 100;       $yDisplayScaleConst = 1;
       } else {
         print STDERR "Warning: Unknown DET yScale '$options->{yScale}' defaulting to normal deviate\n";
       }
     }    
     if (exists($options->{xScale})) {
       if ($options->{xScale} eq "nd") {
-        $xScale = "nd";         $xmin = 0.0001; $xmax = 40;
+        $xScale = "nd";         $xmin = 0.0001; $xmax = 40; $xDisplayScaleConst = 100;
       } elsif ($options->{xScale} eq "log") {
-        $xScale = "log";    $xmin = 0.001;    $xmax = 100;
+        $xScale = "log";    $xmin = 0.001;    $xmax = 100;  $xDisplayScaleConst = 1;
       } elsif ($options->{xScale} eq "linear") {
-        $xScale = "lin"; $xmin = 0;      $xmax = 100;
+        $xScale = "lin"; $xmin = 0;      $xmax = 100;       $xDisplayScaleConst = 1;
       } else {
         print STDERR "Warning: Unknown DET xScale '$options->{xScale}' defaulting to normal deviate\n";
       }
@@ -1365,13 +1489,15 @@ sub writeGNUGraph{
   ### Check the metric types to see if the random curve is defined
   my $includeRandomCurve = 1;
   $includeRandomCurve = 0 if ($self->{METRIC}->errMissUnit() ne "Prob" || $self->{METRIC}->errFAUnit() ne "Prob");
-        
-  #    print "Writing DET to GNUPLOT file $fileRoot.*\n";
-  open(PLT,"> $fileRoot.plt") ||
-    die("unable to open DET gnuplot file $fileRoot.plt");
+  
+  ### Set labels for off-graph points
+  my @offAxisLabels = ();                                                                                                     
+
+  ### $this text element constitutes the extra plot commands for the graph
+  my $PLOTCOMS = "";
+       
   open(THRESHPLT,"> $fileRoot.thresh.plt") ||
     die("unable to open DET gnuplot file $fileRoot.thresh.plt");
-  $self->write_gnuplot_DET_header(*PLT, $title, $xmin, $xmax, $ymin, $ymax, $keyLoc, $includeRandomCurve, $xScale, $yScale);
 
   ### The line data file
   my $withErrorCurve = 1;
@@ -1438,29 +1564,40 @@ sub writeGNUGraph{
     if (! (defined($options) && exists($options->{lTitleNoBestComb})));
   $ltitle .= sprintf(" ($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr)
     if (! (defined($options) && exists($options->{lTitleNoPointInfo})));
-    
+         
   my $xcol = ($xScale eq "nd" ? "3" : "5");
   my $ycol = ($yScale eq "nd" ? "2" : "4");
-  print PLT ",\\\n" if ($includeRandomCurve);
-  printf PLT "    '$fileRoot.dat.1' using $xcol:$ycol title '$ltitle' with lines 2";
+  $PLOTCOMS .= ",\\\n" if ($includeRandomCurve);
+  $PLOTCOMS .= "    '$fileRoot.dat.1' using $xcol:$ycol title '$ltitle' with lines 2";
   $xcol = ($xScale eq "nd" ? "6" : "4");
   $ycol = ($yScale eq "nd" ? "5" : "3");
-  printf PLT ", \\\n    '$fileRoot.dat.2' using $xcol:$ycol notitle with points lc 2 pt 7";
+  $PLOTCOMS .= sprintf(", \\\n    '$fileRoot.dat.2' using $xcol:$ycol notitle with points lc 2 pt 7");
+  my $bestlab = _getOffAxisLabel($miss, $fa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, 2, 7, 0); 
+  push (@offAxisLabels, $bestlab) if ($bestlab ne "");
   if ($reportActual){
     $xcol = ($xScale eq "nd" ? "11" : "9");
     $ycol = ($yScale eq "nd" ? "10" : "8");
-    printf PLT ", \\\n    '$fileRoot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc 2  pt 6";
+    $PLOTCOMS .= sprintf(", \\\n    '$fileRoot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc 2  pt 6");
+    my $lab = _getOffAxisLabel($actMiss, $actFa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, 2, 6, 0); 
+    push (@offAxisLabels, $lab) if ($lab ne "");
   }
   if ($withErrorCurve) {
     $xcol = ($xScale eq "nd" ? "8" : "12");
     $ycol = ($yScale eq "nd" ? "7" : "13");
-    printf PLT ", \\\n    '$fileRoot.dat.1' using $xcol:$ycol title '+/- 2 Standard Error' with lines 3"; 
+    $PLOTCOMS .= sprintf(", \\\n    '$fileRoot.dat.1' using $xcol:$ycol title '+/- 2 Standard Error' with lines 3"); 
     $xcol = ($xScale eq "nd" ? "10" : "14");
     $ycol = ($yScale eq "nd" ? "9" : "13");
-    printf PLT ", \\\n    '$fileRoot.dat.1' using $xcol:$ycol notitle with lines 3";
+    $PLOTCOMS .= ", \\\n    '$fileRoot.dat.1' using $xcol:$ycol notitle with lines 3";
   }
-  print PLT "\n";
+  $PLOTCOMS .= "\n";
+  
+  #    print "Writing DET to GNUPLOT file $fileRoot.*\n";
+  open(PLT,"> $fileRoot.plt") ||
+    die("unable to open DET gnuplot file $fileRoot.plt");
+  $self->write_gnuplot_DET_header(*PLT, $title, $xmin, $xmax, $ymin, $ymax, $keyLoc, $includeRandomCurve, $xScale, $yScale, \@offAxisLabels);
+  print PLT $PLOTCOMS;
   close PLT;
+  
   if ($makePNG) {
     buildPNG($fileRoot, $gnuplotPROG);
     $self->{LAST_GNU_DETFILE_PNG} = "$fileRoot.png";
