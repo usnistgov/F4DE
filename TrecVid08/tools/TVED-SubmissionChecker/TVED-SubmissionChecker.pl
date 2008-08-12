@@ -106,16 +106,6 @@ unless (eval "use Getopt::Long; 1") {
   $have_everything = 0;
 }
 
-# Cwd (usualy part of the Perl Core)
-unless (eval "use Cwd; 1") {
-  &_warn_add
-    (
-     "\"Cwd\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-    );
-  $have_everything = 0;
-}
-
 # Something missing ? Abort
 if (! $have_everything) {
   print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
@@ -441,8 +431,8 @@ sub uncompress_archive {
 
   my $lf = MMisc::concat_dir_file_ext($dir, $file, $ext);
 
-  my $pwd = Cwd::cwd();
-  my $f = Cwd::abs_path($lf);
+  my $pwd = MMisc::get_pwd();
+  my $f = MMisc::get_file_full_path($lf);
 
   my $ferr = MMisc::check_file_r($lf);
   return("Problem finding requested sourcefile ($lf): $ferr")
