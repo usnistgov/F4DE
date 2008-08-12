@@ -64,7 +64,7 @@ sub ViperFile_crop {
 
   ## Cropping is a 2 steps operations:
   # - trim to select values
-  # - shifting all elements to the beginning of the 
+  # - shifting all elements so that frames start at 1
 
   # Get an observation representation of all the viper file
   my @ao = $vf->get_all_events_observations();
