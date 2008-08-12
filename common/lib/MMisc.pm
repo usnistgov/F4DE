@@ -471,18 +471,29 @@ sub are_float_equal {
 
 sub get_sorted_MemDump {
   my $obj = shift @_;
+  my $indent = &iuv(shift @_, 2);
 
   # Save the default sort key
   my $s_dso = $Data::Dumper::Sortkeys;
+  # Save the default indent
+  my $s_din = $Data::Dumper::Indent;
+  # Save the deault Purity
+  my $s_dpu = $Data::Dumper::Purity;
 
   # Force dumper to sort
   $Data::Dumper::Sortkeys = 1;
+  # Force dumper to turn off all pretty print
+  $Data::Dumper::Indent = $indent;
+  #  Purity controls how self referential objects are written
+  $Data::Dumper::Purity = 1;
 
   # Get the Dumper dump
   my $str = Dumper($obj);
 
-  # Reset the sort key to its previous value
+  # Reset the keys to their previous values
   $Data::Dumper::Sortkeys = $s_dso;
+  $Data::Dumper::Indent   = $s_din;
+  $Data::Dumper::Purity   = $s_dpu;
 
   return($str);
 }
