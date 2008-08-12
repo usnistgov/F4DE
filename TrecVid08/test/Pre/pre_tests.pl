@@ -37,7 +37,7 @@ if ($ms > 0) {
   print "  Found all packages\n\n";
 }
 print "[Other Perl Required Packages]\n";
-$ms = &_chkpkg("Getopt::Long", "Data::Dumper", "File::Temp");
+$ms = &_chkpkg("Getopt::Long", "Data::Dumper", "File::Temp", "Cwd");
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the program, please install the missing ones\n\n";
   $err++;
@@ -49,10 +49,6 @@ print "[Optional Perl Packages]\n";
 $ms = &_chkpkg("Statistics::Descriptive::Discrete"); # TV08Stats
 if ($ms > 0) {
   print "  ** WARNING: Not all TV08Stats packages found, you will not be able to run this program\n";
-}
-$ms = &_chkpkg("Cwd"); # TV08ED-SubmissionChecker
-if ($ms > 0) {
-  print "  ** WARNING: Not all TV08ED-SubmissionChecker packages found, you will not be able to run this program\n";
 }
 
 ##########
