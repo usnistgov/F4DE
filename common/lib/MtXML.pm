@@ -144,7 +144,7 @@ sub split_line_into_tags {
   my $line = shift @_;
   my @all = ();
 
-  while ($line =~ s%([^\s]+?)\s*(\=)\s*(\"[^\"]+?\")%%) {
+  while ($line =~ s%([^\s]+?)\s*(\=)\s*(\"[^\"]*?\")%%) {
     push @all, "$1$2$3";
   }
   return("Leftover text after tag extraction ($line)", ())
