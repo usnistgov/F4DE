@@ -39,7 +39,6 @@ if ($version =~ m/b$/) {
 my $versionid = "TrecVid08EventList.pm Version: $version";
 
 my @ok_events = ();
-my @kernel_params_list = ();
 my @full_ok_events = ();
 my $obs_dummy_key = "";
 
@@ -53,18 +52,15 @@ sub new {
 
   my $errormsg = new MErrorH("TrecVid08EventList");
 
-  $errormsg->set_errormsg("TrecVid08EventList's \'new\' does not accept any parameter. ") if (scalar @_ > 0);
+  $errormsg->set_errormsg("\'new\' does not accept any parameter. ") if (scalar @_ > 0);
 
   my $tmp = &_set_infos();
   $errormsg->set_errormsg("Could not obtain the list authorized events ($tmp). ") if (! MMisc::is_blank($tmp));
 
   my $self =
     {
-     delta_t     => undef,
      MinDec_s    => undef,
      RangeDec_s  => undef,
-     E_t         => undef,
-     E_d         => undef,
      isgtf       => -1,
      ihash       => undef,
      ihash_changed  => 0,
@@ -88,7 +84,6 @@ sub _set_infos_ViperFile {
 
 sub _set_infos_Observations {
   my $dummy = new TrecVid08Observation();
-  @kernel_params_list = $dummy->get_kernel_params_list();
   $obs_dummy_key = $dummy->get_key_dummy_eventtype();
   @full_ok_events = @ok_events;
   push @full_ok_events, $obs_dummy_key;
@@ -236,164 +231,6 @@ sub get_isgtf {
   return($self->{isgtf});
 }
 
-########## 'delta_t'
-
-sub set_delta_t {
-  my ($self, $value) = @_;
-
-  return(0) if ($self->error());
-
-  $self->{delta_t} = $value;
-  return(1);
-}
-
-#####
-
-sub _is_delta_t_set {
-  my ($self) = @_;
-
-  return(0) if ($self->error());
-
-  return(1) if (defined $self->{delta_t});
-
-  return(0);
-}
-
-#####
-
-sub get_delta_t {
-  my ($self) = @_;
-
-  return(-1) if ($self->error());
-
-  if (! $self->_is_delta_t_set()) {
-    $self->_set_errormsg("\'delta_t\' not set");
-    return(0);
-  }
-
-  return($self->{delta_t});
-}
-
-########## 'E_t'
-
-sub set_E_t {
-  my ($self, $value) = @_;
-
-  return(0) if ($self->error());
-
-  $self->{E_t} = $value;
-  return(1);
-}
-
-#####
-
-sub _is_E_t_set {
-  my ($self) = @_;
-
-  return(0) if ($self->error());
-
-  return(1) if (defined $self->{E_t});
-
-  return(0);
-}
-
-#####
-
-sub get_E_t {
-  my ($self) = @_;
-
-  return(-1) if ($self->error());
-
-  if (! $self->_is_E_t_set()) {
-    $self->_set_errormsg("\'E_t\' not set");
-    return(0);
-  }
-
-  return($self->{E_t});
-}
-
-########## 'E_d'
-
-sub set_E_d {
-  my ($self, $value) = @_;
-
-  return(0) if ($self->error());
-
-  $self->{E_d} = $value;
-  return(1);
-}
-
-#####
-
-sub _is_E_d_set {
-  my ($self) = @_;
-
-  return(0) if ($self->error());
-
-  return(1) if (defined $self->{E_d});
-
-  return(0);
-}
-
-#####
-
-sub get_E_d {
-  my ($self) = @_;
-
-  return(-1) if ($self->error());
-
-  if (! $self->_is_E_d_set()) {
-    $self->_set_errormsg("\'E_d\' not set");
-    return(0);
-  }
-
-  return($self->{E_d});
-}
-
-########## 'MinDec_s'
-
-sub _is_MinDec_s_set {
-  my ($self) = @_;
-
-  return(0) if ($self->error());
-
-  return(1) if (defined $self->{MinDec_s});
-
-  return(0);
-}
-
-#####
-
-sub get_MinDec_s {
-  my ($self) = @_;
-
-  return(-1) if ($self->error());
-
-  return($self->_compute_Min_Range_Dec_s("MinDec_s"));
-}
-
-########## 'RangeDec_s'
-
-sub _is_RangeDec_s_set {
-  my ($self) = @_;
-
-  return(0) if ($self->error());
-
-  return(1) if (defined $self->{RangeDec_s});
-
-  return(0);
-}
-
-#####
-
-sub get_RangeDec_s {
-  my ($self) = @_;
-
-  return(-1) if ($self->error());
-
-  return($self->_compute_Min_Range_Dec_s("RangeDec_s"));
-}
-
 ################################################## 'Observations' function
 
 sub Observation_Added {
@@ -519,62 +356,6 @@ sub add_Observation {
   } else {
     return($self->_add_new_observation($obs));
   }
-}
-
-########################################
-
-sub _get_selected_param {
-  my ($self, $key) = @_;
-
-  if (! grep(m%^$key$%, @kernel_params_list)) {
-    $self->_set_errormsg("Unknown parameter list ($key). ");
-    return(0);
-  }
-
-  my $dummy = new TrecVid08Observation();
-
-  if ($key eq $dummy->get_kp_key_delta_t()) {
-    return($self->get_delta_t());
-  } elsif ($key eq $dummy->get_kp_key_MinDec_s()) {
-    return($self->get_MinDec_s());
-  } elsif ($key eq $dummy->get_kp_key_RangeDec_s()) {
-    return($self->get_RangeDec_s());
-  } elsif ($key eq $dummy->get_kp_key_E_t()) {
-    return($self->get_E_t());
-  } elsif ($key eq $dummy->get_kp_key_E_d()) {
-    return($self->get_E_d());
-  }
-
-  $self->_set_errormsg("WEIRD: Unknow parameter key ($key)");
-  return(0);
-}
-
-#####
-
-sub get_kernel_params {
-  my ($self) = @_;
-
-  return(0) if ($self->error());
-
-  my $isgtf = $self->get_isgtf();
-  return(0) if ($self->error());
-
-  if ($isgtf) {
-    $self->_set_errormsg("Can not get the kernel parameters list from a GTF EventList");
-    return(0);
-  }
-
-  my @out = ();
-  foreach my $key (@kernel_params_list) {
-    my $val = $self->_get_selected_param($key);
-    if ($self->error()) {
-      $self->_set_errormsg("Problem trying to obtain the kernel parameters list for \'$key\'. ");
-      return(0);
-    }
-    push @out, $val;
-  }
-
-  return(@out);
 }
 
 ##########
@@ -805,6 +586,50 @@ sub comparable_filenames {
 }
 
 ############################################################
+
+sub _is_MinDec_s_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (defined $self->{MinDec_s});
+
+  return(0);
+}
+
+#####
+
+sub get_MinDec_s {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  return($self->_compute_Min_Range_Dec_s("MinDec_s"));
+}
+
+########## 
+
+sub _is_RangeDec_s_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (defined $self->{RangeDec_s});
+
+  return(0);
+}
+
+#####
+
+sub get_RangeDec_s {
+  my ($self) = @_;
+
+  return(-1) if ($self->error());
+
+  return($self->_compute_Min_Range_Dec_s("RangeDec_s"));
+}
+
+##########
 
 sub _get_Min_Range_Dec_s_value {
   my ($self, $key) = @_;
