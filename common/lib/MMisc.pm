@@ -26,6 +26,8 @@ use strict;
 use File::Temp;
 # Data::Dumper
 use Data::Dumper;
+# Cwd
+use Cwd;
 
 my $version     = "0.1b";
 
@@ -1031,6 +1033,28 @@ sub concat_dir_file_ext {
   }
 
   return($out);
+}
+
+##########
+
+sub get_pwd { return(Cwd::cwd()); }
+
+#####
+
+sub get_file_full_path {
+  my ($rp, $from) = &iuav(\@_, "", &get_pwd());
+
+  return($rp) if (MMisc::is_blank($rp));
+
+  my $f = $rp;
+  $f = "$from/$rp" if ($rp !~ m%^\/%);
+
+  my $o = Cwd::abs_path($f);
+
+  $o = $f
+    if (MMisc::is_blank($o)); # The request PATH does not exist, fake it
+
+  return($o);
 }
 
 ##########
