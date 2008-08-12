@@ -107,22 +107,28 @@ my %hash_file_attributes_types =
    $key_fat_framerate  => "fvalue",
   );
 
+my $key_xtra = "xtra_"; # A very special type, is both optional and a partial match
+
 my @array_file_inline_attributes =
   ( "id", "name" );             # 'id' is to be first
 
 my @list_objects_attributes =   # Order is important
-  ("DetectionScore", "DetectionDecision", "Point", "BoundingBox");
+  ("DetectionScore", "DetectionDecision", "Point", "BoundingBox", "$key_xtra");
 
 my @list_objects_attributes_types = # Order is important (has to match previous)
-  ("fvalue", "bvalue", "point", "bbox");
+  ("fvalue", "bvalue", "point", "bbox", "svalue");
 
 my @list_objects_attributes_isd = # Order is important (has to match previous too)
-  (0, 0, 1, 1);
+  (0, 0, 1, 1, 0);
+
+my @list_objects_attributes_expected = # Order is important (has to match previous too)
+  (1, 1, 1, 1, 0);
 
 my @not_gtf_required_objects_attributes =
   ($list_objects_attributes[0], $list_objects_attributes[1]);
 
 my %hash_objects_attributes_types = ();
+my %hash_objects_attributes_types_expected = ();
 
 my %hash_objects_attributes_types_dynamic = ();
 
@@ -132,6 +138,7 @@ my %hasharray_inline_attributes = ();
 @{$hasharray_inline_attributes{"fvalue"}} = ("value");
 @{$hasharray_inline_attributes{"bvalue"}} = ("value");
 @{$hasharray_inline_attributes{"dvalue"}} = ("value");
+@{$hasharray_inline_attributes{"svalue"}} = ("value");
 
 my @array_objects_inline_attributes = 
   ("name", "id", "framespan");  # order is important
@@ -219,6 +226,11 @@ sub _fill_required_hashes {
 
     $hash_objects_attributes_types{$key} = 
       $keyt;
+
+    if ($list_objects_attributes_expected[$i]) {
+      $hash_objects_attributes_types_expected{$key} =
+        $keyt;
+    }
 
     $hash_objects_attributes_types_dynamic{$key} =
       $list_objects_attributes_isd[$i];
@@ -957,7 +969,7 @@ sub validate {
 ####################
 
 sub _call_writeback2xml {
-  my ($self, $comment, $rfhash, @limitto_events) = @_;
+  my ($self, $comment, $rfhash, $rxtra_list, @limitto_events) = @_;
 
   return(0) if ($self->error());
 
@@ -972,7 +984,7 @@ sub _call_writeback2xml {
 
   return(0) if ($self->error());
 
-  return($self->_writeback2xml($comment, $rfhash, @limitto_events));
+  return($self->_writeback2xml($comment, $rfhash, $rxtra_list, @limitto_events));
 }
 
 #####
@@ -990,7 +1002,10 @@ sub reformat_xml {
     return(0);
   }
 
-  return($self->_call_writeback2xml($comment, \%tmp, @limitto_events));
+  my @xtra_list = $self->list_xtra_attributes();
+  return(0) if ($self->error());
+
+  return($self->_call_writeback2xml($comment, \%tmp, \@xtra_list, @limitto_events));
 }
 
 #####
@@ -999,8 +1014,9 @@ sub get_base_xml {
   my ($self, @limitto_events) = @_;
 
   my %tmp = ();
+  my @xtra_list = ();
 
-  return($self->_call_writeback2xml("", \%tmp, @limitto_events));
+  return($self->_call_writeback2xml("", \%tmp, \@xtra_list, @limitto_events));
 }
 
 ####################
@@ -1110,7 +1126,7 @@ sub _get_event_observation_common {
 
 sub get_dummy_observation {
   my ($self) = @_;
-  # This function is really only used by the merger in case there are no observations in a file
+  # This function is really only used by the tools in case there are no observations in a file
 
   my ($xmlfile, $filename, $fps, $isgtf, $file_fs) = $self->_get_event_observation_common();
   return(0) if ($self->error());
@@ -1171,7 +1187,7 @@ sub get_dummy_observation {
     return(0);
   }
 
-  my $fs = $file_fs;          # to validate, it needs a obs' framespan
+  my $fs = $file_fs; # to validate, it needs a obs' framespan
   my $fs_fs = new ViperFramespan();
   if (! $fs_fs->set_value_from_beg_to($fs)) {
     $self->_set_errormsg("In observation creation: ViperFramespan ($fs) error (" . $fs_fs->get_errormsg() . ")");
@@ -1199,6 +1215,7 @@ sub get_dummy_observation {
       }
     }
   }
+  # Skip xtra attributes
 
   if (! $obs->validate()) {
     $self->_set_errormsg("Problem validating observation (" . $obs->get_errormsg() .")");
@@ -1328,8 +1345,10 @@ sub get_event_observations {
       return(0);
     }
 
-    ## This is past the validation step, so we know that types are ok, so simply process the dynamic vs non dynamic elements
-    my @all_obj_attrs = keys %hash_objects_attributes_types_dynamic;
+    ## This is past the ViperFile validation step, so we know
+    # that types are ok, so simply process the dynamic vs
+    # non dynamic elements
+    my @all_obj_attrs = keys %hash_objects_attributes_types_expected;
     foreach my $okey (@all_obj_attrs) {
       if (exists $all_obs{$id}{$okey}) {
         my %ih = %{$all_obs{$id}{$okey}};
@@ -1370,6 +1389,17 @@ sub get_event_observations {
       }
     }
 
+    ## And the xtra attributes (if any)
+    if (exists $all_obs{$id}{$key_xtra}) {
+      foreach my $xtra (keys %{$all_obs{$id}{$key_xtra}}) {
+        if (! $obs->set_xtra_attribute($xtra, $all_obs{$id}{$key_xtra}{$xtra})) {
+          $self->_set_errormsg("Problem adding xtra attribute to observation (" . $obs->get_errormsg() . ")");
+          return(0);
+        }
+      }
+    }
+
+    ## Validate observation
     if (! $obs->validate()) {
       $self->_set_errormsg("Problem validating observation (" . $obs->get_errormsg() .")");
       return(0);
@@ -1817,7 +1847,7 @@ sub add_observation {
   }
 
   # Now process the attributes information
-  foreach my $attr (keys %hash_objects_attributes_types) {
+  foreach my $attr (keys %hash_objects_attributes_types_expected) {
     if ($hash_objects_attributes_types_dynamic{$attr}) {
       # Dynamic objects
       my ($set, %values) = $obs->get_selected($attr);
@@ -1845,6 +1875,17 @@ sub add_observation {
       next if (! $set);
       @values = &_bvalue_convert($attr, @values);
       @{$sp_out{$attr}{$obs_fs}} = @values;
+    }
+  }
+
+  ## and the xtra attributes
+  if ($obs->is_xtra_set()) {
+    my @xl = $obs->list_xtra_attributes();
+    foreach my $xtra (@xl) {
+      my $v = $obs->get_xtra_value($xtra);
+      $self->_set_errormsg("Problem obtaining observation xtra attribute value (" . $obs->get_errormsg() . ")")
+        if ($obs->error());
+      $sp_out{$key_xtra}{$xtra} = $v;
     }
   }
 
@@ -2335,6 +2376,109 @@ sub get_summary {
   return($txt);
 }
 
+######################################## 'xtra'
+
+sub set_xtra_attribute {
+  my ($self, $attr, $value) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'set_xtra_attribute\' on a validated file");
+    return(0);
+  }
+
+  my %fhash = $self->_get_fhash();
+  foreach my $event (@ok_events) {
+    next if (! exists $fhash{$event});
+    foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+      $fhash{$event}{$id}{$key_xtra}{$attr} = $value;
+    }
+  }
+  $self->_set_fhash(%fhash);
+
+  return(1);
+}
+
+##########
+
+sub unset_xtra_attribute {
+  my ($self, $attr) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'unset_xtra_attribute\' on a validated file");
+    return(0);
+  }
+
+  my %fhash = $self->_get_fhash();
+  foreach my $event (@ok_events) {
+    next if (! exists $fhash{$event});
+    foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+      next if (! exists $fhash{$event}{$id}{$key_xtra});
+      delete $fhash{$event}{$id}{$key_xtra}{$attr} 
+        if (exists $fhash{$event}{$id}{$key_xtra}{$attr});
+    }
+  }
+  $self->_set_fhash(%fhash);
+
+  return(1);
+}
+
+##########
+
+sub list_xtra_attributes {
+  my ($self) = @_;
+
+  my @aa = ();
+
+  return(@aa)
+    if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'list_xtra_attributes\' on a validated file");
+    return(@aa);
+  }
+
+  my %fhash = $self->_get_fhash();
+  foreach my $event (@ok_events) {
+    next if (! exists $fhash{$event});
+    foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+      next if (! exists $fhash{$event}{$id}{$key_xtra});
+      push @aa, keys %{$fhash{$event}{$id}{$key_xtra}};
+    }
+  }
+  @aa = MMisc::make_array_of_unique_values(@aa);
+
+  return(@aa);
+}
+
+##########
+
+sub unset_all_xtra_attributes {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'unset_all_xtra_attributes\' on a validated file");
+    return(0);
+  }
+
+  my %fhash = $self->_get_fhash();
+  foreach my $event (@ok_events) {
+    next if (! exists $fhash{$event});
+    foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+      next if (! exists $fhash{$event}{$id}{$key_xtra});
+      delete $fhash{$event}{$id}{$key_xtra};
+    }
+  }
+  $self->_set_fhash(%fhash);
+
+  return(1);
+}
+
 ############################################################
 # Internals
 ########################################
@@ -2591,9 +2735,9 @@ sub _parse_file_section {
   my %expected_hash = %hash_file_attributes_types;
   @expected = keys %expected_hash;
   ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
-  return("Could not find all the expected \'$wtag\' attributes", ())
+  return("Could not find all the expected \'$wtag\' attributes [Found: " . join(" ", @$in) ."] [Expected: " . join(" ", @expected) . "]", ())
     if (scalar @$in != scalar @expected);
-  return("Found some unexpected \'$wtag\' attributes", ())
+  return("Found some unexpected \'$wtag\' attributes [" . join(" ", @$out) . "]", ())
     if (scalar @$out > 0);
 
   # Check they are of valid type & reformat them for the output file hash
@@ -2696,13 +2840,13 @@ sub _parse_object_section {
   return("While parsing the \'$wtag\' \'attribute\'s : $text", ())
     if (! MMisc::is_blank($text));
   
-  # Confirm they are the ones we want
-  my %expected_hash = %hash_objects_attributes_types;
+  # Confirm they are the ones we want (except for xtra ones)
+  my %expected_hash = %hash_objects_attributes_types_expected;
   @expected = keys %expected_hash;
   ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
-  return("Could not find all the expected \'$wtag\' attributes", ())
+  return("Could not find all the expected \'$wtag\' attributes [Found: " . join(" ", @$in) ."] [Expected: " . join(" ", @expected) . "]", ())
     if (scalar @$in != scalar @expected);
-  return("Found some unexpected \'$wtag\' attributes", ())
+  return("Found some unexpected \'$wtag\' attributes[" . join(" ", @$out) . "]", ())
     if (scalar @$out > 0);
 
   my @det_sub = @not_gtf_required_objects_attributes;
@@ -2734,6 +2878,10 @@ sub _parse_object_section {
       @{$object_hash{$key}{$fs}} = @{$attr{$key}{$val}{$fs}};
     }
   }
+
+  # simply copy the xtra ones
+  $object_hash{$key_xtra} = $attr{$key_xtra}
+      if (exists $attr{$key_xtra});
 
   my ($etype, $stype) = &split_full_event($object_name, $self->check_force_subtype()); 
 
@@ -2795,12 +2943,12 @@ sub _extract_data {
 
   while (! MMisc::is_blank($str)) {
     my $name = MtXML::get_next_xml_name($str, $default_error_value);
-    return("Problem obtaining a valid XML name, aborting", $str)
+    return("Problem obtaining a valid XML name, aborting", ())
       if ($name eq $default_error_value);
-    return("\'data\' extraction process does not seem to have found one, aborting", $str)
+    return("\'data\' extraction process does not seem to have found one, aborting", ())
       if ($name !~ m%^data\:%i);
     my $section = MtXML::get_named_xml_section($name, \$str, $default_error_value);
-    return("Problem obtaining the \'data\:\' XML section, aborting", "")
+    return("Problem obtaining the \'data\:\' XML section, aborting", ())
       if ($name eq $default_error_value);
 
     # All within a data: entry is inlined, so get the inlined content
@@ -2838,6 +2986,9 @@ sub _extract_data {
     } elsif ($allow_nofspan) {
       # This is an element for which we know at this point we do not have to worry about its framespan status
       # (most likely not processing any "object" but a "file"), make it valid for the entire provided framespan
+      $lfspan = $fspan;
+    } elsif (&_is_an_xtra_attribute($type)) {
+      # valid for the entire provided framespan
       $lfspan = $fspan;
     } else {
       # if none was specified, check if the type is dynamic
@@ -2900,19 +3051,82 @@ sub _parse_attributes {
 
     # Process the content
     $sec = MMisc::clean_begend_spaces($sec);
-    
-    if (MMisc::is_blank($sec)) {
-      $attrs{$name} = undef;
-    } else {
-      ($text, my %tmp) = $self->_extract_data($sec, $fspan, $allow_nofspan, $name);
-      return("Error while processing the \'data\:\' content of the \'$name\' \'attribute\' ($text)", ())
-        if (! MMisc::is_blank($text));
-      %{$attrs{$name}} = %tmp;
+
+    if (&_is_an_xtra_attribute($name)) {
+      if (! MMisc::is_blank($sec)) {
+        my $kn = &_get_xtra_attribute_name($name);
+        ($text, my %tmp) = $self->_extract_data($sec, $fspan, $allow_nofspan, $name);
+        return("Error while processing the \'data\:\' content of the xtra ($kn) \'attribute\' ($text)", ())
+          if (! MMisc::is_blank($text));
+        ($text, my $kv) = &_dive_structure(\%tmp);
+        return("Error while extracting the \'data\:\' content of the xtra ($kn) \'attribute\' ($text)", ())
+          if (! defined $kv);
+        $attrs{$key_xtra}{$kn} = $kv;
+      }
+    } else { # Not an xtra attribute
+      if (MMisc::is_blank($sec)) {
+        $attrs{$name} = undef;
+      } else {
+        ($text, my %tmp) = $self->_extract_data($sec, $fspan, $allow_nofspan, $name);
+        return("Error while processing the \'data\:\' content of the \'$name\' \'attribute\' ($text)", ())
+          if (! MMisc::is_blank($text));
+        %{$attrs{$name}} = %tmp;
+      }
     }
-    
+
   } # while
 
   return("", %attrs);
+}
+
+########################################
+
+sub _is_an_xtra_attribute {
+  my $type = shift @_;
+
+  return(1) if ($type =~ m%^$key_xtra%);
+
+  return(0);
+}
+
+#####
+
+sub _get_xtra_attribute_name {
+  my $name = shift @_;
+
+  $name =~ s%^$key_xtra%%;
+
+  return($name);
+}
+
+#####
+
+sub _make_xtra_attribute_name {
+  my $name = shift @_;
+
+  return("$key_xtra$name");
+}
+
+#####
+
+sub _dive_structure {
+  my $r = shift @_;
+
+  return("", $r) if (! ref($r));
+
+  return("", $$r[0]) 
+    if (ref($r) eq 'ARRAY');
+
+  return("Not a HASH (" . ref($r) . ")", undef)
+    if (ref($r) ne 'HASH');
+  
+  my @keys = keys %$r;
+  return("Found multiple keys (" . join(" ", @keys) . ")", undef) 
+    if (scalar @keys > 1);
+
+  $r = $$r{$keys[0]};
+
+  return(&_dive_structure($r));
 }
 
 ########################################
@@ -3023,9 +3237,12 @@ sub _writeback_object {
   my $event = shift @_;
   my $id = shift @_;
   my $fst = shift @_;
+  my $rxtra_list = shift @_;
   my %object_hash = @_;
 
   my $txt = "";
+
+  my @xtra_list = @$rxtra_list;
 
   my $stype = $object_hash{$key_subtype};
   my $ftype = &get_printable_full_event($event, $stype, $fst);
@@ -3037,7 +3254,7 @@ sub _writeback_object {
     if (exists $object_hash{"comment"});
 
   # attributes
-  foreach my $key (sort keys %hash_objects_attributes_types) {
+  foreach my $key (sort keys %hash_objects_attributes_types_expected) {
     $txt .= &_wb_print($indent, "<attribute name=\"$key\"");
     if (defined $object_hash{$key}) {
       $txt .= ">\n";
@@ -3077,7 +3294,22 @@ sub _writeback_object {
     }
   }
   
+  # xtra attributes
+  if (scalar @xtra_list > 0) {
+    foreach my $xtra (@xtra_list) {
+      $txt .= &_wb_print($indent, "<attribute name=\"" . &_make_xtra_attribute_name($xtra) . "\"");
+      if ( (exists $object_hash{$key_xtra})
+           && (exists $object_hash{$key_xtra}{$xtra}) ) {
+        $txt .= ">\n";
+        $txt .= &_wb_print($indent + 1, "<data:svalue value=\"" . $object_hash{$key_xtra}{$xtra} . "\"/>\n");
+        $txt .= &_wb_print($indent, "</attribute>\n");
+      } else {
+        $txt .= "/>\n";
+      }
+    }
+  }
 
+  # end object
   $txt .= &_wb_print(--$indent, "</object>\n");
 
   return($txt);
@@ -3089,6 +3321,7 @@ sub _writeback2xml {
   my $self = shift @_;
   my $comment = shift @_;
   my $rlhash = shift @_;
+  my $rxtra_list = shift @_;
   my @asked_events = @_;
 
   my $txt = "";
@@ -3116,10 +3349,14 @@ sub _writeback2xml {
   $txt .= &_wb_print($indent, "<attribute dynamic=\"false\" name=\"V-FRAME-SIZE\" type=\"http://lamp.cfar.umd.edu/viperdata#dvalue\"/>\n");
   $txt .= &_wb_print(--$indent, "</descriptor>\n");
 
+  # Get the list of extra attributes
+  my @xtra_list = @$rxtra_list;
+
   # Write all objects
   foreach my $ftype (&sort_events(@asked_events)) {
     $txt .= &_wb_print($indent++, "<descriptor name=\"$ftype\" type=\"OBJECT\">\n");
-    foreach my $key (sort keys %hash_objects_attributes_types) {
+
+    foreach my $key (sort keys %hash_objects_attributes_types_expected) {
       $txt .= &_wb_print
 	($indent,
 	 "<attribute dynamic=\"",
@@ -3128,6 +3365,13 @@ sub _writeback2xml {
 	 $hash_objects_attributes_types{$key}, 
 	 "\"/>\n");
     }
+
+    foreach my $key (sort @xtra_list) {
+      $txt .= &_wb_print
+	($indent,
+	 "<attribute dynamic=\"false\" name=\"" . &_make_xtra_attribute_name($key) . "\" type=\"http://lamp.cfar.umd.edu/viperdata#svalue\"/>\n");
+    }
+ 
     $txt .= &_wb_print(--$indent, "</descriptor>\n");
   }
 
@@ -3150,7 +3394,7 @@ sub _writeback2xml {
       my @ids = $self->get_event_ids($ftype);
       my ($ev, $sev) = &split_full_event($ftype, $fst); 
       foreach my $id (sort _numerically @ids) {
-	$txt .= &_writeback_object($indent, $ev, $id, $fst, %{$lhash{$ev}{$id}});
+	$txt .= &_writeback_object($indent, $ev, $id, $fst, \@xtra_list, %{$lhash{$ev}{$id}});
       }
     }
 
