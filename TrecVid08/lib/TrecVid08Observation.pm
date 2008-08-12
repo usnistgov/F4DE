@@ -1,4 +1,5 @@
 package TrecVid08Observation;
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # TrecVid08 Observation
 #
@@ -42,8 +43,6 @@ my %hasharray_inline_attributes = ();
 my %hash_objects_attributes_types_dynamic = ();
 my $dummy_et = "Fake_Event-Merger_Dummy_Type";
 
-my @kernel_params_list = ("delta_t", "MinDec_s", "RangeDec_s", "E_t", "E_d"); # Order is important
-
 ## Constructor
 sub new {
   my ($class) = shift @_;
@@ -76,6 +75,7 @@ sub new {
      DetectionDecision   => -1,    # binary
      BoundingBox => undef, # hash ref (with "real" ViperFramespan this time)
      Point       => undef, # hash ref (with "real" ViperFramespan this time)
+     Xtra        => undef, # xtra attributes
      validated   => 0,    # To confirm all the values required are set
      cloneid     => 0,    # When cloning, still confirm that the uid is unique
      errormsg    => $errormsg,
@@ -933,6 +933,129 @@ sub get_selected {
   }
 }
 
+########## 'xtra'
+
+sub set_xtra_attribute {
+  my ($self, $attr, $value) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{Xtra}{$attr} = $value;
+  return(1);
+}
+
+#####
+
+sub add_to_xtra_attribute {
+  my ($self, $attr, $value) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->set_xtra_attribute($attr, $value))
+    if (! $self->is_xtra_attribute_set($attr));
+
+  $self->{Xtra}{$attr} .= "| $value";
+
+  return(1);
+}  
+
+#####
+
+sub is_xtra_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (defined $self->{Xtra});
+
+  return(0);
+}
+
+#####
+
+sub is_xtra_attribute_set {
+  my ($self, $attr) = @_;
+
+  return(0) if ($self->error());
+
+  return(0) if (! $self->is_xtra_set());
+
+  return(1) if (exists $self->{Xtra}{$attr});
+
+  return(0);
+}
+
+#####
+
+sub get_xtra_value {
+  my ($self, $attr) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_Xtra_set()) {
+    $self->_set_errormsg("\'Xtra\' not set. ");
+    return(0);
+  }
+
+  if (! exists $self->{Xtra}{$attr}) {
+    $self->_set_errormsg("\'Xtra\' for requested attribute ($attr) not set. ");
+    return(0);
+  }
+
+  return($self->{Xtra}{$attr});
+}
+
+#####
+
+sub list_xtra_attributes {
+  my ($self) = @_;
+
+  my @aa = ();
+
+  return(@aa) if ($self->error());
+
+  if (! $self->is_Xtra_set()) {
+    $self->_set_errormsg("\'Xtra\' not set. ");
+    return(@aa);
+  }
+
+  @aa = keys %{$self->{Xtra}};
+
+  return(@aa);
+}
+
+#####
+
+sub unset_xtra {
+  my ($self, $attr) = @_;
+
+  return(0) if ($self->error());
+
+  return(0)
+    if (! exists $self->{Xtra}{$attr});
+
+  delete $self->{Xtra}{$attr};
+
+  my @aa = keys %{$self->{Xtra}};
+  $self->{Xtra} = undef
+    if (scalar @aa == 0);
+
+  return(1);
+}
+
+#####
+
+sub unset_all_xtra {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  # Thank you garbage collector
+  $self->{Xtra} = undef;
+
+  return(1);
+}
+
 ########################################
 
 sub is_validated {
@@ -1257,163 +1380,6 @@ sub get_SYS_Beg_Mid_End_Dur_Dec {
   return(0) if ($self->error());
 
   return(@o, $de);
-}
-
-########## Scoring core
-
-sub get_kp_key_delta_t {
-  return($kernel_params_list[0]);
-}
-
-#####
-
-sub get_kp_key_MinDec_s {
-  return($kernel_params_list[1]);
-}
-
-#####
-
-sub get_kp_key_RangeDec_s {
-  return($kernel_params_list[2]);
-}
-
-#####
-
-sub get_kp_key_E_t {
-  return($kernel_params_list[3]);
-}
-
-#####
-
-sub get_kp_key_E_d {
-  return($kernel_params_list[4]);
-}
-
-#####
-
-sub get_kernel_params_list {
-  my ($self) = @_;
-
-  return(0) if ($self->error());
-
-  return(@kernel_params_list);
-}
-
-#####
-
-sub joint_kernel {
-  my ($self, $other, $delta_t, $MinDec_s, $RangeDec_s, $E_t, $E_d) = @_;
-
-  # Check the base for a possible comparison (validate, no error, same file, same eventtype)
-  return($self->get_errormsg(), undef)
-    if (! $self->is_comparable_to($other));
-
-  # For kernel: Can only compare SYS to REF ($self -> $other)
-  my $etxt = "";
-  $etxt .= "Calling object has to be a SYSTEM observation"
-    if ($self->get_isgtf());
-  $etxt .= "Compared to object can not be a SYSTEM observation"
-    if (! $other->get_isgtf());
-  # Return yet ?
-  return($etxt, undef) if (! MMisc::is_blank($etxt));
-
-  # Error ?
-  $etxt .= "Problem in calling object (" . $self->get_errormsg() ."). "
-    if ($self->error());
-  $etxt .= "Problem in compared to object (" . $other->get_errormsg() ."). "
-    if ($other->error());
-  # Return yet ?
-  return($etxt, undef) if (! MMisc::is_blank($etxt));
-
-  ########## Now the scoring can begin
-
-  # Kernel (O(s,i), O(r,j)) <=> ($self, $other)
-  my ($Beg_Osi, $Mid_Osi, $End_Osi, $Dur_Osi, $Dec_Osi)
-    = $self->get_SYS_Beg_Mid_End_Dur_Dec();
-  return("Problem obtaining some element related to the SYS Observation (" . $self->get_errormsg() . ")", undef) if ($self->error());
-  my ($Beg_Orj, $Mid_Orj, $End_Orj, $Dur_Orj)
-    = $other->get_REF_Beg_Mid_End_Dur();
-  return("Problem obtaining some element related to the REF Observation (" . $other->get_errormsg() . ")", undef) if ($other->error());
-  
-  if ($Mid_Osi > ($End_Orj + $delta_t)) {
-    return("", undef);
-  } elsif ($Mid_Osi < ($Beg_Orj - $delta_t)) {
-    return("", undef);
-  }                             # implicit "else"
-
-  my $TimeCongru_Osi_Orj 
-    = ( MMisc::min($End_Orj, $End_Osi) - MMisc::max($Beg_Orj, $Beg_Osi) )
-      / MMisc::max((1/25), $Dur_Orj);
-
-  my $DecScoreCongru_Osi
-    = ($RangeDec_s == 0) ? 1 :
-      ( $Dec_Osi - $MinDec_s ) / $RangeDec_s;
-
-  my $kernel 
-    = 1
-      + $E_t * $TimeCongru_Osi_Orj
-        + $E_d * $DecScoreCongru_Osi;
-
-  return("", $kernel);
-}
-
-#####
-
-sub falsealarms_kernel {
-  my ($self) = @_;
-
-  return($self->get_errormsg(), undef) if ($self->error());
-
-  my $isgtf = $self->get_isgtf();
-  return($self->get_errormsg(), undef) if ($self->error());
-
-  if ($isgtf) {
-    $self->_set_errormsg("Can not generate the \'false alarms kernel\' for a GTF observation. ");
-    return($self->get_errormsg(), undef);
-  }
-
-  my $kernel = -1;
-
-  return("", $kernel);
-}
-
-#####
-
-sub misseddetections_kernel {
-  my ($self) = @_;
-
-  return($self->get_errormsg(), undef) if ($self->error());
-
-  my $isgtf = $self->get_isgtf();
-  return($self->get_errormsg(), undef) if ($self->error());
-
-  if (! $isgtf) {
-    $self->_set_errormsg("Can only generate the \'missed detections kernel\' for a GTF observation. ");
-    return($self->get_errormsg(), undef);
-  }
-
-  my $kernel = 0;
-
-  return("", $kernel);
-}
-
-#####
-
-# Class method (to hide implementation details to calling function)
-sub kernel_function {
-  my ($ref, $sys, @params) = @_;
-
-  # 4 cases
-  if ((defined $sys) && (defined $ref)) {
-    return($sys->joint_kernel($ref, @params));
-  } elsif ((defined $sys) && (! defined $ref)) {
-    return($sys->falsealarms_kernel());
-  } elsif ((! defined $sys) && (defined $ref)) {
-    return($ref->misseddetections_kernel());
-  }
-
-  # 4th case: both values are undefined
-  return("This case is undefined", undef);
 }
 
 ############################################################ framespan shift function
