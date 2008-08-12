@@ -12,8 +12,8 @@ print "[F4DE Common Packages]\n";
 $ms = &_chkpkg
   (
    # common/lib
-   "BipartiteMatch", "DETCurve", "DETCurveSet", "MErrorH", "MMisc",
-   "MetricFuncs", "MetricTestStub", "MtXML", "PropList",
+   "BipartiteMatch", "DETCurve", "DETCurveSet", "F4DE_TestCore",
+   "MErrorH", "MMisc", "MetricFuncs", "MetricTestStub", "MtXML", "PropList",
    "SimpleAutoTable", "TrialSummaryTable", "Trials", "ViperFramespan",
   );
 if ($ms > 0) {
@@ -26,7 +26,7 @@ print "[F4DE's TrecVid08 Packages]\n";
 $ms = &_chkpkg
   (
    # TrecVid08/lib
-   "MetricTV08", "TrecVid08ECF", "TrecVid08EventList", 
+   "KernelFunctions", "MetricTV08", "TrecVid08ECF", "TrecVid08EventList", 
    "TrecVid08HelperFunctions", "TrecVid08Observation",
    "TrecVid08ViperFile", "TrecVid08xmllint"
   );
