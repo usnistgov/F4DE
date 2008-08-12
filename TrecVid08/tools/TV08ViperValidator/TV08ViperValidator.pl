@@ -154,9 +154,10 @@ my $MemDump = undef;
 my $forceFilename = "";
 my $dosummary = undef;
 my $ecffile = "";
+my @xtra = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:   C  F             T  WX    cdefgh   lm  p r   vwx  
+# USed:   C  F             T  WX  a cdefgh   lm  p r   vwx  
 
 my %opt = ();
 GetOptions
@@ -180,6 +181,7 @@ GetOptions
    'ForceFilename=s' => \$forceFilename,
    'displaySummary=i' => \$dosummary,
    'ecf=s'           => \$ecffile,
+   'addXtraAttribute=s' => \@xtra,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -279,6 +281,20 @@ if (defined $dosummary) {
   $dosummary = 0;
 }
 
+my %hxtra = ();
+if (scalar @xtra > 0) {
+  MMisc::error_quit("\'addXtraAttribute\' can only be used with \'write\'")
+    if ($writeback == -1);
+
+  foreach my $val (@xtra) {
+    if ($val =~ m%^(\w+)\:(\w+)$%) {
+      $hxtra{$1} = $2;
+    } else {
+      MMisc::error_quit("\'addXtraAttribute\' entry ($val) is not composed of string\:string, aborting");
+    }
+  }
+}
+
 my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
 MMisc::error_quit("\'fps\' must set in order to use \'ecf\'")
     if (($useECF) && (! defined $fps));
@@ -362,6 +378,15 @@ while ($tmp = shift @ARGV) {
       if ($object->error());
   MMisc::error_quit("Problem while \'clone\'-ing the ViperFile")
     if (! defined $nvf);
+
+  # Add Xtra Attribute
+  if (scalar @xtra > 0) {
+    foreach my $key (keys %hxtra) {
+      $nvf->set_xtra_attribute($key, $hxtra{$key});
+      MMisc::error_quit("Problem while adding \'xatr\' attribute to ViperFile (" . $nvf->get_errormsg() .")")
+        if ($nvf->error());
+    }
+  }
   
   # Writeback & MemDump
   if ($writeback != -1) {
@@ -461,7 +486,7 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--ChangeType> [I<randomseed:find_value>]]>
   S<[B<--crop> I<beg:end>] [B<--WriteMemDump> [I<mode>]]>
   S<[B<--ForceFilename> I<filename>] [B<--pruneEvents>]>
-  S<[B<--removeSubEventtypes>]]>
+  S<[B<--removeSubEventtypes>] [B<--addXtraAttribute> I<name:value>]]>
   S<[B<--fps> I<fps>] [B<--ecf> I<ecffile>]>
   S<[B<--displaySummary> I<level>]>
   I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
@@ -521,6 +546,12 @@ B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well
 =head1 OPTIONS
 
 =over
+
+=item B<--addXtraAttribute> I<name:value>
+
+Add to each event observation seen an extra attribute to the XML file.
+More than one B<-addXtraAttribute> command line option can be used to add multiple attributes.
+Attributes will be part of the event observation when copied from a ViPER file to another.
 
 =item B<--ChangeType> [I<randomseed>[:I<find_value>]]
 
@@ -651,7 +682,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes]]  [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value]]  [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 
@@ -671,6 +702,7 @@ Will perform a semantic validation of the ViPER XML file(s) provided.
   --ForceFilename Replace the 'sourcefile' file value
   --pruneEvents   Only keep in the new file's config section events for which observations are seen
   --removeSubEventtypes  Useful when working with specialized Scorer outputs to remove specialized sub types
+  --addXtraAttribute  Add a new attribute to each event observation in file. Muliple \'--addXtraAttribute\' can be used.
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --ecf           Specify the ECF file to load
   --displaySummary  Display a file information summary (level shows information about event type seen, and is a value from 1 to 6)
