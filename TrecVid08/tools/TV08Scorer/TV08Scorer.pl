@@ -90,6 +90,13 @@ unless (eval "use TrecVid08EventList; 1") {
   $have_everything = 0;
 }
 
+# KernelFunctions (part of this tool)
+unless (eval "use KernelFunctions; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"KernelFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
 # MetricTV08 (part of this tool)
 unless (eval "use MetricTV08; 1") {
   my $pe = &eo2pe($@);
@@ -387,12 +394,14 @@ if ($useECF) {
 
 ## Prepare event lists for scoring
 print "\n\n***** STEP ", $stepc++, ": Aligning Files and Events\n\n";
-$sysEL->set_delta_t($delta_t);
-$sysEL->set_E_t($E_t);
-$sysEL->set_E_d($E_d);
-my @kp = $sysEL->get_kernel_params();
-MMisc::error_quit("Error while obtaining the EventList kernel function parameters (" . $sysEL->get_errormsg() . ")")
-  if ($sysEL->error());
+my $kernel = new KernelFunctions();
+$kernel->set_delta_t($delta_t);
+$kernel->set_E_t($E_t);
+$kernel->set_E_d($E_d);
+$kernel->set_sysEL($sysEL);
+my @kp = $kernel->get_kernel_params();
+MMisc::error_quit("Error while obtaining the kernel function parameters (" . $kernel->get_errormsg() . ")")
+  if ($kernel->error());
 
 my %all_bpm = ();
 my %metrics_params = ( TOTALDURATION => $duration ) ;
@@ -767,7 +776,7 @@ sub do_alignment {
 
       my $tomatch = scalar @sys_events_obs + scalar @ref_events_obs;
       print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, " | Total Observations: $tomatch elements\n";
-      my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&TrecVid08Observation::kernel_function, \@kp);
+      my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&KernelFunctions::kernel_function, \@kp);
       MMisc::error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
         if ($bpm->error());
 
