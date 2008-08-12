@@ -84,6 +84,12 @@ $testr += &do_simple_test($tn, "(REF: ECF)", "-g ../common/test1-gtf.xml ../comm
 $tn = "test11b";
 $testr += &do_simple_test($tn, "(REF: ECF + ChangeType + Crop)", "-g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6 -C word -w -p -c 20:1080", "res_$tn.txt");
 
+$tn = "test12a";
+$testr += &do_simple_test($tn, "(addXtraAttribute)", "../common/test1-1md-sys.xml -a addedattr:testvalue -a another_addedattr:value11 -w -p", "res_$tn.txt");
+
+$tn = "test12b";
+$testr += &do_simple_test($tn, "(addXtraAttribute + crop)", "../common/test1-1md-sys.xml -a attr_name:person_11 -c 1450:1750 -f PAL -w -p", "res_$tn.txt");
+
 ##########
 
 if ($testr == $totest) {
