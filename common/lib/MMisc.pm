@@ -482,7 +482,7 @@ sub get_sorted_MemDump {
 
   # Force dumper to sort
   $Data::Dumper::Sortkeys = 1;
-  # Force dumper to turn off all pretty print
+  # Force dumper to use requested indent level
   $Data::Dumper::Indent = $indent;
   #  Purity controls how self referential objects are written
   $Data::Dumper::Purity = 1;
