@@ -316,7 +316,7 @@ $VAR1 = bless( {
                                                                  'errormsg' => '',
                                                                  'header' => 'TrecVid08xmllint'
                                                                }, 'MErrorH' ),
-                                          'xmllint' => '',
+                                          'xmllint' => 'xmllint',
                                           'xsdfilesl' => [
                                                            'TrecVid08.xsd',
                                                            'TrecVid08-viper.xsd',
@@ -539,7 +539,7 @@ $VAR1 = bless( {
                                                                  'errormsg' => '',
                                                                  'header' => 'TrecVid08xmllint'
                                                                }, 'MErrorH' ),
-                                          'xmllint' => '',
+                                          'xmllint' => 'xmllint',
                                           'xsdfilesl' => [
                                                            'TrecVid08.xsd',
                                                            'TrecVid08-viper.xsd',
