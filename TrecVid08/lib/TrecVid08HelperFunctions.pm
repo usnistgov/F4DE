@@ -157,11 +157,11 @@ sub save_ViperFile_MemDump {
   my $object = undef;
   if ($portable) {
     $object = $aobject->clone();
-    # In order to make it portable, we remove command paths
-    # ie 'xmllint': force to ""
+    # In order to make it portable, we remove command paths that might differ
+    # on different system (ie '/usr/bin/xmllint': force to "xmllint")
     return(0) if (! defined $object);
     return(0) if ($aobject->error());
-    $object->set_xmllint("", 1);
+    $object->set_xmllint("xmllint", 1);
     return(0) if ($object->error());
   } else {
     $object = $aobject;
