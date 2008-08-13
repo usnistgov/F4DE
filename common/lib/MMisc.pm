@@ -68,16 +68,24 @@ sub slurp_file {
 
   return(undef) if (&is_blank($fname));
 
+  my $out = "";
   open FILE, "<$fname"
     or return(undef);
-  my @all = <FILE>;
+  if ($mode eq "bin") {
+    binmode FILE;
+    my $buffer = '';
+    while ( read(FILE, $buffer, 65536) ) {
+      $out .= $buffer;
+    }
+  } else {
+    my @all = <FILE>;
+    chomp @all;
+
+    $out = join("\n", @all);
+  }
   close FILE;
-  chomp @all if ($mode ne "bin");
 
-  my $jc = ($mode ne "bin") ? "\n" : "";
-  my $tmp = join($jc, @all);
-
-  return($tmp);
+  return($out);
 }
 
 #####
