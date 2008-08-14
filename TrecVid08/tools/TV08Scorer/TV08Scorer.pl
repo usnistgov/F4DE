@@ -200,6 +200,7 @@ my $Rtarget = 1.8;
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
 my $mancmd = "perldoc -F $0";
+my @xtend_modes = ("copy_sys", "copy_ref", "overlap", "extended"); # Order is important
 my $usage = &set_usage();
 
 # Default values for variables
@@ -227,9 +228,10 @@ my $writexml = undef;
 my $autolt = 0;
 my $ltse = 0;
 my @asked_events = ();
+my $xtend = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:   CDEFG    LMNO  RST     Za  cdefgh  lmnop  st vwx  
+# Used:   CDEFG    LMNO  RST   X Za  cdefgh  lmnop  st vwx  
 
 my %opt = ();
 my @leftover = ();
@@ -265,6 +267,7 @@ GetOptions
    'MissCost=f'      => \$CostMiss,
    'CostFA=f'        => \$CostFA,
    'Rtarget=f'       => \$Rtarget,
+   'XtraMappedObservations=s' => \$xtend,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -296,6 +299,11 @@ if ($xsdpath ne "") {
 
 MMisc::error_quit("\'pruneEvents\' is only usable if \'writexml\' is selected")
   if (($autolt) && ( ! defined $writexml));
+
+MMisc::error_quit("\'XtraMappedObservations\' is only usable if \'writexml\' is selected")
+  if ((! MMisc::is_blank($xtend)) && ( ! defined $writexml));
+MMisc::error_quit("Wrong \'XtraMappedObservations\' mode ($xtend), authorized modes list: " . join(" ", @xtend_modes))
+  if (! grep(m%$xtend$%, @xtend_modes));
 
 MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting")
   if ($gtfs > 1);
@@ -828,6 +836,42 @@ sub do_alignment {
 	  $tmp_obs->addto_comment("Mapped to REF \"$ref_uid\"");
 	  MMisc::error_quit("Problem adding comment to Observation (" . $tmp_obs->get_errormsg() . ")")
 	    if ($tmp_obs->error());
+
+    if (! MMisc::is_blank($xtend)) {
+
+      my $fs_fs = undef;
+      if ($xtend eq $xtend_modes[1]) { # 'copy_ref'
+        $fs_fs = $ref_obj->get_framespan();
+        MMisc::error_quit("Problem obtaining REF observation's framespan (" . $ref_obj->get_errormsg() . ")")
+          if ($ref_obj->error());
+      } elsif ($xtend eq $xtend_modes[2]) { # 'overlap'
+        $fs_fs = $ref_obj->get_framespan_overlap_from_obs($sys_obj);
+        MMisc::error_quit("Problem obtaining SYS to REF observation's framespan overlap (" . $ref_obj->get_errormsg() . ")")
+          if ($ref_obj->error());
+      } elsif ($xtend eq $xtend_modes[3]) { # 'extended'
+        $fs_fs = $ref_obj->get_extended_framespan_from_obs($sys_obj);
+        MMisc::error_quit("Problem obtaining SYS to REF observation's extended framespan (" . $ref_obj->get_errormsg() . ")")
+          if ($ref_obj->error());
+      }
+      # For 'copy_sys', do nothing it is already copied
+      
+      if (defined $fs_fs) {
+        $tmp_obs->set_framespan($fs_fs);
+        MMisc::error_quit("Problem setting SYS observation's framespan (" . $tmp_obs->get_errormsg() . ")")
+          if ($tmp_obs->error());
+      }
+
+      # copy 'xtra' attributes (include tracking comment)
+      if ($ref_obj->is_xtra_set()) {
+        foreach my $xtra ($ref_obj->list_xtra_attributes()) {
+          my $v = $ref_obj->get_xtra_value($xtra);
+          $tmp_obs->set_xtra_attribute($xtra, $v);
+          MMisc::error_quit("Problem adding \'xtra\' attribute (" . $tmp_obs->get_errormsg() . ")")
+            if ($tmp_obs->error());
+        }
+      }
+
+    }
 
 	  &add_obs2vf($tmp_obs);
 	}
@@ -1402,10 +1446,11 @@ sub set_usage {
   my $ro = join(" ", @ok_events);
   my $xsdfiles = join(" ", @xsdfilesl);
   my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
+  my $xtend_modes_txt = join(" ", @xtend_modes);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--pruneEvents]] [--Duration seconds] [--ecf ecffile] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--pruneEvents] [--XtraMappedObservations mode]] [--Duration seconds] [--ecf ecffile] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -1422,6 +1467,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --limitto       Only care about provided list of events
   --writexml      Write a ViPER XML file containing the Mapped, Unmapped Reference and Unmapped System Event Observations to disk (if dir is specified, stdout otherwise)
   --pruneEvents   Only keep in the new file's config section events for which observations are seen
+  --XtraMappedObservations  Authorized modes: $xtend_modes_txt
   --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
   --ecf           Specify the ECF file to load and perform scoring against
   --MissCost      Set the Metric's Cost of a Miss (for DCR computation) (default: $CostMiss)
