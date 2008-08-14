@@ -936,28 +936,18 @@ sub get_selected {
 ########## 'xtra'
 
 sub set_xtra_attribute {
-  my ($self, $attr, $value) = @_;
+  my ($self, $attr, $value, $replace) = @_;
 
   return(0) if ($self->error());
 
-  $self->{Xtra}{$attr} = $value;
+  if ((! $self->is_xtra_attribute_set($attr)) || ($replace)) {
+    $self->{Xtra}{$attr} = $value;
+  } else {
+    $self->{Xtra}{$attr} .= " # $value";
+  }
+
   return(1);
 }
-
-#####
-
-sub add_to_xtra_attribute {
-  my ($self, $attr, $value) = @_;
-
-  return(0) if ($self->error());
-
-  return($self->set_xtra_attribute($attr, $value))
-    if (! $self->is_xtra_attribute_set($attr));
-
-  $self->{Xtra}{$attr} .= "| $value";
-
-  return(1);
-}  
 
 #####
 
@@ -992,7 +982,7 @@ sub get_xtra_value {
 
   return(0) if ($self->error());
 
-  if (! $self->is_Xtra_set()) {
+  if (! $self->is_xtra_set()) {
     $self->_set_errormsg("\'Xtra\' not set. ");
     return(0);
   }
@@ -1014,7 +1004,7 @@ sub list_xtra_attributes {
 
   return(@aa) if ($self->error());
 
-  if (! $self->is_Xtra_set()) {
+  if (! $self->is_xtra_set()) {
     $self->_set_errormsg("\'Xtra\' not set. ");
     return(@aa);
   }
@@ -1941,15 +1931,25 @@ sub clone {
 
   my %ofi = MMisc::clone($self->get_ofi());
   $clone->set_ofi(%ofi);
-  $clone->addto_comment($self->get_comment()) if ($self->is_comment_set());
+  $clone->addto_comment($self->get_comment()) 
+    if ($self->is_comment_set());
 
   if (! $isgtf) {
     $clone->set_DetectionScore($self->get_DetectionScore());
     $clone->set_DetectionDecision($self->get_DetectionDecision());
   }
 
-  $clone->set_BoundingBox(&__clone($self->get_BoundingBox())) if ($self->_is_BoundingBox_set());
-  $clone->set_Point(&__clone($self->get_Point())) if ($self->_is_Point_set());
+  $clone->set_BoundingBox(&__clone($self->get_BoundingBox())) 
+    if ($self->_is_BoundingBox_set());
+  $clone->set_Point(&__clone($self->get_Point())) 
+    if ($self->_is_Point_set());
+
+  if ($self->is_xtra_set()) {
+    foreach my $xtra ($self->list_xtra_attributes()) {
+      my $v = $self->get_xtra_value($xtra);
+      $clone->set_xtra_attribute($xtra, $v);
+    }
+  }
 
   my $cloneid = $self->get_clone_id();
   $clone->{cloneid} = ++$cloneid;
