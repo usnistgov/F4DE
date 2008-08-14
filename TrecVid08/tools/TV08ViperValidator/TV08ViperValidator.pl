@@ -132,6 +132,7 @@ my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
 my $mancmd = "perldoc -F $0";
+my $ok_chars = 'a-zA-Z0-9/.~_-';
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
 my $usage = &set_usage();
 
@@ -155,9 +156,10 @@ my $forceFilename = "";
 my $dosummary = undef;
 my $ecffile = "";
 my @xtra = ();
+my $xtra_tc = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:   C  F             T  WX  a cdefgh   lm  p r   vwx  
+# USed: A C  F             T  WX  a cdefgh   lm  p r   vwx  
 
 my %opt = ();
 GetOptions
@@ -182,6 +184,7 @@ GetOptions
    'displaySummary=i' => \$dosummary,
    'ecf=s'           => \$ecffile,
    'addXtraAttribute=s' => \@xtra,
+   'AddXtraTrackingComment' => \$xtra_tc,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -287,10 +290,10 @@ if (scalar @xtra > 0) {
     if ($writeback == -1);
 
   foreach my $val (@xtra) {
-    if ($val =~ m%^(\w+)\:(\w+)$%) {
+    if ($val =~ m%^([$ok_chars]+)\:([$ok_chars]+)$%) {
       $hxtra{$1} = $2;
     } else {
-      MMisc::error_quit("\'addXtraAttribute\' entry ($val) is not composed of string\:string, aborting");
+      MMisc::error_quit("\'addXtraAttribute\' entry ($val) is not composed of \'name\:value\' composed of the following authorized characters \'$ok_chars\' , aborting");
     }
   }
 }
@@ -383,11 +386,18 @@ while ($tmp = shift @ARGV) {
   if (scalar @xtra > 0) {
     foreach my $key (keys %hxtra) {
       $nvf->set_xtra_attribute($key, $hxtra{$key});
-      MMisc::error_quit("Problem while adding \'xatr\' attribute to ViperFile (" . $nvf->get_errormsg() .")")
+      MMisc::error_quit("Problem while adding \'xtra\' attribute to ViperFile (" . $nvf->get_errormsg() .")")
         if ($nvf->error());
     }
   }
-  
+
+  # 'xtra' Tracking Comment
+  if ($xtra_tc) {
+    $nvf->set_xtra_Tracking_Comment();
+    MMisc::error_quit("Problem while adding \'xtra\' Tracking Comment to ViperFile (" . $nvf->get_errormsg() .")")
+      if ($nvf->error());
+  }
+
   # Writeback & MemDump
   if ($writeback != -1) {
     # Re-adapt @asked_events for each object if automatic limitto is set
@@ -682,7 +692,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value]]  [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value] [--AddXtrTrackingComment]]  [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 
@@ -703,6 +713,7 @@ Will perform a semantic validation of the ViPER XML file(s) provided.
   --pruneEvents   Only keep in the new file's config section events for which observations are seen
   --removeSubEventtypes  Useful when working with specialized Scorer outputs to remove specialized sub types
   --addXtraAttribute  Add a new attribute to each event observation in file. Muliple \'--addXtraAttribute\' can be used.
+  --AddXtraTrackingComment Add an xtra attribute designed to help understand from where an Event Observation came from when performing an operation on it
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --ecf           Specify the ECF file to load
   --displaySummary  Display a file information summary (level shows information about event type seen, and is a value from 1 to 6)
