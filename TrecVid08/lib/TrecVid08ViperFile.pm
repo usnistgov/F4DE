@@ -108,6 +108,8 @@ my %hash_file_attributes_types =
   );
 
 my $key_xtra = "xtra_"; # A very special type, is both optional and a partial match
+my $key_xtra_trackingcomment = "Tracking_Comment";
+my $spval_xtra_trackingcomment = "Special Values for xtra Tracking_Comment";
 
 my @array_file_inline_attributes =
   ( "id", "name" );             # 'id' is to be first
@@ -2378,8 +2380,16 @@ sub get_summary {
 
 ######################################## 'xtra'
 
+sub set_xtra_Tracking_Comment {
+  my ($self) = @_;
+
+  return($self->set_xtra_attribute($key_xtra_trackingcomment, $spval_xtra_trackingcomment));
+}
+
+#####
+
 sub set_xtra_attribute {
-  my ($self, $attr, $value) = @_;
+  my ($self, $attr, $value, $replace) = @_;
 
   return(0) if ($self->error());
 
@@ -2388,11 +2398,28 @@ sub set_xtra_attribute {
     return(0);
   }
 
+  if (($attr eq $key_xtra_trackingcomment) && ($value ne $spval_xtra_trackingcomment)) {
+    $self->_set_errormsg("\'$key_xtra_trackingcomment\' is a reserved keyword, refusing to add");
+    return(0);
+  }
+
+  my $addvalue = $value;
   my %fhash = $self->_get_fhash();
   foreach my $event (@ok_events) {
     next if (! exists $fhash{$event});
     foreach my $id (sort _numerically keys %{$fhash{$event}}) {
-      $fhash{$event}{$id}{$key_xtra}{$attr} = $value;
+      if ($value eq $spval_xtra_trackingcomment) {
+        my $file = $self->get_file();
+        my $sffn = $self->get_sourcefile_filename();
+        my $range = $fhash{$event}{$id}{$key_framespan};
+        my $subtype = $fhash{$event}{$id}{$key_subtype};
+        $addvalue = "[ File: $file | Sourcefile: $sffn | Event: $event | SubType: $subtype | ID: $id | Range: $range]";
+      }
+      if ((! exists $fhash{$event}{$id}{$key_xtra}{$attr}) || ($replace)) {
+        $fhash{$event}{$id}{$key_xtra}{$attr} = $addvalue;
+      } else {
+        $fhash{$event}{$id}{$key_xtra}{$attr} .= " # $addvalue";
+      }
     }
   }
   $self->_set_fhash(%fhash);
@@ -3242,7 +3269,7 @@ sub _writeback_object {
 
   my $txt = "";
 
-  my @xtra_list = @$rxtra_list;
+  my @xtra_list = sort @$rxtra_list;
 
   my $stype = $object_hash{$key_subtype};
   my $ftype = &get_printable_full_event($event, $stype, $fst);
