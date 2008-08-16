@@ -48,6 +48,21 @@ $testr += &do_simple_test($tn, "(writexml + pruneEvents)", "test2-gtf.xml", "tes
 $tn = "test6";
 $testr += &do_simple_test($tn, "(Limittosysevents)", "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -L", "res-$tn.txt");
 
+$tn = "test7a";
+$testr += &do_simple_test($tn, "(XtraMappedObservations [copy_sys])", "test6-Xtra-gtf.xml", "test6-Xtra-sys.xml", "-D 1000 -s -a -w -p -X copy_sys", "res-$tn.txt");
+
+$tn = "test7b";
+$testr += &do_simple_test($tn, "(XtraMappedObservations [copy_ref])", "test6-Xtra-gtf.xml", "test6-Xtra-sys.xml", "-D 1000 -s -a -w -p -X copy_ref", "res-$tn.txt");
+
+$tn = "test7c";
+$testr += &do_simple_test($tn, "(XtraMappedObservations [overlap])", "test6-Xtra-gtf.xml", "test6-Xtra-sys.xml", "-D 1000 -s -a -w -p -X overlap", "res-$tn.txt");
+
+$tn = "test7d";
+$testr += &do_simple_test($tn, "(XtraMappedObservations [extended])", "test6-Xtra-gtf.xml", "test6-Xtra-sys.xml", "-D 1000 -s -a -w -p -X extended", "res-$tn.txt");
+
+$tn = "test7e";
+$testr += &do_simple_test($tn, "(\'xtra\' files)", "test6-Xtra-gtf.xml", "test6-Xtra-sys.xml", "-D 1000 -s -a -w -p", "res-$tn.txt");
+
 if ($testr == $totest) {
   ok_quit("All test ok\n\n");
 } else {
