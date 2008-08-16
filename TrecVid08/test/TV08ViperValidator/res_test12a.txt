@@ -65,11 +65,11 @@
           <data:fvalue value="0.23"/>
         </attribute>
         <attribute name="Point"/>
-        <attribute name="xtra_another_addedattr">
-          <data:svalue value="value11"/>
-        </attribute>
         <attribute name="xtra_addedattr">
           <data:svalue value="testvalue"/>
+        </attribute>
+        <attribute name="xtra_another_addedattr">
+          <data:svalue value="value11"/>
         </attribute>
       </object>
       <object name="CellToEar" id="2" framespan="3503:3739">
@@ -81,11 +81,11 @@
           <data:fvalue value="0.99"/>
         </attribute>
         <attribute name="Point"/>
-        <attribute name="xtra_another_addedattr">
-          <data:svalue value="value11"/>
-        </attribute>
         <attribute name="xtra_addedattr">
           <data:svalue value="testvalue"/>
+        </attribute>
+        <attribute name="xtra_another_addedattr">
+          <data:svalue value="value11"/>
         </attribute>
       </object>
       <object name="ObjectPut" id="0" framespan="938:1493">
@@ -108,11 +108,11 @@
         <attribute name="Point">
           <data:point framespan="1124:1124" x="263" y="353"/>
         </attribute>
-        <attribute name="xtra_another_addedattr">
-          <data:svalue value="value11"/>
-        </attribute>
         <attribute name="xtra_addedattr">
           <data:svalue value="testvalue"/>
+        </attribute>
+        <attribute name="xtra_another_addedattr">
+          <data:svalue value="value11"/>
         </attribute>
       </object>
       <object name="ObjectGet" id="0" framespan="1493:3327">
@@ -126,11 +126,11 @@
           <data:fvalue value="0.78"/>
         </attribute>
         <attribute name="Point"/>
-        <attribute name="xtra_another_addedattr">
-          <data:svalue value="value11"/>
-        </attribute>
         <attribute name="xtra_addedattr">
           <data:svalue value="testvalue"/>
+        </attribute>
+        <attribute name="xtra_another_addedattr">
+          <data:svalue value="value11"/>
         </attribute>
       </object>
     </sourcefile>
