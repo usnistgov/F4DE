@@ -401,6 +401,11 @@ sub confirm_all_ECF_sffn_are_listed {
   return("Problem obtaining ECF's file list (" . $ecfobj->get_errormsg() . ")", \@missing_from_ECF, \@not_in_ECF)
     if ($ecfobj->error());
 
+  return("ECF list seems to contain blank values (" . join("|", @ecflist) . ")", \@missing_from_ECF, \@not_in_ECF)
+    if (MMisc::any_blank(@ecflist));
+  return("SourceFilenames list seems to contain blank values (" . join("|", @flist) . ")", \@missing_from_ECF, \@not_in_ECF)
+    if (MMisc::any_blank(@flist));
+
   my @tfl = MMisc::make_array_of_unique_values(@flist);
 
   my ($rla, $rlb) = MMisc::confirm_first_array_values(\@ecflist, @tfl);
