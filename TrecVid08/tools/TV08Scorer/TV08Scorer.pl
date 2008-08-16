@@ -1166,7 +1166,8 @@ B<TV08Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
   S<[B<--showAT>] [B<--allAT>] [B<--observationCont>]>
   S<[B<--LimittoSYSEvents> | B<--limitto> I<event1>[,I<event2>[I<...>]]]>
-  S<[B<--writexml> [I<dir>] [B<--pruneEvents>]]>
+  S<[B<--writexml> [I<dir>] [B<--pruneEvents>]>
+  S<[B<--XtraMappedObservations> I<mode>]]
   S<[B<--Duration> I<seconds>] [B<--ecf> I<ecffile>]>
   S<[B<--MissCost> I<value>] [B<--CostFA> I<value>] [B<--Rtarget> I<value>]> 
   S<[B<--computeDETCurve> [B<--titleOfSys> I<title>] [B<--ZipPROG> I<gzip>]>
@@ -1393,6 +1394,35 @@ Display B<TV08Scorer> version information.
 
 Write a ViPER File to disk (or stdout if no I<dir> specified) containing the I<Mapped>, I<Unmapped_Sys> and I<Unmapped_Ref> event observations alignment from scoring the SYS file to the REF file.
 
+=item B<--XtraMappedObservations> I<mode>
+
+For I<Mapped> I<Event> I<Observation>s, copy the I<Xtra Attributes> of both the I<REF> and the I<SYS> into a new I<Observation> to be written to file.
+Without this option, only I<SYS> I<Xtra Attributes> are copied to the new I<Observation>.
+
+It will also modify the framespan written depending of the I<mode> selected:
+
+=over 
+
+=item S<copy_sys>
+
+will copy the framespan of the I<SYS> I<Observation> as the framespan of the new I<Observation>. It is the default behavior of the B<--write> function when B<--XtraMappedObservations> is not selected.
+
+=item S<copy_ref>
+
+will copy the framespan of the I<REF> I<Observation> as the framespan of the new I<Observation>.
+
+=item S<overlap>
+
+will perform a framespan overlap operation between the I<REF> and I<SYS> I<Observation>s, and use this value as the framespan of the new I<Observation>.
+For example if ref is 10:20 and sys is 15:30, the overlap will be 15:20.
+
+=item S<extended>
+
+will take the absolute min and absolute max of the framespans of the I<REF> and I<SYS> I<Observation>s, and use this value as the framespan of the new I<Observation>.
+For example if ref is 10:20 and sys is 15:30, the overlap will be 10:30.
+
+=back
+
 =item B<--xmllint> I<location>
 
 Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
@@ -1467,7 +1497,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --limitto       Only care about provided list of events
   --writexml      Write a ViPER XML file containing the Mapped, Unmapped Reference and Unmapped System Event Observations to disk (if dir is specified, stdout otherwise)
   --pruneEvents   Only keep in the new file's config section events for which observations are seen
-  --XtraMappedObservations  Authorized modes: $xtend_modes_txt
+  --XtraMappedObservations  For Mapped events, copy the 'Xtra Attributes' of both the REF and the SYS into the event observation to be written to file. Will also modify the framespan written depending of the 'mode' selected (one of: $xtend_modes_txt)
   --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
   --ecf           Specify the ECF file to load and perform scoring against
   --MissCost      Set the Metric's Cost of a Miss (for DCR computation) (default: $CostMiss)
