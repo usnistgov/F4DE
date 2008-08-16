@@ -226,6 +226,13 @@ sub error {
   return($self->{errormsg}->error());
 }
 
+##########
+
+sub clear_error {
+  my ($self) = @_;
+  return($self->{errormsg}->clear());
+}
+
 ############################################################
 
 1;
