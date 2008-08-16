@@ -247,9 +247,14 @@ my %exp_ext_cmd = &_set_exp_ext_cmd();
 
 my $todo = scalar @ARGV;
 my $done = 0;
+my %warnings = ();
+my %notes = ();
+my $wn_key = "";
 foreach my $sf (@ARGV) {
-  my @warnings = ();
-  my @notes = ();
+  %warnings = ();
+  %notes = ();
+
+  print "\n---------- [$sf]\n";
 
   my $ok = 1;
   my $tmpdir = "";
@@ -331,23 +336,19 @@ foreach my $sf (@ARGV) {
     }
     foreach my $sdir (sort @$rd) {
       vprint(2, "Checking Submission Directory ($sdir)");
-      ($err, my $warn, my $note) = &check_submission_dir("$tmpdir/$odir", $sdir, $site);
-      if (! MMisc::is_blank($err)) {
+      $wn_key = $sdir;
+      my @errs = &check_submission_dir("$tmpdir/$odir", $sdir, $site);
+      if (scalar @errs > 0) {
+        my $err = &format_list("While checking submission dir", "  ", @errs);
         &valerr($sf, $err);
         $ok = 0;
         next;
       }
-      push @warnings, $warn
-        if (! MMisc::is_blank($warn));
-      push @notes, $note
-        if (! MMisc::is_blank($note));
     }
   }
 
   if ($ok) {
-    &valok($sf, "ok" 
-           . ((scalar @notes > 0) ? (" -- NOTES : " . join(". ", @notes)) : "")
-           . ((scalar @warnings > 0) ? (" -- WARNINGS: " . join(". ", @warnings)) : "") );
+    &valok($sf, "ok" . &format_warnings_notes());
     $done ++;
   }
 }
@@ -364,7 +365,7 @@ push @lin, "the \'work_in_dir\' option was used, please rerun the program agains
 
 MMisc::ok_quit
   (
-   "All submission processed (OK: $done / Total: $todo)\n" 
+   "\n\n==========\nAll submission processed (OK: $done / Total: $todo)\n" 
    . ((scalar @lin == 0) ? "" :
       ($done ? "\nIMPORTANT NOTES:\n - " . join("\n - ", @lin) . "\n" : "")
    )
@@ -382,12 +383,58 @@ sub valok {
 
 sub valerr {
   my ($fname, $txt) = @_;
-  foreach (split(/\n/, $txt)) { 
-    &valok($fname, "[ERROR] $_");
-  }
+  &valok($fname, "[ERROR] $txt");
   &valok($fname, "[ERROR] ** Please refer to the \'Submission Instructions\' (Appendix B) of the \'TRECVid Event Detection Evaluation Plan\' for more information");
 }
 
+#####
+
+sub format_list {
+  my $txt = shift @_;
+  my $skipbl = shift @_;
+  my @list = @_;
+
+  return("$txt None\n")
+    if (scalar @list == 0);
+
+  return("$txt " . $list[0] . "\n")
+    if (scalar @list == 1);
+
+  my $inc = 1;
+  my $out = "$txt (" . scalar @list . ")\n";
+  foreach my $entry (@list) {
+    $out .= "$skipbl$inc) $entry\n";
+    $inc++;
+  }
+
+  return($out);
+}
+
+#####
+
+sub format_warnings_notes {
+  my $txt = "";
+
+  my @todo = keys %notes;
+  push @todo, keys %warnings;
+  @todo = MMisc::make_array_of_unique_values(@todo);
+  foreach my $key (@todo) {
+    $txt .= "  -- $key\n";
+    if (exists $warnings{$key}) {
+      my @list = @{$warnings{$key}};
+      $txt .= &format_list("    - WARNINGS:", "      ", @list);
+    }
+    if (exists $notes{$key}) {
+      my @list = @{$notes{$key}};
+      $txt .= &format_list("    - NOTES:", "      ", @list);
+    }
+  }
+
+  $txt = "\n$txt"
+    if (! MMisc::is_blank($txt));
+
+  return($txt);
+}
 
 ##########
 
@@ -489,17 +536,15 @@ sub check_submission_dir {
 
   vprint(3, "Checking name");
   my ($lerr, my $data) = &check_name($dir, $site);
-  return("[$dir : $lerr]", "") if (! MMisc::is_blank($lerr));
+  return($lerr) if (! MMisc::is_blank($lerr));
 
   vprint(3, "Checking expected directory files");
-  ($lerr, my $lw, my @ep) = &check_exp_dirfiles($bd, $dir, $data);
-  return("[$dir : $lerr]", "") if (! MMisc::is_blank($lerr));
-  $lw = "[$dir : $lw]" if (! MMisc::is_blank($lw));
-  my $nt = "";
-  $nt = "[$dir : Expected_Events: " . join(" ", @ep) . "]"
-    if (scalar @ep > 0);
+  (my $rep, my @errs) = &check_exp_dirfiles($bd, $dir, $data);
+  return(@errs) if (scalar @errs > 0);
+  push @{$notes{$wn_key}}, "Expected_Events: " . join(" ", @$rep)
+    if (scalar @$rep > 0);
 
-  return("", $lw, $nt);
+  return(@errs);
 }
 
 ##########
@@ -508,41 +553,41 @@ sub check_name {
   my ($name, $site) = @_;
 
   my $et = "\'EXP-ID\' not of the form \'<SITE>_<YEAR>_<TASK>_<DATA>_<LANG>_<INPUT>_<SYSID>_<VERSION>\' : ";
-
+  
   my ($lsite, $lyear, $ltask, $ldata, $llang, $linput, $lsysid, $lversion,
       @left) = split(m%\_%, $name);
-
+  
   return($et . " leftover entries: " . join(" ", @left) . ". ", "")
     if (scalar @left > 0);
-
+  
   return($et ." missing parameters ($name). ", "")
     if (MMisc::any_blank($lsite, $lyear, $ltask, $ldata, $llang, $linput, $lsysid, $lversion));
-
+  
   my $err = "";
-
+  
   $err .= " <SITE> ($lsite) is different from submission file <SITE> ($site)."
     if ($site ne $lsite);
-
+  
   $err .= &cmp_exp("<YEAR>", $lyear, @expected_year);
   $err .= &cmp_exp("<TASK>", $ltask, @expected_task);
   $err .= &cmp_exp("<DATA>", $ldata, @expected_data);
   $err .= &cmp_exp("<LANG>", $llang, @expected_lang);
   $err .= &cmp_exp("<INPUT>", $linput, @expected_input);
-
+  
   my $b = substr($lsysid, 0, 2);
   $err .= "<SYSID> ($lsysid) does not start by expected value (" 
     . join(" ", @expected_sysid_beg) . "). "
-      if (! grep(m%^$b$%, @expected_sysid_beg));
+    if (! grep(m%^$b$%, @expected_sysid_beg));
   
   $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
     if ( ($lversion !~ m%^\d+$%) || ($lversion =~ m%^0%) || ($lversion > 19) );
   # More than 19 submissions would make anybody suspicious ;)
-
+  
   return($et . $err, "")
     if (! MMisc::is_blank($err));
-
+  
   vprint(4, "<SITE> = $lsite | <YEAR> = $lyear | <TASK> = $ltask | <DATA> = $ldata | <LANG> = $llang | <INPUT> = $linput | <SYSID> = $lsysid | <VERSION> = $lversion");
-
+  
   return("", $ldata);
 }
 
@@ -550,79 +595,80 @@ sub check_name {
 
 sub check_exp_dirfiles {
   my ($bd, $exp, $data) = @_;
-
+  
+  my @ep = ();
+  
   my ($derr, $rd, $rf, $ru) = MMisc::list_dirs_files("$bd/$exp");
-  return($derr, "")
+  return(\@ep, $derr)
     if (! MMisc::is_blank($derr));
-
+  
   my @left = @$rd;
   push @left, @$ru;
-  return("Found more than just files (" . join(" ", @left) . ")", "")
+  return(\@ep, "Found more than just files (" . join(" ", @left) . ")")
     if (scalar @left > 0);
-
-  return("Found no files", "")
+  
+  return(\@ep, "Found no files")
     if (scalar @$rf == 0);
-
+  
   my %leftf = MMisc::array1d_to_count_hash(@$rf);
   vprint(4, "Checking for expected text file");
   my $expected_exp = "$exp.txt";
   my @txtf = grep(m%\.txt$%, @$rf);
-  return("Found no \'.txt\' file. ", "")
+  return(\@ep, "Found no \'.txt\' file")
     if (scalar @txtf == 0);
-  return("Found more than the one expected \'.txt\' file :" . join(" ", @txtf) . ")", "")
+  return(\@ep, "Found more than the one expected \'.txt\' file :" . join(" ", @txtf) . ")")
     if (scalar @txtf > 1);
-  return("Could not find the expected \'.txt\' file ($expected_exp) (seen: " . join(" ", @txtf) . ")", "")
+  return(\@ep, "Could not find the expected \'.txt\' file ($expected_exp) (seen: " . join(" ", @txtf) . ")")
     if (! grep(m%$expected_exp$%, @txtf));
   vprint(5, "Found: $expected_exp" . (($dryrun) ? " (dryrun_mode: skipping content check)" : "") );
-
+  
   my @events_processed = ();
   if (! $dryrun) {
     ($derr, @events_processed) = &get_events_processed("$bd/$exp", $expected_exp);
-    return($derr, "")
+    return(\@ep, $derr)
       if (! MMisc::is_blank($derr));
-    return("No event found in \'Events_Processed:\' line ?", "")
+    return(\@ep, "No event found in \'Events_Processed:\' line ?")
       if (scalar @events_processed == 0);
   }
   delete $leftf{$expected_exp};
-
+  
   vprint(4, "Checking for XML files");
   my @xmlf = grep(m%\.xml$%, @$rf);
-  return("Found no \'.xml\' file. ", "")
+  return(\@ep, "Found no \'.xml\' file. ")
     if (scalar @xmlf == 0);
   foreach my $xf (@xmlf) { delete $leftf{$xf}; }
-  return("More than just \'.txt\' and \'.xml\' files in directory (" . join(" ", keys %leftf) . ")", "")
+  return(\@ep, "More than just \'.txt\' and \'.xml\' files in directory (" . join(" ", keys %leftf) . ")")
     if (scalar keys %leftf > 0);
   vprint(5, "Found: " . join(" ", @xmlf));
-
+  
   # Try to validate the XML file
-  my $errs = "";
-  my $warns = "";
+  my @errsl = ();
+  my @sffnl = ();
   if (! $skipval) {
     foreach my $xf (@xmlf) {
       vprint(4, "Trying to validate XML file ($xf)");
-      my ($e, $w) = validate_xml("$bd/$exp", $xf, $data, $exp, @events_processed);
+      my ($e, $sffn) = &validate_xml("$bd/$exp", $xf, $data, $exp, @events_processed);
       if (! MMisc::is_blank($e)) {
         vprint(5, "ERROR: $e");
-        $errs .= "[$xf : $e] ";
+        push @errsl, "$xf : $e";
       }
-      if (! MMisc::is_blank($w)) {
-        vprint(5, "WARNING: $w");
-        $warns .= "[$xf : $w] ";
-      }
+      push @sffnl, $sffn;
     }
   }
+  return(\@ep, @errsl)
+    if (scalar @errsl > 0);
   
   if ($useECF) {
-    my ($err, $rmiss, $rnotin) = TrecVid08HelperFunctions::confirm_all_ECF_sffn_are_listed($ecfobj, @xmlf);
-    return("Problem obtaining file list from ECF", $warns)
+    my ($err, $rmiss, $rnotin) = TrecVid08HelperFunctions::confirm_all_ECF_sffn_are_listed($ecfobj, @sffnl);
+    return(\@ep, "Problem obtaining file list from ECF ($err)")
       if (! MMisc::is_blank($err));
-    $warns .= "Will not be able to perform soring (comparing ECF to common list); the following referred to files are present in the ECF but where not found in the submission: " . join(" ", @$rmiss) . ". "
+    push @{$warnings{$wn_key}}, "Will not be able to perform soring (comparing ECF to common list); the following referred to files are present in the ECF but where not found in the submission: " . join(" ", sort @$rmiss)
       if (scalar @$rmiss > 0);
-    $warns .= "FYI: the following referred to files are not listed in the ECF, and therefore will not be scored against: ", join(" ", @$rnotin) . ". " 
+    push @{$warnings{$wn_key}}, "FYI: the following referred to files are not listed in the ECF, and therefore will not be scored against: " . join(" ", sort @$rnotin)
       if (scalar @$rnotin > 0);
   }
-
-  return($errs, $warns, @events_processed);
+  
+  return(\@events_processed, @errsl);
 }
 
 ##########
@@ -630,17 +676,17 @@ sub check_exp_dirfiles {
 sub get_events_processed {
   my $dir = shift @_;
   my $file = shift @_;
-
+  
   my $fn = "$dir/$file";
-
+  
   vprint(4, "Checking for \'Events_Processed:\' line in txt file");
   
   my @ep = ();
-
+  
   my $err = MMisc::check_file_r($fn);
   return("Problem with file ($file): $err", @ep)
     if (! MMisc::is_blank($err));
-
+  
   my $fc = MMisc::slurp_file($fn);
   return("Problem reading txt file ($file)", @ep)
     if (! defined $fc);
@@ -649,8 +695,9 @@ sub get_events_processed {
     my $el = MMisc::clean_begend_spaces($1);
     $fc =~ s%^Events_Processed:(.+)$%%m;
     return("Multiple \'Events_Processed:\' lines found in txt file", @ep) 
-      if ($fc =~ m%^Events_Processed:(.+)$%m);
+      if ($fc =~ m%^Events_Processed:.*$%m);
     my @tep = split(m%\s+%, $el);
+    $dummy->clear_error(); # if there was an error in a previous iteration
     @tep = $dummy->validate_events_list(@tep);
     return("Problem validating file's event list (" . $dummy->get_errormsg() . ")", @ep)
       if ($dummy->error());
@@ -658,7 +705,7 @@ sub get_events_processed {
   } else {
     return("Could not find the \'Events_Processed:\' line in file ($file)", @ep);
   }
-
+  
   vprint(5, "Events Processed: " . join(" ", @ep));
   return("", @ep);
 }
@@ -667,70 +714,71 @@ sub get_events_processed {
 
 sub validate_xml {
   my ($dir, $xf, $data, $exp, @events_processed) = @_;
-
-  my $warn = "";
-
+  
   vprint(5, "Loading ViperFile");
   my $tmp = "$dir/$xf";
   my ($retstatus, $object, $msg) = 
-    TrecVid08HelperFunctions::load_ViperFile(0, $tmp, 
-					     $fps, $xmllint, $xsdpath);
-
-  return($msg, $warn)
+    TrecVid08HelperFunctions::load_ViperFile
+    (0, $tmp, $fps, $xmllint, $xsdpath);
+  
+  return($msg, "")
     if (! $retstatus);
-
+  
   vprint(5, "Confirming sourcefile filename is proper");
   my $sffn = $object->get_sourcefile_filename();
-  return("Problem obtaining the sourcefile's filename (" . $object->get_errormsg() . ")", $warn)
+  return("Problem obtaining the sourcefile's filename (" . $object->get_errormsg() . ")", "")
     if ($object->error());
   
   my ($derr, $dir, $exp_key, $ext) = MMisc::split_dir_file_ext($xf);
-  return("Problem splitting file and extension for ($xf)", "")
+  return("Problem splitting file and extension for ($xf)", $sffn)
     if (! MMisc::is_blank($derr));
   
-  return("Could not find matching sourcefile filename for <DATA> ($data) and xml file ($xf)", "")
+  return("Could not find matching sourcefile filename for <DATA> ($data) and xml file ($xf)", $sffn)
     if (! exists $expected_sffn{$data}{$exp_key});
   
   my $exp_sffn = $expected_sffn{$data}{$exp_key};
-  return("Sourcefile's filename is wrong (is: $sffn) (expected: $exp_sffn)", $warn)
+  return("Sourcefile's filename is wrong (is: $sffn) (expected: $exp_sffn)", $sffn)
     if ($sffn !~ m%$exp_sffn$%);
   
   my ($bettxt, $bte, $btot) = $object->get_txt_and_number_of_events(2);
-  return("Problem obtaining the number of events (" . $object->get_errormsg() . ")", $warn)
+  return("Problem obtaining the number of events (" . $object->get_errormsg() . ")", $sffn)
     if ($object->error());
-
-  $warn .= "Found no events in file. "
-    if ($btot == 0);
-
-  $warn .= &write_memdump_file($object, $exp, $xf)
-    if (defined $memdump);
   
-  return("", $warn)
-    if (! $useECF);
+  push @{$warnings{$wn_key}}, "$xf: Found no events in file. "
+    if ($btot == 0);
+  
+  if (defined $memdump) {
+    my $txt = &write_memdump_file($object, $exp, $xf);
+    push @{$warnings{$wn_key}}, $txt
+      if (! MMisc::is_blank($txt));
+  }
 
+  return("", $sffn)
+    if (! $useECF);
+  
   vprint(5, "Applying ECF file ($ecffile) to ViperFile");
   my ($lerr, $nobject) =
     TrecVid08HelperFunctions::get_new_ViperFile_from_ViperFile_and_ECF($object, $ecfobj);
-  return($lerr, $warn)
+  return($lerr, $sffn)
     if (! MMisc::is_blank($lerr));
-  return("Problem with ViperFile object", $warn)
+  return("Problem with ViperFile object", $sffn)
     if (! defined $nobject);
-
+  
   my ($aettxt, $ate, $atot) = $nobject->get_txt_and_number_of_events(2);
-  return("Problem obtaining the number of events (after ECF) (" . $nobject->get_errormsg() . ")", $warn)
+  return("Problem obtaining the number of events (after ECF) (" . $nobject->get_errormsg() . ")", $sffn)
     if ($nobject->error());
 
-  $warn .= "Total number of events changed from before ($btot / Events: $bettxt) to after applying the ECF ($atot / Events: $aettxt). "
+  push @{$warnings{$wn_key}}, "Total number of events changed from before ($btot / Events: $bettxt) to after applying the ECF ($atot / Events: $aettxt). "
     if ($atot != $btot);
 
   if (scalar @events_processed > 0) {
     my @ue = $nobject->list_used_events();
     my ($ri, $ro) = MMisc::confirm_first_array_values(\@ue, @events_processed);
-    return("Some events found in file that were not in the \'Events_Processed:\' list: " . join(" ", @$ri) . ".", $warn)
-      if (scalar @$ri > 0);
+    return("Some events found in file that were not in the \'Events_Processed:\' list: " . join(" ", @$ro) . ".", $sffn)
+      if (scalar @$ro > 0);
   }
 
-  return("", $warn);
+  return("", $sffn);
 }
 
 ##########
