@@ -2381,15 +2381,16 @@ sub get_summary {
 ######################################## 'xtra'
 
 sub set_xtra_Tracking_Comment {
-  my ($self) = @_;
+  my ($self, $add) = @_;
 
-  return($self->set_xtra_attribute($key_xtra_trackingcomment, $spval_xtra_trackingcomment));
+  return($self->set_xtra_attribute($key_xtra_trackingcomment, $spval_xtra_trackingcomment, 0, $add));
 }
 
 #####
 
 sub set_xtra_attribute {
-  my ($self, $attr, $value, $replace) = @_;
+  my ($self, $attr, $value, $replace, $addtotc) = @_;
+  # 'addtotc' is ignored unless we are writting an xtra_Tracking_Comment
 
   return(0) if ($self->error());
 
@@ -2411,9 +2412,12 @@ sub set_xtra_attribute {
       if ($value eq $spval_xtra_trackingcomment) {
         my $file = $self->get_file();
         my $sffn = $self->get_sourcefile_filename();
+        my $gtftxt = $self->check_if_gtf() ? "GTF" : "SYS";
         my $range = $fhash{$event}{$id}{$key_framespan};
         my $subtype = $fhash{$event}{$id}{$key_subtype};
-        $addvalue = "[ File: $file | Sourcefile: $sffn | Event: $event | SubType: $subtype | ID: $id | Range: $range]";
+        $subtype = MMisc::is_blank($subtype) ? "Not Set" : $subtype;
+        my $pretxt = (MMisc::is_blank($addtotc)) ? "" : " ($addtotc)";
+        $addvalue = "[$pretxt File: $file | Sourcefile: $sffn | Type: $gtftxt | Event: $event | SubType: $subtype | ID: $id | Framespan: $range]";
       }
       if ((! exists $fhash{$event}{$id}{$key_xtra}{$attr}) || ($replace)) {
         $fhash{$event}{$id}{$key_xtra}{$attr} = $addvalue;
@@ -3480,6 +3484,13 @@ sub get_errormsg {
 sub error {
   my ($self) = @_;
   return($self->{errormsg}->error());
+}
+
+##########
+
+sub clear_error {
+  my ($self) = @_;
+  return($self->{errormsg}->clear());
 }
 
 ############################################################
