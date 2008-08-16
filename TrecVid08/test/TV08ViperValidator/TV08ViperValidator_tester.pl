@@ -93,6 +93,9 @@ $testr += &do_simple_test($tn, "(addXtraAttribute)", "$validator ../common/test1
 $tn = "test12b";
 $testr += &do_simple_test($tn, "(addXtraAttribute + crop)", "$validator ../common/test1-1md-sys.xml -a attr_name:person_11 -c 1450:1750 -f PAL -w -p", "res_$tn.txt");
 
+$tn = "test12c";
+$testr += &do_simple_test($tn, "(addXtraAttribute + AddXtraTrackingComment + crop)", "$validator ../common/test1-1md-sys.xml -a attr_name:person_11 -c 1450:1750 -f PAL -w -p -A", "res_$tn.txt");
+
 ##########
 
 if ($testr == $totest) {
