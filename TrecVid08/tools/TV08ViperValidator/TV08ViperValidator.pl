@@ -284,6 +284,9 @@ if (defined $dosummary) {
   $dosummary = 0;
 }
 
+MMisc::error_quit("\'AddXtraTrackingComment\' can only be used with \'write\'")
+  if (($xtra_tc) && ($writeback == -1));
+
 my %hxtra = ();
 if (scalar @xtra > 0) {
   MMisc::error_quit("\'addXtraAttribute\' can only be used with \'write\'")
@@ -320,6 +323,10 @@ while ($tmp = shift @ARGV) {
   my ($ok, $object) = &load_file($isgtf, $tmp);
   next if (! $ok);
 
+  my $mods = 0; # Those are modification that would influence
+  # the Event Observation tracking ID which contains:
+  # File, Sourcefile, Type, Event (type not list of), SubType, ID, Framespan
+
   # This is really if you are a debugger
   print("** (Pre) Memory Representation:\n", $object->_display_all()) if ($show);
   # Summary
@@ -329,11 +336,19 @@ while ($tmp = shift @ARGV) {
     print "[Pre Modifications]\n$sumtxt";
   }
 
+  # 'xtra' Tracking Comment
+  if ($xtra_tc) {
+    $object->set_xtra_Tracking_Comment();
+    MMisc::error_quit("Problem while adding \'xtra\' Tracking Comment to ViperFile (" . $object->get_errormsg() .")")
+      if ($object->error());
+  }
+
   # ForceFilename
   if ($forceFilename ne "") {
     $object->change_sourcefile_filename($forceFilename);
     MMisc::error_quit("Problem while changing the sourcefile filename (" . $object->get_errormsg() .")")
       if ($object->error());
+    $mods++;
   }
   
   # ChangeType
@@ -346,10 +361,14 @@ while ($tmp = shift @ARGV) {
     }
     MMisc::error_quit("Could not change type of the file") if ($r == 0);
     MMisc::error_quit("Problem while changing the type of the file: " . $object->get_errormsg()) if ($object->error());
+    $mods++;
   }
 
   # Remove subtype
-  $object->unset_force_subtype() if ($remse);
+  if ($remse) {
+    $object->unset_force_subtype();
+    $mods++;
+  }
 
   # ECF work ?
   if ($useECF) {
@@ -358,22 +377,24 @@ while ($tmp = shift @ARGV) {
     MMisc::error_quit($lerr)
       if (! MMisc::is_blank($lerr));
     $object = $obj;
+    $mods++;
   }
   MMisc::error_quit("Problem with ViperFile object")
     if (! defined $object);
   MMisc::error_quit("Problem with ViperFile object (" . $object->get_errormsg() . ")")
     if ($object->error());
 
-  ###### Then do the rest
-
   # Crop
   if (! MMisc::is_blank($crop)) {
     (my $err, $object) = TrecVid08HelperFunctions::ViperFile_crop($object, $crop_beg, $crop_end);
     MMisc::error_quit("While cropping: $err\n") if (! MMisc::is_blank($err));
+    $mods++;
   }
 
   # Auto Limit
-  @asked_events = $object->list_used_full_events() if ($autolt);
+  if ($autolt) {
+    @asked_events = $object->list_used_full_events();
+  }
 
   # Duplicate the object in memory with only the selected types
   my $nvf = $object->clone_with_selected_events(@asked_events);
@@ -382,7 +403,7 @@ while ($tmp = shift @ARGV) {
   MMisc::error_quit("Problem while \'clone\'-ing the ViperFile")
     if (! defined $nvf);
 
-  # Add Xtra Attribute
+  # Add Xtra Attribute(s)
   if (scalar @xtra > 0) {
     foreach my $key (keys %hxtra) {
       $nvf->set_xtra_attribute($key, $hxtra{$key});
@@ -392,8 +413,8 @@ while ($tmp = shift @ARGV) {
   }
 
   # 'xtra' Tracking Comment
-  if ($xtra_tc) {
-    $nvf->set_xtra_Tracking_Comment();
+  if (($xtra_tc) && ($mods > 0)) {
+    $nvf->set_xtra_Tracking_Comment("Post Modifications");
     MMisc::error_quit("Problem while adding \'xtra\' Tracking Comment to ViperFile (" . $nvf->get_errormsg() .")")
       if ($nvf->error());
   }
@@ -496,7 +517,8 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--ChangeType> [I<randomseed:find_value>]]>
   S<[B<--crop> I<beg:end>] [B<--WriteMemDump> [I<mode>]]>
   S<[B<--ForceFilename> I<filename>] [B<--pruneEvents>]>
-  S<[B<--removeSubEventtypes>] [B<--addXtraAttribute> I<name:value>]]>
+  S<[B<--removeSubEventtypes>]>
+  S<[B<--addXtraAttribute> I<name:value>] [B<--AddXtraTrackingComment>]]>
   S<[B<--fps> I<fps>] [B<--ecf> I<ecffile>]>
   S<[B<--displaySummary> I<level>]>
   I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
@@ -559,9 +581,13 @@ B<TV08ViperValidator> will ignore the I<config> section of the XML file, as well
 
 =item B<--addXtraAttribute> I<name:value>
 
-Add to each event observation seen an extra attribute to the XML file.
+Add to each I<Event> I<Observation> an extra attribute to I<write> to the XML file.
 More than one B<-addXtraAttribute> command line option can be used to add multiple attributes.
-Attributes will be part of the event observation when copied from a ViPER file to another.
+Attributes wil be carried over when performing work on I<Observation>s.
+
+=item B<--AddXtraTrackingComment>
+
+Add to each I<Event> I<Observation> an extra attribute to I<write> to the XML file that will contain information about the I<File>, I<Sourcefile>, I<Type>, I<Event>, I<SubType>, I<ID> and I<Framespan>.
 
 =item B<--ChangeType> [I<randomseed>[:I<find_value>]]
 
