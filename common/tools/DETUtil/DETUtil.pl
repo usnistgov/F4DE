@@ -16,8 +16,6 @@
 
 use strict;
 use Data::Dumper;
-use MetricTV08;
-use Trials;
 
 ##########
 # Check we have every module (perl wise)
@@ -33,6 +31,9 @@ BEGIN {
   $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
 }
 use lib ($tv08plv, $f4deplv, $f4bv);
+
+use MetricTV08;
+use Trials;
 
 sub eo2pe {
   my @a = @_;
