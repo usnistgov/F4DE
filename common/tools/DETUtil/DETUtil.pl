@@ -618,7 +618,7 @@ Draw the iso-cost ratio lines.
 
 =item B<-R>, B<--set-iso-costratiolines> F<COEF>[,F<COEF>[,...]]
 
-Set the corficient for the iso-cost ratio lines. The F<COEF> is the ratio of cost of Miss divided by cost of False Alarm. Coeficients can be specified, or the default values defined by the application are used (c.f.: NOTES Section).
+Set the coeficient for the iso-cost ratio lines. The F<COEF> is the ratio of cost of Miss divided by cost of False Alarm. Coeficients can be specified, or the default values defined by the application are used (c.f.: NOTES Section).
 
 =item B<-P>, B<--iso-points>
 
@@ -627,6 +627,10 @@ Draw the isopoints and links (required -c).
 =item B<-I>, B<--iso-metriclines>
 
 Draw the iso-metric specific lines.
+
+=item B<-Q>, B<--set-iso-metriclines> F<COEF>[,F<COEF>[,...]]
+
+Set the coeficient for the iso-metric lines. Coeficients can be specified, or the default values defined by the application are used (c.f.: NOTES Section).
 
 =item B<-O>, B<--OmitActualCalc>
 
@@ -681,6 +685,8 @@ No known bugs.
 =head1 NOTES
 
 The default iso-cost ratio coeficients (-R option) are: 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000.
+
+The default iso-metric coeficients (-Q option) are: 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.6, .7, .8, .9, .95, .98, .99, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000.
 
 =head1 AUTHOR
 
