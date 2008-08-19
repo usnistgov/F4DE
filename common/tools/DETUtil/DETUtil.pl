@@ -110,7 +110,8 @@ if (! $have_everything) {
 }
 
 my $VERSION = 0.4;
-my @listIsolineCoef = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000);
+my @listIsoratiolineCoef = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000);
+my @listIsometriclineCoef = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.6, .7, .8, .9, .95, .98, .99, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000);
 
 my $man = 0;
 my $help = 0;
@@ -127,6 +128,7 @@ my $DetCompare = 0;
 my $DrawIsoratiolines = 0;
 my $Isoratiolineslist = "";
 my $DrawIsometriclines = 0;
+my $Isometriclineslist = "";
 my $DrawIsopoints = 0;
 my $confidenceIsoThreshold = 0.95;
 my $ConclusionOverall = 0;
@@ -151,6 +153,7 @@ GetOptions
 	'i|iso-costratiolines'                 => \$DrawIsoratiolines,
 	'R|set-iso-costratiolines=s'           => \$Isoratiolineslist,
 	'I|iso-metriclines'                    => \$DrawIsometriclines,
+	'Q|set-iso-metriclines=s'              => \$Isometriclineslist,
 	'P|iso-points'                         => \$DrawIsopoints,
 	'T|Title=s'                            => \$title,
 	'l|lineTitle=s'                        => \$lineTitleModification,
@@ -179,18 +182,34 @@ pod2usage("'-c|--compare' works with 2 and only 2 DET curves.\n") if( ( scalar (
 # Check iso coef
 if($Isoratiolineslist ne "")
 {
-	@listIsolineCoef = ();
+	@listIsoratiolineCoef = ();
 
 	# Use the list given on the command-line
 	foreach my $c ( split( /,/ , $Isoratiolineslist ) )
 	{
-		die "ERROR: The coefficient for the iso-costratioline if not a proper floating-point." if( $c !~ /^[-+]?\d*\.?\d+([eE][-+]?\d+)?$/ );
-		push( @listIsolineCoef, $c );
+		die "ERROR: The coefficient for the iso-costratioline if not a proper floating-point." if( $c !~ /^\d*\.?\d+([eE][-+]?\d+)?$/ );
+		push( @listIsoratiolineCoef, $c );
 	}
 	
-	@listIsolineCoef = unique(@listIsolineCoef);
-	@listIsolineCoef = sort {$a <=> $b} @listIsolineCoef;
+	@listIsoratiolineCoef = unique(@listIsoratiolineCoef);
+	@listIsoratiolineCoef = sort {$a <=> $b} @listIsoratiolineCoef;
 }
+
+if($Isometriclineslist ne "")
+{
+	@listIsometriclineCoef = ();
+
+	# Use the list given on the command-line
+	foreach my $c ( split( /,/ , $Isometriclineslist ) )
+	{
+		die "ERROR: The coefficient for the iso-metricline if not a proper floating-point." if( $c !~ /^[-+]?\d*\.?\d+([eE][-+]?\d+)?$/ );
+		push( @listIsometriclineCoef, $c );
+	}
+	
+	@listIsometriclineCoef = unique(@listIsometriclineCoef);
+	@listIsometriclineCoef = sort {$a <=> $b} @listIsometriclineCoef;
+}
+#
 
 # Check the filter syntax
 foreach $_(@selectFilters)
@@ -201,6 +220,7 @@ foreach $_(@editFilters)
 {
 	die "Error: Edit Filter '$_' does not match a legal expression" if ($_ !~ /^title:s\/[^\/]+\/[^\/]*\/(g|i|gi|ig|)$/);
 }
+#
 ##
 
 my %options = ();
@@ -248,7 +268,7 @@ my $ds = new DETCurveSet($title);
 foreach my $srl ( @ARGV )
 {
   my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
-  my $det = new DETCurve($loadeddet->getTrials(), $loadeddet->getMetric(), $loadeddet->getStyle(), $loadeddet->getLineTitle(), \@listIsolineCoef, $loadeddet->{GZIPPROG});
+  my $det = new DETCurve($loadeddet->getTrials(), $loadeddet->getMetric(), $loadeddet->getStyle(), $loadeddet->getLineTitle(), \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
   $det->{LAST_SERIALIZED_DET} = $loadeddet->{LAST_SERIALIZED_DET};
   $det->computePoints();
   
@@ -310,7 +330,7 @@ if($DetCompare)
 	
 	my %statsCompare;
 	
-	foreach my $cof ( @listIsolineCoef )
+	foreach my $cof ( @listIsoratiolineCoef )
 	{
 		$statsCompare{$cof}{COMPARE}{PLUS} = 0;
 		$statsCompare{$cof}{COMPARE}{MINUS} = 0;
@@ -363,7 +383,7 @@ if($DetCompare)
 	$compare2{ZERO} = 0;
 	
 	# Display the table
-	foreach my $cof ( @listIsolineCoef )
+	foreach my $cof ( @listIsoratiolineCoef )
 	{
 		my $bestDET = "    -     ";
 		my $isDiff = 0;
@@ -415,12 +435,13 @@ if($DetCompare)
 	$options{Isopoints} = \@list_isopoints if( $DrawIsopoints );
 }
 
-$options{Isolines} = \@listIsolineCoef if( $DrawIsoratiolines );
+$options{Isoratiolines} = \@listIsoratiolineCoef if( $DrawIsoratiolines );
+$options{Isometriclines} = \@listIsometriclineCoef if( $DrawIsometriclines );
 
 ## Reports
 my $temp = "";
 
-if($tmpDir ne "" || $tmpDir ne "/tmp")
+if($tmpDir ne "" && $tmpDir ne "/tmp")
 {
 	$temp = tempdir( "$tmpDir/DETUtil.XXXXXXXX", CLEANUP => !$keepFiles );
 }

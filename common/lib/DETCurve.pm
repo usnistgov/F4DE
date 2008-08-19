@@ -1184,7 +1184,7 @@ sub writeMultiDetGraph
     
     ### Use the options
     my $title = "Combined DET Plot";
-    my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $Isolines, $Isopoints) = (0.0001, 40, 5, 98, "top", undef, undef);
+    my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $Isoratiolines, $Isometriclines, $Isopoints) = (0.0001, 40, 5, 98, "top", undef, undef, undef);
     ### $*DisplayScaleConst Sets the scaling in the display.  for ND we print it as a percentage. 
     my ($gnuplotPROG, $xScale, $yScale, $makePNG, $reportActual) = (undef, "nd", "nd", 1, 1);
 
@@ -1222,7 +1222,8 @@ sub writeMultiDetGraph
       $ymax = $options->{Ymax} if (exists($options->{Ymax}));
       $keyLoc = $options->{KeyLoc} if (exists($options->{KeyLoc}));
       $keyLoc = $options->{KeyLoc} if (exists($options->{KeyLoc}));
-      $Isolines = $options->{Isolines} if (exists($options->{Isolines}));
+      $Isoratiolines = $options->{Isoratiolines} if (exists($options->{Isoratiolines}));
+      $Isometriclines = $options->{Isometriclines} if (exists($options->{Isometriclines}));
       $Isopoints = $options->{Isopoints} if (exists($options->{Isopoints}));
       $makePNG = $options->{BuildPNG} if (exists($options->{BuildPNG}));
       $gnuplotPROG = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
@@ -1236,13 +1237,57 @@ sub writeMultiDetGraph
     
     my @colors = (1..40);  splice(@colors, 0, 1);
 
-    ### Draw the isolines
-    if ( defined($Isolines) ) {
-      my $troot = sprintf( "%s.isolines", $fileRoot );
+	### Draw the isometriclines
+    if ( defined($Isometriclines) ) {
+      my $troot = sprintf( "%s.isometriclines", $fileRoot );
+      my $color = "rgb \"\#FFD700\"";
+      open( ISODAT, "> $troot" ); 
+            
+      foreach my $isocoef (@{ $Isometriclines } )
+      {
+          my $x = $xmin/100;
+                                
+          while ($x <= $xmax)
+          {
+            my $pfa = ($xScale eq "nd" ? ppndf($x) : $x);
+            my $tv = $isocoef*$isocoef-$x*$x;
+            my $y = sqrt($tv < 0 ? 0 : $tv);
+            my $pmiss = ($yScale eq "nd" ? ppndf($y) : $y);
+            printf ISODAT "$pfa $pmiss\n";
+            
+            if   ( $x < 0.0001 ) { $x += 0.000001; }
+			elsif( $x < 0.001  ) { $x += 0.00001; }
+			elsif( $x < 0.004  ) { $x += 0.00004; }
+			elsif( $x < 0.01   ) { $x += 0.0001; }
+			elsif( $x < 0.02   ) { $x += 0.0002; }
+			elsif( $x < 0.05   ) { $x += 0.0005; }
+			elsif( $x < 0.1    ) { $x += 0.001; }
+			elsif( $x < 0.2    ) { $x += 0.002; }
+			elsif( $x < 0.5    ) { $x += 0.005; }
+			elsif( $x < 1      ) { $x += 0.01; }
+			elsif( $x < 2      ) { $x += 0.02; }
+			elsif( $x < 5      ) { $x += 0.05; }
+			else                 { $x += 0.1; }
+          }
+                                     
+          printf ISODAT "\n";
+      }
+                
+      close( ISODAT );
+      if ($needComma) {
+        $PLOTCOMS .= ",\\\n";
+      }
+      $PLOTCOMS .= "  '$troot' title 'Iso-metric lines' with lines lt $color";
+      $needComma = 1;
+    }
+
+    ### Draw the isoratiolines
+    if ( defined($Isoratiolines) ) {
+      my $troot = sprintf( "%s.isoratiolines", $fileRoot );
       my $color = "rgb \"\#DDDDDD\"";
       open( ISODAT, "> $troot" ); 
             
-      foreach my $isocoef (@{ $Isolines } )
+      foreach my $isocoef (@{ $Isoratiolines } )
       {
           my $x = $xmin/100;
                                 
