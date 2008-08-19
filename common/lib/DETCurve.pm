@@ -1233,64 +1233,49 @@ sub writeMultiDetGraph
     my $includeRandomCurve = 1;
     $includeRandomCurve = 0 if ($detset->getDETForID(0)->{METRIC}->errMissUnit() ne "Prob" || $detset->getDETForID(0)->{METRIC}->errFAUnit() ne "Prob");
     my $needComma = ($includeRandomCurve ? 1 : 0);
-        
-
+    
     my @colors = (1..40);  splice(@colors, 0, 1);
 
     ### Draw the isolines
-    if ( defined($Isolines) && $Isolines == 1 ) {
+    if ( defined($Isolines) ) {
       my $troot = sprintf( "%s.isolines", $fileRoot );
       my $color = "rgb \"\#DDDDDD\"";
       open( ISODAT, "> $troot" ); 
-                
-      foreach my $tic_s ( @tics ) {
-        if ( ( $tic_s >= $xmin ) && ( $tic_s <= $ymax ) ) {
-          my $isocoef = $tic_s/$xmin;
-          my $x = $xmin;
+            
+      foreach my $isocoef (@{ $Isolines } )
+      {
+          my $x = $xmin/100;
                                 
-          while ( $x <= $xmax ) {
-            my $pfa = ppndf( $x/100 );
-            my $pmiss = ppndf( $isocoef*$x/100) ;
+          while ($x <= $xmax)
+          {
+            my $pfa = ($xScale eq "nd" ? ppndf($x) : $x);
+            my $pmiss = ($yScale eq "nd" ? ppndf($isocoef*$x) : $isocoef*$x);
             printf ISODAT "$pfa $pmiss\n";
-                                
-            if ( $x < 0.0001 ) {
-              $x += 0.000001;
-            } elsif ( $x < 0.001  ) {
-              $x += 0.00001;
-            } elsif ( $x < 0.004  ) {
-              $x += 0.00004;
-            } elsif ( $x < 0.01   ) {
-              $x += 0.0001;
-            } elsif ( $x < 0.02   ) {
-              $x += 0.0002;
-            } elsif ( $x < 0.05   ) {
-              $x += 0.0005;
-            } elsif ( $x < 0.1    ) {
-              $x += 0.001;
-            } elsif ( $x < 0.2    ) {
-              $x += 0.002;
-            } elsif ( $x < 0.5    ) {
-              $x += 0.005;
-            } elsif ( $x < 1      ) {
-              $x += 0.01;
-            } elsif ( $x < 2      ) {
-              $x += 0.02;
-            } elsif ( $x < 5      ) {
-              $x += 0.05;
-            } else {
-              $x += 0.1;
-            }
+            
+            if   ( $x < 0.0001 ) { $x += 0.000001; }
+			elsif( $x < 0.001  ) { $x += 0.00001; }
+			elsif( $x < 0.004  ) { $x += 0.00004; }
+			elsif( $x < 0.01   ) { $x += 0.0001; }
+			elsif( $x < 0.02   ) { $x += 0.0002; }
+			elsif( $x < 0.05   ) { $x += 0.0005; }
+			elsif( $x < 0.1    ) { $x += 0.001; }
+			elsif( $x < 0.2    ) { $x += 0.002; }
+			elsif( $x < 0.5    ) { $x += 0.005; }
+			elsif( $x < 1      ) { $x += 0.01; }
+			elsif( $x < 2      ) { $x += 0.02; }
+			elsif( $x < 5      ) { $x += 0.05; }
+			else                 { $x += 0.1; }
           }
-                                
+                                     
           printf ISODAT "\n";
-        }
+      
       }
                 
       close( ISODAT );
       if ($needComma) {
         $PLOTCOMS .= ",\\\n";
       }
-      $PLOTCOMS .= "  '$troot' title 'isolines' with lines lt $color";
+      $PLOTCOMS .= "  '$troot' title 'Iso-cost ratio lines' with lines lt $color";
       $needComma = 1;
     }
         
@@ -1310,10 +1295,10 @@ sub writeMultiDetGraph
       foreach my $isoelt ( @{ $Isopoints } ) {
         my @elt = @$isoelt;
                         
-        my $x1 = ppndf( $elt[0] );
-        my $y1 = ppndf( $elt[1] );
-        my $x2 = ppndf( $elt[2] );
-        my $y2 = ppndf( $elt[3] );
+        my $x1 = ($xScale eq "nd" ? ppndf( $elt[0] ) : $elt[0] );
+        my $y1 = ($yScale eq "nd" ? ppndf( $elt[1] ) : $elt[1] );
+        my $x2 = ($xScale eq "nd" ? ppndf( $elt[2] ) : $elt[2] );
+        my $y2 = ($yScale eq "nd" ? ppndf( $elt[3] ) : $elt[3] );
                         
         printf POINTS1DAT "$x1 $y1\n";
         printf POINTS2DAT "$x2 $y2\n";
@@ -1326,25 +1311,17 @@ sub writeMultiDetGraph
             my $x = (1-$t)*$elt[2] + $t*$elt[0];
             my $y = (1-$t)*$elt[3] + $t*$elt[1];
                                 
-            my $pfa = ppndf( $x );
-            my $pmiss = ppndf( $y ) ;
+            my $pfa = ($xScale eq "nd" ? ppndf( $x ) : $x);
+            my $pmiss =  ($yScale eq "nd" ? ppndf( $y ) : $y);
             printf LINESDAT "$pfa $pmiss\n";
                                 
-            if ( $x < 0.0001 ) {
-              $t += 0.0001;
-            } elsif ( $x < 0.001  ) {
-              $t += 0.001;
-            } elsif ( $x < 0.004  ) {
-              $t += 0.004;
-            } elsif ( $x < 0.01   ) {
-              $t += 0.01;
-            } elsif ( $x < 0.02   ) {
-              $t += 0.02;
-            } elsif ( $x < 0.05   ) {
-              $t += 0.05;
-            } else {
-              $t += 0.1;
-            }
+            if   ( $x < 0.0001 ) { $t += 0.0001; }
+			elsif( $x < 0.001  ) { $t += 0.001; }
+			elsif( $x < 0.004  ) { $t += 0.004; }
+			elsif( $x < 0.01   ) { $t += 0.01; }
+			elsif( $x < 0.02   ) { $t += 0.02; }
+			elsif( $x < 0.05   ) { $t += 0.05; }
+			else                 { $t += 0.1; }
           }
                                 
           printf LINESDAT "\n";
@@ -1358,7 +1335,8 @@ sub writeMultiDetGraph
         $PLOTCOMS .= ",\\\n";
       }
       $PLOTCOMS .= "  '$trootlines' title 'no diff' with lines lt $colorlines" if( $isnodiff );
-      $PLOTCOMS .= ",\\\n  '$trootpoints1' notitle with points lt $colorpoints1 pt 6 ps 1";
+      $PLOTCOMS .= ",\\\n" if($isnodiff);
+      $PLOTCOMS .= "  '$trootpoints1' notitle with points lt $colorpoints1 pt 6 ps 1";
       $PLOTCOMS .= ",\\\n  '$trootpoints2' notitle with points lt $colorpoints2 pt 6 ps 1";
       $needComma = 1;
     }
@@ -1389,10 +1367,10 @@ sub writeMultiDetGraph
                     
         my $xcol = ($xScale eq "nd" ? "3" : "5");
         my $ycol = ($yScale eq "nd" ? "2" : "4");
-        $PLOTCOMS .= "  '$troot.dat.1' using $xcol:$ycol title '$ltitle' with lines $colors[$d]";
+        $PLOTCOMS .= "  '$troot.dat.1' using $xcol:$ycol notitle with lines $colors[$d]";
         $xcol = ($xScale eq "nd" ? "6" : "4");
         $ycol = ($yScale eq "nd" ? "5" : "3");
-        $PLOTCOMS .= ",\\\n  '$troot.dat.2' using $xcol:$ycol notitle with points lc $colors[$d] pt 7";
+        $PLOTCOMS .= ",\\\n  '$troot.dat.2' using $xcol:$ycol title '$ltitle' with linespoints lc $colors[$d] pt 7";
         my $bestlab = _getOffAxisLabel($miss, $fa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $colors[$d], 7, 0); 
         push (@offAxisLabels, $bestlab) if ($bestlab ne "");
 
@@ -1568,10 +1546,10 @@ sub writeGNUGraph{
   my $xcol = ($xScale eq "nd" ? "3" : "5");
   my $ycol = ($yScale eq "nd" ? "2" : "4");
   $PLOTCOMS .= ",\\\n" if ($includeRandomCurve);
-  $PLOTCOMS .= "    '$fileRoot.dat.1' using $xcol:$ycol title '$ltitle' with lines 2";
+  $PLOTCOMS .= "    '$fileRoot.dat.1' using $xcol:$ycol notitle with lines 2";
   $xcol = ($xScale eq "nd" ? "6" : "4");
   $ycol = ($yScale eq "nd" ? "5" : "3");
-  $PLOTCOMS .= sprintf(", \\\n    '$fileRoot.dat.2' using $xcol:$ycol notitle with points lc 2 pt 7");
+  $PLOTCOMS .= sprintf(", \\\n    '$fileRoot.dat.2' using $xcol:$ycol title '$ltitle' with linespoints lc 2 pt 7");
   my $bestlab = _getOffAxisLabel($miss, $fa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, 2, 7, 0); 
   push (@offAxisLabels, $bestlab) if ($bestlab ne "");
   if ($reportActual){

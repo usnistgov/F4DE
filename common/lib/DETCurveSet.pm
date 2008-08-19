@@ -185,10 +185,11 @@ sub getFSKeyForKey(){
 sub getDETList(){
   my ($self, $key) = @_;
   my @arr = ();
-  foreach ($self->{DETList}){
-    push @arr; $_->{DET};
+  foreach (@{ $self->{DETList} }){
+    push @arr, $_->{DET};
   }
-  return @arr;
+  
+  return \@arr;
 }
 
 sub _PN(){
