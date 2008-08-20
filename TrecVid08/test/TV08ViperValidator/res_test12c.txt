@@ -61,7 +61,7 @@ Framespan was shifted by -1449 -->
         </attribute>
         <attribute name="Point"/>
         <attribute name="xtra_Tracking_Comment">
-          <data:svalue value="[ File: ../common/test1-1md-sys.xml | Sourcefile: 20050519-1503-Excerpt.mpg | Type: SYS | Event: ObjectPut | SubType: Not Set | ID: 0 | Framespan: 938:1493] # [ (Post Modifications) File: ../common/test1-1md-sys.xml | Sourcefile: 20050519-1503-Excerpt.mpg | Type: SYS | Event: ObjectPut | SubType: Not Set | ID: 0 | Framespan: 1:44]"/>
+          <data:svalue value="[ (Original) File = ../common/test1-1md-sys.xml | Sourcefile = 20050519-1503-Excerpt.mpg | Type = SYS | Event = ObjectPut | SubType = Not Set | ID = 0 | Framespan = 938:1493 | XtraAttributes = Not Set] # [ (Post Modification) File = ../common/test1-1md-sys.xml | Sourcefile = 20050519-1503-Excerpt.mpg | Type = SYS | Event = ObjectPut | SubType = Not Set | ID = 0 | Framespan = 1:44 | XtraAttributes = attr_name]"/>
         </attribute>
         <attribute name="xtra_attr_name">
           <data:svalue value="person_11"/>
@@ -79,7 +79,7 @@ Framespan was shifted by -1449 -->
         </attribute>
         <attribute name="Point"/>
         <attribute name="xtra_Tracking_Comment">
-          <data:svalue value="[ File: ../common/test1-1md-sys.xml | Sourcefile: 20050519-1503-Excerpt.mpg | Type: SYS | Event: ObjectGet | SubType: Not Set | ID: 0 | Framespan: 1493:3327] # [ (Post Modifications) File: ../common/test1-1md-sys.xml | Sourcefile: 20050519-1503-Excerpt.mpg | Type: SYS | Event: ObjectGet | SubType: Not Set | ID: 0 | Framespan: 44:301]"/>
+          <data:svalue value="[ (Original) File = ../common/test1-1md-sys.xml | Sourcefile = 20050519-1503-Excerpt.mpg | Type = SYS | Event = ObjectGet | SubType = Not Set | ID = 0 | Framespan = 1493:3327 | XtraAttributes = Not Set] # [ (Post Modification) File = ../common/test1-1md-sys.xml | Sourcefile = 20050519-1503-Excerpt.mpg | Type = SYS | Event = ObjectGet | SubType = Not Set | ID = 0 | Framespan = 44:301 | XtraAttributes = attr_name]"/>
         </attribute>
         <attribute name="xtra_attr_name">
           <data:svalue value="person_11"/>
