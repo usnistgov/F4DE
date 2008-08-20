@@ -1099,7 +1099,7 @@ sub _log10{
 sub _getValueInGraph
 {
 	my ($x, $xmin, $xmax, $scale) = @_;
-	if (    $scale eq "nd") { return((ppndf($x) - ppndf($xmin/100)) / (ppndf($xmax/100) - ppndf($xmin/100))); }
+	if    ($scale eq "nd" ) { return((ppndf($x) - ppndf($xmin/100)) / (ppndf($xmax/100) - ppndf($xmin/100))); }
   	elsif ($scale eq "log") { return((($x <= 0) ? -1 : (_log10($x) - _log10($xmin)) / (_log10($xmax) - _log10($xmin)))); }
   	else                    { return(($x - $xmin) / ($xmax - $xmin)); }
 }
@@ -1155,13 +1155,19 @@ sub _getOffAxisLabel{
 
 sub _getIsoMetricLineLabel
 {
-	my ($yval, $xval, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $indexl, $qstr) = @_;
+	my ($yval, $xval, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $indexl, $qstr, $xtemp) = @_;
 	my $gyval = _getValueInGraph($yval, $ymin, $ymax, $yScale);
 	my $gxval = _getValueInGraph($xval, $xmin, $xmax, $xScale);
 	
 	$gxval = 0 if($gxval < 0);
-	$gyval = 1 if($gyval > 1);
 	
+	if($gyval > 1)
+	{
+		$gxval = _getValueInGraph($xtemp, $xmin, $xmax, $xScale);
+		$gyval = 1;
+		$gxval -= 0.05;
+	}
+
 	$gyval -= 0.01;
 	$gxval += 0.005;
 	
@@ -1274,9 +1280,10 @@ sub writeMultiDetGraph
       {
           my $x = $xmin/100;
           
-          my $ytemp = $detset->getDETForID(0)->{METRIC}->MISSForGivenComb($isocoef, $xmin);
+          my $ytemp = $detset->getDETForID(0)->{METRIC}->MISSForGivenComb($isocoef, $xmin/100);
+          my $xtemp = $detset->getDETForID(0)->{METRIC}->FAForGivenComb($isocoef, $ymax/100);
           
-          my $linelabel = _getIsoMetricLineLabel($ytemp, $x, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $labelind, $isocoef);
+          my $linelabel = _getIsoMetricLineLabel($ytemp, $x, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $labelind, sprintf("%.3f", $isocoef), $xtemp);
           
           push (@offAxisLabels, $linelabel);
                                 
