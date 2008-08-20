@@ -365,8 +365,7 @@ sub get_new_ViperFile_from_ViperFile_and_ECF {
   return("Problem tying EventList to ECF " . $el->get_errormsg() . ")", undef)
     if (! $el->tie_to_ECF($ecfobj));
 
-  my ($terr, $tobs, $added, $rejected) = 
-    TrecVid08HelperFunctions::add_ViperFileObservations2EventList($vf, $el, 1);
+  my ($terr, $tobs, $added, $rejected) = add_ViperFileObservations2EventList($vf, $el, 1);
   return("Problem adding ViperFile Observations to EventList: $terr", undef)
     if (! MMisc::is_blank($terr));
   
@@ -416,3 +415,137 @@ sub confirm_all_ECF_sffn_are_listed {
 
   return("", \@missing_from_ECF, \@not_in_ECF);
 }
+
+####################
+
+sub _only_keep_annotations_with {
+  my $okaw = shift @_;
+  my $okaw_rm = shift @_;
+  my $rokk = shift @_;
+  my @in = @_;
+
+  return(@in) if ((MMisc::is_blank($okaw)) || (scalar @in == 0));
+
+  my @out = ();
+  foreach my $rh (@in) {
+    my $annot = $$rh{$$rokk[7]};
+
+    if ($okaw_rm) {
+      my @tmp1 = split(m%\s+%, $annot);
+      my @tmp2 = grep(m%^$okaw%, @tmp1);
+      $annot = join(" ", @tmp2);
+      $$rh{$$rokk[7]} = $annot;
+    }
+
+    push @out, $rh
+      if ($annot =~ m%$okaw%);
+  }
+
+  return(@out);
+}
+
+#####
+
+sub extract_trackingcomment_information {
+  my $akv = "__all__";
+  my ($txt, $keep_tc_key, $mode, $okaw, $okaw_rm) = MMisc::iuav(\@_, "", $akv, 0, "", 0);
+  # mode: 0 = keep all occurences for the same xml file 
+  # 1 = keep the first one / 2 = keep the latest one
+  # okaw: Only Keep Annotations With
+  # okaw_rm: Remove all other entries ?
+
+  my @out = ();
+
+  return("Empty data", @out)
+    if (MMisc::is_blank($txt));
+
+  $keep_tc_key = $akv if (MMisc::is_blank($keep_tc_key));
+
+  my $dvf = new TrecVid08ViperFile();
+  my $tcs = $dvf->get_char_tc_separator();
+  my $be  = $dvf->get_char_tc_beg_entry();
+  my $ee  = $dvf->get_char_tc_end_entry();
+  my $es  = $dvf->get_char_tc_entry_sep();
+  my $cs  = $dvf->get_char_tc_comp_sep();
+  my $bp  = $dvf->get_char_tc_beg_pre();
+  my $ep  = $dvf->get_char_tc_end_pre();
+  my @okk = $dvf->get_array_tc_list();
+  my @tca = $dvf->get_xtra_tc_authorized_keys();
+  return("Problem obtaining some tracking comment information: " . $dvf->get_errormsg())
+    if ($dvf->error());
+
+  return("Request key ($keep_tc_key) is not authorized", @out)
+    if (($keep_tc_key ne $akv) && (! grep(m%^$keep_tc_key$%, @tca)));
+
+  my @all = split(m%\Q$tcs\E%, $txt);
+  return("Could not find any entry" , @out)
+    if (scalar @all == 0);
+
+  my $ekv = "__empty__";
+  my %allh = ();
+  my %isin = ();
+  foreach my $entry (@all) {
+    $entry = MMisc::clean_begend_spaces($entry);
+    return("Entry does not start with expected character ($be)", @out)
+      if ($entry !~ s%^\Q$be\E%%);
+    return("Entry does not end with expected character ($ee)", @out)
+      if ($entry !~ s%\Q$ee\E$%%);
+    
+    my $pre = $ekv;
+    $entry = MMisc::clean_begend_spaces($entry);
+    $pre = $1 if ($entry =~ s%^\Q$bp\E([^\Q$ep\E]+)\Q$ep\E%%);
+  
+    $entry = MMisc::clean_begend_spaces($entry);
+    my @av = split(m%\Q$es\E%, $entry);
+    return("Could not find any key/value entry" , @out)
+      if (scalar @av == 0);
+    my %vh = ();
+    foreach my $comp (@av) {
+      my ($k, $v) = split(m%\Q$cs\E%, $comp);
+      $k = MMisc::clean_begend_spaces($k);
+      $v = MMisc::clean_begend_spaces($v);
+      return("Found unknown key ($k / $v)", @out)
+        if (! grep(m%$k$%, @okk));
+      $vh{$k} = $v;
+    }
+
+    if ((($keep_tc_key eq $akv) || ($pre eq $keep_tc_key)) && ($mode > 0)) {
+      my $use = 1;
+      my $file = $vh{$okk[0]}; # get the 'File' info
+      $use = 0 if ( ($mode == 1) && (exists $isin{$file}) ); # only keep first
+      $isin{$file} = \%vh if ($use);
+    }
+
+    push @{$allh{$pre}}, \%vh;
+  }
+
+  if ($mode > 0) {
+    foreach my $key (keys %isin) {
+      push @out, $isin{$key};
+    } 
+    return("", &_only_keep_annotations_with($okaw, $okaw_rm, \@okk, @out));
+  }
+
+  ## mode = 0 
+
+  # all keys
+  if ($keep_tc_key eq $akv) {
+    foreach my $key (keys %allh) {
+      push @out, @{$allh{$key}};
+    }
+    return("", &_only_keep_annotations_with($okaw, $okaw_rm, \@okk, @out));
+  }
+
+  # key not in ? (returns an empty array)
+  return("", @out)
+    if (! exists $allh{$keep_tc_key});
+
+  # key in
+  @out = @{$allh{$keep_tc_key}};
+
+  return("", &_only_keep_annotations_with($okaw, $okaw_rm, \@okk, @out));
+}
+
+########################################
+
+1;
