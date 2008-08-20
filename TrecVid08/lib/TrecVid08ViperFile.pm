@@ -74,8 +74,8 @@ my @ok_events =
   );
 
 # Authorized sub Events List (usualy those would be results from the scorer)
-my $key_subevent_Undefined = "Undefined";
-my $key_subevent_Mapped = "Mapped";
+my $key_subevent_Undefined   = "Undefined";
+my $key_subevent_Mapped      = "Mapped";
 my $key_subevent_UnmappedRef = "Unmapped_Ref";
 my $key_subevent_UnmappedSys = "Unmapped_Sys";
 my @ok_subevents = 
@@ -110,6 +110,23 @@ my %hash_file_attributes_types =
 my $key_xtra = "xtra_"; # A very special type, is both optional and a partial match
 my $key_xtra_trackingcomment = "Tracking_Comment";
 my $spval_xtra_trackingcomment = "Special Values for xtra Tracking_Comment";
+
+my $key_xtra_tc_original = "Original";
+my $key_xtra_tc_modsadd  = "Post Modification";
+my @keys_xtra_tc_authorized = ($key_xtra_tc_original, $key_xtra_tc_modsadd);
+
+my @array_xtra_tc_list = # Order is important
+  ( "File", "Sourcefile", "Type", "Event", "SubType",
+    "ID", "Framespan", "XtraAttributes");
+
+# Important to properly separate those values in other pacakges
+my $char_tc_separator = "\#";
+my $char_tc_beg_entry = "\[";
+my $char_tc_end_entry = "\]";
+my $char_tc_entry_sep = " \| ";
+my $char_tc_comp_sep  = " \= ";
+my $char_tc_beg_pre   = "\(";
+my $char_tc_end_pre   = "\)";
 
 my @array_file_inline_attributes =
   ( "id", "name" );             # 'id' is to be first
@@ -275,7 +292,7 @@ sub _expand_events_star {
 
     if ($e eq "*") { # $s is not blank
       foreach my $ev (@ok_events) {
-	push @out, get_printable_full_event($ev, $s, 1);
+	push @out, &get_printable_full_event($ev, $s, 1);
       }
       next;
     }
@@ -301,6 +318,12 @@ sub validate_events_list {
   @events = split(m%\,%, join(",", @events));
   @events = $self-> _expand_events_star(@events);
   @events = MMisc::make_array_of_unique_values(@events);
+
+  # A non validated entry does not have 'subtype' set yet, so any subtype
+  # would be dropped, so skip the 'reformat_events' function until then
+  @events = $self->reformat_events(@events)
+    if ($self->is_validated());
+
   my ($rev, $rsev) = $self->split_events_subevents(@events);
 
   my ($in, $out) = MMisc::confirm_first_array_values($rev, @ok_events);
@@ -976,7 +999,7 @@ sub _call_writeback2xml {
   return(0) if ($self->error());
 
   if (scalar @limitto_events == 0) {
-    @limitto_events = @ok_events;
+    @limitto_events = $self->validate_events_list(@ok_events);
   } else {
     @limitto_events = $self->validate_events_list(@limitto_events);
     return(0) if ($self->error());
@@ -1004,7 +1027,7 @@ sub reformat_xml {
     return(0);
   }
 
-  my @xtra_list = $self->list_xtra_attributes();
+  my @xtra_list = $self->list_all_xtra_attributes();
   return(0) if ($self->error());
 
   return($self->_call_writeback2xml($comment, \%tmp, \@xtra_list, @limitto_events));
@@ -1039,7 +1062,7 @@ sub _display {
   return("") if ($self->error());
 
   if (scalar @limitto_events == 0) {
-    @limitto_events = @ok_events;
+    @limitto_events = $self->validate_events_list(@ok_events);
   } else {
     @limitto_events = $self->validate_events_list(@limitto_events);
     return(0) if ($self->error());
@@ -1422,7 +1445,7 @@ sub get_all_events_observations {
   return(0) if ($self->error());
 
   if (scalar @limitto_events == 0) {
-    @limitto_events = @ok_events;
+    @limitto_events = $self->validate_events_list(@ok_events);
   } else {
     @limitto_events = $self->validate_events_list(@limitto_events);
     return(0) if ($self->error());
@@ -1984,7 +2007,7 @@ sub make_full_events_hash {
 
 sub split_events_subevents {
   my ($self, @fevl) = @_;
-  my ($rev, $rsev, $dummy) = $self->_make_full_events_hash_core(@fevl);
+  my ($rev, $rsev, %dummyh) = $self->_make_full_events_hash_core(@fevl);
   return($rev, $rsev);
 }
 
@@ -2380,10 +2403,57 @@ sub get_summary {
 
 ######################################## 'xtra'
 
+sub get_key_xtra_trackingcomment { return($key_xtra_trackingcomment); }
+
+##
+
+sub get_char_tc_separator { return($char_tc_separator); }
+sub get_char_tc_beg_entry { return($char_tc_beg_entry); }
+sub get_char_tc_end_entry { return($char_tc_end_entry); }
+sub get_char_tc_entry_sep { return($char_tc_entry_sep); }
+sub get_char_tc_comp_sep  { return($char_tc_comp_sep); }
+sub get_char_tc_beg_pre   { return($char_tc_beg_pre); }
+sub get_char_tc_end_pre   { return($char_tc_end_pre); }
+
+sub get_array_tc_list     { return(@array_xtra_tc_list); }
+
+##
+
+sub get_xtra_tc_original { return($key_xtra_tc_original); }
+sub get_xtra_tc_modsadd  { return($key_xtra_tc_modsadd); }
+
+sub get_xtra_tc_authorized_keys { return(@keys_xtra_tc_authorized); }
+
+#####
+
 sub set_xtra_Tracking_Comment {
   my ($self, $add) = @_;
 
+  if ( (! MMisc::is_blank($add)) && (! grep(m%$add$%, @keys_xtra_tc_authorized)) ) {
+    $self->_set_errormsg("Requested add for \'Tracking Comment\' is not an authorized value");
+    return(0);
+  }
+
   return($self->set_xtra_attribute($key_xtra_trackingcomment, $spval_xtra_trackingcomment, 0, $add));
+}
+
+#####
+
+sub unset_xtra_Tracking_Comment {
+  my ($self) = @_;
+
+  return($self->unset_xtra_attribute($key_xtra_trackingcomment));
+}
+
+##########
+
+sub __write_entry_line {
+  my ($k, $v, $s) = @_;
+
+  my $txt = "$k$char_tc_comp_sep$v";
+  $txt .= "$char_tc_entry_sep" if (! $s);
+
+  return($txt);
 }
 
 #####
@@ -2399,6 +2469,11 @@ sub set_xtra_attribute {
     return(0);
   }
 
+  if ( (MMisc::is_blank($attr)) || (MMisc::is_blank($value)) ) {
+    $self->_set_errormsg("Can only call \'set_xtra_attribute\' with values for both \'attr\' and \'value\'");
+    return(0);
+  }
+    
   if (($attr eq $key_xtra_trackingcomment) && ($value ne $spval_xtra_trackingcomment)) {
     $self->_set_errormsg("\'$key_xtra_trackingcomment\' is a reserved keyword, refusing to add");
     return(0);
@@ -2410,19 +2485,37 @@ sub set_xtra_attribute {
     next if (! exists $fhash{$event});
     foreach my $id (sort _numerically keys %{$fhash{$event}}) {
       if ($value eq $spval_xtra_trackingcomment) {
+        my $pretxt = (MMisc::is_blank($addtotc)) ? "" 
+          : " $char_tc_beg_pre$addtotc$char_tc_end_pre";
         my $file = $self->get_file();
         my $sffn = $self->get_sourcefile_filename();
         my $gtftxt = $self->check_if_gtf() ? "GTF" : "SYS";
-        my $range = $fhash{$event}{$id}{$key_framespan};
         my $subtype = $fhash{$event}{$id}{$key_subtype};
         $subtype = MMisc::is_blank($subtype) ? "Not Set" : $subtype;
-        my $pretxt = (MMisc::is_blank($addtotc)) ? "" : " ($addtotc)";
-        $addvalue = "[$pretxt File: $file | Sourcefile: $sffn | Type: $gtftxt | Event: $event | SubType: $subtype | ID: $id | Framespan: $range]";
+        my $range = $fhash{$event}{$id}{$key_framespan};
+        my $xtra_txt = "Not Set";
+        if (exists $fhash{$event}{$id}{$key_xtra}) {
+          my @xtra_list = grep(! m%$key_xtra_trackingcomment$%, 
+                               sort keys %{$fhash{$event}{$id}{$key_xtra}} );
+          $xtra_txt = join(" ", @xtra_list);
+        }
+
+        $addvalue 
+          = "$char_tc_beg_entry$pretxt " .
+            &__write_entry_line($array_xtra_tc_list[0], $file) .
+            &__write_entry_line($array_xtra_tc_list[1], $sffn) .
+            &__write_entry_line($array_xtra_tc_list[2], $gtftxt) .
+            &__write_entry_line($array_xtra_tc_list[3], $event) .
+            &__write_entry_line($array_xtra_tc_list[4], $subtype) .
+            &__write_entry_line($array_xtra_tc_list[5], $id) .
+            &__write_entry_line($array_xtra_tc_list[6], $range) .
+            &__write_entry_line($array_xtra_tc_list[7], $xtra_txt, 1) .
+            $char_tc_end_entry;
       }
       if ((! exists $fhash{$event}{$id}{$key_xtra}{$attr}) || ($replace)) {
         $fhash{$event}{$id}{$key_xtra}{$attr} = $addvalue;
       } else {
-        $fhash{$event}{$id}{$key_xtra}{$attr} .= " # $addvalue";
+        $fhash{$event}{$id}{$key_xtra}{$attr} .= " $char_tc_separator $addvalue";
       }
     }
   }
@@ -2450,6 +2543,8 @@ sub unset_xtra_attribute {
       next if (! exists $fhash{$event}{$id}{$key_xtra});
       delete $fhash{$event}{$id}{$key_xtra}{$attr} 
         if (exists $fhash{$event}{$id}{$key_xtra}{$attr});
+      delete $fhash{$event}{$id}{$key_xtra}
+        if (scalar(keys %{$fhash{$event}{$id}{$key_xtra}}) == 0);
     }
   }
   $self->_set_fhash(%fhash);
@@ -2459,7 +2554,7 @@ sub unset_xtra_attribute {
 
 ##########
 
-sub list_xtra_attributes {
+sub list_all_xtra_attributes {
   my ($self) = @_;
 
   my @aa = ();
@@ -2468,7 +2563,7 @@ sub list_xtra_attributes {
     if ($self->error());
 
   if (! $self->is_validated()) {
-    $self->_set_errormsg("Can only call \'list_xtra_attributes\' on a validated file");
+    $self->_set_errormsg("Can only call \'list_all_xtra_attributes\' on a validated file");
     return(@aa);
   }
 
@@ -2483,6 +2578,22 @@ sub list_xtra_attributes {
   @aa = MMisc::make_array_of_unique_values(@aa);
 
   return(@aa);
+}
+
+#####
+
+sub list_xtra_attributes {
+  my ($self) = @_;
+
+  my @aa = $self->list_all_xtra_attribute();
+  my @xl = ();
+
+  return(@xl) 
+    if ($self->error());
+
+  @xl = grep(! m%^$key_xtra_trackingcomment$%, @aa);
+
+  return(@xl);
 }
 
 ##########
@@ -2502,7 +2613,13 @@ sub unset_all_xtra_attributes {
     next if (! exists $fhash{$event});
     foreach my $id (sort _numerically keys %{$fhash{$event}}) {
       next if (! exists $fhash{$event}{$id}{$key_xtra});
-      delete $fhash{$event}{$id}{$key_xtra};
+      my @xl = keys %{$fhash{$event}{$id}{$key_xtra}};
+      @xl = grep(! m%^$key_xtra_trackingcomment$%, @xl);
+      foreach my $x (@xl) {
+        delete $fhash{$event}{$id}{$key_xtra}{$x};
+      }
+      delete $fhash{$event}{$id}{$key_xtra}
+        if (scalar(keys %{$fhash{$event}{$id}{$key_xtra}}) == 0);
     }
   }
   $self->_set_fhash(%fhash);
@@ -3437,7 +3554,7 @@ sub _writeback2xml {
   $txt .= &_wb_print(--$indent, "</data>\n");
   $txt .= &_wb_print(--$indent, "</viper>\n");
 
-  # We discard this warning for all but debug runs
+  # Remember to enable this this warning for all but debug runs
   #warn_print("(WEIRD) End indentation is not equal to 0 ? (= $indent)\n") if ($indent != 0);
 
   return($txt);
