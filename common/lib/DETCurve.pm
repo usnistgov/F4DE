@@ -1096,25 +1096,35 @@ sub _log10{
   ($v == 0) ? undef : log($v)/log(10)
 }
 
+sub _getValueInGraph
+{
+	my ($x, $xmin, $xmax, $scale) = @_;
+	if (    $scale eq "nd") { return((ppndf($x) - ppndf($xmin/100)) / (ppndf($xmax/100) - ppndf($xmin/100))); }
+  	elsif ($scale eq "log") { return((($x <= 0) ? -1 : (_log10($x) - _log10($xmin)) / (_log10($xmax) - _log10($xmin)))); }
+  	else                    { return(($x - $xmin) / ($xmax - $xmin)); }
+}
+
 ## this functions Checks the extent of the graph frame and builds labels for points off the graph
 sub _getOffAxisLabel{
   my ($yval, $xval, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $pointType, $qstr) = @_;
 
   ### Convert the yval to graph scale (default is linear)
-  my $gyval = ($yval - $ymin) / ($ymax - $ymin);
-  if ($yScale eq "nd"){
-    $gyval = (ppndf($yval) - ppndf($ymin/100)) / (ppndf($ymax/100) - ppndf($ymin/100));
-  } elsif ($yScale eq "log") {
-    $gyval = (($yval <= 0) ? -1 : (_log10($yval) - _log10($ymin)) / (_log10($ymax) - _log10($ymin)));  
-  }   
+  #my $gyval = ($yval - $ymin) / ($ymax - $ymin);
+  #if ($yScale eq "nd"){
+  #  $gyval = (ppndf($yval) - ppndf($ymin/100)) / (ppndf($ymax/100) - ppndf($ymin/100));
+  #} elsif ($yScale eq "log") {
+  #  $gyval = (($yval <= 0) ? -1 : (_log10($yval) - _log10($ymin)) / (_log10($ymax) - _log10($ymin)));  
+  #}
+  my $gyval = _getValueInGraph($yval, $ymin, $ymax, $yScale);
 
   ### Convert the xval to graph scale (default is linear)
-  my $gxval = ($xval - $xmin) / ($xmax - $xmin);
-  if ($xScale eq "nd"){
-    $gxval = (ppndf($xval) - ppndf($xmin/100)) / (ppndf($xmax/100) - ppndf($xmin/100));
-  } elsif ($xScale eq "log") {
-    $gxval = (($xval <= 0) ? -1 : (_log10($xval) - _log10($xmin)) / (_log10($xmax) - _log10($xmin)));  
-  }   
+  #my $gxval = ($xval - $xmin) / ($xmax - $xmin);
+  #if ($xScale eq "nd"){
+  #  $gxval = (ppndf($xval) - ppndf($xmin/100)) / (ppndf($xmax/100) - ppndf($xmin/100));
+  #} elsif ($xScale eq "log") {
+  #  $gxval = (($xval <= 0) ? -1 : (_log10($xval) - _log10($xmin)) / (_log10($xmax) - _log10($xmin)));  
+  #}
+  my $gxval = _getValueInGraph($xval, $xmin, $xmax, $xScale);
 
   ### Check to see if the MinBest and actual are off axis
   ###    Q1   Q2   Q3
@@ -1141,6 +1151,21 @@ sub _getOffAxisLabel{
   # Q9
   if ($gyval < 0 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q9" : "")."\" point lc $color pt $pointType at graph     1.02, graph  -0.02"; }
   "";
+}
+
+sub _getIsoMetricLineLabel
+{
+	my ($yval, $xval, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $indexl, $qstr) = @_;
+	my $gyval = _getValueInGraph($yval, $ymin, $ymax, $yScale);
+	my $gxval = _getValueInGraph($xval, $xmin, $xmax, $xScale);
+	
+	$gxval = 0 if($gxval < 0);
+	$gyval = 1 if($gyval > 1);
+	
+	$gyval -= 0.01;
+	$gxval += 0.005;
+	
+	return "set label $indexl \"$qstr\" at graph $gxval, graph $gyval nopoint textcolor $color";
 }
 
 ### Options for graphs:
@@ -1241,18 +1266,27 @@ sub writeMultiDetGraph
     if ( defined($Isometriclines) ) {
       my $troot = sprintf( "%s.isometriclines", $fileRoot );
       my $color = "rgb \"\#FFD700\"";
-      open( ISODAT, "> $troot" ); 
+      open( ISODAT, "> $troot" );
+      
+      my $labelind = 10;
             
       foreach my $isocoef (@{ $Isometriclines } )
       {
           my $x = $xmin/100;
+          
+          my $ytemp = $detset->getDETForID(0)->{METRIC}->MISSForGivenComb($isocoef, $xmin);
+          
+          my $linelabel = _getIsoMetricLineLabel($ytemp, $x, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $labelind, $isocoef);
+          
+          push (@offAxisLabels, $linelabel);
                                 
           while ($x <= $xmax)
           {
             my $pfa = ($xScale eq "nd" ? ppndf($x) : $x);
-            my $tv = $isocoef*$isocoef-$x*$x;
-            my $y = sqrt($tv < 0 ? 0 : $tv);
+            my $y = $detset->getDETForID(0)->{METRIC}->MISSForGivenComb($isocoef, $x);
+            
             my $pmiss = ($yScale eq "nd" ? ppndf($y) : $y);
+            
             printf ISODAT "$pfa $pmiss\n";
             
             if   ( $x < 0.0001 ) { $x += 0.000001; }
@@ -1271,12 +1305,15 @@ sub writeMultiDetGraph
           }
                                      
           printf ISODAT "\n";
+          
+          $labelind++;
       }
                 
       close( ISODAT );
       if ($needComma) {
         $PLOTCOMS .= ",\\\n";
       }
+
       $PLOTCOMS .= "  '$troot' title 'Iso-metric lines' with lines lt $color";
       $needComma = 1;
     }

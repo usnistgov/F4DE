@@ -137,7 +137,7 @@ C<$faErr> is undefined, then the combined calculation returns C<undef>,
 
 =cut
 
-sub combPmissForGivenCost(){
+sub MISSForGivenComb(){
   my ($self, $comb, $faErr) = @_;
   if (defined($comb) && defined($faErr)) {
     - ($comb - 1 + $self->{PARAMS}->{BETA} * $faErr);
