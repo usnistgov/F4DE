@@ -107,15 +107,19 @@ sub get_next_xml_section {
 sub split_xml_tag {
   my $tag = shift @_;
 
-  my @split = split(m%\=%, $tag);
-  return("", "")
-    if (scalar @split != 2);
+  if ($tag =~ m%^([^\=]+)\=(.+)$%) {
+    my ($name, $value) = ($1, $2);
 
-  my ($name, $value) = @split;
-  $value =~ s%^\s*\"%%;
-  $value =~ s%\"\s*$%%;
+    $name = MMisc::clean_begend_spaces($name);
 
-  return($name, $value);
+    $value = MMisc::clean_begend_spaces($value);
+    $value =~ s%^\s*\"%%;
+    $value =~ s%\"\s*$%%;
+
+    return($name, $value);
+  } else {
+    return("", "");
+  }
 }
 
 #####
