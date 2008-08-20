@@ -124,6 +124,28 @@ sub combCalc(){
     undef;
   }
 }
+
+####################################################################################################
+=pod
+
+=item B<MISSForGivenComb>(I<$comb, I<$faErr>)
+
+Calculates the value of the Miss statistic for a given combined measure and the FA value.  This is 
+a permutation of the combined formula to solve for the Miss value. This method uses the constants 
+defined during object creation.  If either C<$comb> or 
+C<$faErr> is undefined, then the combined calculation returns C<undef>,
+
+=cut
+
+sub combPmissForGivenCost(){
+  my ($self, $comb, $faErr) = @_;
+  if (defined($comb) && defined($faErr)) {
+    - ($comb - 1 + $self->{PARAMS}->{BETA} * $faErr);
+  } else {
+    undef;
+  }
+}
+
 sub combBlockCalc(){
   my ($self, $nMiss, $nFa, $block) = @_;
   $self->combErrCalc($self->errMissCalc($nMiss, $block), $self->errFACalc($nFa, $block));
