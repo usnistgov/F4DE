@@ -42,6 +42,8 @@ my @ok_subevents = ();
 my %hasharray_inline_attributes = ();
 my %hash_objects_attributes_types_dynamic = ();
 my $dummy_et = "Fake_Event-Merger_Dummy_Type";
+my $key_tc = "";
+my $char_tcs = "";
 
 ## Constructor
 sub new {
@@ -95,6 +97,8 @@ sub _get_TrecVid08ViperFile_infos {
   @ok_subevents = $dummy->get_full_subevents_list();
   %hasharray_inline_attributes = $dummy->_get_hasharray_inline_attributes();
   %hash_objects_attributes_types_dynamic = $dummy->_get_hash_objects_attributes_types_dynamic();
+  $char_tcs = $dummy->get_char_tc_separator();
+  $key_tc = $dummy->get_key_xtra_trackingcomment();
   return($dummy->get_errormsg());
 }
 
@@ -215,7 +219,7 @@ sub set_full_eventtype {
     
   return(1) if (MMisc::is_blank($stype));
 
-  return(0) if (! $self->set_subeventtype($stype));
+  return(0) if (! $self->set_eventsubtype($stype));
 
   return(1);
 }
@@ -943,7 +947,7 @@ sub set_xtra_attribute {
   if ((! $self->is_xtra_attribute_set($attr)) || ($replace)) {
     $self->{Xtra}{$attr} = $value;
   } else {
-    $self->{Xtra}{$attr} .= " # $value";
+    $self->{Xtra}{$attr} .= " $char_tcs $value";
   }
 
   return(1);
@@ -1044,6 +1048,37 @@ sub unset_all_xtra {
   $self->{Xtra} = undef;
 
   return(1);
+}
+
+#####
+
+sub is_trackingcomment_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(0) if (! $self->is_xtra_set());
+
+  return(1) if (exists $self->{Xtra}{$key_tc});
+
+  return(0);
+}
+
+######
+
+sub get_trackingcomment_txt {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_trackingcomment_set()) {
+    $self->_set_errormsg("Can not obtain \'tracking comment\', it is not set");
+    return(0);
+  }
+
+  my $tc = $self->{Xtra}{$key_tc};
+
+  return($tc);
 }
 
 ########################################
