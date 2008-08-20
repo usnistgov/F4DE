@@ -89,13 +89,6 @@ unless (eval "use TrecVid08ECF; 1") {
   $have_everything = 0;
 }
 
-# TrecVid08EventList (part of this tool)
-unless (eval "use TrecVid08EventList; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1") {
   &_warn_add
@@ -134,6 +127,7 @@ my $xsdpath_env = "TV08_XSDPATH";
 my $mancmd = "perldoc -F $0";
 my $ok_chars = 'a-zA-Z0-9/.~_-';
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
+my @ok_remove = ("TrackingComment", "XtraAttributes", "AllEvents", "ALL"); # Order is important ("ALL" must always be last)
 my $usage = &set_usage();
 
 # Default values for variables
@@ -157,9 +151,10 @@ my $dosummary = undef;
 my $ecffile = "";
 my @xtra = ();
 my $xtra_tc = 0;
+my @toremove = ();
 
-# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed: A C  F             T  WX  a cdefgh   lm  p r   vwx  
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
+# Used: A C  F           R T  WX  a cdefgh   lm  p r   vwx    #
 
 my %opt = ();
 GetOptions
@@ -185,6 +180,7 @@ GetOptions
    'ecf=s'           => \$ecffile,
    'addXtraAttribute=s' => \@xtra,
    'AddXtraTrackingComment' => \$xtra_tc,
+   'Remove=s'        => \@toremove,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -301,6 +297,32 @@ if (scalar @xtra > 0) {
   }
 }
 
+if (scalar @toremove > 0) {
+  my @tmp = ();
+  foreach my $e (@toremove) {
+    push @tmp, split(m%\,%, $e);
+  }
+  @toremove = MMisc::make_array_of_unique_values(@tmp);
+  my @tmp = ();
+  foreach my $tor (@toremove) {
+    push @tmp, $tor if (! grep(m%$tor$%, @ok_remove));
+  }
+  MMisc::error_quit("Unknown \'Remove\' value: " . join(" ", @tmp))
+    if (scalar @tmp > 0);
+  # Replace all by "ALL" if in
+  my $tmpv = $ok_remove[-1];
+  if (grep(m%^$tmpv$%, @toremove)) {
+    @toremove = ();
+    push @toremove, $tmpv;
+  }
+  # Replace "ALL" by every other value
+  if (grep(m%^$tmpv$%, @toremove)) {
+    @toremove = @ok_remove;
+    # Remove the last value ("ALL")
+    splice(@toremove, -1);
+  }
+}
+
 my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
 MMisc::error_quit("\'fps\' must set in order to use \'ecf\'")
     if (($useECF) && (! defined $fps));
@@ -324,8 +346,8 @@ while ($tmp = shift @ARGV) {
   next if (! $ok);
 
   my $mods = 0; # Those are modification that would influence
-  # the Event Observation tracking ID which contains:
-  # File, Sourcefile, Type, Event (type not list of), SubType, ID, Framespan
+  # the Event Observation tracking ID which contains: File, Sourcefile,
+  # Type, Event (type not list of), SubType, ID, Framespan, XtrAttributes
 
   # This is really if you are a debugger
   print("** (Pre) Memory Representation:\n", $object->_display_all()) if ($show);
@@ -338,7 +360,7 @@ while ($tmp = shift @ARGV) {
 
   # 'xtra' Tracking Comment
   if ($xtra_tc) {
-    $object->set_xtra_Tracking_Comment();
+    $object->set_xtra_Tracking_Comment(TrecVid08ViperFile::get_xtra_tc_original());
     MMisc::error_quit("Problem while adding \'xtra\' Tracking Comment to ViperFile (" . $object->get_errormsg() .")")
       if ($object->error());
   }
@@ -350,7 +372,7 @@ while ($tmp = shift @ARGV) {
       if ($object->error());
     $mods++;
   }
-  
+
   # ChangeType
   if (defined $changetype) {
     my $r = 0;
@@ -361,12 +383,6 @@ while ($tmp = shift @ARGV) {
     }
     MMisc::error_quit("Could not change type of the file") if ($r == 0);
     MMisc::error_quit("Problem while changing the type of the file: " . $object->get_errormsg()) if ($object->error());
-    $mods++;
-  }
-
-  # Remove subtype
-  if ($remse) {
-    $object->unset_force_subtype();
     $mods++;
   }
 
@@ -391,10 +407,9 @@ while ($tmp = shift @ARGV) {
     $mods++;
   }
 
-  # Auto Limit
-  if ($autolt) {
-    @asked_events = $object->list_used_full_events();
-  }
+  # Auto Limit 
+  @asked_events = $object->list_used_full_events() 
+    if ($autolt);
 
   # Duplicate the object in memory with only the selected types
   my $nvf = $object->clone_with_selected_events(@asked_events);
@@ -403,6 +418,12 @@ while ($tmp = shift @ARGV) {
   MMisc::error_quit("Problem while \'clone\'-ing the ViperFile")
     if (! defined $nvf);
 
+  # Remove subtype
+  if ($remse) {
+    $nvf->unset_force_subtype();
+    $mods++;
+  }
+
   # Add Xtra Attribute(s)
   if (scalar @xtra > 0) {
     foreach my $key (keys %hxtra) {
@@ -410,11 +431,40 @@ while ($tmp = shift @ARGV) {
       MMisc::error_quit("Problem while adding \'xtra\' attribute to ViperFile (" . $nvf->get_errormsg() .")")
         if ($nvf->error());
     }
+    $mods++;
+  }
+
+  # Remove
+  if (scalar @toremove > 0) {
+    my $tmpv = $ok_remove[0]; # TrackingComment
+    if (grep(m%^$tmpv$%, @toremove)) {
+      $nvf->unset_xtra_Tracking_Comment();
+      MMisc::error_quit("Problem removing the Xtra Tracking Comment (" . $nvf->get_errormsg() .")")
+        if ($nvf->error());
+    }
+
+    my $tmpv = $ok_remove[1]; # XtraAttributes
+    if (grep(m%^$tmpv$%, @toremove)) {
+      $nvf->unset_all_xtra_attributes();
+      MMisc::error_quit("Problem removing the Xtra Tracking Comment (" . $nvf->get_errormsg() .")")
+        if ($nvf->error());
+      $mods++;
+    }
+
+    my $tmpv = $ok_remove[2]; # AllEvents
+    if (grep(m%^$tmpv$%, @toremove)) {
+      my $ovf = $nvf->clone_with_no_events();
+      MMisc::error_quit("Problem removing all events (" . $nvf->get_errormsg() .")")
+        if ($nvf->error());
+      $nvf = $ovf;
+      $mods++;
+    }
+
   }
 
   # 'xtra' Tracking Comment
   if (($xtra_tc) && ($mods > 0)) {
-    $nvf->set_xtra_Tracking_Comment("Post Modifications");
+    $nvf->set_xtra_Tracking_Comment(TrecVid08ViperFile::get_xtra_tc_modsadd());
     MMisc::error_quit("Problem while adding \'xtra\' Tracking Comment to ViperFile (" . $nvf->get_errormsg() .")")
       if ($nvf->error());
   }
@@ -587,7 +637,7 @@ Attributes wil be carried over when performing work on I<Observation>s.
 
 =item B<--AddXtraTrackingComment>
 
-Add to each I<Event> I<Observation> an extra attribute to I<write> to the XML file that will contain information about the I<File>, I<Sourcefile>, I<Type>, I<Event>, I<SubType>, I<ID> and I<Framespan>.
+Add to each I<Event> I<Observation> an extra attribute to I<write> to the XML file that will contain information about the I<File>, I<Sourcefile>, I<Type>, I<Event>, I<SubType>, I<ID>, I<Framespan> and I<XtraAttribute> names.
 
 =item B<--ChangeType> [I<randomseed>[:I<find_value>]]
 
@@ -715,10 +765,11 @@ sub set_usage {
   my $xsdfiles = join(" ", @xsdfilesl);
   my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
   my $wmd = join(" ", @ok_md);
+  my $rem = join(" ", @ok_remove);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value] [--AddXtrTrackingComment]]  [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value] [--AddXtrTrackingComment] [--Remove type]]  [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 
@@ -740,6 +791,7 @@ Will perform a semantic validation of the ViPER XML file(s) provided.
   --removeSubEventtypes  Useful when working with specialized Scorer outputs to remove specialized sub types
   --addXtraAttribute  Add a new attribute to each event observation in file. Muliple \'--addXtraAttribute\' can be used.
   --AddXtraTrackingComment Add an xtra attribute designed to help understand from where an Event Observation came from when performing an operation on it
+  --Remove        Remove from the ViPER file one of the following: $rem
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --ecf           Specify the ECF file to load
   --displaySummary  Display a file information summary (level shows information about event type seen, and is a value from 1 to 6)
