@@ -45,6 +45,9 @@ $testr += &do_simple_test($tn, "(subEventtypes + pruneEvents)", "$validator ../c
 $tn = "test5c";
 $testr += &do_simple_test($tn, "(subEventtypes + pruneEvents + removeSubEventtypes)", "$validator ../common/test5-subEventtypes-sys.xml -w -p -r", "res_$tn.txt");
 
+$tn = "test5d";
+$testr += &do_simple_test($tn, "(subEventtypes + limitto)", "$validator ../common/test5-subEventtypes-sys.xml -w -l *:Unmapped_Sys", "res_$tn.txt");
+
 ##
 $tn = "test6";
 $testr += &do_simple_test($tn, "(crop)", "$validator ../common/test1-1fa-sys.xml -w -p -c 1118:2000 -f 25", "res_$tn.txt");
