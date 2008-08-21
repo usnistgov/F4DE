@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
-# ViPER Converter
+# Adjudicator
 #
 # Author(s): Martial Michel
 #
@@ -10,7 +10,7 @@
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "ViPER Converter" is an experimental system.
+# "Adjudicator" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -32,7 +32,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "ViPER Converter Version: $version";
+my $versionid = "Adjudicator Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -103,6 +103,13 @@ unless (eval "use AdjudicationViPERfile; 1") {
   $have_everything = 0;
 }
 
+# ViperFramespan (part of this tool)
+unless (eval "use ViperFramespan; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"ViperFramespan\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
 # Getopt::Long (usualy part of the Perl Core)
 unless (eval "use Getopt::Long; 1") {
   &_warn_add
@@ -127,6 +134,8 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 my $dummy = new TrecVid08ViperFile();
 my @ok_events = $dummy->get_full_events_list();
 my @xsdfilesl = $dummy->get_required_xsd_files_list();
+my $se_UnRef  = $dummy->get_UnmappedRef_subeventkey();
+my $se_UnSys  = $dummy->get_UnmappedSys_subeventkey();
 # We will use the '$dummy' to do checks before processing files
 
 ########################################
@@ -134,6 +143,7 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
+my $margind = 75;
 my $usage = &set_usage();
 
 # Default values for variables
@@ -144,9 +154,11 @@ $xsdpath = "$f4bv/data"
 my $fps = undef;
 my $odir = "";
 my $akey = "";
+my $doglobal = 0;
+my $margin = $margind;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                    T      a  d f h    m        v x   #
+# Used:       G            T      a  d f h          s  v x   #
 
 my %opt = ();
 GetOptions
@@ -154,12 +166,13 @@ GetOptions
    \%opt,
    'help',
    'version',
-   'man',
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
    'fps=s'           => \$fps,
    'dir=s'           => \$odir,
    'annot_key=s'     => \$akey,
+   'Global'          => \$doglobal,
+   'segmentation_margin=i' => \$margin,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -184,12 +197,14 @@ MMisc::error_quit("\'fps\' must be set to continue")
 MMisc::error_quit("\'annot_key\' must be set to continue")
   if (MMisc::is_blank($akey));
 
-##########
+if (! MMisc::is_blank($odir)) {
+  my $err = MMisc::check_dir_w($odir);
+  MMisc::error_quit("Problem with \'outdir\': $err")
+    if (! MMisc::is_blank($err));
+}
 
-my $err = MMisc::check_dir_w($odir);
-MMisc::error_quit("Problem with \'outdir\': $err")
-  if (! MMisc::is_blank($err));
-
+MMisc::error_quit("\'segmentation_margin\' must be at least 1")
+  if ($margin < 1);
 
 ##########
 # Main processing
@@ -200,90 +215,83 @@ print "\n\n***** STEP ", $stepc++, ": Assimilating SYS files\n";
 
 my $isgtf = 0; # We only work with SYS files !
 
-my $el  = undef;
-my $sffn = "";
-my $numframes = 0;
+my $el= undef;
+my %numframes = ();
+
 foreach my $ifile (@ARGV) {
-  $err = MMisc::check_file_r($ifile);
+  my $err = MMisc::check_file_r($ifile);
   MMisc::error_quit("Problem with \'xmlfile\': $err")
-      if (! MMisc::is_blank($err));
+    if (! MMisc::is_blank($err));
   
   print "** Loading Viper File: $ifile\n";
   my ($retstatus, $vf, $msg) = 
     TrecVid08HelperFunctions::load_ViperFile
-        ($isgtf, $ifile, $fps, $xmllint, $xsdpath);
+    ($isgtf, $ifile, $fps, $xmllint, $xsdpath);
   MMisc::error_quit("File ($ifile) does not validate: $msg")
-      if (! $retstatus);
-
+    if (! $retstatus);
   print " -> File validates\n";
-  #print "**MemDump: ", MMisc::get_sorted_MemDump($vf), "\n";
-
-  my $tsffn = $vf->get_sourcefile_filename();
+  
+  my $sffn = $vf->get_sourcefile_filename();
   MMisc::error_quit("Could not get the sourcefile filename: " . $vf->get_errormsg() )
-      if ($vf->error());
-  MMisc::error_quit("Only one \'sourcefile filanme\' authorized for this work")
-      if ((! MMisc::is_blank($sffn)) && ($sffn ne $tsffn));
-  $sffn = $tsffn;
+    if ($vf->error());
+  print " -> Sourcefile filename: $sffn\n";
 
   my $tnf = $vf->get_numframes_value();
   MMisc::error_quit("Could not get the numframes: " . $vf->get_errormsg() )
-      if ($vf->error());
-  MMisc::error_quit("\'numframes\' differ from previous one ? ($tnf vs $numframes)")
-      if (($numframes != 0) && ($ numframes != $tnf));
-  $numframes = $tnf;
+    if ($vf->error());
+  MMisc::error_quit("\'numframes\' differ from previous one ? ($tnf vs " . $numframes{$sffn} . ")")
+    if ((exists $numframes{$sffn}) && ($numframes{$sffn} != $tnf));
+  $numframes{$sffn} = $tnf;
   
   print " -> Converting to an EventList\n";
   if (! defined $el) {
     $el = new TrecVid08EventList();
     MMisc::error_quit("Problem creating the EventList :" . $el->get_errormsg())
-        if ($el->error());
+      if ($el->error());
   }
   my ($terr, $tobs, $added, $rejected) = 
     TrecVid08HelperFunctions::add_ViperFileObservations2EventList($vf, $el, 1);
   MMisc::error_quit("Problem adding ViperFile Observations to EventList: $terr")
-      if (! MMisc::is_blank($terr));
+    if (! MMisc::is_blank($terr));
   print "   -> Added: $tobs Observations ($added Added / $rejected Rejected)\n";
 }
+print "\n** Seen sourcefile filenames:\n - ", join("\n - ", keys %numframes), "\n";
 
-########## Adding observations to AdjudicationViPERfile
-print "\n\n***** STEP ", $stepc++, ": Adding observations to AdjudicationViPERfile\n";
+########## Segmented Adjudication
+print "\n\n***** STEP ", $stepc++, ": Segmented Adjudication\n";
 
-my $avf = new AdjudicationViPERfile();
-$avf->set_annot_key($akey);
-$avf->set_sffn($sffn);
-$avf->set_numframes($numframes);
-MMisc::error_quit("Problem creating the Adjudication ViPER file: " . $avf->get_errormsg())
-  if ($avf->error());
-
-my @evl = $el->get_events_list($sffn);
-MMisc::error_quit("Problem obtaining the Events list: " . $el->get_errormsg())
+my $cnumframes = 0;
+my @ev_sffn = $el->get_filenames_list();
+MMisc::error_quit("Problem obtaining the EventList sourcefile filename list: " . $el->get_errormsg())
   if ($el->error());
-foreach my $event (@evl) {
-  my @ol = $el->get_Observations_list($sffn, $event);
-  MMisc::error_quit("Problem obtaining the Events Observations: " . $el->get_errormsg())
+foreach my $sffn (@ev_sffn) {
+  MMisc::error_quit("\'numframes\' for selected \'sffn\' does not exist, aborting")
+    if (! exists $numframes{$sffn});
+  $cnumframes = $numframes{$sffn};
+  my @evl = $el->get_events_list($sffn);
+  MMisc::error_quit("Problem obtaining the Events list: " . $el->get_errormsg())
+    if ($el->error());
+  foreach my $event (@evl) {
+    my @ol = $el->get_Observations_list($sffn, $event);
+    MMisc::error_quit("Problem obtaining the Event Observations: " . $el->get_errormsg())
       if ($el->error());
-  MMisc::error_quit("Problem adjusting the Adjudication ViPER file for event ($event): " . $avf->get_errormsg())
-      if ($avf->error());
-  
-  print "* Event: $event | Observations: ", scalar(@ol), "\n";
-  foreach my $obs (@ol) {
-    $avf->add_tv08obs($obs);
-    MMisc::error_quit("Problem adding Observation to AVF: " . $avf->get_errormsg())
-        if ($avf->error());
+    
+    print "* SFFN: $sffn | Event: $event | Observations: ", scalar(@ol), "\n";
+    &write_avf($sffn, $event, undef, @ol) if ($doglobal);
+    
+    print " -> No Segmentation possible: No \'$se_UnSys\' observations\n"
+      if (! &has_UnSys(@ol));
+
+    while (&has_UnSys(@ol)) {
+      my $obs = &shift_next_UnSys(\@ol);
+      next if (! defined $obs);
+      
+      my ($fs_fs, @in) = &compute_overlaps($obs, \@ol, $margin);
+      
+      &write_avf($sffn, $event, $fs_fs, @in);
+    }
   }
-  
-  my $fname = (! MMisc::is_blank($odir)) ? MMisc::concat_dir_file_ext($odir, "Adjudication-$event", "xml") : "";
-  my $txt = $avf->get_xml($event);
-  MMisc::error_quit("Problem obtaining the XML representation: " . $avf->get_errormsg())
-      if ($avf->error());
-
-  MMisc::error_quit("Problem while trying to write")
-      if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
 }
-
-
-MMisc::ok_quit("OK SO FAR -- MORE TODO\n");
-
 
 MMisc::ok_quit("Done\n");
 
@@ -291,6 +299,207 @@ MMisc::ok_quit("Done\n");
 
 sub _warn_add {
   $warn_msg .= "[Warning] " . join(" ", @_) ."\n";
+}
+
+##########
+
+sub die_get_subeventtype {
+  my ($obs) = shift @_;
+
+  my $est = $obs->get_eventsubtype();
+  MMisc::error_quit("Problem obtaining the Observation subtype: " . $obs->get_errormsg())
+    if ($obs->error());
+
+  MMisc::error_quit("Found Observation subtype ($est) is not authorized")
+    if (($est ne $se_UnRef) && ($est ne $se_UnSys));
+
+  return($est);
+}
+
+#####
+
+sub has_UnSys {
+  my @ol = @_;
+
+  return(0) if (scalar @ol == 0);
+
+  foreach my $obs (@ol) {
+    my $set = &die_get_subeventtype($obs);
+    return(1) if ($set eq $se_UnSys);
+  }
+
+  return(0);
+}
+
+#####
+
+sub shift_next_UnSys {
+  my $rol = shift @_;
+  
+  for (my $i = 0; $i < scalar @$rol; $i++) {
+    my $set = die_get_subeventtype($$rol[$i]);
+    return(splice(@$rol, $i, 1)) if ($set eq $se_UnSys);
+  }
+
+  return(undef);
+}
+
+##########
+
+sub die_get_fs_beg_end {
+  my ($fs_fs) = @_;
+
+  my ($beg, $end) = $fs_fs->get_beg_end_fs();
+ MMisc::error_quit("Error obtaining Framespan's Beg/End: " . $fs_fs->get_errormsg())
+   if ($fs_fs->error());
+
+  return($beg, $end);
+}
+
+#####
+
+sub die_get_obs_fs_beg_end {
+  my ($obs) = @_;
+
+  my $fs_fs = $obs->get_framespan();
+  MMisc::error_quit("Error obtaining Observation's framespan: " . $obs->get_errormsg())
+    if ($obs->error());
+
+  return(&die_get_fs_beg_end($fs_fs));
+}
+
+#####
+
+sub create_fs_from_beg_end {
+  my ($beg, $end, $addmargin) = @_;
+
+  $beg -= $addmargin;
+  $end += $addmargin;
+
+  $beg = 1 
+    if ($beg < 1);
+  $end = $cnumframes - 1 
+    if ($end >= $cnumframes);
+
+  my $fs_fs = new ViperFramespan();
+  $fs_fs->set_value_beg_end($beg, $end);
+  MMisc::error_quit("Problem creating ViperFramespan: " . $fs_fs->get_errormsg())
+    if ($fs_fs->error());
+  
+  return($fs_fs);
+}
+
+#####
+
+sub get_obs_extended_framespan {
+  my ($addmargin, @ol) = @_;
+
+  my @vals = ();
+  foreach my $obs (@ol) {
+    my @tmp = &die_get_obs_fs_beg_end($obs);
+    push @vals, @tmp;
+  }
+
+  my ($min, $max) = MMisc::min_max(@vals);
+  
+  return(&create_fs_from_beg_end($min, $max, $addmargin));
+}
+
+#####
+
+sub die_do_fs_obs_ov {
+  my ($fs_fs, $obs) = @_;
+
+  my $fs_ov = $obs->get_framespan_overlap_from_fs($fs_fs);
+  MMisc::error_quit("Problem obtaining observation framespan and framespan overlap: " . $obs->get_errormsg())
+    if ($obs->error());
+
+  return(1) if (defined $fs_ov);
+
+  return(0);
+}
+
+#####
+
+sub find_shift_overlapping_obs {
+  my ($fs_fs, $rol) = @_;
+
+  my @ol = @$rol;
+  my @left = ();
+  my @ovobs = ();
+  foreach my $obs (@ol) {
+    if (&die_do_fs_obs_ov($fs_fs, $obs)) {
+      push @ovobs, $obs;
+    } else {
+      push @left, $obs;
+    }
+  }
+
+  @$rol = @left;
+
+  return(@ovobs);
+}
+
+#####
+
+sub compute_overlaps {
+  my ($obs, $rol, $margin) = @_;
+
+  my @in = ();
+  push @in, $obs;
+
+  my $fs_fs = undef;
+  my $sz = 0;
+  do {
+    $sz = scalar @in;
+    $fs_fs = &get_obs_extended_framespan($margin, @in);
+    push @in, &find_shift_overlapping_obs($fs_fs, $rol);
+  } until (scalar @in == $sz);
+
+  return($fs_fs, @in);
+}
+
+##########
+
+sub write_avf {
+  my ($sffn, $event, $fs_fs, @ol) = @_;
+
+  my $nf  = $numframes{$sffn};
+  my $osf = 1;
+  my $beg = 1;
+  my $end = $nf;
+
+  if (defined $fs_fs) {
+    ($beg, $end) = &die_get_fs_beg_end($fs_fs);
+    $nf = $end - $beg + 1;
+    $osf = $beg;
+  }
+
+  my $avf = new AdjudicationViPERfile();
+  $avf->set_annot_key($akey);
+  $avf->set_sffn($sffn);
+  $avf->set_numframes($nf);
+  $avf->set_origstartframe($osf);
+  MMisc::error_quit("Problem creating the Adjudication ViPER file: " . $avf->get_errormsg())
+    if ($avf->error());
+
+  foreach my $obs (@ol) {
+    $avf->add_tv08obs($obs);
+    MMisc::error_quit("Problem adding Observation to AVF: " . $avf->get_errormsg())
+      if ($avf->error());
+  }
+    
+  my $fname = "";
+  my $spfnadd = (! defined $fs_fs) ? "-Global" : "";
+  $fname = MMisc::concat_dir_file_ext($odir, "$sffn-$event-${beg}_$end$spfnadd", "xml")
+    if (! MMisc::is_blank($odir));
+
+  my $txt = $avf->get_xml($event);
+  MMisc::error_quit("Problem obtaining the XML representation: " . $avf->get_errormsg())
+    if ($avf->error());
+    
+  MMisc::error_quit("Problem while trying to write")
+    if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML Representation:\n"));
 }
 
 ############################################################
@@ -301,7 +510,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--dir dir] --annot_key key --fps fps file.xml [file.xml[...]]
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--dir dir] [--Global] [--segmentation_margin value] --annot_key key --fps fps file.xml [file.xml[...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 
@@ -311,6 +520,8 @@ Will perform a semantic validation of the ViPER XML file(s) provided.
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
   --dir           Specify the output path for special ViPER files (stdout otherwise)
+  --Global        Generate a global Adjudication File in addition to the segmented ones
+  --segmentation_margin  Add +/- value frames to each observation when computing its possible candidates for overlap (default: $margind)
   --annot_key     Specify the annotator key used in the files
 
 Note:
