@@ -192,11 +192,6 @@ sub set_origstartframe {
     $self->_set_errormsg("Can not set a \'origstartframe\' less than 1");
     return(0);
   }
-  my $f = $self->get_numframes();
-  if ($v > $f) {
-    $self->_set_errormsg("Can not set a \'origstartframe\' over \'numframes\'");
-    return(0);
-  }
     
   $self->{origstartframe} = $v;
 
