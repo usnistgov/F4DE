@@ -102,7 +102,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
-my $mancmd = "perldoc -F $0";
+my $margind = 75;
 my $usage = &set_usage();
 
 # Default values for variables
@@ -115,10 +115,15 @@ my $verb = 0;
 my $wid = "";
 my $validator = "../TV08ViperValidator/TV08ViperValidator.pl";
 my $scorer = "../TV08Scorer/TV08Scorer.pl";
+my $adjtool = "./Adjudicator.pl";
 my $duration = undef;
+my $margin = $margind;
+my $cREFt = 0;
+my $cSYSt = 0;
+my $forceFilename = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:    D              ST V         f h    m        vwx   #
+# Used: A CD              ST V      c  f h          s  vwx   #
 
 my %opt = ();
 GetOptions
@@ -126,23 +131,22 @@ GetOptions
    \%opt,
    'help',
    'version',
-   'man',
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
    'fps=s'           => \$fps,
-   'Validator'       => \$validator,
-   'Scorer'          => \$scorer,
+   'Validator=s'     => \$validator,
+   'Scorer=s'        => \$scorer,
+   'Adjudicator=s'   => \$adjtool,
    'work_in_dir=s'   => \$wid,
    'Duration=f'      => \$duration,
+   'segmentation_margin=i' => \$margin,
+   'changeREFtype'   => \$cREFt,
+   'ChangeSYStype'   => \$cSYSt,
+   'ForceFilename=s' => \$forceFilename,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
-if ($opt{'man'}) {
-  my ($r, $o, $e) = MMisc::do_system_call($mancmd);
-  MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
-  MMisc::ok_quit($o);
-}
 
 MMisc::error_quit("No arguments left on command line\n\n$usage\n")
   if (scalar @ARGV == 0);
@@ -172,14 +176,15 @@ MMisc::error_quit("\'work_in_dir\' \'dir\' problem: $err")
 MMisc::error_quit("\'Duration\' is not set, aborting")
   if (! defined $duration);
 
-MMisc::error_quit("Not doing adjudication work on only on REF and SYS file")
+MMisc::error_quit("Not doing adjudication work on only on one REF and one SYS file")
   if (scalar @ARGV < 3);
 
 ########## Main processing
 my $note_key = "NOTE_KEY";
 
 $validator .= " $cmdline_add";
-$scorer .= " $cmdline_add";
+$scorer    .= " $cmdline_add";
+$adjtool   .= " $cmdline_add";
 
 my $md_add = ".memdump";
 my $log_add = "log";
@@ -196,6 +201,7 @@ my $UnRef_step2    = "$UnRef_base/2-Master_REF_vs_empty_SYS";
 my $UnSys_base     = "04-2-Unmapped_Sys";
 my $UnSys_step1    = "$UnSys_base/1-empty_REF";
 my $UnSys_step2    = "$UnSys_base/2-empty_REF_vs_Final_SYS";
+my $AdjDir         = "05-Adjudication_ViPERfiles";
 
 my $stepc = 1;
 
@@ -232,18 +238,25 @@ my $ref_dir = MMisc::get_file_full_path("$wid/$ref_val_md_dir");
 my $sys_dir = MMisc::get_file_full_path("$wid/$sys_val_md_dir");
 &die_mkdir($sys_dir, "SYS");
 
+my $val_add = "";
+$val_add .= "-F $forceFilename " if (! MMisc::is_blank($forceFilename));
+
+my $ref_switch = "-g";
+$ref_switch = "-C" if ($cREFt);
 print "Validating REF file\n";
 my ($dir, $file, $ext) = &die_split_dfe($master_ref);
 my $log = MMisc::concat_dir_file_ext($ref_dir, $file, $log_add);
-my $command = "$validator -g $master_ref -w $ref_dir -W text";
+my $command = "$validator $val_add $master_ref -w $ref_dir -W text $ref_switch";
 &die_syscall_logfile($log, "REF validation command", $command);
 
+my $sys_switch = "";
+$sys_switch = "-C -g" if ($cSYSt);
 print "Validating SYS files\n";
 foreach my $sf (sort keys %sys_files) {
   my ($dir, $file, $ext) = &die_split_dfe($sf);
   my $log = MMisc::concat_dir_file_ext($sys_dir, $file, $log_add);
   my $xtra = $sys_files{$sf};
-  my $command = "$validator $sf -w $sys_dir -W text -a $xtra:$sf -A";
+  my $command = "$validator $val_add $sf -w $sys_dir -W text -a $xtra:$sf -A $sys_switch";
   &die_syscall_logfile($log, "SYS validation command", $command);
 }
 
@@ -434,13 +447,30 @@ my $command = "$scorer -w $final_sc_dir -p -f $fps $csf -g $empty_ref -d 0.5 -D 
 my ($UnSys_file) = &die_list_X_files(1, $final_sc_dir, "scoring");
 $UnSys_file = MMisc::concat_dir_file_ext($final_sc_dir, $UnSys_file, "");
 
-#####
+########## Creating Adjudication ViPERfiles
+print "\n\n***** STEP ", $stepc++, ": Creating Adjudication ViPERfiles\n";
 
 print "Unmapped_REF : $UnRef_file\n";
 print "Unmapped_SYS : $UnSys_file\n";
 
+my $adj_dir = MMisc::get_file_full_path("$wid/$AdjDir");
+&die_mkdir($adj_dir, "Adjudication Directory");
 
-MMisc::ok_quit("Ok so far\n");
+my $log = MMisc::concat_dir_file_ext($adj_dir, "Adjudication_Run", $log_add);
+my $command = "$adjtool -f $fps -d $adj_dir -a $note_key -s $margin $UnRef_file $UnSys_file";
+
+&die_syscall_logfile($log, "adjudication command", $command);
+
+print "\nAdjudication directory: $adj_dir\n";
+
+my @tfl = &die_list_X_files(0, $adj_dir, "Adjudication results");
+my @fl = grep(! m%$log_add$%, @tfl);
+MMisc::error_quit("No files in directory")
+  if (scalar @fl == 0);
+
+print "\nAdjudication files:\n - ", join("\n - ", sort @fl), "\n";
+
+MMisc::ok_quit("Done\n");
 
 ##############################
 
@@ -522,171 +552,6 @@ sub die_do_incin_dir {
   return($dir);
 }
 
-############################################################ Manual
-
-=pod
-
-=head1 NAME
-
-TV08ED-Submission Checker - TrecVid08 Event Detection Submission Checker
-
-=head1 SYNOPSIS
-
-B<TV08ED-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
-  S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
-  S<[B<--ecf> I<ecffile> B<--fps> I<fps>]>
-  S<[B<--skip_validation>] [B<--WriteMemDump> I<dir>]>
-  S<[B<--dryrun_mode>] [B<--Verbose>]>
-  S<[B<--uncompress_dir> I<dir> | B<--work_in_dir> I<dir>]>
-  S<last_parameter>
-
-=head1 DESCRIPTION
-
-B<TV08ED-SubmissionChecker> is a I<TrecVid08 Event Detection Sumbission Checker> program designed to confirm that a submission archive follows the guidelines posted in the I<Submission Instructions> (Appendix B) of the I<TRECVid Event Detection Evaluation Plan>.
-The software will confirm that an archive's files and directory structure conforms with the I<Submission Instructions>, and will validate the SYS XML files.
-
-In the case of B<--work_in_dir>, S<last_parameter> is the E<lt>SITEE<gt>.
-In all other cases, S<last_parameter> is the archive file to process in the E<lt>I<SITE>E<gt>_E<lt>I<SUB-NUM>E<gt>.I<extension> form (recognized extensions are available using the B<--help> option).
-
-Supported archive formats list can be obtained using B<--help>.
-
-=head1 PREREQUISITES
-
-B<TV08ED-SubmissionChecker> ViPER files need to pass the B<TV08ViperValidator> validation process. The program relies on the following software and files.
- 
-=over
-
-=item B<SOFTWARE>
-
-I<xmllint> (part of I<libxml2>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
-If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
-
-The program relies on I<gnu tar> and I<unzip> to process the archive files.
-
-=item B<FILES>
-
-The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
-It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> environment variable.
-You should not have to specify their location, if you have performed an install and have set the global environment variables.
-
-=item B<GLOBAL ENVIRONMENT VARIABLES>
-
-B<TV08ED-SubmissionChecker> relies on internal and external Perl libraries to function.
-
-Simply running the B<TV08ED-SubmissionChecker> script should provide you with the list of missing libraries.
-The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
-
-=over
-
-=item B<F4DE_BASE>
-
-The main variable once you have installed the software, it should be sufficient to run this program.
-
-=item B<F4DE_PERL_LIB>
-
-Allows you to specify a different directory for the B<F4DE> libraries.  This is a development environment variable.
-
-=item B<TV08_PERL_LIB>
-
-Allows you to specify a different directory for the B<TrecVid08> libraries.  This is a development environment variable.
-
-=back
-
-=back
-
-=head1 GENERAL NOTES
-
-B<TV08ED-SubmissionChecker> expects that the system and reference ViPER files can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
-
-B<TV08ED-SubmissionChecker> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
-
-=head1 OPTIONS
-
-=over
-
-=item B<--dryrun_mode>
-
-Perform all regular tasks related with checking a submission, except for checking the content of the txt file for the S<Events_Processed:> entry.
-
-=item B<--ecf> I<ecffile>
-
-Specify the I<ECF> to load. The ECF provides the duration of the test set for the error calculations and the list of sourcefile filename expected to be seen in the submission. 
-
-=item B<--fps> I<fps>
-
-Specify the default sample rate (in frames per second) of the ViPER files.
-
-=item B<--help>
-
-Display the usage page for this program. Also display some default values and information.
-
-=item B<--man>
-
-Display this man page.
-
-=item B<--skip_validation>
-
-Do not perform XML validation on the ViPER files within the archive.
-
-=item B<--TrecVid08xsd> I<location>
-
-Specify the default location of the required XSD files (use B<--help> to get the list of required files).
-Can also be set using the B<TV08_XSDPATH> environment variable.
-
-=item B<--uncompress_dir> I<dir>
-
-Specify the location of the directory in which to uncompress the archive content (by default a temporary directory is created).
-
-=item B<--Verbose>
-
-Print a verbose log of every task being performed before performing it, and in some case, its results.
-
-=item B<--version>
-
-Display B<TV08ED-SubmissionChecker> version information.
-
-=item B<--WriteMemDump> I<dir>
-
-Write a memory dump of validated XML files into I<dir>.
-Useful to avoid having to re-run the entire validation process on the XML file when using another one F4DE's program that accept such files.
-
-=item B<--work_in_dir> I<dir>
-
-Specify the location of the uncompressed files to check.
-This step is designed to help confirm that a directory structure is proper before generating the archive.
-When using this mode, the S<last_parameter> becomes E<lt>SITEE<gt>.
-
-=item B<--xmllint> I<location>
-
-Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
-Can also be set using the B<TV08_XMLLINT> environment variable.
-
-=back
-
-=head1 USAGE
-
-=item B<TV08ED-SubmissionChecker SITE_3.tgz>
-
-Will perform a submission check on archive file I<SITE_3.tgz> in a temporarily created directory.
-
-=item B<TV08ED-SubmissionChecker SITE_3.tgz --uncompress_dir testdir --skip_validation --dryrun>
-
-Will perform a submission check on archive file I<SITE_3.tgz>, uncompressing its content in the I<testdir> directory. This will also not try to validate the XML files, it will simply confirm that the directory structure, and that all the files are present. It will not check the content of the E<lt>EXP-IDE<gt> txt file for the S<Events_Processed:> entry. 
-
-=item B<TV08ED-SubmissionChecker SITE --work_in_dir testdir -ecf ecfile.xml --fps 25>
-
-Will check that the files and directories in I<testdir> are the expected ones. It will check the txt file for the S<Events_Processed:> entry. It will also confirm that the XML files validate against the XML strucutre. It will confirm that the content of the XML files be matched against the ECF file (using a frame per second rate of 25) to permit scoring (the scorer will refuse to process those XML files if one or more of the file listed in the ECF is missing).
-
-=head1 BUGS
-
-Please send bug reports to <nist_f4de@nist.gov>
-
-=head1 AUTHORS
-
-Martial Michel <martial.michel@nist.gov>
-
-=cut
-
 ############################################################
 
 sub set_usage {
@@ -694,7 +559,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] --fps fps --Duration seconds --work_in_dir dir ref_file sys_files
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--changeREFtype] [--ChangeSYStype] [--ForceFilename filename] [--segmentation_margin value] --fps fps --Duration seconds --work_in_dir dir ref_file sys_files
 
  Where:
   --help          Print this usage information and exit
@@ -703,6 +568,11 @@ Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
   --Validator     Full path location of the TV08Validator program
   --Scorer        Full path location of the TV08Scorer program
+  --Adjudicator   Full path location of the Adjudicator program
+  --changeREFtype   Will convert the 'ref_file' from SYS to REF
+  --ChangeSYStype   Will convert all 'sys_file's from REF to SYS
+  --ForceFilename Replace the 'sourcefile' file value
+  --segmentation_margin  Add +/- value frames to each observation when computing its possible candidates for overlap (default: $margind)
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
   --work_in_dir   Directory where all the output an temporary files will be geneated
