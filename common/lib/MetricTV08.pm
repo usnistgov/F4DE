@@ -83,6 +83,40 @@ sub new
 ####################################################################################################
 =pod
 
+=item B<isoCombCoeffForDETCurve>()
+
+Returns an array of coefficients to define what iso lines to draw on a DET Curve for the defined 
+combiner metric. These are the defaults for the Metric, but can be overridden by DETUtil and the actual scoring
+application.
+
+=cut
+
+  sub isoCombCoeffForDETCurve(){ (0.1, 0.2, 0.4, 0.5, 0.7, 1.0 ) }
+
+
+####################################################################################################
+=pod
+
+=item B<isoCostRatioCoeffForDETCurve>()
+
+Returns an array of coefficients to define what iso lines to draw on a DET Curve.  For instance, if the
+combined metric model is:
+
+  Combined = C_m * Miss + C_f * FA
+  
+Then the coefficients represent various values of C_m / C_f.  
+
+These are the defaults for the Metric, but can be overridden by DETUtil and the actual scoring
+application.
+
+=cut
+
+  sub isoCostRatioCoeffForDETCurve(){ (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000) }
+
+
+####################################################################################################
+=pod
+
 =item B<errMissLab>()
 
 Returns a free-form label string for the MissError statistic.  The method is required.
