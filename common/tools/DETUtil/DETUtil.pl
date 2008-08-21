@@ -110,8 +110,8 @@ if (! $have_everything) {
 }
 
 my $VERSION = 0.4;
-my @listIsoratiolineCoef = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000);
-my @listIsometriclineCoef = (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.6, .7, .8, .9, .95, .98, .99, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000);
+my @listIsoratiolineCoef = ();
+my @listIsometriclineCoef = ();
 
 my $man = 0;
 my $help = 0;
@@ -268,6 +268,8 @@ my $ds = new DETCurveSet($title);
 foreach my $srl ( @ARGV )
 {
   my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
+  @listIsoratiolineCoef = $loadeddet->getMetric()->isoCostRatioCoeffForDETCurve() if(scalar(@listIsoratiolineCoef) == 0);
+  @listIsometriclineCoef = $loadeddet->getMetric()->isoCombCoeffForDETCurve() if(scalar(@listIsometriclineCoef) == 0);
   my $det = new DETCurve($loadeddet->getTrials(), $loadeddet->getMetric(), $loadeddet->getStyle(), $loadeddet->getLineTitle(), \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
   $det->{LAST_SERIALIZED_DET} = $loadeddet->{LAST_SERIALIZED_DET};
   $det->computePoints();
@@ -435,8 +437,17 @@ if($DetCompare)
 	$options{Isopoints} = \@list_isopoints if( $DrawIsopoints );
 }
 
-$options{Isoratiolines} = \@listIsoratiolineCoef if( $DrawIsoratiolines );
-$options{Isometriclines} = \@listIsometriclineCoef if( $DrawIsometriclines );
+if($DrawIsoratiolines)
+{
+	$options{Isoratiolines} = \@listIsoratiolineCoef;
+	$options{DrawIsoratiolines} = 1;
+}
+
+if($DrawIsometriclines)
+{
+	$options{Isometriclines} = \@listIsometriclineCoef;
+	$options{DrawIsometriclines} = 1;
+}
 
 ## Reports
 my $temp = "";
@@ -618,7 +629,7 @@ Draw the iso-cost ratio lines.
 
 =item B<-R>, B<--set-iso-costratiolines> F<COEF>[,F<COEF>[,...]]
 
-Set the coeficient for the iso-cost ratio lines. The F<COEF> is the ratio of cost of Miss divided by cost of False Alarm. Coeficients can be specified, or the default values defined by the application are used (c.f.: NOTES Section).
+Set the coefficient for the iso-cost ratio lines. The F<COEF> is the ratio of cost of Miss divided by cost of False Alarm. Coeficients can be specified, or the default values defined by the application are used (c.f.: NOTES Section).
 
 =item B<-P>, B<--iso-points>
 
@@ -630,7 +641,7 @@ Draw the iso-metric specific lines.
 
 =item B<-Q>, B<--set-iso-metriclines> F<COEF>[,F<COEF>[,...]]
 
-Set the coeficient for the iso-metric lines. Coeficients can be specified, or the default values defined by the application are used (c.f.: NOTES Section).
+Set the coefficient for the iso-metric lines. Coeficients can be specified, or the default values defined by the application are used (c.f.: NOTES Section).
 
 =item B<-O>, B<--OmitActualCalc>
 
@@ -684,9 +695,7 @@ No known bugs.
 
 =head1 NOTES
 
-The default iso-cost ratio coeficients (-R option) are: 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000.
-
-The default iso-metric coeficients (-Q option) are: 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.6, .7, .8, .9, .95, .98, .99, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000.
+The default iso-cost ratio coefficients (-R option) and iso-metric coefficients (-Q option) are defined into the metric.
 
 =head1 AUTHOR
 

@@ -1019,7 +1019,7 @@ sub write_gnuplot_DET_header{
     print $FP "set size ratio $ratio\n";
   } elsif ($xScale eq "lin" && $yScale eq "lin") {
     $ratio = ($y_max - $y_min) / ($x_max - $x_min);
-    print $FP "set size ratio $ratio\n";
+    print $FP "set size ratio 0.85\n";#$ratio\n";
   } else {
     print $FP "set size ratio 0.85\n";
   }
@@ -1165,7 +1165,7 @@ sub _getIsoMetricLineLabel
 	{
 		$gxval = _getValueInGraph($xtemp, $xmin, $xmax, $xScale);
 		$gyval = 1;
-		$gxval -= 0.05;
+		$gxval -= 0.055;
 	}
 
 	$gyval -= 0.01;
@@ -1215,7 +1215,7 @@ sub writeMultiDetGraph
     
     ### Use the options
     my $title = "Combined DET Plot";
-    my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $Isoratiolines, $Isometriclines, $Isopoints) = (0.0001, 40, 5, 98, "top", undef, undef, undef);
+    my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $DrawIsoratiolines, $DrawIsometriclines, $Isoratiolines, $Isometriclines, $Isopoints) = (0.0001, 40, 5, 98, "top", 0, 0, undef, undef, undef);
     ### $*DisplayScaleConst Sets the scaling in the display.  for ND we print it as a percentage. 
     my ($gnuplotPROG, $xScale, $yScale, $makePNG, $reportActual) = (undef, "nd", "nd", 1, 1);
 
@@ -1254,7 +1254,9 @@ sub writeMultiDetGraph
       $keyLoc = $options->{KeyLoc} if (exists($options->{KeyLoc}));
       $keyLoc = $options->{KeyLoc} if (exists($options->{KeyLoc}));
       $Isoratiolines = $options->{Isoratiolines} if (exists($options->{Isoratiolines}));
+      $DrawIsoratiolines = $options->{DrawIsoratiolines} if (exists($options->{DrawIsoratiolines}));
       $Isometriclines = $options->{Isometriclines} if (exists($options->{Isometriclines}));
+      $DrawIsometriclines = $options->{DrawIsometriclines} if (exists($options->{DrawIsometriclines}));
       $Isopoints = $options->{Isopoints} if (exists($options->{Isopoints}));
       $makePNG = $options->{BuildPNG} if (exists($options->{BuildPNG}));
       $gnuplotPROG = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
@@ -1269,7 +1271,7 @@ sub writeMultiDetGraph
     my @colors = (1..40);  splice(@colors, 0, 1);
 
 	### Draw the isometriclines
-    if ( defined($Isometriclines) ) {
+    if ( $DrawIsometriclines ) {
       my $troot = sprintf( "%s.isometriclines", $fileRoot );
       my $color = "rgb \"\#FFD700\"";
       open( ISODAT, "> $troot" );
@@ -1287,7 +1289,7 @@ sub writeMultiDetGraph
           
           push (@offAxisLabels, $linelabel);
                                 
-          while ($x <= $xmax)
+          while ($x <= $xmax+100)
           {
             my $pfa = ($xScale eq "nd" ? ppndf($x) : $x);
             my $y = $detset->getDETForID(0)->{METRIC}->MISSForGivenComb($isocoef, $x);
@@ -1321,12 +1323,12 @@ sub writeMultiDetGraph
         $PLOTCOMS .= ",\\\n";
       }
 
-      $PLOTCOMS .= "  '$troot' title 'Iso-metric lines' with lines lt $color";
+      $PLOTCOMS .= "  '$troot' title 'Iso-" . $detset->getDETForID(0)->{METRIC}->combLab() . " lines' with lines lt $color";
       $needComma = 1;
     }
 
     ### Draw the isoratiolines
-    if ( defined($Isoratiolines) ) {
+    if ( $DrawIsoratiolines ) {
       my $troot = sprintf( "%s.isoratiolines", $fileRoot );
       my $color = "rgb \"\#DDDDDD\"";
       open( ISODAT, "> $troot" ); 
