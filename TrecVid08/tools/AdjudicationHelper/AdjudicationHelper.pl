@@ -121,9 +121,9 @@ my $margin = $margind;
 my $cREFt = 0;
 my $cSYSt = 0;
 my $forceFilename = "";
-
+my $adjudicate_only = 0;
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CD              ST V      c  f h          s  vwx   #
+# Used: A CD              ST V    a c  f h          s  vwx   #
 
 my %opt = ();
 GetOptions
@@ -143,6 +143,7 @@ GetOptions
    'changeREFtype'   => \$cREFt,
    'ChangeSYStype'   => \$cSYSt,
    'ForceFilename=s' => \$forceFilename,
+   'adjudicate_only' => \$adjudicate_only,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -449,11 +450,13 @@ $UnSys_file = MMisc::concat_dir_file_ext($final_sc_dir, $UnSys_file, "");
 
 ########## Creating Adjudication ViPERfiles
 print "\n\n***** STEP ", $stepc++, ": Creating Adjudication ViPERfiles\n";
+$adjudicate_only = 0; # Turn off
 
 print "Unmapped_REF : $UnRef_file\n";
 print "Unmapped_SYS : $UnSys_file\n";
 
-my $adj_dir = MMisc::get_file_full_path("$wid/$AdjDir");
+my $ad_add = "-seg_margin_$margin";
+my $adj_dir = MMisc::get_file_full_path("$wid/$AdjDir$ad_add");
 &die_mkdir($adj_dir, "Adjudication Directory");
 
 my $log = MMisc::concat_dir_file_ext($adj_dir, "Adjudication_Run", $log_add);
@@ -514,10 +517,17 @@ sub die_split_dfe {
 sub die_syscall_logfile {
   my ($file, $txt, @command) = @_;
 
+  if ($adjudicate_only) {
+    print "    [## Adjudicate only requested ##] Skipping \'$txt\'\n";
+    return();
+  }
+
   my ($ok, $rtxt, $stdout, $stderr, $retcode) =
     MMisc::write_syscall_logfile($file, @command);
   MMisc::error_quit("Problem when running $txt\nSTDOUT:$stdout\nSTDERR:\n$stderr\n")
     if ($retcode != 0);
+
+  print "    (Ran \"$txt\", see log at: $file)\n";
 }
 
 #####
@@ -559,7 +569,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--changeREFtype] [--ChangeSYStype] [--ForceFilename filename] [--segmentation_margin value] --fps fps --Duration seconds --work_in_dir dir ref_file sys_files
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--changeREFtype] [--ChangeSYStype] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] --fps fps --Duration seconds --work_in_dir dir ref_file sys_files
 
  Where:
   --help          Print this usage information and exit
@@ -573,6 +583,7 @@ Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-
   --ChangeSYStype   Will convert all 'sys_file's from REF to SYS
   --ForceFilename Replace the 'sourcefile' file value
   --segmentation_margin  Add +/- value frames to each observation when computing its possible candidates for overlap (default: $margind)
+  --adjudication_only    Only run the program in the adjudication step
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
   --work_in_dir   Directory where all the output an temporary files will be geneated
