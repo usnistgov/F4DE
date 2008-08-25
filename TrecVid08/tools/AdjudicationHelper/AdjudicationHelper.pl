@@ -102,7 +102,10 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
-my $margind = 75;
+my $margin_d = 75;
+my $validator_d = "../TV08ViperValidator/TV08ViperValidator.pl";
+my $scorer_d = "../TV08Scorer/TV08Scorer.pl";
+my $adjtool_d = "./Adjudicator.pl";
 my $usage = &set_usage();
 
 # Default values for variables
@@ -113,17 +116,19 @@ $xsdpath = "$f4bv/data"
 my $fps = undef;
 my $verb = 0;
 my $wid = "";
-my $validator = "../TV08ViperValidator/TV08ViperValidator.pl";
-my $scorer = "../TV08Scorer/TV08Scorer.pl";
-my $adjtool = "./Adjudicator.pl";
 my $duration = undef;
-my $margin = $margind;
+my $margin = $margin_d;
 my $cREFt = 0;
 my $cSYSt = 0;
 my $forceFilename = "";
 my $adjudicate_only = 0;
+my $deltat = undef;
+my $validator = "";
+my $scorer = "";
+my $adjtool = "";
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CD              ST V    a c  f h          s  vwx   #
+# Used: A CD              ST V    a cd f h          s  vwx   #
 
 my %opt = ();
 GetOptions
@@ -144,6 +149,7 @@ GetOptions
    'ChangeSYStype'   => \$cSYSt,
    'ForceFilename=s' => \$forceFilename,
    'adjudicate_only' => \$adjudicate_only,
+   'delta_t=f'       => \$deltat,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -177,11 +183,28 @@ MMisc::error_quit("\'work_in_dir\' \'dir\' problem: $err")
 MMisc::error_quit("\'Duration\' is not set, aborting")
   if (! defined $duration);
 
+MMisc::error_quit("\'delta_t\' is not set, aborting")
+  if (! defined $deltat);
+
 MMisc::error_quit("Not doing adjudication work on only on one REF and one SYS file")
   if (scalar @ARGV < 3);
 
 ########## Main processing
 my $note_key = "NOTE_KEY";
+
+$validator = "$validator_d $validator"
+  if ($validator =~ m%^\-%);
+$scorer = "$scorer_d $scorer"
+  if ($scorer =~ m%^\-%);
+$adjtool = "$adjtool_d $adjtool"
+  if ($adjtool =~ m%^\-%);
+
+$validator = $validator_d 
+  if (MMisc::is_blank($validator));
+$scorer = $scorer_d 
+  if (MMisc::is_blank($scorer));
+$adjtool = $adjtool_d 
+  if (MMisc::is_blank($adjtool));
 
 $validator .= " $cmdline_add";
 $scorer    .= " $cmdline_add";
@@ -189,6 +212,8 @@ $adjtool   .= " $cmdline_add";
 
 my $md_add = ".memdump";
 my $log_add = "log";
+
+my $dtadd = "-deltat_$deltat";
 
 my $val_md_dir = "00-Validate";
 my $ref_val_md_dir = "$val_md_dir/REF";
@@ -275,11 +300,11 @@ foreach my $sf (sort keys %sys_files) {
   &die_check_file_r($sf_md, "SYS");
   
   my $bodir = MMisc::get_file_full_path("$wid/$first_align");
-  my $odir = "$bodir/$file";
+  my $odir = "$bodir/$file$dtadd";
   &die_mkdir($odir, "SYS");
 
   my $log = MMisc::concat_dir_file_ext($bodir, $file, $log_add);
-  my $command = "$scorer -w $odir -p -f $fps $sf_md -g $master_ref_md -d 0.5 -D $duration -a -s";
+  my $command = "$scorer -w $odir -p -f $fps $sf_md -g $master_ref_md -d $deltat -D $duration -a -s";
 
   print "* Scoring [$file]\n";
   &die_syscall_logfile($log, "scoring command", $command);
@@ -295,7 +320,7 @@ my $usys_dir = MMisc::get_file_full_path("$wid/$first_remove");
 
 my %sc2_sys_files = ();
 foreach my $sf (sort keys %sc1_sys_files) {
-  my $odir = "$usys_dir/$sf";
+  my $odir = "$usys_dir/$sf$dtadd";
   &die_mkdir($odir, "$sf");
 
   my $rsf = $sc1_sys_files{$sf};
@@ -336,7 +361,7 @@ while (scalar @todo > 0) {
   # Convert SYS to REF
   my $mode = "SYS2REF";
   my $mode_txt = "Converting SYS to REF";
-  my $odir = &die_do_incin_dir($inc, $inc_in++, "$wid/$iteration_step", $mode, $mode_txt);
+  my $odir = &die_do_incin_dir($inc, $inc_in++, "$wid/$iteration_step", $mode, $mode_txt, $dtadd);
   my $log = MMisc::concat_dir_file_ext($odir, $mode, $log_add);
   my $command = "$validator $csf -w $odir -W text -C -p";
   print "  -> $mode_txt\n";
@@ -352,9 +377,9 @@ while (scalar @todo > 0) {
   # Score New REF to SYS
   $mode = "Scoring";
   my $mode_txt = "Scoring SYS to new REF";
-  my $odir = &die_do_incin_dir($inc, $inc_in++, "$wid/$iteration_step", $mode, $mode_txt);
+  my $odir = &die_do_incin_dir($inc, $inc_in++, "$wid/$iteration_step", $mode, $mode_txt, $dtadd);
   my $log = MMisc::concat_dir_file_ext($odir, $mode, $log_add);
-  my $command = "$scorer -w $odir -p -f $fps $vsf -g $csf -d 0.5 -D $duration -a -s -X extended";
+  my $command = "$scorer -w $odir -p -f $fps $vsf -g $csf -d $deltat -D $duration -a -s -X extended";
   print "  -> $mode_txt\n";
   &die_syscall_logfile($log, $mode_txt, $command);
 
@@ -368,7 +393,7 @@ while (scalar @todo > 0) {
   # Removing subtypes
   $mode = "Removing_Subtypes";
   my $mode_txt = "Removing Subtypes";
-  my $odir = &die_do_incin_dir($inc, $inc_in++, "$wid/$iteration_step", $mode, $mode_txt);
+  my $odir = &die_do_incin_dir($inc, $inc_in++, "$wid/$iteration_step", $mode, $mode_txt, $dtadd);
   my $log = MMisc::concat_dir_file_ext($odir, $mode, $log_add);
   my $command = "$validator $csf -w $odir -r -p";
   print "  -> $mode_txt\n";
@@ -390,7 +415,7 @@ print "Master REF: $master_ref_md\n";
 
 print "* Generating Empty SYS\n";
 
-my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnRef_step1");
+my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnRef_step1$dtadd");
 &die_mkdir($final_sc_dir, "empty SYS");
 
 my $log_dir = MMisc::get_file_full_path("$wid/$UnRef_base");
@@ -405,11 +430,11 @@ $empty_sys = MMisc::concat_dir_file_ext($final_sc_dir, $empty_sys, "");
 #####
 print "* Alignment\n";
 
-my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnRef_step2");
+my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnRef_step2$dtadd");
 &die_mkdir($final_sc_dir, "REF2SYS");
 
 my $log = MMisc::concat_dir_file_ext($log_dir, "scoring", $log_add);
-my $command = "$scorer -w $final_sc_dir -p -f $fps $empty_sys -g $master_ref_md -d 0.5 -D $duration -a -s";
+my $command = "$scorer -w $final_sc_dir -p -f $fps $empty_sys -g $master_ref_md -d $deltat -D $duration -a -s";
 
 &die_syscall_logfile($log, "scoring command", $command);
 
@@ -422,7 +447,7 @@ print "Final SYS : $csf\n";
 
 print "* Generating Empty REF\n";
 
-my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnSys_step1");
+my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnSys_step1$dtadd");
 &die_mkdir($final_sc_dir, "empty REF");
 
 my $log_dir = MMisc::get_file_full_path("$wid/$UnSys_base");
@@ -437,11 +462,11 @@ $empty_ref = MMisc::concat_dir_file_ext($final_sc_dir, $empty_ref, "");
 #####
 print "* Alignment\n";
 
-my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnSys_step2");
+my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnSys_step2$dtadd");
 &die_mkdir($final_sc_dir, "REF2SYS");
 
 my $log = MMisc::concat_dir_file_ext($log_dir, "scoring", $log_add);
-my $command = "$scorer -w $final_sc_dir -p -f $fps $csf -g $empty_ref -d 0.5 -D $duration -a -s";
+my $command = "$scorer -w $final_sc_dir -p -f $fps $csf -g $empty_ref -d $deltat -D $duration -a -s";
 
 &die_syscall_logfile($log, "scoring command", $command);
 
@@ -455,8 +480,8 @@ $adjudicate_only = 0; # Turn off
 print "Unmapped_REF : $UnRef_file\n";
 print "Unmapped_SYS : $UnSys_file\n";
 
-my $ad_add = "-seg_margin_$margin";
-my $adj_dir = MMisc::get_file_full_path("$wid/$AdjDir$ad_add");
+my $adadd = "-seg_margin_$margin";
+my $adj_dir = MMisc::get_file_full_path("$wid/$AdjDir$dtadd$adadd");
 &die_mkdir($adj_dir, "Adjudication Directory");
 
 my $log = MMisc::concat_dir_file_ext($adj_dir, "Adjudication_Run", $log_add);
@@ -552,12 +577,12 @@ sub die_list_X_files {
 #####
 
 sub die_do_incin_dir {
-  my ($inc, $inc_in, $dirb, $dira, $txt) = @_;
+  my ($inc, $inc_in, $dirb, $dira, $txt, $diradd) = @_;
 
   my $t = sprintf("%03d_%02d-$dira", $inc, $inc_in);
 
-  my $dir = MMisc::get_file_full_path("$dirb/$t");
-  &die_mkdir($dir, "SYS2REF");
+  my $dir = MMisc::get_file_full_path("$dirb/$t$diradd");
+  &die_mkdir($dir, $txt);
 
   return($dir);
 }
@@ -576,13 +601,13 @@ Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-
   --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --Validator     Full path location of the TV08Validator program
-  --Scorer        Full path location of the TV08Scorer program
-  --Adjudicator   Full path location of the Adjudicator program
+  --Validator     Full path location of the TV08Validator program (default: $validator_d)
+  --Scorer        Full path location of the TV08Scorer program (default: $scorer_d)
+  --Adjudicator   Full path location of the Adjudicator program (default: $adjtool_d)
   --changeREFtype   Will convert the 'ref_file' from SYS to REF
   --ChangeSYStype   Will convert all 'sys_file's from REF to SYS
   --ForceFilename Replace the 'sourcefile' file value
-  --segmentation_margin  Add +/- value frames to each observation when computing its possible candidates for overlap (default: $margind)
+  --segmentation_margin  Add +/- value frames to each observation when computing its possible candidates for overlap (default: $margin_d)
   --adjudication_only    Only run the program in the adjudication step
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
@@ -591,6 +616,7 @@ Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-
 Note:
 - This prerequisite that the XML files can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
 - 'TrecVid08xsd' files are: $xsdfiles
+- dash preceded options for the different programs can be used by simply entering them when specifying the programs.
 EOF
     ;
 
