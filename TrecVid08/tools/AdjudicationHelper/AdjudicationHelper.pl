@@ -303,7 +303,7 @@ foreach my $sf (sort keys %sys_files) {
   my $odir = "$bodir/$file$dtadd";
   &die_mkdir($odir, "SYS");
 
-  my $log = MMisc::concat_dir_file_ext($bodir, $file, $log_add);
+  my $log = MMisc::concat_dir_file_ext($bodir, "$file$dtadd", $log_add);
   my $command = "$scorer -w $odir -p -f $fps $sf_md -g $master_ref_md -d $deltat -D $duration -a -s";
 
   print "* Scoring [$file]\n";
@@ -419,7 +419,7 @@ my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnRef_step1$dtadd");
 &die_mkdir($final_sc_dir, "empty SYS");
 
 my $log_dir = MMisc::get_file_full_path("$wid/$UnRef_base");
-my $log = MMisc::concat_dir_file_ext($log_dir, "empty_SYS", $log_add);
+my $log = MMisc::concat_dir_file_ext($log_dir, "empty_SYS$dtadd", $log_add);
 my $command = "$validator -R AllEvents -w $final_sc_dir $csf";
 
 &die_syscall_logfile($log, "validating command", $command);
@@ -433,7 +433,7 @@ print "* Alignment\n";
 my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnRef_step2$dtadd");
 &die_mkdir($final_sc_dir, "REF2SYS");
 
-my $log = MMisc::concat_dir_file_ext($log_dir, "scoring", $log_add);
+my $log = MMisc::concat_dir_file_ext($log_dir, "scoring$dtadd", $log_add);
 my $command = "$scorer -w $final_sc_dir -p -f $fps $empty_sys -g $master_ref_md -d $deltat -D $duration -a -s";
 
 &die_syscall_logfile($log, "scoring command", $command);
@@ -451,7 +451,7 @@ my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnSys_step1$dtadd");
 &die_mkdir($final_sc_dir, "empty REF");
 
 my $log_dir = MMisc::get_file_full_path("$wid/$UnSys_base");
-my $log = MMisc::concat_dir_file_ext($log_dir, "empty_REF", $log_add);
+my $log = MMisc::concat_dir_file_ext($log_dir, "empty_REF$dtadd", $log_add);
 my $command = "$validator -R AllEvents -w $final_sc_dir -g $master_ref_md";
 
 &die_syscall_logfile($log, "validating command", $command);
@@ -465,7 +465,7 @@ print "* Alignment\n";
 my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnSys_step2$dtadd");
 &die_mkdir($final_sc_dir, "REF2SYS");
 
-my $log = MMisc::concat_dir_file_ext($log_dir, "scoring", $log_add);
+my $log = MMisc::concat_dir_file_ext($log_dir, "scoring$dtadd", $log_add);
 my $command = "$scorer -w $final_sc_dir -p -f $fps $csf -g $empty_ref -d $deltat -D $duration -a -s";
 
 &die_syscall_logfile($log, "scoring command", $command);
