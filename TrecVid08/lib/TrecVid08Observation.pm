@@ -940,9 +940,15 @@ sub get_selected {
 ########## 'xtra'
 
 sub set_xtra_attribute {
-  my ($self, $attr, $value, $replace) = @_;
+  my $self = shift @_;
+  my ($attr, $value, $replace) = MMisc::iuav(\@_, "", "", 0);
 
   return(0) if ($self->error());
+
+  if (MMisc::is_blank($attr)) {
+    $self->_set_errormsg("Can not set an empty attribute");
+    return(0);
+  }
 
   if ((! $self->is_xtra_attribute_set($attr)) || ($replace)) {
     $self->{Xtra}{$attr} = $value;
@@ -1001,21 +1007,31 @@ sub get_xtra_value {
 
 #####
 
-sub list_xtra_attributes {
+sub list_all_xtra_attributes {
   my ($self) = @_;
 
   my @aa = ();
 
   return(@aa) if ($self->error());
 
-  if (! $self->is_xtra_set()) {
-    $self->_set_errormsg("\'Xtra\' not set. ");
-    return(@aa);
-  }
+  return(@aa) if (! $self->is_xtra_set());
 
   @aa = keys %{$self->{Xtra}};
 
   return(@aa);
+}
+
+#####
+
+sub list_xtra_attributes {
+  my ($self) = @_;
+
+  my @aa = $self->list_all_xtra_attributes();
+  return(@aa) if (scalar @aa == 0);
+
+  my @xl = grep(! m%^$key_tc$%, @aa);
+
+  return(@xl);
 }
 
 #####
@@ -1030,9 +1046,8 @@ sub unset_xtra {
 
   delete $self->{Xtra}{$attr};
 
-  my @aa = keys %{$self->{Xtra}};
   $self->{Xtra} = undef
-    if (scalar @aa == 0);
+    if (scalar(keys %{$self->{Xtra}}) == 0);
 
   return(1);
 }
@@ -1044,8 +1059,14 @@ sub unset_all_xtra {
 
   return(0) if ($self->error());
 
-  # Thank you garbage collector
-  $self->{Xtra} = undef;
+  return(1) if (! defined $self->{Xtra});
+
+  my @list = $self->list_xtra_attributes();
+  foreach my $attr (@list) {
+    $self->unset_xtra($attr);
+  }
+
+  return(0) if ($self->error());
 
   return(1);
 }
@@ -1079,6 +1100,18 @@ sub get_trackingcomment_txt {
   my $tc = $self->{Xtra}{$key_tc};
 
   return($tc);
+}
+
+#####
+
+sub unset_trackingcomment {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (! $self->is_trackingcomment_set());
+
+  return($self->unset_xtra($key_tc));;
 }
 
 ########################################
@@ -1980,7 +2013,7 @@ sub clone {
     if ($self->_is_Point_set());
 
   if ($self->is_xtra_set()) {
-    foreach my $xtra ($self->list_xtra_attributes()) {
+    foreach my $xtra ($self->list_all_xtra_attributes()) {
       my $v = $self->get_xtra_value($xtra);
       $clone->set_xtra_attribute($xtra, $v);
     }
