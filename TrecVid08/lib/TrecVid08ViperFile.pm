@@ -1905,7 +1905,7 @@ sub add_observation {
 
   ## and the xtra attributes
   if ($obs->is_xtra_set()) {
-    my @xl = $obs->list_xtra_attributes();
+    my @xl = $obs->list_all_xtra_attributes();
     foreach my $xtra (@xl) {
       my $v = $obs->get_xtra_value($xtra);
       $self->_set_errormsg("Problem obtaining observation xtra attribute value (" . $obs->get_errormsg() . ")")
