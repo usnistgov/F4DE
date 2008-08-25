@@ -99,6 +99,16 @@ $testr += &do_simple_test($tn, "(addXtraAttribute + crop)", "$validator ../commo
 $tn = "test12c";
 $testr += &do_simple_test($tn, "(addXtraAttribute + AddXtraTrackingComment + crop)", "$validator ../common/test1-1md-sys.xml -a attr_name:person_11 -c 1450:1750 -f PAL -w -p -A", "res_$tn.txt");
 
+##
+$tn = "test13a";
+$testr += &do_simple_test($tn, "(Remove TrackingComment)", "$validator ../common/test6-Xtra-sys.xml -w -p -R TrackingComment", "res_$tn.txt");
+
+$tn = "test13b";
+$testr += &do_simple_test($tn, "(Remove XtraAttributes)", "$validator ../common/test6-Xtra-sys.xml -w -p -R XtraAttributes", "res_$tn.txt");
+
+$tn = "test13c";
+$testr += &do_simple_test($tn, "(Remove AllEvents)", "$validator ../common/test6-Xtra-sys.xml -w -p -R AllEvents", "res_$tn.txt");
+
 ##########
 
 if ($testr == $totest) {
