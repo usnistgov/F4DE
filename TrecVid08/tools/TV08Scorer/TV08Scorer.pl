@@ -863,7 +863,7 @@ sub do_alignment {
 
       # copy 'xtra' attributes (include tracking comment)
       if ($ref_obj->is_xtra_set()) {
-        foreach my $xtra ($ref_obj->list_xtra_attributes()) {
+        foreach my $xtra ($ref_obj->list_all_xtra_attributes()) {
           my $v = $ref_obj->get_xtra_value($xtra);
           $tmp_obs->set_xtra_attribute($xtra, $v);
           MMisc::error_quit("Problem adding \'xtra\' attribute (" . $tmp_obs->get_errormsg() . ")")
