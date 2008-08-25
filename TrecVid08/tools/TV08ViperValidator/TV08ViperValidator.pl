@@ -568,7 +568,8 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--crop> I<beg:end>] [B<--WriteMemDump> [I<mode>]]>
   S<[B<--ForceFilename> I<filename>] [B<--pruneEvents>]>
   S<[B<--removeSubEventtypes>]>
-  S<[B<--addXtraAttribute> I<name:value>] [B<--AddXtraTrackingComment>]]>
+  S<[B<--addXtraAttribute> I<name:value>] [B<--AddXtraTrackingComment>]>
+  S<[B<--Remove> I<type>]]>
   S<[B<--fps> I<fps>] [B<--ecf> I<ecffile>]>
   S<[B<--displaySummary> I<level>]>
   I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
@@ -692,6 +693,30 @@ Display this man page.
 =item B<--pruneEvents>
 
 For each validated event that is re-written, only add to this file's config section, events for which observations are seen
+
+=item B<--Remove> I<type>
+
+Remove one of the following from output ViPER file:
+
+=over 
+
+=item I<TrackingComment>
+
+removes any tracking comment.
+
+=item I<XtraAttributes>
+
+removes all Xtra Attributes.
+
+=item I<AllEvents>
+
+removes all seen event observations.
+
+=item I<ALL> 
+
+does all the previously listed removes.
+
+=back
 
 =item B<--removeSubEventtypes>
 
