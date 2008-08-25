@@ -26,9 +26,10 @@ print "[F4DE's TrecVid08 Packages]\n";
 $ms = &_chkpkg
   (
    # TrecVid08/lib
-   "KernelFunctions", "MetricTV08", "TrecVid08ECF", "TrecVid08EventList", 
+    "AdjudicationViPERfile", "KernelFunctions", "MetricTV08",
+   "TrecVid08ECF", "TrecVid08EventList", 
    "TrecVid08HelperFunctions", "TrecVid08Observation",
-   "TrecVid08ViperFile", "TrecVid08xmllint"
+   "TrecVid08ViperFile", "TrecVid08xmllint",
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all TrecVid08 packages found, you will not be able to run the program, please install the missing ones\n\n";
