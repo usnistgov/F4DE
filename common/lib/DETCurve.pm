@@ -1516,6 +1516,8 @@ sub writeGNUGraph{
   
   ### $*DisplayScaleConst Sets the scaling in the display.  for ND we print it as a percentage. 
   my ($gnuplotPROG, $xScale, $yScale, $reportActual, $xDisplayScaleConst, $yDisplayScaleConst) = (undef, "nd", "nd", 1, 100, 100);
+  my ($DrawIsometriclines, $Isometriclines) = (0, undef);
+  
   if (defined $options) {
     $title = $options->{title} if (exists($options->{title}));
 
@@ -1550,6 +1552,8 @@ sub writeGNUGraph{
     $makePNG = $options->{BuildPNG} if (exists($options->{BuildPNG}));
     $gnuplotPROG = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
     $reportActual = $options->{ReportActual} if (exists($options->{ReportActual}));
+    $DrawIsometriclines = $options->{DrawIsometriclines} if (exists($options->{DrawIsometriclines}));
+    $Isometriclines = $options->{Isometriclines} if (exists($options->{Isometriclines}));
   }    
     
   ### Serialize the file for later usage
@@ -1564,6 +1568,59 @@ sub writeGNUGraph{
 
   ### $this text element constitutes the extra plot commands for the graph
   my $PLOTCOMS = "";
+  
+  ### Draw the isometriclines
+    if ( $DrawIsometriclines ) {
+      my $troot = sprintf( "%s.isometriclines", $fileRoot );
+      my $color = "rgb \"\#FFD700\"";
+      open( ISODAT, "> $troot" );
+      
+      my $labelind = 10;
+            
+      foreach my $isocoef (@{ $Isometriclines } )
+      {
+          my $x = $xmin/100;
+          
+          my $ytemp = $self->{METRIC}->MISSForGivenComb($isocoef, $xmin/100);
+          my $xtemp = $self->{METRIC}->FAForGivenComb($isocoef, $ymax/100);
+          
+          my $linelabel = _getIsoMetricLineLabel($ytemp, $x, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $labelind, sprintf("%.3f", $isocoef), $xtemp);
+          
+          push (@offAxisLabels, $linelabel);
+                                
+          while ($x <= $xmax+100)
+          {
+            my $pfa = ($xScale eq "nd" ? ppndf($x) : $x);
+            my $y = $self->{METRIC}->MISSForGivenComb($isocoef, $x);
+            
+            my $pmiss = ($yScale eq "nd" ? ppndf($y) : $y);
+            
+            printf ISODAT "$pfa $pmiss\n";
+            
+            if   ( $x < 0.0001 ) { $x += 0.000001; }
+			elsif( $x < 0.001  ) { $x += 0.00001; }
+			elsif( $x < 0.004  ) { $x += 0.00004; }
+			elsif( $x < 0.01   ) { $x += 0.0001; }
+			elsif( $x < 0.02   ) { $x += 0.0002; }
+			elsif( $x < 0.05   ) { $x += 0.0005; }
+			elsif( $x < 0.1    ) { $x += 0.001; }
+			elsif( $x < 0.2    ) { $x += 0.002; }
+			elsif( $x < 0.5    ) { $x += 0.005; }
+			elsif( $x < 1      ) { $x += 0.01; }
+			elsif( $x < 2      ) { $x += 0.02; }
+			elsif( $x < 5      ) { $x += 0.05; }
+			else                 { $x += 0.1; }
+          }
+                                     
+          printf ISODAT "\n";
+          
+          $labelind++;
+      }
+                
+      close( ISODAT );
+
+      $PLOTCOMS .= "  '$troot' title 'Iso-" . $self->{METRIC}->combLab() . " lines' with lines lt $color ,\\\n";
+    }
        
   open(THRESHPLT,"> $fileRoot.thresh.plt") ||
     die("unable to open DET gnuplot file $fileRoot.thresh.plt");
