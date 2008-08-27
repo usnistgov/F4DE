@@ -42,7 +42,7 @@ sub unitTest(){
   print "Test DETCurveSet\n";
 
   my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
-  my $trial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => undef) });
+  my $trial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
     
   $trial->addTrial("she", 0.10, "NO", 0);
   $trial->addTrial("she", 0.15, "NO", 0);
@@ -64,7 +64,7 @@ sub unitTest(){
   $trial->addTrial("she", 0.95, "YES", 1);
   $trial->addTrial("she", 1.0, "YES", 1);
 
-  my $trial2 = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => undef) });
+  my $trial2 = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
     
   $trial2->addTrial("she", 0.10, "NO", 0);
   $trial2->addTrial("she", 0.15, "NO", 0);
@@ -86,13 +86,27 @@ sub unitTest(){
   $trial2->addTrial("she", 0.95, "YES", 1);
   $trial2->addTrial("she", 1.0, "YES", 1);
 
+  my $emptyTrial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
+
+
+  $emptyTrial->addTrial("he", undef, "OMITTED", 1);
+  $emptyTrial->addTrial("he", undef, "OMITTED", 1);
+  $emptyTrial->addTrial("he", undef, "OMITTED", 1);
+  $emptyTrial->addTrial("she", undef, "OMITTED", 1);
+  $emptyTrial->addTrial("she", undef, "OMITTED", 1);
+  $emptyTrial->addTrial("she", undef, "OMITTED", 1);
+
   my $det1 = new DETCurve($trial, 
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
-                          "pooled", "DET1", \@isolinecoef, undef);
+                          "blocked", "DET1", \@isolinecoef, undef);
   my $det2 = new DETCurve($trial2, 
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
-                          "pooled", "DET2", \@isolinecoef, undef);
-    
+                          "blocked", "DET2", \@isolinecoef, undef);
+  my $det3 = new DETCurve($emptyTrial, 
+                          new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial),
+                          "blocked", "DETEmpty", \@isolinecoef, undef);
+                          $det3->successful();
+  
   print " Added DETs... ";
   my $ds = new DETCurveSet("title");
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Name 1", $det1));
@@ -100,6 +114,7 @@ sub unitTest(){
   my $exp = "Name______________________";
   my $k2 = "Name !@#\$%^&*(){}[]?'\"\<\>:;";
   die "Error: Failed to add second det" if ("success" ne $ds->addDET($k2, $det2));
+  die "Error: Failed to add third (empty) det" if ("success" ne $ds->addDET("EmptyDETCurve", $det3));
   print "OK\n";
   
   print " Check File System Safe keys... ";
@@ -108,9 +123,8 @@ sub unitTest(){
   die "Error: Filesystem safe name by id /".$ds->getFSKeyForID(0)."/ != /Name_1/" if ($ds->getFSKeyForID(0) ne "Name_1");
   die "Error: Filesystem safe name by id /".$ds->getFSKeyForID(1)."/ != /$exp/" if ($ds->getFSKeyForID(1) ne $exp);
   
-#  DETCurve::writeMultiDetGraph("foomerge", [($det1, $det2)]);
-#  print DETCurve::writeMultiDetSummary([($det1, $det2)], "text");
-
+#  my $txt = $ds->renderAsTxt("foomerge", 1, 1, {(createDETfiles => 1)});
+#  print $txt;
 
   print "OK\n";
 } 
