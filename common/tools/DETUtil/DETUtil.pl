@@ -267,12 +267,22 @@ my $ds = new DETCurveSet($title);
 
 foreach my $srl ( @ARGV )
 {
-  my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
-  @listIsoratiolineCoef = $loadeddet->getMetric()->isoCostRatioCoeffForDETCurve() if(scalar(@listIsoratiolineCoef) == 0);
-  @listIsometriclineCoef = $loadeddet->getMetric()->isoCombCoeffForDETCurve() if(scalar(@listIsometriclineCoef) == 0);
-  my $det = new DETCurve($loadeddet->getTrials(), $loadeddet->getMetric(), $loadeddet->getStyle(), $loadeddet->getLineTitle(), \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
-  $det->{LAST_SERIALIZED_DET} = $loadeddet->{LAST_SERIALIZED_DET};
-  $det->computePoints();
+	my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
+	@listIsoratiolineCoef = $loadeddet->getMetric()->isoCostRatioCoeffForDETCurve() if(scalar(@listIsoratiolineCoef) == 0);
+	@listIsometriclineCoef = $loadeddet->getMetric()->isoCombCoeffForDETCurve() if(scalar(@listIsometriclineCoef) == 0);  
+	
+	my $det;
+	
+	if($DrawIsoratiolines)
+	{
+		$det = new DETCurve($loadeddet->getTrials(), $loadeddet->getMetric(), $loadeddet->getStyle(), $loadeddet->getLineTitle(), \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
+		$det->{LAST_SERIALIZED_DET} = $loadeddet->{LAST_SERIALIZED_DET};
+		$det->computePoints();
+	}
+	else
+	{
+		$det = $loadeddet;
+	}
   
 	my $keep = 0;
 	$keep = 1 if (@selectFilters == 0);

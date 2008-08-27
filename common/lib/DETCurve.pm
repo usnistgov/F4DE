@@ -1589,8 +1589,19 @@ sub writeGNUGraph{
       open( ISODAT, "> $troot" );
       
       my $labelind = 10;
-            
-      foreach my $isocoef (@{ $Isometriclines } )
+      
+      my @isometriccoeffs = ();
+          
+      if(defined($Isometriclines))
+      {
+        push(@isometriccoeffs, @{ $Isometriclines });
+      }
+      else
+      {
+      	push(@isometriccoeffs, @{ $self->getMetric()->isoCombCoeffForDETCurve() });
+      }
+
+      foreach my $isocoef (@isometriccoeffs)
       {
           my $x = $xmin/100;
           
