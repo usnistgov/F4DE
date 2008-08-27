@@ -257,7 +257,12 @@ sub blockWeightedUnitTest()
       die "Error: Unable to create a MetricTestStub object with message '$met'\n";
     }
     my $emptydet = new DETCurve($emptyTrial, $met, "blocked", "footitle", \@isolinecoef, undef);
-    die "Error: Empty det should not be successful()" if ($emptydet->successful());
+    die "Error: Empty det should be successful()" if (! $emptydet->successful());
+    die "Error: Empty det have value 0" if ($emptydet->getBestCombComb() != 0);
+    die "Error: Empty det have Pmiss == 1" if ($emptydet->getBestCombMMiss() <=  1 - 0.000001);
+    die "Error: Empty det have PFa   == 0" if ($emptydet->getBestCombMFA() > 0 + 0.0000001);
+    $emptydet->writeGNUGraph("foo", {()});
+
     print "  OK\n";
 
     #####################################  With data  ###############################    
@@ -707,8 +712,17 @@ sub Compute_blocked_DET_points
     #    }
 
     if (!defined($self->{MINSCORE}) || !defined($self->{MAXSCORE})) {
+      my ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial);
+      push(@Outputs, [ ( "NaN", $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks) ] );
+
+      $self->{BESTCOMB}{DETECTIONSCORE} = "NaN";
+      $self->{BESTCOMB}{COMB} = $TWComb;
+      $self->{BESTCOMB}{MFA} = $mFa;
+      $self->{BESTCOMB}{MMISS} = $mMiss;
+
       $self->{MESSAGES} .= "WARNING: '".$self->{TRIALS}->getBlockId()."' weighted DET curves can not be computed, no detection scores exist for block\n";
-      return undef;
+
+      return \@Outputs;
     }
 
     #   print "Blocks: '".join(" ",keys %blocks)."'  minScore: $minScore\n";
@@ -982,7 +996,7 @@ sub ppndf
   }
 
 sub write_gnuplot_threshold_header{
-  my ($self, $FP, $title, $min_x, $max_x) = @_;
+  my ($self, $FP, $title) = @_;
 
   print $FP "## GNUPLOT command file\n";
   print $FP "set terminal postscript color\n";
@@ -992,7 +1006,6 @@ sub write_gnuplot_threshold_header{
   print $FP "set xlabel 'Detection Score'\n";
   print $FP "set grid\n";
 
-  print $FP "plot [$min_x:$max_x] [0:1] \\\n";
 }
 
 sub write_gnuplot_DET_header{
@@ -1728,24 +1741,34 @@ sub writeGNUGraph{
     buildPNG($fileRoot, $gnuplotPROG);
     $self->{LAST_GNU_DETFILE_PNG} = "$fileRoot.png";
   }
-    
-  my $pad = 0.00;
-  if ($self->{MINSCORE} == $self->{MAXSCORE}) {
-    $pad = 0.000001;
+  
+  my ($threshMin, $threshMax) = ($self->{MINSCORE}, $self->{MAXSCORE});
+  if (!defined($self->{MINSCORE})){
+    $threshMin = 0;
+    $threshMax = 1;
+  } elsif ($self->{MINSCORE} == $self->{MAXSCORE}) {
+    $threshMin -= 0.000001;
+    $threshMax += 0.000001;
   }
-  #    $self->write_gnuplot_threshold_header(*THRESHPLT, "$typeStr Threshold Plot for $self->{LINETITLE}", $self->{MINSCORE}-$pad, $self->{MAXSCORE}+$pad);
-  $self->write_gnuplot_threshold_header(*THRESHPLT, "Threshold Plot for $self->{LINETITLE}", $self->{MINSCORE}-$pad, $self->{MAXSCORE}+$pad);
-  print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines 2, \\\n";
-  print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines 3, \\\n";
-  print THRESHPLT "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines 4";
-  if ($reportActual){
-    print THRESHPLT ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines 5";
+  $self->write_gnuplot_threshold_header(*THRESHPLT, "Threshold Plot for $self->{LINETITLE}");
+  if (defined($self->{MINSCORE})){
+    print THRESHPLT "plot [$threshMin:$threshMax] [0:1] \\\n";
+    print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines 2, \\\n";
+    print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines 3, \\\n";
+    print THRESHPLT "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines 4";
+    if ($reportActual){
+      print THRESHPLT ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines 5";
+    }
+    if (defined($self->getBestCombComb())) {
+      print THRESHPLT ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points 6";
+      print THRESHPLT ", \\\n  ".$self->getBestCombComb()." title '$combType $combStr' with lines 6";
+    }
+    print THRESHPLT "\n";
+  } else {
+    print THRESHPLT "set label \"No detection outputs produced by the system.  Threshold plot is empty.\" at graph 0.2, graph 0.5\n";
+    print THRESHPLT "set size ratio 1\n"; 
+    print THRESHPLT "plot [0:1] [0:1] -x notitle with points \n";
   }
-  if (defined($self->getBestCombComb())) {
-    print THRESHPLT ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points 6";
-    print THRESHPLT ", \\\n  ".$self->getBestCombComb()." title '$combType $combStr' with lines 6";
-  }
-  print THRESHPLT "\n";
   close THRESHPLT;
   if ($makePNG) {
     buildPNG($fileRoot.".thresh", $gnuplotPROG);
