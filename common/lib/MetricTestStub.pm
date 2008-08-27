@@ -12,6 +12,8 @@
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 package MetricTestStub;
+@ISA = qw(MetricFuncs);
+
 use strict;
 use Data::Dumper;
  
@@ -103,9 +105,19 @@ sub errMissBlockSetCalc(){
       $n ++;
     }
   }
-  die "Error: Can't calculate errMissBlockSetCalc: zero blocks" if ($n == 0);
-  ($sum / $n, sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1))));
+  ($sum / $n, ($n < 2 ? undef : sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1)))));
 }
+
+####################################################################################################
+=pod
+
+=item B<errMissPrintFormat>()
+
+Returns a printf() format string for printing out miss error measurements. 
+
+=cut
+
+sub errMissPrintFormat(){ "%6.4f" };
 
 sub errFALab() { "PFA"; }
 sub errFAUnit(){ "Prob" };
@@ -133,9 +145,19 @@ sub errFABlockSetCalc(){
     $sumsqr += $fa * $fa;
     $n ++;
   }
-  die "Error: Can't calculate errFABlockSetCalc: zero blocks" if ($n == 0);
-  ($sum / $n, sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1))));
+  ($sum / $n, ($n < 2 ? undef : sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1)))));
 }
+
+####################################################################################################
+=pod
+
+=item B<errFAPrintFormat>()
+
+Returns a printf() format string for printing out false alarm error measurements. 
+
+=cut
+
+sub errFAPrintFormat(){ "%6.4f" };
 
 ### Either 'maximizable' or 'minimizable'
 sub combType() { "maximizable"; }
@@ -148,6 +170,16 @@ sub combCalc(){
     undef;
   }
 }
+
+####################################################################################################
+=pod
+
+=item B<combPrintFormat>()
+
+Returns a printf() format string for printing out combined performance statistic. 
+
+=cut
+  sub combPrintFormat(){ "%6.4f" };
 
 ####################################################################################################
 =pod
@@ -221,7 +253,7 @@ sub combBlockSetCalc(){
   }
   die "Error: Can't calculate errFABlockSetCalc: zero blocks" if ($n == 0);
   ($sum / $n,
-   sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1))),
+   ($n < 2 ? undef : sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1)))),
    $missAvg, $missSSD, $faAvg, $faSSD);
 }
 
