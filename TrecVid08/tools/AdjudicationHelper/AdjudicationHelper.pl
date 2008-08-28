@@ -133,6 +133,8 @@ my $jpeg_path = "";
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used: A CD    I         ST V    a cd f hij        s  vwx   #
 
+my $fcmdline = "$0 " . join(" ", @ARGV);
+
 my %opt = ();
 GetOptions
   (
@@ -199,6 +201,8 @@ MMisc::error_quit("\'jpeg_path\' can only be used if \'InfoGenerator\' is used")
 
 MMisc::error_quit("Not doing adjudication work on only on one REF and one SYS file")
   if (scalar @ARGV < 3);
+
+print "[COMMANDLINE] [$fcmdline]\n";
 
 ########## Main processing
 my $note_key = "NOTE_KEY";
@@ -294,44 +298,14 @@ foreach my $sf (@ARGV) {
   &die_check_file_r($f, "SYS");
   MMisc::error_quit("The same SYS file ($f) can not be used multiple time")
     if (exists $sys_files{$f});
-  my ($dir, $file, $ext) = &die_split_dfe($f);
-  MMisc::error_quit("SYS files ought to have different base names ($file)")
+  my ($dir, $onfile, $ext) = &die_split_dfe($f, "SYS file");
+  my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
+  MMisc::error_quit("SYS files ought to have different names ($file)")
     if (exists $sys_short{$file});
   my $xtra = sprintf("${note_key}_%03d", $annot_count++);
   $sys_files{$f} = $xtra;
   $sys_short{$file} = $f;
   print "SYS file: $sf (xtra attribute used: $xtra)\n";
-}
-
-########## Validating input files
-print "\n\n***** STEP ", $stepc++, ": Validating input files\n";
-
-my $ref_dir = MMisc::get_file_full_path("$wid/$ref_val_md_dir");
-&die_mkdir($ref_dir, "REF");
-my $sys_dir = MMisc::get_file_full_path("$wid/$sys_val_md_dir");
-&die_mkdir($sys_dir, "SYS");
-
-my $val_add = "";
-$val_add .= "-F $forceFilename " 
-  if (! MMisc::is_blank($forceFilename));
-
-my $ref_switch = "-g";
-$ref_switch = "-C" if ($cREFt);
-print "Validating REF file\n";
-my ($dir, $file, $ext) = &die_split_dfe($master_ref);
-my $log = MMisc::concat_dir_file_ext($ref_dir, $file, $log_add);
-my $command = "$validator $val_add $master_ref -w $ref_dir -W text $ref_switch";
-&die_syscall_logfile($log, "REF validation command", $command);
-
-my $sys_switch = "";
-$sys_switch = "-C -g" if ($cSYSt);
-print "Validating SYS files\n";
-foreach my $sf (sort keys %sys_files) {
-  my ($dir, $file, $ext) = &die_split_dfe($sf);
-  my $log = MMisc::concat_dir_file_ext($sys_dir, $file, $log_add);
-  my $xtra = $sys_files{$sf};
-  my $command = "$validator $val_add $sf -w $sys_dir -W text -a $xtra:$sf -A $sys_switch";
-  &die_syscall_logfile($log, "SYS validation command", $command);
 }
 
 ########## Extracting LGW file info
@@ -359,17 +333,52 @@ if (! MMisc::is_blank($info_g)) {
   print "LGW file info: $lgwf\n";
 }
 
+########## Validating input files
+print "\n\n***** STEP ", $stepc++, ": Validating input files\n";
+
+my $ref_dir = MMisc::get_file_full_path("$wid/$ref_val_md_dir");
+&die_mkdir($ref_dir, "REF");
+my $sys_dir = MMisc::get_file_full_path("$wid/$sys_val_md_dir");
+&die_mkdir($sys_dir, "SYS");
+
+my $val_add = "";
+$val_add .= "-F $forceFilename " 
+  if (! MMisc::is_blank($forceFilename));
+
+my $ref_switch = "-g";
+$ref_switch = "-C" if ($cREFt);
+print "Validating REF file\n";
+my ($dir, $onfile, $ext) = &die_split_dfe($master_ref, "Master REF file");
+my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
+my $log = MMisc::concat_dir_file_ext($ref_dir, $file, $log_add);
+my $command = "$validator $val_add $master_ref -w $ref_dir -W text $ref_switch";
+&die_syscall_logfile($log, "REF validation command", $command);
+
+my $sys_switch = "";
+$sys_switch = "-C -g" if ($cSYSt);
+print "Validating SYS files\n";
+foreach my $sf (sort keys %sys_files) {
+  my ($dir, $onfile, $ext) = &die_split_dfe($sf ,"SYS file");
+  my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
+  my $log = MMisc::concat_dir_file_ext($sys_dir, $file, $log_add);
+  my $xtra = $sys_files{$sf};
+  my $command = "$validator $val_add $sf -w $sys_dir -W text -a $xtra:$sf -A $sys_switch";
+  &die_syscall_logfile($log, "SYS validation command", $command);
+}
+
 ########## Align SYSs to REF
 print "\n\n***** STEP ", $stepc++, ": Align SYSs to REF\n";
 
-my ($dir, $file, $ext) = &die_split_dfe($master_ref, "\'master_ref\'");
-my $master_ref_md = MMisc::concat_dir_file_ext($ref_dir, $file, $ext . "$md_add");
+my ($dir, $onfile, $ext) = &die_split_dfe($master_ref, "\'master_ref\'");
+my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
+my $master_ref_md = MMisc::concat_dir_file_ext($ref_dir, $file, "$md_add");
 &die_check_file_r($master_ref_md, "REF");
 
 my %sc1_sys_files = ();
 foreach my $sf (sort keys %sys_files) {
-  my ($dir, $file, $ext) = &die_split_dfe($sf, "SYS");
-  my $sf_md = MMisc::concat_dir_file_ext($sys_dir, $file, $ext . "$md_add");
+  my ($dir, $onfile, $ext) = &die_split_dfe($sf, "SYS");
+  my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
+  my $sf_md = MMisc::concat_dir_file_ext($sys_dir, $file, "$md_add");
   &die_check_file_r($sf_md, "SYS");
   
   my $bodir = MMisc::get_file_full_path("$wid/$first_align");
@@ -418,8 +427,13 @@ print "\n\n***** STEP ", $stepc++, ": Iteration\n";
 
 my $inc = 0;
 my @todo = sort keys %sc2_sys_files;
+MMisc::error_quit("No elements in SYS list, aborting")
+  if (scalar @todo == 0);
 my $csf_key = shift @todo;
 my $csf = $sc2_sys_files{$csf_key};
+
+MMisc::error_quit("No elements left in SYS list, aborting")
+  if (scalar @todo == 0);
 
 my $ftxt = $csf_key;
 while (scalar @todo > 0) {
