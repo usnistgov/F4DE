@@ -156,9 +156,13 @@ my $odir = "";
 my $akey = "";
 my $doglobal = 0;
 my $margin = $margind;
+my $info_path = "";
+my $info_g = "";
+my $lgwf = "";
+my $jpeg_path = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:       G            T      a  d f h          s  v x   #
+# Used:       G I  L       T      a  d f hij        s  v x   #
 
 my %opt = ();
 GetOptions
@@ -173,6 +177,10 @@ GetOptions
    'annot_key=s'     => \$akey,
    'Global'          => \$doglobal,
    'segmentation_margin=i' => \$margin,
+   'info_path=s'     => \$info_path,
+   'InfoGenerator=s' => \$info_g,
+   'LGW=s'           => \$lgwf,
+   'jpeg_path=s'     => \$jpeg_path,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -199,15 +207,39 @@ MMisc::error_quit("\'annot_key\' must be set to continue")
 
 if (! MMisc::is_blank($odir)) {
   my $err = MMisc::check_dir_w($odir);
-  MMisc::error_quit("Problem with \'outdir\': $err")
+  MMisc::error_quit("Problem with \'dir\' ($odir): $err")
     if (! MMisc::is_blank($err));
 }
 
 MMisc::error_quit("\'segmentation_margin\' must be at least 1")
   if ($margin < 1);
 
+MMisc::error_quit("\'info_path\' can only be used if \'InfoGenerator\' is used")
+  if ((MMisc::is_blank($info_g)) && (! MMisc::is_blank($info_path)));
+MMisc::error_quit("\'jpeg_path\' can only be used if \'InfoGenerator\' is used")
+  if ((MMisc::is_blank($info_g)) && (! MMisc::is_blank($jpeg_path)));
+MMisc::error_quit("\'LGW\' can only be used if \'InfoGenerator\' is used")
+  if ((MMisc::is_blank($info_g)) && (! MMisc::is_blank($lgwf)));
+MMisc::error_quit("\'LGW\' must be set when \'InfoGenerator\' is used")
+  if ((! MMisc::is_blank($info_g)) && (MMisc::is_blank($lgwf)));
+MMisc::error_quit("\'dir\' must be set when \'InfoGenerator\' is used")
+  if ((! MMisc::is_blank($info_g)) && (MMisc::is_blank($odir)));
+&die_check_lgwf($lgwf);
+if (! MMisc::is_blank($info_path)) {
+  $info_path =~ s%\/$%%;
+  $info_path .= "/";
+}
+if (! MMisc::is_blank($jpeg_path)) {
+  $jpeg_path =~ s%\/$%%;
+  $jpeg_path .= "/";
+}
+
 ##########
 # Main processing
+
+my $log_add  = "log";
+my $info_add = "info";
+
 my $stepc = 1;
 
 ########## Assimilating SYS files
@@ -488,10 +520,36 @@ sub write_avf {
     MMisc::error_quit("Problem adding Observation to AVF: " . $avf->get_errormsg())
       if ($avf->error());
   }
-    
+
+  my $agreeadd = "Agree_" . sprintf("%02d", $avf->get_maxAgree());
+  MMisc::error_quit("Problem obtaining AVF's max Agree text: " . $avf->get_errormsg())
+    if ($avf->error());
+
+  my $spfnadd = (! defined $fs_fs) ? "-Global" : "-$agreeadd";
+  my $fname_b = "$sffn-$event-" . sprintf("%06d", $beg) . "_" . sprintf("%06d", $end) . "$spfnadd";
+
+
+  my $lsffn = $sffn;
+  if (! MMisc::is_blank($info_g)) {
+    my $infofile_b = MMisc::concat_dir_file_ext("", $fname_b, $info_add);
+    my $infofile = MMisc::concat_dir_file_ext($odir, $fname_b, $info_add);
+    my $log = MMisc::concat_dir_file_ext($odir, "InfoGenerator_Run", $log_add);
+    my $command = "$info_g $infofile $lgwf $beg $end";
+    $command .= " $jpeg_path" if (! MMisc::is_blank($jpeg_path));
+
+    &die_syscall_logfile($log, "InfoGenerator run", $command);
+
+    $lsffn = "$info_path$infofile_b";
+  }
+ 
+  if ($lsffn ne $sffn) {
+    $avf->set_sffn($lsffn);
+    MMisc::error_quit("Problem changing the sffn ($sffn -> $lsffn): " . $avf->get_errormsg())
+      if ($avf->error());
+  } 
+
   my $fname = "";
-  my $spfnadd = (! defined $fs_fs) ? "-Global" : "";
-  $fname = MMisc::concat_dir_file_ext($odir, "$sffn-$event-${beg}_$end$spfnadd", "xml")
+  $fname = MMisc::concat_dir_file_ext($odir, $fname_b, "xml")
     if (! MMisc::is_blank($odir));
 
   my $txt = $avf->get_xml($event);
@@ -502,6 +560,39 @@ sub write_avf {
     if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML Representation:\n"));
 }
 
+##########
+
+sub die_check_lgwf {
+  my $lgwf = shift @_;
+
+  return() if (MMisc::is_blank($lgwf));
+
+  MMisc::error_quit("Problem with LGW file: Does not start with LGW")
+      unless ($lgwf =~ s%^LGW_%%);
+
+  MMisc::error_quit("Problem with LGW file: Does not contain an 8 digits date")
+      unless ($lgwf =~ s%^\d{8}_%%);
+
+  MMisc::error_quit("Problem with LGW file: Does not contain a set id")
+      unless ($lgwf =~ s%^E\d_%%);
+
+  MMisc::error_quit("Problem with LGW file: Does not contain a camera id")
+      unless ($lgwf =~ s%^CAM\d$%%);
+}
+
+##########
+
+sub die_syscall_logfile {
+  my ($file, $txt, @command) = @_;
+
+  my ($ok, $rtxt, $stdout, $stderr, $retcode) =
+    MMisc::write_syscall_logfile($file, @command);
+  MMisc::error_quit("Problem when running $txt\nSTDOUT:$stdout\nSTDERR:\n$stderr\n")
+    if ($retcode != 0);
+
+  print "    (Ran \"$txt\", see log at: $file)\n";
+}
+
 ############################################################
 
 sub set_usage {
@@ -510,7 +601,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--dir dir] [--Global] [--segmentation_margin value] --annot_key key --fps fps file.xml [file.xml[...]]
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--dir dir] [--Global] [--segmentation_margin value] [--InfoGenerator tool --LGW lwg_file [--info_path path]] --annot_key key --fps fps file.xml [file.xml[...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 
@@ -522,7 +613,12 @@ Will perform a semantic validation of the ViPER XML file(s) provided.
   --dir           Specify the output path for special ViPER files (stdout otherwise)
   --Global        Generate a global Adjudication File in addition to the segmented ones
   --segmentation_margin  Add +/- value frames to each observation when computing its possible candidates for overlap (default: $margind)
+  --InfoGenerator Specify the '.info' generator tool to use (arguments to this tool must be in the following order: info_outfile LGW_info start_frame end_frame [jpeg_path])
+  --LGW           Specify the LGW_info passed to the '.info' generator
+  --info_path     Path to the final '.info' file (added in the Viper file)
+  --jpeg_path     Path to the JPEG files inside the '.info' file
   --annot_key     Specify the annotator key used in the files
+  --fps           Specify the fps
 
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
