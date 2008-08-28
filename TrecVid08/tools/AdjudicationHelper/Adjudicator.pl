@@ -601,7 +601,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--dir dir] [--Global] [--segmentation_margin value] [--InfoGenerator tool --LGW lwg_file [--info_path path]] --annot_key key --fps fps file.xml [file.xml[...]]
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--dir dir] [--Global] [--segmentation_margin value] [--InfoGenerator tool --LGW lwg_file [--info_path path] [--jpeg_path path]] --annot_key key --fps fps file.xml [file.xml[...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 

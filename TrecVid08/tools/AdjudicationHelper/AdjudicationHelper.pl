@@ -689,7 +689,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--InfoGenerator tool [--info_path path]] [--changeREFtype] [--ChangeSYStype] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] --fps fps --Duration seconds --delta_t value --work_in_dir dir ref_file sys_files
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--InfoGenerator tool [--info_path path] [--jpeg_path path]] [--changeREFtype] [--ChangeSYStype] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] --fps fps --Duration seconds --delta_t value --work_in_dir dir ref_file sys_files
 
  Where:
   --help          Print this usage information and exit
@@ -701,6 +701,7 @@ Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-
   --Adjudicator   Full path location of the Adjudicator program (default: $adjtool_d)
   --InfoGenerator Specify the '.info' generator tool to use (arguments to this tool must be in the following order: info_outfile LGW_info start_frame end_frame [jpeg_path])
   --info_path     Path to the final '.info' file (added in the Viper file)
+  --jpeg_path     Path to the JPEG files inside the '.info' file
   --changeREFtype   Will convert the 'ref_file' from SYS to REF
   --ChangeSYStype   Will convert all 'sys_file's from REF to SYS
   --ForceFilename Replace the 'sourcefile' file value
