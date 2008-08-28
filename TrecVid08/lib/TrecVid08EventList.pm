@@ -423,17 +423,13 @@ sub get_full_events_list {      # Include $obs_dummy_key if in it
 
 #####
 
-sub get_events_list {     # Remove $obs_dummy_key if it is in the list
+sub get_events_list { # Remove $obs_dummy_key if it is in the list
   my ($self, $filename) = @_;
 
   my @in = $self->_get_events_list_core($filename);
   return() if ($self->error());
 
-  my @out = ();
-  foreach my $key (@in) {
-    next if ($key eq $obs_dummy_key);
-    push @out, $key;
-  }
+  my @out = grep(! m%^$obs_dummy_key$%, @in);
 
   return(@out);
 }
@@ -532,6 +528,22 @@ sub get_all_Observations {
   }
 
   return(@out);
+}
+
+##########
+
+sub get_1st_dummy_observation {
+  my ($self, $filename) = @_;
+
+  return(undef) if (! $self->is_filename_in($filename));
+
+  return(undef) if (! $self->is_event_in($filename, $obs_dummy_key));
+
+  my @o = $self->get_Observations_list($filename, $obs_dummy_key);
+
+  return(undef) if (scalar @o == 0);
+
+  return($o[0]);
 }
 
 ############################################################
