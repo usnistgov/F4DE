@@ -516,7 +516,17 @@ sub write_avf {
     if ($avf->error());
 
   foreach my $obs (@ol) {
-    $avf->add_tv08obs($obs);
+    my $tobs = $obs->clone();
+    MMisc::error_quit("Could not clone observation: " . $obs->get_errormsg())
+      if ($obs->error());
+
+    $tobs->negative_shift_framespan($osf);
+    MMisc::error_quit("Problem shifting framespan: " . $tobs->get_errormsg())
+      if ($tobs->error());
+
+    print MMisc::get_sorted_MemDump(\$tobs);
+
+    $avf->add_tv08obs($tobs);
     MMisc::error_quit("Problem adding Observation to AVF: " . $avf->get_errormsg())
       if ($avf->error());
   }
