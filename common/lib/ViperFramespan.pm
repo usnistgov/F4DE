@@ -1082,8 +1082,19 @@ sub duration_ts {
 
 ######################################## framespan shift function
 
-sub value_shift {
+sub negative_value_shift {
   my ($self, $val) = @_;
+
+  return(0) if ($self->error());
+
+  # "negative" shifts correct all values under 1
+  return($self->value_shift($val, 1));
+}
+
+#####
+
+sub value_shift {
+  my ($self, $val, $neg) = @_;
 
   return(0) if ($self->error());
 
@@ -1091,6 +1102,9 @@ sub value_shift {
     $self->_set_errormsg($error_msgs{"NoFramespanSet"});
     return(0);
   }
+
+  $val = -$val
+    if ($neg);
 
   my $fs = $self->get_value();
 
@@ -1106,6 +1120,11 @@ sub value_shift {
 
     $b += $val;
     $e += $val;
+
+    if ($neg) {
+      $b = 1 if ($b < 1);
+      $e = 1 if ($e < 1);
+    }
 
     push @out, "$b:$e";
   }
