@@ -1704,7 +1704,7 @@ sub get_first_available_event_id {
   }
 
   if (! grep(m%^$event$%, @ok_events)) {
-    $self->set_errormsg("Eventtype ($event) is not a recognized one");
+    $self->_set_errormsg("Eventtype ($event) is not a recognized one");
     return(-1);
   }
 
@@ -1824,6 +1824,11 @@ sub add_observation {
     $self->_set_errormsg("Can only add an observation to a file whose \'GTF status\' match");
     return(0);
   }
+
+  # For the dummy observation, do nothing more
+  my $dummy_obs_key = $obs->get_key_dummy_eventtype();
+  return(1)
+    if ($event eq $dummy_obs_key);
 
   my $id = "";
   if ($keep_obs_id) {
