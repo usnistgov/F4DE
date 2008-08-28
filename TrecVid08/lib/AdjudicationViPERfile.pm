@@ -83,6 +83,8 @@ sub new {
      UnmapAnnot     => undef,
      Ref            => undef,
      ##
+     maxAgree       => 0,
+     ##
      errormsg       => $errormsg,
     };
 
@@ -255,6 +257,27 @@ sub get_annot_key {
 
 ##########
 
+sub setif_maxAgree {
+  my ($self, $agc) = @_;
+  
+  return(0) if ($self->error());
+  
+  $self->{maxAgree} = $agc
+    if ($agc > $self->{maxAgree});
+}
+
+#####
+
+sub get_maxAgree {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->{maxAgree});
+}
+
+##########
+
 sub _pre_self_tests {
   my ($self) = @_;
   
@@ -402,6 +425,8 @@ sub add_agree {
   } else {
     push @{$self->{Agree}{$event}{$agc}}, [ $fs, $agt ];
   }
+
+  $self->setif_maxAgree($agc);
 
   return(1);
 } 
