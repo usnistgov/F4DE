@@ -238,7 +238,7 @@ sub get_full_eventtype {
   my $stype = $self->get_eventsubtype();
   return("") if ($self->error());
 
-  return(TrecVid08ViperFile::get_printable_full_event($etype, $stype));
+  return(TrecVid08ViperFile::get_printable_full_event($etype, $stype, 1));
 }
 
 ########## 'id'
@@ -1443,7 +1443,7 @@ sub get_SYS_Beg_Mid_End_Dur_Dec {
 ############################################################ framespan shift function
 
 sub _shift_framespan_selected {
-  my ($self, $choice, $val) = @_;
+  my ($self, $choice, $val, $neg) = @_;
 
   my @ok_choices = &_get_set_selected_ok_choices();
   if (! grep(m%^$choice$%, @ok_choices)) {
@@ -1470,7 +1470,11 @@ sub _shift_framespan_selected {
     my $fs_tmp = $chash{$key}{$key_fs};
     my $ct = $chash{$key}{$key_ct};
 
-    $fs_tmp->value_shift($val);
+    if ($neg) {
+      $fs_tmp->negative_value_shift($val);
+    } else {
+      $fs_tmp->value_shift($val);
+    }
     if ($fs_tmp->error()) {
       $self->_set_errormsg("Problem while shifting the framespan of $key (" . $fs_tmp->get_errormsg() . "). ");
       return(0);
@@ -1488,8 +1492,18 @@ sub _shift_framespan_selected {
 
 #####
 
-sub shift_framespan {
+sub negative_shift_framespan {
   my ($self, $val) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->shift_framespan($val, 1));
+}
+
+#####
+
+sub shift_framespan {
+  my ($self, $val, $neg) = @_;
 
   return(0) if ($self->error());
 
@@ -1504,13 +1518,21 @@ sub shift_framespan {
   my $fs_file = $self->get_fs_file();
   return(0) if ($self->error());
 
-  $fs_fs->value_shift($val);
+  if ($neg) {
+    $fs_fs->negative_value_shift($val);
+  } else {
+    $fs_fs->value_shift($val);
+  }
   if ($fs_fs->error()) {
     $self->_set_errormsg("Problem while shifting the framespan (" . $fs_fs->get_errormsg() . "). ");
     return(0);
   }
 
-  $fs_file->value_shift($val);
+  if ($neg) {
+    $fs_file->negative_value_shift($val);
+  } else {
+    $fs_file->value_shift($val);
+  }
   if ($fs_file->error()) {
     $self->_set_errormsg("Problem while shifting the file framespan (" . $fs_file->get_errormsg() . "). ");
     return(0);
@@ -1524,13 +1546,18 @@ sub shift_framespan {
     $self->_set_errormsg("WEIRD: Problem accessing the ofi \'$key\' information. ");
     return(0);
   }
-  $ofi{$key} += $val;
+  if ($neg) {
+    $ofi{$key} -= $val;
+    $ofi{$key} = 1 if ($ofi{$key} < 1);
+  } else {
+    $ofi{$key} += $val;
+  }
   $self->set_ofi(%ofi);
 
   # other attributes
   my @ok_choices = &_get_set_selected_ok_choices();
   foreach my $choice (@ok_choices) {
-    $self->_shift_framespan_selected($choice, $val);
+    $self->_shift_framespan_selected($choice, $val, $neg);
     return(0) if ($self->error());
   }
 
