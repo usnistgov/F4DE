@@ -389,7 +389,6 @@ sub add_tv08obs {
     }
     return(0) if (! $self->add_agree($event, $alignc, $align, $fs));
     foreach my $rh (@atc) {
-      my $fs = $$rh{$xtra_tc_list[6]};
       my $annot = $$rh{$xtra_tc_list[7]};
       return(0) if (! $self->add_Unmapped_annot($event, $fs, $annot));
     }
