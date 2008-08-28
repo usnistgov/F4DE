@@ -429,19 +429,23 @@ my $gtrial = $all_trials{$key_allevents};
 
 my %xmlwriteback = ();
 my $ald = &do_alignment(@common, @only_in_sys, @only_in_ref);
-
-MMisc::error_quit("No alignment ever performed, aborting")
+print "NOTE: No alignment ever done\n"
   if ($ald == 0);
 
-if ($trials_c{$key_allevents} == 0) {
-  MMisc::error_quit("No Trials ever added");
-}
+my $alc = $trials_c{$key_allevents};
+print "WARNING: No Trials ever added, will force skip some steps\n"
+  if ($alc == 0);
 
 ## Dump Trial Contingency Table (optional)
 
 if ($observationContingencyTable) {
   print "\n\n***** STEP ", $stepc++, ": Dump of Trial Contingency Table\n";
-  MMisc::writeTo($outputRootFile, ".contigency.txt", 1, 0, $all_trials{$key_allevents}->dumpCountSummary());
+
+  if ($alc == 0) {
+    print "  ** Skipped **\n";
+  } else {
+    MMisc::writeTo($outputRootFile, ".contigency.txt", 1, 0, $all_trials{$key_allevents}->dumpCountSummary());
+  }
 }
 
 ## Dump of Analysis Report
@@ -465,15 +469,20 @@ foreach my $event (@all_events) {
   MMisc::error_quit("Error adding Event '$event' to the DETSet: $rtn") if ($rtn ne "success");                     
 }
 
-MMisc::writeTo($outputRootFile, ".scores.txt", 1, 0, 
-               $detSet->renderAsTxt
-               ($outputRootFile . ".det", $doDC, 1, 
-                { (xScale => "log", Ymin => "0.00001", Ymax => "90",
-                   Xmin => "0.00001", Xmax => "100", 
-                   gnuplotPROG => $gnuplotPROG,
-                   createDETfiles => ($nodetfiles ? 0: 1),
-                   BuildPNG => ($noPNG ? 0 : 1))
-                } ) );
+if ($alc == 0) {
+  print "  ** Skipped **\n";
+} else {
+  MMisc::writeTo
+    ($outputRootFile, ".scores.txt", 1, 0, 
+     $detSet->renderAsTxt
+     ($outputRootFile . ".det", $doDC, 1, 
+      { (xScale => "log", Ymin => "0.00001", Ymax => "90",
+         Xmin => "0.00001", Xmax => "100", 
+         gnuplotPROG => $gnuplotPROG,
+         createDETfiles => ($nodetfiles ? 0: 1),
+         BuildPNG => ($noPNG ? 0 : 1))
+      } ) );
+}
 
 ## reWrite XML files
 if (defined $writexml) {
@@ -730,6 +739,12 @@ sub do_alignment {
     if (scalar @ref_events + scalar @sys_events == 0) {
       print "|->File: $file\n";
       print " -- No Events, skipping\n\n";
+
+      my $tmp_obs = $sysEL->get_1st_dummy_observation($file);
+      MMisc::error_quit("**WEIRD** Could not obtain a \'dummy observation\' for file ($file)")
+        if (! defined $tmp_obs);
+      &add_obs2vf($tmp_obs);
+
       next;
     }
 
@@ -747,6 +762,12 @@ sub do_alignment {
       my @listed_events = MMisc::make_array_of_unique_values(@sys_events, @ref_events);
       if (scalar @listed_events == 0) {
         print " -- No Events left, skipping\n\n";
+        
+        my $tmp_obs = $sysEL->get_1st_dummy_observation($file);
+        MMisc::error_quit("**WEIRD** Could not obtain a \'dummy observation\' for file ($file)")
+          if (! defined $tmp_obs);
+        &add_obs2vf($tmp_obs);
+        
         next;
       }
       print " -- Will only process the following event(s): ", join(" ", @listed_events), "\n";
@@ -768,6 +789,12 @@ sub do_alignment {
     if (scalar @listed_events == 0) {
       print "|->File: $file\n";
       print " -- No Events, skipping\n\n";
+
+      my $tmp_obs = $sysEL->get_1st_dummy_observation($file);
+      MMisc::error_quit("**WEIRD** Could not obtain a \'dummy observation\' for file ($file)")
+        if (! defined $tmp_obs);
+      &add_obs2vf($tmp_obs);
+
       next;
     }
 
