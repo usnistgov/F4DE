@@ -261,7 +261,7 @@ sub blockWeightedUnitTest()
     die "Error: Empty det have value 0" if ($emptydet->getBestCombComb() != 0);
     die "Error: Empty det have Pmiss == 1" if ($emptydet->getBestCombMMiss() <=  1 - 0.000001);
     die "Error: Empty det have PFa   == 0" if ($emptydet->getBestCombMFA() > 0 + 0.0000001);
-    $emptydet->writeGNUGraph("foo", {()});
+#    $emptydet->writeGNUGraph("foo", {()});
 
     print "  OK\n";
 
