@@ -126,9 +126,12 @@ my $deltat = undef;
 my $validator = "";
 my $scorer = "";
 my $adjtool = "";
+my $info_path = "";
+my $info_g = "";
+my $jpeg_path = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CD              ST V    a cd f h          s  vwx   #
+# Used: A CD    I         ST V    a cd f hij        s  vwx   #
 
 my %opt = ();
 GetOptions
@@ -150,6 +153,9 @@ GetOptions
    'ForceFilename=s' => \$forceFilename,
    'adjudicate_only' => \$adjudicate_only,
    'delta_t=f'       => \$deltat,
+   'info_path=s'     => \$info_path,
+   'InfoGenerator=s' => \$info_g,
+   'jpeg_path=s'     => \$jpeg_path,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -186,6 +192,11 @@ MMisc::error_quit("\'Duration\' is not set, aborting")
 MMisc::error_quit("\'delta_t\' is not set, aborting")
   if (! defined $deltat);
 
+MMisc::error_quit("\'info_path\' can only be used if \'InfoGenerator\' is used")
+  if ((MMisc::is_blank($info_g)) && (! MMisc::is_blank($info_path)));
+MMisc::error_quit("\'jpeg_path\' can only be used if \'InfoGenerator\' is used")
+  if ((MMisc::is_blank($info_g)) && (! MMisc::is_blank($jpeg_path)));
+
 MMisc::error_quit("Not doing adjudication work on only on one REF and one SYS file")
   if (scalar @ARGV < 3);
 
@@ -210,31 +221,67 @@ $validator .= " $cmdline_add";
 $scorer    .= " $cmdline_add";
 $adjtool   .= " $cmdline_add";
 
-my $md_add = ".memdump";
-my $log_add = "log";
+my $md_add   = ".memdump";
+my $log_add  = "log";
+my $info_add = "info";
 
 my $dtadd = "-deltat_$deltat";
 
-my $val_md_dir = "00-Validate";
+my $empty_ref_dir  = "00-empty_REF";
+my $val_md_dir     = "01-Validate";
 my $ref_val_md_dir = "$val_md_dir/REF";
 my $sys_val_md_dir = "$val_md_dir/SYS";
-my $first_align    = "01-First_Alignment";
-my $first_remove   = "02-Only_Unmapped_Sys";
-my $iteration_step = "03-Iteration";
-my $UnRef_base     = "04-1-Unmapped_Ref";
+my $first_align    = "02-First_Alignment";
+my $first_remove   = "03-Only_Unmapped_Sys";
+my $iteration_step = "04-Iteration";
+my $UnRef_base     = "05-1-Unmapped_Ref";
 my $UnRef_step1    = "$UnRef_base/1-empty_SYS";
 my $UnRef_step2    = "$UnRef_base/2-Master_REF_vs_empty_SYS";
-my $UnSys_base     = "04-2-Unmapped_Sys";
+my $UnSys_base     = "05-2-Unmapped_Sys";
 my $UnSys_step1    = "$UnSys_base/1-empty_REF";
 my $UnSys_step2    = "$UnSys_base/2-empty_REF_vs_Final_SYS";
-my $AdjDir         = "05-Adjudication_ViPERfiles";
+my $AdjDir         = "06-Adjudication_ViPERfiles";
+
+my $lgwf = "";
 
 my $stepc = 1;
+
+########## Generating Empty Master REF file
+my $mf = shift @ARGV;
+
+if ($mf eq "_blank_") {
+  print "\n\n***** STEP ", $stepc++, ": Generating Empty Master REF file\n";
+
+  # Use the first SYS file
+  my $sf = $ARGV[0];
+  my $f = MMisc::get_file_full_path($sf);
+  &die_check_file_r($f, "SYS file used to make Empty Master REF");
+
+  my $mrd = MMisc::get_file_full_path("$wid/$empty_ref_dir");
+  &die_mkdir($mrd, "empty Master REF");
+
+  my $log = MMisc::concat_dir_file_ext($mrd, "empty_Master_REF", $log_add);
+  my $command = "$validator -R AllEvents -w $mrd $f -p";
+  if ($cSYSt) { # if the SYS are really a GTF
+    $command .= " -g";
+  } else { # otherwise, we need to change its type
+    $command .= " -C";
+  }
+
+  &die_syscall_logfile($log, "validating command", $command);
+
+  my @ofiles = &die_list_X_files(2, $mrd, "result");
+  my @tmp = grep(! m%$log_add$%, @ofiles);
+  MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
+    if (scalar @tmp != 1);
+
+  $mf = "$mrd/" . $tmp[0];
+}
+
 
 ########## Confirming input files
 print "\n\n***** STEP ", $stepc++, ": Confirming input files\n";
 
-my $mf = shift @ARGV;
 my $master_ref = MMisc::get_file_full_path($mf);
 print "MASTER REF file: $master_ref\n";
 &die_check_file_r($master_ref, "REF");
@@ -265,7 +312,8 @@ my $sys_dir = MMisc::get_file_full_path("$wid/$sys_val_md_dir");
 &die_mkdir($sys_dir, "SYS");
 
 my $val_add = "";
-$val_add .= "-F $forceFilename " if (! MMisc::is_blank($forceFilename));
+$val_add .= "-F $forceFilename " 
+  if (! MMisc::is_blank($forceFilename));
 
 my $ref_switch = "-g";
 $ref_switch = "-C" if ($cREFt);
@@ -284,6 +332,31 @@ foreach my $sf (sort keys %sys_files) {
   my $xtra = $sys_files{$sf};
   my $command = "$validator $val_add $sf -w $sys_dir -W text -a $xtra:$sf -A $sys_switch";
   &die_syscall_logfile($log, "SYS validation command", $command);
+}
+
+########## Extracting LGW file info
+if (! MMisc::is_blank($info_g)) {
+  print "\n\n***** STEP ", $stepc++, ": Extracting LGW file info\n";
+  
+  my @l = ();
+  push @l, $master_ref;
+  push @l, keys %sys_files;
+  foreach my $f (@l) {
+    if ($f =~ m%(LGW_.+?_CAM\d)%) {
+      my $tmp = $1;
+      &die_check_lgwf($tmp);
+      if (! MMisc::is_blank($lgwf)) {
+        MMisc::error_quit("File's LGW file information ($tmp) does not seem to have the same LGW file information that previously found ($lgwf)")
+          if ($tmp ne $lgwf);
+      } else {
+        $lgwf = $tmp;
+      }
+    }
+  }
+
+  MMisc::error_quit("Could not find LGW file info value")
+    if (MMisc::is_blank($lgwf));
+  print "LGW file info: $lgwf\n";
 }
 
 ########## Align SYSs to REF
@@ -473,8 +546,8 @@ my $command = "$scorer -w $final_sc_dir -p -f $fps $csf -g $empty_ref -d $deltat
 my ($UnSys_file) = &die_list_X_files(1, $final_sc_dir, "scoring");
 $UnSys_file = MMisc::concat_dir_file_ext($final_sc_dir, $UnSys_file, "");
 
-########## Creating Adjudication ViPERfiles
-print "\n\n***** STEP ", $stepc++, ": Creating Adjudication ViPERfiles\n";
+########## Creating Adjudication ViPERfile
+print "\n\n***** STEP ", $stepc++, ": Creating Adjudication ViPERfile\n";
 $adjudicate_only = 0; # Turn off
 
 print "Unmapped_REF : $UnRef_file\n";
@@ -486,13 +559,17 @@ my $adj_dir = MMisc::get_file_full_path("$wid/$AdjDir$dtadd$adadd");
 
 my $log = MMisc::concat_dir_file_ext($adj_dir, "Adjudication_Run", $log_add);
 my $command = "$adjtool -f $fps -d $adj_dir -a $note_key -s $margin $UnRef_file $UnSys_file";
+$command .= " -I $info_g" if (! MMisc::is_blank($info_g));
+$command .= " -i $info_path" if (! MMisc::is_blank($info_path));
+$command .= " -L $lgwf" if (! MMisc::is_blank($lgwf));
+$command .= " -j $jpeg_path" if (! MMisc::is_blank($jpeg_path));
 
 &die_syscall_logfile($log, "adjudication command", $command);
 
 print "\nAdjudication directory: $adj_dir\n";
 
 my @tfl = &die_list_X_files(0, $adj_dir, "Adjudication results");
-my @fl = grep(! m%$log_add$%, @tfl);
+my @fl = grep(! m%($log_add|$info_add)$%, @tfl);
 MMisc::error_quit("No files in directory")
   if (scalar @fl == 0);
 
@@ -587,6 +664,24 @@ sub die_do_incin_dir {
   return($dir);
 }
 
+##########
+
+sub die_check_lgwf {
+  my $lgwf = shift @_;
+
+  MMisc::error_quit("Problem with LGW file: Does not start with LGW")
+      unless ($lgwf =~ s%^LGW_%%);
+
+  MMisc::error_quit("Problem with LGW file: Does not contain an 8 digits date")
+      unless ($lgwf =~ s%^\d{8}_%%);
+
+  MMisc::error_quit("Problem with LGW file: Does not contain a set id")
+      unless ($lgwf =~ s%^E\d_%%);
+
+  MMisc::error_quit("Problem with LGW file: Does not contain a camera id")
+      unless ($lgwf =~ s%^CAM\d$%%);
+}
+
 ############################################################
 
 sub set_usage {
@@ -594,7 +689,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--changeREFtype] [--ChangeSYStype] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] --fps fps --Duration seconds --work_in_dir dir ref_file sys_files
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--InfoGenerator tool [--info_path path]] [--changeREFtype] [--ChangeSYStype] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] --fps fps --Duration seconds --delta_t value --work_in_dir dir ref_file sys_files
 
  Where:
   --help          Print this usage information and exit
@@ -604,19 +699,23 @@ Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-
   --Validator     Full path location of the TV08Validator program (default: $validator_d)
   --Scorer        Full path location of the TV08Scorer program (default: $scorer_d)
   --Adjudicator   Full path location of the Adjudicator program (default: $adjtool_d)
+  --InfoGenerator Specify the '.info' generator tool to use (arguments to this tool must be in the following order: info_outfile LGW_info start_frame end_frame [jpeg_path])
+  --info_path     Path to the final '.info' file (added in the Viper file)
   --changeREFtype   Will convert the 'ref_file' from SYS to REF
   --ChangeSYStype   Will convert all 'sys_file's from REF to SYS
   --ForceFilename Replace the 'sourcefile' file value
   --segmentation_margin  Add +/- value frames to each observation when computing its possible candidates for overlap (default: $margin_d)
   --adjudication_only    Only run the program in the adjudication step
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
-  --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
+  --Duration      Specify the scorer's duration
+  --delta_t       Specify the scorer's delta_t value
   --work_in_dir   Directory where all the output an temporary files will be geneated
 
 Note:
 - This prerequisite that the XML files can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
 - 'TrecVid08xsd' files are: $xsdfiles
 - dash preceded options for the different programs can be used by simply entering them when specifying the programs.
+- Using '_blank_' as the REF file will force the creation of an empty REF file from the first SYS file listed
 EOF
     ;
 
