@@ -37,6 +37,9 @@ use TrecVid08ViperFile;
 # "TrecVid08Observation.pm" (part of this program sources)
 use TrecVid08Observation;
 
+# "ViperFramespan.pm" (part of this program sources)
+use ViperFramespan;
+
 # "MErrorH.pm" (part of this program sources)
 use MErrorH;
 
@@ -304,7 +307,7 @@ sub _pre_self_tests {
 #####
 
 sub add_tv08obs {
-  my ($self, $obs) = @_;
+  my ($self, $obs, $osf) = @_;
 
   if (! $obs->is_validated()) {
     $self->_set_errormsg("Can not add an observation which is not validated");
@@ -317,6 +320,30 @@ sub add_tv08obs {
   }
   
   return(0) if (! $self->_pre_self_tests());
+
+  if ($osf != 0) {
+    my $tobs = $obs->clone();
+    if ($obs->error()) {
+      $self->_set_errormsg("Could not clone observation: " . $obs->get_errormsg());
+      return(0);
+    }
+
+    if ($osf > 0) {
+      $tobs->shift_framespan($osf);
+      if ($tobs->error()) {
+        $self->_set_errormsg("Problem shifting framespan: " . $tobs->get_errormsg());
+        return(0);
+      }
+    } else {
+      $tobs->negative_shift_framespan(-$osf);
+      if ($tobs->error()) {
+        $self->_set_errormsg("Problem negative shifting framespan: " . $tobs->get_errormsg());
+        return(0);
+      }
+    }
+
+    $obs = $tobs;
+  }
 
   my $lsffn = $self->get_sffn();
   my $sffn = $obs->get_filename();
@@ -387,10 +414,32 @@ sub add_tv08obs {
       $self->_set_errormsg("Found a different amount of tracking comment (" . scalar @atc . ") comapred to the number of Xtra Attributes ($alignc)");
       return(0);
     }
-    return(0) if (! $self->add_agree($event, $alignc, $align, $fs));
+    my $ag_txt = $self->add_agree($event, $alignc, $align, $fs);
+    return(0) if (MMisc::is_blank($ag_txt));
     foreach my $rh (@atc) {
+      my $fs_value = $$rh{$xtra_tc_list[6]};
       my $annot = $$rh{$xtra_tc_list[7]};
-      return(0) if (! $self->add_Unmapped_annot($event, $fs, $annot));
+
+      if ($osf != 0) {
+        my $fs_fs = new ViperFramespan($fs_value);
+
+        if ($osf > 0) {
+          $fs_fs->value_shift($osf);
+          if ($fs_fs->error()) {
+            $self->_set_errormsg("Problem shifting framespan: " . $fs_fs->get_errormsg());
+            return(0);
+          }
+        } else {
+          $fs_fs->negative_value_shift(-$osf);
+          if ($fs_fs->error()) {
+            $self->_set_errormsg("Problem negative shifting framespan: " . $fs_fs->get_errormsg());
+            return(0);
+          }
+        }
+        $fs_value = $fs_fs->get_value();
+      }
+    
+      return(0) if (! $self->add_Unmapped_annot($event, $fs_value, "$ag_txt $annot"));
     }
     return (1);
   }
@@ -410,9 +459,11 @@ sub add_tv08obs {
 sub add_agree {
   my ($self, $event, $agc, $agt, $fs) = @_;
 
+  my $txt = "";
+
   if ($agc < 1) {
     $self->_set_errormsg("Agreement value must be at least 1");
-    return(0);
+    return($txt);
   }
 
 #  print "** AGREE ($event / Agree: $agc [$fs] $agt)\n";
@@ -427,7 +478,9 @@ sub add_agree {
 
   $self->setif_maxAgree($agc);
 
-  return(1);
+  $txt = "Agree=$agc ID=" . scalar @{$self->{Agree}{$event}{$agc}} - 1;
+
+  return($txt);
 } 
 
 #####
