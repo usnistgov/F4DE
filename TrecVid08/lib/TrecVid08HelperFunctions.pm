@@ -30,6 +30,8 @@ use TrecVid08EventList;
 use MErrorH;
 use MMisc;
 
+use Text::CSV;
+
 my $version     = "0.1b";
 
 if ($version =~ m/b$/) {
@@ -544,6 +546,133 @@ sub extract_trackingcomment_information {
   @out = @{$allh{$keep_tc_key}};
 
   return("", &_only_keep_annotations_with($okaw, $okaw_rm, \@okk, @out));
+}
+
+########################################
+
+sub ViperFile2CSVtxt {
+  my ($vf, @keys) = @_;
+
+  my $txt = "";
+
+  return("ViperFile is not validated, aborting", $txt)
+    if (! $vf->is_validated());
+
+  return("No keys requested", $txt)
+    if (scalar @keys == 0);
+
+  my $dobs = $vf->get_dummy_observation();
+  return("Problem obtaining dummy observation from ViperFile: " . $vf->get_errormsg(), $txt)
+    if ($vf->error());
+
+  return("Unknown keys: " . $dobs->get_errormsg(), $txt)
+    if (! $dobs->check_csv_keys(@keys));
+
+  # Get an observation representation of all the viper file
+  my @ao = $vf->get_all_events_observations();
+  return("Problem while obtaining Observations (" . $vf->get_errormsg() . ")", $txt)
+    if ($vf->error());
+
+  my $ch = Text::CSV->new({always_quote => 1, binary => 1})
+    or return("Problem creating the CSV object (" . Text::CSV->error_diag() . ")", $txt);
+
+  my $tmp = "";
+
+  return("Problem adding entries to CSV file: " . $ch->error_diag(), $txt)
+    if (! $ch->combine(@keys));
+  $tmp .= $ch->string();
+  $tmp .= "\n";
+
+  foreach my $obs (@ao) {
+    my ($err, @tmp) = &Observation2CSVarray($obs, @keys);
+    return($err, $txt) if (! MMisc::is_blank($err));
+    
+    return("CSV generation from Observation did not return the expected number of keys", $txt)
+      if (scalar @keys != scalar @tmp);
+
+    return("Problem adding entries to CSV file: " . $ch->error_diag())
+      if (! $ch->combine(@tmp));
+    $tmp .= $ch->string();
+    $tmp .= "\n";
+  }
+  
+  return("", $tmp);
+}
+
+##########
+
+sub Observation2CSVarray {
+  my ($obs, @keys) = @_;
+
+  my @out = ();
+
+  return("Observation is not validated", @out)
+    if (! $obs->is_validated());
+
+  return("No keys requested", @out)
+    if (scalar @keys == 0);
+
+  return("Unknown keys: " . $obs->get_errormsg(), @out)
+    if (! $obs->check_csv_keys(@keys));
+
+  my @array = $obs->get_csv_array(@keys);
+  return("Problem obtaining csv array: " . $obs->get_errormsg(), @out)
+    if ($obs->error());
+
+  return("", @array);
+}
+
+####################
+
+sub Add_CSVfile2VFobject {
+  my ($csvf, $vf) = @_;
+
+  my $dobs = $vf->get_dummy_observation();
+  return("Problem obtaining dummy observation from ViperFile: " . $vf->get_errormsg())
+    if ($vf->error());
+
+  open CSV, "<$csvf"
+    or return("Problem opening CSV file: $!\n");
+
+  my $csv = Text::CSV->new();
+
+  # Process CSV file line per line
+  my @headers = ();
+  while (my $line = <CSV>) {
+    my @columns = ();
+    if ($csv->parse($line)) {
+      @columns = $csv->fields();
+    } else {
+      return("Failed to parse CSV line: " . $csv->error_input);
+    }
+
+    if (scalar @headers == 0) { # extract the CSV headers
+      return("When checking the CSV header: " . $dobs->get_errormsg())
+        if (! $dobs->check_csv_keys(@columns));
+      @headers = @columns;
+      next;
+    }
+
+    # Add the values to a cloned observation, then to the ViperFile
+    return("Did not find the same number of information on line as expected (" . scalar @columns . " vs " . scalar @headers . ")")
+      if (scalar @columns != scalar @headers);
+    
+    my $obs = $dobs->clone();
+    return("Problem cloning the dummy observation: " . $dobs->get_errormsg())
+      if ($dobs->error());
+    
+    return("Problem modifying cloned observation to use CSV information: " . $obs->get_errormsg())
+      if (! $obs->mod_from_csv_array(\@headers, @columns));
+    
+    return("Problem re-validating modified observation: " . $obs->get_errormsg())
+      if (! $obs->redo_validation());
+
+    return("Problem adding modified clone CSV adapted observation to ViperFile: " . $vf->get_errormsg())
+      if (! $vf->add_observation($obs));
+  }
+  close CSV;
+
+  return("");
 }
 
 ########################################
