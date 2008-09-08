@@ -1035,10 +1035,8 @@ sub concat_dir_file_ext {
 
   $out .= $file;
 
-  if (! &is_blank($ext)) {
-    $ext =~ s%^\.%%;
-    $out .= ".$ext" 
-  }
+  $ext =~ s%^\.%%;
+  $out .= ".$ext" if (! &is_blank($ext));
 
   return($out);
 }
