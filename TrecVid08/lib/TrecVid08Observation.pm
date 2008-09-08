@@ -44,6 +44,19 @@ my %hash_objects_attributes_types_dynamic = ();
 my $dummy_et = "Fake_Event-Merger_Dummy_Type";
 my $key_tc = "";
 my $char_tcs = "";
+my @ok_csv_keys = 
+  (
+   # Required
+   "EventType", "Framespan", # 0,1
+   # Optional
+   "DetectionScore", "DetectionDecision", "Filename", "XMLFile", # 2,3,4,5
+   "BoundingBox", "Point", "EventSubType", "ID", "isGTF", # 6,7,8,9,10
+   "Comment", "FileFramespan", "OtherFileInformation", # 11,12,13
+   # Used by TV08Stats
+   "Duration", "Beginning", "End", "MiddlePoint", # 14,15,16,17
+  );
+my @required_csv_keys = @ok_csv_keys[0,1];
+
 
 ## Constructor
 sub new {
@@ -70,6 +83,7 @@ sub new {
      xmlfilename => "", # The xml file that described this observation
      framespan   => undef,      # ViperFramespan object
      fs_file     => undef, # 'sourcefile filename' framespan (important for overlap computation and shift operations)
+     fps         => -1, # Gets defined when framespan or fs_file is defined
      isgtf       => -1,
      ofi         => undef,      # hash ref / Other File Information
      comment     => "", # Text that will be added to the XML file when rewritting it (used by merger)
@@ -367,6 +381,57 @@ sub get_xmlfilename {
   return($self->{xmlfilename});
 }
 
+########## 'fps'
+
+sub set_fps {
+  my ($self, $fps) = @_;
+
+  return(0) if ($self->error());
+
+  # use ViperFramespan to create the accepted value
+  my $fs_tmp = new ViperFramespan();
+  if (! $fs_tmp->set_fps($fps)) {
+    $self->_set_errormsg("While setting the file fps ($fps) error (" . $fs_tmp->get_errormsg() . ")");
+    return(0);
+  }
+  # And get it back
+  $fps = $fs_tmp->get_fps();
+  if ($fs_tmp->error()) {
+    $self->_set_errormsg("While obtaining back the file fps ($fps) error (" . $fs_tmp->get_errormsg() . ")");
+    return(0);
+  }
+
+  $self->{fps} = $fps;
+  return(1);
+}
+
+#####
+
+sub is_fps_set {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(0) if ($self->{fps} == -1);
+
+  return(1);
+}
+
+#####
+
+sub get_fps {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  if (! $self->is_fps_set()) {
+    $self->_set_errormsg("\'fps\' is not set");
+    return(0);
+  }
+
+  return($self->{fps});
+}
+
 ########## 'framespan'
 
 sub set_framespan {
@@ -374,11 +439,27 @@ sub set_framespan {
 
   return(0) if ($self->error());
 
-  if ( (! defined $fs_fs) || (! $fs_fs->is_value_set() ) || (! $fs_fs->is_fps_set() ) ) {
+  if ( (! defined $fs_fs) || (! $fs_fs->is_value_set() ) ) {
     $self->_set_errormsg("Invalid \'framespan\'. ");
     return(0);
   }
-  
+  if (! $fs_fs->is_fps_set() ) {
+    $self->_set_errormsg("\'fps\' not set in \'framespan\'. ");
+    return(0);
+  }
+
+  my $ffps = $fs_fs->get_fps();
+  if ($self->is_fps_set()) {
+    my $sfps = $self->get_fps();
+    if ($sfps != $ffps) {
+      $self->_set_errormsg("\'fps\' value from framespan ($ffps) differs from already set value ($sfps)");
+      return(0);
+    }
+  } else {
+    $self->set_fps($ffps);
+  }
+  return(0) if ($self->error());
+
   $self->{framespan} = $fs_fs;
   return(1);
 }
@@ -419,10 +500,25 @@ sub set_fs_file {
 
   return(0) if ($self->error());
 
-  if ( (! defined $fs_file) || (! $fs_file->is_value_set() ) || (! $fs_file->is_fps_set() ) ) {
+  if ( (! defined $fs_file) || (! $fs_file->is_value_set() ) ) {
     $self->_set_errormsg("Invalid \'fs_file\'. ");
     return(0);
   }
+  if (! $fs_file->is_fps_set() ) {
+    $self->_set_errormsg("\'fps\' not set in \'fs_file\'. ");
+    return(0);
+  }
+  my $ffps = $fs_file->get_fps();
+  if ($self->is_fps_set()) {
+    my $sfps = $self->get_fps();
+    if ($sfps != $ffps) {
+      $self->_set_errormsg("\'fps\' value from framespan ($ffps) differs from already set value ($sfps)");
+      return(0);
+    }
+  } else {
+    $self->set_fps($ffps);
+  }
+  return(0) if ($self->error());
 
   $self->{fs_file} = $fs_file;
   return(1);
@@ -1187,6 +1283,18 @@ sub validate {
 
   $self->{validated} = 1;
   return(1);
+}
+
+#####
+
+sub redo_validation {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{validated} = 0;
+
+  return($self->validate());
 }
 
 ####################
@@ -2016,6 +2124,8 @@ sub clone {
   $clone->set_filename($self->get_filename());
   $clone->set_xmlfilename($self->get_xmlfilename());
 
+  $clone->set_fps($self->get_fps()) if ($self->is_fps_set());
+
   my $fs_tmp = $self->get_framespan();
   $clone->set_framespan($fs_tmp->clone());
   $fs_tmp = $self->get_fs_file();
@@ -2130,6 +2240,332 @@ sub get_ofi_VF_empty_order {
   push @out, $self->get_ofi_vframesize();
 
   return(@out);
+}
+
+######################################## CSV Helpers
+
+sub get_ok_csv_keys       { return(@ok_csv_keys); }
+sub get_required_csv_keys { return(@required_csv_keys); }
+
+##
+
+sub get_EventType_csv_key            { return $ok_csv_keys[0]; }
+sub get_Framespan_csv_key            { return $ok_csv_keys[1]; }
+sub get_DetectionScore_csv_key       { return $ok_csv_keys[2]; }
+sub get_DetectionDecision_csv_key    { return $ok_csv_keys[3]; }
+sub get_Filename_csv_key             { return $ok_csv_keys[4]; }
+sub get_XMLFile_csv_key              { return $ok_csv_keys[5]; }
+sub get_BoundingBox_csv_key          { return $ok_csv_keys[6]; }
+sub get_Point_csv_key                { return $ok_csv_keys[7]; }
+sub get_EventSubType_csv_key         { return $ok_csv_keys[8]; }
+sub get_ID_csv_key                   { return $ok_csv_keys[9]; }
+sub get_isGTF_csv_key                { return $ok_csv_keys[10]; }
+sub get_Comment_csv_key              { return $ok_csv_keys[11]; }
+sub get_FileFramespan_csv_key        { return $ok_csv_keys[12]; }
+sub get_OtherFileInformation_csv_key { return $ok_csv_keys[13]; }
+sub get_Duration_csv_key             { return $ok_csv_keys[14]; }
+sub get_Beginning_csv_key            { return $ok_csv_keys[15]; }
+sub get_End_csv_key                  { return $ok_csv_keys[16]; }
+sub get_MiddlePoint_csv_key          { return $ok_csv_keys[17]; }
+
+#####
+
+sub CF_check_csv_keys {
+  my @keys = @_;
+
+  my ($rla, $rlb) = MMisc::confirm_first_array_values(\@keys, @ok_csv_keys);
+  return("Found unauthorized keys for CSV work: " . join(" ", @$rlb))
+    if (scalar @$rlb > 0);
+
+  my ($rla, $rlb) = MMisc::confirm_first_array_values(\@required_csv_keys, @keys);
+  return("Not all required keys (" . join(" ", @required_csv_keys) . ") could be found (only seen: " . join(" ", @$rla) .")")
+    if (scalar @$rla != scalar @required_csv_keys);
+
+  return("");
+}
+
+##### 
+
+sub check_csv_keys {
+  my ($self, @keys) = @_;
+
+  return(0) if ($self->error());
+
+  my $tmp = &CF_check_csv_keys(@keys);
+
+  if (! MMisc::is_blank($tmp)) {
+    $self->_set_errormsg($tmp);
+    return(0);
+  }
+
+  return(1);
+}
+
+#####
+
+sub mod_from_csv_array {
+  my ($self, $rh, @values) = @_;
+  
+  return(0) if ($self->error());
+
+  my @headers = @$rh;
+  if (scalar @headers == 0) {
+    $self->_set_errormsg("No key requested");
+    return(0);
+  }
+  return(0) if (! $self->check_csv_keys(@headers));
+
+  if (scalar @headers != scalar @values) {
+    $self->_set_errormsg("Not the same number of values in the header and in the given array");
+    return(0);
+  }
+  
+  for (my $i = 0; $i < scalar @headers; $i++) {
+    my $task = $headers[$i];
+    my $value = $values[$i];
+    return(0) if (! $self->_csv_set_XXX($task, $value));
+  }
+
+  return(1);
+}
+
+##########
+
+sub _csv_set_XXX {
+  my ($self, $task, $value) = @_;
+
+  if (! grep(m%^$task$%, @ok_csv_keys)) {
+    $self->_set_errormsg("Key not found ($task)");
+    return(0);
+  }
+
+  if ($task eq $self->get_EventType_csv_key()) {
+    return($self->set_eventtype($value));
+  } elsif ($task eq $self->get_EventSubType_csv_key()) {
+    return(1) if (MMisc::is_blank($value));
+    return($self->set_eventsubtype($value));
+  } elsif ($task eq $self->get_Filename_csv_key()) {
+    return($self->set_filename($value));
+  } elsif ($task eq $self->get_XMLFile_csv_key()) {
+    return($self->set_xmlfilename($value));
+  } elsif ($task eq $self->get_DetectionScore_csv_key()) {
+    return(1) if (MMisc::is_blank($value));
+    return($self->set_DetectionScore($value));
+  } elsif ($task eq $self->get_DetectionDecision_csv_key()) {
+    return(1) if (MMisc::is_blank($value));
+    return($self->set_DetectionDecision($value));
+  } elsif ($task eq $self->get_isGTF_csv_key()) {
+    return($self->set_isgtf($value));
+  } elsif ($task eq $self->get_ID_csv_key()) {
+    return($self->set_id($value));
+  } elsif ($task eq $self->get_Comment_csv_key()) {
+    $self->clear_comment();
+    return($self->addto_comment($value));
+  } elsif (grep(m%^$task$%, ($self->get_Duration_csv_key(), $self->get_Beginning_csv_key(), $self->get_End_csv_key(), $self->get_MiddlePoint_csv_key()))) {
+    return(1); # discard those entirely
+  } elsif ($task eq $self->get_Framespan_csv_key()) {
+    return($self->_csvset_aframespan("frame", $value));
+  } elsif ($task eq $self->get_FileFramespan_csv_key()) {
+    return($self->_csvset_aframespan("file", $value));
+  } elsif ($task eq $self->get_BoundingBox_csv_key()) {
+    return($self->_csvset_BoundingBox($value));
+  } elsif ($task eq $self->get_Point_csv_key()) {
+    return($self->_csvset_Point($value));
+  } elsif ($task eq $self->get_OtherFileInformation_csv_key()) {
+    return($self->_csvset_ofi($value));
+  }
+
+  # No proper path ?
+  $self->_set_errormsg("Unknow request ($task)");
+  return(0);
+}
+
+#####
+
+sub _csvset_aframespan {
+  my ($self, $xxx, $value) = @_;
+
+  if (! $self->is_fps_set()) {
+    $self->_set_errormsg("Can not set a framespan without a fps value");
+    return(0);
+  }
+
+  my $fps = $self->get_fps();
+
+  my $fs_tmp = new ViperFramespan($value);
+  $fs_tmp->set_fps($fps);
+  if ($fs_tmp->error()) {
+    $self->_set_errormsg("Problem creating a ViperFramespan: " . $fs_tmp->get_errormsg());
+    return(0);
+  }
+
+  if ($xxx eq "frame") {
+    return($self->set_framespan($fs_tmp));
+  } elsif ($xxx eq "file") {
+    return($self->set_fs_file($fs_tmp));
+  }
+
+  # All the proper path were not used ...
+  $self->_set_errormsg("Unknown mode ($xxx) for setting a framespan");
+  return(0);
+}
+  
+#####
+
+sub _csvset_BoundingBox {
+  # TODO
+  return(1);
+}
+
+#####
+
+sub _csvset_Point {
+  # TODO
+  return(1);
+}
+
+#####
+
+sub _csvset_ofi {
+  #TODO
+  return(1);
+}
+
+####################
+
+sub get_csv_array {
+  my ($self, @keys) = @_;
+
+  my @tmp = ();
+
+  return(@tmp) if ($self->error());
+
+  if (scalar @keys == 0) {
+    $self->_set_errormsg("No key requested");
+    return(@tmp);
+  }
+
+  return(@tmp) if (! $self->check_csv_keys(@keys));
+
+  my @out = ();
+  foreach my $key (@keys) {
+    my $txt = $self->_csv_get_XXX($key);
+    return(@tmp) if ($self->error());
+    push @out, $txt;
+  }
+
+  return(@tmp) if ($self->error());
+
+  if (scalar @out != scalar @keys) {
+    $self->_set_errormsg("No enough information extracted");
+    return(@tmp);
+  }
+
+  return(@out);
+}
+
+#####
+
+sub _csv_get_XXX {
+  my ($self, $key) = @_;
+
+  if (! grep(m%^$key$%, @ok_csv_keys)) {
+    $self->_set_errormsg("Key not found ($key)");
+    return(0);
+  }
+
+  if ($key eq $self->get_EventType_csv_key()) {
+    return($self->get_eventtype());
+  } elsif ($key eq $self->get_EventSubType_csv_key()) {
+    return("") if (! $self->is_eventsubtype_set());
+    return($self->get_eventsubtype());
+  } elsif ($key eq $self->get_Filename_csv_key()) {
+    return($self->get_filename());
+  } elsif ($key eq $self->get_XMLFile_csv_key()) {
+    return($self->get_xmlfilename());
+  } elsif ($key eq $self->get_DetectionScore_csv_key()) {
+    return("") if ($self->get_isgtf());
+    return($self->get_DetectionScore());
+  } elsif ($key eq $self->get_DetectionDecision_csv_key()) {
+    return("") if ($self->get_isgtf());
+    return($self->get_DetectionDecision());
+  } elsif ($key eq $self->get_isGTF_csv_key()) {
+    return($self->get_isgtf());
+  } elsif ($key eq $self->get_ID_csv_key()) {
+    return($self->get_id());
+  } elsif ($key eq $self->get_Comment_csv_key()) {
+    return("") if (! $self->is_comment_set());
+    return($self->get_comment());
+  } elsif ($key eq $self->get_Duration_csv_key()) {
+    return($self->Dur());
+  } elsif ($key eq $self->get_Beginning_csv_key()) {
+    return($self->Beg());
+  } elsif ($key eq $self->get_End_csv_key()) {
+    return($self->End());
+  } elsif ($key eq $self->get_MiddlePoint_csv_key()) {
+    return($self->Mid());
+  } elsif ($key eq $self->get_Framespan_csv_key()) {
+    return($self->_csvget_aframespan("frame"));
+  } elsif ($key eq $self->get_FileFramespan_csv_key()) {
+    return($self->_csvget_aframespan("file"));
+  } elsif ($key eq $self->get_BoundingBox_csv_key()) {
+    return($self->_csvget_BoundingBox());
+  } elsif ($key eq $self->get_Point_csv_key()) {
+    return($self->_csvget_Point());
+  } elsif ($key eq $self->get_OtherFileInformation_csv_key()) {
+    return($self->_csvget_ofi());
+  }
+
+  $self->_set_errormsg("Unknow request");
+}
+
+#####
+
+sub _csvget_aframespan {
+  my ($self, $xxx) = @_;
+
+  my $fs_tmp = undef;
+
+  if ($xxx eq "frame") {
+    $fs_tmp = $self->get_framespan();
+  } elsif ($xxx eq "file") {
+    $fs_tmp = $self->get_fs_file();
+  }
+
+  return("") if ($self->error());
+  if (! defined $fs_tmp) {
+    $self->_set_errormsg("Could not obtain framespan ($xxx)");
+    return("");
+  }
+
+  my $txt = $fs_tmp->get_value();
+  if ($fs_tmp->error()) {
+    $self->_set_errormsg("Could not obtain framespan ($xxx)'s value: " . $fs_tmp->get_errormsg());
+    return("");
+  }
+
+  return($txt);
+}
+  
+#####
+
+sub _csvget_BoundingBox {
+  # TODO
+  return("");
+}
+
+#####
+
+sub _csvget_Point {
+  # TODO
+  return("");
+}
+
+#####
+
+sub _csvget_ofi {
+  #TODO
+  return("");
 }
 
 ############################################################
