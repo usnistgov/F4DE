@@ -75,6 +75,13 @@ unless (eval "use TrecVid08ViperFile; 1") {
   $have_everything = 0;
 }
 
+# TrecVid08Observation (part of this tool)
+unless (eval "use TrecVid08Observation; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"TrecVid08Observation\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
 # TrecVid08HelperFunctions (part of this tool)
 unless (eval "use TrecVid08HelperFunctions; 1") {
   my $pe = &eo2pe($@);
@@ -119,6 +126,9 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 my $ecfobj = new TrecVid08ECF();
 my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
 
+my @ok_csv_keys = TrecVid08Observation::get_ok_csv_keys();
+my @required_csv_keys = TrecVid08Observation::get_required_csv_keys();
+
 ########################################
 # Options processing
 
@@ -152,9 +162,11 @@ my $ecffile = "";
 my @xtra = ();
 my $xtra_tc = 0;
 my @toremove = ();
+my @docsv = ();
+my $inscsv = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A C  F           R T  WX  a cdefgh   lm  p r   vwx    #
+# Used: A CD F           R T  WX  a cdefghi   lm  p r   vwx    #
 
 my %opt = ();
 GetOptions
@@ -181,6 +193,8 @@ GetOptions
    'addXtraAttribute=s' => \@xtra,
    'AddXtraTrackingComment' => \$xtra_tc,
    'Remove=s'        => \@toremove,
+   'DumpCSV=s'       => \@docsv,
+   'insertCSV=s'     => \$inscsv,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -323,6 +337,22 @@ if (scalar @toremove > 0) {
   }
 }
 
+if (scalar @docsv > 0) {
+  MMisc::error_quit("Can not \'DumpCSV\' unless \'write\' is selected")
+    if ($writeback == -1);
+  my @tmp = ();
+  foreach my $k (@docsv) {
+    push @tmp, split(m%\,%, $k);
+  }
+  @docsv = @tmp;
+  my $txt = TrecVid08Observation::CF_check_csv_keys(@docsv);
+  MMisc::error_quit("Problem with \'DumpCSV\' keys: $txt")
+    if (! MMisc::is_blank($txt));
+}
+
+MMisc::error_quit("Can not use \'insertCSV\' unless \'write\' is used")
+  if (($writeback == -1) && (! MMisc::is_blank($inscsv)));
+
 my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
 MMisc::error_quit("\'fps\' must set in order to use \'ecf\'")
     if (($useECF) && (! defined $fps));
@@ -356,6 +386,13 @@ while ($tmp = shift @ARGV) {
     my $sumtxt = $object->get_summary($dosummary);
     MMisc::error_quit("Problem obtaining summary (" . $object->get_errormsg() . ")") if ($object->error());
     print "[Pre Modifications]\n$sumtxt";
+  }
+
+  # 'insertCSV'
+  if (! MMisc::is_blank($inscsv)) {
+    my $err = TrecVid08HelperFunctions::Add_CSVfile2VFobject($inscsv, $object);
+    MMisc::error_quit("Problem while trying to \'insertCSV\': $err")
+      if (! MMisc::is_blank($err));
   }
 
   # 'xtra' Tracking Comment
@@ -480,9 +517,8 @@ while ($tmp = shift @ARGV) {
     my $fname = "";
     
     if ($writeback ne "") {
-      my $tmp2 = $tmp;
-      $tmp2 =~ s%^.+\/([^\/]+)$%$1%;
-      $fname = "$writeback$tmp2";
+      my ($err, $td, $tf, $te) = MMisc::split_dir_file_ext($tmp);
+      $fname = MMisc::concat_dir_file_ext($writeback, $tf, $te);
     }
     MMisc::error_quit("Problem while trying to \'write\'")
       if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
@@ -493,6 +529,21 @@ while ($tmp = shift @ARGV) {
     }
   }
   
+  if (scalar @docsv > 0) {
+    my $fname = "";
+
+    if ($writeback ne "") {
+      my ($err, $td, $tf, $te) = MMisc::split_dir_file_ext($tmp);
+      $fname = MMisc::concat_dir_file_ext($writeback, $tf, "csv");
+    }
+
+    my ($err, $txt) = TrecVid08HelperFunctions::ViperFile2CSVtxt($nvf, @docsv);
+    MMisc::error_quit("Problem while trying to generate the CSV text: $err")
+      if (! MMisc::is_blank($err));
+    MMisc::error_quit("Problem while trying to \'DumpCSV\'")
+      if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** CSV representation:\n"));
+  }
+
   # Summary
   if ($dosummary) {
     my $sumtxt = $nvf->get_summary($dosummary);
@@ -791,10 +842,12 @@ sub set_usage {
   my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
   my $wmd = join(" ", @ok_md);
   my $rem = join(" ", @ok_remove);
+  my $ok_csvk = join(" ", @ok_csv_keys);
+  my $rq_csvk = join(" ", @required_csv_keys);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value] [--AddXtrTrackingComment] [--Remove type]]  [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value] [--AddXtrTrackingComment] [--Remove type] [--DumpCSV csvkeys] [--insertCSV file.csv]]  [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 
@@ -817,6 +870,8 @@ Will perform a semantic validation of the ViPER XML file(s) provided.
   --addXtraAttribute  Add a new attribute to each event observation in file. Muliple \'--addXtraAttribute\' can be used.
   --AddXtraTrackingComment Add an xtra attribute designed to help understand from where an Event Observation came from when performing an operation on it
   --Remove        Remove from the ViPER file one of the following: $rem
+  --DumpCSV       Dump a file containing the list of keys provided
+  --insertCSV     Insert the csv file to a re-written XML file. Keys are the same as the one in DumpCSV
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --ecf           Specify the ECF file to load
   --displaySummary  Display a file information summary (level shows information about event type seen, and is a value from 1 to 6)
@@ -827,6 +882,8 @@ Note:
 - Program will discard any xml comment(s).
 - List of recognized events: $ro
 - 'TrecVid08xsd' files are: $xsdfiles (and if the 'ecf' option is used, also: $ecf_xsdf)
+- Recognized CSV keys: $ok_csvk
+- Required CSV keys (for insertCSV): $rq_csvk
 EOF
     ;
 
