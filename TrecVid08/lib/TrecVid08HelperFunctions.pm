@@ -635,6 +635,8 @@ sub Add_CSVfile2VFobject {
     or return("Problem opening CSV file: $!\n");
 
   my $csv = Text::CSV->new();
+  return("Problem creating the CSV object (" . Text::CSV->error_diag() . ")")
+    if (! defined $csv);
 
   # Process CSV file line per line
   my @headers = ();
@@ -643,7 +645,7 @@ sub Add_CSVfile2VFobject {
     if ($csv->parse($line)) {
       @columns = $csv->fields();
     } else {
-      return("Failed to parse CSV line: " . $csv->error_input);
+      return("Failed to parse CSV line: " . $csv->error_input());
     }
 
     if (scalar @headers == 0) { # extract the CSV headers
