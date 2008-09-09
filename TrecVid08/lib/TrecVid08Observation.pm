@@ -21,11 +21,14 @@ package TrecVid08Observation;
 # $Id$
 
 use strict;
+
 use ViperFramespan;
 use TrecVid08ViperFile;
 
 use MErrorH;
 use MMisc;
+
+use Text::CSV;
 
 my $version     = "0.1b";
 
@@ -44,6 +47,7 @@ my %hash_objects_attributes_types_dynamic = ();
 my $dummy_et = "Fake_Event-Merger_Dummy_Type";
 my $key_tc = "";
 my $char_tcs = "";
+
 my @ok_csv_keys = 
   (
    # Required
@@ -54,6 +58,8 @@ my @ok_csv_keys =
    "Comment", "FileFramespan", "OtherFileInformation", # 11,12,13
    # Used by TV08Stats
    "Duration", "Beginning", "End", "MiddlePoint", # 14,15,16,17
+   # Xtra
+   "Xtra", # 18
   );
 my @required_csv_keys = @ok_csv_keys[0,1];
 
@@ -2267,6 +2273,22 @@ sub get_Duration_csv_key             { return $ok_csv_keys[14]; }
 sub get_Beginning_csv_key            { return $ok_csv_keys[15]; }
 sub get_End_csv_key                  { return $ok_csv_keys[16]; }
 sub get_MiddlePoint_csv_key          { return $ok_csv_keys[17]; }
+sub get_Xtra_csv_key                 { return $ok_csv_keys[18]; }
+
+#####
+
+sub __CF_new_Text_CSV {
+  my $csv = Text::CSV->new
+    (
+     {
+      always_quote       => 1,
+      binary             => 1,
+      quote_char         => '@',
+      escape_char        => '@',
+     }
+    );
+  return($csv);
+}
 
 #####
 
@@ -2334,11 +2356,6 @@ sub mod_from_csv_array {
 sub _csv_set_XXX {
   my ($self, $task, $value) = @_;
 
-  if (! grep(m%^$task$%, @ok_csv_keys)) {
-    $self->_set_errormsg("Key not found ($task)");
-    return(0);
-  }
-
   if ($task eq $self->get_EventType_csv_key()) {
     return($self->set_eventtype($value));
   } elsif ($task eq $self->get_EventSubType_csv_key()) {
@@ -2373,11 +2390,46 @@ sub _csv_set_XXX {
     return($self->_csvset_Point($value));
   } elsif ($task eq $self->get_OtherFileInformation_csv_key()) {
     return($self->_csvset_ofi($value));
+  } elsif ($task eq $self->get_Xtra_csv_key()) {
+    return(1) if (MMisc::is_blank($value));
+    return($self->_csvset_Xtra($value));
   }
 
   # No proper path ?
   $self->_set_errormsg("Unknow request ($task)");
   return(0);
+}
+
+#####
+
+sub _csvset_Xtra {
+  my ($self, $value) = @_;
+
+  my $csv = &__CF_new_Text_CSV();
+  if (! defined $csv) {
+    $self->_set_errormsg("Problem creating the CSV object (" . Text::CSV->error_diag() . ")");
+    return(0);
+  }
+
+  if (! $csv->parse($value)) {
+    $self->_set_errormsg("Problem extracting inlined-CSV line:" . csv->error_input());
+    return(0);
+  }
+
+  my @columns = $csv->fields();
+  if ((scalar @columns) % 2 != 0) {
+    $self->_set_errormsg("inlined-CSV does not contains an even number of elements");
+    return(0);
+  }
+
+  while (my $attr = shift @columns) {
+    my $v = shift @columns;
+
+    return(0)
+      if (! $self->set_xtra_attribute($attr, $v, 1));
+  }
+
+  return(1);
 }
 
 #####
@@ -2469,11 +2521,6 @@ sub get_csv_array {
 sub _csv_get_XXX {
   my ($self, $key) = @_;
 
-  if (! grep(m%^$key$%, @ok_csv_keys)) {
-    $self->_set_errormsg("Key not found ($key)");
-    return(0);
-  }
-
   if ($key eq $self->get_EventType_csv_key()) {
     return($self->get_eventtype());
   } elsif ($key eq $self->get_EventSubType_csv_key()) {
@@ -2514,9 +2561,43 @@ sub _csv_get_XXX {
     return($self->_csvget_Point());
   } elsif ($key eq $self->get_OtherFileInformation_csv_key()) {
     return($self->_csvget_ofi());
+  } elsif ($key eq $self->get_Xtra_csv_key()) {
+    return($self->_csvget_Xtra());
   }
 
   $self->_set_errormsg("Unknow request");
+}
+
+#####
+
+sub _csvget_Xtra {
+  my ($self) = @_;
+
+  my $txt = "";
+  return($txt) if (! $self->is_xtra_set());
+
+  my @todo = $self->list_all_xtra_attributes();
+  my @array = ();
+  foreach my $attr (sort @todo) {
+    my $v = $self->get_xtra_value($attr);
+    return($txt) if ($self->error());
+    push @array, $attr;
+    push @array, $v;
+  }
+
+  my $ch = &__CF_new_Text_CSV();
+  if (! defined $ch) {
+    $self->_set_errormsg("Problem creating the CSV object (" . Text::CSV->error_diag() . ")");
+    return($txt);
+  }
+
+  if (! $ch->combine(@array)) {
+    $self->_set_errormsg("Problem adding entries to CSV file: " . $ch->error_diag());
+    return($txt);
+  }
+
+  $txt = $ch->string();
+  return($txt);
 }
 
 #####
