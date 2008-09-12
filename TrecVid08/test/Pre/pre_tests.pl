@@ -38,7 +38,8 @@ if ($ms > 0) {
   print "  Found all packages\n\n";
 }
 print "[Other Perl Required Packages]\n";
-$ms = &_chkpkg("Getopt::Long", "Data::Dumper", "File::Temp", "Cwd");
+$ms = &_chkpkg("Getopt::Long", "Data::Dumper", "File::Temp",
+               "Cwd", "Text::CSV");
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the program, please install the missing ones\n\n";
   $err++;
@@ -70,7 +71,7 @@ if ($xobj->error()) {
   $err++;
 } else {
   $xmllint = $xobj->get_xmllint();
-  print "  xmllint ($xmllint) is ok and recent enough\n";
+  print "  xmllint ($xmllint) is valid and its version is recent enough\n";
 }
 
 ####################
