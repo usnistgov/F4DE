@@ -52,7 +52,8 @@ sub _is_magic {
 #####
 
 sub _run_core {
-  my ($cmd, $cmp2resfile, $mode) = @_;
+  my ($cmd, $cmp2resfile, $mode, $erv) = 
+    MMisc::iuav(\@_, "", "", "", 0);
 
   my $ofile = "";
   if (&_is_magic($mode)) {
@@ -66,7 +67,8 @@ sub _run_core {
 
   my $tst = join("\n  ## ", @toshow);
 
-  return(0, $ofile, $tst) if ($retcode != 0);
+  return(0, $ofile, $tst) if (($retcode >> 8) != $erv);
+  # 'perldoc -f system': to get the actual exit value, shift right by eight
 
   return(1, $ofile, $tst) if (&_is_magic($mode));
 
@@ -114,7 +116,8 @@ sub check_skip {
 #####
 
 sub run_simpletest {
-  my ($testname, $subtype, $cmd, $cmp2resfile, $mode) = @_;
+  my ($testname, $subtype, $cmd, $cmp2resfile, $mode, $erv) = 
+    MMisc::iuav(\@_, "", "", "", "", "", 0);
 
   &print_name($testname, $subtype);
 
@@ -123,7 +126,7 @@ sub run_simpletest {
     return(1);
   }
 
-  my ($rv, $ofile, $toshow) = &_run_core($cmd, $cmp2resfile, $mode);
+  my ($rv, $ofile, $toshow) = &_run_core($cmd, $cmp2resfile, $mode, $erv);
 
   if (&_is_magic($mode)) {
     print "makecheckfile ... ";
