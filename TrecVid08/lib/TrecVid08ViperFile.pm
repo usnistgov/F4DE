@@ -418,6 +418,8 @@ sub get_HFramesize_fileattrkey { return($key_fat_hframesize); }
 sub get_VFramesize_fileattrkey { return($key_fat_vframesize); }
 sub get_Framerate_fileattrkey { return($key_fat_framerate); }
 
+sub _get_hash_file_attributes_types { return(%hash_file_attributes_types); }
+
 ########## 'xmllint'
 
 sub set_xmllint {
