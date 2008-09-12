@@ -557,7 +557,12 @@ while ($tmp = shift @ARGV) {
   
   $ndone++;
 }
-MMisc::ok_quit("All files processed (Validated: $ndone | Total: $ntodo)\n");
+print "All files processed (Validated: $ndone | Total: $ntodo)\n\n";
+
+MMisc::error_exit()
+  if ($ndone != $ntodo);
+
+MMisc::ok_exit();
 
 ########## END
 
@@ -620,7 +625,8 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--ForceFilename> I<filename>] [B<--pruneEvents>]>
   S<[B<--removeSubEventtypes>]>
   S<[B<--addXtraAttribute> I<name:value>] [B<--AddXtraTrackingComment>]>
-  S<[B<--Remove> I<type>]]>
+  S<[B<--Remove> I<type>]>
+  S<[B<--DumpCSV> I<csvkeys>]  [B<--insertCSV> I<file.csv>]]>
   S<[B<--fps> I<fps>] [B<--ecf> I<ecffile>]>
   S<[B<--displaySummary> I<level>]>
   I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
@@ -703,6 +709,13 @@ Also, when trying to reproduce a file, it is possible to ask the program to find
 Will crop all input ViPER files to the specified range. Only valid when used with the 'write' option.
 Note that cropping consists of trimming all seen events to the selected range and then shifting the file to start at 1 again.
 
+=item B<--DumpCSV> I<csvkeys>
+
+Will dump into a I<Comma Separated Value> (CSV) file every I<Event> I<Observation> listed in the source xml file(s) in a human readable form.
+B<--fps> must be set to use this option.
+Multiple B<DumpCSV> entries can be used or I<csvkeys> can be comma separated. 
+The list of authorized and required I<csvkeys> can be obtained by using B<--help>.
+
 =item B<--displaySummary> [I<level>]
 
 Display a file information summary.
@@ -730,6 +743,12 @@ Specify that the file to validate is a Reference file (also known as a Ground Tr
 
 Display the usage page for this program. Also display some default values and information.
 
+=item B<--insertCSV> I<file.csv>
+
+Will insert into the output XML file, every I<Event> I<Observation> listed in the I<file.csv>.
+B<--fps> must be set to use this option.
+The list of authorized and required I<csvkeys> can be obtained by using B<--help>.
+
 =item B<--limitto> I<event1>[,I<event2>[I<,...>]]
 
 Used with B<--write> or B<--XMLbase>, only add the provided list of events to output files.
@@ -747,7 +766,11 @@ For each validated event that is re-written, only add to this file's config sect
 
 =item B<--Remove> I<type>
 
-Remove one of the following from output ViPER file:
+Remove information from output ViPER file.
+
+Note that it removes data just before the file is rewritten to disk, and therefore data added with the such of B<--insertCSV> will be removed if I<AllEvents> is selected.
+
+Removes one of the following:
 
 =over 
 
@@ -883,7 +906,7 @@ Note:
 - List of recognized events: $ro
 - 'TrecVid08xsd' files are: $xsdfiles (and if the 'ecf' option is used, also: $ecf_xsdf)
 - Recognized CSV keys: $ok_csvk
-- Required CSV keys (for insertCSV): $rq_csvk
+- Required CSV keys: $rq_csvk
 EOF
     ;
 
