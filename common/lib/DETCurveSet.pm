@@ -209,9 +209,11 @@ sub getDETList(){
 sub _PN(){
   my ($fmt, $value) = @_;
   if (! defined($value)) {
-    "NA";
+    return("NA");
+  } elsif ($value !~ m%^[\-\d\.]+%) {
+    return($value);
   } else {
-    sprintf($fmt, $value);
+    return(sprintf($fmt, $value));
   }
 }
 
