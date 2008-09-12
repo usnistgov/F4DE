@@ -21,7 +21,7 @@ $testr += &do_simple_test($tn, "(Base XML Generation)", "$validator -X", "res_$t
 
 ##
 $tn = "test1";
-$testr += &do_simple_test($tn, "(Not a Viper File)", "$validator TV08ViperValidator_tester.pl", "res_${tn}.txt");
+$testr += &do_simple_test($tn, "(Not a Viper File)", "$validator TV08ViperValidator_tester.pl", "res_${tn}.txt", 1);
 
 ##
 $tn = "test2";
@@ -29,7 +29,7 @@ $testr += &do_simple_test($tn, "(GTF files check)", "$validator ../common/test1-
 
 ##
 $tn = "test3";
-$testr += &do_simple_test($tn, "(SYS file check)", "$validator ../common/test1-1fa-sys.xml ../common/test1-1md-sys.xml ../common/test1-same-sys.xml ../common/test2-1md_1fa-sys.xml ../common/test2-same-sys.xml -w", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(SYS files check)", "$validator ../common/test1-1fa-sys.xml ../common/test1-1md-sys.xml ../common/test1-same-sys.xml ../common/test2-1md_1fa-sys.xml ../common/test2-same-sys.xml -w", "res_$tn.txt");
 
 ##
 $tn = "test4";
@@ -78,18 +78,19 @@ $testr += &do_simple_test($tn, "(ForceFilename)", "$validator ../common/test1-1f
 
 ##
 $tn = "test10a";
-$testr += &do_simple_test($tn, "(SYS: displaySummary)", "$validator ../common/test1-1fa-sys.xml ../common/test2-1md_1fa-sys.xml ../common/test5-subEventtypes-sys.xml -d 3", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(displaySummary [SYS])", "$validator ../common/test1-1fa-sys.xml ../common/test2-1md_1fa-sys.xml ../common/test5-subEventtypes-sys.xml -d 3", "res_$tn.txt");
 
 $tn = "test10b";
-$testr += &do_simple_test($tn, "(REF: displaySummary)", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -d 3", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(displaySummary [REF])", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -d 3", "res_$tn.txt");
 
 ##
 $tn = "test11a";
-$testr += &do_simple_test($tn, "(REF: ECF)", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(ECF [REF])", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6", "res_$tn.txt");
 
 $tn = "test11b";
-$testr += &do_simple_test($tn, "(REF: ECF + ChangeType + Crop)", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6 -C word -w -p -c 20:1080", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(ECF + ChangeType + Crop [REF])", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6 -C word -w -p -c 20:1080", "res_$tn.txt");
 
+##
 $tn = "test12a";
 $testr += &do_simple_test($tn, "(addXtraAttribute)", "$validator ../common/test1-1md-sys.xml -a addedattr:testvalue -a another_addedattr:value11 -w -p", "res_$tn.txt");
 
@@ -109,6 +110,13 @@ $testr += &do_simple_test($tn, "(Remove XtraAttributes)", "$validator ../common/
 $tn = "test13c";
 $testr += &do_simple_test($tn, "(Remove AllEvents)", "$validator ../common/test6-Xtra-sys.xml -w -p -R AllEvents", "res_$tn.txt");
 
+##
+$tn = "test14a";
+$testr += &do_simple_test($tn, "(DumpCSV)", "$validator ../common/test6-Xtra-sys.xml -w -p -f NTSC -D EventType,Filename,XMLFile,EventSubType,ID,isGTF,DetectionScore,DetectionDecision,Framespan,FileFramespan,Xtra,Comment,BoundingBox,Point,OtherFileInformation,Duration,Beginning,End,MiddlePoint", "res_$tn.txt");
+
+$tn = "test14b";
+$testr += &do_simple_test($tn, "(insertCSV)", "$validator ../common/test7-empty_gtf.xml -w -p -f NTSC -i ../common/test7-population.csv", "res_$tn.txt");
+
 ##########
 
 if ($testr == $totest) {
@@ -122,11 +130,12 @@ die("You should never see this :)");
 ##########
 
 sub do_simple_test {
-  my ($testname, $subtype, $command, $res) = @_;
+  my ($testname, $subtype, $command, $res, $rev) = 
+    MMisc::iuav(\@_, "", "", "", "", 0);
 
   $totest++;
 
-  return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
+  return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev));
 }
 
 #####
