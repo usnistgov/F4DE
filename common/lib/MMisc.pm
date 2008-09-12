@@ -569,7 +569,7 @@ sub mem_gzip {
   return(undef) if (&is_blank($tozip));
 
   my $filename = &get_tmpfilename();
-  open(FH, " | /usr/bin/gzip > $filename")
+  open(FH, " | gzip > $filename")
     or return(undef);
   print FH $tozip;
   close FH;
@@ -602,7 +602,7 @@ sub file_gunzip {
   return(undef) if (! &is_file_r($in));
 
   my $unzip = "";
-  open(FH, "/usr/bin/gzip -dc $in |")
+  open(FH, "gzip -dc $in |")
     or return(undef);
   while (my $line = <FH>) { 
     $unzip .= $line;
@@ -680,16 +680,28 @@ sub warn_print {
 
 ##########
 
+sub error_exit {
+  exit(1);
+}
+
+#####
+
 sub error_quit {
   print("[ERROR] ", join(" ", @_), "\n");
-  exit(1);
+  &error_exit();
 }
 
 ##########
 
+sub ok_exit {
+  exit(0);
+}
+
+#####
+
 sub ok_quit {
   print(join(" ", @_), "\n");
-  exit(0);
+  &ok_exit();
 }
 
 ####################
