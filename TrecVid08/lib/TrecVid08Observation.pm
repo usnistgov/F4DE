@@ -44,7 +44,12 @@ my @full_ok_events = ();
 my @ok_subevents = ();
 my %hasharray_inline_attributes = ();
 my %hash_objects_attributes_types_dynamic = ();
+my @array_file_attributes_keys = ();
 my $dummy_et = "Fake_Event-Merger_Dummy_Type";
+
+my $attr_framespan_key = "ViperFramespan";
+my $attr_content_key   = "Content";
+
 my $key_tc = "";
 my $char_tcs = "";
 
@@ -117,6 +122,8 @@ sub _get_TrecVid08ViperFile_infos {
   @ok_subevents = $dummy->get_full_subevents_list();
   %hasharray_inline_attributes = $dummy->_get_hasharray_inline_attributes();
   %hash_objects_attributes_types_dynamic = $dummy->_get_hash_objects_attributes_types_dynamic();
+  my %tmp = $dummy->_get_hash_file_attributes_types();
+  @array_file_attributes_keys = keys %tmp;
   $char_tcs = $dummy->get_char_tc_separator();
   $key_tc = $dummy->get_key_xtra_trackingcomment();
   return($dummy->get_errormsg());
@@ -609,6 +616,14 @@ sub set_ofi {
     return(0);
   }
 
+  foreach my $key (@array_file_attributes_keys) {
+    if (! exists $entries{$key}) {
+      $self->_set_errormsg("One of the \'ofi\' \'s required key ($key) is missing");
+      return(0);
+    }
+  }
+
+
   $self->{ofi} = \%entries;
   return(1);
 }
@@ -800,7 +815,7 @@ sub set_BoundingBox {
 
 #####
 
-sub _is_BoundingBox_set {
+sub is_BoundingBox_set {
   my ($self) = @_;
 
   return(0) if ($self->error());
@@ -817,7 +832,7 @@ sub get_BoundingBox {
 
   return(0) if ($self->error());
 
-  if (! $self->_is_BoundingBox_set()) {
+  if (! $self->is_BoundingBox_set()) {
     $self->_set_errormsg("\'BoundingBox\' not set. ");
     return(0);
   }
@@ -847,7 +862,7 @@ sub set_Point {
 
 #####
 
-sub _is_Point_set {
+sub is_Point_set {
   my ($self) = @_;
 
   return(0) if ($self->error());
@@ -864,7 +879,7 @@ sub get_Point {
 
   return(0) if ($self->error());
 
-  if (! $self->_is_Point_set()) {
+  if (! $self->is_Point_set()) {
     $self->_set_errormsg("\'Point\' not set. ");
     return(0);
   }
@@ -893,17 +908,8 @@ sub _get_1keyhash_content {
 
 #####
 
-sub key_attr_framespan {
-  my ($self) = shift @_;
-  return("ViperFramspan");
-}
-
-#####
-
-sub key_attr_content {
-  my ($self) = shift @_;
-  return("Content");
-}
+sub key_attr_framespan { return($attr_framespan_key); }
+sub key_attr_content   { return($attr_content_key);   }
 
 #####
 
@@ -996,11 +1002,11 @@ sub set_selected {
       $self->_set_errormsg("In \'set_selected\', problem while extracting the one hash element for choice ($choice) ($errtxt). ");
       return(0);
     }
-    if (! exists $oneelt{$self->key_attr_content()}) {
+    if (! exists $oneelt{$attr_content_key}) {
       $self->_set_errormsg("WEIRD: In \'set_selected\' can not obtain the \'content\' key. ");
       return(0);
     }
-    my $rvalues = $oneelt{$self->key_attr_content()};
+    my $rvalues = $oneelt{$attr_content_key};
     my @values = @$rvalues;
     # For non dynamic 1 inline attribute, we only care about that one element
     if ($nattr == 1) {
@@ -1028,10 +1034,10 @@ sub get_selected {
     return(0, ()) if (! $self->_is_DetectionDecision_set());
     return(1, $self->get_DetectionDecision());
   } elsif ($choice =~ m%^$ok_choices[2]$%) { # 'BoundingBox'
-    return(0, ()) if (! $self->_is_BoundingBox_set());
+    return(0, ()) if (! $self->is_BoundingBox_set());
     return(1, $self->get_BoundingBox());
   } elsif ($choice =~ m%^$ok_choices[3]$%) { # 'Point'
-    return(0, ()) if (! $self->_is_Point_set());
+    return(0, ()) if (! $self->is_Point_set());
     return(1, $self->get_Point());
   } else {
     $self->_set_errormsg("WEIRD: Could not select a choice in \'get_selected\' ($choice). ");
@@ -2151,9 +2157,9 @@ sub clone {
   }
 
   $clone->set_BoundingBox(&__clone($self->get_BoundingBox())) 
-    if ($self->_is_BoundingBox_set());
+    if ($self->is_BoundingBox_set());
   $clone->set_Point(&__clone($self->get_Point())) 
-    if ($self->_is_Point_set());
+    if ($self->is_Point_set());
 
   if ($self->is_xtra_set()) {
     foreach my $xtra ($self->list_all_xtra_attributes()) {
@@ -2283,11 +2289,54 @@ sub __CF_new_Text_CSV {
      {
       always_quote       => 1,
       binary             => 1,
-      quote_char         => '@',
-      escape_char        => '@',
+      quote_char         => '~',
+      escape_char        => '~',
      }
     );
+
   return($csv);
+}
+
+#####
+
+sub _array2csvtxt {
+  my ($self, @array) = @_;
+
+  my $ch = &__CF_new_Text_CSV();
+  if (! defined $ch) {
+    $self->_set_errormsg("Problem creating the CSV object (" . Text::CSV->error_diag() . ")");
+    return("");
+  }
+
+  if (! $ch->combine(@array)) {
+    $self->_set_errormsg("Problem adding entries to CSV: " . $ch->error_diag());
+    return("");
+  }
+
+  my $txt = $ch->string();
+  return($txt);
+}
+
+#####
+
+sub _csvtxt2array {
+  my ($self, $value) = @_;
+
+  my @out = ();
+
+  my $ch = &__CF_new_Text_CSV();
+  if (! defined $ch) {
+    $self->_set_errormsg("Problem creating the CSV object (" . Text::CSV->error_diag() . ")");
+    return(@out);
+  }
+
+  if (! $ch->parse($value)) {
+    $self->_set_errormsg("Problem extracting inlined-CSV line:" . $ch->error_input());
+    return(@out);
+  }
+
+  my @columns = $ch->fields();
+  return(@columns);
 }
 
 #####
@@ -2385,9 +2434,9 @@ sub _csv_set_XXX {
   } elsif ($task eq $self->get_FileFramespan_csv_key()) {
     return($self->_csvset_aframespan("file", $value));
   } elsif ($task eq $self->get_BoundingBox_csv_key()) {
-    return($self->_csvset_BoundingBox($value));
+    return($self->_csvset_BB_Pt($task, $value));
   } elsif ($task eq $self->get_Point_csv_key()) {
-    return($self->_csvset_Point($value));
+    return($self->_csvset_BB_Pt($task, $value));
   } elsif ($task eq $self->get_OtherFileInformation_csv_key()) {
     return($self->_csvset_ofi($value));
   } elsif ($task eq $self->get_Xtra_csv_key()) {
@@ -2405,18 +2454,9 @@ sub _csv_set_XXX {
 sub _csvset_Xtra {
   my ($self, $value) = @_;
 
-  my $csv = &__CF_new_Text_CSV();
-  if (! defined $csv) {
-    $self->_set_errormsg("Problem creating the CSV object (" . Text::CSV->error_diag() . ")");
-    return(0);
-  }
+  return(1) if (MMisc::is_blank($value));
 
-  if (! $csv->parse($value)) {
-    $self->_set_errormsg("Problem extracting inlined-CSV line:" . csv->error_input());
-    return(0);
-  }
-
-  my @columns = $csv->fields();
+  my @columns = $self->_csvtxt2array($value);
   if ((scalar @columns) % 2 != 0) {
     $self->_set_errormsg("inlined-CSV does not contains an even number of elements");
     return(0);
@@ -2464,23 +2504,72 @@ sub _csvset_aframespan {
   
 #####
 
-sub _csvset_BoundingBox {
-  # TODO
-  return(1);
-}
+sub _csvset_BB_Pt {
+  my ($self, $mode, $value) = @_;
 
-#####
+  if ( ($mode ne $self->get_BoundingBox_csv_key()) 
+       && ($mode ne $self->get_Point_csv_key()) ) {
+    $self->_set_errormsg("Unknown mode requested (neither Point or BoundingBox)");
+    return(0);
+  }
 
-sub _csvset_Point {
-  # TODO
-  return(1);
+  return(1)
+    if (MMisc::is_blank($value));
+
+  my $fps = $self->get_fps();
+  return(0) if ($self->error());
+
+  my @columns = $self->_csvtxt2array($value);
+  if ((scalar @columns) % 2 != 0) {
+    $self->_set_errormsg("inlined-CSV does not contains an even number of elements");
+    return(0);
+  }
+
+  my %tmp = ();
+  while (my $fs = shift @columns) {
+    my $v = shift @columns;
+
+    my @array = split(m%\,%, $v);
+    if (scalar @array == 0) {
+      $self->_set_errormsg("No element in array for \'$mode\' framespan ($fs)");
+      return(0);
+    }
+    my $fs_fs = new ViperFramespan($fs);
+    $fs_fs->set_fps($fps);
+    if ($fs_fs->error()) {
+      $self->_set_errormsg("Problem while creating ViperFramespan: " . $fs_fs->get_errormsg());
+      return(0);
+    }
+
+    my %x = ();
+    $x{$attr_content_key} = \@array;
+    $x{$attr_framespan_key} = $fs_fs;
+    $tmp{$fs} = \%x;
+  }
+  return(0) if ($self->error());
+
+  if ($mode eq $self->get_BoundingBox_csv_key()) {
+    return($self->set_BoundingBox(%tmp));
+  } else {
+    return($self->set_Point(%tmp));
+  }
+
+  # Wrong path
+  $self->_set_errormsg("Unkown mode ($mode) for setting a BoundingBox or Point");
+  return(0);
 }
 
 #####
 
 sub _csvset_ofi {
-  #TODO
-  return(1);
+  my ($self, $value) = @_;
+  
+  return(0) if ($self->error());
+  
+  my %tmp = $self->_csvtxt2array($value);
+  return(0) if ($self->error());
+  
+  return($self->set_ofi(%tmp));
 }
 
 ####################
@@ -2556,9 +2645,9 @@ sub _csv_get_XXX {
   } elsif ($key eq $self->get_FileFramespan_csv_key()) {
     return($self->_csvget_aframespan("file"));
   } elsif ($key eq $self->get_BoundingBox_csv_key()) {
-    return($self->_csvget_BoundingBox());
+    return($self->_csvget_BB_Pt($key));
   } elsif ($key eq $self->get_Point_csv_key()) {
-    return($self->_csvget_Point());
+    return($self->_csvget_BB_Pt($key));
   } elsif ($key eq $self->get_OtherFileInformation_csv_key()) {
     return($self->_csvget_ofi());
   } elsif ($key eq $self->get_Xtra_csv_key()) {
@@ -2585,18 +2674,7 @@ sub _csvget_Xtra {
     push @array, $v;
   }
 
-  my $ch = &__CF_new_Text_CSV();
-  if (! defined $ch) {
-    $self->_set_errormsg("Problem creating the CSV object (" . Text::CSV->error_diag() . ")");
-    return($txt);
-  }
-
-  if (! $ch->combine(@array)) {
-    $self->_set_errormsg("Problem adding entries to CSV file: " . $ch->error_diag());
-    return($txt);
-  }
-
-  $txt = $ch->string();
+  $txt = $self->_array2csvtxt(@array);
   return($txt);
 }
 
@@ -2630,23 +2708,78 @@ sub _csvget_aframespan {
   
 #####
 
-sub _csvget_BoundingBox {
-  # TODO
-  return("");
+sub _fs_sort {
+  my ($b1, $e1) = split(m%\:%, $a);
+  my ($b2, $e2) = split(m%\:%, $b);
+
+  # Order by beginning first
+  return($b1 <=> $b2) if ($b1 != $b2);
+  # by end if the beginning is the same
+  return($e1 <=> $e2);
 }
 
 #####
 
-sub _csvget_Point {
-  # TODO
-  return("");
+sub _csvget_BB_Pt {
+  my ($self, $mode) = @_;
+
+  my %tmp = ();
+
+  if ($mode eq $self->get_BoundingBox_csv_key()) {
+    return("") if (! $self->is_BoundingBox_set());
+    %tmp = $self->get_BoundingBox();
+  } elsif ($mode eq $self->get_Point_csv_key()) {
+    return("") if (! $self->is_Point_set());
+    %tmp = $self->get_Point();
+  } else {
+    $self->_set_errormsg("Unknown mode requested (neither Point or BoundingBox)");
+    return("");
+  }
+
+  my @all = ();
+  my @todo = keys %tmp;
+  foreach my $key (sort _fs_sort @todo) {
+    my %in = %{$tmp{$key}};
+    if (! exists $in{$attr_content_key}) {
+      $self->_set_errormsg("Could not find the \'$attr_framespan_key\' information");
+      return("");
+    }
+    my $rtmp = $in{$attr_content_key};
+    my $txt = join(",", @$rtmp);
+    push @all, $key;
+    push @all, $txt;
+  }
+  
+  my $txt = $self->_array2csvtxt(@all);
+  return($txt);
 }
 
 #####
 
 sub _csvget_ofi {
-  #TODO
-  return("");
+  my ($self) = @_;
+
+  return("") if ($self->error());
+
+  if (! $self->_is_ofi_set()) {
+    $self->_set_errormsg("\'Other File Information\' not set");
+    return("");
+  }
+
+  my %tmp = $self->get_ofi();
+
+  my @a = ();
+  foreach my $key (@array_file_attributes_keys) {
+    if (! exists $tmp{$key}) {
+      $self->_set_errormsg("One of the \'Other File Information\' key ($key) is not set");
+      return("");
+    }
+    my $v = $tmp{$key};
+    push @a, $key;
+    push @a, $v;
+  }
+
+  return($self->_array2csvtxt(@a));
 }
 
 ############################################################
