@@ -117,6 +117,11 @@ $testr += &do_simple_test($tn, "(DumpCSV)", "$validator ../common/test6-Xtra-sys
 $tn = "test14b";
 $testr += &do_simple_test($tn, "(insertCSV)", "$validator ../common/test7-empty_gtf.xml -w -p -f NTSC -i ../common/test7-population.csv", "res_$tn.txt");
 
+##
+$tn = "test15";
+$testr += &do_simple_test($tn, "(ValueDivide + GetminMax)", "$validator ../common/test1-1fa-sys.xml ../common/test1-1md-sys.xml ../common/test2-1md_1fa-sys.xml ../common/test5-subEventtypes-sys.xml ../common/test6-Xtra-sys.xml -p -w -G -f NTSC -V 351:-250", "res_$tn.txt");
+
+
 ##########
 
 if ($testr == $totest) {
