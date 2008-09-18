@@ -692,9 +692,10 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--removeSubEventtypes>]>
   S<[B<--addXtraAttribute> I<name:value>] [B<--AddXtraTrackingComment>]>
   S<[B<--Remove> I<type>]>
-  S<[B<--DumpCSV> I<csvkeys>]  [B<--insertCSV> I<file.csv>]]>
+  S<[B<--DumpCSV> I<csvkeys>]  [B<--insertCSV> I<file.csv>]>
+  S<[B<--ValueDivide> I<div>[I<:sub>]]]>
   S<[B<--fps> I<fps>] [B<--ecf> I<ecffile>]>
-  S<[B<--displaySummary> I<level>]>
+  S<[B<--displaySummary> I<level>] [B<--GetminMax>]>
   I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
   
 =head1 DESCRIPTION
@@ -801,6 +802,13 @@ Replace the I<sourcefile>'s I<filename> value by  I<fname>.
 
 Specify the default sample rate (in frames per second) of the ViPER files.
 
+=item B<--GetminMax>
+
+For each SYS Viper file validated, print this file's I<DetectionScore> minimum and maximum value.
+After processing all Viper files, print the global I<DetectionScore> min, max and range values.
+
+This option need to have B<fps> set.
+
 =item B<--gtf>
 
 Specify that the file to validate is a Reference file (also known as a Ground Truth File)
@@ -866,6 +874,24 @@ Only useful for specialized Scorer XML files containing subtypes information; op
 
 Specify the default location of the required XSD files (use B<--help> to get the list of required files).
 Can also be set using the B<TV08_XSDPATH> environment variable.
+
+=item B<--ValueDivide> I<div>[I<:sub>]
+
+For each SYS Viper File's Event's I<DetectionScore> (noted I<Det>), compute:
+
+=over
+
+=item I<newDet> = ( I<Det> - I<sub> ) / I<div>
+
+=back
+
+and replace I<Det> by I<newDet> in the output file.
+
+If I<sub> is not given, its value is set to 0.
+
+This option allow a re-normalization of a set of Viper file's I<DetectionScore>  from 0 to 1 (ie 0 to 100%) when, after having run the B<GetminMax> on this same set of files, this option is used with I<div> set to the global range obtained and I<sub> to the global min value obtained.
+
+This option requires B<fps> to be set.
 
 =item B<--version>
 
