@@ -1172,6 +1172,30 @@ sub csvtxt2array {
   return(@columns);
 }
 
+##########
+
+sub is_float {
+  my $str = shift @_;
+
+  $str = &clean_begend_spaces($str);
+  return(1)
+    if ($str =~ m%^\-?\d+(\.\d+)?$%);
+
+  return(0);
+}
+
+#####
+
+sub is_integer {
+  my $str = shift @_;
+
+  $str = &clean_begend_spaces($str);
+  return(1)
+    if ($str =~ m%^\-?\d+$%);
+
+  return(0);
+}
+
 ############################################################
 
 1;
