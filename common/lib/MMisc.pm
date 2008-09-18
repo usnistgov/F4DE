@@ -22,12 +22,10 @@ package MMisc;
 
 use strict;
 
-# File::Temp (usualy part of the Perl Core)
 use File::Temp;
-# Data::Dumper
 use Data::Dumper;
-# Cwd
 use Cwd;
+use Text::CSV;
 
 my $version     = "0.1b";
 
@@ -1100,6 +1098,78 @@ sub iuv { # Initialize Undefined Values
   return($r) if (! defined $v);
 
   return($v);
+}
+
+##########
+
+sub dive_structure {
+  my $r = shift @_;
+
+  return("", $r) if (! ref($r));
+
+  return("", $$r[0]) 
+    if (ref($r) eq 'ARRAY');
+
+  return("Not a HASH (" . ref($r) . ")", undef)
+    if (ref($r) ne 'HASH');
+  
+  my @keys = keys %$r;
+  return("Found multiple keys (" . join(" ", @keys) . ")", undef) 
+    if (scalar @keys > 1);
+
+  $r = $$r{$keys[0]};
+
+  return(&dive_structure($r));
+}
+
+##########
+
+sub get_csv_handler {
+  my $qc = shift @_;
+
+  my $csv = undef;
+  my %options = ();
+  $options{always_quote} = 1;
+  $options{binary} = 1;
+  if (! MMisc::is_blank($qc)) {
+    return($csv) 
+      if (length($qc) > 1);
+    $options{quote_char}  = $qc;
+    $options{escape_char} = $qc;
+  }
+  $csv = Text::CSV->new(\%options);
+
+  return($csv);
+}
+
+#####
+
+sub array2csvtxt {
+  my ($ch, @array) = @_;
+
+  return(undef)
+    if (! defined $ch);
+
+  return(undef)
+    if (! $ch->combine(@array));
+
+  my $txt = $ch->string();
+  return($txt);
+}
+
+#####
+
+sub csvtxt2array {
+  my ($ch, $value) = @_;
+
+  return(undef)
+    if (! defined $ch);
+
+  return(undef)
+    if (! $ch->parse($value));
+
+  my @columns = $ch->fields();
+  return(@columns);
 }
 
 ############################################################
