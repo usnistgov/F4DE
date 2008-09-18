@@ -3213,7 +3213,7 @@ sub _parse_attributes {
         ($text, my %tmp) = $self->_extract_data($sec, $fspan, $allow_nofspan, $name);
         return("Error while processing the \'data\:\' content of the xtra ($kn) \'attribute\' ($text)", ())
           if (! MMisc::is_blank($text));
-        ($text, my $kv) = &_dive_structure(\%tmp);
+        ($text, my $kv) = MMisc::dive_structure(\%tmp);
         return("Error while extracting the \'data\:\' content of the xtra ($kn) \'attribute\' ($text)", ())
           if (! defined $kv);
         $attrs{$key_xtra}{$kn} = $kv;
@@ -3260,28 +3260,6 @@ sub _make_xtra_attribute_name {
   my $name = shift @_;
 
   return("$key_xtra$name");
-}
-
-#####
-
-sub _dive_structure {
-  my $r = shift @_;
-
-  return("", $r) if (! ref($r));
-
-  return("", $$r[0]) 
-    if (ref($r) eq 'ARRAY');
-
-  return("Not a HASH (" . ref($r) . ")", undef)
-    if (ref($r) ne 'HASH');
-  
-  my @keys = keys %$r;
-  return("Found multiple keys (" . join(" ", @keys) . ")", undef) 
-    if (scalar @keys > 1);
-
-  $r = $$r{$keys[0]};
-
-  return(&_dive_structure($r));
 }
 
 ########################################
