@@ -28,8 +28,6 @@ use TrecVid08ViperFile;
 use MErrorH;
 use MMisc;
 
-use Text::CSV;
-
 my $version     = "0.1b";
 
 if ($version =~ m/b$/) {
@@ -67,7 +65,7 @@ my @ok_csv_keys =
    "Xtra", # 18
   );
 my @required_csv_keys = @ok_csv_keys[0,1];
-
+my $csv_quote_char = '~';
 
 ## Constructor
 sub new {
@@ -1498,7 +1496,7 @@ sub Dec {
   return(0) if ($self->error());
 
   my $isgtf = $self->get_isgtf();
-  return($isgtf) if ($self->error());
+  return(0) if ($self->error());
 
   if ($isgtf) {
     $self->_set_errormsg("Can not get the \'DetectionScore' for a GTF observation. ");
@@ -1506,7 +1504,7 @@ sub Dec {
   }
 
   my $ds = $self->get_DetectionScore();
-  return($ds) if ($self->error());
+  return(0) if ($self->error());
 
   return($ds);
 }
@@ -2283,37 +2281,22 @@ sub get_Xtra_csv_key                 { return $ok_csv_keys[18]; }
 
 #####
 
-sub __CF_new_Text_CSV {
-  my $csv = Text::CSV->new
-    (
-     {
-      always_quote       => 1,
-      binary             => 1,
-      quote_char         => '~',
-      escape_char        => '~',
-     }
-    );
-
-  return($csv);
-}
-
-#####
-
 sub _array2csvtxt {
   my ($self, @array) = @_;
 
-  my $ch = &__CF_new_Text_CSV();
+  my $ch = MMisc::get_csv_handler($csv_quote_char);
   if (! defined $ch) {
-    $self->_set_errormsg("Problem creating the CSV object (" . Text::CSV->error_diag() . ")");
+    $self->_set_errormsg("Problem creating the CSV object");
     return("");
   }
 
-  if (! $ch->combine(@array)) {
-    $self->_set_errormsg("Problem adding entries to CSV: " . $ch->error_diag());
+  my $txt = MMisc::array2csvtxt($ch, @array);
+
+  if (! defined $txt) {
+    $self->_set_errormsg("Problem adding entries to CSV");
     return("");
   }
 
-  my $txt = $ch->string();
   return($txt);
 }
 
@@ -2324,18 +2307,18 @@ sub _csvtxt2array {
 
   my @out = ();
 
-  my $ch = &__CF_new_Text_CSV();
+  my $ch = MMisc::get_csv_handler($csv_quote_char);
   if (! defined $ch) {
-    $self->_set_errormsg("Problem creating the CSV object (" . Text::CSV->error_diag() . ")");
+    $self->_set_errormsg("Problem creating the CSV object");
     return(@out);
   }
 
-  if (! $ch->parse($value)) {
-    $self->_set_errormsg("Problem extracting inlined-CSV line:" . $ch->error_input());
+  my @columns = MMisc::csvtxt2array($ch, $value);
+  if (! defined @columns) {
+    $self->_set_errormsg("Problem extracting inlined-CSV line");
     return(@out);
   }
 
-  my @columns = $ch->fields();
   return(@columns);
 }
 
