@@ -8,6 +8,17 @@ my $err = 0;
 ##########
 print "** Checking for Perl Packages:\n";
 my $ms = 1;
+
+print "[Perl Required Packages]\n";
+$ms = &_chkpkg("Getopt::Long", "Data::Dumper", "File::Temp",
+               "Cwd", "Text::CSV");
+if ($ms > 0) {
+  print "  ** ERROR: Not all packages found, you will not be able to run the program (and some F4DE package will most likely fail this step), install the missing packages and re-run the checks\n\n";
+  $err++;
+} else {
+  print "  Found all packages\n\n";
+}
+
 print "[F4DE Common Packages]\n";
 $ms = &_chkpkg
   (
@@ -22,6 +33,7 @@ if ($ms > 0) {
 } else {
   print "  Found all packages\n\n";
 }
+
 print "[F4DE's TrecVid08 Packages]\n";
 $ms = &_chkpkg
   (
@@ -33,15 +45,6 @@ $ms = &_chkpkg
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all TrecVid08 packages found, you will not be able to run the program, please install the missing ones\n\n";
-  $err++;
-} else {
-  print "  Found all packages\n\n";
-}
-print "[Other Perl Required Packages]\n";
-$ms = &_chkpkg("Getopt::Long", "Data::Dumper", "File::Temp",
-               "Cwd", "Text::CSV");
-if ($ms > 0) {
-  print "  ** ERROR: Not all packages found, you will not be able to run the program, please install the missing ones\n\n";
   $err++;
 } else {
   print "  Found all packages\n\n";
@@ -76,7 +79,8 @@ if ($xobj->error()) {
 
 ####################
 
-error_quit("\nSome issues, fix before attempting to run make check again\n") if ($err);
+error_quit("\nSome issues, fix before attempting to run make check again\n") 
+  if ($err);
 
 ok_quit("\n** Pre-requisite testing done\n\n");
 
