@@ -164,9 +164,11 @@ my $xtra_tc = 0;
 my @toremove = ();
 my @docsv = ();
 my $inscsv = "";
+my $do_minmax = 0;
+my $divideby = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A CD F           R T  WX  a cdefghi   lm  p r   vwx    #
+# Used: A CD FG          R T VWX  a cdefghi   lm  p r   vwx    #
 
 my %opt = ();
 GetOptions
@@ -195,6 +197,8 @@ GetOptions
    'Remove=s'        => \@toremove,
    'DumpCSV=s'       => \@docsv,
    'insertCSV=s'     => \$inscsv,
+   'GetminMax'       => \$do_minmax,
+   'ValueDivide=f'   => \$divideby,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -311,6 +315,18 @@ if (scalar @xtra > 0) {
   }
 }
 
+MMisc::error_quit("\'GetminMax\' can only be used on SYS files")
+  if (($do_minmax) && ($isgtf));
+
+if (defined $divideby) {
+  MMisc::error_quit("\'ValueDivide\' can only be used SYS files")
+    if ($isgtf);
+  MMisc::error_quit("Can not use 0 for \'ValueDivide\'")
+    if ($divideby == 0);
+  MMisc::error_quit("\'ValueDivide\' can only be used with \'write\'")
+    if ($writeback == -1);
+}
+
 if (scalar @toremove > 0) {
   my @tmp = ();
   foreach my $e (@toremove) {
@@ -370,6 +386,9 @@ if ($useECF) {
 my $tmp = "";
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
+my $gmin = undef;
+my $gmax = undef;
+my $nan = "NaN";
 TrecVid08ViperFile::type_changer_init_randomseed($changetype) if (defined $changetype);
 while ($tmp = shift @ARGV) {
   my ($ok, $object) = &load_file($isgtf, $tmp);
@@ -506,6 +525,36 @@ while ($tmp = shift @ARGV) {
       if ($nvf->error());
   }
 
+  # 'ValueDivide'
+  if (defined $divideby) {
+    my ($err, $tvf) = TrecVid08HelperFunctions::divideby_ViperFile_Observations($nvf, $divideby);
+    MMisc::error_quit("Problem while \'ValueDivide\' ($err)")
+      if (! MMisc::is_blank($err));
+    $nvf = $tvf;
+  }
+
+  # 'GetminMax'
+  if ($do_minmax) {
+    my ($err, $min, $max) = TrecVid08HelperFunctions::ViperFile_DetectionScore_minMax($nvf);
+    MMisc::error_quit("Problem obtaining min/Max: $err")
+      if (! MMisc::is_blank($err));
+    my $pmin = (defined $min) ? $min : $nan;
+    my $pmax = (defined $max) ? $max : $nan;
+    my $addtxt = ((! defined $min) && (! defined $max)) ? " (no events in file)" : "";
+    my $diff = ((! defined $min) && (! defined $max)) ? $nan : ($max - $min);
+    print "  [min: $pmin / Max: $pmax] [Range: $diff]$addtxt\n";
+    if (MMisc::is_blank($addtxt)) {
+      $gmin = $min
+        if (! defined $gmin);
+      $gmin = $min
+        if ($min < $gmin);
+      $gmax = $max
+        if (! defined $gmax);
+      $gmax = $max
+        if ($max > $gmax);
+    }
+  }
+
   # Writeback & MemDump
   if ($writeback != -1) {
     # Re-adapt @asked_events for each object if automatic limitto is set
@@ -558,9 +607,17 @@ while ($tmp = shift @ARGV) {
   $ndone++;
 }
 print "All files processed (Validated: $ndone | Total: $ntodo)\n\n";
-
 MMisc::error_exit()
   if ($ndone != $ntodo);
+
+if ($do_minmax) {
+  my $pgmin = (defined $gmin) ? $gmin : $nan;
+  my $pgmax = (defined $gmax) ? $gmax : $nan;
+  my $addtxt = ((defined $gmin) && (defined $gmax)) ? "" : " (no events in any file)";
+  my $diff = ((! defined $gmin) && (! defined $gmax)) ? $nan : ($gmax - $gmin);
+
+  print "Global min: $pgmin / Global Max: $pgmax [Range: $diff]$addtxt\n";
+} 
 
 MMisc::ok_exit();
 
@@ -870,7 +927,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value] [--AddXtrTrackingComment] [--Remove type] [--DumpCSV csvkeys] [--insertCSV file.csv]]  [--fps fps] [--ecf ecffile] [--displaySummary level] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value] [--AddXtrTrackingComment] [--Remove type] [--DumpCSV csvkeys] [--insertCSV file.csv] [--ValueDivide value]]  [--fps fps] [--ecf ecffile] [--displaySummary level] [--GetminMax] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 
@@ -898,6 +955,8 @@ Will perform a semantic validation of the ViPER XML file(s) provided.
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --ecf           Specify the ECF file to load
   --displaySummary  Display a file information summary (level shows information about event type seen, and is a value from 1 to 6)
+  --GetminMax     For SYS files: get the DetectionScore local and global min/max values
+  --ValueDivide   For SYS files: divide each event\'s DetectionScore by \'value\'
 
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
