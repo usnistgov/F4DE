@@ -74,9 +74,9 @@ sub get_named_xml_section {
   my $rstr = shift @_;          # reference to the string
   my $txt = shift @_;           # Default error string
   
-  if ($$rstr =~ s%\s*(\<${name}(\/\>|\s+[^\>]+\/\>))%%s) {
+  if ($$rstr =~ s%(\<${name}(\/\>|\s+[^\>]+\/\>))%%s) {
     $txt = $1;
-  } elsif ($$rstr =~ s%\s*(\<${name}(\>|\s+[^\>]+\>).+?\<\/${name}\>)%%s) {
+  } elsif ($$rstr =~ s%(\<${name}(\>|\s+[^\>]+\>).+?\<\/${name}\>)%%s) {
     $txt = $1;
   }
 
