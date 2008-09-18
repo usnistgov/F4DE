@@ -30,8 +30,6 @@ use TrecVid08EventList;
 use MErrorH;
 use MMisc;
 
-use Text::CSV;
-
 my $version     = "0.1b";
 
 if ($version =~ m/b$/) {
@@ -573,15 +571,16 @@ sub ViperFile2CSVtxt {
   return("Problem while obtaining Observations (" . $vf->get_errormsg() . ")", $txt)
     if ($vf->error());
 
-  my $ch = Text::CSV->new({always_quote => 1, binary => 1})
-    or return("Problem creating the CSV object (" . Text::CSV->error_diag() . ")", $txt);
+  my $ch = MMisc::get_csv_handler();
+  return("Problem creating the CSV object", $txt)
+    if (! defined $ch);
 
   my $tmp = "";
 
-  return("Problem adding entries to CSV file: " . $ch->error_diag(), $txt)
-    if (! $ch->combine(@keys));
-  $tmp .= $ch->string();
-  $tmp .= "\n";
+  my $tmptxt = MMisc::array2csvtxt($ch, @keys);
+  return("Problem adding entries to CSV file", $txt)
+    if (! defined $tmptxt);
+  $tmp .= "$tmptxt\n";
 
   foreach my $obs (@ao) {
     my ($err, @tmp) = &Observation2CSVarray($obs, @keys);
@@ -590,10 +589,10 @@ sub ViperFile2CSVtxt {
     return("CSV generation from Observation did not return the expected number of keys", $txt)
       if (scalar @keys != scalar @tmp);
 
-    return("Problem adding entries to CSV file: " . $ch->error_diag())
-      if (! $ch->combine(@tmp));
-    $tmp .= $ch->string();
-    $tmp .= "\n";
+    $tmptxt = MMisc::array2csvtxt($ch, @tmp);
+    return("Problem adding entries to CSV file", $txt)
+      if (! defined $tmptxt);
+    $tmp .= "$tmptxt\n";
   }
   
   return("", $tmp);
@@ -634,19 +633,16 @@ sub Add_CSVfile2VFobject {
   open CSV, "<$csvf"
     or return("Problem opening CSV file: $!\n");
 
-  my $csv = Text::CSV->new();
-  return("Problem creating the CSV object (" . Text::CSV->error_diag() . ")")
+  my $csv = MMisc::get_csv_handler();
+  return("Problem creating the CSV object")
     if (! defined $csv);
 
   # Process CSV file line per line
   my @headers = ();
   while (my $line = <CSV>) {
-    my @columns = ();
-    if ($csv->parse($line)) {
-      @columns = $csv->fields();
-    } else {
-      return("Failed to parse CSV line: " . $csv->error_input());
-    }
+    my @columns = MMisc::csvtxt2array($csv, $line);
+    return("Failed to parse CSV line")
+      if (! defined @columns);
 
     if (scalar @headers == 0) { # extract the CSV headers
       return("When checking the CSV header: " . $dobs->get_errormsg())
@@ -675,6 +671,89 @@ sub Add_CSVfile2VFobject {
   close CSV;
 
   return("");
+}
+
+####################
+
+sub ViperFile_DetectionScore_minMax {
+  my ($vf) = @_;
+
+  return("ViperFile is not validated, aborting", undef, undef)
+    if (! $vf->is_validated());
+  
+  return("Can not obtain a \'DetectionScore\' from a REF file", undef, undef)
+    if ($vf->check_if_gtf());
+
+  # Get an observation representation of all the viper file
+  my @ao = $vf->get_all_events_observations();
+  return("Problem while obtaining Observations (" . $vf->get_errormsg() . ")", undef, undef)
+    if ($vf->error());
+
+  my $min = undef;
+  my $max = undef;
+
+  return("", undef, undef)
+    if (scalar @ao == 0);
+
+  foreach my $obs (@ao) {
+    my $dec = $obs->Dec();
+    return($obs->get_errormsg(), undef, undef)
+      if ($obs->error());
+    $min = $dec
+      if (! defined $min);
+    $min = $dec
+      if ($dec < $min);
+    $max = $dec
+      if (! defined $max);
+    $max = $dec
+      if ($dec > $max);
+  }
+  
+  return("", $min, $max);
+}
+
+####################
+
+sub divideby_ViperFile_Observations {
+  my ($vf, $by) = @_;
+
+  return("ViperFile is not validated, aborting", undef)
+    if (! $vf->is_validated());
+  
+  return("Can not obtain a \'DetectionScore\' from a REF file", undef)
+    if ($vf->check_if_gtf());
+
+  return("Can not divide by zero", undef)
+    if ($by == 0);
+
+  # Get an observation representation of the viper file
+  my @ao = $vf->get_all_events_observations();
+  return("Problem while obtaining Observations (" . $vf->get_errormsg() . ")", undef)
+    if ($vf->error());
+
+  return("", $vf)
+    if (scalar @ao == 0); # No observations, no need to go any further
+
+  my $tvf = $vf->clone_with_no_events();
+  return("Problem while cloning the ViperFile", undef)
+    if (! defined $tvf);
+
+  foreach my $obs (@ao) {
+    my $dec = $obs->Dec();
+    return($obs->get_errormsg(), undef)
+      if ($obs->error());
+
+    $dec = $dec / $by;
+
+    $obs->set_DetectionScore($dec);
+    return($obs->get_errormsg(), undef)
+      if ($obs->error());
+
+    return("Problem adding Observation to new ViperFile (" . $tvf->get_errormsg() .")", undef)
+      if ( (! $tvf->add_observation($obs, 1)) || ($tvf->error()) );
+  }
+
+  return("", $tvf);
 }
 
 ########################################
