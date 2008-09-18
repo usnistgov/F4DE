@@ -715,7 +715,13 @@ sub ViperFile_DetectionScore_minMax {
 ####################
 
 sub divideby_ViperFile_Observations {
-  my ($vf, $by) = @_;
+  my ($vf, $by, $sub) = MMisc::iuav(\@_, undef, 0, 0);
+
+  return("No ViperFile provided, aborting", undef)
+    if (! defined $vf);
+
+  return("No value provided for division step", undef)
+    if (! defined $by);
 
   return("ViperFile is not validated, aborting", undef)
     if (! $vf->is_validated());
@@ -743,7 +749,7 @@ sub divideby_ViperFile_Observations {
     return($obs->get_errormsg(), undef)
       if ($obs->error());
 
-    $dec = $dec / $by;
+    $dec = ($dec - $sub) / $by;
 
     $obs->set_DetectionScore($dec);
     return($obs->get_errormsg(), undef)
