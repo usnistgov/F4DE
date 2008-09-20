@@ -119,7 +119,7 @@ my $wid = "";
 my $duration = undef;
 my $margin = $margin_d;
 my $cREFt = 0;
-my $cSYSt = 0;
+my $cSYSt = undef;
 my $forceFilename = "";
 my $adjudicate_only = 0;
 my $deltat = undef;
@@ -129,9 +129,10 @@ my $adjtool = "";
 my $info_path = "";
 my $info_g = "";
 my $jpeg_path = "";
+my $pds = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CD    I         ST V    a cd f hij        s  vwx   #
+# Used: A CD    I         ST V    a cd f hij     p  s  vwx   #
 
 my $fcmdline = "$0 " . join(" ", @ARGV);
 
@@ -151,13 +152,14 @@ GetOptions
    'Duration=f'      => \$duration,
    'segmentation_margin=i' => \$margin,
    'changeREFtype'   => \$cREFt,
-   'ChangeSYStype'   => \$cSYSt,
+   'ChangeSYStype:s' => \$cSYSt,
    'ForceFilename=s' => \$forceFilename,
    'adjudicate_only' => \$adjudicate_only,
    'delta_t=f'       => \$deltat,
    'info_path=s'     => \$info_path,
    'InfoGenerator=s' => \$info_g,
    'jpeg_path=s'     => \$jpeg_path,
+   'percentDS'       => \$pds,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -266,7 +268,7 @@ if ($mf eq "_blank_") {
 
   my $log = MMisc::concat_dir_file_ext($mrd, "empty_Master_REF", $log_add);
   my $command = "$validator -R AllEvents -w $mrd $f -p";
-  if ($cSYSt) { # if the SYS are really a GTF
+  if (defined $cSYSt) { # if the SYS are really a GTF
     $command .= " -g";
   } else { # otherwise, we need to change its type
     $command .= " -C";
@@ -338,7 +340,8 @@ print "\n\n***** STEP ", $stepc++, ": Validating input files\n";
 
 my $ref_dir = MMisc::get_file_full_path("$wid/$ref_val_md_dir");
 &die_mkdir($ref_dir, "REF");
-my $sys_dir = MMisc::get_file_full_path("$wid/$sys_val_md_dir");
+my $sys_dir_base = MMisc::get_file_full_path("$wid/$sys_val_md_dir");
+my $sys_dir = ($pds) ? "$sys_dir_base/00-Before_percentDS" : $sys_dir_base;
 &die_mkdir($sys_dir, "SYS");
 
 my $val_add = "";
@@ -355,7 +358,10 @@ my $command = "$validator $val_add $master_ref -w $ref_dir -W text $ref_switch";
 &die_syscall_logfile($log, "REF validation command", $command);
 
 my $sys_switch = "";
-$sys_switch = "-C -g" if ($cSYSt);
+if (defined $cSYSt) {
+  my $v = (MMisc::is_blank($cSYSt)) ? "" : " $cSYSt";
+  $sys_switch = "-C$v -g" 
+}
 print "Validating SYS files\n";
 foreach my $sf (sort keys %sys_files) {
   my ($dir, $onfile, $ext) = &die_split_dfe($sf ,"SYS file");
@@ -364,6 +370,40 @@ foreach my $sf (sort keys %sys_files) {
   my $xtra = $sys_files{$sf};
   my $command = "$validator $val_add $sf -w $sys_dir -W text -a $xtra:$sf -A $sys_switch";
   &die_syscall_logfile($log, "SYS validation command", $command);
+}
+
+if ($pds) {
+  print "Adjusting Detection Score to 100 % max [0 -> 1]\n";
+  
+  my @xf = ();
+  foreach my $sf (sort keys %sys_files) {
+    my ($dir, $onfile, $ext) = &die_split_dfe($sf ,"SYS file");
+    my $file = MMisc::concat_dir_file_ext($sys_dir, $onfile, $ext);
+    push @xf, $file;
+  }
+  my $log = MMisc::concat_dir_file_ext($sys_dir_base, "find_global", $log_add);
+  my $command = "$validator -G -f $fps " . join(" ", @xf);
+  &die_syscall_logfile($log, "Obtaining Global Range and Global Min Values", $command);
+
+  my $txt = MMisc::slurp_file($log);
+  MMisc::error_quit("Problem reading log file ($txt), aborting")
+    if (! defined $txt);
+
+  my ($gmin, $grange) = (undef, undef);
+  ($gmin, $grange) = ($1, $2)
+    if ($txt =~ m%^Global\s+min\:\s+([^\s]+?)\s.+?\[Range\:\s+([^\s]+)\]%m);
+  MMisc::error_quit("Could not find Global min and Global Range values")
+    if ((! defined $gmin) || (! defined $grange));
+  MMisc::error_quit("Some problem with Global min and Global Range values (Not a number ? [$gmin / $grange]")
+    if ((! MMisc::is_float($gmin)) || (! MMisc::is_float($grange)));
+
+  print "Found Global min: $gmin / Global range: $grange\n";
+
+  my $log = MMisc::concat_dir_file_ext($sys_dir_base, "apply_global", $log_add);
+  my $command = "$validator -G -V $grange:$gmin -f $fps -w $sys_dir_base -W text " . join(" ", @xf);
+  &die_syscall_logfile($log, "Applying Global Range and Global Min Values", $command);
+  
+  $sys_dir = $sys_dir_base;
 }
 
 ########## Align SYSs to REF
@@ -529,7 +569,7 @@ my ($UnRef_file) = &die_list_X_files(1, $final_sc_dir, "scoring");
 $UnRef_file = MMisc::concat_dir_file_ext($final_sc_dir, $UnRef_file, "");
 
 ########## Aligning Empty REF to Final SYS
-print "\n\n***** STEP ", $stepc++, ": Aligning Master REF to Empty SYS\n";
+print "\n\n***** STEP ", $stepc++, ": Aligning Empty REF to Final SYS\n";
 print "Final SYS : $csf\n";
 
 print "* Generating Empty REF\n";
@@ -703,7 +743,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--InfoGenerator tool [--info_path path] [--jpeg_path path]] [--changeREFtype] [--ChangeSYStype] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] --fps fps --Duration seconds --delta_t value --work_in_dir dir ref_file sys_files
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--InfoGenerator tool [--info_path path] [--jpeg_path path]] [--changeREFtype] [--ChangeSYStype [randomseed[:find_value]]] [--percentDS] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] --fps fps --Duration seconds --delta_t value --work_in_dir dir ref_file sys_files
 
  Where:
   --help          Print this usage information and exit
@@ -717,7 +757,8 @@ Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-
   --info_path     Path to the final '.info' file (added in the Viper file)
   --jpeg_path     Path to the JPEG files inside the '.info' file
   --changeREFtype   Will convert the 'ref_file' from SYS to REF
-  --ChangeSYStype   Will convert all 'sys_file's from REF to SYS
+  --ChangeSYStype   Will convert all 'sys_file's from REF to SYS. The \'randomseed\' and \'find_value\' are the same as in the TV08ViperValidator\'s \'ChangeType\' options.
+  --percentDS     For the SYS files, obtain the global min and global range and recompute them so that each DetectionScore value will be between 0 and 1
   --ForceFilename Replace the 'sourcefile' file value
   --segmentation_margin  Add +/- value frames to each observation when computing its possible candidates for overlap (default: $margin_d)
   --adjudication_only    Only run the program in the adjudication step
