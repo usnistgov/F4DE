@@ -398,7 +398,8 @@ my $ndone = 0;
 my $gmin = undef;
 my $gmax = undef;
 my $nan = "NaN";
-TrecVid08ViperFile::type_changer_init_randomseed($changetype) if (defined $changetype);
+TrecVid08ViperFile::type_changer_init_randomseed($changetype)
+  if (defined $changetype);
 while ($tmp = shift @ARGV) {
   my ($ok, $object) = &load_file($isgtf, $tmp);
   next if (! $ok);
