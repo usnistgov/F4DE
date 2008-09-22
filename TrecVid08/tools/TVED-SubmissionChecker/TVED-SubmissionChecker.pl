@@ -129,6 +129,8 @@ my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
 ########################################
 # Options processing
 
+my @expected_ext = ( "tgz", "tar", "tar.gz", "tar.bz2", "zip" ); # keep Order
+
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
 my $mancmd = "perldoc -F $0";
@@ -232,7 +234,6 @@ if ($useECF) {
 ########################################
 
 # Expected values
-my @expected_ext = ( "tgz", "tar", "tar.gz", "tar.bz2", "zip" ); # keep Order
 my @expected_year = ( "2008" );
 my @expected_task = ( "retroED" );
 my @expected_data = ( "DEV08", "EVAL08" ); # keep Order
