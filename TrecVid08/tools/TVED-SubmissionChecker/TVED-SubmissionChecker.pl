@@ -130,6 +130,7 @@ my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
 # Options processing
 
 my @expected_ext = ( "tgz", "tar", "tar.gz", "tar.bz2", "zip" ); # keep Order
+my $epmdfile = "Events_Processed.md";
 
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
@@ -149,9 +150,11 @@ my $wid = undef;
 my $skipval = 0;
 my $memdump = undef;
 my $dryrun = 0;
+my $gdoepmd = 0;
+my $qins = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                    T VW      def h          s uvwx   #
+# Used:                    T VW     cdef h        q s uvwx   #
 
 my %opt = ();
 GetOptions
@@ -170,6 +173,8 @@ GetOptions
    'skip_validation' => \$skipval,
    'WriteMemDump=s'  => \$memdump,
    'dryrun_mode'     => \$dryrun,
+   'create_Events_Processed_file' => \$gdoepmd,
+   'quit_if_non_scorable' => \$qins,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -213,6 +218,9 @@ if ($skipval) {
     if ( (! MMisc::is_blank($ecffile)) || (defined $memdump) );
 }
 
+MMisc::error_quit("Can only use \'create_Events_Processed_file\' when \'WriteMemDump\' is used too")
+  if (($gdoepmd) && (! defined $memdump));
+
 if (defined $memdump) {
   my $derr = MMisc::check_dir_w($memdump);
   MMisc::error_quit("Problem with \'WriteMemDump\' 's directory ($memdump) : $derr")
@@ -245,6 +253,8 @@ my @expected_dir_output = ( "output" );
 
 my %expected_sffn = &_set_expected_sffn();
 my %exp_ext_cmd = &_set_exp_ext_cmd();
+
+my $doepmd = 0;
 
 my $todo = scalar @ARGV;
 my $done = 0;
@@ -386,6 +396,9 @@ sub valerr {
   my ($fname, $txt) = @_;
   &valok($fname, "[ERROR] $txt");
   &valok($fname, "[ERROR] ** Please refer to the \'Submission Instructions\' (Appendix B) of the \'TRECVid Event Detection Evaluation Plan\' for more information");
+
+  MMisc::error_quit("\'quit_if_non_scorable\' selected, quitting")
+    if ($qins);
 }
 
 #####
@@ -645,6 +658,7 @@ sub check_exp_dirfiles {
   # Try to validate the XML file
   my @errsl = ();
   my @sffnl = ();
+  $doepmd = 1 if ($gdoepmd);
   if (! $skipval) {
     foreach my $xf (@xmlf) {
       vprint(4, "Trying to validate XML file ($xf)");
@@ -663,8 +677,12 @@ sub check_exp_dirfiles {
     my ($err, $rmiss, $rnotin) = TrecVid08HelperFunctions::confirm_all_ECF_sffn_are_listed($ecfobj, @sffnl);
     return(\@ep, "Problem obtaining file list from ECF ($err)")
       if (! MMisc::is_blank($err));
-    push @{$warnings{$wn_key}}, "Will not be able to perform soring (comparing ECF to common list); the following referred to files are present in the ECF but where not found in the submission: " . join(" ", sort @$rmiss)
-      if (scalar @$rmiss > 0);
+    if (scalar @$rmiss > 0) {
+      my $tmp_txt = "Will not be able to perform soring (comparing ECF to common list); the following referred to files are present in the ECF but where not found in the submission: " . join(" ", sort @$rmiss);
+      push @{$warnings{$wn_key}}, $tmp_txt;
+      MMisc::error_quit($tmp_txt)
+        if ($qins);
+    }
     push @{$warnings{$wn_key}}, "FYI: the following referred to files are not listed in the ECF, and therefore will not be scored against: " . join(" ", sort @$rnotin)
       if (scalar @$rnotin > 0);
   }
@@ -749,7 +767,7 @@ sub validate_xml {
     if ($btot == 0);
   
   if (defined $memdump) {
-    my $txt = &write_memdump_file($object, $exp, $xf);
+    my $txt = &write_memdump_file($object, $exp, $xf, @events_processed);
     push @{$warnings{$wn_key}}, $txt
       if (! MMisc::is_blank($txt));
   }
@@ -787,7 +805,7 @@ sub validate_xml {
 sub write_memdump_file {
   return("") if (! defined $memdump);
 
-  my ($vf, $diradd, $fname) = @_;
+  my ($vf, $diradd, $fname, @ep) = @_;
 
   my $dd = "$memdump/$diradd";
 
@@ -802,6 +820,14 @@ sub write_memdump_file {
   my $ok = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, "gzip", 0);
   return("In \'WriteMemDump\', a problem occurred while writing the output file ($of)")
     if (! $ok);
+
+  if ($doepmd) {
+    my $str = MMisc::get_sorted_MemDump(\@ep);
+    my $fn = "$dd/$epmdfile";
+    MMisc::error_quit("Could not write expected events files ($fn), aborting")
+      if (! MMisc::writeTo($fn, "", 0, 0, $str));
+    $doepmd = 0;
+  }
 
   return("");
 }
@@ -925,9 +951,11 @@ TV08ED-Submission Checker - TrecVid08 Event Detection Submission Checker
 B<TV08ED-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
   S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
   S<[B<--ecf> I<ecffile> B<--fps> I<fps>]>
-  S<[B<--skip_validation>] [B<--WriteMemDump> I<dir>]>
+  S<[B<--skip_validation>]>
+  S<[B<--WriteMemDump> I<dir> [B<--create_Events_Processed_file>]]>
   S<[B<--dryrun_mode>] [B<--Verbose>]>
   S<[B<--uncompress_dir> I<dir> | B<--work_in_dir> I<dir>]>
+  S<[B<--quit_if_non_scorable>]>
   S<last_parameter>
 
 =head1 DESCRIPTION
@@ -994,6 +1022,10 @@ B<TV08ED-SubmissionChecker> will ignore the I<config> section of the XML file, a
 
 =over
 
+=item B<--create_Events_Processed_file>
+
+Will create an S<Events_Processed.md> I<MemDump> file in B<WriteMemDump>'s I<dir>.
+
 =item B<--dryrun_mode>
 
 Perform all regular tasks related with checking a submission, except for checking the content of the txt file for the S<Events_Processed:> entry.
@@ -1009,6 +1041,10 @@ Specify the default sample rate (in frames per second) of the ViPER files.
 =item B<--help>
 
 Display the usage page for this program. Also display some default values and information.
+
+=item B<--quit_if_non_scorable>
+
+If for any reason, any submission file or step is non scorable, quit when an error is encounted, instead of continuing the check process and of adding information to a report printed when all submissions have been checked.
 
 =item B<--man>
 
@@ -1086,7 +1122,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] last_parameter
+Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir [--create_Events_Processed_file]] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_if_non_scorable] last_parameter
 
 Will confirm that a submission file conforms to the 'Submission Instructions' (Appendix B) of the 'TRECVid Event Detection Evaluation Plan'.
 
@@ -1103,10 +1139,12 @@ Only in the '--work_in_dir' case does it become <SITE>.
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --skip_validation  Bypass the XML files validation process
   --WriteMemDump  Write a memory dump of each validated XML file into \'dir\'. Note that this option will recreate the <EXP-ID> directory.
+  --create_Events_Processed_file   Will create an \'$epmdfile\' MemDump file in \'WriteMemDump\' \'s dir
   --dryrun_mode   Do not check for content of txt file
   --Verbose       Explain step by step what is being checked
   --uncompress_dir  Specify the directory in which the archive file will be uncompressed
   --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified (useful to confirm a submission before generating its archive)
+  --quit_if_non_scorable  If for any reason, any submission is non scorable, quit without continuing the check process, instead of adding information to a report printed at the end
 
 Note:
 - Recognized archive extensions: $ok_exts
