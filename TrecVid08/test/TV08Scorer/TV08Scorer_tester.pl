@@ -36,6 +36,12 @@ $testr += &do_simple_test($tn, "(ECF check 1)",  "test2-gtf.xml", "test2-same-sy
 $tn = "test3b";
 $testr += &do_simple_test($tn, "(ECF check 2)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -e ../common/tests.ecf", "res-$tn.txt");
 
+$tn = "test3c";
+$testr += &do_simple_test($tn, "(ECF check 3)",  "test2-gtf.xml test3-gtf.xml", "test2-1md_1fa-sys.xml test3-sys.xml", "-D 1000 -e ../common/tests-BAD.ecf", "res-$tn.txt", 1);
+
+$tn = "test3d";
+$testr += &do_simple_test($tn, "(ECF check 4)",  "test2-gtf.xml test3-gtf.xml", "test2-1md_1fa-sys.xml test3-sys.xml", "-e ../common/tests.ecf", "res-$tn.txt");
+
 $tn = "test4";
 $testr += &do_simple_test($tn, "(Big Test)", "test4-BigTest.ref.xml", "test4-BigTest.sys.xml", "-D 90000 --computeDETCurve --noPNG -N" , "res-$tn-BigTest.txt");
 
@@ -74,14 +80,17 @@ die("You should never see this :)");
 ##########
 
 sub do_simple_test {
-  my ($testname, $subtype, $rf, $sf, $ao, $res) = @_;
-  my $frf = "../common/$rf";
-  my $fsf = "../common/$sf";
+  my ($testname, $subtype, $rf, $sf, $ao, $res, $rev) = 
+    MMisc::iuav(\@_, "", "", "", "", "", "", 0);
+  my $frf = "";
+  foreach my $i (split(m%\s+%, $rf)) { $frf .= "../common/$i ";}
+  my $fsf = "";
+  foreach my $i (split(m%\s+%, $sf)) { $fsf .= "../common/$i ";}
 
-  my $command = "$scorer -a -f 25 -d 1 $fsf -g $frf -s -o $ao";
+  my $command = "$scorer -a -f 25 -d 1 ${fsf}-g ${frf}-s -o $ao";
   $totest++;
 
-  return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
+  return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev));
 }
 
 #####
