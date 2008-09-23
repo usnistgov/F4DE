@@ -1,0 +1,39 @@
+[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test2-1md_1fa-sys.xml ../common/test3-sys.xml -g ../common/test2-gtf.xml ../common/test3-gtf.xml -s -o -D 1000 -e ../common/tests-BAD.ecf
+[[RETURN CODE]] 256
+[[STDOUT]]
+***** STEP 1: Loading files in Memory
+(SYS) ../common/test2-1md_1fa-sys.xml: Loaded
+(SYS) ../common/test3-sys.xml: Loaded
+(REF) ../common/test2-gtf.xml: Loaded
+(REF) ../common/test3-gtf.xml: Loaded
+
+** SUMMARY: All files loaded
+** REF: 2 files (all ok)
+** SYS: 2 files (all ok)
+
+
+
+***** STEP 2: Loading the ECF file
+[Warning] Command line 'Duration' (1000) overrides (for scoring) the one found in the ECF file (75160.440)
+
+** SUMMARY: ECF file loaded
+ - source file: ../common/tests-BAD.ecf
+ - Duration: 75160.440
+ - File key: 20050519-1503-Excerpt-FAKE.mpg | Time range(s): [140.24 : 210.52]
+ - File key: 20050519-1503-Excerpt.mpg | Time range(s): [0 : 70]
+
+
+***** STEP 3: Generating EventLists (only adding observations matching loaded ECF)
+* SYS EventList: 1 Observation(s) added (10 rejected) [Seen 11 Observations inside 2 file(s)]
+* REF EventList: 1 Observation(s) added (9 rejected) [Seen 10 Observations inside 2 file(s)]
+
+** SUMMARY: All EventLists generated
+** Common referred to files (2): 20061212.mpg 20050519-1503-Excerpt.mpg
+** Only in SYS (0): 
+** Only in REF (0): 
+
+[Warning] FYI (comparing ECF to common list): the following files are not listed in the ECF, and therefore will not be scored against: 20061212.mpg
+[ERROR] Can not perform soring (comparing ECF to common list): the following files are present in the ECF but not in the common list: 20050519-1503-Excerpt-FAKE.mpg
+
+[[STDERR]]
+
