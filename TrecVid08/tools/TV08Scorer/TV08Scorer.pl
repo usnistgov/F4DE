@@ -394,10 +394,10 @@ if ($useECF) {
   my ($err, $rmiss, $rnotin) = TrecVid08HelperFunctions::confirm_all_ECF_sffn_are_listed($ecfobj, @common);
   MMisc::error_quit($err)
     if (! MMisc::is_blank($err));
+  MMisc::warn_print("FYI (comparing ECF to common list): the following files are not listed in the ECF, and therefore will not be scored against: " . join(" ", @$rnotin))
+    if (scalar @$rnotin > 0);
   MMisc::error_quit("Can not perform soring (comparing ECF to common list): the following files are present in the ECF but not in the common list: " . join(" ", @$rmiss))
     if (scalar @$rmiss > 0);
- MMisc::warn_print("FYI (comparing ECF to common list): the following files are not listed in the ECF, and therefore will not be scored against: " . join(" ", @$rnotin))
-   if (scalar @$rnotin > 0);
 }
 
 ## Prepare event lists for scoring
