@@ -374,7 +374,7 @@ sub get_new_ViperFile_from_ViperFile_and_ECF {
     if ($vf->error());
 
   my $tvf = $vf->clone_with_no_events();
-  return("Problem while cloning the ECF modifed ViperFile", undef)
+  return("Problem while cloning the ECF modifed ViperFile (" . $vf->get_errormsg() . ")", undef)
     if (! defined $tvf);
 
   return("File ($sffn) is not in EventList", undef)
