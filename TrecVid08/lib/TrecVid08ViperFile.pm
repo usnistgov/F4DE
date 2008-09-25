@@ -728,21 +728,28 @@ sub _get_fhash {
 ########## 'file'
 
 sub set_file {
-  my ($self, $file) = @_;
+  my ($self, $file, $nocheck) = MMisc::iuav(\@_, undef, "", 0);
 
   return(0) if ($self->error());
 
-  if (! -e $file) {
-    $self->_set_errormsg("File does not exists ($file)");
+  if (MMisc::is_blank($file)) {
+    $self->_set_errormsg("Empty file name");
     return(0);
   }
-  if (! -r $file) {
-    $self->set_errormsg("File is not readable ($file)");
-    return(0);
-  }
-  if (! -f $file) {
-    $self->set_errormsg("Parameter is not a file ($file)");
-    return(0);
+    
+  if (! $nocheck) {
+    if (! -e $file) {
+      $self->_set_errormsg("File does not exists ($file)");
+      return(0);
+    }
+    if (! -r $file) {
+      $self->set_errormsg("File is not readable ($file)");
+      return(0);
+    }
+    if (! -f $file) {
+      $self->set_errormsg("Parameter is not a file ($file)");
+      return(0);
+    }
   }
 
   $self->{file} = $file;
@@ -1523,7 +1530,7 @@ sub _clone_core {
   $clone->set_xsdpath($self->get_xsdpath(), 1);
   $clone->set_as_gtf() if ($self->check_if_gtf());
   $clone->set_fps($self->get_fps()) if ($self->is_fps_set());
-  $clone->set_file($self->get_file());
+  $clone->set_file($self->get_file(), 1);
   $clone->set_force_subtype() if ($self->check_force_subtype);
   $clone->_set_framespan_max_value($self->_get_framespan_max_value()) if ($self->_is_framespan_max_set());
   $clone->addto_comment($self->get_comment()) if ($self->is_comment_set());
