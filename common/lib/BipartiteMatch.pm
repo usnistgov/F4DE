@@ -532,7 +532,7 @@ sub compute {
 
 sub _map_ref_to_sys {
   my ($rjv, $rfa, $rmd) = @_;
-  return(&_map_ref_to_sys_cohorts($rjv, $rfa, $rmd));
+  return(&_map_ref_to_sys_clique_cohorts($rjv, $rfa, $rmd));
 }
 
 ##########
