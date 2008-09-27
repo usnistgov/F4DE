@@ -169,7 +169,7 @@ my $divideby = undef;
 my $dividesub = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A CD FG          R T VWX  a cdefghi   lm  p r   vwx    #
+# Used: A CD FG          R T VWX  a cdefghi  lm  p r   vwx    #
 
 my %opt = ();
 GetOptions
@@ -486,7 +486,10 @@ while ($tmp = shift @ARGV) {
 
   # Remove subtype
   if ($remse) {
+    $nvf->remove_all_subtypes();
     $nvf->unset_force_subtype();
+    MMisc::error_quit("Problem while removing subtypes (" . $nvf->get_errormsg() . ")")
+      if ($nvf->error());
     $mods++;
   }
 
@@ -583,8 +586,9 @@ while ($tmp = shift @ARGV) {
       if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
     
     if (defined $MemDump) {
-      MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
-        if (! TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump, 1, 1));
+      my $err = TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump, 1, 1);
+      MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object ($err)")
+        if (! MMisc::is_blank($err));
     }
   }
   
