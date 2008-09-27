@@ -130,9 +130,10 @@ my $info_path = "";
 my $info_g = "";
 my $jpeg_path = "";
 my $pds = 0;
+my $warn_nf = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CD    I         ST V    a cd f hij     p  s  vwx   #
+# Used: A CD    I         ST VW   a cd f hij     p  s  vwx   #
 
 my $fcmdline = "$0 " . join(" ", @ARGV);
 
@@ -160,6 +161,7 @@ GetOptions
    'InfoGenerator=s' => \$info_g,
    'jpeg_path=s'     => \$jpeg_path,
    'percentDS'       => \$pds,
+   'Warn_numframes'  => \$warn_nf,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -378,7 +380,7 @@ if ($pds) {
   my @xf = ();
   foreach my $sf (sort keys %sys_files) {
     my ($dir, $onfile, $ext) = &die_split_dfe($sf ,"SYS file");
-    my $file = MMisc::concat_dir_file_ext($sys_dir, $onfile, $ext);
+    my $file = MMisc::concat_dir_file_ext($sys_dir, $onfile, $ext . $md_add);
     push @xf, $file;
   }
   my $log = MMisc::concat_dir_file_ext($sys_dir_base, "find_global", $log_add);
@@ -404,9 +406,10 @@ if ($pds) {
   &die_syscall_logfile($log, "Applying Global Range and Global Min Values", $command);
   
   $sys_dir = $sys_dir_base;
+  &md_add_cleaner($sys_dir);
 }
 
-########## Align SYSs to REF
+########## Align SYSs to Master REF
 print "\n\n***** STEP ", $stepc++, ": Align SYSs to REF\n";
 
 my ($dir, $onfile, $ext) = &die_split_dfe($master_ref, "\'master_ref\'");
@@ -426,12 +429,13 @@ foreach my $sf (sort keys %sys_files) {
   &die_mkdir($odir, "SYS");
 
   my $log = MMisc::concat_dir_file_ext($bodir, "$file$dtadd", $log_add);
-  my $command = "$scorer -w $odir -p -f $fps $sf_md -g $master_ref_md -d $deltat -D $duration -a -s";
+  my $command = "$scorer -w $odir -W text -p -f $fps $sf_md -g $master_ref_md -d $deltat -D $duration -a -s";
 
   print "* Scoring [$file]\n";
   &die_syscall_logfile($log, "scoring command", $command);
 
-  my ($ofile) = &die_list_X_files(1, $odir, "$file scoring");
+  my @ofiles = &die_list_X_files(2, $odir, "$file scoring");
+  my ($ofile) = grep(m%$md_add$%, @ofiles);
   $sc1_sys_files{$file} = "$odir/$ofile";
 }
 
@@ -454,11 +458,12 @@ foreach my $sf (sort keys %sc1_sys_files) {
   print "* Only keeping Unmapped_Sys and removing subtypes [$sf]\n";
   &die_syscall_logfile($log, "validating command", $command);
 
+  &md_add_cleaner($odir);
   my (@ofiles) = &die_list_X_files(3, $odir, "$sf validating");
-  my @tmp = grep(! m%($md_add|$log_add)$%, @ofiles);
-  MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
-    if (scalar @tmp != 1);
-  my $ofile = $tmp[0];
+  my @tmp = grep(! m%$log_add$%, @ofiles);
+  MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (2) : " . join(" ", @tmp))
+    if (scalar @tmp != 2);
+  my ($ofile) = grep(m%$md_add$%, @tmp);
   $sc2_sys_files{$sf} = "$odir/$ofile";
 }
 
@@ -494,6 +499,7 @@ while (scalar @todo > 0) {
   print "  -> $mode_txt\n";
   &die_syscall_logfile($log, $mode_txt, $command);
 
+  &md_add_cleaner($odir);
   my (@ofiles) = &die_list_X_files(3, $odir, "$mode");
   my @tmp = grep(m%$md_add$%, @ofiles);
   MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
@@ -506,28 +512,29 @@ while (scalar @todo > 0) {
   my $mode_txt = "Scoring SYS to new REF";
   my $odir = &die_do_incin_dir($inc, $inc_in++, "$wid/$iteration_step", $mode, $mode_txt, $dtadd);
   my $log = MMisc::concat_dir_file_ext($odir, $mode, $log_add);
-  my $command = "$scorer -w $odir -p -f $fps $vsf -g $csf -d $deltat -D $duration -a -s -X extended";
+  my $command = "$scorer -w $odir -W text -p -f $fps $vsf -g $csf -d $deltat -D $duration -a -s -X extended";
   print "  -> $mode_txt\n";
   &die_syscall_logfile($log, $mode_txt, $command);
 
-  my (@ofiles) = &die_list_X_files(2, $odir, "$mode");
-  my @tmp = grep(! m%$log_add$%, @ofiles);
+  my (@ofiles) = &die_list_X_files(3, $odir, "$mode");
+  my @tmp = grep( m%$md_add$%, @ofiles);
   MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
     if (scalar @tmp != 1);
   my $ofile = $tmp[0];
   $csf = "$odir/$ofile";
-  
+
   # Removing subtypes
   $mode = "Removing_Subtypes";
   my $mode_txt = "Removing Subtypes";
   my $odir = &die_do_incin_dir($inc, $inc_in++, "$wid/$iteration_step", $mode, $mode_txt, $dtadd);
   my $log = MMisc::concat_dir_file_ext($odir, $mode, $log_add);
-  my $command = "$validator $csf -w $odir -r -p";
+  my $command = "$validator $csf -w $odir -W text -r -p";
   print "  -> $mode_txt\n";
   &die_syscall_logfile($log, $mode_txt, $command);
 
-  my (@ofiles) = &die_list_X_files(2, $odir, "$mode");
-  my @tmp = grep(! m%$log_add$%, @ofiles);
+  &md_add_cleaner($odir);
+  my (@ofiles) = &die_list_X_files(3, $odir, "$mode");
+  my @tmp = grep(m%$md_add$%, @ofiles);
   MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
     if (scalar @tmp != 1);
   my $ofile = $tmp[0];
@@ -547,11 +554,16 @@ my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnRef_step1$dtadd");
 
 my $log_dir = MMisc::get_file_full_path("$wid/$UnRef_base");
 my $log = MMisc::concat_dir_file_ext($log_dir, "empty_SYS$dtadd", $log_add);
-my $command = "$validator -R AllEvents -w $final_sc_dir $csf";
+my $command = "$validator -R AllEvents -w $final_sc_dir -W text $csf";
 
 &die_syscall_logfile($log, "validating command", $command);
 
-my ($empty_sys) = &die_list_X_files(1, $final_sc_dir, "result");
+&md_add_cleaner($final_sc_dir);
+my @ofiles = &die_list_X_files(2, $final_sc_dir, "result");
+my @tmp = grep(m%$md_add$%, @ofiles);
+MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
+  if (scalar @tmp != 1);
+my $empty_sys = $tmp[0];
 $empty_sys = MMisc::concat_dir_file_ext($final_sc_dir, $empty_sys, "");
 
 #####
@@ -561,11 +573,15 @@ my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnRef_step2$dtadd");
 &die_mkdir($final_sc_dir, "REF2SYS");
 
 my $log = MMisc::concat_dir_file_ext($log_dir, "scoring$dtadd", $log_add);
-my $command = "$scorer -w $final_sc_dir -p -f $fps $empty_sys -g $master_ref_md -d $deltat -D $duration -a -s";
+my $command = "$scorer -w $final_sc_dir -W text -p -f $fps $empty_sys -g $master_ref_md -d $deltat -D $duration -a -s";
 
 &die_syscall_logfile($log, "scoring command", $command);
 
-my ($UnRef_file) = &die_list_X_files(1, $final_sc_dir, "scoring");
+my @files = &die_list_X_files(2, $final_sc_dir, "scoring");
+my @tmp = grep(m%$md_add$%, @ofiles);
+MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
+  if (scalar @tmp != 1);
+my $UnRef_file = $tmp[0];
 $UnRef_file = MMisc::concat_dir_file_ext($final_sc_dir, $UnRef_file, "");
 
 ########## Aligning Empty REF to Final SYS
@@ -579,11 +595,16 @@ my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnSys_step1$dtadd");
 
 my $log_dir = MMisc::get_file_full_path("$wid/$UnSys_base");
 my $log = MMisc::concat_dir_file_ext($log_dir, "empty_REF$dtadd", $log_add);
-my $command = "$validator -R AllEvents -w $final_sc_dir -g $master_ref_md";
+my $command = "$validator -R AllEvents -w $final_sc_dir -W text -g $master_ref_md";
 
 &die_syscall_logfile($log, "validating command", $command);
 
-my ($empty_ref) = &die_list_X_files(1, $final_sc_dir, "result");
+&md_add_cleaner($final_sc_dir);
+my @ofiles = &die_list_X_files(2, $final_sc_dir, "result");
+my @tmp = grep(m%$md_add$%, @ofiles);
+MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
+  if (scalar @tmp != 1);
+my $empty_ref = $tmp[0];
 $empty_ref = MMisc::concat_dir_file_ext($final_sc_dir, $empty_ref, "");
 
 #####
@@ -593,11 +614,15 @@ my $final_sc_dir = MMisc::get_file_full_path("$wid/$UnSys_step2$dtadd");
 &die_mkdir($final_sc_dir, "REF2SYS");
 
 my $log = MMisc::concat_dir_file_ext($log_dir, "scoring$dtadd", $log_add);
-my $command = "$scorer -w $final_sc_dir -p -f $fps $csf -g $empty_ref -d $deltat -D $duration -a -s";
+my $command = "$scorer -w $final_sc_dir -W text -p -f $fps $csf -g $empty_ref -d $deltat -D $duration -a -s";
 
 &die_syscall_logfile($log, "scoring command", $command);
 
-my ($UnSys_file) = &die_list_X_files(1, $final_sc_dir, "scoring");
+my @ofiles = &die_list_X_files(2, $final_sc_dir, "scoring");
+my @tmp = grep(m%$md_add$%, @ofiles);
+MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
+  if (scalar @tmp != 1);
+my $UnSys_file = $tmp[0];
 $UnSys_file = MMisc::concat_dir_file_ext($final_sc_dir, $UnSys_file, "");
 
 ########## Creating Adjudication ViPERfile
@@ -617,6 +642,7 @@ $command .= " -I $info_g" if (! MMisc::is_blank($info_g));
 $command .= " -i $info_path" if (! MMisc::is_blank($info_path));
 $command .= " -L $lgwf" if (! MMisc::is_blank($lgwf));
 $command .= " -j $jpeg_path" if (! MMisc::is_blank($jpeg_path));
+$command .= " -W" if ($warn_nf);
 
 &die_syscall_logfile($log, "adjudication command", $command);
 
@@ -700,7 +726,7 @@ sub die_list_X_files {
     if (scalar @$rd > 0);
 
   MMisc::error_quit("Found different than $x files in $txt dir ($dir): " . join(" ", @$rf))
-    if (($x) && (scalar @$rf != $x));
+    if (($x > 0) && (scalar @$rf != $x));
 
   return(@$rf);
 }
@@ -734,6 +760,65 @@ sub die_check_lgwf {
 
   MMisc::error_quit("Problem with LGW file: Does not contain a camera id")
       unless ($lgwf =~ s%^CAM\d$%%);
+}
+
+####################
+
+sub rem_md_add {
+  my $in = shift @_;
+
+  my $c = 0;
+  while ($in =~ s%$md_add$%%) {$c++;}
+
+  return($in, $c);
+}
+
+#####
+
+sub md_add_cleaner {
+  my $dir = shift @_;
+
+  my @f = MMisc::get_files_list($dir);
+  return(0, "No file in \'$dir\' directory ? Skipping")
+    if (scalar @f == 0);
+
+  my @sl = grep(m%$md_add$%, @f);
+  my %h = ();
+  foreach my $e (@sl) {
+    my ($g, $d) = &rem_md_add($e);
+    push @{$h{$g}}, $e;
+  }
+  my %r = ();
+  foreach my $k (keys %h) {
+    my @t = @{$h{$k}};
+    MMisc::error_quit("$md_add \"cleaner\" only works on 2 elements at a time (in $dir)")
+      if (scalar @t != 2);
+    my $f1 = $t[0];
+    my $f2 = $t[1];
+    my ($d, $f1c) = &rem_md_add($f1);
+    my ($d, $f2c) = &rem_md_add($f2);
+
+    MMisc::error_quit("Two files can not contain the same number of $md_add")
+      if ($f1c == $f2c);
+
+    if ($f1c < $f2c) {
+      push @{$r{$k}}, ($f1, $f2);
+    } else {
+      push @{$r{$k}}, ($f2, $f1);
+    }
+  }
+  my $done = 0;
+  foreach my $k (keys %r) {
+    my @t = @{$r{$k}};
+    my $e = shift @t;
+#    print "$e -> $k\n";
+    rename("$dir/$e", "$dir/$k");
+    my $e = shift @t;
+#    print "$e -> $k$md_add\n";
+    rename("$dir/$e", "$dir/$k$md_add");
+    $done++;
+  }
+  print "   (Renamed $done pairs of $md_add files to simpler versions)\n";
 }
 
 ############################################################
