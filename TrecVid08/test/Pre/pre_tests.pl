@@ -23,7 +23,7 @@ print "[F4DE Common Packages]\n";
 $ms = &_chkpkg
   (
    # common/lib
-   "BipartiteMatch", "DETCurve", "DETCurveSet", "F4DE_TestCore",
+   "BipartiteMatch", "CSVHelper", "DETCurve", "DETCurveSet", "F4DE_TestCore",
    "MErrorH", "MMisc", "MetricFuncs", "MetricTestStub", "MtXML", "PropList",
    "SimpleAutoTable", "TrialSummaryTable", "Trials", "ViperFramespan",
   );
