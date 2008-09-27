@@ -160,9 +160,10 @@ my $info_path = "";
 my $info_g = "";
 my $lgwf = "";
 my $jpeg_path = "";
+my $warn_nf = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:       G I  L       T      a  d f hij        s  v x   #
+# Used:       G I  L       T  W   a  d f hij        s  v x   #
 
 my %opt = ();
 GetOptions
@@ -181,6 +182,7 @@ GetOptions
    'InfoGenerator=s' => \$info_g,
    'LGW=s'           => \$lgwf,
    'jpeg_path=s'     => \$jpeg_path,
+   'Warn_numframes'  => \$warn_nf,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -271,8 +273,11 @@ foreach my $ifile (@ARGV) {
   my $tnf = $vf->get_numframes_value();
   MMisc::error_quit("Could not get the numframes: " . $vf->get_errormsg() )
     if ($vf->error());
-  MMisc::error_quit("\'numframes\' differ from previous one ? ($tnf vs " . $numframes{$sffn} . ")")
-    if ((exists $numframes{$sffn}) && ($numframes{$sffn} != $tnf));
+  if ((exists $numframes{$sffn}) && ($numframes{$sffn} != $tnf)) {
+    MMisc::error_quit("\'numframes\' differ from previous one ? ($tnf vs " . $numframes{$sffn} . ")")
+      if (! $warn_nf);
+    MMisc::warn_print("\'numframes\' differ from previous one ? ($tnf vs " . $numframes{$sffn} . ") [** WARNING ONLY REQUESTED **]");
+  }
   $numframes{$sffn} = $tnf;
   
   print " -> Converting to an EventList\n";
