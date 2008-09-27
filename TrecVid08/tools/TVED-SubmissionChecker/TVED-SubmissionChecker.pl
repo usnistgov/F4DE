@@ -818,8 +818,8 @@ sub write_memdump_file {
 
   my $of = "$dd/$fname";
   my $ok = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, "gzip", 0);
-  return("In \'WriteMemDump\', a problem occurred while writing the output file ($of)")
-    if (! $ok);
+  return("In \'WriteMemDump\', a problem occurred while writing the output file ($of): $ok")
+    if (! MMisc::is_blank($ok));
 
   if ($doepmd) {
     my $str = MMisc::get_sorted_MemDump(\@ep);
