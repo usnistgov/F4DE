@@ -27,8 +27,8 @@
 |-> Filename: 20050519-1503-Excerpt.mpg | Event: CellToEar | SYS elements: 2 | REF elements: 3 | Total Observations: 5 elements
       TYPE      R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
 ----------------------------------------------------------------------------------------------------------------------------------
-        Mapped     0  3503:3738    236     2  3503:3739    237      0.99        NO   3503:3738       236            0           -1
-        Mapped     2  3503:3739    237     1  3503:3739    237      0.23        NO   3503:3739       237            0            0
+        Mapped     2  3503:3739    237     2  3503:3739    237      0.99        NO   3503:3739       237            0            0
+        Mapped     0  3503:3738    236     1  3503:3739    237      0.23        NO   3503:3738       236            0           -1
   Unmapped_Ref     1  3503:3739    237                                                                                            
  -- Summary: 2 Mapped (Pairs) / 0 Unmapped Sys  / 1 Unmapped Ref | Total Observations: 5 elements
 
@@ -46,8 +46,8 @@
 
             File               Event        TYPE      R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  20050519-1503-Excerpt.mpg  CellToEar        Mapped     0  3503:3738    236     2  3503:3739    237      0.99        NO   3503:3738       236            0           -1
-  20050519-1503-Excerpt.mpg  CellToEar        Mapped     2  3503:3739    237     1  3503:3739    237      0.23        NO   3503:3739       237            0            0
+  20050519-1503-Excerpt.mpg  CellToEar        Mapped     2  3503:3739    237     2  3503:3739    237      0.99        NO   3503:3739       237            0            0
+  20050519-1503-Excerpt.mpg  CellToEar        Mapped     0  3503:3738    236     1  3503:3739    237      0.23        NO   3503:3738       236            0           -1
   20050519-1503-Excerpt.mpg  CellToEar  Unmapped_Ref     1  3503:3739    237                                                                                            
   20050519-1503-Excerpt.mpg  ObjectGet        Mapped     0  1493:3327   1835     0  1493:3327   1835      0.78        NO   1493:3327      1835            0            0
   20050519-1503-Excerpt.mpg  ObjectPut        Mapped     0   938:1493    556     0   938:1493    556      0.45       YES    938:1493       556            0            0
