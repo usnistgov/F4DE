@@ -632,6 +632,31 @@ sub split_full_event {
   return($e, $s);
 }
 
+#####
+
+sub remove_all_subtypes {
+  my $self = shift @_;
+
+  return(0) if ($self->error());
+
+   if (! $self->is_validated()) {
+    $self->_set_errormsg("Can only call \'remove_all_subtypes\' on a validated file");
+    return(0);
+  }
+
+  my %fhash = $self->_get_fhash();
+  foreach my $event (@ok_events) {
+    next if (! exists $fhash{$event});
+    foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+      next if (! exists $fhash{$event}{$id}{$key_subtype});
+      $fhash{$event}{$id}{$key_subtype} = '';
+    }
+  }
+  $self->_set_fhash(%fhash);
+
+  return(1);
+}
+
 ########## 'fps'
 
 sub set_fps {
