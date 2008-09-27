@@ -837,6 +837,9 @@ sub do_alignment {
       MMisc::error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
         if ($bpm->error());
 
+      # Force the use of the clique_cohorts algorithm
+      $bpm->use_clique_cohorts();
+
       $bpm->compute();
       MMisc::error_quit("While computing the Bipartite Matching for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
         if ($bpm->error());
