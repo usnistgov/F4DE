@@ -25,7 +25,6 @@ use strict;
 use File::Temp;
 use Data::Dumper;
 use Cwd;
-use Text::CSV;
 
 my $version     = "0.1b";
 
@@ -1120,56 +1119,6 @@ sub dive_structure {
   $r = $$r{$keys[0]};
 
   return(&dive_structure($r));
-}
-
-##########
-
-sub get_csv_handler {
-  my $qc = shift @_;
-
-  my $csv = undef;
-  my %options = ();
-  $options{always_quote} = 1;
-  $options{binary} = 1;
-  if (! MMisc::is_blank($qc)) {
-    return($csv) 
-      if (length($qc) > 1);
-    $options{quote_char}  = $qc;
-    $options{escape_char} = $qc;
-  }
-  $csv = Text::CSV->new(\%options);
-
-  return($csv);
-}
-
-#####
-
-sub array2csvtxt {
-  my ($ch, @array) = @_;
-
-  return(undef)
-    if (! defined $ch);
-
-  return(undef)
-    if (! $ch->combine(@array));
-
-  my $txt = $ch->string();
-  return($txt);
-}
-
-#####
-
-sub csvtxt2array {
-  my ($ch, $value) = @_;
-
-  return(undef)
-    if (! defined $ch);
-
-  return(undef)
-    if (! $ch->parse($value));
-
-  my @columns = $ch->fields();
-  return(@columns);
 }
 
 ##########
