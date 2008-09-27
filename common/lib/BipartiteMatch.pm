@@ -76,6 +76,8 @@ sub new {
      # Convenience access
      rev_joint_values => undef,
      rev_mapping    => undef,
+     # Algorithm selection
+     clique_cohorts => 0,
      # Error Handler
      errormsg       => $errormsg,
     };
@@ -447,6 +449,8 @@ sub compute {
 
   return(1) if ($self->is_computed());
 
+  my $clique_cohorts = $self->using_clique_cohorts();
+
   my @kp = @{$self->{KernelAddParam}};
   my %sysObj = %{$self->{sysObj}};
   my %refObj = %{$self->{refObj}};
@@ -490,7 +494,7 @@ sub compute {
   $self->{missed_detect_values} = \%md_values;
 
   ##### Compute mapping
-  my ($err, %map) = &_map_ref_to_sys(\%joint_values, \%fa_values, \%md_values);
+  my ($err, %map) = &_map_ref_to_sys(\%joint_values, \%fa_values, \%md_values, $clique_cohorts);
   if (! MMisc::is_blank($err)) {
     $self->_set_errormsg("While computing mapping: $err");
     return(0);
@@ -530,9 +534,48 @@ sub compute {
 
 ################################################################################
 
+sub use_clique_cohorts {
+  my ($self) = @_;
+  $self->{clique_cohorts} = 1;
+}
+
+#####
+
+sub use_cohorts {
+  my ($self) = @_;
+  $self->{clique_cohorts} = 0;
+}
+
+#####
+
+sub using_clique_cohorts {
+  my ($self) = @_;
+
+  return(1) if ($self->{clique_cohorts} == 1);
+
+  return(0);
+}
+
+#####
+
+sub using_cohorts {
+  my ($self) = @_;
+
+  return(1) if ($self->{clique_cohorts} == 0);
+
+  return(0);
+}
+
+#####
+
 sub _map_ref_to_sys {
-  my ($rjv, $rfa, $rmd) = @_;
-  return(&_map_ref_to_sys_clique_cohorts($rjv, $rfa, $rmd));
+  my ($rjv, $rfa, $rmd, $cc) = @_;
+  
+  if ($cc) {
+    return(&_map_ref_to_sys_clique_cohorts($rjv, $rfa, $rmd));
+  } else {
+    return(&_map_ref_to_sys_cohorts($rjv, $rfa, $rmd));
+  }
 }
 
 ##########
