@@ -201,6 +201,7 @@ my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
 my $mancmd = "perldoc -F $0";
 my @xtend_modes = ("copy_sys", "copy_ref", "overlap", "extended"); # Order is important
+my @ok_md = ("gzip", "text"); # Default is gzip / order is important
 my $usage = &set_usage();
 
 # Default values for variables
@@ -229,9 +230,10 @@ my $autolt = 0;
 my $ltse = 0;
 my @asked_events = ();
 my $xtend = "";
+my $MemDump = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:   CDEFG    LMNO  RST   X Za  cdefgh  lmnop  st vwx  
+# Used:   CDEFG    LMNO  RST  WX Za  cdefgh  lmnop  st vwx  
 
 my %opt = ();
 my @leftover = ();
@@ -268,6 +270,7 @@ GetOptions
    'CostFA=f'        => \$CostFA,
    'Rtarget=f'       => \$Rtarget,
    'XtraMappedObservations=s' => \$xtend,
+   'WriteMemDump:s'  => \$MemDump,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -297,11 +300,20 @@ if ($xsdpath ne "") {
     if (! $dummy->set_xsdpath($xsdpath));
 }
 
+if (defined $MemDump) {
+  MMisc::error_quit("\'WriteMemDump\' can only be used in conjunction with \'writexml\'")
+    if (! defined $writexml);
+  $MemDump = $ok_md[0]
+    if (MMisc::is_blank($MemDump));
+  MMisc::error_quit("Unknown \'WriteMemDump\' mode ($MemDump), authorized: " . join(" ", @ok_md))
+    if (! grep(m%^$MemDump$%, @ok_md));
+}
+
 MMisc::error_quit("\'pruneEvents\' is only usable if \'writexml\' is selected")
   if (($autolt) && ( ! defined $writexml));
 
 MMisc::error_quit("\'XtraMappedObservations\' is only usable if \'writexml\' is selected")
-  if ((! MMisc::is_blank($xtend)) && ( ! defined $writexml));
+  if ((! MMisc::is_blank($xtend)) && (! defined $writexml));
 MMisc::error_quit("Wrong \'XtraMappedObservations\' mode ($xtend), authorized modes list: " . join(" ", @xtend_modes))
   if (! grep(m%$xtend$%, @xtend_modes));
 
@@ -500,6 +512,12 @@ if (defined $writexml) {
 
     my $of = (! MMisc::is_blank($writexml)) ? "$writexml/$key.xml" : "";
     MMisc::writeTo($of, "", 1, 0, $txt, "", "");
+
+    if (defined $MemDump) {
+      my $err = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, $MemDump, 1, 1);
+      MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object ($err)")
+        if (! MMisc::is_blank($err));
+    }
   }
 }
 
@@ -673,9 +691,13 @@ sub add_obs2vf {
   if (! exists $xmlwriteback{$file}) {
     my ($numframes, $framerate, $sourcetype, $hframesize, $vframesize) 
       = $obs->get_ofi_VF_empty_order();
+    my $xf = $obs->get_xmlfilename();
 
     my $tmp_vf = new TrecVid08ViperFile();
     $tmp_vf->fill_empty($file, 0, $numframes, $framerate, $sourcetype, $hframesize, $vframesize);
+    $tmp_vf->set_xmllint("xmllint", 1);
+    $tmp_vf->set_xsdpath(".", 1);
+    $tmp_vf->set_file($xf, 1); 
 
     MMisc::error_quit("Problem creating a new TrecVid08ViperFile (" . $tmp_vf->get_errormsg() . ")")
       if ($tmp_vf->error());
@@ -1504,10 +1526,11 @@ sub set_usage {
   my $xsdfiles = join(" ", @xsdfilesl);
   my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
   my $xtend_modes_txt = join(" ", @xtend_modes);
+  my $wmd = join(" ", @ok_md);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--pruneEvents] [--XtraMappedObservations mode]] [--Duration seconds] [--ecf ecffile] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--WriteMemDump [mode]] [--pruneEvents] [--XtraMappedObservations mode]] [--Duration seconds] [--ecf ecffile] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -1523,6 +1546,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --LimittoSYSEvents  For each sourcfile filename, only process events that are listed in the sys ViPER files.
   --limitto       Only care about provided list of events
   --writexml      Write a ViPER XML file containing the Mapped, Unmapped Reference and Unmapped System Event Observations to disk (if dir is specified, stdout otherwise)
+  --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
   --pruneEvents   Only keep in the new file's config section events for which observations are seen
   --XtraMappedObservations  For Mapped events, copy the 'Xtra Attributes' of both the REF and the SYS into the event observation to be written to file. Will also modify the framespan written depending of the 'mode' selected (one of: $xtend_modes_txt)
   --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
