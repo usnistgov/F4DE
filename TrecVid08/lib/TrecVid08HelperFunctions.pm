@@ -159,22 +159,23 @@ sub save_ViperFile_MemDump {
     $object = $aobject->clone();
     # In order to make it portable, we remove command paths that might differ
     # on different system (ie '/usr/bin/xmllint': force to "xmllint")
-    return(0) if (! defined $object);
-    return(0) if ($aobject->error());
+    return("Clone: " . $aobject->get_errormsg()) if ($aobject->error());
+    return("Clone: Undefined Object") if (! defined $object);
     $object->set_xmllint("xmllint", 1);
-    return(0) if ($object->error());
+    return("Portable Clone: " . $object->errormsg()) if ($object->error());
   } else {
     $object = $aobject;
   }
-  return(0) if (! defined $object);
-  return(0) if ($object->error());
+  return("Undefined Object") if (! defined $object);
+  return($object->get_errormsg()) if ($object->error());
 
-  return(MMisc::dump_memory_object
-	 ($fname, $VF_MemDump_Suffix, $object,
-	  $VF_MemDump_FileHeader,
-	  ($mode eq "gzip") ? $VF_MemDump_FileHeader_gz : undef,
-          $printw)
-	);
+  my $tmp = MMisc::dump_memory_object
+    ($fname, $VF_MemDump_Suffix, $object,
+     $VF_MemDump_FileHeader,
+     ($mode eq "gzip") ? $VF_MemDump_FileHeader_gz : undef,
+     $printw);
+
+   return((($tmp == 1) ? "" : "Problem during actual dump process"));
 }
 
 ##########
