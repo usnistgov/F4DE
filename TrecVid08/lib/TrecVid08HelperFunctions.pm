@@ -27,6 +27,8 @@ use TrecVid08ViperFile;
 use TrecVid08Observation;
 use TrecVid08EventList;
 
+use CSVHelper;
+
 use MErrorH;
 use MMisc;
 
@@ -572,13 +574,13 @@ sub ViperFile2CSVtxt {
   return("Problem while obtaining Observations (" . $vf->get_errormsg() . ")", $txt)
     if ($vf->error());
 
-  my $ch = MMisc::get_csv_handler();
+  my $ch = CSVHelper::get_csv_handler();
   return("Problem creating the CSV object", $txt)
     if (! defined $ch);
 
   my $tmp = "";
 
-  my $tmptxt = MMisc::array2csvtxt($ch, @keys);
+  my $tmptxt = CSVHelper::array2csvtxt($ch, @keys);
   return("Problem adding entries to CSV file", $txt)
     if (! defined $tmptxt);
   $tmp .= "$tmptxt\n";
@@ -590,7 +592,7 @@ sub ViperFile2CSVtxt {
     return("CSV generation from Observation did not return the expected number of keys", $txt)
       if (scalar @keys != scalar @tmp);
 
-    $tmptxt = MMisc::array2csvtxt($ch, @tmp);
+    $tmptxt = CSVHelper::array2csvtxt($ch, @tmp);
     return("Problem adding entries to CSV file", $txt)
       if (! defined $tmptxt);
     $tmp .= "$tmptxt\n";
@@ -634,14 +636,14 @@ sub Add_CSVfile2VFobject {
   open CSV, "<$csvf"
     or return("Problem opening CSV file: $!\n");
 
-  my $csv = MMisc::get_csv_handler();
+  my $csv = CSVHelper::get_csv_handler();
   return("Problem creating the CSV object")
     if (! defined $csv);
 
   # Process CSV file line per line
   my @headers = ();
   while (my $line = <CSV>) {
-    my @columns = MMisc::csvtxt2array($csv, $line);
+    my @columns = CSVHelper::csvtxt2array($csv, $line);
     return("Failed to parse CSV line")
       if (! defined @columns);
 

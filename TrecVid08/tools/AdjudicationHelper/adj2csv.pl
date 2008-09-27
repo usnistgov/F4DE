@@ -61,7 +61,6 @@ my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
 my $warn_msg = "";
 
-
 # MMisc (part of this tool)
 unless (eval "use MMisc; 1") {
   my $pe = &eo2pe($@);
@@ -80,6 +79,13 @@ unless (eval "use ViperFramespan; 1") {
 unless (eval "use MtXML; 1") {
   my $pe = &eo2pe($@);
   &_warn_add("\"MtXML\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
+# CSVHelper (part of this tool)
+unless (eval "use CSVHelper; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"CSVHelper\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
@@ -205,7 +211,7 @@ foreach my $x (@ARGV) {
   print "done\n";
 }
 
-my $ch = MMisc::get_csv_handler();
+my $ch = CSVHelper::get_csv_handler();
 MMisc::error_quit("Problem creating the CSV object")
   if (! defined $ch);
 
@@ -709,7 +715,7 @@ sub _fs_sort {
 sub array2csvline {
   my ($ch, @array) = @_;
 
-  my $tmp = MMisc::array2csvtxt($ch, @array);
+  my $tmp = CSVHelper::array2csvtxt($ch, @array);
 
   MMisc::error_quit("Problem adding entries to CSV file: " . $ch->error_diag())
     if (! defined $tmp);

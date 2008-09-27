@@ -25,6 +25,8 @@ use strict;
 use ViperFramespan;
 use TrecVid08ViperFile;
 
+use CSVHelper;
+
 use MErrorH;
 use MMisc;
 
@@ -2284,13 +2286,13 @@ sub get_Xtra_csv_key                 { return $ok_csv_keys[18]; }
 sub _array2csvtxt {
   my ($self, @array) = @_;
 
-  my $ch = MMisc::get_csv_handler($csv_quote_char);
+  my $ch = CSVHelper::get_csv_handler($csv_quote_char);
   if (! defined $ch) {
     $self->_set_errormsg("Problem creating the CSV object");
     return("");
   }
 
-  my $txt = MMisc::array2csvtxt($ch, @array);
+  my $txt = CSVHelper::array2csvtxt($ch, @array);
 
   if (! defined $txt) {
     $self->_set_errormsg("Problem adding entries to CSV");
@@ -2307,13 +2309,13 @@ sub _csvtxt2array {
 
   my @out = ();
 
-  my $ch = MMisc::get_csv_handler($csv_quote_char);
+  my $ch = CSVHelper::get_csv_handler($csv_quote_char);
   if (! defined $ch) {
     $self->_set_errormsg("Problem creating the CSV object");
     return(@out);
   }
 
-  my @columns = MMisc::csvtxt2array($ch, $value);
+  my @columns = CSVHelper::csvtxt2array($ch, $value);
   if (! defined @columns) {
     $self->_set_errormsg("Problem extracting inlined-CSV line");
     return(@out);
