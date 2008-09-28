@@ -406,7 +406,6 @@ if ($pds) {
   &die_syscall_logfile($log, "Applying Global Range and Global Min Values", $command);
   
   $sys_dir = $sys_dir_base;
-  &md_add_cleaner($sys_dir);
 }
 
 ########## Align SYSs to Master REF
@@ -458,7 +457,6 @@ foreach my $sf (sort keys %sc1_sys_files) {
   print "* Only keeping Unmapped_Sys and removing subtypes [$sf]\n";
   &die_syscall_logfile($log, "validating command", $command);
 
-  &md_add_cleaner($odir);
   my (@ofiles) = &die_list_X_files(3, $odir, "$sf validating");
   my @tmp = grep(! m%$log_add$%, @ofiles);
   MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (2) : " . join(" ", @tmp))
@@ -499,7 +497,6 @@ while (scalar @todo > 0) {
   print "  -> $mode_txt\n";
   &die_syscall_logfile($log, $mode_txt, $command);
 
-  &md_add_cleaner($odir);
   my (@ofiles) = &die_list_X_files(3, $odir, "$mode");
   my @tmp = grep(m%$md_add$%, @ofiles);
   MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
@@ -532,7 +529,6 @@ while (scalar @todo > 0) {
   print "  -> $mode_txt\n";
   &die_syscall_logfile($log, $mode_txt, $command);
 
-  &md_add_cleaner($odir);
   my (@ofiles) = &die_list_X_files(3, $odir, "$mode");
   my @tmp = grep(m%$md_add$%, @ofiles);
   MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
@@ -558,7 +554,6 @@ my $command = "$validator -R AllEvents -w $final_sc_dir -W text $csf";
 
 &die_syscall_logfile($log, "validating command", $command);
 
-&md_add_cleaner($final_sc_dir);
 my @ofiles = &die_list_X_files(2, $final_sc_dir, "result");
 my @tmp = grep(m%$md_add$%, @ofiles);
 MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
@@ -599,7 +594,6 @@ my $command = "$validator -R AllEvents -w $final_sc_dir -W text -g $master_ref_m
 
 &die_syscall_logfile($log, "validating command", $command);
 
-&md_add_cleaner($final_sc_dir);
 my @ofiles = &die_list_X_files(2, $final_sc_dir, "result");
 my @tmp = grep(m%$md_add$%, @ofiles);
 MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
@@ -760,65 +754,6 @@ sub die_check_lgwf {
 
   MMisc::error_quit("Problem with LGW file: Does not contain a camera id")
       unless ($lgwf =~ s%^CAM\d$%%);
-}
-
-####################
-
-sub rem_md_add {
-  my $in = shift @_;
-
-  my $c = 0;
-  while ($in =~ s%$md_add$%%) {$c++;}
-
-  return($in, $c);
-}
-
-#####
-
-sub md_add_cleaner {
-  my $dir = shift @_;
-
-  my @f = MMisc::get_files_list($dir);
-  return(0, "No file in \'$dir\' directory ? Skipping")
-    if (scalar @f == 0);
-
-  my @sl = grep(m%$md_add$%, @f);
-  my %h = ();
-  foreach my $e (@sl) {
-    my ($g, $d) = &rem_md_add($e);
-    push @{$h{$g}}, $e;
-  }
-  my %r = ();
-  foreach my $k (keys %h) {
-    my @t = @{$h{$k}};
-    MMisc::error_quit("$md_add \"cleaner\" only works on 2 elements at a time (in $dir)")
-      if (scalar @t != 2);
-    my $f1 = $t[0];
-    my $f2 = $t[1];
-    my ($d, $f1c) = &rem_md_add($f1);
-    my ($d, $f2c) = &rem_md_add($f2);
-
-    MMisc::error_quit("Two files can not contain the same number of $md_add")
-      if ($f1c == $f2c);
-
-    if ($f1c < $f2c) {
-      push @{$r{$k}}, ($f1, $f2);
-    } else {
-      push @{$r{$k}}, ($f2, $f1);
-    }
-  }
-  my $done = 0;
-  foreach my $k (keys %r) {
-    my @t = @{$r{$k}};
-    my $e = shift @t;
-#    print "$e -> $k\n";
-    rename("$dir/$e", "$dir/$k");
-    my $e = shift @t;
-#    print "$e -> $k$md_add\n";
-    rename("$dir/$e", "$dir/$k$md_add");
-    $done++;
-  }
-  print "   (Renamed $done pairs of $md_add files to simpler versions)\n";
 }
 
 ############################################################
