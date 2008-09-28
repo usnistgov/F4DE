@@ -132,6 +132,8 @@ my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
 my @expected_ext = ( "tgz", "tar", "tar.gz", "tar.bz2", "zip" ); # keep Order
 my $epmdfile = "Events_Processed.md";
 
+my $md_add = TrecVid08HelperFunctions::get_MemDump_Suffix();
+
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
 my $mancmd = "perldoc -F $0";
@@ -152,9 +154,10 @@ my $memdump = undef;
 my $dryrun = 0;
 my $gdoepmd = 0;
 my $qins = 0;
+my $cont_md = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                    T VW     cdef h        q s uvwx   #
+# Used:   C                T VW     cdef h        q s uvwx   #
 
 my %opt = ();
 GetOptions
@@ -175,6 +178,7 @@ GetOptions
    'dryrun_mode'     => \$dryrun,
    'create_Events_Processed_file' => \$gdoepmd,
    'quit_if_non_scorable' => \$qins,
+   'Continue_MemDump' => \$cont_md,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -225,6 +229,9 @@ if (defined $memdump) {
   my $derr = MMisc::check_dir_w($memdump);
   MMisc::error_quit("Problem with \'WriteMemDump\' 's directory ($memdump) : $derr")
     if (! MMisc::is_blank($derr));
+} else {
+ MMisc::error_quit("\'Continue_MemDump\' can only be used if \'WriteMemDump\' is selected")
+   if ($cont_md == 0);
 }
 
 my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
@@ -301,7 +308,7 @@ foreach my $sf (@ARGV) {
     }
     vprint(2, "<SITE> = $site | <SUB-NUM> = $subnum");
     
-    vprint(1, "Uncompress archive");
+    vprint(1, "Uncompressing archive");
     ($err, $tmpdir) = &uncompress_archive($dir, $file, $ext, $rtmpdir);
     if (! MMisc::is_blank($err)) {
       &valerr($sf, $err);
@@ -733,7 +740,15 @@ sub get_events_processed {
 
 sub validate_xml {
   my ($dir, $xf, $data, $exp, @events_processed) = @_;
-  
+ 
+  if ($cont_md) {
+    my $md_file = "$memdump/$exp/$xf$md_add";
+    if (-e $md_file) {
+      vprint(5, "MemDump file already exists and \'Continue_MemDump\' requested, skipping");
+      return("", "")
+    }
+  }
+ 
   vprint(5, "Loading ViperFile");
   my $tmp = "$dir/$xf";
   my ($retstatus, $object, $msg) = 
@@ -1122,7 +1137,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir [--create_Events_Processed_file]] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_if_non_scorable] last_parameter
+Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir [--create_Events_Processed_file] [--Continue_MemDump]] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_if_non_scorable] last_parameter
 
 Will confirm that a submission file conforms to the 'Submission Instructions' (Appendix B) of the 'TRECVid Event Detection Evaluation Plan'.
 
