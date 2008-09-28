@@ -150,11 +150,45 @@ my $VF_MemDump_FileHeader_gz = $VF_MemDump_FileHeader_gz_cmp
 
 ##########
 
+sub _rm_mds {
+  my ($fname) = @_;
+
+  return($fname) if (MMisc::is_blank($fname));
+
+  # Remove them all
+  while ($fname =~ s%$VF_MemDump_Suffix$%%) {1;}
+
+  return($fname);
+}
+
+#####
+
+sub save_ViperFile_XML {
+  my ($fname, $vf, $printname, $ptxt, @asked_events) = @_;
+
+  # Re-adapt the file name to remove any potential ".memdump"
+  $fname = &_rm_mds($fname, 0);
+
+  my $txt = $vf->reformat_xml(@asked_events);
+  return("While trying to \'write\' (" . $vf->get_errormsg() . ")")
+    if ($vf->error());
+
+  return("Problem while trying to \'save_ViperFile_XML\'")
+    if (! MMisc::writeTo($fname, "", $printname, 0, $txt, "", $ptxt));
+
+  return("");
+}
+
+##########
+
 sub save_ViperFile_MemDump {
   my ($fname, $aobject, $mode, $printw, $portable) = @_;
 
   $printw = MMisc::iuv($printw, 1);
   $portable = MMisc::iuv($portable, 0);
+
+  # Re-adapt the file name to remove all ".memdump" (added later in this step)
+  $fname = &_rm_mds($fname);
 
   my $object = undef;
   if ($portable) {
