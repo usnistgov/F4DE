@@ -70,6 +70,13 @@ unless (eval "use TrecVid08ViperFile; 1") {
   $have_everything = 0;
 }
 
+# TrecVid08HelperFunctions (part of this tool)
+unless (eval "use TrecVid08HelperFunctions; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
 # MMisc (part of this tool)
 unless (eval "use MMisc; 1") {
   my $pe = &eo2pe($@);
@@ -229,7 +236,8 @@ $validator .= " $cmdline_add";
 $scorer    .= " $cmdline_add";
 $adjtool   .= " $cmdline_add";
 
-my $md_add   = ".memdump";
+my $md_add = TrecVid08HelperFunctions::get_MemDump_Suffix();
+
 my $log_add  = "log";
 my $info_add = "info";
 
