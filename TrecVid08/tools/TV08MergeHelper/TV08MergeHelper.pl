@@ -439,20 +439,11 @@ foreach my $key (sort keys %mergefiles) {
     print $mf->_display();
   }
 
-  my $txt = "";
-  if ($autolt) {
-    my @used_events = $mf->list_used_full_events();
-    $txt = $mf->reformat_xml(@used_events);
-  } else {
-    $txt = $mf->reformat_xml();
-  }
-  MMisc::error_quit("While trying to re-represent XML (" . $mf->get_errormsg() . ")")
-    if ($mf->error());
-
+  my @used_events = ($autolt) ? $mf->list_used_full_events() : @ok_events;
   my $writeto = (MMisc::is_blank($writetodir)) ? "" : "$writetodir/$key.xml";
-  my $cmt = ($fobs == 0) ? " (No observation)" : "";
-  MMisc::error_quit("Problem writing reformatted XML file\n")
-    if (! MMisc::writeTo($writeto, "", 1, 0, $txt, $cmt));
+  my $errm = TrecVid08HelperFunctions::save_ViperFile_XML($writeto, $mf, 1, "", @used_events);
+  MMisc::error_quit($errm)
+    if (! MMisc::is_blank($errm));
 
   $fdone++;
 }
@@ -475,19 +466,11 @@ if ($ovoxml) {
       print $mf->_display();
     }
 
-    my $txt = "";
-    if ($autolt) {
-      my @used_events = $mf->list_used_full_events();
-      $txt = $mf->reformat_xml(@used_events);
-    } else {
-      $txt = $mf->reformat_xml();
-    }
-    MMisc::error_quit("While trying to re-represent XML (" . $mf->get_errormsg() . ")")
-      if ($mf->error());
-    
+    my @used_events = ($autolt) ? $mf->list_used_full_events() : @ok_events;
     my $writeto = (MMisc::is_blank($writetodir)) ? "" : "$writetodir/${key}_OverlapOnly.xml";
-    MMisc::error_quit("Problem writing reformatted XML file\n")
-      if (! MMisc::writeTo($writeto, "", 1, 0, $txt, ""));
+    my $errm = TrecVid08HelperFunctions::save_ViperFile_XML($writeto, $mf, 1, "", @used_events);
+    MMisc::error_quit($errm)
+      if (! MMisc::is_blank($errm));
 
     $fdone++;
   }

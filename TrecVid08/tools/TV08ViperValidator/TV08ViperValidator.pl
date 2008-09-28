@@ -570,20 +570,16 @@ while ($tmp = shift @ARGV) {
 
   # Writeback & MemDump
   if ($writeback != -1) {
-    # Re-adapt @asked_events for each object if automatic limitto is set
-    
-    my $txt = $nvf->reformat_xml(@asked_events);
-    MMisc::error_quit("While trying to \'write\' (" . $nvf->get_errormsg() . ")")
-      if ($nvf->error());
-    
     my $fname = "";
     
     if ($writeback ne "") {
       my ($err, $td, $tf, $te) = MMisc::split_dir_file_ext($tmp);
       $fname = MMisc::concat_dir_file_ext($writeback, $tf, $te);
     }
-    MMisc::error_quit("Problem while trying to \'write\'")
-      if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
+
+    my $err = TrecVid08HelperFunctions::save_ViperFile_XML($fname, $nvf, 1, "** XML re-Representation:\n", @asked_events);
+    MMisc::error_quit($err)
+      if (! MMisc::is_blank($err));
     
     if (defined $MemDump) {
       my $err = TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump, 1, 1);
