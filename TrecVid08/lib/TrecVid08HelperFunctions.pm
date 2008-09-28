@@ -139,6 +139,8 @@ sub ViperFile_crop {
 
 my $VF_MemDump_Suffix = ".memdump";
 
+sub get_MemDump_Suffix { return $VF_MemDump_Suffix; }
+
 my $VF_MemDump_FileHeader_cmp = "\#  TrecVid08ViperFile MemDump";
 my $VF_MemDump_FileHeader_gz_cmp = $VF_MemDump_FileHeader_cmp . " (Gzip)";
 my $VF_MemDump_FileHeader_add = "\n\n";
