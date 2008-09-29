@@ -357,7 +357,7 @@ foreach my $sf (@ARGV) {
       $wn_key = $sdir;
       my @errs = &check_submission_dir("$tmpdir/$odir", $sdir, $site);
       if (scalar @errs > 0) {
-        my $err = &format_list("While checking submission dir", "  ", @errs);
+        my $err = &format_list("While checking submission dir [$sdir]", "  ", @errs);
         &valerr($sf, $err);
         $ok = 0;
         next;
@@ -743,7 +743,7 @@ sub validate_xml {
 
   my $sffn = "";
 
-  my ($derr, $dir, $exp_key, $ext) = MMisc::split_dir_file_ext($xf);
+  my ($derr, $tdir, $exp_key, $ext) = MMisc::split_dir_file_ext($xf);
   return("Problem splitting file and extension for ($xf)", $sffn)
     if (! MMisc::is_blank($derr));
   
