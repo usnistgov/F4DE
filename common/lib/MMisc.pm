@@ -85,35 +85,6 @@ sub slurp_file {
   return($out);
 }
 
-#####
-
-sub do_system_call {
-  my @args = @_;
-  
-  return(-1, "", "") if (scalar @args == 0);
-
-  my $cmdline = "(" . join(" ", @args) . ")"; 
-
-  my $retcode = -1;
-  # Get temporary filenames (created by the command line call)
-  my $stdoutfile = &get_tmpfilename();
-  my $stderrfile = &get_tmpfilename();
-
-  open (CMD, "$cmdline 1> $stdoutfile 2> $stderrfile |");
-  close CMD;
-  $retcode = $?;
-
-  # Get the content of those temporary files
-  my $stdout = &slurp_file($stdoutfile);
-  my $stderr = &slurp_file($stderrfile);
-
-  # Erase the temporary files
-  unlink($stdoutfile);
-  unlink($stderrfile);
-
-  return($retcode, $stdout, $stderr);
-}
-
 ##########
 
 sub check_package {
@@ -631,6 +602,59 @@ sub strip_header {
 
 ##########
 
+sub _system_call_logfile {
+  my $logfile = shift @_;
+  my @args = @_;
+  
+  return(-1, "", "") if (scalar @args == 0);
+
+  my $cmdline = "(" . join(" ", @args) . ")"; 
+
+  my $retcode = -1;
+  my $stdoutfile = "";
+  my $stderrfile = "";
+  if ((! defined $logfile) || (MMisc::is_blank($logfile))) {
+    # Get temporary filenames (created by the command line call)
+    $stdoutfile = &get_tmpfilename();
+    $stderrfile = &get_tmpfilename();
+  } else {
+    $stdoutfile = $logfile . ".stdout";
+    $stderrfile = $logfile . ".stderr";
+    # Create a place holder for the final logfile
+    open TMP, ">$logfile"
+      or return(-1, "", "");
+    print TMP "Placedholder for final log. See \"$stdoutfile\" and \"$stderrfile\" files until the process is concluded\n";
+    close TMP
+  }
+
+  my $ov = $|;
+  $| = 1;
+
+  open (CMD, "$cmdline 1> $stdoutfile 2> $stderrfile |");
+  close CMD;
+  $retcode = $?;
+
+  $| = $ov;
+
+  # Get the content of those temporary files
+  my $stdout = &slurp_file($stdoutfile);
+  my $stderr = &slurp_file($stderrfile);
+
+  # Erase the temporary files
+  unlink($stdoutfile);
+  unlink($stderrfile);
+
+  return($retcode, $stdout, $stderr);
+}
+
+#####
+
+sub do_system_call {
+  return(&_system_call_logfile(undef, @_));
+}
+
+#####
+
 sub write_syscall_logfile {
   my $ofile = &iuv(shift @_, "");
   my @command = @_;
@@ -638,7 +662,7 @@ sub write_syscall_logfile {
   return(0, "", "", "", "") 
     if ( (&is_blank($ofile)) || (scalar @command == 0) );
 
-  my ($retcode, $stdout, $stderr) = &do_system_call(@command);
+  my ($retcode, $stdout, $stderr) = &_system_call_logfile($ofile, @command);
 
   my $otxt = "[[COMMANDLINE]] " . join(" ", @command) . "\n"
     . "[[RETURN CODE]] $retcode\n"
