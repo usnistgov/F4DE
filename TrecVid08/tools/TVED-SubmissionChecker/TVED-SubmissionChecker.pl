@@ -740,12 +740,24 @@ sub get_events_processed {
 
 sub validate_xml {
   my ($dir, $xf, $data, $exp, @events_processed) = @_;
+
+  my $sffn = "";
+
+  my ($derr, $dir, $exp_key, $ext) = MMisc::split_dir_file_ext($xf);
+  return("Problem splitting file and extension for ($xf)", $sffn)
+    if (! MMisc::is_blank($derr));
+  
+  return("Could not find matching sourcefile filename for <DATA> ($data) and xml file ($xf)", $sffn)
+    if (! exists $expected_sffn{$data}{$exp_key});
+  
+  my $exp_sffn = $expected_sffn{$data}{$exp_key};
  
   if ($cont_md) {
     my $md_file = "$memdump/$exp/$xf$md_add";
     if (-e $md_file) {
       vprint(5, "MemDump file already exists and \'Continue_MemDump\' requested, skipping");
-      return("", "")
+      # Return the expected sffn (passed validation, so it is ok)
+      return("", $exp_sffn)
     }
   }
  
@@ -759,18 +771,10 @@ sub validate_xml {
     if (! $retstatus);
   
   vprint(5, "Confirming sourcefile filename is proper");
-  my $sffn = $object->get_sourcefile_filename();
+  $sffn = $object->get_sourcefile_filename();
   return("Problem obtaining the sourcefile's filename (" . $object->get_errormsg() . ")", "")
     if ($object->error());
   
-  my ($derr, $dir, $exp_key, $ext) = MMisc::split_dir_file_ext($xf);
-  return("Problem splitting file and extension for ($xf)", $sffn)
-    if (! MMisc::is_blank($derr));
-  
-  return("Could not find matching sourcefile filename for <DATA> ($data) and xml file ($xf)", $sffn)
-    if (! exists $expected_sffn{$data}{$exp_key});
-  
-  my $exp_sffn = $expected_sffn{$data}{$exp_key};
   return("Sourcefile's filename is wrong (is: $sffn) (expected: $exp_sffn)", $sffn)
     if ($sffn !~ m%$exp_sffn$%);
   
