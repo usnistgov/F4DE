@@ -669,10 +669,28 @@ sub write_syscall_logfile {
       . "[[STDOUT]]\n$stdout\n\n"
         . "[[STDERR]]\n$stderr\n";
 
-  return(0, $otxt, $stdout, $stderr, $retcode)
+  return(0, $otxt, $stdout, $stderr, $retcode, $ofile)
     if (! &writeTo($ofile, "", 0, 0, $otxt));
 
-  return(1, $otxt, $stdout, $stderr, $retcode);
+  return(1, $otxt, $stdout, $stderr, $retcode, $ofile);
+}
+
+#####
+
+sub write_syscall_smart_logfile {
+  my $ofile = &iuv(shift @_, "");
+  my @command = @_;
+
+  return(0, "", "", "", "") 
+    if ( (&is_blank($ofile)) || (scalar @command == 0) );
+
+  if (-e $ofile) {
+    my $date = `date "+20%y%m%d-%H%M%S"`;
+    chomp($date);
+    $ofile .= "-$date";
+  }
+
+  return(&write_syscall_logfile($ofile, @command));
 }
 
 #####
