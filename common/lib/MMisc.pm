@@ -1187,6 +1187,25 @@ sub is_integer {
   return(0);
 }
 
+##########
+
+sub human_int {
+  my $v = shift @_;
+
+  return($v)
+    if (length($v) < 4);
+    
+  my $txt = "";
+  while (length($v) > 0) {
+    my $c = substr($v, 0, 1, "");
+    $txt .= "$c";
+    $txt .= ","
+      if ((length($v) % 3 == 0) && (length($v) > 0));
+  }
+
+  return($txt);
+}
+
 ############################################################
 
 1;
