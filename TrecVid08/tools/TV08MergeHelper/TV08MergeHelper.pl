@@ -119,6 +119,7 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 # Options processing
 
 my @ov_modes = ("FrameShiftedFiles", "SameFramespanFiles", "All"); # Order is important
+my @ok_md = ("gzip", "text"); # Default is gzip / order is important
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
 my $mancmd = "perldoc -F $0";
@@ -140,9 +141,12 @@ my $do_same_ov = 0;
 my $ecff = "";
 my $autolt = 0;
 my $ovoxml = 0;
+my $MemDump = undef;
+my $keepid = 0;
+my $noco = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:      F        O   ST   X      efgh    m op  s  vwx  
+# Used:      F        O   ST  WX      efgh  k mnop  s  vwx  
 
 my %opt = ();
 my $dbgftmp = "";
@@ -164,6 +168,9 @@ GetOptions
    'ecfhelperfile=s' => \$ecff,
    'pruneEvents'     => \$autolt,
    'OverlapOnlyXML'  => \$ovoxml,
+   'WriteMemDump:s'  => \$MemDump,
+   "keep_id"         => \$keepid,
+   "no_comment"      => \$noco,
    # Hidden option
    'X_show_internals+' => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -417,18 +424,20 @@ foreach my $key (sort keys %mergefiles) {
     MMisc::error_quit("While obatining Observations list ($key / $i) (" . $EL->get_errormsg() .")")
       if ($EL->error());
     foreach my $obs (@bucket) {
-      # Add a comment to the observation to indicate where it came from
-      my $comment = "Was originally: " . $obs->get_unique_id();
-      $obs->addto_comment($comment);
-      MMisc::error_quit("While adding a comment to observation (" . $obs->get_errormsg() .")")
-        if ($obs->error());
-      
+      if (! $noco) {
+        # Add a comment to the observation to indicate where it came from
+        my $comment = "Was originally: " . $obs->get_unique_id();
+        $obs->addto_comment($comment);
+        MMisc::error_quit("While adding a comment to observation (" . $obs->get_errormsg() .")")
+          if ($obs->error());
+      }
+
       # Debugging
       if ($show > 1) {
         print "** OBSERVATION MEMORY REPRESENATION:\n", $obs->_display();
       }
       
-      $mf->add_observation($obs);
+      $mf->add_observation($obs, $keepid);
       MMisc::error_quit("While \'add_observation\' (" . $mf->get_errormsg() .")")
         if ($mf->error());
     }
@@ -439,11 +448,18 @@ foreach my $key (sort keys %mergefiles) {
     print $mf->_display();
   }
 
+  # Duplicate the object in memory with only the selected types
   my @used_events = ($autolt) ? $mf->list_used_full_events() : @ok_events;
+
   my $writeto = (MMisc::is_blank($writetodir)) ? "" : "$writetodir/$key.xml";
   my $errm = TrecVid08HelperFunctions::save_ViperFile_XML($writeto, $mf, 1, "", @used_events);
   MMisc::error_quit($errm)
     if (! MMisc::is_blank($errm));
+  if (defined $MemDump) {
+    my $err = TrecVid08HelperFunctions::save_ViperFile_MemDump($writeto, $mf, $MemDump, 1, 1, ($autolt) ? @used_events : ());
+      MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object ($err)")
+        if (! MMisc::is_blank($err));
+    }
 
   $fdone++;
 }
@@ -471,6 +487,11 @@ if ($ovoxml) {
     my $errm = TrecVid08HelperFunctions::save_ViperFile_XML($writeto, $mf, 1, "", @used_events);
     MMisc::error_quit($errm)
       if (! MMisc::is_blank($errm));
+    if (defined $MemDump) {
+      my $err = TrecVid08HelperFunctions::save_ViperFile_MemDump($writeto, $mf, $MemDump, 1, 1, ($autolt) ? @used_events : ());
+      MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object ($err)")
+        if (! MMisc::is_blank($err));
+    }
 
     $fdone++;
   }
@@ -654,8 +675,10 @@ sub _check_overlap_core {
 	    my $new_obs = $ao_obs->clone();
 
 	    $new_obs->clear_comment();
-	    my $no_txt = "\'$mode\' Overlap [ID: $ov_id] between \"$ao_id\" and \"$el_id\" [overlap: $ovr_txt]";
-	    $new_obs->addto_comment($no_txt);
+      if (! $noco) {
+        my $no_txt = "\'$mode\' Overlap [ID: $ov_id] between \"$ao_id\" and \"$el_id\" [overlap: $ovr_txt]";
+        $new_obs->addto_comment($no_txt);
+      }
 	    my $fs_no_ov = &_ovc_get_extended_framespan_obs2obs($ao_obs, $el_obs);
 	    $new_obs->set_framespan($fs_no_ov);
 	    MMisc::error_quit("Problem with OverlapOnly observation (" . $new_obs->get_errormsg() .")")
@@ -668,12 +691,14 @@ sub _check_overlap_core {
 	  }
 
           @{$overlap_list{$sffn}{$mode}{$event}{$ov_id}} = ($ao_id, $el_id, $ovr_txt);
-          $ao_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$el_id\" [overlap: $ovr_txt]");
-          MMisc::error_quit("Problem adding a comment to observation (" . $ao_obs->get_errormsg() . ")")
-            if ($ao_obs->error());
-          $el_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$ao_id\" [overlap: $ovr_txt]");
-          MMisc::error_quit("Problem adding a comment to observation (" . $el_obs->get_errormsg() . ")")
-            if ($el_obs->error());
+          if (! $noco) {
+            $ao_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$el_id\" [overlap: $ovr_txt]");
+            MMisc::error_quit("Problem adding a comment to observation (" . $ao_obs->get_errormsg() . ")")
+              if ($ao_obs->error());
+            $el_obs->addto_comment("\'$mode\' Overlap [ID: $ov_id] with \"$ao_id\" [overlap: $ovr_txt]");
+            MMisc::error_quit("Problem adding a comment to observation (" . $el_obs->get_errormsg() . ")")
+              if ($el_obs->error());
+          }
           $lpov = 1;
         }
         $pov += $lpov;
@@ -1115,11 +1140,12 @@ Martial Michel <martial.michel@nist.gov>
 sub set_usage {
   my $ro = join(" ", @ok_events);
   my $xsdfiles = join(" ", @xsdfilesl);
+  my $wmd = join(" ", @ok_md);
   my $tmp=<<EOF
 
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--gtf] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]] [--OverlapOnlyXML]] [--ecfhelperfile [file.csv]] [--writetodir dir] [--pruneEvents] --fps fps viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] 
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--gtf] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]] [--OverlapOnlyXML]] [--ecfhelperfile [file.csv]] [--writetodir dir [--WriteMemDump [mode]]] [--pruneEvents] --fps fps viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] 
 
 Will merge event observations found in given files related to the same sourcefile's filename, and will try to provide help in merging overlapping or repeating observations.
 
@@ -1137,6 +1163,7 @@ Will merge event observations found in given files related to the same sourcefil
   --OverlapOnlyXML    Create a XML file containing only overlap observations
   --ecfhelperfile Save a CSV file thaf contains information needed to generate the ECF file
   --writetodir    Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension) (If no writetodir option is specified, print to stdout)
+  --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
   --pruneEvents   Only keep in the new file's config section events for which observations are seen
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
 
