@@ -92,9 +92,15 @@ my $spc = 200; # Fine tuned on BigTest (on my laptop)
 my $chunks = 16034;
 my $usage = &set_usage();
 
-my $mrgtool = "../TV08MergeHelper/TV08MergeHelper.pl";
-my $valtool = "./TV08ViperValidator.pl";
-
+my $mrgtool = "";
+my $valtool = "";
+if (exists $ENV{"F4DE_BASE"}) {
+  $valtool = $ENV{"F4DE_BASE"} . "/bin/TV08ViperValidator";
+  $mrgtool = $ENV{"F4DE_BASE"} . "/bin/TV08MergeHelper";
+} else {
+  $valtool = "../TV08ViperValidator/TV08ViperValidator.pl";
+  $mrgtool = "../TV08MergeHelper/TV08MergeHelper.pl";
+}
 
 # Default values for variables
 my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision informations set
@@ -102,10 +108,11 @@ my $writedir = undef;
 my $fps = undef;
 my $xmllint = "";
 my $xsdpath = "";
-my $verb = 0;
+my $verb = 1;
+my $copyxmltoo = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                    T V         fgh          s uvwx    #
+# Used:             M      T V         fgh        q s uvwx    #
 
 my %opt = ();
 GetOptions
@@ -119,8 +126,11 @@ GetOptions
    'writedir=s'      => \$writedir,
    'fps=s'           => \$fps,
    'splitevery=i'    => \$spc,
-   'Verbose'         => \$verb,
+   'quiet'           => sub { $verb = 0; },
    'chunks=i'        => \$chunks,
+   'ViperValidator=s' => \$valtool,
+   'MergerHelper=s'  => \$mrgtool,
+   'copy_xml_too'    => \$copyxmltoo,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -229,15 +239,17 @@ while (my $file = shift @ARGV) {
 
   ##
 
+  my $addtxt = ($copyxmltoo) ? " (and rewritten XML file)" : "";
   if (scalar @vfl > 1) {
-    print $stepc++, ") Copying merged files\n";
+    print $stepc++, ") Copying merged MemDump file$addtxt\n";
   } else {
-    print $stepc++, ") Copying validated file\n";
+    print $stepc++, ") Copying validated MemDump file$addtxt\n";
   }
 
   my $fvf = "$mdir/$vf";
   my $xf = "$writedir/$fn.xml";
-  &copy_file($fvf, $xf);
+  &copy_file($fvf, $xf)
+    if ($copyxmltoo);
 
   my $mfvf = "$mdir/$md_vf";
   my $mxf = $xf . ".memdump";
