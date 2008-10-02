@@ -379,7 +379,14 @@ sub set_fps {
     $fps = 25;
   } elsif ($fps =~ m%^ntsc$%i) {
     $fps = 30000 / 1001;
-  } elsif ($fps < 0) {
+  }
+
+  if (! MMisc::is_float($fps)) {
+    $self->_set_errormsg($error_msgs{"WeirdBalue"});
+    return(0);
+  }
+
+  if ($fps < 0) {
     $self->_set_errormsg($error_msgs{"negFPS"});
     return(0);
   } elsif ($fps == 0) {
