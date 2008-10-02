@@ -118,7 +118,7 @@ sub get_env_val {
 
 sub is_blank {
   my $txt = &iuv(shift @_, "");
-  return(($txt =~ m%^\s*$%));
+  return(($txt =~ m%^\s*$%s));
 }
 
 #####
