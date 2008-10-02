@@ -395,23 +395,20 @@ if ($pds) {
   my $command = "$validator -G -f $fps " . join(" ", @xf);
   &die_syscall_logfile($log, "Obtaining Global Range and Global Min Values", $command);
 
-  my $txt = MMisc::slurp_file($log);
-  MMisc::error_quit("Problem reading log file ($txt), aborting")
-    if (! defined $txt);
+  my ($gmin, $grange) = &extract_gmin_grange_from_log($log);
+  print "Found: Global min = $gmin / Global range = $grange\n";
 
-  my ($gmin, $grange) = (undef, undef);
-  ($gmin, $grange) = ($1, $2)
-    if ($txt =~ m%^Global\s+min\:\s+([^\s]+?)\s.+?\[Range\:\s+([^\s]+)\]%m);
-  MMisc::error_quit("Could not find Global min and Global Range values")
-    if ((! defined $gmin) || (! defined $grange));
-  MMisc::error_quit("Some problem with Global min and Global Range values (Not a number ? [$gmin / $grange]")
-    if ((! MMisc::is_float($gmin)) || (! MMisc::is_float($grange)));
-
-  print "Found Global min: $gmin / Global range: $grange\n";
+  if ($grange == 0) {
+    MMisc::warn_print("          @@@@@@@@@@ Global range is 0 / Forcing \'1\' @@@@@@@@@@");
+    $grange = 1;
+  }
 
   my $log = MMisc::concat_dir_file_ext($sys_dir_base, "apply_global", $log_add);
   my $command = "$validator -G -V $grange:$gmin -f $fps -w $sys_dir_base -W text " . join(" ", @xf);
   &die_syscall_logfile($log, "Applying Global Range and Global Min Values", $command);
+
+  my ($gmin, $grange) = &extract_gmin_grange_from_log($log);
+  print "FINAL: Global min = $gmin / Global range = $grange\n";
   
   $sys_dir = $sys_dir_base;
 }
@@ -762,6 +759,26 @@ sub die_check_lgwf {
 
   MMisc::error_quit("Problem with LGW file: Does not contain a camera id")
       unless ($lgwf =~ s%^CAM\d$%%);
+}
+
+##########
+
+sub extract_gmin_grange_from_log {
+  my $log = shift @_;
+
+  my $txt = MMisc::slurp_file($log);
+  MMisc::error_quit("Problem reading log file ($txt), aborting")
+    if (! defined $txt);
+
+  my ($gmin, $grange) = (undef, undef);
+  ($gmin, $grange) = ($1, $2)
+    if ($txt =~ m%^Global\s+min\:\s+([^\s]+?)\s.+?\[Range\:\s+([^\s]+)\]%m);
+  MMisc::error_quit("Could not find Global min and Global Range values")
+    if ((! defined $gmin) || (! defined $grange));
+  MMisc::error_quit("Some problem with Global min and Global Range values (Not a number ? [$gmin / $grange]")
+    if ((! MMisc::is_float($gmin)) || (! MMisc::is_float($grange)));
+
+  return($gmin, $grange);
 }
 
 ############################################################
