@@ -2178,14 +2178,14 @@ sub exists_event {
 sub is_event_id_used {
   my ($self, $fev, $id) = @_;
 
-  my @all = $self->get_event_ids($fev);
+  my ($e, $s) = &split_full_event($fev, 0);
 
-  return(0) if ($self->error());
+  my %fhash = $self->_get_fhash();
 
-  return(1) if (grep(m%^$id$%, @all));
+  return(1) if (exists $fhash{$e}{$id});
 
   return(0);
-}
+} 
 
 #################### change type
 
