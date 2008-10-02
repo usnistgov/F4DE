@@ -184,7 +184,7 @@ sub save_ViperFile_XML {
 ##########
 
 sub save_ViperFile_MemDump {
-  my ($fname, $aobject, $mode, $printw, $portable) = @_;
+  my ($fname, $aobject, $mode, $printw, $portable, @asked_events) = @_;
 
   $printw = MMisc::iuv($printw, 1);
   $portable = MMisc::iuv($portable, 0);
@@ -193,14 +193,20 @@ sub save_ViperFile_MemDump {
   $fname = &_rm_mds($fname);
 
   my $object = undef;
-  if ($portable) {
-    $object = $aobject->clone();
-    # In order to make it portable, we remove command paths that might differ
-    # on different system (ie '/usr/bin/xmllint': force to "xmllint")
+  if (($portable) || (scalar @asked_events > 0)) {
+    if (scalar @asked_events > 0) {
+      $object = $aobject->clone_with_selected_events(@asked_events);
+    } else {
+      $object = $aobject->clone();
+    }
     return("Clone: " . $aobject->get_errormsg()) if ($aobject->error());
     return("Clone: Undefined Object") if (! defined $object);
-    $object->set_xmllint("xmllint", 1);
-    return("Portable Clone: " . $object->errormsg()) if ($object->error());
+    if ($portable) {
+      # In order to make it portable, we remove command paths that might differ
+      # on different system (ie '/usr/bin/xmllint': force to "xmllint")
+      $object->set_xmllint("xmllint", 1);
+      return("Portable Clone: " . $object->errormsg()) if ($object->error());
+    }
   } else {
     $object = $aobject;
   }
