@@ -134,6 +134,10 @@ my $epmdfile = "Events_Processed.md";
 
 my $md_add = TrecVid08HelperFunctions::get_MemDump_Suffix();
 
+my $BigXMLtool = (exists $ENV{"F4DE_BASE"})
+  ? $ENV{"F4DE_BASE"} . "/bin/BigXML_ValidatorHelper"
+  : "../TV08ViperValidator/BigXML_ValidatorHelper.pl";
+
 my $xmllint_env = "TV08_XMLLINT";
 my $xsdpath_env = "TV08_XSDPATH";
 my $mancmd = "perldoc -F $0";
@@ -155,9 +159,10 @@ my $dryrun = 0;
 my $gdoepmd = 0;
 my $qins = 0;
 my $cont_md = 0;
+my $use_bigxml = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:   C                T VW     cdef h        q s uvwx   #
+# Used:  BC                T VW    bcdef h        q s uvwx   #
 
 my %opt = ();
 GetOptions
@@ -179,6 +184,8 @@ GetOptions
    'create_Events_Processed_file' => \$gdoepmd,
    'quit_if_non_scorable' => \$qins,
    'Continue_MemDump' => \$cont_md,
+   'bigXML'           => \$use_bigxml,
+   'BigXML=s'         => \$BigXMLtool,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -218,8 +225,8 @@ if (defined $wid) {
 }
 
 if ($skipval) {
-  MMisc::error_quit("Can not use \'ecf\' or \'WriteMemDump\' when \'skip_validation\' is selected")
-    if ( (! MMisc::is_blank($ecffile)) || (defined $memdump) );
+  MMisc::error_quit("Can not use \'ecf\', \'WriteMemDump\' or \'bigXML\' when \'skip_validation\' is selected")
+    if ( (! MMisc::is_blank($ecffile)) || (defined $memdump) || ($use_bigxml) );
 }
 
 MMisc::error_quit("Can only use \'create_Events_Processed_file\' when \'WriteMemDump\' is used too")
@@ -230,8 +237,10 @@ if (defined $memdump) {
   MMisc::error_quit("Problem with \'WriteMemDump\' 's directory ($memdump) : $derr")
     if (! MMisc::is_blank($derr));
 } else {
- MMisc::error_quit("\'Continue_MemDump\' can only be used if \'WriteMemDump\' is selected")
-   if ($cont_md == 0);
+  MMisc::error_quit("\'Continue_MemDump\' can only be used if \'WriteMemDump\' is selected")
+    if ($cont_md == 0);
+  MMisc::error_quit("\'bigXML\' can only be used if \'WriteMemDump\' is selected")
+    if (! $use_bigxml);
 }
 
 my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
@@ -268,6 +277,7 @@ my $done = 0;
 my %warnings = ();
 my %notes = ();
 my $wn_key = "";
+my $admd = 0; # Already Dumper MemDump ?
 foreach my $sf (@ARGV) {
   %warnings = ();
   %notes = ();
@@ -673,6 +683,8 @@ sub check_exp_dirfiles {
       if (! MMisc::is_blank($e)) {
         vprint(5, "ERROR: $e");
         push @errsl, "$xf : $e";
+        return(\@ep, @errsl)
+          if ($qins);
       }
       push @sffnl, $sffn;
     }
@@ -761,15 +773,48 @@ sub validate_xml {
     }
   }
  
-  vprint(5, "Loading ViperFile");
+  my $md_dd = "";
+  if (defined $memdump) {
+    $md_dd = "$memdump/$exp";
+    
+    return("In \'WriteMemDump\' problem creating output directory ($md_dd)", "")
+      if (! MMisc::make_dir($md_dd));
+
+    my $derr = MMisc::check_dir_w($md_dd);
+    return("In \'WriteMemDump\', output directory ($md_dd) problem: $derr", "")
+      if (! MMisc::is_blank($derr));
+
+    $admd = 0;
+  }
+
   my $tmp = "$dir/$xf";
+  if ($use_bigxml) {
+    vprint(5, "Using BigXML tool to generate MemDump version");
+    return("No directory given for BigXML", "")
+      if (MMisc::is_blank($md_dd));
+    my $cmd = $BigXMLtool;
+    $cmd .= " -f $fps -w $md_dd $dir/$xf";
+    my $logfile = "$md_dd/$exp_key-BigXML.log";
+    
+    my ($rv, $tx, $so, $se, $retcode, $logfile)
+      = MMisc::write_syscall_smart_logfile($logfile, $cmd);
+    
+    return("Problem during BigXML, see logfile ($logfile)", "")
+      if ($retcode != 0);
+    
+    $tmp = MMisc::concat_dir_file_ext($md_dd, $xf, $md_add);
+
+    $admd = 1;
+  }
+   
+  vprint(5, "Loading ViperFile");
   my ($retstatus, $object, $msg) = 
     TrecVid08HelperFunctions::load_ViperFile
     (0, $tmp, $fps, $xmllint, $xsdpath);
   
   return($msg, "")
     if (! $retstatus);
-  
+
   vprint(5, "Confirming sourcefile filename is proper");
   $sffn = $object->get_sourcefile_filename();
   return("Problem obtaining the sourcefile's filename (" . $object->get_errormsg() . ")", "")
@@ -836,9 +881,15 @@ sub write_memdump_file {
     if (! MMisc::is_blank($derr));
 
   my $of = "$dd/$fname";
-  my $ok = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, "gzip", 0);
-  return("In \'WriteMemDump\', a problem occurred while writing the output file ($of): $ok")
-    if (! MMisc::is_blank($ok));
+  if ($admd) {
+    my $err = MMisc::check_file_r($of);
+    return("\'WriteMemDump\' file [$of] problem: $err")
+      if (! MMisc::is_blank($err));
+  } else {
+    my $ok = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, "gzip", 0);
+    return("In \'WriteMemDump\', a problem occurred while writing the output file ($of): $ok")
+      if (! MMisc::is_blank($ok));
+  }
 
   if ($doepmd) {
     my $str = MMisc::get_sorted_MemDump(\@ep);
