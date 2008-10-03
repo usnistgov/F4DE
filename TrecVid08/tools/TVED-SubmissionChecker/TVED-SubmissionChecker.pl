@@ -882,6 +882,7 @@ sub write_memdump_file {
 
   my $of = "$dd/$fname";
   if ($admd) {
+    $of .= $md_add;
     my $err = MMisc::check_file_r($of);
     return("\'WriteMemDump\' file [$of] problem: $err")
       if (! MMisc::is_blank($err));
