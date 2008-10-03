@@ -305,6 +305,7 @@ print "MASTER REF file: $master_ref\n";
 my $annot_count = 1;
 my %sys_files = ();
 my %sys_short = ();
+my @order_of_things = ();
 foreach my $sf (@ARGV) {
   my $f = MMisc::get_file_full_path($sf);
   &die_check_file_r($f, "SYS");
@@ -318,6 +319,7 @@ foreach my $sf (@ARGV) {
   $sys_files{$f} = $xtra;
   $sys_short{$file} = $f;
   print "SYS file: $sf (xtra attribute used: $xtra)\n";
+  push @order_of_things, $f;
 }
 
 ########## Extracting LGW file info
@@ -326,7 +328,7 @@ if (! MMisc::is_blank($info_g)) {
   
   my @l = ();
   push @l, $master_ref;
-  push @l, keys %sys_files;
+  push @l, @order_of_things;
   foreach my $f (@l) {
     if ($f =~ m%(LGW_.+?_CAM\d)%) {
       my $tmp = $1;
@@ -373,7 +375,7 @@ if (defined $cSYSt) {
   $sys_switch = "-C$v -g" 
 }
 print "Validating SYS files\n";
-foreach my $sf (sort keys %sys_files) {
+foreach my $sf (@order_of_things) {
   my ($dir, $onfile, $ext) = &die_split_dfe($sf ,"SYS file");
   my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
   my $log = MMisc::concat_dir_file_ext($sys_dir, $file, $log_add);
@@ -386,7 +388,7 @@ if ($pds) {
   print "Adjusting Detection Score to 100 % max [0 -> 1]\n";
   
   my @xf = ();
-  foreach my $sf (sort keys %sys_files) {
+  foreach my $sf (@order_of_things) {
     my ($dir, $onfile, $ext) = &die_split_dfe($sf ,"SYS file");
     my $file = MMisc::concat_dir_file_ext($sys_dir, $onfile, $ext . $md_add);
     push @xf, $file;
@@ -422,7 +424,8 @@ my $master_ref_md = MMisc::concat_dir_file_ext($ref_dir, $file, "$md_add");
 &die_check_file_r($master_ref_md, "REF");
 
 my %sc1_sys_files = ();
-foreach my $sf (sort keys %sys_files) {
+my %sc1_mapt = ();
+foreach my $sf (@order_of_things) {
   my ($dir, $onfile, $ext) = &die_split_dfe($sf, "SYS");
   my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
   my $sf_md = MMisc::concat_dir_file_ext($sys_dir, $file, "$md_add");
@@ -440,6 +443,7 @@ foreach my $sf (sort keys %sys_files) {
 
   my @ofiles = &die_list_X_files(2, $odir, "$file scoring");
   my ($ofile) = grep(m%$md_add$%, @ofiles);
+  $sc1_mapt{$sf} = $file;
   $sc1_sys_files{$file} = "$odir/$ofile";
 }
 
@@ -449,7 +453,14 @@ print "\n\n***** STEP ", $stepc++, ": Only keeping Unmapped_Sys entries\n";
 my $usys_dir = MMisc::get_file_full_path("$wid/$first_remove");
 
 my %sc2_sys_files = ();
-foreach my $sf (sort keys %sc1_sys_files) {
+my %sc2_mapt = ();
+foreach my $tsf (@order_of_things) {
+  MMisc::error_quit("KEY NOT FOUND [$tsf]")
+    if (! exists $sc1_mapt{$tsf});
+  my $sf = $sc1_mapt{$tsf};
+  MMisc::error_quit("KEY2 NOT FOUND [$sf]")
+    if (! exists $sc1_sys_files{$sf});
+  
   my $odir = "$usys_dir/$sf$dtadd";
   &die_mkdir($odir, "$sf");
 
@@ -467,6 +478,7 @@ foreach my $sf (sort keys %sc1_sys_files) {
   MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (2) : " . join(" ", @tmp))
     if (scalar @tmp != 2);
   my ($ofile) = grep(m%$md_add$%, @tmp);
+  $sc2_mapt{$tsf} = $sf;
   $sc2_sys_files{$sf} = "$odir/$ofile";
 }
 
@@ -474,7 +486,10 @@ foreach my $sf (sort keys %sc1_sys_files) {
 print "\n\n***** STEP ", $stepc++, ": Iteration\n";
 
 my $inc = 0;
-my @todo = sort keys %sc2_sys_files;
+my @todo = ();
+foreach my $k (@order_of_things) {
+  push @todo, $sc2_mapt{$k};
+}
 MMisc::error_quit("No elements in SYS list, aborting")
   if (scalar @todo == 0);
 my $csf_key = shift @todo;
