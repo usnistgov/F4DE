@@ -880,6 +880,15 @@ sub write_memdump_file {
   return("In \'WriteMemDump\', output directory problem: $derr")
     if (! MMisc::is_blank($derr));
 
+  if ($doepmd) { # First, do the Processed Event list dump
+    my $str = MMisc::get_sorted_MemDump(\@ep);
+    my $fn = "$dd/$epmdfile";
+    MMisc::error_quit("Could not write expected events files ($fn), aborting")
+      if (! MMisc::writeTo($fn, "", 0, 0, $str));
+    $doepmd = 0;
+  }
+
+  # Then worry about the regular memdump
   my $of = "$dd/$fname";
   if ($admd) {
     $of .= $md_add;
@@ -890,14 +899,6 @@ sub write_memdump_file {
     my $ok = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, "gzip", 0);
     return("In \'WriteMemDump\', a problem occurred while writing the output file ($of): $ok")
       if (! MMisc::is_blank($ok));
-  }
-
-  if ($doepmd) {
-    my $str = MMisc::get_sorted_MemDump(\@ep);
-    my $fn = "$dd/$epmdfile";
-    MMisc::error_quit("Could not write expected events files ($fn), aborting")
-      if (! MMisc::writeTo($fn, "", 0, 0, $str));
-    $doepmd = 0;
   }
 
   return("");
