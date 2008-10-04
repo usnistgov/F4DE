@@ -400,7 +400,7 @@ if ($pds) {
   my @xf = ();
   foreach my $sf (@order_of_things) {
     my ($dir, $onfile, $ext) = &die_split_dfe($sf ,"SYS file");
-    my $file = MMisc::concat_dir_file_ext($sys_dir, $onfile, $ext . $md_add);
+    my $file = MMisc::concat_dir_file_ext($sys_dir, $onfile, $ext . (($ext =~ m%$md_add$%) ? "" : $md_add));
     push @xf, $file;
   }
   my $log = MMisc::concat_dir_file_ext($sys_dir_base, "find_global", $log_add);
@@ -435,7 +435,7 @@ my %sc1_mapt = ();
 foreach my $sf (@order_of_things) {
   my ($dir, $onfile, $ext) = &die_split_dfe($sf, "SYS");
   my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
-  my $sf_md = MMisc::concat_dir_file_ext($sys_dir, $file, ($file =~ m%$md_add$%) ? "" : "$md_add");
+  my $sf_md = MMisc::concat_dir_file_ext($sys_dir, $file, (($file =~ m%$md_add$%) ? "" : "$md_add"));
   &die_check_file_r($sf_md, "SYS");
   
   my $bodir = MMisc::get_file_full_path("$wid/$first_align");
@@ -541,7 +541,7 @@ while (scalar @todo > 0) {
   &die_syscall_logfile($log, $mode_txt, $command);
 
   my (@ofiles) = &die_list_X_files(3, $odir, "$mode");
-  my @tmp = grep( m%$md_add$%, @ofiles);
+  my @tmp = grep(m%$md_add$%, @ofiles);
   MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
     if (scalar @tmp != 1);
   my $ofile = $tmp[0];
