@@ -277,7 +277,7 @@ if ($mf eq "_blank_") {
   &die_mkdir($mrd, "empty Master REF");
 
   my $log = MMisc::concat_dir_file_ext($mrd, "empty_Master_REF", $log_add);
-  my $command = "$validator -R AllEvents -w $mrd $f -p";
+  my $command = "$validator -R AllEvents -w $mrd -W text $f -p";
   if (defined $cSYSt) { # if the SYS are really a GTF
     $command .= " -g";
   } else { # otherwise, we need to change its type
@@ -286,8 +286,8 @@ if ($mf eq "_blank_") {
 
   &die_syscall_logfile($log, "validating command", $command);
 
-  my @ofiles = &die_list_X_files(2, $mrd, "result");
-  my @tmp = grep(! m%$log_add$%, @ofiles);
+  my @ofiles = &die_list_X_files(3, $mrd, "result");
+  my @tmp = grep(m%$md_add$%, @ofiles);
   MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
     if (scalar @tmp != 1);
 
@@ -350,11 +350,10 @@ if (! MMisc::is_blank($info_g)) {
 ########## Validating input files
 print "\n\n***** STEP ", $stepc++, ": Validating input files\n";
 
+## REF
+
 my $ref_dir = MMisc::get_file_full_path("$wid/$ref_val_md_dir");
 &die_mkdir($ref_dir, "REF");
-my $sys_dir_base = MMisc::get_file_full_path("$wid/$sys_val_md_dir");
-my $sys_dir = ($pds) ? "$sys_dir_base/00-Before_percentDS" : $sys_dir_base;
-&die_mkdir($sys_dir, "SYS");
 
 my $val_add = "";
 $val_add .= "-F $forceFilename " 
@@ -368,6 +367,17 @@ my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
 my $log = MMisc::concat_dir_file_ext($ref_dir, $file, $log_add);
 my $command = "$validator $val_add $master_ref -w $ref_dir -W text $ref_switch";
 &die_syscall_logfile($log, "REF validation command", $command);
+my @ofiles = &die_list_X_files(3, $ref_dir, "REF Validation result");
+my @tmp = grep(m%$md_add$%, @ofiles);
+MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (1) : " . join(" ", @tmp))
+  if (scalar @tmp != 1);
+my $master_ref_md = "$ref_dir/" . $tmp[0];
+
+## SYS
+
+my $sys_dir_base = MMisc::get_file_full_path("$wid/$sys_val_md_dir");
+my $sys_dir = ($pds) ? "$sys_dir_base/00-Before_percentDS" : $sys_dir_base;
+&die_mkdir($sys_dir, "SYS");
 
 my $sys_switch = "";
 if (defined $cSYSt) {
@@ -418,17 +428,14 @@ if ($pds) {
 ########## Align SYSs to Master REF
 print "\n\n***** STEP ", $stepc++, ": Align SYSs to REF\n";
 
-my ($dir, $onfile, $ext) = &die_split_dfe($master_ref, "\'master_ref\'");
-my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
-my $master_ref_md = MMisc::concat_dir_file_ext($ref_dir, $file, "$md_add");
-&die_check_file_r($master_ref_md, "REF");
+&die_check_file_r($master_ref_md, "Validated REF");
 
 my %sc1_sys_files = ();
 my %sc1_mapt = ();
 foreach my $sf (@order_of_things) {
   my ($dir, $onfile, $ext) = &die_split_dfe($sf, "SYS");
   my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
-  my $sf_md = MMisc::concat_dir_file_ext($sys_dir, $file, "$md_add");
+  my $sf_md = MMisc::concat_dir_file_ext($sys_dir, $file, ($file =~ m%$md_add$%) ? "" : "$md_add");
   &die_check_file_r($sf_md, "SYS");
   
   my $bodir = MMisc::get_file_full_path("$wid/$first_align");
