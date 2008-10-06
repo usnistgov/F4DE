@@ -389,14 +389,19 @@ foreach my $sf (@order_of_things) {
   my ($dir, $onfile, $ext) = &die_split_dfe($sf ,"SYS file");
   my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
   my $log = MMisc::concat_dir_file_ext($sys_dir, $file, $log_add);
-  my $xtra = $sys_files{$sf};
-  my $command = "$validator $val_add $sf -w $sys_dir -W text -a $xtra:$sf -A $sys_switch";
+  my $xtratxt = "";
+  if (! $pds) { # Do not add the xtraTrackingComment just yet if 'percentDS'
+    my $xtra = $sys_files{$sf};
+    $xtratxt = "-a $xtra:$sf -A";
+  }
+  my $command = "$validator $val_add $sf -w $sys_dir -W text $xtratxt $sys_switch";
   &die_syscall_logfile($log, "SYS validation command", $command);
 }
 
 if ($pds) {
   print "Adjusting Detection Score to 100 % max [0 -> 1]\n";
-  
+
+  # First, get the values to work with
   my @xf = ();
   foreach my $sf (@order_of_things) {
     my ($dir, $onfile, $ext) = &die_split_dfe($sf ,"SYS file");
@@ -415,14 +420,27 @@ if ($pds) {
     $grange = 1;
   }
 
-  my $log = MMisc::concat_dir_file_ext($sys_dir_base, "apply_global", $log_add);
-  my $command = "$validator -G -V $grange:$gmin -f $fps -w $sys_dir_base -W text " . join(" ", @xf);
+  # Then apply those values
+  my $sys_dir_pds = "$sys_dir_base/01-After_percentDS";
+  &die_mkdir($sys_dir_pds, "percent DS SYS");
+  my $log = MMisc::concat_dir_file_ext($sys_dir_pds, "apply_global", $log_add);
+  my $command = "$validator -G -V $grange:$gmin -f $fps -w $sys_dir_pds -W text " . join(" ", @xf);
   &die_syscall_logfile($log, "Applying Global Range and Global Min Values", $command);
 
   my ($gmin, $grange) = &extract_gmin_grange_from_log($log);
   print "FINAL: Global min = $gmin / Global range = $grange\n";
   
+  # Finaly, get the final Validated MemDump _WITH_ the xtraTrackingComment
   $sys_dir = $sys_dir_base;
+  foreach my $sf (@order_of_things) {
+    my ($dir, $onfile, $ext) = &die_split_dfe($sf ,"SYS file");
+    my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
+    my $infile = MMisc::concat_dir_file_ext($sys_dir_pds, $onfile, $ext . (($ext =~ m%$md_add$%) ? "" : $md_add));
+    my $log = MMisc::concat_dir_file_ext($sys_dir, $file, $log_add);
+    my $xtra = $sys_files{$sf};
+    my $command = "$validator $val_add $infile -w $sys_dir -W text -a $xtra:$sf -A";
+    &die_syscall_logfile($log, "Post \'percentDS\' SYS MemDump + Xtra adds", $command);
+  }
 }
 
 ########## Align SYSs to Master REF
