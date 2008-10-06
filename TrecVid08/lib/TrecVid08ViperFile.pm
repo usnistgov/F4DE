@@ -117,7 +117,10 @@ my @keys_xtra_tc_authorized = ($key_xtra_tc_original, $key_xtra_tc_modsadd);
 
 my @array_xtra_tc_list = # Order is important
   ( "File", "Sourcefile", "Type", "Event", "SubType",
-    "ID", "Framespan", "XtraAttributes");
+    "ID", "Framespan", "XtraAttributes",
+    # Added 20081006:
+    "DetectionScore", "DetectionDecision",
+  );
 
 # Important to properly separate those values in other pacakges
 my $char_tc_separator = "\#";
@@ -173,6 +176,9 @@ my $key_subtype = "subtype";
 
 my $full_event_separator = "\:";
 
+my $key_DetectionDecision = "DetectionDecision";
+my $key_DetectionScore    = "DetectionScore";
+
 ##########
 # Default values to compare against (constant values)
 my $default_error_value = "default_error_value";
@@ -181,7 +187,7 @@ my $framespan_max_default = "all";
 ########## Some rules that can be changed (here, specific for TrecVid08)
 # Maximum number of pair per framespan found
 # For Trecvid08, only one pair (ie one framespan range) is authorized per framespan (0 for unlimited)
-my $max_pair_per_fs = 1;        # positive number / 0 for unlimited
+my $max_pair_per_fs = 1; # positive number / 0 for unlimited
 ## Update (20080421): After talking with Jon, we decided that IDs do not have to start at 0 or be consecutive after all
 # Check if IDs list have to start at 0
 my $check_ids_start_at_zero = 0;
@@ -2538,6 +2544,16 @@ sub set_xtra_attribute {
                                sort keys %{$fhash{$event}{$id}{$key_xtra}} );
           $xtra_txt = join(" ", @xtra_list);
         }
+        my $detscr = "NA";
+        my $detdec = "NA";
+        if ($self->check_if_sys()) {
+          if ( (! exists $fhash{$event}{$id}{$key_DetectionScore})  || (! exists $fhash{$event}{$id}{$key_DetectionDecision}) ) {
+            $self->_set_errormsg("\"$key_DetectionScore\" and/or \"$key_DetectionDecision\" should be set for a SYS");
+            return(0);
+          }
+          $detscr = MMisc::dive_structure($fhash{$event}{$id}{$key_DetectionScore});
+          $detdec = MMisc::dive_structure($fhash{$event}{$id}{$key_DetectionDecision});
+        }
 
         $addvalue 
           = "$char_tc_beg_entry$pretxt " .
@@ -2548,7 +2564,9 @@ sub set_xtra_attribute {
             &__write_entry_line($array_xtra_tc_list[4], $subtype) .
             &__write_entry_line($array_xtra_tc_list[5], $id) .
             &__write_entry_line($array_xtra_tc_list[6], $range) .
-            &__write_entry_line($array_xtra_tc_list[7], $xtra_txt, 1) .
+            &__write_entry_line($array_xtra_tc_list[7], $xtra_txt) .
+            &__write_entry_line($array_xtra_tc_list[8], $detscr) .
+            &__write_entry_line($array_xtra_tc_list[9], $detdec, 1) .
             $char_tc_end_entry;
       }
       if ((! exists $fhash{$event}{$id}{$key_xtra}{$attr}) || ($replace)) {
