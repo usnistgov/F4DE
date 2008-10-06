@@ -414,11 +414,24 @@ sub add_tv08obs {
       $self->_set_errormsg("Found a different amount of tracking comment (" . scalar @atc . ") comapred to the number of Xtra Attributes ($alignc)");
       return(0);
     }
-    my $ag_txt = $self->add_agree($event, $alignc, $align, $fs);
+    if (scalar @atc == 0) {
+      $self->_set_errormsg("Found a zero count for tracking comment");
+      return(0);
+    }
+    my ($ag_txt, $id) = $self->add_agree($event, $alignc, $align, $fs);
     return(0) if (MMisc::is_blank($ag_txt));
+    my $detscrsum = 0;
+
     foreach my $rh (@atc) {
       my $fs_value = $$rh{$xtra_tc_list[6]};
       my $annot = $$rh{$xtra_tc_list[7]};
+      my $detscr = $$rh{$xtra_tc_list[8]};
+
+      if (! MMisc::is_float($detscr)) {
+        $self->_set_errormsg("Found an UnmappedSys entry without a proper \"DetectionScore\" ($detscr)");
+        return(0);
+      }
+      $detscrsum += $detscr;
 
       if ($osf != 0) {
         my $fs_fs = new ViperFramespan($fs_value);
@@ -439,9 +452,12 @@ sub add_tv08obs {
         $fs_value = $fs_fs->get_value();
       }
     
-      return(0) if (! $self->add_Unmapped_annot($event, $fs_value, "$ag_txt $annot"));
+      return(0) if (! $self->add_Unmapped_annot($event, $fs_value, "$ag_txt $annot", $detscr));
     }
-    return (1);
+
+    my $meandetscr = $detscrsum / scalar @atc;
+
+    return($self->set_agree_DetectionScore($event, $alignc, $id, $meandetscr));
   }
 
   if ($st eq $key_se_UnmappedRef) {
@@ -456,8 +472,28 @@ sub add_tv08obs {
 
 ##########
 
+sub set_agree_DetectionScore {
+  my ($self, $event, $agc, $id, $detscr) = @_;
+
+  return(0) if (! exists $self->{Agree}{$event}{$agc});
+
+  my @tmp = @{$self->{Agree}{$event}{$agc}};
+  return(0) if (scalar @tmp < $id);
+
+  my @a = @{$tmp[$id]};
+
+  $a[2] = $detscr;
+
+  ${$self->{Agree}{$event}{$agc}}[$id] = \@a;
+
+  return(1);
+}
+
+#####
+
 sub add_agree {
   my ($self, $event, $agc, $agt, $fs) = @_;
+  # Set and empty DetectionScore for now
 
   my $txt = "";
 
@@ -470,32 +506,33 @@ sub add_agree {
 
   if (! exists $self->{Agree}{$event}{$agc}) {
     my @tmp = ();
-    push @tmp, [ $fs, $agt ];
+    push @tmp, [ $fs, $agt, undef ];
     @{$self->{Agree}{$event}{$agc}} = @tmp;
   } else {
-    push @{$self->{Agree}{$event}{$agc}}, [ $fs, $agt ];
+    push @{$self->{Agree}{$event}{$agc}}, [ $fs, $agt, undef ];
   }
 
   $self->setif_maxAgree($agc);
 
-  $txt = "Agree=$agc ID=" . scalar @{$self->{Agree}{$event}{$agc}} - 1;
+  my $id  = scalar @{$self->{Agree}{$event}{$agc}} - 1;
+  $txt = "Agree=$agc ID=$id";
 
-  return($txt);
+  return($txt, $id);
 } 
 
 #####
 
 sub add_Unmapped_annot {
-  my ($self, $event, $fs, $annot) = @_;
+  my ($self, $event, $fs, $annot, $detscr) = @_;
 
 #  print "** Unmapped Annot ($event / $fs / $annot)\n";
 
   if (! exists $self->{UnmapAnnot}{$event}) {
     my @tmp = ();
-    push @tmp, [ $fs, $annot ];
+    push @tmp, [ $fs, $annot, $detscr ];
     @{$self->{UnmapAnnot}{$event}} = @tmp;
   } else {
-    push @{$self->{UnmapAnnot}{$event}}, [ $fs, $annot ];
+    push @{$self->{UnmapAnnot}{$event}}, [ $fs, $annot, $detscr ];
   }
 
   return(1);
@@ -564,7 +601,7 @@ sub _wb_print { # writeback print
 #####
 
 sub _writexml_Agree {
-  my ($in, $agree, $fs, $id) = @_;
+  my ($in, $agree, $fs, $id, $detscr) = @_;
 
   my $txt = "";
 
@@ -572,6 +609,9 @@ sub _writexml_Agree {
   $txt .= &_wb_print($in, "<attribute name=\"Note\"/>\n");
   $txt .= &_wb_print($in++, "<attribute name=\"isGood\">\n");
   $txt .= &_wb_print($in--, "<data:bvalue value=\"false\"/>\n");
+  $txt .= &_wb_print($in--, "</attribute>\n");
+  $txt .= &_wb_print($in++, "<attribute name=\"DetectionScore\">\n");
+  $txt .= &_wb_print($in--, "<data:fvalue value=\"$detscr\"/>\n");
   $txt .= &_wb_print($in--, "</attribute>\n");
   $txt .= &_wb_print($in, "</object>\n");
 
@@ -581,13 +621,16 @@ sub _writexml_Agree {
 #####
 
 sub _writexml_UnmapAnnot {
-  my ($in, $id, $fs, $annot) = @_;
+  my ($in, $id, $fs, $annot, $detscr) = @_;
 
   my $txt = "";
 
   $txt .= &_wb_print($in++, "<object framespan=\"$fs\" id=\"$id\" name=\"Unmapped Annot\">\n");
   $txt .= &_wb_print($in++, "<attribute name=\"location\">\n");
   $txt .= &_wb_print($in--, "<data:svalue value=\"$annot\"/>\n");
+  $txt .= &_wb_print($in--, "</attribute>\n");
+  $txt .= &_wb_print($in++, "<attribute name=\"DetectionScore\">\n");
+  $txt .= &_wb_print($in--, "<data:fvalue value=\"$detscr\"/>\n");
   $txt .= &_wb_print($in--, "</attribute>\n");
   $txt .= &_wb_print($in, "</object>\n");
 
@@ -691,15 +734,17 @@ sub get_xml {
   $txt .= &_wb_print(--$in, "</descriptor>\n");
   if (exists $self->{Agree}{$event}) {
     foreach my $level (reverse sort {$a <=> $b} keys %{$self->{Agree}{$event}}) {
-      $txt .= &_wb_print($in, "<descriptor name=\"Agree=$level\" type=\"OBJECT\">\"\n");
-      $txt .= &_wb_print($in++, "<attribute dynamic=\"false\" name=\"Note\" type=\"http://lamp.cfar.umd.edu/viperdata#svalue\"/>\n");
+      $txt .= &_wb_print($in++, "<descriptor name=\"Agree=$level\" type=\"OBJECT\">\"\n");
+      $txt .= &_wb_print($in, "<attribute dynamic=\"false\" name=\"Note\" type=\"http://lamp.cfar.umd.edu/viperdata#svalue\"/>\n");
       $txt .= &_wb_print($in, "<attribute dynamic=\"false\" name=\"isGood\" type=\"http://lamp.cfar.umd.edu/viperdata#bvalue\"/>\n");
+      $txt .= &_wb_print($in, "<attribute dynamic=\"false\" name=\"DetectionScore\" type=\"http://lamp.cfar.umd.edu/viperdata#fvalue\"/>\n");
       $txt .= &_wb_print(--$in, "</descriptor>\n");
     }
   }
   if (exists $self->{UnmapAnnot}{$event}) {
-    $txt .= &_wb_print($in, "<descriptor name=\"Unmapped Annot\" type=\"OBJECT\">\n");
-    $txt .= &_wb_print($in++, "<attribute dynamic=\"false\" name=\"location\" type=\"http://lamp.cfar.umd.edu/viperdata#svalue\"/>\n");
+    $txt .= &_wb_print($in++, "<descriptor name=\"Unmapped Annot\" type=\"OBJECT\">\n");
+    $txt .= &_wb_print($in, "<attribute dynamic=\"false\" name=\"location\" type=\"http://lamp.cfar.umd.edu/viperdata#svalue\"/>\n");
+    $txt .= &_wb_print($in, "<attribute dynamic=\"false\" name=\"DetectionScore\" type=\"http://lamp.cfar.umd.edu/viperdata#fvalue\"/>\n");
     $txt .= &_wb_print(--$in, "</descriptor>\n");
   }
   $txt .= &_wb_print($in, "<descriptor name=\"$event REF\" type=\"OBJECT\">\n");
@@ -714,8 +759,8 @@ sub get_xml {
     foreach my $level (reverse sort {$a <=> $b} keys %{$self->{Agree}{$event}}) {
       my $inc = 0;
       foreach my $ra (@{$self->{Agree}{$event}{$level}}) {
-        my ($fs, $agt) = @$ra;
-        $txt .= &_writexml_Agree($in, $level, $fs, $inc++);
+        my ($fs, $agtm, $detscr) = @$ra;
+        $txt .= &_writexml_Agree($in, $level, $fs, $inc++, $detscr);
       }
     }
   }
@@ -723,8 +768,8 @@ sub get_xml {
   if (exists $self->{UnmapAnnot}{$event}) {
     my $inc = 0;
     foreach my $ra (@{$self->{UnmapAnnot}{$event}}) {
-      my ($fs, $annot) = @$ra;
-      $txt .= &_writexml_UnmapAnnot($in, $inc++, $fs, $annot);
+      my ($fs, $annot, $detscr) = @$ra;
+      $txt .= &_writexml_UnmapAnnot($in, $inc++, $fs, $annot, $detscr);
     }
   }
 
