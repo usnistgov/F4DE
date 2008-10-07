@@ -1170,7 +1170,7 @@ sub is_float {
 
   $str = &clean_begend_spaces($str);
   return(1)
-    if ($str =~ m%^\-?\d+(\.\d+)?$%);
+    if ($str =~ m%^\-?\d+(\.\d+)?(e[-+]?\d+)?$%i);
 
   return(0);
 }
