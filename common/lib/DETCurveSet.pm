@@ -26,7 +26,7 @@ use DETCurve;
 sub new
   {
     my ($class, $title) = @_;
-        
+
     my $self =
       { 
        Title => $title,
@@ -233,16 +233,16 @@ sub _buildAutoTable(){
     foreach my $block (sort $trial->getBlockIDs()) {
       $combData{$block}{MMISS} = $trial->getNumMiss($block);     
       $combData{$block}{MFA} = $trial->getNumFalseAlarm($block); 
-    }                                                              
+    }
     my ($BScombAvg, $BScombSSD, $BSmissAvg, $BSmissSSD, $BSfaAvg, $BSfaSSD) = 
-      $metric->combBlockSetCalc(\%combData);                     
+      $metric->combBlockSetCalc(\%combData);
 
     if ($includeCounts) {
-      my ($refSum, $refAvg, $refSSD) = $trial->getTotNumTarg(); 
-      my ($sysSum, $sysAvg, $sysSSD) = $trial->getTotNumCorr(); 
-      my ($corrSum, $corrAvg, $corrSSD) = $trial->getTotNumCorr(); 
-      my ($faSum, $faAvg, $faSSD) = $trial->getTotNumFalseAlarm(); 
-      my ($missSum, $missAvg, $missSSD) = $trial->getTotNumMiss(); 
+      my ($refSum, $refAvg, $refSSD) = $trial->getTotNumTarg();
+      my ($sysSum, $sysAvg, $sysSSD) = $trial->getTotNumSys();
+      my ($corrSum, $corrAvg, $corrSSD) = $trial->getTotNumCorr();
+      my ($faSum, $faAvg, $faSSD) = $trial->getTotNumFalseAlarm();
+      my ($missSum, $missAvg, $missSSD) = $trial->getTotNumMiss();
       $at->addData($refSum,           "#Ref",   $key);
       $at->addData($sysSum,           "#Sys",   $key);
       $at->addData($corrSum,          "#CorDet",   $key);
