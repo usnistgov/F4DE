@@ -896,7 +896,7 @@ sub write_memdump_file {
     return("\'WriteMemDump\' file [$of] problem: $err")
       if (! MMisc::is_blank($err));
   } else {
-    my $ok = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, "gzip", 0);
+    (my $ok, $of) = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, "gzip", 0);
     return("In \'WriteMemDump\', a problem occurred while writing the output file ($of): $ok")
       if (! MMisc::is_blank($ok));
   }

@@ -577,12 +577,12 @@ while ($tmp = shift @ARGV) {
       $fname = MMisc::concat_dir_file_ext($writeback, $tf, $te);
     }
 
-    my $err = TrecVid08HelperFunctions::save_ViperFile_XML($fname, $nvf, 1, "** XML re-Representation:\n", @asked_events);
+    (my $err, $fname) = TrecVid08HelperFunctions::save_ViperFile_XML($fname, $nvf, 1, "** XML re-Representation:\n", @asked_events);
     MMisc::error_quit($err)
       if (! MMisc::is_blank($err));
     
     if (defined $MemDump) {
-      my $err = TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump, 1, 1);
+      (my $err, $fname) = TrecVid08HelperFunctions::save_ViperFile_MemDump($fname, $nvf, $MemDump, 1, 1);
       MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object ($err)")
         if (! MMisc::is_blank($err));
     }

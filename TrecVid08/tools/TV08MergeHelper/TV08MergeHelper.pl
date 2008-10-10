@@ -452,11 +452,11 @@ foreach my $key (sort keys %mergefiles) {
   my @used_events = ($autolt) ? $mf->list_used_full_events() : @ok_events;
 
   my $writeto = (MMisc::is_blank($writetodir)) ? "" : "$writetodir/$key.xml";
-  my $errm = TrecVid08HelperFunctions::save_ViperFile_XML($writeto, $mf, 1, "", @used_events);
+  (my $errm, $writeto) = TrecVid08HelperFunctions::save_ViperFile_XML($writeto, $mf, 1, "", @used_events);
   MMisc::error_quit($errm)
     if (! MMisc::is_blank($errm));
   if (defined $MemDump) {
-    my $err = TrecVid08HelperFunctions::save_ViperFile_MemDump($writeto, $mf, $MemDump, 1, 1, ($autolt) ? @used_events : ());
+    (my $err, $writeto) = TrecVid08HelperFunctions::save_ViperFile_MemDump($writeto, $mf, $MemDump, 1, 1, ($autolt) ? @used_events : ());
       MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object ($err)")
         if (! MMisc::is_blank($err));
     }
@@ -484,11 +484,11 @@ if ($ovoxml) {
 
     my @used_events = ($autolt) ? $mf->list_used_full_events() : @ok_events;
     my $writeto = (MMisc::is_blank($writetodir)) ? "" : "$writetodir/${key}_OverlapOnly.xml";
-    my $errm = TrecVid08HelperFunctions::save_ViperFile_XML($writeto, $mf, 1, "", @used_events);
+    (my $errm, $writeto) = TrecVid08HelperFunctions::save_ViperFile_XML($writeto, $mf, 1, "", @used_events);
     MMisc::error_quit($errm)
       if (! MMisc::is_blank($errm));
     if (defined $MemDump) {
-      my $err = TrecVid08HelperFunctions::save_ViperFile_MemDump($writeto, $mf, $MemDump, 1, 1, ($autolt) ? @used_events : ());
+      (my $err, $writeto) = TrecVid08HelperFunctions::save_ViperFile_MemDump($writeto, $mf, $MemDump, 1, 1, ($autolt) ? @used_events : ());
       MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object ($err)")
         if (! MMisc::is_blank($err));
     }
