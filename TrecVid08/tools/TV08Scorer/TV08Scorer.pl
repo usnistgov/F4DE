@@ -163,6 +163,13 @@ unless (eval "use TrecVid08HelperFunctions; 1") {
   $have_everything = 0;
 }
 
+# CSVHelper (part of this tool)
+unless (eval "use CSVHelper; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"CSVHelper\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
 # Something missing ? Abort
 if (! $have_everything) {
   print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
@@ -231,9 +238,10 @@ my $ltse = 0;
 my @asked_events = ();
 my $xtend = "";
 my $MemDump = undef;
+my $inputAliCSV = "";
 
-# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# Used:   CDEFG    LMNO  RST  WX Za  cdefgh  lmnop  st vwx  
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
+# Used: A CDEFG    LMNO  RST  WX Za  cdefgh  lmnop  st vwx   #
 
 my %opt = ();
 my @leftover = ();
@@ -271,6 +279,7 @@ GetOptions
    'Rtarget=f'       => \$Rtarget,
    'XtraMappedObservations=s' => \$xtend,
    'WriteMemDump:s'  => \$MemDump,
+   'AlignmentCSV=s'  => \$inputAliCSV,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -283,7 +292,8 @@ if ($opt{'man'}) {
   MMisc::ok_quit($o);
 }
 
-MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+MMisc::ok_quit("\n$usage\n") 
+  if ((scalar @ARGV == 0) && (MMisc::is_blank($inputAliCSV)));
 
 MMisc::error_quit("\'fps\' must set in order to do any scoring work") if (! defined $fps);
 MMisc::error_quit("\'delta_t\' must set in order to do any scoring work") if (! defined $delta_t);
@@ -323,10 +333,17 @@ MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting
 my ($rref, $rsys) = &get_sys_ref_filelist(\@leftover, @ARGV);
 my @ref = @{$rref};
 my @sys = @{$rsys};
-MMisc::error_quit("No SYS file(s) provided, can not perform scoring")
-  if (scalar @sys == 0);
-MMisc::error_quit("No REF file(s) provided, can not perform scoring")
-  if (scalar @ref == 0);
+if (MMisc::is_blank($inputAliCSV)) {
+  MMisc::error_quit("No SYS file(s) provided, can not perform scoring")
+    if (scalar @sys == 0);
+  MMisc::error_quit("No REF file(s) provided, can not perform scoring")
+    if (scalar @ref == 0);
+} else {
+  MMisc::error_quit("\'ecf\' can not be used with \'AlignmentCSV\'; \'Duration\' is to be used instead")
+    if (! MMisc::is_blank($ecffile));
+  MMisc::error_quit("\'Duration\' not set while required when using \'AlignmentCSV\'")
+    if ($duration == 0);
+}
 
 MMisc::error_quit("\'NoDetFiles\' can not be used unless \'noPNG\' is selected too")
   if ((! $noPNG) && $nodetfiles);
@@ -347,102 +364,162 @@ if (scalar @asked_events == 0) {
 
 ########## Main processing
 my $stepc = 1;
-
-## Load Pre-processing
-print "***** STEP ", $stepc++, ": Loading files in Memory\n";
-my ($sysdone, $systodo, %sys_hash) = &load_preprocessing(0, @sys);
-my ($refdone, $reftodo, %ref_hash) = &load_preprocessing(1, @ref);
-
-my $ndone = $sysdone + $refdone;
-my $ntodo = $systodo + $reftodo;
-
-print "\n** SUMMARY: All files loaded\n";
-print "** REF: $systodo files (", ($sysdone == $systodo) ? "all" : $sysdone, " ok)\n";
-print "** SYS: $reftodo files (", ($refdone == $reftodo) ? "all" : $refdone, " ok)\n\n";
-MMisc::error_quit("Can not continue, not all files passed the loading/validation step, aborting\n")
-  if ($ndone != $ntodo);
-
-## Loading of the ECF file
-my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
-if ($useECF) {
-  print "\n\n***** STEP ", $stepc++, ": Loading the ECF file\n";
-  my ($errmsg) = TrecVid08HelperFunctions::load_ECF($ecffile, $ecfobj, $xmllint, $xsdpath, $fps);
-  MMisc::error_quit("Problem loading the ECF file: $errmsg")
-    if (! MMisc::is_blank($errmsg));
-  my $td = $ecfobj->get_duration();
-  MMisc::error_quit("Problem obtaining the ECF duration (" . $ecfobj->get_errormsg() . ")")
-    if ($ecfobj->error());
-  if ($duration == 0) {
-    $duration = $td;
-  } else {
-    MMisc::warn_print("Command line \'Duration\' ($duration) overrides (for scoring) the one found in the ECF file ($td)")
-      if ($td != $duration);
-  }
-  print "\n** SUMMARY: ECF file loaded\n";
-  print $ecfobj->txt_summary();
-}
-
-## Generate event lists
-print "\n\n***** STEP ", $stepc++, ": Generating EventLists",
-  (($useECF) ? " (only adding observations matching loaded ECF)" : ""), "\n";
-my $tmpecfobj = ($useECF) ? $ecfobj : undef;
-my $sysEL = &generate_EventList("SYS", $tmpecfobj, %sys_hash);
-my $refEL = &generate_EventList("REF", $tmpecfobj, %ref_hash);
-## Can we score after all ?
-my ($rc, $rs, $rr) = $sysEL->comparable_filenames($refEL);
-MMisc::error_quit("While trying to obtain a list of scorable referred to files (" . $sysEL->get_errormsg() .")")
-  if ($sysEL->error());
-my @common = @{$rc};
-my @only_in_sys = @{$rs};
-my @only_in_ref = @{$rr};
-print "\n** SUMMARY: All EventLists generated\n";
-print "** Common referred to files (", scalar @common, "): ", join(" ", @common), "\n";
-print "** Only in SYS (", scalar @only_in_sys, "): ", join(" ", @only_in_sys), "\n";
-print "** Only in REF (", scalar @only_in_ref, "): ", join(" ", @only_in_ref), "\n\n";
-my $fcount = (scalar @common) + (scalar @only_in_sys) + (scalar @only_in_ref);
-MMisc::error_quit("Can not continue, no file in any list ?") if ($fcount == 0);
-
-if ($useECF) {
-  my ($err, $rmiss, $rnotin) = TrecVid08HelperFunctions::confirm_all_ECF_sffn_are_listed($ecfobj, @common);
-  MMisc::error_quit($err)
-    if (! MMisc::is_blank($err));
-  MMisc::warn_print("FYI (comparing ECF to common list): the following files are not listed in the ECF, and therefore will not be scored against: " . join(" ", @$rnotin))
-    if (scalar @$rnotin > 0);
-  MMisc::error_quit("Can not perform soring (comparing ECF to common list): the following files are present in the ECF but not in the common list: " . join(" ", @$rmiss))
-    if (scalar @$rmiss > 0);
-}
-
-## Prepare event lists for scoring
-print "\n\n***** STEP ", $stepc++, ": Aligning Files and Events\n\n";
-my $kernel = new KernelFunctions();
-$kernel->set_delta_t($delta_t);
-$kernel->set_E_t($E_t);
-$kernel->set_E_d($E_d);
-$kernel->set_sysEL($sysEL);
-my @kp = $kernel->get_kernel_params();
-MMisc::error_quit("Error while obtaining the kernel function parameters (" . $kernel->get_errormsg() . ")")
-  if ($kernel->error());
-
-my %all_bpm = ();
-my %metrics_params = ( TOTALDURATION => $duration ) ;
-my @all_events = ();
-my $key_allevents= "AllEvents";
-push @all_events, $key_allevents;
-push @all_events, @asked_events;
+  
 my %all_trials = ();
 my %all_metric = ();
+my $gtrial = undef;
 my %trials_c = ();
-foreach my $event (@all_events) {
-  my $trial = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
-  $all_trials{$event} = $trial;
-  $all_metric{$event} = new MetricTV08({ ('CostMiss' => $CostMiss, 'CostFA' => $CostFA, 'Rtarget' => $Rtarget ) }, $trial);
-}
-my $gtrial = $all_trials{$key_allevents};
-
+my $key_allevents= "AllEvents";
+my @all_events = ();
 my %xmlwriteback = ();
-my $ald = &do_alignment(@common, @only_in_sys, @only_in_ref);
-print "NOTE: No alignment ever done\n"
-  if ($ald == 0);
+my %metrics_params = ();
+
+if (MMisc::is_blank($inputAliCSV)) {
+  ## Load Pre-processing
+  print "***** STEP ", $stepc++, ": Loading files in Memory\n";
+  my ($sysdone, $systodo, %sys_hash) = &load_preprocessing(0, @sys);
+  my ($refdone, $reftodo, %ref_hash) = &load_preprocessing(1, @ref);
+  
+  my $ndone = $sysdone + $refdone;
+  my $ntodo = $systodo + $reftodo;
+  
+  print "\n** SUMMARY: All files loaded\n";
+  print "** REF: $systodo files (", ($sysdone == $systodo) ? "all" : $sysdone, " ok)\n";
+  print "** SYS: $reftodo files (", ($refdone == $reftodo) ? "all" : $refdone, " ok)\n\n";
+  MMisc::error_quit("Can not continue, not all files passed the loading/validation step, aborting\n")
+    if ($ndone != $ntodo);
+  
+  ## Loading of the ECF file
+  my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
+  if ($useECF) {
+    print "\n\n***** STEP ", $stepc++, ": Loading the ECF file\n";
+    my ($errmsg) = TrecVid08HelperFunctions::load_ECF($ecffile, $ecfobj, $xmllint, $xsdpath, $fps);
+    MMisc::error_quit("Problem loading the ECF file: $errmsg")
+      if (! MMisc::is_blank($errmsg));
+    my $td = $ecfobj->get_duration();
+    MMisc::error_quit("Problem obtaining the ECF duration (" . $ecfobj->get_errormsg() . ")")
+      if ($ecfobj->error());
+    if ($duration == 0) {
+      $duration = $td;
+    } else {
+      MMisc::warn_print("Command line \'Duration\' ($duration) overrides (for scoring) the one found in the ECF file ($td)")
+        if ($td != $duration);
+    }
+    print "\n** SUMMARY: ECF file loaded\n";
+    print $ecfobj->txt_summary();
+  }
+  %metrics_params = ( TOTALDURATION => $duration );
+
+  ## Generate event lists
+  print "\n\n***** STEP ", $stepc++, ": Generating EventLists",
+    (($useECF) ? " (only adding observations matching loaded ECF)" : ""), "\n";
+  my $tmpecfobj = ($useECF) ? $ecfobj : undef;
+  my $sysEL = &generate_EventList("SYS", $tmpecfobj, %sys_hash);
+  my $refEL = &generate_EventList("REF", $tmpecfobj, %ref_hash);
+  ## Can we score after all ?
+  my ($rc, $rs, $rr) = $sysEL->comparable_filenames($refEL);
+  MMisc::error_quit("While trying to obtain a list of scorable referred to files (" . $sysEL->get_errormsg() .")")
+    if ($sysEL->error());
+  my @common = @{$rc};
+  my @only_in_sys = @{$rs};
+  my @only_in_ref = @{$rr};
+  print "\n** SUMMARY: All EventLists generated\n";
+  print "** Common referred to files (", scalar @common, "): ", join(" ", @common), "\n";
+  print "** Only in SYS (", scalar @only_in_sys, "): ", join(" ", @only_in_sys), "\n";
+  print "** Only in REF (", scalar @only_in_ref, "): ", join(" ", @only_in_ref), "\n\n";
+  my $fcount = (scalar @common) + (scalar @only_in_sys) + (scalar @only_in_ref);
+  MMisc::error_quit("Can not continue, no file in any list ?") if ($fcount == 0);
+  
+  if ($useECF) {
+    my ($err, $rmiss, $rnotin) = TrecVid08HelperFunctions::confirm_all_ECF_sffn_are_listed($ecfobj, @common);
+    MMisc::error_quit($err)
+      if (! MMisc::is_blank($err));
+    MMisc::warn_print("FYI (comparing ECF to common list): the following files are not listed in the ECF, and therefore will not be scored against: " . join(" ", @$rnotin))
+      if (scalar @$rnotin > 0);
+    MMisc::error_quit("Can not perform soring (comparing ECF to common list): the following files are present in the ECF but not in the common list: " . join(" ", @$rmiss))
+      if (scalar @$rmiss > 0);
+  }
+  
+  ## Aligning Files and Events
+  print "\n\n***** STEP ", $stepc++, ": Aligning Files and Events\n\n";
+  my $kernel = new KernelFunctions();
+  $kernel->set_delta_t($delta_t);
+  $kernel->set_E_t($E_t);
+  $kernel->set_E_d($E_d);
+  $kernel->set_sysEL($sysEL);
+  my @kp = $kernel->get_kernel_params();
+  MMisc::error_quit("Error while obtaining the kernel function parameters (" . $kernel->get_errormsg() . ")")
+    if ($kernel->error());
+  
+  push @all_events, $key_allevents;
+  push @all_events, @asked_events;
+  foreach my $event (@all_events) {
+    my $trial = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
+    $all_trials{$event} = $trial;
+    $all_metric{$event} = new MetricTV08({ ('CostMiss' => $CostMiss, 'CostFA' => $CostFA, 'Rtarget' => $Rtarget ) }, $trial);
+  }
+  $gtrial = $all_trials{$key_allevents};
+
+  my @todo = ();
+  push @todo, @common;
+  push @todo, @only_in_sys;
+  push @todo, @only_in_ref;
+  my $ald = &do_alignment(\@todo, $sysEL, $refEL, @kp);
+  print "NOTE: No alignment ever done\n"
+    if ($ald == 0);
+} else { # if (MMisc::is_blank($inputAliCSV)) {
+  %metrics_params = ( TOTALDURATION => $duration );
+  ### Load the Trial Structures from a CSV alignment file
+  open (CSV, $inputAliCSV) || MMisc::error_quit("Failed to open CSV alignment file $inputAliCSV");
+
+  my $csv = CSVHelper::get_csv_handler();
+  return("Problem creating the CSV object")
+    if (! defined $csv);
+
+  my $header = <CSV>;  
+  my @headers = CSVHelper::csvtxt2array($csv, $header);
+
+#  print join("=",@headers)."\n";
+  MMisc::error_quit("CSV field [2] != 'Event'") if ($headers[2] ne "Event");
+  MMisc::error_quit("CSV field [3] != 'TYPE'") if ($headers[3] ne "TYPE");
+  MMisc::error_quit("CSV field [10] != 'S.DetScr'") if ($headers[10] ne "S.DetScr");
+  MMisc::error_quit("CSV field [11] != 'S.DetDec'") if ($headers[11] ne "S.DetDec");
+
+  $all_trials{$key_allevents} = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
+
+  my %allEvents = ();
+  my ($type, $evt, $detscr, $detdec);
+  while (<CSV>){
+    my @data =  CSVHelper::csvtxt2array($csv, $_);
+
+#    print join("=",@data)."\n";
+    ($type, $evt, $detscr, $detdec) = ($data[3], $data[2], $data[10], $data[11]);
+
+#    print "  ($type, $evt, $detscr, $detdec) =\n";
+    if (! exists($all_trials{$evt})){
+#      print "Made trial $evt\n";
+      $all_trials{$evt} = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
+      $all_metric{$evt} = new MetricTV08({ ('CostMiss' => $CostMiss, 'CostFA' => $CostFA, 'Rtarget' => $Rtarget ) }, $all_trials{$evt});
+    }
+
+    if ($type eq "Mapped"){
+      $all_trials{$evt}->addTrial($evt, $detscr, $detdec, 1);
+      $all_trials{$key_allevents}->addTrial($evt, $detscr, $detdec, 1); 
+    } elsif ($type eq "Unmapped_Sys") {
+      $all_trials{$evt}->addTrial($evt, $detscr, $detdec, 0);
+      $all_trials{$key_allevents}->addTrial($evt, $detscr, $detdec, 0);
+    } else {
+      $all_trials{$evt}->addTrial($evt, undef, "OMITTED", 1);
+      $all_trials{$key_allevents}->addTrial($evt, undef, "OMITTED", 1);
+    }
+    $trials_c{$evt}++;
+    $trials_c{$key_allevents}++;
+    $allEvents{$evt} = 1;    
+  }
+
+  push @all_events, $key_allevents;
+  push @all_events, keys %allEvents;
+}
 
 my $alc = $trials_c{$key_allevents};
 print "WARNING: No Trials ever added, will force skip some steps\n"
@@ -736,7 +813,9 @@ sub add_data2sat {
 #####
 
 sub do_alignment {
-  my @todo = @_;
+  my ($rtodo, $sysEL, $refEL, @kp) = @_;
+
+  my @todo = @{$rtodo};
 
   my $ksep = 0;
   
@@ -1026,8 +1105,6 @@ sub do_alignment {
       }
       # 'Trials' done
 
-      $all_bpm{$file}{$evt} = $bpm;
-      
       if ($allAT) {
         my $tbl = $lsat->renderTxtTable(2);
         MMisc::error_quit("ERROR: Generating Alignment Report (". $lsat->get_errormsg() . ")") if (! defined($tbl));
