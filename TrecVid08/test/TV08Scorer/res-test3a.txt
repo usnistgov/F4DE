@@ -77,7 +77,7 @@ Constant parameters:
 
                  |  #Ref  #Sys  #CorDet  #FA  #Miss  Act. RFA  Act. PMiss  Act. DCR  
 -----------------+-----------------------------------------------------------------
-CellToEar Event  |     1     0        0    0      1    0.0000      1.0000    1.0000
+CellToEar Event  |     1     1        0    0      1    0.0000      1.0000    1.0000
 ObjectPut Event  |     1     1        1    0      0    0.0000      0.0000    0.0000
 
 

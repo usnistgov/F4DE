@@ -85,8 +85,8 @@ Constant parameters:
 
                   |  #Ref  #Sys  #CorDet  #FA  #Miss  Act. RFA  Act. PMiss  Act. DCR  
 ------------------+-----------------------------------------------------------------
-PersonRuns Event  |     0     0        0    1      0    3.6000          NA        NA
-CellToEar Event   |     1     0        0    0      1    0.0000      1.0000    1.0000
+PersonRuns Event  |     0     1        0    1      0    3.6000          NA        NA
+CellToEar Event   |     1     1        0    0      1    0.0000      1.0000    1.0000
 ObjectPut Event   |     1     0        0    0      1    0.0000      1.0000    1.0000
 
 

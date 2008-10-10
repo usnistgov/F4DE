@@ -80,9 +80,9 @@ Constant parameters:
 
                  |  #Ref  #Sys  #CorDet  #FA  #Miss  Act. RFA  Act. PMiss  Act. DCR  
 -----------------+-----------------------------------------------------------------
-CellToEar Event  |     3     1        1    0      2    0.0000      0.6667    0.6667
+CellToEar Event  |     3     3        1    0      2    0.0000      0.6667    0.6667
 ObjectPut Event  |     1     1        1    0      0    0.0000      0.0000    0.0000
-ObjectGet Event  |     1     0        0    0      1    0.0000      1.0000    1.0000
+ObjectGet Event  |     1     1        0    0      1    0.0000      1.0000    1.0000
 
 
 ***** Done *****
