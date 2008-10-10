@@ -238,7 +238,7 @@ my $ltse = 0;
 my @asked_events = ();
 my $xtend = "";
 my $MemDump = undef;
-my $inputAliCSV = "";
+my @inputAliCSV = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used: A CDEFG    LMNO  RST  WX Za  cdefgh  lmnop  st vwx   #
@@ -279,7 +279,7 @@ GetOptions
    'Rtarget=f'       => \$Rtarget,
    'XtraMappedObservations=s' => \$xtend,
    'WriteMemDump:s'  => \$MemDump,
-   'AlignmentCSV=s'  => \$inputAliCSV,
+   'AlignmentCSV=s'  => \@inputAliCSV,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -293,7 +293,7 @@ if ($opt{'man'}) {
 }
 
 MMisc::ok_quit("\n$usage\n") 
-  if ((scalar @ARGV == 0) && (MMisc::is_blank($inputAliCSV)));
+  if ((scalar @ARGV == 0) && (scalar @inputAliCSV == 0));
 
 MMisc::error_quit("\'fps\' must set in order to do any scoring work") if (! defined $fps);
 MMisc::error_quit("\'delta_t\' must set in order to do any scoring work") if (! defined $delta_t);
@@ -333,7 +333,7 @@ MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting
 my ($rref, $rsys) = &get_sys_ref_filelist(\@leftover, @ARGV);
 my @ref = @{$rref};
 my @sys = @{$rsys};
-if (MMisc::is_blank($inputAliCSV)) {
+if (scalar @inputAliCSV == 0) {
   MMisc::error_quit("No SYS file(s) provided, can not perform scoring")
     if (scalar @sys == 0);
   MMisc::error_quit("No REF file(s) provided, can not perform scoring")
@@ -374,7 +374,7 @@ my @all_events = ();
 my %xmlwriteback = ();
 my %metrics_params = ();
 
-if (MMisc::is_blank($inputAliCSV)) {
+if (scalar @inputAliCSV == 0) {
   ## Load Pre-processing
   print "***** STEP ", $stepc++, ": Loading files in Memory\n";
   my ($sysdone, $systodo, %sys_hash) = &load_preprocessing(0, @sys);
@@ -467,55 +467,67 @@ if (MMisc::is_blank($inputAliCSV)) {
   my $ald = &do_alignment(\@todo, $sysEL, $refEL, @kp);
   print "NOTE: No alignment ever done\n"
     if ($ald == 0);
-} else { # if (MMisc::is_blank($inputAliCSV)) {
-  %metrics_params = ( TOTALDURATION => $duration );
-  ### Load the Trial Structures from a CSV alignment file
-  open (CSV, $inputAliCSV) || MMisc::error_quit("Failed to open CSV alignment file $inputAliCSV");
-
-  my $csv = CSVHelper::get_csv_handler();
-  return("Problem creating the CSV object")
-    if (! defined $csv);
-
-  my $header = <CSV>;  
-  my @headers = CSVHelper::csvtxt2array($csv, $header);
-
-#  print join("=",@headers)."\n";
-  MMisc::error_quit("CSV field [2] != 'Event'") if ($headers[2] ne "Event");
-  MMisc::error_quit("CSV field [3] != 'TYPE'") if ($headers[3] ne "TYPE");
-  MMisc::error_quit("CSV field [10] != 'S.DetScr'") if ($headers[10] ne "S.DetScr");
-  MMisc::error_quit("CSV field [11] != 'S.DetDec'") if ($headers[11] ne "S.DetDec");
-
-  $all_trials{$key_allevents} = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
-
-  my %allEvents = ();
-  my ($type, $evt, $detscr, $detdec);
-  while (<CSV>){
-    my @data =  CSVHelper::csvtxt2array($csv, $_);
-
-#    print join("=",@data)."\n";
-    ($type, $evt, $detscr, $detdec) = ($data[3], $data[2], $data[10], $data[11]);
-
-#    print "  ($type, $evt, $detscr, $detdec) =\n";
-    if (! exists($all_trials{$evt})){
-#      print "Made trial $evt\n";
-      $all_trials{$evt} = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
-      $all_metric{$evt} = new MetricTV08({ ('CostMiss' => $CostMiss, 'CostFA' => $CostFA, 'Rtarget' => $Rtarget ) }, $all_trials{$evt});
-    }
-
-    if ($type eq "Mapped"){
-      $all_trials{$evt}->addTrial($evt, $detscr, $detdec, 1);
-      $all_trials{$key_allevents}->addTrial($evt, $detscr, $detdec, 1); 
-    } elsif ($type eq "Unmapped_Sys") {
-      $all_trials{$evt}->addTrial($evt, $detscr, $detdec, 0);
-      $all_trials{$key_allevents}->addTrial($evt, $detscr, $detdec, 0);
-    } else {
-      $all_trials{$evt}->addTrial($evt, undef, "OMITTED", 1);
-      $all_trials{$key_allevents}->addTrial($evt, undef, "OMITTED", 1);
-    }
-    $trials_c{$evt}++;
-    $trials_c{$key_allevents}++;
-    $allEvents{$evt} = 1;    
+} else { # if (scalar @inputAliCSV == 0) {
+  my @tmp = ();
+  foreach my $entry (@inputAliCSV) {
+    push @tmp, split(m%\,%, $entry);
   }
+  @inputAliCSV = @tmp;
+
+  %metrics_params = ( TOTALDURATION => $duration );
+  $all_trials{$key_allevents} = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
+  my %allEvents = ();
+
+  ### Load the Trial Structures from CSV alignment files
+  foreach my $csvf (@inputAliCSV) {
+    open (CSV, $csvf) 
+      or MMisc::error_quit("Failed to open CSV alignment file ($csvf): $!");
+
+    my $csv = CSVHelper::get_csv_handler();
+    return("Problem creating the CSV object")
+      if (! defined $csv);
+
+    my $header = <CSV>;  
+    my @headers = CSVHelper::csvtxt2array($csv, $header);
+
+    MMisc::error_quit("CSV field [2] != 'Event'") 
+      if ($headers[2] ne "Event");
+    MMisc::error_quit("CSV field [3] != 'TYPE'") 
+      if ($headers[3] ne "TYPE");
+    MMisc::error_quit("CSV field [10] != 'S.DetScr'") 
+      if ($headers[10] ne "S.DetScr");
+    MMisc::error_quit("CSV field [11] != 'S.DetDec'")
+      if ($headers[11] ne "S.DetDec");
+    
+    my ($type, $evt, $detscr, $detdec);
+    while (<CSV>){
+      my @data =  CSVHelper::csvtxt2array($csv, $_);
+
+      ($type, $evt, $detscr, $detdec) =
+        ($data[3], $data[2], $data[10], $data[11]);
+
+      if (! exists($all_trials{$evt})){
+        $all_trials{$evt} = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
+        $all_metric{$evt} = new MetricTV08({ ('CostMiss' => $CostMiss, 'CostFA' => $CostFA, 'Rtarget' => $Rtarget ) }, $all_trials{$evt});
+      }
+
+      if ($type eq "Mapped"){
+        $all_trials{$evt}->addTrial($evt, $detscr, $detdec, 1);
+        $all_trials{$key_allevents}->addTrial($evt, $detscr, $detdec, 1); 
+      } elsif ($type eq "Unmapped_Sys") {
+        $all_trials{$evt}->addTrial($evt, $detscr, $detdec, 0);
+        $all_trials{$key_allevents}->addTrial($evt, $detscr, $detdec, 0);
+      } else {
+        $all_trials{$evt}->addTrial($evt, undef, "OMITTED", 1);
+        $all_trials{$key_allevents}->addTrial($evt, undef, "OMITTED", 1);
+      }
+      $trials_c{$evt}++;
+      $trials_c{$key_allevents}++;
+      $allEvents{$evt} = 1;    
+    }
+
+    close CSV;
+  } # foreach @inputAliCSV
 
   push @all_events, $key_allevents;
   push @all_events, keys %allEvents;
