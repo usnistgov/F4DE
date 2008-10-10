@@ -504,12 +504,12 @@ if (defined $writexml) {
     my $vf = $xmlwriteback{$key};
     my @used_events = ($autolt) ? $vf->list_used_full_events() : @ok_events;
     my $of = (! MMisc::is_blank($writexml)) ? "$writexml/$key.xml" : "";
-    my $err = TrecVid08HelperFunctions::save_ViperFile_XML($of, $vf, 1, "", @used_events);
+    (my $err, $of) = TrecVid08HelperFunctions::save_ViperFile_XML($of, $vf, 1, "", @used_events);
     MMisc::error_quit($err)
       if (! MMisc::is_blank($err));
 
     if (defined $MemDump) {
-      my $err = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, $MemDump, 1, 1);
+      (my $err, $of) = TrecVid08HelperFunctions::save_ViperFile_MemDump($of, $vf, $MemDump, 1, 1);
       MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object ($err)")
         if (! MMisc::is_blank($err));
     }
