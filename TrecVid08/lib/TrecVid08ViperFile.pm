@@ -653,7 +653,7 @@ sub remove_all_subtypes {
   my %fhash = $self->_get_fhash();
   foreach my $event (@ok_events) {
     next if (! exists $fhash{$event});
-    foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+    foreach my $id (keys %{$fhash{$event}}) {
       next if (! exists $fhash{$event}{$id}{$key_subtype});
       $fhash{$event}{$id}{$key_subtype} = '';
     }
@@ -2314,6 +2314,9 @@ sub change_autoswitch {
   foreach my $event (@ok_events) {
     next if (! exists $fhash{$event});
     foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+      # The 'sort' on IDs is required to make sure that for "random"
+      # DetectionScore values obtained from a given "seed" provide 
+      # a repeatable result
       foreach my $key (@not_gtf_required_objects_attributes) {
 	if ($self->check_if_sys()) {
 	  # For sys files, we remove the "Detection" values
@@ -2528,7 +2531,7 @@ sub set_xtra_attribute {
   my %fhash = $self->_get_fhash();
   foreach my $event (@ok_events) {
     next if (! exists $fhash{$event});
-    foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+    foreach my $id (keys %{$fhash{$event}}) {
       if ($value eq $spval_xtra_trackingcomment) {
         my $pretxt = (MMisc::is_blank($addtotc)) ? "" 
           : " $char_tc_beg_pre$addtotc$char_tc_end_pre";
@@ -2596,7 +2599,7 @@ sub unset_xtra_attribute {
   my %fhash = $self->_get_fhash();
   foreach my $event (@ok_events) {
     next if (! exists $fhash{$event});
-    foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+    foreach my $id (keys %{$fhash{$event}}) {
       next if (! exists $fhash{$event}{$id}{$key_xtra});
       delete $fhash{$event}{$id}{$key_xtra}{$attr} 
         if (exists $fhash{$event}{$id}{$key_xtra}{$attr});
@@ -2668,7 +2671,7 @@ sub unset_all_xtra_attributes {
   my %fhash = $self->_get_fhash();
   foreach my $event (@ok_events) {
     next if (! exists $fhash{$event});
-    foreach my $id (sort _numerically keys %{$fhash{$event}}) {
+    foreach my $id (keys %{$fhash{$event}}) {
       next if (! exists $fhash{$event}{$id}{$key_xtra});
       my @xl = keys %{$fhash{$event}{$id}{$key_xtra}};
       @xl = grep(! m%^$key_xtra_trackingcomment$%, @xl);
