@@ -172,13 +172,13 @@ sub save_ViperFile_XML {
   $fname = &_rm_mds($fname, 0);
 
   my $txt = $vf->reformat_xml(@asked_events);
-  return("While trying to \'write\' (" . $vf->get_errormsg() . ")")
+  return("While trying to create the XML text (" . $vf->get_errormsg() . ")", $fname)
     if ($vf->error());
 
-  return("Problem while trying to \'save_ViperFile_XML\'")
+  return("Problem while trying to \'save_ViperFile_XML\'", $fname)
     if (! MMisc::writeTo($fname, "", $printname, 0, $txt, "", $ptxt));
 
-  return("");
+  return("", $fname);
 }
 
 ##########
@@ -199,19 +199,24 @@ sub save_ViperFile_MemDump {
     } else {
       $object = $aobject->clone();
     }
-    return("Clone: " . $aobject->get_errormsg()) if ($aobject->error());
-    return("Clone: Undefined Object") if (! defined $object);
+    return("Clone: " . $aobject->get_errormsg(), $fname)
+      if ($aobject->error());
+    return("Clone: Undefined Object", $fname)
+      if (! defined $object);
     if ($portable) {
       # In order to make it portable, we remove command paths that might differ
       # on different system (ie '/usr/bin/xmllint': force to "xmllint")
       $object->set_xmllint("xmllint", 1);
-      return("Portable Clone: " . $object->errormsg()) if ($object->error());
+      return("Portable Clone: " . $object->errormsg(), $fname)
+        if ($object->error());
     }
   } else {
     $object = $aobject;
   }
-  return("Undefined Object") if (! defined $object);
-  return($object->get_errormsg()) if ($object->error());
+  return("Undefined Object", $fname)
+    if (! defined $object);
+  return($object->get_errormsg(), $fname)
+    if ($object->error());
 
   my $tmp = MMisc::dump_memory_object
     ($fname, $VF_MemDump_Suffix, $object,
@@ -219,7 +224,10 @@ sub save_ViperFile_MemDump {
      ($mode eq "gzip") ? $VF_MemDump_FileHeader_gz : undef,
      $printw);
 
-   return((($tmp == 1) ? "" : "Problem during actual dump process"));
+  return("Problem during actual dump process", $fname)
+    if ($tmp != 1);
+
+  return("", $fname);
 }
 
 ##########
