@@ -429,7 +429,7 @@ the CODE DIES as this should never happen.
         if (defined($combSum)) {
           my $comb = $self->combCalc($miss, $fa);
           $combSum += $comb;
-          $combSumSqr += $comb;
+          $combSumSqr += $comb * $comb;
           $combN ++;
         }
       } else {
