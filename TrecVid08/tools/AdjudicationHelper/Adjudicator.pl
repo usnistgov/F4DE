@@ -161,9 +161,13 @@ my $info_g = "";
 my $lgwf = "";
 my $jpeg_path = "";
 my $warn_nf = 0;
+my $oour = 0;
+my $riur = 0;
+my $minAgree = 0;
+my $cad = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:       G I  L       T  W   a  d f hij        s  v x   #
+# Used:       G I  L       T  W   a cd f hij        s  v x   #
 
 my %opt = ();
 GetOptions
@@ -183,6 +187,10 @@ GetOptions
    'LGW=s'           => \$lgwf,
    'jpeg_path=s'     => \$jpeg_path,
    'Warn_numframes'  => \$warn_nf,
+   'onlyOverlapUnmapRef' => \$oour,
+   'reinjectUnmapRef' => \$riur,
+   'minAgree=i'       => \$minAgree,
+   'createAgreeDir'   => \$cad,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -211,7 +219,11 @@ if (! MMisc::is_blank($odir)) {
   my $err = MMisc::check_dir_w($odir);
   MMisc::error_quit("Problem with \'dir\' ($odir): $err")
     if (! MMisc::is_blank($err));
+  $odir =~ s%/$%%;
 }
+
+MMisc::error_quit("\'minAgree\' must be postive")
+  if ($minAgree < 0);
 
 MMisc::error_quit("\'segmentation_margin\' must be at least 1")
   if ($margin < 1);
@@ -323,9 +335,13 @@ foreach my $sffn (@ev_sffn) {
       my $obs = &shift_next_UnSys(\@ol);
       next if (! defined $obs);
       
-      my ($fs_fs, @in) = &compute_overlaps($obs, \@ol, $margin);
-      
+      my ($fs_fs, @in) = &compute_overlaps($obs, \@ol, $margin, $oour);
+
       &write_avf($sffn, $event, $fs_fs, @in);
+
+      my $ok = &reinject_UnRefs(\@ol, @in);
+      MMisc::error_quit("Problem while re-injecting Unmapped Refs")
+          if (! $ok);
     }
   }
 }
@@ -445,7 +461,15 @@ sub get_obs_extended_framespan {
 #####
 
 sub die_do_fs_obs_ov {
-  my ($fs_fs, $obs) = @_;
+  my ($fs_fs, $obs, $oour) = @_;
+
+  if ($oour) { # Only Overlap Unmapped Ref
+    return(0)
+      if (! $obs->is_eventsubtype_set());
+    my $set = $obs->get_eventsubtype();
+    return(0)
+      if ($set ne $se_UnRef);
+  }
 
   my $fs_ov = $obs->get_framespan_overlap_from_fs($fs_fs);
   MMisc::error_quit("Problem obtaining observation framespan and framespan overlap: " . $obs->get_errormsg())
@@ -459,13 +483,13 @@ sub die_do_fs_obs_ov {
 #####
 
 sub find_shift_overlapping_obs {
-  my ($fs_fs, $rol) = @_;
+  my ($fs_fs, $rol, $oour) = @_;
 
   my @ol = @$rol;
   my @left = ();
   my @ovobs = ();
   foreach my $obs (@ol) {
-    if (&die_do_fs_obs_ov($fs_fs, $obs)) {
+    if (&die_do_fs_obs_ov($fs_fs, $obs, $oour)) {
       push @ovobs, $obs;
     } else {
       push @left, $obs;
@@ -480,7 +504,7 @@ sub find_shift_overlapping_obs {
 #####
 
 sub compute_overlaps {
-  my ($obs, $rol, $margin) = @_;
+  my ($obs, $rol, $margin, $oour) = @_;
 
   my @in = ();
   push @in, $obs;
@@ -490,10 +514,31 @@ sub compute_overlaps {
   do {
     $sz = scalar @in;
     $fs_fs = &get_obs_extended_framespan($margin, @in);
-    push @in, &find_shift_overlapping_obs($fs_fs, $rol);
+    push @in, &find_shift_overlapping_obs($fs_fs, $rol, $oour);
   } until (scalar @in == $sz);
 
   return($fs_fs, @in);
+}
+
+##########
+
+sub reinject_UnRefs {
+  return(1)
+    if (! $riur);
+
+  my ($rol, @in) = @_;
+
+  foreach my $obs (@in) {
+    return(0)
+      if (! $obs->is_eventsubtype_set());
+    my $set = $obs->get_eventsubtype();
+    next
+      if ($set ne $se_UnRef);
+
+    push @{$rol}, $obs;
+  }
+
+  return(1);
 }
 
 ##########
@@ -526,19 +571,34 @@ sub write_avf {
       if ($avf->error());
   }
 
-  my $agreeadd = "Agree_" . sprintf("%02d", $avf->get_maxAgree());
-  MMisc::error_quit("Problem obtaining AVF's max Agree text: " . $avf->get_errormsg())
-    if ($avf->error());
+  my $mal = $avf->get_maxAgree();
+  MMisc::error_quit("Problem obtaining AVF's max Agree value: " . $avf->get_errormsg())
+      if ($avf->error());
+
+  my $agreeadd = "Agree_" . sprintf("%02d", $mal);
 
   my $spfnadd = (! defined $fs_fs) ? "-Global" : "-$agreeadd";
   my $fname_b = "$sffn-$event-" . sprintf("%06d", $beg) . "_" . sprintf("%06d", $end) . "$spfnadd";
 
+  if ($mal < $minAgree) {
+    print "Skipping writting of [$fname_b], agree level ($mal) under \'minAgree\' threshold ($minAgree)\n";
+    return();
+  } else {
+    print "* Found [$fname_b]\n";
+  }
+
+  my $lodir = $odir;
+  if ($cad) {
+    $lodir .= ((MMisc::is_blank($odir)) ? "" : "/") . "$agreeadd";
+    MMisc::error_quit("Problem creating output dir [$lodir]")
+        if (! MMisc::make_dir($lodir));
+  }
 
   my $lsffn = $sffn;
   if (! MMisc::is_blank($info_g)) {
     my $infofile_b = MMisc::concat_dir_file_ext("", $fname_b, $info_add);
-    my $infofile = MMisc::concat_dir_file_ext($odir, $fname_b, $info_add);
-    my $log = MMisc::concat_dir_file_ext($odir, "InfoGenerator_Run", $log_add);
+    my $infofile = MMisc::concat_dir_file_ext($lodir, $fname_b, $info_add);
+    my $log = MMisc::concat_dir_file_ext($lodir, "Latest_InfoGenerator_Run", $log_add);
     my $command = "$info_g $infofile $lgwf $beg $end";
     $command .= " $jpeg_path" if (! MMisc::is_blank($jpeg_path));
 
@@ -554,8 +614,8 @@ sub write_avf {
   } 
 
   my $fname = "";
-  $fname = MMisc::concat_dir_file_ext($odir, $fname_b, "xml")
-    if (! MMisc::is_blank($odir));
+  $fname = MMisc::concat_dir_file_ext($lodir, $fname_b, "xml")
+    if (! MMisc::is_blank($lodir));
 
   my $txt = $avf->get_xml($event);
   MMisc::error_quit("Problem obtaining the XML representation: " . $avf->get_errormsg())
