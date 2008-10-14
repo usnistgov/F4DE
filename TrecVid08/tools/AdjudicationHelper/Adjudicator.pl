@@ -579,6 +579,12 @@ sub write_avf {
 
   my $spfnadd = (! defined $fs_fs) ? "-Global" : "-$agreeadd";
   my $fname_b = "$sffn-$event-" . sprintf("%06d", $beg) . "_" . sprintf("%06d", $end) . "$spfnadd";
+  if ($oour) {
+    my $mads = $avf->get_maxAgreeDS();
+    MMisc::error_quit("Problem obtaining AVF's max Agree Detection Score value: " . $avf->get_errormsg())
+        if ($avf->error());
+    $fname_b .= sprintf("-MeanDetectionScore_%06f", $mads);
+  }
 
   if ($mal < $minAgree) {
     print "Skipping writting of [$fname_b], agree level ($mal) under \'minAgree\' threshold ($minAgree)\n";
