@@ -113,11 +113,11 @@ sub isCompatible(){
 
   foreach my $k ($self->getMetricParamKeys()) {
     return 0 if (! $tr2->getMetricParamValueExists($k));
-    return 0 if ($self->getMetricParamValue($k) ne $tr2->getMetricParamValue($k));
+#    return 0 if ($self->getMetricParamValue($k) ne $tr2->getMetricParamValue($k));
   }
   foreach my $k ($tr2->getMetricParamKeys()) {
     return 0 if (! $self->getMetricParamValueExists($k));
-    return 0 if ($self->getMetricParamValue($k) ne $tr2->getMetricParamValue($k));
+#    return 0 if ($self->getMetricParamValue($k) ne $tr2->getMetricParamValue($k));
   }
 
   return 1;    
