@@ -1281,7 +1281,7 @@ sub writeMultiDetGraph
     $includeRandomCurve = 0 if ($detset->getDETForID(0)->{METRIC}->errMissUnit() ne "Prob" || $detset->getDETForID(0)->{METRIC}->errFAUnit() ne "Prob");
     my $needComma = ($includeRandomCurve ? 1 : 0);
     
-    my @colors = (1..40);  splice(@colors, 0, 1);
+    my @colors = (1..400);  splice(@colors, 0, 1);
 
 	### Draw the isometriclines
     if ( $DrawIsometriclines ) {
