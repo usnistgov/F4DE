@@ -87,6 +87,7 @@ sub new {
      Ref            => undef,
      ##
      maxAgree       => 0,
+     maxAgreeDS     => 0,
      ##
      errormsg       => $errormsg,
     };
@@ -265,8 +266,24 @@ sub setif_maxAgree {
   
   return(0) if ($self->error());
   
-  $self->{maxAgree} = $agc
-    if ($agc > $self->{maxAgree});
+  if ($agc > $self->{maxAgree}) {
+    $self->{maxAgree} = $agc;
+    return(1);
+  }
+
+  return(0);
+}
+
+#####
+
+sub set_maxAgreeDS {
+  my ($self, $ds) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{maxAgreeDS} = $ds;
+
+  return(1);
 }
 
 #####
@@ -277,6 +294,16 @@ sub get_maxAgree {
   return(0) if ($self->error());
 
   return($self->{maxAgree});
+}
+
+#####
+
+sub get_maxAgreeDS {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->{maxAgreeDS});
 }
 
 ##########
@@ -418,7 +445,7 @@ sub add_tv08obs {
       $self->_set_errormsg("Found a zero count for tracking comment");
       return(0);
     }
-    my ($ag_txt, $id) = $self->add_agree($event, $alignc, $align, $fs);
+    my ($ag_txt, $id, $ismax) = $self->add_agree($event, $alignc, $align, $fs);
     return(0) if (MMisc::is_blank($ag_txt));
     my $detscrsum = 0;
 
@@ -457,7 +484,7 @@ sub add_tv08obs {
 
     my $meandetscr = $detscrsum / scalar @atc;
 
-    return($self->set_agree_DetectionScore($event, $alignc, $id, $meandetscr));
+    return($self->set_agree_DetectionScore($event, $alignc, $id, $meandetscr, $ismax));
   }
 
   if ($st eq $key_se_UnmappedRef) {
@@ -473,7 +500,7 @@ sub add_tv08obs {
 ##########
 
 sub set_agree_DetectionScore {
-  my ($self, $event, $agc, $id, $detscr) = @_;
+  my ($self, $event, $agc, $id, $detscr, $ismax) = @_;
 
   return(0) if (! exists $self->{Agree}{$event}{$agc});
 
@@ -485,6 +512,9 @@ sub set_agree_DetectionScore {
   $a[2] = $detscr;
 
   ${$self->{Agree}{$event}{$agc}}[$id] = \@a;
+
+  return($self->set_maxAgreeDS($detscr))
+    if ($ismax);
 
   return(1);
 }
@@ -512,12 +542,10 @@ sub add_agree {
     push @{$self->{Agree}{$event}{$agc}}, [ $fs, $agt, undef ];
   }
 
-  $self->setif_maxAgree($agc);
-
   my $id  = scalar @{$self->{Agree}{$event}{$agc}} - 1;
   $txt = "Agree=$agc ID=$id";
 
-  return($txt, $id);
+  return($txt, $id, $self->setif_maxAgree($agc));
 } 
 
 #####
