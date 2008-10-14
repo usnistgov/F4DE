@@ -138,9 +138,12 @@ my $info_g = "";
 my $jpeg_path = "";
 my $pds = 0;
 my $warn_nf = 0;
+my $nonglob = 0;
+my $minAgree = 0;
+my $mad = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CD    I         ST VW   a cd f hij     p  s  vwx   #
+# Used: A CD    I   M     ST VW   a cd f hij  mn p  s  vwx   #
 
 my $fcmdline = "$0 " . join(" ", @ARGV);
 
@@ -169,6 +172,9 @@ GetOptions
    'jpeg_path=s'     => \$jpeg_path,
    'percentDS'       => \$pds,
    'Warn_numframes'  => \$warn_nf,
+   'nonGlobing'      => \$nonglob,
+   'minAgree=i'      => \$minAgree,
+   'MakeAgreeDir'    => \$mad,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -257,6 +263,7 @@ my $UnSys_base     = "05-2-Unmapped_Sys";
 my $UnSys_step1    = "$UnSys_base/1-empty_REF";
 my $UnSys_step2    = "$UnSys_base/2-empty_REF_vs_Final_SYS";
 my $AdjDir         = "06-Adjudication_ViPERfiles";
+my $NGAdjDir       = "06-Non_Globing-Adjudication_ViPERfiles";
 
 my $lgwf = "";
 
@@ -672,7 +679,8 @@ print "Unmapped_REF : $UnRef_file\n";
 print "Unmapped_SYS : $UnSys_file\n";
 
 my $adadd = "-seg_margin_$margin";
-my $adj_dir = MMisc::get_file_full_path("$wid/$AdjDir$dtadd$adadd");
+my $tadjdir = ($nonglob) ? $NGAdjDir : $AdjDir;
+my $adj_dir = MMisc::get_file_full_path("$wid/$tadjdir$dtadd$adadd");
 &die_mkdir($adj_dir, "Adjudication Directory");
 
 my $log = MMisc::concat_dir_file_ext($adj_dir, "Adjudication_Run", $log_add);
@@ -682,17 +690,32 @@ $command .= " -i $info_path" if (! MMisc::is_blank($info_path));
 $command .= " -L $lgwf" if (! MMisc::is_blank($lgwf));
 $command .= " -j $jpeg_path" if (! MMisc::is_blank($jpeg_path));
 $command .= " -W" if ($warn_nf);
+$command .= " -c" if ($mad);
+$command .= " -m $minAgree" if ($minAgree > 0);
+$command .= " -o -r" if ($nonglob);
 
 &die_syscall_logfile($log, "adjudication command", $command);
 
 print "\nAdjudication directory: $adj_dir\n";
 
-my @tfl = &die_list_X_files(0, $adj_dir, "Adjudication results");
-my @fl = grep(! m%($log_add|$info_add)$%, @tfl);
-MMisc::error_quit("No files in directory")
-  if (scalar @fl == 0);
-
-print "\nAdjudication files:\n - ", join("\n - ", sort @fl), "\n";
+my @fl = ();
+if ($mad) {
+  my ($err, $rd, $rf, $ru) = MMisc::list_dirs_files($adj_dir);
+  MMisc::error_quit("Problem listing directory ($adj_dir): $err")
+      if (! MMisc::is_blank($err));
+  foreach my $tdir (@{$rd}) {
+    my @tfl = &die_list_X_files(0, "$adj_dir/$tdir", "Adjudication results for [$tdir]");
+    push @fl, grep(! m%($log_add|$info_add)$%, @tfl);
+  }
+} else {
+  my @tfl = &die_list_X_files(0, $adj_dir, "Adjudication results");
+  @fl = grep(! m%($log_add|$info_add)$%, @tfl);
+}
+if (scalar @fl == 0) {
+  print("\nNo Adjudication files found\n");
+} else {
+  print "\nAdjudication files (", scalar @fl, "):\n - ", join("\n - ", sort @fl), "\n";
+}
 
 MMisc::ok_quit("Done\n");
 
