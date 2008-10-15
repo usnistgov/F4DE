@@ -547,6 +547,12 @@ sub getLineTitle{
   $self->{LINETITLE};
 }
 
+sub setLineTitle{
+  my ($self, $title) = @_;
+  
+  $self->{LINETITLE} = $title;
+}
+
 sub IntersectionIsolineParameter
   {
     my ($self, $x1, $y1, $x2, $y2) = @_;
