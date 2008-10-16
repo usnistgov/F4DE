@@ -141,6 +141,7 @@ my $warn_nf = 0;
 my $nonglob = 0;
 my $minAgree = 0;
 my $mad = 0;
+my $smartglob = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used: A CD    I   M     ST VW   a cd f hij  mn p  s  vwx   #
@@ -175,6 +176,7 @@ GetOptions
    'nonGlobing'      => \$nonglob,
    'minAgree=i'      => \$minAgree,
    'MakeAgreeDir'    => \$mad,
+   'globSmart=i'     => \$smartglob,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -210,6 +212,13 @@ MMisc::error_quit("\'Duration\' is not set, aborting")
 
 MMisc::error_quit("\'delta_t\' is not set, aborting")
   if (! defined $deltat);
+
+if (defined $smartglob) {
+  MMisc::error_quit("Not doing both \'nonGlobing\' and \'globSmart\' at the same time")
+      if ($nonglob);
+  MMisc::error("\"globSmart\" value must be 1 or more")
+      if ($smartglob < 1);
+}
 
 MMisc::error_quit("\'info_path\' can only be used if \'InfoGenerator\' is used")
   if ((MMisc::is_blank($info_g)) && (! MMisc::is_blank($info_path)));
@@ -264,6 +273,7 @@ my $UnSys_step1    = "$UnSys_base/1-empty_REF";
 my $UnSys_step2    = "$UnSys_base/2-empty_REF_vs_Final_SYS";
 my $AdjDir         = "06-Adjudication_ViPERfiles";
 my $NGAdjDir       = "06-Non_Globing-Adjudication_ViPERfiles";
+my $SGAdjDir       = "06-Smart_Globing-Adjudication_ViPERfiles";
 
 my $lgwf = "";
 
@@ -679,7 +689,7 @@ print "Unmapped_REF : $UnRef_file\n";
 print "Unmapped_SYS : $UnSys_file\n";
 
 my $adadd = "-seg_margin_$margin";
-my $tadjdir = ($nonglob) ? $NGAdjDir : $AdjDir;
+my $tadjdir = ($nonglob) ? $NGAdjDir : ((defined $smartglob) ? $SGAdjDir : $AdjDir);
 my $adj_dir = MMisc::get_file_full_path("$wid/$tadjdir$dtadd$adadd");
 &die_mkdir($adj_dir, "Adjudication Directory");
 
@@ -693,6 +703,7 @@ $command .= " -W" if ($warn_nf);
 $command .= " -c" if ($mad);
 $command .= " -m $minAgree" if ($minAgree > 0);
 $command .= " -o -r" if ($nonglob);
+$command .= " -S $smartglob -r" if (defined $smartglob);
 
 &die_syscall_logfile($log, "adjudication command", $command);
 
