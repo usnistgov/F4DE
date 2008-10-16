@@ -266,7 +266,9 @@ sub setif_maxAgree {
   
   return(0) if ($self->error());
   
-  if ($agc > $self->{maxAgree}) {
+  if ($agc >= $self->{maxAgree}) {
+    # The equal is important to insure that the DS get changed too
+    # in case the agree level is equal to the last max agree level
     $self->{maxAgree} = $agc;
     return(1);
   }
@@ -276,12 +278,13 @@ sub setif_maxAgree {
 
 #####
 
-sub set_maxAgreeDS {
+sub setif_maxAgreeDS {
   my ($self, $ds) = @_;
 
   return(0) if ($self->error());
 
-  $self->{maxAgreeDS} = $ds;
+  $self->{maxAgreeDS} = $ds
+    if ($ds > $self->{maxAgreeDS});
 
   return(1);
 }
@@ -329,6 +332,99 @@ sub _pre_self_tests {
   }
 
   return(1);
+}
+
+#####
+
+sub get_align_array_from_obs {
+  my ($self, $obs) = @_;
+
+  my @out = ();
+  if (! $self->is_annot_key_set()) {
+    $self->_set_errormsg("Can not work unless the \'annotator key\' is set");
+    return(@out);
+  }
+
+  return(@out)
+    if (! $obs->is_xtra_set());
+
+  my $ak = $self->get_annot_key();
+  my @al = $obs->list_xtra_attributes();
+  my @l = grep(m%$ak%, sort @al);
+  
+  return(@l);
+}
+
+#####
+
+sub get_observation_agree_level {
+  my ($self, $obs) = @_;
+
+  my @l = $self->get_align_array_from_obs($obs);
+  return(0) if ($self->error());
+
+  return(scalar @l);
+}
+
+#####
+
+sub extract_trackingcomment_information {
+  my ($self, $obs) = @_;
+
+  my $tcv = ($obs->is_trackingcomment_set()) ? $obs->get_trackingcomment_txt() : "";
+
+  my @empty = ();
+
+  return(@empty)
+    if (MMisc::is_blank($tcv));
+
+  my @atc = ();
+  # We want the "mods add" (to get the added annotator key) and the
+  # first added (per file) since mods are added to the end and we 
+  # proces in temporal add, "first" and "last" value for a given file
+  # have a meaning
+  (my $err, @atc) = TrecVid08HelperFunctions::extract_trackingcomment_information($tcv, TrecVid08ViperFile::get_xtra_tc_modsadd(), 1, $self->get_annot_key(), 1);
+  if (! MMisc::is_blank($err)) {
+    $self->_set_errormsg("While extracting tracking comment information: $err");
+    return(@empty);
+  }
+
+  return(@atc);
+}
+
+#####
+
+sub get_observation_meanDS {
+  my ($self, $obs) = @_;
+
+  my $st = $obs->get_eventsubtype();
+  if (MMisc::is_blank($st)) {
+    $self->_set_errormsg("Events with no subtypes are not valid for Adjudication work");
+    return(0);
+  }
+
+  if ($st ne $key_se_UnmappedSys) {
+    $self->_set_errormsg("Can only compute meanDetectionScore on UnmappedSys observations");
+    return(0);
+  }
+
+  my @atc = $self->extract_trackingcomment_information($obs);
+  return(0) if ($self->error());
+  return(0) if (scalar @atc == 0);
+
+  my $detscrsum = 0;
+  foreach my $rh (@atc) {
+    my $detscr = $$rh{$xtra_tc_list[8]};
+
+    if (! MMisc::is_float($detscr)) {
+      $self->_set_errormsg("Found an UnmappedSys entry without a proper \"DetectionScore\" ($detscr)");
+      return(0);
+    }
+    $detscrsum += $detscr;
+  }
+  my $meandetscr = $detscrsum / scalar @atc;
+  
+  return($meandetscr);
 }
 
 #####
@@ -410,31 +506,14 @@ sub add_tv08obs {
     return(0);
   }
   
-  my $alignc = 0;
-  my $align = "";
-  if ($obs->is_xtra_set()) {
-    my $ak = $self->get_annot_key();
-    my @al = $obs->list_xtra_attributes();
-    my @l = grep(m%$ak%, sort @al);
-    $align = join(" ", @l);
-    $alignc = scalar @l;
-  }
+  my @aligna = $self->get_align_array_from_obs($obs);
+  return(0) if ($self->error());
+  my $alignc = scalar @aligna;
+  my $align = ($alignc > 0) ? join(" ", @aligna) : "";
 
-  my $tcv = ($obs->is_trackingcomment_set()) 
-    ? $obs->get_trackingcomment_txt() : "";
 
-  my @atc = ();
-  # We want the "mods add" (to get the added annotator key) and the
-  # first added (per file) since mods are added to the end and we 
-  # proces in temporal add, "first" and "last" value for a given file
-  # have a meaning
-  if (! MMisc::is_blank($tcv)) {
-    (my $err, @atc) = TrecVid08HelperFunctions::extract_trackingcomment_information($tcv, TrecVid08ViperFile::get_xtra_tc_modsadd(), 1, $self->get_annot_key(), 1);
-    if (! MMisc::is_blank($err)) {
-      $self->_set_errormsg("While extracting tracking comment information: $err");
-      return(0);
-    } 
-  }
+  my @atc = $self->extract_trackingcomment_information($obs);
+  return(0) if ($self->error());
 
   if ($st eq $key_se_UnmappedSys) {
     if (scalar @atc != $alignc) {
@@ -483,6 +562,11 @@ sub add_tv08obs {
     }
 
     my $meandetscr = $detscrsum / scalar @atc;
+    my $cmeandetscr = $self->get_observation_meanDS($obs);
+    if (! MMisc::are_float_equal($meandetscr, $cmeandetscr, 0)) {
+      $self->_set_errormsg("Localy computed Mean DetectionScore ($meandetscr) is different from observation computed one ($cmeandetscr)");
+      return(0);
+    }
 
     return($self->set_agree_DetectionScore($event, $alignc, $id, $meandetscr, $ismax));
   }
@@ -513,7 +597,7 @@ sub set_agree_DetectionScore {
 
   ${$self->{Agree}{$event}{$agc}}[$id] = \@a;
 
-  return($self->set_maxAgreeDS($detscr))
+  return($self->setif_maxAgreeDS($detscr))
     if ($ismax);
 
   return(1);
@@ -596,6 +680,91 @@ sub clear {
   $self->{Ref} = undef;
 
   return(1);
+}
+
+########################################
+
+sub _num { $a <=> $b; }
+
+#####
+
+sub sort_observations_by_max_agree_and_max_mean_detection_score {
+  my ($self, @lo) = @_;
+
+  return(undef, undef) if ($self->error());
+
+  # checks
+  my $sffn = $self->get_sffn();
+  return(undef, undef) if ($self->error());
+
+  my @ur = ();
+  my %us = ();
+  foreach my $obs (@lo) {
+    my $osffn = $obs->get_filename();
+    if ($obs->error()) {
+      $self->_set_errormsg("Problem obtaining observation's sffn: " . $obs->get_errormsg());
+      return(undef, undef);
+    }
+    if ($osffn ne $sffn) {
+      $self->_set_errormsg("Observation's sffn ($osffn) is different from adj sffn ($sffn)");
+      return(undef, undef);
+    }
+
+    my $st = $obs->get_eventsubtype();
+    if (MMisc::is_blank($st)) {
+      $self->_set_errormsg("Events with no subtypes are not valid for Adjudication work");
+      return(undef, undef);
+    }
+    if (($st ne $key_se_UnmappedSys) && ($st ne $key_se_UnmappedRef)) {
+      $self->_set_errormsg("Only \'$key_se_UnmappedSys\' and \'$key_se_UnmappedRef\' Events' subtypes are valid for Adjudication work (not: $st)");
+      return(undef, undef);
+    }
+
+    if ($st eq $key_se_UnmappedRef) {
+      push @ur, $obs;
+      next;
+    }
+
+    # Only UnmappedSys left
+
+    my $agreec = $self->get_observation_agree_level($obs);
+    return(undef, undef) if ($self->error());
+
+    my $meands = $self->get_observation_meanDS($obs);
+    return(undef, undef) if ($self->error());
+
+    if ($obs->error()) {
+      $self->_set_errormsg("Problem in Observation: " . $obs->get_errormsg());
+      return(undef, undef);
+    }
+
+    # Store it now (we can have more than 1 with the same DS, so we need an array
+    push @{$us{$agreec}{$meands}}, $obs;
+  }
+
+  my @outus = ();
+  # We work in reverse to have the top candidates first (sort keys: Agree then meanDS)
+  foreach my $al (reverse sort _num keys %us) {
+    foreach my $ds (reverse sort _num keys %{$us{$al}}) {
+      if (! exists $us{$al}{$ds}) {
+	$self->_set_errormsg("WEIRD -- Could not find UnmappedSys Observation [$al / $ds]");
+	return(undef, undef);
+      }
+      foreach my $obs (@{$us{$al}{$ds}}) {
+	push @outus, $obs;
+      }
+    }
+  }
+
+  if ((scalar @ur + scalar @outus) != scalar @lo) {
+    $self->_set_errormsg
+      ("Not the same number of observations out (" . scalar @ur + scalar @outus . 
+       " = " . scalar @outus . " $key_se_UnmappedSys + " . scalar @ur . " $key_se_UnmappedRef) vs in ("
+       . scalar @lo . ")");
+    return(undef, undef);
+  }
+
+  return(\@outus, \@ur);
 }
 
 ########################################
