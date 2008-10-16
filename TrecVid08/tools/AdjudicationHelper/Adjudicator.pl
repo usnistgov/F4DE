@@ -165,9 +165,10 @@ my $oour = 0;
 my $riur = 0;
 my $minAgree = 0;
 my $cad = 0;
+my $smartglob = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:       G I  L       T  W   a cd f hij        s  v x   #
+# Used:       G I  L      ST  W   a cd f hij        s  v x   #
 
 my %opt = ();
 GetOptions
@@ -191,6 +192,7 @@ GetOptions
    'reinjectUnmapRef' => \$riur,
    'minAgree=i'       => \$minAgree,
    'createAgreeDir'   => \$cad,
+   'SmartGlob=i'      => \$smartglob,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -227,6 +229,9 @@ MMisc::error_quit("\'minAgree\' must be postive")
 
 MMisc::error_quit("\'segmentation_margin\' must be at least 1")
   if ($margin < 1);
+
+MMisc::error_quit("\'SmartGlob\' must be more than 0")
+  if ((defined $smartglob) && ($smartglob == 0));
 
 MMisc::error_quit("\'info_path\' can only be used if \'InfoGenerator\' is used")
   if ((MMisc::is_blank($info_g)) && (! MMisc::is_blank($info_path)));
@@ -266,7 +271,7 @@ my %numframes = ();
 
 foreach my $ifile (@ARGV) {
   my $err = MMisc::check_file_r($ifile);
-  MMisc::error_quit("Problem with \'xmlfile\': $err")
+  MMisc::error_quit("Problem with \'xmlfile\' [$ifile] : $err")
     if (! MMisc::is_blank($err));
   
   print "** Loading Viper File: $ifile\n";
@@ -326,23 +331,58 @@ foreach my $sffn (@ev_sffn) {
       if ($el->error());
     
     print "* SFFN: $sffn | Event: $event | Observations: ", scalar(@ol), "\n";
-    &write_avf($sffn, $event, undef, @ol) if ($doglobal);
-    
-    print " -> No Segmentation possible: No \'$se_UnSys\' observations\n"
-      if (! &has_UnSys(@ol));
 
+    
+    if (defined $smartglob) {
+      my $lavf = new AdjudicationViPERfile();
+      $lavf->set_annot_key($akey);
+      $lavf->set_sffn($sffn);
+      MMisc::error_quit("Problem creating the local Adjudication ViPER file: " . $lavf->get_errormsg())
+          if ($lavf->error());
+      
+      my ($rus, $rur) = $lavf->sort_observations_by_max_agree_and_max_mean_detection_score(@ol);
+      MMisc::error_quit("Problem sorting Observations for \"SmartGlob\" : " . $lavf->get_errormsg())
+          if ($lavf->error());
+      MMisc::error_quit("Problem sorting Observations for \"SmartGlob\" : undefined references arrays")
+          if ((! defined $rus) || (! defined $rur));
+      my $scol = scalar @ol;
+      my $doable = MMisc::min($smartglob, $scol);
+      @ol = ();
+      for (my $i = 0; $i < $doable; $i++) {
+        push @ol, $$rus[$i];
+      }
+      print " (kept ", scalar @ol, " reordered observations / $scol) [expected: $doable]\n";
+      push @ol, @$rur;
+    }
+    
+    &write_avf($sffn, $event, undef, @ol) if ($doglobal);
+
+    if (! &has_UnSys(@ol)) {
+      print " -> No Segmentation possible: No \'$se_UnSys\' observations\n";
+      next;
+    }
+
+    my $wrote = 0;
+    my $wskip = 0;
+    my $tsobs = 0;
+    my $trobs = 0;
     while (&has_UnSys(@ol)) {
       my $obs = &shift_next_UnSys(\@ol);
       next if (! defined $obs);
       
       my ($fs_fs, @in) = &compute_overlaps($obs, \@ol, $margin, $oour);
 
-      &write_avf($sffn, $event, $fs_fs, @in);
+      my ($wr, $wsk, $lts, $ltr) = &write_avf($sffn, $event, $fs_fs, @in);
+      $wrote += $wr;
+      $wskip += $wsk;
+      $tsobs  += $lts;
+      $trobs  += $ltr;
 
       my $ok = &reinject_UnRefs(\@ol, @in);
       MMisc::error_quit("Problem while re-injecting Unmapped Refs")
           if (! $ok);
     }
+    print " -> Wrote: $wrote files (Skipped: $wskip) containing a total of ", ($tsobs + $trobs), " observation(s) ($tsobs SYS + $trobs REF)\n";
   }
 }
 
@@ -565,11 +605,18 @@ sub write_avf {
   MMisc::error_quit("Problem creating the Adjudication ViPER file: " . $avf->get_errormsg())
     if ($avf->error());
 
+  my $sobs = 0;
+  my $robs = 0;
   foreach my $obs (@ol) {
     $avf->add_tv08obs($obs, -$osf);
     MMisc::error_quit("Problem adding Observation to AVF: " . $avf->get_errormsg())
       if ($avf->error());
+    my $st = $obs->get_eventsubtype();
+    $sobs++ if ($st eq $se_UnSys);
+    $robs++ if ($st eq $se_UnRef);
   }
+  MMisc::error_quit("Did not process a correct number of observations (" . $sobs + $robs . " = $sobs sys + $robs ref) vs " . scalar @ol . "expected")
+      if (scalar @ol != ($sobs + $robs));
 
   my $mal = $avf->get_maxAgree();
   MMisc::error_quit("Problem obtaining AVF's max Agree value: " . $avf->get_errormsg())
@@ -579,18 +626,18 @@ sub write_avf {
 
   my $spfnadd = (! defined $fs_fs) ? "-Global" : "-$agreeadd";
   my $fname_b = "$sffn-$event-" . sprintf("%06d", $beg) . "_" . sprintf("%06d", $end) . "$spfnadd";
-  if ($oour) {
-    my $mads = $avf->get_maxAgreeDS();
-    MMisc::error_quit("Problem obtaining AVF's max Agree Detection Score value: " . $avf->get_errormsg())
-        if ($avf->error());
-    $fname_b .= sprintf("-MeanDetectionScore_%06f", $mads);
-  }
+  my $mads = $avf->get_maxAgreeDS();
+  MMisc::error_quit("Problem obtaining AVF's max Agree Detection Score value: " . $avf->get_errormsg())
+      if ($avf->error());
+  $fname_b .= sprintf("-MeanDetectionScore_%06f", $mads);
+
+  my $addtxt = " -- Note: " . ($robs + $sobs) . " observation(s) = $sobs SYS + $robs REF";
 
   if ($mal < $minAgree) {
-    print "Skipping writting of [$fname_b], agree level ($mal) under \'minAgree\' threshold ($minAgree)\n";
-    return();
+    print "Skipping writting of [$fname_b], agree level ($mal) under \'minAgree\' threshold ($minAgree)$addtxt\n";
+    return(0, 1, $sobs, $robs);
   } else {
-    print "* Found [$fname_b]\n";
+    print "* About to create [$fname_b]$addtxt\n";
   }
 
   my $lodir = $odir;
@@ -629,6 +676,8 @@ sub write_avf {
     
   MMisc::error_quit("Problem while trying to write")
     if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML Representation:\n"));
+
+  return(1, 0, $sobs, $robs);
 }
 
 ##########
