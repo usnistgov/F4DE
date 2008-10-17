@@ -689,26 +689,31 @@ sub _num { $a <=> $b; }
 #####
 
 sub sort_observations_by_max_agree_and_max_mean_detection_score {
-  my ($self, @lo) = @_;
+  my ($self, $check_sffn, @lo) = @_;
 
   return(undef, undef) if ($self->error());
 
   # checks
-  my $sffn = $self->get_sffn();
-  return(undef, undef) if ($self->error());
+  my $sffn = "";
+  if ($check_sffn) {
+      $sffn = $self->get_sffn();
+      return(undef, undef) if ($self->error());
+  }
 
   my @ur = ();
   my %us = ();
   foreach my $obs (@lo) {
-    my $osffn = $obs->get_filename();
-    if ($obs->error()) {
-      $self->_set_errormsg("Problem obtaining observation's sffn: " . $obs->get_errormsg());
-      return(undef, undef);
-    }
-    if ($osffn ne $sffn) {
-      $self->_set_errormsg("Observation's sffn ($osffn) is different from adj sffn ($sffn)");
-      return(undef, undef);
-    }
+      if ($check_sffn) {
+	  my $osffn = $obs->get_filename();
+	  if ($obs->error()) {
+	      $self->_set_errormsg("Problem obtaining observation's sffn: " . $obs->get_errormsg());
+	      return(undef, undef);
+	  }
+	  if ($osffn ne $sffn) {
+	      $self->_set_errormsg("Observation's sffn ($osffn) is different from adj sffn ($sffn)");
+	      return(undef, undef);
+	  }
+      }
 
     my $st = $obs->get_eventsubtype();
     if (MMisc::is_blank($st)) {
@@ -732,6 +737,8 @@ sub sort_observations_by_max_agree_and_max_mean_detection_score {
 
     my $meands = $self->get_observation_meanDS($obs);
     return(undef, undef) if ($self->error());
+      # Reformat it to have a fixed value (of higer precision than the filename printout)
+      $meands = sprintf("%.08f", $meands);
 
     if ($obs->error()) {
       $self->_set_errormsg("Problem in Observation: " . $obs->get_errormsg());
