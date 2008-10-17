@@ -340,19 +340,20 @@ foreach my $sffn (@ev_sffn) {
       MMisc::error_quit("Problem creating the local Adjudication ViPER file: " . $lavf->get_errormsg())
           if ($lavf->error());
       
-      my ($rus, $rur) = $lavf->sort_observations_by_max_agree_and_max_mean_detection_score(@ol);
+      my ($rus, $rur) = $lavf->sort_observations_by_max_agree_and_max_mean_detection_score(1, @ol);
       MMisc::error_quit("Problem sorting Observations for \"SmartGlob\" : " . $lavf->get_errormsg())
           if ($lavf->error());
       MMisc::error_quit("Problem sorting Observations for \"SmartGlob\" : undefined references arrays")
           if ((! defined $rus) || (! defined $rur));
-      my $scol = scalar @ol;
+      my $scol = scalar @$rus;
       my $doable = MMisc::min($smartglob, $scol);
       @ol = ();
       for (my $i = 0; $i < $doable; $i++) {
         push @ol, $$rus[$i];
       }
       print " (kept ", scalar @ol, " reordered observations / $scol) [expected: $doable]\n";
-      push @ol, @$rur;
+      push @ol, @$rur if (scalar @$rur > 0);
+      print " -- total observations (including REFs) : ", scalar @ol, "\n";
     }
     
     &write_avf($sffn, $event, undef, @ol) if ($doglobal);
