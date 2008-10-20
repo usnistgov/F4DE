@@ -467,7 +467,7 @@ if (scalar @inputAliCSV == 0) {
   my $ald = &do_alignment(\@todo, $sysEL, $refEL, @kp);
   print "NOTE: No alignment ever done\n"
     if ($ald == 0);
-} else { # if (scalar @inputAliCSV == 0) {
+} else { # scalar @inputAliCSV != 0
   my @tmp = ();
   foreach my $entry (@inputAliCSV) {
     push @tmp, split(m%\,%, $entry);
@@ -480,25 +480,35 @@ if (scalar @inputAliCSV == 0) {
 
   ### Load the Trial Structures from CSV alignment files
   foreach my $csvf (@inputAliCSV) {
+    print "* Loading CSV file [$csvf]";
+
     open (CSV, $csvf) 
       or MMisc::error_quit("Failed to open CSV alignment file ($csvf): $!");
 
     my $csv = CSVHelper::get_csv_handler();
-    return("Problem creating the CSV object")
+    MMisc::error_quit("Problem creating the CSV object")
       if (! defined $csv);
 
-    my $header = <CSV>;  
+    my $header = <CSV>;
+    if (! defined $header) {
+      print "File [$csvf] contains no data, skipping\n";
+      next;
+    }
     my @headers = CSVHelper::csvtxt2array($csv, $header);
+    if (scalar @headers == 1) {
+      print "File [$csvf] contains no usable data, skipping\n";
+      next;
+    }
+    MMisc::error_quit("File [$csvf] does not contain enough CSV columns (" . scalar @headers .") vs 16 expected")
+        if (scalar @headers != 16);
 
-    MMisc::error_quit("CSV field [2] != 'Event'") 
-      if ($headers[2] ne "Event");
-    MMisc::error_quit("CSV field [3] != 'TYPE'") 
-      if ($headers[3] ne "TYPE");
-    MMisc::error_quit("CSV field [10] != 'S.DetScr'") 
-      if ($headers[10] ne "S.DetScr");
-    MMisc::error_quit("CSV field [11] != 'S.DetDec'")
-      if ($headers[11] ne "S.DetDec");
-    
+    foreach my $tmp_ft (qw(2:Event 3:TYPE 10:S.DetScr 11:S.DetDec)) {
+      my ($tmp_loc, $tmp_ev) = split(m%\:%, $tmp_ft); 
+      my $tmp_val = $headers[$tmp_loc];
+      MMisc::error_quit("In file [$csvf]: CSV field [$tmp_loc] != \'$tmp_ev\' (is \"$tmp_val\"")
+          if ($tmp_val ne $tmp_ev);
+    }
+
     my ($type, $evt, $detscr, $detdec);
     while (<CSV>){
       my @data =  CSVHelper::csvtxt2array($csv, $_);
@@ -523,7 +533,7 @@ if (scalar @inputAliCSV == 0) {
       }
       $trials_c{$evt}++;
       $trials_c{$key_allevents}++;
-      $allEvents{$evt} = 1;    
+      $allEvents{$evt} = 1;
     }
 
     close CSV;
