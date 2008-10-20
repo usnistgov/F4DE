@@ -316,6 +316,20 @@ sub renderAsTxt(){
   $info . $at->renderTxtTable(2);
 }
 
+sub renderCSV {
+    my ($self, $includeCounts, $DETOptions) = @_;
+
+  if (@{ $self->{DETList} } == 0) {
+    return "Error: No DETs provided to produce a report from";
+  }
+  
+  my $reportActual = 1;
+  $reportActual = $DETOptions->{ReportActual} if (exists($DETOptions->{ReportActual}));
+
+  my $at = $self->_buildAutoTable(0, $includeCounts, $reportActual);
+    
+  return($at->renderCSV());
+}       
 
 
 1;
