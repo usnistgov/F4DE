@@ -480,8 +480,10 @@ my $report = $ds->renderAsTxt("$temp/merge", 1, 1, \%options);
 system "cp $temp/merge.png $OutPNGfile";
 
 if ($docsv) {
-    my $csv = $ds->renderCSV(1, \%options);
-    MMisc::writeTo($OutPNGfile, ".csv", 1, 0, $csv);
+  my $csvf = $OutPNGfile;
+  $csvf =~ s/\.png$/.csv/i;
+  my $csv = $ds->renderCSV(1, \%options);
+  MMisc::writeTo($csvf, "", 1, 0, $csv);
 }
 
 exit 0;
