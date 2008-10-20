@@ -30,9 +30,9 @@ BEGIN {
   $f4b = "F4DE_BASE";
   $f4bv =  $ENV{$f4b} . "/lib";
   $tv08pl = "TV08_PERL_LIB";
-  $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
+  $tv08plv = $ENV{$tv08pl} || "../../../TrecVid08/lib"; # Default is relative to this tool's default path
   $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
+  $f4deplv = $ENV{$f4depl} || "../../lib"; # Default is relative to this tool's default path
 }
 use lib ($tv08plv, $f4deplv, $f4bv);
 
@@ -136,12 +136,17 @@ my $gzipPROG = "gzip";
 my $gnuplotPROG = "gnuplot";
 my $axisScales = undef;
 my $omitActual = 0;
+my $docsv = 0;
 
 Getopt::Long::Configure(qw( no_ignore_case ));
+
+# Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
+# Used: A C   G I K   OPQRST     Z  c e ghi klm o   st v     #
 
 GetOptions
 (
 	'o|output-png=s'                       => \$OutPNGfile,
+        'g|generateCSV'                        => \$docsv,                      
 	
 	't|tmpdir=s'                           => \$tmpDir,
 	's|select-filter=s'                    => \@selectFilters,
@@ -163,7 +168,7 @@ GetOptions
 	'G|GnuplotPROG=s'                      => \$gnuplotPROG,
 	'A|AxisScale=s'                        => \$axisScales,
 	'O|OmitActualCalc'                     => \$omitActual, 
-	
+
 	'version'                              => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; print "$name version $VERSION\n"; exit(0); },
 	'h|help'                               => \$help,
 	'm|man'                                => \$man,
@@ -473,6 +478,11 @@ else
 
 my $report = $ds->renderAsTxt("$temp/merge", 1, 1, \%options);
 system "cp $temp/merge.png $OutPNGfile";
+
+if ($docsv) {
+    my $csv = $ds->renderCSV(1, \%options);
+    MMisc::writeTo($OutPNGfile, ".csv", 1, 0, $csv);
+}
 
 exit 0;
 
