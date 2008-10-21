@@ -1007,10 +1007,10 @@ sub write_gnuplot_threshold_header{
   print $FP "## GNUPLOT command file\n";
   print $FP "set terminal postscript color\n";
   print $FP "set data style lines\n";
-  print $FP "set key 1,1\n";
   print $FP "set title '$title'\n";
   print $FP "set xlabel 'Detection Score'\n";
   print $FP "set grid\n";
+  print $FP "set size ratio 0.85\n";
 
 }
 
@@ -1028,7 +1028,8 @@ sub write_gnuplot_DET_header{
   print $FP "set noxzeroaxis\n";
   print $FP "set noyzeroaxis\n";
   if (defined($keyLoc)) {
-    print $FP "set key $keyLoc spacing .5\n";
+    $keyLoc = "bmargin vertical" if ($keyLoc eq "below");  ### Gnuplot changed
+    print $FP "set key $keyLoc spacing .7 ".($keyLoc eq "bmargin vertical" ? "box" : "")."\n";
   }
   if ($xScale eq "nd" && $yScale eq "nd") {
     $ratio = ($p_y_max - $p_y_min) / ($p_x_max - $p_x_min);
@@ -1797,14 +1798,30 @@ sub writeGNUGraph{
 ## This is NOT and instance method
 ### To see the test pattern: (echo set terminal png medium size 600,400; echo test) | gnuplot > foo.png
 sub buildPNG
-  {
+{
     my ($fileRoot, $gnuplot) = @_;
 
     $gnuplot = "gnuplot" if (!defined($gnuplot));
+ 
+    my $hasbMargin = 0;
+    my $numTitle = 0;
+    my $inPlot = 0;
+    ### Pre-read the file to count titles so that IF 'set key bmargin' is used, it looks good. 
+    open (FILE, $fileRoot.".plt") || die "Error: Failed to open GNUPLOT driver file '$fileRoot.plt' for read\n";
+    while (<FILE>){
+      if ($_ =~ /plot\s+\[/) { $inPlot = 1; }
+      if ($_ =~ /set\s+key\s+bmargin/) { $hasbMargin = 1; }
+      if ($inPlot && $_ =~ /\susing\s.*\s+title\s/) { $numTitle++; }
+    }
+    close FILE;
     
     ## Use this with gnuplot 3.X
     #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
-    system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium size 768,2048 crop\n\" if (\$_ =~ /set terminal/)\' | $gnuplot > $fileRoot.png");
+    my $newTermCommand = "set terminal png medium size 768,2048 crop";
+    if ($hasbMargin){
+      $newTermCommand = "set terminal png medium size 768,".(652+($numTitle*22))." crop"
+    }
+    system("cat $fileRoot.plt | perl -pe \'\$_ = \"$newTermCommand\n\" if (\$_ =~ /set terminal/)\' | $gnuplot > $fileRoot.png");
   }
 
 1;
