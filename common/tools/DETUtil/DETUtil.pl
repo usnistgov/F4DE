@@ -481,8 +481,9 @@ system "cp $temp/merge.png $OutPNGfile";
 
 if ($docsv) {
   my $csvf = $OutPNGfile;
-  $csvf =~ s/\.png$/.csv/i;
-  my $csv = $ds->renderCSV(1, \%options);
+  $csvf =~ s/\.png$//i;
+  $csvf .= ".csv";
+  my $csv = $ds->renderCSV("$temp/merge", 1, \%options);
   MMisc::writeTo($csvf, "", 1, 0, $csv);
 }
 
