@@ -88,7 +88,6 @@ sub unitTest(){
 
   my $emptyTrial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
 
-
   $emptyTrial->addTrial("he", undef, "OMITTED", 1);
   $emptyTrial->addTrial("he", undef, "OMITTED", 1);
   $emptyTrial->addTrial("he", undef, "OMITTED", 1);
@@ -105,7 +104,8 @@ sub unitTest(){
   my $det3 = new DETCurve($emptyTrial, 
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial),
                           "blocked", "DETEmpty", \@isolinecoef, undef);
-                          $det3->successful();
+                          
+  $det3->successful();
   
   print " Added DETs... ";
   my $ds = new DETCurveSet("title");
@@ -115,6 +115,16 @@ sub unitTest(){
   my $k2 = "Name !@#\$%^&*(){}[]?'\"\<\>:;";
   die "Error: Failed to add second det" if ("success" ne $ds->addDET($k2, $det2));
   die "Error: Failed to add third (empty) det" if ("success" ne $ds->addDET("EmptyDETCurve", $det3));
+  print "OK\n";
+
+  print " Added Non-Compatible DETs... ";
+  my $k2Diff  = "Name non-compatable";
+  my $ncTrial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTAL" => 1000) });
+  my $det2Diff = new DETCurve($ncTrial, 
+                              new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
+                              "blocked", "DET2", \@isolinecoef, undef);
+  my $ret = $ds->addDET($k2Diff, $det2Diff);
+  die "Error: Add of non-compatiable DET succeeded returning \"$ret\"" if ("success" eq $ret);
   print "OK\n";
   
   print " Check File System Safe keys... ";
@@ -159,7 +169,7 @@ sub addDET(){
 
   ### Check to make sure the Metrics are all the same in the DETS
   for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
-    return "Error: the new det and DET[$d] are non-compatible objects" 
+    return "Error: the new det /".$det->getLineTitle()."/ and DET[$d] /".$self->{DETList}->[$d]->{DET}->getLineTitle()."/ are non-compatible objects" 
       if (! $det->isCompatible($self->{DETList}->[$d]->{DET}));
   }
 
