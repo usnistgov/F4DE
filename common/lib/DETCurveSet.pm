@@ -327,7 +327,7 @@ sub renderAsTxt(){
 }
 
 sub renderCSV {
-    my ($self, $includeCounts, $DETOptions) = @_;
+    my ($self, $fileRoot, $includeCounts, $DETOptions) = @_;
 
   if (@{ $self->{DETList} } == 0) {
     return "Error: No DETs provided to produce a report from";
@@ -336,7 +336,12 @@ sub renderCSV {
   my $reportActual = 1;
   $reportActual = $DETOptions->{ReportActual} if (exists($DETOptions->{ReportActual}));
 
-  my $at = $self->_buildAutoTable(0, $includeCounts, $reportActual);
+  my $multiInfo = {()};
+  if ($DETOptions->{createDETfiles}) {
+    $multiInfo = DETCurve::writeMultiDetGraph($fileRoot, $self, $DETOptions);
+  }
+
+  my $at = $self->_buildAutoTable(1, $includeCounts, $reportActual);
     
   return($at->renderCSV());
 }       
