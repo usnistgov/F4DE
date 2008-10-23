@@ -290,7 +290,6 @@ if(defined($keyLoc))
 	die "Error: Invalid key location '$keyLoc' !~ $expr" if ($keyLoc !~ /$expr/);
 	$options{KeyLoc} = $keyLoc;
 }
-print  Dumper(\%options);
 
 if($omitActual)
 {
