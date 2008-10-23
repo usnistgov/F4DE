@@ -22,6 +22,7 @@ use Data::Dumper;
 use Trials;
 use MetricTestStub;
 use DETCurve;
+use SimpleAutoTable;
 
 sub new
   {
@@ -285,7 +286,6 @@ sub _buildAutoTable(){
   $at;
 }
 
-
 sub renderAsTxt(){
   my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions) = @_;
     
@@ -346,5 +346,276 @@ sub renderCSV {
   return($at->renderCSV());
 }       
 
+sub intersection
+{
+	my %l = ();
+	my @listout;
+	foreach my $e (@_) { $l{$e}++; }
+	foreach my $e (keys %l) { push(@listout, $e) if($l{$e} > 1); }
+	return @listout;	
+}
+
+sub unique
+{
+	my %l = ();
+	foreach my $e (@_) { $l{$e}++; }
+	return keys %l;
+}
+
+sub max
+{
+	my $max = shift;
+	foreach $_ (@_) { $max = $_ if $_ > $max; }
+	return $max;
+}
+
+sub comb
+{
+      my ($n, $k) = @_;
+
+      return 0 if( $k < 0 || $k > $n );
+      $k = $n - $k if(  $k > $n - $k );
+
+      my $Cnk = 1;
+
+      for( my $i=0; $i<$k; $i++ )
+      {
+              $Cnk *= $n - $i;
+              $Cnk /= $i + 1;
+      }
+
+      return( $Cnk );
+}
+
+sub cdf_norm
+{
+      my ($z) = @_;
+      my $PREC = 0.00005;
+      my $PI = 3.14159265;
+
+      my $a = 1;
+      my $b = 1;
+      my $c = $z;
+      my $sum = $z;
+      my $term = $z;
+
+      return( 0.5 * $z / abs ( $z ) ) if( abs( $z ) > 8 );
+
+      for( my $i=1; abs( $term ) > $PREC; $i++ )
+      {
+              $a += 2;
+              $b *= -2 * $i;
+              $c *= $z * $z;
+              $term = $c/( $a * $b );
+              $sum += $term;
+      }
+
+      return( $sum/sqrt( 2*$PI ) );
+}
+
+sub binomial
+{
+      my ($p, $n, $s) = @_;
+
+      my $sum = 0;
+
+      if( $n > 30 )
+      {
+              my $sigma = sqrt( $n*$p*(1.0-$p) );
+              my $z = ( ($s+0.5) - $n*$p )/$sigma;
+              $sum = 0.5 + cdf_norm( $z );
+      }
+      else
+      {
+              for( my $i=0; $i<=$s; $i++ )
+              {
+                      $sum += comb( $n, $i ) * ( $p ** $i ) * ( (1.0-$p) ** ( $n - $i ) );
+              }
+      }
+
+      return( 1 - $sum );
+}
+
+sub renderDETCompare
+{
+	my ($self, $confidenceIsoThreshold) = @_;
+	
+	die "[DetCurveSet::renderDETCompare] Error: Can only compare 2 DET Curves" 
+		if(scalar(@{ $self->{DETList} }) != 2);
+		
+	my ($det1, $det2) = @{ $self->getDETList() };
+	
+	my $det1name = $det1->{LAST_SERIALIZED_DET};
+	$det1name =~ s/\.srl$//;
+	my $det2name = $det2->{LAST_SERIALIZED_DET};
+	$det2name =~ s/\.srl$//;
+	
+	my %statsCompare;
+	my @listIsoCoeftmp = intersection(@{ $det1->{ISOLINE_COEFFICIENTS} }, @{ $det2->{ISOLINE_COEFFICIENTS} });
+	my @listIsoCoef = ();
+	
+	foreach my $cof ( @listIsoCoeftmp )
+	{
+		next if(!defined($det1->{ISOPOINTS}{$cof}));
+		next if(!defined($det2->{ISOPOINTS}{$cof}));
+	
+		$statsCompare{$cof}{COMPARE}{PLUS} = 0;
+		$statsCompare{$cof}{COMPARE}{MINUS} = 0;
+		$statsCompare{$cof}{COMPARE}{ZERO} = 0;
+		$statsCompare{$cof}{DET1}{MFA} = $det1->{ISOPOINTS}{$cof}{INTERPOLATED_MFA};
+		$statsCompare{$cof}{DET1}{MMISS} = $det1->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS};
+		$statsCompare{$cof}{DET2}{MFA} = $det2->{ISOPOINTS}{$cof}{INTERPOLATED_MFA};
+		$statsCompare{$cof}{DET2}{MMISS} = $det2->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS};
+		
+		my @tmpblkkey1 = keys %{ $det1->{ISOPOINTS}{$cof}{BLOCKS} };
+		my @tmpblkkey2 = keys %{ $det2->{ISOPOINTS}{$cof}{BLOCKS} };
+		
+		my @com_blocks = intersection( @tmpblkkey1, @tmpblkkey2 );
+	
+		foreach my $b ( @com_blocks )
+		{
+			my $diffdet12 = sprintf("%.4f", $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} - $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} );
+		
+			push( @{ $statsCompare{$cof}{COMPARE}{DIFF}{ARRAY} }, $diffdet12);
+		
+			if( abs ( $diffdet12 ) < 0.001 )
+			{
+				$statsCompare{$cof}{COMPARE}{ZERO}++;
+			}
+			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} > $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} )
+			{
+				$statsCompare{$cof}{COMPARE}{PLUS}++;
+			}
+			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} < $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} )
+			{
+				$statsCompare{$cof}{COMPARE}{MINUS}++;
+			}			
+		}
+				
+		$statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS} = max( 0, binomial( 0.5, $statsCompare{$cof}{COMPARE}{PLUS}+$statsCompare{$cof}{COMPARE}{MINUS}+$statsCompare{$cof}{COMPARE}{ZERO}, $statsCompare{$cof}{COMPARE}{PLUS}+sprintf( "%.0f", $statsCompare{$cof}{COMPARE}{ZERO}/2)) );
+		
+		push(@listIsoCoef, $cof);	
+	}
+	
+	my $at = new SimpleAutoTable();
+	
+	my %compare2;
+	my @list_isopoints;
+	
+	$compare2{DET1} = 0;
+	$compare2{DET2} = 0;
+	$compare2{ZERO} = 0;
+	
+	foreach my $cof ( sort {$a <=> $b} @listIsoCoef )
+	{
+		my $bestDET = "-";
+		my $isDiff = 0;
+		
+		if( $statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS} < ( 1 - $confidenceIsoThreshold ) )
+		{
+			$isDiff = 1;
+			$bestDET = "DET1";
+			$compare2{DET1}++;
+		}
+		elsif( $statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS} > $confidenceIsoThreshold )
+		{
+			$isDiff = 1;
+			$bestDET = "DET2";
+			$compare2{DET2}++;
+		}
+		else
+		{
+			$compare2{ZERO}++;
+		}
+		
+		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET1}{MFA}),
+		             "DET1|".$det1->{METRIC}->errFALab(), 
+		             sprintf("%.4f", $cof) );
+		             
+		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET1}{MMISS}),
+		             "DET1|".$det1->{METRIC}->errMissLab(), 
+		             sprintf("%.4f", $cof) );
+		             
+		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET2}{MFA}),
+		             "DET2|".$det2->{METRIC}->errFALab(), 
+		             sprintf("%.4f", $cof) );
+		             
+		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET2}{MMISS}),
+		             "DET2|".$det1->{METRIC}->errMissLab(), 
+		             sprintf("%.4f", $cof) );
+		             
+		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{PLUS}),
+		             "+", 
+		             sprintf("%.4f", $cof) );
+		             
+		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{MINUS}),
+		             "-", 
+		             sprintf("%.4f", $cof) );
+		             
+		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{ZERO}),
+		             "0", 
+		             sprintf("%.4f", $cof) );
+	
+		$at->addData(sprintf("%.5f", $statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS}),
+		             "Sign Test", 
+		             sprintf("%.4f", $cof) );
+		             
+		$at->addData($bestDET,
+		             "Comparison", 
+		             sprintf("%.4f", $cof) );
+		             
+		push(@list_isopoints,
+		     [( $statsCompare{$cof}{DET1}{MFA}, 
+		        $statsCompare{$cof}{DET1}{MMISS},
+		        $statsCompare{$cof}{DET2}{MFA},
+		        $statsCompare{$cof}{DET2}{MMISS},
+		        1 - $isDiff )] );
+	}
+	
+	my $compare2sign = max( 0, binomial( 0.5, $compare2{DET1}+$compare2{DET2}+$compare2{ZERO}, $compare2{DET1}+sprintf( "%.0f", $compare2{ZERO}/2)) );
+ 
+   my $conclusion = sprintf( "Overall sign test:\n  DET# 1 performs %d time%s better than DET# 2\n  DET# 2 performs %d time%s better than DET# 1\n  %d time%s, it is inconclusive\n", $compare2{DET1}, ( $compare2{DET1} > 1 ) ? "s" : "", $compare2{DET2}, ( $compare2{DET2} > 1 ) ? "s" : "", $compare2{ZERO}, ( $compare2{ZERO} > 1 ) ? "s" : "");
+
+   if( $compare2sign < ( 1 - $confidenceIsoThreshold ) )
+   {
+		   $conclusion .= sprintf(" With %.0f%% of confidence (test=%.5f), DET# 1 overall performs better then DET# 2.\n", $confidenceIsoThreshold*100, $compare2sign );
+   }
+   elsif( $compare2sign > $confidenceIsoThreshold )
+   {
+		   $conclusion .= sprintf(" With %.0f%% of confidence (test=%.5f), DET# 2 overall performs better then DET# 1.\n", $confidenceIsoThreshold*100, $compare2sign );
+   }
+   else
+   {
+		   $conclusion .= sprintf(" With %.0f%% of confidence (test=%.5f), nothing can be concluded.\n", $confidenceIsoThreshold*100, $compare2sign );
+   }
+	
+	return($at->renderTxtTable(2), $conclusion, \@list_isopoints);
+}
+
+sub renderIsoRatioIntersection
+{
+	my ($self) = @_;
+	
+	my $at = new SimpleAutoTable();
+	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove"} );
+
+	foreach my $det ( @{ $self->getDETList() } )
+	{
+		foreach my $cof ( sort {$a <=> $b} @{ $det->{ISOLINE_COEFFICIENTS} } )
+		{		
+			if(defined($det->{ISOPOINTS}{$cof}))
+			{
+				my $rowtitle = "$det->{LINETITLE}|$cof";
+				$at->addData($det->{LINETITLE},                                            "",                          $rowtitle);
+				$at->addData(sprintf("%.4f", $cof),                                        "Coef",                          $rowtitle);
+				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MFA}),   $det->getMetric()->errFALab(),   $rowtitle);
+				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS}), $det->getMetric()->errMissLab(), $rowtitle);
+				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_COMB}),  $det->getMetric()->combLab(),    $rowtitle);
+			}
+		}
+	}
+	
+	return $at->renderTxtTable(2);
+}
 
 1;

@@ -625,6 +625,7 @@ sub AddIsolineInformation
         
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_MFA} = $estMFa;
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_MMISS} = $estMMiss;
+    $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_COMB} = $self->{METRIC}->combCalc($estMMiss, $estMFa);
         
     foreach my $b ( keys %{ $blocks } ) {
       # Add info of previous in the block id

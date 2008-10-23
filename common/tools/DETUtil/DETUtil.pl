@@ -18,6 +18,8 @@
 # MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER,
 # INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
+# $Id$
+
 use strict;
 use Data::Dumper;
 
@@ -109,7 +111,7 @@ if (! $have_everything) {
   exit(1);
 }
 
-my $VERSION = 0.4;
+my $VERSION = "0.4";
 my @listIsoratiolineCoef = ();
 my @listIsometriclineCoef = ();
 
@@ -127,11 +129,11 @@ my $keyLoc = undef;
 my $DetCompare = 0;
 my $DrawIsoratiolines = 0;
 my $Isoratiolineslist = "";
+my $IsoRatioStatisticFile = "";
 my $DrawIsometriclines = 0;
 my $Isometriclineslist = "";
 my $DrawIsopoints = 0;
 my $confidenceIsoThreshold = 0.95;
-my $ConclusionOverall = 0;
 my $gzipPROG = "gzip";
 my $gnuplotPROG = "gnuplot";
 my $axisScales = undef;
@@ -141,37 +143,38 @@ my $docsv = 0;
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A C   G I K   OPQRST     Z  c e ghi klm o   st v     #
+# Used: A     G I K   OPQRST     Z  c e ghi klm o  rst v     #
 
 GetOptions
 (
-	'o|output-png=s'                       => \$OutPNGfile,
-        'g|generateCSV'                        => \$docsv,                      
-	
-	't|tmpdir=s'                           => \$tmpDir,
-	's|select-filter=s'                    => \@selectFilters,
-	'e|edit-filter=s'                      => \@editFilters,
-	'c|compare'                            => \$DetCompare,
-	'C|ConclusionOverall'                  => \$ConclusionOverall,
-	'k|keepFiles'                          => \$keepFiles,
-	
-	'i|iso-costratiolines'                 => \$DrawIsoratiolines,
-	'R|set-iso-costratiolines=s'           => \$Isoratiolineslist,
-	'I|iso-metriclines'                    => \$DrawIsometriclines,
-	'Q|set-iso-metriclines=s'              => \$Isometriclineslist,
-	'P|iso-points'                         => \$DrawIsopoints,
-	'T|Title=s'                            => \$title,
-	'l|lineTitle=s'                        => \$lineTitleModification,
-	'S|Scale=s'                            => \$scale,
-	'K|KeyLoc=s'                           => \$keyLoc,
-	'Z|ZipPROG=s'                          => \$gzipPROG,
-	'G|GnuplotPROG=s'                      => \$gnuplotPROG,
-	'A|AxisScale=s'                        => \$axisScales,
-	'O|OmitActualCalc'                     => \$omitActual, 
-
-	'version'                              => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; print "$name version $VERSION\n"; exit(0); },
-	'h|help'                               => \$help,
-	'm|man'                                => \$man,
+	'o|output-png=s'              => \$OutPNGfile,
+	'r|ratiostats=s'              => \$IsoRatioStatisticFile,
+	'g|generateCSV'               => \$docsv,                      
+								  
+	't|tmpdir=s'                  => \$tmpDir,
+	's|select-filter=s'           => \@selectFilters,
+	'e|edit-filter=s'             => \@editFilters,
+	'c|compare'                   => \$DetCompare,
+	'k|keepFiles'                 => \$keepFiles,
+								  
+	'i|iso-costratiolines'        => \$DrawIsoratiolines,
+	'R|set-iso-costratiolines=s'  => \$Isoratiolineslist,
+	'I|iso-metriclines'           => \$DrawIsometriclines,
+	'Q|set-iso-metriclines=s'     => \$Isometriclineslist,
+	'P|iso-points'                => \$DrawIsopoints,
+	'T|Title=s'                   => \$title,
+	'l|lineTitle=s'               => \$lineTitleModification,
+	'S|Scale=s'                   => \$scale,
+	'K|KeyLoc=s'                  => \$keyLoc,
+	'Z|ZipPROG=s'                 => \$gzipPROG,
+	'G|GnuplotPROG=s'             => \$gnuplotPROG,
+	'A|AxisScale=s'               => \$axisScales,
+	'O|OmitActualCalc'            => \$omitActual, 
+								  
+	'version'                     => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; 
+	                                       print "$name version $VERSION\n"; exit(0); },
+	'h|help'                      => \$help,
+	'm|man'                       => \$man,
 );
 
 ## Docs
@@ -192,7 +195,9 @@ if($Isoratiolineslist ne "")
 	# Use the list given on the command-line
 	foreach my $c ( split( /,/ , $Isoratiolineslist ) )
 	{
-		die "ERROR: The coefficient for the iso-costratioline if not a proper floating-point." if( $c !~ /^\d*\.?\d+([eE][-+]?\d+)?$/ );
+		die "ERROR: The coefficient for the iso-costratioline if not a proper floating-point."
+			if( $c !~ /^\d*\.?\d+([eE][-+]?\d+)?$/ );
+		
 		push( @listIsoratiolineCoef, $c );
 	}
 	
@@ -207,7 +212,9 @@ if($Isometriclineslist ne "")
 	# Use the list given on the command-line
 	foreach my $c ( split( /,/ , $Isometriclineslist ) )
 	{
-		die "ERROR: The coefficient for the iso-metricline if not a proper floating-point." if( $c !~ /^[-+]?\d*\.?\d+([eE][-+]?\d+)?$/ );
+		die "ERROR: The coefficient for the iso-metricline if not a proper floating-point."
+			if( $c !~ /^[-+]?\d*\.?\d+([eE][-+]?\d+)?$/ );
+			
 		push( @listIsometriclineCoef, $c );
 	}
 	
@@ -223,7 +230,8 @@ foreach $_(@selectFilters)
 }
 foreach $_(@editFilters)
 {
-	die "Error: Edit Filter '$_' does not match a legal expression" if ($_ !~ /^title:s\/[^\/]+\/[^\/]*\/(g|i|gi|ig|)$/);
+	die "Error: Edit Filter '$_' does not match a legal expression"
+		if ($_ !~ /^title:s\/[^\/]+\/[^\/]*\/(g|i|gi|ig|)$/);
 }
 #
 ##
@@ -238,26 +246,33 @@ $options{lTitleNoBestComb} = 1 if ($lineTitleModification =~ /M/);
 
 $options{gnuplotPROG} = $gnuplotPROG;
 $options{createDETfiles} = 1;
-if (defined($axisScales)){
-  $axisScales =~ tr/A-Z/a-z/; 
-  if ($axisScales !~ /^(nd|log|linear):(nd|log|linear)$/){
-    usage();
-    die "Error: Axis scales in appropriate" if ($axisScales !~ /^(nd|log|linear):(nd|log|linear)$/);
-  }
-  $options{xScale} = $1;  
-  $options{yScale} = $2;
+
+if (defined($axisScales))
+{
+	$axisScales =~ tr/A-Z/a-z/; 
+	
+	if ($axisScales !~ /^(nd|log|linear):(nd|log|linear)$/)
+	{
+		usage();
+		die "Error: Axis scales in appropriate" if ($axisScales !~ /^(nd|log|linear):(nd|log|linear)$/);
+	}
+	
+	$options{xScale} = $1;  
+	$options{yScale} = $2;
 }
 
 if (defined($scale))
 {
-	die "Error: Invalid Scale '$scale'. must match N:N:N:N" if ($scale !~ /^(\d+|\d*.\d+):(\d+|\d*.\d+):(\d+|\d*.\d+):(\d+|\d*.\d+)$/);
+	die "Error: Invalid Scale '$scale'. must match N:N:N:N"
+		if ($scale !~ /^(\d+|\d*.\d+):(\d+|\d*.\d+):(\d+|\d*.\d+):(\d+|\d*.\d+)$/);
+		
 	$options{Xmin} = $1;
 	$options{Xmax} = $2;
 	$options{Ymin} = $3;
 	$options{Ymax} = $4;
 }
 
-if (defined($keyLoc))
+if(defined($keyLoc))
 {
 	die "Error: Invalid key location '$keyLoc'" if ($keyLoc !~ /^(left|right|top|bottom|outside|below)$/);
 	$options{KeyLoc} = $keyLoc;
@@ -273,14 +288,20 @@ my $ds = new DETCurveSet($title);
 foreach my $srl ( @ARGV )
 {
 	my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
-	@listIsoratiolineCoef = $loadeddet->getMetric()->isoCostRatioCoeffForDETCurve() if(scalar(@listIsoratiolineCoef) == 0);
-	@listIsometriclineCoef = $loadeddet->getMetric()->isoCombCoeffForDETCurve() if(scalar(@listIsometriclineCoef) == 0);  
+	
+	@listIsoratiolineCoef = $loadeddet->getMetric()->isoCostRatioCoeffForDETCurve()
+		if(scalar(@listIsoratiolineCoef) == 0);
+	
+	@listIsometriclineCoef = $loadeddet->getMetric()->isoCombCoeffForDETCurve() 
+		if(scalar(@listIsometriclineCoef) == 0);  
 	
 	my $det;
 	
-	if($DrawIsoratiolines)
+	if( $DrawIsoratiolines || ($IsoRatioStatisticFile ne ""))
 	{
-		$det = new DETCurve($loadeddet->getTrials(), $loadeddet->getMetric(), $loadeddet->getStyle(), $loadeddet->getLineTitle(), \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
+		$det = new DETCurve($loadeddet->getTrials(), $loadeddet->getMetric(),
+		                    $loadeddet->getStyle(), $loadeddet->getLineTitle(),
+		                    \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
 		$det->{LAST_SERIALIZED_DET} = $loadeddet->{LAST_SERIALIZED_DET};
 		$det->computePoints();
 	}
@@ -336,120 +357,19 @@ foreach my $srl ( @ARGV )
 	}
 }
 
+if($IsoRatioStatisticFile ne "")
+{
+	open(FILESTATS, ">", $IsoRatioStatisticFile) or die "$!";
+	print FILESTATS $ds->renderIsoRatioIntersection();
+	close(FILESTATS)
+}
+
 if($DetCompare)
 {
-	my ($det1, $det2) = @{ $ds->getDETList() };
-	
-	my $det1name = $det1->{LAST_SERIALIZED_DET};
-	$det1name =~ s/\.srl$//;
-	my $det2name = $det2->{LAST_SERIALIZED_DET};
-	$det2name =~ s/\.srl$//;
-	
-	my %statsCompare;
-	
-	foreach my $cof ( @listIsoratiolineCoef )
-	{
-		$statsCompare{$cof}{COMPARE}{PLUS} = 0;
-		$statsCompare{$cof}{COMPARE}{MINUS} = 0;
-		$statsCompare{$cof}{COMPARE}{ZERO} = 0;
-		$statsCompare{$cof}{DET1}{PFA} = $det1->{ISOPOINTS}{$cof}{INTERPOLATED_MFA};
-		$statsCompare{$cof}{DET1}{PMISS} = $det1->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS};
-		$statsCompare{$cof}{DET2}{PFA} = $det2->{ISOPOINTS}{$cof}{INTERPOLATED_MFA};
-		$statsCompare{$cof}{DET2}{PMISS} = $det2->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS};
-		
-		my @tmpblkkey1 = keys %{ $det1->{ISOPOINTS}{$cof}{BLOCKS} };
-		my @tmpblkkey2 = keys %{ $det2->{ISOPOINTS}{$cof}{BLOCKS} };
-		
-		my @com_blocks = intersection( @tmpblkkey1, @tmpblkkey2 );
-	
-		foreach my $b ( @com_blocks )
-		{
-			my $diffdet12 = sprintf( "%.4f", $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} - $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} );
-		
-			push( @{ $statsCompare{$cof}{COMPARE}{DIFF}{ARRAY} }, $diffdet12);
-		
-			if( abs ( $diffdet12 ) < 0.001 )
-			{
-				$statsCompare{$cof}{COMPARE}{ZERO}++;
-			}
-			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} > $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} )
-			{
-				$statsCompare{$cof}{COMPARE}{PLUS}++;
-			}
-			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} < $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} )
-			{
-				$statsCompare{$cof}{COMPARE}{MINUS}++;
-			}			
-		}
-				
-		$statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS} = max( 0, binomial( 0.5, $statsCompare{$cof}{COMPARE}{PLUS}+$statsCompare{$cof}{COMPARE}{MINUS}+$statsCompare{$cof}{COMPARE}{ZERO}, $statsCompare{$cof}{COMPARE}{PLUS}+sprintf( "%.0f", $statsCompare{$cof}{COMPARE}{ZERO}/2)) );
-		$statsCompare{$cof}{COMPARE}{BINOMIAL_WITHOUT_ZEROS} = max( 0, binomial( 0.5, $statsCompare{$cof}{COMPARE}{PLUS}+$statsCompare{$cof}{COMPARE}{MINUS}, $statsCompare{$cof}{COMPARE}{PLUS}) );
-	}	
-	
-	print "Comparison between DET# 1:'$det1name' and DET# 2:'$det2name'\n";
-	print ".----------------------------------------------------------------------------------------------------------.\n";
-	print "|             |       DET# 1     |       DET# 2     |                      |     Sign Test    | Comparison |\n";
-	print "|     Coef    |    Pfa    Pmiss  |    Pfa    Pmiss  |     +      -      0  |  w/ 0     w/o 0  |            |\n";
-	print "|-------------+------------------+------------------+----------------------+------------------+------------|\n";
-	
-	my @list_isopoints;
-	my %compare2;
-	
-	$compare2{DET1} = 0;
-	$compare2{DET2} = 0;
-	$compare2{ZERO} = 0;
-	
-	# Display the table
-	foreach my $cof ( @listIsoratiolineCoef )
-	{
-		my $bestDET = "    -     ";
-		my $isDiff = 0;
-		
-		if( $statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS} < ( 1 - $confidenceIsoThreshold ) )
-		{
-			$isDiff = 1;
-			$bestDET = "  DET# 1  ";
-			$compare2{DET1}++;
-		}
-		elsif( $statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS} > $confidenceIsoThreshold )
-		{
-			$isDiff = 1;
-			$bestDET = "  DET# 2  ";
-			$compare2{DET2}++;
-		}
-		else
-		{
-			$compare2{ZERO}++;
-		}
-	
-		printf( "| %11.4f | %8.6f  %6.4f | %8.6f  %6.4f | %6d %6d %6d | %7.5f  %7.5f | %s |\n", $cof, $statsCompare{$cof}{DET1}{PFA}, $statsCompare{$cof}{DET1}{PMISS},$statsCompare{$cof}{DET2}{PFA}, $statsCompare{$cof}{DET2}{PMISS}, $statsCompare{$cof}{COMPARE}{PLUS}, $statsCompare{$cof}{COMPARE}{MINUS},$statsCompare{$cof}{COMPARE}{ZERO}, $statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS}, $statsCompare{$cof}{COMPARE}{BINOMIAL_WITHOUT_ZEROS}, $bestDET );
-		
-		push( @list_isopoints, [( $statsCompare{$cof}{DET1}{PFA}, $statsCompare{$cof}{DET1}{PMISS},$statsCompare{$cof}{DET2}{PFA}, $statsCompare{$cof}{DET2}{PMISS}, 1 - $isDiff )] ) if( $DrawIsopoints );
-	}
-	
-	print "'----------------------------------------------------------------------------------------------------------'\n";
-	
-	if( $ConclusionOverall == 1 )
-	{
-		my $compare2sign = max( 0, binomial( 0.5, $compare2{DET1}+$compare2{DET2}+$compare2{ZERO}, $compare2{DET1}+sprintf( "%.0f", $compare2{ZERO}/2)) );
-		
-		printf( "Overall sign test:\n  DET# 1 performs %d time%s better than DET# 2\n  DET# 2 performs %d time%s better than DET# 1\n  %d time%s, it is inconclusive\n", $compare2{DET1}, ( $compare2{DET1} > 1 ) ? "s" : "", $compare2{DET2}, ( $compare2{DET2} > 1 ) ? "s" : "", $compare2{ZERO}, ( $compare2{ZERO} > 1 ) ? "s" : "");
-		
-		if( $compare2sign < ( 1 - $confidenceIsoThreshold ) )
-		{
-			printf(" With %.0f%% of confidence (test=%.5f), DET# 1 overall performs better then DET# 2.\n", $confidenceIsoThreshold*100, $compare2sign );
-		}
-		elsif( $compare2sign > $confidenceIsoThreshold )
-		{
-			printf(" With %.0f%% of confidence (test=%.5f), DET# 2 overall performs better then DET# 1.\n", $confidenceIsoThreshold*100, $compare2sign );
-		}
-		else
-		{
-			printf(" With %.0f%% of confidence (test=%.5f), nothing can be concluded.\n", $confidenceIsoThreshold*100, $compare2sign );
-		}
-	}
-	
-	$options{Isopoints} = \@list_isopoints if( $DrawIsopoints );
+	my ($str, $conclusion, $list_isopoints) = $ds->renderDETCompare($confidenceIsoThreshold);
+	print $str;
+	print $conclusion;
+	$options{Isopoints} = $list_isopoints if( $DrawIsopoints );
 }
 
 if($DrawIsoratiolines)
@@ -503,89 +423,6 @@ sub unique
 	return keys %l;
 }
 
-sub max
-{
-	my $max = shift;
-	foreach $_ (@_) { $max = $_ if $_ > $max; }
-	return $max;
-}
-
-sub intersection
-{
-	my %l = ();
-	my @listout;
-	foreach my $e (@_) { $l{$e}++; }
-	foreach my $e (keys %l) { push(@listout, $e) if($l{$e} > 1); }
-	return @listout;	
-}
-
-sub comb
-{
-	my ($n, $k) = @_;
-	
-	return 0 if( $k < 0 || $k > $n );
-	$k = $n - $k if(  $k > $n - $k );
-	
-	my $Cnk = 1;
-	
-	for( my $i=0; $i<$k; $i++ )
-	{
-		$Cnk *= $n - $i;
-		$Cnk /= $i + 1;
-	}
-	
-	return( $Cnk );
-}
-
-sub cdf_norm
-{
-	my ($z) = @_;
-	my $PREC = 0.00005;
-	my $PI = 3.14159265;
-	
-	my $a = 1;
-	my $b = 1;
-	my $c = $z;
-	my $sum = $z;
-	my $term = $z;
-	
-	return( 0.5 * $z / abs ( $z ) ) if( abs( $z ) > 8 );
-	
-	for( my $i=1; abs( $term ) > $PREC; $i++ )
-	{
-		$a += 2;
-		$b *= -2 * $i;
-		$c *= $z * $z;
-		$term = $c/( $a * $b );
-		$sum += $term;
-	}
-	
-	return( $sum/sqrt( 2*$PI ) );
-}
-
-sub binomial
-{
-	my ($p, $n, $s) = @_;
-	
-	my $sum = 0;
-	
-	if( $n > 30 )
-	{
-		my $sigma = sqrt( $n*$p*(1.0-$p) );
-		my $z = ( ($s+0.5) - $n*$p )/$sigma;
-		$sum = 0.5 + cdf_norm( $z );
-	}
-	else
-	{
-		for( my $i=0; $i<=$s; $i++ )
-		{
-			$sum += comb( $n, $i ) * ( $p ** $i ) * ( (1.0-$p) ** ( $n - $i ) );
-		}
-	}
-	
-	return( 1 - $sum );
-}
-
 __END__
 
 =head1 NAME
@@ -610,6 +447,10 @@ The script merges multiple DET Curves into a single PNG file and can provide a s
 
 Output png file.
 
+=item B<-r>, B<--output-ratiostats> F<FILE>
+
+Output report file containing the intersection coordinates and Combined Cost between the DET Curve and the the Iso-ratio lines.
+
 =head2 Optional arguments:
 
 =item B<-t>, B<--tmpdir> F<DIR>
@@ -631,10 +472,6 @@ Edit the titles to reduce/expand the elements printed in the combined plot with 
 =item B<-c>, B<--compare>
 
 Compare 2 DET curves with a sign test.
-
-=item B<-C>, B<--ConclusionOverall>
-
-Make a conclusion on the sign test analysis (required -c).
 
 =item B<-Z>, B<--ZipPROG> F<GZIP_PATH>
 
@@ -728,7 +565,7 @@ The default iso-cost ratio coefficients (-R option) and iso-metric coefficients 
 
 =head1 VERSION
 
-DETUtil.pl version 0.4
+DETUtil.pl version 0.4 $Revision$
 
 =head1 COPYRIGHT 
 
