@@ -139,11 +139,12 @@ my $gnuplotPROG = "gnuplot";
 my $axisScales = undef;
 my $omitActual = 0;
 my $docsv = 0;
+my $plotControls = undef;
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A     G I K   OPQRST     Z  c e ghi klm o  rst v     #
+# Used: A     G I K   OPQRST     Z  c e ghi klm op rst v     #
 
 GetOptions
 (
@@ -170,7 +171,8 @@ GetOptions
 	'G|GnuplotPROG=s'             => \$gnuplotPROG,
 	'A|AxisScale=s'               => \$axisScales,
 	'O|OmitActualCalc'            => \$omitActual, 
-								  
+  'p|plotControls=s'            => \$plotControls,
+
 	'version'                     => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; 
 	                                       print "$name version $VERSION\n"; exit(0); },
 	'h|help'                      => \$help,
@@ -246,6 +248,15 @@ $options{lTitleNoBestComb} = 1 if ($lineTitleModification =~ /M/);
 
 $options{gnuplotPROG} = $gnuplotPROG;
 $options{createDETfiles} = 1;
+
+if (defined($plotControls)){
+  if ($plotControls =~ /ColorScheme=gr[ae]y/){
+    $options{ColorScheme} = "grey";
+  }
+  if ($plotControls =~ /PointSize=(\d+)/){
+    $options{PointSize} = $1;
+  }
+}
 
 if (defined($axisScales))
 {
