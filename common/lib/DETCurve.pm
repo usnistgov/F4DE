@@ -1307,7 +1307,7 @@ sub writeMultiDetGraph
 	### Draw the isometriclines
     if ( $DrawIsometriclines ) {
       my $troot = sprintf( "%s.isometriclines", $fileRoot );
-      my $color = ($colorScheme eq "color" ? "rgb \"\#FFD700\"" : "rgb \"\#606060\"");
+      my $color = ($colorScheme eq "color" ? "rgb \"\#FFD700\"" : "rgb \"\#b0b0b0\"");
       open( ISODAT, "> $troot" );
       
       my $labelind = 10;
@@ -1468,19 +1468,33 @@ sub writeMultiDetGraph
         
     ### Write Individual Dets
     for (my $d=0; $d < $numDET; $d++) {
-#      my $troot = sprintf("%s.sub%02d",$fileRoot,$d);
-       my $troot = sprintf("%s.%s",$fileRoot, $detset->getFSKeyForID($d));
-      my ($actComb, $actCombSSD, $actMiss, $actMissSSD, $actFa, $actFaSSD) = $detset->getDETForID($d)->getMetric()->getActualDecisionPerformance();
       my $openPoint = $pointTypes->[ $d % scalar(@$pointTypes) ]->[0];
       my $closedPoint = $pointTypes->[ $d % scalar(@$pointTypes) ]->[1];
       my $lineWidth = $lineWidths->[ $d % scalar(@$lineWidths)];
       my $color = $colorsRGB->[ $d % scalar(@$colorsRGB) ];
+
+      my ($actComb, $actCombSSD, $actMiss, $actMissSSD, $actFa, $actFaSSD) = $detset->getDETForID($d)->getMetric()->getActualDecisionPerformance();
+      if (!defined($actMiss) || !defined($actFa)) {
+        if ($needComma) {
+          $PLOTCOMS .= ",\\\n";
+        }        
+
+        $PLOTCOMS .= "  -10000 title \"".$detset->getDETForID($d)->{LINETITLE}." Omitted - No Data\" with linespoints lc $color lw $lineWidth pt $closedPoint ps $pointSize";
+        
+        $needComma = 1;
+    
+        ### Skip the rest BECAUSE There is NO DATA to plot
+        next;
+      }
+    
+#      my $troot = sprintf("%s.sub%02d",$fileRoot,$d);
+       my $troot = sprintf("%s.%s",$fileRoot, $detset->getFSKeyForID($d));
       if ($detset->getDETForID($d)->writeGNUGraph($troot, $options)) {
         #                       my $typeStr = ($dets->[$d]->{STYLE} eq "pooled" ? 
         #                                  "Pooled ".$dets->[$d]->{TRIALS}->getBlockId()." ".$dets->[$d]->{TRIALS}->getDecisionId() :
         #                                  $dets->[$d]->{TRIALS}->getBlockId()." Wtd.");
         my ($scr, $comb, $miss, $fa) = ($detset->getDETForID($d)->getBestCombDetectionScore(),
-                                        $detset->getDETForID($d)->getBestCombComb(),
+                                          $detset->getDETForID($d)->getBestCombComb(),
                                         $detset->getDETForID($d)->getBestCombMMiss(),
                                         $detset->getDETForID($d)->getBestCombMFA());
                         
