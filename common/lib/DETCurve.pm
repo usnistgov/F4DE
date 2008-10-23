@@ -190,49 +190,49 @@ sub unitTest
 sub offGraphLabelUnitTest(){
   print " Checking off Graph Label tests...";
   my $ret = "";
-  $ret = _getOffAxisLabel(0.9, 0.1, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
-  $ret = _getOffAxisLabel(0.9, 0.5, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 2 and returned '$ret'"  if ($ret !~ /Q2/);  
-  $ret = _getOffAxisLabel(0.9, 0.9, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 3 and returned '$ret'"  if ($ret !~ /Q3/);  
+  $ret = _getOffAxisLabel(0.9, 0.1, 20, 80, "nd", 20, 80, "nd", 9, 9, 6, 1);    die " ND Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
+  $ret = _getOffAxisLabel(0.9, 0.5, 20, 80, "nd", 20, 80, "nd", 9, 9, 6, 1);    die " ND Quad 2 and returned '$ret'"  if ($ret !~ /Q2/);  
+  $ret = _getOffAxisLabel(0.9, 0.9, 20, 80, "nd", 20, 80, "nd", 9, 9, 6, 1);    die " ND Quad 3 and returned '$ret'"  if ($ret !~ /Q3/);  
 
-  $ret = _getOffAxisLabel(0.5, 0.1, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
-  $ret = _getOffAxisLabel(0.5, 0.5, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 5 and returned '$ret'"  if ($ret ne "");  
-  $ret = _getOffAxisLabel(0.5, 0.9, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 6 and returned '$ret'"  if ($ret !~ /Q6/);  
+  $ret = _getOffAxisLabel(0.5, 0.1, 20, 80, "nd", 20, 80, "nd", 9, 9, 6, 1);    die " ND Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
+  $ret = _getOffAxisLabel(0.5, 0.5, 20, 80, "nd", 20, 80, "nd", 9, 9, 6, 1);    die " ND Quad 5 and returned '$ret'"  if ($ret ne "");  
+  $ret = _getOffAxisLabel(0.5, 0.9, 20, 80, "nd", 20, 80, "nd", 9, 9, 6, 1);    die " ND Quad 6 and returned '$ret'"  if ($ret !~ /Q6/);  
 
-  $ret = _getOffAxisLabel(0.1, 0.1, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
-  $ret = _getOffAxisLabel(0.1, 0.5, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
-  $ret = _getOffAxisLabel(0.1, 0.9, 20, 80, "nd", 20, 80, "nd", 9, 9, 1);    die " ND Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
+  $ret = _getOffAxisLabel(0.1, 0.1, 20, 80, "nd", 20, 80, "nd", 9, 9, 6, 1);    die " ND Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.1, 0.5, 20, 80, "nd", 20, 80, "nd", 9, 9, 6, 1);    die " ND Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
+  $ret = _getOffAxisLabel(0.1, 0.9, 20, 80, "nd", 20, 80, "nd", 9, 9, 6, 1);    die " ND Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
 
-  $ret = _getOffAxisLabel(0.9, 0.1, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
-  $ret = _getOffAxisLabel(0.9, 0.5, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 2 and returned '$ret'"  if ($ret !~ /Q2/);  
-  $ret = _getOffAxisLabel(0.9, 0.9, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 3 and returned '$ret'"  if ($ret !~ /Q3/);  
+  $ret = _getOffAxisLabel(0.9, 0.1, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 6, 1);    die " Linear Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
+  $ret = _getOffAxisLabel(0.9, 0.5, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 6, 1);    die " Linear Quad 2 and returned '$ret'"  if ($ret !~ /Q2/);  
+  $ret = _getOffAxisLabel(0.9, 0.9, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 6, 1);    die " Linear Quad 3 and returned '$ret'"  if ($ret !~ /Q3/);  
 
-  $ret = _getOffAxisLabel(0.5, 0.1, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
-  $ret = _getOffAxisLabel(0.5, 0.5, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 5 and returned '$ret'"  if ($ret ne "");  
-  $ret = _getOffAxisLabel(0.5, 0.9, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 6 and returned '$ret'"  if ($ret !~ /Q6/);  
+  $ret = _getOffAxisLabel(0.5, 0.1, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 6, 1);    die " Linear Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
+  $ret = _getOffAxisLabel(0.5, 0.5, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 6, 1);    die " Linear Quad 5 and returned '$ret'"  if ($ret ne "");  
+  $ret = _getOffAxisLabel(0.5, 0.9, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 6, 1);    die " Linear Quad 6 and returned '$ret'"  if ($ret !~ /Q6/);  
 
-  $ret = _getOffAxisLabel(0.1, 0.1, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
-  $ret = _getOffAxisLabel(0.1, 0.5, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
-  $ret = _getOffAxisLabel(0.1, 0.9, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 1);    die " Linear Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
+  $ret = _getOffAxisLabel(0.1, 0.1, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 6, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.1, 0.5, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 6, 1);    die " Linear Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
+  $ret = _getOffAxisLabel(0.1, 0.9, 0.2, 0.8, "linear", 0.2, 0.8, "linear", 9, 9, 6, 1);    die " Linear Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
 
-  $ret = _getOffAxisLabel(0.9, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
-  $ret = _getOffAxisLabel(0.9, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
-  $ret = _getOffAxisLabel(0.9, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 2 and returned '$ret'"  if ($ret !~ /Q2/);  
-  $ret = _getOffAxisLabel(0.9, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 3 and returned '$ret'"  if ($ret !~ /Q3/);  
+  $ret = _getOffAxisLabel(0.9, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
+  $ret = _getOffAxisLabel(0.9, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 1 and returned '$ret'"  if ($ret !~ /Q1/);  
+  $ret = _getOffAxisLabel(0.9, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 2 and returned '$ret'"  if ($ret !~ /Q2/);  
+  $ret = _getOffAxisLabel(0.9, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 3 and returned '$ret'"  if ($ret !~ /Q3/);  
 
-  $ret = _getOffAxisLabel(0.5, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
-  $ret = _getOffAxisLabel(0.5, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
-  $ret = _getOffAxisLabel(0.5, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 5 and returned '$ret'"  if ($ret ne "");  
-  $ret = _getOffAxisLabel(0.5, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 6 and returned '$ret'"  if ($ret !~ /Q6/);  
+  $ret = _getOffAxisLabel(0.5, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
+  $ret = _getOffAxisLabel(0.5, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 4 and returned '$ret'"  if ($ret !~ /Q4/);  
+  $ret = _getOffAxisLabel(0.5, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 5 and returned '$ret'"  if ($ret ne "");  
+  $ret = _getOffAxisLabel(0.5, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 6 and returned '$ret'"  if ($ret !~ /Q6/);  
 
-  $ret = _getOffAxisLabel(0.1, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
-  $ret = _getOffAxisLabel(0.1, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
-  $ret = _getOffAxisLabel(0.1, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
-  $ret = _getOffAxisLabel(0.1, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
+  $ret = _getOffAxisLabel(0.1, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.1, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.1, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
+  $ret = _getOffAxisLabel(0.1, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
 
-  $ret = _getOffAxisLabel(0.0, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
-  $ret = _getOffAxisLabel(0.0, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
-  $ret = _getOffAxisLabel(0.0, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
-  $ret = _getOffAxisLabel(0.0, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 1);    die " Linear Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
+  $ret = _getOffAxisLabel(0.0, 0.0, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.0, 0.1, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 7 and returned '$ret'"  if ($ret !~ /Q7/);  
+  $ret = _getOffAxisLabel(0.0, 0.5, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 8 and returned '$ret'"  if ($ret !~ /Q8/);  
+  $ret = _getOffAxisLabel(0.0, 0.9, 0.2, 0.8, "log", 0.2, 0.8, "log", 9, 9, 6, 1);    die " Linear Quad 9 and returned '$ret'"  if ($ret !~ /Q9/);  
 
   print "  Ok\n";
 }
@@ -1127,7 +1127,7 @@ sub _getValueInGraph
 
 ## this functions Checks the extent of the graph frame and builds labels for points off the graph
 sub _getOffAxisLabel{
-  my ($yval, $xval, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $pointType, $qstr) = @_;
+  my ($yval, $xval, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $pointType, $pointSize, $qstr) = @_;
 
   ### Convert the yval to graph scale (default is linear)
   #my $gyval = ($yval - $ymin) / ($ymax - $ymin);
@@ -1154,23 +1154,23 @@ sub _getOffAxisLabel{
   ###       ------
   ###    Q7   Q8   Q9
   # Q1
-  if ($gyval > 1 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q1" : "")."\" point lc $color pt $pointType at graph  -0.02, graph   1.02"; }
+  if ($gyval > 1 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q1" : "")."\" point lc $color pt $pointType ps $pointSize at graph  -0.02, graph   1.02"; }
   # Q2
-  if ($gyval > 1 && $gxval < 1) { return "set label \"".($qstr == 1 ? "Q2" : "")."\" point lc $color pt $pointType at graph $gxval, graph   1.02"; }
+  if ($gyval > 1 && $gxval < 1) { return "set label \"".($qstr == 1 ? "Q2" : "")."\" point lc $color pt $pointType ps $pointSize at graph $gxval, graph   1.02"; }
   # Q3
-  if ($gyval > 1 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q3" : "")."\" point lc $color pt $pointType at graph   1.02, graph   1.02"; }
+  if ($gyval > 1 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q3" : "")."\" point lc $color pt $pointType ps $pointSize at graph   1.02, graph   1.02"; }
   # Q4
-  if ($gyval > 0 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q4" : "")."\" point lc $color pt $pointType at graph  -0.02, graph $gyval"; }
+  if ($gyval > 0 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q4" : "")."\" point lc $color pt $pointType ps $pointSize at graph  -0.02, graph $gyval"; }
   # Q5
   if ($gyval > 0 && $gxval < 1) { return ""; }
   # Q6
-  if ($gyval > 0 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q6" : "")."\" point lc $color pt $pointType at graph     1.02, graph $gyval"; }
+  if ($gyval > 0 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q6" : "")."\" point lc $color pt $pointType ps $pointSize at graph     1.02, graph $gyval"; }
   # Q7
-  if ($gyval < 0 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q7" : "")."\" point lc $color pt $pointType at graph    -0.02, graph  -0.02"; }
+  if ($gyval < 0 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q7" : "")."\" point lc $color pt $pointType ps $pointSize at graph    -0.02, graph  -0.02"; }
   # Q8
-  if ($gyval < 0 && $gxval < 1) { return "set label \"".($qstr == 1 ? "Q8" : "")."\" point lc $color pt $pointType at graph   $gxval, graph  -0.02"; }
+  if ($gyval < 0 && $gxval < 1) { return "set label \"".($qstr == 1 ? "Q8" : "")."\" point lc $color pt $pointType ps $pointSize at graph   $gxval, graph  -0.02"; }
   # Q9
-  if ($gyval < 0 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q9" : "")."\" point lc $color pt $pointType at graph     1.02, graph  -0.02"; }
+  if ($gyval < 0 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q9" : "")."\" point lc $color pt $pointType ps $pointSize at graph     1.02, graph  -0.02"; }
   "";
 }
 
@@ -1237,12 +1237,21 @@ sub writeMultiDetGraph
     ### Use the options
     my $title = "Combined DET Plot";
     my ($xmin, $xmax, $ymin, $ymax, $keyLoc, $DrawIsoratiolines, $DrawIsometriclines, $Isoratiolines, $Isometriclines, $Isopoints) = (0.0001, 40, 5, 98, "top", 0, 0, undef, undef, undef);
+    my ($pointSize) = (2);
     ### $*DisplayScaleConst Sets the scaling in the display.  for ND we print it as a percentage. 
     my ($gnuplotPROG, $xScale, $yScale, $makePNG, $reportActual) = (undef, "nd", "nd", 1, 1);
 
     ### $this text element constitutes the extra plot commands for the graph
     my $PLOTCOMS = "";
-    
+
+    ### Define the colors, pointtypes and line widths
+    my $pointTypes = [ [ (6, 7) ], [ (4, 5) ], [ (8, 9) ], [ (10, 11) ], [ (12, 13) ] ];
+#    my $colorsRGB = [ ("rgb \"#000000\"", "rgb \"#c0c0c0\"", "rgb \"#909090\"", "rgb \"#606060\"") ];
+    # Default colors for PNG
+    my $colorsRGB = [ (2..100) ];
+    my $lineWidths = [ ( 1, 3, 5) ];
+    my $colorScheme = "color";
+
     if (defined $options) {
       if (exists($options->{yScale})) {
         if ($options->{yScale} eq "nd") {
@@ -1282,19 +1291,23 @@ sub writeMultiDetGraph
       $makePNG = $options->{BuildPNG} if (exists($options->{BuildPNG}));
       $gnuplotPROG = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
       $reportActual = $options->{ReportActual} if (exists($options->{ReportActual}));
+      $pointSize = $options->{PointSize} if (exists($options->{PointSize}));
+      $colorScheme = $options->{ColorScheme} if (exists($options->{ColorScheme}));
     }
 
+    if ($colorScheme eq "grey"){
+      $colorsRGB = [ ("rgb \"#000000\"", "rgb \"#c0c0c0\"", "rgb \"#909090\"", "rgb \"#606060\"") ];    
+    } 
+    
     ### Check the metric types to see if the random curve is defined
     my $includeRandomCurve = 1;
     $includeRandomCurve = 0 if ($detset->getDETForID(0)->{METRIC}->errMissUnit() ne "Prob" || $detset->getDETForID(0)->{METRIC}->errFAUnit() ne "Prob");
     my $needComma = ($includeRandomCurve ? 1 : 0);
     
-    my @colors = (1..400);  splice(@colors, 0, 1);
-
 	### Draw the isometriclines
     if ( $DrawIsometriclines ) {
       my $troot = sprintf( "%s.isometriclines", $fileRoot );
-      my $color = "rgb \"\#FFD700\"";
+      my $color = ($colorScheme eq "color" ? "rgb \"\#FFD700\"" : "rgb \"\#606060\"");
       open( ISODAT, "> $troot" );
       
       my $labelind = 10;
@@ -1396,8 +1409,8 @@ sub writeMultiDetGraph
       my $trootpoints1 = sprintf( "%s.isopoints.1", $fileRoot );
       my $trootpoints2 = sprintf( "%s.isopoints.2", $fileRoot );
       my $trootlines = sprintf( "%s.isopoints.3", $fileRoot );
-      my $colorpoints1 = $colors[0];
-      my $colorpoints2 = $colors[1];
+      my $colorpoints1 = $colorsRGB->[0];
+      my $colorpoints2 = $colorsRGB->[1];
       my $colorlines = "rgb \"\#333333\"";
       my $isnodiff = 0;
       open( POINTS1DAT, "> $trootpoints1" );
@@ -1454,13 +1467,14 @@ sub writeMultiDetGraph
     }
         
     ### Write Individual Dets
-    my $pointTypes = [ [ (6, 7) ], [ (4, 5) ], [ (8, 9) ], [ (10, 11) ], [ (12, 13) ] ];
     for (my $d=0; $d < $numDET; $d++) {
 #      my $troot = sprintf("%s.sub%02d",$fileRoot,$d);
        my $troot = sprintf("%s.%s",$fileRoot, $detset->getFSKeyForID($d));
       my ($actComb, $actCombSSD, $actMiss, $actMissSSD, $actFa, $actFaSSD) = $detset->getDETForID($d)->getMetric()->getActualDecisionPerformance();
-      my $openPoint = $pointTypes->[ $d % 5 ]->[0];
-      my $closedPoint = $pointTypes->[ $d % 5 ]->[1];
+      my $openPoint = $pointTypes->[ $d % scalar(@$pointTypes) ]->[0];
+      my $closedPoint = $pointTypes->[ $d % scalar(@$pointTypes) ]->[1];
+      my $lineWidth = $lineWidths->[ $d % scalar(@$lineWidths)];
+      my $color = $colorsRGB->[ $d % scalar(@$colorsRGB) ];
       if ($detset->getDETForID($d)->writeGNUGraph($troot, $options)) {
         #                       my $typeStr = ($dets->[$d]->{STYLE} eq "pooled" ? 
         #                                  "Pooled ".$dets->[$d]->{TRIALS}->getBlockId()." ".$dets->[$d]->{TRIALS}->getDecisionId() :
@@ -1481,20 +1495,20 @@ sub writeMultiDetGraph
                     
         my $xcol = ($xScale eq "nd" ? "3" : "5");
         my $ycol = ($yScale eq "nd" ? "2" : "4");
-        $PLOTCOMS .= "  '$troot.dat.1' using $xcol:$ycol notitle with lines $colors[$d]";
+        $PLOTCOMS .= "  '$troot.dat.1' using $xcol:$ycol notitle with lines lc $color lw $lineWidth";
         $xcol = ($xScale eq "nd" ? "6" : "4");
         $ycol = ($yScale eq "nd" ? "5" : "3");
-        $PLOTCOMS .= ",\\\n  '$troot.dat.2' using $xcol:$ycol title '$ltitle' with linespoints lc $colors[$d] pt $closedPoint";
-        my $bestlab = _getOffAxisLabel($miss, $fa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $colors[$d], $closedPoint, 0); 
+        $PLOTCOMS .= ",\\\n  '$troot.dat.2' using $xcol:$ycol title '$ltitle' with linespoints lc $color pt $closedPoint lw $lineWidth ps $pointSize";
+        my $bestlab = _getOffAxisLabel($miss, $fa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $closedPoint, $pointSize, 0); 
         push (@offAxisLabels, $bestlab) if ($bestlab ne "");
 
         if ($reportActual){
           $xcol = ($xScale eq "nd" ? "11" : "9");
           $ycol = ($yScale eq "nd" ? "10" : "8");
   
-          $PLOTCOMS .= ", \\\n    '$troot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $colors[$d] pt $openPoint";
+          $PLOTCOMS .= ", \\\n    '$troot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $color pt $openPoint ps $pointSize";
 
-          my $lab = _getOffAxisLabel($actMiss, $actFa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $colors[$d], $openPoint, 0); 
+          my $lab = _getOffAxisLabel($actMiss, $actFa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $openPoint, $pointSize, 0); 
           push (@offAxisLabels, $lab) if ($lab ne "");
         }
         $needComma = 1;
@@ -1732,13 +1746,13 @@ sub writeGNUGraph{
   $xcol = ($xScale eq "nd" ? "6" : "4");
   $ycol = ($yScale eq "nd" ? "5" : "3");
   $PLOTCOMS .= sprintf(", \\\n    '$fileRoot.dat.2' using $xcol:$ycol title '$ltitle' with linespoints lc 2 pt 7");
-  my $bestlab = _getOffAxisLabel($miss, $fa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, 2, 7, 0); 
+  my $bestlab = _getOffAxisLabel($miss, $fa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, 2, 7, 6, 0); 
   push (@offAxisLabels, $bestlab) if ($bestlab ne "");
   if ($reportActual){
     $xcol = ($xScale eq "nd" ? "11" : "9");
     $ycol = ($yScale eq "nd" ? "10" : "8");
     $PLOTCOMS .= sprintf(", \\\n    '$fileRoot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc 2  pt 6");
-    my $lab = _getOffAxisLabel($actMiss, $actFa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, 2, 6, 0); 
+    my $lab = _getOffAxisLabel($actMiss, $actFa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, 2, 6, 6, 0); 
     push (@offAxisLabels, $lab) if ($lab ne "");
   }
   if ($withErrorCurve) {
@@ -1820,7 +1834,8 @@ sub buildPNG
     
     ## Use this with gnuplot 3.X
     #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
-    my $newTermCommand = "set terminal png medium size 768,2048 crop";
+#    my $newTermCommand = "set terminal png medium size 740,2048 crop xffffff x000000 x404040 x000000 xc0c0c0 x909090 x606060   x000000 xc0c0c0 x909090 x606060";
+    my $newTermCommand = "set terminal png medium size 740,2048 crop";
     if ($hasbMargin){
       $newTermCommand = "set terminal png medium size 768,".(652+($numTitle*22))." crop"
     }
