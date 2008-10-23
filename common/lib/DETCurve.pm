@@ -1453,11 +1453,13 @@ sub writeMultiDetGraph
     }
         
     ### Write Individual Dets
+    my $pointTypes = [ [ (6, 7) ], [ (4, 5) ], [ (8, 9) ], [ (10, 11) ], [ (12, 13) ] ];
     for (my $d=0; $d < $numDET; $d++) {
 #      my $troot = sprintf("%s.sub%02d",$fileRoot,$d);
        my $troot = sprintf("%s.%s",$fileRoot, $detset->getFSKeyForID($d));
       my ($actComb, $actCombSSD, $actMiss, $actMissSSD, $actFa, $actFaSSD) = $detset->getDETForID($d)->getMetric()->getActualDecisionPerformance();
-                
+      my $openPoint = $pointTypes->[ $d % 5 ]->[0];
+      my $closedPoint = $pointTypes->[ $d % 5 ]->[1];
       if ($detset->getDETForID($d)->writeGNUGraph($troot, $options)) {
         #                       my $typeStr = ($dets->[$d]->{STYLE} eq "pooled" ? 
         #                                  "Pooled ".$dets->[$d]->{TRIALS}->getBlockId()." ".$dets->[$d]->{TRIALS}->getDecisionId() :
@@ -1481,17 +1483,17 @@ sub writeMultiDetGraph
         $PLOTCOMS .= "  '$troot.dat.1' using $xcol:$ycol notitle with lines $colors[$d]";
         $xcol = ($xScale eq "nd" ? "6" : "4");
         $ycol = ($yScale eq "nd" ? "5" : "3");
-        $PLOTCOMS .= ",\\\n  '$troot.dat.2' using $xcol:$ycol title '$ltitle' with linespoints lc $colors[$d] pt 7";
-        my $bestlab = _getOffAxisLabel($miss, $fa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $colors[$d], 7, 0); 
+        $PLOTCOMS .= ",\\\n  '$troot.dat.2' using $xcol:$ycol title '$ltitle' with linespoints lc $colors[$d] pt $closedPoint";
+        my $bestlab = _getOffAxisLabel($miss, $fa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $colors[$d], $closedPoint, 0); 
         push (@offAxisLabels, $bestlab) if ($bestlab ne "");
 
         if ($reportActual){
           $xcol = ($xScale eq "nd" ? "11" : "9");
           $ycol = ($yScale eq "nd" ? "10" : "8");
   
-          $PLOTCOMS .= ", \\\n    '$troot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $colors[$d] pt 6";
+          $PLOTCOMS .= ", \\\n    '$troot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $colors[$d] pt $openPoint";
 
-          my $lab = _getOffAxisLabel($actMiss, $actFa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $colors[$d], 6, 0); 
+          my $lab = _getOffAxisLabel($actMiss, $actFa, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $colors[$d], $openPoint, 0); 
           push (@offAxisLabels, $lab) if ($lab ne "");
         }
         $needComma = 1;
