@@ -239,9 +239,10 @@ my @asked_events = ();
 my $xtend = "";
 my $MemDump = undef;
 my @inputAliCSV = ();
+my $schc = 0; # Skip CSV Header Check
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CDEFG    LMNO  RST  WX Za  cdefgh  lmnop  st vwx   #
+# Used: A CDEFG    LMNO  RST  WX Zab cdefgh  lmnop  st vwx   #
 
 my %opt = ();
 my @leftover = ();
@@ -280,6 +281,7 @@ GetOptions
    'XtraMappedObservations=s' => \$xtend,
    'WriteMemDump:s'  => \$MemDump,
    'AlignmentCSV=s'  => \@inputAliCSV,
+   'bypassCSVHeader' => \$schc,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -489,24 +491,26 @@ if (scalar @inputAliCSV == 0) {
     MMisc::error_quit("Problem creating the CSV object")
       if (! defined $csv);
 
-    my $header = <CSV>;
-    if (! defined $header) {
-      print "File [$csvf] contains no data, skipping\n";
-      next;
-    }
-    my @headers = CSVHelper::csvtxt2array($csv, $header);
-    if (scalar @headers == 1) {
-      print "File [$csvf] contains no usable data, skipping\n";
-      next;
-    }
-    MMisc::error_quit("File [$csvf] does not contain enough CSV columns (" . scalar @headers .") vs 16 expected")
+    if (! $schc) {
+      my $header = <CSV>;
+      if (! defined $header) {
+        print "File [$csvf] contains no data, skipping\n";
+        next;
+      }
+      my @headers = CSVHelper::csvtxt2array($csv, $header);
+      if (scalar @headers == 1) {
+        print "File [$csvf] contains no usable data, skipping\n";
+        next;
+      }
+      MMisc::error_quit("File [$csvf] does not contain enough CSV columns (" . scalar @headers .") vs 16 expected")
         if (scalar @headers != 16);
-
-    foreach my $tmp_ft (qw(2:Event 3:TYPE 10:S.DetScr 11:S.DetDec)) {
-      my ($tmp_loc, $tmp_ev) = split(m%\:%, $tmp_ft); 
-      my $tmp_val = $headers[$tmp_loc];
-      MMisc::error_quit("In file [$csvf]: CSV field [$tmp_loc] != \'$tmp_ev\' (is \"$tmp_val\"")
+      
+      foreach my $tmp_ft (qw(2:Event 3:TYPE 10:S.DetScr 11:S.DetDec)) {
+        my ($tmp_loc, $tmp_ev) = split(m%\:%, $tmp_ft); 
+        my $tmp_val = $headers[$tmp_loc];
+        MMisc::error_quit("In file [$csvf]: CSV field [$tmp_loc] != \'$tmp_ev\' (is \"$tmp_val\"")
           if ($tmp_val ne $tmp_ev);
+      }
     }
 
     my ($type, $evt, $detscr, $detdec);
