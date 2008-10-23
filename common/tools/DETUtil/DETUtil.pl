@@ -126,6 +126,7 @@ my $title = undef;
 my $scale = undef;
 my $lineTitleModification = "";
 my $keyLoc = undef;
+my @KeyLocDefs = ( "left", "right", "center", "top", "bottom", "outside", "below", "((left|right|center)\\s+(top|bottom|center))" );
 my $DetCompare = 0;
 my $DrawIsoratiolines = 0;
 my $Isoratiolineslist = "";
@@ -285,9 +286,11 @@ if (defined($scale))
 
 if(defined($keyLoc))
 {
-	die "Error: Invalid key location '$keyLoc'" if ($keyLoc !~ /^(left|right|top|bottom|outside|below)$/);
+  my $expr = "^(".join("|",@KeyLocDefs).")\$";
+	die "Error: Invalid key location '$keyLoc' !~ $expr" if ($keyLoc !~ /$expr/);
 	$options{KeyLoc} = $keyLoc;
 }
+print  Dumper(\%options);
 
 if($omitActual)
 {
@@ -529,7 +532,7 @@ Modify the output line title by removing default information. F<TITLE> can inclu
   T -> removes the DET Curve Type
   M -> removes the Maximum Value
 
-=item B<-K>, B<--KeyLoc> left | right | top | bottom | outside | below
+=item B<-K>, B<--KeyLoc> left | right | center | top | bottom | outside | below | ((left|right|center) (top|bottom|center))
 
 Place the key at one of the locations.
 
