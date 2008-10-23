@@ -243,7 +243,7 @@ sub _leftJust(){
 
 sub _rightJust(){
   my ($self, $str, $len) = @_;
-  $self->_nChrStr($len - length($str), " ") . $str;
+  $self->_nChrStr($len - (defined($str) ? length($str) : 0), " ") . (defined($str) ? $str : "");
 }
 
 sub _centerJust(){
@@ -476,9 +476,11 @@ sub renderCSV {
 sub quc { # Quote clean
   my $in = shift @_;
 
-  $in =~ s%\"%\'%g;
-
-  return($in);
+  if (defined($in)){
+    $in =~ s%\"%\'%g;
+    return($in);
+  } 
+  return $in;
 }
 
 #####
@@ -488,8 +490,12 @@ sub qua { # Quote Array
 
   my @out = ();
   foreach my $in (@todo) {
-    $in = &quc($in);
-    push @out, "\"$in\"";
+    if (defined($in)){
+      $in = &quc($in);
+      push @out, "\"$in\"";
+    } else {
+      push @out, "\"\"";
+    }
   }
 
   return(@out);
