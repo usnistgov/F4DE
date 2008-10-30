@@ -1024,10 +1024,12 @@ B<TV08ED-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
   S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
   S<[B<--ecf> I<ecffile> B<--fps> I<fps>]>
   S<[B<--skip_validation>]>
-  S<[B<--WriteMemDump> I<dir> [B<--create_Events_Processed_file>]]>
+  S<[B<--WriteMemDump> I<dir> [B<--create_Events_Processed_file>]>
+  S<[B<--Continue_MemDump>]]>
   S<[B<--dryrun_mode>] [B<--Verbose>]>
   S<[B<--uncompress_dir> I<dir> | B<--work_in_dir> I<dir>]>
   S<[B<--quit_if_non_scorable>]>
+  S<[B<--bigXML> [B<--BigXML> I<location>]]>
   S<last_parameter>
 
 =head1 DESCRIPTION
@@ -1093,6 +1095,18 @@ B<TV08ED-SubmissionChecker> will ignore the I<config> section of the XML file, a
 =head1 OPTIONS
 
 =over
+
+=item B<--BigXML> I<location>
+
+Specify the I<location> of the S<BigXML_ValidatorHelper> tool.
+
+=item B<--bigXML>
+
+Use the S<BigXML_ValidatorHelper> tool to validate and perform a MemDump of the XML files contained within the submission.
+
+=item B<--Continue_MemDump>
+
+When re-running a previously started process (using B<--WriteMemDump>), skip previously created MemDump files.
 
 =item B<--create_Events_Processed_file>
 
@@ -1194,7 +1208,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir [--create_Events_Processed_file] [--Continue_MemDump]] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_if_non_scorable] last_parameter
+Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir [--create_Events_Processed_file] [--Continue_MemDump]] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_if_non_scorable] [--bigXML [--BigXML location]] last_parameter
 
 Will confirm that a submission file conforms to the 'Submission Instructions' (Appendix B) of the 'TRECVid Event Detection Evaluation Plan'.
 
@@ -1212,11 +1226,14 @@ Only in the '--work_in_dir' case does it become <SITE>.
   --skip_validation  Bypass the XML files validation process
   --WriteMemDump  Write a memory dump of each validated XML file into \'dir\'. Note that this option will recreate the <EXP-ID> directory.
   --create_Events_Processed_file   Will create an \'$epmdfile\' MemDump file in \'WriteMemDump\' \'s dir
+  --Continue_MemDump    If a MemDump file already exist, skip re-creation of the same file
   --dryrun_mode   Do not check for content of txt file
   --Verbose       Explain step by step what is being checked
   --uncompress_dir  Specify the directory in which the archive file will be uncompressed
   --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified (useful to confirm a submission before generating its archive)
   --quit_if_non_scorable  If for any reason, any submission is non scorable, quit without continuing the check process, instead of adding information to a report printed at the end
+  --bigXML        Use the \"BigXML_ValidatorHelper\" tool to perform validation of XML files
+  --BigXML        Specify the location of the \"BigXML_ValidatorHelper\" tool (default: $BigXMLtool)
 
 Note:
 - Recognized archive extensions: $ok_exts
