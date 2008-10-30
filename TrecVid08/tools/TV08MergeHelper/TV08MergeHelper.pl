@@ -973,7 +973,9 @@ B<TV08Mergehelper> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--gtf>] [B<--ForceFilename> I<filename>]>
   S<[B<--shift_overlap> B<--Same_overlap> [B<--overlaplistfile> [I<file>]]>
   S<[B<--OverlapOnlyXML>]] [B<--ecfhelperfile> [I<file.csv>]]>
-  S<[B<--writetodir> I<directory>] [B<--pruneEvents>] B<--fps> I<fps>>
+  S<[B<--writetodir> I<directory> [B<--WriteMemDump> [I<mode>]]]>
+  S<[B<--pruneEvents>]  [B<--keep_id>] [B<--no_comment>]>
+  S<B<--fps> I<fps>>
   I<viper_source_file.xml[I<:frame_shift>]> [I<...>]
 
 =head1 DESCRIPTION
@@ -1055,9 +1057,19 @@ Specify that the file to validate is a Reference file (also known as a Ground Tr
 
 Display the usage page for this program. Also display some default values and information.
 
+=item B<--keep_id>
+
+When adding an I<observation> to the merged file, keep the input file I<observation> ID or exit with an error message.
+
+By default, when adding an I<observation> to the merged file, the newly created observation will have the first available ID.
+
 =item B<--man>
 
 Display this man page.
+
+=item B<--no_comment>
+
+Do not add any comment to the merged file explaining the source of the event I<observation>.
 
 =item B<--OverlapOnlyXML>
 
@@ -1087,6 +1099,12 @@ Can also be set using the B<TV08_XSDPATH> environment variable.
 =item B<--version>
 
 Display B<TV08MergeHelper> version information.
+
+=item B<--WriteMemDump> [I<mode>]
+
+In addition to writing the XML file, write a MemDump of the same file.
+
+I<mode> information can be obtained using B<--help>.
 
 =item B<--writetodir> I<directory>
 
@@ -1145,7 +1163,7 @@ sub set_usage {
 
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--gtf] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]] [--OverlapOnlyXML]] [--ecfhelperfile [file.csv]] [--writetodir dir [--WriteMemDump [mode]]] [--pruneEvents] --fps fps viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] 
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--gtf] [--ForceFilename filename] [--shift_overlap --Same_overlap [--overlaplistfile [file]] [--OverlapOnlyXML]] [--ecfhelperfile [file.csv]] [--writetodir dir [--WriteMemDump [mode]]] [--pruneEvents] [--keep_id] [--no_comment] --fps fps viper_source_file.xml[:frame_shift] [viper_source_file.xml[:frame_shift] [...]] 
 
 Will merge event observations found in given files related to the same sourcefile's filename, and will try to provide help in merging overlapping or repeating observations.
 
@@ -1164,7 +1182,9 @@ Will merge event observations found in given files related to the same sourcefil
   --ecfhelperfile Save a CSV file thaf contains information needed to generate the ECF file
   --writetodir    Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension) (If no writetodir option is specified, print to stdout)
   --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
-  --pruneEvents   Only keep in the new file's config section events for which observations are seen
+  --pruneEvents   Only keep in the new file\'s config section events for which observations are seen
+  --keep_id       Keep the event observation ID from the source file to the merged version (exit in error if impossible)
+  --no_comment    Do not add comment(s) to the merged file 
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
 
 Note:
