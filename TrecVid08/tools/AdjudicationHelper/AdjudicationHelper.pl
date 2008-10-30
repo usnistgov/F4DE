@@ -862,7 +862,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--InfoGenerator tool [--info_path path] [--jpeg_path path]] [--changeREFtype] [--ChangeSYStype [randomseed[:find_value]]] [--percentDS] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] --fps fps --Duration seconds --delta_t value --work_in_dir dir ref_file sys_files
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--InfoGenerator tool [--info_path path] [--jpeg_path path]] [--changeREFtype] [--ChangeSYStype [randomseed[:find_value]]] [--percentDS] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] [--Warn_numframes] [--minAgree level] [--MakeAgreeDir] [--nonGlobing | --globSmart tokeep] --fps fps --Duration seconds --delta_t value --work_in_dir dir ref_file sys_files
 
  Where:
   --help          Print this usage information and exit
@@ -881,10 +881,22 @@ Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-
   --ForceFilename Replace the 'sourcefile' file value
   --segmentation_margin  Add +/- value frames to each observation when computing its possible candidates for overlap (default: $margin_d)
   --adjudication_only    Only run the program in the adjudication step
+  --Warn_numframes    Print a warning (instead of quitting), in case the XML files NUMFRAMES differs
+  --minAgree      Do not write files XML Adjudication files for entries under the minAgree level value
+  --MakeAgreeDir  Create an output directory per Agree level
+  --nonGlobing    Will create Adjudication XML files using the \"non Globing\" algorithm (default is to use the Globing algorithm)
+  --globSmart     Will create Adjudication XML files using the \"smart Globing\" algorithm (default is to use the Globing algorithm), working on the top \'tokeep\' Unmapped Sys observations
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --Duration      Specify the scorer's duration
   --delta_t       Specify the scorer's delta_t value
   --work_in_dir   Directory where all the output an temporary files will be geneated
+
+The tool will create Adjudication XML files by working step by step with the REF and SYS files using other TrecVid08 F4DE tools, and using the Adjudicator script on the final result.
+
+A note on algorithms for the final Adjudication XML files:
+- \"Globing\" (default mode) will add to the XML file any event observation overlapping the extended range (global min and global max of all ovservations that are within).
+- \"non Globing\" will only add to the XML file Unmapped Ref observations, not other Unmapped Sys ones.
+- \"smart Globing\" will add to the XML file all event observations that overlap the extended range from a list of observations that contains both all the Unmapped Ref and the top \'tokeep\' Unmapped Sys (highest Agree level and highest mean DetectionScore)
 
 Note:
 - This prerequisite that the XML files can be been validated using 'xmllint' against the 'TrecVid08.xsd' file

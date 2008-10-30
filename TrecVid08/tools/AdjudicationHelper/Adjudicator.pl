@@ -722,7 +722,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--dir dir] [--Global] [--segmentation_margin value] [--InfoGenerator tool --LGW lwg_file [--info_path path] [--jpeg_path path]] --annot_key key --fps fps file.xml [file.xml[...]]
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--dir dir] [--Global] [--segmentation_margin value] [--InfoGenerator tool --LGW lwg_file [--info_path path] [--jpeg_path path]] [--Warn_numframes] [--minAgree level] [--CreateAgreeDir] [--reinjectUnmapRef] [--onlyOverlapUnmapRef] [--SmartGlob tokeep] --annot_key key --fps fps file.xml [file.xml[...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 
@@ -738,8 +738,16 @@ Will perform a semantic validation of the ViPER XML file(s) provided.
   --LGW           Specify the LGW_info passed to the '.info' generator
   --info_path     Path to the final '.info' file (added in the Viper file)
   --jpeg_path     Path to the JPEG files inside the '.info' file
-  --annot_key     Specify the annotator key used in the files
+  --Warn_numframes    Print a warning (instead of quitting), in case the XML files NUMFRAMES differs
+  --minAgree      Do not write files XML Adjudication files for entries under the minAgree level value
+  --CreateAgreeDir  Create an output directory per Agree level
+  --reinjectUnmapRef    When an Unmapped Ref entry is globbed within an output Adjudication XML file, reinject it into the list of available observations for the next pass of the algorithm
+  --onlyOvlerapUnmapRef    Only perform overlap search on Unmapped Ref observations
+  --SmartGlob     Only keep in the search list the top \'tokeep\' Unmapped Sys event observations (highest Agree level and highest mean DetectionScore)
+  --annot_key     Specify the annotator key base used in the files
   --fps           Specify the fps
+
+Create an Adjudication XML ViPER file from data contained within the input ViPER XML file (should only contain Unmapped Sys and Unmapped Ref entries).
 
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'TrecVid08.xsd' file
