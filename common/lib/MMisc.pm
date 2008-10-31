@@ -168,26 +168,36 @@ sub reorder_array_numerically {
 
 #####
 
-sub min_max {
-  my @v = &reorder_array_numerically(@_);
-
-  return($v[0], $v[-1]);
+sub min_max
+{
+  my $min = shift;
+  my $max = $min;
+  
+  foreach $_ (@_)
+  {
+    $min = $_ if $_ < $min;
+    $max = $_ if $_ > $max;
+  }
+  
+  return($min, $max);
 }
 
 #####
 
-sub min {
-  my @v = &min_max(@_);
-
-  return($v[0]);
+sub min
+{
+  my $min = shift;
+  foreach $_ (@_) { $min = $_ if $_ < $min; }
+  return $min;
 }
 
 #####
 
-sub max {
-  my @v = &min_max(@_);
-
-  return($v[-1]);
+sub max
+{
+  my $max = shift;
+  foreach $_ (@_) { $max = $_ if $_ > $max; }
+  return $max;
 }
 
 ##########
