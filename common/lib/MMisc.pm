@@ -159,11 +159,7 @@ sub clean_begend_spaces {
 ##########
 
 sub reorder_array_numerically {
-  my @ts = @_;
-
-  @ts = sort { $a <=> $b } @ts;
-
-  return(@ts);
+  return(sort { $a <=> $b } @_);
 }
 
 #####
