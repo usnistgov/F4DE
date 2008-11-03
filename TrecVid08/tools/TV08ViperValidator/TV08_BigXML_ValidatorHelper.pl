@@ -87,6 +87,7 @@ if (! $have_everything) {
 # Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
+my $mancmd = "perldoc -F $0";
 my $spc = 200; # Fine tuned on BigTest (on my laptop)
 # 50=11s 100=9.97s 150=9.5s 200=9.3s 250=9.3s 300=9.55s 500=10.3s
 my $chunks = 16034;
@@ -112,7 +113,7 @@ my $verb = 1;
 my $copyxmltoo = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:             M      T V         fgh        q s uvwx    #
+# Used:   C         M      T V      c  fgh    m   q s uvwx    #
 
 my %opt = ();
 GetOptions
@@ -120,6 +121,7 @@ GetOptions
    \%opt,
    'help',
    'version',
+   'man',
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
    'gtf'             => \$isgtf,
@@ -130,11 +132,16 @@ GetOptions
    'chunks=i'        => \$chunks,
    'ViperValidator=s' => \$valtool,
    'MergerHelper=s'  => \$mrgtool,
-   'copy_xml_too'    => \$copyxmltoo,
+   'Copy_xml_too'    => \$copyxmltoo,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
+if ($opt{'man'}) {
+  my ($r, $o, $e) = MMisc::do_system_call($mancmd);
+  MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
+  MMisc::ok_quit($o);
+}
 
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
@@ -451,6 +458,160 @@ sub copy_file {
     if ($rc != 0);
 }
 
+############################################################ Manual
+
+=pod
+
+=head1 NAME
+
+BigXML_ValidatorHelper - TrecVid08 Big XML Files Validator Helper
+
+=head1 SYNOPSIS
+
+B<BigXML_ValidatorHelper> S<[--help | --man | --version]>
+  S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
+  S<[B<--ViperValidator> I<location>] [B<--MergeHelper> I<location>]>
+  S<[B<--gtf>] [B<--splitevery> I<value>] [B<--chunks> I<bytes>]>
+  S<[B<--quiet>] [B<--Copy_xml_too>]>
+  B<--fps> I<fps> B<--writedir> I<directory>
+  I<viper_source_file.xml> [I<viper_source_file.xml> [I<...>]]
+
+=head1 DESCRIPTION
+
+B<BigXML_ValidatorHelper> performs a syntactic and semantic validation of the ViPER XML file(s) provided on the command line, then write a MemDump version of this file into the B<writedir> directory. It can I<validate> reference files (see B<--gtf>) as well as system files. It does so by splitting large files into plenty of small files, validating those files and merging the resulting files. It does not have all the options of S<TV08ViperValidator> as it is a helper tool designed to obtain a MemDump version of large XML files. Those MemDump files can then be used in other tools reducing considerably the load time (does not have to re-validate the XML file). 
+
+=head1 PREREQUISITES
+
+B<BigXML_ValidatorHelper> relies on some external software and files.
+
+=over
+
+=item B<SOFTWARE> 
+
+I<xmllint> (part of I<libxml2>, see S<http://www.xmlsoft.org/>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
+
+B<TV08ViperValidator> and B<TV08MergerHelper>, part of F4DE's TrecVid08 section are also needed as they are the core programs used. 
+
+=item B<FILES>
+
+The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
+It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> environment variable.
+You should not have to specify their location, if you have performed an install and have set the global environment variables.
+
+=item B<GLOBAL ENVIRONMENT VARIABLES>
+
+B<BigXML_ValidatorHelper> relies on some internal and external Perl libraries to function.
+
+Simply running the B<BigXML_ValidatorHelper> script should provide you with the list of missing libraries. 
+The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
+
+=over
+
+=item B<F4DE_BASE>
+
+The main variable once you have installed the software, it should be sufficient to run this program.
+
+=item B<F4DE_PERL_LIB>
+
+Allows you to specify a different directory for the B<F4DE> libraries.
+
+=item B<TV08_PERL_LIB>
+
+Allows you to specify a different directory for the B<TrecVid08> libraries.
+
+=back
+
+=back
+
+=head1 GENERAL NOTES
+
+B<BigXML_ValidatorHelper> expect that the files can be validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
+
+B<BigXML_ValidatorHelper> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
+
+=head1 OPTIONS
+
+=over
+
+=item B<--Copy_xml_too>
+
+Copy source XML file to B<writedir> directory in addition to generating the I<MemDump> file.
+
+=item B<--chunks> I<value>
+
+Read I<value> bytes of data at a time from the source file when generating the sub files used for validation.
+This influence the speed of processing of the validation process.
+Default value can be obtained using B<--help>. It is recommended to not go under this value.
+
+=item B<--fps> I<fps>
+
+Specify the default sample rate (in frames per second) of the ViPER files.
+
+=item B<--gtf>
+
+Specify that the file to validate is a Reference file (also known as a Ground Truth File)
+
+=item B<--help>
+
+Display the usage page for this program. Also display some default values and information.
+
+=item B<--MergeHelper> I<location>
+
+Specify the location of the S<TV08MergeHelper> program (used by this helper).
+Default location used can be obained using B<--help>.
+
+=item B<--man>
+
+Display this man page.
+
+=item B<--quiet>
+
+Do not print processing information (default is to be verbose).
+
+=item B<--splitevery> I<value>
+
+Split the source file every I<value> event observation seen.
+This influence the total number of files created in the validation process.
+Default value can be obtained using B<--help>
+
+=item B<--TrecVid08xsd> I<location>
+
+Specify the default location of the required XSD files (use B<--help> to get the list of required files).
+Can also be set using the B<TV08_XSDPATH> environment variable.
+
+=item B<--ViperValidator> I<location>
+
+Specify the location of the S<TV08ViperValidator> program (used by this helper).
+Default location used can be obained using B<--help>.
+
+=item B<--version>
+
+Display B<BigXML_ValidatorHelper> version information.
+
+=item B<--writedir> [I<directory>]
+
+Once validation has been completed for a given file, B<BigXML_ValidatorHelper> will write the MemDump representation of this file to this directory.
+
+=item B<--xmllint> I<location>
+
+Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
+Can also be set using the B<TV08_XMLLINT> environment variable.
+
+=back
+
+=head1 USAGE
+
+
+=head1 BUGS
+
+Please send bug reports to <nist_f4de@nist.gov>
+
+=head1 AUTHORS
+
+Martial Michel <martial.michel@nist.gov>
+
+=cut
 
 ########################################
 
@@ -458,7 +619,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--gtf] [--splitevery value] [--chunks bytes] [--symlink] [--Verbose] --fps fps --writedir directory viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--ViperValidator location] [--MergerHelper location] [--gtf] [--splitevery value] [--chunks bytes] [--quiet] [--Copy_xml_too] --fps fps --writedir directory viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 
@@ -467,10 +628,22 @@ Will perform a semantic validation of the ViPER XML file(s) provided.
   --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable
   --TrecVid08xsd  Path where the XSD files can be found
+  --ViperValidator    Location of the TV08ViperValidator tool
+  --MergeHelper   Location of the TV08MergeHelper tool
   --gtf           Specify that the file to validate is a Ground Truth File
-  --writedir      Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
+  --splitevery    Split \'viper_source_file.xml\' every \'value\' events observations (default: $spc)
+  --chunks        Specify the size in \'bytes\' of the chunks of the input file being processed at a time (to generate the split version) (default: $chunks)
+  --quiet         Print as little information as possible during run
+  --Copy_xml_too  By default, only write MemDump to \'writedir\' directory, copy XML file too
+  --writedir      Once processed in memory, print a new XML MemDump of file in this directory. Also use this directory to put all steps
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
 
+Note:
+- Program will ignore the <config> section of the XML file.
+- Program will discard any xml comment(s).
+- By default will try to use:
+$valtool
+$mrgtool
 EOF
     ;
 
