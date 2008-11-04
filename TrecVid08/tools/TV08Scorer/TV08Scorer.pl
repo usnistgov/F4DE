@@ -580,7 +580,7 @@ foreach my $event (@all_events) {
   my $trials = $all_trials{$event};
   my $metric = $all_metric{$event};
 #  print "** Computing DET Curves for event: $event\n";
-  my $det = new DETCurve($trials, $metric, "blocked", "Event $event: ". $sysTitle, [()], $gzipPROG);
+  my $det = new DETCurve($trials, $metric, "Event $event: ". $sysTitle, [()], $gzipPROG);
   print $det->getMessages()
     if (! MMisc::is_blank($det->getMessages()));
   my $rtn = $detSet->addDET($event." Event", $det);
