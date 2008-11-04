@@ -44,6 +44,46 @@ sub new
     return $self;
   }
 
+####################################################################################################
+=pod
+
+=item B<trialParamMerge>(I<$Param>, I<$baseValue>, I<$valueToMerge>, I<$mergeType>)
+
+When Trial structures are merged, the parameters in the Trial structure need to be merged appropriately
+based on whether or not the C<mergeType> is /pooled/ or /blocked/.  One way to think of a C<pooled> merge
+is to concatenate the data into a single list.  One way to think of a C<blocked> merge is keep the individual 
+Trial structures as blocks in the new structures. 
+
+This code is executed parameter, by C<$Param> from the data structure.  Since the interpretation of how to
+merge a parameter,  the specifics of the merge are encoded in the Metric object.
+
+C<baseValue> is the existing value in the trial structure.  If this is the first merge, (i.e., the 
+trial structure is empty), then this value must be C<undef>.  C<valueToMerge> is the value to merge.
+
+=cut
+
+sub trialParamMerge(){
+  my ($self, $param, $mergedValue, $toMergeValue, $mergeType) = @_;
+
+  if ($param eq "TOTALTRIALS"){
+    if ($mergeType eq "pooled"){
+      ### if pooled, totaltrials ios added
+      return (defined($mergedValue) ? $mergedValue : 0) + $toMergeValue;
+    } elsif ($mergeType eq "blocked") {
+      ### if blocked, the totaltrials MUST be constant 
+      return undef if (!defined($mergedValue) && !defined($toMergeValue));
+      die "Error: Trial Merge of incompatable /$param/.  New value undefined" if (!defined($toMergeValue));
+      return $toMergeValue if (!defined($mergedValue));
+      die "Error: Trial Merge only supported for equal /$param/ ($mergedValue != $toMergeValue)" 
+        if ($mergedValue != $toMergeValue);
+      return $mergedValue;
+    } else {
+      die "Error: Unknown merge type /$mergeType/\n";
+    }
+  }
+  die "Error: Trial parameter merge for /$param/ Failed.  $param not defined in the metric";
+}
+
 
 ####################################################################################################
 =pod
@@ -81,7 +121,7 @@ sub isoCostRatioCoeffForDETCurve(){ (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1,
 
 sub errMissLab(){ "PMiss"; }
 sub errMissUnit(){ "Prob" };
-sub errMissUnitLabel(){ "%" };
+sub errMissUnitLabel(){ "" };
 sub errMissBlockCalc(){
   my ($self, $nMiss, $block) = @_;
   my $NTarg =  $self->{TRIALS}->getNumTarg($block);
@@ -121,7 +161,7 @@ sub errMissPrintFormat(){ "%6.4f" };
 
 sub errFALab() { "PFA"; }
 sub errFAUnit(){ "Prob" };
-sub errFAUnitLabel(){ "%" };
+sub errFAUnitLabel(){ "" };
 sub errFABlockCalc(){
   my ($self, $nFa, $block) = @_;
   my $NNonTargTrials = (defined($self->{TRIALPARAMS}->{TOTALTRIALS}) ? 
@@ -204,7 +244,7 @@ sub MISSForGivenComb(){
 
 =pod
 
-=item B<FAForGivenComb>(I<$comb, I<$missErr>)
+=item B<FAForGivenComb>(I<$comb>, I<$missErr>)
 
 Calculates the value of the Fa statistic for a given combined measure and the Miss value.  This is 
 a permutation of the combined formula to solve for the Fa value. This method uses the constants 
