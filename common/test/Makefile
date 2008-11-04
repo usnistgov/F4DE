@@ -7,6 +7,7 @@ install:
 check:
 	@(cd ../lib; perl -I . -e 'use DETCurveSet; DETCurveSet::unitTest()')
 	@(cd ../lib; perl -I . -e 'use DETCurve; DETCurve::unitTest()')
+	@(cd ../lib; perl -I . -e 'use DETCurveGnuplotRenderer; DETCurveGnuplotRenderer::unitTest()')
 	@(cd ../lib; perl -I . -e 'use Trials; Trials::unitTest()')
 	@echo "***** All tests ran succesfully"
 
