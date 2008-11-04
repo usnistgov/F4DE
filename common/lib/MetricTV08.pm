@@ -15,7 +15,7 @@ package MetricTV08;
 @ISA = qw(MetricFuncs);
 
 use strict;
-use MetricFuncs;
+use Data::Dumper;
 
 =pod
 =head1 NAME
@@ -79,6 +79,45 @@ sub new
     return $self;
   }
 
+####################################################################################################
+=pod
+
+=item B<trialParamMerge>(I<$Param>, I<$baseValue>, I<$valueToMerge>, I<$mergeType>)
+
+When Trial structures are merged, the parameters in the Trial structure need to be merged appropriately
+based on whether or not the C<mergeType> is /pooled/ or /blocked/.  One way to think of a C<pooled> merge
+is to concatenate the data into a single list.  One way to think of a C<blocked> merge is keep the individual 
+Trial structures as blocks in the new structures. 
+
+This code is executed parameter, by C<$Param> from the data structure.  Since the interpretation of how to
+merge a parameter,  the specifics of the merge are encoded in the Metric object.
+
+C<baseValue> is the existing value in the trial structure.  If this is the first merge, (i.e., the 
+trial structure is empty), then this value must be C<undef>.  C<valueToMerge> is the value to merge.
+
+=cut
+
+sub trialParamMerge(){
+  my ($self, $param, $mergedValue, $toMergeValue, $mergeType) = @_;
+
+  if ($param eq "TOTALDURATION"){
+    if ($mergeType eq "pooled"){
+      ### if pooled, totalduration added
+      return (defined($mergedValue) ? $mergedValue : 0) + $toMergeValue;
+    } elsif ($mergeType eq "blocked") {
+      ### if blocked, the totalduration MUST be constant 
+      return undef if (!defined($mergedValue) && !defined($toMergeValue));
+      die "Error: Trial Merge of incompatable /$param/.  New value undefined" if (!defined($toMergeValue));
+      return $toMergeValue if (!defined($mergedValue));
+      die "Error: Trial Merge only supported for equal /$param/ ($mergedValue != $toMergeValue)" 
+        if ($mergedValue != $toMergeValue);
+      return $mergedValue;
+    } else {
+      die "Error: Unknown merge type /$mergeType/\n";
+    }
+  }
+  die "Error: Trial parameter merge for /$param/ Failed.  $param not defined in the metric";
+}
 
 ####################################################################################################
 =pod
@@ -147,7 +186,7 @@ to print the units.
 
 =cut
 
-  sub errMissUnitLabel(){ "%" };
+  sub errMissUnitLabel(){ "" };
 
 ####################################################################################################
 =pod
@@ -447,6 +486,8 @@ the CODE DIES as this should never happen.
 
     my ($combBSet, $combBSetSSD) = (undef, undef);
     $combBSet = $self->combCalc($missBSet, $faBSet);
+#  print "sqrt((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1))) if (defined($combSum)  && $combN > 1);\n"
+#    if ( (defined($combSum)  && $combN > 1) && ((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1)) < 0));
     $combBSetSSD = sqrt((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1))) if (defined($combSum)  && $combN > 1);
 
     ($combBSet, $combBSetSSD, $missBSet, $missBSetSSD, $faBSet, $faBSetSSD);
