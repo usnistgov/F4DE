@@ -22,6 +22,9 @@
 
 use strict;
 use Data::Dumper;
+use Carp ();  local $SIG{__WARN__} = \&Carp::cluck;
+#$SIG{__WARN__} = sub { CORE::die "Warning:\n", @_, "\n" };
+
 
 ##########
 # Check we have every module (perl wise)
@@ -36,10 +39,7 @@ BEGIN {
   $f4depl = "F4DE_PERL_LIB";
   $f4deplv = $ENV{$f4depl} || "../../lib"; # Default is relative to this tool's default path
 }
-use lib ($tv08plv, $f4deplv, $f4bv);
-
-use MetricTV08;
-use Trials;
+use lib ($f4deplv, $tv08plv, $f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -61,6 +61,13 @@ unless (eval "use MMisc; 1") {
   $have_everything = 0;
 }
 
+# MetricFuncs (part of this tool)
+unless (eval "use MetricFuncs; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"MetricFuncs\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
 # DETCurve (part of this tool)
 unless (eval "use DETCurve; 1") {
   my $pe = &eo2pe($@);
@@ -72,6 +79,13 @@ unless (eval "use DETCurve; 1") {
 unless (eval "use DETCurveSet; 1") {
   my $pe = &eo2pe($@);
   &_warn_add("\"DETCurveSet\" is not available in your Perl installation. ", $partofthistool, $pe);
+  $have_everything = 0;
+}
+
+# Trials (part of this tool)
+unless (eval "use Trials; 1") {
+  my $pe = &eo2pe($@);
+  &_warn_add("\"Trials\" is not available in your Perl installation. ", $partofthistool, $pe);
   $have_everything = 0;
 }
 
@@ -298,8 +312,23 @@ if($omitActual)
 
 my $ds = new DETCurveSet($title);
 
+sub attrValueStringToHT{
+  my ($str) = @_;
+  my %ht = ();
+  
+  foreach my $avPair(split(/,/, $str)){
+    my ($attr, $val) = split("=>",$avPair);
+    print "  attr=$attr val=$val\n";
+    $ht{$attr} = $val;
+  }
+  \%ht;
+}
+
 foreach my $srl ( @ARGV )
 {
+  ### The SRL files can now include various plotting attributes.  
+#  my ($srl, $attrVal) = split(/:/,$srlDef,2);
+  
 	my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
 	
 	@listIsoratiolineCoef = $loadeddet->getMetric()->isoCostRatioCoeffForDETCurve()
