@@ -70,13 +70,6 @@ my @ok_events =
    "DoorOpenClose", "UseATM", "ObjectGet", "VestAppears", "SitDown", 
    "StandUp", "ObjectTransfer", 
    # Removed events
-   "Event000", "Event001", "Event002", "Event003", "Event004", "Event005", "Event006", "Event007", "Event008", "Event009", 
-   "Event010", "Event011", "Event012", "Event013", "Event014", "Event015", "Event016", "Event017", "Event018", "Event019", 
-   "Event020", "Event021", "Event022", "Event023", "Event024", "Event025", "Event026", "Event027", "Event028", "Event029", 
-   "Event030", "Event031", "Event032", "Event033", "Event034", "Event035", "Event036", "Event037", "Event038", "Event039", 
-   "Event040", "Event041", "Event042", "Event043", "Event044", "Event045", "Event046", "Event047", "Event048", "Event049", 
-   "Event050", "Event051", "Event052", "Event053", "Event054", "Event055", "Event056", "Event067", "Event058", "Event059", 
-   "Event060", "Event061", "Event062", "Event063", "Event064", "Event065", "Event066", "Event077", "Event068", "Event069", 
    ##
   );
 
