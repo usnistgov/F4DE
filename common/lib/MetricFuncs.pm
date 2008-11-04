@@ -146,6 +146,40 @@ Returns the value stored in the parameter value.
 ####################################################################################################
 =pod
 
+=item B<getParams>()
+
+Returns the value stored in the parameter value.
+
+=cut
+
+  sub getParams(){
+    my($self, $key) = @_;
+    $self->{PARAMS};
+  }
+
+####################################################################################################
+=pod
+
+=item B<cloneForTrial>(I<$trial>)
+
+Returns a new metric object using the parameters in the existing metric object ($self) and the
+trial structure.
+
+=cut
+
+sub cloneForTrial(){
+  my($self, $trial) = @_;
+
+  ### Make a metric clone
+  my $metType = ref($self);
+  my $VAR1;
+  eval (Dumper($self->getParams()));
+  new $metType($VAR1, $trial);
+}
+
+####################################################################################################
+=pod
+
 =item B<getActualDecisionPerformance>()
 
 Returns an array of global miss/fa/comb statistics based on the actual decisions.
