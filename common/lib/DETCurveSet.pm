@@ -23,6 +23,7 @@ use Trials;
 use MetricTestStub;
 use DETCurve;
 use SimpleAutoTable;
+use DETCurveGnuplotRenderer;
 
 sub new
   {
@@ -98,13 +99,13 @@ sub unitTest(){
 
   my $det1 = new DETCurve($trial, 
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
-                          "blocked", "DET1", \@isolinecoef, undef);
+                          "DET1", \@isolinecoef, undef);
   my $det2 = new DETCurve($trial2, 
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
-                          "blocked", "DET2", \@isolinecoef, undef);
+                          "DET2", \@isolinecoef, undef);
   my $det3 = new DETCurve($emptyTrial, 
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial),
-                          "blocked", "DETEmpty", \@isolinecoef, undef);
+                          "DETEmpty", \@isolinecoef, undef);
                           
   $det3->successful();
   
@@ -123,7 +124,7 @@ sub unitTest(){
   my $ncTrial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTAL" => 1000) });
   my $det2Diff = new DETCurve($ncTrial, 
                               new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
-                              "blocked", "DET2", \@isolinecoef, undef);
+                              "DET2", \@isolinecoef, undef);
   my $ret = $ds->addDET($k2Diff, $det2Diff);
   die "Error: Add of non-compatiable DET succeeded returning \"$ret\"" if ("success" eq $ret);
   print "OK\n";
@@ -299,7 +300,8 @@ sub renderAsTxt(){
   ### Build the combined and separate DET PNGs
   my $multiInfo = {()};
   if ($buildCurves && $DETOptions->{createDETfiles}) {
-    $multiInfo = DETCurve::writeMultiDetGraph($fileRoot, $self, $DETOptions);
+    my $dcRend = new DETCurveGnuplotRenderer($DETOptions);
+    $multiInfo = $dcRend->writeMultiDetGraph($fileRoot,  $self);
   }
     
   my $at = $self->_buildAutoTable($buildCurves, $includeCounts, $reportActual);
