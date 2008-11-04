@@ -162,16 +162,7 @@ sub addTrial {
   die "Error: Decision must be \"YES|NO|OMITTED\" not '$decision'" if ($decision !~ /^(YES|NO|OMITTED)$/);
   my $attr = ($isTarg ? "TARG" : "NONTARG");
   
-  if (! defined($self->{"trials"}{$block}{"title"})) {
-    $self->{"trials"}{$block}{"TARG"} = [];
-    $self->{"trials"}{$block}{"NONTARG"} = [];
-    $self->{"trials"}{$block}{"title"} = "$block";
-    $self->{"trials"}{$block}{"YES TARG"} = 0;
-    $self->{"trials"}{$block}{"NO TARG"} = 0;
-    $self->{"trials"}{$block}{"YES NONTARG"} = 0;
-    $self->{"trials"}{$block}{"NO NONTARG"} = 0;
-    $self->{"trials"}{$block}{"OMITTED TARG"} = 0;
-  }
+  $self->_initForBlock($block);
   
   ## update the counts
   $self->{"isSorted"} = 0;
@@ -182,6 +173,21 @@ sub addTrial {
     die "Error: OMITTED trials must be Target trials" if (! $isTarg);
   }
   $self->{"trials"}{$block}{$decision." $attr"} ++;
+}
+
+sub _initForBlock {
+  my ($self, $block) = @_;
+  
+  if (! defined($self->{"trials"}{$block}{"title"})) {
+    $self->{"trials"}{$block}{"TARG"} = [];
+    $self->{"trials"}{$block}{"NONTARG"} = [];
+    $self->{"trials"}{$block}{"title"} = "$block";
+    $self->{"trials"}{$block}{"YES TARG"} = 0;
+    $self->{"trials"}{$block}{"NO TARG"} = 0;
+    $self->{"trials"}{$block}{"YES NONTARG"} = 0;
+    $self->{"trials"}{$block}{"NO NONTARG"} = 0;
+    $self->{"trials"}{$block}{"OMITTED TARG"} = 0;
+  }
 }
 
 sub getTaskID {
@@ -516,6 +522,45 @@ sub getBlockId {
 sub getDecisionId {
   my ($self) = @_;
   $self->{"DecisionID"};
+}
+  
+### This is not an instance method
+sub mergeTrials{
+  my ($r_baseTrial, $mergeTrial, $metric, $mergeType) = @_;
+
+  ### Sanity Check 
+  my @blockIDs = $mergeTrial->getBlockIDs();
+  die "Error: trial merge with multi-block trial data not supported" if (@blockIDs > 1);
+  die "Error: trial merge requires at least one block ID" if (@blockIDs > 1);
+
+  ### First the params
+  if (! defined($$r_baseTrial)){
+    $$r_baseTrial = new Trials($mergeTrial->getTaskID(), $mergeTrial->getBlockID(), $mergeTrial->getDecisionID(), $mergeTrial->getMetricParams());
+  } else { 
+    foreach my $mkey ($$r_baseTrial->getMetricParamKeys()){
+      my $newVal = $metric->trialParamMerge($mkey,
+                                            $$r_baseTrial->getMetricParamValue($mkey), 
+                                            $mergeTrial->getMetricParamValue($mkey), $mergeType);
+      $$r_baseTrial->setMetricParamValue($mkey, $newVal);
+    }
+  }
+
+  ### Now the data!!!
+  my $newBlock = "pooled";
+  if ($mergeType eq "blocked"){
+    my @theIDs = $$r_baseTrial->getBlockIDs();
+    $newBlock = sprintf("block_%03d",scalar(@theIDs));  
+  }
+    
+  $$r_baseTrial->{isSorted} = 0;
+  $$r_baseTrial->_initForBlock($newBlock);
+    
+  push (@{ $$r_baseTrial->{"trials"}{$newBlock}{"TARG"} }, @{ $mergeTrial->{trials}{$blockIDs[0]}{TARG} });
+  push (@{ $$r_baseTrial->{"trials"}{$newBlock}{"NONTARG"} }, @{ $mergeTrial->{trials}{$blockIDs[0]}{NONTARG} });
+  foreach my $counter("YES TARG", "NO TARG", "YES NONTARG", "NO NONTARG", "OMITTED TARG"){
+    $$r_baseTrial->{"trials"}{$newBlock}{$counter} += $mergeTrial->{"trials"}{$blockIDs[0]}{$counter};
+  }    
+  
 }
 
 1;
