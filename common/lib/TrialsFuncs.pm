@@ -16,6 +16,8 @@ package Trials;
 use strict;
 use Data::Dumper;
 use SimpleAutoTable;
+use MetricFuncs;
+use MetricTV08;
 
 =pod
 
