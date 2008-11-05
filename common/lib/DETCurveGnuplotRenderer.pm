@@ -98,7 +98,7 @@ sub _setDefaultRanges{
   }
 
   if ($self->{props}->getValue("xScale") eq "nd") {
-     $self->{Bounds}{xmax}{disp} = 0.0001;  $self->{Bounds}{xmin}{disp} = 40;
+     $self->{Bounds}{xmin}{disp} = 0.0001;  $self->{Bounds}{xmax}{disp} = 40;
   } elsif ($self->{props}->getValue("xScale") eq "log") {
      $self->{Bounds}{xmin}{disp} = 0.001;   $self->{Bounds}{xmax}{disp} = 100; 
   } elsif ($self->{props}->getValue("xScale") eq "linear") {
@@ -241,7 +241,9 @@ sub unitTest{
 }
 
 sub renderUnitTest{
-  print "Test DETCurveGnuplotRenderer...";
+  my ($dir) = @_;
+
+  print "Test DETCurveGnuplotRenderer...Dir=$dir...";
   my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
   my $trial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
     
@@ -324,7 +326,6 @@ sub renderUnitTest{
   die "Error: Failed to add second det" if ("success" ne $ds->addDET("Name 2", $det2));
   die "Error: Failed to add second det" if ("success" ne $ds->addDET("Name 3", $det3));
 
-  my $dir = "mdettmp";
   system "rm -rf $dir";
   system "mkdir -p $dir";
   my $options = { ("ColorScheme" => "grey",
@@ -662,10 +663,9 @@ sub write_gnuplot_DET_header{
   print $FP "set xlabel '".$metric->errFALab()." $xlab'\n";
 
   print $FP join("\n",@$labels)."\n" if (defined($labels));
-  
   if ($xScale eq "nd") {
     print $FP "set noxtics\n"; 
-    $self->_write_tics($FP, 'xtics', $self->{Bounds}{xmin}{disp}, $self->{Bounds}{xmax}{disp});
+    print $FP $self->_ticsLine('xtics', $self->{Bounds}{xmin}{disp}, $self->{Bounds}{xmax}{disp});
   } elsif ($xScale eq "log") {
     print $FP "set xtics\n"; 
     print $FP "set logscale x\n"; 
@@ -676,7 +676,7 @@ sub write_gnuplot_DET_header{
 
   if ($yScale eq "nd") {
     print $FP "set noytics\n"; 
-    $self->_write_tics($FP, 'ytics', $self->{Bounds}{ymin}{disp}, $self->{Bounds}{ymax}{disp});
+    print $FP $self->_ticsLine('ytics', $self->{Bounds}{ymin}{disp}, $self->{Bounds}{ymax}{disp});
   } elsif ($yScale eq "log") {
     print $FP "set ytics\n"; 
     print $FP "set logscale y\n"; 
@@ -689,15 +689,16 @@ sub write_gnuplot_DET_header{
   print $FP "plot $xrange $yrange \\\n";
 }
 
-sub _write_tics{ 
-  my($self, $FP, $axis, $min, $max) = @_;
+sub _ticsLine{ 
+  my($self, $axis, $min, $max) = @_;
   my($lab, $i, $prev) = ("", 0, 0);
   my $tics = $self->{NDtics};
-  print $FP "set $axis (";
+  
+  my $line = "set $axis (";
   for ($i=0, $prev=0; $i< @$tics; $i++) {
     if ($tics->[$i] >= $min && $tics->[$i] <= $max) {
-      print $FP ", " if ($prev > 0);
-      print $FP "\\\n    " if (($prev % 5) == 0);
+      $line .= ", " if ($prev > 0);
+      $line .= "\\\n    " if (($prev+1 % 10) == 0);
       if ($tics->[$i] > 99) {
         $lab = sprintf("%.1f", $tics->[$i]);
       } elsif ($tics->[$i] >= 1) {
@@ -713,11 +714,12 @@ sub _write_tics{
       } else {
         ($lab = sprintf("%.5f", $tics->[$i])) =~ s/^0//;
       }
-      printf $FP "'$lab' %.4f",ppndf($tics->[$i]/100);
+      $line .= sprintf "'$lab' %.4f",ppndf($tics->[$i]/100);
       $prev ++;
     }
   }
-  print $FP ")\n";
+  $line .= ")\n";
+  $line;
 }
 
 sub _drawIsoratiolines{
