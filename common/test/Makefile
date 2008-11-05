@@ -15,7 +15,7 @@ makecheckfiles:
 	@(perl -I ../lib -I ../../TrecVid08/lib -e 'use DETCurveGnuplotRenderer; DETCurveGnuplotRenderer::renderUnitTest("rendtmp")')
 	@(perl -I ../lib -I ../../TrecVid08/lib ../tools/DETUtil/DETUtil.pl -o DETUtil.g1.png ./rendtmp/g1.nd.nd*srl.gz)
 	@(perl -I ../lib -I ../../TrecVid08/lib ../tools/DETMerge/DETMerge.pl -o Merge.g1.srl ./rendtmp/g1.nd.nd*srl.gz)
-	@(perl -I ../lib -I ../../TrecVid08/lib ../tools/DETUtil/DETUtil.pl -o DETUtil.g1.merge.png Merge.g1.srl.gz ./rendtmp/g1.nd.nd*srl.gz)
+	@(perl -I ../lib -I ../../TrecVid08/lib ../tools/DETUtil/DETUtil.pl -o DETUtil.g1.merge.png -p 'ExtraPoint=paeg 1:.01:0.4:2:2:rgb "#ff00ff":left' -p 'ExtraPoint=paeg 1:.2:0.8:1:2:rgb "#ff00ff":' Merge.g1.srl.gz ./rendtmp/g1.nd.nd*srl.gz)
 	@echo "***** All files generated succesfully"
 
 cleanresfiles:

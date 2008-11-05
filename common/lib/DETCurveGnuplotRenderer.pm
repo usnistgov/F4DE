@@ -828,7 +828,9 @@ sub _makePointSetLabels{
                          _getValueInGraph($point->{MMiss}, $self->{Bounds}{ymin}{metric}, $self->{Bounds}{ymax}{metric}, $self->{props}->getValue("yScale")));
     # print Dumper($point)." points $xpos $ypos _getValueInGraph($point->{MMISS}, $self->{Bounds}{ymin}{metric}, $self->{Bounds}{ymax}{metric}, $yScale)\n";
     push @labs, 
-        "set label \"".(exists($point->{label}) ? $point->{label} : "")."\" point ".
+        "set label \"".(exists($point->{label}) ? $point->{label} : "")."\" " .
+        (exists($point->{justification}) ? $point->{justification}." " : "") .
+        " point ".
         "lc ".(exists($point->{color}) ? $point->{color} : 1)." ".
         "pt ".(exists($point->{pointType}) ? $point->{pointType} : 1)." ".
         "ps ".(exists($point->{pointSize}) ? $point->{pointSize} : 1)." ".

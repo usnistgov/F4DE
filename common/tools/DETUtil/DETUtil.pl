@@ -154,7 +154,7 @@ my $gnuplotPROG = "gnuplot";
 my $axisScales = undef;
 my $omitActual = 0;
 my $docsv = 0;
-my $plotControls = undef;
+my @plotControls = ();
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
@@ -186,7 +186,7 @@ GetOptions
 	'G|GnuplotPROG=s'             => \$gnuplotPROG,
 	'A|AxisScale=s'               => \$axisScales,
 	'O|OmitActualCalc'            => \$omitActual, 
-  'p|plotControls=s'            => \$plotControls,
+  'p|plotControls=s'            => \@plotControls,
 
 	'version'                     => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; 
 	                                       print "$name version $VERSION\n"; exit(0); },
@@ -264,12 +264,31 @@ $options{lTitleNoBestComb} = 1 if ($lineTitleModification =~ /M/);
 $options{gnuplotPROG} = $gnuplotPROG;
 $options{createDETfiles} = 1;
 
-if (defined($plotControls)){
-  if ($plotControls =~ /ColorScheme=gr[ae]y/){
+foreach my $directive(@plotControls){
+  #print "Processing directive $directive\n";
+  if ($directive =~ /ColorScheme=gr[ae]y/){
     $options{ColorScheme} = "grey";
-  }
-  if ($plotControls =~ /PointSize=(\d+)/){
+  } elsif ($directive =~ /PointSize=(\d+)/){
     $options{PointSize} = $1;
+  } elsif ($directive =~ /ExtraPoint=(.*)$/){
+    my $pointDef = $1;
+    my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
+    my $intRegex = '\d*';
+    my $colorRegex = 'rgb "#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
+    my $fullExp = "^([^:]*):($numRegex):($numRegex):($intRegex):($intRegex):(($colorRegex)|):(left|right|center|)\$";
+    die "Error: Point definition /$pointDef/ does not match the pattern /$fullExp/" 
+      if ($pointDef !~ /$fullExp/);
+    my %ht = ();
+    $ht{label}         = $1 if ($1 ne "");
+    $ht{MFA}           = $2 if ($2 ne "");
+    $ht{MMiss}         = $3 if ($3 ne "");
+    $ht{pointSize}     = $4 if ($4 ne "");
+    $ht{pointType}     = $5 if ($5 ne "");
+    $ht{color}         = $6 if ($6 ne "");
+    $ht{justification} = $8 if ($8 ne "");
+    push @{ $options{PointSet} }, \%ht;
+  } else {
+    print "Warning: Unknown plot directive /$directive/\n";
   }
 }
 
@@ -279,7 +298,6 @@ if (defined($axisScales))
 	
 	if ($axisScales !~ /^(nd|log|linear):(nd|log|linear)$/)
 	{
-		usage();
 		die "Error: Axis scales in appropriate" if ($axisScales !~ /^(nd|log|linear):(nd|log|linear)$/);
 	}
 	
