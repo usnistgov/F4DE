@@ -342,12 +342,15 @@ sub attrValueStringToHT{
   \%ht;
 }
 
-foreach my $srl ( @ARGV )
+foreach my $srlDef ( @ARGV )
 {
   ### The SRL files can now include various plotting attributes.  
-#  my ($srl, $attrVal) = split(/:/,$srlDef,2);
+  my ($srl, $newLabel) = split(/:/,$srlDef,2);
   
 	my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
+	if (defined($newLabel)){
+	  $loadeddet->setLineTitle($newLabel);
+	}
 	
 	@listIsoratiolineCoef = $loadeddet->getMetric()->isoCostRatioCoeffForDETCurve()
 		if(scalar(@listIsoratiolineCoef) == 0);
@@ -491,11 +494,11 @@ DETUtil.pl -- Merge DET Curves and statistical analyses.
 
 =head1 SYNOPSIS
 
-B<DETUtil.pl> [ OPTIONS ] -o F<PNG_FILE>  F<SERIALIZED_DET> [F<SERIALIZED_DET> [...]]
+B<DETUtil.pl> [ OPTIONS ] -o F<PNG_FILE>  F<SERIALIZED_DET[:NEWTITLE]> [F<SERIALIZED_DET>[:NEWTITLE] [...]]
 
 =head1 DESCRIPTION
 
-The script merges multiple DET Curves into a single PNG file and can provide a sign test when comparing two (2) DET Curves.
+The script merges multiple serialized DET Curves into a single PNG file and can provide a sign test when comparing two (2) DET Curves.  The specification of the serialized DET Curves can optionally include a re-specification of the title used on the DET curve.  The title, which is attached to the filename with a colon, can includes spaces as long as the shell passed the string as a single argument.  For example "foo.srl.gz:New title" would set the title on the DET curve to be /New title/.  This replacement occurs prior to any edit filters specified by the B<-e> option. 
 
 =head1 OPTIONS
 
@@ -592,6 +595,17 @@ Sets the X and Y axis scale types for the graph:
   nd -> Normal Deviate (the default)
   log -> for logarithmic
   linear -> for non-weighted scale
+
+=item B<-p>, B<--plotControls> F<Directive>
+
+The B<plotControl> options provides access to fine control the the DET curve display.  The option, which can be used multiple times, specifies one of the following directives via the following BNF definitions:
+
+/ColorScheme=grey/  ->  Sets the color scheme to greyscale.
+
+/PointSize=\d+/     -> Overrides to default point size to the specified integer.
+
+/ExtraPoint=text:FA:MISS:pointSize:pointType:color:justification/
+                    -> Places a point at localtion FA,MISS with the label /text/ with the specified point type, color, size, and label justification.  All colons and the FA and MISS values are required.  Point type is an integer. Point color is /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors.  Point size is a floating point number.  Justification is either /right|left|center/.
 
 =head2 Others:
 
