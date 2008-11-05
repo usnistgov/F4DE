@@ -240,9 +240,10 @@ my $xtend = "";
 my $MemDump = undef;
 my @inputAliCSV = ();
 my $schc = 0; # Skip CSV Header Check
+my $befc = 0; # Bypass ECF Files Check
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CDEFG    LMNO  RST  WX Zab cdefgh  lmnop  st vwx   #
+# Used: ABCDEFG    LMNO  RST  WX Zab cdefgh  lmnop  st vwx   #
 
 my %opt = ();
 my @leftover = ();
@@ -282,6 +283,7 @@ GetOptions
    'WriteMemDump:s'  => \$MemDump,
    'AlignmentCSV=s'  => \@inputAliCSV,
    'bypassCSVHeader' => \$schc,
+   'BypassECFFilesCheck' => \$befc,
    # Hidden option
    'Show_internals+' => \$showi,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -349,6 +351,9 @@ if (scalar @inputAliCSV == 0) {
   MMisc::error_quit("\'Duration\' not set while required when using \'AlignmentCSV\'")
     if ($duration == 0);
 }
+
+MMisc::error_quit("\'BypassECFFilesCheck\' can ony be used when \'ecf\' is used")
+  if (($befc) && (MMisc::is_blank($ecffile)));
 
 MMisc::error_quit("\'NoDetFiles\' can not be used unless \'noPNG\' is selected too")
   if ((! $noPNG) && $nodetfiles);
@@ -441,8 +446,11 @@ if (scalar @inputAliCSV == 0) {
       if (! MMisc::is_blank($err));
     MMisc::warn_print("FYI (comparing ECF to common list): the following files are not listed in the ECF, and therefore will not be scored against: " . join(" ", @$rnotin))
       if (scalar @$rnotin > 0);
-    MMisc::error_quit("Can not perform soring (comparing ECF to common list): the following files are present in the ECF but not in the common list: " . join(" ", @$rmiss))
-      if (scalar @$rmiss > 0);
+    if (scalar @$rmiss > 0) {
+      MMisc::error_quit("Can not perform soring (comparing ECF to common list): the following files are present in the ECF but not in the common list: " . join(" ", @$rmiss))
+        if (! $befc);
+      MMisc::warn_print("FYI (comparing ECF to common list): the following files are present in the ECF but not in the common list: " . join(" ", @$rmiss) . ". This is cause for exiting with error status but \'BypassECFFilesCheck\' was requested");
+    }
   }
   
   ## Aligning Files and Events
@@ -1321,7 +1329,7 @@ B<TV08Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--LimittoSYSEvents> | B<--limitto> I<event1>[,I<event2>[I<...>]]]>
   S<[B<--writexml> [I<dir>] [B<--WriteMemDump> [I<mode>]] [B<--pruneEvents>]>
   S<[B<--XtraMappedObservations> I<mode>]]>
-  S<[B<--Duration> I<seconds>] [B<--ecf> I<ecffile>]>
+  S<[B<--Duration> I<seconds>] [B<--ecf> I<ecffile> [B<--BypassECFFilesCheck>]]>
   S<[B<--MissCost> I<value>] [B<--CostFA> I<value>] [B<--Rtarget> I<value>]> 
   S<[B<--computeDETCurve> [B<--titleOfSys> I<title>] [B<--ZipPROG> I<gzip>]>
   S<[B<--OutputFileRoot> I<filebase>]>
@@ -1408,6 +1416,10 @@ Note that when specifying this mode, it is not possible to use I<SYS> or I<REF> 
 =item B<--allAT>
 
 Show I<Alignment Table>, per File/Event as they are being processed.  
+
+=item B<--BypassECFFilesCheck>
+
+Do not quit with error status if not all the files listed in the ECF are present. Note that the duration found in the ECF will still be used.
 
 =item B<--bypassCSVHeader>
 
@@ -1653,7 +1665,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--WriteMemDump [mode]] [--pruneEvents] [--XtraMappedObservations mode]] [--Duration seconds] [--ecf ecffile] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps [sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]] | --AlignmentCSV file.csv[,file.csv[,...]] [--bypassCSVHeader]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--WriteMemDump [mode]] [--pruneEvents] [--XtraMappedObservations mode]] [--Duration seconds] [--ecf ecffile [--BypassECFFilesCheck]] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps [sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]] | --AlignmentCSV file.csv[,file.csv[,...]] [--bypassCSVHeader]]
 
 Will Score the XML file(s) provided (Truth vs System)
 
@@ -1674,6 +1686,7 @@ Will Score the XML file(s) provided (Truth vs System)
   --XtraMappedObservations  For Mapped events, copy the 'Xtra Attributes' of both the REF and the SYS into the event observation to be written to file. Will also modify the framespan written depending of the 'mode' selected (one of: $xtend_modes_txt)
   --Duration      Specify the scoring duration for the Metric (warning: override any ECF file)
   --ecf           Specify the ECF file to load and perform scoring against
+  --BypassECFFilesCheck    Do not quit with error status if not all the files in the ECF are present
   --MissCost      Set the Metric's Cost of a Miss (for DCR computation) (default: $CostMiss)
   --CostFA        Set the Metric's Cost of a False Alarm (for DCR computation) (default: $CostFA)
   --Rtarget       Set the Metric's Rate of Target value (for DCR computation) (default: $Rtarget)
