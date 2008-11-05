@@ -115,9 +115,13 @@ my $usage = &set_usage();
 
 # Default values for variables
 my $filecheck = "";
+my $roe = 1;
+my $eeq = 1;
+my $igw = 0;
+my $igt = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                                f                     #
+# Used:                              d f h             v     #
 
 my %opt = ();
 GetOptions
@@ -126,6 +130,10 @@ GetOptions
    'help',
    'version',
    'filecheck=s'      => \$filecheck,
+   'duplicates_warn'  => sub { $roe = 0; },
+   'ensure_warn'      => sub { $eeq = 0; },
+   'isGood_warn'      => \$igw,
+   'IsGood_true'      => \$igt,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -156,6 +164,8 @@ my $key_object = "object";
 my $key_fs = "framespan";
 my $key_unmann = "Unmapped Annot";
 my $key_loc = "location";
+my $key_ds = "DetectionScore";
+my $key_faf = "FromAdjFile";
 
 my $key_agree = "Agree=";
 my $key_ref = " REF";
@@ -204,7 +214,7 @@ foreach my $x (@ARGV) {
   $event =~ s%$key_ref$%%;
 
   # Fill %all
-  my $err = &fill_all(\$fc, $lgw, $event, @agl);
+  my $err = &fill_all(\$fc, $lgw, $event, $x, @agl);
   MMisc::error_quit($err)
     if (! MMisc::is_blank($err));
   
@@ -217,7 +227,7 @@ MMisc::error_quit("Problem creating the CSV object")
 
 my $global = "global.csv";
 my $global_txt = "";
-my @gh = ("File", "Event", "AgreeLevel", "Framespan", "isGood", "NbrAnnot", "AnnotList", "Note");
+my @gh = ("File", "Event", "AgreeLevel", "MeanDetectionScore", "Framespan", "isGood", "FromADJFile", "NbrAnnot", "AnnotList", "Note");
 $global_txt .= &array2csvline($ch, @gh);
 
 foreach my $lgw (sort keys %all) {
@@ -233,6 +243,8 @@ foreach my $lgw (sort keys %all) {
         my $isg  = $all{$lgw}{$event}{$agl}{$fs}{$key_isGood};
         my $id   = $all{$lgw}{$event}{$agl}{$fs}{$key_id};
         my $note = $all{$lgw}{$event}{$agl}{$fs}{$key_note};
+        my $mds  = $all{$lgw}{$event}{$agl}{$fs}{$key_ds};
+        my $faf  = $all{$lgw}{$event}{$agl}{$fs}{$key_faf};
 
         my $sagl = -1;
         my $sagl = $1 if ($agl =~ m%\=(\d+)$%);
@@ -244,7 +256,7 @@ foreach my $lgw (sort keys %all) {
           $file_txt .= &array2csvline($ch, @b);
         }
 
-        my @c = ($lgw, $event, $sagl, $fs, $isg, scalar @anl, join(" ", sort @anl), $note);
+        my @c = ($lgw, $event, $sagl, $mds, $fs, $isg, $faf, scalar @anl, join(" ", sort @anl), $note);
         $global_txt .= &array2csvline($ch, @c);
       }
     }
@@ -293,7 +305,7 @@ sub list_allconf_names {
 #####
 
 sub fill_all {
-  my ($rfc, $lgw, $event, @agl) = @_;
+  my ($rfc, $lgw, $event, $fn, @agl) = @_;
 
   my %local = ();
 
@@ -318,7 +330,7 @@ sub fill_all {
   foreach my $key (@agl) {
     my $doit = 1;
     while ($doit) {
-      my ($err, $framespan, $id, $isGood, $note, $notin) 
+      my ($err, $framespan, $id, $isGood, $note, $notin, $mds) 
         = &get_agree($key, \$data);
       return($err) 
         if (! MMisc::is_blank($err));
@@ -344,6 +356,7 @@ sub fill_all {
       @{$local{$key}{$id}{$key_annot}}  = ();
       $local{$key}{$id}{$key_isGood} = $isGood;
       $local{$key}{$id}{$key_note}   = $note;
+      $local{$key}{$id}{$key_ds}     = $mds;
 #      print "[$lgw | $event | $key | $id | $framespan | $isGood | $note] ";
     }
   }
@@ -371,7 +384,7 @@ sub fill_all {
     return("WEIRD: Multiple Annotators found in location list ? (" . join(" ", @ans) . ")")
       if (scalar @ans > 1);
 
-    return("An entry for [agk | $idk] does not already exist as expected ?")
+    return("An entry for [$agk | $idk] does not already exist as expected ?")
       if (! exists $local{$agk}{$idk}{$dummy});
     my $idt = $ans[0] . "($id|$framespan)";
     push @{$local{$agk}{$idk}{$key_annot}}, $idt;
@@ -383,8 +396,12 @@ sub fill_all {
     foreach my $key2 (keys %{$local{$key1}}) {
       my $exp = $local{$key1}{$key2}{$dummy};
       my $in  = scalar @{$local{$key1}{$key2}{$key_annot}};
-      return("Did not find the same number of entries for ($key1 / $key2): exp= $exp vs found= $in")
-        if ($exp != $in);
+      if ($exp != $in) {
+        my $txt = "Did not find the same number of entries for ($key1 / $key2): exp $exp vs found $in [$fn]";
+        return($txt)
+          if ($eeq);
+        print "########## $txt ##########\n";
+      }
     }
   }
 
@@ -392,8 +409,22 @@ sub fill_all {
   foreach my $agk (keys %local) {
     foreach my $idk (keys %{$local{$agk}}) {
       my $fs = $local{$agk}{$idk}{$key_fs};
-      return("An entry already exists for [$lgw | $event | $agk | $idk | $fs]")
-        if (exists $all{$lgw}{$event}{$agk}{$fs}{$key_annot});
+      if (exists $all{$lgw}{$event}{$agk}{$fs}{$key_annot}) {
+        my $og = $all{$lgw}{$event}{$agk}{$fs}{$key_isGood};
+        my $ng = $local{$agk}{$idk}{$key_isGood};
+        my $od = $all{$lgw}{$event}{$agk}{$fs}{$key_ds};
+        my $nd = $local{$agk}{$idk}{$key_ds};
+        my $of = $all{$lgw}{$event}{$agk}{$fs}{$key_faf};
+        my $oi = $all{$lgw}{$event}{$agk}{$fs}{$key_id};
+        my $txt = "An entry already exists for [$lgw | $event | $agk | $fs] -- Old: [isGood: $og | DetScr: $od | ID: $oi | AdjFile: $of] vs New: [isGood: $ng | DetScr: $nd | ID: $idk | AdjFile: $fn]";
+        $txt .= " (**isGood Differ**)" if ($ng != $og);
+        $txt .= " (**DetScr Differ**)" if ($od != $ng);
+        $txt .= " (**AdjFile Differ**)" if ($of ne $fn);
+        return($txt)
+          if ($roe);
+        print "########## $txt (skipping entry) ##########\n";
+        next;
+      }
       
       @{$all{$lgw}{$event}{$agk}{$fs}{$key_annot}} =
         @{$local{$agk}{$idk}{$key_annot}};
@@ -401,7 +432,12 @@ sub fill_all {
         $local{$agk}{$idk}{$key_isGood};
       $all{$lgw}{$event}{$agk}{$fs}{$key_note} = 
         $local{$agk}{$idk}{$key_note};
-      $all{$lgw}{$event}{$agk}{$fs}{$key_id} = $idk;
+      $all{$lgw}{$event}{$agk}{$fs}{$key_id} = 
+        $idk;
+      $all{$lgw}{$event}{$agk}{$fs}{$key_ds} = 
+        $local{$agk}{$idk}{$key_ds};
+      $all{$lgw}{$event}{$agk}{$fs}{$key_faf} = 
+        $fn;
     }
   }
 
@@ -532,9 +568,14 @@ sub _get_isgnote {
     }
   }
 
-  return("Did not find \'$key_isGood\'", $ig, $nt)
-    if ($ig == -1);
-
+  if ($ig == -1) {
+    return("Did not find \'$key_isGood\'", $ig, $nt)
+      if (! $igw);
+    
+    print "########## Did not find a value for \'$key_isGood\', forcing to " . (($igt) ? "true" : "false") . " ##########\n";
+    $ig = $igt;
+  }
+  
   $ig = 1 if ($ig eq "true");
   $ig = 0 if ($ig eq "false");
 
@@ -550,43 +591,46 @@ sub get_agree {
   my ($key, $rtxt) = @_;
 
   my $notin = "";
-
+  
   my $doit = 1;
   my $fs = undef;
   my $id = -1;
   my $ig = -1; # isGood
   my $nt = ""; # Note
+  my $ds = "NotPresent";
   while ($doit) {
     my $tmp = MtXML::get_named_xml_section($key_object, $rtxt, $errstring);
-    return("", $fs, $id, $ig, $nt, $notin)
+    return("", $fs, $id, $ig, $nt, $notin, $ds)
       if ($tmp eq $errstring); # No more
-
+    
     my ($err, %tmph) = MtXML::get_inline_xml_attributes($key_object, $tmp);
-    return($err, $fs, $id, $ig, $nt, $notin)
+    return($err, $fs, $id, $ig, $nt, $notin, $ds)
       if (! MMisc::is_blank($err));
-    return("Could not extract \'$key_object\'\'s \'$key_name\' inline attribute", $fs, $id, $ig, $nt, $notin)
+    return("Could not extract \'$key_object\'\'s \'$key_name\' inline attribute", $fs, $id, $ig, $nt, $notin, $ds)
       if (! exists $tmph{$key_name});
-
+    
     if ($tmph{$key_name} ne $key) {
       $notin .= "$tmp\n";
       next;
     }
-
-    return("Could not extract \'$key_object\'\'s \'$key_fs\' inline attribute", $fs, $id, $ig, $nt, $notin)
+    
+    return("Could not extract \'$key_object\'\'s \'$key_fs\' inline attribute", $fs, $id, $ig, $nt, $notin, $ds)
       if (! exists $tmph{$key_fs});
-    return("Could not extract \'$key_object\'\'s \'$key_id\' inline attribute", $fs, $id, $ig, $nt, $notin)
+    return("Could not extract \'$key_object\'\'s \'$key_id\' inline attribute", $fs, $id, $ig, $nt, $notin, $ds)
       if (! exists $tmph{$key_id});
     $fs = $tmph{$key_fs};
     $id = $tmph{$key_id};
-
+    $ds = $tmph{$key_ds}
+      if (exists $tmph{$key_ds});
+    
     ($err, $ig, $nt) = _get_isgnote($tmp);
-    return($err, $fs, $id, $ig, $nt, $notin)
+    return($err, $fs, $id, $ig, $nt, $notin, $ds)
       if (! MMisc::is_blank($err));
-
+    
     $doit = 0;
   }
 
-  return("", $fs, $id, $ig, $nt, $notin);
+  return("", $fs, $id, $ig, $nt, $notin, $ds);
 }
 
 ##########
@@ -729,7 +773,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] 
+Usage: $0 [options] file(s).xml 
 
 Will do stuff
 
@@ -737,7 +781,10 @@ Will do stuff
   --help          Print this usage information and exit
   --version       Print version number and exit
   --filecheck     Regular expression used to extract the file structure from source filename (example: \'LGW_\\d{8}_E\\d_CAM\\d\')
-
+  --duplicates_warn   When finding duplicate keys, do not exit with error status, simply discard found duplicates
+  --ensure_warn       When finding a problem with Agree counts, do not exit with error status, simply print a warning message
+  --isGood_warn       When finding a problem with isGood content, do not exit, print a warning and set the isGood value to false
+  --IsGood_true       extension to --isGood_warn; instead of setting value to false, set it to true
 Note:
 - Empty note
 EOF
