@@ -75,10 +75,10 @@ sub _initProps{
   die "Error making a proplist for the DETCurveGnuplotRenderer /".$props->get_errormsg()."/"  if ($props->error());
   die "Failed to add property xScale" unless ($props->addProp("xScale", "nd", ("nd", "log", "linear")));
   die "Failed to add property yScale" unless ($props->addProp("yScale", "nd", ("nd", "log", "linear")));
-  die "Failed to add property yScale" unless ($props->addProp("FAUnit", "Prob", ("Prob", "Rate")));
-  die "Failed to add property yScale" unless ($props->addProp("ColorScheme", "color", ("color", "grey")));
-  die "Failed to add property yScale" unless ($props->addProp("MissUnit", "Prob", ("Prob", "Rate")));
-  die "Failed to add property yScale" unless ($props->addProp("KeyLoc", "top", ("left", "right", "center", "top", "bottom", "outside", "below",
+  die "Failed to add property FAUnit" unless ($props->addProp("FAUnit", "Prob", ("Prob", "Rate")));
+  die "Failed to add property ColorScheme" unless ($props->addProp("ColorScheme", "color", ("color", "grey")));
+  die "Failed to add property MissUnit" unless ($props->addProp("MissUnit", "Prob", ("Prob", "Rate")));
+  die "Failed to add property KeyLoc" unless ($props->addProp("KeyLoc", "top", ("left", "right", "center", "top", "bottom", "outside", "below",
                                                               "left top",    "center top",    "right top",
                                                               "left center", "center center", "right center",
                                                               "left bottom", "center bottom", "right bottom")));
@@ -609,7 +609,7 @@ sub write_gnuplot_threshold_header{
 
   print $FP "## GNUPLOT command file\n";
   print $FP "set terminal postscript color\n";
-  print $FP "set data  lines\n";
+  print $FP "set data style lines\n";
   print $FP "set title '$title'\n";
   print $FP "set xlabel 'Detection Score'\n";
   print $FP "set grid\n";
