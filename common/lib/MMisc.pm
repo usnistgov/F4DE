@@ -629,7 +629,7 @@ sub _system_call_logfile {
     # Create a place holder for the final logfile
     open TMP, ">$logfile"
       or return(-1, "", "");
-    print TMP "Placedholder for final log. See \"$stdoutfile\" and \"$stderrfile\" files until the process is concluded\n";
+    print TMP "Placedholder for final combined log\n\nCommandline: [$cmdline]\n\nSee \"$stdoutfile\" and \"$stderrfile\" files until the process is concluded\n";
     close TMP
   }
 
