@@ -449,7 +449,7 @@ if (scalar @inputAliCSV == 0) {
     if (scalar @$rmiss > 0) {
       MMisc::error_quit("Can not perform soring (comparing ECF to common list): the following files are present in the ECF but not in the common list: " . join(" ", @$rmiss))
         if (! $befc);
-      MMisc::warn_print("FYI (comparing ECF to common list): the following files are present in the ECF but not in the common list: " . join(" ", @$rmiss) . ". This is cause for exiting with error status but \'BypassECFFilesCheck\' was requested");
+      MMisc::warn_print("FYI (comparing ECF to common list): the following files are present in the ECF but not in the common list: " . join(" ", @$rmiss) . ". This is cause for exiting with error status but \'BypassECFFilesCheck\' was requested, will continue scoring");
     }
   }
   
