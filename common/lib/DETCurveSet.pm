@@ -340,7 +340,8 @@ sub renderCSV {
 
   my $multiInfo = {()};
   if ($DETOptions->{createDETfiles}) {
-    $multiInfo = DETCurveGnuplotRenderer::writeMultiDetGraph($fileRoot, $self, $DETOptions);
+      my $dcRend = new DETCurveGnuplotRenderer($DETOptions);
+      $multiInfo = $dcRend->writeMultiDetGraph($fileRoot, $self);
   }
 
   my $at = $self->_buildAutoTable(1, $includeCounts, $reportActual);
