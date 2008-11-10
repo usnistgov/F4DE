@@ -826,7 +826,13 @@ sub _makePointSetLabels{
   foreach my $point(@$pset){
     my ($xpos, $ypos) = (_getValueInGraph($point->{MFA}, $self->{Bounds}{xmin}{metric}, $self->{Bounds}{xmax}{metric}, $self->{props}->getValue("xScale")),
                          _getValueInGraph($point->{MMiss}, $self->{Bounds}{ymin}{metric}, $self->{Bounds}{ymax}{metric}, $self->{props}->getValue("yScale")));
-    # print Dumper($point)." points $xpos $ypos _getValueInGraph($point->{MMISS}, $self->{Bounds}{ymin}{metric}, $self->{Bounds}{ymax}{metric}, $yScale)\n";
+
+    ### If the points are off the graph, place them in the border
+    if ($xpos < 0) { $xpos = -0.02; }
+    if ($ypos < 0) { $ypos = -0.02; }
+    if ($xpos > 1) { $xpos =  1.02; }
+    if ($ypos > 1) { $ypos =  1.02; }
+
     push @labs, 
         "set label \"".(exists($point->{label}) ? $point->{label} : "")."\" " .
         (exists($point->{justification}) ? $point->{justification}." " : "") .
