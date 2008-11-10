@@ -82,7 +82,8 @@ sub _initProps{
                                                               "left top",    "center top",    "right top",
                                                               "left center", "center center", "right center",
                                                               "left bottom", "center bottom", "right bottom")));
-
+  die "Failed to add property PointSetAreaDefinition" unless ($props->addProp("PointSetAreaDefinition", "Radius", ("Area", "Radius")));
+  
   $props;
 }
 
@@ -175,6 +176,11 @@ sub _parseOptions{
     $self->{PointSet} = $options->{PointSet};
     ### This needs validation
   }
+  if (exists($options->{PointSetAreaDefinition})){
+    if (! $self->{props}->setValue("PointSetAreaDefinition", $options->{"PointSetAreaDefinition"})){
+      die "Error: DET option PointSetAreaDefinition illegal. ".$self->{props}->get_errormsg();
+    }
+  }  
   if (exists($options->{DETLineAttr})){
     $self->{DETLineAttr} = $options->{DETLineAttr};
     ### This needs validation
@@ -833,13 +839,21 @@ sub _makePointSetLabels{
     if ($xpos > 1) { $xpos =  1.02; }
     if ($ypos > 1) { $ypos =  1.02; }
 
+    ### Point size is the radius.  This option tells the program to plot it as area of Radius    
+    my $sizeDef = ($self->{props}->getValue("PointSetAreaDefinition"));
+    my $mySize = (exists($point->{pointSize}) ? $point->{pointSize} : 1);
+    if ($sizeDef eq "Area"){
+      ### $mySize = Pi * r * r
+      $mySize = sqrt($mySize / 3.141592653589) / sqrt(1 / 3.141592653589);
+    }
+
     push @labs, 
         "set label \"".(exists($point->{label}) ? $point->{label} : "")."\" " .
         (exists($point->{justification}) ? $point->{justification}." " : "") .
         " point ".
         "lc ".(exists($point->{color}) ? $point->{color} : 1)." ".
         "pt ".(exists($point->{pointType}) ? $point->{pointType} : 1)." ".
-        "ps ".(exists($point->{pointSize}) ? $point->{pointSize} : 1)." ".
+        "ps ".$mySize." ".
         "at graph $xpos, graph  $ypos";              
   }      
   @labs;

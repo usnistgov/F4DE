@@ -270,6 +270,8 @@ foreach my $directive(@plotControls){
     $options{ColorScheme} = "grey";
   } elsif ($directive =~ /PointSize=(\d+)/){
     $options{PointSize} = $1;
+  } elsif ($directive =~ /PointSetAreaDefinition=(Area|Radius)/){
+    $options{PointSetAreaDefinition} = $1;
   } elsif ($directive =~ /ExtraPoint=(.*)$/){
     my $pointDef = $1;
     my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
