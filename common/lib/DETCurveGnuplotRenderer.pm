@@ -765,7 +765,7 @@ sub _drawIsometriclines{
   return if (! $self->{DrawIsometriclines});
 
   my $troot = sprintf( "%s.isometriclines", $fileRoot );
-  my $color = ($self->{props}->getValue("colorScheme") eq "color" ? "rgb \"\#FFD700\"" : "rgb \"\#b0b0b0\"");
+  my $color = ($self->{props}->getValue("ColorScheme") eq "color" ? "rgb \"\#FFD700\"" : "rgb \"\#b0b0b0\"");
   open( ISODAT, "> $troot" );
       
   my $labelind = 10;
