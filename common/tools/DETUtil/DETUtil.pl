@@ -363,7 +363,7 @@ foreach my $srlDef ( @ARGV )
 	if( $DrawIsoratiolines || ($IsoRatioStatisticFile ne ""))
 	{
 		$det = new DETCurve($loadeddet->getTrials(), $loadeddet->getMetric(),
-		                    $loadeddet->getStyle(), $loadeddet->getLineTitle(),
+		                    $loadeddet->getLineTitle(),
 		                    \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
 		$det->{LAST_SERIALIZED_DET} = $loadeddet->{LAST_SERIALIZED_DET};
 		$det->computePoints();
