@@ -337,7 +337,8 @@ sub unitTestMultiDet{
   print "OK\n";  
 }
 
-sub serialize
+# Old serialize
+sub serialize2
   {
     my ($self, $file) = @_;
     $self->{LAST_SERIALIZED_DET} = $file;
@@ -356,6 +357,57 @@ sub serialize
     
     close FILE;
     system("$self->{GZIPPROG} -9 -f $file > /dev/null");
+  }
+
+# Serialize avoiding creating temporary variables and arrays for POINTS 
+# structure.
+sub serialize
+  {
+    my ($self, $file) = @_;
+    $self->{LAST_SERIALIZED_DET} = $file;
+    open (FILE, ">$file") || die "Error: Unable to open file '$file' to serialize STDDETSet to";
+    my $orig = $Data::Dumper::Indent; 
+    $Data::Dumper::Indent = 0;
+    
+    ### Purity controls how self referential objects are written;
+    my $origPurity = $Data::Dumper::Purity;
+    $Data::Dumper::Purity = 1;
+    
+    my $p = $self->{'POINTS'};
+    $self->{POINTS} = undef;
+
+    print FILE Dumper($self);
+
+    my $origTerse = $Data::Dumper::Terse;
+    $Data::Dumper::Terse = 1;
+    
+    print FILE "\$VAR1->{'POINTS'} = [";
+    my $first = 1;
+    
+    foreach my $vs (@$p)
+	{
+		if(!$first)
+		{
+			print FILE ",";
+		}
+		else
+		{
+			$first = 0;
+		}
+		
+		print FILE Dumper $vs;
+	}
+	
+	print FILE "];";
+
+    $Data::Dumper::Indent = $orig;
+    $Data::Dumper::Purity = $origPurity;
+    $Data::Dumper::Terse = $origTerse;
+        
+    close FILE;
+    system("$self->{GZIPPROG} -9 -f $file > /dev/null");
+    
+    $self->{'POINTS'} = $p;
   }
 
 sub readFromFile
