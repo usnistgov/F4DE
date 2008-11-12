@@ -478,17 +478,17 @@ the CODE DIES as this should never happen.
     
     my ($faBSet, $faBSetSSD) = (undef, undef); 
     $faBSet = $faSum / $faN if ($faN > 0);
-    $faBSetSSD = sqrt((($faN * $faSumSqr) - ($faSum * $faSum)) / ($faN * ($faN - 1))) if ($faN >= 2);
+    $faBSetSSD = MMisc::safe_sqrt((($faN * $faSumSqr) - ($faSum * $faSum)) / ($faN * ($faN - 1))) if ($faN >= 1);
   
     my ($missBSet, $missBSetSSD) = (undef, undef); 
     $missBSet = $missSum / $missN if ($missN > 0);
-    $missBSetSSD = sqrt((($missN * $missSumSqr) - ($missSum * $missSum)) / ($missN * ($missN - 1))) if ($missN >= 2);
+    $missBSetSSD = MMisc::safe_sqrt((($missN * $missSumSqr) - ($missSum * $missSum)) / ($missN * ($missN - 1))) if ($missN >= 1);
 
     my ($combBSet, $combBSetSSD) = (undef, undef);
     $combBSet = $self->combCalc($missBSet, $faBSet);
 #  print "sqrt((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1))) if (defined($combSum)  && $combN > 1);\n"
 #    if ( (defined($combSum)  && $combN > 1) && ((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1)) < 0));
-    $combBSetSSD = sqrt((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1))) if (defined($combSum)  && $combN > 1);
+    $combBSetSSD = MMisc::safe_sqrt((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1))) if (defined($combSum)  && $combN >= 1);
 
     ($combBSet, $combBSetSSD, $missBSet, $missBSetSSD, $faBSet, $faBSetSSD);
   }
