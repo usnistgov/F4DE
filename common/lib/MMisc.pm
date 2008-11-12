@@ -1212,6 +1212,18 @@ sub human_int {
   return($txt);
 }
 
+##########
+### Added by Jon Fiscus
+### This routine returns 0 if the value to take the sqrt of is essentially zero, but negative do
+### to floating point problems
+sub safe_sqrt {
+  my $v = shift @_;
+
+  $v = 0.0 if (defined $v && $v > -0.00000000001 && $v < 0.00000000000);
+  
+  return(sqrt($v));
+}
+
 ############################################################
 
 1;
