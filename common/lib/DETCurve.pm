@@ -338,26 +338,26 @@ sub unitTestMultiDet{
 }
 
 # Old serialize
-sub serialize2
-  {
-    my ($self, $file) = @_;
-    $self->{LAST_SERIALIZED_DET} = $file;
-    open (FILE, ">$file") || die "Error: Unable to open file '$file' to serialize STDDETSet to";
-    my $orig = $Data::Dumper::Indent; 
-    $Data::Dumper::Indent = 0;
-    
-    ### Purity controls how self referential objects are written;
-    my $origPurity = $Data::Dumper::Purity;
-    $Data::Dumper::Purity = 1;
-             
-    print FILE Dumper($self); 
-    
-    $Data::Dumper::Indent = $orig;
-    $Data::Dumper::Purity = $origPurity;
-    
-    close FILE;
-    system("$self->{GZIPPROG} -9 -f $file > /dev/null");
-  }
+#sub serialize2
+#  {
+#    my ($self, $file) = @_;
+#    $self->{LAST_SERIALIZED_DET} = $file;
+#    open (FILE, ">$file") || die "Error: Unable to open file '$file' to serialize STDDETSet to";
+#    my $orig = $Data::Dumper::Indent; 
+#    $Data::Dumper::Indent = 0;
+#    
+#    ### Purity controls how self referential objects are written;
+#    my $origPurity = $Data::Dumper::Purity;
+#    $Data::Dumper::Purity = 1;
+#             
+#    print FILE Dumper($self); 
+#    
+#    $Data::Dumper::Indent = $orig;
+#    $Data::Dumper::Purity = $origPurity;
+#    
+#    close FILE;
+#    system("$self->{GZIPPROG} -9 -f $file > /dev/null");
+#  }
 
 # Serialize avoiding creating temporary variables and arrays for POINTS 
 # structure.
@@ -375,31 +375,88 @@ sub serialize
     
     my $p = $self->{'POINTS'};
     $self->{POINTS} = undef;
+    
+    my $t = $self->{'TRIALS'}{'trials'};
+    $self->{'TRIALS'}{'trials'} = undef;
 
     print FILE Dumper($self);
-
+    
+	##	
     my $origTerse = $Data::Dumper::Terse;
     $Data::Dumper::Terse = 1;
     
+    # POINTS
     print FILE "\$VAR1->{'POINTS'} = [";
-    my $first = 1;
     
-    foreach my $vs (@$p)
+    for(my $i=0; $i<scalar(@$p); $i++)
 	{
-		if(!$first)
+		print FILE "," if($i>0);
+
+		print FILE "[";
+		
+		for(my $j=0; $j<scalar(@{$p->[$i]}); $j++)
 		{
-			print FILE ",";
-		}
-		else
-		{
-			$first = 0;
+			print FILE "," if($j>0);
+			print FILE Dumper $p->[$i][$j];
+			
+			#if(defined($p->[$i][$j]))
+			#{
+			#	print FILE "'"."$p->[$i][$j]"."'";
+			#}
+			#else
+			#{
+			#	print FILE "undef";
+			#}
 		}
 		
-		print FILE Dumper $vs;
+		print FILE "]";
 	}
 	
 	print FILE "];";
-
+	#
+	
+	# TRIALS
+	print FILE "\$VAR1->{'TRIALS'}{'trials'} = {";
+    my $firstkey = 1;
+    
+    foreach my $k (keys %$t)
+    {
+    	print FILE "," if(!$firstkey);
+		$firstkey = 0 unless(!$firstkey);
+		print FILE "'"."$k"."' => {";
+		
+		my $firstkeyelt = 1;
+		
+		foreach my $e (keys %{ $t->{$k} })
+		{
+			print FILE "," if(!$firstkeyelt);
+			$firstkeyelt = 0 unless(!$firstkeyelt);
+			
+			if($e =~ /^(TARG|NONTARG)$/)
+			{				
+				print FILE "'"."$e"."' => [";
+				
+				for(my $i=0; $i<scalar(@{ $t->{$k}{$e} }); $i++)
+				{
+					print FILE "," if($i>0);
+					print FILE Dumper $t->{$k}{$e}->[$i];
+				}
+				
+				print FILE "]";
+			}
+			else
+			{
+				print FILE "'"."$e"."' => ";
+				print FILE Dumper $t->{$k}{$e};
+			}
+		}
+		
+		print FILE "}";
+    }
+    
+    print FILE "};";
+	#
+	
     $Data::Dumper::Indent = $orig;
     $Data::Dumper::Purity = $origPurity;
     $Data::Dumper::Terse = $origTerse;
@@ -408,6 +465,7 @@ sub serialize
     system("$self->{GZIPPROG} -9 -f $file > /dev/null");
     
     $self->{'POINTS'} = $p;
+    $self->{'TRIALS'}{'trials'} = $t;
   }
 
 sub readFromFile

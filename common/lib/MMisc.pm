@@ -162,6 +162,16 @@ sub reorder_array_numerically {
   return(sort { $a <=> $b } @_);
 }
 
+####
+
+sub get_msize
+{
+	my ($str) = @_;
+	my $x = `/bin/ps -aux | grep $$ | grep -v "grep" | awk '{print \$5}'`;
+	$x =~ s/\s//g;
+	return "$x $str";
+}
+
 #####
 
 sub min_max
