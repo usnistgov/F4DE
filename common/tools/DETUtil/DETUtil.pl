@@ -22,9 +22,7 @@
 
 use strict;
 use Data::Dumper;
-use Carp ();  local $SIG{__WARN__} = \&Carp::cluck;
-#$SIG{__WARN__} = sub { CORE::die "Warning:\n", @_, "\n" };
-
+#use Carp ();  local $SIG{__WARN__} = \&Carp::cluck;
 
 ##########
 # Check we have every module (perl wise)
@@ -347,12 +345,35 @@ sub attrValueStringToHT{
 foreach my $srlDef ( @ARGV )
 {
   ### The SRL files can now include various plotting attributes.  
-  my ($srl, $newLabel) = split(/:/,$srlDef,2);
+  my $pointDef = $1;
+  my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
+  my $intRegex = '\d*';
+  my $colorRegex = 'rgb "#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
+
+  my ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth) = split(/:/,$srlDef);
   
 	my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
+  my %lineAttr = ();
 	if (defined($newLabel)){
-	  $loadeddet->setLineTitle($newLabel);
-	}
+    ### then we will control the plot style
+ 	  $lineAttr{"label"} = $newLabel if ($newLabel ne "");
+ 	  if (defined ($pointSize) && $pointSize ne ""){
+ 	    die "Error: DET Line Attr control for pointSize [3] /$pointSize/ illegal." if ($pointSize !~ /^($numRegex)$/);
+ 	    $lineAttr{"pointSize"} = $pointSize;
+ 	  }
+ 	  if (defined ($pointTypeSet) && $pointTypeSet ne ""){
+ 	    die "Error: DET Line Attr control for pointTypeSet [4] /$pointTypeSet/ illegal." if ($pointTypeSet !~ /^(square|circle|triangle|utriangle|diamond)$/);
+ 	    $lineAttr{"pointTypeSet"} = $pointTypeSet;
+ 	  }
+ 	  if (defined ($color) && $color ne ""){
+ 	    die "Error: DET Line Attr control for color [5] /$color/ illegal." if ($color !~ /^($colorRegex)$/);
+ 	    $lineAttr{"color"} = $color;
+ 	  }
+ 	  if (defined ($lineWidth) && $lineWidth ne ""){
+ 	    die "Error: DET Line Attr control for LineWidth [6] /$lineWidth/ illegal." if ($lineWidth !~ /^($numRegex)$/);
+ 	    $lineAttr{"lineWidth"} = $lineWidth;
+ 	  }
+	} 
 	
 	@listIsoratiolineCoef = $loadeddet->getMetric()->isoCostRatioCoeffForDETCurve()
 		if(scalar(@listIsoratiolineCoef) == 0);
@@ -368,6 +389,7 @@ foreach my $srlDef ( @ARGV )
 		                    $loadeddet->getLineTitle(),
 		                    \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
 		$det->{LAST_SERIALIZED_DET} = $loadeddet->{LAST_SERIALIZED_DET};
+		
 		$det->computePoints();
 	}
 	else
@@ -417,6 +439,9 @@ foreach my $srlDef ( @ARGV )
 			}
 		}
 		
+		if (scalar(keys %lineAttr) > 0){
+		  $options{DETLineAttr}{$det->getLineTitle()} = \%lineAttr;
+		}
 		my $rtn = $ds->addDET($det->getLineTitle() . "$srl", $det);
     	die "Error: Unable to add DET to DETSet.\n$rtn\n"	if ($rtn ne "success");
 	}
@@ -496,11 +521,29 @@ DETUtil.pl -- Merge DET Curves and statistical analyses.
 
 =head1 SYNOPSIS
 
-B<DETUtil.pl> [ OPTIONS ] -o F<PNG_FILE>  F<SERIALIZED_DET[:NEWTITLE]> [F<SERIALIZED_DET>[:NEWTITLE] [...]]
+B<DETUtil.pl> [ OPTIONS ] -o F<PNG_FILE>  F<SERIALIZED_DET[:OPTs]> [F<SERIALIZED_DET>[:OPTs] [...]]
 
 =head1 DESCRIPTION
 
-The script merges multiple serialized DET Curves into a single PNG file and can provide a sign test when comparing two (2) DET Curves.  The specification of the serialized DET Curves can optionally include a re-specification of the title used on the DET curve.  The title, which is attached to the filename with a colon, can includes spaces as long as the shell passed the string as a single argument.  For example "foo.srl.gz:New title" would set the title on the DET curve to be /New title/.  This replacement occurs prior to any edit filters specified by the B<-e> option. 
+The script merges multiple serialized DET Curves into a single PNG file and can provide a sign test when comparing two (2) DET Curves.  
+
+The specification of the serialized DET Curves can optionally include a re-specification of the title and plot characteristics on the DET curve.  The BNF of the specification is below.  All fields can be empty in which case the default value will be used for the attribute
+
+  SRL[:title[:pointSize[:pointType[:color[:lineWidth]]]]]
+  
+=over 4
+
+title -> The title can includes spaces as long as the shell passed the string as a single argument.  This replacement occurs prior to any edit filters specified by the B<-e> option. 
+
+pointSize -> A floating point number for the point size.
+
+pointType -> Must be one of /(square|circle|triangle|utriangle|diamond)/.
+
+color -> The RGB color formatted as /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors.
+
+lineWidth -> A floating point number for the line width.
+
+=back 4
 
 =head1 OPTIONS
 
@@ -608,6 +651,8 @@ The B<plotControl> options provides access to fine control the the DET curve dis
 
 /ExtraPoint=text:FA:MISS:pointSize:pointType:color:justification/
                     -> Places a point at localtion FA,MISS with the label /text/ with the specified point type, color, size, and label justification.  All colons and the FA and MISS values are required.  Point type is an integer. Point color is /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors.  Point size is a floating point number.  Justification is either /right|left|center/.
+
+/PointSetAreaDefinition=(Area|Radius)/     -> The value of C<pointSize> is display as either area of  the point or the width.  Def. is radius.
 
 =head2 Others:
 
