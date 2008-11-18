@@ -1,6 +1,6 @@
 File:  README
-Date:  September 23rd , 2008
-F4DE Version: 1.2.1
+Date:  November 18th , 2008
+F4DE Version: 1.3
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
@@ -12,6 +12,9 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - TV08ViperValidator - A syntactic and semantic validator for 
       both system output ViPER files and reference annotation files.
     - TV08MergeHelper - A TRECVid '08 ViPER-formatted file merging program.  
+    - BigXML_ValidatorHelper - An helper program (that relies on TV08ViperValidator
+      and TV08MergeHelper) to perform syntactic and semantic validation on
+      ViPER-formatted files containing a large number of event observations.
     - TV08ED-SubmissionChecker - A tool designed to help confirm submission
       archives before transmitting them to NIST. 
 
