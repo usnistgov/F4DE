@@ -1,0 +1,19 @@
+[[COMMANDLINE]] ../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/BN_TDT/*.rdf -g ../common/BN_TDT/*.gtf -D BN -E Area -f 15
+[[RETURN CODE]] 0
+[[STDOUT]]
+** Detection and Tracking Results:
+../../tools/CLEARDTScorer/CLEARDTScorer.pl../common/BN_TDT/XXCMU_XTEXT_P_2005_Test_BNews_TDEng_05_01.rdf ../common/BN_TDT/XXCMU_XTEXT_P_2005_Test_BNews_TDEng_37_01.rdf -g ../common/BN_TDT/2005_Test_BNews_TDT_05.gtf ../common/BN_TDT/2005_Test_BNews_TDT_37.gtf -D BN -E Area -f 15
+
+Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+        Reference File                     System Output File                            Video               Object    SFDA      ATA       MODA      MODP      MOTA       MOTP    
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  2005_TEST_BNEWS_TDT_05.GTF  XXCMU_XTEXT_P_2005_TEST_BNEWS_TDENG_05_01.RDF  19980410_1830_1900_ABC_WNT.MPG    TEXT  0.638767  0.018950  0.534351  0.674247  -0.104962  0.655220
+  2005_TEST_BNEWS_TDT_37.GTF  XXCMU_XTEXT_P_2005_TEST_BNEWS_TDENG_37_01.RDF  19980518_1130_1200_CNN_HDL.MPG    TEXT  0.724979  0.009498  0.855833  0.778886   0.044754  0.773512
+
+
+***** DONE *****
+
+
+[[STDERR]]
+

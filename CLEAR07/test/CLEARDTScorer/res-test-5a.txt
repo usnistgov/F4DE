@@ -1,0 +1,22 @@
+[[COMMANDLINE]] ../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/MR_FDT/*.rdf -g ../common/MR_FDT/*.gtf -D MR -E Area
+[[RETURN CODE]] 0
+[[STDOUT]]
+** Detection and Tracking Results:
+../../tools/CLEARDTScorer/CLEARDTScorer.pl../common/MR_FDT/PPATT_F0904_P_2005_Test_Meetings_FDT_01_01.rdf ../common/MR_FDT/PPATT_F0904_P_2005_Test_Meetings_FDT_09_01.rdf ../common/MR_FDT/PPATT_F0904_P_2005_Test_Meetings_FDT_19_01.rdf ../common/MR_FDT/PPATT_F0904_P_2005_Test_Meetings_FDT_41_01.rdf ../common/MR_FDT/PPATT_F0904_P_2005_Test_Meetings_FDT_50_01.rdf -g ../common/MR_FDT/2005_Test_MRoom_FDT_01.gtf ../common/MR_FDT/2005_Test_MRoom_FDT_09.gtf ../common/MR_FDT/2005_Test_MRoom_FDT_19.gtf ../common/MR_FDT/2005_Test_MRoom_FDT_41.gtf ../common/MR_FDT/2005_Test_MRoom_FDT_50.gtf -D MR -E Area
+
+Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+        Reference File                      System Output File                             Video               Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  2005_TEST_MROOM_FDT_01.GTF  PPATT_F0904_P_2005_TEST_MEETINGS_FDT_01_01.RDF  NIST_20011211-1054_C01_NONE.MPG    FACE  0.661399  0.627229  1.000000  0.627229  1.000000  0.627229
+  2005_TEST_MROOM_FDT_09.GTF  PPATT_F0904_P_2005_TEST_MEETINGS_FDT_09_01.RDF  NIST_20020911-1033_C05_NONE.MPG          0.000000  0.000000  0.000000  0.000000  0.000000  0.000000
+  2005_TEST_MROOM_FDT_19.GTF  PPATT_F0904_P_2005_TEST_MEETINGS_FDT_19_01.RDF  NIST_20031204-1125_C01_NONE.MPG    FACE  0.562961  0.449652  0.998233  0.563547  0.996466  0.564135
+  2005_TEST_MROOM_FDT_41.GTF  PPATT_F0904_P_2005_TEST_MEETINGS_FDT_41_01.RDF  NIST_20020304-1352_C05_NONE.MPG          0.000000  0.000000  0.000000  0.000000  0.000000  0.000000
+  2005_TEST_MROOM_FDT_50.GTF  PPATT_F0904_P_2005_TEST_MEETINGS_FDT_50_01.RDF  NIST_20021003-1416_C05_NONE.MPG    FACE  0.762436  0.726577  1.000000  0.726577  1.000000  0.726577
+
+
+***** DONE *****
+
+
+[[STDERR]]
+

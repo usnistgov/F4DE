@@ -18,9 +18,58 @@ package Point;
 
 # use module
 use strict;
-use Data::Dumper;
-use MErrorH;
-use MMisc;
+
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "Point.pm Version: $version";
+
+##########
+# Check we have every module (perl wise)
+
+sub eo2pe {
+  my @a = @_;
+  my $oe = join(" ", @a);
+  my $pe = ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "";
+  return($pe);
+}
+
+## Then try to load everything
+my $ekw = "ERROR"; # Error Key Work
+my $have_everything = 1;
+my $partofthistool = "It should have been part of this tools' files.";
+
+# MErrorH.pm
+unless (eval "use MErrorH; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MErrorH\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# "MMisc.pm"
+unless (eval "use MMisc; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# For the '_display()' function
+unless (eval "use Data::Dumper; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"Data::Dumper\" is not available in your Perl installation. ", 
+                "Please visit \"http://search.cpan.org/~ilyam/Data-Dumper-2.121/Dumper.pm\" for installation information\n");
+    $have_everything = 0;
+  }
+
+# Something missing ? Abort
+error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
 
 # Constructor 
 # Using double-argument form of bless() for an inheritable constructor
@@ -33,7 +82,7 @@ sub new {
     my ( $proto, $x, $y ) = @_;
     my $class = ref($proto) || $proto;
 
-    my $_errormsg = new MErrorH("Point");
+    my $_errormsg = MErrorH->new("Point");
     my $errortxt = "";
     $_errormsg->set_errormsg($errortxt);
 
@@ -100,5 +149,20 @@ sub error {
 }
 
 #######################
+
+sub warn_print {
+  print "WARNING: ", @_;
+
+  print "\n";
+}
+
+#######################
+
+sub error_quit {
+  print("${ekw}: ", @_);
+
+  print "\n";
+  exit(1);
+}
 
 1;

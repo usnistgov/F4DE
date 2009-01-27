@@ -16,11 +16,67 @@ package Object;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-# use module
 use strict;
-use Data::Dumper;
-use MErrorH;
-use MMisc;
+
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "Object.pm Version: $version";
+
+##########
+# Check we have every module (perl wise)
+
+sub eo2pe {
+  my @a = @_;
+  my $oe = join(" ", @a);
+  my $pe = ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "";
+  return($pe);
+}
+
+## Then try to load everything
+my $ekw = "ERROR"; # Error Key Work
+my $have_everything = 1;
+my $partofthistool = "It should have been part of this tools' files.";
+
+#Levenshtein.pm
+unless (eval "use Levenshtein; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"Levenshtein\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# MErrorH.pm
+unless (eval "use MErrorH; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MErrorH\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# "MMisc.pm"
+unless (eval "use MMisc; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# For the '_display()' function
+unless (eval "use Data::Dumper; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"Data::Dumper\" is not available in your Perl installation. ", 
+                "Please visit \"http://search.cpan.org/~ilyam/Data-Dumper-2.121/Dumper.pm\" for installation information\n");
+    $have_everything = 0;
+  }
+
+# Something missing ? Abort
+error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
 
 # Constructor 
 # Using double-argument form of bless() for an inheritable constructor
@@ -33,7 +89,7 @@ sub new {
     my ( $proto, $objectId ) = @_;
     my $class = ref($proto) || $proto;
 
-    my $_errormsg = new MErrorH("Object");
+    my $_errormsg = MErrorH->new("Object");
     my $errortxt  = "";
     $_errormsg->set_errormsg($errortxt);
 
@@ -50,8 +106,17 @@ sub new {
         };
 
     return "'objectId' not defined" if (! defined $objectId);
+    return "'objectId' cannot be negative" if ($objectId < 0);
     bless ($self, $class);
     return $self;
+}
+
+#######################
+
+sub unitTest {
+    print "Test Object\n";
+
+    return 1;
 }
 
 #######################
@@ -100,7 +165,7 @@ sub setContent {
 
 sub getContent {
     my ( $self ) = @_;
-    return @{ $self->{_content} };
+    return $self->{_content};
 }
 
 #######################
@@ -114,7 +179,7 @@ sub setOffset {
 
 sub getOffset {
     my ( $self ) = @_;
-    return @{ $self->{_offset} };
+    return $self->{_offset};
 }
 
 #######################
@@ -137,8 +202,12 @@ sub setOBoxCentroid {
     my ( $self ) = @_;
 
     my $oBox = $self->getOBox();
-    my $point = $self->getPoint();
+    if (! defined $oBox) {
+        $self->_set_errormsg("Undefined OBox while computing centroid");
+        return -1;
+    }
 
+    my $point = $self->getPoint();
     if (! defined $point) {
         my $boxCentroid = $oBox->computeCentroid();
         $self->setPoint($boxCentroid);
@@ -148,7 +217,12 @@ sub setOBoxCentroid {
 #######################
 
 sub computeOverlapRatio {
-    my ( $self, $other ) = @_;
+    my ( $self, $other, $thres, $bin ) = @_;
+
+    # We handle thresholded metric value computation and regular
+    # metric value computation through one sub-routine. When computing 
+    # the regular way, pass 1.0 as the value for $thres without the 
+    # binary option ($bin = 0).
 
     my $gtOBox = $self->getOBox();
     my $soOBox = $other->getOBox();
@@ -159,7 +233,11 @@ sub computeOverlapRatio {
     my $unionArea = $gtBoxArea + $soBoxArea - $intersectionArea;
     my $retVal;
 
-    if ($intersectionArea > 0) { $retVal = $intersectionArea/$unionArea; }
+    if ($intersectionArea > 0) { 
+        my $value = $intersectionArea/$unionArea; 
+        if ($bin) { $retVal = ($value >= $thres) ? 1 : undef; }
+        else { $retVal = ($value >= $thres) ? 1 : $value; }
+    }
 
     return ( "", $retVal );
 }
@@ -167,11 +245,26 @@ sub computeOverlapRatio {
 #######################
 
 sub computeNormDistance {
-    my ( $self, $other, @frameDims ) = @_;
+    my ( $self, $other, $thres, $bin, @frameDims ) = @_;
 
     my $gtPoint = $self->getPoint();
+
+    # If there is no point defined, compute the centroid of the OBox and use that for computing distance
+    if (! defined $gtPoint) {
+        $self->setOBoxCentroid();
+        if ($self->error()) { return ($self->get_errormsg(), undef); }
+        $gtPoint = $self->getPoint();
+    }
     my $gtOBox  = $self->getOBox();
+
     my $soPoint = $other->getPoint();
+
+    # If there is no point defined, compute the centroid of the OBox and use that for computing distance
+    if (! defined $soPoint) {
+        $other->setOBoxCentroid();
+        if ($other->error()) { return ($other->get_errormsg(), undef); }
+        $soPoint = $other->getPoint();
+    }
 
     my $distance = $gtPoint->computeDistance($soPoint);
     
@@ -179,10 +272,41 @@ sub computeNormDistance {
     if (defined $gtOBox) { $normFactor = ($gtOBox->getWidth() + $gtOBox->getHeight())/2; }
     else { $normFactor = ($frameDims[0] + $frameDims[1])/4; }
 
-    my $normDistance = $distance/$normFactor;
-    if ( $normDistance > 1.0 ) { $normDistance = undef; }
+    my $normDistance;
+    my $value = $distance/$normFactor;
+    if ( $value >= 1.0 ) { $normDistance = undef; }
+    else {
+        $value = 1 - $value;
+        if ($bin) { $normDistance = ($value >= $thres) ? 1 : undef; }
+        else { $normDistance = ($value >= $thres) ? 1 : $value; }
+    }
 
     return ("", $normDistance);
+}
+
+#######################
+
+sub computeEditDistance {
+    my ( $refText, $sysText, $costInsDel, $costSub ) = @_;
+    return (Levenshtein(lc($refText), lc($sysText), $costInsDel, $costSub, 0, 0, 0));
+}
+
+#######################
+
+sub computeCharacterErrorRate {
+    my ( $self, $other, $costInsDel, $costSub ) = @_;
+
+    my $gtText = $self->getContent();
+    return ("Cannot evaluate against an undefined 'content' (reference)", undef) if (! defined $gtText);
+    my $gtTextLength = length($gtText);
+
+    my $soText = $other->getContent();
+    return ("Cannot evaluate against an undefined 'content' (system)", undef) if (! defined $soText);
+
+    my $CER = &computeEditDistance($gtText, $soText, $costInsDel, $costSub);
+
+    my $retVal = 1 - ($CER/$gtTextLength);
+    return ("", $retVal);
 }
 
 #######################
@@ -210,11 +334,50 @@ sub padHypRef {
 #######################
 
 sub kernelFunction {
-    my ( $ref, $sys, @params ) = @_;
+    my ( $ref, $sys, $params ) = @_;
+    
+    my @kernel_params = @$params;
+    my $thres = shift @kernel_params;
+    my $bin = shift @kernel_params;
 
     if ( (defined $ref) && (defined $sys) ) {
-        if ( @params ) { return ($ref->computeNormDistance( $sys, @params )); }
-        else { return ($ref->computeOverlapRatio( $sys )); }
+        if ( scalar @kernel_params > 0 ) { return ($ref->computeNormDistance( $sys, $thres, $bin, @kernel_params )); }
+        else { return ($ref->computeOverlapRatio( $sys, $thres, $bin )); }
+    } elsif ( (! defined $ref) && (defined $sys) ) {
+        return ($sys->padHypRef());
+    } elsif ( (defined $ref) && (! defined $sys) ) {
+        return ($ref->padHypSys());
+    } 
+
+    # Return error if both are undefined
+    return("This case is undefined", undef);
+}
+
+#######################
+
+sub textRecKernelFunction {
+    my ( $ref, $sys, $params ) = @_;
+    
+    my @kernel_params = @$params;
+    my $thres = shift @kernel_params;
+    my $bin = shift @kernel_params;
+    my $spatialWeight = shift @kernel_params;
+    my $cerWeight = shift @kernel_params;
+    my $costInsDel = shift @kernel_params;
+    my $costSub = shift @kernel_params;
+
+    if ( (defined $ref) && (defined $sys) ) {
+        my ($txt, $spatialValue, $textValue);
+
+        if ( scalar @kernel_params > 0 ) { ($txt, $spatialValue) = $ref->computeNormDistance( $sys, $thres, $bin, @kernel_params ); }
+        else { ($txt, $spatialValue) = $ref->computeOverlapRatio( $sys, $thres, $bin ); }
+        if (! MMisc::is_blank($txt)) { return ($txt, undef); }
+
+        ($txt, $textValue) = $ref->computeCharacterErrorRate( $sys, $costInsDel, $costSub );
+        if (! MMisc::is_blank($txt)) { return ($txt, undef); }
+
+        my $retVal = (defined $spatialValue) ? (($spatialWeight*$spatialValue) + ($cerWeight*$textValue)) : undef;
+        return ("", $retVal);
     } elsif ( (! defined $ref) && (defined $sys) ) {
         return ($sys->padHypRef());
     } elsif ( (defined $ref) && (! defined $sys) ) {
@@ -261,5 +424,20 @@ sub error {
 }
 
 #######################
+
+sub warn_print {
+  print "WARNING: ", @_;
+
+  print "\n";
+}
+
+#######################
+
+sub error_quit {
+  print("${ekw}: ", @_);
+
+  print "\n";
+  exit(1);
+}
 
 1;

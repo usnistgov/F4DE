@@ -1,0 +1,31 @@
+# From within: test/CLEARDTViperValidator
+
+CLEARDTViperValidator_tester=CLEARDTViperValidator_tester.pl
+
+CLEARDTViperValidator_exec=CLEARDTViperValidator.pl
+CLEARDTViperValidator_reldir=../../tools/CLEARDTViperValidator
+CLEARDTViperValidator=${CLEARDTViperValidator_reldir}/${CLEARDTViperValidator_exec}
+
+CLEARDT_XSDPATH_rel=../../data
+
+CLEARDTTC_lib=../lib
+F4DEC_lib=../../../common/lib
+PERL=perl -I${CLEARDTTC_lib} -I${F4DEC_lib}
+
+all:
+	@echo "Nothing to do"
+
+install:
+	@echo "Nothing to do for install"
+
+check:	${CLEARDTViperValidator_tester_exec} ${CLEARDTViperValidator}
+	@(env CLEARDT_XSDPATH=${CLEARDT_XSDPATH_rel} ${PERL} ${CLEARDTViperValidator_tester} ${CLEARDTViperValidator} check)
+
+makecheckfiles:	${CLEARDTViperValidator_tester_exec}
+	@(env CLEARDT_XSDPATH=${CLEARDT_XSDPATH_rel} ${PERL} ${CLEARDTViperValidator_tester} ${CLEARDTViperValidator} makecheckfiles)
+
+makecompcheckfiles:	${CLEARDTViperValidator_tester_exec}
+	@(env CLEARDT_XSDPATH=${CLEARDT_XSDPATH_rel} ${PERL} ${CLEARDTViperValidator_tester} ${CLEARDTViperValidator} makecompcheckfiles)
+
+cleanresfiles:
+	@rm -f res*.txt

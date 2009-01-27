@@ -16,12 +16,67 @@ package OBox;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-# use module
 use strict;
-use Data::Dumper;
-use MErrorH;
-use MMisc;
-use Point;
+
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "OBox.pm Version: $version";
+
+##########
+# Check we have every module (perl wise)
+
+sub eo2pe {
+  my @a = @_;
+  my $oe = join(" ", @a);
+  my $pe = ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "";
+  return($pe);
+}
+
+## Then try to load everything
+my $ekw = "ERROR"; # Error Key Work
+my $have_everything = 1;
+my $partofthistool = "It should have been part of this tools' files.";
+
+# Point.pm
+unless (eval "use Point; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"Point\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# MErrorH.pm
+unless (eval "use MErrorH; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MErrorH\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# "MMisc.pm"
+unless (eval "use MMisc; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# For the '_display()' function
+unless (eval "use Data::Dumper; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"Data::Dumper\" is not available in your Perl installation. ", 
+                "Please visit \"http://search.cpan.org/~ilyam/Data-Dumper-2.121/Dumper.pm\" for installation information\n");
+    $have_everything = 0;
+  }
+
+# Something missing ? Abort
+error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
 
 # Constructor 
 # Using double-argument form of bless() for an inheritable constructor
@@ -31,10 +86,10 @@ use Point;
 #######################
 
 sub new {
-    my ( $proto, $x, $y, $width, $height, $orientation ) = @_;
+    my ( $proto, $x, $y, $height, $width, $orientation ) = @_;
     my $class = ref($proto) || $proto;
    
-    my $_errormsg = new MErrorH("OBox");
+    my $_errormsg = MErrorH->new("OBox");
     my $errortxt  = "";
     $_errormsg->set_errormsg($errortxt);
 
@@ -52,7 +107,9 @@ sub new {
     return "'x' not defined" if (! defined $x);
     return "'y' not defined" if (! defined $y);
     return "'width' not defined" if (! defined $width);
+    return "'width' should be a positive number" if ($width <= 0);
     return "'height' not defined" if (! defined $height);
+    return "'height' should be a positive number" if ($height <= 0);
     return "'orientation' not defined" if (! defined $orientation);
 
     bless ( $self, $class );
@@ -61,19 +118,40 @@ sub new {
 
 ######################
 
-#sub unitTest(){
-#    
-#    my $ob1 = new OBox(3, 3, 100, 333, 90);
-#    my $ob2 = ....
-#    my $ret = $ob1->getIntersectionArea($ob2);
-#    die "error: expected 50 got $ret" if ($ret ne 50);
-#}
+sub unitTest {
+    print "Test OBox\n";
+    
+    my ( $ob1, $ob2, $ret );
+
+    $ob1 = OBox->new(284, 149, 86, 103, 1);
+    $ob2 = OBox->new(281, 149, 95, 102, 0);
+    $ret = $ob1->computeIntersectionArea($ob2);
+    die "  Computing Intersection Area Error: Expected 8365.20954518059 got $ret\n" if ($ret ne 8365.20954518059);
+
+    $ob1 = OBox->new(119, 146, 37, 27, 3);
+    $ob2 = OBox->new(109, 146, 43, 46, 0);
+    $ret = $ob1->computeIntersectionArea($ob2);
+    die "  Computing Intersection Area Error: Expected 979.897364451338 got $ret\n" if ($ret ne 979.897364451338);
+
+    print "  Computing Intersection Area... OK\n";
+    return 1;
+}
 
 #######################
+
+sub _setX {
+    my ( $self, $x ) = @_;
+    $self->{_x} = $x;
+}
 
 sub getX {
     my ( $self ) = @_;
     return $self->{_x};
+}
+
+sub _setY {
+    my ( $self, $y ) = @_;
+    $self->{_y} = $y;
 }
 
 sub getY {
@@ -81,14 +159,29 @@ sub getY {
     return $self->{_y}; 
 }
 
+sub _setWidth {
+    my ( $self, $width ) = @_;
+    $self->{_width} = $width;
+}
+
 sub getWidth {
     my ( $self ) = @_;
     return $self->{_width}; 
 }
 
+sub _setHeight {
+    my ( $self, $height ) = @_;
+    $self->{_height} = $height;
+}
+
 sub getHeight {
     my ( $self ) = @_;
     return $self->{_height};
+}
+
+sub _setOrientation {
+    my ( $self, $orientation ) = @_;
+    $self->{_orientation} = $orientation;
 }
 
 sub getOrientation {
@@ -114,10 +207,12 @@ sub computeCentroid {
     my $theta = atan2($yhat,$xhat);
     $theta -= $orads;
 
-    my $centroid = new Point();
     my $centx = $r*cos($theta)+$self->getX();
     my $centy = $r*sin($theta)+$self->getY();
-    $centroid->setCoords( $centx, $centy );
+    my $centroid = Point->new( $centx, $centy );
+    if (ref($centroid) ne "Point") {
+        die "Failed to create new 'Point' instance in 'computeCentroid'\n"
+    }
     return $centroid;
 }
 
@@ -290,22 +385,61 @@ sub computeIntersectionArea {
     # print Dumper($intVertices);
 
     # Create a cyclic order of vertex traversal based on the angle made with pivot vertex (topLeft).
-    my $convHull = { };
+    my $convHull = {};
     for (my $loop = 0; $loop < scalar @{$intVertices}; $loop++) {
-        if ($$intVertices[$loop][0] == $intTopLeftX) {
-            if ($$intVertices[$loop][1] == $intTopLeftY) { next; }
-            elsif ($$intVertices[$loop][1] > $intTopLeftY) { $convHull->{$PI/2} = [@{ $intVertices->[$loop] }]; } 
-            else { $convHull->{-$PI/2} = [@{ $intVertices->[$loop] }]; }
+        if (abs($$intVertices[$loop][0] - $intTopLeftX) <= $MACHINE_LOW) {
+            if (abs($$intVertices[$loop][1] - $intTopLeftY) <= $MACHINE_LOW) { next; }
+            elsif ($$intVertices[$loop][1] > $intTopLeftY) { 
+                if (exists $convHull->{$PI/2}) {
+                    my @currVertex = @{$convHull->{$PI/2}};
+                    if ((abs($currVertex[0] - $$intVertices[$loop][0]) > $MACHINE_LOW) || (abs($currVertex[1] - $$intVertices[$loop][1]) > $MACHINE_LOW)) {
+                        if ((abs($currVertex[0] - $intTopLeftX) <= $MACHINE_LOW) && (abs($currVertex[1] - $intTopLeftY) <= $MACHINE_LOW)) {
+                            $convHull->{$PI/2} = [@{ $intVertices->[$loop] }];
+                        }
+                        elsif ((abs($intTopLeftX - $$intVertices[$loop][0]) > $MACHINE_LOW) || (abs($intTopLeftY - $$intVertices[$loop][1]) > $MACHINE_LOW)) {
+                            $self->_set_errormsg("WEIRD: There are 3 unique collinear points forming an area");
+                            return -1;
+                        }
+                    }
+                }
+                else { $convHull->{$PI/2} = [@{ $intVertices->[$loop] }]; }
+            } 
+            else { 
+                if (exists $convHull->{-$PI/2}) {
+                    my @currVertex = @{$convHull->{-$PI/2}};
+                    if ((abs($currVertex[0] - $$intVertices[$loop][0]) > $MACHINE_LOW) || (abs($currVertex[1] - $$intVertices[$loop][1]) > $MACHINE_LOW)) {
+                        if ((abs($currVertex[0] - $intTopLeftX) <= $MACHINE_LOW) && (abs($currVertex[1] - $intTopLeftY) <= $MACHINE_LOW)) {
+                            $convHull->{-$PI/2} = [@{ $intVertices->[$loop] }];
+                        }
+                        elsif ((abs($intTopLeftX - $$intVertices[$loop][0]) > $MACHINE_LOW) || (abs($intTopLeftY - $$intVertices[$loop][1]) > $MACHINE_LOW)) {
+                            $self->_set_errormsg("WEIRD: There are 3 unique collinear points forming an area");
+                            return -1;
+                        }
+                    }
+                }
+                else { $convHull->{-$PI/2} = [@{ $intVertices->[$loop] }]; }
+            }
         }
         else { 
-            $convHull->{atan2( $$intVertices[$loop][1] - $intTopLeftY, $$intVertices[$loop][0] - $intTopLeftX )} = [@{ $intVertices->[$loop] }]; 
+            my $angle = atan2( $$intVertices[$loop][1] - $intTopLeftY, $$intVertices[$loop][0] - $intTopLeftX );
+            if (exists $convHull->{$angle}) {
+                    my @currVertex = @{$convHull->{$angle}};
+                    if ((abs($currVertex[0] - $$intVertices[$loop][0]) > $MACHINE_LOW) || (abs($currVertex[1] - $$intVertices[$loop][1]) > $MACHINE_LOW)) {
+                        if ((abs($currVertex[0] - $intTopLeftX) <= $MACHINE_LOW) && (abs($currVertex[1] - $intTopLeftY) <= $MACHINE_LOW)) {
+                            $convHull->{angle} = [@{ $intVertices->[$loop] }];
+                        }
+                        elsif ((abs($intTopLeftX - $$intVertices[$loop][0]) > $MACHINE_LOW) || (abs($intTopLeftY - $$intVertices[$loop][1]) > $MACHINE_LOW)) {
+                            $self->_set_errormsg("WEIRD: There are 3 unique collinear points forming an area");
+                            return -1;
+                        }
+                    }
+            }
+            else { $convHull->{$angle} = [@{ $intVertices->[$loop] }]; }
         }
     }
 
-    # print "$intTopLeftX  $intTopLeftY\n";
-
     # Compute individual triangle areas and add them up
-    my @hullOrder = MMisc::reorder_array_numerically keys %$convHull;
+    my @hullOrder = MMisc::reorder_array_numerically(keys %$convHull);
     my $intersectionArea = 0;
     for (my $loop = 0; $loop < $#hullOrder; $loop++ ) {
         # print "$convHull->{$hullOrder[$loop]}[0] $convHull->{$hullOrder[$loop]}[1]\n";
@@ -332,6 +466,24 @@ sub computeIntersectionArea {
 
 #######################
 
+sub computeBigBox {
+    my ( $self, $other ) = @_;
+
+    my $newX = $self->getX();
+    my $newY = $other->getY();
+    my $newWidth = $self->getWidth();
+    my $newHeight = $other->getHeight()*2;
+    my $newOrientation = $self->getOrientation();
+
+    $self->_setX($newX);
+    $self->_setY($newY);
+    $self->_setWidth($newWidth);
+    $self->_setHeight($newHeight);
+    $self->_setOrientation($newOrientation);
+}
+
+#######################
+
 sub _set_errormsg {
   my ($self, $txt) = @_;
   $self->{_errormsg}->set_errormsg($txt);
@@ -348,5 +500,20 @@ sub error {
 }
 
 #######################
+
+sub warn_print {
+  print "WARNING: ", @_;
+
+  print "\n";
+}
+
+#######################
+
+sub error_quit {
+  print("${ekw}: ", @_);
+
+  print "\n";
+  exit(1);
+}
 
 1;

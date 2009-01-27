@@ -44,7 +44,24 @@
       </xsd:complexContent>
     </xsd:complexType>
   </xsd:element>
-  
+
+  <xsd:element name="textline" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="x" type="xsd:integer"/>
+	  <xsd:attribute name="y" type="xsd:integer"/>
+	  <xsd:attribute name="width" type="xsd:integer"/>
+	  <xsd:attribute name="height" type="xsd:integer"/>
+	  <xsd:attribute name="rotation" type="xsd:integer"/>
+	  <xsd:attribute name="offsets" type="xsd:string"/>
+	  <xsd:attribute name="occlusions" type="xsd:string"/>
+	  <xsd:attribute name="text" type="xsd:string"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+ 
   <xsd:element name="svalue" substitutionGroup="viper:null">
     <xsd:complexType>
       <xsd:complexContent>
@@ -64,6 +81,7 @@
       </xsd:complexContent>
     </xsd:complexType>
   </xsd:element>
+
   <xsd:element name="lvalue-possibles">
     <xsd:complexType>
       <xsd:sequence>
@@ -121,6 +139,16 @@
     </xsd:complexType>
   </xsd:element>
   
+  <xsd:element name="textlink" substitutionGroup="viper:null">
+    <xsd:complexType>
+      <xsd:complexContent>
+	<xsd:extension base="viper:descriptorAttributeData">
+	  <xsd:attribute name="value" type="xsd:string"/>
+	</xsd:extension>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+
   <xsd:element name="circle" substitutionGroup="viper:null">
     <xsd:complexType>
       <xsd:complexContent>

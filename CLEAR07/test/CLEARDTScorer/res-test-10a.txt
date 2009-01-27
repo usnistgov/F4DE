@@ -1,0 +1,21 @@
+[[COMMANDLINE]] ../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/UV_VDT/*.rdf -g ../common/UV_VDT/*.gtf -D UV -E Area -f 15
+[[RETURN CODE]] 0
+[[STDOUT]]
+** Detection and Tracking Results:
+../../tools/CLEARDTScorer/CLEARDTScorer.pl../common/UV_VDT/XXUSC_Track_P_2005_UAV_VDT_01_01.rdf ../common/UV_VDT/XXUSC_Track_P_2005_UAV_VDT_14_01.rdf ../common/UV_VDT/XXUSC_Track_P_2005_UAV_VDT_37_01.rdf ../common/UV_VDT/XXUSC_Track_P_2005_UAV_VDT_50_01.rdf -g ../common/UV_VDT/2005_Test_UAV_VDT_01.gtf ../common/UV_VDT/2005_Test_UAV_VDT_14.gtf ../common/UV_VDT/2005_Test_UAV_VDT_37.gtf ../common/UV_VDT/2005_Test_UAV_VDT_50.gtf -D UV -E Area -f 15
+
+Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+       Reference File                System Output File                 Video        Object     SFDA      ATA       MODA       MODP      MOTA       MOTP    
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+  2005_TEST_UAV_VDT_01.GTF  XXUSC_TRACK_P_2005_UAV_VDT_01_01.RDF  V4V100002_039.MPG  VEHICLE  0.442953  0.000000   0.000000  0.000000   0.000000  0.000000
+  2005_TEST_UAV_VDT_14.GTF  XXUSC_TRACK_P_2005_UAV_VDT_14_01.RDF  V4V300004_023.MPG  VEHICLE  0.139439  0.025084  -1.360000  0.434306  -1.394286  0.446427
+  2005_TEST_UAV_VDT_37.GTF  XXUSC_TRACK_P_2005_UAV_VDT_37_01.RDF  V4V100012_046.MPG  VEHICLE  0.000000  1.000000   0.000000  0.000000   0.000000  0.000000
+  2005_TEST_UAV_VDT_50.GTF  XXUSC_TRACK_P_2005_UAV_VDT_50_01.RDF  V4V100014_061.MPG  VEHICLE  0.232323  0.000000   0.000000  0.000000   0.000000  0.000000
+
+
+***** DONE *****
+
+
+[[STDERR]]
+

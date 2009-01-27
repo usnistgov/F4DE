@@ -1,0 +1,22 @@
+[[COMMANDLINE]] ../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/BN_FDT/*.rdf -g ../common/BN_FDT/*.gtf -D BN -E Area
+[[RETURN CODE]] 0
+[[STDOUT]]
+** Detection and Tracking Results:
+../../tools/CLEARDTScorer/CLEARDTScorer.pl../common/BN_FDT/PPATT_F0904_P_2005_Test_BNews_FDT_02_01.rdf ../common/BN_FDT/PPATT_F0904_P_2005_Test_BNews_FDT_03_01.rdf ../common/BN_FDT/PPATT_F0904_P_2005_Test_BNews_FDT_04_01.rdf ../common/BN_FDT/PPATT_F0904_P_2005_Test_BNews_FDT_05_01.rdf ../common/BN_FDT/PPATT_F0904_P_2005_Test_BNews_FDT_28_01.rdf -g ../common/BN_FDT/2005_Test_BNews_FDT_02.gtf ../common/BN_FDT/2005_Test_BNews_FDT_03.gtf ../common/BN_FDT/2005_Test_BNews_FDT_04.gtf ../common/BN_FDT/2005_Test_BNews_FDT_05.gtf ../common/BN_FDT/2005_Test_BNews_FDT_28.gtf -D BN -E Area
+
+Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+        Reference File                    System Output File                           Video               Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  2005_TEST_BNEWS_FDT_02.GTF  PPATT_F0904_P_2005_TEST_BNEWS_FDT_02_01.RDF  19980408_1830_1900_ABC_WNT.MPG    FACE  0.769743  0.488288  0.870833  0.743184  0.841667  0.743184
+  2005_TEST_BNEWS_FDT_03.GTF  PPATT_F0904_P_2005_TEST_BNEWS_FDT_03_01.RDF  19980409_1830_1900_ABC_WNT.MPG    FACE  0.754230  0.509380  0.919463  0.733193  0.912752  0.728154
+  2005_TEST_BNEWS_FDT_04.GTF  PPATT_F0904_P_2005_TEST_BNEWS_FDT_04_01.RDF  19980410_1130_1200_CNN_HDL.MPG    FACE  0.750853  0.560680  0.831276  0.724057  0.823045  0.716796
+  2005_TEST_BNEWS_FDT_05.GTF  PPATT_F0904_P_2005_TEST_BNEWS_FDT_05_01.RDF  19980410_1830_1900_ABC_WNT.MPG    FACE  0.748024  0.503881  0.683486  0.750776  0.669725  0.745839
+  2005_TEST_BNEWS_FDT_28.GTF  PPATT_F0904_P_2005_TEST_BNEWS_FDT_28_01.RDF  19980508_1130_1200_CNN_HDL.MPG    FACE  0.823861  0.157227  0.268817  0.805929  0.258065  0.805929
+
+
+***** DONE *****
+
+
+[[STDERR]]
+

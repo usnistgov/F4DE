@@ -1,0 +1,1169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+    <config>
+        <descriptor name="Information" type="FILE">
+            <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+                <data:lvalue-possibles>
+                    <data:lvalue-enum value="SEQUENCE"/>
+                    <data:lvalue-enum value="FRAMES"/>
+                </data:lvalue-possibles>
+            </attribute>
+            <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+            <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+            <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+            <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+        </descriptor>
+        <descriptor name="FRAME" type="OBJECT">
+            <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="true"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="CROWD" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="MULTIPLE VEHICLE" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="MULTIPLE TEXT AREAS" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+        </descriptor>
+        <descriptor name="VEHICLE" type="OBJECT">
+            <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#obox"/>
+            <attribute dynamic="true" name="VISIBLE" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="true"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue">
+                <default>
+                    <data:bvalue value="false"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="CATEGORY" type="http://lamp.cfar.umd.edu/viperdata#dvalue">
+                <default>
+                    <data:dvalue value="0"/>
+                </default>
+            </attribute>
+            <attribute dynamic="true" name="GROUPBOX" type="http://lamp.cfar.umd.edu/viperdata#obox"/>
+            <attribute dynamic="true" name="MOBILITY" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+                <data:lvalue-possibles>
+                    <data:lvalue-enum value="MOVING"/>
+                    <data:lvalue-enum value="STATIONARY"/>
+                </data:lvalue-possibles>
+                <default>
+                    <data:lvalue value="MOVING"/>
+                </default>
+            </attribute>
+        </descriptor>
+        <descriptor name="I-Frames" type="OBJECT"/>
+    </config>
+    <data>
+        <sourcefile filename="file:/C:/Documents%20and%20Settings/sprasad/Desktop/vehicle_uav_test/V4V300004_023.mpg">
+            <file id="0" name="Information">
+                <attribute name="SOURCETYPE"/>
+                <attribute name="NUMFRAMES">
+                    <data:dvalue value="1798"/>
+                </attribute>
+                <attribute name="FRAMERATE">
+                    <data:fvalue value="1.0"/>
+                </attribute>
+                <attribute name="H-FRAME-SIZE"/>
+                <attribute name="V-FRAME-SIZE"/>
+            </file>
+            <object
+                framespan="1:1 13:13 25:25 37:37 49:49 61:61 73:73 85:85 97:97 109:109 121:121 133:133 145:145 157:157 169:169 181:181 193:193 205:205 217:217 229:229 241:241 253:253 265:265 277:277 289:289 301:301 313:313 325:325 337:337 349:349 361:361 373:373 385:385 397:397 409:409 421:421 433:433 445:445 457:457 469:469 481:481 493:493 505:505 517:517 529:529 541:541 553:553 565:565 577:577 589:589 601:601 613:613 625:625 637:637 649:649 661:661 673:673 685:685 697:697 709:709 721:721 733:733 745:745 757:757 769:769 781:781 793:793 805:805 817:817 829:829 841:841 853:853 865:865 877:877 889:889 901:901 913:913 925:925 937:937 949:949 961:961 973:973 985:985 997:997 1009:1009 1021:1021 1033:1033 1045:1045 1057:1057 1069:1069 1081:1081 1093:1093 1105:1105 1117:1117 1129:1129 1141:1141 1153:1153 1165:1165 1177:1177 1189:1189 1201:1201 1213:1213 1225:1225 1237:1237 1249:1249 1261:1261 1273:1273 1285:1285 1297:1297 1309:1309 1321:1321 1333:1333 1345:1345 1357:1357 1369:1369 1381:1381 1393:1393 1405:1405 1417:1417 1429:1429 1441:1441 1453:1453 1465:1465 1477:1477 1489:1489 1501:1501 1513:1513 1525:1525 1537:1537 1549:1549 1561:1561 1573:1573 1585:1585 1597:1597 1609:1609 1621:1621 1633:1633 1645:1645 1657:1657 1669:1669 1681:1681 1693:1693 1705:1705 1717:1717 1729:1729 1741:1741 1753:1753 1765:1765 1777:1777 1789:1789"
+                id="0" name="I-Frames"/>
+            <object
+                framespan="1:1 13:13 25:25 37:37 49:49 61:61 73:73 85:85 97:97 109:109 121:121 133:133 145:145 157:157 169:169 181:181 193:193 205:205 217:217 229:229 241:241 253:253 265:265 277:277 289:289 301:301 313:313 325:325 337:337 349:349 361:361 373:373 385:385 397:397 409:409 421:421 433:433 445:445 457:457 469:469 481:481 493:493 505:505 517:517 529:529 541:541 553:553 565:565 577:577 589:589 601:601 613:613 625:625 637:637 649:649 661:661 673:673 685:685 697:697 709:709 721:721 733:733 745:745 757:757 769:769 781:781 793:793 805:805 817:817 829:829 841:841 853:853 865:865 877:877 889:889 901:901 913:913 925:925 937:937 949:949 961:961 973:973 985:985 997:997 1009:1009 1021:1021 1033:1033 1045:1045 1057:1057 1069:1069 1081:1081 1093:1093 1105:1105 1117:1117 1129:1129 1141:1141 1153:1153 1165:1165 1177:1177 1189:1189 1201:1201 1213:1213 1225:1225 1237:1237 1249:1249 1261:1261 1273:1273 1285:1285 1297:1297 1309:1309 1321:1321 1333:1333 1345:1345 1357:1357 1369:1369 1381:1381 1393:1393 1405:1405 1417:1417 1429:1429 1441:1441 1453:1453 1465:1465 1477:1477 1489:1489 1501:1501 1513:1513 1525:1525 1537:1537 1549:1549 1561:1561 1573:1573 1585:1585 1597:1597 1609:1609 1621:1621 1633:1633 1645:1645 1657:1657 1669:1669 1681:1681 1693:1693 1705:1705 1717:1717 1729:1729 1741:1741 1753:1753 1765:1765 1777:1777 1789:1789"
+                id="0" name="FRAME">
+                <attribute name="EVALUATE">
+                    <data:bvalue framespan="1:1789" value="true"/>
+                </attribute>
+                <attribute name="CROWD">
+                    <data:bvalue framespan="1:1789" value="false"/>
+                </attribute>
+                <attribute name="MULTIPLE VEHICLE">
+                    <data:bvalue framespan="1:1789" value="false"/>
+                </attribute>
+                <attribute name="MULTIPLE TEXT AREAS">
+                    <data:bvalue framespan="1:1789" value="false"/>
+                </attribute>
+            </object>
+            <object
+                framespan="1:1 13:13 25:25 37:37 49:49 61:61 73:73 85:85 97:97 109:109 121:121 133:133 145:145 157:157 169:169 181:181 193:193"
+                id="0" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="1:12" height="11" rotation="5"
+                        width="10" x="153" y="178"/>
+                    <data:obox framespan="13:24" height="14"
+                        rotation="5" width="10" x="135" y="179"/>
+                    <data:obox framespan="25:36" height="13"
+                        rotation="5" width="9" x="123" y="182"/>
+                    <data:obox framespan="37:48" height="14"
+                        rotation="5" width="9" x="130" y="184"/>
+                    <data:obox framespan="49:60" height="14"
+                        rotation="5" width="9" x="138" y="186"/>
+                    <data:obox framespan="61:72" height="14"
+                        rotation="5" width="9" x="116" y="190"/>
+                    <data:obox framespan="73:84" height="17"
+                        rotation="5" width="10" x="102" y="193"/>
+                    <data:obox framespan="85:96" height="14"
+                        rotation="5" width="11" x="89" y="198"/>
+                    <data:obox framespan="97:108" height="16"
+                        rotation="5" width="11" x="80" y="201"/>
+                    <data:obox framespan="109:120" height="14"
+                        rotation="5" width="10" x="95" y="205"/>
+                    <data:obox framespan="121:132" height="16"
+                        rotation="5" width="12" x="97" y="209"/>
+                    <data:obox framespan="133:144" height="15"
+                        rotation="5" width="10" x="93" y="213"/>
+                    <data:obox framespan="145:156" height="15"
+                        rotation="5" width="11" x="96" y="217"/>
+                    <data:obox framespan="157:168" height="14"
+                        rotation="5" width="11" x="100" y="223"/>
+                    <data:obox framespan="169:180" height="15"
+                        rotation="356" width="10" x="104" y="225"/>
+                    <data:obox framespan="181:192" height="14"
+                        rotation="356" width="10" x="109" y="232"/>
+                    <data:obox framespan="193:205" height="12"
+                        rotation="356" width="10" x="111" y="237"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="1:205" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="1:205" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="1:205" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="1:205" value="MOVING"/>
+                </attribute>
+            </object>
+            <object
+                framespan="1:1 13:13 25:25 37:37 49:49 61:61 73:73 85:85 97:97 109:109 121:121 133:133 145:145 157:157 169:169 181:181 193:193 205:205 217:217 229:229 241:241 253:253 265:265 277:277"
+                id="1" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="1:12" height="15" rotation="4"
+                        width="10" x="149" y="126"/>
+                    <data:obox framespan="13:24" height="17"
+                        rotation="11" width="11" x="133" y="128"/>
+                    <data:obox framespan="25:36" height="18"
+                        rotation="11" width="11" x="121" y="130"/>
+                    <data:obox framespan="37:48" height="17"
+                        rotation="1" width="11" x="130" y="133"/>
+                    <data:obox framespan="49:60" height="15"
+                        rotation="1" width="9" x="141" y="137"/>
+                    <data:obox framespan="61:72" height="14"
+                        rotation="1" width="10" x="118" y="142"/>
+                    <data:obox framespan="73:84" height="16"
+                        rotation="1" width="11" x="106" y="146"/>
+                    <data:obox framespan="85:96" height="13"
+                        rotation="1" width="12" x="95" y="151"/>
+                    <data:obox framespan="97:108" height="18"
+                        rotation="1" width="11" x="87" y="153"/>
+                    <data:obox framespan="109:120" height="16"
+                        rotation="1" width="11" x="104" y="158"/>
+                    <data:obox framespan="121:132" height="15"
+                        rotation="1" width="10" x="107" y="162"/>
+                    <data:obox framespan="133:144" height="15"
+                        rotation="1" width="8" x="104" y="166"/>
+                    <data:obox framespan="145:156" height="17"
+                        rotation="1" width="11" x="110" y="171"/>
+                    <data:obox framespan="157:168" height="17"
+                        rotation="356" width="11" x="115" y="173"/>
+                    <data:obox framespan="169:180" height="15"
+                        rotation="356" width="10" x="121" y="179"/>
+                    <data:obox framespan="181:192" height="17"
+                        rotation="356" width="11" x="124" y="183"/>
+                    <data:obox framespan="193:204" height="15"
+                        rotation="356" width="11" x="128" y="189"/>
+                    <data:obox framespan="205:216" height="18"
+                        rotation="356" width="12" x="124" y="194"/>
+                    <data:obox framespan="217:228" height="18"
+                        rotation="356" width="10" x="121" y="200"/>
+                    <data:obox framespan="229:240" height="17"
+                        rotation="349" width="11" x="116" y="206"/>
+                    <data:obox framespan="241:252" height="17"
+                        rotation="349" width="10" x="108" y="214"/>
+                    <data:obox framespan="253:264" height="17"
+                        rotation="349" width="9" x="97" y="221"/>
+                    <data:obox framespan="265:276" height="17"
+                        rotation="349" width="11" x="86" y="229"/>
+                    <data:obox framespan="277:277" height="16"
+                        rotation="349" width="10" x="74" y="238"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="1:277" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="1:277" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="1:277" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="1:277" value="MOVING"/>
+                </attribute>
+            </object>
+            <object
+                framespan="1:1 13:13 25:25 37:37 49:49 61:61 73:73 85:85 97:97 109:109 121:121 133:133 145:145 157:157 169:169 181:181 193:193 205:205 217:217 229:229 241:241 253:253 265:265 277:277 289:289 301:301 313:313 325:325 337:337 349:349 361:361 373:373 385:385 397:397 409:409"
+                id="2" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="1:12" height="21" rotation="0"
+                        width="9" x="147" y="38"/>
+                    <data:obox framespan="13:24" height="21"
+                        rotation="3" width="11" x="132" y="41"/>
+                    <data:obox framespan="25:36" height="15"
+                        rotation="3" width="12" x="123" y="48"/>
+                    <data:obox framespan="37:48" height="18"
+                        rotation="3" width="11" x="133" y="50"/>
+                    <data:obox framespan="49:60" height="17"
+                        rotation="3" width="11" x="147" y="55"/>
+                    <data:obox framespan="61:72" height="16"
+                        rotation="3" width="10" x="127" y="60"/>
+                    <data:obox framespan="73:84" height="14"
+                        rotation="3" width="10" x="117" y="65"/>
+                    <data:obox framespan="85:96" height="16"
+                        rotation="3" width="9" x="109" y="68"/>
+                    <data:obox framespan="97:108" height="16"
+                        rotation="3" width="10" x="102" y="75"/>
+                    <data:obox framespan="109:120" height="16"
+                        rotation="356" width="10" x="122" y="77"/>
+                    <data:obox framespan="121:132" height="15"
+                        rotation="351" width="10" x="129" y="77"/>
+                    <data:obox framespan="133:144" height="21"
+                        rotation="351" width="10" x="128" y="82"/>
+                    <data:obox framespan="145:156" height="19"
+                        rotation="351" width="10" x="136" y="88"/>
+                    <data:obox framespan="157:168" height="18"
+                        rotation="351" width="9" x="143" y="95"/>
+                    <data:obox framespan="169:180" height="18"
+                        rotation="348" width="10" x="148" y="100"/>
+                    <data:obox framespan="181:192" height="18"
+                        rotation="348" width="9" x="156" y="104"/>
+                    <data:obox framespan="193:204" height="18"
+                        rotation="348" width="8" x="162" y="113"/>
+                    <data:obox framespan="205:216" height="20"
+                        rotation="348" width="12" x="158" y="117"/>
+                    <data:obox framespan="217:228" height="20"
+                        rotation="348" width="11" x="157" y="124"/>
+                    <data:obox framespan="229:252" height="20"
+                        rotation="342" width="10" x="150" y="138"/>
+                    <data:obox framespan="253:276" height="22"
+                        rotation="342" width="11" x="143" y="138"/>
+                    <data:obox framespan="277:288" height="22"
+                        rotation="342" width="10" x="131" y="144"/>
+                    <data:obox framespan="289:300" height="22"
+                        rotation="339" width="11" x="111" y="167"/>
+                    <data:obox framespan="301:312" height="25"
+                        rotation="339" width="13" x="100" y="171"/>
+                    <data:obox framespan="313:324" height="23"
+                        rotation="339" width="12" x="86" y="182"/>
+                    <data:obox framespan="325:336" height="20"
+                        rotation="339" width="12" x="70" y="192"/>
+                    <data:obox framespan="337:348" height="20"
+                        rotation="339" width="13" x="63" y="198"/>
+                    <data:obox framespan="349:360" height="20"
+                        rotation="339" width="12" x="57" y="204"/>
+                    <data:obox framespan="361:372" height="20"
+                        rotation="339" width="14" x="47" y="209"/>
+                    <data:obox framespan="373:384" height="20"
+                        rotation="334" width="12" x="40" y="215"/>
+                    <data:obox framespan="385:396" height="20"
+                        rotation="334" width="13" x="30" y="221"/>
+                    <data:obox framespan="397:408" height="20"
+                        rotation="334" width="13" x="21" y="226"/>
+                    <data:obox framespan="409:409" height="20"
+                        rotation="334" width="14" x="14" y="230"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="1:409" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="1:85" value="false"/>
+                    <data:bvalue framespan="86:96" value="true"/>
+                    <data:bvalue framespan="97:97" value="false"/>
+                    <data:bvalue framespan="98:132" value="true"/>
+                    <data:bvalue framespan="133:145" value="false"/>
+                    <data:bvalue framespan="146:192" value="true"/>
+                    <data:bvalue framespan="193:193" value="false"/>
+                    <data:bvalue framespan="194:204" value="true"/>
+                    <data:bvalue framespan="205:205" value="false"/>
+                    <data:bvalue framespan="206:312" value="true"/>
+                    <data:bvalue framespan="313:409" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="1:24" value="1"/>
+                    <data:dvalue framespan="25:409" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="1:409" value="MOVING"/>
+                </attribute>
+            </object>
+            <object
+                framespan="73:73 85:85 97:97 109:109 121:121 133:133 145:145 157:157 169:169 181:181 193:193 205:205 217:217 229:229 241:241 253:253 265:265 277:277 289:289 301:301 313:313 325:325 337:337 349:349 361:361 373:373 385:385 397:397 409:409 421:421 433:433 445:445 457:457 469:469 481:481 493:493 505:505 517:517 529:529 541:541 553:553 565:565 577:577 589:589 601:601 613:613 625:625 637:637 649:649 661:661 673:673 685:685"
+                id="3" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="73:84" height="15"
+                        rotation="4" width="14" x="121" y="2"/>
+                    <data:obox framespan="85:96" height="17"
+                        rotation="4" width="10" x="115" y="3"/>
+                    <data:obox framespan="97:108" height="15"
+                        rotation="4" width="13" x="110" y="10"/>
+                    <data:obox framespan="109:120" height="16"
+                        rotation="4" width="11" x="132" y="14"/>
+                    <data:obox framespan="121:132" height="14"
+                        rotation="358" width="10" x="141" y="19"/>
+                    <data:obox framespan="133:144" height="16"
+                        rotation="358" width="11" x="142" y="25"/>
+                    <data:obox framespan="145:156" height="16"
+                        rotation="358" width="12" x="151" y="32"/>
+                    <data:obox framespan="157:168" height="16"
+                        rotation="358" width="12" x="159" y="36"/>
+                    <data:obox framespan="169:180" height="13"
+                        rotation="358" width="12" x="167" y="43"/>
+                    <data:obox framespan="181:192" height="14"
+                        rotation="358" width="11" x="175" y="48"/>
+                    <data:obox framespan="193:204" height="13"
+                        rotation="350" width="11" x="185" y="59"/>
+                    <data:obox framespan="205:228" height="15"
+                        rotation="350" width="11" x="186" y="63"/>
+                    <data:obox framespan="229:240" height="18"
+                        rotation="350" width="11" x="184" y="74"/>
+                    <data:obox framespan="241:264" height="18"
+                        rotation="340" width="11" x="184" y="74"/>
+                    <data:obox framespan="265:265" height="17"
+                        rotation="340" width="10" x="168" y="94"/>
+                    <data:obox framespan="266:276" height="18"
+                        rotation="340" width="11" x="181" y="73"/>
+                    <data:obox framespan="277:300" height="17"
+                        rotation="335" width="10" x="180" y="72"/>
+                    <data:obox framespan="301:301" height="21"
+                        rotation="325" width="11" x="174" y="74"/>
+                    <data:obox framespan="302:312" height="17"
+                        rotation="335" width="10" x="180" y="72"/>
+                    <data:obox framespan="313:313" height="20"
+                        rotation="335" width="11" x="164" y="80"/>
+                    <data:obox framespan="314:324" height="15"
+                        rotation="335" width="11" x="160" y="85"/>
+                    <data:obox framespan="325:325" height="18"
+                        rotation="335" width="13" x="115" y="136"/>
+                    <data:obox framespan="326:336" height="16"
+                        rotation="335" width="11" x="156" y="84"/>
+                    <data:obox framespan="337:348" height="16"
+                        rotation="335" width="10" x="109" y="141"/>
+                    <data:obox framespan="349:360" height="16"
+                        rotation="335" width="13" x="105" y="148"/>
+                    <data:obox framespan="361:372" height="13"
+                        rotation="335" width="13" x="99" y="154"/>
+                    <data:obox framespan="373:384" height="14"
+                        rotation="328" width="10" x="93" y="159"/>
+                    <data:obox framespan="385:408" height="14"
+                        rotation="328" width="13" x="83" y="169"/>
+                    <data:obox framespan="409:420" height="18"
+                        rotation="328" width="10" x="74" y="180"/>
+                    <data:obox framespan="421:432" height="18"
+                        rotation="324" width="11" x="72" y="183"/>
+                    <data:obox framespan="433:444" height="16"
+                        rotation="324" width="9" x="71" y="190"/>
+                    <data:obox framespan="445:456" height="17"
+                        rotation="324" width="10" x="69" y="194"/>
+                    <data:obox framespan="457:468" height="17"
+                        rotation="324" width="10" x="61" y="202"/>
+                    <data:obox framespan="469:480" height="16"
+                        rotation="324" width="13" x="59" y="204"/>
+                    <data:obox framespan="481:492" height="17"
+                        rotation="324" width="11" x="59" y="209"/>
+                    <data:obox framespan="493:504" height="17"
+                        rotation="324" width="11" x="60" y="213"/>
+                    <data:obox framespan="505:516" height="17"
+                        rotation="324" width="12" x="57" y="219"/>
+                    <data:obox framespan="517:528" height="17"
+                        rotation="324" width="14" x="61" y="223"/>
+                    <data:obox framespan="529:540" height="15"
+                        rotation="324" width="13" x="66" y="228"/>
+                    <data:obox framespan="541:552" height="17"
+                        rotation="310" width="13" x="64" y="230"/>
+                    <data:obox framespan="553:564" height="18"
+                        rotation="310" width="16" x="63" y="232"/>
+                    <data:obox framespan="565:576" height="18"
+                        rotation="310" width="14" x="61" y="222"/>
+                    <data:obox framespan="577:588" height="17"
+                        rotation="310" width="12" x="44" y="206"/>
+                    <data:obox framespan="589:600" height="15"
+                        rotation="310" width="11" x="26" y="197"/>
+                    <data:obox framespan="601:612" height="15"
+                        rotation="310" width="11" x="19" y="187"/>
+                    <data:obox framespan="613:624" height="15"
+                        rotation="310" width="13" x="38" y="182"/>
+                    <data:obox framespan="625:636" height="15"
+                        rotation="310" width="12" x="58" y="183"/>
+                    <data:obox framespan="637:648" height="12"
+                        rotation="310" width="12" x="74" y="181"/>
+                    <data:obox framespan="649:660" height="16"
+                        rotation="310" width="14" x="61" y="179"/>
+                    <data:obox framespan="661:672" height="12"
+                        rotation="304" width="13" x="42" y="181"/>
+                    <data:obox framespan="673:684" height="16"
+                        rotation="298" width="14" x="24" y="178"/>
+                    <data:obox framespan="685:685" height="12"
+                        rotation="298" width="12" x="8" y="176"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="73:685" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="73:168" value="false"/>
+                    <data:bvalue framespan="169:193" value="true"/>
+                    <data:bvalue framespan="194:420" value="true"/>
+                    <data:bvalue framespan="421:685" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="73:685" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="73:685" value="MOVING"/>
+                </attribute>
+            </object>
+            <object
+                framespan="217:217 229:229 241:241 253:253 265:265 277:277 289:289 301:301 313:313 325:325 337:337 349:349 361:361 373:373 385:385 397:397 409:409 421:421 433:433 445:445 457:457 469:469 481:481 493:493 505:505 517:517 529:529 541:541 553:553 565:565 577:577 589:589 601:601 613:613 625:625 637:637 649:649 661:661 673:673 685:685 697:697 709:709 721:721 733:733 745:745 757:757 769:769 781:781 793:793 805:805 817:817 829:829 841:841 853:853 865:865 877:877 889:889 901:901"
+                id="4" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="217:217" height="8"
+                        rotation="67" width="15" x="207" y="29"/>
+                    <data:obox framespan="218:228" height="10"
+                        rotation="67" width="16" x="193" y="56"/>
+                    <data:obox framespan="229:229" height="11"
+                        rotation="67" width="13" x="203" y="37"/>
+                    <data:obox framespan="230:240" height="10"
+                        rotation="67" width="16" x="193" y="56"/>
+                    <data:obox framespan="241:241" height="12"
+                        rotation="67" width="14" x="198" y="49"/>
+                    <data:obox framespan="242:253" height="10"
+                        rotation="67" width="16" x="193" y="56"/>
+                    <data:obox framespan="254:264" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="265:265" height="12"
+                        rotation="59" width="15" x="188" y="63"/>
+                    <data:obox framespan="266:276" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="277:277" height="10"
+                        rotation="56" width="17" x="147" y="121"/>
+                    <data:obox framespan="278:288" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="289:289" height="9"
+                        rotation="60" width="18" x="141" y="124"/>
+                    <data:obox framespan="290:300" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="301:301" height="11"
+                        rotation="52" width="18" x="132" y="128"/>
+                    <data:obox framespan="302:312" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="313:313" height="10"
+                        rotation="49" width="17" x="122" y="134"/>
+                    <data:obox framespan="314:324" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="325:325" height="12"
+                        rotation="36" width="18" x="146" y="97"/>
+                    <data:obox framespan="326:336" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="337:337" height="11"
+                        rotation="47" width="18" x="138" y="108"/>
+                    <data:obox framespan="338:348" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="349:349" height="12"
+                        rotation="48" width="18" x="134" y="115"/>
+                    <data:obox framespan="350:360" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="361:361" height="13"
+                        rotation="45" width="18" x="130" y="120"/>
+                    <data:obox framespan="362:372" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="373:373" height="11"
+                        rotation="36" width="18" x="124" y="126"/>
+                    <data:obox framespan="374:384" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="385:385" height="12"
+                        rotation="36" width="18" x="116" y="136"/>
+                    <data:obox framespan="386:396" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="397:397" height="12"
+                        rotation="36" width="18" x="110" y="140"/>
+                    <data:obox framespan="398:408" height="10"
+                        rotation="36" width="18" x="181" y="102"/>
+                    <data:obox framespan="409:409" height="11"
+                        rotation="36" width="18" x="113" y="147"/>
+                    <data:obox framespan="410:420" height="11"
+                        rotation="36" width="18" x="174" y="125"/>
+                    <data:obox framespan="421:421" height="11"
+                        rotation="36" width="18" x="111" y="151"/>
+                    <data:obox framespan="422:432" height="11"
+                        rotation="36" width="18" x="174" y="125"/>
+                    <data:obox framespan="433:433" height="10"
+                        rotation="36" width="18" x="115" y="159"/>
+                    <data:obox framespan="434:444" height="12"
+                        rotation="36" width="16" x="180" y="133"/>
+                    <data:obox framespan="445:445" height="12"
+                        rotation="36" width="18" x="112" y="164"/>
+                    <data:obox framespan="446:456" height="12"
+                        rotation="36" width="16" x="180" y="133"/>
+                    <data:obox framespan="457:457" height="10"
+                        rotation="36" width="17" x="106" y="169"/>
+                    <data:obox framespan="458:468" height="9"
+                        rotation="36" width="15" x="109" y="193"/>
+                    <data:obox framespan="469:469" height="11"
+                        rotation="36" width="17" x="108" y="175"/>
+                    <data:obox framespan="470:480" height="10"
+                        rotation="36" width="15" x="111" y="195"/>
+                    <data:obox framespan="481:481" height="11"
+                        rotation="36" width="18" x="107" y="181"/>
+                    <data:obox framespan="482:492" height="11"
+                        rotation="36" width="14" x="119" y="195"/>
+                    <data:obox framespan="493:493" height="12"
+                        rotation="36" width="20" x="116" y="180"/>
+                    <data:obox framespan="494:505" height="10"
+                        rotation="36" width="17" x="113" y="193"/>
+                    <data:obox framespan="506:517" height="10"
+                        rotation="36" width="17" x="117" y="198"/>
+                    <data:obox framespan="518:540" height="11"
+                        rotation="36" width="12" x="119" y="201"/>
+                    <data:obox framespan="541:552" height="13"
+                        rotation="36" width="17" x="117" y="205"/>
+                    <data:obox framespan="553:564" height="11"
+                        rotation="36" width="18" x="116" y="211"/>
+                    <data:obox framespan="565:576" height="13"
+                        rotation="36" width="10" x="117" y="197"/>
+                    <data:obox framespan="577:588" height="11"
+                        rotation="36" width="14" x="102" y="184"/>
+                    <data:obox framespan="589:600" height="11"
+                        rotation="36" width="15" x="85" y="174"/>
+                    <data:obox framespan="601:612" height="9"
+                        rotation="36" width="16" x="81" y="165"/>
+                    <data:obox framespan="613:624" height="12"
+                        rotation="36" width="16" x="99" y="162"/>
+                    <data:obox framespan="625:636" height="10"
+                        rotation="36" width="16" x="121" y="162"/>
+                    <data:obox framespan="637:648" height="13"
+                        rotation="36" width="15" x="139" y="161"/>
+                    <data:obox framespan="649:660" height="12"
+                        rotation="36" width="15" x="121" y="163"/>
+                    <data:obox framespan="661:672" height="11"
+                        rotation="36" width="15" x="108" y="163"/>
+                    <data:obox framespan="673:684" height="12"
+                        rotation="36" width="15" x="88" y="162"/>
+                    <data:obox framespan="685:696" height="12"
+                        rotation="36" width="14" x="72" y="158"/>
+                    <data:obox framespan="697:708" height="10"
+                        rotation="26" width="18" x="54" y="156"/>
+                    <data:obox framespan="709:720" height="11"
+                        rotation="26" width="17" x="52" y="152"/>
+                    <data:obox framespan="721:732" height="12"
+                        rotation="26" width="16" x="56" y="146"/>
+                    <data:obox framespan="733:744" height="12"
+                        rotation="26" width="14" x="63" y="142"/>
+                    <data:obox framespan="745:756" height="9"
+                        rotation="26" width="15" x="68" y="140"/>
+                    <data:obox framespan="757:768" height="11"
+                        rotation="22" width="17" x="72" y="135"/>
+                    <data:obox framespan="769:780" height="10"
+                        rotation="22" width="15" x="77" y="133"/>
+                    <data:obox framespan="781:792" height="13"
+                        rotation="14" width="19" x="81" y="131"/>
+                    <data:obox framespan="793:804" height="12"
+                        rotation="14" width="13" x="91" y="128"/>
+                    <data:obox framespan="805:816" height="9"
+                        rotation="14" width="15" x="96" y="130"/>
+                    <data:obox framespan="817:828" height="10"
+                        rotation="14" width="12" x="110" y="126"/>
+                    <data:obox framespan="829:840" height="11"
+                        rotation="14" width="11" x="127" y="123"/>
+                    <data:obox framespan="841:852" height="11"
+                        rotation="14" width="15" x="142" y="120"/>
+                    <data:obox framespan="853:864" height="12"
+                        rotation="14" width="14" x="156" y="118"/>
+                    <data:obox framespan="865:901" height="10"
+                        rotation="14" width="16" x="168" y="118"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="217:901" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="217:217" value="false"/>
+                    <data:bvalue framespan="218:517" value="true"/>
+                    <data:bvalue framespan="518:864" value="false"/>
+                    <data:bvalue framespan="865:901" value="true"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="217:901" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="217:901" value="MOVING"/>
+                </attribute>
+            </object>
+            <object
+                framespan="985:985 997:997 1009:1009 1021:1021 1033:1033 1045:1045 1057:1057 1069:1069 1081:1081 1093:1093 1105:1105 1117:1117 1129:1129 1141:1141"
+                id="5" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="985:996" height="12"
+                        rotation="0" width="22" x="149" y="0"/>
+                    <data:obox framespan="997:1008" height="13"
+                        rotation="0" width="22" x="160" y="0"/>
+                    <data:obox framespan="1009:1020" height="14"
+                        rotation="0" width="22" x="172" y="0"/>
+                    <data:obox framespan="1021:1032" height="14"
+                        rotation="0" width="22" x="183" y="1"/>
+                    <data:obox framespan="1033:1044" height="14"
+                        rotation="0" width="22" x="194" y="3"/>
+                    <data:obox framespan="1045:1056" height="14"
+                        rotation="0" width="23" x="207" y="5"/>
+                    <data:obox framespan="1057:1068" height="12"
+                        rotation="0" width="23" x="216" y="7"/>
+                    <data:obox framespan="1069:1080" height="14"
+                        rotation="0" width="24" x="230" y="7"/>
+                    <data:obox framespan="1081:1092" height="14"
+                        rotation="0" width="22" x="243" y="8"/>
+                    <data:obox framespan="1093:1104" height="14"
+                        rotation="0" width="29" x="252" y="10"/>
+                    <data:obox framespan="1105:1116" height="16"
+                        rotation="0" width="23" x="266" y="10"/>
+                    <data:obox framespan="1117:1128" height="15"
+                        rotation="0" width="27" x="278" y="14"/>
+                    <data:obox framespan="1129:1140" height="15"
+                        rotation="0" width="27" x="291" y="18"/>
+                    <data:obox framespan="1141:1141" height="15"
+                        rotation="0" width="16" x="301" y="18"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="985:1141" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="985:1141" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="985:1141" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="985:1141" value="STATIONARY"/>
+                </attribute>
+            </object>
+            <object
+                framespan="1525:1525 1537:1537 1549:1549 1561:1561 1573:1573 1585:1585 1597:1597 1609:1609 1621:1621 1633:1633 1645:1645 1657:1657 1669:1669 1681:1681 1693:1693 1705:1705 1717:1717 1729:1729 1741:1741 1753:1753 1765:1765 1777:1777 1789:1789"
+                id="6" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="1525:1536" height="11"
+                        rotation="28" width="10" x="1" y="72"/>
+                    <data:obox framespan="1537:1548" height="16"
+                        rotation="28" width="11" x="0" y="68"/>
+                    <data:obox framespan="1549:1560" height="16"
+                        rotation="28" width="12" x="26" y="69"/>
+                    <data:obox framespan="1561:1572" height="17"
+                        rotation="28" width="11" x="52" y="67"/>
+                    <data:obox framespan="1573:1584" height="18"
+                        rotation="28" width="12" x="79" y="68"/>
+                    <data:obox framespan="1585:1596" height="18"
+                        rotation="28" width="12" x="107" y="65"/>
+                    <data:obox framespan="1597:1608" height="19"
+                        rotation="28" width="12" x="130" y="66"/>
+                    <data:obox framespan="1609:1620" height="19"
+                        rotation="19" width="11" x="151" y="67"/>
+                    <data:obox framespan="1621:1632" height="15"
+                        rotation="19" width="12" x="169" y="72"/>
+                    <data:obox framespan="1633:1644" height="15"
+                        rotation="19" width="12" x="177" y="73"/>
+                    <data:obox framespan="1645:1668" height="16"
+                        rotation="15" width="11" x="179" y="74"/>
+                    <data:obox framespan="1669:1680" height="15"
+                        rotation="15" width="11" x="170" y="76"/>
+                    <data:obox framespan="1681:1692" height="14"
+                        rotation="15" width="12" x="161" y="82"/>
+                    <data:obox framespan="1693:1704" height="13"
+                        rotation="15" width="10" x="157" y="82"/>
+                    <data:obox framespan="1705:1716" height="16"
+                        rotation="15" width="10" x="158" y="83"/>
+                    <data:obox framespan="1717:1728" height="16"
+                        rotation="15" width="13" x="158" y="88"/>
+                    <data:obox framespan="1729:1740" height="17"
+                        rotation="15" width="12" x="153" y="91"/>
+                    <data:obox framespan="1741:1752" height="16"
+                        rotation="15" width="11" x="148" y="97"/>
+                    <data:obox framespan="1753:1764" height="17"
+                        rotation="8" width="12" x="152" y="100"/>
+                    <data:obox framespan="1765:1776" height="15"
+                        rotation="8" width="11" x="146" y="106"/>
+                    <data:obox framespan="1777:1788" height="17"
+                        rotation="8" width="11" x="152" y="114"/>
+                    <data:obox framespan="1789:1789" height="18"
+                        rotation="8" width="12" x="149" y="121"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="1525:1789" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="1525:1789" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="1525:1789" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="1525:1789" value="MOVING"/>
+                </attribute>
+            </object>
+            <object
+                framespan="1621:1621 1633:1633 1645:1645 1657:1657 1669:1669 1681:1681 1693:1693 1705:1705 1717:1717 1729:1729 1741:1741 1753:1753 1765:1765 1777:1777 1789:1789"
+                id="7" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="1621:1632" height="10"
+                        rotation="14" width="11" x="192" y="129"/>
+                    <data:obox framespan="1633:1644" height="14"
+                        rotation="14" width="10" x="198" y="130"/>
+                    <data:obox framespan="1645:1656" height="17"
+                        rotation="14" width="11" x="198" y="133"/>
+                    <data:obox framespan="1657:1668" height="13"
+                        rotation="14" width="12" x="197" y="137"/>
+                    <data:obox framespan="1669:1680" height="14"
+                        rotation="14" width="12" x="187" y="139"/>
+                    <data:obox framespan="1681:1692" height="17"
+                        rotation="14" width="10" x="176" y="140"/>
+                    <data:obox framespan="1693:1704" height="16"
+                        rotation="14" width="11" x="171" y="143"/>
+                    <data:obox framespan="1705:1716" height="14"
+                        rotation="14" width="9" x="172" y="146"/>
+                    <data:obox framespan="1717:1728" height="14"
+                        rotation="14" width="9" x="171" y="149"/>
+                    <data:obox framespan="1729:1740" height="16"
+                        rotation="14" width="9" x="165" y="153"/>
+                    <data:obox framespan="1741:1752" height="15"
+                        rotation="14" width="11" x="159" y="158"/>
+                    <data:obox framespan="1753:1764" height="14"
+                        rotation="7" width="12" x="161" y="161"/>
+                    <data:obox framespan="1765:1776" height="16"
+                        rotation="7" width="12" x="154" y="166"/>
+                    <data:obox framespan="1777:1788" height="15"
+                        rotation="7" width="12" x="159" y="179"/>
+                    <data:obox framespan="1789:1789" height="15"
+                        rotation="7" width="9" x="157" y="183"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="1621:1789" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="1621:1789" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="1621:1789" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="1621:1789" value="MOVING"/>
+                </attribute>
+            </object>
+            <object
+                framespan="1693:1693 1705:1705 1717:1717 1729:1729 1741:1741 1753:1753 1765:1765 1777:1777 1789:1789"
+                id="8" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="1693:1704" height="13"
+                        rotation="21" width="11" x="181" y="189"/>
+                    <data:obox framespan="1705:1716" height="13"
+                        rotation="10" width="11" x="181" y="189"/>
+                    <data:obox framespan="1717:1728" height="13"
+                        rotation="10" width="11" x="178" y="195"/>
+                    <data:obox framespan="1729:1740" height="15"
+                        rotation="10" width="11" x="170" y="200"/>
+                    <data:obox framespan="1741:1752" height="14"
+                        rotation="10" width="11" x="164" y="205"/>
+                    <data:obox framespan="1753:1764" height="13"
+                        rotation="10" width="11" x="165" y="211"/>
+                    <data:obox framespan="1765:1776" height="14"
+                        rotation="10" width="12" x="156" y="216"/>
+                    <data:obox framespan="1777:1788" height="16"
+                        rotation="10" width="14" x="161" y="225"/>
+                    <data:obox framespan="1789:1789" height="14"
+                        rotation="10" width="11" x="159" y="232"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="1693:1789" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="1693:1789" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="1693:1789" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="1693:1789" value="MOVING"/>
+                </attribute>
+            </object>
+            <object
+                framespan="1669:1669 1681:1681 1693:1693 1705:1705 1717:1717 1729:1729 1741:1741 1753:1753 1765:1765 1777:1777 1789:1789"
+                id="9" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="1669:1680" height="12"
+                        rotation="0" width="13" x="153" y="1"/>
+                    <data:obox framespan="1681:1692" height="12"
+                        rotation="0" width="11" x="148" y="3"/>
+                    <data:obox framespan="1693:1704" height="12"
+                        rotation="0" width="12" x="143" y="4"/>
+                    <data:obox framespan="1705:1716" height="14"
+                        rotation="0" width="11" x="149" y="7"/>
+                    <data:obox framespan="1717:1728" height="11"
+                        rotation="0" width="12" x="149" y="12"/>
+                    <data:obox framespan="1729:1740" height="14"
+                        rotation="0" width="10" x="146" y="14"/>
+                    <data:obox framespan="1741:1752" height="12"
+                        rotation="0" width="10" x="143" y="20"/>
+                    <data:obox framespan="1753:1764" height="13"
+                        rotation="0" width="11" x="146" y="26"/>
+                    <data:obox framespan="1765:1776" height="12"
+                        rotation="0" width="11" x="139" y="34"/>
+                    <data:obox framespan="1777:1788" height="15"
+                        rotation="0" width="9" x="147" y="40"/>
+                    <data:obox framespan="1789:1789" height="13"
+                        rotation="0" width="11" x="147" y="49"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="1669:1789" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="1669:1789" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="1669:1789" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="1669:1789" value="MOVING"/>
+                </attribute>
+            </object>
+            <object framespan="1777:1777 1789:1789" id="10" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="1777:1788" height="10"
+                        rotation="3" width="8" x="143" y="8"/>
+                    <data:obox framespan="1789:1789" height="11"
+                        rotation="3" width="11" x="141" y="11"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="1777:1789" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="1777:1789" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="1777:1789" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="1777:1789" value="MOVING"/>
+                </attribute>
+            </object>
+            <object
+                framespan="409:409 421:421 433:433 445:445 457:457 469:469 481:481 493:493 505:505 517:517 529:529 541:541 553:553 565:565 577:577 589:589 601:601 613:613 625:625 637:637 649:649 661:661 673:673 685:685 697:697 709:709 721:721 733:733"
+                id="11" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="409:420" height="13"
+                        rotation="337" width="20" x="4" y="111"/>
+                    <data:obox framespan="421:432" height="14"
+                        rotation="337" width="20" x="12" y="109"/>
+                    <data:obox framespan="433:444" height="15"
+                        rotation="337" width="21" x="21" y="109"/>
+                    <data:obox framespan="445:456" height="15"
+                        rotation="337" width="21" x="30" y="108"/>
+                    <data:obox framespan="457:468" height="12"
+                        rotation="337" width="20" x="32" y="108"/>
+                    <data:obox framespan="469:480" height="15"
+                        rotation="337" width="20" x="45" y="106"/>
+                    <data:obox framespan="481:492" height="15"
+                        rotation="337" width="20" x="56" y="106"/>
+                    <data:obox framespan="493:504" height="15"
+                        rotation="337" width="20" x="67" y="106"/>
+                    <data:obox framespan="505:516" height="13"
+                        rotation="337" width="20" x="80" y="106"/>
+                    <data:obox framespan="517:528" height="15"
+                        rotation="337" width="20" x="97" y="104"/>
+                    <data:obox framespan="529:540" height="15"
+                        rotation="337" width="20" x="111" y="106"/>
+                    <data:obox framespan="541:552" height="15"
+                        rotation="337" width="20" x="122" y="106"/>
+                    <data:obox framespan="553:564" height="16"
+                        rotation="337" width="20" x="134" y="104"/>
+                    <data:obox framespan="565:576" height="16"
+                        rotation="337" width="20" x="145" y="88"/>
+                    <data:obox framespan="577:588" height="16"
+                        rotation="337" width="20" x="142" y="71"/>
+                    <data:obox framespan="589:600" height="16"
+                        rotation="337" width="20" x="139" y="58"/>
+                    <data:obox framespan="601:612" height="16"
+                        rotation="337" width="20" x="145" y="46"/>
+                    <data:obox framespan="613:624" height="16"
+                        rotation="337" width="20" x="175" y="39"/>
+                    <data:obox framespan="625:636" height="16"
+                        rotation="337" width="20" x="210" y="36"/>
+                    <data:obox framespan="637:660" height="14"
+                        rotation="337" width="18" x="241" y="36"/>
+                    <data:obox framespan="661:672" height="14"
+                        rotation="319" width="17" x="239" y="33"/>
+                    <data:obox framespan="673:684" height="13"
+                        rotation="319" width="17" x="235" y="29"/>
+                    <data:obox framespan="685:696" height="13"
+                        rotation="319" width="18" x="231" y="25"/>
+                    <data:obox framespan="697:708" height="14"
+                        rotation="319" width="19" x="228" y="19"/>
+                    <data:obox framespan="709:720" height="13"
+                        rotation="319" width="18" x="241" y="16"/>
+                    <data:obox framespan="721:732" height="15"
+                        rotation="357" width="15" x="256" y="15"/>
+                    <data:obox framespan="733:733" height="14"
+                        rotation="357" width="14" x="276" y="13"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="409:733" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="409:733" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="409:733" value="2"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="409:409" value="STATIONARY"/>
+                    <data:lvalue framespan="410:420" value="MOVING"/>
+                    <data:lvalue framespan="421:421" value="STATIONARY"/>
+                    <data:lvalue framespan="422:432" value="MOVING"/>
+                    <data:lvalue framespan="433:433" value="STATIONARY"/>
+                    <data:lvalue framespan="434:444" value="MOVING"/>
+                    <data:lvalue framespan="445:733" value="STATIONARY"/>
+                </attribute>
+            </object>
+            <object
+                framespan="445:445 457:457 469:469 481:481 493:493 505:505 517:517 529:529 541:541 553:553 565:565 577:577 589:589"
+                id="12" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="445:456" height="9"
+                        rotation="36" width="12" x="6" y="69"/>
+                    <data:obox framespan="457:468" height="14"
+                        rotation="36" width="15" x="8" y="68"/>
+                    <data:obox framespan="469:480" height="12"
+                        rotation="36" width="15" x="22" y="68"/>
+                    <data:obox framespan="481:492" height="13"
+                        rotation="36" width="13" x="37" y="66"/>
+                    <data:obox framespan="493:504" height="12"
+                        rotation="36" width="14" x="49" y="67"/>
+                    <data:obox framespan="505:516" height="12"
+                        rotation="36" width="14" x="64" y="66"/>
+                    <data:obox framespan="517:528" height="12"
+                        rotation="36" width="15" x="82" y="68"/>
+                    <data:obox framespan="529:540" height="12"
+                        rotation="36" width="13" x="100" y="68"/>
+                    <data:obox framespan="541:552" height="13"
+                        rotation="36" width="13" x="112" y="66"/>
+                    <data:obox framespan="553:564" height="12"
+                        rotation="36" width="13" x="125" y="66"/>
+                    <data:obox framespan="565:576" height="13"
+                        rotation="36" width="14" x="136" y="50"/>
+                    <data:obox framespan="577:588" height="11"
+                        rotation="36" width="13" x="134" y="32"/>
+                    <data:obox framespan="589:589" height="12"
+                        rotation="36" width="13" x="133" y="20"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="445:589" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="445:589" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="445:589" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="445:589" value="STATIONARY"/>
+                </attribute>
+            </object>
+            <object
+                framespan="493:493 505:505 517:517 529:529 541:541 553:553 565:565 577:577 589:589 601:601 613:613 625:625 637:637 649:649 661:661 673:673 685:685 697:697 709:709 721:721"
+                id="13" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="493:504" height="10"
+                        rotation="337" width="19" x="9" y="119"/>
+                    <data:obox framespan="505:516" height="13"
+                        rotation="337" width="19" x="24" y="116"/>
+                    <data:obox framespan="517:528" height="12"
+                        rotation="337" width="21" x="38" y="114"/>
+                    <data:obox framespan="529:540" height="13"
+                        rotation="337" width="23" x="54" y="114"/>
+                    <data:obox framespan="541:552" height="13"
+                        rotation="337" width="21" x="64" y="113"/>
+                    <data:obox framespan="553:564" height="13"
+                        rotation="337" width="22" x="76" y="112"/>
+                    <data:obox framespan="565:576" height="12"
+                        rotation="337" width="21" x="85" y="97"/>
+                    <data:obox framespan="577:588" height="14"
+                        rotation="337" width="22" x="83" y="75"/>
+                    <data:obox framespan="589:600" height="12"
+                        rotation="333" width="22" x="79" y="63"/>
+                    <data:obox framespan="601:612" height="10"
+                        rotation="335" width="22" x="85" y="49"/>
+                    <data:obox framespan="613:624" height="13"
+                        rotation="335" width="22" x="118" y="43"/>
+                    <data:obox framespan="625:636" height="14"
+                        rotation="335" width="23" x="152" y="40"/>
+                    <data:obox framespan="637:660" height="14"
+                        rotation="335" width="19" x="184" y="37"/>
+                    <data:obox framespan="661:672" height="13"
+                        rotation="335" width="19" x="179" y="34"/>
+                    <data:obox framespan="673:684" height="11"
+                        rotation="315" width="20" x="178" y="30"/>
+                    <data:obox framespan="685:696" height="11"
+                        rotation="315" width="22" x="174" y="24"/>
+                    <data:obox framespan="697:708" height="12"
+                        rotation="315" width="21" x="171" y="19"/>
+                    <data:obox framespan="709:720" height="12"
+                        rotation="315" width="21" x="184" y="13"/>
+                    <data:obox framespan="721:733" height="11"
+                        rotation="315" width="18" x="203" y="8"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="493:733" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="493:733" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="493:733" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="493:733" value="STATIONARY"/>
+                </attribute>
+            </object>
+            <object
+                framespan="997:997 1009:1009 1021:1021 1033:1033 1045:1045 1057:1057 1069:1069 1081:1081 1093:1093 1105:1105 1117:1117 1129:1129 1141:1141 1153:1153 1165:1165 1177:1177 1189:1189 1201:1201 1213:1213 1225:1225 1237:1237 1249:1249 1261:1261 1273:1273 1285:1285 1297:1297 1309:1309"
+                id="14" name="VEHICLE">
+                <attribute name="LOCATION"/>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="997:1309" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="997:1309" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="997:1309" value="2"/>
+                </attribute>
+                <attribute name="GROUPBOX">
+                    <data:obox framespan="997:1020" height="31"
+                        rotation="0" width="53" x="0" y="20"/>
+                    <data:obox framespan="1021:1032" height="21"
+                        rotation="0" width="66" x="0" y="29"/>
+                    <data:obox framespan="1033:1044" height="21"
+                        rotation="0" width="76" x="0" y="29"/>
+                    <data:obox framespan="1045:1056" height="62"
+                        rotation="0" width="85" x="-1" y="19"/>
+                    <data:obox framespan="1057:1068" height="62"
+                        rotation="0" width="85" x="7" y="19"/>
+                    <data:obox framespan="1069:1080" height="62"
+                        rotation="0" width="85" x="22" y="17"/>
+                    <data:obox framespan="1081:1092" height="62"
+                        rotation="0" width="88" x="34" y="17"/>
+                    <data:obox framespan="1093:1104" height="62"
+                        rotation="0" width="88" x="44" y="17"/>
+                    <data:obox framespan="1105:1116" height="62"
+                        rotation="0" width="88" x="56" y="18"/>
+                    <data:obox framespan="1117:1128" height="62"
+                        rotation="0" width="88" x="66" y="18"/>
+                    <data:obox framespan="1129:1140" height="62"
+                        rotation="0" width="90" x="76" y="17"/>
+                    <data:obox framespan="1141:1152" height="62"
+                        rotation="0" width="90" x="89" y="19"/>
+                    <data:obox framespan="1153:1164" height="64"
+                        rotation="356" width="90" x="101" y="17"/>
+                    <data:obox framespan="1165:1176" height="68"
+                        rotation="349" width="93" x="117" y="10"/>
+                    <data:obox framespan="1177:1188" height="68"
+                        rotation="349" width="93" x="128" y="12"/>
+                    <data:obox framespan="1189:1200" height="68"
+                        rotation="349" width="93" x="130" y="13"/>
+                    <data:obox framespan="1201:1224" height="68"
+                        rotation="349" width="93" x="133" y="13"/>
+                    <data:obox framespan="1225:1236" height="68"
+                        rotation="349" width="93" x="145" y="16"/>
+                    <data:obox framespan="1237:1248" height="68"
+                        rotation="349" width="93" x="165" y="19"/>
+                    <data:obox framespan="1249:1260" height="72"
+                        rotation="345" width="93" x="194" y="17"/>
+                    <data:obox framespan="1261:1272" height="72"
+                        rotation="345" width="94" x="218" y="18"/>
+                    <data:obox framespan="1273:1284" height="72"
+                        rotation="345" width="89" x="239" y="26"/>
+                    <data:obox framespan="1285:1296" height="58"
+                        rotation="358" width="80" x="240" y="44"/>
+                    <data:obox framespan="1297:1308" height="58"
+                        rotation="358" width="64" x="255" y="49"/>
+                    <data:obox framespan="1309:1309" height="53"
+                        rotation="358" width="49" x="269" y="56"/>
+                </attribute>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="997:1309" value="STATIONARY"/>
+                </attribute>
+            </object>
+            <object
+                framespan="181:181 193:193 205:205 217:217 229:229 241:241 253:253 265:265 277:277 289:289 301:301 313:313"
+                id="15" name="VEHICLE">
+                <attribute name="LOCATION">
+                    <data:obox framespan="181:192" height="13"
+                        rotation="1" width="21" x="1" y="134"/>
+                    <data:obox framespan="193:204" height="15"
+                        rotation="1" width="23" x="10" y="131"/>
+                    <data:obox framespan="205:216" height="15"
+                        rotation="1" width="23" x="14" y="131"/>
+                    <data:obox framespan="217:228" height="15"
+                        rotation="1" width="23" x="16" y="131"/>
+                    <data:obox framespan="229:252" height="15"
+                        rotation="1" width="23" x="15" y="128"/>
+                    <data:obox framespan="253:264" height="15"
+                        rotation="1" width="23" x="11" y="128"/>
+                    <data:obox framespan="265:276" height="15"
+                        rotation="1" width="23" x="8" y="128"/>
+                    <data:obox framespan="277:288" height="15"
+                        rotation="1" width="23" x="7" y="127"/>
+                    <data:obox framespan="289:300" height="15"
+                        rotation="1" width="23" x="1" y="127"/>
+                    <data:obox framespan="301:312" height="13"
+                        rotation="1" width="19" x="1" y="127"/>
+                    <data:obox framespan="313:313" height="12"
+                        rotation="1" width="14" x="1" y="127"/>
+                </attribute>
+                <attribute name="VISIBLE">
+                    <data:bvalue framespan="181:313" value="true"/>
+                </attribute>
+                <attribute name="OCCLUSION">
+                    <data:bvalue framespan="181:313" value="false"/>
+                </attribute>
+                <attribute name="CATEGORY">
+                    <data:dvalue framespan="181:313" value="0"/>
+                </attribute>
+                <attribute name="GROUPBOX"/>
+                <attribute name="MOBILITY">
+                    <data:lvalue framespan="181:313" value="STATIONARY"/>
+                </attribute>
+            </object>
+        </sourcefile>
+    </data>
+</viper>

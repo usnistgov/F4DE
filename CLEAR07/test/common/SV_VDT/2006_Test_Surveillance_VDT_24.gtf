@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="I-FRAMES" type="OBJECT">
+    </descriptor>
+    <descriptor name="VEHICLE" type="OBJECT">
+      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="CATEGORY" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="true" name="MOBILITY" type="http://lamp.cfar.umd.edu/viperdata#lvalue"/>
+      <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="PRESENT" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+    <descriptor name="FRAME" type="OBJECT">
+      <attribute dynamic="true" name="CROWD" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="MULTIPLE TEXT AREAS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="MULTIPLE VEHICLE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="MULTIPLE VEHICLES" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="file:/C:/Documents%20and%20Settings/rkrebs/Desktop/ARDA/ARDA_2006/Clips_06/PVTRA102a15.mov.out.mpg">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="4136"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="I-FRAMES" id="0" framespan="1:1 13:13 25:25 37:37 49:49 61:61 73:73 85:85 97:97 109:109 121:121 133:133 145:145 157:157 169:169 181:181 193:193 205:205 217:217 229:229 241:241 253:253 265:265 277:277 289:289 301:301 313:313 325:325 337:337 349:349 361:361 373:373 385:385 397:397 409:409 421:421 433:433 445:445 457:457 469:469 481:481 493:493 505:505 517:517 529:529 541:541 553:553 565:565 577:577 589:589 601:601 613:613 625:625 637:637 649:649 661:661 673:673 685:685 697:697 709:709 721:721 733:733 745:745 757:757 769:769 781:781 793:793 805:805 817:817 829:829 841:841 853:853 865:865 877:877 889:889 901:901 913:913 925:925 937:937 949:949 961:961 973:973 985:985 997:997 1009:1009 1021:1021 1033:1033 1045:1045 1057:1057 1069:1069 1081:1081 1093:1093 1105:1105 1117:1117 1129:1129 1141:1141 1153:1153 1165:1165 1177:1177 1189:1189 1201:1201 1213:1213 1225:1225 1237:1237 1249:1249 1261:1261 1273:1273 1285:1285 1297:1297 1309:1309 1321:1321 1333:1333 1345:1345 1357:1357 1369:1369 1381:1381 1393:1393 1405:1405 1417:1417 1429:1429 1441:1441 1453:1453 1465:1465 1477:1477 1489:1489 1501:1501 1513:1513 1525:1525 1537:1537 1549:1549 1561:1561 1573:1573 1585:1585 1597:1597 1609:1609 1621:1621 1633:1633 1645:1645 1657:1657 1669:1669 1681:1681 1693:1693 1705:1705 1717:1717 1729:1729 1741:1741 1753:1753 1765:1765 1777:1777 1789:1789 1801:1801 1813:1813 1825:1825 1837:1837 1849:1849 1861:1861 1873:1873 1885:1885 1897:1897 1909:1909 1921:1921 1933:1933 1945:1945 1957:1957 1969:1969 1981:1981 1993:1993 2005:2005 2017:2017 2029:2029 2041:2041 2053:2053 2065:2065 2077:2077 2089:2089 2101:2101 2113:2113 2125:2125 2137:2137 2149:2149 2161:2161 2173:2173 2185:2185 2197:2197 2209:2209 2221:2221 2233:2233 2245:2245 2257:2257 2269:2269 2281:2281 2293:2293 2305:2305 2317:2317 2329:2329 2341:2341 2353:2353 2365:2365 2377:2377 2389:2389 2401:2401 2413:2413 2425:2425 2437:2437 2449:2449 2461:2461 2473:2473 2485:2485 2497:2497 2509:2509 2521:2521 2533:2533 2545:2545 2557:2557 2569:2569 2581:2581 2593:2593 2605:2605 2617:2617 2629:2629 2641:2641 2653:2653 2665:2665 2677:2677 2689:2689 2701:2701 2713:2713 2725:2725 2737:2737 2749:2749 2761:2761 2773:2773 2785:2785 2797:2797 2809:2809 2821:2821 2833:2833 2845:2845 2857:2857 2869:2869 2881:2881 2893:2893 2905:2905 2917:2917 2929:2929 2941:2941 2953:2953 2965:2965 2977:2977 2989:2989 3001:3001 3013:3013 3025:3025 3037:3037 3049:3049 3061:3061 3073:3073 3085:3085 3097:3097 3109:3109 3121:3121 3133:3133 3145:3145 3157:3157 3169:3169 3181:3181 3193:3193 3205:3205 3217:3217 3229:3229 3241:3241 3253:3253 3265:3265 3277:3277 3289:3289 3301:3301 3313:3313 3325:3325 3337:3337 3349:3349 3361:3361 3373:3373 3385:3385 3397:3397 3409:3409 3421:3421 3433:3433 3445:3445 3457:3457 3469:3469 3481:3481 3493:3493 3505:3505 3517:3517 3529:3529 3541:3541 3553:3553 3565:3565 3577:3577 3589:3589 3601:3601 3613:3613 3625:3625 3637:3637 3649:3649 3661:3661 3673:3673 3685:3685 3697:3697 3709:3709 3721:3721 3733:3733 3745:3745 3757:3757 3769:3769 3781:3781 3793:3793 3805:3805 3817:3817 3829:3829 3841:3841 3853:3853 3865:3865 3877:3877 3889:3889 3901:3901 3913:3913 3925:3925 3937:3937 3949:3949 3961:3961 3973:3973 3985:3985 3997:3997 4009:4009 4021:4021 4033:4033 4045:4045 4057:4057 4069:4069 4081:4081 4093:4093 4105:4105 4117:4117 4129:4129">
+      </object>
+      <object name="VEHICLE" id="0" framespan="1993:1993 2005:2005 2017:2017 2029:2029 2041:2041 2053:2053 2065:2065 2077:2077 2089:2089 2101:2101 2113:2113 2125:2125 2137:2137 2149:2149 2161:2161 2173:2173 2185:2185 2197:2197 2209:2209 2221:2221 2233:2233 2245:2245 2257:2257 2269:2269 2281:2281 2293:2293 2305:2305 2317:2317 2329:2329 2341:2341 2353:2353 2365:2365 2377:2377 2389:2389 2401:2401 2413:2413 2425:2425 2437:2437 2449:2449 2461:2461 2473:2473 2485:2485 2497:2497 2509:2509 2521:2521 2533:2533 2545:2545 2557:2557 2569:2569 2581:2581 2593:2593 2605:2605 2617:2617 2629:2629 2641:2641 2653:2653 2665:2665 2677:2677 2689:2689 2701:2701 2713:2713 2725:2725 2737:2737 2749:2749 2761:2761 2773:2773 2785:2785 2797:2797 2809:2809 2821:2821 2833:2833 2845:2845 2857:2857 2869:2869 2881:2881 2893:2893 2905:2905 2917:2917 2929:2929 2941:2941 2953:2953 2965:2965 2977:2977 2989:2989 3001:3001 3013:3013 3025:3025 3037:3037 3049:3049 3061:3061 3073:3073 3085:3085 3097:3097 3109:3109 3121:3121 3133:3133 3145:3145 3157:3157 3169:3169 3181:3181 3193:3193 3205:3205 3217:3217 3229:3229 3241:3241 3253:3253 3265:3265 3277:3277 3289:3289 3301:3301 3313:3313 3325:3325 3337:3337 3349:3349 3361:3361 3373:3373 3385:3385 3397:3397 3409:3409 3421:3421 3433:3433 3445:3445 3457:3457 3469:3469 3481:3481 3493:3493 3505:3505 3517:3517 3529:3529 3541:3541 3553:3553 3565:3565 3577:3577 3589:3589 3601:3601 3613:3613 3625:3625 3637:3637 3649:3649 3661:3661 3673:3673 3685:3685 3697:3697 3709:3709 3721:3721 3733:3733 3745:3745 3757:3757 3769:3769 3781:3781 3793:3793 3805:3805 3817:3817 3829:3829 3841:3841 3853:3853 3865:3865 3877:3877 3889:3889 3901:3901 3913:3913 3925:3925 3937:3937 3949:3949 3961:3961 3973:3973 3985:3985 3997:3997 4009:4009 4021:4021 4033:4033 4045:4045 4057:4057 4069:4069 4081:4081 4093:4093 4105:4105 4117:4117">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="1993:4117" value="true"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="1993:4117" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="1993:4117" x="315" y="87" height="31" width="343"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="1993:4117" value="MOBILE"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="1993:4117" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="1993:4117" value="true"/>
+        </attribute>
+      </object>
+      <object name="VEHICLE" id="1" framespan="1993:1993 2005:2005 2017:2017 2029:2029 2041:2041 2053:2053 2065:2065 2077:2077 2089:2089 2101:2101 2113:2113 2125:2125 2137:2137 2149:2149 2161:2161 2173:2173 2185:2185 2197:2197 2209:2209 2221:2221 2233:2233 2245:2245 2257:2257 2269:2269 2281:2281 2293:2293 2305:2305 2317:2317 2329:2329 2341:2341 2353:2353 2365:2365 2377:2377 2389:2389 2401:2401 2413:2413 2425:2425 2437:2437 2449:2449 2461:2461 2473:2473 2485:2485 2497:2497 2509:2509 2521:2521 2533:2533 2545:2545 2557:2557 2569:2569 2581:2581 2593:2593 2605:2605 2617:2617 2629:2629 2641:2641 2653:2653 2665:2665 2677:2677 2689:2689 2701:2701 2713:2713 2725:2725 2737:2737 2749:2749 2761:2761 2773:2773 2785:2785 2797:2797 2809:2809 2821:2821 2833:2833 2845:2845 2857:2857 2869:2869 2881:2881 2893:2893 2905:2905 2917:2917 2929:2929 2941:2941 2953:2953 2965:2965 2977:2977 2989:2989 3001:3001 3013:3013 3025:3025 3037:3037 3049:3049 3061:3061 3073:3073 3085:3085 3097:3097 3109:3109 3121:3121 3133:3133 3145:3145 3157:3157 3169:3169 3181:3181 3193:3193 3205:3205 3217:3217 3229:3229 3241:3241 3253:3253 3265:3265 3277:3277 3289:3289 3301:3301 3313:3313 3325:3325 3337:3337 3349:3349 3361:3361 3373:3373 3385:3385 3397:3397 3409:3409 3421:3421 3433:3433 3445:3445 3457:3457 3469:3469 3481:3481 3493:3493 3505:3505 3517:3517 3529:3529 3541:3541 3553:3553 3565:3565 3577:3577 3589:3589 3601:3601 3613:3613 3625:3625 3637:3637 3649:3649 3661:3661 3673:3673 3685:3685 3697:3697 3709:3709 3721:3721 3733:3733 3745:3745 3757:3757 3769:3769 3781:3781 3793:3793 3805:3805 3817:3817 3829:3829 3841:3841 3853:3853 3865:3865 3877:3877 3889:3889 3901:3901 3913:3913 3925:3925 3937:3937 3949:3949 3961:3961 3973:3973 3985:3985 3997:3997 4009:4009 4021:4021 4033:4033 4045:4045 4057:4057 4069:4069 4081:4081 4093:4093 4105:4105 4117:4117">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="1993:4117" value="false"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="1993:4117" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="1993:1993" x="458" y="138" height="92" width="89"/>
+          <data:bbox framespan="2005:2005" x="451" y="140" height="98" width="94"/>
+          <data:bbox framespan="2017:2017" x="449" y="142" height="98" width="94"/>
+          <data:bbox framespan="2029:2029" x="447" y="142" height="99" width="92"/>
+          <data:bbox framespan="2041:4117" x="443" y="143" height="98" width="96"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="1993:2041" value="MOBILE"/>
+          <data:lvalue framespan="2053:4117" value="STATIONARY"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="1993:4117" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="1993:4117" value="true"/>
+        </attribute>
+      </object>
+      <object name="VEHICLE" id="2" framespan="1993:1993 2005:2005 2017:2017 2029:2029 2041:2041 2053:2053 2065:2065 2077:2077 2089:2089 2101:2101 2113:2113 2125:2125 2137:2137 2149:2149 2161:2161 2173:2173 2185:2185 2197:2197 2209:2209 2221:2221 2233:2233 2245:2245 2257:2257 2269:2269 2281:2281 2293:2293 2305:2305 2317:2317 2329:2329 2341:2341 2353:2353 2365:2365 2377:2377 2389:2389 2401:2401 2413:2413 2425:2425 2437:2437 2449:2449 2461:2461 2473:2473 2485:2485 2497:2497 2509:2509 2521:2521 2533:2533 2545:2545 2557:2557 2569:2569 2581:2581 2593:2593 2605:2605 2617:2617 2629:2629 2641:2641 2653:2653 2665:2665 2677:2677 2689:2689 2701:2701 2713:2713 2725:2725 2737:2737 2749:2749 2761:2761 2773:2773">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="1993:2773" value="false"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="1993:2773" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="1993:2245" x="142" y="177" height="51" width="85"/>
+          <data:bbox framespan="2257:2257" x="143" y="177" height="51" width="85"/>
+          <data:bbox framespan="2269:2269" x="147" y="177" height="51" width="85"/>
+          <data:bbox framespan="2281:2281" x="152" y="176" height="51" width="85"/>
+          <data:bbox framespan="2293:2293" x="164" y="172" height="49" width="88"/>
+          <data:bbox framespan="2305:2305" x="184" y="167" height="49" width="88"/>
+          <data:bbox framespan="2317:2317" x="206" y="161" height="49" width="88"/>
+          <data:bbox framespan="2329:2329" x="237" y="156" height="44" width="81"/>
+          <data:bbox framespan="2341:2341" x="268" y="150" height="42" width="77"/>
+          <data:bbox framespan="2353:2353" x="299" y="145" height="37" width="71"/>
+          <data:bbox framespan="2365:2365" x="326" y="137" height="39" width="68"/>
+          <data:bbox framespan="2377:2377" x="351" y="133" height="37" width="63"/>
+          <data:bbox framespan="2389:2389" x="372" y="130" height="34" width="58"/>
+          <data:bbox framespan="2401:2401" x="388" y="129" height="30" width="54"/>
+          <data:bbox framespan="2413:2413" x="400" y="126" height="30" width="54"/>
+          <data:bbox framespan="2425:2425" x="411" y="123" height="31" width="49"/>
+          <data:bbox framespan="2437:2437" x="416" y="121" height="30" width="48"/>
+          <data:bbox framespan="2449:2449" x="421" y="117" height="28" width="42"/>
+          <data:bbox framespan="2461:2461" x="426" y="117" height="28" width="39"/>
+          <data:bbox framespan="2473:2473" x="427" y="115" height="29" width="39"/>
+          <data:bbox framespan="2485:2485" x="428" y="113" height="30" width="39"/>
+          <data:bbox framespan="2497:2629" x="429" y="112" height="31" width="39"/>
+          <data:bbox framespan="2641:2641" x="428" y="110" height="31" width="37"/>
+          <data:bbox framespan="2653:2653" x="427" y="108" height="31" width="38"/>
+          <data:bbox framespan="2665:2665" x="425" y="108" height="28" width="36"/>
+          <data:bbox framespan="2677:2677" x="414" y="101" height="31" width="41"/>
+          <data:bbox framespan="2689:2689" x="400" y="96" height="31" width="41"/>
+          <data:bbox framespan="2701:2701" x="382" y="88" height="31" width="41"/>
+          <data:bbox framespan="2713:2713" x="362" y="90" height="29" width="50"/>
+          <data:bbox framespan="2725:2725" x="341" y="88" height="28" width="50"/>
+          <data:bbox framespan="2737:2737" x="325" y="85" height="25" width="45"/>
+          <data:bbox framespan="2749:2749" x="308" y="83" height="25" width="45"/>
+          <data:bbox framespan="2761:2761" x="286" y="81" height="25" width="45"/>
+          <data:bbox framespan="2773:2773" x="265" y="77" height="25" width="45"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="1993:2245" value="STATIONARY"/>
+          <data:lvalue framespan="2257:2773" value="MOBILE"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="1993:2677" value="false"/>
+          <data:bvalue framespan="2689:2701" value="true"/>
+          <data:bvalue framespan="2713:2749" value="false"/>
+          <data:bvalue framespan="2761:2773" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="1993:2773" value="true"/>
+        </attribute>
+      </object>
+      <object name="VEHICLE" id="3" framespan="1993:1993 2005:2005 2017:2017 2029:2029 2041:2041 2053:2053">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="1993:2053" value="false"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="1993:2053" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="1993:1993" x="97" y="282" height="161" width="212"/>
+          <data:bbox framespan="2005:2005" x="51" y="296" height="175" width="227"/>
+          <data:bbox framespan="2017:2017" x="6" y="317" height="161" width="235"/>
+          <data:bbox framespan="2029:2029" x="6" y="344" height="134" width="189"/>
+          <data:bbox framespan="2041:2041" x="6" y="380" height="98" width="134"/>
+          <data:bbox framespan="2053:2053" x="6" y="430" height="48" width="60"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="1993:2053" value="MOBILE"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="1993:2053" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="1993:2053" value="true"/>
+        </attribute>
+      </object>
+      <object name="VEHICLE" id="4" framespan="2113:2113 2125:2125 2137:2137 2149:2149 2161:2161 2173:2173 2185:2185 2197:2197 2209:2209 2221:2221 2233:2233 2245:2245 2257:2257 2269:2269 2281:2281 2293:2293">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="2113:2293" value="false"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="2113:2293" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="2113:2113" x="622" y="98" height="31" width="52"/>
+          <data:bbox framespan="2125:2125" x="596" y="102" height="31" width="52"/>
+          <data:bbox framespan="2137:2137" x="575" y="108" height="31" width="52"/>
+          <data:bbox framespan="2149:2149" x="546" y="117" height="31" width="52"/>
+          <data:bbox framespan="2161:2161" x="525" y="122" height="37" width="48"/>
+          <data:bbox framespan="2173:2173" x="499" y="128" height="37" width="48"/>
+          <data:bbox framespan="2185:2185" x="467" y="137" height="37" width="48"/>
+          <data:bbox framespan="2197:2197" x="427" y="146" height="53" width="54"/>
+          <data:bbox framespan="2209:2209" x="388" y="160" height="60" width="66"/>
+          <data:bbox framespan="2221:2221" x="341" y="177" height="66" width="82"/>
+          <data:bbox framespan="2233:2233" x="282" y="198" height="75" width="99"/>
+          <data:bbox framespan="2245:2245" x="212" y="223" height="89" width="120"/>
+          <data:bbox framespan="2257:2257" x="131" y="255" height="102" width="142"/>
+          <data:bbox framespan="2269:2269" x="36" y="292" height="131" width="171"/>
+          <data:bbox framespan="2281:2281" x="7" y="344" height="132" width="125"/>
+          <data:bbox framespan="2293:2293" x="7" y="429" height="49" width="42"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="2113:2293" value="MOBILE"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="2113:2125" value="false"/>
+          <data:bvalue framespan="2137:2185" value="true"/>
+          <data:bvalue framespan="2197:2293" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="2113:2293" value="true"/>
+        </attribute>
+      </object>
+      <object name="VEHICLE" id="5" framespan="2413:2413 2425:2425 2437:2437 2449:2449 2461:2461 2473:2473 2485:2485 2497:2497 2509:2509 2521:2521 2533:2533 2545:2545 2557:2557 2569:2569 2581:2581 2593:2593 2605:2605 2617:2617 2629:2629 2641:2641 2653:2653 2665:2665 2677:2677 2689:2689 2701:2701 2713:2713 2725:2725 2737:2737 2749:2749 2761:2761 2773:2773 2785:2785 2797:2797 2809:2809">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="2413:2809" value="false"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="2413:2809" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="2413:2413" x="6" y="245" height="73" width="106"/>
+          <data:bbox framespan="2425:2425" x="62" y="224" height="64" width="113"/>
+          <data:bbox framespan="2437:2437" x="127" y="206" height="60" width="100"/>
+          <data:bbox framespan="2449:2449" x="178" y="192" height="54" width="89"/>
+          <data:bbox framespan="2461:2461" x="221" y="180" height="49" width="80"/>
+          <data:bbox framespan="2473:2473" x="255" y="171" height="45" width="72"/>
+          <data:bbox framespan="2485:2485" x="283" y="163" height="43" width="65"/>
+          <data:bbox framespan="2497:2497" x="304" y="155" height="40" width="61"/>
+          <data:bbox framespan="2509:2509" x="322" y="149" height="39" width="59"/>
+          <data:bbox framespan="2521:2521" x="339" y="143" height="39" width="57"/>
+          <data:bbox framespan="2533:2533" x="352" y="138" height="39" width="56"/>
+          <data:bbox framespan="2545:2545" x="362" y="135" height="38" width="53"/>
+          <data:bbox framespan="2557:2557" x="371" y="133" height="36" width="51"/>
+          <data:bbox framespan="2569:2569" x="378" y="133" height="33" width="49"/>
+          <data:bbox framespan="2581:2581" x="383" y="131" height="33" width="48"/>
+          <data:bbox framespan="2593:2593" x="387" y="128" height="34" width="48"/>
+          <data:bbox framespan="2605:2605" x="390" y="126" height="34" width="47"/>
+          <data:bbox framespan="2617:2617" x="393" y="126" height="33" width="45"/>
+          <data:bbox framespan="2629:2629" x="397" y="127" height="31" width="42"/>
+          <data:bbox framespan="2641:2641" x="399" y="127" height="30" width="42"/>
+          <data:bbox framespan="2653:2653" x="403" y="124" height="30" width="42"/>
+          <data:bbox framespan="2665:2665" x="409" y="124" height="29" width="42"/>
+          <data:bbox framespan="2677:2677" x="414" y="120" height="29" width="39"/>
+          <data:bbox framespan="2689:2689" x="419" y="116" height="28" width="35"/>
+          <data:bbox framespan="2701:2701" x="418" y="111" height="29" width="33"/>
+          <data:bbox framespan="2713:2713" x="405" y="106" height="29" width="41"/>
+          <data:bbox framespan="2725:2725" x="393" y="100" height="31" width="44"/>
+          <data:bbox framespan="2737:2737" x="381" y="96" height="33" width="46"/>
+          <data:bbox framespan="2749:2749" x="366" y="94" height="27" width="45"/>
+          <data:bbox framespan="2761:2761" x="343" y="89" height="27" width="47"/>
+          <data:bbox framespan="2773:2773" x="323" y="89" height="24" width="45"/>
+          <data:bbox framespan="2785:2785" x="302" y="86" height="24" width="45"/>
+          <data:bbox framespan="2797:2797" x="275" y="84" height="24" width="45"/>
+          <data:bbox framespan="2809:2809" x="257" y="82" height="24" width="45"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="2413:2809" value="MOBILE"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="2413:2701" value="false"/>
+          <data:bvalue framespan="2713:2749" value="true"/>
+          <data:bvalue framespan="2761:2785" value="false"/>
+          <data:bvalue framespan="2797:2809" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="2413:2809" value="true"/>
+        </attribute>
+      </object>
+      <object name="VEHICLE" id="6" framespan="2737:2737 2749:2749 2761:2761 2773:2773 2785:2785 2797:2797 2809:2809 2821:2821 2833:2833 2845:2845 2857:2857 2869:2869 2881:2881 2893:2893 2905:2905 2917:2917 2929:2929 2941:2941 2953:2953 2965:2965">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="2737:2965" value="false"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="2737:2965" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="2737:2737" x="634" y="97" height="28" width="39"/>
+          <data:bbox framespan="2749:2749" x="611" y="103" height="25" width="53"/>
+          <data:bbox framespan="2761:2761" x="587" y="105" height="25" width="53"/>
+          <data:bbox framespan="2773:2773" x="569" y="110" height="25" width="53"/>
+          <data:bbox framespan="2785:2785" x="560" y="112" height="25" width="53"/>
+          <data:bbox framespan="2797:2797" x="536" y="123" height="29" width="49"/>
+          <data:bbox framespan="2809:2809" x="522" y="124" height="39" width="49"/>
+          <data:bbox framespan="2821:2821" x="503" y="132" height="39" width="49"/>
+          <data:bbox framespan="2833:2833" x="483" y="135" height="39" width="49"/>
+          <data:bbox framespan="2845:2845" x="449" y="156" height="39" width="49"/>
+          <data:bbox framespan="2857:2857" x="420" y="150" height="56" width="61"/>
+          <data:bbox framespan="2869:2869" x="391" y="166" height="58" width="65"/>
+          <data:bbox framespan="2881:2881" x="361" y="179" height="61" width="77"/>
+          <data:bbox framespan="2893:2893" x="328" y="196" height="69" width="86"/>
+          <data:bbox framespan="2905:2905" x="289" y="214" height="77" width="99"/>
+          <data:bbox framespan="2917:2917" x="236" y="239" height="85" width="117"/>
+          <data:bbox framespan="2929:2929" x="170" y="268" height="99" width="143"/>
+          <data:bbox framespan="2941:2941" x="82" y="303" height="122" width="178"/>
+          <data:bbox framespan="2953:2953" x="8" y="350" height="127" width="186"/>
+          <data:bbox framespan="2965:2965" x="8" y="404" height="73" width="110"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="2737:2965" value="MOBILE"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="2737:2749" value="false"/>
+          <data:bvalue framespan="2761:2857" value="true"/>
+          <data:bvalue framespan="2869:2965" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="2737:2965" value="true"/>
+        </attribute>
+      </object>
+      <object name="VEHICLE" id="7" framespan="2809:2809 2821:2821 2833:2833 2845:2845 2857:2857 2869:2869 2881:2881 2893:2893 2905:2905 2917:2917 2929:2929 2941:2941 2953:2953 2965:2965 2977:2977 2989:2989 3001:3001">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="2809:3001" value="false"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="2809:3001" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="2809:2809" x="6" y="240" height="65" width="66"/>
+          <data:bbox framespan="2821:2821" x="45" y="212" height="63" width="111"/>
+          <data:bbox framespan="2833:2833" x="124" y="192" height="54" width="94"/>
+          <data:bbox framespan="2845:2845" x="183" y="174" height="47" width="80"/>
+          <data:bbox framespan="2857:2857" x="231" y="160" height="41" width="71"/>
+          <data:bbox framespan="2869:2869" x="269" y="146" height="42" width="64"/>
+          <data:bbox framespan="2881:2881" x="301" y="137" height="37" width="57"/>
+          <data:bbox framespan="2893:2893" x="328" y="129" height="35" width="53"/>
+          <data:bbox framespan="2905:2905" x="349" y="123" height="33" width="49"/>
+          <data:bbox framespan="2917:2917" x="365" y="117" height="33" width="45"/>
+          <data:bbox framespan="2929:2929" x="373" y="112" height="31" width="40"/>
+          <data:bbox framespan="2941:2941" x="369" y="106" height="29" width="37"/>
+          <data:bbox framespan="2953:2953" x="351" y="100" height="28" width="45"/>
+          <data:bbox framespan="2965:2965" x="329" y="95" height="30" width="49"/>
+          <data:bbox framespan="2977:2977" x="302" y="89" height="29" width="48"/>
+          <data:bbox framespan="2989:2989" x="276" y="85" height="29" width="48"/>
+          <data:bbox framespan="3001:3001" x="250" y="81" height="22" width="41"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="2809:3001" value="MOBILE"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="2809:2977" value="false"/>
+          <data:bvalue framespan="2989:3001" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="2809:3001" value="true"/>
+        </attribute>
+      </object>
+      <object name="VEHICLE" id="8" framespan="2917:2917 2929:2929 2941:2941 2953:2953 2965:2965 2977:2977 2989:2989 3001:3001 3013:3013 3025:3025 3037:3037 3049:3049 3061:3061 3073:3073 3085:3085 3097:3097 3109:3109 3121:3121 3133:3133">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="2917:3133" value="false"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="2917:3133" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="2917:2917" x="6" y="236" height="68" width="77"/>
+          <data:bbox framespan="2929:2929" x="9" y="222" height="63" width="119"/>
+          <data:bbox framespan="2941:2941" x="63" y="205" height="61" width="108"/>
+          <data:bbox framespan="2953:2953" x="116" y="192" height="55" width="97"/>
+          <data:bbox framespan="2965:2965" x="164" y="178" height="50" width="86"/>
+          <data:bbox framespan="2977:2977" x="206" y="168" height="43" width="78"/>
+          <data:bbox framespan="2989:2989" x="244" y="155" height="42" width="71"/>
+          <data:bbox framespan="3001:3001" x="277" y="144" height="39" width="65"/>
+          <data:bbox framespan="3013:3013" x="308" y="135" height="39" width="61"/>
+          <data:bbox framespan="3025:3025" x="335" y="126" height="37" width="55"/>
+          <data:bbox framespan="3037:3037" x="354" y="121" height="33" width="49"/>
+          <data:bbox framespan="3049:3049" x="367" y="117" height="28" width="41"/>
+          <data:bbox framespan="3061:3061" x="366" y="112" height="28" width="39"/>
+          <data:bbox framespan="3073:3073" x="352" y="104" height="29" width="45"/>
+          <data:bbox framespan="3085:3085" x="332" y="99" height="30" width="50"/>
+          <data:bbox framespan="3097:3097" x="308" y="96" height="32" width="48"/>
+          <data:bbox framespan="3109:3109" x="286" y="89" height="26" width="43"/>
+          <data:bbox framespan="3121:3121" x="268" y="87" height="26" width="43"/>
+          <data:bbox framespan="3133:3133" x="246" y="87" height="26" width="43"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="2917:3133" value="MOBILE"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="2917:3109" value="false"/>
+          <data:bvalue framespan="3121:3133" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="2917:3133" value="true"/>
+        </attribute>
+      </object>
+      <object name="VEHICLE" id="9" framespan="3085:3085 3097:3097 3109:3109 3121:3121 3133:3133 3145:3145 3157:3157 3169:3169 3181:3181 3193:3193 3205:3205 3217:3217 3229:3229 3241:3241 3253:3253 3265:3265 3277:3277 3289:3289">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="3085:3289" value="false"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="3085:3289" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="3085:3085" x="627" y="98" height="25" width="45"/>
+          <data:bbox framespan="3097:3097" x="603" y="105" height="24" width="48"/>
+          <data:bbox framespan="3109:3109" x="584" y="108" height="24" width="48"/>
+          <data:bbox framespan="3121:3121" x="567" y="112" height="24" width="48"/>
+          <data:bbox framespan="3133:3133" x="540" y="124" height="26" width="43"/>
+          <data:bbox framespan="3145:3145" x="523" y="127" height="35" width="44"/>
+          <data:bbox framespan="3157:3157" x="505" y="133" height="35" width="44"/>
+          <data:bbox framespan="3169:3169" x="482" y="143" height="35" width="44"/>
+          <data:bbox framespan="3181:3181" x="441" y="162" height="35" width="44"/>
+          <data:bbox framespan="3193:3193" x="407" y="158" height="51" width="63"/>
+          <data:bbox framespan="3205:3205" x="375" y="174" height="53" width="75"/>
+          <data:bbox framespan="3217:3217" x="338" y="187" height="64" width="83"/>
+          <data:bbox framespan="3229:3229" x="292" y="203" height="74" width="95"/>
+          <data:bbox framespan="3241:3241" x="239" y="224" height="89" width="112"/>
+          <data:bbox framespan="3253:3253" x="161" y="255" height="104" width="140"/>
+          <data:bbox framespan="3265:3265" x="80" y="292" height="122" width="167"/>
+          <data:bbox framespan="3277:3277" x="8" y="343" height="135" width="167"/>
+          <data:bbox framespan="3289:3289" x="8" y="432" height="46" width="74"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="3085:3289" value="MOBILE"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="3085:3097" value="false"/>
+          <data:bvalue framespan="3109:3181" value="true"/>
+          <data:bvalue framespan="3193:3289" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="3085:3289" value="true"/>
+        </attribute>
+      </object>
+      <object name="VEHICLE" id="10" framespan="3421:3421 3433:3433 3445:3445 3457:3457 3469:3469 3481:3481 3493:3493 3505:3505 3517:3517 3529:3529 3541:3541 3553:3553 3565:3565 3577:3577 3589:3589 3601:3601 3613:3613 3625:3625">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="3421:3625" value="false"/>
+        </attribute>
+        <attribute name="CATEGORY">
+          <data:dvalue framespan="3421:3625" value="0"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="3421:3421" x="622" y="97" height="30" width="46"/>
+          <data:bbox framespan="3433:3433" x="602" y="105" height="30" width="46"/>
+          <data:bbox framespan="3445:3445" x="583" y="108" height="30" width="46"/>
+          <data:bbox framespan="3457:3457" x="567" y="114" height="30" width="46"/>
+          <data:bbox framespan="3469:3469" x="536" y="125" height="30" width="46"/>
+          <data:bbox framespan="3481:3481" x="514" y="128" height="34" width="47"/>
+          <data:bbox framespan="3493:3493" x="492" y="132" height="36" width="49"/>
+          <data:bbox framespan="3505:3505" x="471" y="137" height="36" width="49"/>
+          <data:bbox framespan="3517:3517" x="442" y="149" height="47" width="54"/>
+          <data:bbox framespan="3529:3529" x="415" y="160" height="53" width="56"/>
+          <data:bbox framespan="3541:3541" x="384" y="172" height="59" width="67"/>
+          <data:bbox framespan="3553:3553" x="344" y="190" height="65" width="80"/>
+          <data:bbox framespan="3565:3565" x="305" y="209" height="75" width="91"/>
+          <data:bbox framespan="3577:3577" x="260" y="233" height="83" width="103"/>
+          <data:bbox framespan="3589:3589" x="189" y="264" height="99" width="128"/>
+          <data:bbox framespan="3601:3601" x="113" y="298" height="118" width="154"/>
+          <data:bbox framespan="3613:3613" x="8" y="344" height="131" width="190"/>
+          <data:bbox framespan="3625:3625" x="8" y="399" height="76" width="108"/>
+        </attribute>
+        <attribute name="MOBILITY">
+          <data:lvalue framespan="3421:3625" value="MOBILE"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="3421:3433" value="false"/>
+          <data:bvalue framespan="3445:3517" value="true"/>
+          <data:bvalue framespan="3529:3625" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="3421:3625" value="true"/>
+        </attribute>
+      </object>
+      <object name="FRAME" id="0" framespan="1993:1993 2005:2005 2017:2017 2029:2029 2041:2041 2053:2053 2065:2065 2077:2077 2089:2089 2101:2101 2113:2113 2125:2125 2137:2137 2149:2149 2161:2161 2173:2173 2185:2185 2197:2197 2209:2209 2221:2221 2233:2233 2245:2245 2257:2257 2269:2269 2281:2281 2293:2293 2305:2305 2317:2317 2329:2329 2341:2341 2353:2353 2365:2365 2377:2377 2389:2389 2401:2401 2413:2413 2425:2425 2437:2437 2449:2449 2461:2461 2473:2473 2485:2485 2497:2497 2509:2509 2521:2521 2533:2533 2545:2545 2557:2557 2569:2569 2581:2581 2593:2593 2605:2605 2617:2617 2629:2629 2641:2641 2653:2653 2665:2665 2677:2677 2689:2689 2701:2701 2713:2713 2725:2725 2737:2737 2749:2749 2761:2761 2773:2773 2785:2785 2797:2797 2809:2809 2821:2821 2833:2833 2845:2845 2857:2857 2869:2869 2881:2881 2893:2893 2905:2905 2917:2917 2929:2929 2941:2941 2953:2953 2965:2965 2977:2977 2989:2989 3001:3001 3013:3013 3025:3025 3037:3037 3049:3049 3061:3061 3073:3073 3085:3085 3097:3097 3109:3109 3121:3121 3133:3133 3145:3145 3157:3157 3169:3169 3181:3181 3193:3193 3205:3205 3217:3217 3229:3229 3241:3241 3253:3253 3265:3265 3277:3277 3289:3289 3301:3301 3313:3313 3325:3325 3337:3337 3349:3349 3361:3361 3373:3373 3385:3385 3397:3397 3409:3409 3421:3421 3433:3433 3445:3445 3457:3457 3469:3469 3481:3481 3493:3493 3505:3505 3517:3517 3529:3529 3541:3541 3553:3553 3565:3565 3577:3577 3589:3589 3601:3601 3613:3613 3625:3625 3637:3637 3649:3649 3661:3661 3673:3673 3685:3685 3697:3697 3709:3709 3721:3721 3733:3733 3745:3745 3757:3757 3769:3769 3781:3781 3793:3793 3805:3805 3817:3817 3829:3829 3841:3841 3853:3853 3865:3865 3877:3877 3889:3889 3901:3901 3913:3913 3925:3925 3937:3937 3949:3949 3961:3961 3973:3973 3985:3985 3997:3997 4009:4009 4021:4021 4033:4033 4045:4045 4057:4057 4069:4069 4081:4081 4093:4093 4105:4105 4117:4117">
+        <attribute name="CROWD">
+          <data:bvalue framespan="1993:4117" value="false"/>
+        </attribute>
+        <attribute name="EVALUATE">
+          <data:bvalue framespan="1993:4117" value="true"/>
+        </attribute>
+        <attribute name="MULTIPLE TEXT AREAS">
+          <data:bvalue framespan="1993:4117" value="false"/>
+        </attribute>
+        <attribute name="MULTIPLE VEHICLE">
+          <data:bvalue framespan="1993:4117" value="false"/>
+        </attribute>
+        <attribute name="MULTIPLE VEHICLES"/>
+      </object>
+    </sourcefile>
+  </data>
+</viper>

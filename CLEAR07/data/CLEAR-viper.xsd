@@ -26,7 +26,7 @@
   
   <xsd:complexType name="viperType">
     <xsd:sequence>
-      <xsd:element name="config" type="viper:configType"/>
+      <xsd:element name="config" type="viper:configType" minOccurs="0"/>
       <xsd:element name="sequences" type="viper:mediaSequenceListingType" minOccurs="0"/>
       <xsd:element name="data" type="viper:dataType" minOccurs="0"/>
       <!-- There might not be a data section at first. -->
@@ -90,7 +90,6 @@
 	data with more information.
       </xsd:documentation>
     </xsd:annotation>
-    
     <xsd:sequence>
       <xsd:element name="default" minOccurs="0">
 	<xsd:complexType>
@@ -100,6 +99,13 @@
 	</xsd:complexType>
       </xsd:element>
       <xsd:any minOccurs="0" maxOccurs="unbounded"/>
+      <xsd:element name="default" minOccurs="0">
+	<xsd:complexType>
+	  <xsd:sequence>
+	    <xsd:element ref="viper:null" minOccurs="0"/>
+	  </xsd:sequence>
+	</xsd:complexType>
+      </xsd:element>
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string"/>
     <xsd:attribute name="type" type="xsd:anyURI"/>

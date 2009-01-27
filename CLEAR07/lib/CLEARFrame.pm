@@ -16,13 +16,75 @@ package Frame;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-# use module
 use strict;
-use Data::Dumper;
-use MErrorH;
-use MMisc;
-use Object;
-use BipartiteMatch;
+
+my $version = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "Frame.pm Version: $version";
+
+##########
+# Check we have every module (perl wise)
+
+sub eo2pe {
+  my @a = @_;
+  my $oe = join(" ", @a);
+  my $pe = ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "";
+  return($pe);
+}
+
+## Then try to load everything
+my $ekw = "ERROR"; # Error Key Work
+my $have_everything = 1;
+my $partofthistool = "It should have been part of this tools' files.";
+
+# Object.pm
+unless (eval "use Object; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"Object\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# BipartiteMatch.pm
+unless (eval "use BipartiteMatch; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"BipartiteMatch\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# MErrorH.pm
+unless (eval "use MErrorH; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MErrorH\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# "MMisc.pm"
+unless (eval "use MMisc; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
+
+# For the '_display()' function
+unless (eval "use Data::Dumper; 1")
+  {
+    my $pe = &eo2pe($@);
+    warn_print("\"Data::Dumper\" is not available in your Perl installation. ", 
+                "Please visit \"http://search.cpan.org/~ilyam/Data-Dumper-2.121/Dumper.pm\" for installation information\n");
+    $have_everything = 0;
+  }
+
+# Something missing ? Abort
+error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
 
 # Constructor 
 # Using double-argument form of bless() for an inheritable constructor
@@ -35,7 +97,7 @@ sub new {
     my ( $proto, $frameNum ) = @_;
     my $class = ref($proto) || $proto;
 
-    my $_errormsg = new MErrorH("Frame");
+    my $_errormsg = MErrorH->new("Frame");
     my $errortxt  = "";
     $_errormsg->set_errormsg($errortxt);
 
@@ -53,17 +115,32 @@ sub new {
         _noPenaltySysIDs    => undef,
         _missDetectIDs      => undef,
         _falseAlarmIDs      => undef,
+	_substitutionIDs    => undef,
         _idSplitObjIDs      => undef,
         _idMergeObjIDs      => undef,
+        _evalBPM            => undef,
+        _dcoBPM             => undef,
+        _numOfChars         => undef,
+        _numOfCharErrs      => undef,
         _isDet              => 0,
         _isTrk              => 0,
+        _isTRec             => 0,
         #ErrorHandler
         _errormsg           => $_errormsg,
         };
 
     return "'frameNum' not defined" if (! defined $frameNum);
+    return "'frameNum' cannot be negative" if ($frameNum < 0);
     bless ( $self, $class );
     return $self;
+}
+
+#######################
+
+sub unitTest {
+    print "Test Frame\n";
+
+    return 1;
 }
 
 #######################
@@ -106,6 +183,13 @@ sub getObjectList {
     return $self->{_objectList};
 }
 
+sub setObjectList {
+    my ( $self, $objectList ) = @_;
+
+    if (! defined $objectList) { $self->_set_errormsg("Invalid 'objectList' in setObjectList"); return -1; }
+    $self->{_objectList} = $objectList;
+}
+
 #######################
 
 sub setDontCareObjectIDs {
@@ -136,6 +220,30 @@ sub removeObjectFromFrame {
     if (! exists $objList->{$objectId} ) { $self->_set_errormsg("'objectId' not present in removeObjectFromFrame"); return -1; }
 
     delete $objList->{$objectId};
+}
+
+#######################
+
+sub _setNumOfChars {
+    my ( $self, $numOfChars ) = @_;
+    $self->{_numOfChars} = $numOfChars;
+}
+
+sub getNumOfChars {
+    my ( $self ) = @_;
+    return $self->{_numOfChars};
+}
+
+#######################
+
+sub _setNumOfCharErrs {
+    my ( $self, $numOfCharErrs ) = @_;
+    $self->{_numOfCharErrs} = $numOfCharErrs;
+}
+
+sub getNumOfCharErrs {
+    my ( $self ) = @_;
+    return $self->{_numOfCharErrs};
 }
 
 #######################
@@ -172,6 +280,24 @@ sub _unsetTrkOutDefined {
 sub getTrkOutDefined {
     my ( $self ) = @_;
     return $self->{_isTrk};
+}
+
+#######################
+
+sub _setTRecOutDefined {
+    my ( $self ) = @_;
+    if ($self->getTRecOutDefined) { $self->_set_errormsg("Text Recognition output already defined for frame"); return -1; }
+    $self->{_isTRec} = 1;
+}
+
+sub _unsetTRecOutDefined {
+    my ( $self ) = @_;
+    $self->{_isTRec} = 0;
+}
+
+sub getTRecOutDefined {
+    my ( $self ) = @_;
+    return $self->{_isTRec};
 }
 
 #######################
@@ -232,6 +358,23 @@ sub _setTemporalMeasures {
     $self->{_idMergeObjIDs}         = $idMergeObjIDs;
 }
 
+sub _setTextRecMeasures {
+    my ( $self, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $missDetectIDs, $falseAlarmIDs, $substitutionIDs ) = @_;
+
+    if ( $self->error() ) { return -1; }
+    
+    $self->_setTRecOutDefined();
+    if ( $self->error() ) { return -1; }
+
+    $self->{_mappedObjIDs}          = $mappedObjIDs;
+    $self->{_evalObjectIDs}         = $evalObjectIDs;
+    $self->{_evalSOIDs}             = $evalSOIDs;
+    $self->{_noPenaltySysIDs}       = $noPenaltySysIDs;
+    $self->{_missDetectIDs}         = $missDetectIDs;
+    $self->{_falseAlarmIDs}         = $falseAlarmIDs;
+    $self->{_substitutionIDs}       = $substitutionIDs;
+}
+
 #######################
 
 sub getMappedOverlapRatio {
@@ -269,6 +412,12 @@ sub getFalseAlarmIDs {
     return ( %{$self->{_falseAlarmIDs}} );
 }
 
+sub getSubstitutionIDs {
+    my ( $self ) = @_;
+    if (! defined $self->{_substitutionIDs}) { return $self->{_substitutionIDs}; }
+    return ( @{$self->{_substitutionIDs}} );
+}
+
 sub getIDSplitObjIDs {
     my ( $self ) = @_;
     if (! defined $self->{_idSplitObjIDs}) { return $self->{_idSplitObjIDs}; }
@@ -280,21 +429,43 @@ sub getIDMergeObjIDs {
     if (! defined $self->{_idMergeObjIDs}) { return $self->{_idMergeObjIDs}; }
     return ( %{$self->{_idMergeObjIDs}} );
 }
+
+#######################
+
+sub _storeBPM {
+    my ( $self, $evalBPM, $dcoBPM ) = @_;
+
+    if ( $self->error() ) { return -1; }
+
+    $self->{_evalBPM}   = $evalBPM;
+    $self->{_dcoBPM}    = $dcoBPM;
+}
+
+sub getEvalBPM {
+    my ( $self ) = @_;
+    return ( $self->{_evalBPM} );
+}
+
+sub getDCOBPM {
+    my ( $self ) = @_;
+    return ( $self->{_dcoBPM} );
+}
+
 #######################
 
 sub computeAndSetSpatialMeasures {
-    my ($self, $other, @params ) = @_;
+    my ($self, $other, $thres, $bin, @frame_dims) = @_;
     my ($mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs);
+    my @params = [$thres, $bin, @frame_dims];
 
     if ($self->getDontCare()) { 
         $self->_setSpatialMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs ); 
-        return 0;
+        return 1;
     }
 
-    my $gtFrameNum = $self->getFrameNum();
     my $gtObjList = $self->getObjectList();
     my $NG = scalar keys %$gtObjList;
-   
+
     my $dcoIDs;
     if (defined $self->getDontCareObjectIDs() ) { $dcoIDs = { $self->getDontCareObjectIDs() }; }
     else {
@@ -311,20 +482,20 @@ sub computeAndSetSpatialMeasures {
     if (! defined $other ) { 
         $mdIDs = $evalObjectIDs;
         $self->_setSpatialMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs );
-        return 0;
+        return 1;
     }
 
     my $soFrameNum = $other->getFrameNum();
     my $soObjList = $other->getObjectList();
-    $evalSOIDs = { MMisc::array1d_to_hash(keys %$soObjList) };
-    my $ND = scalar keys %$evalSOIDs;
+  	 $evalSOIDs = { MMisc::array1d_to_count_hash(keys %$soObjList) };
+	 my $ND = scalar keys %$evalSOIDs;
 
     # Check for simple cases
     if ( ($NG == 0) || ($ND == 0) ) {
         $mdIDs = $evalObjectIDs;
         $faIDs = $evalSOIDs;
         $self->_setSpatialMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs );
-        return 0;
+        return 1;
     }
 
     # Start computation when both NG and ND is > 0
@@ -336,20 +507,23 @@ sub computeAndSetSpatialMeasures {
     
     # When passed with additional parameters (frame width & frame height), the kernel function computes distance-based measures
     # Without any additional parameters, the kernel function computes area-based measures
-    my $evalBPM = new BipartiteMatch($evalGTObjs, $soObjList, \&Object::kernelFunction, \@params);
-    if ($evalBPM->error()) { 
-        $self->_set_errormsg( "Error while creating Evaluation Bipartite Matching object in computeAndSetSpatialMeasures (" . $evalBPM->get_errormsg() . ")" ); 
-        return -1; 
-    }
-    $evalBPM->compute();
-    if ($evalBPM->error()) { 
-        $self->_set_errormsg( "Error while computing Evaluation Bipartite Matching in computeAndSetSpatialMeasures (" . $evalBPM->get_errormsg() . ")" ); 
-        return -1; 
+    my $evalBPM;
+    if (scalar keys %$evalObjectIDs > 0) {
+        $evalBPM = BipartiteMatch->new($evalGTObjs, $soObjList, \&Object::kernelFunction, \@params);
+        if ($evalBPM->error()) { 
+            $self->_set_errormsg( "Error while creating Evaluation Bipartite Matching object in computeAndSetSpatialMeasures (" . $evalBPM->get_errormsg() . ")" ); 
+            return -1; 
+        }
+        $evalBPM->compute();
+        if ($evalBPM->error()) { 
+            $self->_set_errormsg( "Error while computing Evaluation Bipartite Matching in computeAndSetSpatialMeasures (" . $evalBPM->get_errormsg() . ")" ); 
+            return -1; 
+        }
     }
 
     my $dcoBPM;
     if (scalar keys %$dcoIDs > 0) {
-        $dcoBPM = new BipartiteMatch($dcGTObjs, $soObjList, \&Object::kernelFunction, \@params);
+        $dcoBPM = BipartiteMatch->new($dcGTObjs, $soObjList, \&Object::kernelFunction, \@params);
         if ($dcoBPM->error()) { 
             $self->_set_errormsg( "Error while creating Dont Care Bipartite Matching object in computeAndSetSpatialMeaures (" . $dcoBPM->get_errormsg() . ")" ); 
             return -1; 
@@ -362,58 +536,78 @@ sub computeAndSetSpatialMeasures {
     }
 
     # First display reference eval objects mapping
-    $evalBPM->_display("joint_values");
-    $evalBPM->_display("mapped", "unmapped_ref", "unmapped_sys");
+    if (0 && defined $evalBPM) {
+        print "EVAL OBJECT MAPPING:\n";
+	$evalBPM->_display("joint_values");
+   	$evalBPM->_display("mapped", "unmapped_ref", "unmapped_sys");
+    }
 
     # Next display reference dont care objects mapping
-    if (scalar keys %$dcoIDs > 0) {
+    if (0 && defined $dcoBPM) {
+        print "DONT CARE OBJECT MAPPING:\n";
         $dcoBPM->_display("joint_values");
         $dcoBPM->_display("mapped", "unmapped_ref", "unmapped_sys");
     }
 
-    my @mapped_ids = $evalBPM->get_mapped_ids();
-    $mappedOverlapRatio = 0.0;
-    $mappedObjIDs = [ @mapped_ids ];
-    for (my $loop = 0; $loop < scalar @{$mappedObjIDs}; $loop++) {
-        $mappedOverlapRatio += $evalBPM->get_jointvalues_refsys_value($mapped_ids[$loop][1], $mapped_ids[$loop][0]); 
-    }
+    if (defined $evalBPM) {
+            my @mapped_ids = $evalBPM->get_mapped_ids();
+            $mappedObjIDs = [ @mapped_ids ];
+            $mappedOverlapRatio = 0.0;
+            for (my $loop = 0; $loop < scalar @{$mappedObjIDs}; $loop++) {
+                     $mappedOverlapRatio += $evalBPM->get_jointvalues_refsys_value($mapped_ids[$loop][1], $mapped_ids[$loop][0]); 
+            }
 
-    my @unmapped_ref_ids = $evalBPM->get_unmapped_ref_ids();
-    $mdIDs = { MMisc::array1d_to_hash(@unmapped_ref_ids) };
-    
-    # For each unmapped_sys, check if it overlaps with a dont care object. If yes, don't penalize it. Reduce
-    # the sys_count by 1.
-    my @unmapped_sys_ids = $evalBPM->get_unmapped_sys_ids();
-    if (defined $dcoBPM) {
-        for (my $loop = 0; $loop < scalar @unmapped_sys_ids; $loop++) {
-            my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($unmapped_sys_ids[$loop]);
-            if (scalar @gtDCOList > 0) { 
-                $noPenaltySysIDs->{$unmapped_sys_ids[$loop]} = 1; 
-                delete $evalSOIDs->{$unmapped_sys_ids[$loop]};
+            my @unmapped_ref_ids = $evalBPM->get_unmapped_ref_ids();
+            $mdIDs = { MMisc::array1d_to_count_hash(@unmapped_ref_ids) };
+            
+            # For each unmapped_sys, check if it overlaps with a dont care object. If yes, don't penalize it. Reduce
+            # the sys_count by 1.
+            my @unmapped_sys_ids = $evalBPM->get_unmapped_sys_ids();
+            if (defined $dcoBPM) {
+                     for (my $loop = 0; $loop < scalar @unmapped_sys_ids; $loop++) {
+                                   my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($unmapped_sys_ids[$loop]);
+                                   if (scalar @gtDCOList > 0) { 
+                                            $noPenaltySysIDs->{$unmapped_sys_ids[$loop]} = 1; 
+                                            delete $evalSOIDs->{$unmapped_sys_ids[$loop]};
+                                   }
+                                   else {
+                                            $faIDs->{$unmapped_sys_ids[$loop]} = 1;
+                                   }
+                     }
             }
-            else {
-                $faIDs->{$unmapped_sys_ids[$loop]} = 1;
-            }
-        }
+            else { $faIDs = { MMisc::array1d_to_count_hash(@unmapped_sys_ids) }; }
     }
-    else { $faIDs = { MMisc::array1d_to_hash(@unmapped_sys_ids) }; }
+    elsif (defined $dcoBPM) {
+            foreach my $sys_id (keys %$evalSOIDs) {
+                           my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($sys_id);
+                           if (scalar @gtDCOList > 0) { 
+                                    $noPenaltySysIDs->{$sys_id} = 1; 
+                                    delete $evalSOIDs->{$sys_id};
+                           }
+                           else {
+                                    $faIDs->{$sys_id} = 1;
+                           }
+            }
+    }
+    else { $faIDs = { MMisc::array1d_to_count_hash(keys %$evalSOIDs) }; }
 
     $self->_setSpatialMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs );
-    return 0;
+    $self->_storeBPM( $evalBPM, $dcoBPM );
+    return 1;
 }
 
 #######################
 
 sub computeAndSetTemporalMeasures {
-    my ( $self, $other, $prevGTMap, $prevSOMap, $gtOcclCount, @params ) = @_;
+    my ( $self, $other, $prevGTMap, $prevSOMap, $gtOcclCount, $thres, $bin, @frame_dims ) = @_;
     my ($mappedOverlapRatio,$mappedObjIDs,$evalObjectIDs,$evalSOIDs,$noPenaltySysIDs,$mdIDs,$faIDs,$idSplitObjIDs,$idMergeObjIDs);
+    my @params = [$thres, $bin, @frame_dims];
 
     if ($self->getDontCare()) { 
         $self->_setTemporalMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $idSplitObjIDs, $idMergeObjIDs ); 
-        return 0;
+        return 1;
     }
 
-    my $gtFrameNum = $self->getFrameNum();
     my $gtObjList = $self->getObjectList();
     my $NG = scalar keys %$gtObjList;
    
@@ -438,20 +632,26 @@ sub computeAndSetTemporalMeasures {
     # We do it this way instead of just incrementing the count for dont care objects because eval objects
     # might have left the frame and might re-appear later in the sequence. They have to be handled
     # the same way as objects that are occluded.
+
+    # Create a key (if it doesn't exist already) in the occlusion list for each object in the current frame
+    foreach my $key (keys %$gtObjList) {
+        if (! exists $gtOcclCount->{$key}) { $gtOcclCount->{$key} = 0; }
+    }
     foreach my $key (keys %$gtOcclCount) { $gtOcclCount->{$key}++; }
 
-    # For each valid evaluation object in current frame, reset its occlusion count to 0.
-    foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key} = 0; }
+    # For each valid evaluation object in current frame, reduce the count by 1 to get to the occlusion count before this frame.
+    foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key}--; }
 
     if (! defined $other ) { 
         $mdIDs = $evalObjectIDs;
         $self->_setTemporalMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $idSplitObjIDs, $idMergeObjIDs );
-        return 0;
+        foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key} = 0; }
+        return 1;
     }
 
     my $soFrameNum = $other->getFrameNum();
     my $soObjList = $other->getObjectList();
-    $evalSOIDs = { MMisc::array1d_to_hash(keys %$soObjList) };
+    $evalSOIDs = { MMisc::array1d_to_count_hash(keys %$soObjList) };
     my $ND = scalar keys %$evalSOIDs;
 
     # Check for simple cases
@@ -459,11 +659,12 @@ sub computeAndSetTemporalMeasures {
         $mdIDs = $evalObjectIDs;
         $faIDs = $evalSOIDs;
         $self->_setTemporalMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $idSplitObjIDs, $idMergeObjIDs );
-        return 0;
+        foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key} = 0; }
+        return 1;
     }
 
-    if ( $prevGTMap == undef ) {
-        if (! $self->getDetOutDefined()) { $self->computeAndSetSpatialMeasures($other, @params); } 
+    if ( scalar keys %$prevGTMap == 0 ) {
+        if (! $self->getDetOutDefined()) { $self->computeAndSetSpatialMeasures($other, $thres, $bin, @frame_dims); } 
         if ( $self->error() ) { 
             $self->_set_errormsg("Error while computing temporal measures (" . $self->get_errormsg() . ")" ); 
             return -1;
@@ -478,7 +679,8 @@ sub computeAndSetTemporalMeasures {
             $prevGTMap->{$mappedIDs[$loop][1]} = $mappedIDs[$loop][0];
             $prevSOMap->{$mappedIDs[$loop][0]} = $mappedIDs[$loop][1];
         }
-        return 0;
+        foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key} = 0; }
+        return 1;
     }
 
     # Start computation when both NG and ND is > 0 and there exists a previous mapping
@@ -513,20 +715,23 @@ sub computeAndSetTemporalMeasures {
     }
 
     # Proceed to do a Hungarian matching on the remaining reference and system output objects
-    my $evalBPM = new BipartiteMatch(\%new_ref_objs, \%new_sys_objs, \&Object::kernelFunction, \@params);
-    if ($evalBPM->error()) { 
-        $self->_set_errormsg( "Error while creating Evaluation Bipartite Matching object in computeAndSetTemporalMeasures (" . $evalBPM->get_errormsg() . ")" ); 
-        return -1; 
-    }
-    $evalBPM->compute();
-    if ($evalBPM->error()) { 
-        $self->_set_errormsg( "Error while computing Evaluation Bipartite Matching in computeAndSetTemporalMeasures (" . $evalBPM->get_errormsg() . ")" ); 
-        return -1; 
+    my $evalBPM;
+    if (scalar keys %new_ref_objs > 0) {
+        $evalBPM = BipartiteMatch->new(\%new_ref_objs, \%new_sys_objs, \&Object::kernelFunction, \@params);
+        if ($evalBPM->error()) { 
+            $self->_set_errormsg( "Error while creating Evaluation Bipartite Matching object in computeAndSetTemporalMeasures (" . $evalBPM->get_errormsg() . ")" ); 
+            return -1; 
+        }
+        $evalBPM->compute();
+        if ($evalBPM->error()) { 
+            $self->_set_errormsg( "Error while computing Evaluation Bipartite Matching in computeAndSetTemporalMeasures (" . $evalBPM->get_errormsg() . ")" ); 
+            return -1; 
+        }
     }
 
     my $dcoBPM;
     if (scalar keys %$dcoIDs > 0) {
-        $dcoBPM = new BipartiteMatch($dcGTObjs, \%new_sys_objs, \&Object::kernelFunction, \@params);
+        $dcoBPM = BipartiteMatch->new($dcGTObjs, \%new_sys_objs, \&Object::kernelFunction, \@params);
         if ($dcoBPM->error()) { 
             $self->_set_errormsg( "Error while creating Dont Care Bipartite Matching object in computeAndSetTemporalMeasures (" . $dcoBPM->get_errormsg() . ")" ); 
             return -1; 
@@ -539,65 +744,356 @@ sub computeAndSetTemporalMeasures {
     }
 
     # First display continuing maps
-    print "Continuing Maps:\n", Dumper(%continuing_joint_values);
+    # print "Continuing Maps:\n", Dumper(\%continuing_joint_values);
 
-    # First display reference eval objects mapping
-    $evalBPM->_display("joint_values");
-    $evalBPM->_display("mapped", "unmapped_ref", "unmapped_sys");
+    # Next display reference eval objects mapping
+    if (0 && defined $evalBPM) {
+        $evalBPM->_display("joint_values");
+        $evalBPM->_display("mapped", "unmapped_ref", "unmapped_sys");
+    }
 
-    # Next display reference dont care objects mapping
-    if (scalar keys %$dcoIDs > 0) {
+    # Finally display reference dont care objects mapping
+    if (0 && scalar keys %$dcoIDs > 0) {
         $dcoBPM->_display("joint_values");
         $dcoBPM->_display("mapped", "unmapped_ref", "unmapped_sys");
     }
 
     # Compute mapped overlap ratio for the newly established mappings in this frame
-    my @mapped_ids = $evalBPM->get_mapped_ids();
     $mappedOverlapRatio = 0.0;
-    $mappedObjIDs = [ @mapped_ids ];
-    for (my $loop = 0; $loop < scalar @{$mappedObjIDs}; $loop++) {
-        $mappedOverlapRatio += $evalBPM->get_jointvalues_refsys_value($mapped_ids[$loop][1], $mapped_ids[$loop][0]); 
-        if ( (exists $prevGTMap->{$mapped_ids[$loop][1]}) && ($prevGTMap->{$mapped_ids[$loop][1]} != $mapped_ids[$loop][0]) ) {
-            push( @{$idSplitObjIDs->{$mapped_ids[$loop][1]}}, ( $prevGTMap->{$mapped_ids[$loop][1]}, $mapped_ids[$loop][0] ) );
+    my $maxIFrameDiff = 50;
+    if (defined $evalBPM) {
+        my @mapped_ids = $evalBPM->get_mapped_ids();
+        $mappedObjIDs = [ @mapped_ids ];
+        for (my $loop = 0; $loop < scalar @{$mappedObjIDs}; $loop++) {
+            $mappedOverlapRatio += $evalBPM->get_jointvalues_refsys_value($mapped_ids[$loop][1], $mapped_ids[$loop][0]); 
+            if ( (exists $prevGTMap->{$mapped_ids[$loop][1]}) && ($prevGTMap->{$mapped_ids[$loop][1]} != $mapped_ids[$loop][0]) && ($gtOcclCount->{$mapped_ids[$loop][1]} <= $maxIFrameDiff) ) {
+                push( @{$idSplitObjIDs->{$mapped_ids[$loop][1]}}, ( $prevGTMap->{$mapped_ids[$loop][1]}, $mapped_ids[$loop][0] ) );
+            }
+            $prevGTMap->{$mapped_ids[$loop][1]} = $mapped_ids[$loop][0];
+            
+            # A bug in USF-DATE duplicated here to match scores. ID-Merges were not checked in USF-DATE. Will remove once score validation is done. 
+            if ( (exists $prevSOMap->{$mapped_ids[$loop][0]}) && ($prevSOMap->{$mapped_ids[$loop][0]} != $mapped_ids[$loop][1]) && ($gtOcclCount->{$prevSOMap->{$mapped_ids[$loop][0]}} <= $maxIFrameDiff) ) {
+               push( @{$idMergeObjIDs->{$mapped_ids[$loop][0]}}, ( $prevSOMap->{$mapped_ids[$loop][0]}, $mapped_ids[$loop][1] ) );
+            }
+            $prevSOMap->{$mapped_ids[$loop][0]} = $mapped_ids[$loop][1];
         }
-        $prevGTMap->{$mapped_ids[$loop][1]} = $mapped_ids[$loop][0];
+
+        my @unmapped_ref_ids = $evalBPM->get_unmapped_ref_ids();
+        $mdIDs = { MMisc::array1d_to_count_hash(@unmapped_ref_ids) };
         
-        # Should ask John/Jon how we want to count ID Switch penalties. For now, have are counting by checking both ref and sys ID switches
-        if ( (exists $prevSOMap->{$mapped_ids[$loop][0]}) && ($prevSOMap->{$mapped_ids[$loop][0]} != $mapped_ids[$loop][1]) ) {
-            push( @{$idMergeObjIDs->{$mapped_ids[$loop][0]}}, ( $prevSOMap->{$mapped_ids[$loop][0]}, $mapped_ids[$loop][1] ) );
+        # For each unmapped_sys, check if it overlaps with a dont care object. If yes, don't penalize it. Reduce
+        # the sys_count by 1.
+        my @unmapped_sys_ids = $evalBPM->get_unmapped_sys_ids();
+        if (defined $dcoBPM) {
+            for (my $loop = 0; $loop < scalar @unmapped_sys_ids; $loop++) {
+                my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($unmapped_sys_ids[$loop]);
+                if (scalar @gtDCOList > 0) { 
+                    $noPenaltySysIDs->{$unmapped_sys_ids[$loop]} = 1; 
+                    delete $evalSOIDs->{$unmapped_sys_ids[$loop]};
+                }
+                else {
+                    $faIDs->{$unmapped_sys_ids[$loop]} = 1;
+                }
+            }
         }
-        $prevSOMap->{$mapped_ids[$loop][0]} = $mapped_ids[$loop][1];
+        else { $faIDs = { MMisc::array1d_to_count_hash(@unmapped_sys_ids) }; }
     }
-    
+    elsif (defined $dcoBPM) {
+            foreach my $sys_id (keys %new_sys_objs) {
+                           my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($sys_id);
+                           if (scalar @gtDCOList > 0) { 
+                                    $noPenaltySysIDs->{$sys_id} = 1; 
+                                    delete $evalSOIDs->{$sys_id};
+                           }
+                           else {
+                                    $faIDs->{$sys_id} = 1;
+                           }
+            }
+    }
+    else { $faIDs = { MMisc::array1d_to_count_hash(keys %new_sys_objs) }; }
+
     # Add to that the overlap ratio from mappings that are being carried from previous frames
     # Also, add the ref-sys pair to the mappedObjIDs array
     foreach my $key (keys %continuing_map) {
         $mappedOverlapRatio += $continuing_joint_values{$key}{$continuing_map{$key}};
-        push( @{$mappedObjIDs}, ($key, $continuing_map{$key}) );
+        push( @{$mappedObjIDs->[scalar @{$mappedObjIDs}]}, ($continuing_map{$key}, $key) );
     }
-
-    my @unmapped_ref_ids = $evalBPM->get_unmapped_ref_ids();
-    $mdIDs = { MMisc::array1d_to_hash(@unmapped_ref_ids) };
-    
-    # For each unmapped_sys, check if it overlaps with a dont care object. If yes, don't penalize it. Reduce
-    # the sys_count by 1.
-    my @unmapped_sys_ids = $evalBPM->get_unmapped_sys_ids();
-    if (defined $dcoBPM) {
-        for (my $loop = 0; $loop < scalar @unmapped_sys_ids; $loop++) {
-            my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($unmapped_sys_ids[$loop]);
-            if (scalar @gtDCOList > 0) { 
-                $noPenaltySysIDs->{$unmapped_sys_ids[$loop]} = 1; 
-                delete $evalSOIDs->{$unmapped_sys_ids[$loop]};
-            }
-            else {
-                $faIDs->{$unmapped_sys_ids[$loop]} = 1;
-            }
-        }
-    }
-    else { $faIDs = { MMisc::array1d_to_hash(@unmapped_sys_ids) }; }
 
     $self->_setTemporalMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $idSplitObjIDs, $idMergeObjIDs );
-    return 0;
+    $self->_storeBPM( $evalBPM, $dcoBPM );
+    foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key} = 0; }
+    return 1;
+}
+
+#######################
+
+sub computeAndSetTextRecMeasures {
+    my ($self, $other, $thres, $bin, $spatialWeight, $cerWeight, $costInsDel, $costSub, @frame_dims) = @_;
+    my ($mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $subIDs);
+    my @spatialparams  = [$thres, $bin, @frame_dims];
+    my @combinedparams = [$thres, $bin, $spatialWeight, $cerWeight, $costInsDel, $costSub, @frame_dims];
+
+    if ($self->getDontCare()) { 
+        $self->_setTextRecMeasures( $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $subIDs ); 
+        $self->_computeAndSetCharacterErrors($other, $costInsDel, $costSub);
+        return 1;
+    }
+
+    my $gtObjList = $self->getObjectList();
+    my $NG = scalar keys %$gtObjList;
+
+    my $dcoIDs;
+    if (defined $self->getDontCareObjectIDs() ) { $dcoIDs = { $self->getDontCareObjectIDs() }; }
+    else {
+        $self->setDontCareObjectIDs();
+        $dcoIDs = { $self->getDontCareObjectIDs() };
+    }
+
+    if (defined $self->getEvalObjectIDs() ) { $evalObjectIDs = { $self->getEvalObjectIDs() }; } 
+    else {
+        $self->setEvalObjectIDs();
+        $evalObjectIDs = { $self->getEvalObjectIDs() }; 
+    }
+
+    if (! defined $other ) { 
+        $mdIDs = $evalObjectIDs;
+        $self->_setTextRecMeasures( $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $subIDs ); 
+        $self->_computeAndSetCharacterErrors($other, $costInsDel, $costSub);
+        return 1;
+    }
+
+    my $soFrameNum = $other->getFrameNum();
+    my $soObjList = $other->getObjectList();
+    $evalSOIDs = { MMisc::array1d_to_count_hash(keys %$soObjList) };
+    my $ND = scalar keys %$evalSOIDs;
+
+    # Check for simple cases
+    if ( ($NG == 0) || ($ND == 0) ) {
+        $mdIDs = $evalObjectIDs;
+        $faIDs = $evalSOIDs;
+        $self->_setTextRecMeasures( $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $subIDs ); 
+        $self->_computeAndSetCharacterErrors($other, $costInsDel, $costSub);
+        return 1;
+    }
+
+    # Start computation when both NG and ND is > 0
+    my ( $evalGTObjs, $dcGTObjs );
+    foreach my $key (keys %$gtObjList) {
+        if ($self->{_dontCareObjectIDs}{$key}) { $dcGTObjs->{$key} = $gtObjList->{$key}; } 
+        else { $evalGTObjs->{$key} = $gtObjList->{$key}; }
+    }
+    
+    # When passed with additional parameters (frame width & frame height), the kernel function computes distance-based measures
+    # Without any additional parameters, the kernel function computes area-based measures
+    my $evalBPM;
+    if (scalar keys %$evalObjectIDs > 0) {
+        $evalBPM = BipartiteMatch->new($evalGTObjs, $soObjList, \&Object::kernelFunction, \@spatialparams);
+        if ($evalBPM->error()) { 
+            $self->_set_errormsg( "Error while creating Evaluation Bipartite Matching object in computeAndSetTextRecMeasures (" . $evalBPM->get_errormsg() . ")" ); 
+            return -1; 
+        }
+        $evalBPM->compute();
+        if ($evalBPM->error()) { 
+            $self->_set_errormsg( "Error while computing Evaluation Bipartite Matching in computeAndSetTextRecMeasures (" . $evalBPM->get_errormsg() . ")" ); 
+            return -1; 
+        }
+    }
+
+    my $dcoBPM;
+    if (scalar keys %$dcoIDs > 0) {
+        $dcoBPM = BipartiteMatch->new($dcGTObjs, $soObjList, \&Object::kernelFunction, \@spatialparams);
+        if ($dcoBPM->error()) { 
+            $self->_set_errormsg( "Error while creating Dont Care Bipartite Matching object in computeAndSetTextRecMeaures (" . $dcoBPM->get_errormsg() . ")" ); 
+            return -1; 
+        }
+        $dcoBPM->compute();
+        if ($dcoBPM->error()) { 
+            $self->_set_errormsg( "Error while computing Dont Care Bipartite Matching in computeAndSetTextRecMeasures (" . $dcoBPM->get_errormsg() . ")" ); 
+            return -1; 
+        }
+    }
+
+    # If two system objects are equi-distant from a ref object, we break the tie by computing the Character Error Rate
+    my $redoMapping = 0;
+    foreach my $ref_id (scalar keys %$evalObjectIDs) {
+        my @refsys_jointvalues = MMisc::reorder_array_numerically($self->get_jointvalues_ref_defined_values);
+        if ($refsys_jointvalues[0] == $refsys_jointvalues[1]) {
+            $redoMapping = 1;
+            last;
+        }
+    }
+
+    if ($redoMapping && (scalar keys %$evalObjectIDs > 0)) {
+        $evalBPM = BipartiteMatch->new($evalGTObjs, $soObjList, \&Object::textRecKernelFunction, \@combinedparams);
+        if ($evalBPM->error()) { 
+            $self->_set_errormsg( "Error while creating Evaluation Bipartite Matching object in computeAndSetTextRecMeasures re-mapping (" . $evalBPM->get_errormsg() . ")" ); 
+            return -1; 
+        }
+        $evalBPM->compute();
+        if ($evalBPM->error()) { 
+            $self->_set_errormsg( "Error while computing Evaluation Bipartite Matching in computeAndSetTextRecMeasures re-mapping (" . $evalBPM->get_errormsg() . ")" ); 
+            return -1; 
+        }
+    }
+
+    # First display reference eval objects mapping
+    if (0 && defined $evalBPM) {
+       print "EVAL OBJECT MAPPING:\n";
+       $evalBPM->_display("joint_values");
+       $evalBPM->_display("mapped", "unmapped_ref", "unmapped_sys");
+    }
+
+    # Next display reference dont care objects mapping
+    if (0 && defined $dcoBPM) {
+       print "DONT CARE OBJECT MAPPING:\n";
+       $dcoBPM->_display("joint_values");
+       $dcoBPM->_display("mapped", "unmapped_ref", "unmapped_sys");
+    }
+
+    if (defined $evalBPM) {
+      	    my @mapped_ids = $evalBPM->get_mapped_ids();
+
+  	    for (my $inloop = 0; $inloop < scalar @mapped_ids; $inloop++) {
+		my $sysText = $soObjList->{$mapped_ids[$inloop][0]}->getContent();
+		my $refText = $gtObjList->{$mapped_ids[$inloop][1]}->getContent();
+	        if (lc($refText) ne lc($sysText)) { push( @{$subIDs->[scalar @{$subIDs}]}, @{$mapped_ids[$inloop]} ); }
+		else { push( @{$mappedObjIDs->[scalar @{$mappedObjIDs}]}, @{$mapped_ids[$inloop]} ); }
+	    }
+
+            my @unmapped_ref_ids = $evalBPM->get_unmapped_ref_ids();
+            $mdIDs = { MMisc::array1d_to_count_hash(@unmapped_ref_ids) };
+            
+            # For each unmapped_sys, check if it overlaps with a dont care object. If yes, don't penalize it. Reduce
+            # the sys_count by 1.
+            my @unmapped_sys_ids = $evalBPM->get_unmapped_sys_ids();
+            if (defined $dcoBPM) {
+               for (my $loop = 0; $loop < scalar @unmapped_sys_ids; $loop++) {
+                   my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($unmapped_sys_ids[$loop]);
+                   if (scalar @gtDCOList > 0) { 
+                      $noPenaltySysIDs->{$unmapped_sys_ids[$loop]} = 1; 
+                      delete $evalSOIDs->{$unmapped_sys_ids[$loop]};
+                   }
+                   else {
+                      $faIDs->{$unmapped_sys_ids[$loop]} = 1;
+                   }
+               }
+            }
+            else { $faIDs = { MMisc::array1d_to_count_hash(@unmapped_sys_ids) }; }
+    }
+    elsif (defined $dcoBPM) {
+            foreach my $sys_id (keys %$evalSOIDs) {
+                           my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($sys_id);
+                           if (scalar @gtDCOList > 0) { 
+                                    $noPenaltySysIDs->{$sys_id} = 1; 
+                                    delete $evalSOIDs->{$sys_id};
+                           }
+                           else {
+                                    $faIDs->{$sys_id} = 1;
+                           }
+            }
+    }
+    else { $faIDs = { MMisc::array1d_to_count_hash(keys %$evalSOIDs) }; }
+
+    $self->_setTextRecMeasures( $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $subIDs ); 
+    $self->_computeAndSetCharacterErrors($other, $costInsDel, $costSub);
+    $self->_storeBPM( $evalBPM, $dcoBPM );
+    return 1;
+}
+
+#######################
+
+sub _computeAndSetCharacterErrors {
+    my ( $self, $other, $costInsDel, $costSub ) = @_;
+    my ( $numOfCharErrs, $numOfChars ) = ( 0, 0 );
+
+    if (! $self->getTRecOutDefined()) {
+        $self->_set_errormsg("Cannot compute character error rates before aligning ref and sys objects");
+        return -1;
+    }
+
+    my ( %mdIDs, %faIDs, @mappedIDs, @subIDs );
+
+    if (defined $self->getMissDetectIDs())  { %mdIDs = $self->getMissDetectIDs(); }
+    if (defined $self->getFalseAlarmIDs())  { %faIDs = $self->getFalseAlarmIDs(); }
+    if (defined $self->getMappedObjIDs())   { @mappedIDs = $self->getMappedObjIDs(); }      
+    if (defined $self->getSubstitutionIDs()){ @subIDs = $self->getSubstitutionIDs(); }
+
+    my $gtObjList = $self->getObjectList();
+    my $soObjList = $other->getObjectList();
+
+    if (%mdIDs) {
+        foreach my $mdID (keys %mdIDs) {
+	    my $refText = $gtObjList->{$mdID}->getContent();
+            $numOfCharErrs += length($refText);
+            $numOfChars += length($refText);
+        }
+    }
+
+    if (%faIDs) {
+        foreach my $faID (keys %faIDs) {
+	    my $sysText = $soObjList->{$faID}->getContent();
+            $numOfCharErrs += length($sysText);
+        }
+    }
+
+    if (@subIDs) {
+       for (my $inloop = 0; $inloop < scalar @subIDs; $inloop++) {
+	    my $sysText = $soObjList->{$subIDs[$inloop][0]}->getContent();
+	    my $refText = $gtObjList->{$subIDs[$inloop][1]}->getContent();
+            $numOfCharErrs += &Object::computeEditDistance($refText, $sysText, $costInsDel, $costSub);
+            $numOfChars += length($refText);
+       }
+    }
+
+    if (@mappedIDs) {
+       for (my $inloop = 0; $inloop < scalar @mappedIDs; $inloop++) {
+	    my $sysText = $soObjList->{$mappedIDs[$inloop][0]}->getContent();
+	    my $refText = $gtObjList->{$mappedIDs[$inloop][1]}->getContent();
+            $numOfChars += length($refText);
+       }
+    }
+
+    $self->_setNumOfCharErrs($numOfCharErrs);
+    $self->_setNumOfChars($numOfChars);
+
+    return 1;
+}
+
+#######################
+
+sub isDCOOverlap {
+   my ( $self, $sys_id ) = @_; 
+
+   my $dcoBPM = $self->getDCOBPM();
+   my $frameNum = $self->getFrameNum();
+
+   if (! defined $dcoBPM) { return 0; }
+
+   my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($sys_id);
+   if (scalar @gtDCOList > 0) { 
+        # print "Object $sys_id overlaps with: ", join(", ", @gtDCOList) , "\n";
+        return 1; 
+   }
+
+   return 0;
+}
+
+#######################
+
+sub get_jointvalues_ref_defined_values {
+   my ( $self, $ref_id ) = @_;
+
+   my $evalBPM = $self->getEvalBPM();
+
+   my @out;
+   if (! defined $evalBPM) { return(@out); }
+
+   my @sysList = $evalBPM->get_jointvalues_ref_defined_list($ref_id);
+   foreach my $sys_id (@sysList) {
+        push @out, $evalBPM->get_jointvalues_refsys_value($ref_id, $sys_id);
+   }
+
+   return(@out);
 }
 
 #######################
@@ -636,5 +1132,20 @@ sub error {
 }
 
 #######################
+
+sub warn_print {
+  print "WARNING: ", @_;
+
+  print "\n";
+}
+
+#######################
+
+sub error_quit {
+  print("${ekw}: ", @_);
+
+  print "\n";
+  exit(1);
+}
 
 1;
