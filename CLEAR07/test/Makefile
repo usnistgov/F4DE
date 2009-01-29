@@ -7,31 +7,31 @@ install:
 check:
 	@(cd UnitTests; make $@)
 	@(cd CLEARDTViperValidator; make $@)
-	@(cd CLEARTDViperValidator; make $@)
+	@(cd CLEARTRViperValidator; make $@)
 	@(cd CLEARDTScorer; make $@)
-	@(cd CLEARTDScorer; make $@)
+	@(cd CLEARTRScorer; make $@)
 	@echo "***** All tests ran succesfully"
 
 makecheckfiles:
 	@(cd UnitTests; make $@)
 	@(cd CLEARDTViperValidator; make $@)
-	@(cd CLEARTDViperValidator; make $@)
+	@(cd CLEARTRViperValidator; make $@)
 	@(cd CLEARDTScorer; make $@)
-	@(cd CLEARTDScorer; make $@)
+	@(cd CLEARTRScorer; make $@)
 	@echo "***** All files generated succesfully"
 
 makecompcheckfiles:
 	@(cd UnitTests; make $@)
 	@(cd CLEARDTViperValidator; make $@)
-	@(cd CLEARTDViperValidator; make $@)
+	@(cd CLEARTRViperValidator; make $@)
 	@(cd CLEARDTScorer; make $@)
-	@(cd CLEARTDScorer; make $@)
+	@(cd CLEARTRScorer; make $@)
 	@echo "***** All files generated succesfully"
 
 cleanresfiles:
 	@(cd UnitTests; make $@)
 	@(cd CLEARDTViperValidator; make $@)
-	@(cd CLEARTDViperValidator; make $@)
+	@(cd CLEARTRViperValidator; make $@)
 	@(cd CLEARDTScorer; make $@)
-	@(cd CLEARTDScorer; make $@)
+	@(cd CLEARTRScorer; make $@)
 	@echo "***** All results files removed"
