@@ -143,7 +143,7 @@ sub _fs_check_value {
   my $value = shift @_;
   my $from_new = shift @_;
 
-  if ($value eq "") {
+  if (MMisc::is_blank($value)) {
     # If called from new, it is ok
     return($value, "") if ($from_new);
     # Otherwise it should not happen
@@ -151,6 +151,7 @@ sub _fs_check_value {
   }
 
   # Process pair per pair
+  $value = MMisc::clean_begend_spaces($value);
   my @todo = &_fs_split_line($value);
   foreach my $key (@todo) {
     my ($txt, $b, $e) = &_fs_split_pair($key);
