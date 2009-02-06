@@ -85,6 +85,24 @@ sub get_named_xml_section {
 
 ##########
 
+sub get_named_xml_section_with_inline_content {
+  my $name = shift @_;          # tag name
+  my $content = shift @_;       # inline content
+  my $rstr = shift @_;          # reference to the string
+  my $txt = shift @_;           # Default error string
+  
+  if ($$rstr =~ s%(\<${name}(\s+[^\>]*$content[^\>]*\/\>))%%s) {
+    $txt = $1;
+  } elsif ($$rstr =~ s%(\<${name}(\s+[^\>]*$content[^\>]*\>).+?\<\/${name}\>)%%s) {
+    $txt = $1;
+  }
+
+  return($txt);
+}
+
+
+##########
+
 sub get_next_xml_section {
   my $rstr = shift @_;          # reference to the string
   my $des = shift @_;           # Default error string
