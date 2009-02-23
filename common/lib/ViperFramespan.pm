@@ -216,7 +216,6 @@ sub _fs_shorten_value {
   my @o = ();
 
   my @ftodo = &_fs_split_line($fs);
-  my $ftc = scalar @ftodo;
 
   # Get the first element
   my $entry = shift @ftodo;
@@ -864,6 +863,68 @@ sub duration {
   }
 
   return($d);
+}
+
+##########
+
+sub gap_shorten {
+  my ($self, $gap) = @_;
+
+  return(0) if ($self->error());
+
+  if ($gap < 2) {
+    $self->_set_errormsg("In \'gap_shorten\', \'gap\' value can not be less than 2");
+    return(0);
+  }
+
+  if (! $self->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(0);
+  }
+
+  # Note: We know that new reorder and optimize values, so we can trust data
+  my $fs = $self->get_value();
+
+  # Only 1 element, nothing to do
+  return(1) if (&_fs_split_line_count($fs) == 1);
+
+  # More than one element: compute
+  my @o = ();
+
+  my @ftodo = &_fs_split_line($fs);
+
+  # Get the first element
+  my $entry = shift @ftodo;
+  my ($err, $b, $e) = &_fs_split_pair($entry);
+  if (! MMisc::is_blank($err)) {
+    $self->_set_errormsg("Problem in \'gap_shorten\' : $err");
+    return(0);
+  }
+
+  foreach $entry (@ftodo) {
+    my ($err, $nb, $ne) = &_fs_split_pair($entry);
+    if (! MMisc::is_blank($err)) {
+      $self->_set_errormsg("Problem in \'gap_shorten\' : $err");
+      return(0);
+    }
+
+    my $v = $nb - $e;
+
+    if ($gap < $v) { # ex: 1:2 6:7 w/ gap = 3 ==> 1:2 6:7
+      push @o, "$b:$e";
+      ($b, $e) = ($nb, $ne);
+    } else {          # ex: 1:2 6:7 w/ gap = 4 ==> 1:7
+      $e = $ne;
+    }
+  }
+  push @o, "$b:$e";
+
+  $fs = join(" ", @o);
+
+  $self->set_value($fs);
+  return(0) if ($self->error());
+
+  return(1);
 }
 
 ######################################## 'ts' functions
