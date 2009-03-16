@@ -53,6 +53,16 @@ use Data::Dumper;
 
 ########################################
 
+my $ok_domain = "SV";
+
+my @ok_elements = 
+  ( # Order is important
+   "PERSON",
+   "FRAME",
+   "I-FRAMES",
+   "file",
+  );
+
 ## Constructor
 sub new {
   my $class = shift @_;
@@ -61,7 +71,7 @@ sub new {
   my $errortxt = "";
 
   if (! defined $tmp) {
-    $tmp = CLEARDTViperFile->new("SV");
+    $tmp = CLEARDTViperFile->new($ok_domain);
     $errortxt .= $tmp->get_errormsg() if ($tmp->error());
   }
 
@@ -72,6 +82,7 @@ sub new {
     {
      cldt           => $tmp,
      errormsg       => $errormsg,
+     validated      => 0,
     };
 
   bless $self;
@@ -113,17 +124,28 @@ sub _set_error_and_return {
 ############################################################
 # A lot of the code relies on simpleCLEARDTViperFile functionalities
 
+sub __get_cldt {
+  my ($self) = @_;
+
+  my $cldt = $self->{cldt};
+  return($self->_set_error_and_return("Undefined CLEARDTViperFile", undef))
+    if (! defined $cldt);
+
+  return($cldt);
+}
+
+#####
+
 sub __cldt_caller {
   my ($self, $func, $rderr, @params) = @_;
 
   return(@$rderr) if ($self->error());
 
-  my $cldt = $self->{cldt};
-  return($self->_set_error_and_return("Undefined CLEARDTViperFile", 0))
-    if (! defined $cldt);
+  my $cldt = $self->__get_cldt();
+  return(@$rderr) if (! defined $cldt);
 
   my @ok = &{$func}($cldt, @params);
-  return($self->_set_error_and_return($cldt->get_errormsg(), 0))
+  return($self->_set_error_and_return($cldt->get_errormsg(), @$rderr))
     if ($cldt->error());
 
   return(@ok);
@@ -241,22 +263,6 @@ sub get_frame_tolerance {
          (\&CLEARDTViperFile::get_frame_tolerance, [0]));
 }
 
-########## 'validate'
-
-sub is_validated {
-  my ($self) = @_;
-  return($self->__cldt_caller
-         (\&CLEARDTViperFile::is_validated, [0]));
-}
-
-#####
-
-sub validate {
-  my ($self) = @_;
-  return($self->__cldt_caller
-         (\&CLEARDTViperFile::validate, [0]));
-}
-
 ######################################## Internal queries
 
 sub get_sourcefile_filename {
@@ -283,30 +289,112 @@ sub _display_all {
   return(Dumper(\$self));
 }
 
+########## 'validate'
+
+sub is_validated {
+  my ($self) = @_;
+  return(1)
+    if ($self->{validated});
+
+  return(0);
+}
+
+#####
+
+sub _validate {
+  my ($self) = @_;
+  return($self->__cldt_caller
+         (\&CLEARDTViperFile::validate, [0]));
+}
+
+######################################## 
+## Access to CLEARDTViperFile's internal structures
+# Note: we have to modify its 'fhash' directly since no "Observation" or
+# "EventList" is available in the CLEAR code
+
+sub _get_cldt_fhash {
+  my ($self) = @_;
+  return($self->__cldt_caller
+         (\&CLEARDTViperFile::_get_fhash, [-1]));
+}
+
+#####
+
+sub _set_cldt_fhash {
+  my ($self, %fhash) = @_;
+  return($self->__cldt_caller
+         (\&CLEARDTViperFile::_set_fhash, [0], %fhash));
+}
+
+##########
+
+sub __check_cldt_validity {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  # First check the domain
+  my ($domain) = $self->__cldt_caller
+    (\&CLEARDTViperFile::get_domain, [""]);
+  return(0) if ($self->error());
+  return($self->_set_error_and_return("Wrong domain for type [$domain] (expected: $ok_domain)", 0))
+    if ($domain ne $ok_domain);
+
+  # Then check the keys in 'fhash'
+  my %fhash = $self->_get_cldt_fhash();
+  return(0) if ($self->error());
+
+  my @fh_keys = keys %fhash;
+  my ($rin, $rout) = MMisc::compare_arrays(\@fh_keys, @ok_elements);
+  return($self->_set_error_and_return("Found unknown elements in file [" . join(", ", @$rout) . "]", 0))
+    if (scalar @$rout > 0);
+
+  return(1);
+}
+
+##########
+
+sub validate {
+  my ($self) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if ($self->is_validated());
+
+  # cldt not yet validated ?
+  my $ok = $self->_validate();
+  return($ok) if ($ok != 1);
+
+  # Checks
+  my $ok = $self->__check_cldt_validity();
+  return($ok) if ($ok != 1);
+
+  return(1);
+}
+
 ########## Helper Functions
 
 sub load_ViperFile {
   my ($isgtf, $filename, $frameTol, $xmllint, $xsdpath) = @_;
 
   my ($ok, $cldt, $err) = CLEARDTHelperFunctions::load_ViperFile
-    ($isgtf, $filename, "SV", $frameTol, $xmllint, $xsdpath);
+    ($isgtf, $filename, $ok_domain, $frameTol, $xmllint, $xsdpath);
 
   return($ok, undef, $err)
     if ((! $ok) || (! MMisc::is_blank($err)));
 
   my $it = AVSS09ViperFile->new($cldt);
-
   return(0, undef, $it->get_errormsg())
     if ($it->error());
 
+  my $ok = $it->validate();
+  return(0, undef, $it->get_errormsg())
+    if ($it->error());
+  return($ok, undef, "Problem during validation process")
+    if (! $ok);
+
   return(1, $it, "");
 }
-
-######################################## Actual modification code
-
-
-
-
 
 ############################################################
 
