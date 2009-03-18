@@ -56,7 +56,7 @@ use Data::Dumper;
 my $ok_domain = "SV";
 
 my @ok_elements = 
-  ( # Order is important
+  ( # Order is important ('PERSON' first and 'file' last)
    "PERSON",
    "FRAME",
    "I-FRAMES",
@@ -279,6 +279,30 @@ sub change_sourcefile_filename {
          (\&CLEARDTViperFile::change_sourcefile_filename, [-1], $nfn));
 }
 
+########## 'comment'
+
+sub _addto_comment {
+  my ($self, $comment) = @_;
+  return($self->__cldt_caller
+         (\&CLEARDTViperFile::_addto_comment, [0]));
+}
+
+#####
+
+sub _is_comment_set {
+  my ($self) = @_;
+  return($self->__cldt_caller
+         (\&CLEARDTViperFile::_is_comment_set, [0]));
+}
+
+#####
+
+sub _get_comment {
+  my ($self) = @_;
+  return($self->__cldt_caller
+         (\&CLEARDTViperFile::_get_comment, [0]));
+}
+
 ########################################
 
 sub _display_all {
@@ -293,6 +317,7 @@ sub _display_all {
 
 sub is_validated {
   my ($self) = @_;
+
   return(1)
     if ($self->{validated});
 
@@ -369,6 +394,7 @@ sub validate {
   my $ok = $self->__check_cldt_validity();
   return($ok) if ($ok != 1);
 
+  $self->{validated} = 1;
   return(1);
 }
 
@@ -394,6 +420,356 @@ sub load_ViperFile {
     if (! $ok);
 
   return(1, $it, "");
+}
+
+#################### Add to each ID
+
+sub add_to_id {
+  my ($self, $toadd) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->_set_error_and_return("Can only use \"add_to_id\" on validated XML files", 0))
+    if (! $self->is_validated());
+
+  my %fhash = $self->_get_cldt_fhash();
+  return(0) if ($self->error());
+
+  # No 'PERSON' in this file, return now
+  my $pk = $ok_elements[0];
+  return(1) if (! exists $fhash{$pk});
+
+  my @keys = MMisc::reorder_array_numerically(keys %{$fhash{$pk}});
+  @keys = reverse @keys
+    if ($toadd > 0); # start from the end if we add to value to avoid duplicate
+
+  foreach my $key (@keys) {
+    my $nk = $key + $toadd;
+    return($self->_set_error_and_return("Can not change ID to \"$nk\" (from \"$key\"), not an authorized value", 0))
+      if ($nk < 0);
+
+    return($self->_set_error_and_return("Can not add ($toadd) to ID ($key), an element with the expected value ($nk) already exists", 0))
+      if (exists $fhash{$pk}{$nk});
+
+    # Create the new one
+    $fhash{$pk}{$nk} = $fhash{$pk}{$key};
+    # Delete the old one
+    delete $fhash{$pk}{$key};
+  }
+
+  my $ok = $self->_set_cldt_fhash(%fhash);
+  return(0) if ($self->error());
+
+  $self->_addto_comment("Added $toadd to each $pk ID");
+  return(0) if ($self->error());
+
+  return(1);
+}
+
+#################### Modify bounding boxes
+
+sub _adddiv_bbv {
+  my $v = shift @_;
+  my $add = shift @_;
+  my $mul = shift @_;
+
+  $v *= $mul;
+  $v += $add;
+  $v = sprintf("%d", $v); # Rounding
+
+  return($v);
+}
+
+#####
+
+sub modify_bboxes {
+  my ($self, $xadd, $yadd, $hwmul) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->_set_error_and_return("Can only use \"modify_bboxes\" on validated XML files", 0))
+    if (! $self->is_validated());
+
+  my %fhash = $self->_get_cldt_fhash();
+  return(0) if ($self->error());
+
+  # No 'PERSON' in this file, return now
+  my $pk = $ok_elements[0];
+  return(1) if (! exists $fhash{$pk});
+
+  my @keys = keys %{$fhash{$pk}};
+  my $lk = "LOCATION";
+
+  foreach my $key (@keys) {
+    next if (! exists $fhash{$pk}{$key}{$lk});
+    foreach my $fs (keys %{$fhash{$pk}{$key}{$lk}}) {
+      my @bbox = @{$fhash{$pk}{$key}{$lk}{$fs}};
+      my $x = shift @bbox;
+      $x = &_adddiv_bbv($x, $xadd, $hwmul);
+      my $y = shift @bbox;
+      $y = &_adddiv_bbv($y, $yadd, $hwmul);
+      my $h = shift @bbox;
+      $h = &_adddiv_bbv($h, 0, $hwmul);
+      my $w = shift @bbox;
+      $w = &_adddiv_bbv($w, 0, $hwmul);
+      return($self->_set_error_and_return("WEIRD: bbox contains more than just x,y,h,w ?", 0))
+        if (scalar @bbox > 0);
+      push @bbox, $x, $y, $h, $w;
+      
+      foreach my $v (@bbox) {
+        return($self->_set_error_and_return("Modified bbox contains negative values", 0))
+          if ($v < 0);
+      }
+      
+      @{$fhash{$pk}{$key}{$lk}{$fs}} = @bbox;
+    }
+  }
+
+  my $ok = $self->_set_cldt_fhash(%fhash);
+  return(0) if ($self->error());
+
+  $self->_addto_comment("Modified $pk bounding boxes using (x * $hwmul + $xadd, y * $hwmul + $yadd, h * $hwmul, w * $hwmul)");
+  return(0) if ($self->error());
+
+  return(1);
+}
+
+#################### Frames modifications
+
+sub _shift_fs {
+  my ($v, $fss) = @_;
+
+  my $err = "";
+
+  my $tmp_fs = ViperFramespan->new();
+  return("Creating framespan: " . $tmp_fs->get_errormsg())
+    if ($tmp_fs->error());
+
+  $tmp_fs->set_value($v);
+  return("Setting framespan value: " . $tmp_fs->get_errormsg())
+    if ($tmp_fs->error());
+
+  # Note: we are using value_shift and not negative_value_shift
+  # because we want an error message if the shift create a non
+  # valid framespan
+  $tmp_fs->value_shift($fss);
+  return("Shifting framespan value: " . $tmp_fs->get_errormsg())
+    if ($tmp_fs->error());
+
+  my $r = $tmp_fs->get_value();
+  my $m = $tmp_fs->get_end_fs();
+
+  return("", $r, $m);
+}
+
+#####
+
+sub _fs_sort_core {
+  my ($a, $b) = @_;
+
+  my (@l1) = split(m%\:%, $a);
+  my ($b1, $e1) = ($l1[0], $l1[-1]);
+
+  my (@l2) = split(m%\:%, $b);
+  my ($b2, $e2) = ($l2[0], $l2[-1]);
+
+  # Order by beginning first
+  return($b1 <=> $b2) if ($b1 != $b2);
+  # by end if the beginning is the same
+  return($e1 <=> $e2);
+}
+
+#####
+
+sub _fs_sort {
+  return(&_fs_sort_core($a, $b));
+}
+
+#####
+
+sub _shift_fhash_set {
+  my ($k, $fss, %fhash) = @_;
+
+  return("", 0, %fhash)
+    if (! exists $fhash{$k});
+
+  my $fsk = "framespan";
+  my $max = 0;
+
+  foreach my $id (keys %{$fhash{$k}}) {
+    foreach my $key (keys %{$fhash{$k}{$id}}) {
+      if ($key eq $fsk) { # Special case, no depth
+        my $v = $fhash{$k}{$id}{$key};
+        (my $err, $v, my $tm) = &_shift_fs($v, $fss);
+        return("While trying to shift \"$k\"'s \"$key\" entry by ($fss): $err")
+          if (! MMisc::is_blank($err));
+        $fhash{$k}{$id}{$key} = $v;
+        $max = $tm if ($tm > $max);
+      } else { # 1 additional depth to keys of framespan
+        my @fsl = sort _fs_sort keys %{$fhash{$k}{$id}{$key}};
+        @fsl = reverse @fsl
+          if ($fss > 0); # start from the end if we add to framespan values
+        foreach my $csf (@fsl) {
+          my ($err, $v, $tm) = &_shift_fs($csf, $fss);
+          return("While trying to shift \"$k\"'s \"$key\" entry by ($fss): $err")
+            if (! MMisc::is_blank($err));
+          return("While trying to shift \"$k\"'s \"$key\" entry by ($fss): An element already exists for \"$v\" key")
+            if (exists $fhash{$k}{$id}{$key}{$v});
+          # Create the new one
+          $fhash{$k}{$id}{$key}{$v} = $fhash{$k}{$id}{$key}{$csf};
+          # Delete the old one
+          delete $fhash{$k}{$id}{$key}{$csf};
+
+          $max = $tm if ($tm > $max);
+        }
+      }
+    }
+  }
+  
+  return("", $max, %fhash);
+}
+
+#####
+
+sub shift_frames {
+  my ($self, $fss) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->_set_error_and_return("Can only use \"shift_frames\" on validated XML files", 0))
+    if (! $self->is_validated());
+
+  my %fhash = $self->_get_cldt_fhash();
+  return(0) if ($self->error());
+
+  my @ak = MMisc::clone(@ok_elements);
+  my @fk = keys %fhash;
+  my ($in, $out) = MMisc::compare_arrays(\@ak, @fk);
+  if (scalar @$out > 0) {
+    $self->_set_errormsg("Found some unknown types: " . join(" ", @$out));
+    return(0);
+  }
+
+  my $max = 0;
+  my @atc = ();
+
+  # PERSON
+  my $k = shift @ak;
+  (my $err, my $tm, %fhash) = &_shift_fhash_set($k, $fss, %fhash);
+  return($self->_set_error_and_return($err, 0))
+    if (! MMisc::is_blank($err));
+  $max = $tm if ($tm > $max);
+
+  # I-FRAMES
+  my $k = shift @ak;
+  (my $err, my $tm, %fhash) = &_shift_fhash_set($k, $fss, %fhash);
+  return($self->_set_error_and_return($err, 0))
+    if (! MMisc::is_blank($err));
+  $max = $tm if ($tm > $max);
+
+  # FRAME
+  my $k = shift @ak;
+  (my $err, my $tm, %fhash) = &_shift_fhash_set($k, $fss, %fhash);
+  return($self->_set_error_and_return($err, 0))
+    if (! MMisc::is_blank($err));
+  $max = $tm if ($tm > $max);
+  
+  # file's NUMFRAMES
+  my $k = shift @ak;
+  my $nf = "NUMFRAMES";
+  return($self->_set_error_and_return("Could not find \"$k\"'s \"$nf\" key", 0))
+    if (! exists $fhash{$k}{$nf});
+  my $cm = $fhash{$k}{$nf};
+  if ($cm < $max) {
+    $fhash{$k}{$nf} = $max;
+    push @atc, "Modified $nf from $cm to $max";
+  }
+  
+  my $ok = $self->_set_cldt_fhash(%fhash);
+  return(0) if ($self->error());
+
+  push @atc, "Shifted framespans by $fss";
+  foreach my $cmt (@atc) {
+    $self->_addto_comment($cmt);
+    return(0) if ($self->error());
+  }
+
+  return(1);
+}
+
+############################################################
+## Helper functions
+
+sub extract_transformations {
+  my ($tmp) = @_;
+
+  my $err = "";
+  my $fname = $tmp;
+  my $fsshift = 0;
+  my @boxmod = ();
+  my $idadd = 0;
+
+  while ($tmp =~ s%([\@\:\#][^\@\:\#]+)$%%) {
+    my $wrk = $1;
+    if ($wrk =~ m%^\@([+-]?[\d\.]+)([+-][\d\.]+)x([\d\.]+)$%) {
+      push @boxmod, $1, $2, $3;
+      return("Filename extraction process: Can not have a muliplier value of 0")
+        if ($3 == 0);
+    } elsif ($wrk =~ m%^\:([+-]?\d+)$%) {
+      $fsshift = $1;
+    } elsif ($wrk =~ m%\#([+-]?\d+)$%) {
+      $idadd = $1;
+    } else {
+      return("Unable to extract information for given command line option ($fname) [trying to extract from \"$wrk\"]");
+    }
+    $fname = $tmp;
+  }
+  
+  return($err, $fname, $fsshift, $idadd, @boxmod);
+}
+
+##########
+
+sub Transformation_Helper {
+  my ($self, $forceFilename, $fsshift, $idadd, @boxmod) = @_;
+
+  return(-1) if ($self->error());
+
+  return($self->_set_error_and_return("Can only use \"Transformation_Helper\" on validated XML files", -1))
+    if (! $self->is_validated());
+
+  my $mods = 0;
+
+  if (! MMisc::is_blank($forceFilename)) {
+    $self->change_sourcefile_filename($forceFilename);
+    return(-1)
+      if ($self->error());
+    $mods++;
+  }
+
+  if ($idadd != 0) {
+    $self->add_to_id($idadd);
+    return(-1)
+      if ($self->error());
+    $mods++;
+  }
+
+  if (scalar @boxmod == 3) {
+    $self->modify_bboxes(@boxmod);
+    return(-1)
+      if ($self->error());
+    $mods++;
+  }
+
+  if ($fsshift != 0) {
+    $self->shift_frames($fsshift);
+    return(-1)
+      if ($self->error());
+    $mods++;
+  }
+
+  # Return the number of modifications done
+  return($mods);
 }
 
 ############################################################
