@@ -109,13 +109,12 @@ $xsdpath = "$f4bv/data"
   if (($f4bv ne "/lib") && ($xsdpath eq "../../../CLEAR07/data"));
 my $frameTol = 0;
 my $show = 0;
+my $forceFilename = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   CD               T  WX       fgh   l         vwx    #
+# Used:   C  F                         fgh             v x    #
 
 my %opt;
-my $dbgftmp = "";
-
 GetOptions
   (
    \%opt,
@@ -125,31 +124,46 @@ GetOptions
    'CLEARxsd=s'      => \$xsdpath,
    'gtf'             => \$isgtf,
    'frameTol=i'      => \$frameTol,
+   'ForceFilename=s' => \$forceFilename,
    # Hiden Option(s)
-   'show_internals'  => \$show,
+   'X_show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 die("\n$usage\n") if ($opt{'help'});
 die("$versionid\n") if ($opt{'version'});
 
-MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+MMisc::ok_quit("\nNot enough arguments\n$usage\n") if (scalar @ARGV == 0);
 
+MMisc::error_quit("\'ForceFilename\' option selected but no value set\n$usage")   if (($opt{'ForceFilename'}) && (MMisc::is_blank($forceFilename)));
 
-##########
+  
+##############################
 # Main processing
-my $tmp;
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
-while ($tmp = shift @ARGV) {
-  my ($ok, $object) = &load_file($isgtf, $tmp);
+foreach my $tmp (@ARGV) {
+  my ($err, $fname, $fsshift, $idadd, @boxmod) = 
+    AVSS09ViperFile::extract_transformations($tmp);
+  MMisc::error_quit("While processing filename ($tmp): $err")
+      if (! MMisc::is_blank($err));
+
+  my ($ok, $object) = &load_file($isgtf, $fname);
   next if (! $ok);
 
-#  print "**[", $object->get_xmllint(""), "]**\n";
-#  MMisc::error_quit($object->get_errormsg())
-#      if ($object->error());
+  if ($show) {
+    print "** [Before mods]\n";
+    print $object->_display_all();
+  }
 
-  print "** Object:\n", $object->_display_all()
-    if ($show);
+  # Do the transformations here (and the merge later)
+  my $mods = $object->Transformation_Helper($forceFilename, $fsshift, $idadd, @boxmod);
+  MMisc::error_quit("Problem during \"transformations\": " . $object->get_errormsg())
+      if ($object->error());
+
+  if ($mods && $show) {
+    print "** [After Mods]\n";
+    print $object->_display_all();
+  }
 
   $ndone++;
 }
