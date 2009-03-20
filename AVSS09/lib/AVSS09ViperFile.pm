@@ -9,7 +9,7 @@ package AVSS09ViperFile;
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "CLEARDTViperFile.pm" is an experimental system.
+# "AVSS09ViperFile.pm" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -48,6 +48,9 @@ use CLEARDTViperFile;
 # CLEARDTHelperFunctions (part of this tool)
 use CLEARDTHelperFunctions;
 
+# Sequence (part of this tool [CLEARDT])
+use Sequence;
+
 # For internal dispay
 use Data::Dumper;
 
@@ -63,6 +66,44 @@ my @ok_elements =
    "file",
   );
 
+my @ok_objects = ();
+my @xsdfilesl  = ();
+
+########################################
+
+sub __set_full_objects_list {
+  return if (scalar @ok_objects != 0);
+
+    my $dummy = new CLEARDTViperFile();
+    @ok_objects = $dummy->get_full_objects_list();
+}  
+
+#####
+
+sub get_full_objects_list {
+  &__set_full_objects_list() if (scalar @ok_objects == 0);
+
+  return(@ok_objects);
+}
+
+##########
+
+sub __set_required_xsd_files_list {
+  return if (scalar @xsdfilesl != 0);
+
+  my $dummy = new CLEARDTViperFile();
+  @xsdfilesl = $dummy->get_required_xsd_files_list();
+}
+
+#####
+
+sub get_required_xsd_files_list {
+  &__set_required_xsd_files_list() if (scalar @xsdfilesl == 0);
+  return(@xsdfilesl);
+}
+
+###############
+
 ## Constructor
 sub new {
   my $class = shift @_;
@@ -74,6 +115,9 @@ sub new {
     $tmp = CLEARDTViperFile->new($ok_domain);
     $errortxt .= $tmp->get_errormsg() if ($tmp->error());
   }
+
+  &__set_full_objects_list();
+  &__set_required_xsd_files_list();
 
   my $errormsg = MErrorH->new("AVSS09ViperFile");
   $errormsg->set_errormsg($errortxt);
@@ -728,6 +772,36 @@ sub extract_transformations {
   return($err, $fname, $fsshift, $idadd, @boxmod);
 }
 
+#####
+
+sub get_key_from_transformations {
+  my ($fname, $fsshift, $idadd, $bmx, $bmy, $bmm) = 
+    MMisc::iuav(\@_, "", 0, 0, 0, 0, 1);
+  
+  my $key = sprintf("%s|%012d|%012d|%012d|%012d|%012d",
+                    $fname, $fsshift, $idadd, $bmx, $bmy, $bmm);
+  
+  return($key);
+}
+
+#####
+
+sub get_transformations_from_key {
+  my ($key) = @_;
+
+  my ($fname, @allk) = split(m%\|%, $key);
+  
+  return("Could not extract key information")
+    if (scalar @allk != 5);
+  
+  my @out = ();
+  foreach my $entry (@allk) {
+    push @out, sprintf("%d", $entry);
+  }
+
+  return("", $fname, @out);
+}
+
 ##########
 
 sub Transformation_Helper {
@@ -770,6 +844,54 @@ sub Transformation_Helper {
 
   # Return the number of modifications done
   return($mods);
+}
+
+########################################
+
+sub reformat_xml {
+  my ($self, $isgtf) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->_set_error_and_return("Can only use \"reformat_xml\" on validated XML files", 0))
+    if (! $self->is_validated());
+
+  return($self->__cldt_caller
+         (\&CLEARDTViperFile::reformat_xml, [0], $isgtf, @ok_objects));
+}
+
+##########
+
+sub write_MemDumps {
+  my ($self, $fname, $isgtf, $mdm, $skip_ss) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->_set_error_and_return("Can only use \"write_MemDump\" on validated XML files", 0))
+    if (! $self->is_validated());
+
+  my $cldt = $self->__get_cldt();
+  return(0) if ($self->error());
+
+  # First write the ViperFile MemDump
+  return($self->_set_error_and_return("Problem writing the \'Memory Dump\' representation of the ViperFile object"), 0)
+    if (! CLEARDTHelperFunctions::save_ViperFile_MemDump($fname, $cldt, $mdm));
+
+  # Then process the "sequence" (unless skip requested)
+  return(1) if ($skip_ss);
+
+  my $eval_sequence = Sequence->new($fname);
+  $self->_set_error_and_return("Failed scoring 'Sequence' instance creation. $eval_sequence", 0)
+    if (ref($eval_sequence) ne "Sequence");
+
+  $cldt->reformat_ds($eval_sequence, $isgtf, @ok_objects);
+  $self->_set_error_and_return("Could not reformat Viper File: $fname. " . $cldt->get_errormsg(), 0)
+    if ($cldt->error());
+
+  $self->_set_error_and_return("Problem writing the 'Memory Dump' representation of the Scoring Sequence object", 0)
+    if (! CLEARDTHelperFunctions::save_ScoringSequence_MemDump($fname, $eval_sequence, $mdm));
+
+  return(1);
 }
 
 ############################################################
