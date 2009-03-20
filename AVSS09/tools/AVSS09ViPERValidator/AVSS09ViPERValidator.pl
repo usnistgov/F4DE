@@ -9,7 +9,7 @@
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "CLEAR Detection and Tracking Viper XML Validator" is an experimental system.
+# "AVSS09 ViPER XML Validator" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -31,7 +31,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "AVSS09 Viper XML Validator Version: $version";
+my $versionid = "AVSS09 ViPER XML Validator Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -175,7 +175,7 @@ foreach my $tmp (@ARGV) {
     print $object->_display_all();
   }
 
-  # Do the transformations here (and the merge later)
+  # Do the transformations here
   my $mods = $object->Transformation_Helper($forceFilename, $fsshift, $idadd, @boxmod);
   MMisc::error_quit("Problem during \"transformations\": " . $object->get_errormsg())
       if ($object->error());
