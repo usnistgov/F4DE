@@ -110,9 +110,11 @@ $xsdpath = "$f4bv/data"
 my $frameTol = 0;
 my $show = 0;
 my $forceFilename = "";
+my $writeback = -1;
+my $MemDump = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   C  F                         fgh             v x    #
+# Used:   C  F                W        fgh             vwx    #
 
 my %opt;
 GetOptions
@@ -125,6 +127,8 @@ GetOptions
    'gtf'             => \$isgtf,
    'frameTol=i'      => \$frameTol,
    'ForceFilename=s' => \$forceFilename,
+   'write:s'         => \$writeback,
+   'WriteMemDump:s'  => \$MemDump,
    # Hiden Option(s)
    'X_show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -136,6 +140,22 @@ MMisc::ok_quit("\nNot enough arguments\n$usage\n") if (scalar @ARGV == 0);
 
 MMisc::error_quit("\'ForceFilename\' option selected but no value set\n$usage")   if (($opt{'ForceFilename'}) && (MMisc::is_blank($forceFilename)));
 
+if (($writeback != -1) && ($writeback ne "")) {
+  # Check the directory
+  my ($err) = MMisc::check_dir_w($writeback);
+  MMisc::error_quit("Provided \'write\' option directory ($writeback): $err")
+    if (! MMisc::is_blank($err));
+  $writeback .= "/" if ($writeback !~ m%\/$%); # Add a trailing slash
+}
+
+if (defined $MemDump) {
+  MMisc::error_quit("\'WriteMemDump\' can only be used in conjunction with \'write\'")
+    if ($writeback == -1);
+  $MemDump = $ok_md[0]
+    if (MMisc::is_blank($MemDump));
+  MMisc::error_quit("Unknown \'WriteMemDump\' mode ($MemDump), authorized: " . join(" ", @ok_md))
+    if (! grep(m%^$MemDump$%, @ok_md));
+}
   
 ##############################
 # Main processing
@@ -163,6 +183,26 @@ foreach my $tmp (@ARGV) {
   if ($mods && $show) {
     print "** [After Mods]\n";
     print $object->_display_all();
+  }
+
+  if ($writeback != -1) {
+    my ($txt) = $object->reformat_xml($isgtf);
+    MMisc::error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
+      if ($object->error());
+    my $lfname = "";
+    if ($writeback ne "") {
+      my $tmp2 = $fname;
+      $tmp2 =~ s%^.+\/([^\/]+)$%$1%;
+      $lfname = "$writeback$tmp2";
+    } 
+    MMisc::error_quit("Problem while trying to \'write\'")
+      if (! MMisc::writeTo($lfname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
+
+    if (defined $MemDump) {
+      $object->write_MemDumps($lfname, $isgtf, $MemDump);
+      MMisc::error_quit("Problem while trying to perform \'MemDump\'")
+          if ($object->error());
+    }
   }
 
   $ndone++;
