@@ -580,6 +580,14 @@ sub modify_bboxes {
 
 #################### Frames modifications
 
+sub _extend_framespan_max {
+  my ($self, $max) = @_;
+  return($self->__cldt_caller
+         (\&CLEARDTViperFile::_set_framespan_max_value, [0], "1:$max"));
+}
+
+#####
+
 sub _shift_fs {
   my ($v, $fss) = @_;
 
@@ -687,13 +695,6 @@ sub shift_frames {
   return(0) if ($self->error());
 
   my @ak = MMisc::clone(@ok_elements);
-  my @fk = keys %fhash;
-  my ($in, $out) = MMisc::compare_arrays(\@ak, @fk);
-  if (scalar @$out > 0) {
-    $self->_set_errormsg("Found some unknown types: " . join(" ", @$out));
-    return(0);
-  }
-
   my $max = 0;
   my @atc = ();
 
@@ -727,6 +728,9 @@ sub shift_frames {
   if ($cm < $max) {
     $fhash{$k}{$nf} = $max;
     push @atc, "Modified $nf from $cm to $max";
+    # We also have to modify the 'framespan_max'
+    $self->_extend_framespan_max($max);
+    return(0) if ($self->error());
   }
   
   my $ok = $self->_set_cldt_fhash(%fhash);
