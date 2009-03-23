@@ -99,7 +99,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 my $xmllint_env = "CLEAR_XMLLINT";
 my $xsdpath_env = "CLEAR_XSDPATH";
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
-my $usage = "USAGE TODO";
+my $usage = &set_usage();
 
 # Default values for variables
 my $isgtf = 0;
@@ -112,9 +112,10 @@ my $show = 0;
 my $forceFilename = "";
 my $writeback = -1;
 my $MemDump = undef;
+my $skipSequenceMemDump = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   C  F                W        fgh             vwx    #
+# Used:   C  F                W        fgh          s  vwx    #
 
 my %opt;
 GetOptions
@@ -129,6 +130,7 @@ GetOptions
    'ForceFilename=s' => \$forceFilename,
    'write:s'         => \$writeback,
    'WriteMemDump:s'  => \$MemDump,
+   'skipSequenceMemDump' => \$skipSequenceMemDump,
    # Hiden Option(s)
    'X_show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -156,6 +158,9 @@ if (defined $MemDump) {
   MMisc::error_quit("Unknown \'WriteMemDump\' mode ($MemDump), authorized: " . join(" ", @ok_md))
     if (! grep(m%^$MemDump$%, @ok_md));
 }
+
+MMisc::error_quit("\'skipSequenceMemDump\' can only be used if \'MemDump\' is selected")
+if (($skipSequenceMemDump) && (! defined $MemDump));
   
 ##############################
 # Main processing
@@ -199,7 +204,7 @@ foreach my $tmp (@ARGV) {
       if (! MMisc::writeTo($lfname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
 
     if (defined $MemDump) {
-      $object->write_MemDumps($lfname, $isgtf, $MemDump);
+      $object->write_MemDumps($lfname, $isgtf, $MemDump, $skipSequenceMemDump);
       MMisc::error_quit("Problem while trying to perform \'MemDump\'")
           if ($object->error());
     }
@@ -208,7 +213,10 @@ foreach my $tmp (@ARGV) {
   $ndone++;
 }
 
-MMisc::ok_quit("All files processed (Validated: $ndone | Total: $ntodo)\n");
+print("All files processed (Validated: $ndone | Total: $ntodo)\n");
+
+MMisc::error_quit() if ($ndone != $ntodo);
+MMisc::ok_quit();
 
 ########## END
 
@@ -236,7 +244,7 @@ sub load_file {
     AVSS09ViperFile::load_ViperFile($isgtf, $tmp, $frameTol, $xmllint, $xsdpath);
 
   if ($retstatus) { # OK return
-    &valok($tmp, "validates");
+    &valok($tmp, $msg . (MMisc::is_blank($msg) ? "validates" : ""));
   } else {
     &valerr($tmp, $msg);
   }
@@ -248,4 +256,45 @@ sub load_file {
 
 sub _warn_add {
   $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
+}
+
+########################################
+
+sub set_usage {
+  my $wmd = join(" ", @ok_md);
+
+  my $tmp=<<EOF
+$versionid
+
+Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--CLEARxsd location] [--frameTol framenbr] [--write [directory] [--WriteMemDump [mode] [--skipSequenceMemDump]] [--ForceFilename file] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
+
+Will perform a semantic validation of the AVSS09 Viper XML file(s) provided.
+
+ Where:
+  --gtf           Specify that the file to validate is a Ground Truth File
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --CLEARxsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan
+  --ForceFilename  Specify that all files loaded refers to the same 'sourcefile' file
+  --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
+  --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
+  --skipSequenceMemDump  Do not perform the sequence MemDump (useful for scoring) 
+  --version       Print version number and exit
+  --help          Print this usage information and exit
+
+Transformations syntax: [:FSshift][\@BBmod][#IDadd]
+where: 
+- FSshift is the number of frames to add or substract from every framespan within this file
+- BBmod is the bounding box modifications of the form X+YxM, ie X and Y add or substract and M multiply (example: @-10+20x0.5 will substract 10 from each X coordinate, add 20 to each Y, and multiply each resulting coordinate by 0.5)
+- IDadd is the number of ID to add or substract to every PERSON ID sen within this file
+
+Note:
+- This prerequisite that the file can be been validated using 'xmllint' against the 'CLEAR.xsd' file
+- Program will ignore the <config> section of the XML file.
+- Program will disard any xml comment(s).
+- 'CLEARxsd' files are the same as needed by CLEARDTViperValidator
+EOF
+;
+
+  return $tmp;
 }
