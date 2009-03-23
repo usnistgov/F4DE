@@ -328,7 +328,7 @@ sub change_sourcefile_filename {
 sub _addto_comment {
   my ($self, $comment) = @_;
   return($self->__cldt_caller
-         (\&CLEARDTViperFile::_addto_comment, [0]));
+         (\&CLEARDTViperFile::_addto_comment, [0], $comment));
 }
 
 #####
@@ -447,23 +447,23 @@ sub validate {
 sub load_ViperFile {
   my ($isgtf, $filename, $frameTol, $xmllint, $xsdpath) = @_;
 
-  my ($ok, $cldt, $err) = CLEARDTHelperFunctions::load_ViperFile
+  my ($ok, $cldt, $msg) = CLEARDTHelperFunctions::load_ViperFile
     ($isgtf, $filename, $ok_domain, $frameTol, $xmllint, $xsdpath);
 
-  return($ok, undef, $err)
-    if ((! $ok) || (! MMisc::is_blank($err)));
+  return($ok, undef, $msg)
+    if (! $ok);
 
   my $it = AVSS09ViperFile->new($cldt);
-  return(0, undef, $it->get_errormsg())
+  return(0, undef, $msg . $it->get_errormsg())
     if ($it->error());
 
   my $ok = $it->validate();
-  return(0, undef, $it->get_errormsg())
+  return(0, undef, $msg . $it->get_errormsg())
     if ($it->error());
-  return($ok, undef, "Problem during validation process")
+  return($ok, undef, $msg . "Problem during validation process")
     if (! $ok);
 
-  return(1, $it, "");
+  return(1, $it, $msg . "");
 }
 
 #################### Add to each ID
@@ -867,7 +867,7 @@ sub reformat_xml {
 ##########
 
 sub write_MemDumps {
-  my ($self, $fname, $isgtf, $mdm, $skip_ss) = @_;
+  my ($self, $fname, $isgtf, $mdm, $skip_smd) = @_;
 
   return(0) if ($self->error());
 
@@ -882,7 +882,7 @@ sub write_MemDumps {
     if (! CLEARDTHelperFunctions::save_ViperFile_MemDump($fname, $cldt, $mdm));
 
   # Then process the "sequence" (unless skip requested)
-  return(1) if ($skip_ss);
+  return(1) if ($skip_smd);
 
   my $eval_sequence = Sequence->new($fname);
   $self->_set_error_and_return("Failed scoring 'Sequence' instance creation. $eval_sequence", 0)
@@ -894,6 +894,173 @@ sub write_MemDumps {
 
   $self->_set_error_and_return("Problem writing the 'Memory Dump' representation of the Scoring Sequence object", 0)
     if (! CLEARDTHelperFunctions::save_ScoringSequence_MemDump($fname, $eval_sequence, $mdm));
+
+  return(1);
+}
+
+########################################
+
+sub _union_fs {
+  my ($v1, $v2) = @_;
+
+  my $err = "";
+
+  my $v1_fs = ViperFramespan->new();
+  return("Creating framespan: " . $v1_fs->get_errormsg())
+    if ($v1_fs->error());
+  $v1_fs->set_value($v1);
+  return("Setting framespan value: " . $v1_fs->get_errormsg())
+    if ($v1_fs->error());
+  my $v2_fs = ViperFramespan->new();
+  return("Creating framespan: " . $v2_fs->get_errormsg())
+    if ($v2_fs->error());
+  $v2_fs->set_value($v2);
+  return("Setting framespan value: " . $v2_fs->get_errormsg())
+    if ($v2_fs->error());
+
+  $v1_fs->union($v2_fs);
+  return("While framespan union: " . $v1_fs->get_errormsg())
+    if ($v1_fs->error());
+
+  my $v = $v1_fs->get_value();
+
+  return("", $v);
+}
+
+#####
+
+sub _union_fhash_set {
+  my ($k, $rfhash1, %fhash2) = @_;
+  
+  my %fhash1 = %{$rfhash1};
+  
+  return("Could not find \'$k\' in \"other\"")
+    if (! exists $fhash2{$k});
+  return("Could not find \'$k\'")
+    if (! exists $fhash1{$k});
+  
+  my $fsk = "framespan";
+  my $max = 0;
+
+  foreach my $id (keys %{$fhash2{$k}}) {
+    foreach my $key (keys %{$fhash2{$k}{$id}}) {
+      return("Could not find corresonding entity in master hash ($k / $id / $key)")
+        if (! exists $fhash1{$k}{$id}{$key});
+
+      if ($key eq $fsk) { # Special case, no depth
+        my $v1 = $fhash1{$k}{$id}{$key};
+        my $v2 = $fhash2{$k}{$id}{$key};
+        my ($err, $v) = &_union_fs($v1, $v2);
+        return("While trying to do union over \"$k\"'s \"$key\": $err")
+          if (! MMisc::is_blank($err));
+        $fhash1{$k}{$id}{$key} = $v;
+      } else { # 1 additional depth to keys of framespan
+        my @fs1l = keys %{$fhash1{$k}{$id}{$key}};
+        return("More than 1 entry for master hash's $k / $id / $key")
+          if (scalar @fs1l > 1);
+        my @fs2l = keys %{$fhash2{$k}{$id}{$key}};
+        return("More than 1 entry for \"other\" hash's $k / $id / $key")
+          if (scalar @fs2l > 1);
+        my $v1 = $fs1l[0];
+        my $v2 = $fs2l[0];
+        my ($err, $v) = &_union_fs($v1, $v2);
+        return("While trying to do union over \"$k\"'s \"$key\": $err")
+          if (! MMisc::is_blank($err));
+        # Nothing to do if $v == $v1 (ie no change in framespan)
+        next if ($v1 eq $v);
+        # Otherwise, create the new one
+        $fhash1{$k}{$id}{$key}{$v} = $fhash1{$k}{$id}{$key}{$v1};
+        # Delete the old one
+        delete $fhash1{$k}{$id}{$key}{$v1};
+        # Note that we do not care of the content, we simply copy the
+        # first object's content
+      }
+    }
+  }
+  
+  return("");
+}
+
+#####
+
+sub merge {
+  my ($self, $other) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->_set_error_and_return("Can only use \"merge\" on validated XML files", 0))
+    if (! $self->is_validated());
+
+  return($self->_set_error_and_return("Problem with \"other\" entity of \"merge\": " . $other->get_errormsg()))
+    if ($other->error());
+
+  return($self->_set_error_and_return("Can only use \"merge\" on validated XML files (other)", 0))
+    if (! $other->is_validated());
+
+  my $sffn1 = $self->get_sourcefile_filename();
+  my $sffn2 = $other->get_sourcefile_filename();
+
+  return($self->_set_error_and_return("Sourcefile's filename do not match ($sffn1 vs $sffn2)", 0))
+    if ($sffn1 ne $sffn2);
+  
+  # Get the 'fhash's
+  my %fhash1 = $self->_get_cldt_fhash();
+  return(0) if ($self->error());
+  my %fhash2 = $other->_get_cldt_fhash();
+  return($self->_set_error_and_return("Problem obtaining \"other\"'s data:" . $other->get_errormsg(), 0))
+    if ($other->error());
+
+  ### Process in order
+  my @ak = MMisc::clone(@ok_elements);
+  my @atc = ();
+
+  # PERSON (the easy one: copy each ID from 2 to 1 and error if already exist)
+  my $k = shift @ak;
+  if (exists $fhash2{$k}) {
+    foreach my $id (keys %{$fhash2{$k}}) {
+      return($self->_set_error_and_return("\"$k\" ID ($id) already exist, will not overwrite it", 0))
+        if (exists $fhash1{$k}{$id});
+      %{$fhash1{$k}{$id}} = MMisc::clone(%{$fhash2{$k}{$id}});
+    }
+  } # else: nothing to duplicate to first hash
+
+  # I-FRAMES (ViperFramespan overlap entries)
+  my $k = shift @ak;
+  my ($err) = &_union_fhash_set($k, \%fhash1, %fhash2);
+  return($self->_set_error_and_return("Problem while working on \"$k\": $err", 0))
+    if (! MMisc::is_blank($err));
+
+  # FRAMES
+  my $k = shift @ak;
+  my ($err) = &_union_fhash_set($k, \%fhash1, %fhash2);
+  return($self->_set_error_and_return("Problem while working on \"$k\": $err", 0))
+    if (! MMisc::is_blank($err));
+
+  # file's NUMFRAMES
+  my $k = shift @ak;
+  my $nf = "NUMFRAMES";
+  return($self->_set_error_and_return("Could not find master's \"$k\"'s \"$nf\" key", 0))
+    if (! exists $fhash1{$k}{$nf});
+  return($self->_set_error_and_return("Could not find \"other\"'s \"$k\"'s \"$nf\" key", 0))
+    if (! exists $fhash2{$k}{$nf});
+  if ($fhash2{$k}{$nf} > $fhash1{$k}{$nf}) {
+    my $cm = $fhash1{$k}{$nf};
+    my $max = $fhash2{$k}{$nf};
+    push @atc, "Merge-Modified $nf from $cm to $max";
+    # We also have to modify the 'framespan_max'
+    $self->_extend_framespan_max($max);
+    return(0) if ($self->error());
+    $fhash1{$k}{$nf} = $max;
+  }
+  
+  my $ok = $self->_set_cldt_fhash(%fhash1);
+  return(0) if ($self->error());
+
+  push @atc, "Merged another file onto this one";
+  foreach my $cmt (@atc) {
+    $self->_addto_comment($cmt);
+    return(0) if ($self->error());
+  }
 
   return(1);
 }
