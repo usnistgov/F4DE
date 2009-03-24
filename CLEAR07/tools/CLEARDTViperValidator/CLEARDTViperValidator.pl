@@ -2,7 +2,8 @@
 
 # CLEAR Detection and Tracking Viper XML Validator
 #
-# Author(s): Martial Michel
+# Author:    Vasant Manohar
+# Additions: Martial Michel
 #
 # This software was developed at the National Institute of Standards and Technology by
 # employees and/or contractors of the Federal Government in the course of their official duties.
@@ -131,8 +132,8 @@ my $frameTol = 0;
 my $MemDump = undef;
 my $show = 0;
 
-# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T   X        gh   l         vwx  
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
+# Used:   CD               T  WX       fgh   l         vwx    #
 
 my %opt;
 my $dbgftmp = "";
@@ -159,10 +160,11 @@ die("$versionid\n") if ($opt{'version'});
 
 if (defined $evaldomain) { 
   $evaldomain = uc($evaldomain);
-  MMisc::error_quit("Unknown 'Domain'. Has to be (BN, MR, SV, UV)") if ( ($evaldomain ne "BN") && ($evaldomain ne "MR") && ($evaldomain ne "SV") && ($evaldomain ne "UV") );
+  MMisc::error_quit("Unknown 'Domain'. Has to be (BN, MR, SV, UV)\n\n$usage") if ( ($evaldomain ne "BN") && ($evaldomain ne "MR") && ($evaldomain ne "SV") && ($evaldomain ne "UV") );
   $dummy->set_required_hashes($evaldomain); 
+} else {
+  MMisc::error_quit("'Domain' is a required argument (BN, MR, SV, UV)\n\n$usage");
 }
-else { MMisc::error_quit("'Domain' is a required argument (BN, MR, SV, UV)"); }
 
 if ($xmlbasefile != -1) {
   my $txt = $dummy->get_base_xml($isgtf, @ok_objects);
@@ -288,12 +290,14 @@ sub load_file {
 ########################################
 
 sub set_usage {
+  my $wmd = join(" ", @ok_md);
   my $ro = join(" ", @ok_objects);
   my $xsdfiles = join(" ", @xsdfilesl);
+
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--XMLbase [file]] [--gtf] [--xmllint location] [--CLEARxsd location] [--limitto object1[,object2[...]]] [--write [directory]] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help] [--version] [--XMLbase [file]] [--xmllint location] [--CLEARxsd location] --Domain domain --frameTol framenbr [--gtf] [--write [directory]] [--WriteMemDump [mode]] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -301,9 +305,11 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --gtf           Specify that the file to validate is a Ground Truth File
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --CLEARxsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --limitto       Only care about provided list of objects
   --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
+  --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by CLEAR tools. Also write a sequence MemDump. Two modes possible: $wmd (1st default)
   --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
+  --Domain        Specify the domain of the source file. Possible values are: BN, MR, SV, UV (for "Broadcast News", "Meeting Room", "Surveillance", and "UAV")
+  --frameTol       The frame tolerance allowed for attributes to be outside of the object framespan
   --version       Print version number and exit
   --help          Print this usage information and exit
 
