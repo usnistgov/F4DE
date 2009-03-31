@@ -588,18 +588,39 @@ sub _extend_framespan_max {
 
 #####
 
+sub __fs2vfs {
+  my ($fs) = @_;
+
+  my $fs_fs = new ViperFramespan();
+  return("Problem creating ViperFramespan", undef)
+    if ((!defined $fs_fs) || ($fs_fs->error()));
+
+  $fs_fs->set_value($fs);
+  return("Problem with framespan ($fs): " . $fs_fs->get_errormsg(), undef)
+    if ($fs_fs->error());
+
+  return("", $fs_fs);
+}
+
+#####
+
+sub __self_fs2vfs {
+  my ($self, $fs) = @_;
+
+  my ($err, $fs_fs) = &__fs2vfs($fs);
+  return($self->_set_error_and_return($err, undef))
+    if (! MMisc::is_blank($err));
+
+  return($fs_fs);
+}
+
+#####
+
 sub _shift_fs {
   my ($v, $fss) = @_;
 
-  my $err = "";
-
-  my $tmp_fs = ViperFramespan->new();
-  return("Creating framespan: " . $tmp_fs->get_errormsg())
-    if ($tmp_fs->error());
-
-  $tmp_fs->set_value($v);
-  return("Setting framespan value: " . $tmp_fs->get_errormsg())
-    if ($tmp_fs->error());
+  my ($err, $tmp_fs) = &__fs2vfs($fss);
+  return($err) if (! MMisc::is_blank($err));
 
   # Note: we are using value_shift and not negative_value_shift
   # because we want an error message if the shift create a non
@@ -903,20 +924,10 @@ sub write_MemDumps {
 sub _union_fs {
   my ($v1, $v2) = @_;
 
-  my $err = "";
-
-  my $v1_fs = ViperFramespan->new();
-  return("Creating framespan: " . $v1_fs->get_errormsg())
-    if ($v1_fs->error());
-  $v1_fs->set_value($v1);
-  return("Setting framespan value: " . $v1_fs->get_errormsg())
-    if ($v1_fs->error());
-  my $v2_fs = ViperFramespan->new();
-  return("Creating framespan: " . $v2_fs->get_errormsg())
-    if ($v2_fs->error());
-  $v2_fs->set_value($v2);
-  return("Setting framespan value: " . $v2_fs->get_errormsg())
-    if ($v2_fs->error());
+  my ($err, $v1_fs) = &__fs2vfs($v1);
+  return($err) if (! MMisc::is_blank($err));
+  my ($err, $v2_fs) = &__fs2vfs($v2);
+  return($err) if (! MMisc::is_blank($err));
 
   $v1_fs->union($v2_fs);
   return("While framespan union: " . $v1_fs->get_errormsg())
@@ -1064,6 +1075,229 @@ sub merge {
 
   return(1);
 }
+
+######################################## DCO, DCR, DCF add
+
+my $dco_key = "AMBIGUOUS";
+my $dcr_key = $dco_key;
+my $dcf_key = "EVALUATE";
+
+my $k_person = $ok_elements[0];
+my $k_true = "true";
+my $k_false = "false";
+
+#####
+
+sub __validate_fs {
+  my ($self, $fs) = @_;
+
+  my $fs_fs = $self->__self_fs2vfs($fs);
+  return(undef) if ($self->error());
+
+  return($fs_fs->get_value());
+}
+
+#####
+
+sub __get_fs_beg_end {
+  my ($self, $fs) = @_;
+
+  my ($fs_fs) = $self->__self_fs2vfs($fs);
+  return(undef, undef) if ($self->error());
+
+  my ($b, $e) = $fs_fs->get_beg_end_fs();
+  return($self->_set_error_and_return("Problem with ViperFramespan: " . $fs_fs->get_errormsg(), undef, undef))
+    if ($fs_fs->error());
+
+  return($b, $e);
+}
+
+#####
+
+sub __vc_gfhash {
+  my ($self) = @_;
+
+  return($self->_set_error_and_return("Not a validated XML files", undef))
+    if (! $self->is_validated());
+  
+  return($self->_get_cldt_fhash());
+}
+
+#####
+
+sub is_person_id_in {
+  my ($self, $id) = @_;
+
+  my (%fhash) = $self->__vc_gfhash();
+  return(-1) if ($self->error());
+
+  return(1) if (exists $fhash{$k_person}{$id});
+
+  return(0);
+}
+
+#####
+
+sub get_person_id_list {
+  my ($self) = @_;
+
+  my (%fhash) = $self->__vc_gfhash();
+  return(undef) if ($self->error());
+
+  my @list = keys %{$fhash{$k_person}};
+
+  return(@list);
+}
+
+#####
+
+sub __get_fslist {
+  my ($self, $id, $req_key) = @_;
+
+  my (%fhash) = $self->__vc_gfhash();
+  return(undef) if ($self->error());
+
+  return($self->_set_error_and_return("Can not find request \"PERSON\" ID ($id)", undef))
+    if (! exists $fhash{$k_person}{$id});
+  return($self->_set_error_and_return("Can not find request \"PERSON\" ID ($id)'s key ($req_key)", undef))
+    if (! exists $fhash{$k_person}{$id}{$req_key});
+
+  my @fs_list = keys %{$fhash{$k_person}{$id}{$req_key}};
+  return($self->_set_error_and_return("Could not find any framespan for requested \"PERSON\" ID ($id)'s key ($req_key)", undef))
+    if (scalar @fs_list == 0);
+
+  return(@fs_list);
+}
+
+#####
+
+sub get_person_fs {
+  my ($self, $id) = @_;
+
+  my @fs_list = $self->__get_fslist($id, $dco_key);
+  return(undef) if ($self->error());
+
+  my $fs= join(" ", @fs_list);
+  
+  return($self->__validate_fs($fs));
+}
+
+#####
+
+sub is_DCO {
+  # return the framespan where object is a DCO, undef otherwise 
+  my ($self, $id) = @_;
+
+  # Get the framespan list
+  my (@fs_list) = $self->__get_fslist($id, $dco_key);
+  return(undef) if ($self->error());
+
+  my $ig = $self->check_if_gtf();
+  return(undef) if ($self->error());
+  return($self->_set_error_and_return("DCO is only valid for GTF", undef))
+    if (! $ig);
+
+  # Then check the keys in 'fhash'
+  my %fhash = $self->_get_cldt_fhash();
+  return(undef) if ($self->error());
+
+  my @ofs = ();
+  foreach my $fs (@fs_list) {
+    return($self->_set_error_and_return("Can not fhash location [$k_person / $id / $dco_key / $fs]", undef))
+      if (! exists $fhash{$k_person}{$id}{$dco_key}{$fs});
+    my $tv = $fhash{$k_person}{$id}{$dco_key}{$fs};
+    my ($err, $v) = MMisc::dive_structure($tv);
+    return($self->_set_error_and_return("While checking DCO status: $err", undef))
+      if (! MMisc::is_blank($err));
+
+    if ($v eq $k_true) {
+      push @ofs, $fs;
+      next;
+    }
+
+    return($self->_set_error_and_return("Unknow $dco_key status ($v) for framespan ($fs)", undef))
+      if ($v ne $k_false);
+  }
+
+  # Not a DCO ?
+  return(undef) if (scalar @ofs == 0);
+
+  my $fs= join(" ", @ofs);
+  
+  return($self->__validate_fs($fs));
+}
+
+#####
+
+sub set_DCO {
+  my ($self, $id, $opt_fs) = @_;
+
+  my (@fs_list) = $self->__get_fslist($id, $dco_key);
+  return(undef) if ($self->error());
+
+  my $ig = $self->check_if_gtf();
+  return(undef) if ($self->error());
+  return($self->_set_error_and_return("DCO is only valid for GTF", undef))
+    if (! $ig);
+
+  my $fs2= join(" ", @fs_list);
+  my $fs_fs2 = $self->__self_fs2vfs($fs2);
+  return(undef) if ($self->error());
+
+  my $fs_fs1 = undef;
+  if (! defined $opt_fs) {
+    my ($b, $e) = $fs_fs2->get_beg_end_fs();
+    return($self->_set_error_and_return("Problem with framespan: " . $fs_fs2->get_errormsg(), undef))
+      if ($fs_fs2->error());
+    $opt_fs = "$b:$e";
+  }
+  $fs_fs1 = $self->__self_fs2vfs($opt_fs);
+  return(undef) if ($self->error());
+  return($self->_set_error_and_return("Problem with framespan creation", undef))
+      if (! defined $fs_fs1);
+
+  # Get the overlap list: list of frames in fs1 and fs2, ie the list to put to true
+  my $ov_fs = $fs_fs1->get_overlap($fs_fs2);
+  return($self->_set_error_and_return("Problem with framespan overlap: " . $fs_fs1->get_errormsg(), undef))
+    if ($fs_fs1->error());
+  return($self->_set_error_and_return("No overlap possible", undef))
+    if (! defined $ov_fs);
+  
+  my %fhash = $self->_get_cldt_fhash();
+  return(undef) if ($self->error());
+
+  # Proceed with each framespan pair in fs2:
+  # - if it overlaps with the overlap list, set to true
+  # - do nothing otherwise
+  my $rfs_fslist = $fs_fs2->get_list_of_framespans();
+  return($self->_set_error_and_return("Problem with framespan: " . $fs_fs2->get_errormsg(), undef))
+    if ($fs_fs2->error());
+  my @fs_fslist = @$rfs_fslist;
+  return($self->_set_error_and_return("Found no framespan list", undef))
+    if (scalar @fs_fslist == 0);
+
+  my @ofs = ();
+  foreach my $fs_tmp (@fs_fslist) {
+    my $fs_tmp_ov = $fs_tmp->get_overlap($ov_fs);
+    next if (! defined $fs_tmp_ov);
+
+    my $fsv = $fs_tmp->get_value();
+
+    return($self->_set_error_and_return("Could not find requested framespan ($fsv) for requested \"PERSON\" ID ($id)'s key ($dco_key)", undef))
+      if (! exists $fhash{$k_person}{$id}{$dco_key}{$fsv});
+
+    $fhash{$k_person}{$id}{$dco_key}{$fsv} = [ $k_true ];
+
+    push @ofs, $fsv;
+  }
+
+  my $ok = $self->_set_cldt_fhash(%fhash);
+  return(undef) if ($self->error());
+
+  my $fs= join(" ", @ofs);
+
+  return($self->__validate_fs($fs));
+}  
 
 ############################################################
 
