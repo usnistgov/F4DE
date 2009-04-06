@@ -1682,9 +1682,15 @@ sub unit_test {                 # Xtreme coding and us ;)
   # xor, overlap
   my $in22_1 = "1:10 20:30 40:50 60:70";
   my $in22_2 = "10:20 30:60";
-  my $exp_out22_1 = "1:9 11:19 21:29 31:39 51:59 61:70";
-  my $exp_out22_2 = "10:10 20:20 30:30 40:50 60:60";
-
+  my $exp_out22_1 = "1:9 11:19 21:29 31:39 51:59 61:70"; # xor
+  my $exp_out22_2 = "10:10 20:20 30:30 40:50 60:60"; # ov
+  my $exp_out22_3 = "1:70"; # union
+  my $exp_out22_4 = $exp_out22_1; # not of ov 
+  my $exp_out22_5 = "1:9 21:29 61:70"; # rem 2 from 1
+  my $exp_out22_6 = "80:90"; # ! in1 between (80,90)
+  my $exp_out22_7 = "11:19"; # ! in1 between (10,20)
+  #8: ! in 2 between (10,20) => undef
+  
   my $fs_tmp22_1 = new ViperFramespan($in22_1);
   my $fs_tmp22_2 = new ViperFramespan($in22_2);
 
@@ -1700,8 +1706,44 @@ sub unit_test {                 # Xtreme coding and us ;)
   $otxt .= "$eh Error while checking \'get_overlap\' (expected: $exp_out22_2 / Got: $out22_2). "
     if ($out22_2 ne $exp_out22_2);
 
-  ########## TODO: unit_test for all 'fps' functions ##########
+  my $fs_tmp22_5 = $fs_tmp22_2->clone();
+  my $ok = $fs_tmp22_5->union($fs_tmp22_1);
+  my $out22_3 = $fs_tmp22_5->get_value();
+#  print "$out22_3\n";
+  $otxt .= "$eh Error while checking \'union\' (expected: $exp_out22_3 / Got: $out22_3). "
+    if ($out22_3 ne $exp_out22_3);
+  
+  my $fs_tmp22_6 = $fs_tmp22_4->bounded_not(1, 70);
+  my $out22_4 = $fs_tmp22_6->get_value();
+#  print "$out22_4\n";
+  $otxt .= "$eh Error while checking \'not overlap\' (expected: $exp_out22_4 / Got: $out22_4). "
+    if ($out22_4 ne $exp_out22_4);
 
+  my $fs_tmp22_7 = $fs_tmp22_1->clone();
+  my $ok = $fs_tmp22_7->remove($fs_tmp22_2);
+  my $out22_5 = $fs_tmp22_7->get_value();
+#  print "$out22_5\n";
+  $otxt .= "$eh Error while checking \'remove\' (expected: $exp_out22_5 / Got: $out22_5). "
+    if ($out22_5 ne $exp_out22_5);
+
+  my $fs_tmp22_8 = $fs_tmp22_1->bounded_not(80, 90);
+  my $out22_6 = $fs_tmp22_8->get_value();
+#  print "$out22_6\n";
+  $otxt .= "$eh Error while checking \'bounded_not\' (expected: $exp_out22_6 / Got: $out22_6). "
+    if ($out22_6 ne $exp_out22_6);
+
+  my $fs_tmp22_9 = $fs_tmp22_1->bounded_not(10, 20);
+  my $out22_7 = $fs_tmp22_9->get_value();
+#  print "$out22_7\n";
+  $otxt .= "$eh Error while checking \'bounded_not\' (expected: $exp_out22_7 / Got: $out22_7). "
+    if ($out22_7 ne $exp_out22_7);
+
+  my $fs_tmp22_10 = $fs_tmp22_2->bounded_not(10, 20);
+#  print "UNDEF\n" if (! defined $fs_tmp22_10);
+  $otxt .= "$eh Error while checking \'bounded_not\' (expected: undef). "
+    if (defined $fs_tmp22_10);
+
+  ########## TODO: unit_test for all 'fps' functions ##########
 
   #####
   # End
