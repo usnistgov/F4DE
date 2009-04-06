@@ -533,11 +533,11 @@ sub get_list_of_framespans {
   foreach my $p (&_fs_split_line($value)) {
     my $nfs = new ViperFramespan();
     if (! $nfs->set_value($p)) {
-      $self->_set_errormsg("Failed to set sub framespan value '$p'");
+      $self->_set_errormsg("Failed to set sub framespan value \'$p\'");
       return(undef); 
     }
     if (defined($fps) && (! $nfs->set_fps($fps))) {
-      $self->_set_errormsg("Failed to set sub framespan fps '$fps'");
+      $self->_set_errormsg("Failed to set sub framespan fps \'$fps\'");
       return(undef); 
     }
     push @list, $nfs;
@@ -654,7 +654,7 @@ sub get_overlap {
   my $fps = undef;
   if ((defined $sfps) && (defined $ofps)) {
     if ($sfps != $ofps) {
-      $self->_set_errormsg("Can not process a \'get_ovlerap\' function for framespans with different fps");
+      $self->_set_errormsg("Can not process a \'get_overlap\' function for framespans with different fps");
       return(undef);
     }
     $fps = $sfps;
@@ -754,6 +754,186 @@ sub is_within {
   # is not within
   return(0);
 }
+
+##########
+
+sub _fs_not_value {
+  my ($fs, $min, $max) = @_;
+
+  my @o = ();
+
+  my @ftodo = &_fs_split_line($fs);
+
+  my ($b, $e) = (0, 0);
+  foreach my $entry (@ftodo) {
+    (my $err, $b, $e) = &_fs_split_pair($entry);
+    return($fs, $err) if (! MMisc::is_blank($err));
+
+    push @o, ($min . ":" . ($b - 1))
+      if ($b > $min);
+
+    $min = $e + 1; # Move 'min' each time
+  }
+  push @o, "$min:$max"
+    if ($e < $max);
+
+  $fs = join(" ", @o);
+
+  return($fs, "");
+}
+
+#####
+
+sub bounded_not {
+  my ($self, $min, $max) = @_;
+
+  return(undef) if ($self->error());
+
+  if (! $self->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(undef);
+  }
+
+  # First, limit to min/Max
+  my $tfs = new ViperFramespan("$min:$max");
+  if ($tfs->error()) {
+    $self->_set_errormsg("Problem with min/Max values ($min/$max): " . $tfs->get_errormsg());
+    return(undef);
+  }
+  
+  my $ofs = $self->get_overlap($tfs);
+  return(undef) if ($self->error());
+
+  # If framespan is not within min/Max, return the full min/Max framespan
+  return($tfs) if (! defined $ofs);
+
+  my $fsv = $ofs->get_value();
+  if ($ofs->error()) {
+    $self->_set_errormsg("Problem obtaining overlap value: " . $ofs->get_errormsg());
+    return(undef);
+  }
+
+  my ($ffsv, $err) = &_fs_not_value($fsv, $min, $max);
+  if (! MMisc::is_blank($err)) {
+    $self->_set_errormsg("Problem in not_bounded: " . $err);
+    return(undef);
+  }
+
+  my $nfs = new ViperFramespan();
+  if (! $nfs->set_value($ffsv)) {
+    $self->_set_errormsg("Failed to set new framespan value of \'$ffsv\'");
+    return(undef); 
+  }
+
+  return($nfs);
+}
+
+##########
+
+sub get_xor {
+  my ($self, $other) = @_;
+
+  return(undef) if ($self->error());
+
+  if (! $self->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(undef);
+  }
+
+  if (! $other->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(undef);
+  }
+
+  ### XOR is equivalent to the not of the overlap interescting with the union
+
+  # Work with clones in order not to modify source value
+  my $cl1 = $self->clone();
+  my $cl2 = $self->clone();
+  
+  # Get the union
+  my $ok = $cl1->union($other);
+  if ($cl1->error()) {
+    $self->_set_errormsg("In XOR during union: " . $cl1->get_errormsg());
+    return(undef);
+  }
+
+  # Need min/Max of union for not overlap bounding
+  my ($min, $max) = $cl1->get_beg_end_fs();
+  if ($cl1->error()) {
+    $self->_set_errormsg("In XOR during beg/end get: " . $cl1->get_errormsg());
+    return(undef);
+  }
+
+  # Get the overlap
+  my $ov = $cl2->get_overlap($other);
+  if ($cl2->error()) {
+    $self->_set_errormsg("In XOR during intersection: " . $cl2->get_errormsg());
+    return(undef);
+  }
+
+  my $nov = undef;
+  # If there is no overlap possible
+  if (! defined $ov) {
+    $nov = new ViperFramespan("$min:$max");
+  } else {
+    # Get the not of the overlap restricted to min/Max
+    $nov = $ov->bounded_not($min, $max);
+    if ($ov->error()) {
+      $self->_set_errormsg("In XOR during \"not overlap\": " . $ov->get_errormsg());
+      return(undef);
+    }
+  }
+  if (! defined $nov) {
+    $self->_set_errormsg("In XOR during \"not overlap\": Could not create a value");
+    return(undef);
+  }
+  if ($nov->error()) {
+    $self->_set_errormsg("In XOR during \"not overlap\": " . $nov->get_errormsg());
+    return(undef);
+  }
+
+  # Do the intersection between the non overlap and the union
+  my $res = $nov->get_overlap($cl1);
+  if ($nov->error()) {
+    $self->_set_errormsg("In XOR during final step: " . $nov->get_errormsg());
+    return(undef);
+  }
+
+  if ($res->error()) {
+    $self->_set_errormsg("In XOR, in result: " . $res->get_errormsg());
+    return(undef);
+  }
+
+  return($res);
+}
+
+##########
+
+sub remove {
+  my ($self, $other) = @_;
+
+  my $ok = $self->check_if_overlap($other);
+  return(0) if ($self->error());
+
+  # no need to remove anything if they do not overlap
+  return(1) if (! $ok); 
+ 
+  my $x = $self->get_xor($other);
+  return(0) if ($self->error());
+  if (! defined $x) {
+    $self->_set_errormsg("In remove, could not perform first step");
+    return(0);
+  }
+    
+  my $ov = $self->get_overlap($x);
+  return(0) if ($self->error());
+
+  my $fsv = $ov->get_value();
+
+  return($self->set_value($fsv));
+}
+
 
 ##########
 
@@ -1429,7 +1609,99 @@ sub unit_test {                 # Xtreme coding and us ;)
   $otxt .= "$eh Error while checking \'list_frames\' (expected: $exp_out19 / Got: $out19). "
     if ($out19 ne $exp_out19);
     
+  # xor
+  my $in20_1 = "500:800 900:1000 1200:1300";
+  my $in20_2 = "100:1100";
+  my $exp_out20_1 = "500:800 900:1000"; # overlap ( <=> and )
+  my $exp_out20_2 = "100:1100 1200:1300"; # union ( <=> or )
+  my $exp_out20_3 = "100:499 801:899 1001:1300"; # bounded not (of overlap)
+  my $exp_out20_4 = "100:499 801:899 1001:1100 1200:1300"; # xor
+  my $exp_out20_5 = "100:499 801:899 1001:1100"; # remove 1 from 2
+  
+  my $fs_tmp20_1 = new ViperFramespan($in20_1);
+  my $fs_tmp20_2 = new ViperFramespan($in20_2);
+
+  my $fs_out20_1 = $fs_tmp20_1->get_overlap($fs_tmp20_2);
+  my $out20_1 = $fs_out20_1->get_value();
+#  print "$out20_1\n";
+  $otxt .= "$eh Error while checking \'get_overlap\' (expected: $exp_out20_1 / Got: $out20_1). "
+    if ($out20_1 ne $exp_out20_1);
+
+  my $fs_tmp20_3 = $fs_tmp20_1->clone();
+  my $ok_out20_3 = $fs_tmp20_3->union($fs_tmp20_2);
+  my $out20_2 = $fs_tmp20_3->get_value();
+#  print "$out20_2\n";
+  $otxt .= "$eh Error while checking \'union\' (expected: $exp_out20_2 / Got: $out20_2). "
+    if ($out20_2 ne $exp_out20_2);
+
+  my $fs_tmp20_4 = $fs_out20_1->bounded_not(100, 1300);
+  my $out20_3 = $fs_tmp20_4->get_value();
+#  print "$out20_3\n";
+  $otxt .= "$eh Error while checking \'get_overlap\' (expected: $exp_out20_3 / Got: $out20_3). "
+    if ($out20_3 ne $exp_out20_3);
+
+  my $fs_tmp20_5 = $fs_tmp20_1->get_xor($fs_tmp20_2);
+  my $out20_4 = $fs_tmp20_5->get_value();
+#  print "$out20_4\n";
+  $otxt .= "$eh Error while checking \'get_xor\' (expected: $exp_out20_4 / Got: $out20_4). "
+    if ($out20_4 ne $exp_out20_4);
+  
+  my $ok = $fs_tmp20_2->remove($fs_tmp20_1);
+  my $out20_5 = $fs_tmp20_2->get_value();
+#  print "$out20_5\n";
+  $otxt .= "$eh Error while checking \'remove\' (expected: $exp_out20_5 / Got: $out20_5). "
+    if ($out20_5 ne $exp_out20_5);
+  
+  # not (bounded) + xor
+  my $in21_1 = "20:50 60:80";
+  my $in21_2 = "10:20 80:100";
+  my $exp_out21_1 = "10:19 51:59 81:100";
+  my $exp_out21_2 = "21:79";
+  my $exp_out21_5 = "10:100";
+
+  my $fs_tmp21_1 = new ViperFramespan($in21_1);
+  my $fs_tmp21_2 = new ViperFramespan($in21_2);
+
+  my $fs_tmp21_3 = $fs_tmp21_1->bounded_not(10, 100);
+  my $out21_3 = $fs_tmp21_3->get_value();
+#  print "$out21_3\n";
+  $otxt .= "$eh Error while checking \'bounded_not\' (expected: $exp_out21_1 / Got: $out21_3). "
+    if ($out21_3 ne $exp_out21_1);
+
+  my $fs_tmp21_4 = $fs_tmp21_2->bounded_not(10, 100);
+  my $out21_4 = $fs_tmp21_4->get_value();
+#  print "$out21_4\n";
+  $otxt .= "$eh Error while checking \'bounded_not\' (expected: $exp_out21_2 / Got: $out21_4). "
+    if ($out21_4 ne $exp_out21_2);
+
+  my $fs_tmp21_5 = $fs_tmp21_2->get_xor($fs_tmp21_4);
+  my $out21_5 = $fs_tmp21_5->get_value();
+  $otxt .= "$eh Error while checking \'bounded_not\' (expected: $exp_out21_5 / Got: $out21_5). "
+    if ($out21_5 ne $exp_out21_5);
+
+  # xor, overlap
+  my $in22_1 = "1:10 20:30 40:50 60:70";
+  my $in22_2 = "10:20 30:60";
+  my $exp_out22_1 = "1:9 11:19 21:29 31:39 51:59 61:70";
+  my $exp_out22_2 = "10:10 20:20 30:30 40:50 60:60";
+
+  my $fs_tmp22_1 = new ViperFramespan($in22_1);
+  my $fs_tmp22_2 = new ViperFramespan($in22_2);
+
+  my $fs_tmp22_3 = $fs_tmp22_1->get_xor($fs_tmp22_2);
+  my $out22_1 = $fs_tmp22_3->get_value();
+#  print "$out22_1\n";
+  $otxt .= "$eh Error while checking \'get_xor\' (expected: $exp_out22_1 / Got: $out22_1). "
+    if ($out22_1 ne $exp_out22_1);
+  
+  my $fs_tmp22_4 = $fs_tmp22_1->get_overlap($fs_tmp22_2);
+  my $out22_2 = $fs_tmp22_4->get_value();
+#  print "$out22_2\n";
+  $otxt .= "$eh Error while checking \'get_overlap\' (expected: $exp_out22_2 / Got: $out22_2). "
+    if ($out22_2 ne $exp_out22_2);
+
   ########## TODO: unit_test for all 'fps' functions ##########
+
 
   #####
   # End
