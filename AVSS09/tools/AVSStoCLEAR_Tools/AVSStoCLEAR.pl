@@ -77,6 +77,13 @@ unless (eval "use AVSStoCLEAR; 1") {
   $have_everything = 0;
 }
 
+# Getopt::Long (usualy part of the Perl Core)
+unless (eval "use Getopt::Long; 1") {
+  &_warn_add("\"Getopt::Long\" is not available on your Perl installation. ",
+             "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n");
+  $have_everything = 0;
+}
+
 # Something missing ? Abort
 if (! $have_everything) {
   print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
@@ -85,9 +92,38 @@ if (! $have_everything) {
 
 use strict;
 
+# Use the long mode of Getopt
+Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
+
 ########################################
 
-my $usage = "$0 input_file output_file\n\nConvert one AVSS ViPER file to one CLEAR ViPER file\n";
+my $usage = "$0 [--help] --IFramesGap gap [--sys | --StarterSys] input_file output_file\n\nConvert one AVSS ViPER file to one CLEAR ViPER file\n";
+
+my $dosys = 0;
+my $doStarterSys = 0;
+my $ifgap = 0;
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
+# Used:         I         S              h          s         #
+
+my %opt;
+GetOptions
+  (
+   \%opt,
+   'help',
+   'sys'          => \$dosys,
+   'StarterSys'   => \$doStarterSys,
+   'IFramesGap=i' => \$ifgap,
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+
+die("\n$usage\n") if ($opt{'help'});
+
+MMisc::ok_quit("\nNot enough arguments\n$usage\n") if (scalar @ARGV != 2);
+
+MMisc::error_quit("\'sys\' and \'StarterSys\' can not be used at the same time\n$usage")
+  if (($opt{'sys'}) && ($opt{'StarterSys'}));
+MMisc::error_quit("Invalid \'IFramesGap\' value [$ifgap], must be positive and not equal to zero\n$usage")
+  if ($ifgap < 1);
 
 my $avcl = new AVSStoCLEAR();
 
@@ -98,21 +134,29 @@ MMisc::error_quit("No output_file provided.\n $usage")
 open OUT, ">$out"
   or MMisc::error_quit("Could not create output_file ($out) : $!\n");
 
-my ($ok, $res) = $avcl->load_ViPER_AVSS($in);
+my ($ok, $res) = $avcl->load_ViPER_AVSS($in, $ifgap);
 MMisc::error_quit("ERROR: " . $avcl->get_errormsg())
   if ($avcl->error());
 MMisc::error_quit("ERROR: \'load_ViPER_AVSS\' did not complete succesfully")
   if (! $ok);
 print $res;
 
-my $xmlc = $avcl->create_CLEAR_ViPER($in);
+my $xmlc = "";
+if ($dosys) {
+  $xmlc = $avcl->create_CLEAR_SYS_ViPER($in);
+} elsif ($doStarterSys) {
+  $xmlc = $avcl->create_CLEAR_StarterSYS_ViPER($in);
+} else {
+  $xmlc = $avcl->create_CLEAR_ViPER($in);
+}
 MMisc::error_quit("ERROR: " . $avcl->get_errormsg())
   if ($avcl->error());
 MMisc::error_quit("ERROR: \'create_CLEAR_ViPER\' did not create any XML")
   if (MMisc::is_blank($xmlc));
 print OUT $xmlc;
+close OUT;
 
-print "\n==> Wrote: $out\n";
+print "\n==> Wrote", ($dosys ? "[SYS]" : ($doStarterSys ? "[StarterSYS]" : "[GTF]")), ": $out\n";
 
 MMisc::ok_quit("\nDone\n");
 
