@@ -17,7 +17,7 @@ package AVSStoCLEAR;
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 
-# $Id #
+# $Id $
 
 use strict;
 
@@ -46,15 +46,15 @@ sub new {
   my $self =
     {
      clip           => undef,
+     ifgap          => 0,
      cam_id         => undef,
      rbboxl         => undef,
      robboxl        => undef,
-     loc_xml        => undef,
-     occ_xml        => undef,
      id_fs          => undef,
      id_sfs         => undef,
      id_bf          => undef,
      gfs            => undef,
+     if_list        => undef,
      end_frame      => undef,
      comp_cache     => undef,
      clip_csv_data  => undef,
@@ -112,7 +112,8 @@ sub _set_error_and_return {
 sub load_ViPER_AVSS {
   my $self = shift @_;
   my $in = shift @_;
-  my $gap = MMisc::iuv(shift @_, 25);
+  my $ifgap = MMisc::iuv(shift @_, 5);
+  my $gapsh = MMisc::iuv(shift @_, 25);
 
   return($self->_set_error_and_return("No input file provided", 0))
     if (MMisc::is_blank($in));
@@ -134,6 +135,7 @@ sub load_ViPER_AVSS {
   my $gfs = "";
   my $efs = "";
   my $clip = "";
+  my $if_list_comp = "";
   while ($doit) {
     my $section = MtXML::get_named_xml_section($name, \$str, $avcl_xmlerrorstring);
     if ($section eq $avcl_xmlerrorstring) {
@@ -261,18 +263,18 @@ sub load_ViPER_AVSS {
 
     $self->{rbboxl}{$in}{$idv}  = $rbbl;
     $self->{robboxl}{$in}{$idv} = $robbl;
-    $self->{loc_xml}{$in}{$idv} = $loc_xml;
-    $self->{occ_xml}{$in}{$idv} = $occ_xml;
     $self->{id_fs}{$in}{$idv}   = $fsv;
     $self->{id_sfs}{$in}{$idv}  = $sfsv;
     $self->{id_bf}{$in}{$idv}   = $bf;
+
+    $if_list_comp .= " " . $fsv;
 
     # Fill the extra CSV information
     {
       my $fs_fs = new ViperFramespan($fsv);
       return($self->_set_error_and_return("Problem creating GapShorten framespan : " . $fs_fs->get_errormsg(), 0))
         if ($fs_fs->error());
-      $fs_fs->gap_shorten($gap);
+      $fs_fs->gap_shorten($gapsh);
       return($self->_set_error_and_return("Problem during GapShorten : " . $fs_fs->get_errormsg(), 0))
         if ($fs_fs->error());
 
@@ -299,6 +301,10 @@ sub load_ViPER_AVSS {
   return($self->_set_error_and_return("Could not find clip details", 0))
     if (MMisc::is_blank($clip));
 
+  return($self->_set_error_and_return("Could not find I-Frames list generation information", 0))
+    if ($if_list_comp == -1);
+
+
   $gfs = $self->_simplify_fs($gfs);
   return(0) if ($self->error());
 
@@ -312,6 +318,17 @@ sub load_ViPER_AVSS {
   $self->{clip}{$in} = $clip;
   $self->{gfs}{$in}  = $gfs;
   $self->{end_frame}{$in} = $ef;
+  if ($self->{ifgap} != 0) {
+    my $tig = $self->{ifgap};
+    return($self->_set_error_and_return("IFramesGap already set ($tig) and different from requested value ($ifgap)", 0))
+    if ($ifgap != $tig);
+  }
+  $self->{ifgap} = $ifgap;
+
+  my ($err, $if_list) = &_compute_iflist($if_list_comp, $ef, $ifgap);
+  return($self->_set_error_and_return($err, 0))
+    if (! MMisc::is_blank($err));
+  $self->{if_list}{$in} = $if_list;
 
   my $c = $self->get_cam_id($in);
   return(0) if ($self->error());
@@ -323,9 +340,11 @@ sub load_ViPER_AVSS {
 
 ##########
 
-sub create_CLEAR_ViPER {
+sub _create_CLEAR_ViPER {
   my $self = shift @_;
   my $in = shift @_;
+  my $gtf = shift @_;
+  my $sts = shift @_;
 
   return("") if ($self->error());
 
@@ -338,19 +357,44 @@ sub create_CLEAR_ViPER {
   my $clip = $self->{clip}{$in};
   my $gfs  = $self->{gfs}{$in};
   my $endf = $self->{end_frame}{$in};
-  my $sgfs = $self->_get_short_fs($gfs);
-  return("")
-    if ($self->error());
+#  my $sgfs = $self->_get_short_fs($gfs);
+  my $ifl  = $self->{if_list}{$in};
+  my $sgfs = $self->_get_short_fs($ifl);
+  return("") if ($self->error());
 
-  $xml .= &_write_header($clip, $endf);
-  $xmlt = $self->_create_all_objects_xml($in);
+  $xml .= &_write_header($clip, $endf, $gtf);
+  $xmlt = $self->_create_all_objects_xml($in, ($sts) ? -1 : $gtf);
   return("")
     if ($self->error());
   $xml .= $xmlt;
 
-  $xml .= &_write_trailer($gfs, $sgfs);
+  $xml .= &_write_trailer($ifl, $sgfs, $gtf);
   
   return($xml);
+}
+
+#####
+
+sub create_CLEAR_ViPER { # GTF
+  my ($self, $in) = @_;
+
+  return($self->_create_CLEAR_ViPER($in, 1, 0));
+}
+
+#####
+
+sub create_CLEAR_SYS_ViPER { # SYS
+  my ($self, $in) = @_;
+
+  return($self->_create_CLEAR_ViPER($in, 0, 0));
+}
+
+#####
+
+sub create_CLEAR_StarterSYS_ViPER { # Starter SYS
+  my ($self, $in) = @_;
+
+  return($self->_create_CLEAR_ViPER($in, 0, 1));
 }
 
 ##########
@@ -494,24 +538,29 @@ sub create_composite_CLEAR_ViPER {
   my $clipname = shift @_;
   my $rk = shift @_;
   my $rorder = shift @_;
+  my $gtf = MMisc::iuv(shift @_, 1);
 
   my $gfs = "";
   my $endf = 0;
+  my $iflt = "";
   foreach my $k (@$rk) {
     return($self->_set_error_and_return("Could not find key [$k]", ""))
       if (! exists $self->{clip}{$k});
     $gfs .= " " . $self->{gfs}{$k};
     my $te = $self->{end_frame}{$k};
     $endf = ($te > $endf) ? $te : $endf;
+    $iflt .= " " . $self->{if_list}{$k};
   }
   $gfs = $self->_simplify_fs($gfs);
   return("") if ($self->error());  
-  my $sgfs = $self->_get_short_fs($gfs);
+  my $ifl  = $self->_simplify_fs($iflt);
+  return("") if ($self->error());
+  my $sgfs = $self->_get_short_fs($ifl);
   return("") if ($self->error());
 
   my $xml = "";
   
-  $xml .= &_write_header($clipname, $endf);
+  $xml .= &_write_header($clipname, $endf, $gtf);
   
   foreach my $k (@$rk) {
     my $c = $self->get_cam_id($k);
@@ -521,13 +570,13 @@ sub create_composite_CLEAR_ViPER {
       if (! exists $$rorder{$c});
     my @todo = @{$$rorder{$c}};
     
-    my $xmlt = $self->_create_all_objects_xml($k, \@todo);
+    my $xmlt = $self->_create_all_objects_xml($k, $gtf, \@todo);
     return("")
       if ($self->error());
     $xml .= $xmlt;
   }
 
-  $xml .= &_write_trailer($gfs, $sgfs);
+  $xml .= &_write_trailer($ifl, $sgfs, $gtf);
   
   return($xml);
 }
@@ -614,8 +663,92 @@ sub get_obj_csv_data {
   return(@content);
 }
 
+####################
 
-##########
+sub _compute_iflist {
+  my ($fsv, $end, $gap) = @_;
+
+  my $fs_fs = new ViperFramespan();
+  $fs_fs->set_value($fsv);
+  return($fs_fs->get_errormsg(), "")
+    if ($fs_fs->error());
+  my @fsl = $fs_fs->list_frames();
+  return($fs_fs->get_errormsg(), "")
+    if ($fs_fs->error());
+
+  my @ofsl = ();
+
+  # from "1" to the first listed entry
+  push @ofsl, "1:1";
+  my $prev = shift @fsl;
+  for (my $v = $prev; $v > 0; $v -= $gap) {
+    push @ofsl, "$v:$v";
+  }
+
+  # from $prev to $cur
+  my $cur = "-1";
+  while (scalar @fsl > 0) {
+    $cur = shift @fsl;
+
+    # spacing is less than '$gap'
+    if ($cur - $prev < $gap) {
+      push @ofsl, "$prev:$prev $cur:$cur";
+      $prev = $cur;
+      next;
+    }
+
+    # Fill the gap
+    for (my $v = $prev; $v < $cur; $v += $gap) {
+      push @ofsl, "$v:$v";
+    }
+
+    $prev = $cur;
+  }
+
+  # Fill till the end
+  for (my $v = $cur; $v < $end; $v += $gap) {
+    push @ofsl, "$v:$v";
+  }
+
+  # Just as a precaution, add the last value
+  push @ofsl, "$end:$end";
+
+  my $ffsv = join(" ", @ofsl);
+  
+  my $fs_fs = new ViperFramespan();
+  $fs_fs->set_value($ffsv);
+  return($fs_fs->get_errormsg(), "")
+    if ($fs_fs->error());
+  my $tfsv = $fs_fs->get_value();
+
+  return("", $tfsv);
+}
+
+####################
+
+sub _xmlrender_loc_occ {
+  my $self = shift @_;
+  my $in = shift @_;
+  my $id = shift @_;
+  my $gtf = MMisc::iuv(shift @_, 1);
+  
+  return($self->_set_error_and_return("Could not find key [$in]", undef))
+    if (! exists $self->{clip}{$in});
+  return($self->_set_error_and_return("Could not find requested ID [$id] for key [$in]", undef))
+    if (! exists $self->{rbboxl}{$in}{$id});
+
+  my $rbbl = $self->{rbboxl}{$in}{$id};
+  my %bblist = MMisc::clone(%$rbbl);
+  
+  my $robbl = $self->{robboxl}{$in}{$id};
+  my %obblist = MMisc::clone(%$robbl);
+
+  my $ifg = $self->{ifgap};
+  
+  return(&_xmlrender_location_and_occluded_and_gfs(\%bblist, \%obblist, $gtf, $ifg));
+}
+
+#####
 
 sub _shiftdiv_bboxes {
   my $self = shift @_;
@@ -624,6 +757,7 @@ sub _shiftdiv_bboxes {
   my $xp = shift @_;
   my $yp = shift @_;
   my $div = shift @_;
+  my $gtf = MMisc::iuv(shift @_, 1);
 
   return($self->_set_error_and_return("Could not find key [$in]", undef))
     if (! exists $self->{clip}{$in});
@@ -640,7 +774,9 @@ sub _shiftdiv_bboxes {
   %obblist = $self->_shiftdiv_bbox($xp, $yp, $div, %obblist);
   return(undef) if ($self->error());
   
-  return(&_xmlrender_location_and_occluded_and_gfs(\%bblist, \%obblist));
+  my $ifg = $self->{ifgap};
+
+  return(&_xmlrender_location_and_occluded_and_gfs(\%bblist, \%obblist, $gtf, $ifg));
 } 
 
 ##########
@@ -710,7 +846,14 @@ sub _shiftdiv_bbV {
 sub _create_all_objects_xml {
   my $self = shift @_;
   my $in = shift @_;
+  my $gtf = MMisc::iuv(shift @_, 1);
   my $rshdivs = shift @_;
+
+  my $sts = 0;
+  if ($gtf == -1) {
+    $sts = 1;
+    $gtf = 0;
+  }
 
   return($self->_set_error_and_return("Could not find file [$in]", ""))
     if (! exists $self->{clip}{$in});
@@ -721,9 +864,13 @@ sub _create_all_objects_xml {
     my $idadd = 0;
     my $loc_xml = "";
     my $occ_xml = "";
+    my $fsv = "";
+    my $sfsv = "";
     if (! defined $rshdivs) {
-      $loc_xml = $self->{loc_xml}{$in}{$idv};
-      $occ_xml = $self->{occ_xml}{$in}{$idv};
+      (my $err, $loc_xml, $occ_xml, $fsv, $sfsv) = 
+        $self->_xmlrender_loc_occ($in, $idv, ($sts) ? -1 : $gtf);
+      return($self->_set_error_and_return("Problem while generating loc/occ [key: $in / ID: $idv] : $err", ""))
+        if (! MMisc::is_blank($err));
     } else {
       my @todo = MMisc::clone(@$rshdivs);
       $idadd = shift @todo;
@@ -732,17 +879,14 @@ sub _create_all_objects_xml {
       my $div = shift @todo;
       $div = 1 if ($div == 0);
 
-      (my $err, $loc_xml, $occ_xml, my $dummy1, my $dummy2) = 
-        $self->_shiftdiv_bboxes($in, $idv, $xp, $yp, $div);
+      (my $err, $loc_xml, $occ_xml, $fsv, $sfsv) = 
+        $self->_shiftdiv_bboxes($in, $idv, $xp, $yp, $div, $gtf);
 
       return($self->_set_error_and_return("Problem while shifting [key: $in / ID: $idv] : $err", ""))
         if (! MMisc::is_blank($err));
     }
 
-    my $fsv  = $self->{id_fs}{$in}{$idv};
-    my $sfsv = $self->{id_sfs}{$in}{$idv};
-
-    $xml .= &_generate_object_xml($idv + $idadd, $fsv, $sfsv, $loc_xml, $occ_xml);
+    $xml .= &_generate_object_xml($idv + $idadd, $fsv, $sfsv, $loc_xml, $occ_xml, ($sts) ? -1 : $gtf);
   }
   
   return("", $xml);
@@ -756,31 +900,72 @@ sub _generate_object_xml {
   my $sfs  = shift @_;
   my $loc_xml = shift @_;
   my $occ_xml = shift @_;
-  
+  my $gtf = MMisc::iuv(shift @_, 1);
+
+  my $sts = 0;
+  if ($gtf == -1) {
+    $sts = 1;
+    $gtf = 0;
+  }
+
+  if ($sts) {
+    # Only keep the first 5 entries in that fs list
+    my @fst = split(m%\s+%, $fsv);
+    $fsv = join(" ", @fst[0..4]);
+  }
+
   # Ready to generate the XML part
   my $xml = "";
-  $xml .= "<object name=\"PERSON\" id=\"$idv\" framespan=\"$fsv\">\n";
-
-  # Nothing is ambigous for now
-  $xml .= "<attribute name=\"AMBIGUOUS\">\n<data:bvalue framespan=\"$sfs\" value=\"false\"/>\n</attribute>\n";
+  $xml .= "      <object name=\"PERSON\" id=\"$idv\" framespan=\"$fsv\">\n";
 
   # Location list
-  $xml .= "<attribute name=\"LOCATION\">\n$loc_xml</attribute>";
+  $xml .=<<EOF
+        <attribute name=\"LOCATION\">
+$loc_xml
+        </attribute>
+EOF
+;
 
-  # Everything is mobile for now
-  $xml .= "<attribute name=\"MOBILITY\">\n<data:lvalue framespan=\"$sfs\" value=\"MOBILE\"/>\n</attribute>\n";
+  #!# MM (4/6): MOBILITY is a SV VEHICLE attribute 
+#REMOVED#  # Everything is mobile for now
+#REMOVED#  # $xml .= "        <attribute name=\"MOBILITY\">\n<data:lvalue framespan=\"$sfs\" value=\"MOBILE\"/>\n</attribute>\n";
 
-  # Occluded list
-  $xml .= "<attribute name=\"OCCLUSION\">\n$occ_xml</attribute>\n";
+  if ($gtf) {
+    # Occluded list
+    $xml .=<<EOF
+        <attribute name=\"OCCLUSION\">
+$occ_xml
+        </attribute>
+EOF
+;
 
-  # Everything is present for now
-  $xml .= "<attribute name=\"PRESENT\">\n<data:bvalue framespan=\"$sfs\" value=\"true\"/>\n</attribute>\n";
+    # Nothing is ambigous for now
+    $xml .=<<EOF;
+        <attribute name=\"AMBIGUOUS\">
+          <data:bvalue framespan=\"$sfs\" value=\"false\"/>
+        </attribute>
+EOF
+;
 
-  # Nothing is synthetic for now
-  $xml .= "<attribute name=\"SYNTHETIC\">\n<data:bvalue framespan=\"$sfs\" value=\"false\"/>\n</attribute>\n";
+    # Everything is present
+    $xml .=<<EOF;
+        <attribute name=\"PRESENT\">
+          <data:bvalue framespan=\"$sfs\" value=\"true\"/>
+        </attribute>
+EOF
+;
+
+    # Nothing is synthetic
+    $xml .=<<EOF
+        <attribute name=\"SYNTHETIC\">
+          <data:bvalue framespan=\"$sfs\" value=\"false\"/>
+        </attribute>
+EOF
+;
+  }
 
   # END XML object
-  $xml .= "</object>\n";
+  $xml .= "      </object>\n";
 
   return("", $xml);
 }
@@ -827,25 +1012,27 @@ sub _process_section {
   # Get the visible bbox
   my $atk = "attribute";
   my $atc = "name=\"BOUNDING-BOX\"";
-  my ($err, %bblist) = &_get_bboxes(\$section, $atk, $atc);
+  my @oatc = ("name=\"INITIAL-BOUNDING-BOX\"");
+  my ($err, %bblist) = &_get_bboxes(\$section, $atk, $atc, @oatc);
   return($err)
     if (! MMisc::is_blank($err));
   $res .= "  -> extracted BB\n";
 
   # Get the occluded bbox
   my $atc = "name=\"OCCLUDED-BOUNDING-BOX\"";
-  my ($err, %obblist) = &_get_bboxes(\$section, $atk, $atc);
+  my @oatc = ("name=\"INITIAL-OCCLUDED-BOUNDING-BOX\"");
+  my ($err, %obblist) = &_get_bboxes(\$section, $atk, $atc, @oatc);
   return($err)
     if (! MMisc::is_blank($err));
   $res .= "  -> extracted occluded BB\n";
 
   if ((scalar keys %bblist == 0 ) && (scalar keys %obblist == 0)) {
-    $res .= "  -> **NO acutal data contained within object**\n";
+    $res .= "  -> **NO actual data contained within object**\n";
     return("", $res, $idv, \%bblist, \%obblist, "", "", $lfsv, $lfsv, $lfsv);
   }
 
   # Get location and occluded xml
-  my ($err, $loc_xml, $occ_xml, $fsv, $sfs) = &_xmlrender_location_and_occluded_and_gfs(\%bblist, \%obblist);
+  my ($err, $loc_xml, $occ_xml, $fsv, $sfs) = &_xmlrender_location_and_occluded_and_gfs(\%bblist, \%obblist, 1, 0);
   return("location and occluded render: $err")
     if (! MMisc::is_blank($err));
   $res .= "  -> got XML for location and occlusion + framespan\n";
@@ -856,20 +1043,43 @@ sub _process_section {
 
 ##########
 
-sub _get_bboxes {
+sub _get_remove_section {
   my $rstr = shift @_;
   my $atk = shift @_;
   my $atc = shift @_;
 
-  my %res = ();
-
   my $str = MtXML::get_named_xml_section_with_inline_content($atk, $atc, $rstr, $avcl_xmlerrorstring);
-  return("Could not find $atk with $atc", %res)
+
+  return(0, "Could not find $atk with $atc", "")
     if ($str eq $avcl_xmlerrorstring);
-  return("Could not remove xml tag $atk", %res)
+  return(1, "Could not remove xml tag $atk", "")
     if (! MtXML::remove_xml_tags($atk, \$str));
 
-  # This should only contain "bbox"
+  return(1, "", $str);
+}
+
+#####
+
+sub _get_bboxes {
+  my $rstr = shift @_;
+  my $atk = shift @_;
+  my $atc = shift @_;
+  my @opt_atc = @_;
+
+  my %res = ();
+
+  my ($found, $err, $str) = &_get_remove_section($rstr, $atk, $atc);
+  return($err, %res) if (! MMisc::is_blank($err));
+  
+  foreach my $oatc (@opt_atc) {
+    my ($found, $err, $tmpstr) = &_get_remove_section($rstr, $atk, $oatc);
+    return("Found $oatc, but: $err", %res)
+      if (($found) && (! MMisc::is_blank($err)));
+    next if (! $found);
+    $str .= $tmpstr;
+  }
+
+  # $str should only contain "bbox"
   my $doit = 1;
   my $bbk = "data:bbox";
   while ($doit) {
@@ -915,6 +1125,14 @@ sub _extract_fs {
 sub _xmlrender_location_and_occluded_and_gfs {
   my $rbb = shift @_;
   my $robb = shift @_;
+  my $gtf = MMisc::iuv(shift @_, 1);
+  my $ifg = MMisc::iuv(shift @_, 0);
+
+  my $sts = 0;
+  if ($gtf == -1) {
+    $sts = 1;
+    $gtf = 0;
+  }
 
   my %comp = ();
   foreach my $key (keys %$rbb) {
@@ -926,18 +1144,54 @@ sub _xmlrender_location_and_occluded_and_gfs {
     $comp{$key} = $$robb{$key};
   }
 
-  my $loc_xml = "";
-  my $occ_xml = "";
+  my @loc_xml_a = ();
+  my @occ_xml_a = ();
   my @ordered_fs = sort _fs_sort keys %comp;
-  my $fs_fs = new ViperFramespan();
-  $fs_fs->set_value(join(" ", @ordered_fs));
-  return("Could not get the global framespan: " . $fs_fs->get_errormsg(), "", "", "")
-    if ($fs_fs->error());
+  my @kept_fs = ();
+  my @sts_loc_xml_a = ();
+  my $prev = 0;
   foreach my $key (@ordered_fs) {
-    $loc_xml .= $comp{$key} . "\n";
-    $occ_xml .= "<data:bvalue framespan=\"$key\" value=\"" . ((exists $$robb{$key}) ? "true" : "false") .  "\"/>\n";
+    my $addtxt = "          " . $comp{$key};
+    
+    # For a SYS file, do not include occluded frames
+    if (($gtf) || (! exists $$robb{$key})) {
+      push @loc_xml_a, $addtxt;
+      push @kept_fs, $key;
+    }
+    
+    # We need the first five consecutive non occluded annotated frames
+    if (($sts) && (scalar @sts_loc_xml_a < 5)) {
+      my ($err, $b, $e) = &_get_begend_noself($key);
+      return($err) if (! MMisc::is_blank($err));
+      
+      if (($prev != 0) && ($b - $prev > $ifg)) {
+        # if the space between the new beginning and the old end is 
+        # less than IFramesGap, reset the list
+        @sts_loc_xml_a = ();
+      } else {
+        push @sts_loc_xml_a, $addtxt;
+      }
+      $prev = $e;
+    }
+
+    # ok to fill @occ_xml_a, it will be not used for SYS files
+    push @occ_xml_a, "          <data:bvalue framespan=\"$key\" value=\"" . ((exists $$robb{$key}) ? "true" : "false") .  "\"/>";
   }
 
+  if ($sts) {
+    return("Could not find 5 consecutive non occluded framespan (only " . scalar @sts_loc_xml_a . ")")
+      if (scalar @sts_loc_xml_a < 5);
+    @loc_xml_a = @sts_loc_xml_a;
+  }
+
+  my $loc_xml = join("\n", @loc_xml_a);
+  my $occ_xml = join("\n", @occ_xml_a);
+
+  my $fs_fs = new ViperFramespan();
+  $fs_fs->set_value(join(" ", @kept_fs));
+  return("Could not get the global framespan: " . $fs_fs->get_errormsg(), "", "", "")
+    if ($fs_fs->error());
+  
   my ($begf, $endf) = $fs_fs->get_beg_end_fs();
   return("framespan error: " . $fs_fs->get_errormsg(), "", "", "")
     if ($fs_fs->error());
@@ -948,7 +1202,6 @@ sub _xmlrender_location_and_occluded_and_gfs {
     if ($fs_sfs->error());
 
   return("", $loc_xml, $occ_xml, $fs_fs->get_value(), $fs_sfs->get_value());
-
 }
 
 ####################
@@ -1003,16 +1256,31 @@ sub _get_short_fs {
 
 #####
 
-sub _get_beg_end {
-  my $self = shift @_;
+sub _get_begend_noself {
   my $v = shift @_;
 
   my $fs_fs = new ViperFramespan();
   $fs_fs->set_value($v);
-  return($self->_set_error_and_return("Framespan error: " . $fs_fs->get_errormsg(), -1, -1))
+  return("Framespan error: " . $fs_fs->get_errormsg(), -1, -1)
+    if ($fs_fs->error());
+  my ($b, $e) = $fs_fs->get_beg_end_fs();
+  return("Framespan error: " . $fs_fs->get_errormsg(), -1, -1)
     if ($fs_fs->error());
 
-  return($fs_fs->get_beg_end_fs());
+  return("", $b, $e);
+}
+
+#####
+
+sub _get_beg_end {
+  my $self = shift @_;
+  my $v = shift @_;
+
+  my ($err, $b, $e) = &_get_begend_noself($v);
+  return($self->_set_error_and_return($err, -1, -1))
+    if (! MMisc::is_blank($err));
+
+  return($b, $e);
 }
 
 #####
@@ -1061,6 +1329,7 @@ sub _adapt_clip {
 sub _write_header {
   my $clip = shift @_;
   my $endf = shift @_;
+  my $gtf = shift @_;
 
   $clip = &_adapt_clip($clip);
 
@@ -1081,26 +1350,39 @@ sub _write_header {
       <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
     </descriptor>
     <descriptor name="PERSON" type="OBJECT">
-      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
       <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
-      <attribute dynamic="true" name="MOBILITY" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
-        <data:lvalue-possibles>
-          <data:lvalue-enum value="MOBILE"/>
-        </data:lvalue-possibles>
-      </attribute>
+EOF
+;
+
+$txt.=<<EOF
+      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
       <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
       <attribute dynamic="true" name="PRESENT" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
       <attribute dynamic="true" name="SYNTHETIC" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+EOF
+  if ($gtf);
+
+$txt.=<<EOF
     </descriptor>
-    <descriptor name="I-FRAMES" type="OBJECT">
-    </descriptor>
+EOF
+;
+
+  if ($gtf) {
+    $txt .=<<EOF
     <descriptor name="FRAME" type="OBJECT">
-      <attribute dynamic="true" name="CROWD" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
       <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
-      <attribute dynamic="true" name="MULTIPLE TEXT AREAS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
-      <attribute dynamic="true" name="MULTIPLE VEHICLE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
-      <attribute dynamic="true" name="MULTIPLE VEHICLES" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
     </descriptor>
+EOF
+;
+  } else {
+    $txt .=<<EOF
+    <descriptor name="FRAME" type="OBJECT"/>
+EOF
+      ;
+  }
+
+$txt.=<<EOF
+    <descriptor name="I-FRAMES" type="OBJECT"/>
   </config>
   <data>
     <sourcefile filename="$clip">
@@ -1126,25 +1408,31 @@ EOF
 sub _write_trailer {
   my $gfs = shift @_;
   my $sgfs = shift @_;
+  my $gtf = shift @_;
+
 
   my $txt=<<EOF
-      <object name="I-FRAMES" id="0" framespan="$gfs">
-      </object>
+      <object name="I-FRAMES" id="0" framespan="$gfs"/>
+EOF
+    ;
+
+  if ($gtf) {
+    $txt.=<<EOF
       <object name="FRAME" id="0" framespan="$gfs">
-        <attribute name="CROWD">
-          <data:bvalue framespan="$sgfs" value="false"/>
-        </attribute>
         <attribute name="EVALUATE">
           <data:bvalue framespan="$sgfs" value="true"/>
         </attribute>
-        <attribute name="MULTIPLE TEXT AREAS">
-          <data:bvalue framespan="$sgfs" value="false"/>
-        </attribute>
-        <attribute name="MULTIPLE VEHICLE">
-          <data:bvalue framespan="$sgfs" value="false"/>
-        </attribute>
-        <attribute name="MULTIPLE VEHICLES"/>
       </object>
+EOF
+      ;
+  } else {
+    $txt.=<<EOF
+      <object name="FRAME" id="0" framespan="$gfs"/>
+EOF
+;
+  }
+
+  $txt.=<<EOF
     </sourcefile>
   </data>
 </viper>
