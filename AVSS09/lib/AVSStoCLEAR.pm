@@ -668,44 +668,47 @@ sub get_obj_csv_data {
 sub _compute_iflist {
   my ($fsv, $end, $gap) = @_;
 
-  my $fs_fs = new ViperFramespan();
-  $fs_fs->set_value($fsv);
-  return($fs_fs->get_errormsg(), "")
-    if ($fs_fs->error());
-  my @fsl = $fs_fs->list_frames();
-  return($fs_fs->get_errormsg(), "")
-    if ($fs_fs->error());
-
   my @ofsl = ();
+  my $cur = 1;
+  push @ofsl, "$cur:$cur"; # Always start at 1
 
-  # from "1" to the first listed entry
-  push @ofsl, "1:1";
-  my $prev = shift @fsl;
-  for (my $v = $prev; $v > 0; $v -= $gap) {
-    push @ofsl, "$v:$v";
-  }
-
-  # from $prev to $cur
-  my $cur = "-1";
-  while (scalar @fsl > 0) {
-    $cur = shift @fsl;
-
-    # spacing is less than '$gap'
-    if ($cur - $prev < $gap) {
-      push @ofsl, "$prev:$prev $cur:$cur";
-      $prev = $cur;
-      next;
-    }
-
-    # Fill the gap
-    for (my $v = $prev; $v < $cur; $v += $gap) {
+  if (! MMisc::is_blank($fsv)) { # If a target is found
+    my $fs_fs = new ViperFramespan();
+    $fs_fs->set_value($fsv);
+    return("In _compute_iflist: " . $fs_fs->get_errormsg(), "")
+      if ($fs_fs->error());
+    my @fsl = $fs_fs->list_frames();
+    return($fs_fs->get_errormsg(), "")
+      if ($fs_fs->error());
+    
+    # from "1" to the first listed entry
+    my $prev = shift @fsl;
+    for (my $v = $prev; $v > 0; $v -= $gap) {
       push @ofsl, "$v:$v";
     }
 
-    $prev = $cur;
-  }
-
-  # Fill till the end
+    # from $prev to $cur
+    my $cur = "-1";
+    while (scalar @fsl > 0) {
+      $cur = shift @fsl;
+      
+      # spacing is less than '$gap'
+      if ($cur - $prev < $gap) {
+        push @ofsl, "$prev:$prev $cur:$cur";
+        $prev = $cur;
+        next;
+      }
+      
+      # Fill the gap
+      for (my $v = $prev; $v < $cur; $v += $gap) {
+        push @ofsl, "$v:$v";
+      }
+      
+      $prev = $cur;
+    }
+  } 
+  
+  # Fill till the end  (If no target was found cur = 1)
   for (my $v = $cur; $v < $end; $v += $gap) {
     push @ofsl, "$v:$v";
   }
@@ -717,7 +720,7 @@ sub _compute_iflist {
   
   my $fs_fs = new ViperFramespan();
   $fs_fs->set_value($ffsv);
-  return($fs_fs->get_errormsg(), "")
+  return("Setting _compute_iflist: " . $fs_fs->get_errormsg(), "")
     if ($fs_fs->error());
   my $tfsv = $fs_fs->get_value();
 
