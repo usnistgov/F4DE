@@ -84,6 +84,13 @@ unless (eval "use CSVHelper; 1") {
   $have_everything = 0;
 }
 
+# Getopt::Long (usualy part of the Perl Core)
+unless (eval "use Getopt::Long; 1") {
+  &_warn_add("\"Getopt::Long\" is not available on your Perl installation. ",
+             "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n");
+  $have_everything = 0;
+}
+
 # Something missing ? Abort
 if (! $have_everything) {
   print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
@@ -94,7 +101,34 @@ use strict;
 
 ########################################
 
-my $usage = "$0 input_dir output_dir\n\nConvert all the files within the input_dir directory from AVSS to CLEAR ViPER files and print some detailled on files seen within this file set such as camera information and associated file, PERSON (target) information, order of appearance of target in cameras.\nWill also generate a CSV file with these data\n";
+my $usage = &set_usage();
+
+my $dosys = 0;
+my $doStarterSys = 0;
+my $ifgap = 0;
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
+# Used:         I         S              h          s         #
+
+my %opt;
+GetOptions
+  (
+   \%opt,
+   'help',
+   'sys'          => \$dosys,
+   'StarterSys'   => \$doStarterSys,
+   'IFramesGap=i' => \$ifgap,
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+
+die("\n$usage\n") if ($opt{'help'});
+
+MMisc::error_quit("Not enough arguments\n$usage\n") if (scalar @ARGV != 2);
+
+MMisc::error_quit("\'sys\' and \'StarterSys\' can not be used at the same time\n$usage")
+  if (($opt{'sys'}) && ($opt{'StarterSys'}));
+
+MMisc::error_quit("Invalid \'IFramesGap\' value [$ifgap], must be positive and not equal to zero\n$usage")
+  if ($ifgap < 1);
 
 my $in = shift @ARGV;
 my $out = shift @ARGV;
@@ -126,14 +160,21 @@ foreach my $file (sort @fl) {
   open OUT, ">$off"
     or MMisc::error_quit("Problem creating output file [$off]: $!");
 
-  my ($ok, $res) = $avcl->load_ViPER_AVSS($ff);
+  my ($ok, $res) = $avcl->load_ViPER_AVSS($ff, $ifgap);
   MMisc::error_quit($avcl->get_errormsg())
       if ($avcl->error());
   MMisc::error_quit("\'load_ViPER_AVSS\' did not complete succesfully")
       if (! $ok);
   print $res;
 
-  my $xmlc = $avcl->create_CLEAR_ViPER($ff);
+  my $xmlc = "";
+  if ($dosys) {
+    $xmlc = $avcl->create_CLEAR_SYS_ViPER($ff);
+  } elsif ($doStarterSys) {
+    $xmlc = $avcl->create_CLEAR_StarterSYS_ViPER($ff);
+  } else {
+    $xmlc = $avcl->create_CLEAR_ViPER($ff);
+  }
   MMisc::error_quit($avcl->get_errormsg())
       if ($avcl->error());
   MMisc::error_quit("\'create_CLEAR_ViPER\' did not create any XML")
@@ -144,6 +185,9 @@ foreach my $file (sort @fl) {
   print "\n==> Wrote: $off\n";
   push @keys, $ff;
 }
+
+MMisc::ok_quit("SYS or StarterSys requested, not performing additional analysis\n")
+  if (($dosys) || ($doStarterSys));
 
 ####################
 
@@ -327,4 +371,29 @@ sub _num { $a <=> $b; }
 
 sub _warn_add {
   $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
+}
+
+########################################
+
+sub set_usage {
+  my $tmp=<<EOF
+
+$versionid
+
+$0 [--help] --IFramesGap gap [--sys | --StarterSys] input_dir output_dir
+
+Convert all the files within the input_dir directory from AVSS to CLEAR ViPER files (by default, a Ground Truth File).
+
+For GTF, also print some details on files seen within this fileset such as camera information, associated file, PERSON (target) information, order of appearance of target in cameras, and will also generate a CSV file with these data.
+
+Where:
+  --help          Print this usage information and exit
+  --IFramesGap    Specify the gap between I-Frames and Annotated frames
+  --sys           Generate a CLEAR ViPER system file
+  --StarterSys    Generate a CLEAR ViPER Starter sys file (only contains the first five non occluded bounding boxes)
+
+EOF
+;
+
+  return($tmp);
 }
