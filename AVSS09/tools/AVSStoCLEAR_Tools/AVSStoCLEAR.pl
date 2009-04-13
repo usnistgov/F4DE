@@ -97,7 +97,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 ########################################
 
-my $usage = "$0 [--help] --IFramesGap gap [--sys | --StarterSys] input_file output_file\n\nConvert one AVSS ViPER file to one CLEAR ViPER file\n";
+my $usage = &set_usage();
 
 my $dosys = 0;
 my $doStarterSys = 0;
@@ -118,10 +118,11 @@ GetOptions
 
 die("\n$usage\n") if ($opt{'help'});
 
-MMisc::ok_quit("\nNot enough arguments\n$usage\n") if (scalar @ARGV != 2);
+MMisc::error_quit("Not enough arguments\n$usage\n") if (scalar @ARGV != 2);
 
 MMisc::error_quit("\'sys\' and \'StarterSys\' can not be used at the same time\n$usage")
   if (($opt{'sys'}) && ($opt{'StarterSys'}));
+
 MMisc::error_quit("Invalid \'IFramesGap\' value [$ifgap], must be positive and not equal to zero\n$usage")
   if ($ifgap < 1);
 
@@ -164,4 +165,27 @@ MMisc::ok_quit("\nDone\n");
 
 sub _warn_add {
   $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
+}
+
+########################################
+
+sub set_usage {
+  my $tmp=<<EOF
+
+$versionid
+
+$0 [--help] --IFramesGap gap [--sys | --StarterSys] input_file output_file
+
+Convert one AVSS ViPER file to one CLEAR ViPER file (by default, a Ground Truth File)
+
+Where:
+  --help          Print this usage information and exit
+  --IFramesGap    Specify the gap between I-Frames and Annotated frames
+  --sys           Generate a CLEAR ViPER system file
+  --StarterSys    Generate a CLEAR ViPER Starter sys file (only contains the first five non occluded bounding boxes)
+
+EOF
+;
+
+  return($tmp);
 }
