@@ -301,10 +301,6 @@ sub load_ViPER_AVSS {
   return($self->_set_error_and_return("Could not find clip details", 0))
     if (MMisc::is_blank($clip));
 
-  return($self->_set_error_and_return("Could not find I-Frames list generation information", 0))
-    if ($if_list_comp == -1);
-
-
   $gfs = $self->_simplify_fs($gfs);
   return(0) if ($self->error());
 
@@ -344,7 +340,7 @@ sub _create_CLEAR_ViPER {
   my $self = shift @_;
   my $in = shift @_;
   my $gtf = shift @_;
-  my $sts = shift @_;
+  my $sps = shift @_;
 
   return("") if ($self->error());
 
@@ -363,7 +359,7 @@ sub _create_CLEAR_ViPER {
   return("") if ($self->error());
 
   $xml .= &_write_header($clip, $endf, $gtf);
-  $xmlt = $self->_create_all_objects_xml($in, ($sts) ? -1 : $gtf);
+  $xmlt = $self->_create_all_objects_xml($in, ($sps != 0) ? $sps : $gtf);
   return("")
     if ($self->error());
   $xml .= $xmlt;
@@ -394,9 +390,16 @@ sub create_CLEAR_SYS_ViPER { # SYS
 sub create_CLEAR_StarterSYS_ViPER { # Starter SYS
   my ($self, $in) = @_;
 
-  return($self->_create_CLEAR_ViPER($in, 0, 1));
+  return($self->_create_CLEAR_ViPER($in, 0, -1));
 }
 
+#####
+
+sub create_CLEAR_EmptySYS_ViPER { # Empty SYS
+  my ($self, $in) = @_;
+
+  return($self->_create_CLEAR_ViPER($in, 0, -2));
+}
 ##########
 
 sub get_comparables {
@@ -688,7 +691,6 @@ sub _compute_iflist {
     }
 
     # from $prev to $cur
-    my $cur = "-1";
     while (scalar @fsl > 0) {
       $cur = shift @fsl;
       
@@ -850,10 +852,14 @@ sub _create_all_objects_xml {
   my $self = shift @_;
   my $in = shift @_;
   my $gtf = MMisc::iuv(shift @_, 1);
+  # where: 1 = GTF / 0 = SYS / -1 = StarterSYS / -2 = EmptySYS 
   my $rshdivs = shift @_;
 
+  return("", "") # For EmptySYS, simply return an empty objects string
+    if ($gtf == -2);
+
   my $sts = 0;
-  if ($gtf == -1) {
+  if ($gtf < 0) {
     $sts = 1;
     $gtf = 0;
   }
@@ -889,6 +895,11 @@ sub _create_all_objects_xml {
         if (! MMisc::is_blank($err));
     }
 
+    # Do not add if no data generated
+    next if (MMisc::is_blank($loc_xml));
+    # or no framespan found
+    next if (MMisc::is_blank($fsv));
+
     $xml .= &_generate_object_xml($idv + $idadd, $fsv, $sfsv, $loc_xml, $occ_xml, ($sts) ? -1 : $gtf);
   }
   
@@ -906,7 +917,7 @@ sub _generate_object_xml {
   my $gtf = MMisc::iuv(shift @_, 1);
 
   my $sts = 0;
-  if ($gtf == -1) {
+  if ($gtf < 0) {
     $sts = 1;
     $gtf = 0;
   }
@@ -914,7 +925,9 @@ sub _generate_object_xml {
   if ($sts) {
     # Only keep the first 5 entries in that fs list
     my @fst = split(m%\s+%, $fsv);
-    $fsv = join(" ", @fst[0..4]);
+    my $k = scalar @fst;
+    $k = ($k < 5) ? $k - 1 : 4;
+    $fsv = join(" ", @fst[0..$k]);
   }
 
   # Ready to generate the XML part
@@ -985,10 +998,12 @@ sub _process_section {
   my ($err, %tmp) =  MtXML::get_inline_xml_attributes($name, $section);
   return("Problem extracting inline attributes: $err")
     if (! MMisc::is_blank($err));
-  
+
+  # Could not find expected data ?
   return("", "")
     if ((! exists $tmp{$lfk}) || ($tmp{$lfk} ne $lfv));
 
+  # Otherwise...
   my $res = "FOUND: $lfv\n";
 
   my $fsk = "framespan";
@@ -1038,6 +1053,12 @@ sub _process_section {
   my ($err, $loc_xml, $occ_xml, $fsv, $sfs) = &_xmlrender_location_and_occluded_and_gfs(\%bblist, \%obblist, 1, 0);
   return("location and occluded render: $err")
     if (! MMisc::is_blank($err));
+
+  if (MMisc::is_blank($fsv)) {
+    $res .= "  => ** NO framespan extracted, DISCARDING object**\n";
+    return("", $res, $idv, \%bblist, \%obblist, "", "", $lfsv, $lfsv, $lfsv);
+  }
+
   $res .= "  -> got XML for location and occlusion + framespan\n";
   $res .= "  -> short \"used\" framespan: $sfs\n";
 
@@ -1132,7 +1153,7 @@ sub _xmlrender_location_and_occluded_and_gfs {
   my $ifg = MMisc::iuv(shift @_, 0);
 
   my $sts = 0;
-  if ($gtf == -1) {
+  if ($gtf < 0) {
     $sts = 1;
     $gtf = 0;
   }
@@ -1181,10 +1202,25 @@ sub _xmlrender_location_and_occluded_and_gfs {
     push @occ_xml_a, "          <data:bvalue framespan=\"$key\" value=\"" . ((exists $$robb{$key}) ? "true" : "false") .  "\"/>";
   }
 
+  #  No framespan kept, discard this object
+  return("", "", "", "", "")
+    if (scalar @kept_fs == 0);
+
+##### MM (20090414)
+# OLD DEFINITION: StarterSYS = first 5 _consecutives_ non occluded frames
+#  if ($sts) {
+#    return("Could not find 5 consecutive non occluded framespan (only " . scalar @sts_loc_xml_a . ")")
+#      if (scalar @sts_loc_xml_a < 5);
+#    @loc_xml_a = @sts_loc_xml_a;
+#  }
+
+# NEW DEFINITON: StarterSYS = first 5 non occluded frames
   if ($sts) {
-    return("Could not find 5 consecutive non occluded framespan (only " . scalar @sts_loc_xml_a . ")")
-      if (scalar @sts_loc_xml_a < 5);
-    @loc_xml_a = @sts_loc_xml_a;
+    MMisc::warn_print("Could not find 5 non occluded framespan (only " . scalar @loc_xml_a . ")")
+      if (scalar @loc_xml_a < 5);
+    my $k = scalar @loc_xml_a;
+    $k = ($k < 5) ? $k - 1 : 4;
+    @loc_xml_a = @loc_xml_a[0..$k]; # Only keep the first 5 (or less) found
   }
 
   my $loc_xml = join("\n", @loc_xml_a);
