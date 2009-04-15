@@ -90,8 +90,6 @@ if (! $have_everything) {
   exit(1);
 }
 
-use strict;
-
 # Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
@@ -101,10 +99,11 @@ my $usage = &set_usage();
 
 my $dosys = 0;
 my $doStarterSys = 0;
+my $doEmptySys = 0;
 my $ifgap = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:         I         S              h          s         #
+# Used:     E   I         S              h          s         #
 
 my %opt;
 GetOptions
@@ -113,6 +112,7 @@ GetOptions
    'help',
    'sys'          => \$dosys,
    'StarterSys'   => \$doStarterSys,
+   'EmptySys'     => \$doEmptySys,
    'IFramesGap=i' => \$ifgap,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
@@ -120,8 +120,8 @@ die("\n$usage\n") if ($opt{'help'});
 
 MMisc::error_quit("Not enough arguments\n$usage\n") if (scalar @ARGV != 2);
 
-MMisc::error_quit("\'sys\' and \'StarterSys\' can not be used at the same time\n$usage")
-  if (($opt{'sys'}) && ($opt{'StarterSys'}));
+MMisc::error_quit("\'sys\', \'StarterSys\' or \'EmptySys\' can not be used at the same time\n$usage")
+  if ($dosys + $doStarterSys + $doEmptySys > 1);
 
 MMisc::error_quit("Invalid \'IFramesGap\' value [$ifgap], must be positive and not equal to zero\n$usage")
   if ($ifgap < 1);
@@ -143,12 +143,19 @@ MMisc::error_quit("ERROR: \'load_ViPER_AVSS\' did not complete succesfully")
 print $res;
 
 my $xmlc = "";
+my $tag = "";
 if ($dosys) {
   $xmlc = $avcl->create_CLEAR_SYS_ViPER($in);
+  $tag = "SYS";
 } elsif ($doStarterSys) {
   $xmlc = $avcl->create_CLEAR_StarterSYS_ViPER($in);
+  $tag = "StarterSYS";
+} elsif ($doEmptySys) {
+  $xmlc = $avcl->create_CLEAR_EmptySYS_ViPER($in);
+  $tag = "EmptySYS";
 } else {
   $xmlc = $avcl->create_CLEAR_ViPER($in);
+  $tag = "GTF";
 }
 MMisc::error_quit("ERROR: " . $avcl->get_errormsg())
   if ($avcl->error());
@@ -157,7 +164,7 @@ MMisc::error_quit("ERROR: \'create_CLEAR_ViPER\' did not create any XML")
 print OUT $xmlc;
 close OUT;
 
-print "\n==> Wrote", ($dosys ? "[SYS]" : ($doStarterSys ? "[StarterSYS]" : "[GTF]")), ": $out\n";
+print "\n==> Wrote [$tag] : $out\n";
 
 MMisc::ok_quit("\nDone\n");
 
@@ -174,7 +181,7 @@ sub set_usage {
 
 $versionid
 
-$0 [--help] --IFramesGap gap [--sys | --StarterSys] input_file output_file
+$0 [--help] --IFramesGap gap [--sys | --StarterSys | --EmptySys] input_file output_file
 
 Convert one AVSS ViPER file to one CLEAR ViPER file (by default, a Ground Truth File)
 
@@ -183,6 +190,7 @@ Where:
   --IFramesGap    Specify the gap between I-Frames and Annotated frames
   --sys           Generate a CLEAR ViPER system file
   --StarterSys    Generate a CLEAR ViPER Starter sys file (only contains the first five non occluded bounding boxes)
+  --EmptySys      Generate a CLEAR ViPER system file with no person defintion
 
 EOF
 ;
