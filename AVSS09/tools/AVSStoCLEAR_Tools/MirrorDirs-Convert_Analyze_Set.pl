@@ -70,18 +70,55 @@ unless (eval "use MMisc; 1") {
   $have_everything = 0;
 }
 
+# Getopt::Long (usualy part of the Perl Core)
+unless (eval "use Getopt::Long; 1") {
+  &_warn_add("\"Getopt::Long\" is not available on your Perl installation. ",
+             "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n");
+  $have_everything = 0;
+}
+
 # Something missing ? Abort
 if (! $have_everything) {
   print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
   exit(1);
 }
 
-use strict;
+# Use the long mode of Getopt
+Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 ########################################
 my $toolsb = "Convert_Analyze_Set";
 
-my $usage = "$0 source_dir output_dir [full_path_to_tool]\n\nConvert all the XML files found parsing the source_dir directory from AVSS ViPER to CLEAR ViPER files\nRelies on the $toolsb tool for this process\n";
+my $usage = &set_usage();
+
+my $dosys = 0;
+my $doStarterSys = 0;
+my $doEmptySys = 0;
+my $ifgap = 0;
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
+# Used:     E   I         S              h          s         #
+
+my %opt;
+GetOptions
+  (
+   \%opt,
+   'help',
+   'sys'          => \$dosys,
+   'StarterSys'   => \$doStarterSys,
+   'EmptySys'     => \$doEmptySys,
+   'IFramesGap=i' => \$ifgap,
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+
+die("\n$usage\n") if ($opt{'help'});
+
+MMisc::error_quit("Not enough arguments\n$usage\n") if (scalar @ARGV < 2);
+
+MMisc::error_quit("\'sys\', \'StarterSys\' or \'EmptySys\' can not be used at the same time\n$usage")
+  if ($dosys + $doStarterSys + $doEmptySys > 1);
+
+MMisc::error_quit("Invalid \'IFramesGap\' value [$ifgap], must be positive and not equal to zero\n$usage")
+  if ($ifgap < 1);
 
 my $in = shift @ARGV;
 my $out = shift @ARGV;
@@ -103,6 +140,16 @@ my $tool = MMisc::iuv(shift @ARGV, MMisc::get_pwd() . "/${toolsb}.pl");
 my $err = MMisc::check_file_x($tool);
 MMisc::error_quit("tool [$tool] problem: $err")
   if (! MMisc::is_blank($err));
+
+# Extend $tool
+$tool .= " --IFramesGap $ifgap";
+if ($dosys) {
+  $tool .= " --sys";
+} elsif ($doStarterSys) {
+  $tool .= "  --StarterSys";
+} elsif ($doEmptySys) {
+  $tool .= " --EmptySys";
+}
 
 &do_xmls($in, $out);
 
@@ -203,4 +250,36 @@ sub process_set {
 
   print "|   |-> Set output files (", scalar @set_files, ") generated\n";
   print "|\n";
+}
+
+############################################################
+
+sub _warn_add {
+  $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
+}
+
+########################################
+
+sub set_usage {
+  my $tmp=<<EOF
+
+$versionid
+
+$0 [--help] --IFramesGap gap [--sys | --StarterSys | --EmptySys] input_dir output_dir [full_path_to_tool]
+
+Convert all the XML files found following the input_dir directory structure from AVSS ViPER to CLEAR ViPER files.
+
+Relies on the $toolsb tool for this process.
+
+Where:
+  --help          Print this usage information and exit
+  --IFramesGap    Specify the gap between I-Frames and Annotated frames
+  --sys           Generate a CLEAR ViPER system file
+  --StarterSys    Generate a CLEAR ViPER Starter sys file (only contains the first five non occluded bounding boxes)
+  --EmptySys      Generate a CLEAR ViPER system file with no person defintion
+
+EOF
+;
+
+  return($tmp);
 }
