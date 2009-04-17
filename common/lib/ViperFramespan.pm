@@ -1411,6 +1411,24 @@ sub list_frames {
   return(@res);
 }
 
+#####
+
+sub list_pairs {
+  my ($self) = @_;
+
+  my @out = ();
+
+  return(@out) if ($self->error());
+
+  my $v = $self->get_value();
+  return(@out) if ($self->error());
+
+  my @todo = &_fs_split_line($v);
+  my @res = MMisc::make_array_of_unique_values(@todo);
+
+  return(@res);
+}
+
 ########################################
 
 sub unit_test {                 # Xtreme coding and us ;)
