@@ -582,17 +582,13 @@ sub _does_overlap {
 sub check_if_overlap {
   my ($self, $other) = @_;
 
+  if ( (! $self->is_value_set()) 
+       || (! defined $other) || (! $other->is_value_set()) ) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(0);
+  }
+  
   return(0) if ($self->error());
-
-  if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
-    return(0);
-  }
-
-  if (! $other->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
-    return(0);
-  }
 
   my $ifs = $self->get_value();
   my $cfs = $other->get_value();
@@ -602,43 +598,106 @@ sub check_if_overlap {
 
 ##########
 
-sub _get_overlap {
-  my ($ifs, $cfs) = @_;
+sub _get_overlap_core {
+  my ($i_beg, $i_end, $c_beg, $c_end) = @_;
 
-  # return if no overlap possible
-  return(undef) if (! _does_overlap($ifs, $cfs));
+  # return (ov_b, ov_e, new_i_beg, new_i_end, new_c_beg, new_c_end) 
+  # (ov_b, ov_e) = (0, 0) if no overlap
+  # (new_X_beg, new_X_end) = (0, 0) if "drop"
 
-  my ($i_beg, $i_end) = &_fs_get_begend($ifs);
-  my ($c_beg, $c_end) = &_fs_get_begend($cfs);
+  # 1: ib---ie           -> Drop 1
+  # 2:         cb---ce   -> Keep 2
+  return(0, 0, 0, 0, $c_beg, $c_end)
+    if ($i_end < $c_beg);
+
+  # 1:         ib---ie   -> Keep 1
+  # 2: cb---ce           -> Drop 2
+  return(0, 0, $i_beg, $i_end, 0, 0)
+    if ($i_end < $c_beg);
 
   if (($c_beg >= $i_beg) && ($c_beg <= $i_end)) {
     if ($c_end >= $i_end) {
-      #  ib----------ie
-      #     cb--------------ce
-      #ov:    -------
-      return("$c_beg:$i_end");
+      #  1: ib----------ie
+      #  2:  cb--------------ce
+      # ov:  cb---------ie
+      # 1':
+      # 2':         ie+1-----ce
+      return($c_beg, $i_end, 0, 0, $i_end+1, $c_end);
     } else {
-      #  ib----------ie
-      #     cb-----ce
-      #ov:    -----
-      return("$c_beg:$c_end");
+      #  1: ib----------ie
+      #  2:    cb-----ce
+      # ov:    cb-----ce
+      # 1':       ce+1--ie
+      # 2':
+      return($c_beg, $c_end, $c_end + 1, $i_end, 0, 0);
     }
   } elsif ($c_beg < $i_end) {
     if ($c_end < $i_end) {
-      #        ib----------ie
-      #     cb---------ce
-      #ov:       ------
-      return("$i_beg:$c_end");
+      #  1:     ib----------ie
+      #  2:  cb---------ce
+      # ov:     ib------ce
+      # 1':         ce+1----ie
+      # 2':
+      return($i_beg, $c_end, $c_end + 1, $i_end, 0, 0);
     } else {
-      #        ib----------ie
-      #     cb------------------ce
-      #ov:       ----------
-      return("$i_beg:$i_end");
+      #  1:     ib----------ie
+      #  2:  cb------------------ce
+      # ov:     ib----------ie
+      # 1':
+      # 2':             ie+1-----ce
+      return($i_beg, $i_end, 0, 0, $i_end + 1, $c_end);
     }
   }
+  
+  return(undef);
+}
 
-  # No idea what else is left since we already treated the no overlap case
-  return("WEIRD");              # sure to make it crash
+#####
+
+sub _get_overlap_wrapper {
+  my ($i_beg, $i_end, $c_beg, $c_end) = @_;
+
+  my ($ovb, $ove, $ib, $ie, $cb, $ce) = 
+    &_get_overlap_core($i_beg, $i_end, $c_beg, $c_end);
+
+  return(undef) if (! defined $ovb);
+
+  # We can not have values in "i" and "b" at the same time
+  return(undef) if (($ib != 0) && ($ie != 0) && ($cb != 0) && ($ce != 0));
+
+  # Values disappears if beg > end
+
+  if ($ovb > $ove) {
+    $ovb = 0;
+    $ove = 0;
+  }
+
+  if ($ib > $ie) {
+    $ib = 0;
+    $ie = 0;
+  }
+
+  if ($cb > $ce) {
+    $cb = 0;
+    $ce = 0;
+  }
+
+  return($ovb, $ove, $ib, $ie, $cb, $ce);
+}
+
+#####
+
+sub _split_pair_to_2darray {
+  my @v = @_;
+
+  my @out = ();
+  foreach my $entry (@v) {
+    my ($err, $b, $e) = &_fs_split_pair($entry);
+    return($err) if (! MMisc::is_blank($err));
+    push @out, [$b, $e];
+  }
+
+  return("", @out);
 }
 
 #####
@@ -679,20 +738,70 @@ sub get_overlap {
   my $sv = $self->get_value();
   my $ov = $other->get_value();
 
-  my @spl = &_fs_split_line($sv);
-  my @opl = &_fs_split_line($ov);
-
   my @ov = ();
-  foreach my $sp (@spl) {
-    foreach my $op (@opl) {
-      my $pair = &_get_overlap($sp, $op);
-      next if (! defined $pair);
-      push @ov, $pair;
-    }
-  }
 
+  # [MM 20090420 with Jon's Help] New technique : go from o(n*m) to o(n+m) 
+
+  my ($err, @spl) = &_split_pair_to_2darray(&_fs_split_line($sv));
+  if (! MMisc::is_blank($err)) {
+    $self->_set_errormsg("Problem in \'get_overlap\' : $err");
+    return(undef);
+  }
+  
+  my ($err, @opl)  = &_split_pair_to_2darray(&_fs_split_line($ov));
+  if (! MMisc::is_blank($err)) {
+    $self->_set_errormsg("Problem in \'get_overlap\' : $err");
+    return(undef);
+  }
+  
+  # We rely on the fact that "new" ordered and simplified every value
+  # so we have an fully ordered comparable set of data
+  my $cont = 1;
+  while ($cont) {
+    # Always work with the first element of each list
+    my ($b1, $e1) = ($spl[0][0], $spl[0][1]);
+    my ($b2, $e2) = ($opl[0][0], $opl[0][1]);
+#    print "*[Iteration:$cont] 1[$b1:$e1] 2[$b2:$e2]\n";
+    
+    my ($ovb, $ove, $nb1, $ne1, $nb2, $ne2) = 
+      &_get_overlap_wrapper($b1, $e1, $b2, $e2);
+#    print "-> ov[$ovb:$ove] n1[$nb1:$ne1] n2[$nb2:$ne2]\n";
+
+    if (! defined $ovb) {
+      $self->_set_errormsg("Problem in \'get_overlap\' obtained overlap information");
+      return(undef);
+    }
+    
+    # If we have an overlap, add it to the overlap list
+    push @ov, "$ovb:$ove"
+      if (($ovb != 0) && ($ove != 0));
+    
+    # Do we need to drop one element for spl ?
+    if (($nb1 == 0) && ($ne1 == 0)) {
+      shift @spl;
+    } else { # or replace its content ?
+      $spl[0][0] = $nb1;
+      $spl[0][1] = $ne1;
+    }
+    
+    # Do we need to drop one element for opl ?
+    if (($nb2 == 0) && ($ne2 == 0)) {
+      shift @opl;
+    } else { # or replace its content ?
+      $opl[0][0] = $nb2;
+      $opl[0][1] = $ne2;
+    }
+    
+    $cont++;
+    
+    # We are done when one list is empty
+    $cont = 0 if ((scalar @opl == 0) || (scalar @spl == 0));
+  }
+  
+  # No overlapping value at all
   return(undef) if (scalar @ov == 0);
 
+  # Generate a new framespan out of it
   my $ovp = join(" ", @ov);
 
   my $nfs = new ViperFramespan($ovp);
@@ -1599,20 +1708,38 @@ sub unit_test {                 # Xtreme coding and us ;)
   ### unit test overlap
   my $fs_tmp17 = new ViperFramespan();
   my $fs_tmp18 = new ViperFramespan();
-  my @pairs = ( [ "3:6", "3:6", "3:6" ], 
-                [ "3:6", "4:6", "4:6" ], 
-                [ "3:6", "6:6", "6:6" ], 
-                [ "3:6", "4:7", "4:6" ], 
-                [ "3:6", "6:7", "6:6" ], 
-                [ "3:6", "7:6", undef ] );
-  for (my $p=0; $p<@pairs; $p++) {
+  my @pairs = 
+    (
+     [ "3:6", "3:6", "3:6" ], 
+     [ "3:6", "4:6", "4:6" ], 
+     [ "3:6", "6:6", "6:6" ], 
+     [ "3:6", "4:7", "4:6" ], 
+     [ "3:6", "6:7", "6:6" ], 
+     [ "3:6", "7:8", "" ],
+     [ "1:5 10:15 20:50", "8:40", "10:15 20:40" ],
+     [ "1:5 8:20 25:50 55:80 85:100", "1:100", "1:5 8:20 25:50 55:80 85:100" ],
+     [ "2:2 6:6 12:12", "6:6", "6:6" ],
+     [ "1:1 3:3", "2:2", "" ],
+     [ "1:1 3:3 5:5 7:7 9:9", "9:9 3:5", "3:3 5:5 9:9" ],
+    );
+  for (my $p = 0; $p < scalar @pairs; $p++) {
     $fs_tmp17->set_value($pairs[$p][0]);
     $fs_tmp18->set_value($pairs[$p][1]);
     my $fs_new = $fs_tmp17->get_overlap($fs_tmp18);
-    if (!defined($fs_new) && !defined($pairs[$p][2])) { 
-      ;
+    print ("[*] ", $fs_tmp17->get_errormsg(), "\n") if ($fs_tmp17->error());
+    if (MMisc::is_blank($pairs[$p][2])) {
+      if (defined $fs_new) {
+        $otxt .= "$eh Error overlap calc for (".join(", ",@{ $pairs[$p] }[0..1]).") returned something [ " . $fs_new->get_value() . "]\n";
+        next;
+      }
+#      print "[undef]\n";
     } else {
-      my $ret = $fs_tmp17->get_overlap($fs_tmp18)->get_value();
+      if (! defined $fs_new) {
+        $otxt .= "$eh Error overlap calc for (".join(", ",@{ $pairs[$p] }[0..1]).") did not return anything [expected: " . $pairs[$p][2] . "]\n";
+        next;
+      }
+      my $ret = $fs_new->get_value();
+#     print "[" . $pairs[$p][0] . "] ov [" . $pairs[$p][1] . "] -> [$ret]\n";
       $otxt .= "$eh Error overlap calc for (".join(", ",@{ $pairs[$p] }).") returned ".$ret."\n" 
         if ($ret ne $pairs[$p][2]);
     }
@@ -1760,6 +1887,41 @@ sub unit_test {                 # Xtreme coding and us ;)
 #  print "UNDEF\n" if (! defined $fs_tmp22_10);
   $otxt .= "$eh Error while checking \'bounded_not\' (expected: undef). "
     if (defined $fs_tmp22_10);
+
+  # Big overlap (1)
+  my @a_tmp23a = ();
+  my @a_tmp23b = ();
+  my @a_out23 = ();
+  for (my $f = 1; $f < 1000; $f++) {
+    push @a_tmp23a, sprintf("%d:%d\n", $f*100,      $f*100 + 50);
+    push @a_tmp23b, sprintf("%d:%d\n", $f*100 + 25, $f*100 + 50 + 25);
+    push @a_out23,  sprintf("%d:%d\n", $f*100 + 25, $f*100 + 50);
+  }
+  my $fs_tmp23a = new ViperFramespan(join(" ", @a_tmp23a));
+  my $fs_tmp23b = new ViperFramespan(join(" ", @a_tmp23b));
+  my $exp_out23 = join(" ", @a_out23);
+  my $fs_out23 = $fs_tmp23a->get_overlap($fs_tmp23b);
+  my $out23 = $fs_out23->get_value();
+  $otxt .= "$eh Error while checking (big1) \'get_overlap\' (expected: $exp_out23 / Got: $out23). "
+    if ($exp_out23 != $out23);
+
+  # Big overlap (2)
+  my @a_tmp24a = ();
+  my @a_tmp24b = ();
+  my @a_out24 = ();
+  for (my $f = 1; $f < 1000; $f++) {
+    push @a_tmp24a, sprintf("%d:%d\n", $f*2, $f*2);
+    push @a_tmp24b, sprintf("%d:%d\n", $f*8, $f*8 + 1);
+    next if ($f > 250);
+    push @a_out24,  sprintf("%d:%d\n", $f*8, $f*8);
+  }
+  my $fs_tmp24a = new ViperFramespan(join(" ", @a_tmp24a));
+  my $fs_tmp24b = new ViperFramespan(join(" ", @a_tmp24b));
+  my $exp_out24 = join(" ", @a_out24);
+  my $fs_out24 = $fs_tmp24a->get_overlap($fs_tmp24b);
+  my $out24 = $fs_out24->get_value();
+  $otxt .= "$eh Error while checking (big2) \'get_overlap\' (expected: $exp_out24 / Got: $out24). "
+    if ($exp_out24 != $out24);
 
   ########## TODO: unit_test for all 'fps' functions ##########
 
