@@ -138,7 +138,7 @@ GetOptions
 die("\n$usage\n") if ($opt{'help'});
 die("$versionid\n") if ($opt{'version'});
 
-MMisc::ok_quit("\nNot enough arguments\n$usage\n") if (scalar @ARGV == 0);
+MMisc::error_quit("Not enough arguments\n$usage\n") if (scalar @ARGV == 0);
 
 MMisc::error_quit("\'ForceFilename\' option selected but no value set\n$usage")   if (($opt{'ForceFilename'}) && (MMisc::is_blank($forceFilename)));
 
@@ -215,8 +215,8 @@ foreach my $tmp (@ARGV) {
 
 print("All files processed (Validated: $ndone | Total: $ntodo)\n");
 
-MMisc::error_quit() if ($ndone != $ntodo);
-MMisc::ok_quit();
+MMisc::error_quit("Not all files processed succesfuly") if ($ndone != $ntodo);
+MMisc::ok_quit("\nDone\n");
 
 ########## END
 
