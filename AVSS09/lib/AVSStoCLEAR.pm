@@ -148,6 +148,7 @@ sub load_ViPER_AVSS {
       $clip = &_extract_named_Xvalue("DATA-SOURCE", "svalue", $section);
       return($self->_set_error_and_return("Seen the clip entry, but could not extract it or empty value, aborting", 0))
           if ((!defined $clip) || (MMisc::is_blank($clip)));
+      $clip =~ s%\s%_%g; # Replace spaces by _ in clip name
       $self->{clip_csv_data}{$in}{"Clip"} = $clip;
       
       $res .= "* Clip name: $clip\n";
