@@ -28,16 +28,14 @@ use Data::Dumper;
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $tv08pl, $tv08plv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
   $f4b = "F4DE_BASE";
-  $f4bv =  $ENV{$f4b} . "/lib";
-  $tv08pl = "TV08_PERL_LIB";
-  $tv08plv = $ENV{$tv08pl} || "../../../TrecVid08/lib"; # Default is relative to this tool's default path
-  $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../lib"; # Default is relative to this tool's default path
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../common/lib", "../../../TrecVid08/lib");
 }
-use lib ($f4deplv, $tv08plv, $f4bv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -49,72 +47,24 @@ sub eo2pe {
 ## Then try to load everything
 my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# MMisc (part of this tool)
-unless (eval "use MMisc; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# Part of this tool
+foreach my $pn ("MMisc", "MetricFuncs", "DETCurve", "DETCurveSet", "Trials") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 }
 
-# MetricFuncs (part of this tool)
-unless (eval "use MetricFuncs; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MetricFuncs\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# DETCurve (part of this tool)
-unless (eval "use DETCurve; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"DETCurve\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# DETCurveSet (part of this tool)
-unless (eval "use DETCurveSet; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"DETCurveSet\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# Trials (part of this tool)
-unless (eval "use Trials; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"Trials\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1") {
-  &_warn_add
-    (
-     "\"Getopt::Long\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-    );
-  $have_everything = 0;
-}
-
-# Pod::Usage (usualy part of the Perl Core)
-unless (eval "use Pod::Usage; 1") {
-  &_warn_add
-    (
-     "\"Pod::Usage\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=pod%3A%3Ausage\" for installation information\n"
-    );
-  $have_everything = 0;
-}
-
-# File::Temp (usualy part of the Perl Core)
-unless (eval "use File::Temp qw/ tempdir /; 1") {
-  &_warn_add
-    (
-     "\"File::Temp\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=file%3A%3Atemp\" for installation information\n"
-    );
-  $have_everything = 0;
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long", "Pod::Usage", "File::Temp") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
+    $have_everything = 0;
+  }
 }
 
 # Something missing ? Abort
@@ -160,37 +110,37 @@ Getopt::Long::Configure(qw( no_ignore_case ));
 # Used: A     G I K   OPQRST     Z  c e ghi klm op rst v     #
 
 GetOptions
-(
-	'o|output-png=s'              => \$OutPNGfile,
-	'r|ratiostats=s'              => \$IsoRatioStatisticFile,
-	'g|generateCSV'               => \$docsv,                      
-								  
-	't|tmpdir=s'                  => \$tmpDir,
-	's|select-filter=s'           => \@selectFilters,
-	'e|edit-filter=s'             => \@editFilters,
-	'c|compare'                   => \$DetCompare,
-	'k|keepFiles'                 => \$keepFiles,
-								  
-	'i|iso-costratiolines'        => \$DrawIsoratiolines,
-	'R|set-iso-costratiolines=s'  => \$Isoratiolineslist,
-	'I|iso-metriclines'           => \$DrawIsometriclines,
-	'Q|set-iso-metriclines=s'     => \$Isometriclineslist,
-	'P|iso-points'                => \$DrawIsopoints,
-	'T|Title=s'                   => \$title,
-	'l|lineTitle=s'               => \$lineTitleModification,
-	'S|Scale=s'                   => \$scale,
-	'K|KeyLoc=s'                  => \$keyLoc,
-	'Z|ZipPROG=s'                 => \$gzipPROG,
-	'G|GnuplotPROG=s'             => \$gnuplotPROG,
-	'A|AxisScale=s'               => \$axisScales,
-	'O|OmitActualCalc'            => \$omitActual, 
-  'p|plotControls=s'            => \@plotControls,
-
-	'version'                     => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; 
-	                                       print "$name version $VERSION\n"; exit(0); },
-	'h|help'                      => \$help,
-	'm|man'                       => \$man,
-);
+  (
+   'o|output-png=s'              => \$OutPNGfile,
+   'r|ratiostats=s'              => \$IsoRatioStatisticFile,
+   'g|generateCSV'               => \$docsv,                      
+   
+   't|tmpdir=s'                  => \$tmpDir,
+   's|select-filter=s'           => \@selectFilters,
+   'e|edit-filter=s'             => \@editFilters,
+   'c|compare'                   => \$DetCompare,
+   'k|keepFiles'                 => \$keepFiles,
+   
+   'i|iso-costratiolines'        => \$DrawIsoratiolines,
+   'R|set-iso-costratiolines=s'  => \$Isoratiolineslist,
+   'I|iso-metriclines'           => \$DrawIsometriclines,
+   'Q|set-iso-metriclines=s'     => \$Isometriclineslist,
+   'P|iso-points'                => \$DrawIsopoints,
+   'T|Title=s'                   => \$title,
+   'l|lineTitle=s'               => \$lineTitleModification,
+   'S|Scale=s'                   => \$scale,
+   'K|KeyLoc=s'                  => \$keyLoc,
+   'Z|ZipPROG=s'                 => \$gzipPROG,
+   'G|GnuplotPROG=s'             => \$gnuplotPROG,
+   'A|AxisScale=s'               => \$axisScales,
+   'O|OmitActualCalc'            => \$omitActual, 
+   'p|plotControls=s'            => \@plotControls,
+   
+   'version'                     => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; 
+                                          print "$name version $VERSION\n"; exit(0); },
+   'h|help'                      => \$help,
+   'm|man'                       => \$man,
+  );
 
 ## Docs
 pod2usage(1) if $help;
@@ -531,7 +481,7 @@ The specification of the serialized DET Curves can optionally include a re-speci
 
   SRL[:title[:pointSize[:pointType[:color[:lineWidth]]]]]
   
-=over 4
+=over
 
 title -> The title can includes spaces as long as the shell passed the string as a single argument.  This replacement occurs prior to any edit filters specified by the B<-e> option. 
 
@@ -543,13 +493,13 @@ color -> The RGB color formatted as /rgb "#hhhhhh"/ where the /h/ characters are
 
 lineWidth -> A floating point number for the line width.
 
-=back 4
+=back
 
 =head1 OPTIONS
 
 =head2 Required file arguments:
 
-=over 25
+=over
 
 =item B<-o>, B<--output-png> F<PNG_FILE>
 
@@ -559,7 +509,11 @@ Output png file.
 
 Output report file containing the intersection coordinates and Combined Cost between the DET Curve and the the Iso-ratio lines.
 
+=back
+
 =head2 Optional arguments:
+
+=over
 
 =item B<-t>, B<--tmpdir> F<DIR>
 
@@ -589,7 +543,11 @@ Specify the full path name to gzip (default: 'gzip').
 
 Specify the full path name to gnuplot (default: 'gnuplot').
 
+=back
+
 =head2 Graph tweaks:
+
+=over
 
 =item B<-i>, B<--iso-costratiolines>
 
@@ -654,7 +612,11 @@ The B<plotControl> options provides access to fine control the the DET curve dis
 
 /PointSetAreaDefinition=(Area|Radius)/     -> The value of C<pointSize> is display as either area of  the point or the width.  Def. is radius.
 
+=back
+
 =head2 Others:
+
+=over
 
 =item B<-h>, B<--help>
 

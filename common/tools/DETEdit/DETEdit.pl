@@ -25,19 +25,14 @@ use Data::Dumper;
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $tv08pl, $tv08plv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
   $f4b = "F4DE_BASE";
-  $f4bv =  $ENV{$f4b} . "/lib";
-  $tv08pl = "TV08_PERL_LIB";
-  $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
-  $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../common/lib");
 }
-use lib ($tv08plv, $f4deplv, $f4bv);
-
-use MetricTV08;
-use Trials;
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -49,58 +44,24 @@ sub eo2pe {
 ## Then try to load everything
 my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# MMisc (part of this tool)
-unless (eval "use MMisc; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# Part of this tool
+foreach my $pn ("MMisc", "MetricTV08", "Trials", "DETCurve", "DETCurveSet") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 }
 
-# DETCurve (part of this tool)
-unless (eval "use DETCurve; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"DETCurve\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# DETCurveSet (part of this tool)
-unless (eval "use DETCurveSet; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"DETCurveSet\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1") {
-  &_warn_add
-    (
-     "\"Getopt::Long\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-    );
-  $have_everything = 0;
-}
-
-# Pod::Usage (usualy part of the Perl Core)
-unless (eval "use Pod::Usage; 1") {
-  &_warn_add
-    (
-     "\"Pod::Usage\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=pod%3A%3Ausage\" for installation information\n"
-    );
-  $have_everything = 0;
-}
-
-# File::Temp (usualy part of the Perl Core)
-unless (eval "use File::Temp qw/ tempdir /; 1") {
-  &_warn_add
-    (
-     "\"File::Temp\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=file%3A%3Atemp\" for installation information\n"
-    );
-  $have_everything = 0;
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long", "Pod::Usage", "File::Temp") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
+    $have_everything = 0;
+  }
 }
 
 # Something missing ? Abort
@@ -122,20 +83,20 @@ my $gzipPROG = "gzip";
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 GetOptions
-(
-	'o|output-srl=s'                       => \$outputSrl,
-	'i|input-srl=s'                        => \$inputSrl,
-  'I|Inplace'                            => \$inPlace,
-
-  't|title=s'                            => \$title,
-  'titleRegex=s'                         => \$titleRegex,
-
-	'Z|ZipPROG=s'                          => \$gzipPROG,
-	
-	'version'                              => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; print "$name version $VERSION\n"; exit(0); },
-	'h|help'                               => \$help,
-	'm|man'                                => \$man,
-);
+  (
+   'o|output-srl=s' => \$outputSrl,
+   'i|input-srl=s'  => \$inputSrl,
+   'I|Inplace'      => \$inPlace,
+   
+   't|title=s'      => \$title,
+   'titleRegex=s'   => \$titleRegex,
+   
+   'Z|ZipPROG=s'    => \$gzipPROG,
+   
+   'version'      => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; print "$name version $VERSION\n"; exit(0); },
+   'h|help'         => \$help,
+   'm|man'          => \$man,
+  );
 
 ## Docs
 pod2usage(1) if $help;
@@ -198,7 +159,7 @@ DETEdit.pl -- Edit properties in a serialized DET Curve.
 
 =head1 SYNOPSIS
 
-B<DETEdit.pl> [ OPTIONS ] -i F<IN_SRL_FILE> ( -I | -o F<OUT_SRL_FILE> ) 
+S<B<DETEdit.pl> [--help | --man | --version] -input-srl F<IN_SRL_FILE>  [--Inplace] --output-srl F<OUT_SRL_FILE> [--title I<"title">] [--titleRegex I<regexp>] [--ZipPROG I<prog>]>
 
 =head1 DESCRIPTION
 
@@ -206,39 +167,31 @@ The script modifies fields in a serialized DET Curve generated by the F4DE packa
 
 =head1 OPTIONS
 
-=head2 Required input file argument:
+=over
 
-=over 25
-
-=item B<-i>, B<--input-srl> F<SRL>
+=item B<--input-srl> F<SRL>
 
 Input serialized DET Curve .
 
-=head2 Required output file arguments (Choose one method):
-
-=item B<-I>, B<--Inplace> 
+=item B<--Inplace> 
 
 Overwrite the input file with the updated file.
 
-=item B<-o>, B<--output-srl> 
+=item B<--output-srl> 
 
 Specifiy the output file.
 
-=head2 Optional arguments:
-
-=item B<-t>, B<--title> S<"title">
+=item B<--title> S<"title">
 
 Specify a new title.
 
 =item B<--titleRegex>
 
-Modify the title with the regular expression.  If both --title and --titleRegex is used on the commandline, the title is changed, then the Regex is applied.
+Modify the title with the regular expression.  If both B<title> and B<titleRegex> are used on the commandline, the title is changed, then the Regex is applied.
 
 =item B<-Z>, B<--ZipPROG> F<GZIP_PATH>
 
 Specify the full path name to gzip (default: 'gzip').
-
-=head2 Others:
 
 =item B<-h>, B<--help>
 
