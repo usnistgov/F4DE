@@ -1,6 +1,6 @@
-package TrecVid08xmllint;
+package xmllintHelper;
 
-# TrecVid08 "xmllint" (& XSD) Functions
+# "xmllint" (& XSD) Functions
 #
 # Author(s): Martial Michel
 #
@@ -9,7 +9,7 @@ package TrecVid08xmllint;
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "TrecVid08xmllint.pm" is an experimental system.
+# "xmllintHelper.pm" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -27,9 +27,9 @@ use MMisc;
 sub new {
   my ($class) = shift @_;
 
-  my $errortxt = (scalar @_ > 0) ? "TrecVid08xmllint does not accept parameters" : "";
+  my $errortxt = (scalar @_ > 0) ? "xmllintHelper does not accept parameters" : "";
 
-  my $errormsg = new MErrorH("TrecVid08xmllint");
+  my $errormsg = new MErrorH("xmllintHelper");
   $errormsg->set_errormsg($errortxt);
 
   my $self =
