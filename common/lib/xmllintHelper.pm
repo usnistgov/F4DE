@@ -100,15 +100,10 @@ sub _check_xmllint {
   $xmllint =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
 
   # Check that the file for xmllint exists and is an executable file
-  return("", "\'xmllint\' ($xmllint) does not exist, aborting\n") 
-    if (! -e $xmllint);
+  my $err = MMisc::check_file_x($xmllint);
+  return("", "\'xmllint\' ($xmllint) problem: $err\n") 
+    if (! MMisc::is_blank($err));
 
-  return("", "\'xmllint\' ($xmllint) is not a file, aborting\n")
-    if (! -f $xmllint);
-
-  return("", "\'xmllint\' ($xmllint) is not executable, aborting\n")
-    if (! -x $xmllint);
-         
   # Now check that it actually is xmllint
   my ($retcode, $stdout, $stderr) = MMisc::do_system_call($xmllint, '--version');
   return("", "\'xmllint\' ($xmllint) does not seem to be a valid \'xmllint\' command, aborting\n")
@@ -221,18 +216,35 @@ sub get_xsdpath {
 #####
 
 sub _check_xsdfiles {
-  my $xsdpath = shift @_;
+  my $xpths = shift @_;
   my @xsdfiles = @_;
 
-  $xsdpath =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
-  $xsdpath =~ s%(.)\/$%$1%;
+  my @x = split(m%\s+%, $xpths);
 
+  my %xp = ();
+  my %xpl = ();
   foreach my $fname (@xsdfiles) {
-    my $file = "$xsdpath/$fname";
-    return("", "Could not find required XSD file ($fname) at selected path ($xsdpath), aborting\n")
-      if (! -e $file);
+    foreach my $xsdpath (@x) {
+      next if (exists $xp{$fname});
+
+      $xsdpath =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
+      $xsdpath =~ s%(.)\/$%$1%;
+      
+      my $file = "$xsdpath/$fname";
+      next if (! MMisc::is_file_r($file));
+      $xp{$fname} = $xsdpath;
+    }
+    return("", "Could not find required XSD file ($fname) at selected path ($xpths), aborting\n")
+      if (! exists $xp{$fname});
+    
+    $xpl{$xp{$fname}}++;
   }
 
+  my @keys = keys %xpl;
+  return("", "Found more than one valid path (" . join(" ", @keys) . ")for XSD files (" . join(" ", @xsdfiles) . "), aborting\n")
+      if (scalar @keys > 1);
+  my $xsdpath = shift @keys;
+  
   return($xsdpath, "");
 }
 
