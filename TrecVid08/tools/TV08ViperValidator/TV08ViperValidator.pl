@@ -37,17 +37,14 @@ my $versionid = "TrecVid08 ViPER XML Validator Version: $version";
 ##########
 # Check we have every module (perl wise)
 
-## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $tv08pl, $tv08plv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
   $f4b = "F4DE_BASE";
-  $f4bv = $ENV{$f4b} . "/lib";
-  $tv08pl = "TV08_PERL_LIB";
-  $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
-  $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../common/lib");
 }
-use lib ($tv08plv, $f4deplv, $f4bv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -58,52 +55,25 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# MMisc (part of this tool)
-unless (eval "use MMisc; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+
+# Part of this tool
+foreach my $pn ("MMisc", "TrecVid08ViperFile", "TrecVid08Observation", "TrecVid08HelperFunctions", "TrecVid08ECF") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 }
 
-# TrecVid08ViperFile (part of this tool)
-unless (eval "use TrecVid08ViperFile; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# TrecVid08Observation (part of this tool)
-unless (eval "use TrecVid08Observation; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08Observation\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# TrecVid08HelperFunctions (part of this tool)
-unless (eval "use TrecVid08HelperFunctions; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# TrecVid08ECF (part of this tool)
-unless (eval "use TrecVid08ECF; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1") {
-  &_warn_add
-    (
-     "\"Getopt::Long\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-    );
-  $have_everything = 0;
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
+    $have_everything = 0;
+  }
 }
 
 # Something missing ? Abort
@@ -132,8 +102,7 @@ my @required_csv_keys = TrecVid08Observation::get_required_csv_keys();
 ########################################
 # Options processing
 
-my $xmllint_env = "TV08_XMLLINT";
-my $xsdpath_env = "TV08_XSDPATH";
+my $xmllint_env = "F4DE_XMLLINT";
 my $mancmd = "perldoc -F $0";
 my $ok_chars = 'a-zA-Z0-9/.~_-';
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
@@ -143,9 +112,7 @@ my $usage = &set_usage();
 # Default values for variables
 my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision informations set
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../data");
-$xsdpath = "$f4bv/data" 
-  if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../data";
 my $writeback = -1;
 my $xmlbasefile = -1;
 my @asked_events = ();
@@ -712,34 +679,17 @@ B<TV08ViperValidator> relies on some external software and files.
 =item B<SOFTWARE> 
 
 I<xmllint> (part of I<libxml2>, see S<http://www.xmlsoft.org/>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
-If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<F4DE_XMLLINT> environment variable to the full path location of the I<xmllint> executable.
 
 =item B<FILES>
 
 The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
-It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> environment variable.
+It is possible to specify their location using the B<--xsdpath> option or the B<F4DE_BASE> environment variable.
 You should not have to specify their location, if you have performed an install and have set the global environment variables.
 
-=item B<GLOBAL ENVIRONMENT VARIABLES>
+=item B<GLOBAL ENVIRONMENT VARIABLE>
 
-B<TV08ViperValidator> relies on some internal and external Perl libraries to function.
-
-Simply running the B<TV08ViperValidator> script should provide you with the list of missing libraries. 
-The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
-
-=over
-
-=item B<F4DE_BASE>
-
-The main variable once you have installed the software, it should be sufficient to run this program.
-
-=item B<F4DE_PERL_LIB>
-
-Allows you to specify a different directory for the B<F4DE> libraries.
-
-=item B<TV08_PERL_LIB>
-
-Allows you to specify a different directory for the B<TrecVid08> libraries.
+Once you have installed the software, setting B<F4DE_BASE> to the installation location, and extending your B<PATH> to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
 
 =back
 
@@ -874,7 +824,6 @@ Only useful for specialized Scorer XML files containing subtypes information; op
 =item B<--TrecVid08xsd> I<location>
 
 Specify the default location of the required XSD files (use B<--help> to get the list of required files).
-Can also be set using the B<TV08_XSDPATH> environment variable.
 
 =item B<--ValueDivide> I<div>[I<:sub>]
 
@@ -911,7 +860,7 @@ The mode is the file representation to disk and its values and its default can b
 =item B<--xmllint> I<location>
 
 Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
-Can also be set using the B<TV08_XMLLINT> environment variable.
+Can also be set using the B<F4DE_XMLLINT> environment variable.
 
 =item B<--XMLbase> I<file>
 
@@ -950,6 +899,12 @@ Please send bug reports to <nist_f4de@nist.gov>
 
 Martial Michel <martial.michel@nist.gov>
 
+=head1 COPYRIGHT 
+
+This software was developed at the National Institute of Standards and Technology by employees of the Federal Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this software is not subject to copyright protection within the United States and is in the public domain. It is an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
+
+THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+
 =cut
 
 sub set_usage {
@@ -972,7 +927,7 @@ Will perform a semantic validation of the ViPER XML file(s) provided.
   --man           Print a more detailled manual page and exit (same as running: $mancmd)
   --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --TrecVid08xsd  Path where the XSD files can be found
   --XMLbase       Print a ViPER file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
   --gtf           Specify that the file to validate is a Ground Truth File
   --limitto       Only care about provided list of events
