@@ -171,7 +171,7 @@ $VAR1 = bless( {
                                           'xsdpath' => '../../data',
                                           'errormsg' => bless( {
                                                                  'errormsg' => '',
-                                                                 'header' => 'TrecVid08xmllint'
+                                                                 'header' => 'xmllintHelper'
                                                                }, 'MErrorH' ),
                                           'xsdfilesl' => [
                                                            'TrecVid08.xsd',
@@ -179,7 +179,7 @@ $VAR1 = bless( {
                                                            'TrecVid08-viperdata.xsd'
                                                          ],
                                           'xmllint' => '/opt/local/bin/xmllint'
-                                        }, 'TrecVid08xmllint' ),
+                                        }, 'xmllintHelper' ),
                  'validated' => 1,
                  'force_subtype' => 0,
                  'gtf' => 0,

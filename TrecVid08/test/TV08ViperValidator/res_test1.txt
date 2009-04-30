@@ -1,7 +1,7 @@
 [[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl TV08ViperValidator_tester.pl
 [[RETURN CODE]] 256
 [[STDOUT]]
-TV08ViperValidator_tester.pl: [ERROR] [TrecVid08ViperFile] [TrecVid08xmllint] Problem validating file with 'xmllint' (TV08ViperValidator_tester.pl:1: parser error : Start tag expected, '<' not found
+TV08ViperValidator_tester.pl: [ERROR] [TrecVid08ViperFile] [xmllintHelper] Problem validating file with 'xmllint' (TV08ViperValidator_tester.pl:1: parser error : Start tag expected, '<' not found
 TV08ViperValidator_tester.pl: [ERROR] #!/usr/bin/env perl
 TV08ViperValidator_tester.pl: [ERROR] ^), aborting
 All files processed (Validated: 0 | Total: 1)

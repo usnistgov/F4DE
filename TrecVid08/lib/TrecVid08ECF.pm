@@ -23,7 +23,7 @@ package TrecVid08ECF;
 use strict;
 
 use ViperFramespan;
-use TrecVid08xmllint;
+use xmllintHelper;
 use MtXML;
 use MErrorH;
 use MMisc;
@@ -55,7 +55,7 @@ sub new {
 
   my $errortxt = (scalar @_ > 0) ? "TrecVid08ECF does not accept parameters" : "";
 
-  my $xmllintobj = new TrecVid08xmllint();
+  my $xmllintobj = new xmllintHelper();
   $xmllintobj->set_xsdfilesl(@xsdfilesl);
   $errortxt .= $xmllintobj->get_errormsg() if ($xmllintobj->error());
 

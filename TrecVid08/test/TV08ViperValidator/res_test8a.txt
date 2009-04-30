@@ -314,7 +314,7 @@ $VAR1 = bless( {
                  'xmllintobj' => bless( {
                                           'errormsg' => bless( {
                                                                  'errormsg' => '',
-                                                                 'header' => 'TrecVid08xmllint'
+                                                                 'header' => 'xmllintHelper'
                                                                }, 'MErrorH' ),
                                           'xmllint' => 'xmllint',
                                           'xsdfilesl' => [
@@ -323,7 +323,7 @@ $VAR1 = bless( {
                                                            'TrecVid08-viperdata.xsd'
                                                          ],
                                           'xsdpath' => '../../data'
-                                        }, 'TrecVid08xmllint' )
+                                        }, 'xmllintHelper' )
                }, 'TrecVid08ViperFile' );
 ../common/test2-1md_1fa-sys.xml: validates
 ** XML re-Representation:
@@ -537,7 +537,7 @@ $VAR1 = bless( {
                  'xmllintobj' => bless( {
                                           'errormsg' => bless( {
                                                                  'errormsg' => '',
-                                                                 'header' => 'TrecVid08xmllint'
+                                                                 'header' => 'xmllintHelper'
                                                                }, 'MErrorH' ),
                                           'xmllint' => 'xmllint',
                                           'xsdfilesl' => [
@@ -546,7 +546,7 @@ $VAR1 = bless( {
                                                            'TrecVid08-viperdata.xsd'
                                                          ],
                                           'xsdpath' => '../../data'
-                                        }, 'TrecVid08xmllint' )
+                                        }, 'xmllintHelper' )
                }, 'TrecVid08ViperFile' );
 All files processed (Validated: 2 | Total: 2)
 

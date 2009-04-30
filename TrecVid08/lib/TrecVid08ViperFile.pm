@@ -42,8 +42,8 @@ use ViperFramespan;
 # "TrecVid08Observation.pm" (part of this program sources)
 use TrecVid08Observation;
 
-# "TrecVid08xmllint.pm" (part of this program sources)
-use TrecVid08xmllint;
+# "xmllintHelper.pm" (part of this program sources)
+use xmllintHelper;
 
 # "MtXML.pm" (part of this program sources)
 use MtXML;
@@ -215,7 +215,7 @@ sub new {
   &_fill_required_hashes();
 
   my $fs_tmp = new ViperFramespan();
-  my $xmllintobj = new TrecVid08xmllint();
+  my $xmllintobj = new xmllintHelper();
   $xmllintobj->set_xsdfilesl(@xsdfilesl);
   $errortxt .= $xmllintobj->get_errormsg() if ($xmllintobj->error());
 
