@@ -94,6 +94,10 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 my $xmllint_env = "CLEAR_XMLLINT";
 my $xsdpath_env = "CLEAR_XSDPATH";
+my $mancmd = "perldoc -F $0";
+my $frameTol = 0;
+my $valtool_bt = "AVSS09ViperValidator";
+my $scrtool_bt = "CLEARDTScorer";
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
 my $usage = &set_usage();
 
@@ -104,10 +108,7 @@ $xsdpath = "$f4bv/data"
   if (($f4bv ne "/lib") && ($xsdpath eq "../../../CLEAR07/data"));
 my $gtfs = 0;
 my $verb = 1;
-my $frameTol = 0;
-my $valtool_bt = "AVSS09ViperValidator";
 my $valtool = "";
-my $scrtool_bt = "CLEARDTScorer";
 my $scrtool = "";
 my $destdir = "";
 
@@ -121,6 +122,7 @@ GetOptions
    \%opt,
    'help',
    'version',
+   'man',
    'quiet'           => sub {$verb = 0},
    'writedir=s'      => \$destdir,
    'xmllint=s'       => \$xmllint,
@@ -133,8 +135,13 @@ GetOptions
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
+if ($opt{'man'}) {
+  my ($r, $o, $e) = MMisc::do_system_call($mancmd);
+  MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
+  MMisc::ok_quit($o);
+}
 
-MMisc::error_quit("No \'writedir\' given, aborting")
+MMisc::error_quit("No \'writedir\' given, aborting\n\n$usage\n")
   if (MMisc::is_blank($destdir));
 
 # Val tool
@@ -152,10 +159,10 @@ if (MMisc::is_blank($valtool)) {
     $valtool = $t;
   }
 }
-MMisc::error_quit("No \'$valtool_bt\' provided/found")
+MMisc::error_quit("No \'$valtool_bt\' provided/found\n\n$usage\n")
   if (MMisc::is_blank($valtool));
 my $err = MMisc::check_file_x($valtool);
-MMisc::error_quit("Problem with \'$valtool_bt\' [$valtool]: $err")
+MMisc::error_quit("Problem with \'$valtool_bt\' [$valtool]: $err\n\n$usage\n")
   if (! MMisc::is_blank($err));
 
 # Scr tool
@@ -173,23 +180,23 @@ if (MMisc::is_blank($scrtool)) {
     $scrtool = $t;
   }
 }
-MMisc::error_quit("No \'$scrtool_bt\' provided/found")
+MMisc::error_quit("No \'$scrtool_bt\' provided/found\n\n$usage\n")
   if (MMisc::is_blank($scrtool));
 my $err = MMisc::check_file_x($scrtool);
-MMisc::error_quit("Problem with \'$scrtool_bt\' [$scrtool]: $err")
+MMisc::error_quit("Problem with \'$scrtool_bt\' [$scrtool]: $err\n\n$usage\n")
   if (! MMisc::is_blank($err));
 
-MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting")
+MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting\n\n$usage\n")
   if ($gtfs > 1);
 
 my ($rref, $rsys) = &get_sys_ref_filelist(\@leftover, @ARGV);
 my @ref = @{$rref};
 my @sys = @{$rsys};
-MMisc::error_quit("No SYS file(s) provided, can not perform scoring")
+MMisc::error_quit("No SYS file(s) provided, can not perform scoring\n\n$usage\n")
   if (scalar @sys == 0);
-MMisc::error_quit("No REF file(s) provided, can not perform scoring")
+MMisc::error_quit("No REF file(s) provided, can not perform scoring\n\n$usage\n")
   if (scalar @ref == 0);
-MMisc::error_quit("Unequal number of REF and SYS files, can not perform scoring")
+MMisc::error_quit("Unequal number of REF and SYS files, can not perform scoring\n\n$usage\n")
   if (scalar @ref != scalar @sys);
 
 
@@ -358,6 +365,189 @@ sub get_sys_ref_filelist {
 
 ########################################
 
+sub _warn_add {
+  $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
+}
+
+############################################################ Manual
+
+=pod
+
+=head1 NAME
+
+AVSS09Scorer - AVSS09 ViPER XML System to Reference Scoring Tool
+
+=head1 SYNOPSIS
+
+B<AVSS09Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
+  S<[B<--xmllint> I<location>] [B<--CLEARxsd> I<location>]>
+  S<B<--writedir> directory [B<--frameTol> I<framenbr>]>
+  S<[B<--Validator> I<tool>] [B<--Scorer> I<tool>]>
+  S<I<sys_file.xml> [I<...>] B<--gtf> I<ref_file.xml> [I<...>]>
+  
+=head1 DESCRIPTION
+
+B<AVSS09Scorer> is a wrapper tool for the I<AVSS09ViperValidator> and I<CLEARDTScorer> tools.
+The first one performs a syntactic and semantic validation of the ViPER XML file(s) provided on the command line.
+The second perform the actual scoring on the I<Scoring Sequence memory representation> of the I<system> and I<reference> XML files.
+
+=head1 PREREQUISITES
+
+B<AVSS09scorer>'s tools relies on some external software and files, most of which associated with the B<CLEAR> section of B<F4DE>.
+
+=over
+
+=item B<SOFTWARE> 
+
+I<xmllint> (part of I<libxml2>, see S<http://www.xmlsoft.org/>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<CLEAR_XMLLINT> environment variable.
+
+=item B<FILES>
+
+The syntactic validation requires some XML schema files (see the B<CLEARDTScorer> help section for file list).
+It is possible to specify their location using the B<--xsdpath> option or the B<CLEAR_XSDPATH> environment variable.
+You should not have to specify their location, if you have performed an install and have set the global environment variables.
+
+=item B<GLOBAL ENVIRONMENT VARIABLES>
+
+B<AVSS09scorer>'s tools relies on some internal and external Perl libraries to function.
+
+Simply running both the B<AVSS09ViperValidator> and B<CLEARDTScorer> script should provide you with the list of missing libraries. 
+The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
+
+=over
+
+=item B<F4DE_BASE>
+
+The main variable once you have installed the software, it should be sufficient to run this program.
+
+=item B<F4DE_PERL_LIB>
+
+Allows you to specify a different directory for the B<F4DE> libraries.
+
+=item B<AVSS09_PERL_LIB>
+
+Allows you to specify a different directory for the B<AVSS09> libraries.
+
+=item B<CLEAR_PERL_LIB>
+
+Allows you to specify a different directory for the B<CLEAR> libraries.
+
+=back
+
+=back
+
+=head1 GENERAL NOTES
+
+B<AVSS09ViperValidator> expects that the files can be validated using 'xmllint' against the B<CLEAR> XSD file(s) (see B<--help> for files list).
+
+B<AVSS09ViperValidator> will use the core validation of the B<CLEAR> code and add some specialized checks associated with the B<AVSS09> evaluation.
+
+The B<CLEARDTScorer> will load I<Scoring Sequence memory represenations> generated by the validation process.
+
+=head1 OPTIONS
+
+=over
+
+=item B<--CLEARxsd> I<location>
+
+Specify the default location of the required XSD files.
+Can also be set using the B<CLEAR_XSDPATH> environment variable.
+
+=item B<--frameTol> I<framenbr>
+
+The frame tolerance allowed for attributes to be outside of the object framespan
+
+=item B<--gtf>
+
+Specify that the files past this marker are reference files.
+
+=item B<--help>
+
+Display the usage page for this program. Also display some default values and information.
+
+=item B<--man>
+
+Display this man page.
+
+=item B<--Scorer> I<tool>
+
+Specify the full path location of the B<CLEARDTScorer> program
+
+=item B<--Validator> I<tool>
+
+Specify the full path location of the B<AVSS09ViperValidator> program
+
+=item B<--version>
+
+Display B<AVSS09ViperValidator> version information.
+
+=item B<--writedir> I<directory>
+
+Specify the I<directory> in which all files required for the validation and scoring process will be generated.
+
+=item B<--xmllint> I<location>
+
+Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
+Can also be set using the B<CLEAR_XMLLINT> environment variable.
+
+=back
+
+=head1 USAGE
+
+=item B<AVSS09Scorer --xmllint /local/bin/xmllint --TrecVid08xsd /local/F4DE-CVS/data --writedir /tmp --frameTol 5 sys_test1.xml sys_test2.xml --gtf ref_test1.xml ref_test2.xml>
+
+Using the I<xmllint> executable located at I</local/bin/xmllint>, with the required XSD files found in the I</local/F4DE/data> directory, putting all generated files in I</tmp>, and using a frame tolerance of 5 frames, it will use:
+
+=over
+
+=item B<AVSS09ViperValidator> to validate the I<system> files I<sys_test1.xml> and I<sys_test2.xml> as well as the I<reference> files I<ref_test1.xml> and I<ref_test2.xml>.
+The validator will also generate a I<Scoring Sequence memory represenation> of all those files.
+
+=item B<CLEARDTScorer> to perform scoring on the I<Scoring Sequence memory represenation> files present.
+
+=back
+
+=head1 BUGS
+
+Please send bug reports to <nist_f4de@nist.gov>
+
+=head1 AUTHORS
+
+Martial Michel <martial.michel@nist.gov>
+
+=cut
+
+########################################
+
 sub set_usage {
-  return("");
+  my $wmd = join(" ", @ok_md);
+
+  my $tmp=<<EOF
+$versionid
+
+Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] --writedir directory [--frameTol framenbr] [--Validator tool] [--Scorer tool] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
+
+Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provided (System vs Reference)
+
+ Where:
+  --help          Print this usage information and exit
+  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+  --version       Print version number and exit
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --CLEARxsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan (default: $frameTol)
+  --writedir      Directory in which validation and scoring will be performed
+  --Validator     Specify the full path location of the $valtool_bt tool (if not in your path)
+  --Scorer        Specify the full path location of the $scrtool_bt tool (if not in your path)
+
+Note:
+- This prerequisite that the file can be been validated using 'xmllint' against the 'CLEAR.xsd' file
+- Program will ignore the <config> section of the XML file.
+- Program will disard any xml comment(s).
+- 'CLEARxsd' files are the same as needed by CLEARDTViperValidator
+EOF
+;
+
+  return $tmp;
 }
