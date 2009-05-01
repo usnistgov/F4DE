@@ -38,16 +38,14 @@ my $versionid = "TrecVid08 Scorer (Version: $version)";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $tv08pl, $tv08plv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
   $f4b = "F4DE_BASE";
-  $f4bv = $ENV{$f4b} . "/lib";
-  $tv08pl = "TV08_PERL_LIB";
-  $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
-  $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../common/lib");
 }
-use lib ($tv08plv, $f4deplv, $f4bv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -59,115 +57,24 @@ sub eo2pe {
 ## Then try to load everything
 my $ekw = "ERROR";              # Error Key Work
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# MMisc (part of this tool)
-unless (eval "use MMisc; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# Part of this tool
+foreach my $pn ("MMisc", "TrecVid08ViperFile", "TrecVid08ECF", "TrecVid08EventList", "KernelFunctions", "MetricTV08", "BipartiteMatch", "Trials", "TrialSummaryTable", "SimpleAutoTable", "DETCurve", "DETCurveSet", "TrecVid08HelperFunctions", "CSVHelper") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 }
 
-# TrecVid08ViperFile (part of this tool)
-unless (eval "use TrecVid08ViperFile; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# TrecVid08ECF (part of this tool)
-unless (eval "use TrecVid08ECF; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# TrecVid08EventList (part of this tool)
-unless (eval "use TrecVid08EventList; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# KernelFunctions (part of this tool)
-unless (eval "use KernelFunctions; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"KernelFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# MetricTV08 (part of this tool)
-unless (eval "use MetricTV08; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MetricTV08\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# BipartiteMatch (part of this tool)
-unless (eval "use BipartiteMatch; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"BipartiteMatch\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# Trials (part of this tool)
-unless (eval "use Trials; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"Trials\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# TrialSummaryTable (part of this tool)
-unless (eval "use TrialSummaryTable; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrialSummaryTable\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# SimpleAutoTable (part of this tool)
-unless (eval "use SimpleAutoTable; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# DETCurve (part of this tool)
-unless (eval "use DETCurve; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"DETCurve\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# DETCurveSet (part of this tool)
-unless (eval "use DETCurveSet; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"DETCurveSet\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1") {
-  &_warn_add
-    (
-     "\"Getopt::Long\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-    );
-  $have_everything = 0;
-}
-
-# TrecVid08HelperFunctions (part of this tool)
-unless (eval "use TrecVid08HelperFunctions; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# CSVHelper (part of this tool)
-unless (eval "use CSVHelper; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"CSVHelper\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
+    $have_everything = 0;
+  }
 }
 
 # Something missing ? Abort
@@ -204,8 +111,7 @@ my $Rtarget = 1.8;
 ########################################
 # Options processing
 
-my $xmllint_env = "TV08_XMLLINT";
-my $xsdpath_env = "TV08_XSDPATH";
+my $xmllint_env = "F4DE_XMLLINT";
 my $mancmd = "perldoc -F $0";
 my @xtend_modes = ("copy_sys", "copy_ref", "overlap", "extended"); # Order is important
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
@@ -216,9 +122,7 @@ my $showAT = 0;
 my $allAT = 0;
 my $showi = 0;
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../data");
-$xsdpath = "$f4bv/data" 
-  if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../data";
 my $fps = undef;
 my $gtfs = 0;
 my $delta_t = undef;
@@ -1358,8 +1262,8 @@ B<TV08Scorer> system and reference ViPER files need to pass the B<TV08ViperValid
 
 =item B<SOFTWARE>
 
-I<xmllint> (part of I<libxml2>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
-If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
+I<xmllint> (part of I<libxml2>, see S<http://www.xmlsoft.org/>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<F4DE_XMLLINT> environment variable to the full path location of the I<xmllint> executable.
 
 For I<DETCurve> files generation, I<gzip> is required in your path.  If it is not, use B<--ZipPROG>.
 For I<DETCurve> PNG generation, a recent version of I<GNUPlot> is required in your path.  If it is not, use B<--GnuplotPROG>.
@@ -1367,31 +1271,12 @@ For I<DETCurve> PNG generation, a recent version of I<GNUPlot> is required in yo
 =item B<FILES>
 
 The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
-It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> environment variable.
+It is possible to specify their location using the B<--xsdpath> option.
 You should not have to specify their location, if you have performed an install and have set the global environment variables.
 
 =item B<GLOBAL ENVIRONMENT VARIABLES>
 
-B<TV08Scorer> relies on internal and external Perl libraries to function.
-
-Simply running the B<TV08Scorer> script should provide you with the list of missing libraries.
-The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
-
-=over
-
-=item B<F4DE_BASE>
-
-The main variable once you have installed the software, it should be sufficient to run this program.
-
-=item B<F4DE_PERL_LIB>
-
-Allows you to specify a different directory for the B<F4DE> libraries.  This is a development environment variable.
-
-=item B<TV08_PERL_LIB>
-
-Allows you to specify a different directory for the B<TrecVid08> libraries.  This is a development environment variable.
-
-=back
+Once you have installed the software, setting B<F4DE_BASE> to the installation location, and extending your B<PATH> to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
 
 =back
 
@@ -1562,7 +1447,6 @@ When creating DETCurves reports, I<title> is used for the result's title.
 =item B<--TrecVid08xsd> I<location>
 
 Specify the default location of the required XSD files (use B<--help> to get the list of required files).
-Can also be set using the B<TV08_XSDPATH> environment variable.
 
 =item B<--version>
 
@@ -1610,7 +1494,7 @@ For example if ref is 10:20 and sys is 15:30, the overlap will be 10:30.
 =item B<--xmllint> I<location>
 
 Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
-Can also be set using the B<TV08_XMLLINT> environment variable.
+Can also be set using the B<F4DE_XMLLINT> environment variable.
 
 =item B<--ZipPROG> I<gzip>
 
@@ -1628,7 +1512,7 @@ It will also print the I<Trial Contingency Table> table once all the scoring/ali
 
 =item B<TV08Scorer --xmllint /local/bin/xmllint --TrecVid08xsd /local/F4DE-CVS/data --fps 25 --deltat 10 test1-sys.xml test2-sys.xml test3-sys.xml test4-sys.xml test5-sys.xml --gtf test1-gtf.xml test2-gtf.xml test3-gtf.xml test4-gtf.xml --showAT --computeDETCurve --noPNG --ecf test.ecf>
 
-Will load the I<test1-sys.xml>, I<test2-sys.xml>, I<test3-sys.xml>, I<test4-sys.xml> and I<test5-sys.xml> I<system> files against the I<test1-gtf.xml>, I<test2-gtf.xml>, I<test3-gtf.xml> and I<test4-gtf.xml> I<refefence> files, specifying that the default sample rate is 25 fps, I<delta t> is 10 frames, using the I<xmllint> executable located at I</local/bin/xmllint> and the required XSD files found in the I</local/F4DE/data> directory.
+Will score the I<test1-sys.xml>, I<test2-sys.xml>, I<test3-sys.xml>, I<test4-sys.xml> and I<test5-sys.xml> I<system> files against the I<test1-gtf.xml>, I<test2-gtf.xml>, I<test3-gtf.xml> and I<test4-gtf.xml> I<refefence> files, specifying that the default sample rate is 25 fps, I<delta t> is 10 frames, using the I<xmllint> executable located at I</local/bin/xmllint> and the required XSD files found in the I</local/F4DE/data> directory.
 It will load the I<test.ecf> I<ECF> file and only score the I<Event(s)>/I<Observation(s)> whose sourcefile's filename and time range match the ones listed in the I<ECF> file.
 It will print the I<Global Alignment Table>.
 It will also try to generate a I<DETCurve> result table but not plot PNGs.
@@ -1652,6 +1536,12 @@ Martial Michel <martial.michel@nist.gov>
 
 Jonathan Fiscus <jonathan.fiscus@nist.gov>
 
+=head1 COPYRIGHT 
+
+This software was developed at the National Institute of Standards and Technology by employees of the Federal Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this software is not subject to copyright protection within the United States and is in the public domain. It is an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
+
+THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+
 =cut
 
 ########################################
@@ -1665,16 +1555,16 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--WriteMemDump [mode]] [--pruneEvents] [--XtraMappedObservations mode]] [--Duration seconds] [--ecf ecffile [--BypassECFFilesCheck]] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps [sys_file.xml [sys_file.xml [...]] -gtf ref_file.xml [ref_file.xml [...]] | --AlignmentCSV file.csv[,file.csv[,...]] [--bypassCSVHeader]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--WriteMemDump [mode]] [--pruneEvents] [--XtraMappedObservations mode]] [--Duration seconds] [--ecf ecffile [--BypassECFFilesCheck]] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps [sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]] | --AlignmentCSV file.csv[,file.csv[,...]] [--bypassCSVHeader]]
 
-Will Score the XML file(s) provided (Truth vs System)
+Will Score the XML file(s) provided (System vs Reference)
 
  Where:
   --help          Print this usage information and exit
   --man           Print a more detailled manual page and exit (same as running: $mancmd)
   --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --TrecVid08xsd  Path where the XSD files can be found
   --showAT        Show Gloabl Alignment Table
   --allAT         Show Alignment Table per File and Event processed
   --observationCont  Dump the Trials Contingency Table
