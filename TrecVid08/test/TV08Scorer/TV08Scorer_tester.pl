@@ -3,10 +3,11 @@
 
 use strict;
 use F4DE_TestCore;
+use MMisc;
 
 my $scorer = shift @ARGV;
 error_quit("ERROR: Scorer ($scorer) empty or not an executable\n")
-  if (($scorer eq "") || (! -f $scorer) || (! -x $scorer));
+  if ((MMisc::is_blank($scorer)) || (! MMisc::is_file_x($scorer)));
 my $mode = shift @ARGV;
 
 print "** Running TV08Scorer tests:\n";
@@ -70,12 +71,10 @@ $tn = "test7e";
 $testr += &do_simple_test($tn, "(\'xtra\' files)", "test6-Xtra-gtf.xml", "test6-Xtra-sys.xml", "-D 1000 -s -a -w -p", "res-$tn.txt");
 
 if ($testr == $totest) {
-  ok_quit("All test ok\n\n");
+  MMisc::ok_quit("All test ok\n");
 } else {
-  error_quit("Not all test ok\n\n");
+  MMisc::error_quit("Not all test ok\n");
 }
-
-die("You should never see this :)");
 
 ##########
 
@@ -91,18 +90,4 @@ sub do_simple_test {
   $totest++;
 
   return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev));
-}
-
-#####
-
-sub ok_quit {
-  print @_;
-  exit(0);
-}
-
-#####
-
-sub error_quit {
-  print @_;
-  exit(1);
 }

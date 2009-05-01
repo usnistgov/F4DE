@@ -3,10 +3,11 @@
 
 use strict;
 use F4DE_TestCore;
+use MMisc;
 
 my $validator = shift @ARGV;
 error_quit("ERROR: Validator ($validator) empty or not an executable\n")
-  if (($validator eq "") || (! -f $validator) || (! -x $validator));
+  if ((MMisc::is_blank($validator)) || (! MMisc::is_file_x($validator)));
 my $mode = shift @ARGV;
 
 print "** Running TV08ViperValidator tests:\n";
@@ -125,12 +126,10 @@ $testr += &do_simple_test($tn, "(ValueDivide + GetminMax)", "$validator ../commo
 ##########
 
 if ($testr == $totest) {
-  ok_quit("All tests ok\n\n");
+  MMisc::ok_quit("All tests ok\n");
 } else {
-  error_quit("Not all test ok\n\n");
+  MMisc::error_quit("Not all test ok\n");
 }
-
-die("You should never see this :)");
 
 ##########
 
@@ -141,18 +140,4 @@ sub do_simple_test {
   $totest++;
 
   return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev));
-}
-
-#####
-
-sub ok_quit {
-  print @_;
-  exit(0);
-}
-
-#####
-
-sub error_quit {
-  print @_;
-  exit(1);
 }

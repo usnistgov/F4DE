@@ -1,7 +1,9 @@
 #!/usr/bin/env perl
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
+
 use strict;
 use xmllintHelper;
+use MMisc;
 
 my $err = 0;
 
@@ -23,9 +25,23 @@ print "[F4DE Common Packages]\n";
 $ms = &_chkpkg
   (
    # common/lib
-   "BipartiteMatch", "CSVHelper", "DETCurve", "DETCurveSet", "F4DE_TestCore",
-   "MErrorH", "MMisc", "MetricFuncs", "MetricTestStub", "MtXML", "PropList",
-   "SimpleAutoTable", "TrialSummaryTable", "Trials", "ViperFramespan",
+   "BipartiteMatch",
+   "CSVHelper",
+   "DETCurve",
+   "DETCurveGnuplotRenderer",
+   "DETCurveSet",
+   "F4DE_TestCore",
+   "MErrorH",
+   "MetricFuncs",
+   "MetricTestStub",
+   "MetricTV08",
+   "MMisc",
+   "MtXML",
+   "PropList",
+   "SimpleAutoTable",
+   "Trials",
+   "TrialSummaryTable",
+   "ViperFramespan",
    "xmllintHelper"
   );
 if ($ms > 0) {
@@ -39,9 +55,12 @@ print "[F4DE's TrecVid08 Packages]\n";
 $ms = &_chkpkg
   (
    # TrecVid08/lib
-    "AdjudicationViPERfile", "KernelFunctions", "MetricTV08",
-   "TrecVid08ECF", "TrecVid08EventList", 
-   "TrecVid08HelperFunctions", "TrecVid08Observation",
+   "AdjudicationViPERfile",
+   "KernelFunctions",
+   "TrecVid08ECF",
+   "TrecVid08EventList", 
+   "TrecVid08HelperFunctions",
+   "TrecVid08Observation",
    "TrecVid08ViperFile",
   );
 if ($ms > 0) {
@@ -80,10 +99,9 @@ if ($xobj->error()) {
 
 ####################
 
-error_quit("\nSome issues, fix before attempting to run make check again\n") 
-  if ($err);
+MMisc::error_quit("\nSome issues, fix before attempting to run make check again\n") if ($err);
 
-ok_quit("\n** Pre-requisite testing done\n\n");
+MMisc::ok_quit("\n** Pre-requisite testing done\n\n");
 
 ####################
 
@@ -100,19 +118,4 @@ sub _chkpkg {
   }
 
   return($ms);
-}
-
-
-####################
-
-sub ok_quit {
-  print @_;
-  exit(0);
-}
-
-#####
-
-sub error_quit {
-  print @_;
-  exit(1);
 }
