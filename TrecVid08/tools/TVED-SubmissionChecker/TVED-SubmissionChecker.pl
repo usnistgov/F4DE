@@ -38,16 +38,14 @@ my $versionid = "TrecVid08 Event Detection Submission Checker Version: $version"
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $tv08pl, $tv08plv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
   $f4b = "F4DE_BASE";
-  $f4bv = $ENV{$f4b} . "/lib";
-  $tv08pl = "TV08_PERL_LIB";
-  $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
-  $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../common/lib");
 }
-use lib ($tv08plv, $f4deplv, $f4bv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -58,52 +56,24 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# MMisc (part of this tool)
-unless (eval "use MMisc; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# Part of this tool
+foreach my $pn ("MMisc", "TrecVid08ViperFile", "TrecVid08HelperFunctions", "TrecVid08ECF", "TrecVid08EventList") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 }
 
-# TrecVid08ViperFile (part of this tool)
-unless (eval "use TrecVid08ViperFile; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# TrecVid08HelperFunctions (part of this tool)
-unless (eval "use TrecVid08HelperFunctions; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# TrecVid08ECF (part of this tool)
-unless (eval "use TrecVid08ECF; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08ECF\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# TrecVid08EventList (part of this tool)
-unless (eval "use TrecVid08EventList; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08EventList\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1") {
-  &_warn_add
-    (
-     "\"Getopt::Long\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-    );
-  $have_everything = 0;
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
+    $have_everything = 0;
+  }
 }
 
 # Something missing ? Abort
@@ -134,20 +104,17 @@ my $epmdfile = "Events_Processed.md";
 
 my $md_add = TrecVid08HelperFunctions::get_MemDump_Suffix();
 
-my $BigXMLtool = (exists $ENV{"F4DE_BASE"})
-  ? $ENV{"F4DE_BASE"} . "/bin/BigXML_ValidatorHelper"
-  : "../TV08ViperValidator/BigXML_ValidatorHelper.pl";
+my $BigXMLtool = (exists $ENV{$f4b})
+  ? $ENV{$f4b} . "/bin/TV08_BigXML_ValidatorHelper"
+  : "../TV08ViperValidator/TV08_BigXML_ValidatorHelper.pl";
 
-my $xmllint_env = "TV08_XMLLINT";
-my $xsdpath_env = "TV08_XSDPATH";
+my $xmllint_env = "F4DE_XMLLINT";
 my $mancmd = "perldoc -F $0";
 my $usage = &set_usage();
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../data");
-$xsdpath = "$f4bv/data" 
-  if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../data";
 my $fps = undef;
 my $ecffile = "";
 my $verb = 0;
@@ -1050,37 +1017,20 @@ B<TV08ED-SubmissionChecker> ViPER files need to pass the B<TV08ViperValidator> v
 
 =item B<SOFTWARE>
 
-I<xmllint> (part of I<libxml2>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
-If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
+I<xmllint> (part of I<libxml2>, see S<http://www.xmlsoft.org/>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<F4DE_XMLLINT> environment variable to the full path location of the I<xmllint> executable.
 
 The program relies on I<gnu tar> and I<unzip> to process the archive files.
 
 =item B<FILES>
 
 The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
-It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> environment variable.
+It is possible to specify their location using the B<--xsdpath> option.
 You should not have to specify their location, if you have performed an install and have set the global environment variables.
 
 =item B<GLOBAL ENVIRONMENT VARIABLES>
 
-B<TV08ED-SubmissionChecker> relies on internal and external Perl libraries to function.
-
-Simply running the B<TV08ED-SubmissionChecker> script should provide you with the list of missing libraries.
-The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
-
-=over
-
-=item B<F4DE_BASE>
-
-The main variable once you have installed the software, it should be sufficient to run this program.
-
-=item B<F4DE_PERL_LIB>
-
-Allows you to specify a different directory for the B<F4DE> libraries.  This is a development environment variable.
-
-=item B<TV08_PERL_LIB>
-
-Allows you to specify a different directory for the B<TrecVid08> libraries.  This is a development environment variable.
+Once you have installed the software, setting B<F4DE_BASE> to the installation location, and extending your B<PATH> to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
 
 =back
 
@@ -1098,11 +1048,11 @@ B<TV08ED-SubmissionChecker> will ignore the I<config> section of the XML file, a
 
 =item B<--BigXML> I<location>
 
-Specify the I<location> of the S<BigXML_ValidatorHelper> tool.
+Specify the I<location> of the S<TV08_BigXML_ValidatorHelper> tool.
 
 =item B<--bigXML>
 
-Use the S<BigXML_ValidatorHelper> tool to validate and perform a MemDump of the XML files contained within the submission.
+Use the S<TV08_BigXML_ValidatorHelper> tool to validate and perform a MemDump of the XML files contained within the submission.
 
 =item B<--Continue_MemDump>
 
@@ -1143,7 +1093,6 @@ Do not perform XML validation on the ViPER files within the archive.
 =item B<--TrecVid08xsd> I<location>
 
 Specify the default location of the required XSD files (use B<--help> to get the list of required files).
-Can also be set using the B<TV08_XSDPATH> environment variable.
 
 =item B<--uncompress_dir> I<dir>
 
@@ -1171,7 +1120,7 @@ When using this mode, the S<last_parameter> becomes E<lt>SITEE<gt>.
 =item B<--xmllint> I<location>
 
 Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
-Can also be set using the B<TV08_XMLLINT> environment variable.
+Can also be set using the B<F4DE_XMLLINT> environment variable.
 
 =back
 
@@ -1197,6 +1146,12 @@ Please send bug reports to <nist_f4de@nist.gov>
 
 Martial Michel <martial.michel@nist.gov>
 
+=head1 COPYRIGHT 
+
+This software was developed at the National Institute of Standards and Technology by employees of the Federal Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this software is not subject to copyright protection within the United States and is in the public domain. It is an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
+
+THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+
 =cut
 
 ############################################################
@@ -1220,7 +1175,7 @@ Only in the '--work_in_dir' case does it become <SITE>.
   --man           Print a more detailled manual page and exit (same as running: $mancmd)
   --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --TrecVid08xsd  Path where the XSD files can be found
   --ecf           Specify the ECF file to load
   --fps           Set the number of frames per seconds (float value) (also recognized: PAL, NTSC)
   --skip_validation  Bypass the XML files validation process
@@ -1232,8 +1187,8 @@ Only in the '--work_in_dir' case does it become <SITE>.
   --uncompress_dir  Specify the directory in which the archive file will be uncompressed
   --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified (useful to confirm a submission before generating its archive)
   --quit_if_non_scorable  If for any reason, any submission is non scorable, quit without continuing the check process, instead of adding information to a report printed at the end
-  --bigXML        Use the \"BigXML_ValidatorHelper\" tool to perform validation of XML files
-  --BigXML        Specify the location of the \"BigXML_ValidatorHelper\" tool (default: $BigXMLtool)
+  --bigXML        Use the \"TV08_BigXML_ValidatorHelper\" tool to perform validation of XML files
+  --BigXML        Specify the location of the \"TV08_BigXML_ValidatorHelper\" tool (default: $BigXMLtool)
 
 Note:
 - Recognized archive extensions: $ok_exts
