@@ -58,7 +58,6 @@ my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-
 # Part of this tool
 foreach my $pn ("MMisc", "TrecVid08ViperFile", "TrecVid08Observation", "TrecVid08HelperFunctions", "TrecVid08ECF") {
   unless (eval "use $pn; 1") {
