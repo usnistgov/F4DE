@@ -2,10 +2,11 @@
 
 use strict;
 use F4DE_TestCore;
+use MMisc;
 
 my $cmd = shift @ARGV;
 error_quit("ERROR: MergeHelper ($cmd) empty or not an executable\n")
-  if (($cmd eq "") || (! -f $cmd) || (! -x $cmd));
+  if ((MMisc::is_blank($cmd)) || (! MMisc::is_file_x($cmd)));
 my $mode = shift @ARGV;
 
 print "** Running TV08MergeHelper tests:\n";
@@ -50,12 +51,10 @@ $tn = "test5c";
 $testr += &do_simple_test($tn, "(SYS: FrameShift + ForceFilename + Overlap Check / on stdout + pruneEvents + OverlapOnlyXML)", "$d/test1-1md-sys.xml $d/test3-sys.xml $d/test1-same-sys.xml:40 $d/test1-1fa-sys.xml:10000 $d/test2-1md_1fa-sys.xml:5000 $d/test2-same-sys.xml:1500 -f PAL -s -S -o -F samefile -p -O", "res_$tn.txt");
 
 if ($testr == $totest) {
-  ok_quit("All tests ok\n\n");
+  MMisc::ok_quit("All tests ok\n");
 } else {
-  error_quit("Not all test ok\n\n");
+  MMisc::error_quit("Not all test ok\n");
 }
-
-die("You should never see this :)");
 
 ##########
 
@@ -77,18 +76,4 @@ sub do_simple_test {
   $totest++;
 
   return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
-}
-
-#####
-
-sub ok_quit {
-  print @_;
-  exit(0);
-}
-
-#####
-
-sub error_quit {
-  print @_;
-  exit(1);
 }
