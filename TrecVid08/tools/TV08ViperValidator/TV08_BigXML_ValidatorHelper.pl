@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
-# Big XML Files Validator Helper
+# TrecVid08 Big XML Files Validator Helper
 #
 # Author(s): Martial Michel
 #
@@ -10,7 +10,7 @@
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "Big XML Files Validator Helper" is an experimental system.
+# "TrecVid08 Big XML Files Validator Helper" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -32,7 +32,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "Big XML Files Validator Helper Version: $version";
+my $versionid = "TrecVid08 Big XML Files Validator Helper Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -461,11 +461,11 @@ sub copy_file {
 
 =head1 NAME
 
-BigXML_ValidatorHelper - TrecVid08 Big XML Files Validator Helper
+TV08_BigXML_ValidatorHelper - TrecVid08 Big XML Files Validator Helper
 
 =head1 SYNOPSIS
 
-B<BigXML_ValidatorHelper> S<[--help | --man | --version]>
+B<TV08_BigXML_ValidatorHelper> S<[--help | --man | --version]>
   S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
   S<[B<--ViperValidator> I<location>] [B<--MergeHelper> I<location>]>
   S<[B<--gtf>] [B<--splitevery> I<value>] [B<--chunks> I<bytes>]>
@@ -475,11 +475,11 @@ B<BigXML_ValidatorHelper> S<[--help | --man | --version]>
 
 =head1 DESCRIPTION
 
-B<BigXML_ValidatorHelper> performs a syntactic and semantic validation of the ViPER XML file(s) provided on the command line, then write a MemDump version of this file into the B<writedir> directory. It can I<validate> reference files (see B<--gtf>) as well as system files. It does so by splitting large files into plenty of small files, validating those files and merging the resulting files. It does not have all the options of S<TV08ViperValidator> as it is a helper tool designed to obtain a MemDump version of large XML files. Those MemDump files can then be used in other tools reducing considerably the load time (does not have to re-validate the XML file). 
+B<TV08_BigXML_ValidatorHelper> performs a syntactic and semantic validation of the ViPER XML file(s) provided on the command line, then write a MemDump version of this file into the B<writedir> directory. It can I<validate> reference files (see B<--gtf>) as well as system files. It does so by splitting large files into plenty of small files, validating those files and merging the resulting files. It does not have all the options of S<TV08ViperValidator> as it is a helper tool designed to obtain a MemDump version of large XML files. Those MemDump files can then be used in other tools reducing considerably the load time (does not have to re-validate the XML file). 
 
 =head1 PREREQUISITES
 
-B<BigXML_ValidatorHelper> relies on some external software and files.
+B<TV08_BigXML_ValidatorHelper> relies on some external software and files.
 
 =over
 
@@ -506,9 +506,9 @@ Once you have installed the software, setting B<F4DE_BASE> to the installation l
 
 =head1 GENERAL NOTES
 
-B<BigXML_ValidatorHelper> expect that the files can be validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
+B<TV08_BigXML_ValidatorHelper> expect that the files can be validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
 
-B<BigXML_ValidatorHelper> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
+B<TV08_BigXML_ValidatorHelper> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
 
 =head1 OPTIONS
 
@@ -566,11 +566,11 @@ Default location used can be obained using B<--help>.
 
 =item B<--version>
 
-Display B<BigXML_ValidatorHelper> version information.
+Display B<TV08_BigXML_ValidatorHelper> version information.
 
 =item B<--writedir> [I<directory>]
 
-Once validation has been completed for a given file, B<BigXML_ValidatorHelper> will write the MemDump representation of this file to this directory.
+Once validation has been completed for a given file, B<TV08_BigXML_ValidatorHelper> will write the MemDump representation of this file to this directory.
 
 =item B<--xmllint> I<location>
 
