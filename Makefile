@@ -27,7 +27,7 @@ TV08install:
 	@echo "** Installing TrecVid08 files"
 	@perl installer.pl ${F4DE_BASE} lib TrecVid08/lib/*.pm
 	@perl installer.pl ${F4DE_BASE} lib/data TrecVid08/data/*.xsd
-	@perl installer.pl -x -r ${F4DE_BASE} bin TrecVid08/tools/TV08MergeHelper/TV08MergeHelper.pl TrecVid08/tools/TV08ViperValidator/TV08ViperValidator.pl TrecVid08/tools/TV08ViperValidator/BigXML_ValidatorHelper.pl TrecVid08/tools/TV08Scorer/TV08Scorer.pl  TrecVid08/tools/TV08ED-SubmissionChecker/TV08ED-SubmissionChecker.pl
+	@perl installer.pl -x -r ${F4DE_BASE} bin TrecVid08/tools/TV08MergeHelper/TV08MergeHelper.pl TrecVid08/tools/TV08ViperValidator/TV08ViperValidator.pl TrecVid08/tools/TV08ViperValidator/TV08_BigXML_ValidatorHelper.pl TrecVid08/tools/TV08Scorer/TV08Scorer.pl  TrecVid08/tools/TV08ED-SubmissionChecker/TV08ED-SubmissionChecker.pl
 
 install_head:
 	@echo "** Checking that the F4DE_BASE environment variable is set"
@@ -92,11 +92,13 @@ dist_head:
 dist_common:
 	@cp .f4de_version /tmp
 	@echo ""
-	@echo "***** Removing CLEAR07 Directory (for now)"
-	@(cd /tmp/`cat .f4de_version`; rm -rf CLEAR07)
-	@echo ""
-	@echo "***** Running all tests"
-	@(cd /tmp/`cat .f4de_version`; make check)
+#	@echo "***** Removing CLEAR07 Directory (for now)"
+#	@(cd /tmp/`cat .f4de_version`; rm -rf CLEAR07)
+#	@echo "***** Removing AVSS09 Directory (for now)"
+#	@(cd /tmp/`cat .f4de_version`; rm -rf AVSS09)
+#	@echo ""
+#	@echo "***** Running all tests"
+#	@(cd /tmp/`cat .f4de_version`; make check)
 	@echo "Building the tar.bz2 file"
 	@echo `cat .f4de_version`"-"`date +%Y%m%d-%H%M`.tar.bz2 > /tmp/.f4de_distname
 	@echo `pwd` > /tmp/.f4de_pwd
