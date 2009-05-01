@@ -38,16 +38,14 @@ my $versionid = "TrecVid08 Stat Generator (Version: $version)";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $tv08pl, $tv08plv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
   $f4b = "F4DE_BASE";
-  $f4bv = $ENV{$f4b} . "/lib";
-  $tv08pl = "TV08_PERL_LIB";
-  $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
-  $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../common/lib");
 }
-use lib ($tv08plv, $f4deplv, $f4bv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -58,66 +56,24 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# MMisc (part of this tool)
-unless (eval "use MMisc; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# Part of this tool
+foreach my $pn ("MMisc", "TrecVid08ViperFile", "TrecVid08Observation", "ViperFramespan", "ViperFramespan", "SimpleAutoTable", "TrecVid08HelperFunctions") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 }
 
-# TrecVid08ViperFile (part of this tool)
-unless (eval "use TrecVid08ViperFile; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-unless (eval "use TrecVid08Observation; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08Observation\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-unless (eval "use ViperFramespan; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"ViperFramespan\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-unless (eval "use SimpleAutoTable; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1") {
-  &_warn_add
-    (
-     "\"Getopt::Long\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-    );
-  $have_everything = 0;
-}
-
-# Statistics::Descriptive::Discrete (is part of CPAN)
-unless (eval "use Statistics::Descriptive::Discrete; 1") {
-  &_warn_add
-    (
-     "\"Statistics::Descriptive::Discrete\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?query=descriptive+discrete&mode=all\" for installation information\n"
-    );
-  $have_everything = 0;
-}
-
-# TrecVid08HelperFunctions (part of this tool)
-unless (eval "use TrecVid08HelperFunctions; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"TrecVid08HelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long", "Statistics::Descriptive::Discrete") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
+    $have_everything = 0;
+  }
 }
 
 # Something missing ? Abort
@@ -139,16 +95,13 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 ########################################
 # Options processing
 
-my $xmllint_env = "TV08_XMLLINT";
-my $xsdpath_env = "TV08_XSDPATH";
+my $xmllint_env = "F4DE_XMLLINT";
 my $usage = &set_usage();
 
 # Default values for variables
 my $show = 0;
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../data");
-$xsdpath = "$f4bv/data" 
-  if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../data";
 my $fps = -1;
 my $isgtf = 0;
 my $docsv = -1;
@@ -489,7 +442,7 @@ Will Score the XML file(s) provided (Truth vs System)
  Where:
   --gtf           Specify that the files are gtf
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --TrecVid08xsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --TrecVid08xsd  Path where the XSD files can be found
   --fps           Set the number of frames per seconds (float value) (also recognined: PAL, NTSC)
   --csv           Generate output representation as CSV (to file if given)
   --discardErrors Continue processing even if not all xml files can be properly loaded
