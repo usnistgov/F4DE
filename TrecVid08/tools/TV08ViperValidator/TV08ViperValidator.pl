@@ -684,7 +684,7 @@ If I<xmllint> is not available in your PATH, you can specify its location either
 =item B<FILES>
 
 The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
-It is possible to specify their location using the B<--xsdpath> option or the B<F4DE_BASE> environment variable.
+It is possible to specify their location using the B<--xsdpath> option.
 You should not have to specify their location, if you have performed an install and have set the global environment variables.
 
 =item B<GLOBAL ENVIRONMENT VARIABLE>
