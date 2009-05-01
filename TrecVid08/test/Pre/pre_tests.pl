@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 use strict;
-use TrecVid08xmllint;
+use xmllintHelper;
 
 my $err = 0;
 
@@ -26,6 +26,7 @@ $ms = &_chkpkg
    "BipartiteMatch", "CSVHelper", "DETCurve", "DETCurveSet", "F4DE_TestCore",
    "MErrorH", "MMisc", "MetricFuncs", "MetricTestStub", "MtXML", "PropList",
    "SimpleAutoTable", "TrialSummaryTable", "Trials", "ViperFramespan",
+   "xmllintHelper"
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the programs, please install the missing ones\n\n";
@@ -41,7 +42,7 @@ $ms = &_chkpkg
     "AdjudicationViPERfile", "KernelFunctions", "MetricTV08",
    "TrecVid08ECF", "TrecVid08EventList", 
    "TrecVid08HelperFunctions", "TrecVid08Observation",
-   "TrecVid08ViperFile", "TrecVid08xmllint",
+   "TrecVid08ViperFile",
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all TrecVid08 packages found, you will not be able to run the program, please install the missing ones\n\n";
@@ -58,7 +59,7 @@ if ($ms > 0) {
 
 ##########
 print "\n** Checking for xmllint:\n";
-my $xmllint_env = "TV08_XMLLINT";
+my $xmllint_env = "F4DE_XMLLINT";
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
 if ($xmllint ne "") {
   print "- using the one specified by the $xmllint_env environment variable ($xmllint)\n";
@@ -66,7 +67,7 @@ if ($xmllint ne "") {
 
 my $error = "";
 # Confirm xmllint is present and at least 2.6.30
-my $xobj = new TrecVid08xmllint();
+my $xobj = new xmllintHelper();
 $xobj->set_xmllint($xmllint);
 if ($xobj->error()) {
   print $xobj->get_errormsg();
