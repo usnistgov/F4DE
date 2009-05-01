@@ -37,17 +37,14 @@ my $versionid = "Big XML Files Validator Helper Version: $version";
 ##########
 # Check we have every module (perl wise)
 
-## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $tv08pl, $tv08plv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
   $f4b = "F4DE_BASE";
-  $f4bv = $ENV{$f4b} . "/lib";
-  $tv08pl = "TV08_PERL_LIB";
-  $tv08plv = $ENV{$tv08pl} || "../../lib"; # Default is relative to this tool's default path
-  $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib"; # Default is relative to this tool's default path
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../common/lib");
 }
-use lib ($tv08plv, $f4deplv, $f4bv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -58,24 +55,24 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $tv08pl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# MMisc (part of this tool)
-unless (eval "use MMisc; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# Part of this tool
+foreach my $pn ("MMisc") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 }
 
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1") {
-  &_warn_add
-    (
-     "\"Getopt::Long\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-    );
-  $have_everything = 0;
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
+    $have_everything = 0;
+  }
 }
 
 # Something missing ? Abort
@@ -95,9 +92,9 @@ my $usage = &set_usage();
 
 my $mrgtool = "";
 my $valtool = "";
-if (exists $ENV{"F4DE_BASE"}) {
-  $valtool = $ENV{"F4DE_BASE"} . "/bin/TV08ViperValidator";
-  $mrgtool = $ENV{"F4DE_BASE"} . "/bin/TV08MergeHelper";
+if (exists $ENV{$f4b}) {
+  $valtool = $ENV{$f4b} . "/bin/TV08ViperValidator";
+  $mrgtool = $ENV{$f4b} . "/bin/TV08MergeHelper";
 } else {
   $valtool = "../TV08ViperValidator/TV08ViperValidator.pl";
   $mrgtool = "../TV08MergeHelper/TV08MergeHelper.pl";
@@ -489,36 +486,19 @@ B<BigXML_ValidatorHelper> relies on some external software and files.
 =item B<SOFTWARE> 
 
 I<xmllint> (part of I<libxml2>, see S<http://www.xmlsoft.org/>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
-If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<TV08_XMLLINT> environment variable.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<F4DE_XMLLINT> environment variable.
 
 B<TV08ViperValidator> and B<TV08MergerHelper>, part of F4DE's TrecVid08 section are also needed as they are the core programs used. 
 
 =item B<FILES>
 
 The syntactic validation requires some XML schema files (full list can be obtained using the B<--help> option).
-It is possible to specify their location using the B<--xsdpath> option or the B<TV08_XSDPATH> environment variable.
+It is possible to specify their location using the B<--xsdpath> option.
 You should not have to specify their location, if you have performed an install and have set the global environment variables.
 
 =item B<GLOBAL ENVIRONMENT VARIABLES>
 
-B<BigXML_ValidatorHelper> relies on some internal and external Perl libraries to function.
-
-Simply running the B<BigXML_ValidatorHelper> script should provide you with the list of missing libraries. 
-The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
-
-=over
-
-=item B<F4DE_BASE>
-
-The main variable once you have installed the software, it should be sufficient to run this program.
-
-=item B<F4DE_PERL_LIB>
-
-Allows you to specify a different directory for the B<F4DE> libraries.
-
-=item B<TV08_PERL_LIB>
-
-Allows you to specify a different directory for the B<TrecVid08> libraries.
+Once you have installed the software, setting B<F4DE_BASE> to the installation location, and extending your B<PATH> to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
 
 =back
 
@@ -578,7 +558,6 @@ Default value can be obtained using B<--help>
 =item B<--TrecVid08xsd> I<location>
 
 Specify the default location of the required XSD files (use B<--help> to get the list of required files).
-Can also be set using the B<TV08_XSDPATH> environment variable.
 
 =item B<--ViperValidator> I<location>
 
@@ -610,6 +589,12 @@ Please send bug reports to <nist_f4de@nist.gov>
 =head1 AUTHORS
 
 Martial Michel <martial.michel@nist.gov>
+
+=head1 COPYRIGHT 
+
+This software was developed at the National Institute of Standards and Technology by employees of the Federal Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this software is not subject to copyright protection within the United States and is in the public domain. It is an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
+
+THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
 =cut
 
