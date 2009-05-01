@@ -575,7 +575,7 @@ Once validation has been completed for a given file, B<TV08_BigXML_ValidatorHelp
 =item B<--xmllint> I<location>
 
 Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
-Can also be set using the B<TV08_XMLLINT> environment variable.
+Can also be set using the B<F4DE_XMLLINT> environment variable.
 
 =back
 
