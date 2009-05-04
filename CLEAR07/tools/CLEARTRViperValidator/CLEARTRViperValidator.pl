@@ -125,14 +125,14 @@ GetOptions
    'xmllint=s'       => \$xmllint,
    'CLEARxsd=s'      => \$xsdpath,
    'gtf'             => \$isgtf,
-   'Domain:s'        => \$evaldomain,
+   'Domain=s'        => \$evaldomain,
    'frameTol=i'      => \$frameTol,
    'write:s'         => \$writeback,
    'WriteMemDump:s'  => \$MemDump,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-die("\n$usage\n") if ($opt{'help'});
-die("$versionid\n") if ($opt{'version'});
+MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
 if (defined $evaldomain) { 
   $evaldomain = uc($evaldomain);
@@ -211,11 +211,12 @@ while ($tmp = shift @ARGV) {
 	if (! CLEARTRHelperFunctions::save_ViperFile_MemDump($fname, $object, $MemDump));    
    
       my $eval_sequence = Sequence->new($fname);
-      die "Failed scoring 'Sequence' instance creation. $eval_sequence\n"
+      MMisc::error_quit("Failed scoring 'Sequence' instance creation. $eval_sequence")
         if (ref($eval_sequence) ne "Sequence");
 
       $object->reformat_ds($eval_sequence, $isgtf, @ok_objects);
-      die "Could not reformat Viper File: $fname. " . $object->get_errormsg() . "\n" if ($object->error());
+      MMisc::error_quit("Could not reformat Viper File: $fname. " . $object->get_errormsg())
+          if ($object->error());
 
       MMisc::error_quit("Problem writing the 'Memory Dump' representation of the Scoring Sequence object")
 	if (! CLEARTRHelperFunctions::save_ScoringSequence_MemDump($fname, $eval_sequence, $MemDump));    
