@@ -3,6 +3,7 @@
 # CLEAR Detection and Tracking Scorer
 #
 # Author(s): Vasant Manohar
+# Additions: Martial Michel
 #
 # This software was developed at the National Institute of Standards and Technology by
 # employees and/or contractors of the Federal Government in the course of their official duties.
@@ -37,16 +38,14 @@ my $versionid = "CLEAR Detection and Tracking Scorer Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($dateb, $datebv, $clearpl, $clearplv, $datepl, $dateplv);
+my ($f4b, @f4bv);
 BEGIN {
-  $dateb = "DATE_BASE";
-  $datebv = $ENV{$dateb} . "/lib";
-  $clearpl = "CLEAR_PERL_LIB";
-  $clearplv = $ENV{$clearpl} || "../../lib"; # Default is relative to this tool's default path
-  $datepl = "DATE_PERL_LIB";
-  $dateplv = $ENV{$datepl} || "../../../common/lib";  # Default is relative to this tool's default path
+  $f4b = "F4DE_BASE";
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../common/lib");
 }
-use lib ($clearplv, $dateplv, $datebv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -58,59 +57,24 @@ sub eo2pe {
 ## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $dateb environment variable (if you did an install, otherwise your $clearpl and $datepl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 
-# CLEARDTViperFile (part of this tool)
-unless (eval "use CLEARDTViperFile; 1")
-  {
+# Part of this tool
+foreach my $pn ("CLEARDTViperFile", "CLEARDTHelperFunctions", "Sequence", "SimpleAutoTable") {
+  unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
-    warn_print("\"CLEARDTViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
   }
-
-# CLEARDTHelperFunctions (part of this tool)
-unless (eval "use CLEARDTHelperFunctions; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"CLEARDTHelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
 }
 
-# Sequence (part of this tool)
-unless (eval "use Sequence; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"Sequence\" is not available in your Perl installation. ", $partofthistool, $pe);
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
     $have_everything = 0;
   }
-
-# SimpleAutoTable (part of this tool)
-unless (eval "use SimpleAutoTable; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"SimpleAutoTable\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
 }
-
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1")
-  {
-    warn_print
-      (
-       "\"Getopt::Long\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
-
-# Data::Dumper (usually part of the Perl Core)
-unless (eval "use Data::Dumper; 1")
-   {
-    warn_print
-      (
-       "\"Data::Dumper\" is not available on your Perl installation. ",
-       "Please visit \"http://search.cpan.org/~rgarcia/perl-5.10.0/lib/File/Basename.pm\" for installation information\n"
-      );
-    $have_everything = 0;
-  }   
 
 # Something missing ? Abort
 MMisc::error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
@@ -128,27 +92,26 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 ########################################
 # Options processing
 
-my $xmllint_env = "CLEAR_XMLLINT";
-my $xsdpath_env = "CLEAR_XSDPATH";
-my $usage = &set_usage();
-
-# Default values for variables
-my $gtfs = 0;
-my $xmllint = &_get_env_val($xmllint_env, "");
-my $xsdpath = &_get_env_val($xsdpath_env, "../../data");
-$xsdpath = "$datebv/data" 
-  if (($datebv ne "/lib") && ($xsdpath eq "../../data"));
-my $xmlbasefile = -1;
-my $evaldomain  = undef;
-my $eval_type   = undef;
+my $xmllint_env = "F4DE_XMLLINT";
 my $det_thres   = 1.0;
 my $trk_thres   = 1.0;
 my $CostMiss    = 1.0;
 my $CostFA      = 1.0;
 my $CostIS      = 1.0;
-my $bin         = 0;
 my $frameTol    = 0;
-my $writeback   = -1;
+my $usage = &set_usage();
+
+# Default values for variables
+my $gtfs = 0;
+my $xmllint = MMisc::get_env_val($xmllint_env, "");
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../data";
+my $evaldomain  = undef;
+my $eval_type   = undef;
+my $bin         = 0;
+my $writeres    = "";
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
+# Used:   CDEF  I   M              b d fgh           t vwx    #
 
 my %opt;
 my $dbgftmp = "";
@@ -160,11 +123,10 @@ GetOptions
    \%opt,
    'help',
    'version',
-   "XMLbase:s"       => \$xmlbasefile,
    'xmllint=s'       => \$xmllint,
    'CLEARxsd=s'      => \$xsdpath,
-   'Domain:s'        => \$evaldomain,
-   'Eval:s'          => \$eval_type,
+   'Domain=s'        => \$evaldomain,
+   'Eval=s'          => \$eval_type,
    'detthres=f'      => \$det_thres,
    'trkthres=f'      => \$trk_thres,
    'MissCost=f'      => \$CostMiss,
@@ -172,7 +134,7 @@ GetOptions
    'ISCost=f'        => \$CostIS,
    'bin'             => \$bin,
    'frameTol=i'      => \$frameTol,
-   'write:s'         => \$writeback,   
+   'writeResults=s'  => \$writeres,   
    'gtf'             => sub {$gtfs++; @leftover = @ARGV},
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
@@ -187,20 +149,15 @@ if (defined $evaldomain) {
 else { MMisc::error_quit("'Domain' is a required argument (BN, MR, SV, UV), aborting\n\n$usage\n"); }
 
 if (defined $eval_type) {
-  if (lc($eval_type) eq "area") { $eval_type = "Area"; }
-  elsif (lc($eval_type) eq "point") { $eval_type = "Point";}
-  else { MMisc::error_quit("Unknown 'EvalType'. Has to be (area, point), aborting\n\n$usage\n"); }
-}
-else { MMisc::error_quit("'EvalType' is a required argument (area, point), aborting\n\n$usage\n"); }
-
-if ($xmlbasefile != -1) {
-  my $txt = $dummy->get_base_xml(@ok_objects);
-  MMisc::error_quit("While trying to obtain the base XML file (" . $dummy->get_errormsg() . ")")
-    if ($dummy->error());
-
-  MMisc::writeTo($xmlbasefile, "", 0, 0, $txt);  
-
-  MMisc::ok_quit($txt);
+  if (lc($eval_type) eq "area") {
+    $eval_type = "Area"; 
+  } elsif (lc($eval_type) eq "point") {
+    $eval_type = "Point";
+  } else {
+    MMisc::error_quit("Unknown 'EvalType'. Has to be (area, point), aborting\n\n$usage\n"); 
+  }
+} else {
+  MMisc::error_quit("'EvalType' is a required argument (area, point), aborting\n\n$usage\n");
 }
 
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
@@ -213,17 +170,6 @@ if ($xmllint ne "") {
 if ($xsdpath ne "") {
   MMisc::error_quit("While trying to set \'CLEARxsd\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xsdpath($xsdpath));
-}
-
-if (($writeback != -1) && ($writeback ne "")) {
-  # Check the directory
-  MMisc::error_quit("Provided \'write\' option directory ($writeback) does not exist")
-    if (! -e $writeback);
-  MMisc::error_quit("Provided \'write\' option ($writeback) is not a directory")
-    if (! -d $writeback);
-  MMisc::error_quit("Provided \'write\' option directory ($writeback) is not writable")
-    if (! -w $writeback);
-  $writeback .= "/" if ($writeback !~ m%\/$%); # Add a trailing slash
 }
 
 MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting")
@@ -252,7 +198,7 @@ my (@ref_seqs, @sys_seqs);
 for (my $loop = 0; $loop < $ntodo; $loop++) {
   my ($ref_ok, $gtSequence) = &load_file(1, $ref[$loop]);
   MMisc::error_quit("Could not load ground truth scoring sequence: $ref[$loop]\n") if (! $ref_ok);
-  # print(Dumper(\$gtSequence));
+
   my %ref_seq = ( 'sequence'    => $gtSequence,
                   'filename'    => $gtSequence->getSeqFileName(),
                   'video_file'  => $gtSequence->getSourceFileName(),
@@ -340,14 +286,8 @@ MMisc::error_quit("ERROR: Generating Final Report (". $results->get_errormsg() .
 my $param_setting = &get_param_settings();
 
 my $output = $commandline . $param_setting . $tbl;
-my $fname = "";
-if (($writeback != -1) && ($writeback ne "")) {
-    my @sysfields = split(/[_-]/, $files_to_be_processed[0]->[1]->getSeqFileName()); # Get one system filename
-    my $tmp = $sysfields[0] . "_" . $evaldomain . "_" . $ref_eval_obj . "_DT.res";
-    $fname = "$writeback$tmp";
-} 
 MMisc::error_quit("Problem while trying to \'write\'")
-  if (! MMisc::writeTo($fname, "", 1, 0, $output, "", "** Detection and Tracking Results:\n"));
+  if (! MMisc::writeTo($writeres, "", 1, 0, $output, "", "** Detection and Tracking Results:\n"));
 
 MMisc::ok_quit("\n\n***** DONE *****\n");
 
@@ -385,61 +325,10 @@ sub load_file {
 
 ########################################
 
-sub set_usage {
-  my $ro = join(" ", @ok_objects);
-  my $xsdfiles = join(" ", @xsdfilesl);
-  my $tmp=<<EOF
-$versionid
-
-Usage: $0 [--help | --version] [--XMLbase [file]] [--xmllint location] [--CLEARxsd location] --Domain name --Eval type [--write [directory]] [--detthres value] [--trkthres value] [--bin] [--MissCost value] [--FACost value] [--ISCost value] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
-
-Will Score the XML file(s) provided (Reference vs System)
-
- Where:
-  --help          Print this usage information and exit
-  --version       Print version number and exit
-  --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
-  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --CLEARxsd      Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --Domain        Specify the evaluation domain for the set of files (BN, MR, SV, UV)
-  --Eval          Specify the type of measures that you want to compute (Area, Point)
-  --detthres      Set the threshold for spatial overlap between reference and system objects when computing detection measures (default: $det_thres)
-  --trkthres      Set the threshold for spatial overlap between reference and system objects when computing tracking measures (default: $trk_thres)
-  --bin           Specify if the thresholding should be 'binary' ( >= thres = 1.0, < thres = 0.0) or 'regular' ( >=thres = 1.0, < thres = actual overlap ratio) (default: 'regular')
-  --MissCost      Set the Metric's Cost for a Miss (default: $CostMiss)
-  --FACost        Set the Metric's Cost for a False Alarm (default: $CostFA)
-  --ISCost        Set the Metric's Cost for an ID Switch (default: $CostIS)
-  --gtf           Specify that the files post this marker on the command line are Ground Truth Files  
-
-Note:
-- Program will ignore the <config> section of the XML file.
-- List of recognized objects: $ro
-- 'CLEARxsd' files are: $xsdfiles
-EOF
-;
-
-  return $tmp;
-}
-
-########################################
-
 sub warn_print {
   print "WARNING: ", @_;
 
   print "\n";
-}
-
-########################################
-
-sub _get_env_val {
-  my $envv = shift @_;
-  my $default = shift @_;
-
-  my $var = $default;
-
-  $var = $ENV{$envv} if (exists $ENV{$envv});
-
-  return($var);
 }
 
 ########################################
@@ -526,4 +415,43 @@ sub add_data2sat {
      $sat->addData($motp, "MOTP-D", $runid);
  }
 
+}
+
+########################################
+
+sub set_usage {
+  my $ro = join(" ", @ok_objects);
+  my $xsdfiles = join(" ", @xsdfilesl);
+  my $tmp=<<EOF
+$versionid
+
+Usage: $0 [--help] [--version] [--xmllint location] [--CLEARxsd location] --Domain name --Eval type [--frameTol framenbr] [--writeResult file] [--detthres value] [--trkthres value] [--bin] [--MissCost value] [--FACost value] [--ISCost value] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
+
+Will Score the XML file(s) provided (System vs Truth)
+
+ Where:
+  --help          Print this usage information and exit
+  --version       Print version number and exit
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --CLEARxsd      Path where the XSD files can be found
+  --Domain        Specify the evaluation domain for the set of files (BN, MR, SV, UV)
+  --Eval          Specify the type of measures that you want to compute (Area, Point)
+  --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan (default value: $frameTol)
+  --writeResult   Specify the file into which the scoring result will be written
+  --detthres      Set the threshold for spatial overlap between reference and system objects when computing detection measures (default: $det_thres)
+  --trkthres      Set the threshold for spatial overlap between reference and system objects when computing tracking measures (default: $trk_thres)
+  --bin           Specify if the thresholding should be 'binary' ( >= thres = 1.0, < thres = 0.0) or 'regular' ( >=thres = 1.0, < thres = actual overlap ratio) (default: 'regular')
+  --MissCost      Set the Metric's Cost for a Miss (default: $CostMiss)
+  --FACost        Set the Metric's Cost for a False Alarm (default: $CostFA)
+  --ISCost        Set the Metric's Cost for an ID Switch (default: $CostIS)
+  --gtf           Specify that the files post this marker on the command line are Ground Truth Files  
+
+Note:
+- Program will ignore the <config> section of the XML file.
+- List of recognized objects: $ro
+- 'CLEARxsd' files are: $xsdfiles
+EOF
+;
+
+  return $tmp;
 }
