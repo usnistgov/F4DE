@@ -3,6 +3,7 @@ package OBox;
 # OBox
 #
 # Author(s): Vasant Manohar
+# Additions: Martial Michel
 #
 # This software was developed at the National Institute of Standards and Technology by
 # employees and/or contractors of the Federal Government in the course of their official duties.
@@ -27,56 +28,9 @@ if ($version =~ m/b$/) {
 
 my $versionid = "OBox.pm Version: $version";
 
-##########
-# Check we have every module (perl wise)
-
-sub eo2pe {
-  my @a = @_;
-  my $oe = join(" ", @a);
-  my $pe = ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "";
-  return($pe);
-}
-
-## Then try to load everything
-my $ekw = "ERROR"; # Error Key Work
-my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files.";
-
-# Point.pm
-unless (eval "use Point; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"Point\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
-
-# MErrorH.pm
-unless (eval "use MErrorH; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MErrorH\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
-
-# "MMisc.pm"
-unless (eval "use MMisc; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
-
-# For the '_display()' function
-unless (eval "use Data::Dumper; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"Data::Dumper\" is not available in your Perl installation. ", 
-                "Please visit \"http://search.cpan.org/~ilyam/Data-Dumper-2.121/Dumper.pm\" for installation information\n");
-    $have_everything = 0;
-  }
-
-# Something missing ? Abort
-error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
+use Point;
+use MErrorH;
+use MMisc;
 
 # Constructor 
 # Using double-argument form of bless() for an inheritable constructor
@@ -499,21 +453,6 @@ sub error {
   return($self->{_errormsg}->error());
 }
 
-#######################
-
-sub warn_print {
-  print "WARNING: ", @_;
-
-  print "\n";
-}
-
-#######################
-
-sub error_quit {
-  print("${ekw}: ", @_);
-
-  print "\n";
-  exit(1);
-}
+########################################
 
 1;
