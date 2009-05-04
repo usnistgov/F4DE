@@ -2,8 +2,8 @@
 
 # CLEAR Text Recognition Viper XML Validator
 #
-# Original Author(s): Martial Michel
-# Modified to suit VACE/CLEAR purposes by: Vasant Manohar
+# Author:    Vasant Manohar
+# Additions: Martial Michel
 #
 # This software was developed at the National Institute of Standards and Technology by
 # employees and/or contractors of the Federal Government in the course of their official duties.
@@ -25,6 +25,7 @@ use strict;
 # Version
 
 # $Id$
+
 my $version     = "0.1b";
 
 if ($version =~ m/b$/) {
@@ -38,16 +39,14 @@ my $versionid = "CLEAR Text Recognition Viper XML Validator Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $clearpl, $clearplv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
-  $f4b = "DATE_BASE";
-  $f4bv = (defined $ENV{$f4b}) ? $ENV{$f4b} . "/lib": "/lib";
-  $clearpl = "CLEAR_PERL_LIB";
-  $clearplv = $ENV{$clearpl} || "../../lib"; # Default is relative to this tool's default path
-  $f4depl = "DATE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+  $f4b = "F4DE_BASE";
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../common/lib");
 }
-use lib ($clearplv, $f4deplv, $f4bv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -59,41 +58,25 @@ sub eo2pe {
 ## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $clearpl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# CLEARTRViperFile (part of this tool)
-unless (eval "use CLEARTRViperFile; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"CLEARTRViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# Part of this tool
+foreach my $pn ("CLEARTRViperFile", "CLEARTRHelperFunctions", "Sequence") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
   }
-
-# CLEARTRHelperFunctions (part of this tool)
-unless (eval "use CLEARTRHelperFunctions; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"CLEARTRHelperFunctions\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
 }
 
-# Sequence (part of this tool)
-unless (eval "use Sequence; 1")
-  {
-    my $pe = &eo2pe($@);
-    &_warn_add("\"Sequence\" is not available in your Perl installation. ", $partofthistool, $pe);
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
     $have_everything = 0;
   }
-
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1")
-  {
-    &_warn_add
-      (
-       "\"Getopt::Long\" is not available on your Perl installation. ",
-       "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-      );
-    $have_everything = 0;
-  }
+}
 
 # Something missing ? Abort
 if (! $have_everything) {
@@ -114,26 +97,22 @@ my @xsdfilesl = $dummy->get_required_xsd_files_list();
 ########################################
 # Options processing
 
-my $xmllint_env = "CLEAR_XMLLINT";
-my $xsdpath_env = "CLEAR_XSDPATH";
+my $xmllint_env = "F4DE_XMLLINT";
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
+my $frameTol = 0;
 my $usage = &set_usage();
 
 # Default values for variables
 my $isgtf = 0;
-my $xmllint = &_get_env_val($xmllint_env, "");
-my $xsdpath = &_get_env_val($xsdpath_env, "../../data");
-$xsdpath = "$f4bv/data" 
-  if (($f4bv ne "/lib") && ($xsdpath eq "../../data"));
+my $xmllint = MMisc::get_env_val($xmllint_env, "");
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../data";
 my $writeback = -1;
 my $xmlbasefile = -1;
 my $evaldomain = undef;
-my $frameTol = 0;
 my $MemDump = undef;
-my $show = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T   X        gh   l         vwx  
+# Used:   CD                  WX       fgh             vwx    # 
 
 my %opt;
 my $dbgftmp = "";
@@ -150,8 +129,6 @@ GetOptions
    'frameTol=i'      => \$frameTol,
    'write:s'         => \$writeback,
    'WriteMemDump:s'  => \$MemDump,
-   # Hiden Option(s)
-   'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 die("\n$usage\n") if ($opt{'help'});
@@ -159,10 +136,10 @@ die("$versionid\n") if ($opt{'version'});
 
 if (defined $evaldomain) { 
   $evaldomain = uc($evaldomain);
-  MMisc::error_quit("Unknown 'Domain'. Has to be (BN, MR, SV, UV)") if ( ($evaldomain ne "BN") && ($evaldomain ne "MR") && ($evaldomain ne "SV") && ($evaldomain ne "UV") );
+  MMisc::error_quit("Unknown 'Domain'. Has to be (BN, MR, SV, UV)\n\n$usage") if ( ($evaldomain ne "BN") && ($evaldomain ne "MR") && ($evaldomain ne "SV") && ($evaldomain ne "UV") );
   $dummy->set_required_hashes($evaldomain); 
 }
-else { MMisc::error_quit("'Domain' is a required argument (BN, MR, SV, UV)"); }
+else { MMisc::error_quit("'Domain' is a required argument (BN, MR, SV, UV)\n\n$usage"); }
 
 if ($xmlbasefile != -1) {
   my $txt = $dummy->get_base_xml($isgtf, @ok_objects);
@@ -288,24 +265,27 @@ sub load_file {
 ########################################
 
 sub set_usage {
+  my $wmd = join(" ", @ok_md);
   my $ro = join(" ", @ok_objects);
   my $xsdfiles = join(" ", @xsdfilesl);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--XMLbase [file]] [--gtf] [--xmllint location] [--CLEARxsd location] [--limitto object1[,object2[...]]] [--write [directory]] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help] [--version] [--XMLbase [file]] [--xmllint location] [--CLEARxsd location] --Domain domain [--frameTol framenbr] [--gtf] [--write [directory]] [--WriteMemDump [mode]] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
  Where:
-  --gtf           Specify that the file to validate is a Ground Truth File
-  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --CLEARxsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --limitto       Only care about provided list of objects
-  --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
-  --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
-  --version       Print version number and exit
   --help          Print this usage information and exit
+  --version       Print version number and exit
+  --XMLbase       Print a Viper file with an empty <data> section and a populated <config> section, and exit (to a file if one provided on the command line)
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --CLEARxsd  Path where the XSD files can be found
+  --Domain        Specify the domain of the source file. Possible values are: BN, MR, SV, UV (for "Broadcast News", "Meeting Room", "Surveillance", and "UAV")
+  --frameTol       The frame tolerance allowed for attributes to be outside of the object framespan (default value: $frameTol)
+  --gtf           Specify that the file to validate is a Ground Truth File
+  --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
+  --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by CLEAR tools. Also write a sequence MemDump. Two modes possible: $wmd (1st default)
 
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'CLEAR.xsd' file
@@ -323,17 +303,4 @@ EOF
 
 sub _warn_add {
   $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
-}
-
-########################################
-
-sub _get_env_val {
-  my $envv = shift @_;
-  my $default = shift @_;
-
-  my $var = $default;
-
-  $var = $ENV{$envv} if (exists $ENV{$envv});
-
-  return($var);
 }
