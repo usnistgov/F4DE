@@ -6,7 +6,7 @@ use F4DE_TestCore;
 use MMisc;
 
 my $validator = shift @ARGV;
-error_quit("ERROR: Validator ($validator) empty or not an executable\n")
+MMisc::error_quit("ERROR: Validator ($validator) empty or not an executable\n")
   if ((MMisc::is_blank($validator)) || (! MMisc::is_file_x($validator)));
 my $mode = shift @ARGV;
 
@@ -122,14 +122,13 @@ $testr += &do_simple_test($tn, "(insertCSV)", "$validator ../common/test7-empty_
 $tn = "test15";
 $testr += &do_simple_test($tn, "(ValueDivide + GetminMax)", "$validator ../common/test1-1fa-sys.xml ../common/test1-1md-sys.xml ../common/test2-1md_1fa-sys.xml ../common/test5-subEventtypes-sys.xml ../common/test6-Xtra-sys.xml -p -w -G -f NTSC -V 351:-250", "res_$tn.txt");
 
-
-##########
+#####
 
 if ($testr == $totest) {
   MMisc::ok_quit("All tests ok\n");
-} else {
-  MMisc::error_quit("Not all test ok\n");
 }
+
+MMisc::error_quit("Not all test ok\n");
 
 ##########
 
