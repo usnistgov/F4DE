@@ -2,7 +2,7 @@ package CLEARDTViperFile;
 
 # CLEAR Detection and Tracking ViperFile
 #
-# Original Author(s): Martial Michel
+# Original Author(s) & Additions: Martial Michel
 # Modified by Vasant Manohar to suit CLEAR/VACE evaluation framework
 #
 # This software was developed at the National Institute of Standards and Technology by
@@ -31,87 +31,21 @@ if ($version =~ m/b$/) {
 
 my $versionid = "CLEARDTViperFile.pm Version: $version";
 
-##########
-# Check we have every module (perl wise)
+use Sequence;
+use ViperFramespan;
+use MErrorH;
+use MMisc;
 
-sub eo2pe {
-  my @a = @_;
-  my $oe = join(" ", @a);
-  my $pe = ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "";
-  return($pe);
-}
-
-## Then try to load everything
-my $ekw = "ERROR"; # Error Key Work
-my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files.";
-
-# Sequence.pm (part of this tool)
-unless (eval "use Sequence; 1")
- {
-   my $pe = &eo2pe($@);
-   warn_print("\"Sequence\" is not available in your Perl installation. ", $partofthistool, $pe);
-   $have_everything = 0;
- }
-
-# ViperFramespan.pm (part of this tool)
-unless (eval "use ViperFramespan; 1")
- {
-   my $pe = &eo2pe($@);
-   warn_print("\"ViperFramespan\" is not available in your Perl installation. ", $partofthistool, $pe);
-   $have_everything = 0;
- }
-
-# MErrorH.pm
-unless (eval "use MErrorH; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MErrorH\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
-
-# "MMisc.pm"
-unless (eval "use MMisc; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-    $have_everything = 0;
-  }
-
-# For the '_display()' function
-unless (eval "use Data::Dumper; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"Data::Dumper\" is not available in your Perl installation. ", 
-                "Please visit \"http://search.cpan.org/~ilyam/Data-Dumper-2.121/Dumper.pm\" for installation information\n");
-    $have_everything = 0;
-  }
-
-# File::Temp (usualy part of the Perl Core)
-unless (eval "use File::Temp qw / tempfile /; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"File::Temp\" is not available in your Perl installation. ", 
-                "Please visit \"http://search.cpan.org/~tjenness/File-Temp-0.20/Temp.pm\" for installation information\n");
-    $have_everything = 0;
-  }
-
-# File::Basename (usualy part of the Perl Core)
-unless (eval "use File::Basename; 1")
-  {
-    my $pe = &eo2pe($@);
-    warn_print("\"File::Basename\" is not available in your Perl installation. ", 
-                "Please visit \"http://search.cpan.org/~rgarcia/perl-5.10.0/lib/File/Basename.pm\" for installation information\n");
-    $have_everything = 0;
-  }
+use Data::Dumper;
+use File::Temp qw / tempfile /;
+use File::Basename;
 
 use Frame;
 use Object;
 use OBox;
 use Point;
 
-# Something missing ? Abort
-error_quit("Some Perl Modules are missing, aborting\n") unless $have_everything;
+use xmllintHelper;
 
 ########################################
 
@@ -300,13 +234,16 @@ sub new {
   my $fs_tmp = ViperFramespan->new();
   $errortxt .= $fs_tmp->get_errormsg() if (! $fs_tmp->unit_test());
 
+  my $xmllintobj = new xmllintHelper();
+  $xmllintobj->set_xsdfilesl(@xsdfilesl);
+  $errortxt .= $xmllintobj->get_errormsg() if ($xmllintobj->error());
+
   my $errormsg = MErrorH->new("CLEARDTViperFile");
   $errormsg->set_errormsg($errortxt);
 
   my $self =
     {
-     xmllint        => "",
-     xsdpath        => "",
+     xmllintobj     => $xmllintobj,
      gtf            => 0, # By default, files are not GTF
      file           => "",
      domain         => $evaldomain,
@@ -525,19 +462,17 @@ sub _get_hasharray_inline_attributes {
 ########## 'xmllint'
 
 sub set_xmllint {
-  my ($self, $xmllint) = @_;
+  my ($self, $xmllint, $nocheck) = MMisc::iuav(\@_, undef, "", 0);
 
   return(0) if ($self->error());
 
-  my $error = "";
-  # Confirm xmllint is present and at least 2.6.30
-  ($xmllint, $error) = &_check_xmllint($xmllint);
-  if (! MMisc::is_blank($error)) {
-    $self->_set_errormsg($error);
+  $self->{xmllintobj}->set_xmllint($xmllint, $nocheck);
+
+  if ($self->{xmllintobj}->error()) {
+    $self->_set_errormsg($self->{xmllintobj}->get_errormsg());
     return(0);
   }
-  
-  $self->{xmllint} = $xmllint;
+
   return(1);
 }
 
@@ -548,9 +483,7 @@ sub _is_xmllint_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MMisc::is_blank($self->{xmllint}));
-
-  return(0);
+  return($self->{xmllintobj}->is_xmllint_set());
 }
 
 #####
@@ -565,25 +498,22 @@ sub get_xmllint {
     return(0);
   }
 
-  return($self->{xmllint});
+  return($self->{xmllintobj}->get_xmllint());
 }
 
 ########## 'xsdpath'
 
 sub set_xsdpath {
-  my ($self, $xsdpath) = @_;
+  my ($self, $xsdpath, $nocheck) = MMisc::iuav(\@_, undef, "", 0);
 
   return(0) if ($self->error());
 
-  my $error = "";
-  # Confirm that the required xsdfiles are available
-  ($xsdpath, $error) = &_check_xsdfiles($xsdpath, @xsdfilesl);
-  if (! MMisc::is_blank($error)) {
-    $self->_set_errormsg($error);
+  $self->{xmllintobj}->set_xsdpath($xsdpath, $nocheck);
+  if ($self->{xmllintobj}->error()) {
+    $self->_set_errormsg($self->{xmllintobj}->get_errormsg());
     return(0);
   }
 
-  $self->{xsdpath} = $xsdpath;
   return(1);
 }
 
@@ -594,9 +524,7 @@ sub _is_xsdpath_set {
 
   return(0) if ($self->error());
 
-  return(1) if (! MMisc::is_blank($self->{xsdpath}));
-
-  return(0);
+  return($self->{xmllintobj}->is_xsdpath_set());
 }
 
 #####
@@ -611,7 +539,7 @@ sub get_xsdpath {
     return(0);
   }
 
-  return($self->{xsdpath});
+  return($self->{xmllintobj}->get_xsdpath());
 }
 
 ########## 'gtf'
@@ -906,12 +834,10 @@ sub validate {
     return(0) if (! $self->set_xsdpath("."));
   }
 
-  my $xmllint = $self->get_xmllint();
-  my $xsdpath = $self->get_xsdpath();
   # Load the XML through xmllint
-  my ($res, $bigstring) = &_run_xmllint($xmllint, $xsdpath, $ifile);
-  if (! MMisc::is_blank($res)) {
-    $self->_set_errormsg($res);
+  my ($bigstring) = $self->{xmllintobj}->run_xmllint($ifile);
+  if ($self->{xmllintobj}->error()) {
+    $self->_set_errormsg($self->{xmllintobj}->get_errormsg());
     return(0);
   }
   # No data from xmllint ?
@@ -922,7 +848,7 @@ sub validate {
 
   # Initial Cleanups & Check
   my $isgtf = $self->check_if_gtf();
-  ($res, $bigstring) = &_data_cleanup($bigstring, $isgtf);
+  (my $res, $bigstring) = &_data_cleanup($bigstring, $isgtf);
   if (! MMisc::is_blank($res)) {
     $self->_set_errormsg($res);
     return(0);
@@ -1106,8 +1032,8 @@ sub _clone_core {
   my $domain = $self->get_domain();
   my $clone = new CLEARDTViperFile($domain);
   
-  $clone->set_xmllint($self->get_xmllint());
-  $clone->set_xsdpath($self->get_xsdpath());
+  $clone->set_xmllint($self->get_xmllint(), 1);
+  $clone->set_xsdpath($self->get_xsdpath(), 1);
   $clone->set_as_gtf() if ($self->check_if_gtf());
   $clone->set_file($self->get_file());
   my %in = $self->_get_fhash();
@@ -1303,24 +1229,6 @@ sub change_sourcefile_filename {
 
 ############################################################
 # Internals
-########################################
-
-sub _run_xmllint {
-  my $xmllint = shift @_;
-  my $xsdpath = shift @_;
-  my $file = shift @_;
-
-  $file =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
-
-  my ($retcode, $stdout, $stderr) =
-    &_do_system_call($xmllint, "--path", "\"$xsdpath\"", "--schema", $xsdpath . "/" . $xsdfilesl[0], $file);
-
-  return("Problem validating file with \'xmllint\' ($stderr), aborting", "")
-    if ($retcode != 0);
-
-  return("", $stdout);
-}
-
 ########################################
 
 sub _data_cleanup {
@@ -2125,119 +2033,6 @@ sub _parse_attributes {
 }
 
 ########################################
-# xmllint check
-
-sub _get_tmpfilename {
-  my (undef, $name) = tempfile( OPEN => 0 );
-
-  return($name);
-}
-
-#####
-
-sub _slurp_file {
-  my $fname = shift @_;
-
-  open FILE, "<$fname"
-    or die("[CLEARDTViperFile] Internal error: Can not open file to slurp ($fname): $!\n");
-  my @all = <FILE>;
-  close FILE;
-
-  my $tmp = join(" ", @all);
-  chomp $tmp;
-
-  return($tmp);
-}
-
-#####
-
-sub _do_system_call {
-  my @args = @_;
-  
-  my $cmdline = join(" ", @args);
-
-  my $retcode = -1;
-  # Get temporary filenames (created by the command line call)
-  my $stdoutfile = &_get_tmpfilename();
-  my $stderrfile = &_get_tmpfilename();
-
-  open (CMD, "$cmdline 1> $stdoutfile 2> $stderrfile |");
-  close CMD;
-  $retcode = $?;
-
-  # Get the content of those temporary files
-  my $stdout = &_slurp_file($stdoutfile);
-  my $stderr = &_slurp_file($stderrfile);
-
-  # Erase the temporary files
-  unlink($stdoutfile);
-  unlink($stderrfile);
-
-  return($retcode, $stdout, $stderr);
-}
-
-#####
-
-sub _check_xmllint {
-  my $xmllint = shift @_;
-
-  # If none provided, check if it is available in the path
-  if ($xmllint eq "") {
-    my ($retcode, $stdout, $stderr) = &_do_system_call('which', 'xmllint');
-    return("", "Could not find a valid \'xmllint\' command in the PATH, aborting\n")
-      if ($retcode != 0);
-    $xmllint = $stdout;
-  }
-
-  $xmllint =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
-
-  # Check that the file for xmllint exists and is an executable file
-  return("", "\'xmllint\' ($xmllint) does not exist, aborting\n")
-    if (! -e $xmllint);
-
-  return("", "\'xmllint\' ($xmllint) is not a file, aborting\n")
-    if (! -f $xmllint);
-
-  return("", "\'xmllint\' ($xmllint) is not executable, aborting\n")
-    if (! -x $xmllint);
-
-  # Now check that it actually is xmllint
-  my ($retcode, $stdout, $stderr) = &_do_system_call($xmllint, '--version');
-  return("", "\'xmllint\' ($xmllint) does not seem to be a valid \'xmllint\' command, aborting\n")
-    if ($retcode != 0);
-  
-  if ($stderr =~ m%using\s+libxml\s+version\s+(\d+)%) {
-    # xmllint print the command name followed by the version number
-    my $version = $1;
-    return("", "\'xmllint\' ($xmllint) version too old: requires at least 2.6.30 (ie 20630, installed $version), aborting\n")
-      if ($version <= 20630);
-  } else {
-    return("", "Could not confirm that \'xmllint\' is valid, aborting\n");
-  }
-
-  return($xmllint, "");
-}
-
-#####
-
-sub _check_xsdfiles {
-  my $xsdpath = shift @_;
-  my @xsdfiles = @_;
-
-  $xsdpath =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
-  $xsdpath =~ s%(.)\/$%$1%;
-
-  foreach my $fname (@xsdfiles) {
-    my $file = "$xsdpath/$fname";
-    return("", "Could not find required XSD file ($fname) at selected path ($xsdpath), aborting\n")
-      if (! -e $file);
-  }
-
-  return($xsdpath, "");
-}
-
-
-########################################
 
 sub _clean_begend_spaces {
   my $txt = shift @_;
@@ -2454,9 +2249,6 @@ sub _writeback2xml {
   # end data and viper
   $txt .= &_wb_print(--$indent, "</data>\n");
   $txt .= &_wb_print(--$indent, "</viper>\n");
-
-  # We discard this warning for all but debug runs
-  #warn_print("(WEIRD) End indentation is not equal to 0 ? (= $indent)\n") if ($indent != 0);
 
   return($txt);
 }
@@ -2879,21 +2671,6 @@ sub get_values_from_array_of_hashes {
   return @out;
 }
 
-##########
-
-sub warn_print {
-  print "WARNING: ", @_;
-
-  print "\n";
-}
-
-##########
-
-sub error_quit {
-  print("${ekw}: ", @_);
-
-  print "\n";
-  exit(1);
-}
+########################################
 
 1;
