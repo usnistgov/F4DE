@@ -2,7 +2,8 @@ package CLEARDTHelperFunctions;
 
 # CLEAR Detection and Tracking HelperFunctions
 #
-# Author(s): Martial Michel
+# Original Author(s) & Additions: Martial Michel
+# Modified by Vasant Manohar to suit CLEAR/VACE evaluation framework
 #
 # This software was developed at the National Institute of Standards and Technology by
 # employees and/or contractors of the Federal Government in the course of their official duties.
@@ -20,14 +21,6 @@ package CLEARDTHelperFunctions;
 # $Id$
 
 use strict;
-use ViperFramespan;
-use CLEARDTViperFile;
-use Sequence;
-
-use MErrorH;
-use MMisc;
-
-use Data::Dumper;
 
 my $version     = "0.1b";
 
@@ -37,6 +30,15 @@ if ($version =~ m/b$/) {
 }
 
 my $versionid = "CLEARDTHelperFunctions.pm Version: $version";
+
+use ViperFramespan;
+use CLEARDTViperFile;
+use Sequence;
+
+use MErrorH;
+use MMisc;
+
+use Data::Dumper;
 
 ############################################################
 #################### 'save' / 'load' Memmory Dump functions
@@ -265,3 +267,7 @@ sub _load_MemDump_ScoringSequence {
 
   return(1, $object, $rtxt . "validates");
 }
+
+########################################
+
+1;
