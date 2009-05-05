@@ -37,18 +37,14 @@ my $versionid = "AVSS09 XML Merger Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $avpl, $avplv, $clearpl, $clearplv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
   $f4b = "F4DE_BASE";
-  $f4bv = (defined $ENV{$f4b}) ? $ENV{$f4b} . "/lib": "/lib";
-  $avpl = "AVSS09_PERL_LIB";
-  $avplv = $ENV{$avpl} || "../../lib";
-  $clearpl = "CLEAR_PERL_LIB";
-  $clearplv = $ENV{$clearpl} || "../../../CLEAR07/lib"; # Default is relative to this tool's default path
-  $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../CLEAR07/lib", "../../../common/lib");
 }
-use lib ($avplv, $clearplv, $f4deplv, $f4bv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -60,28 +56,24 @@ sub eo2pe {
 ## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $avpl, $clearpl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# MMisc (part of this tool)
-unless (eval "use MMisc; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"AVSS09ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# Part of this tool
+foreach my $pn ("MMisc", "AVSS09ViperFile") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 }
 
-# AVSS09ViperFile (part of this tool)
-unless (eval "use AVSS09ViperFile; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"AVSS09ViperFile\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1") {
-  &_warn_add("\"Getopt::Long\" is not available on your Perl installation. ",
-             "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n");
-  $have_everything = 0;
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
+    $have_everything = 0;
+  }
 }
 
 # Something missing ? Abort
@@ -96,18 +88,15 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
-my $xmllint_env = "CLEAR_XMLLINT";
-my $xsdpath_env = "CLEAR_XSDPATH";
+my $xmllint_env = "F4DE_XMLLINT";
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
+my $frameTol = 0;
 my $usage = &set_usage();
 
 # Default values for variables
 my $isgtf = 0;
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../../CLEAR07/data");
-$xsdpath = "$f4bv/data" 
-  if (($f4bv ne "/lib") && ($xsdpath eq "../../../CLEAR07/data"));
-my $frameTol = 0;
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../../CLEAR07/data";
 my $show = 0;
 my $forceFilename = "";
 my $writedir = -1;
@@ -290,8 +279,8 @@ Will merge AVSS09 Viper XML file whose sourcefile's filename is identical.
  Where:
   --gtf           Specify that the file to validate is a Ground Truth File
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --CLEARxsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
-  --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan
+  --CLEARxsd  Path where the XSD files can be found
+  --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan (default: $frameTol)
   --ForceFilename  Specify that all files loaded refers to the same 'sourcefile' file
   --writedir      Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension)
   --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
