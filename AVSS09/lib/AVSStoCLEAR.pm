@@ -17,7 +17,7 @@ package AVSStoCLEAR;
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 
-# $Id $
+# $Id$
 
 use strict;
 
