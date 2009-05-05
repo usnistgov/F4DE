@@ -425,7 +425,7 @@ sub __check_cldt_validity {
   return(0) if ($self->error());
 
   my @fh_keys = keys %fhash;
-  my ($rin, $rout) = MMisc::compare_arrays(\@fh_keys, @ok_elements);
+  my ($rin, $rout) = MMisc::compare_arrays(\@ok_elements, @fh_keys);
   return($self->_set_error_and_return("Found unknown elements in file [" . join(", ", @$rout) . "]", 0))
     if (scalar @$rout > 0);
 
