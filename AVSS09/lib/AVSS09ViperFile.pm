@@ -51,9 +51,6 @@ use CLEARDTHelperFunctions;
 # Sequence (part of this tool [CLEARDT])
 use Sequence;
 
-# For internal dispay
-use Data::Dumper;
-
 ########################################
 
 my $ok_domain = "SV";
@@ -368,7 +365,7 @@ sub _display_all {
 
   return(-1) if ($self->error());
 
-  return(Dumper(\$self));
+  return(MMisc::get_sorted_MemDump(\$self));
 }
 
 ########## 'validate'
@@ -1557,7 +1554,6 @@ sub create_DCO {
 
   return(1);
 }
-
 
 ############################################################
 
