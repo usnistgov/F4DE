@@ -38,18 +38,14 @@ my $versionid = "AVSS09 Scorer Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $avpl, $avplv, $clearpl, $clearplv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
   $f4b = "F4DE_BASE";
-  $f4bv = (defined $ENV{$f4b}) ? $ENV{$f4b} . "/lib": "/lib";
-  $avpl = "AVSS09_PERL_LIB";
-  $avplv = $ENV{$avpl} || "../../lib";
-  $clearpl = "CLEAR_PERL_LIB";
-  $clearplv = $ENV{$clearpl} || "../../../CLEAR07/lib"; # Default is relative to this tool's default path
-  $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../CLEAR07/lib", "../../../common/lib");
 }
-use lib ($avplv, $clearplv, $f4deplv, $f4bv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -60,24 +56,24 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $avpl, $clearpl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# MMisc (part of this tool)
-unless (eval "use MMisc; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# Part of this tool
+foreach my $pn ("MMisc") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 }
 
-# Getopt::Long (usualy part of the Perl Core)
-unless (eval "use Getopt::Long; 1") {
-  &_warn_add
-    (
-     "\"Getopt::Long\" is not available on your Perl installation. ",
-     "Please see \"http://search.cpan.org/search?mode=module&query=getopt%3A%3Along\" for installation information\n"
-    );
-  $have_everything = 0;
+# usualy part of the Perl Core
+foreach my $pn ("Getopt::Long") {
+  unless (eval "use $pn; 1") {
+    &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
+    $have_everything = 0;
+  }
 }
 
 # Something missing ? Abort
@@ -92,8 +88,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
-my $xmllint_env = "CLEAR_XMLLINT";
-my $xsdpath_env = "CLEAR_XSDPATH";
+my $xmllint_env = "F4DE_XMLLINT";
 my $mancmd = "perldoc -F $0";
 my $frameTol = 0;
 my $valtool_bt = "AVSS09ViperValidator";
@@ -103,9 +98,7 @@ my $usage = &set_usage();
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = MMisc::get_env_val($xsdpath_env, "../../../CLEAR07/data");
-$xsdpath = "$f4bv/data" 
-  if (($f4bv ne "/lib") && ($xsdpath eq "../../../CLEAR07/data"));
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../../CLEAR07/data";
 my $gtfs = 0;
 my $verb = 1;
 my $valtool = "";
@@ -400,40 +393,17 @@ B<AVSS09scorer>'s tools relies on some external software and files, most of whic
 =item B<SOFTWARE> 
 
 I<xmllint> (part of I<libxml2>, see S<http://www.xmlsoft.org/>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
-If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<CLEAR_XMLLINT> environment variable.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<F4DE_XMLLINT> environment variable to the full path location of the I<xmllint> executable.
 
 =item B<FILES>
 
 The syntactic validation requires some XML schema files (see the B<CLEARDTScorer> help section for file list).
-It is possible to specify their location using the B<--xsdpath> option or the B<CLEAR_XSDPATH> environment variable.
+It is possible to specify their location using the B<--xsdpath> option.
 You should not have to specify their location, if you have performed an install and have set the global environment variables.
 
 =item B<GLOBAL ENVIRONMENT VARIABLES>
 
-B<AVSS09scorer>'s tools relies on some internal and external Perl libraries to function.
-
-Simply running both the B<AVSS09ViperValidator> and B<CLEARDTScorer> script should provide you with the list of missing libraries. 
-The following environment variables should be set in order for Perl to use the B<F4DE> libraries:
-
-=over
-
-=item B<F4DE_BASE>
-
-The main variable once you have installed the software, it should be sufficient to run this program.
-
-=item B<F4DE_PERL_LIB>
-
-Allows you to specify a different directory for the B<F4DE> libraries.
-
-=item B<AVSS09_PERL_LIB>
-
-Allows you to specify a different directory for the B<AVSS09> libraries.
-
-=item B<CLEAR_PERL_LIB>
-
-Allows you to specify a different directory for the B<CLEAR> libraries.
-
-=back
+Once you have installed the software, setting B<F4DE_BASE> to the installation location, and extending your B<PATH> to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
 
 =back
 
@@ -452,7 +422,6 @@ The B<CLEARDTScorer> will load I<Scoring Sequence memory represenations> generat
 =item B<--CLEARxsd> I<location>
 
 Specify the default location of the required XSD files.
-Can also be set using the B<CLEAR_XSDPATH> environment variable.
 
 =item B<--frameTol> I<framenbr>
 
@@ -489,7 +458,7 @@ Specify the I<directory> in which all files required for the validation and scor
 =item B<--xmllint> I<location>
 
 Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
-Can also be set using the B<CLEAR_XMLLINT> environment variable.
+Can also be set using the B<F4DE_XMLLINT> environment variable.
 
 =back
 
@@ -516,6 +485,12 @@ Please send bug reports to <nist_f4de@nist.gov>
 
 Martial Michel <martial.michel@nist.gov>
 
+=head1 COPYRIGHT 
+
+This software was developed at the National Institute of Standards and Technology by employees of the Federal Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this software is not subject to copyright protection within the United States and is in the public domain. It is an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
+
+THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+
 =cut
 
 ########################################
@@ -535,7 +510,7 @@ Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provid
   --man           Print a more detailled manual page and exit (same as running: $mancmd)
   --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --CLEARxsd  Path where the XSD files can be found (can be set using the $xsdpath_env variable)
+  --CLEARxsd  Path where the XSD files can be found
   --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan (default: $frameTol)
   --writedir      Directory in which validation and scoring will be performed
   --Validator     Specify the full path location of the $valtool_bt tool (if not in your path)
