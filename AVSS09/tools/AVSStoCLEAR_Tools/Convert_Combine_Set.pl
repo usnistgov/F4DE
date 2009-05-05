@@ -37,18 +37,14 @@ my $versionid = "AVSS ViPER Files to multiple camera view CLEAR ViPER File conve
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, $f4bv, $avpl, $avplv, $clearpl, $clearplv, $f4depl, $f4deplv);
+my ($f4b, @f4bv);
 BEGIN {
   $f4b = "F4DE_BASE";
-  $f4bv = (defined $ENV{$f4b}) ? $ENV{$f4b} . "/lib": "/lib";
-  $avpl = "AVSS09_PERL_LIB";
-  $avplv = $ENV{$avpl} || "../../lib";
-  $clearpl = "CLEAR_PERL_LIB";
-  $clearplv = $ENV{$clearpl} || "../../../CLEAR07/lib"; # Default is relative to this tool's default path
-  $f4depl = "F4DE_PERL_LIB";
-  $f4deplv = $ENV{$f4depl} || "../../../common/lib";  # Default is relative to this tool's default path
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../lib", "../../../CLEAR07/lib", "../../../common/lib");
 }
-use lib ($avplv, $clearplv, $f4deplv, $f4bv);
+use lib (@f4bv);
 
 sub eo2pe {
   my @a = @_;
@@ -60,21 +56,16 @@ sub eo2pe {
 ## Then try to load everything
 my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable (if you did an install, otherwise your $avpl, $clearpl and $f4depl environment variables).";
+my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
 
-# MMisc (part of this tool)
-unless (eval "use MMisc; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"MMisc\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
-}
-
-# AVSStoCLEAR (part of this tool)
-unless (eval "use AVSStoCLEAR; 1") {
-  my $pe = &eo2pe($@);
-  &_warn_add("\"AVSStoCLEAR\" is not available in your Perl installation. ", $partofthistool, $pe);
-  $have_everything = 0;
+# Part of this tool
+foreach my $pn ("MMisc", "AVSStoCLEAR") {
+  unless (eval "use $pn; 1") {
+    my $pe = &eo2pe($@);
+    &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
+    $have_everything = 0;
+  }
 }
 
 # Something missing ? Abort
@@ -82,8 +73,6 @@ if (! $have_everything) {
   print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
   exit(1);
 }
-
-use strict;
 
 ########################################
 
@@ -162,5 +151,6 @@ MMisc::ok_quit("\nDone\n");
 
 ############################################################
 
-
-
+sub _warn_add {
+  $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
+}
