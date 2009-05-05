@@ -613,7 +613,7 @@ sub _get_overlap_core {
   # 1:         ib---ie   -> Keep 1
   # 2: cb---ce           -> Drop 2
   return(0, 0, $i_beg, $i_end, 0, 0)
-    if ($i_end < $c_beg);
+    if ($c_end < $i_beg);
 
   if (($c_beg >= $i_beg) && ($c_beg <= $i_end)) {
     if ($c_end >= $i_end) {
@@ -659,6 +659,7 @@ sub _get_overlap_wrapper {
 
   my ($ovb, $ove, $ib, $ie, $cb, $ce) = 
     &_get_overlap_core($i_beg, $i_end, $c_beg, $c_end);
+#  print "==> ov[$ovb:$ove] n1[$ib:$ie] n2[$cb:$ce]\n";
 
   return(undef) if (! defined $ovb);
 
@@ -738,7 +739,7 @@ sub get_overlap {
   my $sv = $self->get_value();
   my $ov = $other->get_value();
 
-  my @ov = ();
+#  print "******************** Overlap\n*****In1: $sv\n*****In2: $ov\n";
 
   # [MM 20090420 with Jon's Help] New technique : go from o(n*m) to o(n+m) 
 
@@ -753,6 +754,9 @@ sub get_overlap {
     $self->_set_errormsg("Problem in \'get_overlap\' : $err");
     return(undef);
   }
+
+  # Resulting overlap array
+   my @ova = ();
   
   # We rely on the fact that "new" ordered and simplified every value
   # so we have an fully ordered comparable set of data
@@ -761,7 +765,7 @@ sub get_overlap {
     # Always work with the first element of each list
     my ($b1, $e1) = ($spl[0][0], $spl[0][1]);
     my ($b2, $e2) = ($opl[0][0], $opl[0][1]);
-#    print "*[Iteration:$cont] 1[$b1:$e1] 2[$b2:$e2]\n";
+#    print "\n*[Iteration:$cont] 1[$b1:$e1] 2[$b2:$e2]\n";
     
     my ($ovb, $ove, $nb1, $ne1, $nb2, $ne2) = 
       &_get_overlap_wrapper($b1, $e1, $b2, $e2);
@@ -773,7 +777,7 @@ sub get_overlap {
     }
     
     # If we have an overlap, add it to the overlap list
-    push @ov, "$ovb:$ove"
+    push @ova, "$ovb:$ove"
       if (($ovb != 0) && ($ove != 0));
     
     # Do we need to drop one element for spl ?
@@ -799,10 +803,12 @@ sub get_overlap {
   }
   
   # No overlapping value at all
-  return(undef) if (scalar @ov == 0);
+  return(undef) if (scalar @ova == 0);
 
   # Generate a new framespan out of it
-  my $ovp = join(" ", @ov);
+  my $ovp = join(" ", @ova);
+
+#  print "*****Out: $ovp\n\n";
 
   my $nfs = new ViperFramespan($ovp);
   if ($nfs->error()) {
@@ -1543,82 +1549,82 @@ sub list_pairs {
 sub unit_test {                 # Xtreme coding and us ;)
   my $notverb = shift @_;
   my $eh = "unit_test:";
-  my $otxt = "";
-
+  my @otxt = ();
+  
   # Let us try to set a bad value
   my $fs_tmp1 = new ViperFramespan("Not a framespan");
   my $err1 = $fs_tmp1->get_errormsg();
   my $ee = $error_msgs{"NotFramespan"};
-  $otxt .= "$eh Error while checking \'set_value\'[1] ($err1). "
+  push(@otxt, "$eh [#1] Error while checking \'set_value\'[1] ($err1).")
     if ($err1 !~ m%$ee$%);
-
+  
   # Or an empty framespan
   my $fs_tmp2 = new ViperFramespan();
   $fs_tmp2->set_value("");
   my $err2 = $fs_tmp2->get_errormsg();
   $ee = $error_msgs{"EmptyValue"};
-  $otxt .= "$eh Error while checking \'set_value\'[2] ($err2). "
+  push(@otxt, "$eh [#2] Error while checking \'set_value\'[2] ($err2).")
     if ($err2 !~ m%$ee$%);
-
+  
   # Not ordered framespan
   my $in3 = "5:4";
   my $fs_tmp3 = new ViperFramespan($in3);
   my $err3 = $fs_tmp3->get_errormsg();
   $ee = $error_msgs{"NotOrdered"};
-  $otxt .= "$eh Error while checking \'set_value\'[3] ($err3). "
+  push(@otxt, "$eh [#3] Error while checking \'set_value\'[3] ($err3).")
     if ($err3 !~ m%$ee$%);
-
+  
   # Start a 0
   my $in4 = "0:1";
   my $fs_tmp4 = new ViperFramespan();
   $fs_tmp4->set_value($in4);
   my $err4 = $fs_tmp4->get_errormsg();
   $ee = $error_msgs{"StartAt0"};
-  $otxt .= "$eh Error while checking \'new\'[4] ($err4). "
+  push(@otxt, "$eh [#4] Error while checking \'new\'[4] ($err4).")
     if ($err4 !~ m%$ee$%);
-
+  
   # Reorder
   my $in5 = "4:5 1:2 12:26 8:8";
   my $exp_out5 = "1:2 4:5 8:8 12:26";
   my $fs_tmp5 = new ViperFramespan();
   $fs_tmp5->set_value($in5);
   my $out5 = $fs_tmp5->get_value();
-  $otxt .= "$eh Error while checking \'new\'[reorder] (expected: $exp_out5 / Got: $out5). "
+  push(@otxt, "$eh [#5a] Error while checking \'new\'[reorder] (expected: $exp_out5 / Got: $out5).")
     if ($out5 ne $exp_out5);
-
+  
   # Reorder (2)
   $in5 = "4:7 1:2 1:2";
   $exp_out5 = "1:2 4:7";
   $fs_tmp5->set_value($in5);
   $out5 = $fs_tmp5->get_value();
-  $otxt .= "$eh Error while checking \'new\'[reorder] (expected: $exp_out5 / Got: $out5). "
+  push(@otxt, "$eh [#5b] Error while checking \'new\'[reorder] (expected: $exp_out5 / Got: $out5). ")
     if ($out5 ne $exp_out5);
-
+  
   # Shorten
   my $in6 = "1:2 2:3 4:5";
   my $exp_out6 = "1:5";
   my $fs_tmp6 = new ViperFramespan();
   $fs_tmp6->set_value($in6);
   my $out6 = $fs_tmp6->get_value();
-  $otxt .= "$eh Error while checking \'new\'[shorten] (expected: $exp_out6 / Got: $out6). "
+  push(@otxt, "$eh [#6a] Error while checking \'new\'[shorten] (expected: $exp_out6 / Got: $out6).")
     if ($out6 ne $exp_out6);
-
+  
   # Shorten (2)
   $in6 = "1:3 1:2";
   $exp_out6 = "1:3";
   $fs_tmp6->set_value($in6);
   my $out6 = $fs_tmp6->get_value();
-  $otxt .= "$eh Error while checking \'new\'[shorten] (expected: $exp_out6 / Got: $out6). "
+  push(@otxt, "$eh [#6b] Error while checking \'new\'[shorten] (expected: $exp_out6 / Got: $out6).")
     if ($out6 ne $exp_out6);
-
+  
   # No Framespan Set
   my $fs_tmp7 = new ViperFramespan();
   my $test7 = $fs_tmp7->check_if_overlap(); # We are checking against nothing here
   my $err7 = $fs_tmp7->get_errormsg();
   $ee = $error_msgs{"NoFramespanSet"};
-  $otxt .= "$eh Error while checking \'check_if_overlap\' ($err7). "
+  push(@otxt, "$eh [#7] Error while checking \'check_if_overlap\' ($err7).")
     if ($err7 !~ m%$ee$%);
-
+  
   # Overlap & Within
   my $in8  = "1:10";
   my $in9  = "4:16";
@@ -1629,81 +1635,81 @@ sub unit_test {                 # Xtreme coding and us ;)
   $fs_tmp8->set_value($in8);
   $fs_tmp9->set_value($in9);
   $fs_tmp10->set_value($in10);
-
+  
   my $testa = $fs_tmp8->check_if_overlap($fs_tmp9);
-  $otxt .= "$eh Error while checking \'check_if_overlap\' ($in8 and $in9 do overlap, but test says otherwise). "
+  push(@otxt, "$eh [#8a] Error while checking \'check_if_overlap\' ($in8 and $in9 do overlap, but test says otherwise).")
     if (! $testa);
-
+  
   my $testb = $fs_tmp8->check_if_overlap($fs_tmp10);
-  $otxt .= "$eh Error while checking \'check_if_overlap\' ($in8 and $in10 do not overlap, but test says otherwise). "
+  push(@otxt, "$eh [#8b] Error while checking \'check_if_overlap\' ($in8 and $in10 do not overlap, but test says otherwise).")
     if ($testb);
-
+  
   my $testc = $fs_tmp10->is_within($fs_tmp9);
-  $otxt .= "$eh Error while checking \'is_within\' ($in10 is within $in9, but test says otherwise). "
+  push(@otxt, "$eh [#8c] Error while checking \'is_within\' ($in10 is within $in9, but test says otherwise).")
     if (! $testc);
-
+  
   my $testd = $fs_tmp9->is_within($fs_tmp10);
-  $otxt .= "$eh Error while checking \'is_within\' ($in9 is not within $in10, but test says otherwise). "
+  push(@otxt, "$eh [#8d] Error while checking \'is_within\' ($in9 is not within $in10, but test says otherwise).")
     if ($testd);
-
+  
   # optimize + count_pairs
   my $in11 = "20:40 1:2 1:1 2:6 8:12 20:40"; # 6 pairs (not optimized)
   my $exp_out11 = "1:6 8:12 20:40"; # 3 pairs (once optimized)
   my $fs_tmp11 = new ViperFramespan();
   $fs_tmp11->set_value($in11);
   my $out11 = $fs_tmp11->get_value();
-  $otxt .= "$eh Error while checking \'new\'[count_pairs] (expected: $exp_out11 / Got: $out11). "
+  push(@otxt, "$eh [#11a] Error while checking \'new\'[count_pairs] (expected: $exp_out11 / Got: $out11).")
     if ($out11 ne $exp_out11);
-
+  
   my $etmp11a = &_fs_split_line_count($in11);
   my $tmp11a = $fs_tmp11->count_pairs_in_original_value();
-  $otxt .= "$eh Error while checking \'count_pairs_in_original_value\' (expected: $etmp11a / Got: $tmp11a). "
+  push(@otxt, "$eh [#11b] Error while checking \'count_pairs_in_original_value\' (expected: $etmp11a / Got: $tmp11a).")
     if ($etmp11a != $tmp11a);
-
+  
   my $etmp11b = &_fs_split_line_count($exp_out11);
   my $tmp11b = $fs_tmp11->count_pairs_in_value();
-  $otxt .= "$eh Error while checking \'count_pairs_in_value\' (expected: $etmp11b / Got: $tmp11b). "
+  push(@otxt, "$eh [#11c] Error while checking \'count_pairs_in_value\' (expected: $etmp11b / Got: $tmp11b).")
     if ($etmp11b != $tmp11b);
-
+  
   # extent_middlepoint + extent_middlepoint_distance
   my $in12 = "20:39";
   my $fs_tmp12 = new ViperFramespan($in12);
   my $exp_out12 = 30;           # = 20 + (((39+1) - 20) / 2)
   my $out12 = $fs_tmp12->extent_middlepoint();
-  $otxt .= "$eh Error while checking \'extent_middlepoint\' (expected: $exp_out12 / Got: $out12). "
+  push(@otxt, "$eh [#12] Error while checking \'extent_middlepoint\' (expected: $exp_out12 / Got: $out12).")
     if ($exp_out12 != $out12);
-
+  
   my $in13 = "100:199";         # extent_middlepoint: 150
   my $fs_tmp13 = new ViperFramespan($in13);
 
   my $out13 = $fs_tmp12->extent_middlepoint_distance($fs_tmp13);
   my $exp_out13 = 120;          # from 30 to 150 : +120
-  $otxt .= "$eh Error while checking \'extent_middlepoint_distance\'[1] (expected: $exp_out13 / Got: $out13). "
+  push(@otxt, "$eh [#13] Error while checking \'extent_middlepoint_distance\'[1] (expected: $exp_out13 / Got: $out13).")
     if ($exp_out13 != $out13);
 
   my $out14 = $fs_tmp13->extent_middlepoint_distance($fs_tmp12);
   my $exp_out14 = -120;         # from 150 to 30 : -120
-  $otxt .= "$eh Error while checking \'extent_middlepoint_distance\'[2] (expected: $exp_out14 / Got: $out14). "
+  push(@otxt, "$eh [#14] Error while checking \'extent_middlepoint_distance\'[2] (expected: $exp_out14 / Got: $out14).")
     if ($exp_out14 != $out14);
 
   my $out15 = $fs_tmp12->extent_duration();
   my $exp_out15 = 20;           # 20 [0] to 39 [19] = 20
-  $otxt .= "$eh Error while checking \'extent_duration\' (expected: $exp_out15 / Got: $out15). "
+  push(@otxt, "$eh [#15a] Error while checking \'extent_duration\' (expected: $exp_out15 / Got: $out15).")
     if ($exp_out15 != $out15);
 
   my $out15 = $fs_tmp12->duration();
   my $exp_out15 = 20; # 20 [0] to 39 [19] = 20 (same as extent_duration because there is no gap in the framespan)
-  $otxt .= "$eh Error while checking \'duration\' (expected: $exp_out15 / Got: $out15). "
+  push(@otxt, "$eh [#15b] Error while checking \'duration\' (expected: $exp_out15 / Got: $out15).")
     if ($exp_out15 != $out15);
 
   my $out16 = $fs_tmp11->get_list_of_framespans();
-  $otxt .= "$eh Error getting a list of framespan expected: 3 / got: ".scalar(@$out16) 
+  push(@otxt, "$eh [#16] Error getting a list of framespan expected: 3 / got: ".scalar(@$out16) . ".")
     if (3 != scalar(@$out16));
   my @expSub = split(/ /, $exp_out11);
-  for (my $_i=0; $_i<@expSub; $_i++) {
-    $otxt .= "$eh Error get_list_of_framespan list[$_i] incorrect.  expected '$expSub[$_i]' / got '".$out16->[$_i]->get_value()."'. " 
+  for (my $_i=0; $_i<scalar @expSub; $_i++) {
+    push(@otxt, "$eh [#16+] Error get_list_of_framespan list[$_i] incorrect.  expected '$expSub[$_i]' / got '".$out16->[$_i]->get_value()."'. ") 
       if ($expSub[$_i] ne $out16->[$_i]->get_value())
-    }
+  }
 
   ### unit test overlap
   my $fs_tmp17 = new ViperFramespan();
@@ -1726,21 +1732,21 @@ sub unit_test {                 # Xtreme coding and us ;)
     $fs_tmp17->set_value($pairs[$p][0]);
     $fs_tmp18->set_value($pairs[$p][1]);
     my $fs_new = $fs_tmp17->get_overlap($fs_tmp18);
-    print ("[*] ", $fs_tmp17->get_errormsg(), "\n") if ($fs_tmp17->error());
+#    print ("[*] ", $fs_tmp17->get_errormsg(), "\n") if ($fs_tmp17->error());
     if (MMisc::is_blank($pairs[$p][2])) {
       if (defined $fs_new) {
-        $otxt .= "$eh Error overlap calc for (".join(", ",@{ $pairs[$p] }[0..1]).") returned something [ " . $fs_new->get_value() . "]\n";
+        push(@otxt, "$eh [#17a] Error overlap calc for (".join(", ",@{ $pairs[$p] }[0..1]).") returned something [ " . $fs_new->get_value() . "]");
         next;
       }
 #      print "[undef]\n";
     } else {
       if (! defined $fs_new) {
-        $otxt .= "$eh Error overlap calc for (".join(", ",@{ $pairs[$p] }[0..1]).") did not return anything [expected: " . $pairs[$p][2] . "]\n";
+        push(@otxt, "$eh [#17b] Error overlap calc for (".join(", ",@{ $pairs[$p] }[0..1]).") did not return anything [expected: " . $pairs[$p][2] . "]");
         next;
       }
       my $ret = $fs_new->get_value();
 #     print "[" . $pairs[$p][0] . "] ov [" . $pairs[$p][1] . "] -> [$ret]\n";
-      $otxt .= "$eh Error overlap calc for (".join(", ",@{ $pairs[$p] }).") returned ".$ret."\n" 
+      push(@otxt, "$eh [#17c] Error overlap calc for (".join(", ",@{ $pairs[$p] }).") returned " . $ret . ".") 
         if ($ret ne $pairs[$p][2]);
     }
   }
@@ -1751,7 +1757,7 @@ sub unit_test {                 # Xtreme coding and us ;)
   my $fs_tmp19 = new ViperFramespan($in19);
   my @aout19 = $fs_tmp19->list_frames();
   my $out19 = join(" ", @aout19);
-  $otxt .= "$eh Error while checking \'list_frames\' (expected: $exp_out19 / Got: $out19). "
+  push(@otxt, "$eh [#19] Error while checking \'list_frames\' (expected: $exp_out19 / Got: $out19).")
     if ($out19 ne $exp_out19);
     
   # xor
@@ -1768,33 +1774,28 @@ sub unit_test {                 # Xtreme coding and us ;)
 
   my $fs_out20_1 = $fs_tmp20_1->get_overlap($fs_tmp20_2);
   my $out20_1 = $fs_out20_1->get_value();
-#  print "$out20_1\n";
-  $otxt .= "$eh Error while checking \'get_overlap\' (expected: $exp_out20_1 / Got: $out20_1). "
+  push(@otxt, "$eh [#20a] Error while checking \'get_overlap\' (expected: $exp_out20_1 / Got: $out20_1).")
     if ($out20_1 ne $exp_out20_1);
 
   my $fs_tmp20_3 = $fs_tmp20_1->clone();
   my $ok_out20_3 = $fs_tmp20_3->union($fs_tmp20_2);
   my $out20_2 = $fs_tmp20_3->get_value();
-#  print "$out20_2\n";
-  $otxt .= "$eh Error while checking \'union\' (expected: $exp_out20_2 / Got: $out20_2). "
+  push(@otxt, "$eh [#20b] Error while checking \'union\' (expected: $exp_out20_2 / Got: $out20_2).")
     if ($out20_2 ne $exp_out20_2);
 
   my $fs_tmp20_4 = $fs_out20_1->bounded_not(100, 1300);
   my $out20_3 = $fs_tmp20_4->get_value();
-#  print "$out20_3\n";
-  $otxt .= "$eh Error while checking \'get_overlap\' (expected: $exp_out20_3 / Got: $out20_3). "
+  push(@otxt, "$eh [#20c] Error while checking \'get_overlap\' (expected: $exp_out20_3 / Got: $out20_3).")
     if ($out20_3 ne $exp_out20_3);
 
   my $fs_tmp20_5 = $fs_tmp20_1->get_xor($fs_tmp20_2);
   my $out20_4 = $fs_tmp20_5->get_value();
-#  print "$out20_4\n";
-  $otxt .= "$eh Error while checking \'get_xor\' (expected: $exp_out20_4 / Got: $out20_4). "
+  push(@otxt, "$eh [#20d] Error while checking \'get_xor\' (expected: $exp_out20_4 / Got: $out20_4).")
     if ($out20_4 ne $exp_out20_4);
   
   my $ok = $fs_tmp20_2->remove($fs_tmp20_1);
   my $out20_5 = $fs_tmp20_2->get_value();
-#  print "$out20_5\n";
-  $otxt .= "$eh Error while checking \'remove\' (expected: $exp_out20_5 / Got: $out20_5). "
+  push(@otxt, "$eh [#20e] Error while checking \'remove\' (expected: $exp_out20_5 / Got: $out20_5).")
     if ($out20_5 ne $exp_out20_5);
   
   # not (bounded) + xor
@@ -1809,19 +1810,17 @@ sub unit_test {                 # Xtreme coding and us ;)
 
   my $fs_tmp21_3 = $fs_tmp21_1->bounded_not(10, 100);
   my $out21_3 = $fs_tmp21_3->get_value();
-#  print "$out21_3\n";
-  $otxt .= "$eh Error while checking \'bounded_not\' (expected: $exp_out21_1 / Got: $out21_3). "
+  push(@otxt, "$eh [#21a] Error while checking \'bounded_not\' (expected: $exp_out21_1 / Got: $out21_3).")
     if ($out21_3 ne $exp_out21_1);
 
   my $fs_tmp21_4 = $fs_tmp21_2->bounded_not(10, 100);
   my $out21_4 = $fs_tmp21_4->get_value();
-#  print "$out21_4\n";
-  $otxt .= "$eh Error while checking \'bounded_not\' (expected: $exp_out21_2 / Got: $out21_4). "
+  push(@otxt, "$eh [#21b] Error while checking \'bounded_not\' (expected: $exp_out21_2 / Got: $out21_4).")
     if ($out21_4 ne $exp_out21_2);
 
   my $fs_tmp21_5 = $fs_tmp21_2->get_xor($fs_tmp21_4);
   my $out21_5 = $fs_tmp21_5->get_value();
-  $otxt .= "$eh Error while checking \'bounded_not\' (expected: $exp_out21_5 / Got: $out21_5). "
+  push(@otxt, "$eh [#21c] Error while checking \'bounded_not\' (expected: $exp_out21_5 / Got: $out21_5).")
     if ($out21_5 ne $exp_out21_5);
 
   # xor, overlap
@@ -1841,51 +1840,43 @@ sub unit_test {                 # Xtreme coding and us ;)
 
   my $fs_tmp22_3 = $fs_tmp22_1->get_xor($fs_tmp22_2);
   my $out22_1 = $fs_tmp22_3->get_value();
-#  print "$out22_1\n";
-  $otxt .= "$eh Error while checking \'get_xor\' (expected: $exp_out22_1 / Got: $out22_1). "
+  push(@otxt, "$eh [#22a] Error while checking \'get_xor\' (expected: $exp_out22_1 / Got: $out22_1).")
     if ($out22_1 ne $exp_out22_1);
   
   my $fs_tmp22_4 = $fs_tmp22_1->get_overlap($fs_tmp22_2);
   my $out22_2 = $fs_tmp22_4->get_value();
-#  print "$out22_2\n";
-  $otxt .= "$eh Error while checking \'get_overlap\' (expected: $exp_out22_2 / Got: $out22_2). "
+  push(@otxt, "$eh [#22b] Error while checking \'get_overlap\' (expected: $exp_out22_2 / Got: $out22_2).")
     if ($out22_2 ne $exp_out22_2);
 
   my $fs_tmp22_5 = $fs_tmp22_2->clone();
   my $ok = $fs_tmp22_5->union($fs_tmp22_1);
   my $out22_3 = $fs_tmp22_5->get_value();
-#  print "$out22_3\n";
-  $otxt .= "$eh Error while checking \'union\' (expected: $exp_out22_3 / Got: $out22_3). "
+  push(@otxt, "$eh [#22c] Error while checking \'union\' (expected: $exp_out22_3 / Got: $out22_3).")
     if ($out22_3 ne $exp_out22_3);
   
   my $fs_tmp22_6 = $fs_tmp22_4->bounded_not(1, 70);
   my $out22_4 = $fs_tmp22_6->get_value();
-#  print "$out22_4\n";
-  $otxt .= "$eh Error while checking \'not overlap\' (expected: $exp_out22_4 / Got: $out22_4). "
+  push(@otxt, "$eh [#22d] Error while checking \'not overlap\' (expected: $exp_out22_4 / Got: $out22_4).")
     if ($out22_4 ne $exp_out22_4);
 
   my $fs_tmp22_7 = $fs_tmp22_1->clone();
   my $ok = $fs_tmp22_7->remove($fs_tmp22_2);
   my $out22_5 = $fs_tmp22_7->get_value();
-#  print "$out22_5\n";
-  $otxt .= "$eh Error while checking \'remove\' (expected: $exp_out22_5 / Got: $out22_5). "
+  push(@otxt, "$eh [#22e] Error while checking \'remove\' (expected: $exp_out22_5 / Got: $out22_5).")
     if ($out22_5 ne $exp_out22_5);
 
   my $fs_tmp22_8 = $fs_tmp22_1->bounded_not(80, 90);
   my $out22_6 = $fs_tmp22_8->get_value();
-#  print "$out22_6\n";
-  $otxt .= "$eh Error while checking \'bounded_not\' (expected: $exp_out22_6 / Got: $out22_6). "
+  push(@otxt, "$eh [#22f] Error while checking \'bounded_not\' (expected: $exp_out22_6 / Got: $out22_6).")
     if ($out22_6 ne $exp_out22_6);
 
   my $fs_tmp22_9 = $fs_tmp22_1->bounded_not(10, 20);
   my $out22_7 = $fs_tmp22_9->get_value();
-#  print "$out22_7\n";
-  $otxt .= "$eh Error while checking \'bounded_not\' (expected: $exp_out22_7 / Got: $out22_7). "
+  push(@otxt, "$eh [#22g] Error while checking \'bounded_not\' (expected: $exp_out22_7 / Got: $out22_7).")
     if ($out22_7 ne $exp_out22_7);
 
   my $fs_tmp22_10 = $fs_tmp22_2->bounded_not(10, 20);
-#  print "UNDEF\n" if (! defined $fs_tmp22_10);
-  $otxt .= "$eh Error while checking \'bounded_not\' (expected: undef). "
+  push(@otxt, "$eh [#22h] Error while checking \'bounded_not\' (expected: undef).")
     if (defined $fs_tmp22_10);
 
   # Big overlap (1)
@@ -1893,42 +1884,52 @@ sub unit_test {                 # Xtreme coding and us ;)
   my @a_tmp23b = ();
   my @a_out23 = ();
   for (my $f = 1; $f < 1000; $f++) {
-    push @a_tmp23a, sprintf("%d:%d\n", $f*100,      $f*100 + 50);
-    push @a_tmp23b, sprintf("%d:%d\n", $f*100 + 25, $f*100 + 50 + 25);
-    push @a_out23,  sprintf("%d:%d\n", $f*100 + 25, $f*100 + 50);
+    push @a_tmp23a, sprintf("%d:%d", $f*100,      $f*100 + 50);
+    push @a_tmp23b, sprintf("%d:%d", $f*100 + 25, $f*100 + 50 + 25);
+    push @a_out23,  sprintf("%d:%d", $f*100 + 25, $f*100 + 50);
   }
   my $fs_tmp23a = new ViperFramespan(join(" ", @a_tmp23a));
   my $fs_tmp23b = new ViperFramespan(join(" ", @a_tmp23b));
   my $exp_out23 = join(" ", @a_out23);
   my $fs_out23 = $fs_tmp23a->get_overlap($fs_tmp23b);
   my $out23 = $fs_out23->get_value();
-  $otxt .= "$eh Error while checking (big1) \'get_overlap\' (expected: $exp_out23 / Got: $out23). "
-    if ($exp_out23 != $out23);
+  push(@otxt, "$eh [#23] Error while checking (big1) \'get_overlap\' (expected: $exp_out23 / Got: $out23).")
+    if ($exp_out23 ne $out23);
 
   # Big overlap (2)
   my @a_tmp24a = ();
   my @a_tmp24b = ();
   my @a_out24 = ();
   for (my $f = 1; $f < 1000; $f++) {
-    push @a_tmp24a, sprintf("%d:%d\n", $f*2, $f*2);
-    push @a_tmp24b, sprintf("%d:%d\n", $f*8, $f*8 + 1);
-    next if ($f > 250);
-    push @a_out24,  sprintf("%d:%d\n", $f*8, $f*8);
+    push @a_tmp24a, sprintf("%d:%d", $f*2, $f*2);
+    push @a_tmp24b, sprintf("%d:%d", $f*8, $f*8 + 1);
+    next if ($f > 249);
+    push @a_out24,  sprintf("%d:%d", $f*8, $f*8);
   }
   my $fs_tmp24a = new ViperFramespan(join(" ", @a_tmp24a));
   my $fs_tmp24b = new ViperFramespan(join(" ", @a_tmp24b));
   my $exp_out24 = join(" ", @a_out24);
   my $fs_out24 = $fs_tmp24a->get_overlap($fs_tmp24b);
   my $out24 = $fs_out24->get_value();
-  $otxt .= "$eh Error while checking (big2) \'get_overlap\' (expected: $exp_out24 / Got: $out24). "
-    if ($exp_out24 != $out24);
+  push(@otxt, "$eh [#24] Error while checking (big2) \'get_overlap\' (expected: $exp_out24 / Got: $out24).")
+    if ($exp_out24 ne $out24);
+
+  # Specific overlap
+  my $fs_tmp25a = new ViperFramespan("5401:5401 5413:5413 5425:5425 5437:5437 5449:5449 5461:5461 5473:5473 5485:5485 5497:5497 5509:5509 5521:5521 5533:5533 5545:5545 5557:5557 5569:5569 5581:5581 5593:5593 5605:5605 5617:5617 5629:5629 5641:5641 5653:5653 5665:5665 5677:5677 5689:5689 5701:5701 5713:5713 5725:5725 5737:5737 5749:5749 5761:5761 5773:5773 5785:5785 5797:5797 5809:5809 5821:5821 5833:5833 5845:5845 5857:5857 5869:5869 5881:5881 5893:5893 5905:5905 5917:5917 5929:5929 5941:5941 5953:5953 5965:5965 5977:5977 5989:5989 6001:6001 6013:6013 6025:6025 6037:6037 6049:6049 6061:6061 6073:6073 6085:6085 6097:6097 6109:6109 6121:6121 6133:6133 6145:6145 6157:6157 6169:6169 6181:6181 6193:6193 6205:6205 6217:6217 6229:6229 6241:6241 6253:6253 6265:6265 6277:6277 6289:6289 6301:6301 6313:6313 6325:6325 6337:6337 6349:6349 6361:6361 6373:6373 6385:6385 6397:6397 6409:6409 6421:6421 6433:6433 6445:6445 6457:6457 6469:6469 6481:6481 6493:6493 6505:6505 6517:6517 6529:6529 6541:6541 6553:6553 6565:6565 6577:6577 6589:6589 6601:6601 6613:6613 6625:6625 6637:6637 6649:6649 6661:6661 6673:6673 6685:6685 6697:6697 6709:6709 6721:6721 6733:6733 6745:6745 6757:6757 6769:6769 6781:6781 6793:6793 6805:6805 6817:6817 6829:6829 6841:6841 6853:6853 6865:6865 6877:6877 6889:6889 6901:6901 6913:6913 6925:6925 6937:6937 6949:6949 6961:6961 6973:6973 6985:6985 6997:6997 7009:7009 7021:7021 7033:7033 7045:7045 7057:7057 7069:7069 7081:7081 7093:7093 7105:7105 7117:7117 7129:7129 7141:7141 7153:7153 7165:7165 7177:7177 7189:7189 7201:7201 7213:7213 7225:7225 7237:7237 7249:7249 7261:7261 7273:7273 7285:7285 7297:7297 7309:7309 7321:7321 7333:7333 7345:7345 7357:7357 7369:7369 7381:7381 7393:7393 7405:7405 7417:7417 7429:7429 7441:7441 7453:7453 7465:7465 7477:7477 7489:7489 7501:7501 7513:7513 7525:7525 7537:7537 7549:7549 7561:7561 7573:7573 7585:7585 7597:7597 7609:7609 7621:7621 7633:7633 7645:7645 7657:7657 7669:7669 7681:7681 7693:7693 7705:7705 7717:7717 7729:7729 7741:7741 7753:7753 7765:7765 7777:7777 7789:7789 7801:7801 7813:7813 7825:7825 7837:7837 7849:7849 7861:7861 7873:7873 7885:7885 7897:7897 7909:7909 7921:7921 7933:7933 7945:7945 7957:7957 7969:7969 7981:7981 7993:7993 8005:8005 8017:8017 8029:8029 8041:8041 8053:8053 8065:8065 8077:8077 8089:8089 8101:8101 8113:8113 8125:8125 8137:8137 8149:8149 8161:8161 8173:8173 8185:8185 8197:8197 8209:8209 8221:8221 8233:8233");
+  my $fs_tmp25b = new ViperFramespan("7519:7699 7701:7701 7708:7723 7725:7725 7727:7867 7889:7889 7891:7896 7902:7983 7985:7989 7991:7991 8051:8051 8085:8085 8087:8240");
+  my $exp25 = "7525:7525 7537:7537 7549:7549 7561:7561 7573:7573 7585:7585 7597:7597 7609:7609 7621:7621 7633:7633 7645:7645 7657:7657 7669:7669 7681:7681 7693:7693 7717:7717 7729:7729 7741:7741 7753:7753 7765:7765 7777:7777 7789:7789 7801:7801 7813:7813 7825:7825 7837:7837 7849:7849 7861:7861 7909:7909 7921:7921 7933:7933 7945:7945 7957:7957 7969:7969 7981:7981 8089:8089 8101:8101 8113:8113 8125:8125 8137:8137 8149:8149 8161:8161 8173:8173 8185:8185 8197:8197 8209:8209 8221:8221 8233:8233";
+  my $fs_ov25 = $fs_tmp25a->get_overlap($fs_tmp25b);
+  my $out25 = $fs_ov25->get_value();
+  push(@otxt, "$eh [#25] Error while checking (specific) \'get_overlap\' (expected: $exp25 / Got: $out25).")
+    if ($exp25 ne $out25);
 
   ########## TODO: unit_test for all 'fps' functions ##########
 
   #####
   # End
-  if (! MMisc::is_blank($otxt)) {
-    print "[ViperFramespan] unit_test errors:", $otxt if (! $notverb);
+  if (scalar @otxt > 0) {
+    print("[ViperFramespan] unit_test errors:\n - ", join("\n - ", @otxt), "\n")
+      if (! $notverb);
     return(0);
   }
  
