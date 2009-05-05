@@ -72,7 +72,7 @@ cvsdist:
 	@rm -rf /tmp/`cat .f4de_version`
 	@echo "CVS checkout in: /tmp/"`cat .f4de_version`
 	@cp .f4de_version /tmp
-	@(cd /tmp; cvs -q -d gaston:/home/sware/cvs checkout -d `cat .f4de_version` F4DE)
+	@(cd /tmp; cvs -z3 -q -d gaston:/home/sware/cvs checkout -d `cat .f4de_version` F4DE)
 	@make dist_common
 
 localdist:
