@@ -5,6 +5,7 @@ install:
 	@echo "Nothing to do for install"
 
 check:
+	@perl -I../lib -I../../../common/lib -I../../lib pre_tests.pl
 	@(cd ../lib; perl -I . -e 'use DETCurveSet; DETCurveSet::unitTest()')
 	@(cd ../lib; perl -I . -e 'use DETCurve; DETCurve::unitTest()')
 	@(cd ../lib; perl -I . -e 'use DETCurveGnuplotRenderer; DETCurveGnuplotRenderer::unitTest()')
