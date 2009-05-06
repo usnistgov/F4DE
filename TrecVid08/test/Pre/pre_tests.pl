@@ -2,7 +2,6 @@
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 use strict;
-use xmllintHelper;
 use MMisc;
 
 my $err = 0;
@@ -10,16 +9,6 @@ my $err = 0;
 ##########
 print "** Checking for Perl Packages:\n";
 my $ms = 1;
-
-print "[Perl Required Packages]\n";
-$ms = &_chkpkg("Getopt::Long", "Data::Dumper", "File::Temp",
-               "Cwd", "Text::CSV");
-if ($ms > 0) {
-  print "  ** ERROR: Not all packages found, you will not be able to run the program (and some F4DE package will most likely fail this step), install the missing packages and re-run the checks\n\n";
-  $err++;
-} else {
-  print "  Found all packages\n\n";
-}
 
 print "[F4DE Common Packages]\n";
 $ms = &_chkpkg
@@ -74,27 +63,6 @@ print "[Optional Perl Packages]\n";
 $ms = &_chkpkg("Statistics::Descriptive::Discrete"); # TV08Stats
 if ($ms > 0) {
   print "  ** WARNING: Not all TV08Stats packages found, you will not be able to run this program\n";
-}
-
-##########
-print "\n** Checking for xmllint:\n";
-my $xmllint_env = "F4DE_XMLLINT";
-my $xmllint = MMisc::get_env_val($xmllint_env, "");
-if ($xmllint ne "") {
-  print "- using the one specified by the $xmllint_env environment variable ($xmllint)\n";
-}
-
-my $error = "";
-# Confirm xmllint is present and at least 2.6.30
-my $xobj = new xmllintHelper();
-$xobj->set_xmllint($xmllint);
-if ($xobj->error()) {
-  print $xobj->get_errormsg();
-  print "After installing a suitable version, set the $xmllint_env environment variable to ensure the use of the proper version if it is not in your PATH\n";
-  $err++;
-} else {
-  $xmllint = $xobj->get_xmllint();
-  print "  xmllint ($xmllint) is valid and its version is recent enough\n";
 }
 
 ####################
