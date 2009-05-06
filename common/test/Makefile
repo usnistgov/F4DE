@@ -1,3 +1,5 @@
+# common/test
+
 all:
 	@echo "Nothing to do"
 
