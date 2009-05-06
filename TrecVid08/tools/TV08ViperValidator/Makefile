@@ -1,4 +1,4 @@
-# From within: tools/TV08ViperValidator
+# TrecVid08/tools/TV08ViperValidator
 
 TV08ViperValidator=TV08ViperValidator.pl
 TV08ViperValidator_tester_dir=../../test/TV08ViperValidator
@@ -10,4 +10,4 @@ install:
 	@echo "Nothing to do for install"
 
 check:	${TV08ViperValidator_tester_dir}/Makefile
-	(cd ${TV08ViperValidator_tester_dir}; make check)
+	@(cd ${TV08ViperValidator_tester_dir}; make $@)

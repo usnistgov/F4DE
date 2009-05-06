@@ -1,4 +1,4 @@
-# From within: tools/TV08MergeHelper
+# TrecVid08/tools/TV08MergeHelper
 
 TV08MergeHelper=TV08MergeHelper.pl
 TV08MergeHelper_tester_dir=../../test/TV08MergeHelper
@@ -10,4 +10,4 @@ install:
 	@echo "Nothing to do for install"
 
 check:	${TV08MergeHelper_tester_dir}/Makefile
-	(cd ${TV08MergeHelper_tester_dir}; make check)
+	@(cd ${TV08MergeHelper_tester_dir}; make $@)

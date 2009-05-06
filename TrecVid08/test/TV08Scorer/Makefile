@@ -1,4 +1,4 @@
-# From within: test/TV08Scorer
+# TrecVid08/test/TV08Scorer
 
 TV08Scorer_tester=TV08Scorer_tester.pl
 
@@ -17,13 +17,13 @@ install:
 	@echo "Nothing to do for install"
 
 check: ${TV08Scorer_tester_exec} ${TV08Scorer}
-	@(${PERL} ${TV08Scorer_tester} ${TV08Scorer} check)
+	@(${PERL} ${TV08Scorer_tester} ${TV08Scorer} $@)
 
 makecheckfiles: ${TV08Scorer_tester_exec} ${TV08Scorer}
-	@(${PERL} ${TV08Scorer_tester} ${TV08Scorer} makecheckfiles)
+	@(${PERL} ${TV08Scorer_tester} ${TV08Scorer} $@)
 
 makecompcheckfiles: ${TV08Scorer_tester_exec} ${TV08Scorer}
-	@(${PERL} ${TV08Scorer_tester} ${TV08Scorer} makecompcheckfiles)
+	@(${PERL} ${TV08Scorer_tester} ${TV08Scorer} $@)
 
 cleanresfiles:
 	@rm -f res*.txt

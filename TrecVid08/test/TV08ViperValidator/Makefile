@@ -1,4 +1,4 @@
-# From within: test/TV08ViperValidator
+# TrecVid08/test/TV08ViperValidator
 
 TV08ViperValidator_tester=TV08ViperValidator_tester.pl
 
@@ -17,13 +17,13 @@ install:
 	@echo "Nothing to do for install"
 
 check: ${TV08ViperValidator_tester_exec} ${TV08ViperValidator}
-	@(${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} check)
+	@(${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} $@)
 
 makecheckfiles: ${TV08ViperValidator_tester_exec} ${TV08ViperValidator}
-	@(${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} makecheckfiles)
+	@(${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} $@)
 
 makecompcheckfiles: ${TV08ViperValidator_tester_exec} ${TV08ViperValidator}
-	@(${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} makecompcheckfiles)
+	@(${PERL} ${TV08ViperValidator_tester} ${TV08ViperValidator} $@)
 
 cleanresfiles:
 	@rm -f res_*.txt

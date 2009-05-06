@@ -1,4 +1,4 @@
-# From within: test/TV08MergeHelper
+# TrecVid08/test/TV08MergeHelper
 
 TV08MergeHelper_tester=TV08MergeHelper_tester.pl
 
@@ -17,13 +17,13 @@ install:
 	@echo "Nothing to do for install"
 
 check: ${TV08MergeHelper_tester_exec} ${TV08MergeHelper}
-	@(${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} check)
+	@(${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} $@)
 
 makecheckfiles: ${TV08MergeHelper_tester_exec} ${TV08MergeHelper}
-	@(${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} makecheckfiles)
+	@(${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} $@)
 
 makecompcheckfiles: ${TV08MergeHelper_tester_exec} ${TV08MergeHelper}
-	@(${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} makecompcheckfiles)
+	@(${PERL} ${TV08MergeHelper_tester} ${TV08MergeHelper} $@)
 
 cleanresfiles:
 	@rm -f res_*

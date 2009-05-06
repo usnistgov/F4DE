@@ -1,3 +1,5 @@
+# Main F4DE directory Makefile
+
 F4DE_BASE ?= "notset"
 
 ##########
@@ -18,6 +20,13 @@ all:
 	@echo "  TV08install     only install the TrecVid08 subsection"
 	@echo "  CLEAR07install  only install the CLEAR07 subsection"
 	@echo "  AVSS09install   only install the AVSS09 subsection"
+	@echo ""
+	@make from_installdir
+
+from_installdir:
+	@echo "** Checking that \"make\" is called from the source directory"
+	@test -f .f4de_version
+
 
 ########## Install
 
@@ -27,6 +36,7 @@ install:
 	@make AVSS09install
 
 commoninstall:
+	@make from_installdir
 	@make install_head
 	@echo "** Installing common files"
 	@perl installer.pl ${F4DE_BASE} lib common/lib/*.pm
@@ -70,19 +80,18 @@ install_head:
 	@echo "** Checking that the F4DE_BASE is a writable directory"
 	@test -d ${F4DE_BASE}
 	@test -w ${F4DE_BASE}
-	@echo "** Checking that install is called from the source directory"
-	@test -f .f4de_version
 
 
 ########## Checks
 
 mincheck:
-	@(make commoncheck)
+	@make check_common
+	@make commoncheck
 
 check:
-	@(make commoncheck)
-	@(make TV08check)
-	@(make CLEAR07check)
+	@make commoncheck
+	@make TV08check
+	@make CLEAR07check
 	@echo ""
 	@echo "***** All check tests successful"
 	@echo ""
@@ -108,6 +117,8 @@ commoncheck:
 	@echo "***** All \"Common checks\" ran succesfully"
 	@echo ""
 
+check_common:
+	@make from_installdir
 
 ########################################
 ########## For distribution purpose
@@ -115,6 +126,7 @@ commoncheck:
 
 # 'cvsdist' can only be run by developpers
 cvsdist:
+	@make from_installdir
 	@make dist_head
 	@echo "Building a CVS release:" `cat .f4de_version`
 	@rm -rf /tmp/`cat .f4de_version`
@@ -124,6 +136,7 @@ cvsdist:
 	@make dist_common
 
 localdist:
+	@make from_installdir
 	@make dist_head
 	@echo "Building a local copy release:" `cat .f4de_version`
 	@rm -rf /tmp/`cat .f4de_version`
