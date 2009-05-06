@@ -1,4 +1,4 @@
-# From within: test/CLEARTRViperValidator
+# CLEAR07/test/CLEARTRViperValidator
 
 CLEARTRViperValidator_tester=CLEARTRViperValidator_tester.pl
 
@@ -17,13 +17,13 @@ install:
 	@echo "Nothing to do for install"
 
 check: ${CLEARTRViperValidator_tester_exec} ${CLEARTRViperValidator}
-	@(${PERL} ${CLEARTRViperValidator_tester} ${CLEARTRViperValidator} check)
+	@(${PERL} ${CLEARTRViperValidator_tester} ${CLEARTRViperValidator} $@)
 
 makecheckfiles: ${CLEARTRViperValidator_tester_exec} ${CLEARTRViperValidator}
-	@(${PERL} ${CLEARTRViperValidator_tester} ${CLEARTRViperValidator} makecheckfiles)
+	@(${PERL} ${CLEARTRViperValidator_tester} ${CLEARTRViperValidator} $@)
 
 makecompcheckfiles: ${CLEARTRViperValidator_tester_exec} ${CLEARTRViperValidator}
-	@(${PERL} ${CLEARTRViperValidator_tester} ${CLEARTRViperValidator} makecompcheckfiles)
+	@(${PERL} ${CLEARTRViperValidator_tester} ${CLEARTRViperValidator} $@)
 
 cleanresfiles:
 	@rm -f res*.txt

@@ -1,3 +1,5 @@
+# CLEAR07/test/UnitTests
+
 all:
 	@echo "Nothing to do"
 
@@ -9,9 +11,3 @@ check:
 	@(cd ../../lib; perl -I . -I ../../common/lib -e 'use Object; Object::unitTest()')
 	@(cd ../../lib; perl -I . -I ../../common/lib -e 'use Frame; Frame::unitTest()')
 	@echo "***** All tests ran succesfully"
-
-makecheckfiles:
-	@echo "***** All files generated succesfully"
-
-cleanresfiles:
-	@echo "***** All results files removed"

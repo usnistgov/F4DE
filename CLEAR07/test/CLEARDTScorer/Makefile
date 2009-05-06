@@ -1,4 +1,4 @@
-# From within: test/CLEARDTScorer
+# CLEAR07/test/CLEARDTScorer
 
 CLEARDTScorer_tester=CLEARDTScorer_tester.pl
 
@@ -17,13 +17,13 @@ install:
 	@echo "Nothing to do for install"
 
 check: ${CLEARDTScorer_tester_exec} ${CLEARDTScorer}
-	@(${PERL} ${CLEARDTScorer_tester} ${CLEARDTScorer} check)
+	@(${PERL} ${CLEARDTScorer_tester} ${CLEARDTScorer} $@)
 
 makecheckfiles: ${CLEARDTScorer_tester_exec} ${CLEARDTScorer}
-	@(${PERL} ${CLEARDTScorer_tester} ${CLEARDTScorer} makecheckfiles)
+	@(${PERL} ${CLEARDTScorer_tester} ${CLEARDTScorer} $@)
 
 makecompcheckfiles: ${CLEARDTScorer_tester_exec} ${CLEARDTScorer}
-	@(${PERL} ${CLEARDTScorer_tester} ${CLEARDTScorer} makecompcheckfiles)
+	@(${PERL} ${CLEARDTScorer_tester} ${CLEARDTScorer} $@)
 
 cleanresfiles:
 	@rm -f res*.txt

@@ -1,4 +1,4 @@
-# From within: test/CLEARDTViperValidator
+# CLEAR07/test/CLEARDTViperValidator
 
 CLEARDTViperValidator_tester=CLEARDTViperValidator_tester.pl
 
@@ -17,13 +17,13 @@ install:
 	@echo "Nothing to do for install"
 
 check: ${CLEARDTViperValidator_tester_exec} ${CLEARDTViperValidator}
-	@(${PERL} ${CLEARDTViperValidator_tester} ${CLEARDTViperValidator} check)
+	@(${PERL} ${CLEARDTViperValidator_tester} ${CLEARDTViperValidator} $@)
 
 makecheckfiles: ${CLEARDTViperValidator_tester_exec} ${CLEARDTViperValidator}
-	@(${PERL} ${CLEARDTViperValidator_tester} ${CLEARDTViperValidator} makecheckfiles)
+	@(${PERL} ${CLEARDTViperValidator_tester} ${CLEARDTViperValidator} $@)
 
 makecompcheckfiles: ${CLEARDTViperValidator_tester_exec} ${CLEARDTViperValidator}
-	@(${PERL} ${CLEARDTViperValidator_tester} ${CLEARDTViperValidator} makecompcheckfiles)
+	@(${PERL} ${CLEARDTViperValidator_tester} ${CLEARDTViperValidator} $@)
 
 cleanresfiles:
 	@rm -f res*.txt
