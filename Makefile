@@ -3,19 +3,28 @@ F4DE_BASE ?= "notset"
 ##########
 
 all:
+	@echo "NOTE: Make sure to run this Makefile from the source directory"
+	@echo ""
 	@echo "Possible options are:"
 	@echo ""
-	@echo "  check         to run a check on all included evaluation tools"
-	@echo "  TV08check     only run checks for the TrecVid08 subsection"
+	@echo "[checks section -- recommended to run before installation -- DO NOT set the F4DE_BASE environment variable]"
+	@echo "  mincheck        run only a few common checks"
+	@echo "  check           to run checks on all included evaluation tools"
+	@echo "  TV08check       only run checks for the TrecVid08 subsection"
+	@echo "  CLEAR07check    only run checks for the CLEAR07 subsection"
 	@echo ""
-	@echo "  install       to install the softwares (requires the F4DE_BASE environment variable set)"
-	@echo "  TV08install   only install the TrecVid08 subsection"
+	@echo "[install section -- requires the F4DE_BASE environment variable set]"
+	@echo "  install         to install all the softwares"
+	@echo "  TV08install     only install the TrecVid08 subsection"
+	@echo "  CLEAR07install  only install the CLEAR07 subsection"
+	@echo "  AVSS09install   only install the AVSS09 subsection"
 
 ########## Install
 
 install:
 	@make TV08install
-
+	@make CLEAR07install
+	@make AVSS09install
 
 commoninstall:
 	@make install_head
@@ -23,11 +32,36 @@ commoninstall:
 	@perl installer.pl ${F4DE_BASE} lib common/lib/*.pm
 
 TV08install:
+	@echo ""
+	@echo "********** Installing TrecVid08 tools"
 	@make commoninstall
 	@echo "** Installing TrecVid08 files"
 	@perl installer.pl ${F4DE_BASE} lib TrecVid08/lib/*.pm
 	@perl installer.pl ${F4DE_BASE} lib/data TrecVid08/data/*.xsd
-	@perl installer.pl -x -r ${F4DE_BASE} bin TrecVid08/tools/TV08MergeHelper/TV08MergeHelper.pl TrecVid08/tools/TV08ViperValidator/TV08ViperValidator.pl TrecVid08/tools/TV08ViperValidator/TV08_BigXML_ValidatorHelper.pl TrecVid08/tools/TV08Scorer/TV08Scorer.pl  TrecVid08/tools/TV08ED-SubmissionChecker/TV08ED-SubmissionChecker.pl
+	@perl installer.pl -x -r ${F4DE_BASE} bin TrecVid08/tools/TV08ED-SubmissionChecker/TV08ED-SubmissionChecker.pl TrecVid08/tools/TV08MergeHelper/TV08MergeHelper.pl TrecVid08/tools/TV08Scorer/TV08Scorer.pl TrecVid08/tools/TV08ViperValidator/TV08_BigXML_ValidatorHelper.pl TrecVid08/tools/TV08ViperValidator/TV08ViperValidator.pl 
+	@echo ""
+	@echo ""
+
+CLEAR07install:
+	@echo ""
+	@echo "********** Installing CLEAR07 tools"
+	@make commoninstall
+	@echo "** Installing CLEAR07 files"
+	@perl installer.pl ${F4DE_BASE} lib CLEAR07/lib/*.pm
+	@perl installer.pl ${F4DE_BASE} lib/data CLEAR07/data/*.xsd
+	@perl installer.pl -x -r ${F4DE_BASE} bin CLEAR07/tools/CLEARDTScorer/CLEARDTScorer.pl CLEAR07/tools/CLEARDTViperValidator/CLEARDTViperValidator.pl CLEAR07/tools/CLEARTRScorer/CLEARTRScorer.pl CLEAR07/tools/CLEARTRViperValidator/CLEARTRViperValidator.pl
+	@echo ""
+	@echo ""
+
+AVSS09install:
+	@echo ""
+	@echo "********** Installing AVSS09 tools"
+	@make commoninstall
+	@echo "** Installing AVSS09 files"
+	@perl installer.pl ${F4DE_BASE} lib CLEAR07/lib/*.pm
+	@perl installer.pl -x -r ${F4DE_BASE} bin AVSS09/tools/AVSS09Scorer/AVSS09Scorer.pl AVSS09/tools/AVSS09ViPERValidator/AVSS09ViPERValidator.pl
+	@echo ""
+	@echo ""
 
 install_head:
 	@echo "** Checking that the F4DE_BASE environment variable is set"
@@ -42,23 +76,37 @@ install_head:
 
 ########## Checks
 
+mincheck:
+	@(make commoncheck)
+
 check:
 	@(make commoncheck)
 	@(make TV08check)
+	@(make CLEAR07check)
 	@echo ""
 	@echo "***** All check tests successful"
+	@echo ""
 
 TV08check:
-	@echo "***** Running TV08check tests ..."
+	@echo "***** Running TrecVid08 checks ..."
 	@(cd TrecVid08/test; make check)
-	@echo "***** All TV08check tests ran succesfully"
+	@echo ""
+	@echo "***** All TrecVid08 checks ran succesfully"
+	@echo ""
+
+CLEAR07check:
+	@echo "***** Running CLEAR07 checks ..."
+	@(cd CLEAR07/test; make check)
+	@echo ""
+	@echo "***** All CLEAR07 checks ran succesfully"
+	@echo ""
 
 commoncheck:
-	@echo "***** Running Common tests ..."
+	@echo "***** Running \"Common checks\" ..."
 	@(cd common/test; make check)
-	@echo "***** All common tests ran succesfully"
-
-
+	@echo ""
+	@echo "***** All \"Common checks\" ran succesfully"
+	@echo ""
 
 
 ########################################
@@ -92,13 +140,6 @@ dist_head:
 dist_common:
 	@cp .f4de_version /tmp
 	@echo ""
-#	@echo "***** Removing CLEAR07 Directory (for now)"
-#	@(cd /tmp/`cat .f4de_version`; rm -rf CLEAR07)
-#	@echo "***** Removing AVSS09 Directory (for now)"
-#	@(cd /tmp/`cat .f4de_version`; rm -rf AVSS09)
-#	@echo ""
-#	@echo "***** Running all tests"
-#	@(cd /tmp/`cat .f4de_version`; make check)
 	@echo "Building the tar.bz2 file"
 	@echo `cat .f4de_version`"-"`date +%Y%m%d-%H%M`.tar.bz2 > /tmp/.f4de_distname
 	@echo `pwd` > /tmp/.f4de_pwd
