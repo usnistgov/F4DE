@@ -55,9 +55,9 @@ sub eo2pe {
 }
 
 ## Then try to load everything
-my $ekw = "ERROR"; # Error Key Work
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
+my $warn_msg = "";
 
 # Part of this tool
 foreach my $pn ("CLEARDTViperFile", "CLEARDTHelperFunctions", "Sequence", "SimpleAutoTable") {
@@ -325,14 +325,6 @@ sub load_file {
 
 ########################################
 
-sub warn_print {
-  print "WARNING: ", @_;
-
-  print "\n";
-}
-
-########################################
-
 sub get_param_settings {
   my $str;
 
@@ -419,6 +411,12 @@ sub add_data2sat {
 
 ########################################
 
+sub _warn_add {
+  $warn_msg .= "[Warning] " . join(" ", @_) ."\n";
+}
+
+########################################
+
 sub set_usage {
   my $ro = join(" ", @ok_objects);
   my $xsdfiles = join(" ", @xsdfilesl);
@@ -444,7 +442,7 @@ Will Score the XML file(s) provided (System vs Truth)
   --MissCost      Set the Metric's Cost for a Miss (default: $CostMiss)
   --FACost        Set the Metric's Cost for a False Alarm (default: $CostFA)
   --ISCost        Set the Metric's Cost for an ID Switch (default: $CostIS)
-  --gtf           Specify that the files post this marker on the command line are Ground Truth Files  
+  --gtf           Specify that the files past this marker on the command line are Ground Truth Files  
 
 Note:
 - Program will ignore the <config> section of the XML file.

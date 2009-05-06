@@ -496,6 +496,12 @@ sub copy_file {
 
 ########################################
 
+sub _warn_add {
+  $warn_msg .= "[Warning] " . join(" ", @_) ."\n";
+}
+
+########################################
+
 sub set_usage {
   my $wmd = join(" ", @ok_md);
 
