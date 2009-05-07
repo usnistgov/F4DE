@@ -21,7 +21,17 @@ if ($ms > 0) {
 }
 
 ##########
-print "\n** Checking for xmllint:\n";
+print "\n** Checking for \'rsync\' (needed by installer): ";
+my $rsync = MMisc::cmd_which("rsync");
+if (! defined $rsync) {
+  print " NOT found\n";
+  $err++;
+} else {
+  print " found ($rsync)\n";
+}
+
+##########
+print "\n** Checking for \'xmllint\':\n";
 my $xmllint_env = "F4DE_XMLLINT";
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
 if ($xmllint ne "") {
@@ -34,7 +44,7 @@ my $xobj = new xmllintHelper();
 $xobj->set_xmllint($xmllint);
 if ($xobj->error()) {
   print $xobj->get_errormsg();
-  print "After installing a suitable version, set the $xmllint_env environment variable to ensure the use of the proper version if it is not in your PATH\n";
+  print "After installing a suitable version, set the $xmllint_env environment variable to ensure the use of the proper version if it is not the first available in your PATH\n";
   $err++;
 } else {
   $xmllint = $xobj->get_xmllint();
