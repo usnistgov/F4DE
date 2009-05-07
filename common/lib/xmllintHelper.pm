@@ -91,10 +91,9 @@ sub get_xmllint {
 sub _check_xmllint {
   my ($xmllint) = shift @_;
 
-  if ($xmllint eq "") {
-    my ($retcode, $stdout, $stderr) = &MMisc::do_system_call('which', 'xmllint');
-    return("", "Could not find a valid \'xmllint\' command in the PATH, aborting\n") if ($retcode != 0);
-    $xmllint = $stdout;
+  if (MMisc::is_blank($xmllint)) {
+    $xmllint = &MMisc::cmd_which("xmllint");
+    return("", "Could not find a valid \'xmllint\' command in the PATH, aborting\n") if (! defined $xmllint);
   }
 
   $xmllint =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
