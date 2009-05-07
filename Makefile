@@ -14,6 +14,7 @@ all:
 	@echo "  check           to run checks on all included evaluation tools"
 	@echo "  TV08check       only run checks for the TrecVid08 subsection"
 	@echo "  CLEAR07check    only run checks for the CLEAR07 subsection"
+	@echo "  AVSS09check     only run checks for the AVSS09 subsection"
 	@echo ""
 	@echo "[install section -- requires the F4DE_BASE environment variable set]"
 	@echo "  install         to install all the softwares"
@@ -66,7 +67,8 @@ CLEAR07install:
 AVSS09install:
 	@echo ""
 	@echo "********** Installing AVSS09 tools"
-	@make commoninstall
+	@echo "  (Relies on CLEAR07, running installer)"
+	@make CLEAR07install
 	@echo "** Installing AVSS09 files"
 	@perl installer.pl ${F4DE_BASE} lib CLEAR07/lib/*.pm
 	@perl installer.pl -x -r ${F4DE_BASE} bin AVSS09/tools/AVSS09Scorer/AVSS09Scorer.pl AVSS09/tools/AVSS09ViPERValidator/AVSS09ViPERValidator.pl
@@ -108,6 +110,13 @@ CLEAR07check:
 	@(cd CLEAR07/test; make check)
 	@echo ""
 	@echo "***** All CLEAR07 checks ran succesfully"
+	@echo ""
+
+AVSS09check:
+	@echo "***** Running AVSS09 checks ..."
+	@(cd AVSS09/test; make check)
+	@echo ""
+	@echo "***** All AVSS09 checks ran succesfully"
 	@echo ""
 
 commoncheck:
