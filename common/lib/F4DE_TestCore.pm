@@ -10,6 +10,11 @@ my $mmc_add = $ENV{TEST_MMC_ADD} || "-comp";
 my $dev = "F4DE_TestCore default error value";
 my $lts = 10;                   # lines to show
 
+####################
+
+sub get_magicmode_key { return($magicmode); }
+sub get_magicmode_comp_key { return($magicmode_comp); }
+
 #####
 
 sub _get_filec {
