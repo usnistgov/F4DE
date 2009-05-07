@@ -9,5 +9,5 @@ all:
 install:
 	@echo "Nothing to do for install"
 
-check:	${CLEARDTViperValidator_tester_dir}/Makefile
+check:	${CLEARDTViperValidator_tester_dir}/Makefile ${CLEARDTViperValidator}
 	@(cd ${CLEARDTViperValidator_tester_dir}; make $@)

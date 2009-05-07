@@ -9,5 +9,5 @@ all:
 install:
 	@echo "Nothing to do for install"
 
-check:	${CLEARTRScorer_tester_dir}/Makefile
+check:	${CLEARTRScorer_tester_dir}/Makefile ${CLEARTRScorer}
 	@(cd ${CLEARTRScorer_tester_dir}; make $@)

@@ -9,5 +9,5 @@ all:
 install:
 	@echo "Nothing to do for install"
 
-check:	${TV08ViperValidator_tester_dir}/Makefile
+check:	${TV08ViperValidator_tester_dir}/Makefile ${TV08ViperValidator}
 	@(cd ${TV08ViperValidator_tester_dir}; make $@)
