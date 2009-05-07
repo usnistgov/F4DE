@@ -1,0 +1,38 @@
+[[COMMANDLINE]] ../../tools/AVSS09Scorer/AVSS09Scorer.pl --CLEARxsd ../../../CLEAR07/data --Validator ../../tools/AVSS09ViPERValidator/AVSS09ViPERValidator.pl --Scorer ../../../CLEAR07/tools/CLEARDTScorer/CLEARDTScorer.pl ../common/MCTTR0202a.empty.xml -g ../common/MCTTR0202a.clear.xml -w /tmp/AVSS09Scorer_tester-Temp_test1
+[[RETURN CODE]] 0
+[[STDOUT]]
+
+
+***** STEP 1: Validation
+** Validating and Generating SYS Sequence MemDump
+- Working on SYS file: ../common/MCTTR0202a.empty.xml
+** Validating and Generating GTF Sequence MemDump
+- Working on GTF file: ../common/MCTTR0202a.clear.xml
+
+
+***** STEP 2: Scoring
+
+
+**** Scoring results:
+-- Beg ----------
+** Detection and Tracking Results:
+../../../CLEAR07/tools/CLEARDTScorer/CLEARDTScorer.pl--CLEARxsd ../../../CLEAR07/data --Domain SV --Eval Area /tmp/AVSS09Scorer_tester-Temp_test1/01-Validation/01-SYS/MCTTR0202a/MCTTR0202a.empty.xml.SSmemdump --gtf /tmp/AVSS09Scorer_tester-Temp_test1/01-Validation/00-GTF/MCTTR0202a/MCTTR0202a.clear.xml.SSmemdump
+
+Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+     Reference File      System Output File       Video       Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    
+--------------------------------------------------------------------------------------------------------------------------------
+  MCTTR0202A.CLEAR.XML  MCTTR0202A.EMPTY.XML  MCTTR0202A.MOV  PERSON  0.984323  0.000000  0.000000  0.000000  0.000000  0.000000
+
+
+***** DONE *****
+
+-- End ----------
+For more details, see: /tmp/AVSS09Scorer_tester-Temp_test1/02-Scoring/scoring.log
+
+
+***** Done *****
+
+
+[[STDERR]]
+
