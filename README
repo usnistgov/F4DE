@@ -33,6 +33,7 @@ The only pre-requisites of the tool are:
 - some Perl modules (available on CPAN [http://www.cpan.org/]). Availibility
   of those will be tested during step 1 ('make check') of the installation
   process.
+- the 'rsync' tool available in your PATH (used in the installation process)
 
 Installation is a 4 step process:
 
