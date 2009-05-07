@@ -250,10 +250,15 @@ foreach my $ref_sys_pair (@files_to_be_processed){
     &add_data2sat($results, $ndone+1, $gtSequence->getSeqFileName, $sysSequence->getSeqFileName, $gtSequence->getSourceFileName, $ref_eval_obj, $eval_type, $sfda, $ata, $moda, $modp, $mota, $motp);
     $ndone++;
     next;
+  } elsif (MMisc::is_blank($ref_eval_obj)) {
+    $ref_eval_obj = $sys_eval_obj; 
+  } elsif (MMisc::is_blank($sys_eval_obj)) {
+    $sys_eval_obj = $ref_eval_obj; 
   }
-  elsif (MMisc::is_blank($ref_eval_obj)) { $ref_eval_obj = $sys_eval_obj; }
-  elsif ($ref_eval_obj ne $sys_eval_obj) { MMisc::error_quit("Not possible to evaluate two different evaluation objects. Ground truth object: $ref_eval_obj\t System output object: $sys_eval_obj\n"); }
-
+  
+  MMisc::error_quit("Not possible to evaluate two different evaluation objects. Ground truth object: $ref_eval_obj\t System output object: $sys_eval_obj\n")
+      if ($ref_eval_obj ne $sys_eval_obj);
+  
   $sfda = $gtSequence->computeSFDA($sysSequence, $eval_type, $det_thres, $bin);
   MMisc::error_quit("Error computing 'SFDA' (" . $gtSequence->get_errormsg() . ")")
       if ($gtSequence->error());
