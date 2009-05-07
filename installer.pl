@@ -85,7 +85,7 @@ sub _cp {
   $fe =~ s%^.+/([^/]+)$%$1%;
   my $dfile = "$fdd/$fe";
   $dfile =~ s%\.[^\.]+$%% if ($remext);
-  `cp $file $dfile`;
+  `rsync -a $file $dfile`;
   error_quit("ERROR: copying file ($file -> $dfile)\n")
     if ((! -e $dfile) && (! -f $dfile));
   &_chmodx($dfile);
