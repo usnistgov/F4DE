@@ -727,6 +727,18 @@ sub get_txt_last_Xlines {
   return(@toshowa);
 }
 
+##########
+
+sub cmd_which {
+  my $cmd = shift @_;
+  
+  my ($retcode, $stdout, $stderr) = &do_system_call('which', $cmd);
+  
+  return(undef) if ($retcode != 0);
+
+  return($stdout);
+}
+
 ####################
 
 sub warn_print {
