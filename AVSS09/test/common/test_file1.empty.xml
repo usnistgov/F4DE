@@ -20,7 +20,7 @@
     <descriptor name="I-FRAMES" type="OBJECT"/>
   </config>
   <data>
-    <sourcefile filename="file://MCT_TR_02/MCTTR02a/MCTTR0201a.mov">
+    <sourcefile filename="test_file1.mov">
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
           <data:fvalue value="1.0"/>
