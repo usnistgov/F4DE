@@ -92,7 +92,7 @@ sub save_ScoringSequence_MemDump {
 ##########
 
 sub load_ViperFile {
-  my ($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath) = @_;
+  my ($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode) = @_;
 
   return(0, undef, "file does not exists") 
     if (! -e $filename);
@@ -110,20 +110,20 @@ sub load_ViperFile {
   close FILE;
   chomp $header;
 
-  return(&_load_MemDump_ViperFile($isgtf, $filename))
+  return(&_load_MemDump_ViperFile($isgtf, $filename, $spmode))
     if ( ($header eq $VF_MemDump_FileHeader_cmp)
 	|| ($header eq $VF_MemDump_FileHeader_gz_cmp) );
   
-  return(&_load_XML_ViperFile($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath));
+  return(&_load_XML_ViperFile($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode));
 }
 
 #####
 
 sub _load_XML_ViperFile {
-  my ($isgtf, $tmp, $evaldomain, $frameTol, $xmllint, $xsdpath) = @_;
+  my ($isgtf, $tmp, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode) = @_;
 
   # Prepare the object
-  my $object = new CLEARDTViperFile($evaldomain);
+  my $object = new CLEARDTViperFile($evaldomain, $spmode);
 
   return(0, undef, "While trying to set \'frameTol\' ("
          . $object->get_errormsg() . ")")
@@ -155,7 +155,7 @@ sub _load_XML_ViperFile {
 #####
 
 sub _load_MemDump_ViperFile {
-  my ($isgtf, $file) = @_;
+  my ($isgtf, $file, $spmode) = @_;
 
   my $object = MMisc::load_memory_object($file, $VF_MemDump_FileHeader_gz);
 
@@ -171,6 +171,11 @@ sub _load_MemDump_ViperFile {
   return(0, undef, $rtxt . $object->get_errormsg())
     if ($object->error());
 
+  # Special mode
+  $spmode = MMisc::iuv($spmode, "");
+  $object->set_spmode($spmode)
+    if (! MMisc::is_blank($spmode));
+
   # Validate
   return(0, undef, $rtxt . $object->get_errormsg())
     if (! $object->is_validated());
@@ -182,14 +187,15 @@ sub _load_MemDump_ViperFile {
   return(0, undef, $rtxt . "Object is not SYS as expected")
     if ( (! $isgtf) && (! $object->check_if_sys()) );
 
-  $object->set_required_hashes($object->get_domain());
+  $object->set_required_hashes($object->get_domain(), $object->get_spmode());
+
   return(1, $object, $rtxt . "validates");
 }
 
 #####
 
 sub load_ScoringSequence {
-  my ($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath) = @_;
+  my ($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode) = @_;
 
   return(0, undef, "file does not exists") 
     if (! -e $filename);
@@ -211,16 +217,16 @@ sub load_ScoringSequence {
     if ( ($header eq $SS_MemDump_FileHeader_cmp)
 	|| ($header eq $SS_MemDump_FileHeader_gz_cmp) );
   
-  return(&_load_ScoringSequence_from_XML($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath));
+  return(&_load_ScoringSequence_from_XML($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode));
 
 }
 
 #####
 
 sub _load_ScoringSequence_from_XML {
-  my ($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath) = @_;
+  my ($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode) = @_;
 
-  my ($ok, $object, $txt) = &load_ViperFile($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath);
+  my ($ok, $object, $txt) = &load_ViperFile($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode);
   return(0, undef, $txt) if (! $ok);
 
   my @ok_objects = $object->get_full_objects_list();
