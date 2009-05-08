@@ -201,6 +201,11 @@ my %not_gtf_required_dummy_values =
    $not_gtf_required_objects_attributes[1] => 0,
   );
 
+my @spmode_ok_list = 
+  (
+   "AVSS09", # AVSS09 Evaluation
+  ); # Order is important
+
 ##########
 # Default values to compare against (constant values)
 my $default_error_value = "default_error_value";
@@ -222,13 +227,15 @@ my $check_ids_are_consecutive = 0;
 sub new {
   my ($class) = shift @_;
 
-  my $errortxt = (scalar @_ > 1) ? "CLEARDTViperFile takes maximum of 1 parameter (evaluation domain)" : "";
-  my $evaldomain = (scalar @_ == 1) ? shift @_ : "";
+  my $errortxt = (scalar @_ > 2) ? "CLEARDTViperFile takes maximum of 2 parameter (evaluation domain, special mode)" : "";
+  my $evaldomain = MMisc::iuv(shift @_,  "");
+  my $spmode = MMisc::iuv(shift @_, "");
 
   # If the evaluation domain is not known at this point, we will set the required hashes later when 
   # the command line options are processed. This is for 'dummy' object that is used to do checks 
   # before processing files.
-  &_fill_required_hashes($evaldomain) if (! MMisc::is_blank($evaldomain));
+  &_fill_required_hashes($evaldomain, $spmode)
+    if (! MMisc::is_blank($evaldomain));
 
   ## Run the ViperFramespan test_unit just to be sure
   my $fs_tmp = ViperFramespan->new();
@@ -252,6 +259,7 @@ sub new {
      validated      => 0, # To confirm file was validated
      tol_in_frames  => 0, # The frame tolerance allowed for attributes to be outside of the object framespan 
      fs_framespan_max => $fs_tmp,
+     spmode         => $spmode, # Special mode (so far AVSS09 only)
      errormsg       => $errormsg,
     };
 
@@ -263,7 +271,9 @@ sub new {
 
 sub _fill_required_hashes {
   my $evaldomain = shift @_;
+  my $spmode = shift @_;
   my $checkFlag = 0;
+
   for (my $outloop = 0; $outloop < scalar @ok_objects; $outloop++) {
     my $key = $ok_objects[$outloop];
     my $domain;
@@ -345,12 +355,41 @@ sub _fill_required_hashes {
     $hash_objects_attributes_types_default{$key}{0} = \%sys_hash_object_attributes_types_default;
   }
 
-  if (! $checkFlag) { die("Unsupported object-domain pair (Input file contains objects that are not supported in '$evaldomain')"); }
+  MMisc::error_quit("Unsupported object-domain pair (Input file contains objects that are not supported in '$evaldomain')")
+      if (! $checkFlag);
+
+  ## Special Modes
+#  print "hash_objects_attributes_types:\n" . MMisc::get_sorted_MemDump(\%hash_objects_attributes_types) . "\n\n\n";
+#  print "opt_list_objects_attributes:\n" . MMisc::get_sorted_MemDump(\%opt_list_objects_attributes);
+#  MMisc::ok_quit();
+
+  if ($spmode eq $spmode_ok_list[0]) { # AVSS09
+    MMisc::error_quit("AVSS09 mode is only usable for Surveillance type domain")
+        if ($evaldomain ne "SV");
+
+    ## FRAME
+    # SYS: No EVALUATE
+    delete $hash_objects_attributes_types{'FRAME'}{'0'}{'EVALUATE'};
+    # REF: No CROWD, MULTIPLE TEXT AREAS, MULTIPLE VEHICLE, MULTIPLE VEHICLES
+    delete $hash_objects_attributes_types{'FRAME'}{'1'}{'CROWD'};
+    delete $hash_objects_attributes_types{'FRAME'}{'1'}{'MULTIPLE TEXT AREAS'};
+    delete $hash_objects_attributes_types{'FRAME'}{'1'}{'MULTIPLE VEHICLE'};
+    delete $hash_objects_attributes_types{'FRAME'}{'1'}{'MULTIPLE VEHICLES'};
+
+    ## PERSON
+    # REF: No MOBILITY
+    delete $hash_objects_attributes_types{'PERSON'}{'1'}{'MOBILITY'};
+
+    ## VEHICLE: Not authorized
+    delete $hash_objects_attributes_types{'VEHICLE'};
+  }
 }
 
+#####
+
 sub set_required_hashes {
-  my ($self, $evaldomain) = @_;
-  &_fill_required_hashes($evaldomain);
+  my ($self, $evaldomain, $spmode) = @_;
+  &_fill_required_hashes($evaldomain, $spmode);
   $self->_set_domain($evaldomain);
 }
 
@@ -2671,6 +2710,55 @@ sub get_values_from_array_of_hashes {
   return @out;
 }
 
+################################################## Special Modes
+
+sub get_spmode_list { return(@spmode_ok_list); }
+
+#####
+
+sub get_AVSS09_spmode_key { return($spmode_ok_list[0]); }
+
+#####
+
+sub is_spmode_ok {
+  my ($self) = shift @_;
+  my ($mode) = shift @_;
+
+  if (! grep(m%^$mode$%, @spmode_ok_list)) {
+    $self->_set_errormsg("Unknow special mode ($mode)");
+    return(0);
+  }
+
+  return(1);
+}
+
+##### 
+
+sub set_spmode {
+  my ($self) = shift @_;
+  my ($mode) = shift @_;
+
+  my $t = $self->get_spmode();
+  if ((! MMisc::is_blank($t)) && ($t ne $mode)) {
+    $self->_set_errormsg("Special mode already set to \"$t\", can not change to \"$mode\"");
+    return(0);
+  }
+
+  $self->is_spmode_ok($mode);
+  return(0) if ($self->error());
+
+  return(1);
+}
+
+##### 
+  
+sub get_spmode {
+  my ($self) = shift @_;
+
+  return($self->{spmode});
+}
+
+  
 ########################################
 
 1;
