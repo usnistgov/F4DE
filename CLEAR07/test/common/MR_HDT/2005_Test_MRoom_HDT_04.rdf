@@ -57,7 +57,7 @@
         <descriptor name="I-Frames" type="OBJECT"/>
     </config>
     <data>
-        <sourcefile filename="file:/C:/Documents%20and%20Settings/aboltz/Desktop/ViPER/Video/MRoom_Hand_Test/NIST_20011115-1050_c02_NONE.mpg">
+        <sourcefile filename="NIST_20011115-1050_c02_NONE.mpg">
             <file id="0" name="Information">
                 <attribute name="SOURCETYPE"/>
                 <attribute name="NUMFRAMES">

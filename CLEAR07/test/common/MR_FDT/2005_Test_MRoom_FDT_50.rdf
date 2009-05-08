@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
   <data>
-    <sourcefile filename="file:/C:/Documents%20and%20Settings/cbloom/Desktop/MR_Face_TestAnnotation/Double_MR_Face_Test/core_clips/50/NIST_20021003-1416_c05_NONE.mpg">
+    <sourcefile filename="NIST_20021003-1416_c05_NONE.mpg">
       <file id="0" name="Information">
                 <attribute name="SOURCETYPE"/>
                 <attribute name="NUMFRAMES">
