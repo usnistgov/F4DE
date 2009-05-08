@@ -1,0 +1,18 @@
+[[COMMANDLINE]] ../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/SV_VDT/*.rdf -g ../common/SV_VDT/*.gtf -D SV -E Area
+[[RETURN CODE]] 0
+[[STDOUT]]
+** Detection and Tracking Results:
+../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/SV_VDT/2006_Test_Surveillance_VDT_15.rdf -g ../common/SV_VDT/2006_Test_Surveillance_VDT_15.gtf -D SV -E Area
+
+Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+           Reference File                   System Output File                   Video           Object     SFDA      ATA       MODA      MODP      MOTA      MOTP    
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  2006_TEST_SURVEILLANCE_VDT_15.GTF  2006_TEST_SURVEILLANCE_VDT_15.RDF  PVTRA102A10.MOV.OUT.MPG  VEHICLE  0.569149  0.334860  0.610092  0.596127  0.591743  0.602392
+
+
+***** DONE *****
+
+
+[[STDERR]]
+

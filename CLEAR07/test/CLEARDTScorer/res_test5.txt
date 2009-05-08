@@ -1,0 +1,18 @@
+[[COMMANDLINE]] ../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/MR_HDT/*.rdf -g ../common/MR_HDT/*.gtf -D MR -E Point
+[[RETURN CODE]] 0
+[[STDOUT]]
+** Detection and Tracking Results:
+../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/MR_HDT/2005_Test_MRoom_HDT_04.rdf -g ../common/MR_HDT/2005_Test_MRoom_HDT_04.gtf -D MR -E Point
+
+Distance Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+        Reference File            System Output File                   Video               Object   SFDA-D    ATA-D      MODA     MODP-D     MOTA     MOTP-D   
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+  2005_TEST_MROOM_HDT_04.GTF  2005_TEST_MROOM_HDT_04.RDF  NIST_20011115-1050_C02_NONE.MPG    HAND  0.902243  0.903974  0.853730  0.968427  0.853730  0.968431
+
+
+***** DONE *****
+
+
+[[STDERR]]
+

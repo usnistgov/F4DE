@@ -1,7 +1,7 @@
-[[COMMANDLINE]] ../../tools/CLEARDTViperValidator/CLEARDTViperValidator.pl ../common/MMR_FDT/PPATT_F0206_P_2006_Test_Meetings_FDT_10_01.rdf -D MR -w
+[[COMMANDLINE]] ../../tools/CLEARDTViperValidator/CLEARDTViperValidator.pl ../common/MMR_FDT/*.rdf -D MR -w
 [[RETURN CODE]] 0
 [[STDOUT]]
-../common/MMR_FDT/PPATT_F0206_P_2006_Test_Meetings_FDT_10_01.rdf: validates
+../common/MMR_FDT/2006_Test_MRoom_FDT_10.rdf: validates
 ** XML re-Representation:
 <?xml version="1.0" encoding="UTF-8"?>
 <viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
@@ -28,7 +28,7 @@
     </descriptor>
   </config>
   <data>
-    <sourcefile filename="file:/C:/Documents%20and%20Settings/sprasad/Desktop/NIST/CMU_20050914-0900.cam4.mpg">
+    <sourcefile filename="CMU_20050914-0900.cam4.mpg">
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
           <data:fvalue value="1.0"/>

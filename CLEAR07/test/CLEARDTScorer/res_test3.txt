@@ -1,0 +1,18 @@
+[[COMMANDLINE]] ../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/MMR_FDT/*.rdf -g ../common/MMR_FDT/*.gtf -D MR -E Area
+[[RETURN CODE]] 0
+[[STDOUT]]
+** Detection and Tracking Results:
+../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/MMR_FDT/2006_Test_MRoom_FDT_10.rdf -g ../common/MMR_FDT/2006_Test_MRoom_FDT_10.gtf -D MR -E Area
+
+Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+        Reference File            System Output File                Video             Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+  2006_TEST_MROOM_FDT_10.GTF  2006_TEST_MROOM_FDT_10.RDF  CMU_20050914-0900.CAM4.MPG    FACE  0.636839  0.395568  0.761134  0.710317  0.761134  0.693528
+
+
+***** DONE *****
+
+
+[[STDERR]]
+

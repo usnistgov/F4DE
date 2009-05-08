@@ -1,7 +1,7 @@
-[[COMMANDLINE]] ../../tools/CLEARDTViperValidator/CLEARDTViperValidator.pl ../common/UV_VDT/XXUSC_Track_P_2005_UAV_VDT_14_01.rdf -D UV -w -f 15
+[[COMMANDLINE]] ../../tools/CLEARDTViperValidator/CLEARDTViperValidator.pl ../common/UV_VDT/*.rdf -D UV -w -f 15
 [[RETURN CODE]] 0
 [[STDOUT]]
-../common/UV_VDT/XXUSC_Track_P_2005_UAV_VDT_14_01.rdf: validates
+../common/UV_VDT/2005_Test_UAV_VDT_14.rdf: validates
 ** XML re-Representation:
 <?xml version="1.0" encoding="UTF-8"?>
 <viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
@@ -29,7 +29,7 @@
     </descriptor>
   </config>
   <data>
-    <sourcefile filename="file:/C:/Documents%20and%20Settings/sprasad/Desktop/vehicle_uav_test/V4V300004_023.mpg">
+    <sourcefile filename="V4V300004_023.mpg">
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
           <data:fvalue value="1.0"/>

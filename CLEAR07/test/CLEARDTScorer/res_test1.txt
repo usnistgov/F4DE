@@ -1,0 +1,18 @@
+[[COMMANDLINE]] ../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/BN_FDT/*.rdf -g ../common/BN_FDT/*.gtf -D BN -E Area
+[[RETURN CODE]] 0
+[[STDOUT]]
+** Detection and Tracking Results:
+../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/BN_FDT/2005_Test_BNews_FDT_05.rdf -g ../common/BN_FDT/2005_Test_BNews_FDT_05.gtf -D BN -E Area
+
+Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+        Reference File            System Output File                  Video               Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+  2005_TEST_BNEWS_FDT_05.GTF  2005_TEST_BNEWS_FDT_05.RDF  19980410_1830_1900_ABC_WNT.MPG    FACE  0.748024  0.503881  0.683486  0.750776  0.669725  0.745839
+
+
+***** DONE *****
+
+
+[[STDERR]]
+

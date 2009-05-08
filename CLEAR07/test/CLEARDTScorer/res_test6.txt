@@ -1,0 +1,18 @@
+[[COMMANDLINE]] ../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/MR_PDT/*.rdf -g ../common/MR_PDT/*.gtf -D MR -E Area
+[[RETURN CODE]] 0
+[[STDOUT]]
+** Detection and Tracking Results:
+../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/MR_PDT/2005_Test_MRoom_PDT_10.rdf -g ../common/MR_PDT/2005_Test_MRoom_PDT_10.gtf -D MR -E Area
+
+Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+        Reference File            System Output File                   Video               Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+  2005_TEST_MROOM_PDT_10.GTF  2005_TEST_MROOM_PDT_10.RDF  NIST_20020911-1033_C05_NONE.MPG  PERSON  0.544998  0.220220  0.566265  0.491156  0.560241  0.484199
+
+
+***** DONE *****
+
+
+[[STDERR]]
+

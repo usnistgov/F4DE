@@ -1,0 +1,18 @@
+[[COMMANDLINE]] ../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/SV_PDT/*.rdf -g ../common/SV_PDT/*.gtf -D SV -E Area
+[[RETURN CODE]] 0
+[[STDOUT]]
+** Detection and Tracking Results:
+../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/SV_PDT/2006_Test_Surveillance_PDT_04.rdf -g ../common/SV_PDT/2006_Test_Surveillance_PDT_04.gtf -D SV -E Area
+
+Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
+
+           Reference File                   System Output File                   Video           Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  2006_TEST_SURVEILLANCE_PDT_04.GTF  2006_TEST_SURVEILLANCE_PDT_04.RDF  PVTRA102A03.MOV.OUT.MPG  PERSON  0.568060  0.328387  0.623158  0.596664  0.614737  0.649441
+
+
+***** DONE *****
+
+
+[[STDERR]]
+
