@@ -13,7 +13,7 @@
 </descriptor>
 </config>
 <data>
-<sourcefile filename="file:/E:/NIST_20020911-1033/NIST_20020911-1033_c05_NONE.mpg"><file id="0" name="Information">
+<sourcefile filename="NIST_20020911-1033_c05_NONE.mpg"><file id="0" name="Information">
                 <attribute name="SOURCETYPE"/>
                 <attribute name="NUMFRAMES">
                     <data:dvalue value="64705"/>
