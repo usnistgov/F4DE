@@ -78,7 +78,7 @@
 <descriptor name="I-Frames" type="OBJECT" /> 
 </config> 
 <data> 
-<sourcefile filename="file:/C:/Documents%20and%20Settings/sprasad/Desktop/vehicle_uav_test/V4V300004_023.mpg"> 
+<sourcefile filename="V4V300004_023.mpg"> 
 <file id="0" name="Information">
                 <attribute name="SOURCETYPE"/>
                 <attribute name="NUMFRAMES">

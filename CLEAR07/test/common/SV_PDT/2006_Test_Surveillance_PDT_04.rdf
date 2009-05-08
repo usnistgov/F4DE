@@ -13,7 +13,7 @@
 </descriptor>                     
 </config>                     
 <data>                     
-<sourcefile filename="file:/C:/Documents%20and%20Settings/tseibert/Desktop/personal%20surveilance%20test/Person%20and%20Vehicle%20clips/PVTRA102a03.mov.out.mpg"><file id="0" name="Information">
+<sourcefile filename="PVTRA102a03.mov.out.mpg"><file id="0" name="Information">
                 <attribute name="SOURCETYPE"/>
                 <attribute name="NUMFRAMES">
                     <data:dvalue value="5512"/>
