@@ -21,15 +21,15 @@ my $tn = ""; # Test name
 
 ##
 $tn = "test1";
-$testr += &do_simple_test($tn, "(Empty SYS vs GTF)", "$tool ../common/MCTTR0202a.empty.xml -g ../common/MCTTR0202a.clear.xml", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(Empty SYS vs GTF)", "$tool ../common/test_file2.empty.xml -g ../common/test_file2.clear.xml", "res_$tn.txt");
 
 ##
 $tn = "test2";
-$testr += &do_simple_test($tn, "(Starter SYS vs GTF)", "$tool ../common/MCTTR0202a.ss.xml -g ../common/MCTTR0202a.clear.xml", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(Starter SYS vs GTF)", "$tool ../common/test_file2.ss.xml -g ../common/test_file2.clear.xml", "res_$tn.txt");
 
 ##
 $tn = "test3";
-$testr += &do_simple_test($tn, "(Full SYS vs GTF)", "$tool ../common/MCTTR0202a.sys.xml -g ../common/MCTTR0202a.clear.xml", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(Full SYS vs GTF)", "$tool ../common/test_file2.sys.xml -g ../common/test_file2.clear.xml", "res_$tn.txt");
 
 #####
 

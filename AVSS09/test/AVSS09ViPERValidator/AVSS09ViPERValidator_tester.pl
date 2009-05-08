@@ -21,11 +21,11 @@ my $tn = ""; # Test name
 
 ##
 $tn = "test1";
-$testr += &do_simple_test($tn, "(GTF files check)", "$tool ../common/MCTTR0201a.clear.xml ../common/MCTTR0202a.clear.xml -g -w", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(GTF files check)", "$tool ../common/test_file?.clear.xml -g -w", "res_$tn.txt");
 
 ##
 $tn = "test2";
-$testr += &do_simple_test($tn, "(SYS files check)", "$tool ../common/MCTTR0201a.sys.xml ../common/MCTTR0202a.sys.xml -w", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(SYS files check)", "$tool ../common/test_file?.sys.xml ../common/test_file?.ss.xml -w", "res_$tn.txt");
 
 #####
 
