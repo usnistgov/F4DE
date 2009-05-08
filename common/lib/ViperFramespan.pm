@@ -1498,6 +1498,19 @@ sub value_shift {
   return($self->set_value($fs));
 }
 
+#####
+
+sub value_shift_auto {
+  my ($self, $val) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->negative_value_shift(-$val))
+    if ($val < 0);
+
+  return($self->value_shift($val));
+}
+
 ######################################## list of frames
 
 sub list_frames {
