@@ -87,6 +87,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 my $dummy = new CLEARDTViperFile();
 my @ok_objects = $dummy->get_full_objects_list();
 my @xsdfilesl = $dummy->get_required_xsd_files_list();
+my @spmode_list = $dummy->get_spmode_list();
 # We will use the '$dummy' to do checks before processing files
 
 ########################################
@@ -109,14 +110,15 @@ my $evaldomain  = undef;
 my $eval_type   = undef;
 my $bin         = 0;
 my $writeres    = "";
+my $spmode      = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   CDEF  I   M              b d fgh           t vwx    #
+# Used:   CDEF  I   M     S        b d fgh           t vwx    #
 
 my %opt;
 my $dbgftmp = "";
 
-my $commandline = $0 . join(" ", @ARGV) . "\n\n";
+my $commandline = $0 . " " . join(" ", @ARGV) . "\n\n";
 my @leftover;
 GetOptions
   (
@@ -136,6 +138,7 @@ GetOptions
    'frameTol=i'      => \$frameTol,
    'writeResults=s'  => \$writeres,   
    'gtf'             => sub {$gtfs++; @leftover = @ARGV},
+   'SpecialMode=s'   => \$spmode,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -162,15 +165,14 @@ if (defined $eval_type) {
 
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
-if ($xmllint ne "") {
-  MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
-    if (! $dummy->set_xmllint($xmllint));
-}
+MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
+  if ((! MMisc::is_blank($xmllint)) && (! $dummy->set_xmllint($xmllint)));
 
-if ($xsdpath ne "") {
-  MMisc::error_quit("While trying to set \'CLEARxsd\' (" . $dummy->get_errormsg() . ")")
-    if (! $dummy->set_xsdpath($xsdpath));
-}
+MMisc::error_quit("While trying to set \'CLEARxsd\' (" . $dummy->get_errormsg() . ")")
+  if ((! MMisc::is_blank($xsdpath)) && (! $dummy->set_xsdpath($xsdpath)));
+
+MMisc::error_quit("Problem with \'SpecialMode\' (" . $dummy->get_errormsg() . ")")
+  if ((! MMisc::is_blank($spmode)) && (! $dummy->is_spmode_ok($spmode)));
 
 MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting")
   if ($gtfs > 1);
@@ -319,7 +321,7 @@ sub load_file {
   my ($isgtf, $tmp) = @_;
 
   my ($retstatus, $object, $msg) = 
-    CLEARDTHelperFunctions::load_ScoringSequence($isgtf, $tmp, $evaldomain, $frameTol, $xmllint, $xsdpath);
+    CLEARDTHelperFunctions::load_ScoringSequence($isgtf, $tmp, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode);
 
   if (! $retstatus) {
     &valerr($tmp, $msg);
@@ -425,10 +427,11 @@ sub _warn_add {
 sub set_usage {
   my $ro = join(" ", @ok_objects);
   my $xsdfiles = join(" ", @xsdfilesl);
+  my $spml = join(" ", @spmode_list);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--xmllint location] [--CLEARxsd location] --Domain name --Eval type [--frameTol framenbr] [--writeResult file] [--detthres value] [--trkthres value] [--bin] [--MissCost value] [--FACost value] [--ISCost value] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help] [--version] [--xmllint location] [--CLEARxsd location] --Domain name --Eval type [--frameTol framenbr] [--writeResult file] [--detthres value] [--trkthres value] [--bin] [--MissCost value] [--FACost value] [--ISCost value] [--SpecialMode mode] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (System vs Truth)
 
@@ -447,6 +450,7 @@ Will Score the XML file(s) provided (System vs Truth)
   --MissCost      Set the Metric's Cost for a Miss (default: $CostMiss)
   --FACost        Set the Metric's Cost for a False Alarm (default: $CostFA)
   --ISCost        Set the Metric's Cost for an ID Switch (default: $CostIS)
+  --SpecialMode   Specify that the scorer is run using the CLEAR metric with a different evaluation rules (authorized modes: $spml)
   --gtf           Specify that the files past this marker on the command line are Ground Truth Files  
 
 Note:
