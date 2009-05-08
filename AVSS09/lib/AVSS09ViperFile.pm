@@ -79,14 +79,32 @@ my @ok_person_elements =
 
 my @ok_objects = ();
 my @xsdfilesl  = ();
+my $cdtspmode = "";
 
 ########################################
+
+sub get_cdtspmode {
+  &__set_cdtspmode() if (MMisc::is_blank($cdtspmode));
+
+  return($cdtspmode);
+}
+
+#####
+
+sub __set_cdtspmode {
+  return if (! MMisc::is_blank($cdtspmode));
+
+  my $dummy = new CLEARDTViperFile();
+  $cdtspmode = $dummy->get_AVSS09_spmode_key();
+}
+
+##########
 
 sub __set_full_objects_list {
   return if (scalar @ok_objects != 0);
 
-    my $dummy = new CLEARDTViperFile();
-    @ok_objects = $dummy->get_full_objects_list();
+  my $dummy = new CLEARDTViperFile($ok_domain, &get_cdtspmode());
+  @ok_objects = $dummy->get_full_objects_list();
 }  
 
 #####
@@ -102,7 +120,7 @@ sub get_full_objects_list {
 sub __set_required_xsd_files_list {
   return if (scalar @xsdfilesl != 0);
 
-  my $dummy = new CLEARDTViperFile();
+  my $dummy = new CLEARDTViperFile($ok_domain, &get_cdtspmode());
   @xsdfilesl = $dummy->get_required_xsd_files_list();
 }
 
@@ -123,7 +141,7 @@ sub new {
   my $errortxt = "";
 
   if (! defined $tmp) {
-    $tmp = CLEARDTViperFile->new($ok_domain);
+    $tmp = CLEARDTViperFile->new($ok_domain, &get_cdtspmode());
     $errortxt .= $tmp->get_errormsg() if ($tmp->error());
   }
 
@@ -448,7 +466,8 @@ sub __check_cldt_validity {
     my @slope = @lope; # Selected "local" ok_person_elements
     @slope = @lope[0..1] if ($issys);
 
-    my ($rin, $rout) = MMisc::compare_arrays(\@keys, @slope);
+#    my ($rin, $rout) = MMisc::compare_arrays(\@keys, @slope);
+    my ($rin, $rout) = MMisc::compare_arrays(\@slope, @keys);
     return($self->_set_error_and_return("Found unknown elements in file [" . join(", ", @$rout) . "]", 0))
       if (scalar @$rout > 0);
 
@@ -509,7 +528,7 @@ sub load_ViperFile {
   my ($isgtf, $filename, $frameTol, $xmllint, $xsdpath) = @_;
 
   my ($ok, $cldt, $msg) = CLEARDTHelperFunctions::load_ViperFile
-    ($isgtf, $filename, $ok_domain, $frameTol, $xmllint, $xsdpath);
+    ($isgtf, $filename, $ok_domain, $frameTol, $xmllint, $xsdpath, &get_cdtspmode());
 
   return($ok, undef, $msg)
     if (! $ok);
@@ -680,13 +699,13 @@ sub __self_fs2vfs {
 sub _shift_fs {
   my ($v, $fss) = @_;
 
-  my ($err, $tmp_fs) = &__fs2vfs($fss);
+  my ($err, $tmp_fs) = &__fs2vfs($v);
   return($err) if (! MMisc::is_blank($err));
 
   # Note: we are using value_shift and not negative_value_shift
   # because we want an error message if the shift create a non
   # valid framespan
-  $tmp_fs->value_shift($fss);
+  $tmp_fs->value_shift_auto($fss);
   return("Shifting framespan value: " . $tmp_fs->get_errormsg())
     if ($tmp_fs->error());
 
