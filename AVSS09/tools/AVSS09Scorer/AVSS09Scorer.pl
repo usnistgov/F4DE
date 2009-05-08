@@ -315,6 +315,7 @@ sub do_scoring {
   $cmd .= " --frameTol $frameTol" if ($opt{'frameTol'});
   $cmd .= " --Domain SV";
   $cmd .= " --Eval Area";
+  $cmd .= " --SpecialMode AVSS09";
 
   my @command = ();
   push @command, $cmd;
