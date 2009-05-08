@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
   <data>
-    <sourcefile filename="file:/C:/Documents%20and%20Settings/jmcnitt/My%20Documents/My%20Videos/19980410_1830_1900_ABC_WNT.mpg">
+    <sourcefile filename="19980410_1830_1900_ABC_WNT.mpg">
       <file id="0" name="Information">
                 <attribute name="SOURCETYPE"/>
                 <attribute name="NUMFRAMES">
