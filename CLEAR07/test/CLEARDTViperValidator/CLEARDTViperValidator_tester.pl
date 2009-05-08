@@ -25,7 +25,7 @@ $testr += &do_simple_test($tn, $td, "(BN FaceDT: Reference files)", "*.gtf", "",
 ##
 $tn = "test-1b";
 $td = "BN_FDT";
-$testr += &do_simple_test($tn, $td, "(BN FaceDT: System submissions)", "", "PPATT_F0904_P_2005_Test_BNews_FDT_02_01.rdf", "-D BN -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN FaceDT: System submissions)", "", "*.rdf", "-D BN -w", "res-$tn.txt");
 
 ##
 $tn = "test-2a";
@@ -45,7 +45,7 @@ $testr += &do_simple_test($tn, $td, "(MRoom-MultiSite FaceDT: Reference files)",
 ##
 $tn = "test-3b";
 $td = "MMR_FDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-MultiSite FaceDT: System submissions)", "", "PPATT_F0206_P_2006_Test_Meetings_FDT_10_01.rdf", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-MultiSite FaceDT: System submissions)", "", "*.rdf", "-D MR -w", "res-$tn.txt");
 
 ##
 $tn = "test-4a";
@@ -60,7 +60,7 @@ $testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: Reference files)", "*.g
 ##
 $tn = "test-5b";
 $td = "MR_FDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: System submissions)", "", "PPATT_F0904_P_2005_Test_Meetings_FDT_01_01.rdf", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: System submissions)", "", "*.rdf", "-D MR -w", "res-$tn.txt");
 
 ##
 $tn = "test-6a";
@@ -100,7 +100,7 @@ $testr += &do_simple_test($tn, $td, "(Surv. PersonDT: Reference files)", "*.gtf"
 ##
 $tn = "test-9b";
 $td = "SV_PDT";
-$testr += &do_simple_test($tn, $td, "(Surv. PersonDT: System submissions)", "", "XXUSC_PDTSYS01_P_2006_Test_Surveillance_PDT_20_01.rdf", "-D SV -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(Surv. PersonDT: System submissions)", "", "*.rdf", "-D SV -w", "res-$tn.txt");
 
 ##
 $tn = "test-10a";
@@ -110,7 +110,7 @@ $testr += &do_simple_test($tn, $td, "(UAV VehicleDT: Reference files)", "*.gtf",
 ##
 $tn = "test-10b";
 $td = "UV_VDT";
-$testr += &do_simple_test($tn, $td, "(UAV VehicleDT: System submissions)", "", "XXUSC_Track_P_2005_UAV_VDT_14_01.rdf", "-D UV -w -f 15", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(UAV VehicleDT: System submissions)", "", "*.rdf", "-D UV -w -f 15", "res-$tn.txt");
 
 #####
 

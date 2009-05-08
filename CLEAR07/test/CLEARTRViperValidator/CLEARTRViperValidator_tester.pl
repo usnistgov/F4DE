@@ -25,7 +25,7 @@ $testr += &do_simple_test($tn, $td, "(BN TextRec: Reference files)", "*.gtf", ""
 ##
 $tn = "test-1b";
 $td = "BN_TR";
-$testr += &do_simple_test($tn, $td, "(BN TextRec: System Submissions)", "", "BBN_VByblos_2006_Test_BNews_TREng_08_01.rdf", "-D BN -w -f 15", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextRec: System Submissions)", "", "*.rdf", "-D BN -w -f 15", "res-$tn.txt");
 
 #####
 

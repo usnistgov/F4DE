@@ -18,51 +18,47 @@ my $tn = "";
 my $td = "";
 
 ##
-$tn = "test-1a";
+$tn = "test-1";
 $td = "BN_FDT";
 $testr += &do_simple_test($tn, $td, "(BN FaceDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D BN -E Area", "res-$tn.txt");
 
 ##
-$tn = "test-2a";
+$tn = "test-2";
 $td = "BN_TDT";
 $testr += &do_simple_test($tn, $td, "(BN TextDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D BN -E Area -f 15", "res-$tn.txt");
 
 ##
-$tn = "test-3a";
+$tn = "test-3";
 $td = "MMR_FDT";
 $testr += &do_simple_test($tn, $td, "(MRoom-MultiSite FaceDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Area", "res-$tn.txt");
 
-# $tn = "test-4a";
-# $td = "MMR_PDT";
-# $testr += &do_simple_test($tn, $td, "(MRoom-MultiSite PersonDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Area", "res-$tn.txt");
-
 ##
-$tn = "test-5a";
+$tn = "test-4";
 $td = "MR_FDT";
 $testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Area", "res-$tn.txt");
 
 ##
-$tn = "test-6a";
+$tn = "test-5";
 $td = "MR_HDT";
 $testr += &do_simple_test($tn, $td, "(MRoom-NIST HandDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Point", "res-$tn.txt");
 
 ##
-$tn = "test-7a";
+$tn = "test-6";
 $td = "MR_PDT";
 $testr += &do_simple_test($tn, $td, "(MRoom-NIST PersonDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Area", "res-$tn.txt");
 
 ##
-$tn = "test-8a";
+$tn = "test-7";
 $td = "SV_PDT";
 $testr += &do_simple_test($tn, $td, "(Surv. PersonDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D SV -E Area", "res-$tn.txt");
 
 ##
-$tn = "test-9a";
+$tn = "test-8";
 $td = "SV_VDT";
 $testr += &do_simple_test($tn, $td, "(Surv. VehicleDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D SV -E Area", "res-$tn.txt");
 
 ##
-$tn = "test-10a";
+$tn = "test-9";
 $td = "UV_VDT";
 $testr += &do_simple_test($tn, $td, "(UAV VehicleDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D UV -E Area -f 15", "res-$tn.txt");
 
