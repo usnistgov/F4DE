@@ -226,7 +226,11 @@ while ($tmp = shift @ARGV) {
   $ndone++;
 }
 
-MMisc::ok_quit("All files processed (Validated: $ndone | Total: $ntodo)\n");
+print "All files processed (Validated: $ndone | Total: $ntodo)\n\n";
+MMisc::error_exit()
+  if ($ndone != $ntodo);
+
+MMisc::ok_exit();
 
 ########## END
 
