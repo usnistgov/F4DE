@@ -1,11 +1,23 @@
 File:  README
-Date:  May 1st , 2009
+Date:  May 8th , 2009
 F4DE Version: 2.0 (beta 1)
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
 software package.  It contains a set of evaluation tools for detection
 evaluations and for specific NIST-coordinated evaluations listed below.
+
+  *  CLEAR07 Evaluation. 
+      - Domains: Broadcast News, Meeting Room, Surveillance and UAV
+      - Mesures: Area and Point
+    - Detection and Tracking (DT) tools:
+      - CLEARDTScorer - The main DT evaluation script.
+      - CLEARDTViperValidator - A syntactic and semantic validator for 
+        both system output ViPER files and reference annotation files.
+    - Text Recognition (TR) tools:
+      - CLEARTRScorer - The main TR evaluation script.
+      - CLEARTRViperValidator - A syntactic and semantic validator for 
+        both system output ViPER files and reference annotation files.
 	
   *  2008 TRECVid Event Detection Evaluation. 
     - TV08Scorer - The main evaluation script. 
@@ -18,6 +30,11 @@ evaluations and for specific NIST-coordinated evaluations listed below.
       a large number of event observations.
     - TV08ED-SubmissionChecker - A tool designed to help confirm submission
       archives before transmitting them to NIST. 
+
+  *  AVSS09 Evaluation.
+    - AVSS09Scorer - The main evaluation script. 
+    - AVSS09ViperValidator - A syntactic and semantic validator for 
+      both system output ViPER files and reference annotation files.
 
 
 INSTALLATION
@@ -76,9 +93,12 @@ with the option '--man'.  For example:
 
    %  TV08Scorer --man
 
-The manual pages contain command line examples for each tool.  To try
-some command lines with data files, go to the testing directories in
-'TrecVid08/test/<TOOLNAME>' and try the command lines printed on the
+The manual pages contain command line examples for each tool.
+
+To try some command lines with data files, go to the testing directories
+relative to the evaluation tool you are trying to test, in 
+'CLEAR/test/<TOOLNAME>', 'TrecVid08/test/<TOOLNAME>' or 
+'AVSS09/test/<TOOLNAME>' and try the command lines printed on the
 first line of the res*.txt test case files.
 
 
