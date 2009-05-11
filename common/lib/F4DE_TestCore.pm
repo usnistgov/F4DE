@@ -3,10 +3,15 @@ package F4DE_TestCore;
 use strict;
 use MMisc;
 
+my $env_mmcadd = "F4DE_TEST_MMC_ADD";
+my $env_testonly = "F4DE_TEST_ONLY";
+
 my $magicmode = "makecheckfiles"; # And the magic word is ...
 my $magicmode_comp = "makecompcheckfiles";
 my @magicmodes = ($magicmode, $magicmode_comp);
-my $mmc_add = $ENV{TEST_MMC_ADD} || "-comp";
+
+my $mmc_add = $ENV{$env_mmcadd} || "-comp";
+
 my $dev = "F4DE_TestCore default error value";
 my $lts = 10;                   # lines to show
 
@@ -15,7 +20,34 @@ my $lts = 10;                   # lines to show
 sub get_magicmode_key { return($magicmode); }
 sub get_magicmode_comp_key { return($magicmode_comp); }
 
+##########
+
+sub get_mmcadd_env { return($env_mmcadd); }
+sub get_testonly_env { return($env_testonly); }
+
 #####
+
+sub set_mmcadd_env {
+  my $val = shift @_;
+
+  MMisc::error_quit("Can not set \"$env_mmcadd\" to an empty value")
+      if (MMisc::is_blank($val));
+
+  $env_mmcadd = $val;
+}
+
+#####
+
+sub set_testonly_env {
+  my $val = shift @_;
+
+  MMisc::error_quit("Can not set \"$env_testonly\" to an empty value")
+      if (MMisc::is_blank($val));
+
+  $env_testonly = $val;
+}
+
+###############
 
 sub _get_filec {
   my $f = shift @_;
@@ -35,8 +67,8 @@ sub make_syscall {
   my ($wrote, $otxt, $stdout, $stderr, $retcode) 
     = MMisc::write_syscall_logfile($ofile, @command);
 
-  die("F4DE_TestCore Internal Error\n")
-    if (! $wrote);
+  MMisc::error_quit("F4DE_TestCore Internal Error\n")
+      if (! $wrote);
  
   my @toshow = MMisc::get_txt_last_Xlines($stdout, $lts);
 
@@ -116,6 +148,24 @@ sub check_skip {
   }
 
   return(0);
+}
+
+#####
+
+sub check_files {
+  my ($testname, $subtype, $warn_msg, @lstests) = @_;
+  
+  foreach my $lsa (@lstests) {
+    next if (MMisc::ls_ok($lsa));
+
+    &print_name($testname, $subtype);
+    print "Skipped [" . 
+      ((MMisc::is_blank($warn_msg)) ? "not all files present" : $warn_msg ) 
+        ."]\n";
+    return(0);
+  }
+
+  return(1);
 }
 
 #####
@@ -203,8 +253,8 @@ sub _mcfgetf {
     my $sfc = &_get_sfc($v);
     return(0) if ($sfc eq $dev);
     $df .= $mmc_add if ($mode eq $magicmode_comp);
-    die("F4DE_TestCore Internal Error\n")
-      if (! MMisc::writeTo($df, "", 0, 0, $sfc));
+    MMisc::error_quit("F4DE_TestCore Internal Error\n")
+        if (! MMisc::writeTo($df, "", 0, 0, $sfc));
   }
 
   return(1);
@@ -221,7 +271,6 @@ sub _cmp_sfc_dfc {
 
     my $dfc = &_get_dfc($v);
     return(0) if ($dfc eq $dev);
-    
     return(0) if ($sfc ne $dfc);
   }
 
@@ -268,9 +317,9 @@ sub run_complextest {
 sub query_do_test {
   my ($testname) = @_;
 
-  return(1) if (! defined $ENV{TEST_ONLY});
+  return(1) if (! defined $ENV{$env_testonly});
 
-  my @todo = split(" ", $ENV{TEST_ONLY});
+  my @todo = split(" ", $ENV{$env_testonly});
 
   # If no limit, simply do them all
   return(1) if (scalar @todo == 0);
