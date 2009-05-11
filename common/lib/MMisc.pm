@@ -1234,6 +1234,31 @@ sub human_int {
   return($txt);
 }
 
+####################
+
+sub do_ls {
+  return("Empty \"ls\" argument", undef) if (scalar @_ == 0);
+
+  my $cmd = "ls " . join(" ", @_);
+
+  my ($rc, $stdout, $stderr) = &do_system_call($cmd);
+
+  return($stderr, undef) if ($rc);
+
+  return("", $stdout);
+} 
+
+#####
+
+sub ls_ok {
+  my ($err, $val) = &do_ls(@_);
+
+  return(0) if (! defined $val);
+  return(0) if (! MMisc::is_blank($err));
+
+  return(1);
+}
+
 ##########
 ### Added by Jon Fiscus
 ### This routine returns 0 if the value to take the sqrt of is essentially zero, but negative do
