@@ -465,7 +465,7 @@ Can also be set using the B<F4DE_XMLLINT> environment variable.
 
 =head1 USAGE
 
-=item B<AVSS09Scorer --xmllint /local/bin/xmllint --TrecVid08xsd /local/F4DE-CVS/data --writedir /tmp --frameTol 5 sys_test1.xml sys_test2.xml --gtf ref_test1.xml ref_test2.xml>
+=item B<AVSS09Scorer --xmllint /local/bin/xmllint --CLEARxsd /local/F4DE-CVS/data --writedir /tmp --frameTol 5 sys_test1.xml sys_test2.xml --gtf ref_test1.xml ref_test2.xml>
 
 Using the I<xmllint> executable located at I</local/bin/xmllint>, with the required XSD files found in the I</local/F4DE/data> directory, putting all generated files in I</tmp>, and using a frame tolerance of 5 frames, it will use:
 
