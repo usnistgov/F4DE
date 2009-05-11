@@ -56,5 +56,8 @@ sub do_simple_test {
   $totest++;
 
   $testname =~ s%\-%%;
+
+  return(1) if (! F4DE_TestCore::check_files($testname, $subtype, "intentionally", $files));
+
   return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode));
 }
