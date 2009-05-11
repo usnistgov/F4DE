@@ -24,7 +24,7 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - TV08ViperValidator - A syntactic and semantic validator for 
       both system output ViPER files and reference annotation files.
     - TV08MergeHelper - A TRECVid '08 ViPER-formatted file merging program.  
-    - TV08_BigXML_ValidatorHelper - An helper program (that relies 
+    - TV08_BigXML_ValidatorHelper - A helper program (that relies 
       on TV08ViperValidator and TV08MergeHelper) to perform syntactic
       and semantic validation on ViPER-formatted files containing 
       a large number of event observations.
