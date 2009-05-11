@@ -160,8 +160,12 @@ dist_head:
 	@test -f .f4de_version
 	@fgrep F4DE .f4de_version > /dev/null
 
+dist_archive_pre_remove:
+	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/common/{BN_{{F,T}DT,TR},{M,}MR_FDT}/*.rdf
+
 dist_common:
 	@cp .f4de_version /tmp
+	@make dist_archive_pre_remove
 	@echo ""
 	@echo "Building the tar.bz2 file"
 	@echo `cat .f4de_version`"-"`date +%Y%m%d-%H%M`.tar.bz2 > /tmp/.f4de_distname
@@ -170,7 +174,7 @@ dist_common:
 	@echo ""
 	@echo ""
 	@echo "** Release ready:" `cat /tmp/.f4de_distname`
-	@make dist_clean
+#	@make dist_clean
 
 dist_clean:
 	@rm -rf /tmp/`cat .f4de_version`
