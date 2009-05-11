@@ -161,7 +161,14 @@ dist_head:
 	@fgrep F4DE .f4de_version > /dev/null
 
 dist_archive_pre_remove:
+## CLEAR07
+# Sys files
 	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/common/{BN_{{F,T}DT,TR},{M,}MR_FDT}/*.rdf
+# Corresponding "res" files
+	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/CLEARDTViperValidator/res-test-{1,2,3,5}b.txt
+	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/CLEARTRViperValidator/res-test-1b.txt
+	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/CLEARDTScorer/res-test-{1,2,3,4}.txt
+	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/CLEARTRScorer/res-test-1{a,b}.txt
 
 dist_common:
 	@cp .f4de_version /tmp
