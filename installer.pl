@@ -32,8 +32,6 @@ foreach my $f (@srcfiles) {
 }
 error_quit($etxt) if ($etxt ne "");
 
-#ok_quit("[*] ", join("  |  ", @ARGV), "\n");
-
 # Make the destination directory
 my $fdd = "$bdd/$destdir";
 &_mkdir($fdd);
