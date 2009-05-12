@@ -65,9 +65,10 @@ Installation is a 4 step process:
   2. Set the environment variable 'F4DE_BASE' to be the base directory
      of the F4DE software package.
   3. Execute the command 'make install' to copy the executables into 
-     '$F4DE_BASE/bin', perl modules into '$F4DE_BASE/lib', and XSD/Data files
-     into '$F4DE_BASE/lib/data'.
-  4. Add '$F4DE_BASE/bin' to your path environment variable.
+     '$F4DE_BASE/bin', perl modules into '$F4DE_BASE/lib', XSD data files
+     into '$F4DE_BASE/lib/data', and available man pages in '$F4DE_BASE/man'
+  4. Add '$F4DE_BASE/bin' to your PATH environment variable and 
+     '$F4DE_BASE/man' to your MANPATH environment variable
 
 [*] If one of the Tools tests fails, please follow the bug reports submission 
 instructions detailed in the CONTACT section. The command line 
