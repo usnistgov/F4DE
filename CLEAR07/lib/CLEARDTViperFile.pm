@@ -36,9 +36,7 @@ use ViperFramespan;
 use MErrorH;
 use MMisc;
 
-use Data::Dumper;
-use File::Temp qw / tempfile /;
-use File::Basename;
+use MtXML;
 
 use Frame;
 use Object;
@@ -659,21 +657,28 @@ sub _get_fhash {
 ########## 'file'
 
 sub set_file {
-  my ($self, $file) = @_;
+  my ($self, $file, $nocheck) =MMisc::iuav(\@_, undef, "", 0);
 
   return(0) if ($self->error());
 
-  if (! -e $file) {
-    $self->_set_errormsg("File does not exists ($file)");
+  if (MMisc::is_blank($file)) {
+    $self->_set_errormsg("Empty file name");
     return(0);
   }
-  if (! -r $file) {
-    $self->set_errormsg("File is not readable ($file)");
-    return(0);
-  }
-  if (! -f $file) {
-    $self->set_errormsg("Parameter is not a file ($file)");
-    return(0);
+  
+  if (! $nocheck) {
+    if (! -e $file) {
+      $self->_set_errormsg("File does not exists ($file)");
+      return(0);
+    }
+    if (! -r $file) {
+      $self->set_errormsg("File is not readable ($file)");
+      return(0);
+    }
+    if (! -f $file) {
+      $self->set_errormsg("Parameter is not a file ($file)");
+      return(0);
+    }
   }
 
   $self->{file} = $file;
@@ -965,7 +970,7 @@ sub _display_all {
 
   return(-1) if ($self->error());
 
-  return(Dumper(\$self));
+  return(MMisc::get_sorted_MemDump(\$self));
 }
 
 #####
@@ -991,7 +996,7 @@ sub _display {
   my %in = $self->_get_fhash();
   my %out = &_clone_fhash_selected_objects(\%in, @limitto_objects);
 
-  return(Dumper(\%out));
+  return(MMisc::get_sorted_MemDump(\%out));
 }
 
 ########################################
@@ -1074,7 +1079,7 @@ sub _clone_core {
   $clone->set_xmllint($self->get_xmllint(), 1);
   $clone->set_xsdpath($self->get_xsdpath(), 1);
   $clone->set_as_gtf() if ($self->check_if_gtf());
-  $clone->set_file($self->get_file());
+  $clone->set_file($self->get_file(), 1);
   my %in = $self->_get_fhash();
   my %out;
   if ($keep_objects) {
@@ -1283,11 +1288,11 @@ sub _data_cleanup {
 
   # Remove <viper ...> and </viper> header and trailer
   return("Could not find a proper \'viper\' tag, aborting", $bigstring)
-    if (! &_remove_xml_tags("viper", \$bigstring));
+    if (! MtXML::remove_xml_tags("viper", \$bigstring));
 
   # Remove <config> section
   return("Could not find a proper \'config\' section, aborting", $bigstring)
-    if (! &_remove_xml_section("config", \$bigstring) && $isgtf);
+    if (! MtXML::remove_xml_section("config", \$bigstring) && $isgtf);
 
   # At this point, all we ought to have left is the '<data>' content
   return("After initial cleanup, we found more than just viper \'data\', aborting", $bigstring)
@@ -1295,37 +1300,6 @@ sub _data_cleanup {
 
   return("", $bigstring);
 }
-
-####################
-
-sub _remove_xml_tags {
-  my $name = shift @_;
-  my $rstr = shift @_;
-
-  if ($$rstr =~ s%\s*\<${name}(\/\>|\s+[^\>]+\/\>)%%s) {
-    return(1 == 1);
-  } elsif ($$rstr =~ s%\s*\<${name}(\>|\s+[^\>]+\>)(.+?)\<\/${name}\>%$2%s) {
-    return(1 == 1);
-  }
-
-  return(1 == 0);
-}
-
-#####
-
-sub _remove_xml_section {
-  my $name = shift @_;
-  my $rstr = shift @_;
-
-  if ($$rstr =~ s%\s*\<${name}(\/\>|\s+[^\>]+\/\>)%%s) {
-    return(1 == 1);
-  } elsif ($$rstr =~ s%\s*\<${name}(\>|\s+[^\>]+\>).+?\<\/${name}\>%%s) {
-    return(1 == 1);
-  }
-
-  return(1 == 0);
-}
-
 
 ########################################
 
@@ -1339,23 +1313,23 @@ sub _data_processor {
 
   #####
   # First off, confirm the first section is 'data' and remove it
-  my $name = &_get_next_xml_name($string);
+  my $name = MtXML::get_next_xml_name($string, $default_error_value);
   return("Problem obtaining a valid XML name, aborting", $string)
     if ($name eq $default_error_value);
   return("\'data\' section not present (instead: $name), aborting", $string)
     if ($name !~ m%^data$%i);
   return("Problem cleaning \'data\' tags", $string)
-    if (! &_remove_xml_tags($name, \$string));
+    if (! MtXML::remove_xml_tags($name, \$string));
 
   #####
   # Now, the next --and only-- section is to be a 'sourcefile'
-  my $name = &_get_next_xml_name($string);
+  my $name = MtXML::get_next_xml_name($string, $default_error_value);
   return("Problem obtaining a valid XML name, aborting", $string)
     if ($name eq $default_error_value);
   return("\'sourcefile\' section not present (instead: $name), aborting", $string)
     if ($name !~ m%^sourcefile$%i);
   my $tmp = $string;
-  my $section = &_get_named_xml_section($name, \$string);
+  my $section = MtXML::get_named_xml_section($name, \$string, $default_error_value);
   return("Problem obtaining the \'sourcefile\' XML section, aborting", $tmp)
     if ($name eq $default_error_value);
   # And nothing else should be left in the file
@@ -1376,133 +1350,7 @@ sub _data_processor {
   return($res, %fdata);
 }
 
-#################### 
-
-sub _get_next_xml_name {
-  my $str = shift @_;
-  my $txt = $default_error_value;
-
-  if ($str =~ m%^\s*\<\s*([^\>]+)%s) {
-    my $tmp = $1;
-    my @a = split(m%\s+%, $tmp);
-    $txt = $a[0];
-  }
-
-  return($txt);
-}
-
-##########
-
-sub _get_named_xml_section {
-  my $name = shift @_;
-  my $rstr = shift @_;
-
-  my $txt = $default_error_value;
-  
-  if ($$rstr =~ s%\s*(\<${name}(\/\>|\s+[^\>]+\/\>))%%s) {
-    $txt = $1;
-  } elsif ($$rstr =~ s%\s*(\<${name}(\>|\s+[^\>]+\>).+?\<\/${name}\>)%%s) {
-    $txt = $1;
-  }
-
-  return($txt);
-}
-
-##########
-
-sub _get_next_xml_section {
-  my $rstr = shift @_;
-  
-  my $name = $default_error_value;
-  my $section = $default_error_value;
-
-  $name = &_get_next_xml_name($$rstr);
-  if ($name eq $default_error_value) {
-    return($name,  "");
-  }
-
-  $section = &_get_named_xml_section($name, $rstr);
-
-  return($name, $section);
-}
-
-##########
-
-sub _split_xml_tag {
-  my $tag = shift @_;
-
-  my @split = split(m%\=%, $tag);
-  return("", "")
-    if (scalar @split != 2);
-
-  my ($name, $value) = @split;
-  $value =~ s%^\s*\"%%;
-  $value =~ s%\"\s*$%%;
-
-  return($name, $value);
-}
-
 #####
-
-sub _split_xml_tag_list_to_hash {
-  my @list = @_;
-
-  my %hash;
-  foreach my $tag (@list) {
-    my ($name, $value) = &_split_xml_tag($tag);
-    return("Problem splitting inlined attribute ($tag)", ())
-      if (MMisc::is_blank($name));
-
-    return("Inlined attribute ($name) appears to be present multiple times")
-      if (exists $hash{$name});
-    
-    $hash{$name} = $value;
-  }
-
-  return("", %hash);
-}
-
-#####
-
-sub _split_line_into_tags {
-  my $line = shift @_;
-  my @all;
-
-  while ($line =~ s%([^\s]+?)\s*(\=)\s*(\"[^\"]*?\")%%) {
-    push @all, "$1$2$3";
-  }
-  return("Leftover text after tag extraction ($line)", ())
-    if (! MMisc::is_blank($line));
-  
-  return("", @all);
-}
-
-#####
-
-sub _get_inline_xml_attributes {
-  my $name = shift @_;
-  my $str = shift @_;
-
-  my $txt = "";
-  if ($str =~ s%\s*\<${name}(\/\>|\s+[^\>]+\/\>)%%s) {
-    $txt = $1;
-  } elsif ($str =~ s%\s*\<${name}(\>|\s+[^\>]+\>)%%s) {
-    $txt = $1;
-  }
-  $txt =~ s%^\s+%%;
-  $txt =~ s%\/?\>$%%;
-
-  my ($err, @all) = &_split_line_into_tags($txt);
-  return($err, ()) if (! MMisc::is_blank($err));
-  return("", ()) if (scalar @all == 0); # None found
-
-  my ($res, %hash) = &_split_xml_tag_list_to_hash(@all);
-  return($res, ()) if (! MMisc::is_blank($res));
-
-  return("", %hash);
-}
-  
-##########
 
 sub _find_hash_key {
   my $name = shift @_;
@@ -1531,7 +1379,7 @@ sub _parse_sourcefile_section {
   
   #####
   # First, get the inline attributes from the 'sourcefile' inline attribute itself
-  my ($text, %iattr) = &_get_inline_xml_attributes($name, $str);
+  my ($text, %iattr) = MtXML::get_inline_xml_attributes($name, $str);
   return($text, ()) if (! MMisc::is_blank($text));
 
   # We should only have a \'filename\'
@@ -1546,11 +1394,11 @@ sub _parse_sourcefile_section {
   #####
   # We can now remove the \'sourcefile\' header and trailer tags
   return("WEIRD: could not remove the \'$name\' header and trailer tags", ())
-    if (! &_remove_xml_tags($name, \$str));
+    if (! MtXML::remove_xml_tags($name, \$str));
 
   #####
   # Get the 'file' section
-  my $sec = &_get_named_xml_section("file", \$str);
+  my $sec = MtXML::get_named_xml_section("file", \$str, $default_error_value);
   return("No \'file\' section found in the \'sourcefile\'", ())
     if ($sec eq $default_error_value);
   ($text, my %fattr) = $self->_parse_file_section($sec, "file", $isgtf);
@@ -1562,11 +1410,11 @@ sub _parse_sourcefile_section {
 
   ##########
   # Process all that is left in the string (should only be objects)
-  $str = &_clean_begend_spaces($str);
+  $str = MMisc::clean_begend_spaces($str);
   
   my @error_list = ();
   while (! MMisc::is_blank($str)) {
-    my $sec = &_get_named_xml_section("object", \$str);
+    my $sec = MtXML::get_named_xml_section("object", \$str, $default_error_value);
     if ($sec eq $default_error_value) {
        push (@error_list, ("No \'object\' section left in the \'sourcefile\'"));
     } else {
@@ -1628,7 +1476,7 @@ sub _parse_sourcefile_section {
     }        
 
     # Prepare string for the next run
-    $str = &_clean_begend_spaces($str);
+    $str = MMisc::clean_begend_spaces($str);
   }
 
   # Check if the required objects are present
@@ -1688,7 +1536,7 @@ sub _parse_file_section {
   my $isgtf = shift @_;
   my %file_hash;
 
-  my ($text, %attr) = &_get_inline_xml_attributes($wtag, $str);
+  my ($text, %attr) = MtXML::get_inline_xml_attributes($wtag, $str);
   return($text, ()) if (! MMisc::is_blank($text));
 
   my $framespan_max = $framespan_max_default;
@@ -1710,7 +1558,7 @@ sub _parse_file_section {
 
   # Remove the \'file\' header and trailer tags
   return("WEIRD: could not remove the \'$wtag\' header and trailer tags", ())
-    if (! &_remove_xml_tags($wtag, \$str));
+    if (! MtXML::remove_xml_tags($wtag, \$str));
 
   #####
   # Process each "attribute" left now
@@ -1779,7 +1627,7 @@ sub _parse_object_section {
 
   my $tif = $self->get_frame_tolerance();
 
-  my ($text, %attr) = &_get_inline_xml_attributes($wtag, $str);
+  my ($text, %attr) = MtXML::get_inline_xml_attributes($wtag, $str);
   return($text, ()) if (! MMisc::is_blank($text));
 
   my $framespan_max = $self->_get_framespan_max_value();
@@ -1822,7 +1670,7 @@ sub _parse_object_section {
 
   # Remove the \'object\' header and trailer tags
   return("WEIRD: could not remove the \'$wtag\' header and trailer tags", ())
-    if (! &_remove_xml_tags($wtag, \$str));
+    if (! MtXML::remove_xml_tags($wtag, \$str));
 
   #####
   # Process each "attribute" left now
@@ -1930,17 +1778,17 @@ sub _extract_data {
   }
 
   while (! MMisc::is_blank($str)) {
-    my $name = &_get_next_xml_name($str);
+    my $name = MtXML::get_next_xml_name($str, $default_error_value);
     return("Problem obtaining a valid XML name, aborting", $str)
       if ($name eq $default_error_value);
     return("\'data\' extraction process does not seem to have found one, aborting", $str)
       if ($name !~ m%^data\:%i);
-    my $section = &_get_named_xml_section($name, \$str);
+    my $section = MtXML::get_named_xml_section($name, \$str, $default_error_value);
     return("Problem obtaining the \'data\:\' XML section, aborting", "")
       if ($name eq $default_error_value);
 
     # All within a data: entry is inlined, so get the inlined content
-    my ($text, %iattr) = &_get_inline_xml_attributes($name, $section);
+    my ($text, %iattr) = MtXML::get_inline_xml_attributes($name, $section);
     return($text, ()) if (! MMisc::is_blank($text));
 
     # From here we work per 'data:' type
@@ -2036,11 +1884,11 @@ sub _parse_attributes {
   
   # We process all the "attributes"
   while (! MMisc::is_blank($$rstr)) {
-    my $sec = &_get_named_xml_section("attribute", $rstr);
+    my $sec = MtXML::get_named_xml_section("attribute", $rstr, $default_error_value);
     return("Could not find an \'attribute\'", ()) if ($sec eq $default_error_value);
 
     # Get its name
-    my ($text, %iattr) = &_get_inline_xml_attributes("attribute", $sec);
+    my ($text, %iattr) = MtXML::get_inline_xml_attributes("attribute", $sec);
     return($text, ()) if (! MMisc::is_blank($text));
 
     return("Found more than one inline attribute for \'attribute\'", ())
@@ -2052,10 +1900,10 @@ sub _parse_attributes {
 
     # Now get its content
     return("WEIRD: could not remove the \'attribute\' header and trailer tags", ())
-      if (! &_remove_xml_tags("attribute", \$sec));
+      if (! MtXML::remove_xml_tags("attribute", \$sec));
 
     # Process the content
-    $sec = &_clean_begend_spaces($sec);
+    $sec = MMisc::clean_begend_spaces($sec);
     
     if (MMisc::is_blank($sec)) {
       $attrs{uc($name)} = undef;
@@ -2072,17 +1920,6 @@ sub _parse_attributes {
 }
 
 ########################################
-
-sub _clean_begend_spaces {
-  my $txt = shift @_;
-
-  $txt =~ s%^\s+%%s;
-  $txt =~ s%\s+$%%s;
-
-  return($txt);
-}
-
-####################
 
 sub _numerically {
   return($a <=> $b);
