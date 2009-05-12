@@ -37,33 +37,53 @@ install:
 	@make CLEAR07install
 	@make AVSS09install
 
+#####
+
+CM_DIR=common
+
 commoninstall:
 	@make from_installdir
 	@make install_head
 	@echo "** Installing common files"
-	@perl installer.pl ${F4DE_BASE} lib common/lib/*.pm
+	@perl installer.pl ${F4DE_BASE} lib ${CM_DIR}/lib/*.pm
+
+#####
+
+TV08DIR=TrecVid08
+TV08TOOLS=tools/{TV08ED-SubmissionChecker/TV08ED-SubmissionChecker.pl,TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
 
 TV08install:
 	@echo ""
 	@echo "********** Installing TrecVid08 tools"
 	@make commoninstall
 	@echo "** Installing TrecVid08 files"
-	@perl installer.pl ${F4DE_BASE} lib TrecVid08/lib/*.pm
-	@perl installer.pl ${F4DE_BASE} lib/data TrecVid08/data/*.xsd
-	@perl installer.pl -x -r ${F4DE_BASE} bin TrecVid08/tools/TV08ED-SubmissionChecker/TV08ED-SubmissionChecker.pl TrecVid08/tools/TV08MergeHelper/TV08MergeHelper.pl TrecVid08/tools/TV08Scorer/TV08Scorer.pl TrecVid08/tools/TV08ViperValidator/TV08_BigXML_ValidatorHelper.pl TrecVid08/tools/TV08ViperValidator/TV08ViperValidator.pl 
+	@perl installer.pl ${F4DE_BASE} lib ${TV08DIR}/lib/*.pm
+	@perl installer.pl ${F4DE_BASE} lib/data ${TV08DIR}/data/*.xsd
+	@perl installer.pl -x -r ${F4DE_BASE} bin ${TV08DIR}/${TV08TOOLS}
+	@perl installer.pl ${F4DE_BASE} man/man1 ${TV08DIR}/man/*.1
 	@echo ""
 	@echo ""
+
+#####
+
+CL07DIR=CLEAR07
+CL07TOOLS=tools/{CLEARDTScorer/CLEARDTScorer.pl,CLEARDTViperValidator/CLEARDTViperValidator.pl,CLEARTRScorer/CLEARTRScorer.pl,CLEARTRViperValidator/CLEARTRViperValidator.pl}
 
 CLEAR07install:
 	@echo ""
 	@echo "********** Installing CLEAR07 tools"
 	@make commoninstall
 	@echo "** Installing CLEAR07 files"
-	@perl installer.pl ${F4DE_BASE} lib CLEAR07/lib/*.pm
-	@perl installer.pl ${F4DE_BASE} lib/data CLEAR07/data/*.xsd
-	@perl installer.pl -x -r ${F4DE_BASE} bin CLEAR07/tools/CLEARDTScorer/CLEARDTScorer.pl CLEAR07/tools/CLEARDTViperValidator/CLEARDTViperValidator.pl CLEAR07/tools/CLEARTRScorer/CLEARTRScorer.pl CLEAR07/tools/CLEARTRViperValidator/CLEARTRViperValidator.pl
+	@perl installer.pl ${F4DE_BASE} lib ${CL07DIR}/lib/*.pm
+	@perl installer.pl ${F4DE_BASE} lib/data ${CL07DIR}/data/*.xsd
+	@perl installer.pl -x -r ${F4DE_BASE} bin ${CL07DIR}/${CL07TOOLS}
 	@echo ""
 	@echo ""
+
+#####
+
+AV09DIR=AVSS09
+AV09TOOLS=tools/{AVSS09Scorer/AVSS09Scorer.pl,AVSS09ViPERValidator/AVSS09ViPERValidator.pl}
 
 AVSS09install:
 	@echo ""
@@ -71,10 +91,13 @@ AVSS09install:
 	@echo "  (Relies on CLEAR07, running installer)"
 	@make CLEAR07install
 	@echo "** Installing AVSS09 files"
-	@perl installer.pl ${F4DE_BASE} lib AVSS09/lib/*.pm
-	@perl installer.pl -x -r ${F4DE_BASE} bin AVSS09/tools/AVSS09Scorer/AVSS09Scorer.pl AVSS09/tools/AVSS09ViPERValidator/AVSS09ViPERValidator.pl
+	@perl installer.pl ${F4DE_BASE} lib ${AV09DIR}/lib/*.pm
+	@perl installer.pl -x -r ${F4DE_BASE} bin ${AV09DIR}/${AV09TOOLS}
+	@perl installer.pl ${F4DE_BASE} man/man1 ${AV09DIR}/man/*.1
 	@echo ""
 	@echo ""
+
+#####
 
 install_head:
 	@echo "** Checking that the F4DE_BASE environment variable is set"
@@ -101,28 +124,28 @@ check:
 
 TV08check:
 	@echo "***** Running TrecVid08 checks ..."
-	@(cd TrecVid08/test; make check)
+	@(cd ${TV08DIR}/test; make check)
 	@echo ""
 	@echo "***** All TrecVid08 checks ran succesfully"
 	@echo ""
 
 CLEAR07check:
 	@echo "***** Running CLEAR07 checks ..."
-	@(cd CLEAR07/test; make check)
+	@(cd ${CL07DIR}/test; make check)
 	@echo ""
 	@echo "***** All CLEAR07 checks ran succesfully"
 	@echo ""
 
 AVSS09check:
 	@echo "***** Running AVSS09 checks ..."
-	@(cd AVSS09/test; make check)
+	@(cd ${AV09DIR}/test; make check)
 	@echo ""
 	@echo "***** All AVSS09 checks ran succesfully"
 	@echo ""
 
 commoncheck:
 	@echo "***** Running \"Common checks\" ..."
-	@(cd common/test; make check)
+	@(cd ${CM_DIR}/test; make check)
 	@echo ""
 	@echo "***** All \"Common checks\" ran succesfully"
 	@echo ""
@@ -163,16 +186,25 @@ dist_head:
 dist_archive_pre_remove:
 ## CLEAR07
 # Sys files
-	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/common/{BN_{{F,T}DT,TR},{M,}MR_FDT}/*.rdf
+	@rm -f /tmp/`cat .f4de_version`/${CL07DIR}/test/common/{BN_{[FT]DT,TR},{M,}MR_FDT}/*.rdf
 # Corresponding "res" files
-	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/CLEARDTViperValidator/res-test-{1,2,3,5}b.txt
-	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/CLEARTRViperValidator/res-test-1b.txt
-	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/CLEARDTScorer/res-test-{1,2,3,4}.txt
-	@rm -f /tmp/`cat .f4de_version`/CLEAR07/test/CLEARTRScorer/res-test-1{a,b}.txt
+	@rm -f /tmp/`cat .f4de_version`/${CL07DIR}/test/CLEARDTViperValidator/res-test-[1235]b.txt
+	@rm -f /tmp/`cat .f4de_version`/${CL07DIR}/test/CLEARTRViperValidator/res-test-1b.txt
+	@rm -f /tmp/`cat .f4de_version`/${CL07DIR}/test/CLEARDTScorer/res-test-[1234].txt
+	@rm -f /tmp/`cat .f4de_version`/${CL07DIR}/test/CLEARTRScorer/res-test-1[ab].txt
+
+create_mans:
+# TrecVid08
+	@mkdir -p /tmp/`cat .f4de_version`/${TV08DIR}/man
+	@for i in ${TV08TOOLS}; do g=`basename $$i .pl`; pod2man /tmp/`cat .f4de_version`/${TV08DIR}/$$i /tmp/`cat .f4de_version`/${TV08DIR}/man/$$g.1; done
+# AVSS09
+	@mkdir -p /tmp/`cat .f4de_version`/${AV09DIR}/man
+	@for i in ${AV09TOOLS}; do g=`basename $$i .pl`; pod2man /tmp/`cat .f4de_version`/${AV09DIR}/$$i /tmp/`cat .f4de_version`/${AV09DIR}/man/$$g.1; done
 
 dist_common:
 	@cp .f4de_version /tmp
 	@make dist_archive_pre_remove
+	@make create_mans
 	@echo ""
 	@echo "Building the tar.bz2 file"
 	@echo `cat .f4de_version`"-"`date +%Y%m%d-%H%M`.tar.bz2 > /tmp/.f4de_distname
