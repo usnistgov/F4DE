@@ -982,8 +982,6 @@ Once you have installed the software, setting B<F4DE_BASE> to the installation l
 
 =back
 
-=back
-
 =head1 GENERAL NOTES
 
 B<TV08MergeHelper> expects that the file can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
