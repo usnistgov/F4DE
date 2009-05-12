@@ -95,7 +95,7 @@ my $usage = &set_usage();
 # Default values for variables
 my $isgtf = 0;
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../../CLEAR07/data";
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../../CLEAR07/data";
 my $show = 0;
 my $forceFilename = "";
 my $writedir = -1;

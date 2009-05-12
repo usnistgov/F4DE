@@ -104,7 +104,7 @@ my $usage = &set_usage();
 # Default values for variables
 my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision informations set
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../data";
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
 my $writetodir = "";
 my $fps = undef;
 my $forceFilename = "";

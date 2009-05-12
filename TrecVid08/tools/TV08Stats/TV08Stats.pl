@@ -101,7 +101,7 @@ my $usage = &set_usage();
 # Default values for variables
 my $show = 0;
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/data") : "../../data";
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
 my $fps = -1;
 my $isgtf = 0;
 my $docsv = -1;
