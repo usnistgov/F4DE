@@ -71,7 +71,7 @@ AVSS09install:
 	@echo "  (Relies on CLEAR07, running installer)"
 	@make CLEAR07install
 	@echo "** Installing AVSS09 files"
-	@perl installer.pl ${F4DE_BASE} lib CLEAR07/lib/*.pm
+	@perl installer.pl ${F4DE_BASE} lib AVSS09/lib/*.pm
 	@perl installer.pl -x -r ${F4DE_BASE} bin AVSS09/tools/AVSS09Scorer/AVSS09Scorer.pl AVSS09/tools/AVSS09ViPERValidator/AVSS09ViPERValidator.pl
 	@echo ""
 	@echo ""
