@@ -1,0 +1,137 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+  <title>AVSS Scoring Primer</title>
+</head>
+<body>
+<div style="text-align: center;"><big><big><big>AVSS Scoring Primer</big></big></big><br>
+</div>
+<div style="text-align: center;"><small>Updated May 13, 2009</small><br>
+</div>
+<br>
+<h2>Description: </h2>
+This document provides a high-level overview of how to use the F4DE
+tools for the AVSS09 Multiple Camera Single Person Tracking (MCSPT)
+Evaluations.&nbsp; This document refers to examples in the F4DE
+distribution to get a researcher quickly up to speed using the toolkit
+to evaluate the performance of their systems.<br>
+<br>
+There are five sections in this document: nomenclature, file format
+definitions,
+executable script synopses, annotation file validation, and scoring
+scripts.&nbsp; The examples below assume the F4DE package has been
+installed and is working properly according to the README including
+$F4DE_BASE is defined and $F4DE_BASE/bin is in your path
+variable.&nbsp; The variable DIST used below is the path to the F4DE
+source directory and is not part of the F4DE installation instructions.<br>
+<h2>Nomenclature:</h2>
+The MCSPT evaluation is designed to evaluate systems that can track a
+single, specific person within an ensemble of concurrently recorder
+videos.&nbsp; We call the person to track the 'target'.<br>
+<br>
+We refer to collection of the following as a 'track instance' which
+defines the inputs to the system for a single tested track:<br>
+<ul>
+  <li><span style="font-weight: bold;">Start and end frame:</span> this
+is the duration of the test sequence for the&nbsp; (across all cameras
+for the system to process the video data)</li>
+  <li><span style="font-weight: bold;">Target Tracking Frames (TTF): </span>video
+frames containing the bounding box annotations for the subject.&nbsp;
+Systems
+will use the TTFs to build a model of the target for later tracking.</li>
+  <li><span style="font-weight: bold;">Primary camera:</span> the
+camera view containing the TTFs.&nbsp; The system is expected to track
+the target within the primary camera view beginning after the last TTF
+for the duration specified by the start/end frame<br>
+  </li>
+  <li><span style="font-weight: bold;">Secondary cameras: </span>the
+set of cameras (exclusive of the primary camera) that the system must
+track the target in. <br>
+  </li>
+</ul>
+<h2>File Formats:</h2>
+The AVSS tools use CLEAR-specialized, XML ViPER files as inputs to the
+scripts.&nbsp; The CLEAR-specialized ViPER file format is structurally
+defined by a set of XSD files located in the '<a href="../../lib/data">$F4DE_BASE/lib/data</a>'
+directory.&nbsp; The main XSD file is <a
+ href="../../lib/data/CLEAR.xsd">CLEAR.xsd</a> which includes <a
+ href="../../lib/data/CLEAR-viper.xsd">CLEAR-viper.xsd</a> and <a
+ href="../../lib/data/CLEAR-viperdata.xsd">CLEAR-viperdata.xsd</a>. <br>
+<h2>Executable Script Synopses:</h2>
+<ul>
+  <li>AVSS09ViperValidator - a syntactic and semantic validator for
+ViPER-formatted AVSS files.</li>
+  <li>AVSS09Scorer - a scoring script designed specifically for the
+AVSS MCSPT evaluation. <br>
+  </li>
+</ul>
+<h2>File Validation with AVSS09ViperValidator:</h2>
+In order to ensure systems generate correctly formatted ViPER files for
+the MCSPT, the scoring tools include a validator to both syntactically
+(properly structure XML files) and semantically (e.g., coherent frame
+spans and bounding boxes within the frame spans, etc).&nbsp; <br>
+<br>
+To check a system file, execute the command:<br>
+<br>
+&nbsp;&nbsp;&nbsp; % AVSS09ViPERValidator
+$DIST/AVSS09/test/common/test_file1.ss.xml<br>
+<br>
+<span style="font-weight: bold;"></span>To check a ground truth file,
+execute the command:<br>
+<br>
+&nbsp;&nbsp;&nbsp; % AVSS09ViPERValidator --gtf
+$DIST/AVSS09/test/common/test_file1.clear.xml<span
+ style="font-weight: bold;"></span><span style="font-weight: bold;"><br>
+</span>
+<h2>Scoring a MCSPT system with AVSS09Scorer:</h2>
+AVSS09Scorer is a wrapper script to score the output of an MCSPT
+system.&nbsp; This initial version of the script does not implement the
+full evaluation formalism to score a series of track instances,
+ignoring un-scored frames, and limiting the evaluated span of
+frames.&nbsp;
+Instead, this version is designed to score the output for a single
+track instance.&nbsp; (Note: Future versions of the evaluation script
+will incorporate the use of an Experiment Control File (ECF) to define
+the track instances and the ids output by the system will be specified
+a priori.)<br>
+<br>
+To run the scoring script in a single test file, execute the command:<br>
+<br>
+<div style="margin-left: 40px;">% AVSS09Scorer --writedir /tmp \<br>
+&nbsp;&nbsp;&nbsp; --gtf $DIST/AVSS09/test/common/test_file*.clear.xml \<br>
+&nbsp;&nbsp;&nbsp; $DIST/AVSS09/test/common/test_file*.empty.xml<br>
+</div>
+&nbsp;<br>
+To run the scoring script for a single track instance using the
+released training data set for the MCSPT evaluation (See the AVSS MCSPT
+web site for details), execute the
+following.&nbsp; (The $MCSPT must be set to be the top level of the
+data distribution for your system.)<br>
+<br>
+<div style="margin-left: 40px;">% setenv MCSPT /local/ILIDS_MCTTR_Master<br>
+% AVSS09Scorer --writedir /tmp \<br>
+&nbsp;&nbsp;&nbsp;
+$MCSPT/http/xml/MCT_TR_01/MCTTR01a/MCTTR010[12345]a.ss.xml \<br>
+&nbsp;&nbsp;&nbsp; --gtf&nbsp;
+$MCSPT/http/xml/MCT_TR_01/MCTTR01a/MCTTR010[12345]a.clear.xml
+</div>
+<br>
+This hypothetical example scores five if the starter system files&nbsp;
+(that contain the 5 TTFs for the camera view if they exist) and scores
+them against the CLEAR formated reference files.&nbsp;&nbsp; This
+version of the scoring script does not differentiate the primary
+cameras from the secondary cameras so all camera views have correct
+detections.&nbsp; To score against a set of empty system output files,
+execute the following command.<br>
+<br>
+<div style="margin-left: 40px;">% setenv MCSPT /local/ILIDS_MCTTR_Master<br>
+% AVSS09Scorer --writedir /tmp \<br>
+&nbsp;&nbsp;&nbsp;
+$MCSPT/http/xml/MCT_TR_01/MCTTR01a/MCTTR010[12345]a.empty.xml \<br>
+&nbsp;&nbsp;&nbsp; --gtf&nbsp;
+$MCSPT/http/xml/MCT_TR_01/MCTTR01a/MCTTR010[12345]a.clear.xml
+</div>
+<br>
+</body>
+</html>
