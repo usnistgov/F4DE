@@ -1,12 +1,18 @@
 # Main F4DE directory Makefile
+SHELL=/bin/bash
 
 F4DE_BASE ?= "notset"
 
 ##########
 
+F4DE_VERSION=.f4de_version
+
 all:
 	@echo "NOTE: Make sure to run this Makefile from the source directory"
 	@echo ""
+	@make from_installdir
+	@make dist_head
+	@echo ${F4DE_VERSION}
 	@echo "Possible options are:"
 	@echo ""
 	@echo "[checks section -- recommended to run before installation -- DO NOT set the F4DE_BASE environment variable]"
@@ -27,7 +33,7 @@ all:
 
 from_installdir:
 	@echo "** Checking that \"make\" is called from the source directory"
-	@test -f .f4de_version
+	@test -f ${F4DE_VERSION}
 
 
 ########## Install
@@ -161,60 +167,69 @@ check_common:
 cvsdist:
 	@make from_installdir
 	@make dist_head
-	@echo "Building a CVS release:" `cat .f4de_version`
-	@rm -rf /tmp/`cat .f4de_version`
-	@echo "CVS checkout in: /tmp/"`cat .f4de_version`
-	@cp .f4de_version /tmp
-	@(cd /tmp; cvs -z3 -q -d gaston:/home/sware/cvs checkout -d `cat .f4de_version` F4DE)
+	@echo "Building a CVS release:" `cat ${F4DE_VERSION}`
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`
+	@echo "CVS checkout in: /tmp/"`cat ${F4DE_VERSION}`
+	@cp ${F4DE_VERSION} /tmp
+	@(cd /tmp; cvs -z3 -q -d gaston:/home/sware/cvs checkout -d `cat ${F4DE_VERSION}` F4DE)
 	@make dist_common
 
 localdist:
 	@make from_installdir
 	@make dist_head
-	@echo "Building a local copy release:" `cat .f4de_version`
-	@rm -rf /tmp/`cat .f4de_version`
-	@echo "Local copy in: /tmp/"`cat .f4de_version`
-	@mkdir /tmp/`cat .f4de_version`
-	@rsync -a . /tmp/`cat .f4de_version`/.
+	@echo "Building a local copy release:" `cat ${F4DE_VERSION}`
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`
+	@echo "Local copy in: /tmp/"`cat ${F4DE_VERSION}`
+	@mkdir /tmp/`cat ${F4DE_VERSION}`
+	@rsync -a . /tmp/`cat ${F4DE_VERSION}`/.
 	@make dist_common
 
 dist_head:
-	@echo "***** Checking .f4de_version"
-	@test -f .f4de_version
-	@fgrep F4DE .f4de_version > /dev/null
+	@echo "***** Checking ${F4DE_VERSION}"
+	@test -f ${F4DE_VERSION}
+	@fgrep F4DE ${F4DE_VERSION} > /dev/null
 
 dist_archive_pre_remove:
 ## CLEAR07
 # Sys files
-	@rm -f /tmp/`cat .f4de_version`/${CL07DIR}/test/common/{BN_{[FT]DT,TR},{M,}MR_FDT}/*.rdf
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/common/{BN_{[FT]DT,TR},{M,}MR_FDT}/*.rdf
 # Corresponding "res" files
-	@rm -f /tmp/`cat .f4de_version`/${CL07DIR}/test/CLEARDTViperValidator/res-test-[1235]b.txt
-	@rm -f /tmp/`cat .f4de_version`/${CL07DIR}/test/CLEARTRViperValidator/res-test-1b.txt
-	@rm -f /tmp/`cat .f4de_version`/${CL07DIR}/test/CLEARDTScorer/res-test-[1234].txt
-	@rm -f /tmp/`cat .f4de_version`/${CL07DIR}/test/CLEARTRScorer/res-test-1[ab].txt
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTViperValidator/res-test-[1235]b.txt
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRViperValidator/res-test-1b.txt
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTScorer/res-test-[1234].txt
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRScorer/res-test-1[ab].txt
 
 create_mans:
 # TrecVid08
-	@mkdir -p /tmp/`cat .f4de_version`/${TV08DIR}/man
-	@for i in ${TV08TOOLS}; do g=`basename $$i .pl`; pod2man /tmp/`cat .f4de_version`/${TV08DIR}/$$i /tmp/`cat .f4de_version`/${TV08DIR}/man/$$g.1; done
+	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/man
+	@for i in ${TV08TOOLS}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/man/$$g.1; done
 # AVSS09
-	@mkdir -p /tmp/`cat .f4de_version`/${AV09DIR}/man
-	@for i in ${AV09TOOLS}; do g=`basename $$i .pl`; pod2man /tmp/`cat .f4de_version`/${AV09DIR}/$$i /tmp/`cat .f4de_version`/${AV09DIR}/man/$$g.1; done
+	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man
+	@for i in ${AV09TOOLS}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man/$$g.1; done
 
 dist_common:
-	@cp .f4de_version /tmp
+	@cp ${F4DE_VERSION} /tmp
 	@make dist_archive_pre_remove
 	@make create_mans
 	@echo ""
 	@echo "Building the tar.bz2 file"
-	@echo `cat .f4de_version`"-"`date +%Y%m%d-%H%M`.tar.bz2 > /tmp/.f4de_distname
+	@echo `cat ${F4DE_VERSION}`"-"`date +%Y%m%d-%H%M`.tar.bz2 > /tmp/.f4de_distname
 	@echo `pwd` > /tmp/.f4de_pwd
-	@(cd /tmp; tar cfj `cat /tmp/.f4de_pwd`/`cat /tmp/.f4de_distname` --exclude CVS --exclude .DS_Store --exclude "*~" `cat .f4de_version`)
+	@(cd /tmp; tar cfj `cat /tmp/.f4de_pwd`/`cat /tmp/.f4de_distname` --exclude CVS --exclude .DS_Store --exclude "*~" `cat ${F4DE_VERSION}`)
 	@echo ""
 	@echo ""
 	@echo "** Release ready:" `cat /tmp/.f4de_distname`
 #	@make dist_clean
 
 dist_clean:
-	@rm -rf /tmp/`cat .f4de_version`
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`
 	@rm -f /tmp/.f4de_{distname,version,pwd}
+
+##########
+
+cvs-tag-current-distribution:
+	@make from_installdir
+	@make dist_head
+	@echo "Tagging the current CVS for distribution '"`cat ${F4DE_VERSION}`"'"
+	@(echo -n "Starting actual tag in "; for i in 10 9 8 7 6 5 4 3 2 1 0; do echo -n "$$i "; sleep 1; done; echo " -- Tagging")
+	@cvs tag `cat ${F4DE_VERSION}`
