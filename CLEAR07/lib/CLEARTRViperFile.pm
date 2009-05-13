@@ -1218,7 +1218,7 @@ sub _data_processor {
 
   #####
   # First off, confirm the first section is 'data' and remove it
-  my $name = MtXML::get_next_xml_name($string, $default_error_value);
+  my $name = MtXML::get_next_xml_name(\$string, $default_error_value);
   return("Problem obtaining a valid XML name, aborting", $string)
     if ($name eq $default_error_value);
   return("\'data\' section not present (instead: $name), aborting", $string)
@@ -1228,7 +1228,7 @@ sub _data_processor {
 
   #####
   # Now, the next --and only-- section is to be a 'sourcefile'
-  my $name = MtXML::get_next_xml_name($string, $default_error_value);
+  my $name = MtXML::get_next_xml_name(\$string, $default_error_value);
   return("Problem obtaining a valid XML name, aborting", $string)
     if ($name eq $default_error_value);
   return("\'sourcefile\' section not present (instead: $name), aborting", $string)
@@ -1682,7 +1682,7 @@ sub _extract_data {
   }
 
   while (! MMisc::is_blank($str)) {
-    my $name = MtXML::get_next_xml_name($str, $default_error_value);
+    my $name = MtXML::get_next_xml_name(\$str, $default_error_value);
     return("Problem obtaining a valid XML name, aborting", $str)
       if ($name eq $default_error_value);
     return("\'data\' extraction process does not seem to have found one, aborting", $str)
