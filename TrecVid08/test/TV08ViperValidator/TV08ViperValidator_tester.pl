@@ -16,6 +16,8 @@ my $totest = 0;
 my $testr = 0;
 my $tn = ""; # Test name
 
+my $t0 = F4DE_TestCore::get_currenttime();
+
 ##
 $tn = "test0";
 $testr += &do_simple_test($tn, "(Base XML Generation)", "$validator -X", "res_$tn.txt");
@@ -124,11 +126,14 @@ $testr += &do_simple_test($tn, "(ValueDivide + GetminMax)", "$validator ../commo
 
 #####
 
-if ($testr == $totest) {
-  MMisc::ok_quit("All tests ok\n");
-}
+my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
+my $add = "";
+$add .= " [Elapsed: $elapsed seconds]" if (F4DE_TestCore::is_elapsedtime_on());
 
-MMisc::error_quit("Not all test ok\n");
+MMisc::ok_quit("All tests ok$add\n")
+  if ($testr == $totest);
+
+MMisc::error_quit("Not all test ok$add\n");
 
 ##########
 

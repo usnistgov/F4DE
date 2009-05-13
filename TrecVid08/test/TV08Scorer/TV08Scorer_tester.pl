@@ -16,6 +16,8 @@ my $totest = 0;
 my $testr = 0;
 my $tn = "";
 
+my $t0 = F4DE_TestCore::get_currenttime();
+
 ##
 $tn = "test1a";
 $testr += &do_simple_test($tn, "(same)", "test1-gtf.xml", "test1-same-sys.xml", "-D 1000", "res-$tn.txt");
@@ -90,11 +92,14 @@ $testr += &do_simple_test($tn, "(\'xtra\' files)", "test6-Xtra-gtf.xml", "test6-
 
 #####
 
-if ($testr == $totest) {
-  MMisc::ok_quit("All test ok\n");
-}
+my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
+my $add = "";
+$add .= " [Elapsed: $elapsed seconds]" if (F4DE_TestCore::is_elapsedtime_on());
 
-MMisc::error_quit("Not all test ok\n");
+MMisc::ok_quit("All test ok$add\n")
+  if ($testr == $totest);
+
+MMisc::error_quit("Not all test ok$add\n");
 
 ##########
 

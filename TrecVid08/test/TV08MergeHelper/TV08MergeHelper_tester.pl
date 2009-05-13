@@ -17,6 +17,8 @@ my $testr = 0;
 my $d = "../common";
 my $tn = "";
 
+my $t0 = F4DE_TestCore::get_currenttime();
+
 ##
 $tn = "test1a";
 $testr += &do_complex_test($tn, "(GTF: Basic)", "-g $d/test1-gtf.xml $d/test2-gtf.xml -f PAL -w /tmp", "res_$tn.txt", "/tmp/20050519-1503-Excerpt.mpg.xml:res_$tn-file.xml");
@@ -63,11 +65,14 @@ $testr += &do_simple_test($tn, "(SYS: FrameShift + ForceFilename + Overlap Check
 
 #####
 
-if ($testr == $totest) {
-  MMisc::ok_quit("All tests ok\n");
-}
+my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
+my $add = "";
+$add .= " [Elapsed: $elapsed seconds]" if (F4DE_TestCore::is_elapsedtime_on());
 
-MMisc::error_quit("Not all test ok\n");
+MMisc::ok_quit("All tests ok$add\n")
+  if ($testr == $totest);
+
+MMisc::error_quit("Not all test ok$add\n");
 
 ##########
 

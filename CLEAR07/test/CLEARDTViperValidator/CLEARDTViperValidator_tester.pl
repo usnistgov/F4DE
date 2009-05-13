@@ -17,6 +17,8 @@ my $testr = 0;
 my $tn = "";
 my $td = "";
 
+my $t0 = F4DE_TestCore::get_currenttime();
+
 ##
 $tn = "test-1a";
 $td = "BN_FDT";
@@ -114,11 +116,14 @@ $testr += &do_simple_test($tn, $td, "(UAV VehicleDT: System submissions)", "", "
 
 #####
 
-if ($testr == $totest) {
-  MMisc::ok_quit("All test ok\n\n");
-}
+my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
+my $add = "";
+$add .= " [Elapsed: $elapsed seconds]" if (F4DE_TestCore::is_elapsedtime_on());
 
-MMisc::error_quit("Not all test ok\n\n");
+MMisc::ok_quit("All test ok$add\n\n")
+  if ($testr == $totest);
+
+MMisc::error_quit("Not all test ok$add\n\n");
 
 ##########
 

@@ -19,6 +19,8 @@ my $totest = 0;
 my $testr = 0;
 my $tn = ""; # Test name
 
+my $t0 = F4DE_TestCore::get_currenttime();
+
 ##
 $tn = "test1";
 $testr += &do_simple_test($tn, "(Empty SYS vs GTF)", "$tool ../common/test_file2.empty.xml -g ../common/test_file2.clear.xml", "res_$tn.txt");
@@ -33,11 +35,14 @@ $testr += &do_simple_test($tn, "(Full SYS vs GTF)", "$tool ../common/test_file2.
 
 #####
 
-if ($testr == $totest) {
-  MMisc::ok_quit("All tests ok\n");
-}
+my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
+my $add = "";
+$add .= " [Elapsed: $elapsed seconds]" if (F4DE_TestCore::is_elapsedtime_on());
 
-MMisc::error_quit("Not all test ok\n");
+MMisc::ok_quit("All tests ok$add\n")
+  if ($testr == $totest);
+
+MMisc::error_quit("Not all test ok$add\n");
 
 ##########
 
@@ -54,7 +59,7 @@ sub do_simple_test {
 
   $command .= " -w $tdir";
 
-  my $add = F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev);
+  my $retval = F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev);
 
   if ($mode eq $mmk) {
     print "  (keeping: $tdir)\n";
@@ -62,5 +67,5 @@ sub do_simple_test {
     `rm -rf $tdir`;
   }
 
-  return($add);
+  return($retval);
 }
