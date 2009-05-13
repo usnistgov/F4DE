@@ -25,6 +25,7 @@ use strict;
 use File::Temp;
 use Data::Dumper;
 use Cwd;
+use Time::HiRes;
 
 my $version     = "0.1b";
 
@@ -1258,6 +1259,14 @@ sub ls_ok {
 
   return(1);
 }
+
+####################
+
+sub get_currenttime { return([Time::HiRes::gettimeofday()]); }
+
+#####
+
+sub get_elapsedtime { return(Time::HiRes::tv_interval(shift @_)); }
 
 ##########
 ### Added by Jon Fiscus

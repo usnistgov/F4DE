@@ -2,7 +2,6 @@ package F4DE_TestCore;
 
 use strict;
 use MMisc;
-use Time::HiRes;
 
 my $env_mmcadd = "F4DE_TEST_MMC_ADD";
 my $env_testonly = "F4DE_TEST_ONLY";
@@ -80,11 +79,11 @@ sub is_elapsedtime_on {
 
 #####
 
-sub get_currenttime { return([Time::HiRes::gettimeofday()]); }
+sub get_currenttime { return(MMisc::get_currenttime()); }
 
 #####
 
-sub get_elapsedtime { return(Time::HiRes::tv_interval(shift @_)); }
+sub get_elapsedtime { return(MMisc::get_elapsedtime(shift @_)); }
 
 ##########
 
