@@ -83,7 +83,11 @@ sub setProperties(){
     
 ##########
 
-sub unitTest(){
+sub unitTest {
+  my $makecall = shift @_;
+
+  print "Testing SimpleAutoTable ..." if ($makecall);
+
   my $sg = new SimpleAutoTable();
   $sg->addData("1",  "PartA|A|col1", "PartZ|ObjectPut");
   $sg->addData("2",  "PartA|A|col2", "PartZ|ObjectPut");
@@ -102,9 +106,12 @@ sub unitTest(){
   $sg->addData("15", "PartB|B|col3", "PartYY|Pointing");
   $sg->addData("16454433333333334", "PartB|B|col4", "PartYY|Pointing");
 
-  #    $sg->dump();
-  $sg->renderTxtTable(2);
+  if (! $makecall) {
+    #    $sg->dump();
+    return($sg->renderTxtTable(2));
+  }
 
+  MMisc::ok_quit(" OK");
 }
 
 sub _addLab(){
@@ -163,7 +170,7 @@ sub _getRowLabelWidth(){
     }
     return $len           
   }
-  die "Internal Error";
+  MMisc::error_quit("[SimpleAutoTable] Internal Error");
 }
 
 sub _getColLabelWidth(){
@@ -185,7 +192,7 @@ sub _getOrderedLabelIDs(){
   } elsif ($order eq "Alpha") {
     @sortedKeys = sort keys %{ $ht->{SubID} };
   } else {
-    die "Internal Error SimpleAutoTable: Sort order '$order' not defined";
+    MMisc::error_quit("Internal Error SimpleAutoTable: Sort order '$order' not defined");
   }  
 
   foreach my $sid (@sortedKeys) {

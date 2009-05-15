@@ -138,42 +138,44 @@ sub getAuthorizedValues {
 ############################################################
     
 sub unit_test {
-  my $err = 0;
+  my $makecall = shift @_;
+  
+  print "Testing PropList ..." if ($makecall);
+  
+  my @err = ();
   my $cl = "PropList";
   
   my $p = new PropList();
-  if (! $p->addProp("key1", undef)) {
-    print STDERR "Error: $cl: Unable to add a key\n";
-    $err++;
-  }
-
-  if (! $p->addProp("key2", 'value2')) {
-    print STDERR "Error: $cl: Unable to add a key\n";
-    $err++;
-  }
-
-  if ($p->addProp("key1", undef)) {
-    print STDERR "Error: $cl: re-add of 'key1' succeeded but shouldn't have\n";
-    $err++;
-  }
+  push @err, "Error: $cl: Unable to add a key"
+    if (! $p->addProp("key1", undef));
+  
+  push @err, "Error: $cl: Unable to add a key"
+    if (! $p->addProp("key2", 'value2'));
+  
+  push @err, "Error: $cl: re-add of 'key1' succeeded but shouldn't have"
+    if ($p->addProp("key1", undef));
   
   if ($p->addProp("key3", undef, (1,2,3))) {
-    if (! $p->setValue("key3", 1)) {
-      print STDERR "Error: $cl: Could not add 'key3' value\n";
-      $err++;
-    }
-    if ($p->setValue("key3", 11)) {
-      print STDERR "Error: $cl: Could had a not authorized 'key3' value\n";
-      $err++;
-    }
+    push @err, "Error: $cl: Could not add 'key3' value\n"
+      if (! $p->setValue("key3", 1));
+    
+    push @err, "Error: $cl: Could had a not authorized 'key3' value\n"
+      if ($p->setValue("key3", 11));
   }
   
-  # $p->_display();
-  $p->printPropList();
+  if (! $makecall) {
+    # $p->_display();
+    $p->printPropList();
+    
+    print STDERR scalar(@err) . " Unit Test Errors\n";
+    
+    return(scalar @err);
+  }
+  
+  MMisc::error_quit(" failed\n" . join("\n", @err) . "\n")
+      if (scalar @err > 0);
 
-  print STDERR "$err Unit Test Errors\n";
-
-  return($err);
+  MMisc::ok_quit(" OK");
 }
 
 ##########

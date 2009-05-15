@@ -1123,7 +1123,13 @@ sub _unit_test_kernel {
   }
 }
 
+#####
+
 sub unit_test {
+  my $makecall = shift @_;
+
+  print "Testing BipartiteMatch ..." if ($makecall);
+
   my $i = 10;
 
   my %sys_bpm = ();
@@ -1135,15 +1141,21 @@ sub unit_test {
   my @kp = ();
 
   my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&_unit_test_kernel, \@kp);
-  die("While creating the Bipartite Matching object (" . $bpm->get_errormsg() . ")")
+  MMisc::error_quit("While creating the Bipartite Matching object (" . $bpm->get_errormsg() . ")")
     if ($bpm->error());
 
   $bpm->compute();
-  die("While computing the Bipartite Matching (" . $bpm->get_errormsg() . ")")
+  MMisc::error_quit("While computing the Bipartite Matching (" . $bpm->get_errormsg() . ")")
     if ($bpm->error());
 
-  $bpm->_display("joint_values");
-  $bpm->_display("mapped", "unmapped_ref", "unmapped_sys");
+  if (! $makecall) {
+    $bpm->_display("joint_values");
+    $bpm->_display("mapped", "unmapped_ref", "unmapped_sys");
+    
+    return(1);
+  }
+
+  MMisc::ok_quit(" OK");
 }
 
 
