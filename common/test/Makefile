@@ -8,10 +8,16 @@ install:
 
 check:
 	@perl -I../lib -I../../../common/lib -I../../lib pre_tests.pl
-	@(cd ../lib; perl -I . -e 'use DETCurveSet; DETCurveSet::unitTest()')
-	@(cd ../lib; perl -I . -e 'use DETCurve; DETCurve::unitTest()')
-	@(cd ../lib; perl -I . -e 'use DETCurveGnuplotRenderer; DETCurveGnuplotRenderer::unitTest()')
-	@(cd ../lib; perl -I . -e 'use Trials; Trials::unitTest()')
+	@echo "* Running unit tests"
+	@(cd ../lib; perl -I. -e 'use DETCurveSet; DETCurveSet::unitTest();')
+	@(cd ../lib; perl -I. -e 'use DETCurve; DETCurve::unitTest();')
+	@(cd ../lib; perl -I. -e 'use DETCurveGnuplotRenderer; DETCurveGnuplotRenderer::unitTest();')
+	@(cd ../lib; perl -I. -e 'use Trials; Trials::unitTest();')
+	@(cd ../lib; perl -I. -e 'use ViperFramespan; ViperFramespan::unit_test(0, 1);')
+	@(cd ../lib; perl -I. -e 'use BipartiteMatch; BipartiteMatch::unit_test(1);')
+	@(cd ../lib; perl -I. -e 'use PropList; PropList::unit_test(1);')
+	@(cd ../lib; perl -I. -e 'use SimpleAutoTable; SimpleAutoTable::unitTest(1);')
+	@echo ""
 	@echo "***** All tests ran succesfully"
 
 makecheckfiles:
