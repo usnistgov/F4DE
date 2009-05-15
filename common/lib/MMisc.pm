@@ -118,7 +118,9 @@ sub get_env_val {
 ##########
 
 sub is_blank {
-  my $txt = &iuv(shift @_, "");
+  my $txt = shift @_;
+  return(1) if (! defined $txt);
+  return(1) if (length($txt) == 0);
   return(($txt =~ m%^\s*$%s));
 }
 
@@ -126,8 +128,7 @@ sub is_blank {
 
 sub any_blank {
   foreach my $i (@_) {
-    my $r = &is_blank($i);
-    return(1) if ($r);
+    return(1) if (&is_blank($i));
   }
 
   return(0);
@@ -137,8 +138,7 @@ sub any_blank {
 
 sub all_blank {
   foreach my $i (@_) {
-    my $r = &is_blank($i);
-    return(0) if (! $r);
+    return(0) if (! &is_blank($i));
   }
 
   return(1);
@@ -146,13 +146,46 @@ sub all_blank {
 
 ##########
 
+sub _sp_clean_beg_spaces {
+  my $rstr = shift @_;
+
+  my $cont = 1;
+  while ((length($$rstr) > 1024) && ($cont)) {
+    my $txt = substr($$rstr, 0, 1024, "");
+    $txt =~ s%^\s+%%s;
+    if (length($txt) > 0) {
+      substr($$rstr, 0, 0, $txt);
+      $cont = 0;
+    }
+  }
+  $$rstr =~ s%^\s+%%s if ($cont == 1);
+}
+
+#####
+
+sub _sp_clean_end_spaces {
+  my $rstr = shift @_;
+
+  my $cont = 1;
+  while ((length($$rstr) > 1024) && ($cont)) {
+    my $txt = substr($$rstr, -1024, 1024, "");
+    $txt =~ s%\s+$%%s;
+    if (length($txt) > 0) {
+      $$rstr .= $txt;
+      $cont = 0;
+    }
+  }
+  $$rstr =~ s%\s+$%%s if ($cont == 1);
+}
+
+#####
 sub clean_begend_spaces {
-  my $txt = &iuv(shift @_, "");
+  my $txt = shift @_;
 
   return("") if (&is_blank($txt));
 
-  $txt =~ s%^\s+%%s;
-  $txt =~ s%\s+$%%s;
+  &_sp_clean_beg_spaces(\$txt);
+  &_sp_clean_end_spaces(\$txt);
 
   return($txt);
 }
@@ -165,23 +198,20 @@ sub reorder_array_numerically {
 
 ####
 
-sub get_msize
-{
-	my ($str) = @_;
-	my $x = `/bin/ps -aux | grep $$ | grep -v "grep" | awk '{print \$5}'`;
-	$x =~ s/\s//g;
-	return "$x $str";
+sub get_msize {
+  my ($str) = @_;
+  my $x = `/bin/ps -aux | grep $$ | grep -v "grep" | awk '{print \$5}'`;
+  $x =~ s/\s//g;
+  return("$x $str");
 }
 
 #####
 
-sub min_max
-{
+sub min_max {
   my $min = shift;
   my $max = $min;
   
-  foreach $_ (@_)
-  {
+  foreach $_ (@_) {
     $min = $_ if $_ < $min;
     $max = $_ if $_ > $max;
   }
@@ -191,8 +221,7 @@ sub min_max
 
 #####
 
-sub min
-{
+sub min {
   my $min = shift;
   foreach $_ (@_) { $min = $_ if $_ < $min; }
   return $min;
@@ -200,8 +229,7 @@ sub min
 
 #####
 
-sub max
-{
+sub max {
   my $max = shift;
   foreach $_ (@_) { $max = $_ if $_ > $max; }
   return $max;
@@ -281,10 +309,8 @@ sub clone {
 ##########
 
 sub array1d_to_count_hash {
-  my @all = @_;
-
   my %ohash = ();
-  foreach my $o (@all) {
+  foreach my $o (@_) {
     $ohash{$o}++;
   }
 
@@ -309,11 +335,9 @@ sub array1d_to_ordering_hash {
 #####
 
 sub make_array_of_unique_values {
-  my @order = @_;
+  return(@_) if (scalar @_ < 2);
 
-  return(@order) if (scalar @order < 2);
-
-  my %tmp = &array1d_to_ordering_hash(@order);
+  my %tmp = &array1d_to_ordering_hash(@_);
   my @tosort = keys %tmp;
 
   my @out = sort {$tmp{$a} <=> $tmp{$b}} @tosort;
@@ -325,7 +349,6 @@ sub make_array_of_unique_values {
 
 sub compare_arrays {
   my $rexp = shift @_;
-  my @list = @_;
 
   my @in  = ();
   my @out = ();
@@ -333,12 +356,12 @@ sub compare_arrays {
   return(\@in, \@out) if (! defined $rexp);
 
   foreach my $elt (@$rexp) {
-    if (grep(m%^$elt$%i, @list)) {
+    if (grep(m%^$elt$%i, @_)) {
       push @in, $elt;
     }
   }
 
-  foreach my $elt (@list) {
+  foreach my $elt (@_) {
     if (! grep(m%^$elt$%i, @$rexp)) {
       push @out, $elt;
     }
@@ -351,7 +374,6 @@ sub compare_arrays {
 
 sub confirm_first_array_values {
   my $rexp = shift @_;
-  my @list = @_;
 
   my @in = ();
   my @out = ();
@@ -359,7 +381,7 @@ sub confirm_first_array_values {
   return(\@in, \@out) if (! defined $rexp);
 
   foreach my $elt (@$rexp) {
-    if (grep(m%^$elt$%, @list)) {
+    if (grep(m%^$elt$%, @_)) {
       push @in, $elt;
     } else {
       push @out, $elt;
@@ -373,10 +395,9 @@ sub confirm_first_array_values {
 
 sub _uc_lc_array_values {
   my $mode = &iuv(shift @_, "");
-  my @in = @_;
 
   my @out = ();
-  foreach my $value (@in) {
+  foreach my $value (@_) {
     my $v = ($mode eq "uc") ? uc($value) :
       ($mode eq "lc") ? lc($value) :
         ($mode eq "ucf") ? lcfirst($value) :
@@ -621,11 +642,10 @@ sub strip_header {
 
 sub _system_call_logfile {
   my $logfile = shift @_;
-  my @args = @_;
   
-  return(-1, "", "") if (scalar @args == 0);
+  return(-1, "", "") if (scalar @_ == 0);
 
-  my $cmdline = "(" . join(" ", @args) . ")"; 
+  my $cmdline = "(" . join(" ", @_) . ")"; 
 
   my $retcode = -1;
   my $stdoutfile = "";
@@ -674,14 +694,13 @@ sub do_system_call {
 
 sub write_syscall_logfile {
   my $ofile = &iuv(shift @_, "");
-  my @command = @_;
 
   return(0, "", "", "", "") 
-    if ( (&is_blank($ofile)) || (scalar @command == 0) );
+    if ( (&is_blank($ofile)) || (scalar @_ == 0) );
 
-  my ($retcode, $stdout, $stderr) = &_system_call_logfile($ofile, @command);
+  my ($retcode, $stdout, $stderr) = &_system_call_logfile($ofile, @_);
 
-  my $otxt = "[[COMMANDLINE]] " . join(" ", @command) . "\n"
+  my $otxt = "[[COMMANDLINE]] " . join(" ", @_) . "\n"
     . "[[RETURN CODE]] $retcode\n"
       . "[[STDOUT]]\n$stdout\n\n"
         . "[[STDERR]]\n$stderr\n";
@@ -696,10 +715,9 @@ sub write_syscall_logfile {
 
 sub write_syscall_smart_logfile {
   my $ofile = &iuv(shift @_, "");
-  my @command = @_;
 
   return(0, "", "", "", "") 
-    if ( (&is_blank($ofile)) || (scalar @command == 0) );
+    if ( (&is_blank($ofile)) || (scalar @_ == 0) );
 
   if (-e $ofile) {
     my $date = `date "+20%y%m%d-%H%M%S"`;
@@ -707,7 +725,7 @@ sub write_syscall_smart_logfile {
     $ofile .= "-$date";
   }
 
-  return(&write_syscall_logfile($ofile, @command));
+  return(&write_syscall_logfile($ofile, @_));
 }
 
 #####
@@ -790,8 +808,6 @@ sub _check_file_dir_core {
   } elsif ($mode eq "file") {
     return("is not a $mode")
       if (! -f $entity);
-  } else {
-    return("Unknown mode");
   }
 
   return("");
@@ -800,7 +816,7 @@ sub _check_file_dir_core {
 #####
 
 sub _check_file_dir_XXX {
-  my ($x, $mode, $totest) = &iuav(\@_, "", "", "");
+  my ($mode, $totest, $x) = &iuav(\@_, "", "", "");
 
   return("empty mode")
     if (&is_blank($mode));
@@ -809,6 +825,8 @@ sub _check_file_dir_XXX {
 
   my $txt = &_check_file_dir_core($x, $mode);
   return($txt) if (! &is_blank($txt));
+
+  return("") if ($totest eq "e");
 
   if ($totest eq "r") {
     return("$mode is not readable")
@@ -828,28 +846,32 @@ sub _check_file_dir_XXX {
 
 #####
 
-sub check_file_r { return(&_check_file_dir_XXX(shift @_, "file", "r")); }
-sub check_file_w { return(&_check_file_dir_XXX(shift @_, "file", "w")); }
-sub check_file_x { return(&_check_file_dir_XXX(shift @_, "file", "x")); }
+sub check_file_e { return(&_check_file_dir_XXX("file", "e", @_)); }
+sub check_file_r { return(&_check_file_dir_XXX("file", "r", @_)); }
+sub check_file_w { return(&_check_file_dir_XXX("file", "w", @_)); }
+sub check_file_x { return(&_check_file_dir_XXX("file", "x", @_)); }
 
-sub check_dir_r { return(&_check_file_dir_XXX(shift @_, "dir", "r")); }
-sub check_dir_w { return(&_check_file_dir_XXX(shift @_, "dir", "w")); }
-sub check_dir_x { return(&_check_file_dir_XXX(shift @_, "dir", "x")); }
+sub check_dir_e { return(&_check_file_dir_XXX("dir", "e", @_)); }
+sub check_dir_r { return(&_check_file_dir_XXX("dir", "r", @_)); }
+sub check_dir_w { return(&_check_file_dir_XXX("dir", "w", @_)); }
+sub check_dir_x { return(&_check_file_dir_XXX("dir", "x", @_)); }
 
-sub is_file_r { return( &is_blank( &check_file_r(shift @_) ) ); }
-sub is_file_w { return( &is_blank( &check_file_w(shift @_) ) ); }
-sub is_file_x { return( &is_blank( &check_file_x(shift @_) ) ); }
+sub does_file_exits { return( &is_blank( &check_file_e(@_) ) ); }
+sub is_file_r { return( &is_blank( &check_file_r(@_) ) ); }
+sub is_file_w { return( &is_blank( &check_file_w(@_) ) ); }
+sub is_file_x { return( &is_blank( &check_file_x(@_) ) ); }
 
-sub is_dir_r { return( &is_blank( &check_dir_r(shift @_) ) ); }
-sub is_dir_w { return( &is_blank( &check_dir_w(shift @_) ) ); }
-sub is_dir_x { return( &is_blank( &check_dir_x(shift @_) ) ); }
+sub does_dir_exists { return( &is_blank( &check_dir_e(@_) ) ); }
+sub is_dir_r { return( &is_blank( &check_dir_r(@_) ) ); }
+sub is_dir_w { return( &is_blank( &check_dir_w(@_) ) ); }
+sub is_dir_x { return( &is_blank( &check_dir_x(@_) ) ); }
 
 #####
 
 sub get_file_stat {
   my $file = &iuv(shift @_, "");
 
-  my $err = & check_file_r($file);
+  my $err = &check_file_e($file);
   return($err, undef) if (! &is_blank($err));
 
   my @a = stat($file);
@@ -890,7 +912,6 @@ sub get_file_ctime {return(&_get_file_info_core(10, @_));}
 # Note: will only keep "ok" files in the output list
 sub sort_files {
   my $criteria = &iuv(shift @_, "");
-  my @files_list = @_;
 
   my $func = undef;
   if ($criteria eq "size") {
@@ -907,7 +928,7 @@ sub sort_files {
 
   my %tmp = ();
   my @errs = ();
-  foreach my $file (@files_list) {
+  foreach my $file (@_) {
     my ($v, $err) = &$func($file);
     if (! &is_blank($err)) {
       push @errs, $err;
@@ -932,14 +953,13 @@ sub sort_files {
 # Note: will return undef if any file in the list is not "ok"
 sub _XXXest_core {
   my $mode = &iuv(shift @_, "");
-  my @in = @_;
 
   return(undef) if (&is_blank($mode));
 
-  my ($err, @or) = &sort_files($mode, @in);
+  my ($err, @or) = &sort_files($mode, @_);
 
   return(undef)
-    if (scalar @or != scalar @in);
+    if (scalar @or != scalar @_);
 
   return(@or);
 }
@@ -1146,12 +1166,12 @@ sub get_file_full_path {
 ##########
 
 sub iuav { # Initialize Undefined Array of Values
-  my ($ra, @dv) = @_;
+  my $ra = shift @_;
 
   my @a = @$ra;
 
   my @out = ();
-  foreach my $r (@dv) {
+  foreach my $r (@_) {
     my $v = shift @a;
     push @out, &iuv($v, $r);
   }
