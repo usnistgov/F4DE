@@ -113,18 +113,17 @@ sub errormsg {
 sub clean_errormsg {
   my ($self) = @_;
 
-  my $em = $self->errormsg();
+  my $em = $self->{errormsg};
   return(&_remove_header($em));
 }
 
 ##########
 
+## returns 0 if no error, something else otherwise
 sub error {
   my ($self) = @_;
 
-  return(1) if (! MMisc::is_blank($self->errormsg()));
-
-  return(0);
+  return(length($self->{errormsg}));
 }
 
 ##########
