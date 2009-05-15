@@ -124,8 +124,16 @@ check:
 	@make commoncheck
 	@make TV08check
 	@make CLEAR07check
+	@make AVSS09check
 	@echo ""
 	@echo "***** All check tests successful"
+	@echo ""
+
+commoncheck:
+	@echo "***** Running \"Common checks\" ..."
+	@(cd ${CM_DIR}/test; make check)
+	@echo ""
+	@echo "***** All \"Common checks\" ran succesfully"
 	@echo ""
 
 TV08check:
@@ -147,13 +155,6 @@ AVSS09check:
 	@(cd ${AV09DIR}/test; make check)
 	@echo ""
 	@echo "***** All AVSS09 checks ran succesfully"
-	@echo ""
-
-commoncheck:
-	@echo "***** Running \"Common checks\" ..."
-	@(cd ${CM_DIR}/test; make check)
-	@echo ""
-	@echo "***** All \"Common checks\" ran succesfully"
 	@echo ""
 
 check_common:
