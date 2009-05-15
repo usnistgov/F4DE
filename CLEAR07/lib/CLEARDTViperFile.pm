@@ -235,9 +235,7 @@ sub new {
   &_fill_required_hashes($evaldomain, $spmode)
     if (! MMisc::is_blank($evaldomain));
 
-  ## Run the ViperFramespan test_unit just to be sure
   my $fs_tmp = ViperFramespan->new();
-  $errortxt .= $fs_tmp->get_errormsg() if (! $fs_tmp->unit_test());
 
   my $xmllintobj = new xmllintHelper();
   $xmllintobj->set_xsdfilesl(@xsdfilesl);
@@ -2014,8 +2012,8 @@ sub _writeback_object {
       my @afs;
       foreach my $fs (keys %{$object_hash{$key}}) {
 	my $fs_tmp = ViperFramespan->new();
-	die("[CLEARDTViperFile] Internal Error: WEIRD: In \'_writeback_object\' (" . $fs_tmp->get_errormsg() .")")
-	  if (! $fs_tmp->set_value($fs));
+	MMisc::error_quit("[CLEARDTViperFile] Internal Error: WEIRD: In \'_writeback_object\' (" . $fs_tmp->get_errormsg() .")")
+            if (! $fs_tmp->set_value($fs));
 	push @afs, $fs_tmp;
       }
       foreach my $fs_fs (sort _framespan_sort @afs) {

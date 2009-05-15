@@ -172,9 +172,7 @@ sub new {
   # before processing files.
   &_fill_required_hashes($evaldomain) if (! MMisc::is_blank($evaldomain));
 
-  ## Run the ViperFramespan test_unit just to be sure
   my $fs_tmp = ViperFramespan->new();
-  $errortxt .= $fs_tmp->get_errormsg() if (! $fs_tmp->unit_test());
 
   my $xmllintobj = new xmllintHelper();
   $xmllintobj->set_xsdfilesl(@xsdfilesl);
@@ -284,7 +282,8 @@ sub _fill_required_hashes {
     $hash_objects_attributes_types_default{$key}{0} = \%sys_hash_object_attributes_types_default;
   }
 
-  if (! $checkFlag) { die("Unsupported object-domain pair (Input file contains objects that are not supported in '$evaldomain')"); }
+  MMisc::error_quit("Unsupported object-domain pair (Input file contains objects that are not supported in '$evaldomain')")
+      if (! $checkFlag);
 }
 
 sub set_required_hashes {
@@ -1900,8 +1899,8 @@ sub _writeback_object {
       my @afs;
       foreach my $fs (keys %{$object_hash{$key}}) {
 	my $fs_tmp = ViperFramespan->new();
-	die("[CLEARTRViperFile] Internal Error: WEIRD: In \'_writeback_object\' (" . $fs_tmp->get_errormsg() .")")
-	  if (! $fs_tmp->set_value($fs));
+	MMisc::error_quit("[CLEARTRViperFile] Internal Error: WEIRD: In \'_writeback_object\' (" . $fs_tmp->get_errormsg() .")")
+            if (! $fs_tmp->set_value($fs));
 	push @afs, $fs_tmp;
       }
       foreach my $fs_fs (sort _framespan_sort @afs) {
