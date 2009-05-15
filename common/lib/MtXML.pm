@@ -26,13 +26,6 @@ use MMisc;
 
 ##########
 
-sub __plf {
-  my ($lf, $rs, $p, $a) = @_;
-  print "[$lf] -> [", substr($$rs, $p, length($lf) + $a), "]\n";
-}  
-
-
-
 sub _find_next_tag_pos {
   my $rstr = shift @_;
   my $offset = MMisc::iuv(shift @_, 0);
@@ -152,19 +145,21 @@ sub remove_xml_section {
 sub get_next_xml_name {
   my $rstr = shift @_; # reference to string
   my $txt = shift @_; # Default error string (returned if nothing found)
-
+  
   my ($b, $e) = &_find_next_tag_pos($rstr, 0, "");
   return($txt) if ($b == -1);
+  
+  my $str = substr($$rstr, $b + 1, $e - $b - 1);
+  substr($str, -1, 1, "")
+    if (substr($str, -1) eq "/");
+  
+  my $sf = index($str, " ");
 
-  # Much faster regexp on subset of full string
-  my $str = substr($$rstr, $b, $e + 1 - $b);
-  if ($str =~ m%^<(.+)/?>$%s) {
-    my $tmp = $1;
-    my @a = split(m%\s+%, $tmp);
-    $txt = $a[0];
-  }
+  # Could not find any space ? return the string
+  return($str) if ($sf == -1);
 
-  return($txt);
+  # Otherwise, return the name found
+  return(substr($str, 0, $sf));
 }
 
 ##########
@@ -194,7 +189,6 @@ sub get_named_xml_section_with_inline_content {
     my ($b, $e, $ib, $ie) = &_find_xml_tag_pos($name, $rstr, $offset);
     return($txt) if ($b == -1);
 
-    # Much faster regexp on subset of full string
     my $str = "";
     # b->ib->ie->e
     if ($ib == -1) { # no ib->ie part, get b->e
@@ -203,13 +197,17 @@ sub get_named_xml_section_with_inline_content {
       $str = substr($$rstr, $b, $ib - 1, $ib - $b);
     }
 
-    if ($str =~ m%<${name}\s.*${content}[^>]*/?>%) {
-      $txt = substr($$rstr, $b, $e + 1 - $b, "");
-      $cont = 0;
-    }
-
-    # Continue past just seen entry
+    # For next run, Continue past just seen entry
     $offset = $e + 1;
+
+    # Try to find " content"
+    my $sf = index($str, " $content");
+    
+    # try on next possibility if not found
+    next if ($sf == -1);
+
+    # Found it, blank string, return value
+    return(substr($$rstr, $b, $e + 1 - $b, ""));
   }
 
   return($txt);
@@ -235,61 +233,6 @@ sub get_next_xml_section {
   return($name, $section);
 }
 
-##########
-
-sub split_xml_tag {
-  my $tag = shift @_;
-
-  if ($tag =~ m%^([^\=]+)\=(.+)$%) {
-    my ($name, $value) = ($1, $2);
-
-    $name = MMisc::clean_begend_spaces($name);
-
-    $value = MMisc::clean_begend_spaces($value);
-    $value =~ s%^\s*\"%%;
-    $value =~ s%\"\s*$%%;
-
-    return($name, $value);
-  } else {
-    return("", "");
-  }
-}
-
-#####
-
-sub split_xml_tag_list_to_hash {
-  my @list = @_;
-
-  my %hash = ();
-  foreach my $tag (@list) {
-    my ($name, $value) = &split_xml_tag($tag);
-    return("Problem splitting inlined attribute ($tag)", ())
-      if (MMisc::is_blank($name));
-
-    return("Inlined attribute ($name) appears to be present multiple times", ())
-      if (exists $hash{$name});
-    
-    $hash{$name} = $value;
-  }
-
-  return("", %hash);
-}
-
-#####
-
-sub split_line_into_tags {
-  my $line = shift @_;
-
-  my @all = ();
-  while ($line =~ s%([^\s]+?)\s*(\=)\s*(\"[^\"]*?\")%%) {
-    push @all, "$1$2$3";
-  }
-  return("Leftover text after tag extraction ($line)", ())
-    if (! MMisc::is_blank($line));
-  
-  return("", @all);
-}
-
 #####
 
 sub get_inline_xml_attributes {
@@ -299,19 +242,38 @@ sub get_inline_xml_attributes {
   my ($b, $e) = &_find_next_tag_pos(\$str, 0, $name);
   return("Could not find tag", "") if ($b == -1);
 
-  my $txt = substr($str, $b, $e + 1 - $b);
-  $txt =~ s%<${name}%%s;
-  $txt =~ s%^\s+%%;
-  $txt =~ s%\/?\>$%%;
+  my $l = length("<${name}");
+  my $txt = substr($str, $b + $l, $e - $b - $l);
+  substr($txt, -1, 1, "")
+    if (substr($txt, -1) eq "/");
 
-  my ($err, @all) = &split_line_into_tags($txt);
-  return($err, ()) if (! MMisc::is_blank($err));
-  return("", ()) if (scalar @all == 0); # None found
+  my $cont = 1;
+  my $offset = 0;
+  my $l = length($txt);
+  my %res = ();
+  while (($offset < $l) && ($cont)) {
+    my $ep = index($txt, "=", $offset);
+    if ($ep == -1) { # No more
+      $cont = 0;
+      next;
+    }
 
-  my ($res, %hash) = &split_xml_tag_list_to_hash(@all);
-  return($res, ()) if (! MMisc::is_blank($res));
+    my $qp1 = index($txt, "\"", $ep + 1);
+    return("Could not find beg \"", ())
+      if ($qp1 == -1);
+    my $qp2 = index($txt, "\"", $qp1 + 1);
+    return("Could not find end \"", ())
+      if ($qp2 == -1);
+   
+    my $val = substr($txt, $qp1 + 1, $qp2 - $qp1 - 1);
+    my $name = MMisc::clean_begend_spaces(substr($txt, $offset, $ep - $offset));
 
-  return("", %hash);
+    $res{$name} = $val;
+
+    $offset = $qp2 + 1;
+  }
+
+  return("", %res);
 }
 
 ############################################################
