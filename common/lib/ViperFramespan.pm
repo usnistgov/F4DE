@@ -91,12 +91,6 @@ sub get_version {
 sub _fs_check_pair {
   my ($b, $e) = @_;
 
-  return($error_msgs{"BadRangePair"})
-    if ((MMisc::is_blank($b)) || (MMisc::is_blank($e)));
-
-  return($error_msgs{"NegativeValue"})
-    if (($b < 0) || ($e < 0));
-
   return($error_msgs{"NotOrdered"})
     if ($e < $b);
 
@@ -108,15 +102,24 @@ sub _fs_check_pair {
 
 #####
 
+sub _fs_split_pair_nocheck {
+  my $fs = shift @_;
+
+  my $sc = index($fs, ":", 0);
+  my $bf = substr($fs, 0, $sc);
+  my $ef = substr($fs, $sc + 1); # go until end of string
+
+  return($bf, $ef);
+}
+
+#####
+
 sub _fs_split_pair {
   my ($pair) = shift @_;
 
-  return($error_msgs{"NotFramespan"}, 0, 0)
-    if ($pair !~ m%^\d+\:\d+$%);
+  return("", $1, $2)  if ($pair =~ m%^(\d+)\:(\d+)$%);
 
-  my ($b, $e) = ($pair =~ m%^(\d+)\:(\d+)$%);
-
-  return("", $b, $e);
+  return($error_msgs{"NotFramespan"}, 0, 0);
 }
 
 #####
@@ -143,7 +146,7 @@ sub _fs_check_value {
   my $value = shift @_;
   my $from_new = shift @_;
 
-  if (MMisc::is_blank($value)) {
+  if ($value eq "") { # Ok not to called 'is_blank'
     # If called from new, it is ok
     return($value, "") if ($from_new);
     # Otherwise it should not happen
@@ -209,22 +212,20 @@ sub _fs_shorten_value {
   ($fs, $errormsg) = &_fs_reorder_value($fs);
   return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
 
+  my @ftodo = &_fs_split_line($fs);
+
   # Only 1 element, nothing to do
-  return($fs, "") if (&_fs_split_line_count($fs) == 1);
+  return($fs, "") if (scalar @ftodo == 1);
 
   # More than one element: compute
   my @o = ();
 
-  my @ftodo = &_fs_split_line($fs);
-
   # Get the first element
   my $entry = shift @ftodo;
-  ($errormsg, my $b, my $e) = &_fs_split_pair($entry);
-  return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
+  my ($b, $e) = &_fs_split_pair_nocheck($entry);
 
   foreach $entry (@ftodo) {
-    ($errormsg, my $nb, my $ne) = &_fs_split_pair($entry);
-    return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
+    my ($nb, $ne) = &_fs_split_pair_nocheck($entry);
 
     if ($nb == $e) {            # ex: 1:2 2:6 -> 1:6
       $e = $ne;
@@ -266,7 +267,7 @@ sub _fs_check_and_optimize_value {
   return($value, $errormsg) if (! MMisc::is_blank($errormsg));
 
   # Then optimize it (if a value is present)
-  if ($value ne "") {
+  if ($value ne "") { # Ok not to use 'is_blank' as value is checked after
     ($value, $errormsg) = &_fs_shorten_value($value);
     return($value, $errormsg) if (! MMisc::is_blank($errormsg));
   }
@@ -277,16 +278,19 @@ sub _fs_check_and_optimize_value {
 ##########
 
 sub set_value {
-  my ($self, $tmp) = @_;
+  my ($self, $tmp, $skopt) = @_;
 
   return(0) if ($self->error());
 
   my $ok = 1;
 
-  my ($value, $errormsg) = &_fs_check_and_optimize_value($tmp, 0);
-  if (! MMisc::is_blank($errormsg)) {
-    $self->_set_errormsg($errormsg);
-    $ok = 0;
+  my $value = $tmp;
+  if (! $skopt) {
+    ($value, my $errormsg) = &_fs_check_and_optimize_value($tmp, 0);
+    if (! MMisc::is_blank($errormsg)) {
+      $self->_set_errormsg($errormsg);
+      $ok = 0;
+    }
   }
 
   $self->{value} = $value;
@@ -331,8 +335,7 @@ sub add_fs_to_value {
     return(0);
   }
 
-  my $value = $self->get_value();
-
+  my $value = $self->{value};
   $value .= " $v";
 
   return($self->set_value($value));
@@ -355,7 +358,7 @@ sub union {
     return(0);
   }
 
-  my $cfs = $other->get_value();
+  my $cfs = $other->{value};
 
   return($self->add_fs_to_value($cfs));
 }
@@ -448,11 +451,9 @@ sub is_value_set {
 
   return(0) if ($self->error());
 
-  my $v = $self->get_value();
+  my $v = $self->{value};
 
   return(0) if (MMisc::is_blank($v));
-
-  return(0) if (&_fs_split_line_count($v) == 0);
 
   return(1);
 }
@@ -462,8 +463,11 @@ sub is_value_set {
 sub _fs_get_begend {
   my $fs = shift @_;
 
-  my ($bf) = ($fs =~ m%^(\d+)\:%);
-  my ($ef) = ($fs =~ m%\:(\d+)$%);
+  my $sc = index($fs, ":", 0);
+  my $bf = substr($fs, 0, $sc);
+
+  $sc = rindex($fs, ":"); # look from end of string
+  my $ef = substr($fs, $sc + 1); # go until the end of string
 
   return($bf, $ef);
 }
@@ -493,7 +497,7 @@ sub _fs_sort_core {
 sub sort_cmp {
   my ($self, $other) = @_;
 
-  return(_fs_sort_core($self->get_value(), $other->get_value()));
+  return(&_fs_sort_core($self->{value}, $other->{value}));
 }
 
 
@@ -509,7 +513,7 @@ sub count_pairs_in_value {
     return(-1);
   }
 
-  my $value = $self->get_value();
+  my $value = $self->{value};
 
   return(&_fs_split_line_count($value));
 }
@@ -527,12 +531,12 @@ sub get_list_of_framespans {
     return(undef);
   }
 
-  my $value = $self->get_value();
+  my $value = $self->{value};
   my $fps = undef;
   $fps = $self->get_fps() if ($self->is_fps_set());
   foreach my $p (&_fs_split_line($value)) {
     my $nfs = new ViperFramespan();
-    if (! $nfs->set_value($p)) {
+    if (! $nfs->set_value($p, 1)) {
       $self->_set_errormsg("Failed to set sub framespan value \'$p\'");
       return(undef); 
     }
@@ -590,8 +594,8 @@ sub check_if_overlap {
   
   return(0) if ($self->error());
 
-  my $ifs = $self->get_value();
-  my $cfs = $other->get_value();
+  my $ifs = $self->{value};
+  my $cfs = $other->{value};
 
   return(&_does_overlap($ifs, $cfs));
 }
@@ -663,7 +667,7 @@ sub _get_overlap_wrapper {
 
   return(undef) if (! defined $ovb);
 
-  # We can not have values in "i" and "b" at the same time
+  # We can not have values in "i" and "c" at the same time
   return(undef) if (($ib != 0) && ($ie != 0) && ($cb != 0) && ($ce != 0));
 
   # Values disappears if beg > end
@@ -693,12 +697,11 @@ sub _split_pair_to_2darray {
 
   my @out = ();
   foreach my $entry (@v) {
-    my ($err, $b, $e) = &_fs_split_pair($entry);
-    return($err) if (! MMisc::is_blank($err));
+    my ($b, $e) = &_fs_split_pair_nocheck($entry);
     push @out, [$b, $e];
   }
 
-  return("", @out);
+  return(@out);
 }
 
 #####
@@ -736,24 +739,15 @@ sub get_overlap {
   return(undef) if ($self->error());
 
   # Now in order to compute the overlap we work pair per pair
-  my $sv = $self->get_value();
-  my $ov = $other->get_value();
+  my $sv = $self->{value};
+  my $ov = $other->{value};
 
 #  print "******************** Overlap\n*****In1: $sv\n*****In2: $ov\n";
 
   # [MM 20090420 with Jon's Help] New technique : go from o(n*m) to o(n+m) 
 
-  my ($err, @spl) = &_split_pair_to_2darray(&_fs_split_line($sv));
-  if (! MMisc::is_blank($err)) {
-    $self->_set_errormsg("Problem in \'get_overlap\' : $err");
-    return(undef);
-  }
-  
-  my ($err, @opl)  = &_split_pair_to_2darray(&_fs_split_line($ov));
-  if (! MMisc::is_blank($err)) {
-    $self->_set_errormsg("Problem in \'get_overlap\' : $err");
-    return(undef);
-  }
+  my @spl = &_split_pair_to_2darray(&_fs_split_line($sv));
+  my @opl = &_split_pair_to_2darray(&_fs_split_line($ov));
 
   # Resulting overlap array
    my @ova = ();
@@ -835,9 +829,7 @@ sub get_beg_end_fs {
     return(-1);
   }
 
-  my $v = $self->get_value();
-
-  return(&_fs_get_begend($v));
+  return(&_fs_get_begend($self->{value}));
 }
 
 #####
@@ -881,8 +873,7 @@ sub _fs_not_value {
 
   my ($b, $e) = (0, 0);
   foreach my $entry (@ftodo) {
-    (my $err, $b, $e) = &_fs_split_pair($entry);
-    return($fs, $err) if (! MMisc::is_blank($err));
+    ($b, $e) = &_fs_split_pair_nocheck($entry);
 
     push @o, ($min . ":" . ($b - 1))
       if ($b > $min);
@@ -894,7 +885,7 @@ sub _fs_not_value {
 
   $fs = join(" ", @o);
 
-  return($fs, "");
+  return($fs);
 }
 
 #####
@@ -922,17 +913,9 @@ sub bounded_not {
   # If framespan is not within min/Max, return the full min/Max framespan
   return($tfs) if (! defined $ofs);
 
-  my $fsv = $ofs->get_value();
-  if ($ofs->error()) {
-    $self->_set_errormsg("Problem obtaining overlap value: " . $ofs->get_errormsg());
-    return(undef);
-  }
+  my $fsv = $ofs->{value};
 
-  my ($ffsv, $err) = &_fs_not_value($fsv, $min, $max);
-  if (! MMisc::is_blank($err)) {
-    $self->_set_errormsg("Problem in not_bounded: " . $err);
-    return(undef);
-  }
+  my $ffsv = &_fs_not_value($fsv, $min, $max);
 
   my $nfs = new ViperFramespan();
   if (! $nfs->set_value($ffsv)) {
@@ -1044,9 +1027,9 @@ sub remove {
   my $ov = $self->get_overlap($x);
   return(0) if ($self->error());
 
-  my $fsv = $ov->get_value();
+  my $fsv = $ov->{value};
 
-  return($self->set_value($fsv));
+  return($self->set_value($fsv, 1));
 }
 
 
@@ -1138,17 +1121,13 @@ sub duration {
     return(0);
   }
 
-  my $v = $self->get_value();
+  my $v = $self->{value};
 
   my @pairs = &_fs_split_line($v);
 
   my $d = 0;
   foreach my $p (@pairs) {
-    my ($err, $b, $e) = &_fs_split_pair($p);
-    if (! MMisc::is_blank($err)) {
-      $self->_set_errormsg($err);
-      return(0);
-    }
+    my ($b, $e) = &_fs_split_pair_nocheck($p);
 
     # As for extent_duration:
     # 1:3 is 1:2:3 so duration 3, and
@@ -1178,30 +1157,22 @@ sub gap_shorten {
   }
 
   # Note: We know that new reorder and optimize values, so we can trust data
-  my $fs = $self->get_value();
+  my $fs = $self->{value};
+
+  my @ftodo = &_fs_split_line($fs);
 
   # Only 1 element, nothing to do
-  return(1) if (&_fs_split_line_count($fs) == 1);
+  return(1) if (scalar @ftodo == 1);
 
   # More than one element: compute
   my @o = ();
 
-  my @ftodo = &_fs_split_line($fs);
-
   # Get the first element
   my $entry = shift @ftodo;
-  my ($err, $b, $e) = &_fs_split_pair($entry);
-  if (! MMisc::is_blank($err)) {
-    $self->_set_errormsg("Problem in \'gap_shorten\' : $err");
-    return(0);
-  }
+  my ($b, $e) = &_fs_split_pair_nocheck($entry);
 
   foreach $entry (@ftodo) {
-    my ($err, $nb, $ne) = &_fs_split_pair($entry);
-    if (! MMisc::is_blank($err)) {
-      $self->_set_errormsg("Problem in \'gap_shorten\' : $err");
-      return(0);
-    }
+    my ($nb, $ne) = &_fs_split_pair_nocheck($entry);
 
     my $v = $nb - $e;
 
@@ -1322,7 +1293,7 @@ sub _get_begend_ts_core {
     return(0);
   }
 
-  my $v = $self->get_value();
+  my $v = $self->{value};
 
   my ($beg, $end) = &_fs_get_begend($v);
 
@@ -1470,17 +1441,12 @@ sub value_shift {
   $val = -$val
     if ($neg);
 
-  my $fs = $self->get_value();
+  my $fs = $self->{value};
 
   my @in = &_fs_split_line($fs);
   my @out = ();
   foreach my $entry (@in) {
-    my ($errormsg, $b, $e) = &_fs_split_pair($entry);
-
-    if (! MMisc::is_blank($errormsg)) {
-      $self->_set_errormsg($errormsg);
-      return(0);
-    }
+    my ($b, $e) = &_fs_split_pair_nocheck($entry);
 
     $b += $val;
     $e += $val;
@@ -1520,23 +1486,23 @@ sub list_frames {
 
   return(@out) if ($self->error());
 
-  my $v = $self->get_value();
-  return(@out) if ($self->error());
+  if (! $self->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(@out);
+  }
+
+  my $v = $self->{value};
 
   my @todo = &_fs_split_line($v);
   foreach my $pair (@todo) {
-    my ($txt, $b, $e) = &_fs_split_pair($pair);
-    if (! MMisc::is_blank($txt)) {
-      $self->_set_errormsg("Problem in \'list_frames\' ($txt)");
-      return(@out);
-    }
+    my ($b, $e) = &_fs_split_pair_nocheck($pair);
+
     for (my $c = $b; $c <= $e; $c++) {
       push @out, $c;
     }
   }
-  my @res = MMisc::make_array_of_unique_values(@out);
 
-  return(@res);
+  return(@out);
 }
 
 #####
@@ -1548,8 +1514,12 @@ sub list_pairs {
 
   return(@out) if ($self->error());
 
-  my $v = $self->get_value();
-  return(@out) if ($self->error());
+  if (! $self->is_value_set()) {
+    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    return(@out);
+  }
+
+  my $v = $self->{value};
 
   my @todo = &_fs_split_line($v);
   my @res = MMisc::make_array_of_unique_values(@todo);
@@ -1561,9 +1531,12 @@ sub list_pairs {
 
 sub unit_test {                 # Xtreme coding and us ;)
   my $notverb = shift @_;
+  my $makecall = shift @_;
   my $eh = "unit_test:";
   my @otxt = ();
-  
+
+  print "Testing ViperFramespan ... " if ($makecall);
+
   # Let us try to set a bad value
   my $fs_tmp1 = new ViperFramespan("Not a framespan");
   my $err1 = $fs_tmp1->get_errormsg();
@@ -1941,11 +1914,13 @@ sub unit_test {                 # Xtreme coding and us ;)
   #####
   # End
   if (scalar @otxt > 0) {
-    print("[ViperFramespan] unit_test errors:\n - ", join("\n - ", @otxt), "\n")
-      if (! $notverb);
+    my $txt = "[ViperFramespan] unit_test errors:\n - " . join("\n - ", @otxt) . "\n";
+    MMisc::error_quit("failed\n$txt") if ($makecall);
+    print($txt) if (! $notverb);
     return(0);
   }
  
+  MMisc::ok_quit("OK") if ($makecall);
   # return 1 if no error found
   return(1);
 }
