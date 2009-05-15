@@ -80,12 +80,14 @@ sub unitTest {
     $ob1 = OBox->new(284, 149, 86, 103, 1);
     $ob2 = OBox->new(281, 149, 95, 102, 0);
     $ret = $ob1->computeIntersectionArea($ob2);
-    die "  Computing Intersection Area Error: Expected 8365.20954518059 got $ret\n" if ($ret ne 8365.20954518059);
+    MMisc::error_quit("  Computing Intersection Area Error: Expected 8365.20954518059 got $ret\n")
+        if ($ret ne 8365.20954518059);
 
     $ob1 = OBox->new(119, 146, 37, 27, 3);
     $ob2 = OBox->new(109, 146, 43, 46, 0);
     $ret = $ob1->computeIntersectionArea($ob2);
-    die "  Computing Intersection Area Error: Expected 979.897364451338 got $ret\n" if ($ret ne 979.897364451338);
+    MMisc::error_quit("  Computing Intersection Area Error: Expected 979.897364451338 got $ret\n")
+        if ($ret ne 979.897364451338);
 
     print "  Computing Intersection Area... OK\n";
     return 1;
@@ -153,21 +155,22 @@ sub computeArea {
 #######################
 
 sub computeCentroid {
-    my ( $self ) = @_;
-    my $orads = $self->getOrientation()/180.0*3.1415926535897932384626433;
-    my $xhat = $self->getWidth()/2;
-    my $yhat = $self->getHeight()/2;
-    my $r = sqrt($xhat*$xhat + $yhat*$yhat);
-    my $theta = atan2($yhat,$xhat);
-    $theta -= $orads;
-
-    my $centx = $r*cos($theta)+$self->getX();
-    my $centy = $r*sin($theta)+$self->getY();
-    my $centroid = Point->new( $centx, $centy );
-    if (ref($centroid) ne "Point") {
-        die "Failed to create new 'Point' instance in 'computeCentroid'\n"
-    }
-    return $centroid;
+  my ( $self ) = @_;
+  my $orads = $self->getOrientation()/180.0*3.1415926535897932384626433;
+  my $xhat = $self->getWidth()/2;
+  my $yhat = $self->getHeight()/2;
+  my $r = sqrt($xhat*$xhat + $yhat*$yhat);
+  my $theta = atan2($yhat,$xhat);
+  $theta -= $orads;
+  
+  my $centx = $r*cos($theta)+$self->getX();
+  my $centy = $r*sin($theta)+$self->getY();
+  my $centroid = Point->new( $centx, $centy );
+  
+  MMisc::error_quit("Failed to create new 'Point' instance in 'computeCentroid'\n")
+      if (ref($centroid) ne "Point");
+  
+  return $centroid;
 }
 
 #######################

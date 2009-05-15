@@ -2253,7 +2253,7 @@ sub _get_comment_random_value {
     $v = &_rand();
     $found = 1 if (MMisc::are_float_equal($v, $rseed_lastfound, 0));
     $run++;
-    die("TrecVid08ViperFile Internal Error: Could not find the requested pseudo random value after $maxrun iterations, aborting\n") 
+    MMisc::error_quit("TrecVid08ViperFile Internal Error: Could not find the requested pseudo random value after $maxrun iterations, aborting\n") 
       if ($run > $maxrun);
   }
 
@@ -2270,9 +2270,9 @@ sub _get_random_XXX {
 
   # I cheat a little: I know the required types are not dynamic
   # but just in case they are extended "crash"
-  die("TrecVid08ViperFile Internal Error: Type ($xxx) dynamic status not defined by _get_random_XXX method\n") 
+  MMisc::error_quit("TrecVid08ViperFile Internal Error: Type ($xxx) dynamic status not defined by _get_random_XXX method\n") 
     if (! exists $hash_objects_attributes_types_dynamic{$xxx});
-  die("TrecVid08ViperFile Internal Error: Type ($xxx) is dynamic and dynamic types are not handled by _get_random_XXX method\n") 
+  MMisc::error_quit("TrecVid08ViperFile Internal Error: Type ($xxx) is dynamic and dynamic types are not handled by _get_random_XXX method\n") 
     if ($hash_objects_attributes_types_dynamic{$xxx});
 
   my $v = 0;
@@ -2283,7 +2283,7 @@ sub _get_random_XXX {
     # 0 / 1
     $v = int(&_rand(256)) % 2;
   } else {
-    die("TrecVid08ViperFile Internal Error: Type ($type) is yet not handled by _get_random_XXX method\n");
+    MMisc::error_quit("TrecVid08ViperFile Internal Error: Type ($type) is yet not handled by _get_random_XXX method\n");
   }
 
   my %out = ();
@@ -3449,7 +3449,7 @@ sub _writeback_object {
       my @afs = ();
       foreach my $fs (keys %{$object_hash{$key}}) {
         my $fs_tmp = new ViperFramespan();
-        die("[TrecVid08ViperFile] Internal Error: WEIRD: In \'_writeback_object\' (" . $fs_tmp->get_errormsg() .")")
+        MMisc::error_quit("[TrecVid08ViperFile] Internal Error: WEIRD: In \'_writeback_object\' (" . $fs_tmp->get_errormsg() .")")
           if (! $fs_tmp->set_value($fs));
         push @afs, $fs_tmp;
       }
