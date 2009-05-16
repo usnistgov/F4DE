@@ -193,11 +193,11 @@ dist_head:
 dist_archive_pre_remove:
 ## CLEAR07
 # Sys files
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/common/{BN_{[FT]DT,TR},{M,}MR_FDT}/*.rdf
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/common/BN_{TDT,TR}/*.rdf
 # Corresponding "res" files
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTViperValidator/res-test-[1235]b.txt
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTViperValidator/res-test-2b.txt
 	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRViperValidator/res-test-1b.txt
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTScorer/res-test-[1234].txt
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTScorer/res-test-2.txt
 	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRScorer/res-test-1[ab].txt
 
 create_mans:
