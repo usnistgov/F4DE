@@ -40,7 +40,7 @@ my $versionid = "TrecVid08ECF.pm Version: $version";
 ########################################
 
 # Required XSD files
-my @xsdfilesl = ( "ecf.xsd" );
+my @xsdfilesl = ( "TrecVid08-ecf.xsd" );
 # Default values to compare against (constant values)
 my $default_error_value = "default_error_value";
 
