@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:avss09ecf="http://www.itl.nist.gov/iad/mig/avss09ecf#"
+    targetNamespace="http://www.itl.nist.gov/iad/mig/avss09ecf#"
+    elementFormDefault="qualified">
+
+  <!-- root element -->
+  <xs:element name="ecf" type="avss09ecf:ecfType"/>
+
+
+  <xs:simpleType name="framespanType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d+:\d+(\s+\d+:\d+)*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <xs:complexType name="bboxType">
+    <xs:attribute name="framespan" type="avss09ecf:framespanType"/>
+    <xs:attribute name="x" type="xs:integer"/>
+    <xs:attribute name="y" type="xs:integer"/>
+    <xs:attribute name="width" type="xs:integer"/>
+    <xs:attribute name="height" type="xs:integer"/>
+  </xs:complexType>
+
+
+  <xs:complexType name="descriptionType">
+    <xs:attribute name="id" type="xs:nonNegativeInteger"/>
+    <xs:attribute name="framespan" type="avss09ecf:framespanType"/>
+  </xs:complexType>
+
+
+  <xs:complexType name="BBdescriptionType">
+    <xs:sequence>
+      <xs:element name="bbox" type="avss09ecf:bboxType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:nonNegativeInteger"/>
+    <xs:attribute name="framespan" type="avss09ecf:framespanType"/>
+  </xs:complexType>
+
+
+  <xs:complexType name="cameraType">
+    <xs:sequence>
+      <xs:element name="dont_care_frames" type="avss09ecf:descriptionType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="dont_care_region" type="avss09ecf:BBdescriptionType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="file" type="xs:anyURI"/>
+    <xs:attribute name="template_xml" type="xs:anyURI" use="optional"/>
+    <xs:attribute name="target_training" type="xs:boolean"/>
+  </xs:complexType>
+
+
+  <xs:simpleType name="taskValues">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="cpspt"/>
+      <xs:enumeration value="mcspt"/>
+      <xs:enumeration value="scspt"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+
+  <xs:complexType name="trackingTrialType">
+    <xs:sequence>
+      <xs:element name="camera" type="avss09ecf:cameraType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:Name"/>
+    <xs:attribute name="framespan" type="avss09ecf:framespanType"/>
+    <xs:attribute name="type" type="avss09ecf:taskValues"/>
+  </xs:complexType>
+
+
+  <xs:complexType name="ecfType">
+    <xs:sequence>
+      <xs:element name="version" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="tracking_trial" type="avss09ecf:trackingTrialType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>      
+
+
+</xs:schema>
