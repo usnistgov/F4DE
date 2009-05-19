@@ -195,17 +195,15 @@ while ($tmp = shift @ARGV) {
   next if (! $ok);
 
   if ($writeback != -1) {
-    my $txt = $object->reformat_xml($isgtf, @ok_objects);
-    MMisc::error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
-      if ($object->error());
     my $fname = "";
+    
     if ($writeback ne "") {
-      my $tmp2 = $tmp;
-      $tmp2 =~ s%^.+\/([^\/]+)$%$1%;
-      $fname = "$writeback$tmp2";
-    } 
-    MMisc::error_quit("Problem while trying to \'write\'")
-      if (! MMisc::writeTo($fname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
+      my ($err, $td, $tf, $te) = MMisc::split_dir_file_ext($tmp);
+      $fname = MMisc::concat_dir_file_ext($writeback, $tf, $te);
+    }
+
+    (my $err, $fname) = CLEARDTHelperFunctions::save_ViperFile_XML($fname, $object, 1, "** XML re-Representation:\n", @ok_objects);
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
     if (defined $MemDump) {
       MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
