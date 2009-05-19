@@ -954,7 +954,7 @@ sub Transformation_Helper {
 ########################################
 
 sub reformat_xml {
-  my ($self, $isgtf) = @_;
+  my ($self) = @_;
 
   return(0) if ($self->error());
 
@@ -962,7 +962,23 @@ sub reformat_xml {
     if (! $self->is_validated());
 
   return($self->__cldt_caller
-         (\&CLEARDTViperFile::reformat_xml, [0], $isgtf, @ok_objects));
+         (\&CLEARDTViperFile::reformat_xml, [0], @ok_objects));
+}
+
+##########
+
+sub write_XML {
+  my ($self, $fname, $isgtf, $ptxt) = @_;
+
+  return(0) if ($self->error());
+
+  return($self->_set_error_and_return("Can only use \"write_XML\" on validated XML files", 0))
+    if (! $self->is_validated());
+
+  my $cldt = $self->__get_cldt();
+  return(0) if ($self->error());
+
+  return(CLEARDTHelperFunctions::save_ViperFile_XML($fname, $cldt, 1, $ptxt, @ok_objects));
 }
 
 ##########
@@ -1160,11 +1176,15 @@ sub merge {
 
 sub _num_ { $a <=> $b; }
 
-my $dco_key = "AMBIGUOUS";
-my $dcr_key = $dco_key;
+my $dcor_key = "AMBIGUOUS";
 my $dcf_key = "EVALUATE";
 
+my $dco_kw = "DCO";
+my $dcr_kw = "DCR";
+my $dcf_kw = "DCF";
+
 my $k_person = $ok_elements[0];
+my $k_frame  = $ok_elements[1];
 my $k_true = "true";
 my $k_false = "false";
 
@@ -1234,18 +1254,18 @@ sub get_person_id_list {
 #####
 
 sub __get_fslist {
-  my ($self, $id, $req_key) = @_;
+  my ($self, $k1, $k2, $k3) = @_;
 
   my (%fhash) = $self->__vc_gfhash();
   return(undef) if ($self->error());
 
-  return($self->_set_error_and_return("Can not find request \"PERSON\" ID ($id)", undef))
-    if (! exists $fhash{$k_person}{$id});
-  return($self->_set_error_and_return("Can not find request \"PERSON\" ID ($id)'s key ($req_key)", undef))
-    if (! exists $fhash{$k_person}{$id}{$req_key});
+  return($self->_set_error_and_return("Can not find request \"$k1\" ID ($k2)", undef))
+    if (! exists $fhash{$k1}{$k2});
+  return($self->_set_error_and_return("Can not find request \"$k1\" ID ($$k2)'s key ($k3)", undef))
+    if (! exists $fhash{$k1}{$k2}{$k3});
 
-  my @fs_list = keys %{$fhash{$k_person}{$id}{$req_key}};
-  return($self->_set_error_and_return("Could not find any framespan for requested \"PERSON\" ID ($id)'s key ($req_key)", undef))
+  my @fs_list = keys %{$fhash{$k1}{$k2}{$k3}};
+  return($self->_set_error_and_return("Could not find any framespan for requested \"$k1\" ID ($k2)'s key ($k3)", undef))
     if (scalar @fs_list == 0);
 
   return(@fs_list);
@@ -1256,7 +1276,7 @@ sub __get_fslist {
 sub get_person_fs {
   my ($self, $id) = @_;
 
-  my @fs_list = $self->__get_fslist($id, $dco_key);
+  my @fs_list = $self->__get_fslist($k_person, $id, $dcor_key);
   return(undef) if ($self->error());
 
   my $fs= join(" ", @fs_list);
@@ -1267,10 +1287,10 @@ sub get_person_fs {
 #####
 
 sub __get_fslist_key_is {
-  my ($self, $id, $req_key, $val, $oth_val) = @_;
+  my ($self, $k1, $k2, $k3, $val, $oth_val) = @_;
 
   # Get the framespan list
-  my (@fs_list) = $self->__get_fslist($id, $req_key);
+  my (@fs_list) = $self->__get_fslist($k1, $k2, $k3);
   return(undef) if ($self->error());
 
   # Then check the keys in 'fhash'
@@ -1279,9 +1299,9 @@ sub __get_fslist_key_is {
 
   my @ofs = ();
   foreach my $fs (@fs_list) {
-    return($self->_set_error_and_return("Can not find fhash location [$k_person / $id / $req_key / $fs]", undef))
-      if (! exists $fhash{$k_person}{$id}{$req_key}{$fs});
-    my $tv = $fhash{$k_person}{$id}{$req_key}{$fs};
+    return($self->_set_error_and_return("Can not find fhash location [$k1 / $k2 / $k3 / $fs]", undef))
+      if (! exists $fhash{$k1}{$k2}{$k3}{$fs});
+    my $tv = $fhash{$k1}{$k2}{$k3}{$fs};
     my ($err, $v) = MMisc::dive_structure($tv);
     return($self->_set_error_and_return("While checking variable status: $err", undef))
       if (! MMisc::is_blank($err));
@@ -1291,28 +1311,28 @@ sub __get_fslist_key_is {
       next;
     }
 
-    return($self->_set_error_and_return("Unknow $req_key status ($v) for framespan ($fs)", undef))
+    return($self->_set_error_and_return("Unknow $k3 status ($v) for framespan ($fs)", undef))
       if ($v ne $oth_val);
   }
 
   return(@ofs);
 }
 
-#####
+##########
 
-sub is_DCO {
-  # return the framespan where object is a DCO, undef otherwise 
-  my ($self, $id) = @_;
+sub _is_DCX {
+  # return the framespan where object is a DCO/R/F, undef otherwise 
+  my ($self, $k1, $k2, $k3, $mode, $fk, $ofk) = @_;
 
   my ($ig) = $self->check_if_gtf();
   return(undef) if ($self->error());
-  return($self->_set_error_and_return("DCO is only valid for GTF", undef))
+  return($self->_set_error_and_return("$mode is only valid for GTF", undef))
     if (! $ig);
 
-  my (@ofs) = $self->__get_fslist_key_is($id, $dco_key, $k_true, $k_false);
+  my (@ofs) = $self->__get_fslist_key_is($k1, $k2, $k3, $fk, $ofk);
   return(undef) if ($self->error());
 
-  # Not a DCO ?
+  # Not ?
   return(undef) if (scalar @ofs == 0);
 
   my $fs= join(" ", @ofs);
@@ -1320,23 +1340,32 @@ sub is_DCO {
   return($self->__validate_fs($fs));
 }
 
+## 
+sub is_DCO {
+  my ($self, $id) = @_;
+  return($self->_is_DCX($k_person, $id, $dcor_key, $dco_kw, $k_true, $k_false));
+}
+
+##
+sub is_DCR {
+  my ($self, $id) = @_;
+  return($self->_is_DCX($k_person, $id, $dcor_key, $dcr_kw, $k_true, $k_false));
+}
+ 
+##
+sub get_DCF {
+  my ($self) = @_;
+  return($self->_is_DCX($k_frame, '0', $dcf_key, $dcf_kw, $k_false, $k_true));
+}
+
 #####
 
-sub __set_personidkey_truefalse_fs_to {
-  my ($self, $id, $req_key, $fstc, $to, $other) = @_;
+sub __set_key_truefalse_fs_to {
+  my ($self, $k1, $k2, $k3, $fstc, $to, $other) = @_;
 
-  my (%fhash) = $self->__vc_gfhash();
+  my @fs_list = $self->__get_fslist($k1, $k2, $k3);
   return(0) if ($self->error());
 
-  return($self->_set_error_and_return("Can not find request \"PERSON\" ID ($id)", 0))
-    if (! exists $fhash{$k_person}{$id});
-  return($self->_set_error_and_return("Can not find request \"PERSON\" ID ($id)'s key ($req_key)", 0))
-    if (! exists $fhash{$k_person}{$id}{$req_key});
-
-  my @fs_list = keys %{$fhash{$k_person}{$id}{$req_key}};
-  return($self->_set_error_and_return("Could not find any framespan for requested \"PERSON\" ID ($id)'s key ($req_key)", 0))
-    if (scalar @fs_list == 0); 
-  
   my $ffs = $self->__validate_fs(join(" ", @fs_list));
   return(0) if ($self->error());
   
@@ -1347,13 +1376,16 @@ sub __set_personidkey_truefalse_fs_to {
   return(0) if ($self->error());
   $ffs = $fs_ffs->get_value();
 
+  my (%fhash) = $self->__vc_gfhash();
+  return(0) if ($self->error());
+
   ##### If no framespan was specified, set everything to the requested value
   if (! defined $fstc) {
     # First, delete any previous value
-    delete $fhash{$k_person}{$id}{$req_key};
+    delete $fhash{$k1}{$k2}{$k3};
 
     # Set the replacement value
-    $fhash{$k_person}{$id}{$req_key}{$ffs} = [ $to ];    
+    $fhash{$k1}{$k2}{$k3}{$ffs} = [ $to ];    
 
     $self->_set_cldt_fhash(%fhash);
     return(0) if ($self->error());
@@ -1372,14 +1404,14 @@ sub __set_personidkey_truefalse_fs_to {
   my $fs_ov = $fs_fstc->get_overlap($fs_ffs);
   return($self->_set_error_and_return("Problem with framespan overlap: " . $fs_fstc->get_errormsg(), 0))
     if ($fs_fstc->error());
-  return($self->_set_error_and_return("Requested framespan ($fstc) is not within $k_person / $id 's framespan ($ffs)", 0))
+  return($self->_set_error_and_return("Requested framespan ($fstc) is not within [$k1 / $k2 / $k3] 's framespan ($ffs)", 0))
     if (! defined $fs_ov);
   my $ov = $fs_ov->get_value();
-  return($self->_set_error_and_return("Requested framespan ($fstc) goes beyond $k_person / $id 's framespan ($ffs)", 0))
+  return($self->_set_error_and_return("Requested framespan ($fstc) goes beyond [$k1 / k2 / $k3] 's framespan ($ffs)", 0))
     if ($ov ne $fstc);
 
   # Now get the values in the object that are already at the requested value
-  my (@to_fslist) = $self->__get_fslist_key_is($id, $req_key, $to, $other);
+  my (@to_fslist) = $self->__get_fslist_key_is($k1, $k2, $k3, $to, $other);
   return(0) if ($self->error());
 
   my $fs_to = undef;
@@ -1405,10 +1437,10 @@ sub __set_personidkey_truefalse_fs_to {
   # Just do a check to see if it is all of the original object framespan ?
   if ($fto eq $ffs) {
     # First, delete any previous value
-    delete $fhash{$k_person}{$id}{$req_key};
+    delete $fhash{$k1}{$k2}{$k3};
 
     # Set the replacement value
-    $fhash{$k_person}{$id}{$req_key}{$ffs} = [ $to ];    
+    $fhash{$k1}{$k2}{$k3}{$ffs} = [ $to ];    
 
     $self->_set_cldt_fhash(%fhash);
     return(0) if ($self->error());
@@ -1433,15 +1465,15 @@ sub __set_personidkey_truefalse_fs_to {
     if ($fs_other->error());
   
   # Delete any previous value
-  delete $fhash{$k_person}{$id}{$req_key};
+  delete $fhash{$k1}{$k2}{$k3};
 
   # Fill the "to" values
   foreach my $fs (@to_list) {
-    $fhash{$k_person}{$id}{$req_key}{$fs} = [ $to ];    
+    $fhash{$k1}{$k2}{$k3}{$fs} = [ $to ];    
   }
   # Then the "other" values
   foreach my $fs (@other_list) {
-    $fhash{$k_person}{$id}{$req_key}{$fs} = [ $other ];    
+    $fhash{$k1}{$k2}{$k3}{$fs} = [ $other ];    
   }
 
   $self->_set_cldt_fhash(%fhash);
@@ -1450,52 +1482,91 @@ sub __set_personidkey_truefalse_fs_to {
   return(1);
 }
 
-#####
+##########
 
+sub _flip_DCX {
+  my ($self, $opt_fs, $k1, $k2, $k3, $mode, $fk, $ofk, $soc) = @_;
+
+  my (@fs_list) = $self->__get_fslist($k1, $k2, $k3);
+  return(undef) if ($self->error());
+
+  my ($ig) = $self->check_if_gtf();
+  return(undef) if ($self->error());
+  return($self->_set_error_and_return("$mode is only valid for GTF", undef))
+    if (! $ig);
+  
+  my $ok = $self->__set_key_truefalse_fs_to($k1, $k2, $k3, $opt_fs, $fk, $ofk);
+  return(undef) if ($self->error());
+  return($self->_set_error_and_return("An error occurred while $mode set", undef))
+    if (! $ok);
+  
+  # Same order check
+  my $ck  = ($soc) ? $fk : $ofk;
+  my $ock = ($soc) ? $ofk : $fk;
+  return($self->_is_DCX($k1, $k2, $k3, $mode, $ck, $ock));
+}  
+
+#####
+sub _flip_DCO {
+  my ($self, $ofs, $id, $fk, $ofk, $soc) = @_;
+  return($self->_flip_DCX($ofs, $k_person, $id, $dcor_key, $dco_kw, $fk, $ofk, $soc));
+}
+
+## 
 sub set_DCO {
-  my ($self, $id, $opt_fs) = @_;
+  my ($self, $id, $ofs) = @_;
+  return($self->_flip_DCO($ofs, $id, $k_true, $k_false, 1)); 
+}
 
-  my (@fs_list) = $self->__get_fslist($id, $dco_key);
-  return(undef) if ($self->error());
-
-  my $ig = $self->check_if_gtf();
-  return(undef) if ($self->error());
-  return($self->_set_error_and_return("DCO is only valid for GTF", undef))
-    if (! $ig);
-  
-  my $ok = $self->__set_personidkey_truefalse_fs_to($id, $dco_key, $opt_fs, $k_true, $k_false);
-  return(undef) if ($self->error());
-  return($self->_set_error_and_return("An error occurred while DCO set", undef))
-    if (! $ok);
-  
-  return($self->is_DCO($id));
-}  
-
-#####
-
+## 
 sub unset_DCO {
-  my ($self, $id, $opt_fs) = @_;
-
-  my (@fs_list) = $self->__get_fslist($id, $dco_key);
-  return(undef) if ($self->error());
-
-  my $ig = $self->check_if_gtf();
-  return(undef) if ($self->error());
-  return($self->_set_error_and_return("DCO is only valid for GTF", undef))
-    if (! $ig);
-  
-  my $ok = $self->__set_personidkey_truefalse_fs_to($id, $dco_key, $opt_fs, $k_false, $k_true);
-  return(undef) if ($self->error());
-  return($self->_set_error_and_return("An error occurred while DCO unset", undef))
-    if (! $ok);
-  
-  return($self->is_DCO($id));
-}  
+  my ($self, $id, $ofs) = @_;
+  return($self->_flip_DCO($ofs, $id, $k_false, $k_true, 0));
+}
 
 #####
+sub _flip_DCR {
+  my ($self, $ofs, $id, $fk, $ofk, $soc) = @_;
+  return($self->_flip_DCX($ofs, $k_person, $id, $dcor_key, $dcr_kw, $fk, $ofk, $soc));
+}
 
-sub create_DCO {
-  my ($self, $req_fs, $rbbox, $opt_fs) = @_;
+##
+sub set_DCR {
+  my ($self, $id, $ofs) = @_;
+  return($self->_flip_DCR($ofs, $id, $k_true, $k_false, 1));
+}
+
+##
+sub unset_DCR {
+  my ($self, $id, $ofs) = @_;
+  return($self->_flip_DCR($ofs, $id, $k_false, $k_true, 0));
+}
+
+#####
+sub _flip_DCF {
+  my ($self, $fs, $fk, $ofk, $soc) = @_;
+  
+  return($self->_set_error_and_return("No framespan provided for \'set_DCF\'", undef))
+    if (! defined $fs);
+  return($self->_flip_DCX($fs, $k_frame, '0', $dcf_key, $dcf_kw, $fk, $ofk, $soc));
+}
+  
+##
+sub set_DCF {
+  my ($self, $fs) = @_;
+  return($self->_flip_DCF($fs, $k_false, $k_true, 1));
+}
+
+##
+sub unset_DCF {
+  my ($self, $fs) = @_;
+  return($self->_flip_DCF($fs, $k_true, $k_false, 0));
+}
+
+##########
+
+sub _create_DCOR {
+  my ($self, $req_fs, $rbbox, $opt_fs, $mode) = @_;
 
   return(0) if ($self->error());
 
@@ -1504,7 +1575,7 @@ sub create_DCO {
 
   my $ig = $self->check_if_gtf();
   return(0) if ($self->error());
-  return($self->_set_error_and_return("DCO is only valid for GTF", 0))
+  return($self->_set_error_and_return("$mode is only valid for GTF", 0))
     if (! $ig);
 
   return($self->_set_error_and_return("Not a valid boundingbox", 0))
@@ -1524,7 +1595,7 @@ sub create_DCO {
     $id = $sidl[-1] + 1;
   }
 
-  # Create a valid non DCO object and use 'set_DCO' to finish its creation
+  # Create a valid non DCO/R object and use 'set_DCO/R' to finish its creation
   $fhash{$k_person}{$id} = 
     {
      'AMBIGUOUS' => {
@@ -1539,11 +1610,6 @@ sub create_DCO {
                             $bbox[2],
                             $bbox[3]
                            ],
-                   },
-     'MOBILITY' => {
-                    $fs => [
-                            'MOBILE'
-                           ]
                    },
      'OCCLUSION' => {
                      $fs => [
@@ -1566,12 +1632,24 @@ sub create_DCO {
   my $ok = $self->_set_cldt_fhash(%fhash);
   return(0) if ($self->error());
 
-  my $ok = $self->set_DCO($id, $opt_fs);
+  my $ok = $self->_flip_DCX($opt_fs, $k_person, $id, $dcor_key, $mode, $k_true, $k_false);
   return(0) if ($self->error());
-  return($self->_set_error_and_return("Could not convert newly created $k_person (id $id) to a DCO", 0))
+  return($self->_set_error_and_return("Could not convert newly created $k_person (id $id) to a $mode", 0))
     if (! defined $ok);
 
-  return(1);
+  return($id);
+}
+
+## 
+sub create_DCO {
+  my ($self, $rfs, $rbb, $ofs) = @_;
+  return($self->_create_DCOR($rfs, $rbb, $ofs, $dco_kw));
+}
+
+##
+sub create_DCR {
+  my ($self, $rfs, $rbb, $ofs) = @_;
+  return($self->_create_DCOR($rfs, $rbb, $ofs, $dcr_kw));
 }
 
 ############################################################
