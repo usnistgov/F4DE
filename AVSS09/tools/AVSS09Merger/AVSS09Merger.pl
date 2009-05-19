@@ -100,7 +100,7 @@ my $show = 0;
 my $forceFilename = "";
 my $writedir = -1;
 my $MemDump = undef;
-my $skipSequenceMemDump = 0;
+my $skipScoringSequenceMemDump = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
 # Used:   C  F                W        fgh          s  vwx    #
@@ -116,9 +116,9 @@ GetOptions
    'gtf'             => \$isgtf,
    'frameTol=i'      => \$frameTol,
    'ForceFilename=s' => \$forceFilename,
-   'writedir=s'      => \$writedir,
+   'writedir:s'      => \$writedir,
    'WriteMemDump:s'  => \$MemDump,
-   'skipSequenceMemDump' => \$skipSequenceMemDump,
+   'skipScoringSequenceMemDump' => \$skipScoringSequenceMemDump,
    # Hiden Option(s)
    'X_show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -203,17 +203,17 @@ my $fdone = 0;
 foreach my $fname (keys %merged) {
   my $object = $merged{$fname};
 
-  my ($txt) = $object->reformat_xml($isgtf);
-  MMisc::error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
-      if ($object->error());
-  my $tmp2 = $fname;
-  $tmp2 =~ s%^.+\/([^\/]+)$%$1%;
-  my $lfname = "$writedir$tmp2";
-  MMisc::error_quit("Problem while trying to \'write\'")
-      if (! MMisc::writeTo($lfname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
+  my $lfname = "";
+  if (($writedir != -1) && ($writedir ne "")) {
+    my ($err, $td, $tf, $te) = MMisc::split_dir_file_ext($fname);
+    $lfname = MMisc::concat_dir_file_ext($writedir, $tf, $te);
+  }
+
+  (my $err, $lfname) = $object->write_XML($lfname, $isgtf, "** XML re-Representation:\n");
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));   
 
   if (defined $MemDump) {
-    $object->write_MemDumps($lfname, $isgtf, $MemDump, $skipSequenceMemDump);
+    $object->write_MemDumps($lfname, $isgtf, $MemDump, $skipScoringSequenceMemDump);
     MMisc::error_quit("Problem while trying to perform \'MemDump\'")
         if ($object->error());
   }
@@ -271,7 +271,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--CLEARxsd location] [--frameTol framenbr] [--writedir [directory] [--WriteMemDump [mode] [--skipSequenceMemDump]] [--ForceFilename file] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
+Usage: $0 [--help] [--version] [--gtf] [--xmllint location] [--CLEARxsd location] [--frameTol framenbr] [--writedir [directory] [--WriteMemDump [mode] [--skipScoringSequenceMemDump]] [--ForceFilename file] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
 
 Will merge AVSS09 Viper XML file whose sourcefile's filename is identical.
 
@@ -281,9 +281,9 @@ Will merge AVSS09 Viper XML file whose sourcefile's filename is identical.
   --CLEARxsd  Path where the XSD files can be found
   --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan (default: $frameTol)
   --ForceFilename  Specify that all files loaded refers to the same 'sourcefile' file
-  --writedir      Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension)
+  --writedir      Once processed in memory, print the new XML dump files to this directory (the output filename will the sourcefile's filename with the xml extension) (stdout if none provided)
   --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
-  --skipSequenceMemDump  Do not perform the sequence MemDump (useful for scoring) 
+  --skipScoringSequenceMemDump  Do not perform the sequence MemDump (useful for scoring) 
   --version       Print version number and exit
   --help          Print this usage information and exit
 
