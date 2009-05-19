@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ecf>
+<ecf xmlns="http://www.itl.nist.gov/iad/mig/tv08ecf#">
    <source_signal_duration>75160.440</source_signal_duration>
    <version>Created 20080513</version>
    <excerpt_list>

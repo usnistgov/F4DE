@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:tv08ecf="http://www.itl.nist.gov/iad/mig/tv08ecf#"
+    targetNamespace="http://www.itl.nist.gov/iad/mig/tv08ecf#"
+    elementFormDefault="qualified"
+>
   <xs:element name="ecf">
     <xs:complexType>
       <xs:all>
@@ -26,4 +31,5 @@
       </xs:all>
     </xs:complexType>      
   </xs:element>
+
 </xs:schema>
