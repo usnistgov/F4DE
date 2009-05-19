@@ -1506,43 +1506,43 @@ sub _flip_DCX {
   return($self->_is_DCX($k1, $k2, $k3, $mode, $ck, $ock));
 }  
 
-#####
+##### 'DCO'
 sub _flip_DCO {
   my ($self, $ofs, $id, $fk, $ofk, $soc) = @_;
   return($self->_flip_DCX($ofs, $k_person, $id, $dcor_key, $dco_kw, $fk, $ofk, $soc));
 }
 
 ## 
-sub set_DCO {
+sub add_DCO {
   my ($self, $id, $ofs) = @_;
   return($self->_flip_DCO($ofs, $id, $k_true, $k_false, 1)); 
 }
 
 ## 
-sub unset_DCO {
+sub remove_DCO {
   my ($self, $id, $ofs) = @_;
   return($self->_flip_DCO($ofs, $id, $k_false, $k_true, 0));
 }
 
-#####
+##### 'DCR'
 sub _flip_DCR {
   my ($self, $ofs, $id, $fk, $ofk, $soc) = @_;
   return($self->_flip_DCX($ofs, $k_person, $id, $dcor_key, $dcr_kw, $fk, $ofk, $soc));
 }
 
 ##
-sub set_DCR {
+sub add_DCR {
   my ($self, $id, $ofs) = @_;
   return($self->_flip_DCR($ofs, $id, $k_true, $k_false, 1));
 }
 
 ##
-sub unset_DCR {
+sub remove_DCR {
   my ($self, $id, $ofs) = @_;
   return($self->_flip_DCR($ofs, $id, $k_false, $k_true, 0));
 }
 
-#####
+##### 'DCF'
 sub _flip_DCF {
   my ($self, $fs, $fk, $ofk, $soc) = @_;
   
@@ -1552,15 +1552,42 @@ sub _flip_DCF {
 }
   
 ##
-sub set_DCF {
+sub add_DCF {
   my ($self, $fs) = @_;
   return($self->_flip_DCF($fs, $k_false, $k_true, 1));
 }
 
 ##
-sub unset_DCF {
+sub remove_DCF {
   my ($self, $fs) = @_;
   return($self->_flip_DCF($fs, $k_true, $k_false, 0));
+}
+
+##### 'EVALUATE'
+sub set_evaluate_all {
+  my ($self) = @_;
+  return($self->_flip_DCX(undef, $k_frame, '0', $dcf_key, $dcf_kw, $k_true, $k_false, 1));
+}
+
+##
+sub set_evaluate_range {
+  my ($self, $fs) = @_;
+
+  return($self->_set_error_and_return("No framespan provided for \'set_evaluate_range\'", undef))
+    if (! defined $fs);
+
+  # First, "evaluate none"
+  $self->_flip_DCX(undef, $k_frame, '0', $dcf_key, $dcf_kw, $k_false, $k_true, 1);
+  return(undef) if ($self->error());
+
+  # Then "evaluate the specified range"
+  return($self->_flip_DCX($fs, $k_frame, '0', $dcf_key, $dcf_kw, $k_true, $k_false, 1));
+}
+
+##
+sub get_evaluate_range {
+  my ($self) = @_;
+  return($self->_is_DCX($k_frame, '0', $dcf_key, $dcf_kw, $k_true, $k_false));
 }
 
 ##########
