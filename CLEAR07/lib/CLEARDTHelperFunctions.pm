@@ -67,11 +67,54 @@ my $SS_MemDump_FileHeader_gz = $SS_MemDump_FileHeader_gz_cmp
 
 ##########
 
+sub _rm_mds {
+  my ($fname) = @_;
+
+  return($fname) if (MMisc::is_blank($fname));
+
+  # Remove them all
+  while ($fname =~ s%($VF_MemDump_Suffix|$SS_MemDump_Suffix)$%%) {1;}
+
+  return($fname);
+}
+
+#####
+
+sub save_ViperFile_XML {
+  my ($fname, $vf, $printname, $ptxt, @ok_objects) = @_;
+
+  # Re-adapt the file name to remove any potential ".memdump"
+  $fname = &_rm_mds($fname, 0);
+
+  my $txt = $vf->reformat_xml(@ok_objects);
+  return("While trying to create the XML text (" . $vf->get_errormsg() . ")", $fname)
+    if ($vf->error());
+
+  return("Problem while trying to \'save_ViperFile_XML\'", $fname)
+    if (! MMisc::writeTo($fname, "", $printname, 0, $txt, "", $ptxt));
+
+  return("", $fname);
+}
+
+##########
+
 sub save_ViperFile_MemDump {
   my ($fname, $object, $mode) = @_;
 
+  # Re-adapt the file name to remove any potential ".memdump"
+  $fname = &_rm_mds($fname, 0);
+
+  # Clone and anonymyze some components
+  my $clone = $object->clone();
+  return(0) if ($object->error());
+
+  $clone->set_xmllint("xmllint", 1);
+  return(0) if ($clone->error());
+
+  
+  
   return(MMisc::dump_memory_object
-	 ($fname, $VF_MemDump_Suffix, $object,
+	 ($fname, $VF_MemDump_Suffix, $clone,
 	  $VF_MemDump_FileHeader,
 	  ($mode eq "gzip") ? $VF_MemDump_FileHeader_gz : undef )
 	);
@@ -81,6 +124,9 @@ sub save_ViperFile_MemDump {
 
 sub save_ScoringSequence_MemDump {
   my ($fname, $object, $mode) = @_;
+
+  # Re-adapt the file name to remove any potential ".memdump"
+  $fname = &_rm_mds($fname, 0);
 
   return(MMisc::dump_memory_object
 	 ($fname, $SS_MemDump_Suffix, $object,
@@ -94,14 +140,9 @@ sub save_ScoringSequence_MemDump {
 sub load_ViperFile {
   my ($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode) = @_;
 
-  return(0, undef, "file does not exists") 
-    if (! -e $filename);
-
-  return(0, undef, "is not a file")
-    if (! -f $filename);
-
-  return(0, undef, "file is not readable")
-    if (! -r $filename);
+  my $err = MMisc::check_file_r($filename);
+  return(0, undef, $err)
+    if (! MMisc::is_blank($err));
 
   open FILE, "<$filename"
     or return(0, undef, "Problem opening file ($filename) : $!");
