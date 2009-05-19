@@ -914,9 +914,10 @@ sub validate {
 
 sub reformat_xml {
   my ($self) = shift @_;
-  my $isgtf = shift @_;
   my @limitto_objects = MMisc::uppercase_array_values(@_);
+
   my $domain = $self->get_domain();
+  my $isgtf  = $self->check_if_gtf();
 
   return(-1) if ($self->error());
 
@@ -1111,14 +1112,6 @@ sub clone_with_no_objects {
  my ($self) = @_;
 
   return($self->_clone_core(0));
-}
-
-#####
-
-sub clone_with_selected_objects {
-  my ($self, @limitto_objects) = @_;
-
-  return($self->_clone_core(@limitto_objects));
 }
 
 ##########
