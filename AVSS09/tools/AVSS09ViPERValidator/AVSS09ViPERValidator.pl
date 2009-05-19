@@ -188,18 +188,16 @@ foreach my $tmp (@ARGV) {
   }
 
   if ($writeback != -1) {
-    my ($txt) = $object->reformat_xml($isgtf);
-    MMisc::error_quit("While trying to \'write\' (" . $object->get_errormsg() . ")")
-      if ($object->error());
     my $lfname = "";
+    
     if ($writeback ne "") {
-      my $tmp2 = $fname;
-      $tmp2 =~ s%^.+\/([^\/]+)$%$1%;
-      $lfname = "$writeback$tmp2";
-    } 
-    MMisc::error_quit("Problem while trying to \'write\'")
-      if (! MMisc::writeTo($lfname, "", 1, 0, $txt, "", "** XML re-Representation:\n"));
-
+      my ($err, $td, $tf, $te) = MMisc::split_dir_file_ext($fname);
+      $lfname = MMisc::concat_dir_file_ext($writeback, $tf, $te);
+    }
+    
+    (my $err, $lfname) = $object->write_XML($lfname, $isgtf, "** XML re-Representation:\n");
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));   
+    
     if (defined $MemDump) {
       $object->write_MemDumps($lfname, $isgtf, $MemDump, $skipScoringSequenceMemDump);
       MMisc::error_quit("Problem while trying to perform \'MemDump\'")
