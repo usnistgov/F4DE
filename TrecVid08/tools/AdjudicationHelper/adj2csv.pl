@@ -96,6 +96,7 @@ my $roe = 1;
 my $eeq = 1;
 my $igw = 0;
 my $igt = 0;
+my $writedir = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:                              d f h             v     #
@@ -111,6 +112,7 @@ GetOptions
    'ensure_warn'      => sub { $eeq = 0; },
    'isGood_warn'      => \$igw,
    'IsGood_true'      => \$igt,
+   'writedir=s'       => \$writedir,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -120,6 +122,13 @@ MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 MMisc::error_quit("Need at least 1 file arguments to work\n$usage\n") 
   if (scalar @ARGV < 1);
 
+if (! MMisc::is_blank($writedir)) {
+  # Check the directory
+  my ($err) = MMisc::check_dir_w($writedir);
+  MMisc::error_quit("Provided \'writedir\' option directory ($writedir): $err")
+    if (! MMisc::is_blank($err));
+  $writedir .= "/" if ($writedir !~ m%\/$%); # Add a trailing slash
+}
 ##########
 # Main processing
 
@@ -202,13 +211,13 @@ my $ch = CSVHelper::get_csv_handler();
 MMisc::error_quit("Problem creating the CSV object")
   if (! defined $ch);
 
-my $global = "global.csv";
+my $global = "${writedir}global.csv";
 my $global_txt = "";
 my @gh = ("File", "Event", "AgreeLevel", "MeanDetectionScore", "Framespan", "isGood", "FromADJFile", "NbrAnnot", "AnnotList", "Note");
 $global_txt .= &array2csvline($ch, @gh);
 
 foreach my $lgw (sort keys %all) {
-  my $file = "$lgw.csv";
+  my $file = "$writedir$lgw.csv";
   my $file_txt = "";
   my @a = ("EventType", "Framespan");
   $file_txt .= &array2csvline($ch, @a);
@@ -269,8 +278,7 @@ sub list_allconf_names {
       $doit = 0;
       next;
     }
-    my ($err, %tmph) = MtXML::get_inline_xml_attributes($key_descriptor, $tmp
-);
+    my ($err, %tmph) = MtXML::get_inline_xml_attributes($key_descriptor, $tmp);
     retutn("Could not extract \'$key_descriptor\' \'s \'$key_name\' inline attribute", ())
       if (! exists $tmph{$key_name});
     push @list, $tmph{$key_name};
@@ -428,7 +436,7 @@ sub _extract_attrhash {
 
   my %attrh = ();
   while (! MMisc::is_blank($str)) {
-    my $name = MtXML::get_next_xml_name($str, $errstring);
+    my $name = MtXML::get_next_xml_name(\$str, $errstring);
     return("Problem obtaining a valid XML name, aborting", ())
       if ($name eq $errstring);
     return("Extraction process does not seem to have found one, aborting", ())
