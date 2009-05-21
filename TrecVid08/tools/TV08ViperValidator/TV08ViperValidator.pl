@@ -653,7 +653,7 @@ B<TV08ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--XMLbase> [I<file]>] [B<--gtf>]>
   S<[B<--limitto> I<event1>[,I<event2>[I<...>]]]>
   S<[[B<--write> [I<directory>]]>
-  S<[B<--ChangeType> [I<randomseed:find_value>]]>
+  S<[B<--ChangeType> [I<randomseed>[:I<find_value>[:I<forceDetectionScore>[:I<forceDetectionDecision>]]]]]>
   S<[B<--crop> I<beg:end>] [B<--WriteMemDump> [I<mode>]]>
   S<[B<--ForceFilename> I<filename>] [B<--pruneEvents>]>
   S<[B<--removeSubEventtypes>]>
@@ -712,12 +712,15 @@ Attributes wil be carried over when performing work on I<Observation>s.
 
 Add to each I<Event> I<Observation> an extra attribute to I<write> to the XML file that will contain information about the I<File>, I<Sourcefile>, I<Type>, I<Event>, I<SubType>, I<ID>, I<Framespan> and I<XtraAttribute> names.
 
-=item B<--ChangeType> [I<randomseed>[:I<find_value>]]
+=item B<--ChangeType> [I<randomseed>[:I<find_value>[:I<forceDetectionScore>[:I<forceDetectionDecision>]]]]
 
 Convert a SYS to REF or a REF to SYS.
 The I<randomseed> is useful if you want to reproduce the result in the future.
 Be forewarned that it is possible to reproduce a same output if reusing the I<randomseed> value but the process and source files have to be the exact same too.
 Also, when trying to reproduce a file, it is possible to ask the program to find the file's first random value (see the XML sourcefile comment) thanks to the I<find_value> argument.
+
+Using S<forceDetectionScore> or S<forceDetectionDecision> will force the I<random> value to be the specified entry (and not be random anymore).
+Note that not specifying a value will allow for random mode again, ie using S<--ChangeType :::1> will use the full random mode for I<DetectionScore> but force every I<DetectionDecision> to be S<true>.
 
 =item B<--crop> beg:end
 
@@ -915,7 +918,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value] [--AddXtrTrackingComment] [--Remove type] [--DumpCSV csvkeys] [--insertCSV file.csv] [--ValueDivide div[:sub]]]  [--fps fps] [--ecf ecffile] [--displaySummary level] [--GetminMax] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--XMLbase [file]] [--gtf] [--limitto event1[,event2[...]]] [--write [directory] [--ChangeType [randomseed[:find_value[:forceDetectionScore[:forceDetectionDecision]]]]] [--crop beg:end] [--WriteMemDump [mode]] [--ForceFilename filename] [--pruneEvents] [--removeSubEventtypes] [--addXtraAttributes name:value] [--AddXtrTrackingComment] [--Remove type] [--DumpCSV csvkeys] [--insertCSV file.csv] [--ValueDivide div[:sub]]]  [--fps fps] [--ecf ecffile] [--displaySummary level] [--GetminMax] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the ViPER XML file(s) provided.
 
