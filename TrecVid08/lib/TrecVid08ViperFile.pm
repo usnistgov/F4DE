@@ -203,6 +203,10 @@ my $rseed_lastfound = undef;
 my @rseed_vals = ();
 my $rseed_pos = 0;
 my $rseed_max = 1E4;
+# Allow the "random" DetectionScore and DetectionDecision values not to be random
+my $force_randomDetectionScore = undef;
+my $force_randomDetectionDecision = undef;
+
 
 ########################################
 
@@ -2201,7 +2205,17 @@ sub type_changer_init_randomseed { ## Class function
   return(1) if (! defined $seed_found);
   return(1) if (MMisc::is_blank($seed_found));
 
-  my ($seed, $lastfound) = split(m%\:%, $seed_found);
+  (my $seed, my $lastfound, $force_randomDetectionScore, $force_randomDetectionDecision) = split(m%\:%, $seed_found);
+
+  MMisc::error_quit("[TrecVid08ViperFile] **Internal Error** in \'type_changer_init_randomseed\': can only use a float value for forcing the value of the random Detection Score")
+      if ((! MMisc::is_blank($force_randomDetectionScore)) &&
+          (! MMisc::is_float($force_randomDetectionScore)));
+  
+  MMisc::error_quit("[TrecVid08ViperFile] **Internal Error** in \'type_changer_init_randomseed\': can only use \'0\' (false) or \'1\' (true) as valid entries for forcing the value of the random Detection Decision")
+      if ((! MMisc::is_blank($force_randomDetectionScore)) &&
+          ($force_randomDetectionScore !~ m%^[01]$%));
+  
+  return(1) if (MMisc::is_blank($seed));
 
   $rseed = $seed;
   srand($seed);
@@ -2277,11 +2291,19 @@ sub _get_random_XXX {
 
   my $v = 0;
   if ($type eq $list_objects_attributes_types[0]) { # fvalue
-    # -127 -> 128
-    $v = &_rand(256.0) - 128.0;
+    if (! MMisc::is_blank($force_randomDetectionScore)) {
+      $v = $force_randomDetectionScore;
+    } else {
+      # -127 -> 128
+      $v = &_rand(256.0) - 128.0;
+    }
   } elsif ($type eq $list_objects_attributes_types[1]) { # bvalue
-    # 0 / 1
-    $v = int(&_rand(256)) % 2;
+    if (! MMisc::is_blank($force_randomDetectionDecision)) {
+      $v = $force_randomDetectionDecision;
+    } else {
+      # 0 / 1
+      $v = int(&_rand(256)) % 2;
+    }
   } else {
     MMisc::error_quit("TrecVid08ViperFile Internal Error: Type ($type) is yet not handled by _get_random_XXX method\n");
   }
