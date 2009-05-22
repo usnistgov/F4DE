@@ -1178,6 +1178,7 @@ sub _num_ { $a <=> $b; }
 
 my $dcor_key = "AMBIGUOUS";
 my $dcf_key = "EVALUATE";
+my $occ_key = "OCCLUSION";
 
 my $dco_kw = "DCO";
 my $dcr_kw = "DCR";
@@ -1513,13 +1514,13 @@ sub _flip_DCO {
 }
 
 ## 
-sub add_DCO {
+sub set_DCO {
   my ($self, $id, $ofs) = @_;
   return($self->_flip_DCO($ofs, $id, $k_true, $k_false, 1)); 
 }
 
 ## 
-sub remove_DCO {
+sub unset_DCO {
   my ($self, $id, $ofs) = @_;
   return($self->_flip_DCO($ofs, $id, $k_false, $k_true, 0));
 }
@@ -1531,13 +1532,13 @@ sub _flip_DCR {
 }
 
 ##
-sub add_DCR {
+sub set_DCR {
   my ($self, $id, $ofs) = @_;
   return($self->_flip_DCR($ofs, $id, $k_true, $k_false, 1));
 }
 
 ##
-sub remove_DCR {
+sub unset_DCR {
   my ($self, $id, $ofs) = @_;
   return($self->_flip_DCR($ofs, $id, $k_false, $k_true, 0));
 }
@@ -1592,12 +1593,150 @@ sub get_evaluate_range {
 
 ##########
 
-sub _create_DCOR {
-  my ($self, $req_fs, $rbbox, $opt_fs, $mode) = @_;
+sub _create_object_core {
+  my ($self, $req_fs, $rloc_fs_bbox) = @_;
 
+  return(undef) if ($self->error());
+
+  return($self->_set_error_and_return("No location information", undef))
+    if ((! defined $rloc_fs_bbox) || (scalar(keys %$rloc_fs_bbox) == 0));
+
+  my ($err, $fs_fs) = &__fs2vfs($req_fs);
+  return($self->_set_error_and_return("Invalid $k_person global framespan ($req_fs): $err", undef))
+    if (! MMisc::is_blank($err));
+  my $fs = $fs_fs->get_value();
+
+  my %object;
+
+  my ($ig) = $self->check_if_gtf();
+  %object =  (
+              'AMBIGUOUS' => { $fs => [ $k_false ] },
+              'OCCLUSION' => { $fs => [ $k_false ] },
+              'PRESENT'   => { $fs => [ $k_true  ] },
+              'SYNTHETIC' => { $fs => [ $k_false ] }
+             ) if ($ig);
+
+  $object{'framespan'} = $fs;
+
+  foreach my $lfs (keys %$rloc_fs_bbox) {
+    my ($err, $fs_lfs) = &__fs2vfs($lfs);
+    return($self->_set_error_and_return("Invalid location framespan ($lfs): $err", undef))
+      if (! MMisc::is_blank($err));
+
+    my @bbox = @{$$rloc_fs_bbox{$lfs}};
+    return($self->_set_error_and_return("Not a valid location boundingbox for framespan ($lfs)", undef))
+    if (scalar @bbox != 4);
+
+    return($self->_set_error_and_return("Location framespan ($lfs) is not within englobing framespan ($fs)", undef))
+      if (! $fs_lfs->is_within($fs_fs));
+
+    $object{'LOCATION'}{$lfs} = [ @bbox ];
+  }
+    
+  return(%object);
+}
+
+#####
+
+sub create_SYS_object {
+  my ($self, $req_fs, $rloc_fs_bbox) = @_;
+
+  my $ig = $self->check_if_gtf();
+  return(0) if ($self->error());
+  return($self->_set_error_and_return("Can not add a SYS object to a GTF", 0))
+    if ($ig);
+
+  my (%fhash) = $self->__vc_gfhash();
+  return(0) if ($self->error());
+
+  my %object = $self->_create_object_core($req_fs, %{$rloc_fs_bbox});
+  return(0) if ($self->error());
+
+  my @idl = $self->get_person_id_list();
+  return(0) if ($self->error());
+  
+  my $id = 1;
+  if (scalar @idl > 0) {
+    my @sidl = sort _num_ @idl;
+    $id = $sidl[-1] + 1;
+  }
+
+  %{$fhash{$k_person}{$id}} = %object;
+
+  my $ok = $self->_set_cldt_fhash(%fhash);
+  return(0) if ($self->error());
+
+  return($id);
+}
+
+#####
+
+sub create_REF_object {
+  my ($self, $req_fs, $rloc_fs_bbox, $rocc_fs) = @_;
+
+  my $ig = $self->check_if_gtf();
+  return(0) if ($self->error());
+  return($self->_set_error_and_return("Can not add a GTf object to a SYS", 0))
+    if (! $ig);
+
+  my ($err, $fs_fs) = &__fs2vfs($req_fs);
+  return($self->_set_error_and_return("Invalid $k_person global framespan ($req_fs): $err", 0))
+    if (! MMisc::is_blank($err));
+  my $fs = $fs_fs->get_value();
+
+  return($self->_set_error_and_return("Invalid list of occluded framespans", 0))
+    if (! defined $rocc_fs);
+  my @occ_fsl = ();
+  foreach my $lfs (@{$rocc_fs}) {
+    my ($err, $fs_lfs) = &__fs2vfs($lfs);
+    return($self->_set_error_and_return("Invalid occluded framespan ($lfs): $err", 0))
+      if (! MMisc::is_blank($err));
+    
+    return($self->_set_error_and_return("occluded framespan ($lfs) is not within englobing framespan ($fs)", undef))
+      if (! $fs_lfs->is_within($fs_fs));
+ 
+    push @occ_fsl, $fs_lfs->get_value();
+  }
+  my $occ_fs = "";
+  $occ_fs = $self->__validate_fs(join(" ", @occ_fsl))
+    if (scalar @occ_fsl > 0);
   return(0) if ($self->error());
 
   my (%fhash) = $self->__vc_gfhash();
+  return(0) if ($self->error());
+
+  my %object = $self->_create_object_core($req_fs, $rloc_fs_bbox);
+  return(0) if ($self->error());
+
+  my @idl = $self->get_person_id_list();
+  return(0) if ($self->error());
+  
+  my $id = 1;
+  if (scalar @idl > 0) {
+    my @sidl = sort _num_ @idl;
+    $id = $sidl[-1] + 1;
+  }
+
+  %{$fhash{$k_person}{$id}} = %object;
+
+  my $ok = $self->_set_cldt_fhash(%fhash);
+  return(0) if ($self->error());
+
+  if (! MMisc::is_blank($occ_fs)) { # Do we have anything to occlude ?
+    my $ok = $self->_flip_DCX($occ_fs, $k_person, $id, $occ_key, "OCCLUDED", $k_true, $k_false);
+    return(0) if ($self->error());
+    return($self->_set_error_and_return("Could not add \"OCCLUDED\" entries to newly created $k_person (id $id)", 0))
+      if (! defined $ok);
+  }
+
+  return($id);
+}
+
+##########
+
+sub _create_DCOR {
+  my ($self, $req_fs, $rloc_fs_bbox, $opt_fs, $mode) = @_;
+
   return(0) if ($self->error());
 
   my $ig = $self->check_if_gtf();
@@ -1605,60 +1744,12 @@ sub _create_DCOR {
   return($self->_set_error_and_return("$mode is only valid for GTF", 0))
     if (! $ig);
 
-  return($self->_set_error_and_return("Not a valid boundingbox", 0))
-    if (scalar @$rbbox != 4);
-  my @bbox = @$rbbox;
-
-  my $fs = $self->__validate_fs($req_fs);
-  return($self->_set_error_and_return("Invalid framespan ($fs): " . $self->get_errormsg()))
-    if ($self->error());
-
-  my @idl = $self->get_person_id_list();
+  # Create a REF object with no occluded frames
+  my @occ_fs = ();
+  my $id = $self->create_REF_object($req_fs, $rloc_fs_bbox, \@occ_fs);
   return(0) if ($self->error());
-
-  my $id = 1;
-  if (scalar @idl > 0) {
-    my @sidl = sort _num_ @idl;
-    $id = $sidl[-1] + 1;
-  }
-
-  # Create a valid non DCO/R object and use 'set_DCO/R' to finish its creation
-  $fhash{$k_person}{$id} = 
-    {
-     'AMBIGUOUS' => {
-                     $fs => [
-                             $k_false
-                            ]
-                    },
-     'LOCATION' => {
-                    $fs => [
-                            $bbox[0],
-                            $bbox[1],
-                            $bbox[2],
-                            $bbox[3]
-                           ],
-                   },
-     'OCCLUSION' => {
-                     $fs => [
-                             'false'
-                            ],
-                    },
-     'PRESENT' => {
-                   $fs => [
-                           'true'
-                          ]
-                  },
-     'SYNTHETIC' => {
-                     $fs => [
-                             'false'
-                            ]
-                    },
-     'framespan' => $fs
-    };
-
-  my $ok = $self->_set_cldt_fhash(%fhash);
-  return(0) if ($self->error());
-
+    
+  # and then set it as a DCX
   my $ok = $self->_flip_DCX($opt_fs, $k_person, $id, $dcor_key, $mode, $k_true, $k_false);
   return(0) if ($self->error());
   return($self->_set_error_and_return("Could not convert newly created $k_person (id $id) to a $mode", 0))
@@ -1669,14 +1760,14 @@ sub _create_DCOR {
 
 ## 
 sub create_DCO {
-  my ($self, $rfs, $rbb, $ofs) = @_;
-  return($self->_create_DCOR($rfs, $rbb, $ofs, $dco_kw));
+  my ($self, $rfs, $rloc_fs_bbox, $ofs) = @_;
+  return($self->_create_DCOR($rfs, $rloc_fs_bbox, $ofs, $dco_kw));
 }
 
 ##
 sub create_DCR {
-  my ($self, $rfs, $rbb, $ofs) = @_;
-  return($self->_create_DCOR($rfs, $rbb, $ofs, $dcr_kw));
+  my ($self, $rfs, $rloc_fs_bbox, $ofs) = @_;
+  return($self->_create_DCOR($rfs, $rloc_fs_bbox, $ofs, $dcr_kw));
 }
 
 ############################################################
