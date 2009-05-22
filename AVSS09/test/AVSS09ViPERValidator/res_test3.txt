@@ -1,0 +1,903 @@
+[[COMMANDLINE]] ./_special_test1.pl
+[[RETURN CODE]] 0
+[[STDOUT]]
+
+
+
+
+
+# Object rewrite:
+****************************************
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PERSON" type="OBJECT">
+      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="PRESENT" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="SYNTHETIC" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+    <descriptor name="I-FRAMES" type="OBJECT">
+    </descriptor>
+    <descriptor name="FRAME" type="OBJECT">
+      <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="test_file2.mov">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="12125"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PERSON" id="11" framespan="7497:11372">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="7497:11372" x="661" y="91" height="72" width="17"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="7497:7612" value="true"/>
+          <data:bvalue framespan="7617:7737" value="false"/>
+          <data:bvalue framespan="7742:7757" value="true"/>
+          <data:bvalue framespan="7762:7777" value="false"/>
+          <data:bvalue framespan="7782:7812" value="true"/>
+          <data:bvalue framespan="7817:7832" value="false"/>
+          <data:bvalue framespan="7837:7917" value="true"/>
+          <data:bvalue framespan="7922:7942" value="false"/>
+          <data:bvalue framespan="7947:11372" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="7497:11372" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+      </object>
+      <object name="I-FRAMES" id="0" framespan="1:11847">
+      </object>
+      <object name="FRAME" id="0" framespan="1:11847">
+        <attribute name="EVALUATE">
+          <data:bvalue framespan="1:11847" value="true"/>
+        </attribute>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+
+****************************************
+
+
+
+Wrote: /tmp/AVSS09_special_test1-temp_file_0.xml
+ --> Loaded written XML file and validated ok
+**********PRE
+# DCF: no DCF
+# Ev: 1:11847
+** Created DCR [ID 12]
+
+
+
+
+
+# Object rewrite:
+****************************************
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PERSON" type="OBJECT">
+      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="PRESENT" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="SYNTHETIC" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+    <descriptor name="I-FRAMES" type="OBJECT">
+    </descriptor>
+    <descriptor name="FRAME" type="OBJECT">
+      <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="test_file2.mov">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="12125"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PERSON" id="11" framespan="7497:11372">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="7497:11372" x="661" y="91" height="72" width="17"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="7497:7612" value="true"/>
+          <data:bvalue framespan="7617:7737" value="false"/>
+          <data:bvalue framespan="7742:7757" value="true"/>
+          <data:bvalue framespan="7762:7777" value="false"/>
+          <data:bvalue framespan="7782:7812" value="true"/>
+          <data:bvalue framespan="7817:7832" value="false"/>
+          <data:bvalue framespan="7837:7917" value="true"/>
+          <data:bvalue framespan="7922:7942" value="false"/>
+          <data:bvalue framespan="7947:11372" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="7497:11372" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+      </object>
+      <object name="PERSON" id="12" framespan="10000:12010">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="10000:10499" value="false"/>
+          <data:bvalue framespan="10500:11000" value="true"/>
+          <data:bvalue framespan="11001:12010" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="10000:12010" x="100" y="100" height="200" width="200"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="10000:12010" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+      </object>
+      <object name="I-FRAMES" id="0" framespan="1:11847">
+      </object>
+      <object name="FRAME" id="0" framespan="1:11847">
+        <attribute name="EVALUATE">
+          <data:bvalue framespan="1:11847" value="true"/>
+        </attribute>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+
+****************************************
+
+
+
+Wrote: /tmp/AVSS09_special_test1-temp_file_1.xml
+ --> Loaded written XML file and validated ok
+########## ID: 11
+* fs     : 7497:11372
+* dcr    : not a DCR
+* set dcr [11100:11200]: 11100:11200
+* set dcr [11000:11350]: 11000:11350
+
+
+
+
+
+# Object rewrite:
+****************************************
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PERSON" type="OBJECT">
+      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="PRESENT" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="SYNTHETIC" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+    <descriptor name="I-FRAMES" type="OBJECT">
+    </descriptor>
+    <descriptor name="FRAME" type="OBJECT">
+      <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="test_file2.mov">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="12125"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PERSON" id="11" framespan="7497:11372">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="7497:10999" value="false"/>
+          <data:bvalue framespan="11000:11350" value="true"/>
+          <data:bvalue framespan="11351:11372" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="7497:11372" x="661" y="91" height="72" width="17"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="7497:7612" value="true"/>
+          <data:bvalue framespan="7617:7737" value="false"/>
+          <data:bvalue framespan="7742:7757" value="true"/>
+          <data:bvalue framespan="7762:7777" value="false"/>
+          <data:bvalue framespan="7782:7812" value="true"/>
+          <data:bvalue framespan="7817:7832" value="false"/>
+          <data:bvalue framespan="7837:7917" value="true"/>
+          <data:bvalue framespan="7922:7942" value="false"/>
+          <data:bvalue framespan="7947:11372" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="7497:11372" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+      </object>
+      <object name="PERSON" id="12" framespan="10000:12010">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="10000:10499" value="false"/>
+          <data:bvalue framespan="10500:11000" value="true"/>
+          <data:bvalue framespan="11001:12010" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="10000:12010" x="100" y="100" height="200" width="200"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="10000:12010" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+      </object>
+      <object name="I-FRAMES" id="0" framespan="1:11847">
+      </object>
+      <object name="FRAME" id="0" framespan="1:11847">
+        <attribute name="EVALUATE">
+          <data:bvalue framespan="1:11847" value="true"/>
+        </attribute>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+
+****************************************
+
+
+
+Wrote: /tmp/AVSS09_special_test1-temp_file_2.xml
+ --> Loaded written XML file and validated ok
+* rem dcr [10550:10600]: 11000:11350
+* rem dcr [10750:11000]: 11001:11350
+* rem dcr [full fs]: no framepsan part of DCR
+* set dcr [full object]: 7497:11372
+* rem dcr [full fs]: no framepsan part of DCR
+* is dcr : no framepsan part of DCR
+
+
+
+
+
+# Object rewrite:
+****************************************
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PERSON" type="OBJECT">
+      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="PRESENT" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="SYNTHETIC" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+    <descriptor name="I-FRAMES" type="OBJECT">
+    </descriptor>
+    <descriptor name="FRAME" type="OBJECT">
+      <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="test_file2.mov">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="12125"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PERSON" id="11" framespan="7497:11372">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="7497:11372" x="661" y="91" height="72" width="17"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="7497:7612" value="true"/>
+          <data:bvalue framespan="7617:7737" value="false"/>
+          <data:bvalue framespan="7742:7757" value="true"/>
+          <data:bvalue framespan="7762:7777" value="false"/>
+          <data:bvalue framespan="7782:7812" value="true"/>
+          <data:bvalue framespan="7817:7832" value="false"/>
+          <data:bvalue framespan="7837:7917" value="true"/>
+          <data:bvalue framespan="7922:7942" value="false"/>
+          <data:bvalue framespan="7947:11372" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="7497:11372" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+      </object>
+      <object name="PERSON" id="12" framespan="10000:12010">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="10000:10499" value="false"/>
+          <data:bvalue framespan="10500:11000" value="true"/>
+          <data:bvalue framespan="11001:12010" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="10000:12010" x="100" y="100" height="200" width="200"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="10000:12010" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+      </object>
+      <object name="I-FRAMES" id="0" framespan="1:11847">
+      </object>
+      <object name="FRAME" id="0" framespan="1:11847">
+        <attribute name="EVALUATE">
+          <data:bvalue framespan="1:11847" value="true"/>
+        </attribute>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+
+****************************************
+
+
+
+Wrote: /tmp/AVSS09_special_test1-temp_file_3.xml
+ --> Loaded written XML file and validated ok
+########## ID: 12
+* fs     : 10000:12010
+* dcr    : 10500:11000
+* set dcr [11100:11200]: 10500:11000 11100:11200
+* set dcr [11000:11350]: 10500:11350
+
+
+
+
+
+# Object rewrite:
+****************************************
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PERSON" type="OBJECT">
+      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="PRESENT" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="SYNTHETIC" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+    <descriptor name="I-FRAMES" type="OBJECT">
+    </descriptor>
+    <descriptor name="FRAME" type="OBJECT">
+      <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="test_file2.mov">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="12125"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PERSON" id="11" framespan="7497:11372">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="7497:11372" x="661" y="91" height="72" width="17"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="7497:7612" value="true"/>
+          <data:bvalue framespan="7617:7737" value="false"/>
+          <data:bvalue framespan="7742:7757" value="true"/>
+          <data:bvalue framespan="7762:7777" value="false"/>
+          <data:bvalue framespan="7782:7812" value="true"/>
+          <data:bvalue framespan="7817:7832" value="false"/>
+          <data:bvalue framespan="7837:7917" value="true"/>
+          <data:bvalue framespan="7922:7942" value="false"/>
+          <data:bvalue framespan="7947:11372" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="7497:11372" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+      </object>
+      <object name="PERSON" id="12" framespan="10000:12010">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="10000:10499" value="false"/>
+          <data:bvalue framespan="10500:11350" value="true"/>
+          <data:bvalue framespan="11351:12010" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="10000:12010" x="100" y="100" height="200" width="200"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="10000:12010" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+      </object>
+      <object name="I-FRAMES" id="0" framespan="1:11847">
+      </object>
+      <object name="FRAME" id="0" framespan="1:11847">
+        <attribute name="EVALUATE">
+          <data:bvalue framespan="1:11847" value="true"/>
+        </attribute>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+
+****************************************
+
+
+
+Wrote: /tmp/AVSS09_special_test1-temp_file_4.xml
+ --> Loaded written XML file and validated ok
+* rem dcr [10550:10600]: 10500:10549 10601:11350
+* rem dcr [10750:11000]: 10500:10549 10601:10749 11001:11350
+* rem dcr [full fs]: no framepsan part of DCR
+* set dcr [full object]: 10000:12010
+* rem dcr [full fs]: no framepsan part of DCR
+* is dcr : no framepsan part of DCR
+
+
+
+
+
+# Object rewrite:
+****************************************
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PERSON" type="OBJECT">
+      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="PRESENT" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="SYNTHETIC" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+    <descriptor name="I-FRAMES" type="OBJECT">
+    </descriptor>
+    <descriptor name="FRAME" type="OBJECT">
+      <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="test_file2.mov">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="12125"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PERSON" id="11" framespan="7497:11372">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="7497:11372" x="661" y="91" height="72" width="17"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="7497:7612" value="true"/>
+          <data:bvalue framespan="7617:7737" value="false"/>
+          <data:bvalue framespan="7742:7757" value="true"/>
+          <data:bvalue framespan="7762:7777" value="false"/>
+          <data:bvalue framespan="7782:7812" value="true"/>
+          <data:bvalue framespan="7817:7832" value="false"/>
+          <data:bvalue framespan="7837:7917" value="true"/>
+          <data:bvalue framespan="7922:7942" value="false"/>
+          <data:bvalue framespan="7947:11372" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="7497:11372" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+      </object>
+      <object name="PERSON" id="12" framespan="10000:12010">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="10000:12010" x="100" y="100" height="200" width="200"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="10000:12010" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+      </object>
+      <object name="I-FRAMES" id="0" framespan="1:11847">
+      </object>
+      <object name="FRAME" id="0" framespan="1:11847">
+        <attribute name="EVALUATE">
+          <data:bvalue framespan="1:11847" value="true"/>
+        </attribute>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+
+****************************************
+
+
+
+Wrote: /tmp/AVSS09_special_test1-temp_file_5.xml
+ --> Loaded written XML file and validated ok
+##### DCF
+# DCF: no DCF
+# Add DCF [200:5000 5100:6000] : 200:5000 5100:6000
+# Rem DCF [500:1000] : 200:499 1001:5000 5100:6000
+
+
+
+
+
+# Object rewrite:
+****************************************
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PERSON" type="OBJECT">
+      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="PRESENT" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="SYNTHETIC" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+    <descriptor name="I-FRAMES" type="OBJECT">
+    </descriptor>
+    <descriptor name="FRAME" type="OBJECT">
+      <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="test_file2.mov">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="12125"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PERSON" id="11" framespan="7497:11372">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="7497:11372" x="661" y="91" height="72" width="17"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="7497:7612" value="true"/>
+          <data:bvalue framespan="7617:7737" value="false"/>
+          <data:bvalue framespan="7742:7757" value="true"/>
+          <data:bvalue framespan="7762:7777" value="false"/>
+          <data:bvalue framespan="7782:7812" value="true"/>
+          <data:bvalue framespan="7817:7832" value="false"/>
+          <data:bvalue framespan="7837:7917" value="true"/>
+          <data:bvalue framespan="7922:7942" value="false"/>
+          <data:bvalue framespan="7947:11372" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="7497:11372" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+      </object>
+      <object name="PERSON" id="12" framespan="10000:12010">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="10000:12010" x="100" y="100" height="200" width="200"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="10000:12010" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+      </object>
+      <object name="I-FRAMES" id="0" framespan="1:11847">
+      </object>
+      <object name="FRAME" id="0" framespan="1:11847">
+        <attribute name="EVALUATE">
+          <data:bvalue framespan="1:199" value="true"/>
+          <data:bvalue framespan="200:499" value="false"/>
+          <data:bvalue framespan="500:1000" value="true"/>
+          <data:bvalue framespan="1001:5000" value="false"/>
+          <data:bvalue framespan="5001:5099" value="true"/>
+          <data:bvalue framespan="5100:6000" value="false"/>
+          <data:bvalue framespan="6001:11847" value="true"/>
+        </attribute>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+
+****************************************
+
+
+
+Wrote: /tmp/AVSS09_special_test1-temp_file_6.xml
+ --> Loaded written XML file and validated ok
+##### EVALUATE
+# Ev: 1:199 500:1000 5001:5099 6001:11847
+# Ev [all]: 1:11847
+# Set Ev [200:5000 5100:6000] : 200:5000 5100:6000
+# Set Ev [500:1000] : 500:1000
+# Ev: 500:1000
+
+
+
+
+
+# Object rewrite:
+****************************************
+<?xml version="1.0" encoding="UTF-8"?>
+<viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
+  <config>
+    <descriptor name="Information" type="FILE">
+      <attribute dynamic="false" name="SOURCETYPE" type="http://lamp.cfar.umd.edu/viperdata#lvalue">
+        <data:lvalue-possibles>
+          <data:lvalue-enum value="SEQUENCE"/>
+          <data:lvalue-enum value="FRAMES"/>
+        </data:lvalue-possibles>
+      </attribute>
+      <attribute dynamic="false" name="NUMFRAMES" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="FRAMERATE" type="http://lamp.cfar.umd.edu/viperdata#fvalue"/>
+      <attribute dynamic="false" name="H-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+      <attribute dynamic="false" name="V-FRAME-SIZE" type="http://lamp.cfar.umd.edu/viperdata#dvalue"/>
+    </descriptor>
+    <descriptor name="PERSON" type="OBJECT">
+      <attribute dynamic="true" name="AMBIGUOUS" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="LOCATION" type="http://lamp.cfar.umd.edu/viperdata#bbox"/>
+      <attribute dynamic="true" name="OCCLUSION" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="PRESENT" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+      <attribute dynamic="true" name="SYNTHETIC" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+    <descriptor name="I-FRAMES" type="OBJECT">
+    </descriptor>
+    <descriptor name="FRAME" type="OBJECT">
+      <attribute dynamic="true" name="EVALUATE" type="http://lamp.cfar.umd.edu/viperdata#bvalue"/>
+    </descriptor>
+  </config>
+  <data>
+    <sourcefile filename="test_file2.mov">
+      <file id="0" name="Information">
+        <attribute name="FRAMERATE">
+          <data:fvalue value="1.0"/>
+        </attribute>
+        <attribute name="H-FRAME-SIZE"/>
+        <attribute name="NUMFRAMES">
+          <data:dvalue value="12125"/>
+        </attribute>
+        <attribute name="SOURCETYPE"/>
+        <attribute name="V-FRAME-SIZE"/>
+      </file>
+      <object name="PERSON" id="11" framespan="7497:11372">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="7497:11372" x="661" y="91" height="72" width="17"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="7497:7612" value="true"/>
+          <data:bvalue framespan="7617:7737" value="false"/>
+          <data:bvalue framespan="7742:7757" value="true"/>
+          <data:bvalue framespan="7762:7777" value="false"/>
+          <data:bvalue framespan="7782:7812" value="true"/>
+          <data:bvalue framespan="7817:7832" value="false"/>
+          <data:bvalue framespan="7837:7917" value="true"/>
+          <data:bvalue framespan="7922:7942" value="false"/>
+          <data:bvalue framespan="7947:11372" value="true"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="7497:11372" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="7497:11372" value="false"/>
+        </attribute>
+      </object>
+      <object name="PERSON" id="12" framespan="10000:12010">
+        <attribute name="AMBIGUOUS">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+        <attribute name="LOCATION">
+          <data:bbox framespan="10000:12010" x="100" y="100" height="200" width="200"/>
+        </attribute>
+        <attribute name="OCCLUSION">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+        <attribute name="PRESENT">
+          <data:bvalue framespan="10000:12010" value="true"/>
+        </attribute>
+        <attribute name="SYNTHETIC">
+          <data:bvalue framespan="10000:12010" value="false"/>
+        </attribute>
+      </object>
+      <object name="I-FRAMES" id="0" framespan="1:11847">
+      </object>
+      <object name="FRAME" id="0" framespan="1:11847">
+        <attribute name="EVALUATE">
+          <data:bvalue framespan="1:499" value="false"/>
+          <data:bvalue framespan="500:1000" value="true"/>
+          <data:bvalue framespan="1001:11847" value="false"/>
+        </attribute>
+      </object>
+    </sourcefile>
+  </data>
+</viper>
+
+****************************************
+
+
+
+Wrote: /tmp/AVSS09_special_test1-temp_file_7.xml
+ --> Loaded written XML file and validated ok
+
+
+
+OK
+
+[[STDERR]]
+

@@ -29,6 +29,10 @@ $testr += &do_simple_test($tn, "(GTF files check)", "$tool ../common/test_file?.
 $tn = "test2";
 $testr += &do_simple_test($tn, "(SYS files check)", "$tool ../common/test_file?.sys.xml ../common/test_file?.ss.xml -w", "res_$tn.txt");
 
+##
+$tn = "test3";
+$testr += &do_simple_test($tn, "(DCR, DCF, Evaluate checks)", "./_special_test1.pl", "res_$tn.txt");
+
 #####
 
 my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
