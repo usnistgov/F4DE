@@ -499,7 +499,7 @@ sub _camera_processor {
     if (! MtXML::remove_xml_tags($name, \$string));  
 
   ## Get DCR & DCF
-  my  ($err, @dcfs) = $self->_get_dcfs(\$string, $tt_fs);
+  my  ($err, $dcf) = $self->_get_dcfs(\$string, $tt_fs);
   return("While looking for DCFs in \"$name\" [$tt_id / $sffn] : $err")
     if (! MMisc::is_blank($err));
   my ($err, @dcrs) = $self->_get_dcrs(\$string, $tt_fs);
@@ -508,16 +508,9 @@ sub _camera_processor {
   return("Leftover data when processing \"$name\" [$sffn] : $string")
     if (! MMisc::is_blank($string));
 
-  # Consolidate DCF
-  my $dcf = "";
-  if (scalar @dcfs > 0) {
-    $dcf = join(" ", @dcfs);
-    my ($err, $dcf) = &__validate_fs($dcf);
-    return("While consolidating DCF: $err") if (! MMisc::is_blank($err));
-  }
+  # Add DCF
   $tt_params{$ttp_keys[1]} = $dcf if (! MMisc::is_blank($dcf));
-
-  # Add DCRs
+  # And DCR
   @{$tt_params{$ttp_keys[0]}} = @dcrs
       if (scalar @dcrs > 0);
 
@@ -529,67 +522,26 @@ sub _camera_processor {
 
 #####
 
-sub _get_dcrf_commom {
-  my ($rstr, $gfs, $name) = @_;
-
-  my %ids = ();
-  my %out = ();
-
-  my $cont = 1;
-  while ($cont) {
-    my $sec = MtXML::get_named_xml_section($name, $rstr, $default_error_value);
-    if ($sec eq $default_error_value) {
-      $cont = 0;
-      next;
-    }
-
-    my ($err, %res) = MtXML::get_inline_xml_attributes($name, $sec);
-    return($err) if (! MMisc::is_blank($err));
-
-    my $f="id";
-    return("Could not find \'$f\'") if (! exists $res{$f});
-    my $id = $res{$f};
-    return("\"$f\" [$id] already present")
-      if (exists $ids{$id});
-    $ids{$id}++;
-
-    $f="framespan";
-    return("Could not find \'$f\'") if (! exists $res{$f});
-    my $fs = $res{$f};
-    my ($err, $fs) = &__validate_fs($fs);
-    return($err) if (! MMisc::is_blank($err));
-    my ($err) = &__fully_within($fs, $gfs);
-    return($err) if (! MMisc::is_blank($err));
-
-    ## Clean up string
-    return("Could not remove the \'$name\' tag, aborting")
-      if (! MtXML::remove_xml_tags($name, \$sec));  
-
-    # Store the lefover string for further processing
-    $out{$fs} = $sec;
-  }
-
-  return("", %out);
-}
-
-#####
-
 sub _get_dcfs {
   my ($self, $rstr, $gfs) = @_;
 
   my $name = $ttp_keys[1];
-  my ($err, %res) = &_get_dcrf_commom($rstr, $gfs, $name);
+  # Only 1x DCF entry
+  my $sec = MtXML::get_named_xml_section($name, $rstr, $default_error_value);
+  return("", undef) if ($sec eq $default_error_value); # No DCF
+
+  my ($err, %res) = MtXML::get_inline_xml_attributes($name, $sec);
   return($err) if (! MMisc::is_blank($err));
 
-  my @out = ();
-  foreach my $fs (keys %res) {
-    my $t = $res{$fs};
-    return("In \"$name\", found unexpected content [$t]")
-      if (! MMisc::is_blank($t));
-    push @out, $fs;
-  }
+  my $f="framespan";
+  return("Could not find \'$f\'") if (! exists $res{$f});
+  my $fs = $res{$f};
+  my ($err, $fs) = &__validate_fs($fs);
+  return($err) if (! MMisc::is_blank($err));
+  my ($err) = &__fully_within($fs, $gfs);
+  return($err) if (! MMisc::is_blank($err));
 
-  return("", @out);
+  return("", $fs);
 }
 
 #####
@@ -598,20 +550,17 @@ sub _get_dcrs {
   my ($self, $rstr, $gfs) = @_;
 
   my $name = $ttp_keys[0];
-  my ($err, %res) = &_get_dcrf_commom($rstr, $gfs, $name);
+  # Only 1x DCR entry
+  my $sec = MtXML::get_named_xml_section($name, $rstr, $default_error_value);
+  return("") if ($sec eq $default_error_value); # No DCR
+
+  ## Clean up string
+  return("Could not remove the \'$name\' tag, aborting")
+    if (! MtXML::remove_xml_tags($name, \$sec));  
+  return("In \"$name\", found no content") if (MMisc::is_blank($sec));
+
+  my ($err, @out) = &_confirm_dcr_bbox($sec, $gfs);
   return($err) if (! MMisc::is_blank($err));
-
-  my @out = ();
-  foreach my $fs (keys %res) {
-    my $t = $res{$fs};
-    return("In \"$name\", found no content")
-      if (MMisc::is_blank($t));
-
-    my ($err, @tmp) = &_confirm_dcr_bbox($t, $fs);
-    return($err) if (! MMisc::is_blank($err));
-
-    push @out, [ @tmp ];
-  }
 
   return("", @out);
 }
@@ -621,7 +570,6 @@ sub _get_dcrs {
 sub _confirm_dcr_bbox {
   my ($str, $gfs) = @_;
 
-  my $prevfs = "";
   my $name = "bbox";
   my $cont = 1;
   my @out = ();
@@ -642,14 +590,6 @@ sub _confirm_dcr_bbox {
     return($err) if (! MMisc::is_blank($err));
     my ($err) = &__fully_within($fs, $gfs);
     return($err) if (! MMisc::is_blank($err));
-    if (! MMisc::is_blank($prevfs)) {
-      my ($err, $ov) = &__overlap($fs, $prevfs);
-      return("overlap error: $err") if (! MMisc::is_blank($err));
-      return("framespan ($fs) overlaps previous combined framespans ($prevfs)")
-        if (defined $ov);
-    }
-    ($err, $prevfs) = &__validate_fs("$prevfs $fs");
-    return($err) if (! MMisc::is_blank($err));
 
     my @tmp = ();
     push @tmp, $fs;
@@ -661,29 +601,10 @@ sub _confirm_dcr_bbox {
 
     push @out, [ @tmp ];
   }
-  return("\"$prevfs\" does not cover all of \"$gfs\"") if ($prevfs ne $gfs);
   return("Leftover elements in string ($str)") if (! MMisc::is_blank($str));
   return("Found no bbox") if (scalar @out == 0);
 
   return("", @out);
-}
-
-
-########################################
-
-# Access functions
-
-sub is_filename_in {
-}
-
-#####
-
-sub get_file_ViperFramespans {
-}
-
-#####
-
-sub get_files_list {
 }
 
 ############################################################

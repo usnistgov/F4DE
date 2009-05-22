@@ -25,29 +25,26 @@
   </xs:complexType>
 
 
-  <xs:complexType name="descriptionType">
-    <xs:attribute name="id" type="xs:nonNegativeInteger"/>
+  <xs:complexType name="DCFType">
     <xs:attribute name="framespan" type="avss09ecf:framespanType"/>
   </xs:complexType>
 
 
-  <xs:complexType name="BBdescriptionType">
+  <xs:complexType name="DCRType">
     <xs:sequence>
       <xs:element name="bbox" type="avss09ecf:bboxType" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
-    <xs:attribute name="id" type="xs:nonNegativeInteger"/>
-    <xs:attribute name="framespan" type="avss09ecf:framespanType"/>
   </xs:complexType>
 
 
   <xs:complexType name="cameraType">
     <xs:sequence>
-      <xs:element name="dont_care_frames" type="avss09ecf:descriptionType" minOccurs="0" maxOccurs="unbounded"/>
-      <xs:element name="dont_care_region" type="avss09ecf:BBdescriptionType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="dont_care_frames" type="avss09ecf:DCFType" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="dont_care_region" type="avss09ecf:DCRType" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
     <xs:attribute name="file" type="xs:anyURI"/>
     <xs:attribute name="template_xml" type="xs:anyURI" use="optional"/>
-    <xs:attribute name="target_training" type="xs:boolean"/>
+    <xs:attribute name="target_training" type="xs:boolean" use="optional"/>
   </xs:complexType>
 
 
