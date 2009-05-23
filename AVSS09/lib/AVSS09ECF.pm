@@ -605,10 +605,16 @@ sub _get_dcrs {
     return("In \"$name\", found no content")
       if (MMisc::is_blank($t));
     
-    my ($err, @tmp) = &_confirm_dcr_bbox($t, $fs);
+    my ($err, %tmp) = &_confirm_dcr_bbox($t, $fs);
     return($err) if (! MMisc::is_blank($err));
     
-    push @out, [ @tmp ];
+    # We want the DCR array to contain a list of hash of hash.
+    # - the "list" allow for separation of each separate "PERSON" to be created
+    # - the first hash is mainly to have an easy access to the global framespan
+    #   covered by this DCR
+    # - the second level hash is the DCR represented in a form that can directly
+    #   be used by the 'create_DCR' function
+    push @out, { $fs => { %tmp } };
   }
 
   return("", @out);
@@ -619,10 +625,10 @@ sub _get_dcrs {
 sub _confirm_dcr_bbox {
   my ($str, $gfs) = @_;
 
+  my %out = ();
   my $prevfs = "";
   my $name = "bbox";
   my $cont = 1;
-  my @out = ();
   while ($cont) {
     my $sec = MtXML::get_named_xml_section($name, \$str, $default_error_value);
     if ($sec eq $default_error_value) {
@@ -650,20 +656,18 @@ sub _confirm_dcr_bbox {
     return($err) if (! MMisc::is_blank($err));
 
     my @tmp = ();
-    push @tmp, $fs;
-
     foreach $f ("x", "y", "width", "height") {
       return("Could not find \'$f\'") if (! exists $res{$f});
       push @tmp, $res{$f};
     }
 
-    push @out, [ @tmp ];
+    @{$out{$fs}} = @tmp;
   }
   return("\"$prevfs\" does not cover all of \"$gfs\"") if ($prevfs ne $gfs);
   return("Leftover elements in string ($str)") if (! MMisc::is_blank($str));
-  return("Found no bbox") if (scalar @out == 0);
+  return("Found no bbox") if (scalar(keys %out) == 0);
 
-  return("", @out);
+  return("", %out);
 }
 
 ############################################################
