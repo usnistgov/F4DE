@@ -42,7 +42,7 @@ BEGIN {
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib", "../../../common/lib");
+      : ("../../lib", "../../../CLEAR07/lib", "../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -59,7 +59,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "AVSS09ECF") {
+foreach my $pn ("MMisc", "AVSS09ECF", "AVSS09HelperFunctions") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -154,25 +154,11 @@ sub valerr {
 sub load_file {
   my ($tmp) = @_;
 
-  my $err = MMisc::check_file_r($tmp);
-  if (! MMisc::is_blank($err)) {
-    &valerr($tmp, "skipping: $err");
-    return(0, ());
-  }
-  
-  # Prepare the object
-  my $object = new AVSS09ECF();
-  MMisc::error_quit("While trying to set \'xmllint\' (" . $object->get_errormsg() . ")")
-    if ( (! MMisc::is_blank($xmllint)) && (! $object->set_xmllint($xmllint)) );
-  MMisc::error_quit("While trying to set \'TrecVid08xsd\' (" . $object->get_errormsg() . ")")
-    if ( (! MMisc::is_blank($xsdpath)) && (! $object->set_xsdpath($xsdpath)) );
-  MMisc::error_quit("While setting \'file\' ($tmp) (" . $object->get_errormsg() . ")")
-    if ( ! $object->set_file($tmp) );
+  my ($err, $object) = AVSS09HelperFunctions::load_ECF_file($tmp, $xmllint, $xsdpath);
 
-  # Validate
-  if (! $object->validate()) {
-    &valerr($tmp, $object->get_errormsg());
-    return(0, ());
+  if (! MMisc::is_blank($err)) {
+    &valerr($tmp, $err);
+    return(0, undef);
   }
 
   &valok($tmp, "validates");
