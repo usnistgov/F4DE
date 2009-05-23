@@ -59,7 +59,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "AVSS09ViperFile") {
+foreach my $pn ("MMisc", "AVSS09ViperFile", "AVSS09ECF", "AVSS09HelperFunctions") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -102,9 +102,12 @@ my $forceFilename = "";
 my $writeback = -1;
 my $MemDump = undef;
 my $skipScoringSequenceMemDump = 0;
+my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
+my $ecf_file = "";
+my $ttid = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   C  F                W        fgh          s  vwx    #
+# Used: A C EF                W        fgh          s  vwx    #
 
 my %opt;
 GetOptions
@@ -121,6 +124,9 @@ GetOptions
    'write:s'         => \$writeback,
    'WriteMemDump:s'  => \$MemDump,
    'skipScoringSequenceMemDump' => \$skipScoringSequenceMemDump,
+   'AVSSxsd=s'       => \$AVxsdpath,
+   'ECF=s'           => \$ecf_file,
+   'tracking_trial=s' => \$ttid,
    # Hiden Option(s)
    'X_show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -159,6 +165,10 @@ if (($skipScoringSequenceMemDump) && (! defined $MemDump));
   
 ##############################
 # Main processing
+
+## Pre
+my $ecf = &load_ecf($ecf_file);
+
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
 foreach my $tmp (@ARGV) {
@@ -180,11 +190,21 @@ foreach my $tmp (@ARGV) {
   MMisc::error_quit("Problem during \"transformations\": " . $object->get_errormsg())
       if ($object->error());
 
-  ## DCx test code would go here...
-
   if ($mods && $show) {
     print "** [After Mods]\n";
     print $object->_display_all();
+  }
+
+  ## ECF
+  if (defined $ecf) {
+  print("** ECF Memory Representation:\n", $ecf->_display());
+    my ($err, $nvf) = AVSS09HelperFunctions::clone_VF_apply_ECF_for_ttid($object, $ecf, $ttid, 1);
+    print "ECF ERROR: $err\n" if (! MMisc::is_blank($err));
+    if (defined $nvf) {
+      $nvf->_display_all();
+    } else {
+      print "Undefined value ?\n";
+    }
   }
 
   if ($writeback != -1) {
@@ -245,6 +265,21 @@ sub load_file {
   }
 
   return($retstatus, $object);
+}
+
+##########
+
+sub load_ecf {
+  my ($tmp) = @_;
+
+  return(undef) if (MMisc::is_blank($tmp));
+
+  my ($err, $object) = AVSS09HelperFunctions::load_ECF_file($tmp, $xmllint, $AVxsdpath);
+
+  MMisc::error_quit("Problem loading ECF file ($tmp) : $err")
+      if (! MMisc::is_blank($err));
+
+  return($object);
 }
 
 ########################################
