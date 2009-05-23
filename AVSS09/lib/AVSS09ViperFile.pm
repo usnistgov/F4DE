@@ -1750,7 +1750,7 @@ sub _create_DCOR {
   return(0) if ($self->error());
     
   # and then set it as a DCX
-  my $ok = $self->_flip_DCX($opt_fs, $k_person, $id, $dcor_key, $mode, $k_true, $k_false);
+  my $ok = $self->_flip_DCX($opt_fs, $k_person, $id, $dcor_key, $mode, $k_true, $k_false, 1);
   return(0) if ($self->error());
   return($self->_set_error_and_return("Could not convert newly created $k_person (id $id) to a $mode", 0))
     if (! defined $ok);
@@ -1768,6 +1768,29 @@ sub create_DCO {
 sub create_DCR {
   my ($self, $rfs, $rloc_fs_bbox, $ofs) = @_;
   return($self->_create_DCOR($rfs, $rloc_fs_bbox, $ofs, $dcr_kw));
+}
+
+############################################################
+
+sub clone {
+  my ($self) = @_;
+
+  return(undef) if ($self->error());
+
+  return($self->_set_error_and_return("Can only \"clone\" validated objects", undef))
+    if (! $self->is_validated());
+
+  my $cldt = $self->__get_cldt();
+  my $new_cldt = $cldt->clone();
+
+  my $ret = new AVSS09ViperFile($new_cldt);
+  return($self->_set_error_and_return($ret->get_errormsg(), undef))
+    if ($ret->error());
+
+  # Force validation
+  $ret->{validated} = 1;
+
+  return($ret);
 }
 
 ############################################################
