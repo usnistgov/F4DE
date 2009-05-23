@@ -109,7 +109,6 @@ sub clone_VF_apply_ECF_for_ttid {
   # Apply to the new VF (if any)
   if (scalar @$rdcr > 0) {
     foreach my $rh (@$rdcr) {
-      print MMisc::get_sorted_MemDump(\@$rdcr);
       my %h = MMisc::clone(%$rh);
       my @k = keys %h;
       return("Did not find 1 master key for DCR, found " . scalar @k)

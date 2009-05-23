@@ -197,13 +197,12 @@ foreach my $tmp (@ARGV) {
 
   ## ECF
   if (defined $ecf) {
-  print("** ECF Memory Representation:\n", $ecf->_display());
+#    print("** ECF Memory Representation:\n", $ecf->_display());
     my ($err, $nvf) = AVSS09HelperFunctions::clone_VF_apply_ECF_for_ttid($object, $ecf, $ttid, 1);
     print "ECF ERROR: $err\n" if (! MMisc::is_blank($err));
-    if (defined $nvf) {
-      $nvf->_display_all();
-    } else {
-      print "Undefined value ?\n";
+    if ((defined $nvf) && ($show)) {
+      print "** [ECF applied]\n";
+      print $nvf->_display_all();
     }
   }
 
