@@ -672,26 +672,98 @@ sub _confirm_dcr_bbox {
 
 ############################################################
 
+sub is_sffn_in_ttid {
+  my ($self, $ttid, $sffn) = @_;
+
+  return(0) if ($self->error());
+
+  return(0) if (! exists $self->{tt_sffn}{$sffn}{$ttid});
+
+  return(1);
+}
+
+##########
+
+sub get_ttid_sffn_evaluate {
+  my ($self, $ttid, $sffn) = @_;
+
+  return(undef) if ($self->error());
+
+  return($self->_set_error_and_return("Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
+    if (! $self->is_sffn_in_ttid($ttid, $sffn));
+
+  return($self->_set_error_and_return("Internal Error: " . $tt_keys[0] . " for Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
+    if (! exists $self->{tracking_trials}{$ttid}{$tt_keys[0]});
+
+  return($self->{tracking_trials}{$ttid}{$tt_keys[0]});
+}
+
+##########
+
+sub _get_ttid_sffn_dcrf {
+  my ($self, $ttid, $sffn, $key) = @_;
+  
+  return(undef) if ($self->error());
+
+  return($self->_set_error_and_return("Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
+    if (! $self->is_sffn_in_ttid($ttid, $sffn));
+
+  return($self->_set_error_and_return("Internal Error: $key for Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
+    if (! exists $self->{tracking_trials}{$ttid}{$tt_keys[2]}{$sffn});
+
+  return(undef)
+    if (! exists $self->{tracking_trials}{$ttid}{$tt_keys[2]}{$sffn}{$key});
+
+  return($self->{tracking_trials}{$ttid}{$tt_keys[2]}{$sffn}{$key});
+}
+
+#####
+
+sub get_ttid_sffn_dcr {
+  my ($self, $ttid, $sffn) = @_;
+  return($self->_get_ttid_sffn_dcrf($ttid, $sffn, $ttp_keys[0]));
+}
+
+#####
+
+sub get_ttid_sffn_dcf {
+  my ($self, $ttid, $sffn) = @_;
+  return($self->_get_ttid_sffn_dcrf($ttid, $sffn, $ttp_keys[1]));
+}
+
+############################################################
+
 sub _set_errormsg {
   my ($self, $txt) = @_;
   $self->{errormsg}->set_errormsg($txt);
 }
 
-##########
+#####
 
 sub get_errormsg {
   my ($self) = @_;
   return($self->{errormsg}->errormsg());
 }
 
-##########
+#####
 
 sub error {
   my ($self) = @_;
   return($self->{errormsg}->error());
 }
 
-##########
+#####
+
+sub _set_error_and_return {
+  my $self = shift @_;
+  my $errormsg = shift @_;
+
+  $self->_set_errormsg($errormsg);
+
+  return(@_);
+}
+
+#####
 
 sub clear_error {
   my ($self) = @_;
