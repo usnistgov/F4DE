@@ -255,7 +255,7 @@ sub load_file {
   my ($isgtf, $tmp) = @_;
 
   my ($retstatus, $object, $msg) = 
-    AVSS09ViperFile::load_ViperFile($isgtf, $tmp, $frameTol, $xmllint, $xsdpath);
+    AVSS09HelperFunctions::load_ViperFile($isgtf, $tmp, $frameTol, $xmllint, $xsdpath);
 
   if ($retstatus) { # OK return
     &valok($tmp, $msg . (MMisc::is_blank($msg) ? "validates" : ""));
