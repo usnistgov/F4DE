@@ -31,7 +31,9 @@ $ms = &_chkpkg
   (
    # AVSS09/lib
    "AVSS09ViperFile",
-   "AVSStoCLEAR"
+   "AVSStoCLEAR",
+   "AVSS09ECF",
+   "AVSS09HelperFunctions",
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all AVSS09 packages found, you will not be able to run the program, please install the missing ones\n\n";
