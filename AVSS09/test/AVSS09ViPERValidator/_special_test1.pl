@@ -6,10 +6,11 @@ use strict;
 
 use MMisc;
 use AVSS09ViperFile;
+use AVSS09HelperFunctions;
 
 my $xsdpath = "../../../CLEAR07/data";
 my ($retstatus, $object, $msg) = 
-    AVSS09ViperFile::load_ViperFile(1, "../common/test_file3.clear.xml", 0, "", $xsdpath);
+    AVSS09HelperFunctions::load_ViperFile(1, "../common/test_file3.clear.xml", 0, "", $xsdpath);
 
 MMisc::error_quit("ERROR: $msg")
   if (! $retstatus);
@@ -148,7 +149,7 @@ sub obj_print {
       if (! $object->write_XML($fname, 1, ""));
 
   my ($retstatus, $obj, $msg) = 
-    AVSS09ViperFile::load_ViperFile(1, $fname, 0, "", $xsdpath);
+    AVSS09HelperFunctions::load_ViperFile(1, $fname, 0, "", $xsdpath);
 
   MMisc::error_quit("ERROR reloading rewritten file: $msg")
       if (! $retstatus);
