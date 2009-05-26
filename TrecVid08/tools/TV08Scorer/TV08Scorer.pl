@@ -401,9 +401,9 @@ if (scalar @inputAliCSV == 0) {
     open (CSV, $csvf) 
       or MMisc::error_quit("Failed to open CSV alignment file ($csvf): $!");
 
-    my $csv = CSVHelper::get_csv_handler();
-    MMisc::error_quit("Problem creating the CSV object")
-      if (! defined $csv);
+    my $csv = new CSVHelper();
+    MMisc::error_quit("Problem creating the CSV object: " . $csv->get_errormsg())
+      if ($csv->error());
 
     if (! $schc) {
       my $header = <CSV>;
@@ -411,14 +411,19 @@ if (scalar @inputAliCSV == 0) {
         print "File [$csvf] contains no data, skipping\n";
         next;
       }
-      my @headers = CSVHelper::csvtxt2array($csv, $header);
+      my @headers = $csv->csvline2array($header);
+      MMisc::error_quit("Problem extracting csv line:" . $csv->get_errormsg())
+        if ($csv->error());
       if (scalar @headers == 1) {
         print "File [$csvf] contains no usable data, skipping\n";
         next;
       }
       MMisc::error_quit("File [$csvf] does not contain enough CSV columns (" . scalar @headers .") vs 16 expected")
         if (scalar @headers != 16);
-      
+      $csv->set_number_of_columns(scalar @headers);
+      MMisc::error_quit("Problem setting the number of columns for the csv file:" . $csv->get_errormsg())
+        if ($csv->error());
+
       foreach my $tmp_ft (qw(2:Event 3:TYPE 10:S.DetScr 11:S.DetDec)) {
         my ($tmp_loc, $tmp_ev) = split(m%\:%, $tmp_ft); 
         my $tmp_val = $headers[$tmp_loc];
@@ -429,7 +434,9 @@ if (scalar @inputAliCSV == 0) {
 
     my ($type, $evt, $detscr, $detdec);
     while (<CSV>){
-      my @data =  CSVHelper::csvtxt2array($csv, $_);
+      my @data =  $csv->csvline2array($_);
+      MMisc::error_quit("Problem extracting data from csv line: " . $csv->get_errormsg())
+        if ($csv->error());
 
       ($type, $evt, $detscr, $detdec) =
         ($data[3], $data[2], $data[10], $data[11]);

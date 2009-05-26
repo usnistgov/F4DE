@@ -624,15 +624,18 @@ sub ViperFile2CSVtxt {
   return("Problem while obtaining Observations (" . $vf->get_errormsg() . ")", $txt)
     if ($vf->error());
 
-  my $ch = CSVHelper::get_csv_handler();
-  return("Problem creating the CSV object", $txt)
-    if (! defined $ch);
+  my $ch = new CSVHelper();
+  return("Problem creating the CSV object :" . $ch->get_errormsg(), $txt)
+    if ($ch->error());
 
   my $tmp = "";
 
-  my $tmptxt = CSVHelper::array2csvtxt($ch, @keys);
-  return("Problem adding entries to CSV file", $txt)
-    if (! defined $tmptxt);
+  $ch->set_number_of_columns(scalar @keys);
+  return("Problem setting number of columns for CSV: " . $ch->get_errormsg(), $txt)
+    if ($ch->error());
+  my $tmptxt = $ch->array2csvline(@keys);
+  return("Problem adding entries to CSV file: " . $ch->get_errormsg(), $txt)
+    if ($ch->error());
   $tmp .= "$tmptxt\n";
 
   foreach my $obs (@ao) {
@@ -642,9 +645,9 @@ sub ViperFile2CSVtxt {
     return("CSV generation from Observation did not return the expected number of keys", $txt)
       if (scalar @keys != scalar @tmp);
 
-    $tmptxt = CSVHelper::array2csvtxt($ch, @tmp);
-    return("Problem adding entries to CSV file", $txt)
-      if (! defined $tmptxt);
+    $tmptxt = $ch->array2csvline(@tmp);
+    return("Problem adding entries to CSV file: " . $ch->get_errormsg(), $txt)
+      if ($ch->error());
     $tmp .= "$tmptxt\n";
   }
   
@@ -686,21 +689,24 @@ sub Add_CSVfile2VFobject {
   open CSV, "<$csvf"
     or return("Problem opening CSV file: $!\n");
 
-  my $csv = CSVHelper::get_csv_handler();
-  return("Problem creating the CSV object")
-    if (! defined $csv);
+  my $csv = new CSVHelper();
+  return("Problem creating the CSV object: " . $csv->get_errormsg())
+    if ($csv->error());
 
   # Process CSV file line per line
   my @headers = ();
   while (my $line = <CSV>) {
-    my @columns = CSVHelper::csvtxt2array($csv, $line);
-    return("Failed to parse CSV line")
-      if (! defined @columns);
+    my @columns = $csv->csvline2array($line);
+    return("Failed to parse CSV line: " . $csv->get_errormsg())
+      if ($csv->error());
 
     if (scalar @headers == 0) { # extract the CSV headers
       return("When checking the CSV header: " . $dobs->get_errormsg())
         if (! $dobs->check_csv_keys(@columns));
       @headers = @columns;
+      $csv->set_number_of_columns(scalar @columns);
+      return("Problem setting number of columns for CSV: " . $csv->get_errormsg())
+        if ($csv->error());
       next;
     }
 

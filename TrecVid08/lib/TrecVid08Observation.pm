@@ -2286,16 +2286,15 @@ sub get_Xtra_csv_key                 { return $ok_csv_keys[18]; }
 sub _array2csvtxt {
   my ($self, @array) = @_;
 
-  my $ch = CSVHelper::get_csv_handler($csv_quote_char);
-  if (! defined $ch) {
-    $self->_set_errormsg("Problem creating the CSV object");
+  my $ch = new CSVHelper($csv_quote_char);
+  if ($ch->error()) {
+    $self->_set_errormsg("Problem creating the CSV object: " . $ch->get_errormsg());
     return("");
   }
 
-  my $txt = CSVHelper::array2csvtxt($ch, @array);
-
-  if (! defined $txt) {
-    $self->_set_errormsg("Problem adding entries to CSV");
+  my $txt = $ch->array2csvline(@array);
+  if ($ch->error()) {
+    $self->_set_errormsg("Problem adding entries to CSV:" . $ch->get_errormsg());
     return("");
   }
 
@@ -2309,15 +2308,15 @@ sub _csvtxt2array {
 
   my @out = ();
 
-  my $ch = CSVHelper::get_csv_handler($csv_quote_char);
-  if (! defined $ch) {
-    $self->_set_errormsg("Problem creating the CSV object");
+  my $ch = new CSVHelper($csv_quote_char);
+  if ($ch->error()) {
+    $self->_set_errormsg("Problem creating the CSV object: " . $ch->get_errormsg());
     return(@out);
   }
 
-  my @columns = CSVHelper::csvtxt2array($ch, $value);
-  if (! defined @columns) {
-    $self->_set_errormsg("Problem extracting inlined-CSV line");
+  my @columns = $ch->csvline2array($value);
+  if ($ch->error()) {
+    $self->_set_errormsg("Problem extracting inlined-CSV line: " . $ch->get_errormsg());
     return(@out);
   }
 

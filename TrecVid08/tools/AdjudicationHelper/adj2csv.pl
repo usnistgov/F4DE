@@ -207,9 +207,9 @@ foreach my $x (@ARGV) {
   print "done\n";
 }
 
-my $ch = CSVHelper::get_csv_handler();
-MMisc::error_quit("Problem creating the CSV object")
-  if (! defined $ch);
+my $ch = new CSVHelper();
+MMisc::error_quit("Problem creating the CSV object: " . $ch->get_errormsg())
+  if ($ch->error());
 
 my $global = "${writedir}global.csv";
 my $global_txt = "";
@@ -744,10 +744,10 @@ sub _fs_sort {
 sub array2csvline {
   my ($ch, @array) = @_;
 
-  my $tmp = CSVHelper::array2csvtxt($ch, @array);
+  my $tmp = $ch->array2csvline(@array);
 
-  MMisc::error_quit("Problem adding entries to CSV file: " . $ch->error_diag())
-    if (! defined $tmp);
+  MMisc::error_quit("Problem adding entries to CSV file: " . $ch->get_errormsg())
+    if ($ch->error());
 
   return("$tmp\n");
 }
