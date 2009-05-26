@@ -81,6 +81,10 @@ my @ok_objects = ();
 my @xsdfilesl  = ();
 my $cdtspmode = "";
 
+#####
+
+sub get_okdomain { return($ok_domain); } 
+
 ########################################
 
 sub get_cdtspmode {
@@ -520,30 +524,6 @@ sub validate {
 
   $self->{validated} = 1;
   return(1);
-}
-
-########## Helper Functions
-
-sub load_ViperFile {
-  my ($isgtf, $filename, $frameTol, $xmllint, $xsdpath) = @_;
-
-  my ($ok, $cldt, $msg) = CLEARDTHelperFunctions::load_ViperFile
-    ($isgtf, $filename, $ok_domain, $frameTol, $xmllint, $xsdpath, &get_cdtspmode());
-
-  return($ok, undef, $msg)
-    if (! $ok);
-
-  my $it = AVSS09ViperFile->new($cldt);
-  return(0, undef, $msg . $it->get_errormsg())
-    if ($it->error());
-
-  my $ok = $it->validate();
-  return(0, undef, $msg . $it->get_errormsg())
-    if ($it->error());
-  return($ok, undef, $msg . "Problem during validation process")
-    if (! $ok);
-
-  return(1, $it, $msg . "");
 }
 
 #################### Add to each ID

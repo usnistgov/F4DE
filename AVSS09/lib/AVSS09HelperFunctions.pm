@@ -38,6 +38,33 @@ my $versionid = "AVSS09HelperFunctions.pm Version: $version";
 
 ########################################
 
+sub load_ViperFile {
+  my ($isgtf, $filename, $frameTol, $xmllint, $xsdpath) = @_;
+
+  my $ok_domain = AVSS09ViperFile::get_okdomain();
+  my $cdtspmode = AVSS09ViperFile::get_cdtspmode();
+
+  my ($ok, $cldt, $msg) = CLEARDTHelperFunctions::load_ViperFile
+    ($isgtf, $filename, $ok_domain, $frameTol, $xmllint, $xsdpath, $cdtspmode);
+
+  return($ok, undef, $msg)
+    if (! $ok);
+
+  my $it = AVSS09ViperFile->new($cldt);
+  return(0, undef, $msg . $it->get_errormsg())
+    if ($it->error());
+
+  my $ok = $it->validate();
+  return(0, undef, $msg . $it->get_errormsg())
+    if ($it->error());
+  return($ok, undef, $msg . "Problem during validation process")
+    if (! $ok);
+
+  return(1, $it, $msg . "");
+}
+
+##########
+
 sub load_ECF_file {
   my ($file, $xmllint, $xsdpath) = @_;
 
