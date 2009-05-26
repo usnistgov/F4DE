@@ -262,9 +262,9 @@ open OFILE, ">$of"
 my @header = ();
 push @header, "Directory", "File ID", "Excerpt Set", "Camera ID";
 
-my $csvh = CSVHelper::get_csv_handler();
-MMisc::error_quit("Problem getting CSV handler")
-  if (! defined $csvh);
+my $csvh = new CSVHelper();
+MMisc::error_quit($csvh->get_errormsg())
+  if ($csvh->error());
 
 my @idl = sort _num keys %$rresk;
 
@@ -331,10 +331,15 @@ foreach my $key (sort @keys) {
     push @content_id, $cam_seqstr{$id};
 
     if (! $wrote_header) {
-      my $txt = CSVHelper::array2csvtxt($csvh, @header);
+      $csvh->set_number_of_columns(scalar @header);
+      MMisc::error_quit($csvh->get_errormsg())
+          if ($csvh->error());
+      my $line = $csvh->array2csvline(@header);
+      MMisc::error_quit($csvh->get_errormsg())
+          if ($csvh->error());
       MMisc::error_quit("Problem creating CSV header")
-          if (! defined $txt);
-      print OFILE $txt . "\n";
+          if (! defined $line);
+      print OFILE $line . "\n";
       $wrote_header = 1;
     }
 
@@ -345,7 +350,9 @@ foreach my $key (sort @keys) {
     MMisc::error_quit("Different number of columns in data (" . scalar @content . ") than in header (" . scalar @header . "), refusing to write")
         if (scalar @header != scalar @content);
 
-    my $line = CSVHelper::array2csvtxt($csvh, @content);
+    my $line = $csvh->array2csvline(@content);
+    MMisc::error_quit($csvh->get_errormsg())
+        if ($csvh->error());
     MMisc::error_quit("Problem creating CSV content")
         if (! defined $line);
     print OFILE $line . "\n";
