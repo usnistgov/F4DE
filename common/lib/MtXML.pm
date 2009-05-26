@@ -194,7 +194,7 @@ sub get_named_xml_section_with_inline_content {
     if ($ib == -1) { # no ib->ie part, get b->e
       $str = substr($$rstr, $b, $e + 1 - $b);
     } else { # Go from b->ib
-      $str = substr($$rstr, $b, $ib - 1, $ib - $b);
+      $str = substr($$rstr, $b, $ib - $b);
     }
 
     # For next run, Continue past just seen entry
