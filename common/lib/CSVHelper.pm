@@ -37,21 +37,40 @@ my $versionid = "CSVHelper.pm Version: $version";
 
 sub get_csv_handler {
   my $qc = shift @_;
+  my $sc = shift @_;
 
-  my $csv = undef;
   my %options = ();
   $options{always_quote} = 1;
   $options{binary} = 1;
+
+  my $csv = undef;
+
+  return($csv)
+    if ((! MMisc::is_blank($qc)) && (length($qc) > 1));
+
+  return($csv)
+    if ((! MMisc::is_blank($sc)) && (length($sc) > 1));
+
   if (! MMisc::is_blank($qc)) {
-    return($csv) 
-      if (length($qc) > 1);
     $options{quote_char}  = $qc;
     $options{escape_char} = $qc;
   }
+
+  $options{sep_char} = $sc
+    if (! MMisc::is_blank($sc));
+
   $csv = Text::CSV->new(\%options);
 
   return($csv);
 }
+
+#####
+
+sub error { return(! MMisc::is_blank(&get_errormsg())); }
+
+#####
+
+sub get_errormsg { return(Text::CSV->error_diag()); }
 
 #####
 
