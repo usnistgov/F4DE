@@ -105,6 +105,7 @@ my $skipScoringSequenceMemDump = 0;
 my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
 my $ecf_file = "";
 my $ttid = "";
+my $tttdir = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
 # Used: A C EF                W        fgh          s  vwx    #
@@ -127,6 +128,7 @@ GetOptions
    'AVSSxsd=s'       => \$AVxsdpath,
    'ECF=s'           => \$ecf_file,
    'tracking_trial=s' => \$ttid,
+   'TrackingTrialsDir' => \$tttdir,
    # Hiden Option(s)
    'X_show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -149,6 +151,36 @@ if (($writeback != -1) && ($writeback ne "")) {
   MMisc::error_quit("Provided \'write\' option directory ($writeback): $err")
     if (! MMisc::is_blank($err));
   $writeback .= "/" if ($writeback !~ m%\/$%); # Add a trailing slash
+}
+
+MMisc::error_quit("Can not use \'tracking_trial\' unless an ECF file is specified")
+  if ((MMisc::is_blank($ecf_file)) && (! MMisc::is_blank($ttid)));
+
+if ($tttdir) {
+  MMisc::error_quit("Can not use \'TrackingTrialsDir\' unless an ECF file is specified")
+      if (MMisc::is_blank($ecf_file));
+  MMisc::error_quit("Can not use \'TrackingTrialsDir\' unless a \"write\" directory is specified")
+      if ($writeback eq "");
+}
+
+MMisc::error_quit("\'ECF\' needs one of \'TrackingTrialsDir\' or \'tracking_trial\'")
+  if ((! MMisc::is_blank($ecf_file)) && (MMisc::is_blank($ttid)) && ($tttdir == 0));
+
+my $sk_wb = 0;
+$sk_wb = 1 if ((! MMisc::is_blank($ttid)) || ($tttdir));
+
+if ($sk_wb) {
+  my $txt = "*!* Tracking Trial mode selected";
+  if (! defined $MemDump) {
+    $txt .= " / Forcing " . $ok_md[0] . " MemDump";
+    $MemDump = $ok_md[0]
+  }
+  if ($skipScoringSequenceMemDump) {
+    $txt .= " / Forcing ScoringSequenceMemDump";
+    $skipScoringSequenceMemDump = 0;
+  }
+  $txt .= " *!*";
+  print "$txt\n";
 }
 
 if (defined $MemDump) {
@@ -174,7 +206,7 @@ my $ndone = 0;
 foreach my $tmp (@ARGV) {
   my ($err, $fname, $fsshift, $idadd, @boxmod) = 
     AVSS09ViperFile::extract_transformations($tmp);
-  MMisc::error_quit("While processing filename ($tmp): $err")
+  MMisc::error_quit("While processing filename ($fname): $err")
       if (! MMisc::is_blank($err));
 
   my ($ok, $object) = &load_file($isgtf, $fname);
@@ -196,17 +228,10 @@ foreach my $tmp (@ARGV) {
   }
 
   ## ECF
-  if (defined $ecf) {
-#    print("** ECF Memory Representation:\n", $ecf->_display());
-    my ($err, $nvf) = AVSS09HelperFunctions::clone_VF_apply_ECF_for_ttid($object, $ecf, $ttid, 1);
-    print "ECF ERROR: $err\n" if (! MMisc::is_blank($err));
-    if ((defined $nvf) && ($show)) {
-      print "** [ECF applied]\n";
-      print $nvf->_display_all();
-    }
-  }
-
-  if ($writeback != -1) {
+  my ($msg) = &process_training_trials($object);
+  print $msg if (! MMisc::is_blank($msg));
+  
+  if (($writeback != -1) && (! $sk_wb)) {
     my $lfname = "";
     
     if ($writeback ne "") {
@@ -214,19 +239,13 @@ foreach my $tmp (@ARGV) {
       $lfname = MMisc::concat_dir_file_ext($writeback, $tf, $te);
     }
     
-    (my $err, $lfname) = $object->write_XML($lfname, $isgtf, "** XML re-Representation:\n");
-    MMisc::error_quit($err) if (! MMisc::is_blank($err));   
-    
-    if (defined $MemDump) {
-      $object->write_MemDumps($lfname, $isgtf, $MemDump, $skipScoringSequenceMemDump);
-      MMisc::error_quit("Problem while trying to perform \'MemDump\'")
-          if ($object->error());
-    }
+    AVSS09HelperFunctions::VF_write_XML_MemDumps($object, $lfname, $isgtf, $MemDump, $skipScoringSequenceMemDump, "** XML re-Representation:\n");
   }
 
   $ndone++;
 }
 
+print "\n\n" if ($sk_wb);
 print("All files processed (Validated: $ndone | Total: $ntodo)\n");
 
 MMisc::error_quit("Not all files processed succesfuly") if ($ndone != $ntodo);
@@ -237,6 +256,7 @@ MMisc::ok_quit("\nDone\n");
 sub valok {
   my ($fname, $txt) = @_;
 
+  print "\n\n[*] " if ($sk_wb);
   print "$fname: $txt\n";
 }
 
@@ -244,6 +264,8 @@ sub valok {
 
 sub valerr {
   my ($fname, $txt) = @_;
+
+  print "\n\n[*] " if ($sk_wb);
   foreach (split(/\n/, $txt)){ 
     &valok($fname, "[ERROR] $_");
   }
@@ -279,6 +301,130 @@ sub load_ecf {
       if (! MMisc::is_blank($err));
 
   return($object);
+}
+
+##########
+
+sub __get_ttid_VF {
+  my ($vf, $ttid) = @_;
+
+  my ($err, $nvf) 
+    = AVSS09HelperFunctions::clone_VF_apply_ECF_for_ttid($vf, $ecf, $ttid, 1);
+  MMisc::error_quit("While trying to obtain a new ViperFile memory representation: $err\n")
+      if (! MMisc::is_blank($err));
+
+  return($nvf);
+}
+
+#####
+
+sub _get_ttid_dd {
+  my ($sffn, $rttid) = @_;
+
+  my $dd = $writeback;
+  $dd .= $ecf->get_sffn_ttid_expected_path_base($sffn, $rttid, 1)
+    if ($tttdir);
+
+  MMisc::error_quit("Problem creating output dir [$dd]")
+      if (! MMisc::make_dir($dd));
+  
+  return($dd);
+}
+
+#####
+
+sub _write_VF_to_ttid_dd {
+  my ($vf, $sffn, $rttid, $isgtf) = @_;
+
+  my $dd = &_get_ttid_dd($sffn, $rttid);
+  
+  my $df = "$dd/$sffn.xml";
+  return(AVSS09HelperFunctions::VF_write_XML_MemDumps($vf, $df, $isgtf, $MemDump, 0, ""));
+}
+
+#####
+
+sub __write_GTF_ttid_VF {
+  my ($vf, $rttid, $sffn) = @_;
+
+  my $nvf = &__get_ttid_VF($vf, $rttid);
+  return(&_write_VF_to_ttid_dd($nvf, $sffn, $rttid, 1));
+}
+
+#####
+
+sub __write_SYS_ttid_VF {
+  my ($vf, $rttid, $sffn) = @_;
+  return(&_write_VF_to_ttid_dd($vf, $sffn, $rttid, 0));
+}
+
+#####
+
+sub __write_autoselect_ttid_VF {
+  my ($vf, $rttid, $sffn, $isgtf) = @_;
+  
+  return(&__write_GTF_ttid_VF($vf, $rttid, $sffn))
+    if ($isgtf);
+
+  return(&__write_SYS_ttid_VF($vf, $rttid, $sffn));
+}
+
+#####
+
+sub _process_tt_ttid_only {
+  my ($vf, $sffn, $isgtf, $rttid) = @_;
+
+  return("! sffn not part of requested tracking_trial [$ttid], skipping it\n")
+    if (! $ecf->is_sffn_in_ttid($rttid, $sffn));
+
+  print "++ ttid: $rttid\n";
+  my $fn = &__write_autoselect_ttid_VF($vf, $rttid, $sffn, $isgtf);
+  return("");
+}
+
+#####
+
+sub _process_tt_all {
+  my ($vf, $sffn, $isgtf) = @_;
+
+  my @l = $ecf->get_ttid_list_for_sffn($sffn);
+  MMisc::error_quit("Problem obtaining list of ttid for sffn: " . $ecf->get_errormsg())
+      if ($ecf->error());
+
+  return("  |-> sffn not part of any tracking_trial, skip tt processing\n", undef)
+    if (scalar @l == 0);
+
+  foreach my $rttid (@l) {
+    my $msg = &_process_tt_ttid_only($vf, $sffn, $isgtf, $rttid);
+    print $msg;
+  }
+
+  return("--> All ECF ttids done\n");
+}
+
+#####
+
+sub process_training_trials {
+  my ($vf) = @_;
+
+  return("") if (! $sk_wb);
+
+  my ($sffn) = $vf->get_sourcefile_filename();
+  MMisc::error_quit("Problem obtaining sffn: " . $vf->get_errormsg())
+      if ($vf->error());
+
+  print "== sffn: $sffn\n";
+
+  my ($isgtf) = $vf->check_if_gtf();
+  MMisc::error_quit("Problem obtaining gtf status: " . $vf->get_errormsg())
+      if ($vf->error());
+
+  # If we only want one ttid, only do this one
+  return(&_process_tt_ttid_only($vf, $sffn, $isgtf, $ttid))
+    if (! MMisc::is_blank($ttid));
+
+  # otherwise, do them all
+  return(&_process_tt_all($vf, $sffn, $isgtf));
 }
 
 ########################################
@@ -456,7 +602,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--gtf] [--frameTol framenbr] [--write [directory] [--WriteMemDump [mode] [--skipScoringSequenceMemDump]] [--ForceFilename file] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--gtf] [--frameTol framenbr] [--write [directory] [--WriteMemDump [mode] [--skipScoringSequenceMemDump]] [--ForceFilename file] [--ECF ecffile.xml [--TrackingTrialsDir] [--tracking_trial ttid]] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
 
 Will perform a semantic validation of the AVSS09 Viper XML file(s) provided.
 
