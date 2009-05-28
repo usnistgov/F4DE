@@ -65,6 +65,23 @@ sub load_ViperFile {
 
 ##########
 
+sub VF_write_XML_MemDumps {
+  my ($vf, $fname, $isgtf, $MemDump, $skSSM, $stdouttext) = @_;
+
+  my ($err, $ndf) = $vf->write_XML($fname, $isgtf, $stdouttext);
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));   
+  
+  if (defined $MemDump) {
+    $vf->write_MemDumps($ndf, $isgtf, $MemDump, $skSSM);
+    MMisc::error_quit("Problem while trying to perform \'MemDump\'")
+        if ($vf->error());
+  }
+
+  return($ndf);
+}
+
+##########
+
 sub load_ECF_file {
   my ($file, $xmllint, $xsdpath) = @_;
 
@@ -91,7 +108,7 @@ sub load_ECF_file {
 ##########
 
 sub clone_VF_apply_ECF_for_ttid {
-  my ($vf, $ecf, $ttid) = @_;
+  my ($vf, $ecf, $ttid, $verb) = @_;
 
   return($vf->get_errormsg()) if ($vf->error());
   return($ecf->get_errormsg()) if ($ecf->error());
@@ -102,7 +119,13 @@ sub clone_VF_apply_ECF_for_ttid {
   return("Sourcefile ($sffn) is not part of tracking trial ($ttid)")
     if (! $ecf->is_sffn_in_ttid($ttid, $sffn));
 
-#  print "Trying to clone ViperFile\n";
+  my ($isgtf) = $vf->check_if_gtf();
+  return($vf->get_errormsg()) if ($vf->error());
+  return("Can only apply an ECF to a GTF") if (! $isgtf);
+
+  my $count = 0;
+
+  print $count++, ") Clone ViperFile\n" if ($verb);
   my $nvf = $vf->clone();
   return($vf->get_errormsg()) if ($vf->error());
   return("Got no clone") if (! defined $nvf);
@@ -112,10 +135,10 @@ sub clone_VF_apply_ECF_for_ttid {
   my $evfs = $ecf->get_ttid_sffn_evaluate($ttid, $sffn);
   return($ecf->get_errormsg()) if ($ecf->error());
   # Apply to the new VF
-#  print "Applying Evaluate [$evfs]\n";
+  print $count++, ") Applying Evaluate [$evfs]\n" if ($verb);
   my $res = $nvf->set_evaluate_range($evfs);
   return($nvf->get_errormsg()) if ($nvf->error());
-#  print " -> Evaluate [$res]\n";
+  print " -> Evaluate [$res]\n" if ($verb);
 
   ##### 2) DCF
   # Get from ECF
@@ -123,10 +146,10 @@ sub clone_VF_apply_ECF_for_ttid {
   return($ecf->get_errormsg()) if ($ecf->error());
   # Apply to the new VF (if any)
   if (defined $dcffs) {
-#    print "Applying DCF [$dcffs]\n";
+    print $count++, ") Applying DCF [$dcffs]\n" if ($verb);
     my $res = $nvf->add_DCF($dcffs);
     return($nvf->get_errormsg()) if ($nvf->error());
-#    print " -> DCF [$res]\n";
+    print " -> DCF [$res]\n" if ($verb);
   }
 
   ##### 3) DCR
@@ -142,10 +165,10 @@ sub clone_VF_apply_ECF_for_ttid {
         if (scalar @k != 1);
       my $fs = $k[0];
       my %loc_fs_bbox = %{$h{$fs}};
-#      print "Creating DCR [$fs]\n";
+      print $count++, ") Creating DCR [$fs]\n" if ($verb);
       my $res = $nvf->create_DCR($fs, \%loc_fs_bbox);
       return($nvf->get_errormsg()) if ($nvf->error());
-#      print " -> ID [$res]\n";
+      print " -> ID [$res]\n" if ($verb);
     }
   }
   
