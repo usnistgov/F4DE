@@ -1762,7 +1762,7 @@
     </descriptor>
   </config>
   <data>
-    <sourcefile filename="test_file2.mov">
+    <sourcefile filename="test_file3.mov">
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
           <data:fvalue value="1.0"/>
