@@ -684,6 +684,34 @@ sub is_sffn_in_ttid {
 
 ##########
 
+sub get_ttid_list_for_sffn {
+  my ($self, $sffn) = @_;
+  
+  my @out = ();
+  return(@out) if ($self->error());
+
+  return(@out) if (! exists $self->{tt_sffn}{$sffn});
+
+  @out = keys %{$self->{tt_sffn}{$sffn}};
+
+  return(@out);
+}
+
+##########
+
+sub get_ttid_type {
+  my ($self, $ttid) = @_;
+
+  return(undef) if ($self->error());
+
+  return($self->_set_errormsg_and_return("No \"$ttid\" \'tracking_trial\'", undef))
+    if (! exists $self->{tracking_trials}{$ttid});
+
+  return($self->{tracking_trials}{$ttid}{$tt_keys[1]});
+}
+
+##########
+
 sub get_ttid_sffn_evaluate {
   my ($self, $ttid, $sffn) = @_;
 
@@ -729,6 +757,23 @@ sub get_ttid_sffn_dcr {
 sub get_ttid_sffn_dcf {
   my ($self, $ttid, $sffn) = @_;
   return($self->_get_ttid_sffn_dcrf($ttid, $sffn, $ttp_keys[1]));
+}
+
+##########
+
+sub get_sffn_ttid_expected_path_base {
+  my ($self, $sffn, $ttid, $isgtf) = @_;
+
+  return(undef) if (! $self->is_sffn_in_ttid($ttid, $sffn));
+
+  my ($out) = $self->get_ttid_type($ttid);
+  $out .= "/$ttid/$sffn";
+  
+  return($out) if (! defined $isgtf);
+
+  return("$out/GTF") if ($isgtf);
+
+  return("$out/SYS");
 }
 
 ############################################################
