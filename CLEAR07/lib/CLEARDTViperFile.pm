@@ -1073,12 +1073,15 @@ sub _clone_core {
   }
   
   my $domain = $self->get_domain();
-  my $clone = new CLEARDTViperFile($domain);
+  my $spmode = $self->get_spmode();
+
+  my $clone = new CLEARDTViperFile($domain, $spmode);
   
   $clone->set_xmllint($self->get_xmllint(), 1);
   $clone->set_xsdpath($self->get_xsdpath(), 1);
   $clone->set_as_gtf() if ($self->check_if_gtf());
   $clone->set_file($self->get_file(), 1);
+
   my %in = $self->_get_fhash();
   my %out;
   if ($keep_objects) {
