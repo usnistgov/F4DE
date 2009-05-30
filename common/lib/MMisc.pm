@@ -856,7 +856,7 @@ sub check_dir_r { return(&_check_file_dir_XXX("dir", "r", @_)); }
 sub check_dir_w { return(&_check_file_dir_XXX("dir", "w", @_)); }
 sub check_dir_x { return(&_check_file_dir_XXX("dir", "x", @_)); }
 
-sub does_file_exits { return( &is_blank( &check_file_e(@_) ) ); }
+sub does_file_exists { return( &is_blank( &check_file_e(@_) ) ); }
 sub is_file_r { return( &is_blank( &check_file_r(@_) ) ); }
 sub is_file_w { return( &is_blank( &check_file_w(@_) ) ); }
 sub is_file_x { return( &is_blank( &check_file_x(@_) ) ); }
