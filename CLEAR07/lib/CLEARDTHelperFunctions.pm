@@ -70,13 +70,29 @@ my $SS_MemDump_FileHeader_gz = $SS_MemDump_FileHeader_gz_cmp
 sub _rm_mds {
   my ($fname) = @_;
 
-  return($fname) if (MMisc::is_blank($fname));
+  return("") if (MMisc::is_blank($fname));
 
   # Remove them all
   while ($fname =~ s%($VF_MemDump_Suffix|$SS_MemDump_Suffix)$%%) {1;}
+  # Also remove double ".xml"
+  while ($fname =~ s%\.xml(\.xml)$%$1%) {1;}
 
   return($fname);
 }
+
+#####
+
+sub __clean_fn {
+  my ($fn, $add) = @_;
+  return("") if (MMisc::is_blank($fn)); 
+  return(&_rm_mds($fn) . $add);
+}
+
+##### 
+
+sub get_XML_filename { my ($fn) = @_; return(&__clean_fn($fn, "")); }
+sub get_VFMD_filename { my ($fn) = @_; return(&__clean_fn($fn, $VF_MemDump_Suffix)); }
+sub get_SSMD_filename { my ($fn) = @_; return(&__clean_fn($fn, $SS_MemDump_Suffix)); }
 
 #####
 
@@ -84,7 +100,7 @@ sub save_ViperFile_XML {
   my ($fname, $vf, $printname, $ptxt, @ok_objects) = @_;
 
   # Re-adapt the file name to remove any potential ".memdump"
-  $fname = &_rm_mds($fname, 0);
+  $fname = &_rm_mds($fname);
 
   my $txt = $vf->reformat_xml(@ok_objects);
   return("While trying to create the XML text (" . $vf->get_errormsg() . ")", $fname)
@@ -102,7 +118,7 @@ sub save_ViperFile_MemDump {
   my ($fname, $object, $mode) = @_;
 
   # Re-adapt the file name to remove any potential ".memdump"
-  $fname = &_rm_mds($fname, 0);
+  $fname = &_rm_mds($fname);
 
   # Clone and anonymyze some components
   my $clone = $object->clone();
@@ -111,8 +127,6 @@ sub save_ViperFile_MemDump {
   $clone->set_xmllint("xmllint", 1);
   return(0) if ($clone->error());
 
-  
-  
   return(MMisc::dump_memory_object
 	 ($fname, $VF_MemDump_Suffix, $clone,
 	  $VF_MemDump_FileHeader,
@@ -126,7 +140,7 @@ sub save_ScoringSequence_MemDump {
   my ($fname, $object, $mode) = @_;
 
   # Re-adapt the file name to remove any potential ".memdump"
-  $fname = &_rm_mds($fname, 0);
+  $fname = &_rm_mds($fname);
 
   return(MMisc::dump_memory_object
 	 ($fname, $SS_MemDump_Suffix, $object,
