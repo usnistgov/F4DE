@@ -947,6 +947,13 @@ sub reformat_xml {
 
 ##########
 
+sub get_XML_filename { 
+  my ($fn) = @_;
+  return(CLEARDTHelperFunctions::get_XML_filename($fn));
+}
+
+#####
+
 sub write_XML {
   my ($self, $fname, $isgtf, $ptxt) = @_;
 
