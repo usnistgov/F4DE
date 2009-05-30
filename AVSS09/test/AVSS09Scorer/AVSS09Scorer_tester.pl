@@ -56,8 +56,14 @@ sub do_simple_test {
   `rm -rf $tdir` if (-e $tdir);
   MMisc::error_quit("Could not make temporary dir for testing ($tdir)")
     if (! MMisc::make_dir($tdir));
+  my $sdir = "$tdir/SYS";
+  MMisc::error_quit("Could not make temporary dir for testing ($sdir)")
+    if (! MMisc::make_dir($sdir));
+  my $gdir = "$tdir/GTF";
+  MMisc::error_quit("Could not make temporary dir for testing ($gdir)")
+    if (! MMisc::make_dir($gdir));
 
-  $command .= " -w $tdir";
+  $command .= " -w $tdir -D $sdir -d $gdir";
 
   my $retval = F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev);
 
