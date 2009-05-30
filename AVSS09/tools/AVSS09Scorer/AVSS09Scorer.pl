@@ -60,7 +60,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc") {
+foreach my $pn ("MMisc", "AVSS09ECF") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -104,9 +104,15 @@ my $verb = 1;
 my $valtool = "";
 my $scrtool = "";
 my $destdir = "";
+my $sysvaldir = "";
+my $gtfvaldir = "";
+my $ttid = "";
+my $skval = 0;
+my $ecf_file = "";
+my $ovwrt = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:   C               S  V         f          q    vwx   #
+# Used:   CDE         O   S  V       d f          q s  vwx   #
 
 my %opt = ();
 my @leftover = ();
@@ -124,6 +130,12 @@ GetOptions
    'frameTol=i'      => \$frameTol,
    'Validator=s'     => \$valtool,
    'Scorer=s'        => \$scrtool,
+   'ECF=s'           => \$ecf_file,
+   'Overwrite'       => \$ovwrt,
+   'skipValidation'  => \$skval,
+   'dir_for_GTF=s'   => \$gtfvaldir,
+   'Dir_for_SYS=s'   => \$sysvaldir,
+   'ttid=s'          => \$ttid,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -134,8 +146,24 @@ if ($opt{'man'}) {
   MMisc::ok_quit($o);
 }
 
-MMisc::error_quit("No \'writedir\' given, aborting\n\n$usage\n")
-  if (MMisc::is_blank($destdir));
+# Check option set
+&check_opt_is_blank("writedir", $destdir);
+&check_opt_is_blank("dir_for_GTF", $gtfvaldir);
+&check_opt_is_blank("Dir_for_SYS", $sysvaldir);
+# And directories exists
+&check_opt_dir_w("writedir", $destdir);
+&check_opt_dir_w("dir_for_GTF", $gtfvaldir);
+&check_opt_dir_w("Dir_for_SYS", $sysvaldir);
+
+MMisc::error_quit("\'dir_for_GTF\' and \'Dir_for_SYS\' can not be the same")
+  if ($gtfvaldir eq $sysvaldir);
+
+# ECF
+if (! MMisc::is_blank($ecf_file)) {
+  my $err = MMisc::check_file_r($ecf_file);
+  MMisc::error_quit("Problem with \'ECF\' file ($ecf_file): $err")
+    if (! MMisc::is_blank($err));
+}
 
 # Val tool
 if (MMisc::is_blank($valtool)) {
@@ -152,11 +180,13 @@ if (MMisc::is_blank($valtool)) {
     $valtool = $t;
   }
 }
-MMisc::error_quit("No \'$valtool_bt\' provided/found\n\n$usage\n")
-  if (MMisc::is_blank($valtool));
-my $err = MMisc::check_file_x($valtool);
-MMisc::error_quit("Problem with \'$valtool_bt\' [$valtool]: $err\n\n$usage\n")
-  if (! MMisc::is_blank($err));
+if (! $skval) {
+  MMisc::error_quit("No \'$valtool_bt\' provided/found\n\n$usage\n")
+    if (MMisc::is_blank($valtool));
+  my $err = MMisc::check_file_x($valtool);
+  MMisc::error_quit("Problem with \'$valtool_bt\' [$valtool]: $err\n\n$usage\n")
+    if (! MMisc::is_blank($err));
+}
 
 # Scr tool
 if (MMisc::is_blank($scrtool)) {
@@ -179,53 +209,16 @@ my $err = MMisc::check_file_x($scrtool);
 MMisc::error_quit("Problem with \'$scrtool_bt\' [$scrtool]: $err\n\n$usage\n")
   if (! MMisc::is_blank($err));
 
-MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting\n\n$usage\n")
-  if ($gtfs > 1);
-
-my ($rref, $rsys) = &get_sys_ref_filelist(\@leftover, @ARGV);
-my @ref = @{$rref};
-my @sys = @{$rsys};
-MMisc::error_quit("No SYS file(s) provided, can not perform scoring\n\n$usage\n")
-  if (scalar @sys == 0);
-MMisc::error_quit("No REF file(s) provided, can not perform scoring\n\n$usage\n")
-  if (scalar @ref == 0);
-MMisc::error_quit("Unequal number of REF and SYS files, can not perform scoring\n\n$usage\n")
-  if (scalar @ref != scalar @sys);
-
-
 my $svfmd = "VFmemdump";
 my $sssmd = "SSmemdump";
 ########## Main processing
 my $stepc = 1;
 
-#####
-print "\n\n***** STEP ", $stepc++, ": Validation\n";
-## Create the needed directory
-my $err = MMisc::check_dir_w($destdir);
-MMisc::error_quit("Can not write in \'writedir\' ($destdir): $err")
-  if (! MMisc::is_blank($err));
-my $val_dir = "01-Validation";
-my $td = "$destdir/$val_dir";
-MMisc::error_quit("Could not create Validation directory ($td)")
-  if (! MMisc::make_dir($td));
+##### Validation
+my ($rsys_hash, $rref_hash) = &do_validation();
 
-my (%sys_hash) = &load_preprocessing(0, "$td/01-SYS", @sys);
-my (%ref_hash) = &load_preprocessing(1, "$td/00-GTF", @ref);
-
-#####
-print "\n\n***** STEP ", $stepc++, ": Scoring\n";
-## Create the needed directories
-my $scr_dir = "02-Scoring";
-my $td = "$destdir/$scr_dir";
-MMisc::error_quit("Could not create scoring directory ($td)")
-  if (! MMisc::make_dir($td));
-
-my @sysscrf = keys %{$sys_hash{$sssmd}};
-my @refscrf = keys %{$ref_hash{$sssmd}};
-my ($scores, $logfile) = &do_scoring($td, \@sysscrf, \@refscrf);
-
-print "\n\n**** Scoring results:\n-- Beg ----------\n$scores\n-- End ----------\n";
-print "For more details, see: $logfile\n";
+##### Scoring
+&do_scoring();
 
 MMisc::ok_quit("\n\n***** Done *****\n");
 
@@ -249,11 +242,14 @@ sub load_preprocessing {
     MMisc::error_quit("Problem spliting filename ($tmp): $err")
         if (! MMisc::is_blank($err));
 
-    my $td = "$ddir/$file";
-    MMisc::error_quit("Output directory already exists ($td)")
+    my $td = $ddir;
+    if (MMisc::is_blank($ecf_file)) {
+      $td = "$ddir/$file";
+      MMisc::error_quit("Output directory already exists ($td)")
         if (-d $td);
-    MMisc::error_quit("Problem creating output directory ($td)")
+      MMisc::error_quit("Problem creating output directory ($td)")
         if (! MMisc::make_dir($td));
+    }
 
     my $logfile = "$td/$file.log";
 
@@ -263,6 +259,14 @@ sub load_preprocessing {
     $command .= " --CLEARxsd $xsdpath" if ($opt{'xsdpath'});
     $command .= " --frameTol $frameTol" if ($opt{'frameTol'});
     $command .= " --write $td --WriteMemDump gzip";
+
+    if (! MMisc::is_blank($ecf_file)) {
+      $command .= " --ECF $ecf_file";
+      $command .= " --TrackingTrialsDir"; # Always with ECF (safer & easier)
+      $command .= " --tracking_trial $ttid" if (! MMisc::is_blank($ttid));
+      $command .= " --overwrite_not" if (! $ovwrt);
+    }
+
     $command .= " \"$tmp\"";
 
     my ($ok, $otxt, $stdout, $stderr, $retcode, $ofile) = 
@@ -271,30 +275,34 @@ sub load_preprocessing {
     MMisc::error_quit("Problem during validation:\n" . $stderr . "\nFor details, see $ofile\n")
         if ($retcode != 0);
 
-    my $file = "$td/$file.$ext";
-    my $err = MMisc::check_file_r($file);
-    MMisc::error_quit("Can not find output ViperFile [$file]")
-        if (! MMisc::is_blank($err));
+    print "   -> OK [logfile: $ofile]\n";
 
-    my $vfmd = "$file.$svfmd";
-    my $err = MMisc::check_file_r($vfmd);
-    MMisc::error_quit("Can not find ViperFile MemDump file [$vfmd]")
+    if (MMisc::is_blank($ecf_file)) {
+      my $file = "$td/$file.$ext";
+      my $err = MMisc::check_file_r($file);
+      MMisc::error_quit("Can not find output ViperFile [$file]")
         if (! MMisc::is_blank($err));
-    $all{$svfmd}{$vfmd} = $tmp;
-
-    my $ssmd = "$file.$sssmd";
-    my $err = MMisc::check_file_r($ssmd);
-    MMisc::error_quit("Can not find Sequence MemDump file [$ssmd]")
+      
+      my $vfmd = "$file.$svfmd";
+      my $err = MMisc::check_file_r($vfmd);
+      MMisc::error_quit("Can not find ViperFile MemDump file [$vfmd]")
         if (! MMisc::is_blank($err));
-    $all{$sssmd}{$ssmd} = $tmp;
+      $all{$svfmd}{$vfmd} = $tmp;
+      
+      my $ssmd = "$file.$sssmd";
+      my $err = MMisc::check_file_r($ssmd);
+      MMisc::error_quit("Can not find Scoring Sequence MemDump file [$ssmd]")
+        if (! MMisc::is_blank($err));
+      $all{$sssmd}{$ssmd} = $tmp;
+    }
   }
-
+    
   return(%all);
 }
 
 ##########
 
-sub do_scoring {
+sub do_single_scoring {
   my ($td, $rsysf, $rgtff) = @_;
 
   my $logfile = "$td/scoring.log";
@@ -303,8 +311,10 @@ sub do_scoring {
   if (! defined $ENV{$f4b}) { 
     $cmd .= "perl ";
     foreach my $j ("../../../CLEAR07/lib", "../../../common/lib") {
-      my $i = MMisc::get_file_full_path($j);
-      $cmd .= " -I$i" if (MMisc::is_dir_r($i));
+      my $err = MMisc::check_dir_r($j);
+      MMisc::error_quit("Problem with expected INC directory [$j]: $err")
+        if (! MMisc::is_blank($err));
+      $cmd .= " -I$j";
     }
     $cmd .= " ";
   }
@@ -355,6 +365,74 @@ sub get_sys_ref_filelist {
   @sys = reverse @args;
 
   return(\@ref, \@sys);
+}
+
+####################
+
+sub do_validation {
+  return() if ($skval);
+  
+  MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting\n\n$usage\n")
+    if ($gtfs > 1);
+  
+  my ($rref, $rsys) = &get_sys_ref_filelist(\@leftover, @ARGV);
+  my @ref = @{$rref};
+  my @sys = @{$rsys};
+  MMisc::error_quit("No SYS file(s) provided, can not perform scoring\n\n$usage\n")
+    if (scalar @sys == 0);
+  MMisc::error_quit("No REF file(s) provided, can not perform scoring\n\n$usage\n")
+    if (scalar @ref == 0);
+  MMisc::error_quit("Unequal number of REF and SYS files, can not perform scoring\n\n$usage\n")
+    if (scalar @ref != scalar @sys);
+  
+  #####
+  print "\n\n***** STEP ", $stepc++, ": Validation\n";
+  
+  my (%sys_hash) = &load_preprocessing(0, $sysvaldir, @sys);
+  my (%ref_hash) = &load_preprocessing(1, $gtfvaldir, @ref);
+  
+  return(\%sys_hash, \%ref_hash);
+}
+
+####################
+
+sub do_scoring_noECF {
+  my @sysscrf = keys %{$$rsys_hash{$sssmd}};
+  my @refscrf = keys %{$$rref_hash{$sssmd}};
+  my ($scores, $logfile) = &do_single_scoring($destdir, \@sysscrf, \@refscrf);
+  
+  print "\n\n**** Scoring results:\n-- Beg ----------\n$scores\n-- End ----------\n";
+  print "For more details, see: $logfile\n";
+}
+
+##########
+
+sub do_scoring {
+  print "\n\n***** STEP ", $stepc++, ": Scoring\n";
+
+  return(&do_scoring_noECF())
+    if (MMisc::is_blank($ecf_file));
+
+  MMisc::ok_quit("TODO");
+}
+
+####################
+
+sub check_opt_is_blank {
+  my ($opt, $val) = @_;
+
+  MMisc::error_quit("No \'$opt\' given, aborting\n\n$usage\n")
+    if (MMisc::is_blank($val));
+}
+
+#####
+
+sub check_opt_dir_w {
+  my ($opt, $dir) = @_;
+
+  my $err = MMisc::check_dir_w($dir);
+  MMisc::error_quit("Problem with \'$opt\' directory [$dir]: $err\n\n$usage\n")
+    if (! MMisc::is_blank($err));
 }
 
 ########################################
