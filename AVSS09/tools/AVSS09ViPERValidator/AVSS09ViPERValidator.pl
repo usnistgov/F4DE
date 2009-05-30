@@ -106,9 +106,10 @@ my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
 my $ecf_file = "";
 my $ttid = "";
 my $tttdir = 0;
+my $ovwrt = 1;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A C EF                W        fgh          s  vwx    #
+# Used: A C EF             T  W        fgh      o   st vwx    #
 
 my %opt;
 GetOptions
@@ -129,6 +130,7 @@ GetOptions
    'ECF=s'           => \$ecf_file,
    'tracking_trial=s' => \$ttid,
    'TrackingTrialsDir' => \$tttdir,
+   'overwrite_not'    => sub {$ovwrt = 0},
    # Hiden Option(s)
    'X_show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -239,7 +241,7 @@ foreach my $tmp (@ARGV) {
       $lfname = MMisc::concat_dir_file_ext($writeback, $tf, $te);
     }
     
-    AVSS09HelperFunctions::VF_write_XML_MemDumps($object, $lfname, $isgtf, $MemDump, $skipScoringSequenceMemDump, "** XML re-Representation:\n");
+    AVSS09HelperFunctions::VF_write_XML_MemDumps($object, $lfname, $isgtf, $MemDump, $skipScoringSequenceMemDump, "** XML re-Representation:\n", $ovwrt);
   }
 
   $ndone++;
@@ -303,7 +305,7 @@ sub load_ecf {
   return($object);
 }
 
-##########
+####################
 
 sub __get_ttid_VF {
   my ($vf, $ttid) = @_;
@@ -319,10 +321,10 @@ sub __get_ttid_VF {
 #####
 
 sub _get_ttid_dd {
-  my ($sffn, $rttid) = @_;
+  my ($sffn, $rttid, $isgtf) = @_;
 
   my $dd = $writeback;
-  $dd .= $ecf->get_sffn_ttid_expected_path_base($sffn, $rttid, 1)
+  $dd .= $ecf->get_sffn_ttid_expected_path_base($sffn, $rttid, $isgtf)
     if ($tttdir);
 
   MMisc::error_quit("Problem creating output dir [$dd]")
@@ -334,39 +336,44 @@ sub _get_ttid_dd {
 #####
 
 sub _write_VF_to_ttid_dd {
-  my ($vf, $sffn, $rttid, $isgtf) = @_;
+  my ($vf, $sffn, $rttid, $isgtf, $efn) = @_;
 
-  my $dd = &_get_ttid_dd($sffn, $rttid);
-  
-  my $df = "$dd/$sffn.xml";
-  return(AVSS09HelperFunctions::VF_write_XML_MemDumps($vf, $df, $isgtf, $MemDump, 0, ""));
+  return(AVSS09HelperFunctions::VF_write_XML_MemDumps($vf, $efn, $isgtf, $MemDump, 0, "", $ovwrt));
 }
 
 #####
 
 sub __write_GTF_ttid_VF {
-  my ($vf, $rttid, $sffn) = @_;
+  my ($vf, $rttid, $sffn, $efn) = @_;
 
   my $nvf = &__get_ttid_VF($vf, $rttid);
-  return(&_write_VF_to_ttid_dd($nvf, $sffn, $rttid, 1));
+  return(&_write_VF_to_ttid_dd($nvf, $sffn, $rttid, 1, $efn));
 }
 
 #####
 
 sub __write_SYS_ttid_VF {
-  my ($vf, $rttid, $sffn) = @_;
-  return(&_write_VF_to_ttid_dd($vf, $sffn, $rttid, 0));
+  my ($vf, $rttid, $sffn, $efn) = @_;
+  return(&_write_VF_to_ttid_dd($vf, $sffn, $rttid, 0, $efn));
 }
 
 #####
 
 sub __write_autoselect_ttid_VF {
   my ($vf, $rttid, $sffn, $isgtf) = @_;
-  
-  return(&__write_GTF_ttid_VF($vf, $rttid, $sffn))
+
+  my $dd = &_get_ttid_dd($sffn, $rttid, $isgtf);
+  my $df = "$dd/$sffn.xml";
+  my $efn = AVSS09ViperFile::get_XML_filename($df);
+  if ((! $ovwrt) && (MMisc::does_file_exists($efn))) {
+    MMisc::warn_print("Output ViperFile ($efn) already exists, and overwrite not requested, skippping XML and MemDumps (if any) rewrite");
+    return($efn);
+  }
+
+  return(&__write_GTF_ttid_VF($vf, $rttid, $sffn, $efn))
     if ($isgtf);
 
-  return(&__write_SYS_ttid_VF($vf, $rttid, $sffn));
+  return(&__write_SYS_ttid_VF($vf, $rttid, $sffn, $efn));
 }
 
 #####
