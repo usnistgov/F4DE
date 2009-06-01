@@ -761,6 +761,19 @@ sub get_ttid_sffn_dcf {
 
 ##########
 
+sub get_ttid_expected_path_base {
+  my ($self, $ttid) = @_;
+
+  return(undef) if (! $self->is_ttid_in($ttid));
+
+  my ($out) = $self->get_ttid_type($ttid);
+  $out .= "/$ttid";
+
+  return($out);
+}
+
+#####  
+
 sub get_sffn_ttid_expected_path_base {
   my ($self, $sffn, $ttid, $isgtf) = @_;
 
@@ -774,6 +787,66 @@ sub get_sffn_ttid_expected_path_base {
   return("$out/GTF") if ($isgtf);
 
   return("$out/SYS");
+}
+
+#####
+
+sub get_sffn_ttid_expected_XML_filename {
+  my ($self, $sffn, $ttid, $isgtf, $bd) = @_;
+
+  return(undef) if (! defined $isgtf);
+
+  my $dd = $self->get_sffn_ttid_expected_path_base($sffn, $ttid, $isgtf);
+  return(undef) if (! defined $dd);
+
+  my $res = "";
+  $res .= "$bd/" if (defined $bd);
+  $res .= "$dd/$sffn.xml";
+
+  return($res);
+}
+
+####################
+
+sub get_ttid_list {
+  my ($self) = @_;
+
+  my @ttl = ();
+
+  return(@ttl) if ($self->error());
+
+  @ttl = keys %{$self->{tracking_trials}};
+
+  return(@ttl);
+}
+
+#####
+
+sub is_ttid_in {
+  my ($self, $ttid) = @_;
+
+  return(0) if ($self->error());
+
+  return(1) if (exists $self->{tracking_trials}{$ttid});
+
+  return(0);
+}
+
+#####
+
+sub get_sffn_list_for_ttid {
+  my ($self, $ttid) = @_;
+
+  my @out = ();
+
+  return(@out) if ($self->error());
+
+  return($self->_set_error_and_return("Requested \'ttid\' ($ttid) not found", @out))
+    if (! exists $self->{tracking_trials}{$ttid});
+
+  @out = keys %{$self->{tracking_trials}{$ttid}{$tt_keys[2]}};
+
+  return(@out);
 }
 
 ############################################################
