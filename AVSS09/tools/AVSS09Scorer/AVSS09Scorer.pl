@@ -60,7 +60,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "AVSS09ECF") {
+foreach my $pn ("MMisc", "AVSS09ECF", "AVSS09HelperFunctions") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -110,6 +110,7 @@ my $ttid = "";
 my $skval = 0;
 my $ecf_file = "";
 my $ovwrt = 0;
+my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:   CDE         O   S  V       d f          q s  vwx   #
@@ -130,6 +131,7 @@ GetOptions
    'frameTol=i'      => \$frameTol,
    'Validator=s'     => \$valtool,
    'Scorer=s'        => \$scrtool,
+   'AVSSxsd=s'       => \$AVxsdpath,
    'ECF=s'           => \$ecf_file,
    'Overwrite'       => \$ovwrt,
    'skipValidation'  => \$skval,
@@ -214,11 +216,14 @@ my $sssmd = "SSmemdump";
 ########## Main processing
 my $stepc = 1;
 
+#### Pre
+my $ecf = &load_ecf($ecf_file);
+
 ##### Validation
 my ($rsys_hash, $rref_hash) = &do_validation();
 
 ##### Scoring
-&do_scoring();
+&do_scoring($ecf);
 
 MMisc::ok_quit("\n\n***** Done *****\n");
 
@@ -228,7 +233,11 @@ MMisc::ok_quit("\n\n***** Done *****\n");
 sub load_preprocessing {
   my ($isgtf, $ddir, @filelist) = @_;
 
-  print "** Validating and Generating ", ($isgtf) ? "GTF" : "SYS", " Sequence MemDump\n";
+  if (MMisc::is_blank($ecf_file)) {
+    print "** Validating and Generating ", ($isgtf) ? "GTF" : "SYS", " Sequence MemDump\n";
+  } else {
+    print "** Confirming that ", ($isgtf) ? "GTF" : "SYS", " Sequence MemDump exist\n";
+  }
 
   my %all = ();
   while (my $tmp = shift @filelist) {
@@ -243,8 +252,9 @@ sub load_preprocessing {
         if (! MMisc::is_blank($err));
 
     my $td = $ddir;
-    if (MMisc::is_blank($ecf_file)) {
-      $td = "$ddir/$file";
+    $td = "$ddir/$file" if (MMisc::is_blank($ecf_file));
+
+    if ((! $skval) && (MMisc::is_blank($ecf_file))) {
       MMisc::error_quit("Output directory already exists ($td)")
         if (-d $td);
       MMisc::error_quit("Problem creating output directory ($td)")
@@ -269,13 +279,15 @@ sub load_preprocessing {
 
     $command .= " \"$tmp\"";
 
-    my ($ok, $otxt, $stdout, $stderr, $retcode, $ofile) = 
-      MMisc::write_syscall_smart_logfile($logfile, $command);
-
-    MMisc::error_quit("Problem during validation:\n" . $stderr . "\nFor details, see $ofile\n")
+    if (! $skval) {
+      my ($ok, $otxt, $stdout, $stderr, $retcode, $ofile) = 
+        MMisc::write_syscall_smart_logfile($logfile, $command);
+      
+      MMisc::error_quit("Problem during validation:\n" . $stderr . "\nFor details, see $ofile\n")
         if ($retcode != 0);
-
-    print "   -> OK [logfile: $ofile]\n";
+      
+      print "   -> OK [logfile: $ofile]\n";
+    }
 
     if (MMisc::is_blank($ecf_file)) {
       my $file = "$td/$file.$ext";
@@ -370,8 +382,14 @@ sub get_sys_ref_filelist {
 ####################
 
 sub do_validation {
-  return() if ($skval);
+  if (($skval) && (! MMisc::is_blank($ecf_file))) {
+    print("Note: \'ECF\' provided and \'skipValidation\' selected; will check ECF file presence from ECF in scoring step\n");
+      return();
+  }
   
+  print("Note: no \'ECF\' provided, but \'skipValidation\' selected, will at least confirm required files are present\n")
+    if ($skval);
+
   MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting\n\n$usage\n")
     if ($gtfs > 1);
   
@@ -394,6 +412,30 @@ sub do_validation {
   return(\%sys_hash, \%ref_hash);
 }
 
+#####
+
+sub load_ecf {
+  my ($tmp) = @_;
+
+  return(undef) if (MMisc::is_blank($tmp));
+
+  #####
+  print "\n\n***** STEP ", $stepc++, ": Validating ECF file\n";
+
+  my ($err, $object) = AVSS09HelperFunctions::load_ECF_file($tmp, $xmllint, $AVxsdpath);
+
+  MMisc::error_quit("Problem loading ECF file ($tmp) : $err")
+      if (! MMisc::is_blank($err));
+
+  MMisc::error_quit("Requested \'ttid\' ($ttid) is not part of provided \'ECF\' (ok ttids: " . join("|", $object->get_ttid_list()) . ")")
+    if ((! MMisc::is_blank($ttid)) && (! $object->is_ttid_in($ttid)));
+
+  MMisc::error_quit("Problem with \'ECF\' ($tmp): " . $object->get_errormsg())
+    if ($object->error());
+
+  return($object);
+}
+
 ####################
 
 sub do_scoring_noECF {
@@ -403,17 +445,101 @@ sub do_scoring_noECF {
   
   print "\n\n**** Scoring results:\n-- Beg ----------\n$scores\n-- End ----------\n";
   print "For more details, see: $logfile\n";
+
+  return(1);
 }
 
 ##########
 
+sub do_ECF_ttid_scoring {
+  my ($ecf, $rttid) = @_;
+
+  print "- Scoring \"$rttid\" ttid\n";
+
+  MMisc::error_quit("Problem with \'ECF\' : " . $ecf->get_errormsg())
+    if ($ecf->error());
+
+ MMisc::error_quit("Can not score specified \'ttid\' ($rttid), not part of \'ECF\'")
+   if (! $ecf->is_ttid_in($rttid));
+
+  my @sffnl = $ecf->get_sffn_list_for_ttid($rttid);
+  MMisc::error_quit("Problem obtaining SFFN list: " . $ecf->get_errormsg())
+    if ($ecf->error());
+  MMisc::error_quit("Empty SFFN list for ttid [$rttid]")
+    if (scalar @sffnl == 0);
+  
+  my %dirs =
+    (
+     0 => $sysvaldir,
+     1 => $gtfvaldir,
+    );
+
+  my %fl = ();
+  foreach my $isgtf (keys %dirs) {
+    foreach my $sffn (@sffnl) {
+      my $df = $ecf->get_sffn_ttid_expected_XML_filename($sffn, $rttid, $isgtf, $dirs{$isgtf});
+      MMisc::error_quit("Problem obtaining destination file [$sffn / $rttid / $isgtf]")
+        if (! defined $df);
+      my ($ssf) = AVSS09ViperFile::get_SSMemDump_filename($df);
+      my $err = MMisc::check_file_r($ssf);
+      MMisc::error_quit("Problem with finding Scoring Sequence MemDump for \'ttid\' [$rttid] / \'sffn\' [$sffn]" . (($isgtf) ? "GFT" : "SYS") . " (looking for: " . $df .") : $err")
+        if (! MMisc::is_blank($err));
+      push @{$fl{$isgtf}}, $ssf;
+    }
+  }
+
+  my $dd = $ecf->get_ttid_expected_path_base($rttid);
+  MMisc::error_quit("Problem obtaining scoring destination path [$rttid]")
+    if (! defined $dd);
+  my $td = "$destdir/$dd";
+  MMisc::error_quit("Problem creating scoring output directory ($td)")
+        if (! MMisc::make_dir($td));
+
+  my @sfl = @{$fl{0}};
+  my @gfl = @{$fl{1}};
+
+  my ($scores, $logfile) = &do_single_scoring($td, \@sfl, \@gfl);
+
+  print "\n\n**** [$rttid] \'ttid\' Scoring results:\n-- Beg ----------\n$scores\n-- End ----------\n";
+  print "For more details, see: $logfile\n";
+
+  return(1);
+}
+
+#####
+
+sub do_ECF_scoring {
+  my ($ecf) = @_;
+
+  my @ttidl = $ecf->get_ttid_list();
+  MMisc::error_quit("Problem obtaing \'ttid\' list : " . $ecf->get_errormsg())
+    if ($ecf->error());
+  MMisc::error_quit("Found no \'ttid\' in ECF")
+    if (scalar @ttidl == 0);
+
+  my $ok = 0;
+  foreach my $rttid (sort @ttidl) {
+    $ok =+ &do_ECF_ttid_scoring($ecf, $rttid);
+  }
+
+  return(1) if ($ok == scalar @ttidl);
+
+  return(0);
+}
+
+#####
+
 sub do_scoring {
+  my ($ecf) = @_;
   print "\n\n***** STEP ", $stepc++, ": Scoring\n";
 
   return(&do_scoring_noECF())
-    if (MMisc::is_blank($ecf_file));
+    if (! defined $ecf);
 
-  MMisc::ok_quit("TODO");
+  return(&do_ECF_ttid_scoring($ecf, $ttid))
+    if (! MMisc::is_blank($ttid));
+
+  return(&do_ECF_scoring($ecf));
 }
 
 ####################
