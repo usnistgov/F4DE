@@ -954,6 +954,20 @@ sub get_XML_filename {
 
 #####
 
+sub get_VFMemDump_filename { 
+  my ($fn) = @_;
+  return(CLEARDTHelperFunctions::get_VFMD_filename($fn));
+}
+
+#####
+
+sub get_SSMemDump_filename { 
+  my ($fn) = @_;
+  return(CLEARDTHelperFunctions::get_SSMD_filename($fn));
+}
+
+#####
+
 sub write_XML {
   my ($self, $fname, $isgtf, $ptxt) = @_;
 
