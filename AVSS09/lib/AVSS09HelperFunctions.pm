@@ -165,7 +165,7 @@ sub clone_VF_apply_ECF_for_ttid {
   my $rdcr = $ecf->get_ttid_sffn_dcr($ttid, $sffn);
   return($ecf->get_errormsg()) if ($ecf->error());
   # Apply to the new VF (if any)
-  if (scalar @$rdcr > 0) {
+  if ((defined $rdcr) && (scalar @$rdcr > 0)) {
     foreach my $rh (@$rdcr) {
       my %h = MMisc::clone(%$rh);
       my @k = keys %h;
