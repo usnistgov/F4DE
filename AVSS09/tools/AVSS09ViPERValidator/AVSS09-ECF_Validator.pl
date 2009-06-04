@@ -178,5 +178,21 @@ sub _warn_add {
 #####
 
 sub set_usage {
-  return("");
+  my $tmp=<<EOF
+$versionid
+
+Usage: $0 [--help | --version] [--xmllint location] [--AVSSxsd location] ecf_file.xml [ecf_file.xml [...]]
+
+Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provided (System vs Reference)
+
+ Where:
+  --help          Print this usage information and exit
+  --version       Print version number and exit
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --CLEARxsd  Path where the XSD files can be found
+
+EOF
+;
+
+  return($tmp);
 }
