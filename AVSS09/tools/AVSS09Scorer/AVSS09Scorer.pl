@@ -60,7 +60,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "AVSS09ECF", "AVSS09HelperFunctions") {
+foreach my $pn ("MMisc", "AVSS09ECF", "AVSS09HelperFunctions", "SimpleAutoTable", "CSVHelper") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -223,9 +223,21 @@ my $ecf = &load_ecf($ecf_file);
 my ($rsys_hash, $rref_hash) = &do_validation();
 
 ##### Scoring
-&do_scoring($ecf);
+my %global_scores = ();
+my %global_camid = ();
+my @gs_spk = ("camid", "primcam", "motavg"); # special keys / order is important
+my $ok = &do_scoring($ecf);
 
-MMisc::ok_quit("\n\n***** Done *****\n");
+print "\n\n";
+
+MMisc::error_quit("***** Not all scoring ok *****")
+  if (! $ok);
+
+my $grtxt = &get_global_results($ecf);
+print"\n\n########## ECF result table:\n\n$grtxt\n\n"
+  if (! MMisc::is_blank($grtxt));
+
+MMisc::ok_quit("***** Done *****\n");
 
 ########## END
 ########################################
@@ -233,7 +245,7 @@ MMisc::ok_quit("\n\n***** Done *****\n");
 sub load_preprocessing {
   my ($isgtf, $ddir, @filelist) = @_;
 
-  if (MMisc::is_blank($ecf_file)) {
+  if (! $skval) {
     print "** Validating and Generating ", ($isgtf) ? "GTF" : "SYS", " Sequence MemDump\n";
   } else {
     print "** Confirming that ", ($isgtf) ? "GTF" : "SYS", " Sequence MemDump exist\n";
@@ -315,7 +327,7 @@ sub load_preprocessing {
 ##########
 
 sub do_single_scoring {
-  my ($td, $rsysf, $rgtff) = @_;
+  my ($td, $rsysf, $rgtff, $csvfile) = @_;
 
   my $logfile = "$td/scoring.log";
   
@@ -338,6 +350,7 @@ sub do_single_scoring {
   $cmd .= " --Domain SV";
   $cmd .= " --Eval Area";
   $cmd .= " --SpecialMode AVSS09";
+  $cmd .= " --csv $csvfile" if (! MMisc::is_blank($csvfile));
 
   my @command = ();
   push @command, $cmd;
@@ -350,6 +363,12 @@ sub do_single_scoring {
 
   MMisc::error_quit("Problem during scoring:\n" . $stderr . "\nFor details, see $ofile\n")
       if ($retcode != 0);
+
+  if (! MMisc::is_blank($csvfile)) {
+    my $err = MMisc::check_file_r($csvfile);
+    MMisc::error_quit("Problem with expected CSV file ($csvfile): $err")
+      if (! MMisc::is_blank($err));
+  }
 
   return($stdout, $ofile);
 }
@@ -482,7 +501,7 @@ sub do_ECF_ttid_scoring {
         if (! defined $df);
       my ($ssf) = AVSS09ViperFile::get_SSMemDump_filename($df);
       my $err = MMisc::check_file_r($ssf);
-      MMisc::error_quit("Problem with finding Scoring Sequence MemDump for \'ttid\' [$rttid] / \'sffn\' [$sffn]" . (($isgtf) ? "GFT" : "SYS") . " (looking for: " . $df .") : $err")
+      MMisc::error_quit("Problem with finding Scoring Sequence MemDump for \'ttid\' [$rttid] / \'sffn\' [$sffn] " . (($isgtf) ? "GFT" : "SYS") . " (looking for: " . $df .") : $err")
         if (! MMisc::is_blank($err));
       push @{$fl{$isgtf}}, $ssf;
     }
@@ -498,10 +517,14 @@ sub do_ECF_ttid_scoring {
   my @sfl = @{$fl{0}};
   my @gfl = @{$fl{1}};
 
-  my ($scores, $logfile) = &do_single_scoring($td, \@sfl, \@gfl);
+  my $csvfile = "$td/$rttid.csv";
 
-  print "\n\n**** [$rttid] \'ttid\' Scoring results:\n-- Beg ----------\n$scores\n-- End ----------\n";
-  print "For more details, see: $logfile\n";
+  my ($scores, $logfile) = &do_single_scoring($td, \@sfl, \@gfl, $csvfile);
+
+  &prepare_results($ecf, $rttid, $csvfile);
+
+  my $ref_res = &reformat_results($ecf, $rttid);
+  print "$ref_res\n";
 
   return(1);
 }
@@ -519,7 +542,7 @@ sub do_ECF_scoring {
 
   my $ok = 0;
   foreach my $rttid (sort @ttidl) {
-    $ok =+ &do_ECF_ttid_scoring($ecf, $rttid);
+    $ok += &do_ECF_ttid_scoring($ecf, $rttid);
   }
 
   return(1) if ($ok == scalar @ttidl);
@@ -540,6 +563,202 @@ sub do_scoring {
     if (! MMisc::is_blank($ttid));
 
   return(&do_ECF_scoring($ecf));
+}
+
+####################
+
+sub prepare_results {
+  my ($ecf, $rttid, $csvfile) = @_;
+
+  my $err = MMisc::check_file_r($csvfile);
+  MMisc::error_quit("Can not find CSV file ($csvfile): $err")
+    if (! MMisc::is_blank($err));
+
+  open CSV, "<$csvfile"
+    or MMisc::error_quit("Problem opening CSV file ($csvfile): $!");
+
+  my $csvh = new CSVHelper();
+  MMisc::error_quit("Problem creating the CSV object: " . $csvh->get_errormsg())
+    if ($csvh->error());
+
+  my $header = <CSV>;
+  MMisc::error_quit("CSV file contains no data ?")
+    if (! defined $header);
+  my @headers = $csvh->csvline2array($header);
+  MMisc::error_quit("Problem extracting csv line:" . $csvh->get_errormsg())
+    if ($csvh->error());
+  MMisc::error_quit("CSV file ($csvfile) contains no usable data")
+    if (scalar @headers < 2);
+
+  my %pos = ();
+  for (my $i = 0; $i < scalar @headers; $i++) {
+    $pos{$headers[$i]} = $i;
+  }
+
+  my @needed = ("Video", "MOTA");
+  foreach my $key (@needed) {
+    MMisc::error_quit("Could not find needed key ($key) in results")
+      if (! exists $pos{$key});
+  }
+
+  $csvh->set_number_of_columns(scalar @headers);
+  MMisc::error_quit("Problem setting the number of columns for the csv file:" . $csvh->get_errormsg())
+    if ($csvh->error());
+
+  my $type = $ecf->get_ttid_type($rttid);
+  MMisc::error_quit("Problem obtaining \'ttid\' type : " . $ecf->get_errormsg())
+    if ($ecf->error());
+
+  my @sffnl = $ecf->get_sffn_list_for_ttid($rttid);
+  MMisc::error_quit("Problem obtaining \'sffn\' list : " . $ecf->get_errormsg())
+    if ($ecf->error());
+  MMisc::error_quit("Empty \'sffn\' list for \'ttid\' ($rttid)")
+    if (scalar @sffnl == 0);
+  my %sffnh = ();
+  # There is a strange tendency to uppercase the entire output scoring array
+  # but we need the exact sffn value, so lowercase everything
+  foreach my $sffn (@sffnl) {
+    my $lcsffn = lc $sffn;
+    MMisc::error_quit("Problem with lowercasing \'sffn\' keys ($sffn), an entry with the same name already exists")
+      if (exists $sffnh{$lcsffn});
+    $sffnh{$lcsffn} = $sffn;
+  }
+
+  my $pc = $ecf->get_ttid_primary_camid($rttid);
+  MMisc::error_quit("Problem obtaining primary \'camid\' : " . $ecf->get_errormsg())
+    if ($ecf->error());
+
+  my %oh = ();
+  my $cont = 1;
+  my $mota_avg = 0;
+  my $mota_entries = 0;
+  while ($cont) {
+    my $line = <CSV>;
+    if (MMisc::is_blank($line)) {
+      $cont = 0;
+      next;
+    }
+
+    my @linec = $csvh->csvline2array($line);
+    MMisc::error_quit("Problem extracting csv line:" . $csvh->get_errormsg())
+      if ($csvh->error());
+    my $sffn = $linec[$pos{$needed[0]}];
+    my $mota = $linec[$pos{$needed[1]}];
+
+    my $sffnk = lc $sffn;
+    MMisc::error_quit("Could not find \'sffn\' ($sffn) in list of expected ones [or already processed ?]")
+      if (! exists $sffnh{$sffnk});
+    $sffn = $sffnh{$sffnk};
+    delete $sffnh{$sffnk};
+
+    MMisc::error_quit("\'sffn\' ($sffn) not in \'ttid\' ($rttid) [in: " . join(",", @sffnl) . "]")
+      if (! $ecf->is_sffn_in_ttid($rttid, $sffn));
+
+    my $camid = $ecf->get_camid_from_ttid_sffn($rttid, $sffn);
+    MMisc::error_quit("Problem obtaining \'camid\' : " . $ecf->get_errormsg())
+      if ($ecf->error());
+    
+    $global_scores{$type}{$rttid}{$gs_spk[0]}{$camid} = $mota;
+    $mota_avg += $mota;
+    $mota_entries++;
+    $global_camid{$camid}++;
+  }
+  MMisc::error_quit("Missing some \'sffn\' results for \'ttid\' ($rttid): " . join(",", keys %sffnh))
+    if (scalar keys %sffnh > 0);
+  close(CSV);
+
+  $global_scores{$type}{$rttid}{$gs_spk[1]} = $pc;
+  $global_scores{$type}{$rttid}{$gs_spk[2]} = $mota_avg / $mota_entries;
+}
+
+##########
+
+sub get_global_results {
+  my ($ecf) = @_;
+
+  return("") if (! defined $ecf);
+
+  my $sat = new SimpleAutoTable();
+  MMisc::error_quit("While preparing print results : " . $sat->get_errormsg() . "\n")
+    if (! $sat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
+
+  my @gcamid = sort {$a <=> $b} keys %global_camid;
+
+  foreach my $type (keys %global_scores) {
+    foreach my $rttid (keys %{$global_scores{$type}}) {
+      my $id = "$type - $rttid";
+      &sat_add_results($sat, $id, 0, $type, $rttid, @gcamid);
+      MMisc::error_quit("Problem with SAT: " . $sat->get_errormsg())
+        if ($sat->error());
+    }
+  }
+
+  my $tbl = $sat->renderTxtTable(2);
+  MMisc::error_quit("Problem rendering SAT: ". $sat->get_errormsg())
+    if (! defined($tbl));
+
+  return($tbl);
+}
+
+#####
+
+sub reformat_results {
+  my ($ecf, $rttid) = @_;
+
+  return("") if (! defined $ecf);
+
+  my $type = $ecf->get_ttid_type($rttid);
+  MMisc::error_quit("Problem obtaining \'ttid\' type : " . $ecf->get_errormsg())
+    if ($ecf->error());
+
+  my $sat = new SimpleAutoTable();
+  MMisc::error_quit("While preparing print results : " . $sat->get_errormsg() . "\n")
+    if (! $sat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
+
+  my $id = "$type - $rttid";
+
+  my $hf = ($type eq "scspt") ? 1 : 0;
+
+  &sat_add_results($sat, $id, $hf, $type, $rttid);
+  MMisc::error_quit("Problem with SAT: " . $sat->get_errormsg())
+    if ($sat->error());
+
+  my $tbl = $sat->renderTxtTable(2);
+  MMisc::error_quit("Problem rendering SAT: ". $sat->get_errormsg())
+    if (! defined($tbl));
+
+  return($tbl);
+}
+
+#####
+
+sub sat_add_results {
+  my ($sat, $id, $half_fill, $type, $rttid, @gcamids) = @_;
+
+  MMisc::error_quit("Can not find results for \'ttid\' ($rttid)")
+    if (! exists $global_scores{$type}{$rttid});
+
+  my @camids = keys %{$global_scores{$type}{$rttid}{$gs_spk[0]}};
+  my $pc = $global_scores{$type}{$rttid}{$gs_spk[1]};
+  my $avg = $global_scores{$type}{$rttid}{$gs_spk[2]};
+
+  $sat->addData($type, "Type", $id);
+  $sat->addData($rttid, "Tracking Trial ID", $id);
+  $sat->addData($pc, "Primary Camera ID", $id);
+  $sat->addData($global_scores{$type}{$rttid}{$gs_spk[0]}{$pc}, 
+                "Primary Camera MOTA", $id);
+
+  return() if ($half_fill);
+
+  @gcamids = @camids if (scalar @gcamids == 0);
+  foreach my $cid (@gcamids) {
+    my $v = ($cid == $pc) ? "--" 
+      : (! exists $global_scores{$type}{$rttid}{$gs_spk[0]}{$cid}) ? "NA"
+      : $global_scores{$type}{$rttid}{$gs_spk[0]}{$cid};
+    $sat->addData($v, "Cam $cid MOTA", $id);
+  }    
+
+  $sat->addData($global_scores{$type}{$rttid}{$gs_spk[2]}, "Average MOTA", $id);
 }
 
 ####################
