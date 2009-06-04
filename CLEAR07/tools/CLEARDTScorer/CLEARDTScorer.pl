@@ -111,9 +111,10 @@ my $eval_type   = undef;
 my $bin         = 0;
 my $writeres    = "";
 my $spmode      = "";
+my $csvfile     = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   CDEF  I   M     S        b d fgh           t vwx    #
+# Used:   CDEF  I   M     S        bcd fgh           t vwx    #
 
 my %opt;
 my $dbgftmp = "";
@@ -139,6 +140,7 @@ GetOptions
    'writeResults=s'  => \$writeres,   
    'gtf'             => sub {$gtfs++; @leftover = @ARGV},
    'SpecialMode=s'   => \$spmode,
+   'csv=s'           => \$csvfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -288,7 +290,16 @@ foreach my $ref_sys_pair (@files_to_be_processed){
 }
 
 my $tbl = $results->renderTxtTable(2);
-MMisc::error_quit("ERROR: Generating Final Report (". $results->get_errormsg() . ")") if (! defined($tbl));
+MMisc::error_quit("Generating Final Report (". $results->get_errormsg() . ")")
+  if (! defined($tbl));
+
+if (! MMisc::is_blank($csvfile)) {
+  my $csvtxt = $results->renderCSV();
+  MMisc::error_quit("Generating CSV Report (". $results->get_errormsg() . ")")
+  if (! defined($csvtxt));
+  MMisc::error_quit("Problem while trying to write CSV file ($csvfile)")
+  if (! MMisc::writeTo($csvfile, "", 1, 0, $csvtxt));
+}
 
 my $param_setting = &get_param_settings();
 
