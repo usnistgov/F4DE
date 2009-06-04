@@ -18,6 +18,8 @@ $ms = &_chkpkg
    "MErrorH",
    "MMisc",
    "ViperFramespan",
+   "SimpleAutoTable",
+   "CSVHelper"
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the programs, please install the missing ones\n\n";
