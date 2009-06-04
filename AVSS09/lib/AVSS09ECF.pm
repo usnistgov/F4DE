@@ -46,8 +46,8 @@ my $default_error_value = "default_error_value";
 
 # Order is important
 my @ok_types = ("scspt", "mcspt", "cpspt");
-my @tt_keys = ("evaluate_fs", "type", "sffn");
-my @ttp_keys = ("dont_care_region", "dont_care_frames", "template_xml", "target_training");
+my @tt_keys = ("evaluate_fs", "type", "sffn", "target_training", "camid");
+my @ttp_keys = ("dont_care_region", "dont_care_frames", "template_xml", $tt_keys[3], $tt_keys[4]);
 
 ## Constructor
 sub new {
@@ -445,18 +445,33 @@ sub _tt_processor {
     return("Found some content other than \'$name\'", $string)
       if ($sec eq $default_error_value);
 
-    my $err = $self->_camera_processor($sec, $name, $id, $type, $fs);
+    my ($err, $sffn, $targt) = $self->_camera_processor($sec, $name, $id, $type, $fs);
     return("Problem extracting \'$name\' data ($err). ", $string)
       if (! MMisc::is_blank($err));
+    
+    if ((! MMisc::is_blank($targt)) && (($targt eq "true") || ($targt == 1))) {
+      MMisc::error_quit("No more than one \'sffn\' can claim to be the \"true\" \'target_training\'. \"" . $self->{tracking_trials}{$id}{$tt_keys[3]} . "\" already says it is, \"$sffn\" can not be too")
+          if (exists $self->{tracking_trials}{$id}{$tt_keys[3]});
+      $self->{tracking_trials}{$id}{$tt_keys[3]} = $sffn;
+    }
+    # For "scpst", force tracking_trials to the only sffn
+    $self->{tracking_trials}{$id}{$tt_keys[3]} = $sffn
+      if ($type eq $ok_types[0]);
 
     $camc++;
-    return("Found more \"$name\" ($camc) than the expected number ($max_exp)", $string)
+    return("For \'$type\' ($id), found more \"$name\" ($camc) than the expected number ($max_exp)", $string)
       if (($max_exp > 0) && ($camc > $max_exp));
   }
-  return("Found a different number of \"$name\" ($camc) than expected ($max_exp)", $string)
+  return("For \'$type\' ($id), found a different number of \"$name\" ($camc) than expected ($max_exp)", $string)
     if (($max_exp > 0) && ($camc > $max_exp));
-  return("Found a very small amount of \"$name\" ($camc) for a \"$type\"", $string)
+  return("For \'$type\' ($id), found a very small amount of \"$name\" ($camc) for a \"$type\"", $string)
     if (($max_exp == 0) && ($camc < 3));
+
+  if (($type eq $ok_types[1]) || ($type eq $ok_types[2])) {
+    # Confirm that there is one "target_training"
+    MMisc::error_quit("For \'$type\' ($id), we need one \'sffn\' to be the \'$tt_keys[3]\', found none")
+        if (! exists $self->{tracking_trials}{$id}{$tt_keys[3]});
+  }
 
   return("", $string);
 }
@@ -475,6 +490,12 @@ sub _camera_processor {
   return("For \"$tt_id\", there is already one definition of this \"$f\" ($sffn)")
     if (exists $self->{tt_sffn}{$sffn}{$tt_id});
 
+  my $f="camid";
+  return("Could not find \'$f\'") if (! exists $res{$f});
+  my $camid = $res{$f};
+  return("For \"$tt_id\", there is already one definition of this \"$f\" ($camid)")
+    if (exists $self->{tt_types}{$tt_type}{$tt_id}{$ttp_keys[4]}{$camid});
+
   my $txml = "";
   $f = $ttp_keys[2]; # template_xml
   $txml = $res{$f} if (exists $res{$f});
@@ -487,12 +508,13 @@ sub _camera_processor {
   my %tt_params = ();
   $self->{tracking_trials}{$tt_id}{$tt_keys[0]} = $tt_fs; # evaluate fs
   $self->{tracking_trials}{$tt_id}{$tt_keys[1]} = $tt_type; # type
-  $self->{tt_types}{$tt_type}{$tt_id}++;
+  $self->{tt_types}{$tt_type}{$tt_id}{$ttp_keys[4]}{$camid}++;
   $self->{tt_sffn}{$sffn}{$tt_id}++;
   $tt_params{$ttp_keys[2]} = $txml 
     if (! MMisc::is_blank($txml));
   $tt_params{$ttp_keys[3]} = $targt 
     if (! MMisc::is_blank($targt));
+  $tt_params{$ttp_keys[4]} = $camid;
 
   ## Clean up string
   return("Could not remove the \'$name\' tag, aborting")
@@ -517,7 +539,7 @@ sub _camera_processor {
   # Set parameters
   %{$self->{tracking_trials}{$tt_id}{$tt_keys[2]}{$sffn}} = %tt_params;
 
-  return("");
+  return("", $sffn, $targt);
 }
 
 #####
@@ -847,6 +869,30 @@ sub get_sffn_list_for_ttid {
   @out = keys %{$self->{tracking_trials}{$ttid}{$tt_keys[2]}};
 
   return(@out);
+}
+
+##########
+
+sub get_camid_from_ttid_sffn {
+  my ($self, $rttid, $sffn) = @_;
+
+  return($self->_set_error_and_return("Could not find \'camid\' for \'ttid\' ($rttid) and \'sffn\' ($sffn)", ""))
+    if (! exists $self->{tracking_trials}{$rttid}{$tt_keys[2]}{$sffn}{$ttp_keys[4]});
+
+  return($self->{tracking_trials}{$rttid}{$tt_keys[2]}{$sffn}{$ttp_keys[4]});
+}
+
+#####
+
+sub get_ttid_primary_camid {
+  my ($self, $rttid) = @_;
+
+  return($self->_set_error_and_return("Could not find primary \'camid\' for \'ttid\' ($rttid)", ""))
+    if (! exists $self->{tracking_trials}{$rttid}{$tt_keys[3]});
+
+  my $sffn = $self->{tracking_trials}{$rttid}{$tt_keys[3]};
+
+  return($self->get_camid_from_ttid_sffn($rttid, $sffn));
 }
 
 ############################################################
