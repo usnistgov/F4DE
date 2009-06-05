@@ -189,7 +189,7 @@ Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provid
   --help          Print this usage information and exit
   --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --CLEARxsd  Path where the XSD files can be found
+  --AVSSxsd       Path where the XSD files needed for ECF validation can be found
 
 EOF
 ;
