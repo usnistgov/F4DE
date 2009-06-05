@@ -111,9 +111,10 @@ my $skval = 0;
 my $ecf_file = "";
 my $ovwrt = 0;
 my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
+my $docsv = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:   CDE         O   S  V       d f          q s  vwx   #
+# Used:   CDE         O   S  V      cd f          q s  vwx   #
 
 my %opt = ();
 my @leftover = ();
@@ -135,9 +136,10 @@ GetOptions
    'ECF=s'           => \$ecf_file,
    'Overwrite'       => \$ovwrt,
    'skipValidation'  => \$skval,
-   'dir_for_GTF=s'   => \$gtfvaldir,
-   'Dir_for_SYS=s'   => \$sysvaldir,
-   'ttid=s'          => \$ttid,
+   'dirGTF=s'        => \$gtfvaldir,
+   'DirSYS=s'        => \$sysvaldir,
+   'trackingTrial=s' => \$ttid,
+   'csv'             => \$docsv,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -150,14 +152,14 @@ if ($opt{'man'}) {
 
 # Check option set
 &check_opt_is_blank("writedir", $destdir);
-&check_opt_is_blank("dir_for_GTF", $gtfvaldir);
-&check_opt_is_blank("Dir_for_SYS", $sysvaldir);
+&check_opt_is_blank("dirGTF", $gtfvaldir);
+&check_opt_is_blank("DirSYS", $sysvaldir);
 # And directories exists
 &check_opt_dir_w("writedir", $destdir);
-&check_opt_dir_w("dir_for_GTF", $gtfvaldir);
-&check_opt_dir_w("Dir_for_SYS", $sysvaldir);
+&check_opt_dir_w("dirGTF", $gtfvaldir);
+&check_opt_dir_w("DirSYS", $sysvaldir);
 
-MMisc::error_quit("\'dir_for_GTF\' and \'Dir_for_SYS\' can not be the same")
+MMisc::error_quit("\'dirGTF\' and \'DirSYS\' can not be the same")
   if ($gtfvaldir eq $sysvaldir);
 
 # ECF
@@ -233,9 +235,8 @@ print "\n\n";
 MMisc::error_quit("***** Not all scoring ok *****")
   if (! $ok);
 
-my $grtxt = &get_global_results($ecf);
-print"\n\n########## ECF result table:\n\n$grtxt\n\n"
-  if (! MMisc::is_blank($grtxt));
+my $ocsvf = ($docsv) ? "$destdir/ECF-global_results.csv" : "";
+&print_global_results($ecf, $ocsvf);
 
 MMisc::ok_quit("***** Done *****\n");
 
@@ -285,8 +286,8 @@ sub load_preprocessing {
     if (! MMisc::is_blank($ecf_file)) {
       $command .= " --ECF $ecf_file";
       $command .= " --TrackingTrialsDir"; # Always with ECF (safer & easier)
-      $command .= " --tracking_trial $ttid" if (! MMisc::is_blank($ttid));
-      $command .= " --overwrite_not" if (! $ovwrt);
+      $command .= " --trackingTrial $ttid" if (! MMisc::is_blank($ttid));
+      $command .= " --overwriteNot" if (! $ovwrt);
     }
 
     $command .= " \"$tmp\"";
@@ -327,10 +328,8 @@ sub load_preprocessing {
 ##########
 
 sub do_single_scoring {
-  my ($td, $rsysf, $rgtff, $csvfile) = @_;
+  my ($logfile, $rsysf, $rgtff, $csvfile) = @_;
 
-  my $logfile = "$td/scoring.log";
-  
   my $cmd = "";
   if (! defined $ENV{$f4b}) { 
     $cmd .= "perl ";
@@ -402,7 +401,7 @@ sub get_sys_ref_filelist {
 
 sub do_validation {
   if (($skval) && (! MMisc::is_blank($ecf_file))) {
-    print("Note: \'ECF\' provided and \'skipValidation\' selected; will check ECF file presence from ECF in scoring step\n");
+    print("Note: \'ECF\' provided and \'skipValidation\' selected; will check ECF needed MemDump files from information comtained within ECF file in scoring step\n");
       return();
   }
   
@@ -460,7 +459,9 @@ sub load_ecf {
 sub do_scoring_noECF {
   my @sysscrf = keys %{$$rsys_hash{$sssmd}};
   my @refscrf = keys %{$$rref_hash{$sssmd}};
-  my ($scores, $logfile) = &do_single_scoring($destdir, \@sysscrf, \@refscrf);
+  my $logfile = "$destdir/scoring.log";
+  my $csvfile = ($docsv) ? "$destdir/DTScorer_Results.csv" : "";
+  my ($scores, $logfile) = &do_single_scoring($logfile, \@sysscrf, \@refscrf, $csvfile);
   
   print "\n\n**** Scoring results:\n-- Beg ----------\n$scores\n-- End ----------\n";
   print "For more details, see: $logfile\n";
@@ -517,13 +518,16 @@ sub do_ECF_ttid_scoring {
   my @sfl = @{$fl{0}};
   my @gfl = @{$fl{1}};
 
-  my $csvfile = "$td/$rttid.csv";
+  my $csvfile = "$td/$rttid-DTScorer_Results.csv";
+  my $logfile = "$td/$rttid-DTScoring.log";
 
-  my ($scores, $logfile) = &do_single_scoring($td, \@sfl, \@gfl, $csvfile);
+  my ($scores, $logfile) = &do_single_scoring($logfile, \@sfl, \@gfl, $csvfile);
 
   &prepare_results($ecf, $rttid, $csvfile);
 
-  my $ref_res = &reformat_results($ecf, $rttid);
+  my $ocsvfile = ($docsv) ? "$td/$rttid-Results.csv" : "";
+
+  my $ref_res = &reformat_results($ecf, $rttid, $ocsvfile);
   print "$ref_res\n";
 
   return(1);
@@ -570,41 +574,6 @@ sub do_scoring {
 sub prepare_results {
   my ($ecf, $rttid, $csvfile) = @_;
 
-  my $err = MMisc::check_file_r($csvfile);
-  MMisc::error_quit("Can not find CSV file ($csvfile): $err")
-    if (! MMisc::is_blank($err));
-
-  open CSV, "<$csvfile"
-    or MMisc::error_quit("Problem opening CSV file ($csvfile): $!");
-
-  my $csvh = new CSVHelper();
-  MMisc::error_quit("Problem creating the CSV object: " . $csvh->get_errormsg())
-    if ($csvh->error());
-
-  my $header = <CSV>;
-  MMisc::error_quit("CSV file contains no data ?")
-    if (! defined $header);
-  my @headers = $csvh->csvline2array($header);
-  MMisc::error_quit("Problem extracting csv line:" . $csvh->get_errormsg())
-    if ($csvh->error());
-  MMisc::error_quit("CSV file ($csvfile) contains no usable data")
-    if (scalar @headers < 2);
-
-  my %pos = ();
-  for (my $i = 0; $i < scalar @headers; $i++) {
-    $pos{$headers[$i]} = $i;
-  }
-
-  my @needed = ("Video", "MOTA");
-  foreach my $key (@needed) {
-    MMisc::error_quit("Could not find needed key ($key) in results")
-      if (! exists $pos{$key});
-  }
-
-  $csvh->set_number_of_columns(scalar @headers);
-  MMisc::error_quit("Problem setting the number of columns for the csv file:" . $csvh->get_errormsg())
-    if ($csvh->error());
-
   my $type = $ecf->get_ttid_type($rttid);
   MMisc::error_quit("Problem obtaining \'ttid\' type : " . $ecf->get_errormsg())
     if ($ecf->error());
@@ -614,69 +583,45 @@ sub prepare_results {
     if ($ecf->error());
   MMisc::error_quit("Empty \'sffn\' list for \'ttid\' ($rttid)")
     if (scalar @sffnl == 0);
-  my %sffnh = ();
-  # There is a strange tendency to uppercase the entire output scoring array
-  # but we need the exact sffn value, so lowercase everything
+
+  my %cid = ();
   foreach my $sffn (@sffnl) {
-    my $lcsffn = lc $sffn;
-    MMisc::error_quit("Problem with lowercasing \'sffn\' keys ($sffn), an entry with the same name already exists")
-      if (exists $sffnh{$lcsffn});
-    $sffnh{$lcsffn} = $sffn;
+    my $camid = $ecf->get_camid_from_ttid_sffn($rttid, $sffn);
+    MMisc::error_quit("Problem obtaining \'camid\' : " . $ecf->get_errormsg())
+      if ($ecf->error());
+    $cid{$sffn} = $camid;
   }
 
   my $pc = $ecf->get_ttid_primary_camid($rttid);
   MMisc::error_quit("Problem obtaining primary \'camid\' : " . $ecf->get_errormsg())
     if ($ecf->error());
 
-  my %oh = ();
-  my $cont = 1;
-  my $mota_avg = 0;
+  my ($err, %oh) = AVSS09HelperFunctions::load_DTScorer_ResultsCSV($csvfile, \@sffnl, \%cid);
+  MMisc::error_quit("Problem with DTScorer Results CSV for \'ttid\' ($rttid): $err")
+    if (! MMisc::is_blank($err));
+
+  my $mota_sum = 0;
   my $mota_entries = 0;
-  while ($cont) {
-    my $line = <CSV>;
-    if (MMisc::is_blank($line)) {
-      $cont = 0;
-      next;
-    }
-
-    my @linec = $csvh->csvline2array($line);
-    MMisc::error_quit("Problem extracting csv line:" . $csvh->get_errormsg())
-      if ($csvh->error());
-    my $sffn = $linec[$pos{$needed[0]}];
-    my $mota = $linec[$pos{$needed[1]}];
-
-    my $sffnk = lc $sffn;
-    MMisc::error_quit("Could not find \'sffn\' ($sffn) in list of expected ones [or already processed ?]")
-      if (! exists $sffnh{$sffnk});
-    $sffn = $sffnh{$sffnk};
-    delete $sffnh{$sffnk};
-
-    MMisc::error_quit("\'sffn\' ($sffn) not in \'ttid\' ($rttid) [in: " . join(",", @sffnl) . "]")
-      if (! $ecf->is_sffn_in_ttid($rttid, $sffn));
-
-    my $camid = $ecf->get_camid_from_ttid_sffn($rttid, $sffn);
-    MMisc::error_quit("Problem obtaining \'camid\' : " . $ecf->get_errormsg())
-      if ($ecf->error());
-    
+  foreach my $camid (keys %oh) {
+    my $mota = $oh{$camid};
     $global_scores{$type}{$rttid}{$gs_spk[0]}{$camid} = $mota;
-    $mota_avg += $mota;
+    $mota_sum += $mota;
     $mota_entries++;
     $global_camid{$camid}++;
   }
-  MMisc::error_quit("Missing some \'sffn\' results for \'ttid\' ($rttid): " . join(",", keys %sffnh))
-    if (scalar keys %sffnh > 0);
-  close(CSV);
 
   $global_scores{$type}{$rttid}{$gs_spk[1]} = $pc;
-  $global_scores{$type}{$rttid}{$gs_spk[2]} = $mota_avg / $mota_entries;
+  $global_scores{$type}{$rttid}{$gs_spk[2]} = $mota_sum / $mota_entries;
 }
 
 ##########
 
-sub get_global_results {
-  my ($ecf) = @_;
+sub print_global_results {
+  my ($ecf, $csvfile) = @_;
 
   return("") if (! defined $ecf);
+
+  print"\n\n########## ECF result table:\n";
 
   my $sat = new SimpleAutoTable();
   MMisc::error_quit("While preparing print results : " . $sat->get_errormsg() . "\n")
@@ -693,17 +638,25 @@ sub get_global_results {
     }
   }
 
+  if (! MMisc::is_blank($csvfile)) {
+    my $csvtxt = $sat->renderCSV();
+    MMisc::error_quit("Generating CSV Report: ". $sat->get_errormsg())
+      if (! defined($csvtxt));
+    MMisc::error_quit("Problem while trying to write CSV file ($csvfile)")
+      if (! MMisc::writeTo($csvfile, "", 1, 0, $csvtxt));
+  }
+
   my $tbl = $sat->renderTxtTable(2);
   MMisc::error_quit("Problem rendering SAT: ". $sat->get_errormsg())
     if (! defined($tbl));
 
-  return($tbl);
+  print "$tbl\n\n";
 }
 
 #####
 
 sub reformat_results {
-  my ($ecf, $rttid) = @_;
+  my ($ecf, $rttid, $csvfile) = @_;
 
   return("") if (! defined $ecf);
 
@@ -726,6 +679,14 @@ sub reformat_results {
   my $tbl = $sat->renderTxtTable(2);
   MMisc::error_quit("Problem rendering SAT: ". $sat->get_errormsg())
     if (! defined($tbl));
+
+  if (! MMisc::is_blank($csvfile)) {
+    my $csvtxt = $sat->renderCSV();
+    MMisc::error_quit("Generating CSV Report: ". $sat->get_errormsg())
+      if (! defined($csvtxt));
+    MMisc::error_quit("Problem while trying to write CSV file ($csvfile)")
+      if (! MMisc::writeTo($csvfile, "", 1, 0, $csvtxt));
+  }
 
   return($tbl);
 }
@@ -798,15 +759,20 @@ AVSS09Scorer - AVSS09 ViPER XML System to Reference Scoring Tool
 
 B<AVSS09Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--xmllint> I<location>] [B<--CLEARxsd> I<location>]>
-  S<B<--writedir> directory [B<--frameTol> I<framenbr>]>
-  S<[B<--Validator> I<tool>] [B<--Scorer> I<tool>]>
-  S<I<sys_file.xml> [I<...>] B<--gtf> I<ref_file.xml> [I<...>]>
+  S<[B<--ECF> I<ecffile.xml> [B<--trackingTrial> I<ttid>] [B<--AVSSxsd> I<location>]]>
+  S<B<--writedir> I<directory> B<--dirGTF> I<directory> B<--DirSYS> I<directory>>
+  S<[B<--frameTol> I<framenbr>]>
+  S<[B<--Validator> I<tool>] [B<--Overwrite>] [B<--skipValidation>]>
+  S<[B<--Scorer> I<tool>] [B<--csv>]>
+  S<[I<sys_file.xml> [I<...>] B<--gtf> I<ref_file.xml> [I<...>]]>
   
 =head1 DESCRIPTION
 
 B<AVSS09Scorer> is a wrapper tool for the I<AVSS09ViPERValidator> and I<CLEARDTScorer> tools.
 The first one performs a syntactic and semantic validation of the ViPER XML file(s) provided on the command line.
 The second perform the actual scoring on the I<Scoring Sequence memory representation> of the I<system> and I<reference> XML files.
+
+It can be run TODO
 
 =head1 PREREQUISITES
 
@@ -843,9 +809,29 @@ The B<CLEARDTScorer> will load I<Scoring Sequence memory represenations> generat
 
 =over
 
+=item B<--AVSSxsd> I<location>
+
+Specify the default location of the required AVSS XSD files.
+
 =item B<--CLEARxsd> I<location>
 
 Specify the default location of the required XSD files.
+
+=item B<--csv>
+
+Generate a CSV file (or multiple one with the B<--ECF> option) containing the scoring results.
+
+=item B<--DirSYS> I<directory>
+
+Specify the I<system> I<directory>  (or directory structure base, with the B<--ECF> option) in which the I<validation> tool will write files, and the I<scorer> tool will find them.
+
+=item B<--dirGTF> I<directory>
+
+Specify the I<system> I<directory> (or directory structure base, with the B<--ECF> option) in which the I<validation> tool will write files, and the I<scorer> tool will find them.
+
+=item B<--ECF> I<ecffile.xml>
+
+Specify the I<ECF> file from which, defining the list of I<tracking trial ID>s availalbe to be scored and the specific controls they provide over XML files.
 
 =item B<--frameTol> I<framenbr>
 
@@ -863,9 +849,21 @@ Display the usage page for this program. Also display some default values and in
 
 Display this man page.
 
+=item B<--Overwrite>
+
+For the I<validation> step run from this tool, when rewriting XML or MemDumps, the default is to not overwrite previously generated files. This option inhibit this feature and will force files to be overwritten.
+
 =item B<--Scorer> I<tool>
 
 Specify the full path location of the B<CLEARDTScorer> program
+
+=item B<--skipValidation>
+
+Do not perform the I<validation> step.
+
+=item B<--trackingTrial> I<ttid>
+
+Only process validation and scoring for entries that are defined in the I<ECF> as part of the specified I<ttid>.
 
 =item B<--Validator> I<tool>
 
@@ -901,6 +899,8 @@ The validator will also generate a I<Scoring Sequence memory represenation> of a
 
 =back
 
+=item TODO
+
 =head1 BUGS
 
 Please send bug reports to <nist_f4de@nist.gov>
@@ -925,20 +925,28 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] --writedir directory [--frameTol framenbr] [--Validator tool] [--Scorer tool] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--ECF ecffile.xml [--trackingTrial ttid] [--AVSSxsd location]] --writedir directory --dirGTF directory --DirSYS directory [--frameTol framenbr] [--Validator tool] [--Overwrite] [--skipValidation] [--Scorer tool] [--csv] [sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]]
 
-Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provided (System vs Reference)
+Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provided (System vs Reference).
 
  Where:
   --help          Print this usage information and exit
   --man           Print a more detailled manual page and exit (same as running: $mancmd)
   --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
-  --CLEARxsd  Path where the XSD files can be found
+  --CLEARxsd      Path where the XSD files can be found
+  --ECF           Specify the ECF XML file to load and score against
+  --trackingTrial  Process only the requested \"tracking trial ID\"
+  --AVSSxsd       Path where the XSD files needed for ECF validation can be found
+  --writedir      Directory in which scoring will be performed
+  --dirGFT        Directory in which validated GTF files are/will be 
+  --DirSYS        Directory in which validated SYS files are/will be
   --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan (default: $frameTol)
-  --writedir      Directory in which validation and scoring will be performed
   --Validator     Specify the full path location of the $valtool_bt tool (if not in your path)
+  --Overwrite     Overwrite previously validated XML and MemDump files
+  --skipValidation  Skip the validation process (will still check files needed for scoring)
   --Scorer        Specify the full path location of the $scrtool_bt tool (if not in your path)
+  --csv           Request results to be put into a CSV file
 
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'CLEAR.xsd' file
