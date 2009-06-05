@@ -442,7 +442,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--xmllint location] [--CLEARxsd location] --Domain name --Eval type [--frameTol framenbr] [--writeResult file] [--detthres value] [--trkthres value] [--bin] [--MissCost value] [--FACost value] [--ISCost value] [--SpecialMode mode] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help] [--version] [--xmllint location] [--CLEARxsd location] --Domain name --Eval type [--frameTol framenbr] [--writeResult file] [--csv file] [--detthres value] [--trkthres value] [--bin] [--MissCost value] [--FACost value] [--ISCost value] [--SpecialMode mode] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (System vs Truth)
 
@@ -455,6 +455,7 @@ Will Score the XML file(s) provided (System vs Truth)
   --Eval          Specify the type of measures that you want to compute (Area, Point)
   --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan (default value: $frameTol)
   --writeResult   Specify the file into which the scoring result will be written
+  --csv           Specify the file into which the CSV formatted scoring result will be written
   --detthres      Set the threshold for spatial overlap between reference and system objects when computing detection measures (default: $det_thres)
   --trkthres      Set the threshold for spatial overlap between reference and system objects when computing tracking measures (default: $trk_thres)
   --bin           Specify if the thresholding should be 'binary' ( >= thres = 1.0, < thres = 0.0) or 'regular' ( >=thres = 1.0, < thres = actual overlap ratio) (default: 'regular')
