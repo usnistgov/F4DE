@@ -184,6 +184,92 @@ sub clone_VF_apply_ECF_for_ttid {
   return("", $nvf);
 }
 
+##########
+
+sub load_DTScorer_ResultsCSV {
+  my ($csvfile, $rsffnl, $rcid) = @_;
+
+  my $err = MMisc::check_file_r($csvfile);
+  return("Can not find CSV file ($csvfile): $err")
+      if (! MMisc::is_blank($err));
+
+  open CSV, "<$csvfile"
+    or return("Problem opening CSV file ($csvfile): $!");
+
+  my $csvh = new CSVHelper();
+  return("Problem creating the CSV object: " . $csvh->get_errormsg())
+    if ($csvh->error());
+
+  my $header = <CSV>;
+  return("CSV file contains no data ?")
+    if (! defined $header);
+  my @headers = $csvh->csvline2array($header);
+  return("Problem extracting csv line:" . $csvh->get_errormsg())
+    if ($csvh->error());
+  return("CSV file ($csvfile) contains no usable data")
+    if (scalar @headers < 2);
+
+  my %pos = ();
+  for (my $i = 0; $i < scalar @headers; $i++) {
+    $pos{$headers[$i]} = $i;
+  }
+
+  my @needed = ("Video", "MOTA");
+  foreach my $key (@needed) {
+    return("Could not find needed key ($key) in results")
+      if (! exists $pos{$key});
+  }
+
+  $csvh->set_number_of_columns(scalar @headers);
+  return("Problem setting the number of columns for the csv file:" . $csvh->get_errormsg())
+    if ($csvh->error());
+
+  my %sffnh = ();
+  # There is a strange tendency to uppercase the entire output scoring array
+  # but we need the exact sffn value, so lowercase everything
+  foreach my $sffn (@$rsffnl) {
+    my $lcsffn = lc $sffn;
+    return("Problem with lowercasing \'sffn\' keys ($sffn), an entry with the same name already exists")
+      if (exists $sffnh{$lcsffn});
+    $sffnh{$lcsffn} = $sffn;
+  }
+
+  my %cid = %$rcid;
+  my %oh = ();
+  my $cont = 1;
+  while ($cont) {
+    my $line = <CSV>;
+    if (MMisc::is_blank($line)) {
+      $cont = 0;
+      next;
+    }
+
+    my @linec = $csvh->csvline2array($line);
+    return("Problem extracting csv line:" . $csvh->get_errormsg())
+      if ($csvh->error());
+    my $sffn = $linec[$pos{$needed[0]}];
+    my $mota = $linec[$pos{$needed[1]}];
+
+    my $sffnk = lc $sffn;
+    MMisc::error_quit("Could not find \'sffn\' ($sffn) in list of expected ones [or already processed ?]")
+      if (! exists $sffnh{$sffnk});
+    $sffn = $sffnh{$sffnk};
+    delete $sffnh{$sffnk};
+
+    return("Could not find \'sffn\' ($sffn) corresponding \'camid\' [available sffn: " . join(",", @$rsffnl) . "]")
+      if (! exists $cid{$sffn});
+    my $camid = $cid{$sffn};
+    
+    $oh{$camid} = $mota;
+  }
+  close(CSV);
+
+  return("Missing some \'sffn\' results: " . join(",", keys %sffnh))
+    if (scalar keys %sffnh > 0);
+
+  return($err, %oh);
+}
+
 ############################################################
 
 1;
