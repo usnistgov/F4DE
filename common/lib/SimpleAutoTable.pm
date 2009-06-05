@@ -23,6 +23,8 @@ use strict;
 
 use MErrorH;
 use PropList;
+use CSVHelper;
+
 use Data::Dumper;
 
 
@@ -347,66 +349,47 @@ sub renderTxtTable(){
 
 ##########
 
-sub _badfile {
-  my ($self, $txt) = @_;
-
-  $self->_seterrormsg($txt);
-  return(0);
-}
-
-#####
-
-sub extract_csv_line {
-  my $line = shift @_;
-
-  my @split = split(m%\"\s*\,\s*\"%, $line);
-  my @out = ();
-  foreach my $elt (@split) {
-    $elt =~ s%^\"%%;
-    $elt =~ s%\"$%%;
-    push @out, $elt;
-  }
-
-  return(@out);
-}
-
-#####
-
 sub loadCSV {
   my ($self, $file) = @_;
 
-  if ($self->{hasData}) {
-    $self->_set_errormsg("Can not load a CSV to a SimpleAutoTable which already has data");
-    return(0);
-  }
+  return($self->_set_error_and_return("Can not load a CSV to a SimpleAutoTable which already has data", 0))
+    if ($self->{hasData});
   
   open FILE, "<$file"
-    or return(&_badfile("Could not open CSV file ($file): $!\n"));
+    or return($self->_set_error_and_return("Could not open CSV file ($file): $!\n", 0));
   my @filec = <FILE>;
   close FILE;
-
   chomp @filec;
+
+  my $csvh = new CSVHelper();
+  return($self->_set_error_and_return("Problem creating CSV handler", 0))
+    if (! defined $csvh);
+  return($self->_set_error_and_return("Problem with CSV handler: " . $csvh->get_errormsg(), 0))
+    if ($csvh->error());
+  
   my %csv = ();
   my %elt1 = ();
   my $inc = 0;
-  my $nc = -1;
   foreach my $line (@filec) {
     next if ($line =~ m%^\s*$%);
-    my $key = sprintf("File: $file | Line: %012d", $inc++);
-    my @cols = &extract_csv_line($line);
-    if ($nc != -1) {
-      if ($nc != scalar @cols) {
-        $self->_set_errormsg("File ($file) is not a CSV, not all lines contains the same amount of information");
-        return(0);
-      }
+
+    my $key = sprintf("File: $file | Line: %012d", $inc);
+    my @cols = $csvh->csvline2array($line);
+    return($self->_set_error_and_return("Problem with CSV line: " . $csvh->get_errormsg(), 0))
+      if ($csvh->error());
+    
+    if ($inc > 0) {
       $elt1{$cols[0]}++;
-    } 
+    } else {
+      $csvh->set_number_of_columns(scalar @cols);
+    }
+
     push @{$csv{$key}}, @cols;
 
-    $nc = scalar @cols;
+    $inc++;
   }
 
-  my $cu1cak = 1;               # Can use 1st column as key
+  my $cu1cak = 1; # Can use 1st column as (master) key
   foreach my $key (keys %elt1) {
     $cu1cak = 0 if ($elt1{$key} > 1);
   }
@@ -459,12 +442,22 @@ sub renderCSV {
   my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort);
   my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded");
 
+  my $csvh = new CSVHelper();
+  return($self->_set_error_and_return("Problem creating CSV handler", 0))
+    if (! defined $csvh);
+  return($self->_set_error_and_return("Problem with CSV handler: " . $csvh->get_errormsg(), 0))
+    if ($csvh->error());
+
   ### Header output
   my @line = ();
   push @line, "MasterKey" if ($k1c);
   push @line, @colIDs;
-  $out .= &generate_csvline(@line);
-  
+  my $txt = $csvh->array2csvline(@line);
+  return($self->_set_error_and_return("Problem with CSV array: " . $csvh->get_errormsg(), 0))
+    if ($csvh->error());
+  $out .= "$txt\n";
+  $csvh->set_number_of_columns(scalar @line);
+
   # line per line
   foreach my $rowIDStr (@rowIDs) {
     my @line = ();
@@ -472,51 +465,13 @@ sub renderCSV {
     foreach my $colIDStr (@colIDs) {
       push @line, $self->{data}{$rowIDStr."-".$colIDStr};
     }
-    $out .= &generate_csvline(@line);
-  }   
+    my $txt = $csvh->array2csvline(@line);
+    return($self->_set_error_and_return("Problem with CSV array: " . $csvh->get_errormsg(), 0))
+      if ($csvh->error());
+    $out .= "$txt\n";
+  }
     
   return($out);
-}
-
-#####
-
-sub quc { # Quote clean
-  my $in = shift @_;
-
-  if (defined($in)){
-    $in =~ s%\"%\'%g;
-    return($in);
-  } 
-  return $in;
-}
-
-#####
-
-sub qua { # Quote Array
-  my @todo = @_;
-
-  my @out = ();
-  foreach my $in (@todo) {
-    if (defined($in)){
-      $in = &quc($in);
-      push @out, "\"$in\"";
-    } else {
-      push @out, "\"\"";
-    }
-  }
-
-  return(@out);
-}
-
-#####
-
-sub generate_csvline {
-  my @in = @_;
-
-  @in = &qua(@in);
-  my $txt = join(",", @in);
-  
-  return("$txt\n");
 }
 
 ############################################################
@@ -526,25 +481,36 @@ sub _set_errormsg {
   $self->{errormsg}->set_errormsg($txt);
 }
 
-##########
+#####
 
 sub get_errormsg {
   my ($self) = @_;
   return($self->{errormsg}->errormsg());
 }
 
-##########
+#####
 
 sub error {
   my ($self) = @_;
   return($self->{errormsg}->error());
 }
 
-##########
+#####
 
 sub clear_error {
   my ($self) = @_;
   return($self->{errormsg}->clear());
+}
+
+#####
+
+sub _set_error_and_return {
+  my $self = shift @_;
+  my $errormsg = shift @_;
+
+  $self->_set_errormsg($errormsg);
+
+  return(@_);
 }
 
 ############################################################
