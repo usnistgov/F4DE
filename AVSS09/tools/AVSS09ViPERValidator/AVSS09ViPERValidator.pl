@@ -128,9 +128,9 @@ GetOptions
    'skipScoringSequenceMemDump' => \$skipScoringSequenceMemDump,
    'AVSSxsd=s'       => \$AVxsdpath,
    'ECF=s'           => \$ecf_file,
-   'tracking_trial=s' => \$ttid,
+   'trackingTrial=s' => \$ttid,
    'TrackingTrialsDir' => \$tttdir,
-   'overwrite_not'    => sub {$ovwrt = 0},
+   'overwriteNot'    => sub {$ovwrt = 0},
    # Hiden Option(s)
    'X_show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -155,7 +155,7 @@ if (($writeback != -1) && ($writeback ne "")) {
   $writeback .= "/" if ($writeback !~ m%\/$%); # Add a trailing slash
 }
 
-MMisc::error_quit("Can not use \'tracking_trial\' unless an ECF file is specified")
+MMisc::error_quit("Can not use \'trackingTrial\' unless an ECF file is specified")
   if ((MMisc::is_blank($ecf_file)) && (! MMisc::is_blank($ttid)));
 
 if ($tttdir) {
@@ -165,7 +165,7 @@ if ($tttdir) {
       if ($writeback eq "");
 }
 
-MMisc::error_quit("\'ECF\' needs one of \'TrackingTrialsDir\' or \'tracking_trial\'")
+MMisc::error_quit("\'ECF\' needs one of \'TrackingTrialsDir\' or \'trackingTrial\'")
   if ((! MMisc::is_blank($ecf_file)) && (MMisc::is_blank($ttid)) && ($tttdir == 0));
 
 my $sk_wb = 0;
@@ -381,7 +381,7 @@ sub __write_autoselect_ttid_VF {
 sub _process_tt_ttid_only {
   my ($vf, $sffn, $isgtf, $rttid) = @_;
 
-  return("! sffn not part of requested tracking_trial [$ttid], skipping it\n")
+  return("! sffn not part of requested trackingTrial [$ttid], skipping it\n")
     if (! $ecf->is_sffn_in_ttid($rttid, $sffn));
 
   print "++ ttid: $rttid\n";
@@ -398,7 +398,7 @@ sub _process_tt_all {
   MMisc::error_quit("Problem obtaining list of ttid for sffn: " . $ecf->get_errormsg())
       if ($ecf->error());
 
-  return("  |-> sffn not part of any tracking_trial, skip tt processing\n", undef)
+  return("  |-> sffn not part of any trackingTrial, skip tt processing\n", undef)
     if (scalar @l == 0);
 
   foreach my $rttid (@l) {
@@ -453,9 +453,12 @@ AVSS09ViperValidator - AVSS09 ViPER XML Validator
 B<AVSS09ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--xmllint> I<location>] [B<--CLEARxsd> I<location>]>
   S<[B<--gtf>] [B<--frameTol> I<framenbr>]>
-  S<[[B<--write> [I<directory>]]>
-  S<[B<--WriteMemDump> [I<mode>] [B<--skipScoringSequenceMemDump>]]]>
   S<[B<--ForceFilename> I<filename>]>
+  S<[B<--write> [I<directory>]>
+   S<[B<--WriteMemDump> [I<mode>] [B<--skipScoringSequenceMemDump>]]>
+   S<[B<--overwriteNot>]]>
+  S<[B<--ECF> I<ecffile.xml> [B<--TrackingTrialsDir>] [B<--trackingTrial> I<ttid>]>
+   S<[B<--AVSSxsd> I<location>]]>
   S<I<viper_source_file.xml>[I<transformations>]>
   S<[I<viper_source_file.xml>[I<transformations>] [I<...>]>
   
@@ -496,9 +499,17 @@ B<AVSS09ViperValidator> will use the core validation of the B<CLEAR> code and ad
 
 =over
 
+=item B<--AVSSxsd> I<location>
+
+Specify the default location of the required AVSS XSD files.
+
 =item B<--CLEARxsd> I<location>
 
-Specify the default location of the required XSD files.
+Specify the default location of the required CLEAR XSD files.
+
+=item B<--ECF> I<ecffile.xml>
+
+When rewriting XML and MemDump, for a given I<tracking trial ID> apply the rules specified in the ECF to the I<sourcefile filename> corresponding entry.
 
 =item B<--ForceFilename> I<file>
 
@@ -520,10 +531,32 @@ Display the usage page for this program. Also display some default values and in
 
 Display this man page.
 
+=item B<--overwriteNot>
+
+When rewriting XML or MemDumps, the default is to overwrite previously generated files. This option inhibit this feature and will force files to not be overwritten.
+
 =item B<--skipScoringSequenceMemDump>
 
 Do not generate the I<Scoring Sequence> memory representation when generating the validated ViPER file memory representation.
 This representation can be used by the scoring program.
+
+=item B<--TrackingTrialsDir>
+
+When rewriting XML or MemDumps into the B<--write> I<directory>, place those files in a directory structure that match the I<ECF> specifications for a given I<tracking trial ID> that can be reloaded by the B<AVSS09Scorer> program with the I<ECF> information only.
+
+This directory structure is of the form:
+
+I<write directory>/I<tracking trial type>/I<tracking trial ID>/I<sourcefile filename>/I<XML file type>/I<sourcefile filename>S<.xml>
+
+For example, if the I<AVSS09ViPERValidator> was asked to validate a I<GTF> which I<sourcefile filename> (the filename part of the I<file> pecified in the XML's I<sourcefile> section) was S<MCTTR0104a.mov>, given an I<ECF> file defining two I<tracking trial ID>s for that I<sourcefile filename> called S<CPSPT_01> and S<SCSPT_02> (respectively of I< tracking trial type>s S<cpspt> and S<scspt>). Given a requested I<write dorectory> of S<PostECF>, the validation process will generate two XML files:
+
+S<PostECF/cpspt/CPSPT_01/MCTTR0104a.mov/GTF/MCTTR0104a.mov.xml>
+
+S<PostECF/scspt/SCSPT_02/MCTTR0104a.mov/GTF/MCTTR0104a.mov.xml>
+
+=item B<--trackingTrial> I<ttid>
+
+When processing files, only rewrite the ones that are defined in the I<ECF> as part of the specified I<ttid>
 
 =item B<--version>
 
@@ -580,10 +613,15 @@ Will try to validate the I<reference> files I<ref_test1.xml> and I<ref_test2.xml
 For I<ref_test1.xml>, it will also add 100 frames to each framespan found within the file, modify the I<bounding box> by substracting 10 from each X coordinate, adding 20 to each Y, and multiplying each resulting coordinate by 0.5, and add 5 to each object ID seen. 
 It will then write to the I</tmp> directory a XML rewrite of both files, as well as a ViPER file memory represenation (in text format) and a scoring sequence memory representation.
 
-=item B<AVSS09ViperValidator sys_test1.xml sys_test2.xl --ForceFilename ff.xml --write /tmp --WriteMemDump gzip --skipScoringSequenceMemDump>
+=item B<AVSS09ViperValidator sys_test1.xml sys_test2.xml --ForceFilename ff.xml --write /tmp --WriteMemDump gzip --skipScoringSequenceMemDump>
 
 Will try to validate the I<system> files I<sys_test1.xml> and I<sys_test2.xml>, changing for files the I<sourcefile filename> within to I<ff.xml>.
 Then write into the I</tmp> directory both files and their ViPER file memory represenation (in compressed format, to save some disk space). 
+
+=item B<AVSS09ViperValidator --gtf gtf_test1.xml gtf_test2.xml --write /tmp --WriteMemDump gzip --ECF test_ecf.xml --TrackingTrialsID --trackingTrial CPSPT_01>
+
+Will try to validate the I<reference> files I<gtf_test1.xml> and I<gtf_test2.xml>.
+It will then write XML and both XML file and Scoring Sequence MemDumps into the I</tmp> directory the files corresponding to the I<test_ecf.xml> I<ECF> definition of the I<CPSCPT_01> I<tracking trial ID>, following a directory structure that can be used by the I<AVSS09Scorer> tool.
 
 =head1 BUGS
 
@@ -609,7 +647,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--gtf] [--frameTol framenbr] [--write [directory] [--WriteMemDump [mode] [--skipScoringSequenceMemDump]] [--ForceFilename file] [--ECF ecffile.xml [--TrackingTrialsDir] [--tracking_trial ttid]] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--gtf] [--frameTol framenbr] [--ForceFilename file] [--write [directory] [--WriteMemDump [mode] [--skipScoringSequenceMemDump]] [--overwriteNot]] [--ECF ecffile.xml [--TrackingTrialsDir] [--trackingTrial ttid] [--AVSSxsd location]] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
 
 Will perform a semantic validation of the AVSS09 Viper XML file(s) provided.
 
@@ -624,7 +662,13 @@ Will perform a semantic validation of the AVSS09 Viper XML file(s) provided.
   --ForceFilename  Specify that all files loaded refers to the same 'sourcefile' file
   --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
   --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
-  --skipScoringSequenceMemDump  Do not perform the Scoring Sequence MemDump (which can be used for scoring) 
+  --skipScoringSequenceMemDump  Do not perform the Scoring Sequence MemDump (which can be used for scoring)
+  --overwriteNot  Do not overwrite already existing XML or MemDump files
+  --ECF           Specify the ECF XML file to use when rewritting data
+  --TrackingTrialsDir  When rewritting data, create a directory hierarchy than is recongizable by the scoring tool
+  --trackingTrial Process only the requested \"tracking trial ID\"
+  --AVSSxsd       Path where the XSD files needed for ECF validation can be found
+
 
 Transformations syntax: [:FSshift][\@BBmod][#IDadd]
 where: 
