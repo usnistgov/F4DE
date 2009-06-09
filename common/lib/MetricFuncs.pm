@@ -182,7 +182,9 @@ sub cloneForTrial(){
 
 =item B<getActualDecisionPerformance>()
 
-Returns an array of global miss/fa/comb statistics based on the actual decisions.
+Returns an array of global miss/fa/comb statistics based on the actual decisions. The contents of the array are:
+
+(MeanActComb, SampleStdDevActComb, MeanMiss, SampleStdDevMiss, MeanFA, SampleStdDevFA)
 
 =cut
 
