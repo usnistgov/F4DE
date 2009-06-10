@@ -33,6 +33,10 @@ $testr += &do_simple_test($tn, "(Starter SYS vs GTF)", "$tool ../common/test_fil
 $tn = "test3";
 $testr += &do_simple_test($tn, "(Full SYS vs GTF)", "$tool ../common/test_file2.sys.xml -g ../common/test_file2.clear.xml", "res_$tn.txt");
 
+##
+$tn = "test4";
+$testr += &do_simple_test($tn, "(with ECF)", "$tool ../common/test_file1.sys.xml ../common/test_file2.sys.xml -g ../common/test_file1.clear.xml ../common/test_file2.clear.xml ../common/test_file3.clear.xml -E ../common/test1-ecf.xml", "res_$tn.txt");
+
 #####
 
 my $elapsed = F4DE_TestCore::get_elapsedtime($t0);

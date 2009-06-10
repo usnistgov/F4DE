@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecf xmlns="http://www.itl.nist.gov/iad/mig/avss09ecf#">
+  <version>Created 20090610</version>
+
+  <tracking_trial id="CPSPT_01" framespan="1000:10000" type="cpspt">
+    <camera file="test_file1.mov" camid="2">
+      <dont_care_region id="1" framespan="2000:2500">
+        <bbox framespan="2000:2500" x="0" y="10" width="128" height="138"/>
+      </dont_care_region>
+    </camera>
+    <camera file="test_file2.mov" camid="5" target_training="1">
+      <dont_care_frames framespan="1000:2000"/>
+    </camera>
+  </tracking_trial>
+
+  <tracking_trial id="SCSPT05b" framespan="1300:11000" type="scspt">
+    <camera file="test_file2.mov" camid="1">
+    </camera>
+  </tracking_trial>
+
+</ecf>
