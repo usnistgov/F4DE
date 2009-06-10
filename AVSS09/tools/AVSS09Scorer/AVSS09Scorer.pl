@@ -419,7 +419,7 @@ sub do_validation {
   MMisc::error_quit("No REF file(s) provided, can not perform scoring\n\n$usage\n")
     if (scalar @ref == 0);
   MMisc::error_quit("Unequal number of REF and SYS files, can not perform scoring\n\n$usage\n")
-    if (scalar @ref != scalar @sys);
+    if ((MMisc::is_blank($ecf_file)) && (scalar @ref != scalar @sys));
   
   #####
   print "\n\n***** STEP ", $stepc++, ": Validation\n";
