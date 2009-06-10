@@ -446,11 +446,11 @@ sub _warn_add {
 
 =head1 NAME
 
-AVSS09ViperValidator - AVSS09 ViPER XML Validator
+AVSS09ViPERValidator - AVSS09 ViPER XML Validator
 
 =head1 SYNOPSIS
 
-B<AVSS09ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
+B<AVSS09ViPERValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--xmllint> I<location>] [B<--CLEARxsd> I<location>]>
   S<[B<--gtf>] [B<--frameTol> I<framenbr>]>
   S<[B<--ForceFilename> I<filename>]>
@@ -464,11 +464,11 @@ B<AVSS09ViperValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   
 =head1 DESCRIPTION
 
-B<AVSS09ViperValidator> performs a syntactic and semantic validation of the ViPER XML file(s) provided on the command line. It can I<validate> reference files (see B<--gtf>) as well as system files. It can also rewrite validated files into another directory using the same filename as the original (see B<--write>), write a I<memory representation> of the ViPER file post validation (to hasten reload time), as well as a I<Scoring Sequence> I<memory representation> to be used for scoring.
+B<AVSS09ViPERValidator> performs a syntactic and semantic validation of the ViPER XML file(s) provided on the command line. It can I<validate> reference files (see B<--gtf>) as well as system files. It can also rewrite validated files into another directory using the same filename as the original (see B<--write>), write a I<memory representation> of the ViPER file post validation (to hasten reload time), as well as a I<Scoring Sequence> I<memory representation> to be used for scoring.
 
 =head1 PREREQUISITES
 
-B<AVSS09ViperValidator> relies on some external software and files, most of which associated with the B<CLEAR> section of B<F4DE>.
+B<AVSS09ViPERValidator> relies on some external software and files, most of which associated with the B<CLEAR> section of B<F4DE>.
 
 =over
 
@@ -491,9 +491,9 @@ Once you have installed the software, setting B<F4DE_BASE> to the installation l
 
 =head1 GENERAL NOTES
 
-B<AVSS09ViperValidator> expects that the files can be validated using 'xmllint' against the B<CLEAR> XSD file(s) (see B<--help> for files list).
+B<AVSS09ViPERValidator> expects that the files can be validated using 'xmllint' against the B<CLEAR> XSD file(s) (see B<--help> for files list).
 
-B<AVSS09ViperValidator> will use the core validation of the B<CLEAR> code and add some specialized checks associated with the B<AVSS09> evaluation.
+B<AVSS09ViPERValidator> will use the core validation of the B<CLEAR> code and add some specialized checks associated with the B<AVSS09> evaluation.
 
 =head1 OPTIONS
 
@@ -548,7 +548,7 @@ This directory structure is of the form:
 
 I<write directory>/I<tracking trial type>/I<tracking trial ID>/I<sourcefile filename>/I<XML file type>/I<sourcefile filename>S<.xml>
 
-For example, if the I<AVSS09ViPERValidator> was asked to validate a I<GTF> which I<sourcefile filename> (the filename part of the I<file> pecified in the XML's I<sourcefile> section) was S<MCTTR0104a.mov>, given an I<ECF> file defining two I<tracking trial ID>s for that I<sourcefile filename> called S<CPSPT_01> and S<SCSPT_02> (respectively of I< tracking trial type>s S<cpspt> and S<scspt>). Given a requested I<write dorectory> of S<PostECF>, the validation process will generate two XML files:
+For example, if the I<AVSS09ViPERValidator> was asked to validate a I<GTF> which I<sourcefile filename> (the filename part of the I<file> specified in the XML's I<sourcefile> section) was S<MCTTR0104a.mov>, given an I<ECF> file defining two I<tracking trial ID>s for that I<sourcefile filename> called S<CPSPT_01> and S<SCSPT_02> (respectively of I< tracking trial type>s S<cpspt> and S<scspt>). Given a requested I<write directory> of S<PostECF>, the validation process will generate two XML files:
 
 S<PostECF/cpspt/CPSPT_01/MCTTR0104a.mov/GTF/MCTTR0104a.mov.xml>
 
@@ -560,11 +560,11 @@ When processing files, only rewrite the ones that are defined in the I<ECF> as p
 
 =item B<--version>
 
-Display B<AVSS09ViperValidator> version information.
+Display B<AVSS09ViPERValidator> version information.
 
 =item B<--write> [I<directory>]
 
-Once validation has been completed for a given file, B<AVSS09ViperValidator> will write a new XML representation of this file to either the standard output (if I<directory> is not set), or will create a file with the same name as the input file in I<directory> (if specified).
+Once validation has been completed for a given file, B<AVSS09ViPERValidator> will write a new XML representation of this file to either the standard output (if I<directory> is not set), or will create a file with the same name as the input file in I<directory> (if specified).
 
 =item B<--WriteMemDump> [I<mode>]
 
@@ -589,36 +589,36 @@ Syntax: S<[:B<FSshift>][@B<BBmod>][#B<IDadd>]>
 
 =item B<FSshift>
 
-It is the number of frames to add or substract from every framespan within the specified file.
+It is the number of frames to add or subtract from every framespan within the specified file.
 
 =item B<BBmod>
 
-It is the I<bounding box> modifications of the form S<I<X>+I<Y>xI<M>>, where I<X> and I<Y> add or substract and I<M> multiply.
+It is the I<bounding box> modifications of the form S<I<X>+I<Y>xI<M>>, where I<X> and I<Y> add or subtract and I<M> multiply.
 
 =item B<IDadd>
 
-It is the number of ID to add or substract to every PERSON ID seen within the specified file.
+It is the number of ID to add or subtract to every PERSON ID seen within the specified file.
 
 =back
 
 =head1 USAGE
 
-=item B<AVSS09ViperValidator --xmllint /local/bin/xmllint --TrecVid08xsd /local/F4DE-CVS/data sys_test1.xml>
+=item B<AVSS09ViPERValidator --xmllint /local/bin/xmllint --TrecVid08xsd /local/F4DE-CVS/data sys_test1.xml>
 
 Will try to validate the I<system> file I<sys_test1.xml> using the I<xmllint> executable located at I</local/bin/xmllint> and the required XSD files found in the I</local/F4DE/data> directory.
 
-=item B<AVSS09ViperValidator --gtf ref_test1.xml:100@-10+20x0.5#5 ref_test2.xml --frameTol 5 --write /tmp --WriteMemDump text>
+=item B<AVSS09ViPERValidator --gtf ref_test1.xml:100@-10+20x0.5#5 ref_test2.xml --frameTol 5 --write /tmp --WriteMemDump text>
 
 Will try to validate the I<reference> files I<ref_test1.xml> and I<ref_test2.xml> using a tolerance of 5 frames for attributes to be ouside of the object framespan.
 For I<ref_test1.xml>, it will also add 100 frames to each framespan found within the file, modify the I<bounding box> by substracting 10 from each X coordinate, adding 20 to each Y, and multiplying each resulting coordinate by 0.5, and add 5 to each object ID seen. 
 It will then write to the I</tmp> directory a XML rewrite of both files, as well as a ViPER file memory represenation (in text format) and a scoring sequence memory representation.
 
-=item B<AVSS09ViperValidator sys_test1.xml sys_test2.xml --ForceFilename ff.xml --write /tmp --WriteMemDump gzip --skipScoringSequenceMemDump>
+=item B<AVSS09ViPERValidator sys_test1.xml sys_test2.xml --ForceFilename ff.xml --write /tmp --WriteMemDump gzip --skipScoringSequenceMemDump>
 
 Will try to validate the I<system> files I<sys_test1.xml> and I<sys_test2.xml>, changing for files the I<sourcefile filename> within to I<ff.xml>.
 Then write into the I</tmp> directory both files and their ViPER file memory represenation (in compressed format, to save some disk space). 
 
-=item B<AVSS09ViperValidator --gtf gtf_test1.xml gtf_test2.xml --write /tmp --WriteMemDump gzip --ECF test_ecf.xml --TrackingTrialsID --trackingTrial CPSPT_01>
+=item B<AVSS09ViPERValidator --gtf gtf_test1.xml gtf_test2.xml --write /tmp --WriteMemDump gzip --ECF test_ecf.xml --TrackingTrialsDir --trackingTrial CPSPT_01>
 
 Will try to validate the I<reference> files I<gtf_test1.xml> and I<gtf_test2.xml>.
 It will then write XML and both XML file and Scoring Sequence MemDumps into the I</tmp> directory the files corresponding to the I<test_ecf.xml> I<ECF> definition of the I<CPSCPT_01> I<tracking trial ID>, following a directory structure that can be used by the I<AVSS09Scorer> tool.
@@ -649,7 +649,7 @@ $versionid
 
 Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--gtf] [--frameTol framenbr] [--ForceFilename file] [--write [directory] [--WriteMemDump [mode] [--skipScoringSequenceMemDump]] [--overwriteNot]] [--ECF ecffile.xml [--TrackingTrialsDir] [--trackingTrial ttid] [--AVSSxsd location]] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
 
-Will perform a semantic validation of the AVSS09 Viper XML file(s) provided.
+Will perform a semantic validation of the AVSS09 ViPER XML file(s) provided.
 
  Where:
   --help          Print this usage information and exit
@@ -680,7 +680,7 @@ Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'CLEAR.xsd' file
 - Program will ignore the <config> section of the XML file.
 - Program will disard any xml comment(s).
-- 'CLEARxsd' files are the same as needed by CLEARDTViperValidator
+- 'CLEARxsd' files are the same as needed by CLEARDTViPERValidator
 EOF
 ;
 
