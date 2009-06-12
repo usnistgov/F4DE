@@ -22,9 +22,9 @@
 
 Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
 
-     Reference File     System Output File      Video       Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    
-------------------------------------------------------------------------------------------------------------------------------
-  TEST_FILE2.CLEAR.XML  TEST_FILE2.SYS.XML  TEST_FILE2.MOV  PERSON  1.000000  1.000000  1.000000  1.000000  1.000000  1.000000
+     Reference File     System Output File      Video       Object    MOTA    
+----------------------------------------------------------------------------
+  TEST_FILE2.CLEAR.XML  TEST_FILE2.SYS.XML  TEST_FILE2.MOV  PERSON  1.000000
 
 
 ***** DONE *****
