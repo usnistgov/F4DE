@@ -57,7 +57,7 @@ sub do_simple_test {
   $totest++;
 
   my $tdir = "/tmp/AVSS09Scorer_tester-Temp_$testname";
-  `rm -rf $tdir` if (-e $tdir);
+  `rm -rf $tdir` if (-e $tdir); # Erase the previous one if present
   MMisc::error_quit("Could not make temporary dir for testing ($tdir)")
     if (! MMisc::make_dir($tdir));
   my $sdir = "$tdir/SYS";
