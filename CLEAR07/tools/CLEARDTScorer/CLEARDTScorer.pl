@@ -239,6 +239,13 @@ foreach my $ref_file (@ref_seqs) {
     print "Could not find matching system output file for " . $ref_file->{'filename'} . ". Skipping file\n" if (! $checkFlag);
 }
 
+my ($sfda_add, $ata_add, $moda_add, $modp_add, $mota_add, $motp_add) 
+  = (1, 1, 1, 1, 1, 1);
+# Note: For 'AVSS09' we are only interested in the MOTA, so if 'spmode'
+#       is set to AVSS09, skip the scoring and set all values to NA
+($sfda_add, $ata_add, $moda_add, $modp_add, $motp_add) = (0, 0, 0, 0, 0)
+  if ($spmode eq $spmode_list[0]);
+
 # Start processing
 my $ndone = 0;
 my ($gtSequence, $sysSequence, $ref_eval_obj, $sys_eval_obj);
@@ -262,27 +269,42 @@ foreach my $ref_sys_pair (@files_to_be_processed){
   
   MMisc::error_quit("Not possible to evaluate two different evaluation objects. Ground truth object: $ref_eval_obj\t System output object: $sys_eval_obj\n")
       if ($ref_eval_obj ne $sys_eval_obj);
+
+  # SFDA & ATA
+  if ($sfda_add) {
+    $sfda = $gtSequence->computeSFDA($sysSequence, $eval_type, $det_thres, $bin);
+    MMisc::error_quit("Error computing 'SFDA' (" . $gtSequence->get_errormsg() . ")")
+        if ($gtSequence->error());
+  }
+  if ($ata_add) {
+    $ata = $gtSequence->computeATA($sysSequence, $eval_type, $trk_thres, $bin);
+    MMisc::error_quit("Error computing 'ATA' (" . $gtSequence->get_errormsg() . ")")
+        if ($gtSequence->error());
+  }
   
-  $sfda = $gtSequence->computeSFDA($sysSequence, $eval_type, $det_thres, $bin);
-  MMisc::error_quit("Error computing 'SFDA' (" . $gtSequence->get_errormsg() . ")")
-      if ($gtSequence->error());
-  $ata = $gtSequence->computeATA($sysSequence, $eval_type, $trk_thres, $bin);
-  MMisc::error_quit("Error computing 'ATA' (" . $gtSequence->get_errormsg() . ")")
-      if ($gtSequence->error());
+  # MODA & MODP
+  if ($moda_add) {
+    $moda = $gtSequence->computeMODA($sysSequence, $CostMiss, $CostFA, $eval_type, $det_thres, $bin);
+    MMisc::error_quit("Error computing 'MODA' (" . $gtSequence->get_errormsg() . ")")
+        if ($gtSequence->error());
+  }
+  if ($modp_add) {
+    $modp = $gtSequence->computeMODP($sysSequence, $eval_type, $det_thres, $bin);
+    MMisc::error_quit("Error computing 'MODP' (" . $gtSequence->get_errormsg() . ")")
+        if ($gtSequence->error());
+  }
 
-  $moda = $gtSequence->computeMODA($sysSequence, $CostMiss, $CostFA, $eval_type, $det_thres, $bin);
-  MMisc::error_quit("Error computing 'MODA' (" . $gtSequence->get_errormsg() . ")")
-      if ($gtSequence->error());
-  $modp = $gtSequence->computeMODP($sysSequence, $eval_type, $det_thres, $bin);
-  MMisc::error_quit("Error computing 'MODP' (" . $gtSequence->get_errormsg() . ")")
-      if ($gtSequence->error());
-
-  $mota = $gtSequence->computeMOTA($sysSequence, $CostMiss, $CostFA, $CostIS, $eval_type, $trk_thres, $bin);
-  MMisc::error_quit("Error computing 'MOTA' (" . $gtSequence->get_errormsg() . ")")
-      if ($gtSequence->error());
-  $motp = $gtSequence->computeMOTP($sysSequence, $eval_type, $trk_thres, $bin);
-  MMisc::error_quit("Error computing 'MOTP' (" . $gtSequence->get_errormsg() . ")")
-      if ($gtSequence->error());
+  # MOTA & MOTP
+  if ($mota_add) {
+    $mota = $gtSequence->computeMOTA($sysSequence, $CostMiss, $CostFA, $CostIS, $eval_type, $trk_thres, $bin);
+    MMisc::error_quit("Error computing 'MOTA' (" . $gtSequence->get_errormsg() . ")")
+        if ($gtSequence->error());
+  }
+  if ($motp_add) {
+    $motp = $gtSequence->computeMOTP($sysSequence, $eval_type, $trk_thres, $bin);
+    MMisc::error_quit("Error computing 'MOTP' (" . $gtSequence->get_errormsg() . ")")
+        if ($gtSequence->error());
+  }
 
   &add_data2sat($results, $ndone+1, $gtSequence->getSeqFileName, $sysSequence->getSeqFileName, $gtSequence->getSourceFileName, $ref_eval_obj, $eval_type, $sfda, $ata, $moda, $modp, $mota, $motp);
 
@@ -396,35 +418,34 @@ sub get_sys_ref_filelist {
 sub add_data2sat {
   my ($sat, $runid, $reffilename, $sysfilename, $videofilename, 
       $evalobj, $evaltype, $sfda, $ata, $moda, $modp, $mota, $motp) = @_;
+  
+  $sfda = sprintf("%.6f", $sfda);
+  $ata = sprintf("%.6f", $ata);
+  $moda = sprintf("%.6f", $moda);
+  $modp = sprintf("%.6f", $modp);
+  $mota = sprintf("%.6f", $mota);
+  $motp = sprintf("%.6f", $motp);
+  
+  $sat->addData($reffilename, "Reference File", $runid);
+  $sat->addData($sysfilename, "System Output File", $runid);
+  $sat->addData($videofilename, "Video", $runid);
+  $sat->addData($evalobj, "Object", $runid);
 
- $sfda = sprintf("%.6f", $sfda);
- $ata = sprintf("%.6f", $ata);
- $moda = sprintf("%.6f", $moda);
- $modp = sprintf("%.6f", $modp);
- $mota = sprintf("%.6f", $mota);
- $motp = sprintf("%.6f", $motp);
-
- $sat->addData($reffilename, "Reference File", $runid);
- $sat->addData($sysfilename, "System Output File", $runid);
- $sat->addData($videofilename, "Video", $runid);
- $sat->addData($evalobj, "Object", $runid);
- if ($evaltype eq "Area") {
-     $sat->addData($sfda, "SFDA", $runid);
-     $sat->addData($ata, "ATA", $runid);
-     $sat->addData($moda, "MODA", $runid);
-     $sat->addData($modp, "MODP", $runid);
-     $sat->addData($mota, "MOTA", $runid);
-     $sat->addData($motp, "MOTP", $runid);
- }
- else {
-     $sat->addData($sfda, "SFDA-D", $runid);
-     $sat->addData($ata, "ATA-D", $runid);
-     $sat->addData($moda, "MODA", $runid);
-     $sat->addData($modp, "MODP-D", $runid);
-     $sat->addData($mota, "MOTA", $runid);
-     $sat->addData($motp, "MOTP-D", $runid);
- }
-
+  if ($evaltype eq "Area") {
+    $sat->addData($sfda, "SFDA", $runid) if ($sfda_add);
+    $sat->addData($ata, "ATA", $runid)   if ($ata_add);
+    $sat->addData($moda, "MODA", $runid) if ($moda_add);
+    $sat->addData($modp, "MODP", $runid) if ($modp_add);
+    $sat->addData($mota, "MOTA", $runid) if ($mota_add);
+    $sat->addData($motp, "MOTP", $runid) if ($motp_add);
+  } else {
+    $sat->addData($sfda, "SFDA-D", $runid) if ($sfda_add);
+    $sat->addData($ata, "ATA-D", $runid)   if ($ata_add);
+    $sat->addData($moda, "MODA", $runid)   if ($moda_add);
+    $sat->addData($modp, "MODP-D", $runid) if ($modp_add);
+    $sat->addData($mota, "MOTA", $runid)   if ($mota_add);
+    $sat->addData($motp, "MOTP-D", $runid) if ($motp_add);
+  }
 }
 
 ########################################
