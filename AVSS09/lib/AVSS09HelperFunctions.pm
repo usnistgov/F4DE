@@ -70,10 +70,8 @@ sub VF_write_XML_MemDumps {
 
   if ((! MMisc::is_blank($fname)) && (! $ov)) {
     my $efn = AVSS09ViperFile::get_XML_filename($fname);
-    if (MMisc::does_file_exists($efn)) {
-      MMisc::warn_print("Output ViperFile ($efn) already exists, and overwrite not requested, skippping XML and MemDumps (if any) rewrite");
-      return($efn);
-    }
+    MMisc::error_quit("Output ViperFile ($efn) already exists, and overwrite not requested, stopping any further processing")
+        if (MMisc::does_file_exists($efn));
   }
 
   my ($err, $ndf) = $vf->write_XML($fname, $isgtf, $stdouttext);
