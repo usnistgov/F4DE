@@ -365,10 +365,8 @@ sub __write_autoselect_ttid_VF {
   my $dd = &_get_ttid_dd($sffn, $rttid, $isgtf);
   my $df = "$dd/$sffn.xml";
   my $efn = AVSS09ViperFile::get_XML_filename($df);
-  if ((! $ovwrt) && (MMisc::does_file_exists($efn))) {
-    MMisc::warn_print("Output ViperFile ($efn) already exists, and overwrite not requested, skippping XML and MemDumps (if any) rewrite");
-    return($efn);
-  }
+  MMisc::error_quit("Output ViperFile ($efn) already exists, and overwrite not requested, stopping further processing")
+      if ((! $ovwrt) && (MMisc::does_file_exists($efn)));
 
   return(&__write_GTF_ttid_VF($vf, $rttid, $sffn, $efn))
     if ($isgtf);
@@ -517,7 +515,8 @@ Replace the I<sourcefile>'s I<filename> value by I<file>.
 
 =item B<--frameTol> I<framenbr>
 
-The frame tolerance allowed for attributes to be outside of the object framespan
+The frame tolerance allowed for attributes to be outside of the object framespan.
+Default value can be obtained by using B<--help>.
 
 =item B<--gtf>
 
@@ -533,7 +532,7 @@ Display this man page.
 
 =item B<--overwriteNot>
 
-When rewriting XML or MemDumps, the default is to overwrite previously generated files. This option inhibit this feature and will force files to not be overwritten.
+When rewriting XML or MemDumps, the default is to overwrite previously generated files. This option inhibit this feature: it will force files to not be overwritten and the program will exit with an error status.
 
 =item B<--skipScoringSequenceMemDump>
 
@@ -594,10 +593,13 @@ It is the number of frames to add or subtract from every framespan within the sp
 =item B<BBmod>
 
 It is the I<bounding box> modifications of the form S<I<X>+I<Y>xI<M>>, where I<X> and I<Y> add or subtract and I<M> multiply.
+Such that if a I<bounding box> if defined by S<x,y,h,w>, S<new x = (x * M) + X>, S<new y = (y * M) + Y>, S<new h = h * M>, and <new w = w * M>.
+
 
 =item B<IDadd>
 
 It is the number of ID to add or subtract to every PERSON ID seen within the specified file.
+Such that if a I<person ID> is S<ID>, then S<new ID = ID + IDadd>. 
 
 =back
 
