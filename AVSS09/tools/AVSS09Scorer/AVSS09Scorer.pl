@@ -794,7 +794,7 @@ The validation tool will create the files required for scoring, the most importa
 
 S<AVSS09Scorer --writedir newResultsDir --dirGTF GTFdir --DirSYS SYSdir --skipValidation sys_files/* --gtf ref_files/*>
 
-This will not perform the validation step; it will still confirm that the S<Scoring Scoring MemDump> files needed for scoring are present.
+This will not perform the validation step; it will still confirm that the S<Scoring Sequence MemDump> files needed for scoring are present.
 
 This relies on both the I<GTFdir> and I<SYSdir> directories to have been filled by a previous validation process,
 
@@ -978,7 +978,7 @@ onto which it will have applied the I<evaluation framespan> specific to this tti
 
 It will discard I<ref3.xml> and I<sys3.xml> as their sourcefile's filename is not listed in the ECF.
 
-=item post running the external validation tool, the wrapper will confirm that for the I<CPSTP01> and I<SCSPT05b> ttid, the I<Scoring Sequence MemDump> files are available in the I<ValSYS> and I <ValGTF> directories (following the special directory structure)
+=item post running the external validation tool, the wrapper will confirm that for the I<CPSTP01> and I<SCSPT05b> ttid, the I<Scoring Sequence MemDump> files are available in the I<ValSYS> and I<ValGTF> directories (following the special directory structure)
 
 =item use B<CLEARDTScorer> for scoring in turn each I<tracking trial ID> using only the I<Scoring Sequence MemDump> needed for it.
 
