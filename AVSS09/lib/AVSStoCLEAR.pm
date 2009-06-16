@@ -1361,6 +1361,9 @@ sub _adapt_clip {
   $name =~ s%^\/%file:\/\/%;
   $name =~ s/\s/\%20/g;
 
+  $name =~ s%^.+/%%;
+  $name =~ s%(\.mov)$%$1.deint.mpeg%;
+
   return($name);
 }
 
