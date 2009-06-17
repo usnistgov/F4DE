@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
-# TrecVid08 Event Detection Submission Checker
+# TrecVid Event Detection Submission Checker
 #
 # Author(s): Martial Michel
 #
@@ -10,7 +10,7 @@
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "TrecVid08 Event Detection Submission Checker" is an experimental system.
+# "TrecVid Event Detection Submission Checker" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -32,7 +32,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "TrecVid08 Event Detection Submission Checker Version: $version";
+my $versionid = "TrecVid Event Detection Submission Checker Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -127,9 +127,10 @@ my $gdoepmd = 0;
 my $qins = 0;
 my $cont_md = 0;
 my $use_bigxml = 0;
+my $specfile = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:  BC                T VW    bcdef h        q s uvwx   #
+# Used:  BC               ST VW    bcdef h        q s uvwx   #
 
 my %opt = ();
 GetOptions
@@ -153,6 +154,7 @@ GetOptions
    'Continue_MemDump' => \$cont_md,
    'bigXML'           => \$use_bigxml,
    'BigXML=s'         => \$BigXMLtool,
+   'Specfile=s'       => \$specfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -165,6 +167,12 @@ if ($opt{'man'}) {
 
 MMisc::error_quit("No arguments left on command line\n\n$usage\n")
   if (scalar @ARGV == 0);
+
+MMisc::error_quit("No \'Specfile\' given, will not continue processing\n\n$usage\n")
+  if (MMisc::is_blank($specfile));
+my $err = MMisc::check_file_r($specfile);
+MMisc::error_quit("Problem with \'Specfile\' ($specfile) : $err")
+  if (! MMisc::is_blank($err));
 
 if ($xmllint ne "") {
   MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
@@ -205,9 +213,9 @@ if (defined $memdump) {
     if (! MMisc::is_blank($derr));
 } else {
   MMisc::error_quit("\'Continue_MemDump\' can only be used if \'WriteMemDump\' is selected")
-    if ($cont_md == 0);
+    if ($cont_md);
   MMisc::error_quit("\'bigXML\' can only be used if \'WriteMemDump\' is selected")
-    if (! $use_bigxml);
+    if ($use_bigxml);
 }
 
 my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
@@ -225,17 +233,33 @@ if ($useECF) {
 ########################################
 
 # Expected values
-my @expected_year = ( "2008" );
-my @expected_task = ( "retroED" );
-my @expected_data = ( "DEV08", "EVAL08" ); # keep Order
-my @expected_lang = ( "ENG" );
-my @expected_input = ( "s-camera" );
-my @expected_sysid_beg = ( "p-", "c-" );
+my @expected_year;
+my @expected_task;
+my @expected_data;
+my @expected_lang;
+my @expected_input;
+my @expected_sysid_beg;
+my @expected_dir_output;
+my %expected_sffn;
+my %exp_ext_cmd;
 
-my @expected_dir_output = ( "output" );
+my $tmpstr = MMisc::slurp_file($specfile);
+MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
+  if (! defined $tmpstr);
+eval $tmpstr;
 
-my %expected_sffn = &_set_expected_sffn();
-my %exp_ext_cmd = &_set_exp_ext_cmd();
+MMisc::error_quit("Missing data in \'Specfile\' ($specfile)")
+  if (
+    (scalar @expected_year == 0)
+    || (scalar @expected_task == 0)
+    || (scalar @expected_data == 0)
+    || (scalar @expected_lang == 0)
+    || (scalar @expected_input == 0)
+    || (scalar @expected_sysid_beg == 0)
+    || (scalar @expected_dir_output == 0)
+    || (scalar keys %expected_sffn == 0)
+    || (scalar keys %exp_ext_cmd == 0)
+  );
 
 my $doepmd = 0;
 
@@ -895,84 +919,6 @@ sub vprint {
 
 ############################################################
 
-sub _set_expected_sffn {
-  my %tmp = (
-    $expected_data[0] =>
-    {
-     'LGW_20071101_E1_CAM1' => 'LGW_20071101_E1_CAM1.mpeg',
-     'LGW_20071101_E1_CAM2' => 'LGW_20071101_E1_CAM2.mpeg',
-     'LGW_20071101_E1_CAM3' => 'LGW_20071101_E1_CAM3.mpeg',
-     'LGW_20071101_E1_CAM4' => 'LGW_20071101_E1_CAM4.mpeg',
-     'LGW_20071101_E1_CAM5' => 'LGW_20071101_E1_CAM5.mpeg',
-     'LGW_20071106_E1_CAM1' => 'LGW_20071106_E1_CAM1.mpeg',
-     'LGW_20071106_E1_CAM2' => 'LGW_20071106_E1_CAM2.mpeg',
-     'LGW_20071106_E1_CAM3' => 'LGW_20071106_E1_CAM3.mpeg',
-     'LGW_20071106_E1_CAM4' => 'LGW_20071106_E1_CAM4.mpeg',
-     'LGW_20071106_E1_CAM5' => 'LGW_20071106_E1_CAM5.mpeg',
-     'LGW_20071107_E1_CAM1' => 'LGW_20071107_E1_CAM1.mpeg',
-     'LGW_20071107_E1_CAM2' => 'LGW_20071107_E1_CAM2.mpeg',
-     'LGW_20071107_E1_CAM3' => 'LGW_20071107_E1_CAM3.mpeg',
-     'LGW_20071107_E1_CAM4' => 'LGW_20071107_E1_CAM4.mpeg',
-     'LGW_20071107_E1_CAM5' => 'LGW_20071107_E1_CAM5.mpeg',
-     'LGW_20071108_E1_CAM1' => 'LGW_20071108_E1_CAM1.mpeg',
-     'LGW_20071108_E1_CAM2' => 'LGW_20071108_E1_CAM2.mpeg',
-     'LGW_20071108_E1_CAM3' => 'LGW_20071108_E1_CAM3.mpeg',
-     'LGW_20071108_E1_CAM4' => 'LGW_20071108_E1_CAM4.mpeg',
-     'LGW_20071108_E1_CAM5' => 'LGW_20071108_E1_CAM5.mpeg',
-     'LGW_20071112_E1_CAM1' => 'LGW_20071112_E1_CAM1.mpeg',
-     'LGW_20071112_E1_CAM2' => 'LGW_20071112_E1_CAM2.mpeg',
-     'LGW_20071112_E1_CAM3' => 'LGW_20071112_E1_CAM3.mpeg',
-     'LGW_20071112_E1_CAM4' => 'LGW_20071112_E1_CAM4.mpeg',
-     'LGW_20071112_E1_CAM5' => 'LGW_20071112_E1_CAM5.mpeg',
-    },
-    $expected_data[1] =>
-    { 
-      'LGW_20071123_E1_CAM1' => 'LGW_20071123_E1_CAM1.mpeg',
-      'LGW_20071123_E1_CAM2' => 'LGW_20071123_E1_CAM2.mpeg',
-      'LGW_20071123_E1_CAM3' => 'LGW_20071123_E1_CAM3.mpeg',
-      'LGW_20071123_E1_CAM4' => 'LGW_20071123_E1_CAM4.mpeg',
-      'LGW_20071123_E1_CAM5' => 'LGW_20071123_E1_CAM5.mpeg',
-      'LGW_20071130_E1_CAM1' => 'LGW_20071130_E1_CAM1.mpeg',
-      'LGW_20071130_E1_CAM2' => 'LGW_20071130_E1_CAM2.mpeg',
-      'LGW_20071130_E1_CAM3' => 'LGW_20071130_E1_CAM3.mpeg',
-      'LGW_20071130_E1_CAM4' => 'LGW_20071130_E1_CAM4.mpeg',
-      'LGW_20071130_E1_CAM5' => 'LGW_20071130_E1_CAM5.mpeg',
-      'LGW_20071130_E2_CAM1' => 'LGW_20071130_E2_CAM1.mpeg',
-      'LGW_20071130_E2_CAM2' => 'LGW_20071130_E2_CAM2.mpeg',
-      'LGW_20071130_E2_CAM3' => 'LGW_20071130_E2_CAM3.mpeg',
-      'LGW_20071130_E2_CAM4' => 'LGW_20071130_E2_CAM4.mpeg',
-      'LGW_20071130_E2_CAM5' => 'LGW_20071130_E2_CAM5.mpeg',
-      'LGW_20071206_E1_CAM1' => 'LGW_20071206_E1_CAM1.mpeg',
-      'LGW_20071206_E1_CAM2' => 'LGW_20071206_E1_CAM2.mpeg',
-      'LGW_20071206_E1_CAM3' => 'LGW_20071206_E1_CAM3.mpeg',
-      'LGW_20071206_E1_CAM4' => 'LGW_20071206_E1_CAM4.mpeg',
-      'LGW_20071206_E1_CAM5' => 'LGW_20071206_E1_CAM5.mpeg',
-      'LGW_20071207_E1_CAM1' => 'LGW_20071207_E1_CAM1.mpeg',
-      'LGW_20071207_E1_CAM2' => 'LGW_20071207_E1_CAM2.mpeg',
-      'LGW_20071207_E1_CAM3' => 'LGW_20071207_E1_CAM3.mpeg',
-      'LGW_20071207_E1_CAM4' => 'LGW_20071207_E1_CAM4.mpeg',
-      'LGW_20071207_E1_CAM5' => 'LGW_20071207_E1_CAM5.mpeg',
-    }
-    );
-
-  return(%tmp);
-}
-
-sub _set_exp_ext_cmd {
-  my %tmp = 
-    (
-     $expected_ext[0] => "tar xfz",
-     $expected_ext[1] => "tar xf",
-     $expected_ext[2] => "tar xfz",
-     $expected_ext[3] => "tar xfj",
-     $expected_ext[4] => "unzip",
-    );
-
-  return(%tmp);
-}
-
-##############################
-
 sub _warn_add {
   $warn_msg .= "[Warning] " . join(" ", @_) ."\n";
 }
@@ -983,11 +929,12 @@ sub _warn_add {
 
 =head1 NAME
 
-TV08ED-Submission Checker - TrecVid08 Event Detection Submission Checker
+TVED-Submission Checker - TrecVid Event Detection Submission Checker
 
 =head1 SYNOPSIS
 
-B<TV08ED-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
+B<TVED-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
+  S<B<--Specfile> I<perlEvalfile>> 
   S<[B<--xmllint> I<location>] [B<--TrecVid08xsd> I<location>]>
   S<[B<--ecf> I<ecffile> B<--fps> I<fps>]>
   S<[B<--skip_validation>]>
@@ -1001,8 +948,11 @@ B<TV08ED-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
 
 =head1 DESCRIPTION
 
-B<TV08ED-SubmissionChecker> is a I<TrecVid08 Event Detection Sumbission Checker> program designed to confirm that a submission archive follows the guidelines posted in the I<Submission Instructions> (Appendix B) of the I<TRECVid Event Detection Evaluation Plan>.
+B<TVED-SubmissionChecker> is a I<TrecVid Event Detection Sumbission Checker> program designed to confirm that a submission archive follows the guidelines posted in the I<Submission Instructions> of the I<TRECVid Event Detection Evaluation Plan>.
+ 
 The software will confirm that an archive's files and directory structure conforms with the I<Submission Instructions>, and will validate the SYS XML files.
+
+It is written to be functional with both TRECVid08 and TRECVid09 but using a B<Specfile> that contains needed definitions (distributed as part of the F4DE archive).
 
 In the case of B<--work_in_dir>, S<last_parameter> is the E<lt>SITEE<gt>.
 In all other cases, S<last_parameter> is the archive file to process in the E<lt>I<SITE>E<gt>_E<lt>I<SUB-NUM>E<gt>.I<extension> form (recognized extensions are available using the B<--help> option).
@@ -1011,7 +961,7 @@ Supported archive formats list can be obtained using B<--help>.
 
 =head1 PREREQUISITES
 
-B<TV08ED-SubmissionChecker> ViPER files need to pass the B<TV08ViperValidator> validation process. The program relies on the following software and files.
+B<TVED-SubmissionChecker> ViPER files need to pass the B<TV08ViperValidator> validation process. The program relies on the following software and files.
  
 =over
 
@@ -1036,9 +986,9 @@ Once you have installed the software, setting B<F4DE_BASE> to the installation l
 
 =head1 GENERAL NOTES
 
-B<TV08ED-SubmissionChecker> expects that the system and reference ViPER files can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
+B<TVED-SubmissionChecker> expects that the system and reference ViPER files can be been validated using 'xmllint' against the TrecVid08 XSD file(s) (see B<--help> for files list).
 
-B<TV08ED-SubmissionChecker> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
+B<TVED-SubmissionChecker> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
 
 =head1 OPTIONS
 
@@ -1084,6 +1034,10 @@ If for any reason, any submission file or step is non scorable, quit when an err
 
 Display this man page.
 
+=item B<--Specfile> I<perlEvalfile>
+
+Specify the I<perEvalfile> that contains definitions specific to the evaluation checked against.
+
 =item B<--skip_validation>
 
 Do not perform XML validation on the ViPER files within the archive.
@@ -1102,7 +1056,7 @@ Print a verbose log of every task being performed before performing it, and in s
 
 =item B<--version>
 
-Display B<TV08ED-SubmissionChecker> version information.
+Display B<TVED-SubmissionChecker> version information.
 
 =item B<--WriteMemDump> I<dir>
 
@@ -1124,15 +1078,15 @@ Can also be set using the B<F4DE_XMLLINT> environment variable.
 
 =head1 USAGE
 
-=item B<TV08ED-SubmissionChecker SITE_3.tgz>
+=item B<TVED-SubmissionChecker SITE_3.tgz>
 
 Will perform a submission check on archive file I<SITE_3.tgz> in a temporarily created directory.
 
-=item B<TV08ED-SubmissionChecker SITE_3.tgz --uncompress_dir testdir --skip_validation --dryrun>
+=item B<TVED-SubmissionChecker SITE_3.tgz --uncompress_dir testdir --skip_validation --dryrun>
 
 Will perform a submission check on archive file I<SITE_3.tgz>, uncompressing its content in the I<testdir> directory. This will also not try to validate the XML files, it will simply confirm that the directory structure, and that all the files are present. It will not check the content of the E<lt>EXP-IDE<gt> txt file for the S<Events_Processed:> entry. 
 
-=item B<TV08ED-SubmissionChecker SITE --work_in_dir testdir -ecf ecfile.xml --fps 25>
+=item B<TVED-SubmissionChecker SITE --work_in_dir testdir -ecf ecfile.xml --fps 25>
 
 Will check that the files and directories in I<testdir> are the expected ones. It will check the txt file for the S<Events_Processed:> entry. It will also confirm that the XML files validate against the XML strucutre. It will confirm that the content of the XML files be matched against the ECF file (using a frame per second rate of 25) to permit scoring (the scorer will refuse to process those XML files if one or more of the file listed in the ECF is missing).
 
@@ -1161,9 +1115,9 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version | --man] [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir [--create_Events_Processed_file] [--Continue_MemDump]] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_if_non_scorable] [--bigXML [--BigXML location]] last_parameter
+Usage: $0 [--help | --version | --man] --Specfile perlEvalfile [--xmllint location] [--TrecVid08xsd location] [--ecf ecffile --fps fps] [--skip_validation] [--WriteMemDump dir [--create_Events_Processed_file] [--Continue_MemDump]] [--dryrun_mode] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_if_non_scorable] [--bigXML [--BigXML location]] last_parameter
 
-Will confirm that a submission file conforms to the 'Submission Instructions' (Appendix B) of the 'TRECVid Event Detection Evaluation Plan'.
+Will confirm that a submission file conforms to the 'Submission Instructions' (Appendix B) of the 'TRECVid Event Detection Evaluation Plan'. The program needs a 'Specfile' to load some of its eval specific definitions.
 
 'last_parameter' is usually the archive file(s) to process (of the form <SITE>_<SUB-NUM>.extension, example: NIST_2.tgz)
 Only in the '--work_in_dir' case does it become <SITE>.
@@ -1172,6 +1126,7 @@ Only in the '--work_in_dir' case does it become <SITE>.
   --help          Print this usage information and exit
   --man           Print a more detailled manual page and exit (same as running: $mancmd)
   --version       Print version number and exit
+  --Specfile      Specify the \'perEvalfile\' that contains definitions specific to the evaluation run
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found
   --ecf           Specify the ECF file to load
