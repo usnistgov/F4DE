@@ -12,7 +12,8 @@ all:
 	@echo ""
 	@make from_installdir
 	@make dist_head
-	@echo ${F4DE_VERSION}
+	@echo "Version Information : " `cat ${F4DE_VERSION}`
+	@echo ""
 	@echo "Possible options are:"
 	@echo ""
 	@echo "[checks section -- recommended to run before installation -- DO NOT set the F4DE_BASE environment variable]"
@@ -56,7 +57,7 @@ commoninstall:
 #####
 
 TV08DIR=TrecVid08
-TV08TOOLS=tools/{TV08ED-SubmissionChecker/TV08ED-SubmissionChecker.pl,TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
+TV08TOOLS=tools/{TV08ED-SubmissionChecker/{TVED-SubmissionChecker.pl,TV{08,09}ED-SubmissionChecker.sh},TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
 
 TV08install:
 	@echo ""
@@ -65,6 +66,7 @@ TV08install:
 	@echo "** Installing TrecVid08 files"
 	@perl installer.pl ${F4DE_BASE} lib ${TV08DIR}/lib/*.pm
 	@perl installer.pl ${F4DE_BASE} lib/data ${TV08DIR}/data/*.xsd
+	@perl installer.pl ${F4DE_BASE} lib/data ${TV08DIR}/data/*.perl
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${TV08DIR}/${TV08TOOLS}
 	@perl installer.pl ${F4DE_BASE} man/man1 ${TV08DIR}/man/*.1
 	@echo ""
