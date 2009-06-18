@@ -112,9 +112,10 @@ my $ecf_file = "";
 my $ovwrt = 0;
 my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
 my $docsv = 0;
+my $trackmota = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:   CDE         O   S  V      cd f          q s  vwx   #
+# Used: A CDE         O   ST V      cd fgh    m   q st vwx   #
 
 my %opt = ();
 my @leftover = ();
@@ -140,6 +141,7 @@ GetOptions
    'DirSYS=s'        => \$sysvaldir,
    'trackingTrial=s' => \$ttid,
    'csv'             => \$docsv,
+   'TrackMOTA'       => \$trackmota,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -350,6 +352,12 @@ sub do_single_scoring {
   $cmd .= " --Eval Area";
   $cmd .= " --SpecialMode AVSS09";
   $cmd .= " --csv $csvfile" if (! MMisc::is_blank($csvfile));
+  if ($trackmota) {
+    my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($logfile);
+    MMisc::error_quit("Problem splitting \'logfile\' into dir/file/ext: $err")
+      if (! MMisc::is_blank($err));
+    $cmd .= " --motaLogDir $d";
+  }
 
   my @command = ();
   push @command, $cmd;
@@ -763,7 +771,7 @@ B<AVSS09Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
   S<B<--writedir> I<directory> B<--dirGTF> I<directory> B<--DirSYS> I<directory>>
   S<[B<--frameTol> I<framenbr>]>
   S<[B<--Validator> I<tool>] [B<--Overwrite>] [B<--skipValidation>]>
-  S<[B<--Scorer> I<tool>] [B<--csv>]>
+  S<[B<--Scorer> I<tool>] [B<--csv>] [B<--TrackMOTA>]>
   S<[I<sys_file.xml> [I<...>] B<--gtf> I<ref_file.xml> [I<...>]]>
   
 =head1 DESCRIPTION
@@ -903,6 +911,10 @@ Specify the full path location of the B<CLEARDTScorer> program
 
 Do not perform the I<validation> step.
 
+=item B<--TrackMOTA>
+
+Create a MOTA computation tracking log in the directory where the scorer log is written.
+
 =item B<--trackingTrial> I<ttid>
 
 Only process validation and scoring for entries that are defined in the I<ECF> as part of the specified I<ttid>.
@@ -1012,7 +1024,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--ECF ecffile.xml [--trackingTrial ttid] [--AVSSxsd location]] --writedir directory --dirGTF directory --DirSYS directory [--frameTol framenbr] [--Validator tool] [--Overwrite] [--skipValidation] [--Scorer tool] [--csv] [sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--ECF ecffile.xml [--trackingTrial ttid] [--AVSSxsd location]] --writedir directory --dirGTF directory --DirSYS directory [--frameTol framenbr] [--Validator tool] [--Overwrite] [--skipValidation] [--Scorer tool] [--csv] [--TrackMOTA] [sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]]
 
 Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provided (System vs Reference).
 
@@ -1034,6 +1046,7 @@ Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provid
   --skipValidation  Skip the validation process (will still check files needed for scoring)
   --Scorer        Specify the full path location of the $scrtool_bt tool (if not in your path)
   --csv           Request results to be put into a CSV file
+  --TrackMOTA     Create a MOTA computation tracking log in the directory where the scorer log is written
 
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'CLEAR.xsd' file
