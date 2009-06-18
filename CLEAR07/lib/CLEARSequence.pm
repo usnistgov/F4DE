@@ -611,90 +611,126 @@ sub computeATA {
 #######################
 
 sub computeMOTA {
-    my ( $self, $other, $costMD, $costFA, $costIS, $eval_type, $thres, $bin ) = @_;
-    my ( $mota, $cerror, $cng );
+  my ($self, $other, $costMD, $costFA, $costIS, $eval_type, $thres, $bin,
+      $logfile ) = @_;
 
-    if (! defined $other ) { $self->_set_errormsg("Undefined system output"); return -1; }
+  if (! defined $other ) { $self->_set_errormsg("Undefined system output"); return -1; }
 
-    my $gtFrameList = $self->getFrameList();
-    my $soFrameList = $other->getFrameList();
+  my ( $mota, $cerror, $cng );
+  my $outstr = "";
 
-    # Just loop through the reference frames to evaluate. If systems report outside
-    # of these frames, those frames will not be evaluated.
-    # The reference annotations start one I-Frame earlier and end one I-Frame later
-    # than the framespan mentioned in the index files. So, exclude the first
-    # and the last frames from evaluation
+  if (defined $logfile) {
+    $outstr .= "MOTA = 1 - ( CostMD*SumMD + CostFA*SumFA + CostIS*(SumIDSplit + SumIDMerge) ) / NumberOfEvalGT\n";
+    $outstr .= "  with: [CostMD = $costMD] [CostFA = $costFA] [CostIS = $costIS]\n";
+  }
 
-    my ( $prevGTMap, $prevSOMap ) = ( {}, {} );
-    my @frameNums = MMisc::reorder_array_numerically(keys %$gtFrameList);
-    my @frame_dims = ($eval_type eq "Point") ? $self->getFrameDims() : ();
-    my $gtOcclCount = {};
-
-    for (my $loop = 1; $loop < $#frameNums; $loop++) {
-        my $gtFrame = $gtFrameList->{$frameNums[$loop]};
-        my $soFrame;
-        if (exists $soFrameList->{$frameNums[$loop]}) { $soFrame = $soFrameList->{$frameNums[$loop]}; }
-
-        if (! $gtFrame->getTrkOutDefined) { $gtFrame->computeAndSetTemporalMeasures($soFrame, $prevGTMap, $prevSOMap, $gtOcclCount, $thres, $bin, @frame_dims); }
-        if ( $gtFrame->error() ) { 
-            $self->_set_errormsg("Error while computing temporal measures (" . $gtFrame->get_errormsg() . ")" ); 
-            return -1; 
-        }
-
-        my ( %mdIDs, %faIDs, %idSplitObjIDs, %idMergeObjIDs, %evalGTIDs );
-        my ( $md, $fa, $idSplits, $idMerges, $numOfEvalGT ) = ( 0, 0, 0, 0, 0 );
-        
-        if (defined $gtFrame->getMissDetectIDs()) { %mdIDs = $gtFrame->getMissDetectIDs(); } 
-        if (defined $gtFrame->getFalseAlarmIDs()) { %faIDs = $gtFrame->getFalseAlarmIDs(); } 
-        if (defined $gtFrame->getIDSplitObjIDs()) { %idSplitObjIDs = $gtFrame->getIDSplitObjIDs(); } 
-        if (defined $gtFrame->getIDMergeObjIDs()) { %idMergeObjIDs = $gtFrame->getIDMergeObjIDs(); } 
-        if (defined $gtFrame->getEvalObjectIDs()) { %evalGTIDs = $gtFrame->getEvalObjectIDs(); }
-        if (%mdIDs) { $md = scalar keys %mdIDs; }
-        if (%faIDs) { $fa = scalar keys %faIDs; }
-        if (%idSplitObjIDs) { $idSplits = scalar keys %idSplitObjIDs; }
-        if (%idMergeObjIDs) { $idMerges = scalar keys %idMergeObjIDs; }
-        if (%evalGTIDs) { $numOfEvalGT = scalar keys %evalGTIDs; }
-
-        my $tmp = 0;
-        if ($md > 0) { 
-            $tmp += $md;
-            if (defined $cerror) { $cerror += $costMD*$md; }
-            else { $cerror = $costMD*$md; }
-        }
-
-        if ($fa > 0) { 
-            $tmp += $fa;
-            if (defined $cerror) { $cerror += $costFA*$fa; }
-            else { $cerror = $costFA*$fa; }
-        }
-
-        if ($idSplits > 0) {
-            $tmp += $idSplits;
-            if (defined $cerror) { $cerror += $costIS*$idSplits; }
-            else { $cerror = $costIS*$idSplits; }
-        }
-
-        if ($idMerges > 0) {
-            $tmp += $idMerges;
-            if (defined $cerror) { $cerror += $costIS*$idMerges; }
-            else { $cerror = $costIS*$idMerges; }
-        }
-
-        if ($numOfEvalGT > 0) {
-            if (defined $cng) { $cng += $numOfEvalGT; }
-            else { $cng = $numOfEvalGT; }
-        }
-
-        # print "FRAME NUMBER: $frameNums[$loop]\tERROR: $tmp\tNG: $numOfEvalGT\n"; 
-        # print "MD: $md\tFA: $fa\tSWITCH: " . ($idSplits + $idMerges) . "\n";
-
+  my $gtFrameList = $self->getFrameList();
+  my $soFrameList = $other->getFrameList();
+  
+  # Just loop through the reference frames to evaluate. If systems report outside
+  # of these frames, those frames will not be evaluated.
+  # The reference annotations start one I-Frame earlier and end one I-Frame later
+  # than the framespan mentioned in the index files. So, exclude the first
+  # and the last frames from evaluation
+  
+  my ( $prevGTMap, $prevSOMap ) = ( {}, {} );
+  my %opgtm = ();
+  my @frameNums = MMisc::reorder_array_numerically(keys %$gtFrameList);
+  my @frame_dims = ($eval_type eq "Point") ? $self->getFrameDims() : ();
+  my $gtOcclCount = {};
+  
+  my ($sumMD, $sumFA, $sumIDsplit, $sumIDmerge) = (0, 0, 0, 0);
+  
+  for (my $loop = 1; $loop < $#frameNums; $loop++) {
+    my $gtFrame = $gtFrameList->{$frameNums[$loop]};
+    my $soFrame;
+    if (exists $soFrameList->{$frameNums[$loop]}) { $soFrame = $soFrameList->{$frameNums[$loop]}; }
+    
+    if (! $gtFrame->getTrkOutDefined) { $gtFrame->computeAndSetTemporalMeasures($soFrame, $prevGTMap, $prevSOMap, $gtOcclCount, $thres, $bin, @frame_dims); }
+    if ( $gtFrame->error() ) { 
+      $self->_set_errormsg("Error while computing temporal measures (" . $gtFrame->get_errormsg() . ")" ); 
+      return -1; 
     }
-
-    if ( $cng > 0 ) { 
-        $mota = 1 - ($cerror/$cng); 
-        # print "CERROR: $cerror\tTNG: $cng\n"; 
+    
+    my ( %mdIDs, %faIDs, %idSplitObjIDs, %idMergeObjIDs, %evalGTIDs );
+    my ( $md, $fa, $idSplits, $idMerges, $numOfEvalGT ) = ( 0, 0, 0, 0, 0 );
+    
+    if (defined $gtFrame->getMissDetectIDs()) { %mdIDs = $gtFrame->getMissDetectIDs(); } 
+    if (defined $gtFrame->getFalseAlarmIDs()) { %faIDs = $gtFrame->getFalseAlarmIDs(); } 
+    if (defined $gtFrame->getIDSplitObjIDs()) { %idSplitObjIDs = $gtFrame->getIDSplitObjIDs(); } 
+    if (defined $gtFrame->getIDMergeObjIDs()) { %idMergeObjIDs = $gtFrame->getIDMergeObjIDs(); } 
+    if (defined $gtFrame->getEvalObjectIDs()) { %evalGTIDs = $gtFrame->getEvalObjectIDs(); }
+    if (%mdIDs) { $md = scalar keys %mdIDs; }
+    if (%faIDs) { $fa = scalar keys %faIDs; }
+    if (%idSplitObjIDs) { $idSplits = scalar keys %idSplitObjIDs; }
+    if (%idMergeObjIDs) { $idMerges = scalar keys %idMergeObjIDs; }
+    if (%evalGTIDs) { $numOfEvalGT = scalar keys %evalGTIDs; }
+    
+    my $tmp = 0;
+    if ($md > 0) { 
+      $tmp += $md;
+      $sumMD += $md;
+      if (defined $cerror) { $cerror += $costMD*$md; }
+      else { $cerror = $costMD*$md; }
     }
-    return $mota;
+    
+    if ($fa > 0) { 
+      $tmp += $fa;
+      $sumFA += $fa;
+      if (defined $cerror) { $cerror += $costFA*$fa; }
+      else { $cerror = $costFA*$fa; }
+    }
+    
+    if ($idSplits > 0) {
+      $tmp += $idSplits;
+      $sumIDsplit += $idSplits;
+      if (defined $cerror) { $cerror += $costIS*$idSplits; }
+      else { $cerror = $costIS*$idSplits; }
+    }
+    
+    if ($idMerges > 0) {
+      $tmp += $idMerges;
+      $sumIDmerge += $idMerges;
+      if (defined $cerror) { $cerror += $costIS*$idMerges; }
+      else { $cerror = $costIS*$idMerges; }
+    }
+    
+    if ($numOfEvalGT > 0) {
+      if (defined $cng) { $cng += $numOfEvalGT; }
+      else { $cng = $numOfEvalGT; }
+    }
+    
+    if (defined $logfile) {
+      %opgtm = $self->_MOTA_decomposer
+        ($frameNums[$loop], $gtFrame, $soFrame,
+         \%mdIDs, \%faIDs, \%idSplitObjIDs, \%idMergeObjIDs,
+         $prevGTMap, \%opgtm, \$outstr);
+      
+      $outstr .= "-- MOTA frame summary : [NumberOfEvalGT: $numOfEvalGT] [MissedDetect: $md] [FalseAlarm: $fa] [IDSplit: $idSplits] [IDMerge: $idMerges]\n";
+      $outstr .= "-- MOTA global summary: [NumberOfEvalGT: $cng] [MissedDetect: $sumMD] [FalseAlarm: $sumFA] [IDSplit: $sumIDsplit] [IDMerge: $sumIDmerge] => [MOTA = " . &__compute_printable_MOTA($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng) . "]\n";
+    }
+    # print "FRAME NUMBER: $frameNums[$loop]\tERROR: $tmp\tNG: $numOfEvalGT\n"; 
+    # print "MD: $md\tFA: $fa\tSWITCH: " . ($idSplits + $idMerges) . "\n";
+  }
+  
+  if ( $cng > 0 ) { 
+    $mota = 1 - ($cerror/$cng); 
+    # print "CERROR: $cerror\tTNG: $cng\n";
+    if (defined $logfile) {
+      $outstr .= "\n\n@@ END PROCESSING @@\n\n";
+      $outstr .= "MOTA = 1 - ( CostMD*SumMD + CostFA*SumFA + CostIS*(SumIDSplit + SumIDMerge) ) / NumberOfEvalGT\n";
+      $outstr .= "     = 1 - ( $costMD*$sumMD + $costFA*$sumFA + $costIS*($sumIDsplit + $sumIDmerge) ) / $cng\n";
+      $outstr .= sprintf("     = %s [conf: %.06f]\n", &__compute_printable_MOTA($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng), $mota);
+    }
+  }
+
+  if (defined $logfile) {
+    $outstr .= "\n\n\n" if (MMisc::is_blank($logfile)); # Add extra CR for stdout print
+    MMisc::error_quit("Problem while trying to write MOTA log file ($logfile)")
+        if (! MMisc::writeTo($logfile, ".tracking_log", 1, 0, $outstr));
+  }
+
+  return($mota);
 }
 
 #######################
@@ -1055,6 +1091,157 @@ sub splitTextLineObjects {
     }
 
     return(1);
+}
+
+########################################
+
+sub __get_obj_info {
+  my ($obj) = @_;
+
+  my $id = $obj->getId();
+  my $ob = $obj->getOBox();
+  my ($x, $y, $w, $h, $o) = 
+    ( $ob->getX(), $ob->getY(), $ob->getWidth(), $ob->getHeight(),
+      $ob->getOrientation() );
+  my $dc = ($obj->getDontCare() == 1) ? "DCO" : "";
+
+  return($id, $x, $y, $w, $h, $o, $dc);
+}
+ 
+##### 
+
+sub __find_hash_key {
+  my ($key, %h) = @_;
+
+  foreach my $k (keys %h) {
+    return($k) if ($h{$k} eq $key);
+  }
+
+  return(undef);
+}
+
+#####
+
+sub __print_prevmatch {
+  my ($rgtIDs, $rsoIDs, $pgt, $routstr) = @_;
+
+  foreach my $rid (sort keys %$rgtIDs) {
+    next if (! exists $$pgt{$rid});
+    my $sid = $$pgt{$rid};
+    next if (! exists $$rsoIDs{$sid});
+    $$routstr .= "== Mapped : SYS $sid -> REF $rid [previously matched]\n";
+  }
+}
+
+#####
+
+sub __compute_printable_MOTA {
+  my ($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng) = @_;
+
+  return("NA") if ($cng == 0);
+  
+  return(sprintf("%.06f", 1 - ( $costMD*$sumMD + $costFA*$sumFA + $costIS*($sumIDsplit + $sumIDmerge)) / $cng));
+}
+
+#####
+
+sub _MOTA_decomposer {
+  my ($self, $fnum, $gtFrame, $soFrame,
+     $rmdIDs, $rfaIDs, $rspIDs, $rmrIDs,
+      $pgt, $opgt, $routstr)
+    = @_;
+
+  $$routstr .= "\n\n***** Evaluated Frame: $fnum\n";
+
+  my $gtObjList = $gtFrame->getObjectList();
+  my $NG = scalar keys %$gtObjList;
+  my %gtIDs = ();
+
+  $$routstr .= "## Number of REF Objects: $NG\n";
+  foreach my $key (sort keys %$gtObjList) {
+    my $obj = $$gtObjList{$key};
+    my ($id, $x, $y, $w, $h, $o, $dc) = &__get_obj_info($obj);
+    $$routstr .= "++ REF $id [x=$x y=$y w=$w h=$h o=$o] $dc\n";
+    $gtIDs{$id}++ if ($dc eq "");
+  }
+
+  my $soObjList = undef;
+  my $NS = 0;
+  my %soIDs = ();
+  if ($soFrame) {
+    $soObjList = $soFrame->getObjectList();
+    $NS = scalar keys %$soObjList;
+  }
+  $$routstr .= "## Number of SYS Objects: $NS\n";
+  if ($NS > 0) {
+    foreach my $key (sort keys %$soObjList) {
+      my $obj = $$soObjList{$key};
+      my ($id, $x, $y, $w, $h, $o, $dc) = &__get_obj_info($obj);
+      $$routstr .= "++ SYS $id [x=$x y=$y w=$w h=$h o=$o] $dc\n";
+      $soIDs{$id}++ if ($dc eq "");
+    }
+  }
+
+  # Prints
+  if ((defined $rmdIDs) && (%$rmdIDs)) {
+    foreach my $key (keys %$rmdIDs) {
+      $$routstr .= "== MD : REF $key\n";
+      delete $gtIDs{$key}; # to avoid that a MD be relisted as mapped
+    }
+  }
+
+  if ((defined $rfaIDs) && (%$rfaIDs)) {
+    foreach my $key (keys %$rfaIDs) {
+      $$routstr .= "== FA : SYS $key\n";
+      delete $soIDs{$key}; # to avoid that a FA be relisted as mapped
+    }
+  }
+
+  if ((defined $rspIDs) && (%$rspIDs)) {
+    foreach my $key (keys %$rspIDs) {
+      my $from = $$opgt{$key};
+      my $to = $$pgt{$key};
+      $$routstr .= "== ID Split : REF $key (SYS $from -> $to)\n"; 
+    }
+  }
+
+  if ((defined $rmrIDs) && (%$rmrIDs)) {
+    foreach my $key (keys %$rmrIDs) {
+      my $id1 = &__find_hash_key($key, %$opgt);
+      my $id2 = &__find_hash_key($key, %$pgt);
+      $$routstr .= "== ID Merge : SYS $key (REF $id1 & $id2)\n";
+    }
+  }
+
+  # BPM check
+  my $bpm = $gtFrame->getEvalBPM();
+  if (! defined $bpm) {
+#    $$routstr .= "-> Undefined BPM\n";
+    &__print_prevmatch(\%gtIDs, \%soIDs, $pgt, $routstr);
+    return(MMisc::clone(%$pgt));
+  }
+
+  my @mapl = $bpm->get_mapped_ids();
+#  my @mdl  = $bpm->get_unmapped_ref_ids();
+#  my @fal  = $bpm->get_unmapped_sys_ids();
+  if (@mapl) {
+    foreach my $ra (@mapl) {
+      my @a = @$ra;
+      my $rid = $a[1];
+      my $sid = $a[0];
+      my ($ov) = $bpm->get_jointvalues_refsys_value($rid, $sid);
+      MMisc::error_quit("Problem obtaining jointvalue ($rid/$sid) : " . $bpm->get_errormsg()) if ($bpm->error());
+      $$routstr .= "== Mapped : SYS $sid -> REF $rid [ov: $ov]\n";
+      delete $gtIDs{$rid}; # to avoid that a Mapped REF be relisted as prev mapped
+      delete $soIDs{$sid}; # to avoid that a Mapped SYS be relisted as prev mapped
+    }
+  }
+  # Previously mapped ?
+  &__print_prevmatch(\%gtIDs, \%soIDs, $pgt, $routstr);
+#  if (@mdl) { $$routstr .= "Missed Detects (REF) : ", join(" ", @mdl), "\n"; }
+#  if (@fal) { $$routstr .= "False Alarms (SYS)   : ", join(" ", @fal), "\n"; }
+
+  return(MMisc::clone(%$pgt));
 }
 
 #######################
