@@ -99,7 +99,7 @@ my @ecf_xsdfilesl = $ecfobj->get_required_xsd_files_list();
 ########################################
 # Options processing
 
-my @expected_ext = ( "tgz", "tar", "tar.gz", "tar.bz2", "zip" ); # keep Order
+my @expected_ext = MMisc::get_unarchived_ext_list();
 my $epmdfile = "Events_Processed.md";
 
 my $md_add = TrecVid08HelperFunctions::get_MemDump_Suffix();
@@ -233,15 +233,6 @@ if ($useECF) {
 ########################################
 
 # Expected values
-my %exp_ext_cmd =
-  (
-   $expected_ext[0] => "tar xfz",
-   $expected_ext[1] => "tar xf",
-   $expected_ext[2] => "tar xfz",
-   $expected_ext[3] => "tar xfj",
-   $expected_ext[4] => "unzip",
-  );
-
 my @expected_year;
 my @expected_task;
 my @expected_data;
@@ -266,7 +257,6 @@ MMisc::error_quit("Missing data in \'Specfile\' ($specfile)")
     || (scalar @expected_sysid_beg == 0)
     || (scalar @expected_dir_output == 0)
     || (scalar keys %expected_sffn == 0)
-    || (scalar keys %exp_ext_cmd == 0)
   );
 
 my $doepmd = 0;
@@ -508,22 +498,10 @@ sub uncompress_archive {
 
   my $lf = MMisc::concat_dir_file_ext($dir, $file, $ext);
 
-  my $pwd = MMisc::get_pwd();
-  my $f = MMisc::get_file_full_path($lf);
+  my ($err, $retcode, $stdout, $stderr) = MMisc::unarchive_archive($lf, $tmpdir);
 
-  my $ferr = MMisc::check_file_r($lf);
-  return("Problem finding requested sourcefile ($lf): $ferr")
-    if (! MMisc::is_blank($ferr));
-
-  my $lext = lc($ext);
-  return("Could not find extension ($ext) approved command line ?")
-    if (! exists $exp_ext_cmd{$lext});
-
-  my $cmdline = $exp_ext_cmd{$lext} . " $f";
-
-  chdir($tmpdir);
-  my ($retcode, $stdout, $stderr) = MMisc::do_system_call($cmdline);
-  chdir($pwd);
+  return("Problem before uncompressing archive ($err)", undef)
+    if (! MMisc::is_blank($err));
 
   return("Problem while uncompressing archive ($stderr)", undef)
     if (! MMisc::is_blank($stderr));
