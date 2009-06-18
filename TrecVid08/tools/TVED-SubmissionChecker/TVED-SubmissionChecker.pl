@@ -233,6 +233,15 @@ if ($useECF) {
 ########################################
 
 # Expected values
+my %exp_ext_cmd =
+  (
+   $expected_ext[0] => "tar xfz",
+   $expected_ext[1] => "tar xf",
+   $expected_ext[2] => "tar xfz",
+   $expected_ext[3] => "tar xfj",
+   $expected_ext[4] => "unzip",
+  );
+
 my @expected_year;
 my @expected_task;
 my @expected_data;
@@ -241,7 +250,6 @@ my @expected_input;
 my @expected_sysid_beg;
 my @expected_dir_output;
 my %expected_sffn;
-my %exp_ext_cmd;
 
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
