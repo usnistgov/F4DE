@@ -112,9 +112,10 @@ my $bin         = 0;
 my $writeres    = "";
 my $spmode      = "";
 my $csvfile     = "";
+my $motalogdir  = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   CDEF  I   M     S        bcd fgh           t vwx    #
+# Used:   CDEF  I   M     S        bcd fgh    m      t vwx    #
 
 my %opt;
 my $dbgftmp = "";
@@ -141,6 +142,7 @@ GetOptions
    'gtf'             => sub {$gtfs++; @leftover = @ARGV},
    'SpecialMode=s'   => \$spmode,
    'csv=s'           => \$csvfile,
+   'motaLogDir:s'    => \$motalogdir,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -175,6 +177,12 @@ MMisc::error_quit("While trying to set \'CLEARxsd\' (" . $dummy->get_errormsg() 
 
 MMisc::error_quit("Problem with \'SpecialMode\' (" . $dummy->get_errormsg() . ")")
   if ((! MMisc::is_blank($spmode)) && (! $dummy->is_spmode_ok($spmode)));
+
+if (! MMisc::is_blank($motalogdir)) {
+  my $err = MMisc::check_dir_w($motalogdir);
+  MMisc::error_quit("Problem with \'motaLogDir\' ($motalogdir): $err")
+      if (! MMisc::is_blank($err));
+}
 
 MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting")
   if ($gtfs > 1);
@@ -296,7 +304,15 @@ foreach my $ref_sys_pair (@files_to_be_processed){
 
   # MOTA & MOTP
   if ($mota_add) {
-    $mota = $gtSequence->computeMOTA($sysSequence, $CostMiss, $CostFA, $CostIS, $eval_type, $trk_thres, $bin);
+    my $mota_logfile = undef;
+    my $lsffn = $gtSequence->getSourceFileName();
+    if (! MMisc::is_blank($motalogdir)) {
+      $mota_logfile = "$motalogdir/$lsffn";
+    } elsif (defined $motalogdir) {
+      print "---------- [$lsffn] Tracking Log ----------\n";
+      $mota_logfile = "";
+    }
+    $mota = $gtSequence->computeMOTA($sysSequence, $CostMiss, $CostFA, $CostIS, $eval_type, $trk_thres, $bin, $mota_logfile);
     MMisc::error_quit("Error computing 'MOTA' (" . $gtSequence->get_errormsg() . ")")
         if ($gtSequence->error());
   }
@@ -463,7 +479,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--xmllint location] [--CLEARxsd location] --Domain name --Eval type [--frameTol framenbr] [--writeResult file] [--csv file] [--detthres value] [--trkthres value] [--bin] [--MissCost value] [--FACost value] [--ISCost value] [--SpecialMode mode] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help] [--version] [--xmllint location] [--CLEARxsd location] --Domain name --Eval type [--frameTol framenbr] [--writeResult file] [--csv file] [--detthres value] [--trkthres value] [--bin] [--MissCost value] [--FACost value] [--ISCost value] [--SpecialMode mode] [--motaLogDir [dir]] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (System vs Truth)
 
@@ -484,6 +500,7 @@ Will Score the XML file(s) provided (System vs Truth)
   --FACost        Set the Metric's Cost for a False Alarm (default: $CostFA)
   --ISCost        Set the Metric's Cost for an ID Switch (default: $CostIS)
   --SpecialMode   Specify that the scorer is run using the CLEAR metric with a different evaluation rules (authorized modes: $spml)
+  --motaLogDir    Specify the directory in which one log file per sourcefile filename is written, containing an evaluated-frame per evaluated-frame decomposition of the tracking analysis. If no directory is provided, print to stdout
   --gtf           Specify that the files past this marker on the command line are Ground Truth Files  
 
 Note:
