@@ -57,7 +57,8 @@ commoninstall:
 #####
 
 TV08DIR=TrecVid08
-TV08TOOLS=tools/{TV08ED-SubmissionChecker/{TVED-SubmissionChecker.pl,TV{08,09}ED-SubmissionChecker.sh},TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
+TV08TOOLS_MAN=tools/{TVED-SubmissionChecker/TVED-SubmissionChecker.pl,TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
+TV08TOOLS=tools/{TVED-SubmissionChecker/{TVED-SubmissionChecker.pl,TV{08,09}ED-SubmissionChecker.sh},TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
 
 TV08install:
 	@echo ""
@@ -205,7 +206,7 @@ dist_archive_pre_remove:
 create_mans:
 # TrecVid08
 	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/man
-	@for i in ${TV08TOOLS}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/man/$$g.1; done
+	@for i in ${TV08TOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/man/$$g.1; done
 # AVSS09
 	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man
 	@for i in ${AV09TOOLS}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man/$$g.1; done
