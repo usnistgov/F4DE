@@ -1300,6 +1300,77 @@ sub safe_sqrt {
   return(sqrt($v));
 }
 
+####################
+# MM: for submission checkers: unarchive archives
+
+my %exp_ext_cmd = ();
+
+#####
+
+sub __set_unarchived_ext_list {
+  return() if (scalar keys %exp_ext_cmd > 0);
+
+  my $tar      = "tar xf";
+  my $targzip  = "tar xfz";
+  my $tarbzip2 = "tar xfj";
+  my $zip      = "unzip";
+
+  %exp_ext_cmd = 
+    (
+     # TAR
+     "tar"     => $tar,
+     # TAR + GZIP
+     "tar.gz"  => $targzip,
+     "tgz"     => $targzip,
+     # TAR + BZIP2
+     "tar.bz2" => $tarbzip2,
+     "tbz2"    => $tarbzip2,
+     "tbz"     => $tarbzip2,
+     "tb2"     => $tarbzip2,
+     # ZIP
+     "zip"     => $zip,
+    );
+}
+
+#####
+
+sub get_unarchived_ext_list {
+  &__set_unarchived_ext_list();
+  return(sort keys %exp_ext_cmd);
+}
+
+#####
+
+sub unarchive_archive {
+  my ($arc, $destdir) = @_;
+
+  &__set_unarchived_ext_list();
+
+  my ($err, $dir, $file, $ext) = &split_dir_file_ext($arc);
+  return("Problem with archive filename: $err") if (! &is_blank($err));
+  
+  $ext = lc($ext);
+  return("Problem with archive extension ($ext), is not in the list of recognized extensions (" . join(" ", &get_unarchived_ext_list()) . ")")
+    if (! exists $exp_ext_cmd{$ext});
+
+  my $pwd = &get_pwd();
+  my $ff = &get_file_full_path($arc);
+
+  $err = &check_file_r($ff);
+  return("Problem with archive file ($arc): $err") if (! &is_blank($err));
+
+  $err = &check_dir_w($destdir);
+  return("Problem with destination directory ($destdir): $err") if (! &is_blank($err));
+  
+  my $cmd = $exp_ext_cmd{$ext} . " $ff";
+
+  chdir($destdir);
+  my ($retcode, $stdout, $stderr) = MMisc::do_system_call($cmd);
+  chdir($pwd);
+  
+  return("", $retcode, $stdout, $stderr);
+}
+
 ############################################################
 
 1;
