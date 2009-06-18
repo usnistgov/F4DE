@@ -426,6 +426,35 @@ sub is_sys_mapped {
   return(1);
 }
 
+########## 'ref' & 'sys'
+
+sub get_sys {
+  my ($self, $sysid) = @_;
+
+  if (! exists $self->{sysObj}{$sysid}) {
+    $self->_set_errormsg("Can not find requested \'sysid\' ($sysid) in SYS objects");
+    return(undef);
+  }
+
+  return($self->{sysObj}{$sysid});
+}
+
+#####
+
+sub get_ref {
+  my ($self, $refid) = @_;
+
+  if (! exists $self->{refObj}{$refid}) {
+    $self->_set_errormsg("Can not find requested \'refid\' ($refid) in REF objects");
+    return(undef);
+  }
+
+  return($self->{refObj}{$refid});
+}
+
+  
+
+
 ########## 'computed'
 
 sub is_computed {
