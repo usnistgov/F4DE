@@ -1,13 +1,13 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+
+
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
   <title>AVSS Scoring Primer</title>
-</head>
-<body>
+</head><body>
 <div style="text-align: center;"><big><big><big>AVSS Scoring Primer</big></big></big><br>
 </div>
-<div style="text-align: center;"><small>Updated May 13, 2009</small><br>
+<div style="text-align: center;"><small>Updated June 18, 2009</small><br>
 </div>
 <br>
 <h2>Description: </h2>
@@ -27,7 +27,7 @@ variable.&nbsp; The variable DIST used below is the path to the F4DE
 source directory and is not part of the F4DE installation instructions.<br>
 <h2>Nomenclature:</h2>
 The MCSPT evaluation is designed to evaluate systems that can track a
-single, specific person within an ensemble of concurrently recorder
+single, specific person within an ensemble of concurrently recorded
 videos.&nbsp; We call the person to track the 'target'.<br>
 <br>
 We refer to collection of the following as a 'track instance' which
@@ -53,11 +53,10 @@ track the target in. <br>
 <h2>File Formats:</h2>
 The AVSS tools use CLEAR-specialized, XML ViPER files as inputs to the
 scripts.&nbsp; The CLEAR-specialized ViPER file format is structurally
-defined by a set of XSD files located in the '<a href="../../lib/data">$F4DE_BASE/lib/data</a>'
-directory.&nbsp; The main XSD file is <a
- href="../../lib/data/CLEAR.xsd">CLEAR.xsd</a> which includes <a
- href="../../lib/data/CLEAR-viper.xsd">CLEAR-viper.xsd</a> and <a
- href="../../lib/data/CLEAR-viperdata.xsd">CLEAR-viperdata.xsd</a>. <br>
+defined by a set of XSD files located in the '<a href="http://gaston/cgi-bin/cvsweb.cgi/%7Echeckout%7E/F4DE/lib/data">$F4DE_BASE/lib/data</a>'
+directory.&nbsp; The main XSD file is <a href="http://gaston/cgi-bin/cvsweb.cgi/%7Echeckout%7E/F4DE/lib/data/CLEAR.xsd">CLEAR.xsd</a> which includes <a href="http://gaston/cgi-bin/cvsweb.cgi/%7Echeckout%7E/F4DE/lib/data/CLEAR-viper.xsd">CLEAR-viper.xsd</a> and <a href="http://gaston/cgi-bin/cvsweb.cgi/%7Echeckout%7E/F4DE/lib/data/CLEAR-viperdata.xsd">CLEAR-viperdata.xsd</a>. For the Experiment Control File (ECF), the XSD is called "AVSS09-ecf.xsd" and is 
+located in the <a href="http://gaston/cgi-bin/cvsweb.cgi/%7Echeckout%7E/F4DE/AVSS09/data/">$F4DE_BASE/AVSS09/data/</a> directory.
+<br>
 <h2>Executable Script Synopses:</h2>
 <ul>
   <li>AVSS09ViperValidator - a syntactic and semantic validator for
@@ -68,8 +67,8 @@ AVSS MCSPT evaluation. <br>
 </ul>
 <h2>File Validation with AVSS09ViperValidator:</h2>
 In order to ensure systems generate correctly formatted ViPER files for
-the MCSPT, the scoring tools include a validator to both syntactically
-(properly structure XML files) and semantically (e.g., coherent frame
+the MCSPT, the scoring tools include a validator to check system-generated
+ViPER files, both syntactically (properly structure XML files) and semantically (e.g., coherent frame
 spans and bounding boxes within the frame spans, etc).&nbsp; <br>
 <br>
 To check a system file, execute the command:<br>
@@ -77,61 +76,94 @@ To check a system file, execute the command:<br>
 &nbsp;&nbsp;&nbsp; % AVSS09ViPERValidator
 $DIST/AVSS09/test/common/test_file1.ss.xml<br>
 <br>
+where $DIST is your path to the F4DE source directory.
+<br>
+<br>
 <span style="font-weight: bold;"></span>To check a ground truth file,
 execute the command:<br>
 <br>
 &nbsp;&nbsp;&nbsp; % AVSS09ViPERValidator --gtf
-$DIST/AVSS09/test/common/test_file1.clear.xml<span
- style="font-weight: bold;"></span><span style="font-weight: bold;"><br>
+$DIST/AVSS09/test/common/test_file1.clear.xml<span style="font-weight: bold;"></span><span style="font-weight: bold;"><br>
 </span>
 <h2>Scoring a MCSPT system with AVSS09Scorer:</h2>
 AVSS09Scorer is a wrapper script to score the output of an MCSPT
-system.&nbsp; This initial version of the script does not implement the
+system.&nbsp; This version of the script implements the
 full evaluation formalism to score a series of track instances,
 ignoring un-scored frames, and limiting the evaluated span of
 frames.&nbsp;
-Instead, this version is designed to score the output for a single
-track instance.&nbsp; (Note: Future versions of the evaluation script
-will incorporate the use of an Experiment Control File (ECF) to define
-the track instances and the ids output by the system will be specified
-a priori.)<br>
 <br>
-To run the scoring script in a single test file, execute the command:<br>
+<ul>
+  <li><span style="font-weight: bold;">To run the scoring script in a single test file, execute the command:</li>
 <br>
-<div style="margin-left: 40px;">% AVSS09Scorer --writedir /tmp \<br>
+<div style="margin-left: 40px;">% AVSS09Scorer --writedir /tmp --dirGTF /tmp/GTF --DirSYS /tmp/SYS \<br>
 &nbsp;&nbsp;&nbsp; --gtf $DIST/AVSS09/test/common/test_file*.clear.xml \<br>
 &nbsp;&nbsp;&nbsp; $DIST/AVSS09/test/common/test_file*.empty.xml<br>
+<br>
+where $DIST is your path to the F4DE source directory.
+<br>
+
 </div>
 &nbsp;<br>
-To run the scoring script for a single track instance using the
-released training data set for the MCSPT evaluation (See the AVSS MCSPT
+
+  <li><span style="font-weight: bold;">To run the scoring script for a single track instance using the
+released training data set for the MCSPT evaluation (see the AVSS MCSPT
 web site for details), execute the
 following.&nbsp; (The $MCSPT must be set to be the top level of the
-data distribution for your system.)<br>
+data distribution for your system.) </li>
 <br>
 <div style="margin-left: 40px;">% setenv MCSPT /local/ILIDS_MCTTR_Master<br>
-% AVSS09Scorer --writedir /tmp \<br>
+% AVSS09Scorer --writedir /tmp --dirGTF /tmp/GTF --DirSYS /tmp/SYS  \<br>
 &nbsp;&nbsp;&nbsp;
 $MCSPT/http/xml/MCT_TR_01/MCTTR01a/MCTTR010[12345]a.ss.xml \<br>
 &nbsp;&nbsp;&nbsp; --gtf&nbsp;
 $MCSPT/http/xml/MCT_TR_01/MCTTR01a/MCTTR010[12345]a.clear.xml
 </div>
 <br>
-This hypothetical example scores five if the starter system files&nbsp;
+This hypothetical example scores five of the starter system files&nbsp;
 (that contain the 5 TTFs for the camera view if they exist) and scores
-them against the CLEAR formated reference files.&nbsp;&nbsp; This
-version of the scoring script does not differentiate the primary
-cameras from the secondary cameras so all camera views have correct
-detections.&nbsp; To score against a set of empty system output files,
-execute the following command.<br>
+them against the CLEAR-formatted reference files.&nbsp;&nbsp; 
+<br>
+<br>
+  <li><span style="font-weight: bold;">To score against a set of empty system output files,
+execute the following command:</li>
 <br>
 <div style="margin-left: 40px;">% setenv MCSPT /local/ILIDS_MCTTR_Master<br>
-% AVSS09Scorer --writedir /tmp \<br>
+% AVSS09Scorer --writedir /tmp --dirGTF /tmp/GTF --DirSYS /tmp/SYS  \<br>
 &nbsp;&nbsp;&nbsp;
 $MCSPT/http/xml/MCT_TR_01/MCTTR01a/MCTTR010[12345]a.empty.xml \<br>
 &nbsp;&nbsp;&nbsp; --gtf&nbsp;
 $MCSPT/http/xml/MCT_TR_01/MCTTR01a/MCTTR010[12345]a.clear.xml
 </div>
 <br>
-</body>
-</html>
+<br>
+  <li><span style="font-weight: bold;">For both the "dry run" and the formal evaluation, an Experiment Control File (ECF) will be provided. 
+The purpose of the ECF is to specify a set of tracking trials as an experimental condition. To score the same set of files as above while making use of an ECF
+called "ecf.xml", execute the following: </li>
+<br>
+<div style="margin-left: 40px;">% setenv MCSPT /local/ILIDS_MCTTR_Master<br>
+% AVSS09Scorer --writedir /tmp --dirGTF /tmp/GTF --DirSYS /tmp/SYS  --ECF ecf.xml \<br>
+&nbsp;&nbsp;&nbsp;
+$MCSPT/http/xml/MCT_TR_01/MCTTR01a/MCTTR010[12345]a.empty.xml \<br>
+&nbsp;&nbsp;&nbsp; --gtf&nbsp;
+$MCSPT/http/xml/MCT_TR_01/MCTTR01a/MCTTR010[12345]a.clear.xml
+</div>
+<br>
+  <li><span style="font-weight: bold;">In general, scoring a set of system files against ground truth files while making use of an ECF called "ecf.xml" can be
+carried out as follows:</li>
+<br>
+<div style="margin-left: 40px;">% setenv MCSPT /local/ILIDS_MCTTR_Master<br>
+% AVSS09Scorer --writedir /tmp --dirGTF /tmp/GTF --DirSYS /tmp/SYS  --ECF ecf.xml \<br>
+&nbsp;&nbsp;&nbsp;
+$MCSPT/http/xml/*/*/*.system.xml \<br>
+&nbsp;&nbsp;&nbsp; --gtf&nbsp;
+$MCSPT/http/xml/*/*/*.clear.xml
+</div>
+<br>
+  <li><span style="font-weight: bold;">In case you have already performed the validation step, you can invoke the scorer using an ECF, skipping validation, and only doing the scoring step: </li>
+</ul>
+<div style="margin-left: 40px;">% AVSS09Scorer --ECF ecf.xml --writedir Results-Dir \<br>
+&nbsp;&nbsp;&nbsp; -dirGTF GTFdir --DirSYS SYSdir --ECF ecf.xml --skipValidation
+</div>
+<br>
+For further information about the AVSS09Scorer and its operation, including details about using it with an ECF, please refer to the AVSS09Scorer manual available as part of the F4DE tools (AVSS09Scorer --man).
+</body></html>
