@@ -234,6 +234,6 @@ dist_clean:
 cvs-tag-current-distribution:
 	@make from_installdir
 	@make dist_head
-	@echo "Tagging the current CVS for distribution '"`cat ${F4DE_VERSION}`"'"
+	@echo "Tagging the current CVS for distribution as '"`sed 's/\./dot/' ${F4DE_VERSION}`"'"
 	@(echo -n "Starting actual tag in "; for i in 10 9 8 7 6 5 4 3 2 1 0; do echo -n "$$i "; sleep 1; done; echo " -- Tagging")
-	@cvs tag `cat ${F4DE_VERSION}`
+	@cvs tag `sed 's/\./dot/' ${F4DE_VERSION}`
