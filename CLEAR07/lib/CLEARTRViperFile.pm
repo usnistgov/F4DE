@@ -31,13 +31,13 @@ if ($version =~ m/b$/) {
 
 my $versionid = "CLEARTRViperFile.pm Version: $version";
 
-use Sequence;
 use ViperFramespan;
 use MErrorH;
 use MMisc;
 
 use MtXML;
 
+use CLEARSequence;
 use CLEARFrame;
 use CLEARObject;
 use CLEAROBox;
@@ -2044,8 +2044,8 @@ sub reformat_ds {
 
   return(-1) if ($self->error());
 
-  if (ref($eval_sequence) ne "Sequence") {
-    $self->_set_errormsg("Can only reformat to object type 'Sequence'");
+  if (ref($eval_sequence) ne "CLEARSequence") {
+    $self->_set_errormsg("Can only reformat to object type 'CLEARSequence'");
     return(0);
   }
 

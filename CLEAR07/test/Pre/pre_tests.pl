@@ -43,7 +43,7 @@ $ms = &_chkpkg
    "CLEAROBox",
    "CLEARObject",
    "CLEARPoint",
-   "Sequence"
+   "CLEARSequence"
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all CLEAR07 packages found, you will not be able to run the program, please install the missing ones\n\n";

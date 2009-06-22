@@ -61,7 +61,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("CLEARDTViperFile", "CLEARDTHelperFunctions", "Sequence") {
+foreach my $pn ("CLEARDTViperFile", "CLEARDTHelperFunctions", "CLEARSequence") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -209,9 +209,9 @@ while ($tmp = shift @ARGV) {
       MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the ViperFile object")
 	if (! CLEARDTHelperFunctions::save_ViperFile_MemDump($fname, $object, $MemDump));    
    
-      my $eval_sequence = Sequence->new($fname);
-      MMisc::error_quit("Failed scoring 'Sequence' instance creation. $eval_sequence")
-        if (ref($eval_sequence) ne "Sequence");
+      my $eval_sequence = CLEARSequence->new($fname);
+      MMisc::error_quit("Failed scoring 'CLEARSequence' instance creation. $eval_sequence")
+        if (ref($eval_sequence) ne "CLEARSequence");
 
       $object->reformat_ds($eval_sequence, $isgtf, @ok_objects);
       MMisc::error_quit("Could not reformat Viper File: $fname. " . $object->get_errormsg())

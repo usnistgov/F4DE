@@ -1,6 +1,6 @@
-package Sequence;
+package CLEARSequence;
 
-# Sequence
+# CLEARSequence
 #
 # Author(s): Vasant Manohar
 #
@@ -9,7 +9,7 @@ package Sequence;
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "Sequence.pm" is an experimental system.
+# "CLEARSequence.pm" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESSED
@@ -25,7 +25,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "Sequence.pm Version: $version";
+my $versionid = "CLEARSequence.pm Version: $version";
 
 use CLEARObject;
 use BipartiteMatch;
@@ -45,7 +45,7 @@ sub new {
     my ( $proto, $seqFileName ) = @_;
     my $class = ref($proto) || $proto;
 
-    my $_errormsg = MErrorH->new("Sequence");
+    my $_errormsg = MErrorH->new("CLEARSequence");
     $_errormsg->set_errormsg("");
     $seqFileName = uc(basename($seqFileName));
 

@@ -33,7 +33,7 @@ my $versionid = "CLEARTRHelperFunctions.pm Version: $version";
 
 use ViperFramespan;
 use CLEARTRViperFile;
-use Sequence;
+use CLEARSequence;
 
 use MErrorH;
 use MMisc;
@@ -223,9 +223,9 @@ sub _load_ScoringSequence_from_XML {
   return(0, undef, $txt) if (! $ok);
 
   my @ok_objects = $object->get_full_objects_list();
-  my $eval_sequence = Sequence->new($filename);
-  return(0, undef, "Failed scoring 'Sequence' instance creation. $eval_sequence\n")
-    if (ref($eval_sequence) ne "Sequence");
+  my $eval_sequence = CLEARSequence->new($filename);
+  return(0, undef, "Failed scoring 'CLEARSequence' instance creation. $eval_sequence\n")
+    if (ref($eval_sequence) ne "CLEARSequence");
 
   $object->reformat_ds($eval_sequence, $isgtf, @ok_objects);
   return(0, undef, "Could not reformat Viper File: $filename. " . $object->get_errormsg() . "\n")
@@ -247,7 +247,7 @@ sub _load_MemDump_ScoringSequence {
     if (! defined $object);
 
   return(0, undef, $rtxt . "Problem reading memory representation: Not a ScoringSequence MemDump") 
-    if (ref $object ne "Sequence");
+    if (ref $object ne "CLEARSequence");
 
   # Error ?
   return(0, undef, $rtxt . $object->get_errormsg())

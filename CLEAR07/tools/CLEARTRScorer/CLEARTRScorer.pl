@@ -60,7 +60,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("CLEARTRViperFile", "CLEARTRHelperFunctions", "Sequence", "SimpleAutoTable") {
+foreach my $pn ("CLEARTRViperFile", "CLEARTRHelperFunctions", "CLEARSequence", "SimpleAutoTable") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
