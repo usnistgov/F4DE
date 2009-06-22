@@ -48,8 +48,8 @@ use CLEARDTViperFile;
 # CLEARDTHelperFunctions (part of this tool)
 use CLEARDTHelperFunctions;
 
-# Sequence (part of this tool [CLEARDT])
-use Sequence;
+# CLEARSequence (part of this tool [CLEARDT])
+use CLEARSequence;
 
 ########################################
 
@@ -1002,9 +1002,9 @@ sub write_MemDumps {
   # Then process the "sequence" (unless skip requested)
   return(1) if ($skip_smd);
 
-  my $eval_sequence = Sequence->new($fname);
-  $self->_set_error_and_return("Failed scoring 'Sequence' instance creation. $eval_sequence", 0)
-    if (ref($eval_sequence) ne "Sequence");
+  my $eval_sequence = CLEARSequence->new($fname);
+  $self->_set_error_and_return("Failed scoring 'CLEARSequence' instance creation. $eval_sequence", 0)
+    if (ref($eval_sequence) ne "CLEARSequence");
 
   $cldt->reformat_ds($eval_sequence, $isgtf, @ok_objects);
   $self->_set_error_and_return("Could not reformat Viper File: $fname. " . $cldt->get_errormsg(), 0)
