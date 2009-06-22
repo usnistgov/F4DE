@@ -40,7 +40,7 @@ use MtXML;
 
 use CLEARFrame;
 use Object;
-use OBox;
+use CLEAROBox;
 use Point;
 
 use xmllintHelper;
@@ -2315,9 +2315,9 @@ sub _set_object_instances {
             my $objectList = $frameList->{$attr_fr}->getObjectList();
             my $loc = undef;
             if (scalar @att_value == 4) {
-              $loc = OBox->new(@att_value, 0); # BBox is just OBox with orientation as 0
-              if (ref($loc) ne "OBox") {
-                $self->_set_errormsg("Failed 'OBox' object instance creation ($loc)");
+              $loc = CLEAROBox->new(@att_value, 0); # BBox is just OBox with orientation as 0
+              if (ref($loc) ne "CLEAROBox") {
+                $self->_set_errormsg("Failed 'CLEAROBox' object instance creation ($loc)");
                 return(0);
               }
 
@@ -2332,9 +2332,9 @@ sub _set_object_instances {
               $checkFlag = 1; # To check if at least one location attribute is set
             }
             elsif (scalar @att_value == 5) {
-              $loc = OBox->new(@att_value);
-              if (ref($loc) ne "OBox") {
-                $self->_set_errormsg("Failed 'OBox' object instance creation ($loc)");
+              $loc = CLEAROBox->new(@att_value);
+              if (ref($loc) ne "CLEAROBox") {
+                $self->_set_errormsg("Failed 'CLEAROBox' object instance creation ($loc)");
                 return(0);
               }
 
@@ -2363,9 +2363,9 @@ sub _set_object_instances {
                   return(0);
               }
 
-              $loc = OBox->new($att_value[0], $att_value[1], $att_value[2], $att_value[3], $att_value[4]);
-              if (ref($loc) ne "OBox") {
-                  $self->_set_errormsg("Failed 'OBox' object instance creation ($loc)");
+              $loc = CLEAROBox->new($att_value[0], $att_value[1], $att_value[2], $att_value[3], $att_value[4]);
+              if (ref($loc) ne "CLEAROBox") {
+                  $self->_set_errormsg("Failed 'CLEAROBox' object instance creation ($loc)");
                   return(0);
               }
 

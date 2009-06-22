@@ -1,6 +1,6 @@
-package OBox;
+package CLEAROBox;
 
-# OBox
+# CLEAROBox
 #
 # Author(s): Vasant Manohar
 # Additions: Martial Michel
@@ -10,7 +10,7 @@ package OBox;
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "OBox.pm" is an experimental system.
+# "CLEAROBox.pm" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESSED
@@ -26,7 +26,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "OBox.pm Version: $version";
+my $versionid = "CLEAROBox.pm Version: $version";
 
 use Point;
 use MErrorH;
@@ -43,7 +43,7 @@ sub new {
     my ( $proto, $x, $y, $height, $width, $orientation ) = @_;
     my $class = ref($proto) || $proto;
    
-    my $_errormsg = MErrorH->new("OBox");
+    my $_errormsg = MErrorH->new("CLEAROBox");
     my $errortxt  = "";
     $_errormsg->set_errormsg($errortxt);
 
@@ -73,18 +73,18 @@ sub new {
 ######################
 
 sub unitTest {
-    print "Test OBox\n";
+    print "Test CLEAROBox\n";
     
     my ( $ob1, $ob2, $ret );
 
-    $ob1 = OBox->new(284, 149, 86, 103, 1);
-    $ob2 = OBox->new(281, 149, 95, 102, 0);
+    $ob1 = CLEAROBox->new(284, 149, 86, 103, 1);
+    $ob2 = CLEAROBox->new(281, 149, 95, 102, 0);
     $ret = $ob1->computeIntersectionArea($ob2);
     MMisc::error_quit("  Computing Intersection Area Error: Expected 8365.20954518059 got $ret\n")
         if ($ret ne 8365.20954518059);
 
-    $ob1 = OBox->new(119, 146, 37, 27, 3);
-    $ob2 = OBox->new(109, 146, 43, 46, 0);
+    $ob1 = CLEAROBox->new(119, 146, 37, 27, 3);
+    $ob2 = CLEAROBox->new(109, 146, 43, 46, 0);
     $ret = $ob1->computeIntersectionArea($ob2);
     MMisc::error_quit("  Computing Intersection Area Error: Expected 979.897364451338 got $ret\n")
         if ($ret ne 979.897364451338);

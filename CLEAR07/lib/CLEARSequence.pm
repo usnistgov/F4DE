@@ -1069,9 +1069,9 @@ sub splitTextLineObjects {
                   return(0);
                 }
                 
-                my $child_location = OBox->new($newX, $newY, $newHeight, $newWidth, $newOrientation);
-                if (ref($child_location) ne "OBox") {
-                  $self->_set_errormsg("Failed 'OBox' object instance creation ($child_location)");
+                my $child_location = CLEAROBox->new($newX, $newY, $newHeight, $newWidth, $newOrientation);
+                if (ref($child_location) ne "CLEAROBox") {
+                  $self->_set_errormsg("Failed 'CLEAROBox' object instance creation ($child_location)");
                   return(0);
                 }
 

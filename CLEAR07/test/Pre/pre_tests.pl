@@ -40,7 +40,7 @@ $ms = &_chkpkg
    "CLEARTRHelperFunctions",
    "CLEARTRViperFile",
    "CLEARFrame",
-   "OBox",
+   "CLEAROBox",
    "Object",
    "Point",
    "Sequence"
