@@ -41,7 +41,7 @@ use MtXML;
 use CLEARFrame;
 use CLEARObject;
 use CLEAROBox;
-use Point;
+use CLEARPoint;
 
 use xmllintHelper;
 
@@ -2423,9 +2423,9 @@ sub _set_object_instances {
             my $objectList = $frameList->{$attr_fr}->getObjectList();
             my $loc = undef;
             if (scalar @att_value == 2) {
-              $loc = Point->new(@att_value);
-              if (ref($loc) ne "Point") {
-                $self->_set_errormsg("Failed 'Point' object instance creation ($loc)");
+              $loc = CLEARPoint->new(@att_value);
+              if (ref($loc) ne "CLEARPoint") {
+                $self->_set_errormsg("Failed 'CLEARPoint' object instance creation ($loc)");
                 return(0);
               }
               $objectList->{$object_id}->setPoint($loc);

@@ -41,7 +41,7 @@ use MtXML;
 use CLEARFrame;
 use CLEARObject;
 use CLEAROBox;
-use Point;
+use CLEARPoint;
 
 use xmllintHelper;
 

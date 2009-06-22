@@ -1,6 +1,6 @@
-package Point;
+package CLEARPoint;
 
-# Point
+# CLEARPoint
 #
 # Author(s): Vasant Manohar
 # Additions: Martial Michel
@@ -10,7 +10,7 @@ package Point;
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "Point.pm" is an experimental system.
+# "CLEARPoint.pm" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESSED
@@ -27,7 +27,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "Point.pm Version: $version";
+my $versionid = "CLEARPoint.pm Version: $version";
 
 use MErrorH;
 use MMisc;
@@ -44,7 +44,7 @@ sub new {
     my ( $proto, $x, $y ) = @_;
     my $class = ref($proto) || $proto;
 
-    my $_errormsg = MErrorH->new("Point");
+    my $_errormsg = MErrorH->new("CLEARPoint");
     my $errortxt = "";
     $_errormsg->set_errormsg($errortxt);
 

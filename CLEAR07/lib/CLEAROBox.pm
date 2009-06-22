@@ -28,7 +28,7 @@ if ($version =~ m/b$/) {
 
 my $versionid = "CLEAROBox.pm Version: $version";
 
-use Point;
+use CLEARPoint;
 use MErrorH;
 use MMisc;
 
@@ -165,10 +165,10 @@ sub computeCentroid {
   
   my $centx = $r*cos($theta)+$self->getX();
   my $centy = $r*sin($theta)+$self->getY();
-  my $centroid = Point->new( $centx, $centy );
+  my $centroid = CLEARPoint->new( $centx, $centy );
   
-  MMisc::error_quit("Failed to create new 'Point' instance in 'computeCentroid'\n")
-      if (ref($centroid) ne "Point");
+  MMisc::error_quit("Failed to create new 'CLEARPoint' instance in 'computeCentroid'\n")
+      if (ref($centroid) ne "CLEARPoint");
   
   return $centroid;
 }

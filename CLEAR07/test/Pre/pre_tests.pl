@@ -42,7 +42,7 @@ $ms = &_chkpkg
    "CLEARFrame",
    "CLEAROBox",
    "CLEARObject",
-   "Point",
+   "CLEARPoint",
    "Sequence"
   );
 if ($ms > 0) {
