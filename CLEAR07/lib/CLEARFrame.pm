@@ -1,6 +1,6 @@
-package Frame;
+package CLEARFrame;
 
-# Frame
+# CLEARFrame
 #
 # Author(s): Vasant Manohar
 # Additions: Martial Michel
@@ -10,7 +10,7 @@ package Frame;
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "Frame.pm" is an experimental system.
+# "CLEARFrame.pm" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESSED
@@ -26,7 +26,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "Frame.pm Version: $version";
+my $versionid = "CLEARFrame.pm Version: $version";
 
 use Object;
 use BipartiteMatch;
@@ -45,7 +45,7 @@ sub new {
     my ( $proto, $frameNum ) = @_;
     my $class = ref($proto) || $proto;
 
-    my $_errormsg = MErrorH->new("Frame");
+    my $_errormsg = MErrorH->new("CLEARFrame");
     my $errortxt  = "";
     $_errormsg->set_errormsg($errortxt);
 
@@ -86,7 +86,7 @@ sub new {
 #######################
 
 sub unitTest {
-    print "Test Frame\n";
+    print "Test CLEARFrame\n";
 
     return 1;
 }

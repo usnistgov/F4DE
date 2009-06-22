@@ -38,7 +38,7 @@ use MMisc;
 
 use MtXML;
 
-use Frame;
+use CLEARFrame;
 use Object;
 use OBox;
 use Point;
@@ -2274,9 +2274,9 @@ sub _set_frame_instances {
   $eval_sequence->setSeqFrSpan($ovlp_frames[0], $ovlp_frames[-1]);
 
   foreach my $frameNum (@ovlp_frames) {
-    my $frame = Frame->new($frameNum);
-    if (ref($frame) ne "Frame") {
-      $self->_set_errormsg("Failed 'Frame' instance creation ($frame)");
+    my $frame = CLEARFrame->new($frameNum);
+    if (ref($frame) ne "CLEARFrame") {
+      $self->_set_errormsg("Failed 'CLEARFrame' instance creation ($frame)");
       return(0);
     }
     $eval_sequence->addToFrameList($frame);
