@@ -41,7 +41,7 @@ $ms = &_chkpkg
    "CLEARTRViperFile",
    "CLEARFrame",
    "CLEAROBox",
-   "Object",
+   "CLEARObject",
    "Point",
    "Sequence"
   );

@@ -1,6 +1,6 @@
-package Object;
+package CLEARObject;
 
-# Object
+# CLEARObject
 #
 # Author(s): Vasant Manohar
 # Additions: Martial Michel
@@ -10,7 +10,7 @@ package Object;
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "Object.pm" is an experimental system.
+# "CLEARObject.pm" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESSED
@@ -26,7 +26,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "Object.pm Version: $version";
+my $versionid = "CLEARObject.pm Version: $version";
 
 use Levenshtein;
 use MErrorH;
@@ -44,7 +44,7 @@ sub new {
     my ( $proto, $objectId ) = @_;
     my $class = ref($proto) || $proto;
 
-    my $_errormsg = MErrorH->new("Object");
+    my $_errormsg = MErrorH->new("CLEARObject");
     my $errortxt  = "";
     $_errormsg->set_errormsg($errortxt);
 
@@ -69,7 +69,7 @@ sub new {
 #######################
 
 sub unitTest {
-    print "Test Object\n";
+    print "Test CLEARObject\n";
 
     return 1;
 }

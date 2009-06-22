@@ -27,7 +27,7 @@ if ($version =~ m/b$/) {
 
 my $versionid = "Sequence.pm Version: $version";
 
-use Object;
+use CLEARObject;
 use BipartiteMatch;
 use MErrorH;
 use MMisc;
@@ -903,7 +903,7 @@ sub computeSpatioTemporalOverlapRatio {
         $ref_object_id = $refObject->getId();
         $sys_object_id = $sysObject->getId();
 
-        my ($txt, $overlap) = Object::kernelFunction($refObject, $sysObject, $params);
+        my ($txt, $overlap) = CLEARObject::kernelFunction($refObject, $sysObject, $params);
         if (! MMisc::is_blank($txt)) { return("Error while computing overlap between objects ($txt). ", undef); }
 
         if (defined $overlap) { 
@@ -1063,9 +1063,9 @@ sub splitTextLineObjects {
                     return(0);
                 }
                 
-                my $child_object = Object->new($child_object_id);
-                if(ref($child_object) ne "Object") {
-                  $self->_set_errormsg("Failed 'Object' instance creation ($child_object)");
+                my $child_object = CLEARObject->new($child_object_id);
+                if(ref($child_object) ne "CLEARObject") {
+                  $self->_set_errormsg("Failed 'CLEARObject' instance creation ($child_object)");
                   return(0);
                 }
                 

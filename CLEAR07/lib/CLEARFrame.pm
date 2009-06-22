@@ -28,7 +28,7 @@ if ($version =~ m/b$/) {
 
 my $versionid = "CLEARFrame.pm Version: $version";
 
-use Object;
+use CLEARObject;
 use BipartiteMatch;
 use MErrorH;
 use MMisc;
@@ -457,7 +457,7 @@ sub computeAndSetSpatialMeasures {
     # Without any additional parameters, the kernel function computes area-based measures
     my $evalBPM;
     if (scalar keys %$evalObjectIDs > 0) {
-        $evalBPM = BipartiteMatch->new($evalGTObjs, $soObjList, \&Object::kernelFunction, \@params);
+        $evalBPM = BipartiteMatch->new($evalGTObjs, $soObjList, \&CLEARObject::kernelFunction, \@params);
         if ($evalBPM->error()) { 
             $self->_set_errormsg( "Error while creating Evaluation Bipartite Matching object in computeAndSetSpatialMeasures (" . $evalBPM->get_errormsg() . ")" ); 
             return -1; 
@@ -471,7 +471,7 @@ sub computeAndSetSpatialMeasures {
 
     my $dcoBPM;
     if (scalar keys %$dcoIDs > 0) {
-        $dcoBPM = BipartiteMatch->new($dcGTObjs, $soObjList, \&Object::kernelFunction, \@params);
+        $dcoBPM = BipartiteMatch->new($dcGTObjs, $soObjList, \&CLEARObject::kernelFunction, \@params);
         if ($dcoBPM->error()) { 
             $self->_set_errormsg( "Error while creating Dont Care Bipartite Matching object in computeAndSetSpatialMeaures (" . $dcoBPM->get_errormsg() . ")" ); 
             return -1; 
@@ -647,7 +647,7 @@ sub computeAndSetTemporalMeasures {
             $new_ref_objs{$key} = $evalGTObjs->{$key}; 
         }
         else {
-            my ( $msg, $res ) = Object::kernelFunction( $evalGTObjs->{$key}, $new_sys_objs{$prevGTMap->{$key}}, @params);
+            my ( $msg, $res ) = CLEARObject::kernelFunction( $evalGTObjs->{$key}, $new_sys_objs{$prevGTMap->{$key}}, @params);
             if (! MMisc::is_blank($msg)) {
                 $self->_set_errormsg("Error while computing temporal measures (" . $msg . ")" );
                 return -1;
@@ -665,7 +665,7 @@ sub computeAndSetTemporalMeasures {
     # Proceed to do a Hungarian matching on the remaining reference and system output objects
     my $evalBPM;
     if (scalar keys %new_ref_objs > 0) {
-        $evalBPM = BipartiteMatch->new(\%new_ref_objs, \%new_sys_objs, \&Object::kernelFunction, \@params);
+        $evalBPM = BipartiteMatch->new(\%new_ref_objs, \%new_sys_objs, \&CLEARObject::kernelFunction, \@params);
         if ($evalBPM->error()) { 
             $self->_set_errormsg( "Error while creating Evaluation Bipartite Matching object in computeAndSetTemporalMeasures (" . $evalBPM->get_errormsg() . ")" ); 
             return -1; 
@@ -679,7 +679,7 @@ sub computeAndSetTemporalMeasures {
 
     my $dcoBPM;
     if (scalar keys %$dcoIDs > 0) {
-        $dcoBPM = BipartiteMatch->new($dcGTObjs, \%new_sys_objs, \&Object::kernelFunction, \@params);
+        $dcoBPM = BipartiteMatch->new($dcGTObjs, \%new_sys_objs, \&CLEARObject::kernelFunction, \@params);
         if ($dcoBPM->error()) { 
             $self->_set_errormsg( "Error while creating Dont Care Bipartite Matching object in computeAndSetTemporalMeasures (" . $dcoBPM->get_errormsg() . ")" ); 
             return -1; 
@@ -835,7 +835,7 @@ sub computeAndSetTextRecMeasures {
     # Without any additional parameters, the kernel function computes area-based measures
     my $evalBPM;
     if (scalar keys %$evalObjectIDs > 0) {
-        $evalBPM = BipartiteMatch->new($evalGTObjs, $soObjList, \&Object::kernelFunction, \@spatialparams);
+        $evalBPM = BipartiteMatch->new($evalGTObjs, $soObjList, \&CLEARObject::kernelFunction, \@spatialparams);
         if ($evalBPM->error()) { 
             $self->_set_errormsg( "Error while creating Evaluation Bipartite Matching object in computeAndSetTextRecMeasures (" . $evalBPM->get_errormsg() . ")" ); 
             return -1; 
@@ -849,7 +849,7 @@ sub computeAndSetTextRecMeasures {
 
     my $dcoBPM;
     if (scalar keys %$dcoIDs > 0) {
-        $dcoBPM = BipartiteMatch->new($dcGTObjs, $soObjList, \&Object::kernelFunction, \@spatialparams);
+        $dcoBPM = BipartiteMatch->new($dcGTObjs, $soObjList, \&CLEARObject::kernelFunction, \@spatialparams);
         if ($dcoBPM->error()) { 
             $self->_set_errormsg( "Error while creating Dont Care Bipartite Matching object in computeAndSetTextRecMeaures (" . $dcoBPM->get_errormsg() . ")" ); 
             return -1; 
@@ -872,7 +872,7 @@ sub computeAndSetTextRecMeasures {
     }
 
     if ($redoMapping && (scalar keys %$evalObjectIDs > 0)) {
-        $evalBPM = BipartiteMatch->new($evalGTObjs, $soObjList, \&Object::textRecKernelFunction, \@combinedparams);
+        $evalBPM = BipartiteMatch->new($evalGTObjs, $soObjList, \&CLEARObject::textRecKernelFunction, \@combinedparams);
         if ($evalBPM->error()) { 
             $self->_set_errormsg( "Error while creating Evaluation Bipartite Matching object in computeAndSetTextRecMeasures re-mapping (" . $evalBPM->get_errormsg() . ")" ); 
             return -1; 
@@ -988,7 +988,7 @@ sub _computeAndSetCharacterErrors {
        for (my $inloop = 0; $inloop < scalar @subIDs; $inloop++) {
 	    my $sysText = $soObjList->{$subIDs[$inloop][0]}->getContent();
 	    my $refText = $gtObjList->{$subIDs[$inloop][1]}->getContent();
-            $numOfCharErrs += &Object::computeEditDistance($refText, $sysText, $costInsDel, $costSub);
+            $numOfCharErrs += &CLEARObject::computeEditDistance($refText, $sysText, $costInsDel, $costSub);
             $numOfChars += length($refText);
        }
     }

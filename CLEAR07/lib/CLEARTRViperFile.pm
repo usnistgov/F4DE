@@ -39,7 +39,7 @@ use MMisc;
 use MtXML;
 
 use CLEARFrame;
-use Object;
+use CLEARObject;
 use CLEAROBox;
 use Point;
 
@@ -2252,9 +2252,9 @@ sub _set_object_instances {
 
     my @obj_frames = $obj_fs->list_frames();
     foreach my $objFrNum (@obj_frames) {
-      my $object = Object->new($object_id);
-      if(ref($object) ne "Object") {
-        $self->_set_errormsg("Failed 'Object' instance creation ($object)");
+      my $object = CLEARObject->new($object_id);
+      if(ref($object) ne "CLEARObject") {
+        $self->_set_errormsg("Failed 'CLEARObject' instance creation ($object)");
         return(0);
       }
 
