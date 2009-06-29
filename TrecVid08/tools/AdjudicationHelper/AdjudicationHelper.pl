@@ -122,9 +122,10 @@ my $nonglob = 0;
 my $minAgree = 0;
 my $mad = 0;
 my $smartglob = undef;
+my $rmREFfromSYS = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CD    I   M     ST VW   a cd f hij  mn p  s  vwx   #
+# Used: A CD    I   M     ST VW   a cd f hij  mn p rs  vwx   #
 
 my $fcmdline = "$0 " . join(" ", @ARGV);
 
@@ -157,6 +158,7 @@ GetOptions
    'minAgree=i'      => \$minAgree,
    'MakeAgreeDir'    => \$mad,
    'globSmart=i'     => \$smartglob,
+   'rerunMasterREFvsSYS' => \$rmREFfromSYS,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -242,13 +244,14 @@ my $empty_ref_dir  = "00-empty_REF";
 my $val_md_dir     = "01-Validate";
 my $ref_val_md_dir = "$val_md_dir/REF";
 my $sys_val_md_dir = "$val_md_dir/SYS";
-my $first_align    = "02-First_Alignment";
-my $first_remove   = "03-Only_Unmapped_Sys";
-my $iteration_step = "04-Iteration";
-my $UnRef_base     = "05-1-Unmapped_Ref";
+my $GTFvsSYS_dir   = "02-MasterREF_vs_SYS";
+sub get_first_align {my($v)=@_;return(sprintf("$GTFvsSYS_dir/%02d-1-First_Alignment", $v));}
+sub get_first_remove {my($v)=@_;return(sprintf("$GTFvsSYS_dir/%02d-2-Only_Unmapped_Sys", $v));}
+my $iteration_step = "03-Iterations";
+my $UnRef_base     = "04-Unmapped_Ref";
 my $UnRef_step1    = "$UnRef_base/1-empty_SYS";
 my $UnRef_step2    = "$UnRef_base/2-Master_REF_vs_empty_SYS";
-my $UnSys_base     = "05-2-Unmapped_Sys";
+my $UnSys_base     = "05-Unmapped_Sys";
 my $UnSys_step1    = "$UnSys_base/1-empty_REF";
 my $UnSys_step2    = "$UnSys_base/2-empty_REF_vs_Final_SYS";
 my $AdjDir         = "06-Adjudication_ViPERfiles";
@@ -441,68 +444,134 @@ if ($pds) {
 }
 
 ########## Align SYSs to Master REF
-print "\n\n***** STEP ", $stepc++, ": Align SYSs to REF\n";
+print "\n\n***** STEP ", $stepc++, ": Align SYSs to Master REF\n";
 
 &die_check_file_r($master_ref_md, "Validated REF");
 
-my %sc1_sys_files = ();
-my %sc1_mapt = ();
+my @lsysf = ();
+my @lfilel = ();
+my %score_sf = ();
 foreach my $sf (@order_of_things) {
   my ($dir, $onfile, $ext) = &die_split_dfe($sf, "SYS");
   my $file = MMisc::concat_dir_file_ext("", $onfile, $ext);
   my $sf_md = MMisc::concat_dir_file_ext($sys_dir, $file, (($file =~ m%$md_add$%) ? "" : "$md_add"));
   &die_check_file_r($sf_md, "SYS");
-  
-  my $bodir = MMisc::get_file_full_path("$wid/$first_align");
-  my $odir = "$bodir/$file$dtadd";
-  &die_mkdir($odir, "SYS");
-
-  my $log = MMisc::concat_dir_file_ext($bodir, "$file$dtadd", $log_add);
-  my $command = "$scorer -w $odir -W text -p -f $fps $sf_md -g $master_ref_md -d $deltat -D $duration -a -s";
-
-  print "* Scoring [$file]\n";
-  &die_syscall_logfile($log, "scoring command", $command);
-
-  my @ofiles = &die_list_X_files(2, $odir, "$file scoring");
-  my ($ofile) = grep(m%$md_add$%, @ofiles);
-  $sc1_mapt{$sf} = $file;
-  $sc1_sys_files{$file} = "$odir/$ofile";
+  push @lsysf, $sf_md;
+  push @lfilel, $file;
+  $score_sf{$sf} = 1;
 }
 
-########## Only keeping Unmapped_Sys entries
-print "\n\n***** STEP ", $stepc++, ": Only keeping Unmapped_Sys entries\n";
-
-my $usys_dir = MMisc::get_file_full_path("$wid/$first_remove");
+my %sc1_sys_files = ();
+my %sc1_mapt = ();
 
 my %sc2_sys_files = ();
 my %sc2_mapt = ();
-foreach my $tsf (@order_of_things) {
-  MMisc::error_quit("KEY NOT FOUND [$tsf]")
-    if (! exists $sc1_mapt{$tsf});
-  my $sf = $sc1_mapt{$tsf};
-  MMisc::error_quit("KEY2 NOT FOUND [$sf]")
-    if (! exists $sc1_sys_files{$sf});
+
+my $mrscit = 0;
+my $redo_mrscit = ($rmREFfromSYS) ? 1 : 0;
+my %prev_csv = ();
+do {
+  print "*** SYSs vs Master REF (Iteration: $mrscit)\n";
+  my @nlsysf = ();
+  for (my $i = 0; $i < scalar @order_of_things; $i++) {
+    my $sf = $order_of_things[$i];
+    next if ($score_sf{$sf} == 0);
+    my $sf_md = $lsysf[$i];
+    my $file = $lfilel[$i];
+    my $bodir = MMisc::get_file_full_path("$wid/" . &get_first_align($mrscit));
+    my $odir = "$bodir/$file$dtadd";
+    &die_mkdir($odir, "SYS");
+    
+    my $log = MMisc::concat_dir_file_ext($bodir, "$file$dtadd", $log_add);
+    my $command = "$scorer -w $odir -W text -p -f $fps $sf_md -g $master_ref_md -d $deltat -D $duration -a -s";
+    
+    print "* Scoring [$file]\n";
+    &die_syscall_logfile($log, "scoring command", $command);
+    
+    my @ofiles = &die_list_X_files(2, $odir, "$file scoring");
+    my ($ofile) = grep(m%$md_add$%, @ofiles);
+    $sc1_mapt{$sf} = $file;
+    $sc1_sys_files{$file} = "$odir/$ofile";
+  }
   
-  my $odir = "$usys_dir/$sf$dtadd";
-  &die_mkdir($odir, "$sf");
+  ## Only keeping Unmapped_Sys entries
+  print "*** Only keeping Unmapped_Sys entries (Iteration: $mrscit)\n";
+  
+  my $usys_dir = MMisc::get_file_full_path("$wid/" . &get_first_remove($mrscit));
+  
+  foreach my $tsf (@order_of_things) {
+    if ($score_sf{$tsf} == 0) {
+      push @nlsysf, "NO FILE THERE";
+      next;
+    }
+    MMisc::error_quit("KEY NOT FOUND [$tsf]")
+      if (! exists $sc1_mapt{$tsf});
+    my $sf = $sc1_mapt{$tsf};
+    MMisc::error_quit("KEY2 NOT FOUND [$sf]")
+      if (! exists $sc1_sys_files{$sf});
+    
+    my $odir = "$usys_dir/$sf$dtadd";
+    &die_mkdir($odir, "$sf");
+    
+    my $rsf = $sc1_sys_files{$sf};
+    &die_check_file_r($rsf, "SYS file");
+    
+    my $log = MMisc::concat_dir_file_ext($odir, $sf, $log_add);
+    my $command = "$validator $rsf -w $odir -W text -l *:Unmapped_Sys -r";
+    
+    my $efn = 2;
+    if ($rmREFfromSYS) {
+      $command .= " --DumpCSV EventType,Framespan -f $fps";
+      $efn = 3;
+    }
 
-  my $rsf = $sc1_sys_files{$sf};
-  &die_check_file_r($rsf, "SYS file");
+    print "* Only keeping Unmapped_Sys and removing subtypes [$sf]\n";
+    &die_syscall_logfile($log, "validating command", $command);
+    
+    my (@ofiles) = &die_list_X_files($efn + 1, $odir, "$sf validating");
+    my @tmp = grep(! m%$log_add$%, @ofiles);
+    MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected ($efn) : " . join(" ", @tmp))
+      if (scalar @tmp != $efn);
+    my ($ofile) = grep(m%$md_add$%, @tmp);
+    $sc2_mapt{$tsf} = $sf;
+    my $nsysf = "$odir/$ofile";
+    my $err = MMisc::check_file_r($nsysf);
+    MMisc::error_quit("Problem with new SYS file ($nsysf): $err")
+      if (! MMisc::is_blank($err));
+    $sc2_sys_files{$sf} = $nsysf;
+    push @nlsysf, $nsysf;
 
-  my $log = MMisc::concat_dir_file_ext($odir, $sf, $log_add);
-  my $command = "$validator $rsf -w $odir -W text -l *:Unmapped_Sys -r";
+    if ($rmREFfromSYS) {
+      my ($lcsvf) = grep(m%\.csv$%i, @tmp);
+      my $csvf = "$odir/$lcsvf";
+      MMisc::error_quit("Could not find expected CSV file ($csvf)")
+        if (! MMisc::is_file_r($csvf));
+      
+      if (exists $prev_csv{$tsf}) {
+        my $lcont = &are_csv_content_different($prev_csv{$tsf}, $csvf);
+        if ($lcont == 0) {
+          print "  -> [$sf] converged in $mrscit iteration(s)\n";
+          $score_sf{$tsf} = 0;
+        }
+      }
+      $prev_csv{$tsf} = $csvf;
+    }
 
-  print "* Only keeping Unmapped_Sys and removing subtypes [$sf]\n";
-  &die_syscall_logfile($log, "validating command", $command);
+  }
+  @lsysf = @nlsysf;
 
-  my (@ofiles) = &die_list_X_files(3, $odir, "$sf validating");
-  my @tmp = grep(! m%$log_add$%, @ofiles);
-  MMisc::error_quit("Found different amount of files (" . scalar @tmp . ") than expected (2) : " . join(" ", @tmp))
-    if (scalar @tmp != 2);
-  my ($ofile) = grep(m%$md_add$%, @tmp);
-  $sc2_mapt{$tsf} = $sf;
-  $sc2_sys_files{$sf} = "$odir/$ofile";
-}
+  if ($redo_mrscit) {
+    my $tmpc = 0;
+    foreach my $key (keys %score_sf) {
+      $tmpc += $score_sf{$key};
+    }
+    $redo_mrscit = $tmpc;
+    print "*** All files have converged\n"
+      if ($redo_mrscit == 0);
+  }
+
+  $mrscit++;
+} until ($redo_mrscit == 0);
 
 ########## Iteration
 print "\n\n***** STEP ", $stepc++, ": Iteration\n";
@@ -835,6 +904,39 @@ sub extract_gmin_grange_from_log {
   return($gmin, $grange);
 }
 
+##########
+
+sub are_csv_content_different {
+  my ($csv1, $csv2) = @_;
+
+  foreach my $f (@_) {
+    my $err = MMisc::check_file_r($f);
+    MMisc::error_quit("Problem with CSV file ($f): $err")
+      if (! MMisc::is_blank($err));
+  }
+
+  open FILE, "<$csv1"
+    or MMisc::error_quit("Problem reading CSV file ($csv1): $!");
+  my @a1 = <FILE>;
+  close FILE;
+  open FILE, "<$csv2"
+    or MMisc::error_quit("Problem reading CSV file ($csv2): $!");
+  my @a2 = <FILE>;
+  close FILE;
+
+  return(1)
+    if (scalar @a1 != scalar @a2);
+
+  @a1 = sort @a1;
+  @a2 = sort @a2;
+
+  for (my $i = 0; $i < scalar @a1; $i++) {
+    return(1) if ($a1[$i] ne $a2[$i]);
+  }
+
+  return(0);
+}
+
 ############################################################
 
 sub set_usage {
@@ -842,7 +944,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--InfoGenerator tool [--info_path path] [--jpeg_path path]] [--changeREFtype] [--ChangeSYStype [randomseed[:find_value]]] [--percentDS] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] [--Warn_numframes] [--minAgree level] [--MakeAgreeDir] [--nonGlobing | --globSmart tokeep] --fps fps --Duration seconds --delta_t value --work_in_dir dir ref_file sys_files
+Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [--Validator location] [--Scorer location] [--Adjudication location] [--InfoGenerator tool [--info_path path] [--jpeg_path path]] [--changeREFtype] [--ChangeSYStype [randomseed[:find_value]]] [--percentDS] [--ForceFilename filename] [--segmentation_margin value] [--adjudication_only] [--Warn_numframes] [--minAgree level] [--MakeAgreeDir] [--nonGlobing | --globSmart tokeep] [--rerunMasterREFvsSYS] --fps fps --Duration seconds --delta_t value --work_in_dir dir ref_file sys_files
 
  Where:
   --help          Print this usage information and exit
@@ -870,6 +972,7 @@ Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-
   --Duration      Specify the scorer's duration
   --delta_t       Specify the scorer's delta_t value
   --work_in_dir   Directory where all the output an temporary files will be geneated
+  --rerunMasterREFvsSYS  Will rerun the "Align SYSs to Master REF" step as many time as needed until a convergence is reached in order to remove multiple SYS entries that are matched by the same REF entry
 
 The tool will create Adjudication XML files by working step by step with the REF and SYS files using other TrecVid08 F4DE tools, and using the Adjudicator script on the final result.
 
