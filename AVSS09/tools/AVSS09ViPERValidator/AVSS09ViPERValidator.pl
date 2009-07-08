@@ -107,9 +107,10 @@ my $ecf_file = "";
 my $ttid = "";
 my $tttdir = 0;
 my $ovwrt = 1;
+my $ttid_quit = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A C EF             T  W        fgh      o   st vwx    #
+# Used: A C EF             T  W        fgh      o q st vwx    #
 
 my %opt;
 GetOptions
@@ -131,6 +132,7 @@ GetOptions
    'trackingTrial=s' => \$ttid,
    'TrackingTrialsDir' => \$tttdir,
    'overwriteNot'    => sub {$ovwrt = 0},
+   'quitTTID'        => \$ttid_quit,
    # Hiden Option(s)
    'X_show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -157,6 +159,8 @@ if (($writeback != -1) && ($writeback ne "")) {
 
 MMisc::error_quit("Can not use \'trackingTrial\' unless an ECF file is specified")
   if ((MMisc::is_blank($ecf_file)) && (! MMisc::is_blank($ttid)));
+MMisc::error_quit("Can not use \'quitTTID\' unless \'trackingTrial\' is selected")
+  if ((MMisc::is_blank($ttid)) && ($ttid_quit != 0));
 
 if ($tttdir) {
   MMisc::error_quit("Can not use \'TrackingTrialsDir\' unless an ECF file is specified")
@@ -181,6 +185,10 @@ if ($sk_wb) {
     $txt .= " / Forcing ScoringSequenceMemDump";
     $skipScoringSequenceMemDump = 0;
   }
+  MMisc::error_quit("No \'write\' option given, needed for this mode\n\n$usage\n")
+      if ($writeback == -1);
+  MMisc::error_quit("Can not \'write\' to stdout in this mode\n\n$usage\n")
+      if ($writeback eq "");
   $txt .= " *!*";
   print "$txt\n";
 }
@@ -202,6 +210,24 @@ if (($skipScoringSequenceMemDump) && (! defined $MemDump));
 
 ## Pre
 my $ecf = &load_ecf($ecf_file);
+my %ttid_lefttodo = ();
+if (! MMisc::is_blank($ttid)) {
+  my $ok = $ecf->is_ttid_in($ttid);
+  MMisc::error_quit("Requested TTID [$ttid] problem: " . $ecf->get_errormsg())
+      if ($ecf->error());
+  MMisc::error_quit("Requested TTID [$ttid] is not in ECF")
+      if (! $ok);
+  my @sffn_list = $ecf->get_sffn_list_for_ttid($ttid);
+  MMisc::error_quit("Problem obtaining SFFN list for requested TTID [$ttid]: " . $ecf->get_errormsg())
+      if ($ecf->error());
+  MMisc::error_quit("No SFFN found for requested TTID [$ttid]")
+      if (scalar @sffn_list == 0);
+  if ($ttid_quit) {
+    foreach my $lsffn (@sffn_list) {
+      $ttid_lefttodo{$lsffn}++;
+    }
+  }
+}
 
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
@@ -249,6 +275,18 @@ foreach my $tmp (@ARGV) {
 
 print "\n\n" if ($sk_wb);
 print("All files processed (Validated: $ndone | Total: $ntodo)\n");
+
+if ($ttid_quit) {
+  my $quitxt = "";
+  foreach my $sffn (sort keys %ttid_lefttodo) {
+    my $v = $ttid_lefttodo{$sffn};
+    $quitxt .= "\n - SFFN [$sffn] was not found." 
+      if ($v > 0);
+  }
+  MMisc::error_quit("In \'quitTTID\' mode for TTID [$ttid]:$quitxt\n")
+      if (! MMisc::is_blank($quitxt));
+  print "Note: In \'quitTTID\' mode for TTID [$ttid], all SFFN seen\n";
+}
 
 MMisc::error_quit("Not all files processed succesfuly") if ($ndone != $ntodo);
 MMisc::ok_quit("\nDone\n");
@@ -379,11 +417,19 @@ sub __write_autoselect_ttid_VF {
 sub _process_tt_ttid_only {
   my ($vf, $sffn, $isgtf, $rttid) = @_;
 
-  return("! sffn not part of requested trackingTrial [$ttid], skipping it\n")
-    if (! $ecf->is_sffn_in_ttid($rttid, $sffn));
+  if (! $ecf->is_sffn_in_ttid($rttid, $sffn)) {
+    MMisc::error_quit("sffn [$sffn] not part of requested trackingTrial [$ttid], and \'quitTTID\' requested, aborting")
+        if ($ttid_quit);
+    return("! sffn not part of requested trackingTrial [$ttid], skipping it\n");
+  }
 
   print "++ ttid: $rttid\n";
   my $fn = &__write_autoselect_ttid_VF($vf, $rttid, $sffn, $isgtf);
+  if ($ttid_quit) {
+    MMisc::error_quit("In \'quitTTID\' mode, can not find SFFN [$sffn] in list of TTID [for $rttid]")
+        if (! exists $ttid_lefttodo{$sffn});
+    $ttid_lefttodo{$sffn}--;
+  }
   return("");
 }
 
@@ -455,10 +501,11 @@ B<AVSS09ViPERValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--write> [I<directory>]>
    S<[B<--WriteMemDump> [I<mode>] [B<--skipScoringSequenceMemDump>]]>
    S<[B<--overwriteNot>]]>
-  S<[B<--ECF> I<ecffile.xml> [B<--TrackingTrialsDir>] [B<--trackingTrial> I<ttid>]>
+  S<[B<--ECF> I<ecffile.xml> [B<--TrackingTrialsDir>]>
+   S<[B<--trackingTrial> I<ttid> [B<--quitTTID>]]>
    S<[B<--AVSSxsd> I<location>]]>
   S<I<viper_source_file.xml>[I<transformations>]>
-  S<[I<viper_source_file.xml>[I<transformations>] [I<...>]>
+  S<[I<viper_source_file.xml>[I<transformations>] [I<...>]]>
   
 =head1 DESCRIPTION
 
@@ -533,6 +580,10 @@ Display this man page.
 =item B<--overwriteNot>
 
 When rewriting XML or MemDumps, the default is to overwrite previously generated files. This option inhibit this feature: it will force files to not be overwritten and the program will exit with an error status.
+
+=item B<--quitTTID>
+
+When checking a specified I<tracking trial ID>, exit with an error message if the files listed on the command line to be validated are not part of this TTID (or if not all the files needed to validate this given TTID are present).
 
 =item B<--skipScoringSequenceMemDump>
 
@@ -649,7 +700,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--gtf] [--frameTol framenbr] [--ForceFilename file] [--write [directory] [--WriteMemDump [mode] [--skipScoringSequenceMemDump]] [--overwriteNot]] [--ECF ecffile.xml [--TrackingTrialsDir] [--trackingTrial ttid] [--AVSSxsd location]] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--gtf] [--frameTol framenbr] [--ForceFilename file] [--write [directory] [--WriteMemDump [mode] [--skipScoringSequenceMemDump]] [--overwriteNot]] [--ECF ecffile.xml [--TrackingTrialsDir] [--trackingTrial ttid [--quitTTID]] [--AVSSxsd location]] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
 
 Will perform a semantic validation of the AVSS09 ViPER XML file(s) provided.
 
@@ -669,6 +720,7 @@ Will perform a semantic validation of the AVSS09 ViPER XML file(s) provided.
   --ECF           Specify the ECF XML file to use when rewritting data
   --TrackingTrialsDir  When rewritting data, create a directory hierarchy than is recongizable by the scoring tool
   --trackingTrial Process only the requested \"tracking trial ID\"
+  --quitTTID      Exit with error if not all files requested for given TTID are present (or too many are present)
   --AVSSxsd       Path where the XSD files needed for ECF validation can be found
 
 
