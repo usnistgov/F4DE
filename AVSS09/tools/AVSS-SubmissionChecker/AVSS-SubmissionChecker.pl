@@ -94,7 +94,6 @@ my $ss_md_add = AVSS09ViperFile::get_SSMemDump_filename();
 
 my $xmllint_env = "F4DE_XMLLINT";
 my $mancmd = "perldoc -F $0";
-my $usage = &set_usage();
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
@@ -107,11 +106,11 @@ my $skipval = 0;
 my $memdump = "/tmp";
 my $ecfdir = "";
 my $qoe = 0;
-my $cont_md = 0;
 my $specfile = "";
 my $valtool = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/bin/AVSS09ViPERValidator") : "../AVSS09ViPERValidator/AVSS09ViPERValidator.pl";
 my $frameTol = 0;
 my $logdir = ".";
+my $usage = &set_usage();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used: A C               S  VW     c efh    lm   q stuvwx   #
@@ -133,7 +132,6 @@ GetOptions
    'WriteMemDump=s'  => \$memdump,
    'ecfdir=s'        => \$ecfdir,
    'quit_on_error'   => \$qoe,
-#   'continue_MemDump' => \$cont_md,
    'Specfile=s'      => \$specfile,
    'tool=s'          => \$valtool,
    'frameTol=i'      => \$frameTol,
@@ -199,9 +197,6 @@ if (defined $memdump) {
   my $derr = MMisc::check_dir_w($memdump);
   MMisc::error_quit("Problem with \'WriteMemDump\' 's directory ($memdump) : $derr")
     if (! MMisc::is_blank($derr));
-} else {
-  MMisc::error_quit("\'Continue_MemDump\' can only be used if \'WriteMemDump\' is selected")
-    if ($cont_md);
 }
 
 ########################################
@@ -390,7 +385,7 @@ sub valerr {
 
   print "\n\n\n";
   &valok($fname, "[ERROR] $txt");
-  &valok($fname, "[ERROR] ** Please refer to the \'Submission Instructions\' (Appendix B) of the \'TRECVid Event Detection Evaluation Plan\' for more information");
+  &valok($fname, "[ERROR] ** Please refer to the \'Submission Instructions\' of the \'AVSS Multiple Camera Person Tracking Evaluation Plan\' for more information");
 
   &valok($fname, "Also to note: $extra") if (! MMisc::is_blank($extra));
 
@@ -444,7 +439,7 @@ sub __extend_error_notes_warnings {
         &__add_to_errors($lexpid, 0, "Some TTID had errors: " . join(", ", sort @{$ltmp{$ttid_modes[2]}}));
       }
       if (exists $ltmp{$ttid_modes[1]}) {
-        &__add_tonotes($lexpid, 0, "Found some TTIDs: " . join(", ", sort @{$ltmp{$ttid_modes[1]}}));
+        &__add_to_notes($lexpid, 0, "Found some TTIDs: " . join(", ", sort @{$ltmp{$ttid_modes[1]}}));
       }
     }
   }
@@ -876,7 +871,7 @@ sub validate_ttid_dir {
   vprint(9, "Running Validation step");
   my ($ok, $rtxt, $stdout, $stderr, $retcode) =
     MMisc::write_syscall_logfile($logfile, $cmd);
-  return("Problem while running validation on TTID [$ttid], see log file [$logfile]\nSTDERR:$stderr")
+  return("Problem while running validation on TTID [$ttid], see log file [$logfile]")
     if ($retcode != 0);
   vprint(10, "Succesful validation [log: $logfile]");
 
@@ -911,29 +906,215 @@ sub _warn_add {
   $warn_msg .= "[Warning] " . join(" ", @_) ."\n";
 }
 
-########################################
+############################################################ Manual
+
+=pod
+
+=head1 NAME
+
+AVSS-Submission Checker - AVSS Submission Checker
+
+=head1 SYNOPSIS
+
+B<AVSS-SubmissionChecker> S<[B<--help> | B<--version> | B<--man>]>
+  S<B<--Specfile> I<perlEvalfile> B<--ecfdir> I<directory>>
+  S<[B<--xmllint> I<location>] [B<--CLEARxsd> I<location>] [B<--AVSSxsd> I<location>]>
+  S<[B<--skip_validation>] [B<--WriteMemDump> I<dir>] [B<--Verbose>]>
+  S<[B<--uncompress_dir> I<dir> | B<--work_in_dir> I<dir>]>
+  S<[B<--quit_on_error>] [B<--logdir> I<directory>]>
+  S<[B<--tool> I<toolpath>] [B<--frameTol> I<nbrframe>]>
+  S<last_parameter>
+
+=head1 DESCRIPTION
+
+B<AVSS-SubmissionChecker> is an I<AVSS Sumbission Checker> program designed to confirm that a submission archive follows the guidelines posted in the I<Submission Instructions> of the I<AVSS Multiple Camera Person Tracking Evaluation Plan>.
+ 
+The software will confirm that an archive's files and directory structure conforms with the I<Submission Instructions>, and will validate the SYS XML files.
+
+It is written to be functional with AVSS09 by using a B<Specfile> that contains needed definitions (distributed as part of the F4DE archive).
+
+In the case of B<--work_in_dir>, S<last_parameter> is the E<lt>SITEE<gt>.
+In all other cases, S<last_parameter> is the archive file to process in the E<lt>I<SITE>E<gt>_E<lt>I<SUB-NUM>E<gt>.I<extension> form (recognized extensions are available using the B<--help> option).
+
+=head1 PREREQUISITES
+
+B<AVSS-SubmissionChecker> ViPER files need to pass the B<TV08ViperValidator> validation process. The program relies on the following software and files.
+ 
+=over
+
+=item B<SOFTWARE>
+
+I<xmllint> (part of I<libxml2>, see S<http://www.xmlsoft.org/>) is required (at least version 2.6.30) to perform the syntactic validation of the source file.
+If I<xmllint> is not available in your PATH, you can specify its location either on the command line (see B<--xmllint>) or by setting the S<F4DE_XMLLINT> environment variable to the full path location of the I<xmllint> executable.
+
+The program needs I<AVSS09ViPERValidator> to perform ViPER validation and additional check on submission files.
+
+The program relies on I<gnu tar> and I<unzip> to process the archive files.
+
+=item B<FILES>
+
+The syntactic validation requires some XML schema files.
+It is possible to specify their location using the B<CLEARxsd> and B<AVSSxsd> options.
+You should not have to specify their location, if you have performed an install and have set the global environment variables.
+
+The program also requires a B<Specfile> that defines some parameters related to the eval being checked as well as list the expected ECF files depending on the task specified by the E<lt>I<EXPID>E<gt>. It then requires a directory location (B<ecfdir>) for those neede ECF files. Note that the ECF files are not part of the B<F4DE> distribution.
+
+=item B<GLOBAL ENVIRONMENT VARIABLES>
+
+Once you have installed the software, setting B<F4DE_BASE> to the installation location, and extending your B<PATH> to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
+
+=back
+
+=head1 GENERAL NOTES
+
+B<AVSS-SubmissionChecker> expects that the system and reference ViPER files can be been validated using 'xmllint' against the AVSS09 specifications.
+
+B<AVSS-SubmissionChecker> will ignore the I<config> section of the XML file, as well as discard any xml comment(s).
+
+=head1 OPTIONS
+
+=over
+
+=item B<--AVSSxsd> I<location>
+
+Specify the default location of the required AVSS XSD files.
+
+=item B<--CLEARxsd> I<location>
+
+Specify the default location of the required CLEAR XSD files.
+
+=item B<--ecfdir> I<directory>
+
+Specify the I<directory> in which the ECF XML files specified using the B<Specfile> option can be found. The ECF provides information such as the list of sourcefile filename expected to be seen in the submission. 
+
+=item B<--frameTol> I<nbrframe>
+
+The frame tolerance allowed for attributes to be outside of the object framespan.
+Default value can be obtained by using B<--help>.
+
+=item B<--help>
+
+Display the usage page for this program. Also display some default values and information.
+
+=item B<--logdir> I<directory>
+
+Specify the directory in which ViPER validation logs are placed.
+
+=item B<--man>
+
+Display this man page.
+
+=item B<--quit_on_error>
+
+If for any reason, any submission file or step is returning an error, quit when this error is encounted, instead of continuing the check process and adding information to a report printed when all submissions have been checked.
+
+=item B<--Specfile> I<perlEvalfile>
+
+Specify the I<perlEvalfile> that contains definitions specific to the evaluation checked against.
+
+=item B<--skip_validation>
+
+Do not perform XML validation on the ViPER files within the archive.
+
+=item B<--tool> I<toolpath>
+
+Specify the full path location of the S<AVSS09ViPERValidator> tool.
+
+=item B<--uncompress_dir> I<dir>
+
+Specify the location of the directory in which to uncompress the archive content (by default a temporary directory is created).
+
+=item B<--Verbose>
+
+Print a verbose log of every task being performed before performing it, and in some case, its results.
+
+=item B<--version>
+
+Display B<AVSS-SubmissionChecker> version information.
+
+=item B<--WriteMemDump> I<dir>
+
+Write a memory dump of validated XML files into I<dir>, placing those files in a directory structure that match the I<ECF> specifications for a given I<tracking trial ID> that can be reloaded by the B<AVSS09Scorer> program with the I<ECF> information only.
+
+=item B<--work_in_dir> I<dir>
+
+Specify the location of the uncompressed files to check.
+This step is designed to help confirm that a directory structure is proper before generating the archive.
+When using this mode, the S<last_parameter> becomes E<lt>SITEE<gt>.
+
+=item B<--xmllint> I<location>
+
+Specify the full path location of the B<xmllint> command line tool if not available in your PATH.
+Can also be set using the B<F4DE_XMLLINT> environment variable.
+
+=back
+
+=head1 USAGE
+
+=item B<AVSS-SubmissionChecker --Specfile AVSS09-SubmissionChecker_conf.perl --ecfdir ECFs SITE_3.tgz>
+
+Will perform a submission check on archive file I<SITE_3.tgz> in a temporarily created directory, following the evaluation specifications defined in I<AVSS09-SubmissionChecker_conf.perl> and looking for the ECF XMLs defined in this specfile in the I<ECFs> directory.
+
+=item B<AVSS-SubmissionChecker --Specfile AVSS09-SubmissionChecker_conf.perl --ecfdir ECFs SITE_3.tgz --uncompress_dir testdir --skip_validation>
+
+Will perform a submission check on archive file I<SITE_3.tgz>, uncompressing its content in the I<testdir> directory. This will also not try to validate the XML files, it will simply confirm that the directory structure, and that all the files are present.
+
+=item B<AVSS-SubmissionChecker --Specfile AVSS09-SubmissionChecker_conf.perl --ecfdir ECFs SITE --work_in_dir testdir --Verbose --quit_on_errors>
+
+Will check that the files and directories in I<testdir> are the expected ones. It will also confirm that the XML files validate against the XML strucutre, and that the content of the XML files can be matched against the ECF rules. While checking each I<EXPID> and I<TTID>, print verbose information on step performed, and will exit after the first error encountered (instead of processing all the files/directory in I<testdir>).
+
+=head1 BUGS
+
+Please send bug reports to <nist_f4de@nist.gov>
+
+=head1 AUTHORS
+
+Martial Michel <martial.michel@nist.gov>
+
+=head1 COPYRIGHT 
+
+This software was developed at the National Institute of Standards and Technology by employees of the Federal Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this software is not subject to copyright protection within the United States and is in the public domain. It is an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
+
+THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+
+=cut
+
+############################################################
 
 sub set_usage {
-  my $txt=<<EOF
-   help
-   version
-   man
-   xmllint=s
-   CLEARxsd=s
-   AVSSxsd=s
-   Verbose
-   uncompress_dir=s
-   work_in_dir=s
-   skip_validation
-   WriteMemDump=s
-   ecfdir=s
-   quit_if_non_scorable
-   continue_MemDump
-   Specfile=s
-   tool=s
-   frameTol=i
-   logdir=s
+  my $ok_exts = join(" ", @expected_ext);
 
+  my $txt=<<EOF
+$versionid
+
+Usage: $0 [--help | --version | --man] --Specfile perlEvalfile --ecfdir directory [--xmllint location] [--CLEARxsd location] [--AVSSxsd location] [--skip_validation] [--WriteMemDump dir] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_on_error] [--logdir directory] [--tool toolpath] [--frameTol nbrframe] last_parameter
+
+Will confirm that a submission file conforms to the 'Submission Instructions' of the 'AVSS Multiple Camera Person Tracking Evaluation Plan'. The program needs a 'Specfile' to load some of its eval specific definitions, as well as an 'ecfdir' in which are all the XML ECF files specified in the Specfile.
+
+'last_parameter' is usually the archive file(s) to process (of the form <SITE>_<SUB-NUM>.extension, example: NIST_2.tgz)
+Only in the '--work_in_dir' case does it become <SITE>.
+
+ Where:
+  --help          Print this usage information and exit
+  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+  --version       Print version number and exit
+  --Specfile      Specify the \'perlEvalfile\' that contains definitions specific to the evaluation run
+  --ecfdir        Specify the \'directory\' in which the ECF XML files defined in the \'perlEvalfile\' can be found 
+  --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
+  --CLEARxsd      Path where the XSD files related to CLEAR can be found
+  --AVSSxsd       Path where the XSD files needed for AVSS ECF validation can be found
+  --skip_validation  Bypass the XML files validation process
+  --WriteMemDump  Base directory in which the scoring ready directory hierarchy will be created 
+  --Verbose       Explain step by step what is being checked
+  --uncompress_dir  Specify the directory in which the archive file will be uncompressed
+  --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified (useful to confirm a submission before generating its archive)
+  --quit_on_error Exit as soon as an error is found in submission. Default is to try to process the entire submission and give a summary of all encountered errors at the end of the check
+  --logdir        Specify the \'directory\' in which all validation steps log files are written (default: $logdir)
+  --tool          Specify the full path location of the AVSS09ViPERValidator tool (default: $valtool)
+  --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan (default: $frameTol)
+
+Note:
+- Recognized archive extensions: $ok_exts
 EOF
 ;
 
