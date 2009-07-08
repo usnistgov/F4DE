@@ -1,6 +1,6 @@
 File:  README
-Date:  June 19th, 2009
-F4DE Version: 2.0 (beta2)
+Date:  July 9th, 2009
+F4DE Version: 2.0 (beta3)
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
@@ -41,6 +41,8 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - AVSS09Scorer - The main evaluation script. 
     - AVSS09ViperValidator - A syntactic and semantic validator for 
       both system output ViPER files and reference annotation files.
+    - AVSS09-SubmissionChecker - A tool designed to help confirm submission
+      archives before transmitting them to NIST. 
 
 
 INSTALLATION
