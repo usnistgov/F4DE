@@ -46,6 +46,13 @@ install:
 
 #####
 
+install_noman:
+	@make TV08install_noman
+	@make CLEAR07install
+	@make AVSS09install_noman
+
+#####
+
 CM_DIR=common
 
 commoninstall:
@@ -61,6 +68,12 @@ TV08TOOLS_MAN=tools/{TVED-SubmissionChecker/TVED-SubmissionChecker.pl,TV08MergeH
 TV08TOOLS=tools/{TVED-SubmissionChecker/{TVED-SubmissionChecker.pl,TV{08,09}ED-SubmissionChecker.sh},TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
 
 TV08install:
+	@make TV08install_common
+	@make TV08install_man
+	@echo ""
+	@echo ""
+
+TV08install_common:
 	@echo ""
 	@echo "********** Installing TrecVid08 tools"
 	@make commoninstall
@@ -69,7 +82,13 @@ TV08install:
 	@perl installer.pl ${F4DE_BASE} lib/data ${TV08DIR}/data/*.xsd
 	@perl installer.pl ${F4DE_BASE} lib/data ${TV08DIR}/data/*.perl
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${TV08DIR}/${TV08TOOLS}
+
+TV08install_man:
 	@perl installer.pl ${F4DE_BASE} man/man1 ${TV08DIR}/man/*.1
+
+TV08install_noman:
+	@make TV08install_common
+	@echo "** NOT installing man files"
 	@echo ""
 	@echo ""
 
@@ -92,17 +111,32 @@ CLEAR07install:
 #####
 
 AV09DIR=AVSS09
-AV09TOOLS=tools/{AVSS09Scorer/AVSS09Scorer.pl,AVSS09ViPERValidator/AVSS09ViPERValidator.pl}
+AV09TOOLS_MAN=tools/{AVSS09Scorer/AVSS09Scorer.pl,AVSS09ViPERValidator/AVSS09ViPERValidator.pl,AVSS-SubmissionChecker/AVSS-SubmissionChecker.pl}
+AV09TOOLS=tools/{AVSS09Scorer/AVSS09Scorer.pl,AVSS09ViPERValidator/AVSS09ViPERValidator.pl,AVSS-SubmissionChecker/{AVSS-SubmissionChecker.pl,AVSS09-SubmissionChecker.sh}}
 
 AVSS09install:
+	@make AVSS09install_common
+	@make AVSS09install_man
+	@echo ""
+	@echo ""
+
+AVSS09install_common:
 	@echo ""
 	@echo "********** Installing AVSS09 tools"
 	@echo "  (Relies on CLEAR07, running installer)"
 	@make CLEAR07install
 	@echo "** Installing AVSS09 files"
 	@perl installer.pl ${F4DE_BASE} lib ${AV09DIR}/lib/*.pm
+	@perl installer.pl ${F4DE_BASE} lib/data ${AVSS09DIR}/data/*.xsd
+	@perl installer.pl ${F4DE_BASE} lib/data ${AVSS09DIR}/data/*.perl
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${AV09DIR}/${AV09TOOLS}
+
+AVSS09install_man:
 	@perl installer.pl ${F4DE_BASE} man/man1 ${AV09DIR}/man/*.1
+
+AVSS09install_noman:
+	@make AVSS09install_common
+	@echo "** NOT installing man file"
 	@echo ""
 	@echo ""
 
@@ -209,7 +243,7 @@ create_mans:
 	@for i in ${TV08TOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/man/$$g.1; done
 # AVSS09
 	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man
-	@for i in ${AV09TOOLS}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man/$$g.1; done
+	@for i in ${AV09TOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man/$$g.1; done
 
 dist_common:
 	@cp ${F4DE_VERSION} /tmp
