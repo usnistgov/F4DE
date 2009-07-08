@@ -895,6 +895,42 @@ sub get_ttid_primary_camid {
   return($self->get_camid_from_ttid_sffn($rttid, $sffn));
 }
 
+##########
+
+sub is_ttid_of_type {
+  my ($self, $rttid, $rtype) = @_;
+
+  return(0) if ($self->error());
+
+  my $type = $self->ok_type($rtype);
+  return(0) if ($self->error());
+
+  my $lt = $self->get_ttid_type($rttid);
+  return(0) if ($self->error());
+
+  return(1) if ($lt eq $type);
+
+  return(0);
+}
+
+##########
+
+sub ok_type {
+  my ($self, $type) = @_;
+
+  return("") if ($self->error());
+
+  return($self->_set_errormsg_and_return("Empty type", ""))
+    if (MMisc::is_blank($type));
+
+  foreach my $t (@ok_types) {
+    return($t) if ($t =~ m%^$type$%i);
+  }
+
+  $self->_set_errormsg("Unknown type ($type)");
+  return("");
+}
+
 ############################################################
 
 sub _set_errormsg {
