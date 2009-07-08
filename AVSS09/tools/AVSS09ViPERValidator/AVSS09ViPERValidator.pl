@@ -280,7 +280,7 @@ if ($ttid_quit) {
   my $quitxt = "";
   foreach my $sffn (sort keys %ttid_lefttodo) {
     my $v = $ttid_lefttodo{$sffn};
-    $quitxt .= "\n - SFFN [$sffn] was not found." 
+    $quitxt .= "\n - SFFN [$sffn] was not found or validated." 
       if ($v > 0);
   }
   MMisc::error_quit("In \'quitTTID\' mode for TTID [$ttid]:$quitxt\n")
@@ -305,10 +305,7 @@ sub valok {
 sub valerr {
   my ($fname, $txt) = @_;
 
-  print "\n\n[*] " if ($sk_wb);
-  foreach (split(/\n/, $txt)){ 
-    &valok($fname, "[ERROR] $_");
-  }
+  &valok($fname, "[ERROR] $txt");
 }
 
 ##########
