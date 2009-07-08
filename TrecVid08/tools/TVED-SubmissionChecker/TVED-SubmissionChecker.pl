@@ -1014,7 +1014,7 @@ Display the usage page for this program. Also display some default values and in
 
 =item B<--quit_if_non_scorable>
 
-If for any reason, any submission file or step is non scorable, quit when an error is encounted, instead of continuing the check process and of adding information to a report printed when all submissions have been checked.
+If for any reason, any submission file or step is non scorable, quit when an error is encounted, instead of continuing the check process and adding information to a report printed when all submissions have been checked.
 
 =item B<--man>
 
@@ -1022,7 +1022,7 @@ Display this man page.
 
 =item B<--Specfile> I<perlEvalfile>
 
-Specify the I<perEvalfile> that contains definitions specific to the evaluation checked against.
+Specify the I<perlEvalfile> that contains definitions specific to the evaluation checked against.
 
 =item B<--skip_validation>
 
@@ -1064,15 +1064,15 @@ Can also be set using the B<F4DE_XMLLINT> environment variable.
 
 =head1 USAGE
 
-=item B<TVED-SubmissionChecker SITE_3.tgz>
+=item B<TVED-SubmissionChecker --Specfile TV08ED-SubmissionChecker_conf.perl SITE_3.tgz>
 
-Will perform a submission check on archive file I<SITE_3.tgz> in a temporarily created directory.
+Will perform a submission check on archive file I<SITE_3.tgz> in a temporarily created directory, following the evaluation configuration information specified in I<TV08ED-SubmissionChecker_conf.perl>.
 
-=item B<TVED-SubmissionChecker SITE_3.tgz --uncompress_dir testdir --skip_validation --dryrun>
+=item B<TVED-SubmissionChecker --Specfile TV08ED-SubmissionChecker_conf.perl SITE_3.tgz --uncompress_dir testdir --skip_validation --dryrun>
 
 Will perform a submission check on archive file I<SITE_3.tgz>, uncompressing its content in the I<testdir> directory. This will also not try to validate the XML files, it will simply confirm that the directory structure, and that all the files are present. It will not check the content of the E<lt>EXP-IDE<gt> txt file for the S<Events_Processed:> entry. 
 
-=item B<TVED-SubmissionChecker SITE --work_in_dir testdir -ecf ecfile.xml --fps 25>
+=item B<TVED-SubmissionChecker --Specfile TV08ED-SubmissionChecker_conf.perl SITE --work_in_dir testdir -ecf ecfile.xml --fps 25>
 
 Will check that the files and directories in I<testdir> are the expected ones. It will check the txt file for the S<Events_Processed:> entry. It will also confirm that the XML files validate against the XML strucutre. It will confirm that the content of the XML files be matched against the ECF file (using a frame per second rate of 25) to permit scoring (the scorer will refuse to process those XML files if one or more of the file listed in the ECF is missing).
 
@@ -1112,7 +1112,7 @@ Only in the '--work_in_dir' case does it become <SITE>.
   --help          Print this usage information and exit
   --man           Print a more detailled manual page and exit (same as running: $mancmd)
   --version       Print version number and exit
-  --Specfile      Specify the \'perEvalfile\' that contains definitions specific to the evaluation run
+  --Specfile      Specify the \'perlEvalfile\' that contains definitions specific to the evaluation run
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found
   --ecf           Specify the ECF file to load
