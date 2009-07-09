@@ -938,7 +938,7 @@ In all other cases, S<last_parameter> is the archive file to process in the E<lt
 
 =head1 PREREQUISITES
 
-B<AVSS-SubmissionChecker> ViPER files need to pass the B<TV08ViperValidator> validation process. The program relies on the following software and files.
+B<AVSS-SubmissionChecker> ViPER files need to pass the B<AVSS09ViPERValidator> validation process. The program relies on the following software and files.
  
 =over
 
@@ -957,7 +957,7 @@ The syntactic validation requires some XML schema files.
 It is possible to specify their location using the B<CLEARxsd> and B<AVSSxsd> options.
 You should not have to specify their location, if you have performed an install and have set the global environment variables.
 
-The program also requires a B<Specfile> that defines some parameters related to the eval being checked as well as list the expected ECF files depending on the task specified by the E<lt>I<EXPID>E<gt>. It then requires a directory location (B<ecfdir>) for those neede ECF files. Note that the ECF files are not part of the B<F4DE> distribution.
+The program also requires a B<Specfile> that defines some parameters related to the eval being checked as well as list the expected ECF files depending on the task specified by the E<lt>I<EXPID>E<gt>. It then requires a directory location (B<ecfdir>) for those needed ECF files. Note that the ECFs are not part of the B<F4DE> distribution, rather they are contained in the training/testing annotation releases.
 
 =item B<GLOBAL ENVIRONMENT VARIABLES>
 
@@ -985,7 +985,7 @@ Specify the default location of the required CLEAR XSD files.
 
 =item B<--ecfdir> I<directory>
 
-Specify the I<directory> in which the ECF XML files specified using the B<Specfile> option can be found. The ECF provides information such as the list of sourcefile filename expected to be seen in the submission. 
+Specify the I<directory> in which the ECF XML files specified using the B<Specfile> option can be found. The ECF provides information such as the list of sourcefile filenames expected to be seen in the submission. 
 
 =item B<--frameTol> I<nbrframe>
 
@@ -1096,7 +1096,7 @@ Only in the '--work_in_dir' case does it become <SITE>.
 
  Where:
   --help          Print this usage information and exit
-  --man           Print a more detailled manual page and exit (same as running: $mancmd)
+  --man           Print a more detailed manual page and exit (same as running: $mancmd)
   --version       Print version number and exit
   --Specfile      Specify the \'perlEvalfile\' that contains definitions specific to the evaluation run
   --ecfdir        Specify the \'directory\' in which the ECF XML files defined in the \'perlEvalfile\' can be found 
