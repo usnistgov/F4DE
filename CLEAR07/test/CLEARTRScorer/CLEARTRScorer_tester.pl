@@ -20,14 +20,14 @@ my $td = "";
 my $t0 = F4DE_TestCore::get_currenttime();
 
 ##
-$tn = "test-1a";
+$tn = "test1a";
 $td = "BN_TR";
-$testr += &do_simple_test($tn, $td, "(BN TextRec: regular non-binary area thresholding)", "*.gtf", "*.rdf", "-D BN -E Area", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextRec: regular non-binary area thresholding)", "*.gtf", "*.rdf", "-D BN -E Area", "res_$tn.txt");
 
 ##
-$tn = "test-1b";
+$tn = "test1b";
 $td = "BN_TR";
-$testr += &do_simple_test($tn, $td, "(BN TextRec: regular non-binary point thresholding)", "*.gtf", "*.rdf", "-D BN -E Point", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextRec: regular non-binary point thresholding)", "*.gtf", "*.rdf", "-D BN -E Point", "res_$tn.txt");
 
 #####
 
@@ -49,8 +49,6 @@ sub do_simple_test {
 
   my $command = "$scorer $fsf -g $frf $params -f 15";
   $totest++;
-
-  $testname =~ s%\-%%;
 
   return(1) if (! F4DE_TestCore::check_files($testname, $subtype, "intentionally", $frf, $fsf, $res));
 
