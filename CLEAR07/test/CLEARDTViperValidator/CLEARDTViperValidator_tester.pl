@@ -20,99 +20,99 @@ my $td = "";
 my $t0 = F4DE_TestCore::get_currenttime();
 
 ##
-$tn = "test-1a";
+$tn = "test1a";
 $td = "BN_FDT";
-$testr += &do_simple_test($tn, $td, "(BN FaceDT: Reference files)", "*.gtf", "", "-D BN -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN FaceDT: Reference files)", "*.gtf", "", "-D BN -w", "res_$tn.txt");
 
 ##
-$tn = "test-1b";
+$tn = "test1b";
 $td = "BN_FDT";
-$testr += &do_simple_test($tn, $td, "(BN FaceDT: System submissions)", "", "*.rdf", "-D BN -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN FaceDT: System submissions)", "", "*.rdf", "-D BN -w", "res_$tn.txt");
 
 ##
-$tn = "test-2a";
+$tn = "test2a";
 $td = "BN_TDT";
-$testr += &do_simple_test($tn, $td, "(BN TextDT: Reference files)", "*.gtf", "", "-D BN -w -f 15", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextDT: Reference files)", "*.gtf", "", "-D BN -w -f 15", "res_$tn.txt");
 
 ##
-$tn = "test-2b";
+$tn = "test2b";
 $td = "BN_TDT";
-$testr += &do_simple_test($tn, $td, "(BN TextDT: System submissions)", "", "*.rdf", "-D BN -w -f 15", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextDT: System submissions)", "", "*.rdf", "-D BN -w -f 15", "res_$tn.txt");
 
 ##
-$tn = "test-3a";
+$tn = "test3a";
 $td = "MMR_FDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-MultiSite FaceDT: Reference files)", "*.gtf", "", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-MultiSite FaceDT: Reference files)", "*.gtf", "", "-D MR -w", "res_$tn.txt");
 
 ##
-$tn = "test-3b";
+$tn = "test3b";
 $td = "MMR_FDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-MultiSite FaceDT: System submissions)", "", "*.rdf", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-MultiSite FaceDT: System submissions)", "", "*.rdf", "-D MR -w", "res_$tn.txt");
 
 ##
-$tn = "test-4a";
+$tn = "test4a";
 $td = "MMR_PDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-MultiSite PersonDT: Reference files)", "*.gtf", "", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-MultiSite PersonDT: Reference files)", "*.gtf", "", "-D MR -w", "res_$tn.txt");
 
 ##
-$tn = "test-5a";
+$tn = "test5a";
 $td = "MR_FDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: Reference files)", "*.gtf", "", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: Reference files)", "*.gtf", "", "-D MR -w", "res_$tn.txt");
 
 ##
-$tn = "test-5b";
+$tn = "test5b";
 $td = "MR_FDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: System submissions)", "", "*.rdf", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: System submissions)", "", "*.rdf", "-D MR -w", "res_$tn.txt");
 
 ##
-$tn = "test-6a";
+$tn = "test6a";
 $td = "MR_HDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: Reference files)", "*.gtf", "", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: Reference files)", "*.gtf", "", "-D MR -w", "res_$tn.txt");
 
 ##
-$tn = "test-6b";
+$tn = "test6b";
 $td = "MR_HDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: System submissions)", "", "*.rdf", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: System submissions)", "", "*.rdf", "-D MR -w", "res_$tn.txt");
 
 ##
-$tn = "test-7a";
+$tn = "test7a";
 $td = "MR_PDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-NIST PersonDT: Reference files)", "*.gtf", "", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-NIST PersonDT: Reference files)", "*.gtf", "", "-D MR -w", "res_$tn.txt");
 
 ##
-$tn = "test-7b";
+$tn = "test7b";
 $td = "MR_PDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-NIST PersonDT: System submissions)", "", "*.rdf", "-D MR -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-NIST PersonDT: System submissions)", "", "*.rdf", "-D MR -w", "res_$tn.txt");
 
 ##
-$tn = "test-8a";
+$tn = "test8a";
 $td = "SV_VDT";
-$testr += &do_simple_test($tn, $td, "(Surv. VehicleDT: Reference files)", "*.gtf", "", "-D SV -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(Surv. VehicleDT: Reference files)", "*.gtf", "", "-D SV -w", "res_$tn.txt");
 
 ##
-$tn = "test-8b";
+$tn = "test8b";
 $td = "SV_VDT";
-$testr += &do_simple_test($tn, $td, "(Surv. VehicleDT: System submissions)", "", "*.rdf", "-D SV -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(Surv. VehicleDT: System submissions)", "", "*.rdf", "-D SV -w", "res_$tn.txt");
 
 ##
-$tn = "test-9a";
+$tn = "test9a";
 $td = "SV_PDT";
-$testr += &do_simple_test($tn, $td, "(Surv. PersonDT: Reference files)", "*.gtf", "", "-D SV -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(Surv. PersonDT: Reference files)", "*.gtf", "", "-D SV -w", "res_$tn.txt");
 
 ##
-$tn = "test-9b";
+$tn = "test9b";
 $td = "SV_PDT";
-$testr += &do_simple_test($tn, $td, "(Surv. PersonDT: System submissions)", "", "*.rdf", "-D SV -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(Surv. PersonDT: System submissions)", "", "*.rdf", "-D SV -w", "res_$tn.txt");
 
 ##
-$tn = "test-10a";
+$tn = "test10a";
 $td = "UV_VDT";
-$testr += &do_simple_test($tn, $td, "(UAV VehicleDT: Reference files)", "*.gtf", "", "-D UV -w -f 15", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(UAV VehicleDT: Reference files)", "*.gtf", "", "-D UV -w -f 15", "res_$tn.txt");
 
 ##
-$tn = "test-10b";
+$tn = "test10b";
 $td = "UV_VDT";
-$testr += &do_simple_test($tn, $td, "(UAV VehicleDT: System submissions)", "", "*.rdf", "-D UV -w -f 15", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(UAV VehicleDT: System submissions)", "", "*.rdf", "-D UV -w -f 15", "res_$tn.txt");
 
 #####
 
@@ -144,8 +144,6 @@ sub do_simple_test {
   }
 
   $totest++;
-
-  $testname =~ s%\-%%;
 
   return(1) if (! F4DE_TestCore::check_files($testname, $subtype, "intentionally", $files, $res));
 
