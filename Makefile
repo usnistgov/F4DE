@@ -127,8 +127,8 @@ AVSS09install_common:
 	@make CLEAR07install
 	@echo "** Installing AVSS09 files"
 	@perl installer.pl ${F4DE_BASE} lib ${AV09DIR}/lib/*.pm
-	@perl installer.pl ${F4DE_BASE} lib/data ${AVSS09DIR}/data/*.xsd
-	@perl installer.pl ${F4DE_BASE} lib/data ${AVSS09DIR}/data/*.perl
+	@perl installer.pl ${F4DE_BASE} lib/data ${AV09DIR}/data/*.xsd
+	@perl installer.pl ${F4DE_BASE} lib/data ${AV09DIR}/data/*.perl
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${AV09DIR}/${AV09TOOLS}
 
 AVSS09install_man:
