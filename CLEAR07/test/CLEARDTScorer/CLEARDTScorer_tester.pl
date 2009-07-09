@@ -20,49 +20,49 @@ my $td = "";
 my $t0 = F4DE_TestCore::get_currenttime();
 
 ##
-$tn = "test-1";
+$tn = "test1";
 $td = "BN_FDT";
-$testr += &do_simple_test($tn, $td, "(BN FaceDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D BN -E Area", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN FaceDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D BN -E Area", "res_$tn.txt");
 
 ##
-$tn = "test-2";
+$tn = "test2";
 $td = "BN_TDT";
-$testr += &do_simple_test($tn, $td, "(BN TextDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D BN -E Area -f 15", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D BN -E Area -f 15", "res_$tn.txt");
 
 ##
-$tn = "test-3";
+$tn = "test3";
 $td = "MMR_FDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-MultiSite FaceDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Area", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-MultiSite FaceDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Area", "res_$tn.txt");
 
 ##
-$tn = "test-4";
+$tn = "test4";
 $td = "MR_FDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Area", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-NIST FaceDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Area", "res_$tn.txt");
 
 ##
-$tn = "test-5";
+$tn = "test5";
 $td = "MR_HDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-NIST HandDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Point", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-NIST HandDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Point", "res_$tn.txt");
 
 ##
-$tn = "test-6";
+$tn = "test6";
 $td = "MR_PDT";
-$testr += &do_simple_test($tn, $td, "(MRoom-NIST PersonDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Area", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(MRoom-NIST PersonDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D MR -E Area", "res_$tn.txt");
 
 ##
-$tn = "test-7";
+$tn = "test7";
 $td = "SV_PDT";
-$testr += &do_simple_test($tn, $td, "(Surv. PersonDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D SV -E Area", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(Surv. PersonDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D SV -E Area", "res_$tn.txt");
 
 ##
-$tn = "test-8";
+$tn = "test8";
 $td = "SV_VDT";
-$testr += &do_simple_test($tn, $td, "(Surv. VehicleDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D SV -E Area", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(Surv. VehicleDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D SV -E Area", "res_$tn.txt");
 
 ##
-$tn = "test-9";
+$tn = "test9";
 $td = "UV_VDT";
-$testr += &do_simple_test($tn, $td, "(UAV VehicleDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D UV -E Area -f 15", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(UAV VehicleDT: regular non-binary thresholding)", "*.gtf", "*.rdf", "-D UV -E Area -f 15", "res_$tn.txt");
 
 #####
 
@@ -84,8 +84,6 @@ sub do_simple_test {
 
   my $command = "$scorer $fsf -g $frf $params";
   $totest++;
-
-  $testname =~ s%\-%%;
 
   return(1) if (! F4DE_TestCore::check_files($testname, $subtype, "intentionally", $frf, $fsf, $res));
 
