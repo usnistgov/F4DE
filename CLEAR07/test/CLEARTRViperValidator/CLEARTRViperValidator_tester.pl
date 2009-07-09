@@ -20,14 +20,14 @@ my $td = "";
 my $t0 = F4DE_TestCore::get_currenttime();
 
 ##
-$tn = "test-1a";
+$tn = "test1a";
 $td = "BN_TR";
-$testr += &do_simple_test($tn, $td, "(BN TextRec: Reference files)", "*.gtf", "", "-D BN -w -f 15", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextRec: Reference files)", "*.gtf", "", "-D BN -w -f 15", "res_$tn.txt");
 
 ##
-$tn = "test-1b";
+$tn = "test1b";
 $td = "BN_TR";
-$testr += &do_simple_test($tn, $td, "(BN TextRec: System Submissions)", "", "*.rdf", "-D BN -w -f 15", "res-$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextRec: System Submissions)", "", "*.rdf", "-D BN -w -f 15", "res_$tn.txt");
 
 #####
 
@@ -59,8 +59,6 @@ sub do_simple_test {
   }
 
   $totest++;
-
-  $testname =~ s%\-%%;
 
   return(1) if (! F4DE_TestCore::check_files($testname, $subtype, "intentionally", $files, $res));
 
