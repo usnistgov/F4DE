@@ -9,7 +9,7 @@ evaluations and for specific NIST-coordinated evaluations listed below.
 
   *  CLEAR07 Evaluation. 
       - Domains: Broadcast News, Meeting Room, Surveillance and UAV
-      - Mesures: Area and Point
+      - Measures: Area and Point
     - Detection and Tracking (DT) tools:
       - CLEARDTScorer - The main DT evaluation script.
       - CLEARDTViperValidator - A syntactic and semantic validator for 
@@ -48,7 +48,7 @@ evaluations and for specific NIST-coordinated evaluations listed below.
 INSTALLATION
 ------------
 
-F4DE consist of a set of Perl scripts that can be run under a shell terminal.
+F4DE consists of a set of Perl scripts that can be run under a shell terminal.
 It has been confirmed to work under Linux, OS X and Cygwin.
 The only pre-requisites of the tool are:
 - a recent version of gnuplot (4.2 preferred, with png support)
@@ -68,7 +68,7 @@ Installation is a 4 step process:
      that all software checks pass [*]. Each individual tool can be tested
      independently from the other, type 'make' in the base F4DE directory
      to see the option list.
-      Please note that each tool individual test can take from a few
+      Please note that each tool's individual test can take from a few
      seconds to a few minutes to complete. 
       IMPORTANT: The 'F4DE_BASE' environment variable must not be set
      for this step to complete. Checks are designed to be run before and
@@ -77,15 +77,17 @@ Installation is a 4 step process:
   2. Set the environment variable 'F4DE_BASE' to be the base directory
      of the F4DE software package installation.
   3. Execute the command 'make install' to copy the executables into 
-     '$F4DE_BASE/bin', perl modules into '$F4DE_BASE/lib', XSD data files
-     into '$F4DE_BASE/lib/data', and available man pages in '$F4DE_BASE/man'
+     '$F4DE_BASE/bin', perl modules into '$F4DE_BASE/lib', XSD and other
+     data files into '$F4DE_BASE/lib/data', and available man pages
+     in '$F4DE_BASE/man'
   4. Add '$F4DE_BASE/bin' to your PATH environment variable and 
      '$F4DE_BASE/man' to your MANPATH environment variable
 
 [*] If one of the Tools tests fails, please follow the bug reports submission 
-instructions detailed in the CONTACT section. The command line 
-that we would like you to run for each test can be found in the corresponding
-test number "res* .txt" file as its first line in the COMMANDLINE section.
+instructions detailed in the "TEST CASE BUG REPORT" section.
+ For information, in each of those tests, the command line that was run by the
+test can be found in the corresponding test number ("res*.txt") file as the
+first line in the COMMANDLINE section.
 
 
 CYGWIN PRE-INSTALLATION NOTES
@@ -100,7 +102,7 @@ make sure to add the following when in the "Select Packages":
  - in "Net", select "rsync" (required) 
  - in "Math", select "gnuplot" (to be able to use TV08Scorer)
  - in "Archive", select "unzip" (to be able to use zip files with
-   TV08ED-SubmissionChecker)
+   submission checker tools)
 
 
 USAGE
@@ -127,6 +129,22 @@ CONTACT
 
 For the bug report to be useful, please include the command line,
 files and text output, including the error message in your email.
+
+
+TEST CASE BUG REPORT
+--------------------
+
+If the error occurred wile doing a 'make check', go in the directory 
+associated with the tool that failed ('CLEAR/test/<TOOLNAME>',
+'TrecVid08/test/<TOOLNAME>' or 'AVSS09/test/<TOOLNAME>') and type 
+'make makecompcheckfiles'. This process will create a file corresponding
+to each test number named "res_test*.txt-comp". These file are (like their
+.txt equivalent) text files that can be compared to the original 
+"res_test*.txt" files.
+ When a test fails, please send us the "res_test*.txt-comp" file of the
+failed test(s) for us to try to understand what happened, as well as 
+information about your system (OS, architecture, ...) that you think
+might help us.  Thank you for helping us improve F4DE.
 
 
 AUTHORS
