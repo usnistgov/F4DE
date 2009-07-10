@@ -59,7 +59,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc") {
+foreach my $pn ("TrecVid08ViperFile", "xmllintHelper", "MMisc") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -84,6 +84,7 @@ if (! $have_everything) {
 # Use the long mode of Getopt
 Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
+my $xmllint_env = "F4DE_XMLLINT";
 my $mancmd = "perldoc -F $0";
 my $spc = 200; # Fine tuned on BigTest (on my laptop)
 # 50=11s 100=9.97s 150=9.5s 200=9.3s 250=9.3s 300=9.55s 500=10.3s
@@ -101,11 +102,11 @@ if (exists $ENV{$f4b}) {
 }
 
 # Default values for variables
+my $xmllint = MMisc::get_env_val($xmllint_env, "");
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
 my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision informations set
 my $writedir = undef;
 my $fps = undef;
-my $xmllint = "";
-my $xsdpath = "";
 my $verb = 1;
 my $copyxmltoo = 0;
 
@@ -178,13 +179,26 @@ while (my $file = shift @ARGV) {
   
   ##
 
+  print $stepc++, ") XML schema validation of the file\n";
+
+  my $xmldir = "$bdir/00-xmllint_validation";
+  MMisc::error_quit("Problem creating directory [$xmldir]")
+      if (! MMisc::make_dir($xmldir));
+
+  my $xfile = "$xmldir/" . MMisc::concat_dir_file_ext("", $fn, $ext);
+  my $err = &xmllint_file($file, $xfile);
+  MMisc::error_quit("Problem during \'xmllint\' step: $err")
+    if (! MMisc::is_blank($err));
+
+  ##
+
   print $stepc++, ") Creating one XML file per $spc events\n";
 
   my $sfdir = "$bdir/01-Split_files";
   MMisc::error_quit("Problem creating directory [$sfdir]")
       if (! MMisc::make_dir($sfdir));
 
-  my ($err, @fl) = &prep_sub_files($sfdir, $file);
+  my ($err, @fl) = &prep_sub_files($sfdir, $xfile);
   if (! MMisc::is_blank($err)) {
     &valerr($file, $err);
     next;
@@ -192,7 +206,7 @@ while (my $file = shift @ARGV) {
   print " - Created ", scalar @fl, " files\n";
   if (scalar @fl == 0) {
     print " !! No file created, could be one of two reasons: file contains no entry or file will not validate because it is not XML proper (and will not pass \'xmllint\' step) => Copying file to validate\n";
-    my ($rc, $so, $se) = MMisc::do_system_call("rsync -a $file $sfdir/");
+    my ($rc, $so, $se) = MMisc::do_system_call("rsync -a $xfile $sfdir/");
     MMisc::error_quit("Problem while copying [$file] to [$sfdir]")
       if ($rc != 0);
     my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($file);
@@ -295,6 +309,33 @@ sub valerr {
 }
 
 ####################
+
+sub xmllint_file {
+  my ($ifile, $ofile) = @_;
+
+  my $dummy = new TrecVid08ViperFile();
+  my @xsdfilesl = $dummy->get_required_xsd_files_list();
+
+  my $xmllintobj = new xmllintHelper();
+  $xmllintobj->set_xsdfilesl(@xsdfilesl);
+  $xmllintobj->set_xsdpath($xsdpath);
+  return("Problem with \'xsdpath\' [$xsdpath]: " . $xmllintobj->get_errormsg())
+    if ($xmllintobj->error());
+  $xmllintobj->set_xmllint($xmllint);
+  return("Problem with \'xmllint\' [$xmllint]: " . $xmllintobj->get_errormsg())
+    if ($xmllintobj->error());
+  
+  my $txt = $xmllintobj->run_xmllint($ifile);
+  return("Problem running \'xmllint\': " . $xmllintobj->get_errormsg())
+    if ($xmllintobj->error());
+  
+  my $ok = MMisc::writeTo($ofile, "", 1, 0, $txt);
+  return("Problem writting to [$ofile]") if (! $ok);
+
+  return("");
+}
+
+#####
 
 sub prep_sub_files {
   my $odir = shift @_;
