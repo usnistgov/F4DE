@@ -146,7 +146,7 @@ sub all_blank {
 
 ##########
 
-sub _sp_clean_beg_spaces {
+sub clean_beg_spaces {
   my $rstr = shift @_;
 
   my $cont = 1;
@@ -163,7 +163,7 @@ sub _sp_clean_beg_spaces {
 
 #####
 
-sub _sp_clean_end_spaces {
+sub clean_end_spaces {
   my $rstr = shift @_;
 
   my $cont = 1;
@@ -184,8 +184,8 @@ sub clean_begend_spaces {
 
   return("") if (&is_blank($txt));
 
-  &_sp_clean_beg_spaces(\$txt);
-  &_sp_clean_end_spaces(\$txt);
+  &clean_beg_spaces(\$txt);
+  &clean_end_spaces(\$txt);
 
   return($txt);
 }
