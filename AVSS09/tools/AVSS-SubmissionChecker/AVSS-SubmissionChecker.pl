@@ -596,12 +596,19 @@ sub check_expid_dir {
 
   vprint(3, "Checking name");
   my ($lerr, my $data, my $task) = &check_name($dir, $site);
-  return($lerr) if (! MMisc::is_blank($lerr));
+  if (! MMisc::is_blank($lerr)) {
+    &__add_to_errors($dir, 1, $lerr);
+    return($lerr);
+  }
 
   vprint(3, "Checking expected directory files");
   my ($lerr) = &check_exp_dirfiles($bd, $dir, $data, $task);
+  if (! MMisc::is_blank($lerr)) {
+    &__add_to_errors($dir, 1, $lerr);
+    return($lerr);
+  }
 
-  return($lerr);
+  return("");
 }
 
 ##########
