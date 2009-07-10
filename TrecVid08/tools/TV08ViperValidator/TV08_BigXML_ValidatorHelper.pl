@@ -190,8 +190,16 @@ while (my $file = shift @ARGV) {
     next;
   }
   print " - Created ", scalar @fl, " files\n";
-  MMisc::error_quit("No file created ?")
-    if (scalar @fl == 0);
+  if (scalar @fl == 0) {
+    print " !! No file created, could be one of two reasons: file contains no entry or file will not validate because it is not XML proper (and will not pass \'xmllint\' step) => Copying file to validate\n";
+    my ($rc, $so, $se) = MMisc::do_system_call("rsync -a $file $sfdir/");
+    MMisc::error_quit("Problem while copying [$file] to [$sfdir]")
+      if ($rc != 0);
+    my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($file);
+    MMisc::error_quit("Problem with file name [$file]: $err")
+      if (! MMisc::is_blank($err));
+    push @fl, MMisc::concat_dir_file_ext("", $f, $e);
+  }
 
   ##
 
@@ -303,14 +311,24 @@ sub prep_sub_files {
   }
 
   my $trailer = "";
-  my $slurp = substr($slurped, -$chunks, $chunks, "");
-  $trailer = $1 if ($slurp =~ s%(\<\/sourcefile\>.+$)%%s);
+  my $slurp = "";
+  while ((length($slurped) > 0) && (length($slurp) < $chunks)) {
+    my $lslurp = substr($slurped, -$chunks, $chunks, "");
+    MMisc::clean_end_spaces(\$lslurp);
+    $slurp = "$lslurp$slurp";
+  }
+  $trailer = $1 if ($slurp =~ s%(\<\/sourcefile\>.+)$%%s);
   return("Could not get file trailer")
     if (MMisc::is_blank($trailer));
   $slurped .= $slurp;
 
   my $header = "";
-  my $slurp = substr($slurped, 0, $chunks, "");
+  my $slurp = "";
+  while ((length($slurped) > 0) && (length($slurp) < $chunks)) {
+    my $lslurp = substr($slurped, 0, $chunks, "");
+    MMisc::clean_beg_spaces(\$lslurp);
+    $slurp .= $lslurp;
+  }
   $header = $1 if ($slurp =~ s%^(.+?\<\/file\>)%%s);
   return("Could not get file header")
     if (MMisc::is_blank($header));
