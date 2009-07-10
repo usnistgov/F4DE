@@ -809,8 +809,7 @@ sub validate_xml {
   
   if (defined $memdump) {
     my $txt = &write_memdump_file($object, $exp, $xf, @events_processed);
-    push @{$warnings{$wn_key}}, $txt
-      if (! MMisc::is_blank($txt));
+    return("$xf: $txt", $sffn) if (! MMisc::is_blank($txt));
   }
 
   return("", $sffn)
@@ -828,7 +827,7 @@ sub validate_xml {
   return("Problem obtaining the number of events (after ECF) (" . $nobject->get_errormsg() . ")", $sffn)
     if ($nobject->error());
 
-  push @{$warnings{$wn_key}}, "Total number of events changed from before ($btot / Events: $bettxt) to after applying the ECF ($atot / Events: $aettxt). "
+  push @{$warnings{$wn_key}}, "$xf: Total number of events changed from before ($btot / Events: $bettxt) to after applying the ECF ($atot / Events: $aettxt). "
     if ($atot != $btot);
 
   if (scalar @events_processed > 0) {
