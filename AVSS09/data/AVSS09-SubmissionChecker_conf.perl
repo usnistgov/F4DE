@@ -17,7 +17,7 @@
    "MCSPT" =>
    {
     "DEV09"  => "expt_2009_MCSPT_DEV09_ENG_NIST_1.xml",
-    "DRYRUN09" => "expt_2009_MCSPT_DRYRUN09_ENG_NIST_1.xml", # Not DRYRUN09 on purpose
+    "DRYRUN09" => "expt_2009_MCSPT_DRYRUN09_ENG_NIST_1.xml",
     "EVAL09" => "expt_2009_MCSPT_EVAL09_ENG_NIST_1.xml",
    },
    "SCSPT" =>
