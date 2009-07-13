@@ -683,9 +683,9 @@ sub __check_task_dir {
     if (scalar @ld != 1);
 
   return("Did not find expected directory ($task), found (" . $ld[0] . ")")
-    if ($ld[0] ne $task);
+    if (lc($ld[0]) ne lc($task));
 
-  return("");
+  return("", $ld[0]);
 }
 
 #####
@@ -704,14 +704,14 @@ sub check_exp_dirfiles {
   }
 
   # <TASK> dir
-  my $err = &__check_task_dir($task, @$rd);
+  my ($err, $lt) = &__check_task_dir($task, @$rd);
   if (! MMisc::is_blank($err)) {
     &__add_to_errors($exp, 1, $err);
     return($err) if ($qoe);
     return(""); # Non lethal, but do no check its content
   }
 
-  my ($err, $aa) = &check_task_dir("$bd/$exp/$task", $data, $task, $exp);
+  my ($err, $aa) = &check_task_dir("$bd/$exp/$lt", $data, $task, $exp);
   if (! MMisc::is_blank($err)) {
     if ($aa != 1) { # Not already added to errors hash ?
       &__add_to_errors($exp, 1, $err);
@@ -854,22 +854,26 @@ sub check_ttid_dir {
   return("") if ($skipval);
 
   my $logfile = "$logbase${exp}_____${task}_____${ttid}.log";
-  return(&validate_ttid_dir($bd, $ttid, $ecffile, $logfile, @$rf));
+  return(&validate_ttid_dir($bd, $ttid, $ecffile, $logfile, $exp, @$rf));
 }  
 
 ##########
 
 sub validate_ttid_dir {
-  my ($bd, $ttid, $ecffile, $logfile, @fl) = @_;
+  my ($bd, $ttid, $ecffile, $logfile, $exp, @fl) = @_;
   
   vprint(8, "Validating TTID content ($ttid)");
   
+  my $lmemdump = "$memdump/$exp";
+  return("Problem creating directory [$lmemdump]")
+    if (! MMisc::make_dir($lmemdump));
+
   my $cmd = "$valtool";
   $cmd .= " --xmllint $xmllint" if (! MMisc::is_blank($xmllint));
   $cmd .= " --CLEARxsd $xsdpath" if (! MMisc::is_blank($xsdpath));
   $cmd .= " --AVSSxsd $AVxsdpath" if (! MMisc::is_blank($AVxsdpath));
   $cmd .= " --frameTol $frameTol";
-  $cmd .= " --write $memdump --WriteMemDump gzip";
+  $cmd .= " --write $lmemdump --WriteMemDump gzip";
   $cmd .= " --ECF $ecffile --TrackingTrialsDir --trackingTrial $ttid --quitTTID";
   foreach my $f (@fl) {
     $cmd .= " $bd/$f";
