@@ -733,7 +733,9 @@ sub write_syscall_smart_logfile {
 sub get_txt_last_Xlines {
   my ($txt, $X) = &iuav(\@_, "", 0);
 
-  return(undef) if ( (&is_blank($txt)) || ($X == 0) );
+  my @out = ();
+
+  return(@out) if ( (&is_blank($txt)) || ($X == 0) );
 
   my @toshowa = ();
   my @a = split(m%\n%, $txt);
@@ -954,11 +956,13 @@ sub sort_files {
 sub _XXXest_core {
   my $mode = &iuv(shift @_, "");
 
-  return(undef) if (&is_blank($mode));
+  my @out = ();
+
+  return(@out) if (&is_blank($mode));
 
   my ($err, @or) = &sort_files($mode, @_);
 
-  return(undef)
+  return(@out)
     if (scalar @or != scalar @_);
 
   return(@or);
@@ -1068,11 +1072,13 @@ sub list_dirs_files {
 sub get_dirs_list {
   my $dir = &iuv(shift @_, "");
 
-  return(undef) if (&is_blank($dir));
+  my @out = ();
+
+  return(@out) if (&is_blank($dir));
 
   my ($err, $rd, $rf, $ru) = &list_dirs_files($dir);
 
-  return(undef) if (! &is_blank($err));
+  return(@out) if (! &is_blank($err));
 
   return(@{$rd});
 }
@@ -1082,11 +1088,13 @@ sub get_dirs_list {
 sub get_files_list {
   my $dir = &iuv(shift @_, "");
 
-  return(undef) if (&is_blank($dir));
+  my @out = ();
+
+  return(@out) if (&is_blank($dir));
 
   my ($err, $rd, $rf, $ru) = &list_dirs_files($dir);
 
-  return(undef) if (! &is_blank($err));
+  return(@out) if (! &is_blank($err));
 
   return(@{$rf});
 }
