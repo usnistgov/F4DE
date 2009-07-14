@@ -111,6 +111,7 @@ my $eval_type   = undef;
 my $bin         = 0;
 my $writeres    = "";
 my $spmode      = "";
+my $spmode_run  = "";
 my $csvfile     = "";
 my $motalogdir  = undef;
 
@@ -175,8 +176,17 @@ MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() .
 MMisc::error_quit("While trying to set \'CLEARxsd\' (" . $dummy->get_errormsg() . ")")
   if ((! MMisc::is_blank($xsdpath)) && (! $dummy->set_xsdpath($xsdpath)));
 
-MMisc::error_quit("Problem with \'SpecialMode\' (" . $dummy->get_errormsg() . ")")
-  if ((! MMisc::is_blank($spmode)) && (! $dummy->is_spmode_ok($spmode)));
+my $avss_full = "full"; # Authorized "AVSS" special mode modification
+if (! MMisc::is_blank($spmode)) {
+  if ($spmode =~ m%^(.+)\:(.+)$%) {
+    $spmode = $1;
+    $spmode_run = $2;
+  }
+  MMisc::error_quit("Problem with \'SpecialMode\' (" . $dummy->get_errormsg() . ")")
+      if (! $dummy->is_spmode_ok($spmode));
+  my $err = &check_spmode_run();
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
+}
 
 if (! MMisc::is_blank($motalogdir)) {
   my $err = MMisc::check_dir_w($motalogdir);
@@ -251,8 +261,9 @@ my ($sfda_add, $ata_add, $moda_add, $modp_add, $mota_add, $motp_add)
   = (1, 1, 1, 1, 1, 1);
 # Note: For 'AVSS09' we are only interested in the MOTA, so if 'spmode'
 #       is set to AVSS09, skip the scoring and set all values to NA
+# Unless we requested "AVSS09:full"
 ($sfda_add, $ata_add, $moda_add, $modp_add, $motp_add) = (0, 0, 0, 0, 0)
-  if ($spmode eq $spmode_list[0]);
+  if (($spmode eq $spmode_list[0]) && ($spmode_run ne $avss_full));
 
 # Start processing
 my $ndone = 0;
@@ -462,6 +473,19 @@ sub add_data2sat {
     $sat->addData($mota, "MOTA", $runid)   if ($mota_add);
     $sat->addData($motp, "MOTP-D", $runid) if ($motp_add);
   }
+}
+
+##########
+
+sub check_spmode_run {
+  my $err = "";
+
+  return("") if (MMisc::is_blank($spmode_run));
+
+  return("")
+    if (($spmode eq $spmode_list[0]) && ($spmode_run eq $avss_full));
+
+  return("Unknown \'special mode\' [$spmode] condition ($spmode_run)");
 }
 
 ########################################

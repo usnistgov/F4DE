@@ -113,9 +113,10 @@ my $ovwrt = 0;
 my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
 my $docsv = 0;
 my $trackmota = 0;
+my $fullresults = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CDE         O   ST V      cd fgh    m   q st vwx   #
+# Used: A CDEF        O   ST V      cd fgh    m   q st vwx   #
 
 my %opt = ();
 my @leftover = ();
@@ -142,6 +143,7 @@ GetOptions
    'trackingTrial=s' => \$ttid,
    'csv'             => \$docsv,
    'TrackMOTA'       => \$trackmota,
+   'FullResults'     => \$fullresults,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -158,10 +160,18 @@ if ($opt{'man'}) {
 &check_opt_is_blank("DirSYS", $sysvaldir);
 # And directories exists
 &check_opt_dir_w("writedir", $destdir);
-&check_opt_dir_w("dirGTF", $gtfvaldir);
-&check_opt_dir_w("DirSYS", $sysvaldir);
+if ($skval) {
+  &check_opt_dir_r("dirGTF", $gtfvaldir);
+  &check_opt_dir_r("DirSYS", $sysvaldir);
+} else {
+  &check_opt_dir_w("dirGTF", $gtfvaldir);
+  &check_opt_dir_w("DirSYS", $sysvaldir);
+}
 
-MMisc::error_quit("\'dirGTF\' and \'DirSYS\' can not be the same")
+MMisc::error_quit("Can not use \'FullResults\' unless \'csv\' is selected too")
+  if (($fullresults) && (! $docsv));
+
+MMisc::error_quit("\'dirGTF\' and \'DirSYS\' should not be the same")
   if ($gtfvaldir eq $sysvaldir);
 
 # ECF
@@ -350,7 +360,9 @@ sub do_single_scoring {
   $cmd .= " --frameTol $frameTol" if ($opt{'frameTol'});
   $cmd .= " --Domain SV";
   $cmd .= " --Eval Area";
-  $cmd .= " --SpecialMode AVSS09";
+  my $spmode = "AVSS09";
+  $spmode .= ":full" if ($fullresults);
+  $cmd .= " --SpecialMode $spmode";
   $cmd .= " --csv $csvfile" if (! MMisc::is_blank($csvfile));
   if ($trackmota) {
     my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($logfile);
@@ -745,6 +757,16 @@ sub check_opt_dir_w {
   my ($opt, $dir) = @_;
 
   my $err = MMisc::check_dir_w($dir);
+  MMisc::error_quit("Problem with \'$opt\' directory [$dir]: $err\n\n$usage\n")
+    if (! MMisc::is_blank($err));
+}
+
+#####
+
+sub check_opt_dir_r {
+  my ($opt, $dir) = @_;
+
+  my $err = MMisc::check_dir_r($dir);
   MMisc::error_quit("Problem with \'$opt\' directory [$dir]: $err\n\n$usage\n")
     if (! MMisc::is_blank($err));
 }
