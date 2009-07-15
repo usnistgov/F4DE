@@ -21,12 +21,12 @@ package SimpleAutoTable;
 
 use strict;
 
+use MMisc;
 use MErrorH;
 use PropList;
 use CSVHelper;
 
 use Data::Dumper;
-
 
 my $key_KeyColumnTxt = "KeyColumnTxt";
 my $key_KeyColumnCsv = "KeyColumnCsv";
@@ -472,6 +472,72 @@ sub renderCSV {
   }
     
   return($out);
+}
+
+##########
+
+sub add_selected_from_CSV {
+  my ($self, $csvfile, $nfv, $idbase, @exp_header) = @_;
+  # nfv "Not Found Value"
+
+  return(0) if ($self->error());
+
+  my $err = MMisc::check_file_r($csvfile);
+  return($self->_set_error_and_return("Problem with CSV file ($csvfile): $err"))
+    if (! MMisc::is_blank($err));
+
+  open CSV, "<$csvfile"
+    or return($self->_set_error_and_return("Problem opening CSV file ($csvfile): $!", 0));
+
+  my $csvh = new CSVHelper();
+  return($self->_set_error_and_return("Problem creating the CSV object: " . $csvh->get_errormsg(), 0))
+    if ($csvh->error());
+
+  my $header = <CSV>;
+  return($self->_set_error_and_return("CSV file contains no data ?", 0))
+    if (! defined $header);
+  my @headers = $csvh->csvline2array($header);
+  return($self->_set_error_and_return("Problem extracting csv line:" . $csvh->get_errormsg(), 0))
+    if ($csvh->error());
+  return($self->_set_error_and_return("CSV file ($csvfile) contains no usable data", 0))
+    if (scalar @headers < 2);
+
+  my %pos = ();
+  for (my $i = 0; $i < scalar @headers; $i++) {
+    $pos{$headers[$i]} = $i;
+  }
+
+  $csvh->set_number_of_columns(scalar @headers);
+  return($self->_set_error_and_return("Problem setting the number of columns for the csv file:" . $csvh->get_errormsg(), 0))
+    if ($csvh->error());
+
+  my $cont = 1;
+  while ($cont) {
+    my $line = <CSV>;
+    if (MMisc::is_blank($line)) {
+      $cont = 0;
+      next;
+    }
+    
+    my @linec = $csvh->csvline2array($line);
+    return($self->_set_error_and_return("Problem extracting csv line:" . $csvh->get_errormsg(), 0))
+      if ($csvh->error());
+
+    my $id = "$idbase | CSVfile: $csvfile | Line#: $cont";
+    foreach my $col (@exp_header) {
+      if (! exists $pos{$col}) {
+        $self->addData($nfv, $col, $id);
+      } else {
+        $self->addData($linec[$pos{$col}], $col, $id);
+      }
+      return(0) if ($self->error());
+    }
+
+    $cont++;
+  }
+  close(CSV);
+
+  return(1);
 }
 
 ############################################################
