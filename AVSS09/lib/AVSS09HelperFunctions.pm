@@ -185,7 +185,10 @@ sub clone_VF_apply_ECF_for_ttid {
 ##########
 
 sub load_DTScorer_ResultsCSV {
-  my ($csvfile, $rsffnl, $rcid) = @_;
+  my ($csvfile, $rsffnl, $rcid, @needed) = @_;
+
+  return("No value given for \'needed\' array")
+    if (scalar @needed == 0);
 
   my $err = MMisc::check_file_r($csvfile);
   return("Can not find CSV file ($csvfile): $err")
@@ -212,7 +215,6 @@ sub load_DTScorer_ResultsCSV {
     $pos{$headers[$i]} = $i;
   }
 
-  my @needed = ("Video", "MOTA");
   foreach my $key (@needed) {
     return("Could not find needed key ($key) in results")
       if (! exists $pos{$key});
@@ -246,7 +248,6 @@ sub load_DTScorer_ResultsCSV {
     return("Problem extracting csv line:" . $csvh->get_errormsg())
       if ($csvh->error());
     my $sffn = $linec[$pos{$needed[0]}];
-    my $mota = $linec[$pos{$needed[1]}];
 
     my $sffnk = lc $sffn;
     MMisc::error_quit("Could not find \'sffn\' ($sffn) in list of expected ones [or already processed ?]")
@@ -257,8 +258,13 @@ sub load_DTScorer_ResultsCSV {
     return("Could not find \'sffn\' ($sffn) corresponding \'camid\' [available sffn: " . join(",", @$rsffnl) . "]")
       if (! exists $cid{$sffn});
     my $camid = $cid{$sffn};
-    
-    $oh{$camid} = $mota;
+
+    for (my $i = 1; $i < scalar @needed; $i++) {
+      my $key = $needed[$i];
+      my $val = $linec[$pos{$key}];
+
+        $oh{$camid}{$key} = $val;
+    }
   }
   close(CSV);
 
