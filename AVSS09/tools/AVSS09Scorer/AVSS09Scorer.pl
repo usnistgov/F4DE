@@ -94,6 +94,8 @@ my $frameTol = 0;
 my $valtool_bt = "AVSS09ViPERValidator";
 my $scrtool_bt = "CLEARDTScorer";
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
+my @ok_needed = ("Video", "MOTA", "MOTP", "SFDA", "ATA", "MODA", "MODP"); # Order is crucial: "Video" <=> "sffn" has to be first
+
 my $usage = &set_usage();
 
 # Default values for variables
@@ -240,6 +242,12 @@ my ($rsys_hash, $rref_hash) = &do_validation();
 my %global_scores = ();
 my %global_camid = ();
 my @gs_spk = ("camid", "primcam", "motavg"); # special keys / order is important
+my @needed = ();
+if (! $fullresults) {
+  push @needed, @ok_needed[0..1];
+} else {
+  push @needed, @ok_needed;
+}
 my $ok = &do_scoring($ecf);
 
 print "\n\n";
@@ -248,7 +256,14 @@ MMisc::error_quit("***** Not all scoring ok *****")
   if (! $ok);
 
 my $ocsvf = ($docsv) ? "$destdir/ECF-global_results.csv" : "";
-&print_global_results($ecf, $ocsvf);
+&print_global_results($ecf, $ocsvf, $needed[1]);
+if ($fullresults) {
+  for (my $i = 1; $i < scalar @needed; $i++) {
+    my $key = $needed[$i];
+    my $ocsvf = ($docsv) ? "$destdir/ECF-global_results-$key.csv" : "";
+    &print_global_results($ecf, $ocsvf, $key);
+  }
+}    
 
 MMisc::ok_quit("***** Done *****\n");
 
@@ -547,7 +562,7 @@ sub do_ECF_ttid_scoring {
 
   my $ocsvfile = ($docsv) ? "$td/$rttid-Results.csv" : "";
 
-  my $ref_res = &reformat_results($ecf, $rttid, $ocsvfile);
+  my $ref_res = &reformat_results($ecf, $rttid, $ocsvfile, $needed[1]);
   print "$ref_res\n";
 
   return(1);
@@ -616,28 +631,41 @@ sub prepare_results {
   MMisc::error_quit("Problem obtaining primary \'camid\' : " . $ecf->get_errormsg())
     if ($ecf->error());
 
-  my ($err, %oh) = AVSS09HelperFunctions::load_DTScorer_ResultsCSV($csvfile, \@sffnl, \%cid);
+  my ($err, %oh) = AVSS09HelperFunctions::load_DTScorer_ResultsCSV($csvfile, \@sffnl, \%cid, @needed);
   MMisc::error_quit("Problem with DTScorer Results CSV for \'ttid\' ($rttid): $err")
     if (! MMisc::is_blank($err));
 
-  my $mota_sum = 0;
-  my $mota_entries = 0;
+  my %calc_sum = ();
+  my %calc_entries = ();
   foreach my $camid (keys %oh) {
-    my $mota = $oh{$camid};
-    $global_scores{$type}{$rttid}{$gs_spk[0]}{$camid} = $mota;
-    $mota_sum += $mota;
-    $mota_entries++;
+    for (my $i = 1; $i < scalar @needed; $i++) {
+      my $key = $needed[$i];
+      my $val = $oh{$camid}{$key};
+
+      $calc_sum{$key} = 0 if (! exists $calc_sum{$key});
+      $calc_entries{$key} = 0 if (! exists $calc_entries{$key});
+
+      $global_scores{$type}{$rttid}{$gs_spk[0]}{$camid}{$key} = $val;
+
+      $calc_sum{$key} += $val;
+      $calc_entries{$key}++;
+    }
     $global_camid{$camid}++;
   }
 
   $global_scores{$type}{$rttid}{$gs_spk[1]} = $pc;
-  $global_scores{$type}{$rttid}{$gs_spk[2]} = $mota_sum / $mota_entries;
+
+  for (my $i = 1; $i < scalar @needed; $i++) {
+    my $key = $needed[$i];
+    $global_scores{$type}{$rttid}{$gs_spk[2]}{$key} 
+    = $calc_sum{$key} / $calc_entries{$key};
+  }
 }
 
 ##########
 
 sub print_global_results {
-  my ($ecf, $csvfile) = @_;
+  my ($ecf, $csvfile, $key) = @_;
 
   return("") if (! defined $ecf);
 
@@ -652,7 +680,7 @@ sub print_global_results {
   foreach my $type (keys %global_scores) {
     foreach my $rttid (keys %{$global_scores{$type}}) {
       my $id = "$type - $rttid";
-      &sat_add_results($sat, $id, 0, $type, $rttid, @gcamid);
+      &sat_add_results($sat, $id, 0, $type, $rttid, $key, @gcamid);
       MMisc::error_quit("Problem with SAT: " . $sat->get_errormsg())
         if ($sat->error());
     }
@@ -676,7 +704,7 @@ sub print_global_results {
 #####
 
 sub reformat_results {
-  my ($ecf, $rttid, $csvfile) = @_;
+  my ($ecf, $rttid, $csvfile, $key) = @_;
 
   return("") if (! defined $ecf);
 
@@ -692,7 +720,7 @@ sub reformat_results {
 
   my $hf = ($type eq "scspt") ? 1 : 0;
 
-  &sat_add_results($sat, $id, $hf, $type, $rttid);
+  &sat_add_results($sat, $id, $hf, $type, $rttid, $key);
   MMisc::error_quit("Problem with SAT: " . $sat->get_errormsg())
     if ($sat->error());
 
@@ -714,32 +742,32 @@ sub reformat_results {
 #####
 
 sub sat_add_results {
-  my ($sat, $id, $half_fill, $type, $rttid, @gcamids) = @_;
+  my ($sat, $id, $half_fill, $type, $rttid, $key, @gcamids) = @_;
 
   MMisc::error_quit("Can not find results for \'ttid\' ($rttid)")
     if (! exists $global_scores{$type}{$rttid});
 
   my @camids = keys %{$global_scores{$type}{$rttid}{$gs_spk[0]}};
   my $pc = $global_scores{$type}{$rttid}{$gs_spk[1]};
-  my $avg = $global_scores{$type}{$rttid}{$gs_spk[2]};
+  my $avg = $global_scores{$type}{$rttid}{$gs_spk[2]}{$key};
 
   $sat->addData($type, "Type", $id);
   $sat->addData($rttid, "Tracking Trial ID", $id);
   $sat->addData($pc, "Primary Camera ID", $id);
-  $sat->addData($global_scores{$type}{$rttid}{$gs_spk[0]}{$pc}, 
-                "Primary Camera MOTA", $id);
+  $sat->addData($global_scores{$type}{$rttid}{$gs_spk[0]}{$pc}{$key}, 
+                "Primary Camera $key", $id);
 
   return() if ($half_fill);
 
   @gcamids = @camids if (scalar @gcamids == 0);
   foreach my $cid (@gcamids) {
     my $v = ($cid == $pc) ? "--" 
-      : (! exists $global_scores{$type}{$rttid}{$gs_spk[0]}{$cid}) ? "NA"
-      : $global_scores{$type}{$rttid}{$gs_spk[0]}{$cid};
-    $sat->addData($v, "Cam $cid MOTA", $id);
+      : (! exists $global_scores{$type}{$rttid}{$gs_spk[0]}{$cid}{$key}) ? "NA"
+      : $global_scores{$type}{$rttid}{$gs_spk[0]}{$cid}{$key};
+    $sat->addData($v, "Cam $cid $key", $id);
   }    
 
-  $sat->addData($global_scores{$type}{$rttid}{$gs_spk[2]}, "Average MOTA", $id);
+  $sat->addData($global_scores{$type}{$rttid}{$gs_spk[2]}{$key}, "Average $key", $id);
 }
 
 ####################
@@ -793,7 +821,7 @@ B<AVSS09Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
   S<B<--writedir> I<directory> B<--dirGTF> I<directory> B<--DirSYS> I<directory>>
   S<[B<--frameTol> I<framenbr>]>
   S<[B<--Validator> I<tool>] [B<--Overwrite>] [B<--skipValidation>]>
-  S<[B<--Scorer> I<tool>] [B<--csv>] [B<--TrackMOTA>]>
+  S<[B<--Scorer> I<tool>] [B<--csv>] [B<--TrackMOTA>] [B<--FullResults>]>
   S<[I<sys_file.xml> [I<...>] B<--gtf> I<ref_file.xml> [I<...>]]>
   
 =head1 DESCRIPTION
@@ -904,6 +932,11 @@ Specify the I<system> I<directory> (or directory structure base, with the B<--EC
 =item B<--ECF> I<ecffile.xml>
 
 Specify the I<ECF> file from which, defining the list of I<tracking trial ID>s available to be scored and the specific controls they provide over XML files.
+
+=item B<--FullResults>
+
+Compute and display all the CLEARDRScorer tool's metrics.
+The default is to only work with the MOTA.
 
 =item B<--frameTol> I<framenbr>
 
@@ -1042,11 +1075,12 @@ THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO 
 
 sub set_usage {
   my $wmd = join(" ", @ok_md);
+  my $metrics = join(" ", @ok_needed[1..$#ok_needed]);
 
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--ECF ecffile.xml [--trackingTrial ttid] [--AVSSxsd location]] --writedir directory --dirGTF directory --DirSYS directory [--frameTol framenbr] [--Validator tool] [--Overwrite] [--skipValidation] [--Scorer tool] [--csv] [--TrackMOTA] [sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--ECF ecffile.xml [--trackingTrial ttid] [--AVSSxsd location]] --writedir directory --dirGTF directory --DirSYS directory [--frameTol framenbr] [--Validator tool] [--Overwrite] [--skipValidation] [--Scorer tool] [--csv] [--TrackMOTA] [--FullResults] [sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]]
 
 Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provided (System vs Reference).
 
@@ -1069,6 +1103,7 @@ Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provid
   --Scorer        Specify the full path location of the $scrtool_bt tool (if not in your path)
   --csv           Request results to be put into a CSV file
   --TrackMOTA     Create a MOTA computation tracking log in the directory where the scorer log is written
+  --FullResults   Print all metrics results ($metrics)
 
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the 'CLEAR.xsd' file
