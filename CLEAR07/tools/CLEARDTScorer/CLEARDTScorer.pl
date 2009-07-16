@@ -316,14 +316,17 @@ foreach my $ref_sys_pair (@files_to_be_processed){
   # MOTA & MOTP
   if ($mota_add) {
     my $mota_logfile = undef;
+    my $mota_csvfile = undef;
     my $lsffn = $gtSequence->getSourceFileName();
     if (! MMisc::is_blank($motalogdir)) {
       $mota_logfile = "$motalogdir/$lsffn";
+      $mota_csvfile = $mota_logfile
+        if (! MMisc::is_blank($csvfile));
     } elsif (defined $motalogdir) {
       print "---------- [$lsffn] Tracking Log ----------\n";
       $mota_logfile = "";
     }
-    $mota = $gtSequence->computeMOTA($sysSequence, $CostMiss, $CostFA, $CostIS, $eval_type, $trk_thres, $bin, $mota_logfile);
+    $mota = $gtSequence->computeMOTA($sysSequence, $CostMiss, $CostFA, $CostIS, $eval_type, $trk_thres, $bin, $mota_logfile, $mota_csvfile);
     MMisc::error_quit("Error computing 'MOTA' (" . $gtSequence->get_errormsg() . ")")
         if ($gtSequence->error());
   }
