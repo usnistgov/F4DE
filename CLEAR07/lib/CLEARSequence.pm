@@ -33,6 +33,7 @@ use MErrorH;
 use MMisc;
 use Data::Dumper;
 use File::Basename;
+use CSVHelper;
 
 # Constructor 
 # Using double-argument form of bless() for an inheritable constructor
@@ -612,7 +613,7 @@ sub computeATA {
 
 sub computeMOTA {
   my ($self, $other, $costMD, $costFA, $costIS, $eval_type, $thres, $bin,
-      $logfile ) = @_;
+      $logfile, $csvfile ) = @_;
 
   if (! defined $other ) { $self->_set_errormsg("Undefined system output"); return -1; }
 
@@ -707,7 +708,7 @@ sub computeMOTA {
          $prevGTMap, \%opgtm, \$outstr);
       
       $outstr .= "-- MOTA frame summary : [NumberOfEvalGT: $numOfEvalGT] [MissedDetect: $md] [FalseAlarm: $fa] [IDSplit: $idSplits] [IDMerge: $idMerges]\n";
-      $outstr .= "-- MOTA global summary: [NumberOfEvalGT: $cng] [MissedDetect: $sumMD] [FalseAlarm: $sumFA] [IDSplit: $sumIDsplit] [IDMerge: $sumIDmerge] => [MOTA = " . &__compute_printable_MOTA($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng) . "]\n";
+      $outstr .= "-- MOTA global summary: [NumberOfEvalGT: $cng] [MissedDetect: $sumMD] [FalseAlarm: $sumFA] [IDSplit: $sumIDsplit] [IDMerge: $sumIDmerge] => [MOTA = " . &Compute_printable_MOTA($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng) . "]\n";
     }
     # print "FRAME NUMBER: $frameNums[$loop]\tERROR: $tmp\tNG: $numOfEvalGT\n"; 
     # print "MD: $md\tFA: $fa\tSWITCH: " . ($idSplits + $idMerges) . "\n";
@@ -720,7 +721,7 @@ sub computeMOTA {
       $outstr .= "\n\n@@ END PROCESSING @@\n\n";
       $outstr .= "MOTA = 1 - ( CostMD*SumMD + CostFA*SumFA + CostIS*(SumIDSplit + SumIDMerge) ) / NumberOfEvalGT\n";
       $outstr .= "     = 1 - ( $costMD*$sumMD + $costFA*$sumFA + $costIS*($sumIDsplit + $sumIDmerge) ) / $cng\n";
-      $outstr .= sprintf("     = %s [conf: %.06f]\n", &__compute_printable_MOTA($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng), $mota);
+      $outstr .= sprintf("     = %s [conf: %.06f]\n", &Compute_printable_MOTA($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng), $mota);
     }
   }
 
@@ -728,6 +729,28 @@ sub computeMOTA {
     $outstr .= "\n\n\n" if (MMisc::is_blank($logfile)); # Add extra CR for stdout print
     MMisc::error_quit("Problem while trying to write MOTA log file ($logfile)")
         if (! MMisc::writeTo($logfile, ".tracking_log", 1, 0, $outstr));
+  }
+
+  if (defined $csvfile) {
+    my @cheader = ("CostMD", "SumMD", "CostFA", "SumFA", "CostIS", "SumIDSplit", "SumIDMerge", "NumberOfEvalGT", "MOTA");
+    my @cvals = ($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng, $mota);
+    my $csvh = new CSVHelper();
+    $csvh->set_number_of_columns(scalar @cheader);
+
+    my $csvstr = "";
+
+    my $line = $csvh->array2csvline(@cheader);
+    MMisc::error_quit("Problem with CSV line: " . $csvh->get_errormsg())
+        if ($csvh->error());
+    $csvstr .= "$line\n";
+
+    my $line = $csvh->array2csvline(@cvals);
+    MMisc::error_quit("Problem with CSV line: " . $csvh->get_errormsg())
+        if ($csvh->error());
+    $csvstr .= "$line\n";
+
+    MMisc::error_quit("Problem while trying to write MOTA CSV file ($csvfile)")
+        if (! MMisc::writeTo($csvfile, "-MOTA_Components.csv", 1, 0, $csvstr));
   }
 
   return($mota);
@@ -1135,12 +1158,22 @@ sub __print_prevmatch {
 
 #####
 
-sub __compute_printable_MOTA {
+sub Compute_MOTA {
   my ($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng) = @_;
 
-  return("NA") if ($cng == 0);
+  return(undef) if ($cng == 0);
   
-  return(sprintf("%.06f", 1 - ( $costMD*$sumMD + $costFA*$sumFA + $costIS*($sumIDsplit + $sumIDmerge)) / $cng));
+  return(1 - ( $costMD*$sumMD + $costFA*$sumFA + $costIS*($sumIDsplit + $sumIDmerge)) / $cng);
+}
+
+#####
+
+sub Compute_printable_MOTA {
+  my $v = &Compute_MOTA(@_);
+  
+  return("NA") if (! defined $v);
+  
+  return(sprintf("%.06f", $v));
 }
 
 #####
@@ -1222,8 +1255,6 @@ sub _MOTA_decomposer {
   }
 
   my @mapl = $bpm->get_mapped_ids();
-#  my @mdl  = $bpm->get_unmapped_ref_ids();
-#  my @fal  = $bpm->get_unmapped_sys_ids();
   if (@mapl) {
     foreach my $ra (@mapl) {
       my @a = @$ra;
@@ -1238,8 +1269,6 @@ sub _MOTA_decomposer {
   }
   # Previously mapped ?
   &__print_prevmatch(\%gtIDs, \%soIDs, $pgt, $routstr);
-#  if (@mdl) { $$routstr .= "Missed Detects (REF) : ", join(" ", @mdl), "\n"; }
-#  if (@fal) { $$routstr .= "False Alarms (SYS)   : ", join(" ", @fal), "\n"; }
 
   return(MMisc::clone(%$pgt));
 }
