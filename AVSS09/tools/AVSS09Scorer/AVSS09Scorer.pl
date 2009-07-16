@@ -861,7 +861,7 @@ sub mota_comp_csv {
     MMisc::warn_print("Can not compute combined MOTA: not the same number of element in Sum array (" . scalar @mota_comps .") than in SAT headers (" . scalar @sat_headers . ")");
     return("");
   }
-  my $id = "Comined MOTA";
+  my $id = "Combined MOTA";
   $sat->addData($id, "CAM ID", $id);
   for (my $i = 0; $i < scalar @mota_comps; $i++) {
     my $v = $mota_comps[$i];
