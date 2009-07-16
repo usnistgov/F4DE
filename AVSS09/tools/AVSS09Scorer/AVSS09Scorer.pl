@@ -60,7 +60,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "AVSS09ECF", "AVSS09HelperFunctions", "SimpleAutoTable", "CSVHelper") {
+foreach my $pn ("MMisc", "AVSS09ECF", "AVSS09HelperFunctions", "SimpleAutoTable", "CSVHelper", "CLEARSequence") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -559,7 +559,6 @@ sub do_ECF_ttid_scoring {
   my ($scores, $logfile) = &do_single_scoring($logfile, \@sfl, \@gfl, $csvfile);
 
   &prepare_results($ecf, $rttid, $csvfile);
-
   my $ocsvfile = ($docsv) ? "$td/$rttid-Results.csv" : "";
 
   my $ref_res = &reformat_results($ecf, $rttid, $ocsvfile, $needed[1]);
@@ -659,6 +658,13 @@ sub prepare_results {
     my $key = $needed[$i];
     $global_scores{$type}{$rttid}{$gs_spk[2]}{$key} 
     = $calc_sum{$key} / $calc_entries{$key};
+  }
+
+  if (($trackmota) && ($docsv)) {
+    my ($err, $bd, $dummy, $dummy) = MMisc::split_dir_file_ext($csvfile);
+    MMisc::error_quit("Problem extracting dir/file/ext [$csvfile]: $err")
+      if (! MMisc::is_blank($err));
+    &mota_comp_csv($bd, $rttid, %cid);
   }
 }
 
@@ -769,6 +775,127 @@ sub sat_add_results {
 
   $sat->addData($global_scores{$type}{$rttid}{$gs_spk[2]}{$key}, "Average $key", $id);
 }
+
+####################
+
+sub mota_comp_csv {
+  my ($bd, $rttid, %cid) = @_;
+
+  my @mota_comps = ();
+
+  my $sat = new SimpleAutoTable();
+  MMisc::error_quit("While preparing print results : " . $sat->get_errormsg() . "\n")
+    if (! $sat->setProperties({ "KeyColumnTxt" => "Remove" }));
+
+  my @sat_headers = ();
+
+  my @sffnl = sort { $cid{$a} <=> $cid{$b} } keys %cid;
+
+  foreach my $sffn (@sffnl) {
+    my $lcid = $cid{$sffn};
+
+    my $tf = "$bd/$sffn-MOTA_Components.csv";
+    if (! MMisc::does_file_exists($tf)) {
+      MMisc::warn_print("Could not find CAM $lcid MOTA Components CSV file ($tf), most likely no content");
+      next;
+    }
+    my $err = MMisc::check_file_r($tf);
+    MMisc::error_quit("Problem with CAM $lcid MOTA Components CSV file ($tf): $err")
+      if (! MMisc::is_blank($err));
+    
+    open LOCAL_CSV, "<$tf"
+      or MMisc::error_quit("Problem opening CSV file ($tf): $!");
+    
+    my $csvh = new CSVHelper();
+    
+    # header
+    my $hl = <LOCAL_CSV>;
+    my @array = $csvh->csvline2array($hl);
+    MMisc::error_quit("Problem extracting CSV header [file: $tf]: " . $csvh->get_errormsg())
+      if ($csvh->error());
+    
+    if (scalar @sat_headers == 0) {
+      push @sat_headers, @array;
+    } else {
+      MMisc::error_quit("Not the same number of element in CSV ($tf) [" . scalar @array . "] than in Table [" . scalar @sat_headers . "]")
+        if (scalar @array != scalar @sat_headers);
+      for (my $i = 0; $i < scalar @array; $i++) {
+        MMisc::error_quit("Not the same order for elements in CSV header")
+          if ($sat_headers[$i] ne $array[$i]);
+      }
+    }
+    $csvh->set_number_of_columns(scalar @array);
+    
+    my $line = <LOCAL_CSV>;
+    my @larray = $csvh->csvline2array($line);
+    MMisc::error_quit("Problem extracting CSV line: " . $csvh->get_errormsg())
+      if ($csvh->error());
+    
+    my $id = "CID: $lcid / SFFN: $sffn";
+    $sat->addData($lcid, "CAM ID", $id);
+    for (my $i = 0; $i < scalar @array; $i++) {
+      my $v = $larray[$i];
+      my $cc = $sat_headers[$i];
+      $sat->addData($v, $array[$i], $id);
+      if ((! MMisc::is_integer($v)) && ($cc ne "MOTA")) {
+        MMisc::warn_print("Column ($cc) value ($v) is not an integrer (for CAM ID $lcid)");
+        next;
+      }
+      if ($cc !~ m%^Cost%) { # Cost entries do not add up
+        $mota_comps[$i] += $v ;
+      } else { 
+        $mota_comps[$i] = $v ; # they just get copied as is
+      }
+    }
+    my $lmota = CLEARSequence::Compute_printable_MOTA(@larray);
+    $sat->addData($lmota, "Computed MOTA", $id);
+  }
+  close LOCAL_CSV;
+
+  my $cdi = 1; # can do it
+  if (scalar @mota_comps == 0) {
+    MMisc::warn_print("Can not compute combined MOTA: no element in Sum array");
+    return("");
+  }
+  if (scalar @mota_comps != scalar @sat_headers) {
+    MMisc::warn_print("Can not compute combined MOTA: not the same number of element in Sum array (" . scalar @mota_comps .") than in SAT headers (" . scalar @sat_headers . ")");
+    return("");
+  }
+  my $id = "Comined MOTA";
+  $sat->addData($id, "CAM ID", $id);
+  for (my $i = 0; $i < scalar @mota_comps; $i++) {
+    my $v = $mota_comps[$i];
+    my $cc = $sat_headers[$i];
+
+    if ($cc eq "MOTA") {
+    } else {
+      $sat->addData($v, $sat_headers[$i], $id);
+      if (! MMisc::is_integer($v)) {
+        MMisc::warn_print("Can not compute combined MOTA: some value ($v) are not integers for column: " . $sat_headers[$i]);
+        $cdi = 0;
+        next;
+      }
+    }
+  }
+  my $lmota = CLEARSequence::Compute_printable_MOTA(@mota_comps);
+  $sat->addData($lmota, "Computed MOTA", $id);
+
+  my $csvfile = "$bd/$rttid-Combined_MOTA.csv";
+  my $csvtxt = $sat->renderCSV();
+  MMisc::error_quit("Generating CSV Report: ". $sat->get_errormsg())
+    if (! defined($csvtxt));
+  MMisc::error_quit("Problem while trying to write CSV file ($csvfile)")
+    if (! MMisc::writeTo($csvfile, "", 1, 0, $csvtxt));
+
+  my $tbl = $sat->renderTxtTable(2);
+  MMisc::error_quit("Problem rendering SAT: ". $sat->get_errormsg())
+    if (! defined($tbl));
+  
+  print "$tbl\n\n";  
+
+  return("");
+}
+
 
 ####################
 
