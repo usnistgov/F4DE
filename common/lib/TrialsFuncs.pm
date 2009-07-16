@@ -458,7 +458,7 @@ sub _stater {
     $sumsqr += $d * $d;
     $n++;
   }
-  ($sum, $sum/$n, ($n <= 1 ? undef : sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1)))));
+  ($sum, ($n > 0 ? $sum/$n : undef), ($n <= 1 ? undef : sqrt((($n * $sumsqr) - ($sum * $sum)) / ($n * ($n - 1)))));
 }
 
 sub getTotNumTarg {
