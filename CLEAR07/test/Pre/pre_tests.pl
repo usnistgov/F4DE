@@ -22,7 +22,8 @@ $ms = &_chkpkg
    "SimpleAutoTable",
    "TextTools",
    "ViperFramespan",
-   "xmllintHelper"
+   "xmllintHelper",
+   "CSVHelper",
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the programs, please install the missing ones\n\n";
@@ -43,7 +44,7 @@ $ms = &_chkpkg
    "CLEAROBox",
    "CLEARObject",
    "CLEARPoint",
-   "CLEARSequence"
+   "CLEARSequence",
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all CLEAR07 packages found, you will not be able to run the program, please install the missing ones\n\n";
