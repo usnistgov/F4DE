@@ -480,26 +480,28 @@ sub add_selected_from_CSV {
   my ($self, $csvfile, $nfv, $idbase, @exp_header) = @_;
   # nfv "Not Found Value"
 
-  return(0) if ($self->error());
+  my @added = ();
+
+  return(@added) if ($self->error());
 
   my $err = MMisc::check_file_r($csvfile);
-  return($self->_set_error_and_return("Problem with CSV file ($csvfile): $err"))
+  return($self->_set_error_and_return("Problem with CSV file ($csvfile): $err", @added))
     if (! MMisc::is_blank($err));
 
   open CSV, "<$csvfile"
-    or return($self->_set_error_and_return("Problem opening CSV file ($csvfile): $!", 0));
+    or return($self->_set_error_and_return("Problem opening CSV file ($csvfile): $!", @added));
 
   my $csvh = new CSVHelper();
-  return($self->_set_error_and_return("Problem creating the CSV object: " . $csvh->get_errormsg(), 0))
+  return($self->_set_error_and_return("Problem creating the CSV object: " . $csvh->get_errormsg(), @added))
     if ($csvh->error());
 
   my $header = <CSV>;
-  return($self->_set_error_and_return("CSV file contains no data ?", 0))
+  return($self->_set_error_and_return("CSV file contains no data ?", @added))
     if (! defined $header);
   my @headers = $csvh->csvline2array($header);
-  return($self->_set_error_and_return("Problem extracting csv line:" . $csvh->get_errormsg(), 0))
+  return($self->_set_error_and_return("Problem extracting csv line:" . $csvh->get_errormsg(), @added))
     if ($csvh->error());
-  return($self->_set_error_and_return("CSV file ($csvfile) contains no usable data", 0))
+  return($self->_set_error_and_return("CSV file ($csvfile) contains no usable data", @added))
     if (scalar @headers < 2);
 
   my %pos = ();
@@ -508,8 +510,10 @@ sub add_selected_from_CSV {
   }
 
   $csvh->set_number_of_columns(scalar @headers);
-  return($self->_set_error_and_return("Problem setting the number of columns for the csv file:" . $csvh->get_errormsg(), 0))
+  return($self->_set_error_and_return("Problem setting the number of columns for the csv file:" . $csvh->get_errormsg(), @added))
     if ($csvh->error());
+
+  push @exp_header, @headers if (scalar @exp_header == 0);
 
   my $cont = 1;
   while ($cont) {
@@ -520,7 +524,7 @@ sub add_selected_from_CSV {
     }
     
     my @linec = $csvh->csvline2array($line);
-    return($self->_set_error_and_return("Problem extracting csv line:" . $csvh->get_errormsg(), 0))
+    return($self->_set_error_and_return("Problem extracting csv line:" . $csvh->get_errormsg(), @added))
       if ($csvh->error());
 
     my $id = "$idbase | CSVfile: $csvfile | Line#: $cont";
@@ -530,14 +534,15 @@ sub add_selected_from_CSV {
       } else {
         $self->addData($linec[$pos{$col}], $col, $id);
       }
-      return(0) if ($self->error());
+      return(@added) if ($self->error());
     }
+    push @added, $id;
 
     $cont++;
   }
   close(CSV);
 
-  return(1);
+  return(@added);
 }
 
 ############################################################
