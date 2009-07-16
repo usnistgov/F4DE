@@ -124,16 +124,18 @@ sub array2csvline {
 sub csvline2array {
   my ($self, $value) = @_;
 
+  my @bad = ();
+
   my $ch = $self->{csvh};
   return($self->_set_error_and_return
-         ("Problem obtaining array from CSV line: " 
+         ("Problem obtaining array from CSV line [$value]: " 
           . $ch->error_diag() . " (" . $ch->error_input() . ")"
-          , undef))
+          , @bad))
     if (! $ch->parse($value));
 
   my @columns = $ch->fields();
   my $cn  = $self->{col_nbr};
-  return($self->_set_error_and_return("Number of elements in extracted array (" . scalar @columns . ") is different from expected number ($cn)", undef))
+  return($self->_set_error_and_return("Number of elements in extracted array (" . scalar @columns . ") is different from expected number ($cn)", @bad))
     if ((defined $cn) && ($cn != scalar @columns));
 
   return(@columns);
