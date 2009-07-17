@@ -835,8 +835,7 @@ sub check_ttid_dir {
   $err = "";
   foreach my $g (@$rf) {
     my $f = $g;
-    $f =~ s%^.+/%%;
-    $f =~ s%\..+$%%;
+    $f =~ s%\.[^\.]+$%%;
     if (! exists $h{$f}) {
       $err .= "Found unknown file ($g). ";
     } else {
