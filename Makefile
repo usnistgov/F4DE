@@ -205,6 +205,11 @@ check_common:
 cvsdist:
 	@make from_installdir
 	@make dist_head
+	@echo ""
+	@echo ""
+	@echo "***** REMEMBER to update the version number in the README file *****"
+	@echo ""
+	@echo ""
 	@echo "Building a CVS release:" `cat ${F4DE_VERSION}`
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`
 	@echo "CVS checkout in: /tmp/"`cat ${F4DE_VERSION}`
