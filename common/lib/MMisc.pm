@@ -1222,26 +1222,66 @@ sub dive_structure {
 
 ##########
 
-sub is_float {
+sub is_get_float {
   my $str = shift @_;
 
   $str = &clean_begend_spaces($str);
-  return(1)
+  return(1, $str)
     if ($str =~ m%^\-?\d+(\.\d+)?(e[-+]?\d+)?$%i);
 
-  return(0);
+  return(0, undef);
+}
+
+#####
+
+sub is_float {
+  my $str = shift @_;
+
+  my ($ok, $val) = & is_get_float($str);
+
+  return($ok);
+}
+
+#####
+
+sub get_float {
+  my $str = shift @_;
+
+  my ($ok, $val) = & is_get_float($str);
+
+  return($val);
+}
+
+##########
+
+sub is_get_integer {
+  my $str = shift @_;
+  
+  $str = &clean_begend_spaces($str);
+  return(1, $str)
+    if ($str =~ m%^\-?\d+$%);
+  
+  return(0, undef);
 }
 
 #####
 
 sub is_integer {
   my $str = shift @_;
+  
+  my ($ok, $val) = & is_get_integer($str);
+  
+  return($ok);
+}
 
-  $str = &clean_begend_spaces($str);
-  return(1)
-    if ($str =~ m%^\-?\d+$%);
+#####
 
-  return(0);
+sub get_integer {
+  my $str = shift @_;
+  
+  my ($ok, $val) = & is_get_integer($str);
+  
+  return($val);
 }
 
 ##########
