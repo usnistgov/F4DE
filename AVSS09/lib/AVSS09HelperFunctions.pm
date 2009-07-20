@@ -274,6 +274,23 @@ sub load_DTScorer_ResultsCSV {
   return($err, %oh);
 }
 
+##########
+
+sub get_scoringstep_destdir {
+  my ($scr_dir, $sda, $site, $expid, $ttid, $mode) 
+    = MMisc::iuav(\@_, "", "", "", "", "", "");
+  
+  return(undef) if (MMisc::any_blank($scr_dir, $site, $expid));
+
+  my $txt = "$scr_dir";
+  $txt .= "/$sda" if (! MMisc::is_blank($sda));
+  $txt .= "/$site/$expid";
+  $txt .= "_____$ttid" if (! MMisc::is_blank($ttid));
+  $txt .= $mode  if (! MMisc::is_blank($mode));
+
+  return($txt);
+}
+
 ############################################################
 
 1;
