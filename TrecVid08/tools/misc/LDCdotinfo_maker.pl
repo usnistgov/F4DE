@@ -91,7 +91,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 my $usage = &set_usage();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                                  h             v     #
+# Used:                                  h    m     s  v     #
 
 my $jpeg_path = "";
 my $split_v = 7750;
@@ -124,10 +124,8 @@ MMisc::error_quit("margin_value < 0")
 MMisc::error_quit("split_value <= margin_value")
   if ($split_v <= $margin_v);
 
-my ($infofile, $lgwf, $sf, $ef, $jpeg_path) 
+my ($infofile, $file_name, $sf, $ef, $jpeg_path) 
   = MMisc::iuav(\@ARGV, "", "", -1, -1, "");
-
-&die_check_lgwf($lgwf);
 
 MMisc::error_quit("End Frame < Beg Frame")
   if ($ef < $sf);
@@ -144,7 +142,7 @@ my @ranges = &die_ranges_generator($ef, $split_v, $margin_v);
 my $otxt = "";
 $otxt .= "#VIPER_VERSION_3.0\n1\n";
 for (my $f = $sf; $f < $ef; $f++) {
-  $otxt .= &die_get_file_loc($f, $jpeg_path, $lgwf, @ranges) . "\n";
+  $otxt .= &die_get_file_loc($f, $jpeg_path, $file_name, @ranges) . "\n";
 }
 MMisc::error_quit("Problem while trying to write")
   if (! MMisc::writeTo($infofile, "", 1, 0, $otxt, "", "** Info file:\n"));
@@ -152,24 +150,6 @@ MMisc::error_quit("Problem while trying to write")
 MMisc::ok_quit("Done\n");
 
 ########## END
-
-sub die_check_lgwf {
-  my $lgwf = shift @_;
-
-  MMisc::error_quit("Problem with LGW file: Does not start with LGW")
-      unless ($lgwf =~ s%^LGW_%%);
-
-  MMisc::error_quit("Problem with LGW file: Does not contain an 8 digits date")
-      unless ($lgwf =~ s%^\d{8}_%%);
-
-  MMisc::error_quit("Problem with LGW file: Does not contain a set id")
-      unless ($lgwf =~ s%^E\d_%%);
-
-  MMisc::error_quit("Problem with LGW file: Does not contain a camera id")
-      unless ($lgwf =~ s%^CAM\d$%%);
-}
-
-##########
 
 sub die_ranges_generator {
   my ($ef, $split_v, $margin_v) = @_;
@@ -208,7 +188,7 @@ sub get_range {
 #####
 
 sub die_get_file_loc {
-  my ($f, $jpeg_path, $lgwf, @list) = @_;
+  my ($f, $jpeg_path, $file_name, @list) = @_;
 
   $f--; # Remove 1 from the frame value
 
@@ -220,7 +200,7 @@ sub die_get_file_loc {
 
   $txt .= (MMisc::is_blank($jpeg_path)) ? "." : $jpeg_path;
   $txt =~ s%\/$%%;
-  $txt .= "/$path_add$lgwf/";
+  $txt .= "/$path_add$file_name/";
   $txt .= sprintf("%06d", $bv) . "_" . sprintf("%06d", $ev);
   $txt .= "/$frame_pre" . sprintf("%06d", $f) . ".jpg";
 
@@ -239,7 +219,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--split_every value] [--margin_value value] outfile.info LGW_{YEAR}{MONTH}{DAY}_{SetID}_{CameraID} start_frame end_frame [jpeg_path]
+Usage: $0 [--help | --version] [--split_every value] [--margin_value value] outfile.info file_name start_frame end_frame [jpeg_path]
 
 Will generate 
 

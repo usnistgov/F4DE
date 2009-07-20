@@ -258,8 +258,6 @@ my $AdjDir         = "06-Adjudication_ViPERfiles";
 my $NGAdjDir       = "06-Non_Globing-Adjudication_ViPERfiles";
 my $SGAdjDir       = "06-Smart_Globing-Adjudication_ViPERfiles";
 
-my $lgwf = "";
-
 my $stepc = 1;
 
 ########## Generating Empty Master REF file
@@ -320,31 +318,6 @@ foreach my $sf (@ARGV) {
   $sys_short{$file} = $f;
   print "SYS file: $sf (xtra attribute used: $xtra)\n";
   push @order_of_things, $f;
-}
-
-########## Extracting LGW file info
-if (! MMisc::is_blank($info_g)) {
-  print "\n\n***** STEP ", $stepc++, ": Extracting LGW file info\n";
-  
-  my @l = ();
-  push @l, $master_ref;
-  push @l, @order_of_things;
-  foreach my $f (@l) {
-    if ($f =~ m%(LGW_.+?_CAM\d)%) {
-      my $tmp = $1;
-      &die_check_lgwf($tmp);
-      if (! MMisc::is_blank($lgwf)) {
-        MMisc::error_quit("File's LGW file information ($tmp) does not seem to have the same LGW file information that previously found ($lgwf)")
-          if ($tmp ne $lgwf);
-      } else {
-        $lgwf = $tmp;
-      }
-    }
-  }
-
-  MMisc::error_quit("Could not find LGW file info value")
-    if (MMisc::is_blank($lgwf));
-  print "LGW file info: $lgwf\n";
 }
 
 ########## Validating input files
@@ -746,7 +719,6 @@ my $log = MMisc::concat_dir_file_ext($adj_dir, "Adjudication_Run", $log_add);
 my $command = "$adjtool -f $fps -d $adj_dir -a $note_key -s $margin $UnRef_file $UnSys_file";
 $command .= " -I $info_g" if (! MMisc::is_blank($info_g));
 $command .= " -i $info_path" if (! MMisc::is_blank($info_path));
-$command .= " -L $lgwf" if (! MMisc::is_blank($lgwf));
 $command .= " -j $jpeg_path" if (! MMisc::is_blank($jpeg_path));
 $command .= " -W" if ($warn_nf);
 $command .= " -c" if ($mad);
@@ -868,24 +840,6 @@ sub die_do_incin_dir {
 
 ##########
 
-sub die_check_lgwf {
-  my $lgwf = shift @_;
-
-  MMisc::error_quit("Problem with LGW file: Does not start with LGW")
-      unless ($lgwf =~ s%^LGW_%%);
-
-  MMisc::error_quit("Problem with LGW file: Does not contain an 8 digits date")
-      unless ($lgwf =~ s%^\d{8}_%%);
-
-  MMisc::error_quit("Problem with LGW file: Does not contain a set id")
-      unless ($lgwf =~ s%^E\d_%%);
-
-  MMisc::error_quit("Problem with LGW file: Does not contain a camera id")
-      unless ($lgwf =~ s%^CAM\d$%%);
-}
-
-##########
-
 sub extract_gmin_grange_from_log {
   my $log = shift @_;
 
@@ -954,7 +908,7 @@ Usage: $0 [--help | --version] [--xmllint location] [--TrecVid08xsd location] [-
   --Validator     Full path location of the TV08Validator program (default: $validator_d)
   --Scorer        Full path location of the TV08Scorer program (default: $scorer_d)
   --Adjudicator   Full path location of the Adjudicator program (default: $adjtool_d)
-  --InfoGenerator Specify the '.info' generator tool to use (arguments to this tool must be in the following order: info_outfile LGW_info start_frame end_frame [jpeg_path])
+  --InfoGenerator Specify the '.info' generator tool to use (arguments to this tool must be in the following order: info_outfile file_name start_frame end_frame [jpeg_path])
   --info_path     Path to the final '.info' file (added in the Viper file)
   --jpeg_path     Path to the JPEG files inside the '.info' file
   --changeREFtype   Will convert the 'ref_file' from SYS to REF
