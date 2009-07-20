@@ -384,8 +384,9 @@ sub set_fps {
     $fps = 30000 / 1001;
   }
 
-  if (! MMisc::is_float($fps)) {
-    $self->_set_errormsg($error_msgs{"WeirdBalue"});
+  my ($ok, $fps) = MMisc::is_get_float($fps);
+  if ((! $ok) || (! defined($fps))) {
+    $self->_set_errormsg($error_msgs{"WeirdValue"});
     return(0);
   }
 
@@ -1205,7 +1206,8 @@ sub _frame_to_ts {
     return(0);
   }
 
-  if ($frame !~ m%^[\d\.]+$%) {
+  my ($ok, $frame) = MMisc::is_get_float($frame);
+  if ((! $ok) || (! defined($frame))) {
     $self->_set_errormsg($error_msgs{"NotAFrame"});
     return(0);
   }
@@ -1246,7 +1248,8 @@ sub _ts_to_frame {
     return(0);
   }
 
-  if ($ts !~ m%^[\d\.]+$%) {
+  my ($ok, $ts) = MMisc::is_get_float($ts);
+  if ((! $ok) || (! defined($ts))) {
     $self->_set_errormsg($error_msgs{"NotAts"});
     return(0);
   }
