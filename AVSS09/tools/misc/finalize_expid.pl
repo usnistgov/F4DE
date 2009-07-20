@@ -62,7 +62,6 @@ my $warn_msg = "";
 # Part of this tool
 foreach my $pn ("MMisc", "SimpleAutoTable", "AVSS09HelperFunctions") {
   unless (eval "use $pn; 1") {
-    print join(",", $@), "\n";
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
