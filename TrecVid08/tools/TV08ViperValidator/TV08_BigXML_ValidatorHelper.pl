@@ -355,13 +355,15 @@ sub prep_sub_files {
   my $slurp = "";
   my $lchunks = $chunks;
   while ((MMisc::is_blank($trailer)) && (length($slurped) > 0)) {
-      while ((length($slurped) > 0) && (length($slurp) < $lchunks)) {
-          my $lslurp = substr($slurped, -$chunks, $chunks, "");
-          MMisc::clean_end_spaces(\$lslurp);
-          $slurp = "$lslurp$slurp";
-      }
-      $trailer = $1 if ($slurp =~ s%(\<\/sourcefile\>.+)$%%s);
-      $lchunks += $chunks;
+    while ((length($slurped) > 0) && (length($slurp) < $lchunks)) {
+      my $lslurp = substr($slurped, -$chunks, $chunks, "");
+      # we can only clean the end spaces if we are not adding at the beginning
+      # of an already filled "slurp"
+      MMisc::clean_end_spaces(\$lslurp) if (MMisc::is_blank($slurp)); 
+      $slurp = "$lslurp$slurp";
+    }
+    $trailer = $1 if ($slurp =~ s%(\<\/sourcefile\>.+)$%%s);
+    $lchunks += $chunks;
   }
   return("Could not get file trailer") if (MMisc::is_blank($trailer));
   $slurped .= $slurp;
@@ -370,13 +372,15 @@ sub prep_sub_files {
   my $slurp = "";
   my $lchunks = $chunks;
   while ((MMisc::is_blank($header)) && (length($slurped) > 0)) {
-      while ((length($slurped) > 0) && (length($slurp) < $lchunks)) {
-        my $lslurp = substr($slurped, 0, $chunks, "");
-          MMisc::clean_beg_spaces(\$lslurp);
-          $slurp .= $lslurp;
-      }
-      $header = $1 if ($slurp =~ s%^(.+?\<\/file\>)%%s);
-      $lchunks += $chunks;
+    while ((length($slurped) > 0) && (length($slurp) < $lchunks)) {
+      my $lslurp = substr($slurped, 0, $chunks, "");
+      # we can only clean the beg spaces if we are not adding at the end
+      # of an already filled "slurp"
+      MMisc::clean_beg_spaces(\$lslurp) if (MMisc::is_blank($slurp));
+      $slurp .= $lslurp;
+    }
+    $header = $1 if ($slurp =~ s%^(.+?\<\/file\>)%%s);
+    $lchunks += $chunks;
   }
   return("Could not get file header") if (MMisc::is_blank($header));
 
