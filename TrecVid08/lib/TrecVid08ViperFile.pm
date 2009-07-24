@@ -2410,7 +2410,6 @@ sub get_txt_and_number_of_events {
   my $txt = "";
 
   my @et = $self->list_used_full_events();
-  my $et = scalar @et;
   my $tot = 0;
   foreach my $event (sort_events(@et)) {
     $txt .= " $event";
@@ -2422,7 +2421,7 @@ sub get_txt_and_number_of_events {
     $txt .= "[IDs: " . join(" ", sort {$a <=> $b} @ids) . "]";
   }
   
-  return(MMisc::clean_begend_spaces($txt), $et, $tot);
+  return(MMisc::clean_begend_spaces($txt), scalar @et, $tot);
 }
 
 #####
