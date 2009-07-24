@@ -59,7 +59,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("TrecVid08ViperFile", "xmllintHelper", "MMisc") {
+foreach my $pn ("TrecVid08ViperFile", "TrecVid08HelperFunctions", "xmllintHelper", "MMisc") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -198,14 +198,14 @@ while (my $file = shift @ARGV) {
   MMisc::error_quit("Problem creating directory [$sfdir]")
       if (! MMisc::make_dir($sfdir));
 
-  my ($err, @fl) = &prep_sub_files($sfdir, $xfile);
+  my ($err, $tcount, @fl) = &prep_sub_files($sfdir, $xfile);
   if (! MMisc::is_blank($err)) {
     &valerr($file, $err);
     next;
   }
-  print " - Created ", scalar @fl, " files\n";
+  print " - Created ", scalar @fl, " files [seen $tcount objects]\n";
   if (scalar @fl == 0) {
-    print " !! No file created, could be one of two reasons: file contains no entry or file will not validate because it is not XML proper (and will not pass \'xmllint\' step) => Copying file to validate\n";
+    print " !! No file created, could be one of two reasons: file contains no entry or file will not validate because it is not XML proper => Copying file to validate\n";
     my ($rc, $so, $se) = MMisc::do_system_call("rsync -a $xfile $sfdir/");
     MMisc::error_quit("Problem while copying [$file] to [$sfdir]")
       if ($rc != 0);
@@ -282,6 +282,13 @@ while (my $file = shift @ARGV) {
   &copy_file($mfvf, $mxf);
 
   print "Results:\n - $xf\n - $mxf\n";
+
+  print $stepc++, ") Confirming number of event in MemDump\n";
+  my ($ettxt, $et, $tot) = &load_check_number_of_events($mxf);
+  print " - Found $tot total events among $et types: $ettxt\n";
+
+  MMisc::eror_quit("Did not find the same number of total events in the output file ($tot) than in the split input files ($tcount)")
+    if ($tcount != $tot);
 
   $ndone++;
 }
@@ -384,37 +391,59 @@ sub prep_sub_files {
   }
   return("Could not get file header") if (MMisc::is_blank($header));
 
+  # keep working with what is left in $slurp
   my $inc = 0;
   my $count = 0;
   my $txt = "\n";
   my @fl = ();
   my $doit = 1;
+  my $tcount = 0;
   while ($doit) {
-    if ((length($slurp) < $chunks) && (length($slurped) > 0)) {
-      # A little cleanup before loading more data
-      $slurp =~ s%^[\s\t\n\r]+%%s;
-      $slurp .= substr($slurped, 0, $chunks, "");
+    my $al1o = ""; # At least 1 object / Empty previous at each loop
+    my $e_al1o = 1;
+    my $lchunks = $chunks;
+
+    # Can we process from 
+    if ($slurp =~ s%(\<object\s.+?\<\/object\>)%%s) {
+      $al1o = $1;
+      $e_al1o = 0; # not empty anymore
     }
 
-    if (MMisc::is_blank($slurp)) {
+    while (($e_al1o) && (length($slurped) > 0)) {      
+      if ((length($slurp) < $lchunks) && (length($slurped) > 0)) {
+        my $lslurp .= substr($slurped, 0, $chunks, "");
+        $slurp .= $lslurp;
+      }
+
+      if ($slurp =~ s%(\<object\s.+?\<\/object\>)%%s) {
+        $al1o = $1;
+        $e_al1o = 0; # not empty anymore
+        next;
+      }
+
+      $lchunks += $chunks;
+    }
+
+    if ((MMisc::is_blank($slurp)) && ($e_al1o)) {
       $doit = 0;
       next;
     }
 
-    if ($slurp =~ s%(\<object\s.+?\<\/object\>)%%s) {
-      $txt .= "$1\n";
-      $count++;
-    } else {
+    if ($e_al1o) {
       my $tf = "$odir/$fn.bad";
       MMisc::writeTo($tf, "", 0, 0, "[$slurp]");
       return("Could not find an \"object\" section, but file is not empty. See \"$tf\" for leftover content (content encapsulated within [])");
     }
+
+    $txt .= "$al1o\n";
+    $count++;
 
     if ($count >= $spc) {
       my $tf = MMisc::concat_dir_file_ext($odir, sprintf("${fn}_%06d", ++$inc), $ext);
       MMisc::writeTo($tf, "", $verb, 0, $header . $txt . $trailer);
       push @fl, $tf;
       $txt = "\n";
+      $tcount += $count;
       $count = 0;
     }
 
@@ -425,10 +454,11 @@ sub prep_sub_files {
     MMisc::writeTo($tf, "", $verb, 0, $header . $txt . $trailer);
     push @fl, $tf;
     $txt = "";
+    $tcount += $count;
     $count = 0;
   }
     
-  return("", @fl);
+  return("", $tcount, @fl);
 }
 
 ####################
@@ -522,6 +552,24 @@ sub copy_file {
   my ($rc, $so, $se) = MMisc::do_system_call($cmd);
   MMisc::error_quit("Could not copy [$a] to [$b]: $se")
     if ($rc != 0);
+}
+
+##########
+
+sub load_check_number_of_events {
+  my ($fn) = @_;
+
+  my ($retstatus, $object, $msg) = 
+    TrecVid08HelperFunctions::load_ViperFile($isgtf, $fn, $fps, $xmllint, $xsdpath);
+
+  MMisc::error_quit("Problem reloading MemDump file ($fn) : $msg")
+    if (! $retstatus);
+
+  my ($ettxt, $et, $tot) = $object->get_txt_and_number_of_events(2);
+  MMisc::error_quit("Problem with reloaded ViperFile MemDump: " . $object->get_errormsg())
+    if ($object->error());
+
+  return($ettxt, $et, $tot);
 }
 
 ########################################
