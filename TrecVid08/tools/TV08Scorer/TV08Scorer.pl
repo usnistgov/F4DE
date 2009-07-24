@@ -149,7 +149,8 @@ my $befc = 0; # Bypass ECF Files Check
 # Used: ABCDEFG    LMNO  RST  WX Zab cdefgh  lmnop  st vwx   #
 
 my %opt = ();
-my @leftover = ();
+my @sys = ();
+my @ref = ();
 GetOptions
   (
    \%opt,
@@ -158,7 +159,7 @@ GetOptions
    'man',
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
-   'gtf'             => sub {$gtfs++; @leftover = @ARGV},
+   'gtf'             => sub {$gtfs++;},
    'fps=s'           => \$fps,
    'deltat=f'        => \$delta_t,
    'Ed=f'            => \$E_d,
@@ -189,6 +190,8 @@ GetOptions
    'BypassECFFilesCheck' => \$befc,
    # Hidden option
    'Show_internals+' => \$showi,
+   # Non options (SYS + REF)
+   '<>' => sub { if ($gtfs) { push @ref, @_; } else { push @sys, @_; } },
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -200,7 +203,10 @@ if ($opt{'man'}) {
 }
 
 MMisc::ok_quit("\n$usage\n") 
-  if ((scalar @ARGV == 0) && (scalar @inputAliCSV == 0));
+  if ((scalar @ARGV == 0) && (scalar @ref == 0) && (scalar @sys == 0) && (scalar @inputAliCSV == 0));
+
+MMisc::error_quit("Leftover arguments on the command line: " . join(", ", @ARGV))
+  if (scalar @ARGV > 0);
 
 MMisc::error_quit("\'fps\' must set in order to do any scoring work") if (! defined $fps);
 MMisc::error_quit("\'delta_t\' must set in order to do any scoring work") if (! defined $delta_t);
@@ -237,12 +243,6 @@ MMisc::error_quit("Wrong \'XtraMappedObservations\' mode ($xtend), authorized mo
 MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting")
   if ($gtfs > 1);
 
-MMisc::error_quit("Can not have any arguments left on command line (SYS or REF files(s)) when using \'AlignmentCSV\' option")
-  if ((scalar @inputAliCSV > 0) && (scalar @ARGV > 0));
-
-my ($rref, $rsys) = &get_sys_ref_filelist(\@leftover, @ARGV);
-my @ref = @{$rref};
-my @sys = @{$rsys};
 if (scalar @inputAliCSV == 0) {
   MMisc::error_quit("No SYS file(s) provided, can not perform scoring")
     if (scalar @sys == 0);
@@ -546,31 +546,6 @@ MMisc::ok_quit("\n\n***** Done *****\n");
 
 sub _warn_add {
   $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
-}
-
-########################################
-
-sub get_sys_ref_filelist {
-  my $rlo = shift @_;
-  my @args = @_;
-
-  my @lo = @{$rlo};
-
-  @args = reverse @args;
-  @lo = reverse @lo;
-
-  my @ref = ();
-  my @sys = ();
-  while (my $l = shift @lo) {
-    if ($l eq $args[0]) {
-      push @ref, $l;
-      shift @args;
-    }
-  }
-  @ref = reverse @ref;
-  @sys = reverse @args;
-
-  return(\@ref, \@sys);
 }
 
 ########################################
