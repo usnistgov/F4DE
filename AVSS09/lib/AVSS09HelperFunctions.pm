@@ -79,7 +79,7 @@ sub VF_write_XML_MemDumps {
   
   if (defined $MemDump) {
     $vf->write_MemDumps($ndf, $isgtf, $MemDump, $skSSM);
-    MMisc::error_quit("Problem while trying to perform \'MemDump\'")
+    MMisc::error_quit("Problem while trying to perform \'MemDump\': " . $vf->get_errormsg())
         if ($vf->error());
   }
 
