@@ -9375,7 +9375,7 @@
       </object>
       <object framespan="47903:47903" id="32" name="FACE">
         <attribute name="Location">
-          <data:obox framespan="47903:47903" height="27" rotation="0" width="29" x="-13" y="80"/>
+          <data:obox framespan="47903:47903" height="27" rotation="0" width="29" x="13" y="80"/>
         </attribute>
       </object>
       <object framespan="47910:47910" id="33" name="FACE">

@@ -1075,7 +1075,7 @@
                     <data:obox framespan="1033:1044" height="21"
                         rotation="0" width="76" x="0" y="29"/>
                     <data:obox framespan="1045:1056" height="62"
-                        rotation="0" width="85" x="-1" y="19"/>
+                        rotation="0" width="85" x="1" y="19"/>
                     <data:obox framespan="1057:1068" height="62"
                         rotation="0" width="85" x="7" y="19"/>
                     <data:obox framespan="1069:1080" height="62"
