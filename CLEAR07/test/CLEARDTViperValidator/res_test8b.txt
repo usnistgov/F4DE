@@ -2023,9 +2023,9 @@
           <data:bbox framespan="2978:2978" x="15" y="461" height="34" width="10"/>
           <data:bbox framespan="2979:2979" x="15" y="464" height="31" width="7"/>
           <data:bbox framespan="2980:2980" x="15" y="468" height="27" width="4"/>
-          <data:bbox framespan="2981:2981" x="15" y="472" height="23" width="0"/>
-          <data:bbox framespan="2982:2982" x="15" y="475" height="20" width="0"/>
-          <data:bbox framespan="2983:2983" x="15" y="479" height="16" width="0"/>
+          <data:bbox framespan="2981:2981" x="15" y="472" height="23" width="1"/>
+          <data:bbox framespan="2982:2982" x="15" y="475" height="20" width="1"/>
+          <data:bbox framespan="2983:2983" x="15" y="479" height="16" width="1"/>
         </attribute>
       </object>
       <object name="FRAME" id="0" framespan="97:3109">
