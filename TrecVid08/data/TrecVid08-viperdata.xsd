@@ -22,10 +22,10 @@
     <xsd:complexType>
       <xsd:complexContent>
 	<xsd:extension base="viper:descriptorAttributeData">
-	  <xsd:attribute name="x" type="xsd:integer"/>
-	  <xsd:attribute name="y" type="xsd:integer"/>
-	  <xsd:attribute name="width" type="xsd:integer"/>
-	  <xsd:attribute name="height" type="xsd:integer"/>
+	  <xsd:attribute name="x" type="xsd:nonNegativeInteger"/>
+	  <xsd:attribute name="y" type="xsd:nonNegativeInteger"/>
+	  <xsd:attribute name="width" type="xsd:positiveInteger"/>
+	  <xsd:attribute name="height" type="xsd:positiveInteger"/>
 	</xsd:extension>
       </xsd:complexContent>
     </xsd:complexType>
@@ -35,10 +35,10 @@
     <xsd:complexType>
       <xsd:complexContent>
 	<xsd:extension base="viper:descriptorAttributeData">
-	  <xsd:attribute name="x" type="xsd:integer"/>
-	  <xsd:attribute name="y" type="xsd:integer"/>
-	  <xsd:attribute name="width" type="xsd:integer"/>
-	  <xsd:attribute name="height" type="xsd:integer"/>
+	  <xsd:attribute name="x" type="xsd:nonNegativeInteger"/>
+	  <xsd:attribute name="y" type="xsd:nonNegativeInteger"/>
+	  <xsd:attribute name="width" type="xsd:positiveInteger"/>
+	  <xsd:attribute name="height" type="xsd:positiveInteger"/>
 	  <xsd:attribute name="rotation" type="xsd:integer"/>
 	</xsd:extension>
       </xsd:complexContent>
@@ -125,9 +125,9 @@
     <xsd:complexType>
       <xsd:complexContent>
 	<xsd:extension base="viper:descriptorAttributeData">
-	  <xsd:attribute name="x" type="xsd:integer"/>
-	  <xsd:attribute name="y" type="xsd:integer"/>
-	  <xsd:attribute name="radius" type="xsd:integer"/>
+	  <xsd:attribute name="x" type="xsd:nonNegativeInteger"/>
+	  <xsd:attribute name="y" type="xsd:nonNegativeInteger"/>
+	  <xsd:attribute name="radius" type="xsd:positiveInteger"/>
 	</xsd:extension>
       </xsd:complexContent>
     </xsd:complexType>
@@ -137,8 +137,8 @@
     <xsd:complexType>
       <xsd:complexContent>
 	<xsd:extension base="viper:descriptorAttributeData">
-	  <xsd:attribute name="x" type="xsd:integer"/>
-	  <xsd:attribute name="y" type="xsd:integer"/>
+	  <xsd:attribute name="x" type="xsd:nonNegativeInteger"/>
+	  <xsd:attribute name="y" type="xsd:nonNegativeInteger"/>
 	</xsd:extension>
       </xsd:complexContent>
     </xsd:complexType>
