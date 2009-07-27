@@ -44,9 +44,9 @@
       </object>
       <object name="FACE" id="1" framespan="203:1800">
         <attribute name="LOCATION">
-          <data:obox framespan="203:203" x="-34" y="191" height="66" width="71" rotation="0"/>
-          <data:obox framespan="204:204" x="-23" y="184" height="67" width="72" rotation="0"/>
-          <data:obox framespan="205:205" x="-13" y="181" height="68" width="73" rotation="0"/>
+          <data:obox framespan="203:203" x="34" y="191" height="66" width="71" rotation="0"/>
+          <data:obox framespan="204:204" x="23" y="184" height="67" width="72" rotation="0"/>
+          <data:obox framespan="205:205" x="13" y="181" height="68" width="73" rotation="0"/>
           <data:obox framespan="206:206" x="3" y="172" height="69" width="74" rotation="0"/>
           <data:obox framespan="207:207" x="21" y="174" height="69" width="74" rotation="0"/>
           <data:obox framespan="208:208" x="39" y="169" height="68" width="73" rotation="0"/>
@@ -288,18 +288,18 @@
           <data:obox framespan="444:444" x="9" y="114" height="67" width="72" rotation="0"/>
           <data:obox framespan="445:445" x="4" y="113" height="67" width="72" rotation="0"/>
           <data:obox framespan="446:446" x="4" y="71" height="67" width="72" rotation="0"/>
-          <data:obox framespan="447:447" x="-3" y="78" height="68" width="73" rotation="0"/>
-          <data:obox framespan="448:448" x="-15" y="112" height="80" width="86" rotation="0"/>
-          <data:obox framespan="449:449" x="-15" y="112" height="80" width="86" rotation="0"/>
-          <data:obox framespan="450:450" x="-15" y="112" height="80" width="86" rotation="0"/>
-          <data:obox framespan="451:451" x="-15" y="112" height="80" width="86" rotation="0"/>
-          <data:obox framespan="452:452" x="-15" y="112" height="80" width="86" rotation="0"/>
-          <data:obox framespan="453:453" x="-15" y="112" height="80" width="86" rotation="0"/>
-          <data:obox framespan="454:454" x="-15" y="112" height="80" width="86" rotation="0"/>
-          <data:obox framespan="455:455" x="-15" y="112" height="80" width="86" rotation="0"/>
-          <data:obox framespan="456:456" x="-15" y="112" height="80" width="86" rotation="0"/>
-          <data:obox framespan="457:457" x="-15" y="112" height="80" width="86" rotation="0"/>
-          <data:obox framespan="458:458" x="-11" y="119" height="80" width="86" rotation="0"/>
+          <data:obox framespan="447:447" x="3" y="78" height="68" width="73" rotation="0"/>
+          <data:obox framespan="448:448" x="15" y="112" height="80" width="86" rotation="0"/>
+          <data:obox framespan="449:449" x="15" y="112" height="80" width="86" rotation="0"/>
+          <data:obox framespan="450:450" x="15" y="112" height="80" width="86" rotation="0"/>
+          <data:obox framespan="451:451" x="15" y="112" height="80" width="86" rotation="0"/>
+          <data:obox framespan="452:452" x="15" y="112" height="80" width="86" rotation="0"/>
+          <data:obox framespan="453:453" x="15" y="112" height="80" width="86" rotation="0"/>
+          <data:obox framespan="454:454" x="15" y="112" height="80" width="86" rotation="0"/>
+          <data:obox framespan="455:455" x="15" y="112" height="80" width="86" rotation="0"/>
+          <data:obox framespan="456:456" x="15" y="112" height="80" width="86" rotation="0"/>
+          <data:obox framespan="457:457" x="15" y="112" height="80" width="86" rotation="0"/>
+          <data:obox framespan="458:458" x="11" y="119" height="80" width="86" rotation="0"/>
           <data:obox framespan="459:459" x="0" y="119" height="80" width="86" rotation="0"/>
           <data:obox framespan="460:460" x="7" y="123" height="81" width="87" rotation="0"/>
           <data:obox framespan="461:461" x="23" y="120" height="71" width="77" rotation="0"/>

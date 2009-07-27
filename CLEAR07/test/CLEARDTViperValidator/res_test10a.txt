@@ -655,7 +655,7 @@
           <data:obox framespan="997:1020" x="0" y="20" height="31" width="53" rotation="0"/>
           <data:obox framespan="1021:1032" x="0" y="29" height="21" width="66" rotation="0"/>
           <data:obox framespan="1033:1044" x="0" y="29" height="21" width="76" rotation="0"/>
-          <data:obox framespan="1045:1056" x="-1" y="19" height="62" width="85" rotation="0"/>
+          <data:obox framespan="1045:1056" x="1" y="19" height="62" width="85" rotation="0"/>
           <data:obox framespan="1057:1068" x="7" y="19" height="62" width="85" rotation="0"/>
           <data:obox framespan="1069:1080" x="22" y="17" height="62" width="85" rotation="0"/>
           <data:obox framespan="1081:1092" x="34" y="17" height="62" width="88" rotation="0"/>

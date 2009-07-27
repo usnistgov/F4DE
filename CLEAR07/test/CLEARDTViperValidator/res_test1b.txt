@@ -1101,7 +1101,7 @@
           <data:obox framespan="47900:47900" x="23" y="74" height="30" width="32" rotation="0"/>
           <data:obox framespan="47901:47901" x="17" y="78" height="24" width="26" rotation="0"/>
           <data:obox framespan="47902:47902" x="2" y="80" height="26" width="28" rotation="0"/>
-          <data:obox framespan="47903:47903" x="-13" y="80" height="27" width="29" rotation="0"/>
+          <data:obox framespan="47903:47903" x="13" y="80" height="27" width="29" rotation="0"/>
         </attribute>
       </object>
       <object name="FACE" id="33" framespan="47910:47941">

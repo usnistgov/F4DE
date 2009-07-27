@@ -168,7 +168,7 @@
           <data:bvalue framespan="45673:45721" value="false"/>
         </attribute>
         <attribute name="LOCATION">
-          <data:obox framespan="45673:45673" x="354" y="-15" height="99" width="84" rotation="-16"/>
+          <data:obox framespan="45673:45673" x="354" y="15" height="99" width="84" rotation="-16"/>
           <data:obox framespan="45685:45685" x="309" y="19" height="99" width="101" rotation="-21"/>
           <data:obox framespan="45697:45697" x="307" y="49" height="100" width="94" rotation="-21"/>
           <data:obox framespan="45709:45709" x="282" y="54" height="100" width="86" rotation="-21"/>

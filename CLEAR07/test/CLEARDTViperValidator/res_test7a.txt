@@ -107,10 +107,10 @@
           <data:obox framespan="45237:45237" x="0" y="190" height="93" width="72" rotation="3"/>
           <data:obox framespan="45252:45252" x="0" y="190" height="70" width="36" rotation="3"/>
           <data:obox framespan="45267:45282" x="0" y="190" height="70" width="42" rotation="3"/>
-          <data:obox framespan="45297:45297" x="-9" y="163" height="95" width="84" rotation="3"/>
+          <data:obox framespan="45297:45297" x="9" y="163" height="95" width="84" rotation="3"/>
           <data:obox framespan="45312:45312" x="22" y="232" height="146" width="133" rotation="3"/>
           <data:obox framespan="45321:45321" x="30" y="281" height="165" width="133" rotation="3"/>
-          <data:obox framespan="45336:45336" x="-9" y="402" height="76" width="81" rotation="0"/>
+          <data:obox framespan="45336:45336" x="9" y="402" height="76" width="81" rotation="0"/>
         </attribute>
         <attribute name="OCCLUSION">
           <data:bvalue framespan="44997:45252" value="false"/>
@@ -464,8 +464,8 @@
           <data:obox framespan="45936:45951" x="133" y="110" height="361" width="280" rotation="0"/>
           <data:obox framespan="45963:45963" x="275" y="99" height="373" width="308" rotation="0"/>
           <data:obox framespan="45978:45978" x="429" y="22" height="373" width="293" rotation="0"/>
-          <data:obox framespan="45993:45993" x="482" y="-2" height="379" width="240" rotation="0"/>
-          <data:obox framespan="46008:46008" x="435" y="-3" height="379" width="281" rotation="0"/>
+          <data:obox framespan="45993:45993" x="482" y="2" height="379" width="240" rotation="0"/>
+          <data:obox framespan="46008:46008" x="435" y="3" height="379" width="281" rotation="0"/>
           <data:obox framespan="46023:46023" x="337" y="2" height="379" width="301" rotation="0"/>
           <data:obox framespan="46038:46038" x="312" y="2" height="379" width="301" rotation="0"/>
           <data:obox framespan="46053:46068" x="244" y="3" height="379" width="301" rotation="0"/>
@@ -589,7 +589,7 @@
           <data:obox framespan="45606:45621" x="0" y="181" height="96" width="64" rotation="358"/>
           <data:obox framespan="45636:45636" x="2" y="267" height="111" width="73" rotation="358"/>
           <data:obox framespan="45651:45651" x="2" y="334" height="111" width="73" rotation="358"/>
-          <data:obox framespan="45666:45666" x="-6" y="348" height="111" width="73" rotation="358"/>
+          <data:obox framespan="45666:45666" x="6" y="348" height="111" width="73" rotation="358"/>
           <data:obox framespan="45681:45681" x="2" y="356" height="102" width="46" rotation="358"/>
           <data:obox framespan="45696:45696" x="1" y="363" height="94" width="31" rotation="358"/>
           <data:obox framespan="45711:45711" x="20" y="348" height="108" width="104" rotation="358"/>

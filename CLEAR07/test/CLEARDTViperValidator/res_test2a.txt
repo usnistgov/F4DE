@@ -356,16 +356,16 @@
           <data:bvalue framespan="28201:28405" value="true"/>
         </attribute>
         <attribute name="LOCATION">
-          <data:obox framespan="28201:28236" x="2" y="-1" height="482" width="704" rotation="0"/>
-          <data:obox framespan="28237:28248" x="315" y="-1" height="482" width="390" rotation="0"/>
-          <data:obox framespan="28249:28260" x="417" y="-1" height="482" width="287" rotation="0"/>
-          <data:obox framespan="28261:28272" x="417" y="-1" height="156" width="287" rotation="0"/>
-          <data:obox framespan="28273:28344" x="0" y="-1" height="482" width="703" rotation="0"/>
-          <data:obox framespan="28345:28368" x="165" y="-1" height="482" width="537" rotation="0"/>
-          <data:obox framespan="28369:28380" x="217" y="-1" height="482" width="481" rotation="0"/>
-          <data:obox framespan="28381:28392" x="250" y="-1" height="482" width="453" rotation="0"/>
-          <data:obox framespan="28393:28393" x="1" y="-1" height="482" width="701" rotation="0"/>
-          <data:obox framespan="28394:28405" x="250" y="-1" height="482" width="453" rotation="0"/>
+          <data:obox framespan="28201:28236" x="2" y="1" height="482" width="704" rotation="0"/>
+          <data:obox framespan="28237:28248" x="315" y="1" height="482" width="390" rotation="0"/>
+          <data:obox framespan="28249:28260" x="417" y="1" height="482" width="287" rotation="0"/>
+          <data:obox framespan="28261:28272" x="417" y="1" height="156" width="287" rotation="0"/>
+          <data:obox framespan="28273:28344" x="0" y="1" height="482" width="703" rotation="0"/>
+          <data:obox framespan="28345:28368" x="165" y="1" height="482" width="537" rotation="0"/>
+          <data:obox framespan="28369:28380" x="217" y="1" height="482" width="481" rotation="0"/>
+          <data:obox framespan="28381:28392" x="250" y="1" height="482" width="453" rotation="0"/>
+          <data:obox framespan="28393:28393" x="1" y="1" height="482" width="701" rotation="0"/>
+          <data:obox framespan="28394:28405" x="250" y="1" height="482" width="453" rotation="0"/>
         </attribute>
         <attribute name="LOGO"/>
         <attribute name="OCCLUSION">
@@ -2588,7 +2588,7 @@
           <data:bvalue framespan="31117:31141" value="false"/>
         </attribute>
         <attribute name="LOCATION">
-          <data:obox framespan="31117:31141" x="308" y="-2" height="30" width="120" rotation="-2"/>
+          <data:obox framespan="31117:31141" x="308" y="2" height="30" width="120" rotation="-2"/>
         </attribute>
         <attribute name="LOGO"/>
         <attribute name="OCCLUSION">
