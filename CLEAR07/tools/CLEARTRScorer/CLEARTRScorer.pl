@@ -99,7 +99,9 @@ my $weightCER 	    = 1.0;
 my $CostInsDel      = 1.0;
 my $CostSub         = 1.0;
 my $frameTol        = 0;
+
 my $usage = &set_usage();
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Default values for variables
 my $gtfs = 0;
@@ -115,7 +117,8 @@ my $writeres        = "";
 
 my %opt;
 my $dbgftmp = "";
-my @leftover;
+my @sys = ();
+my @ref = ();
 
 my $commandline = $0 . join(" ", @ARGV) . "\n\n";
 
@@ -136,11 +139,16 @@ GetOptions
    'frameTol=i'       => \$frameTol,
    'bin'              => \$bin,
    'writeResults=s'   => \$writeres,   
-   'gtf'              => sub {$gtfs++; @leftover = @ARGV},
-  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+   'gtf'              => sub {$gtfs++},
+   # Non options (SYS + REF)
+   '<>' => sub { if ($gtfs) { push @ref, @_; } else { push @sys, @_; } },
+ ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
+
+MMisc::error_quit("Leftover arguments on the command line: " . join(", ", @ARGV))
+  if (scalar @ARGV > 0);
 
 if (defined $evaldomain) { 
   $evaldomain = uc($evaldomain);
@@ -162,8 +170,6 @@ if (defined $eval_type) {
   MMisc::error_quit("'EvalType' is a required argument (area, point), aborting\n\n$usage\n");
 }
 
-MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
-
 if ($xmllint ne "") {
   MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
     if (! $dummy->set_xmllint($xmllint));
@@ -177,9 +183,6 @@ if ($xsdpath ne "") {
 MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting")
   if ($gtfs > 1);
 
-my ($rref, $rsys) = &get_sys_ref_filelist(\@leftover, @ARGV);
-my @ref = @{$rref};
-my @sys = @{$rsys};
 MMisc::error_quit("No SYS file(s) provided, can not perform scoring")
   if (scalar @sys == 0);
 MMisc::error_quit("No REF file(s) provided, can not perform scoring")
@@ -326,31 +329,6 @@ sub get_param_settings {
   $str .= "Substitution-Cost = $CostSub.\n\n";
 
   return($str);
-}
-
-########################################
-
-sub get_sys_ref_filelist {
-  my $rlo = shift @_;
-  my @args = @_;
-
-  my @lo = @{$rlo};
-
-  @args = reverse @args;
-  @lo = reverse @lo;
-
-  my @ref;
-  my @sys;
-  while (my $l = shift @lo) {
-    if ($l eq $args[0]) {
-      push @ref, $l;
-      shift @args;
-    }
-  }
-  @ref = reverse @ref;
-  @sys = reverse @args;
-
-  return(\@ref, \@sys);
 }
 
 ########################################

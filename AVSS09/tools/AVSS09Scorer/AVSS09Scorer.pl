@@ -97,6 +97,7 @@ my @ok_md = ("gzip", "text"); # Default is gzip / order is important
 my @ok_needed = ("Video", "MOTA", "MOTP", "SFDA", "ATA", "MODA", "MODP"); # Order is crucial: "Video" <=> "sffn" has to be first
 
 my $usage = &set_usage();
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
@@ -121,7 +122,8 @@ my $fullresults = 0;
 # Used: A CDEF        O   ST V      cd fgh    m   q st vwx   #
 
 my %opt = ();
-my @leftover = ();
+my @sys = ();
+my @ref = ();
 GetOptions
   (
    \%opt,
@@ -132,7 +134,7 @@ GetOptions
    'writedir=s'      => \$destdir,
    'xmllint=s'       => \$xmllint,
    'CLEARxsd=s'      => \$xsdpath,
-   'gtf'             => sub {$gtfs++; @leftover = @ARGV},
+   'gtf'             => sub {$gtfs++},
    'frameTol=i'      => \$frameTol,
    'Validator=s'     => \$valtool,
    'Scorer=s'        => \$scrtool,
@@ -146,8 +148,9 @@ GetOptions
    'csv'             => \$docsv,
    'TrackMOTA'       => \$trackmota,
    'FullResults'     => \$fullresults,
+   # Non options (SYS + REF)
+   '<>' => sub { if ($gtfs) { push @ref, @_; } else { push @sys, @_; } },
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
-
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 if ($opt{'man'}) {
@@ -155,6 +158,9 @@ if ($opt{'man'}) {
   MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
   MMisc::ok_quit($o);
 }
+
+MMisc::error_quit("Leftover arguments on the command line: " . join(", ", @ARGV))
+  if (scalar @ARGV > 0);
 
 # Check option set
 &check_opt_is_blank("writedir", $destdir);
@@ -409,31 +415,6 @@ sub do_single_scoring {
 
 ##########
 
-sub get_sys_ref_filelist {
-  my $rlo = shift @_;
-  my @args = @_;
-
-  my @lo = @{$rlo};
-
-  @args = reverse @args;
-  @lo = reverse @lo;
-
-  my @ref = ();
-  my @sys = ();
-  while (my $l = shift @lo) {
-    if ($l eq $args[0]) {
-      push @ref, $l;
-      shift @args;
-    }
-  }
-  @ref = reverse @ref;
-  @sys = reverse @args;
-
-  return(\@ref, \@sys);
-}
-
-####################
-
 sub do_validation {
   if (($skval) && (! MMisc::is_blank($ecf_file))) {
     print("Note: \'ECF\' provided and \'skipValidation\' selected; will check ECF needed MemDump files from information comtained within ECF file in scoring step\n");
@@ -446,9 +427,6 @@ sub do_validation {
   MMisc::error_quit("Only one \'gtf\' separator allowed per command line, aborting\n\n$usage\n")
     if ($gtfs > 1);
   
-  my ($rref, $rsys) = &get_sys_ref_filelist(\@leftover, @ARGV);
-  my @ref = @{$rref};
-  my @sys = @{$rsys};
   MMisc::error_quit("No SYS file(s) provided, can not perform scoring\n\n$usage\n")
     if (scalar @sys == 0);
   MMisc::error_quit("No REF file(s) provided, can not perform scoring\n\n$usage\n")

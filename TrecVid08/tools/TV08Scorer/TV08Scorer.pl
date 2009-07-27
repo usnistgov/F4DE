@@ -114,7 +114,9 @@ my $xmllint_env = "F4DE_XMLLINT";
 my $mancmd = "perldoc -F $0";
 my @xtend_modes = ("copy_sys", "copy_ref", "overlap", "extended"); # Order is important
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
+
 my $usage = &set_usage();
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Default values for variables
 my $showAT = 0;
@@ -193,7 +195,6 @@ GetOptions
    # Non options (SYS + REF)
    '<>' => sub { if ($gtfs) { push @ref, @_; } else { push @sys, @_; } },
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
-
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 if ($opt{'man'}) {
@@ -201,9 +202,6 @@ if ($opt{'man'}) {
   MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
   MMisc::ok_quit($o);
 }
-
-MMisc::ok_quit("\n$usage\n") 
-  if ((scalar @ARGV == 0) && (scalar @ref == 0) && (scalar @sys == 0) && (scalar @inputAliCSV == 0));
 
 MMisc::error_quit("Leftover arguments on the command line: " . join(", ", @ARGV))
   if (scalar @ARGV > 0);
