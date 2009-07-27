@@ -2941,7 +2941,7 @@
           <data:textline framespan="3781:3792" x="104" y="41" height="29" width="471" rotation="0" offsets="94 228 332 383 " occlusions="" text="MOST SACRED RELIC IS REAL"/>
           <data:textline framespan="3793:3804" x="103" y="22" height="29" width="471" rotation="0" offsets="94 228 332 383 " occlusions="" text="MOST SACRED RELIC IS REAL"/>
           <data:textline framespan="3805:3805" x="106" y="1" height="29" width="471" rotation="0" offsets="94 228 332 383 " occlusions="" text="MOST SACRED RELIC IS REAL"/>
-          <data:textline framespan="3806:3817" x="106" y="-1" height="29" width="471" rotation="0" offsets="" occlusions="" text="MOST SACRED RELIC IS REAL"/>
+          <data:textline framespan="3806:3817" x="106" y="1" height="29" width="471" rotation="0" offsets="" occlusions="" text="MOST SACRED RELIC IS REAL"/>
         </attribute>
         <attribute name="LOGO"/>
         <attribute name="OCCLUSION">
