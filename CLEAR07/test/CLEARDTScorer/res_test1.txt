@@ -8,7 +8,7 @@ Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Trac
 
         Reference File            System Output File                  Video               Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
-  2005_TEST_BNEWS_FDT_05.GTF  2005_TEST_BNEWS_FDT_05.RDF  19980410_1830_1900_ABC_WNT.MPG    FACE  0.748024  0.503881  0.683486  0.750776  0.669725  0.745839
+  2005_TEST_BNEWS_FDT_05.GTF  2005_TEST_BNEWS_FDT_05.RDF  19980410_1830_1900_ABC_WNT.MPG    FACE  0.745284  0.498167  0.680365  0.750776  0.666667  0.745839
 
 
 ***** DONE *****

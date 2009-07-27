@@ -8,7 +8,7 @@ Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Trac
 
         Reference File            System Output File                   Video               Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    
 -------------------------------------------------------------------------------------------------------------------------------------------------------------
-  2005_TEST_MROOM_PDT_10.GTF  2005_TEST_MROOM_PDT_10.RDF  NIST_20020911-1033_C05_NONE.MPG  PERSON  0.544998  0.220220  0.566265  0.491156  0.560241  0.484199
+  2005_TEST_MROOM_PDT_10.GTF  2005_TEST_MROOM_PDT_10.RDF  NIST_20020911-1033_C05_NONE.MPG  PERSON  0.539090  0.220038  0.568862  0.488957  0.562874  0.482165
 
 
 ***** DONE *****
