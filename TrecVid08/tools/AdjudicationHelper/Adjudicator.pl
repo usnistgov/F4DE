@@ -99,7 +99,9 @@ my $se_UnSys  = $dummy->get_UnmappedSys_subeventkey();
 
 my $xmllint_env = "F4DE_XMLLINT";
 my $margind = 75;
+
 my $usage = &set_usage();
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
@@ -123,6 +125,7 @@ my $smartglob = undef;
 # Used:       G I         ST  W   a cd f hij        s  v x   #
 
 my %opt = ();
+my @args = ();
 GetOptions
   (
    \%opt,
@@ -144,14 +147,14 @@ GetOptions
    'minAgree=i'       => \$minAgree,
    'createAgreeDir'   => \$cad,
    'SmartGlob=i'      => \$smartglob,
+   '<>'               => sub { push @args, @_ },
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 MMisc::error_quit("Need at least 1 file arguments to work\n$usage\n") 
-  if (scalar @ARGV < 1);
+  if (scalar @args < 1);
 
 if ($xmllint ne "") {
   MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
@@ -199,6 +202,12 @@ if (! MMisc::is_blank($jpeg_path)) {
   $jpeg_path .= "/";
 }
 
+my $infog_spadd = "";
+if (scalar @ARGV > 0) {
+  $infog_spadd = join(" ", @ARGV);
+  print "(Will add [$infog_spadd] to [$info_g] command line)\n";
+}
+
 ##########
 # Main processing
 
@@ -215,7 +224,7 @@ my $isgtf = 0; # We only work with SYS files !
 my $el= undef;
 my %numframes = ();
 
-foreach my $ifile (@ARGV) {
+foreach my $ifile (@args) {
   my $err = MMisc::check_file_r($ifile);
   MMisc::error_quit("Problem with \'xmlfile\' [$ifile] : $err")
     if (! MMisc::is_blank($err));
@@ -605,6 +614,7 @@ sub write_avf {
 
     my $command = "$info_g $infofile $file_name $beg $end";
     $command .= " $jpeg_path" if (! MMisc::is_blank($jpeg_path));
+    $command .= " $infog_spadd" if (! MMisc::is_blank($infog_spadd));
 
     &die_syscall_logfile($log, "InfoGenerator run", $command);
 

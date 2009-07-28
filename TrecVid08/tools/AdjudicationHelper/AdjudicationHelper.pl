@@ -95,7 +95,9 @@ my $margin_d = 75;
 my $validator_d = "../TV08ViperValidator/TV08ViperValidator.pl";
 my $scorer_d = "../TV08Scorer/TV08Scorer.pl";
 my $adjtool_d = "./Adjudicator.pl";
+
 my $usage = &set_usage();
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
@@ -130,6 +132,7 @@ my $rmREFfromSYS = 0;
 my $fcmdline = "$0 " . join(" ", @ARGV);
 
 my %opt = ();
+my @args = ();
 GetOptions
   (
    \%opt,
@@ -159,13 +162,13 @@ GetOptions
    'MakeAgreeDir'    => \$mad,
    'globSmart=i'     => \$smartglob,
    'rerunMasterREFvsSYS' => \$rmREFfromSYS,
+   '<>'              => sub { push @args, @_ },
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
-
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-MMisc::error_quit("No arguments left on command line\n\n$usage\n")
-  if (scalar @ARGV == 0);
+MMisc::error_quit("Not doing adjudication work on only on one REF and one SYS file")
+  if (scalar @args < 3);
 
 my $cmdline_add = "";
 my $dummy = new TrecVid08ViperFile();
@@ -207,9 +210,6 @@ MMisc::error_quit("\'info_path\' can only be used if \'InfoGenerator\' is used")
 MMisc::error_quit("\'jpeg_path\' can only be used if \'InfoGenerator\' is used")
   if ((MMisc::is_blank($info_g)) && (! MMisc::is_blank($jpeg_path)));
 
-MMisc::error_quit("Not doing adjudication work on only on one REF and one SYS file")
-  if (scalar @ARGV < 3);
-
 print "[COMMANDLINE] [$fcmdline]\n";
 
 ########## Main processing
@@ -232,6 +232,12 @@ $adjtool = $adjtool_d
 $validator .= " $cmdline_add";
 $scorer    .= " $cmdline_add";
 $adjtool   .= " $cmdline_add";
+
+my $adjtool_spadd = "";
+if (scalar @ARGV > 0) {
+  $adjtool_spadd = "-- " . join(" ", @ARGV);
+  print "(Will add [$adjtool_spadd] to [$adjtool] command line)\n";
+}
 
 my $md_add = TrecVid08HelperFunctions::get_MemDump_Suffix();
 
@@ -261,13 +267,13 @@ my $SGAdjDir       = "06-Smart_Globing-Adjudication_ViPERfiles";
 my $stepc = 1;
 
 ########## Generating Empty Master REF file
-my $mf = shift @ARGV;
+my $mf = shift @args;
 
 if ($mf eq "_blank_") {
   print "\n\n***** STEP ", $stepc++, ": Generating Empty Master REF file\n";
 
   # Use the first SYS file
-  my $sf = $ARGV[0];
+  my $sf = $args[0];
   my $f = MMisc::get_file_full_path($sf);
   &die_check_file_r($f, "SYS file used to make Empty Master REF");
 
@@ -304,7 +310,7 @@ my $annot_count = 1;
 my %sys_files = ();
 my %sys_short = ();
 my @order_of_things = ();
-foreach my $sf (@ARGV) {
+foreach my $sf (@args) {
   my $f = MMisc::get_file_full_path($sf);
   &die_check_file_r($f, "SYS");
   MMisc::error_quit("The same SYS file ($f) can not be used multiple time")
@@ -725,6 +731,7 @@ $command .= " -c" if ($mad);
 $command .= " -m $minAgree" if ($minAgree > 0);
 $command .= " -o -r" if ($nonglob);
 $command .= " -S $smartglob -r" if (defined $smartglob);
+$command .= " $adjtool_spadd" if (! MMisc::is_blank($adjtool_spadd));
 
 &die_syscall_logfile($log, "adjudication command", $command);
 
