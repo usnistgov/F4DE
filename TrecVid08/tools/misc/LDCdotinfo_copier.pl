@@ -98,7 +98,7 @@ my $infile = "";
 my $cfn = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                                  h             v     #
+# Used:                                  hi            v     #
 
 
 my %opt = ();
@@ -168,6 +168,7 @@ Will generate
  Where:
   --help          Print this usage information and exit
   --version       Print version number and exit
+  --input_file    Specify the info file to load data from
 EOF
 ;
   
