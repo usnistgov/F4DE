@@ -141,6 +141,108 @@ sub csvline2array {
   return(@columns);
 }
 
+##########
+
+sub __loadCSV {
+  my ($self, $file) = @_;
+
+  my $err = MMisc::check_file_r($file);
+  return("Problem with file ($file): $err")
+    if (! MMisc::is_blank($err));
+
+  open CSV, "<$file"
+    or return("Problem while opening file ($file): $!");
+ 
+  return("");
+}
+
+#####
+
+sub loadCSV_getheader {
+  my ($self, $file) = @_;
+
+  my @h = ();
+  my $err = $self->__loadCSV($file);
+  return($self->_set_error_and_return($err, @h))
+    if (! MMisc::is_blank($err));
+
+  my $line = <CSV>;
+  close CSV;
+
+  return($self->csvline2array($line));
+}
+
+#####
+
+sub loadCSV_tohash {
+  my ($self, $file, @keysorder) = @_;
+
+  my %out = ();
+
+  my $err = $self->__loadCSV($file);
+  return($self->_set_error_and_return($err, %out))
+    if (! MMisc::is_blank($err));
+ 
+  my $line = <CSV>;
+
+  my @headers = $self->csvline2array($line);
+  return(%out) if ($self->error());
+
+  my %pos = ();
+  for (my $i = 0; $i < scalar @headers; $i++) {
+    $pos{$headers[$i]} = $i;
+  }
+
+  my @nf = ();
+  my %nd = ();
+  foreach my $h (@keysorder) {
+    push @nf, $h
+      if (! exists $pos{$h});
+    $nd{$h} = $pos{$h};
+  }
+  return($self->_set_error_and_return("Could not find requested headers: " . join(", ", @nf), %out))
+    if (scalar @nf > 0);
+
+  $self->set_number_of_columns(scalar @headers);
+  return(%out) if ($self->error());
+
+  my $cont = 1;
+  my $code = "";
+  while ($cont) {
+    my $line = <CSV>;
+    if (MMisc::is_blank($line)) {
+      $cont = 0;
+      next;
+    }
+    
+    my @array = $self->csvline2array($line);
+    return(%out) if ($self->error());
+
+    my $bt = "push \@\{\$out";
+    foreach my $h (@keysorder) {
+      $bt .= "{\'" . $array[$pos{$h}] . "\'}";
+    }
+
+  for (my $i = 0; $i < scalar @headers; $i++) {
+    my $h = $headers[$i];
+    next if (exists $nd{$h});
+
+    my $v = $array[$i];
+    $code .= $bt . "{\'$h\'}}, \'$v\';\n"
+    }
+
+    $cont++;
+  }
+  close CSV;
+
+  return($self->_set_error_and_return("Do not have any code data to reload", %out))
+    if (MMisc::is_blank($code));
+#  print "** Code:\n$code\n";
+  eval $code;
+
+  return(%out);
+}
+
 ############################################################
 
 sub _set_errormsg {
