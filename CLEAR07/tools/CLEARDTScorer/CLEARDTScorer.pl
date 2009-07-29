@@ -116,6 +116,8 @@ my $spmode      = "";
 my $spmode_run  = "";
 my $csvfile     = "";
 my $motalogdir  = undef;
+my $ovnotreq    = 0;
+my $qomf        = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
 # Used:   CDEF  I   M     S        bcd fgh    m      t vwx    #
@@ -147,6 +149,8 @@ GetOptions
    'SpecialMode=s'   => \$spmode,
    'csv=s'           => \$csvfile,
    'motaLogDir:s'    => \$motalogdir,
+   'overlapNotRequired' => \$ovnotreq,
+   'quitOnMissingFiles' => \$qomf,
    # Non options (SYS + REF)
    '<>' => sub { if ($gtfs) { push @ref, @_; } else { push @sys, @_; } },
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -181,6 +185,9 @@ MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() .
 
 MMisc::error_quit("While trying to set \'CLEARxsd\' (" . $dummy->get_errormsg() . ")")
   if ((! MMisc::is_blank($xsdpath)) && (! $dummy->set_xsdpath($xsdpath)));
+
+MMisc::error_quit("\'overlapNotRequired\' only authorized with \'SpecialMode\'")
+  if (($ovnotreq) && (MMisc::is_blank($spmode)));
 
 my $avss_full = "full"; # Authorized "AVSS" special mode modification
 if (! MMisc::is_blank($spmode)) {
@@ -246,18 +253,28 @@ for (my $loop = 0; $loop < $ntodo; $loop++) {
 # Prepare for batch processing
 my @files_to_be_processed;
 foreach my $ref_file (@ref_seqs) {
-    my $checkFlag = 0; # To check if we matched a reference file
-    my ($ref_video_filename, $ref_start_frame, $ref_end_frame) = ($ref_file->{'video_file'}, $ref_file->{'beg_fr'}, $ref_file->{'end_fr'});
-    foreach my $sys_file (@sys_seqs) {
-        my ($sys_video_filename, $sys_start_frame, $sys_end_frame) = ($sys_file->{'video_file'}, $sys_file->{'beg_fr'}, $sys_file->{'end_fr'});
-        # Systems can report outside of the evaluation framespan
-        if (($ref_video_filename eq $sys_video_filename) && ($sys_start_frame <= $ref_start_frame) && ($sys_end_frame >= $ref_end_frame)) {
-            push @files_to_be_processed, [$ref_file->{'sequence'}, $sys_file->{'sequence'}];
-            $checkFlag = 1;
-            last;
-        }
+  my $checkFlag = 0; # To check if we matched a reference file
+  my ($ref_video_filename, $ref_start_frame, $ref_end_frame) = ($ref_file->{'video_file'}, $ref_file->{'beg_fr'}, $ref_file->{'end_fr'});
+  foreach my $sys_file (@sys_seqs) {
+    my ($sys_video_filename, $sys_start_frame, $sys_end_frame) = ($sys_file->{'video_file'}, $sys_file->{'beg_fr'}, $sys_file->{'end_fr'});
+    # Systems can report outside of the evaluation framespan
+    if ($ref_video_filename eq $sys_video_filename) {
+      if ($ovnotreq) {
+        push @files_to_be_processed, [$ref_file->{'sequence'}, $sys_file->{'sequence'}];
+        $checkFlag = 1;
+        last;
+      }
+      if (($sys_start_frame <= $ref_start_frame) && ($sys_end_frame >= $ref_end_frame)) {
+        push @files_to_be_processed, [$ref_file->{'sequence'}, $sys_file->{'sequence'}];
+        $checkFlag = 1;
+        last;
+      }
     }
-    print "Could not find matching system output file for " . $ref_file->{'filename'} . ". Skipping file\n" if (! $checkFlag);
+    
+  }
+  MMisc::error_quit("Could not find matching system output file for " . $ref_file->{'filename'} . " (possibly no SYS file covering REF framespan range)")
+      if (($qomf) && (! $checkFlag));
+  print "Could not find matching system output file for " . $ref_file->{'filename'} . ". Skipping file\n" if (! $checkFlag);
 }
 
 my ($sfda_add, $ata_add, $moda_add, $modp_add, $mota_add, $motp_add) 
@@ -484,7 +501,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--xmllint location] [--CLEARxsd location] --Domain name --Eval type [--frameTol framenbr] [--writeResult file] [--csv file] [--detthres value] [--trkthres value] [--bin] [--MissCost value] [--FACost value] [--ISCost value] [--SpecialMode mode[:trigger]] [--motaLogDir [dir]] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
+Usage: $0 [--help] [--version] [--xmllint location] [--CLEARxsd location] --Domain name --Eval type [--frameTol framenbr] [--writeResult file] [--csv file] [--detthres value] [--trkthres value] [--bin] [--MissCost value] [--FACost value] [--ISCost value] [--SpecialMode mode[:trigger] [--overlapNotRequired]] [--motaLogDir [dir]] [--quitOnMissingFiles] sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]
 
 Will Score the XML file(s) provided (System vs Truth)
 
@@ -505,7 +522,9 @@ Will Score the XML file(s) provided (System vs Truth)
   --FACost        Set the Metric's Cost for a False Alarm (default: $CostFA)
   --ISCost        Set the Metric's Cost for an ID Switch (default: $CostIS)
   --SpecialMode   Specify that the scorer is run using the CLEAR metric with a different evaluation rules (authorized modes: $spml)
+  --overlapNotRequired  Do not refuse to score SYS vs REF in case a full overlap of the GTF framespan by the SYS is not true
   --motaLogDir    Specify the directory in which one log file per sourcefile filename is written, containing an evaluated-frame per evaluated-frame decomposition of the tracking analysis. If no directory is provided, print to stdout
+  --quitOnMissingFiles  Quit if any of the input file is not scorable at pre-scoring check
   --gtf           Specify that the files past this marker on the command line are Ground Truth Files  
 
 Note:
