@@ -117,9 +117,10 @@ my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
 my $docsv = 0;
 my $trackmota = 0;
 my $fullresults = 0;
+my $ovnotreq    = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A CDEF        O   ST V      cd fgh    m   q st vwx   #
+# Used: A CDEF        O   ST V      cd fgh    m o q st vwx   #
 
 my %opt = ();
 my @sys = ();
@@ -148,6 +149,7 @@ GetOptions
    'csv'             => \$docsv,
    'TrackMOTA'       => \$trackmota,
    'FullResults'     => \$fullresults,
+   'overlapNotRequired' => \$ovnotreq,
    # Non options (SYS + REF)
    '<>' => sub { if ($gtfs) { push @ref, @_; } else { push @sys, @_; } },
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -384,7 +386,9 @@ sub do_single_scoring {
   my $spmode = "AVSS09";
   $spmode .= ":full" if ($fullresults);
   $cmd .= " --SpecialMode $spmode";
+  $cmd .= " --overlapNotRequired" if ($ovnotreq);
   $cmd .= " --csv $csvfile" if (! MMisc::is_blank($csvfile));
+  $cmd .= " --quitOnMissingFiles";
   if ($trackmota) {
     my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($logfile);
     MMisc::error_quit("Problem splitting \'logfile\' into dir/file/ext: $err")
@@ -926,7 +930,8 @@ B<AVSS09Scorer> S<[ B<--help> | B<--man> | B<--version> ]>
   S<B<--writedir> I<directory> B<--dirGTF> I<directory> B<--DirSYS> I<directory>>
   S<[B<--frameTol> I<framenbr>]>
   S<[B<--Validator> I<tool>] [B<--Overwrite>] [B<--skipValidation>]>
-  S<[B<--Scorer> I<tool>] [B<--csv>] [B<--TrackMOTA>] [B<--FullResults>]>
+  S<[B<--Scorer> I<tool>] [B<--overlapNotRequired>] [B<--csv>]>
+  S<[B<--TrackMOTA>] [B<--FullResults>]>
   S<[I<sys_file.xml> [I<...>] B<--gtf> I<ref_file.xml> [I<...>]]>
   
 =head1 DESCRIPTION
@@ -1063,6 +1068,10 @@ Display this man page.
 
 For the I<validation> step run from this tool, when rewriting XML or MemDumps, the default is to not overwrite previously generated files. This option inhibit this feature and will force files to be overwritten.
 
+=item B<--overlapNotRequired>
+
+When running the scoring tool, do not refuse to score SYS files whose framespan does not fully contains the GTF framespan
+
 =item B<--Scorer> I<tool>
 
 Specify the full path location of the B<CLEARDTScorer> program
@@ -1185,7 +1194,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--ECF ecffile.xml [--trackingTrial ttid] [--AVSSxsd location]] --writedir directory --dirGTF directory --DirSYS directory [--frameTol framenbr] [--Validator tool] [--Overwrite] [--skipValidation] [--Scorer tool] [--csv] [--TrackMOTA] [--FullResults] [sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--ECF ecffile.xml [--trackingTrial ttid] [--AVSSxsd location]] --writedir directory --dirGTF directory --DirSYS directory [--frameTol framenbr] [--Validator tool] [--Overwrite] [--skipValidation] [--Scorer tool] [--overlapNotRequired] [--csv] [--TrackMOTA] [--FullResults] [sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]]]
 
 Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provided (System vs Reference).
 
@@ -1206,6 +1215,7 @@ Will call the AVSS09 Validation and CLEAR Scorer tools on the XML file(s) provid
   --Overwrite     Overwrite previously validated XML and MemDump files
   --skipValidation  Skip the validation process (will still check files needed for scoring)
   --Scorer        Specify the full path location of the $scrtool_bt tool (if not in your path)
+  --overlapNotRequired  Do not refuse to score SYS vs REF in case a full overlap of the GTF framespan by the SYS is not true
   --csv           Request results to be put into a CSV file
   --TrackMOTA     Create a MOTA computation tracking log in the directory where the scorer log is written
   --FullResults   Print all metrics results ($metrics)
