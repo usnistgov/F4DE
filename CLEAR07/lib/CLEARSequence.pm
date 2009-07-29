@@ -35,6 +35,8 @@ use Data::Dumper;
 use File::Basename;
 use CSVHelper;
 
+use CLEARMetrics;
+
 # Constructor 
 # Using double-argument form of bless() for an inheritable constructor
 # Rather than being uniquely a class method, we'll set it up so that 
@@ -1160,10 +1162,7 @@ sub __print_prevmatch {
 
 sub Compute_MOTA {
   my ($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng) = @_;
-
-  return(undef) if ($cng == 0);
-  
-  return(1 - ( $costMD*$sumMD + $costFA*$sumFA + $costIS*($sumIDsplit + $sumIDmerge)) / $cng);
+  return(CLEARMetrics::computeMOTA($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng));
 }
 
 #####
