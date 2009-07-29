@@ -89,6 +89,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 # Options processing
 
 my $usage = &set_usage();
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:                   S              h    m     st v     #
@@ -98,6 +99,7 @@ my $site = "";
 my $expid = "";
 my $task = "";
 my @metrics = ();
+my $outdir = "";
 
 my %opt = ();
 GetOptions
@@ -110,6 +112,7 @@ GetOptions
    'expid=s'            => \$expid,
    'task=s'             => \$task,
    'metric=s'           => \@metrics,
+   'outdir=s'           => \$outdir,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -121,6 +124,14 @@ MMisc::ok_quit("All options have to be defined, aborting\n\n$usage\n")
 MMisc::ok_quit("No metric specified, aborting\n\n$usage\n")
   if (scalar @metrics == 0);
 
+my $mota_sat = undef;
+my $mota_sat_file = "";
+if (grep(m%^MOTA$%, @metrics)) {
+  $mota_sat = new SimpleAutoTable();
+  MMisc::error_quit("While creating MOTA global SAT : " . $mota_sat->get_errormsg())
+    if (! $mota_sat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
+}
+
 my @ttidl = @ARGV;
 
 foreach my $metric (@metrics) {
@@ -130,6 +141,22 @@ foreach my $metric (@metrics) {
   MMisc::error_quit("$txt Problem finalizing: $err")
       if (! MMisc::is_blank($err));
   print "$txt $ok\n" if (! MMisc::is_blank($ok));
+}
+
+if (defined $mota_sat) {
+  my $txtfile = "$mota_sat_file.txt";
+  my $tbl = $mota_sat->renderTxtTable(2);
+  MMisc::error_quit("Problem rendering MOTA SAT: ". $mota_sat->get_errormsg())
+    if (! defined($tbl));
+  MMisc::error_quit("Problem while trying to write MOTA text file ($txtfile)")
+    if (! MMisc::writeTo($txtfile, "", 1, 0, $tbl));
+  
+  my $csvfile = "$mota_sat_file.csv";
+  my $csvtxt = $mota_sat->renderCSV();
+  MMisc::error_quit("Generating MOTA CSV Report: ". $mota_sat->get_errormsg())
+    if (! defined($csvtxt));
+  MMisc::error_quit("Problem while trying to write CSV file ($csvfile)")
+    if (! MMisc::writeTo($csvfile, "", 1, 0, $csvtxt));
 }
 
 MMisc::ok_quit("All EXPID [$expid] metrics finalized\n");
@@ -150,6 +177,15 @@ sub finalize_expid {
   
   my $bofile = AVSS09HelperFunctions::get_scoringstep_destdir($scr_dir, "", $site, $expid, "", "");
 
+  if (! MMisc::is_blank($outdir)) {
+    my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($bofile);
+    return("", "", $err) if (! MMisc::is_blank($err));
+    $bofile = MMisc::concat_dir_file_ext($outdir, $f, $e);
+  }
+
+  $mota_sat_file = "$bofile-MOTA_Components"
+    if (MMisc::is_blank($mota_sat_file));
+
   my $eout = "$bofile-ECF-global_results-$metric";
   my $txtfile = "$eout.txt";
   return("", "Skipped, already done", "") if (-e $txtfile);
@@ -160,7 +196,7 @@ sub finalize_expid {
   return("", "", "While preparing print results : " . $sat->get_errormsg() . "\n")
     if (! $sat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
 
-  my @exp_header = ("Tracking Trial ID","Primary Camera ID","Primary Camera $metric","Cam 1 $metric","Cam 2 $metric","Cam 3 $metric","Cam 4 $metric","Cam 5 $metric","Average $metric");
+  my @exp_header = ("Tracking Trial ID","Primary Camera ID","Primary Camera $metric","Cam 1 $metric","Cam 2 $metric","Cam 3 $metric","Cam 4 $metric","Cam 5 $metric","Cam Avg $metric");
 
   foreach my $ttid (@ttidl) {
     my $bdd = AVSS09HelperFunctions::get_scoringstep_destdir($scr_dir, "", $site, $expid, $ttid, "");
@@ -183,8 +219,11 @@ sub finalize_expid {
       } elsif (! defined $mota_cv) {
         MMisc::warn_print("[$site] problem obtaining Combined MOTA for $ttid");
       } else {
-        $sat->addData($mota_cv, "Combined MOTA", $added[0]);
+        $sat->addData($mota_cv, "Frame Avg MOTA", $added[0]);
       }
+      my $err = &add_to_mota_sat($csvtl, $site, $expid, $task, $ttid);
+      MMisc::warn_print("[$site] problem working on global MOTA CSV (at $ttid): $err")
+        if (! MMisc::is_blank($err));
     }
 
   }
@@ -204,7 +243,7 @@ sub finalize_expid {
   return("Finalized");
 }
 
-#####
+##########
 
 sub extract_combined_mota_value {
   my ($file) = @_;
@@ -230,6 +269,79 @@ sub extract_combined_mota_value {
   return(undef);
 }
 
+##########
+
+sub add_to_mota_sat {
+  return("") if (! defined $mota_sat);
+
+  my ($file, $site, $expid, $task, $ttid) = @_;
+
+  my $err = MMisc::check_file_r($file);
+  return("file [$file] : $err")
+    if (! MMisc::is_blank($err));
+
+  open CSV, "<$file"
+    or return("$file [$file] : $!");
+
+  my @nh = ("CAM ID", "CostMD", "SumMD", "CostFA", "SumFA", "CostIS",
+            "SumIDSplit", "SumIDMerge", "NumberOfEvalGT");
+  my $idbase = "$site | $expid | $task | $ttid";
+
+  my $csvh = new CSVHelper();
+
+  my $header = <CSV>;
+  return("CSV file contains no data ?")
+    if (! defined $header);
+  my @headers = $csvh->csvline2array($header);
+  return("Problem extracting csv line:" . $csvh->get_errormsg())
+    if ($csvh->error());
+  return("CSV file ($file) contains no usable data")
+    if (scalar @headers < 2);
+
+  my %pos = ();
+  for (my $i = 0; $i < scalar @headers; $i++) {
+    $pos{$headers[$i]} = $i;
+  }
+
+  $csvh->set_number_of_columns(scalar @headers);
+  return("Problem setting the number of columns for the csv file:" . $csvh->get_errormsg())
+    if ($csvh->error());
+
+  my $cont = 1;
+  while ($cont) {
+    my $line = <CSV>;
+    if (MMisc::is_blank($line)) {
+      $cont = 0;
+      next;
+    }
+    
+    my @array = $csvh->csvline2array($line);
+    return("Problem extracting CSV content: " . $csvh->get_errormsg())
+      if ($csvh->error());
+    return("")
+      if ($array[0] eq "Combined MOTA");
+
+    my $id = "$idbase | CSVfile: $file | Line#: $cont";
+    $mota_sat->addData($site, "SITE", $id);
+    $mota_sat->addData($expid, "EXPID", $id);
+    $mota_sat->addData($task, "TASK", $id);
+    $mota_sat->addData($ttid, "TTID", $id);
+    foreach my $col (@nh) {
+      if (! exists $pos{$col}) {
+        return("Could not find required value ($col)");
+      } else {
+        $mota_sat->addData($array[$pos{$col}], $col, $id);
+      }
+      return($mota_sat->get_errormsg()) if ($mota_sat->error());
+    }
+
+    $cont++;
+  }
+  close CSV;
+
+  return("Could not find expected last CSV line");
+}
+
 ####################
 
 sub _warn_add {
@@ -242,7 +354,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] --scoring_dir dir --Site site --expid expid --task task --metric metric [--metric metric [...]] tiid [ttid [...]]
+Usage: $0 [--help | --version] --scoring_dir dir --Site site --expid expid --task task --metric metric [--metric metric [...]] [--outdir dir ] tiid [ttid [...]]
 
 Will generate the finalized Metric(s) CSV and TXT files for given EXPID's TTID(s)
 
@@ -254,6 +366,7 @@ Will generate the finalized Metric(s) CSV and TXT files for given EXPID's TTID(s
   --expid         The experiment ID
   --task          One of the recognized task (ex: MCSPT)
   --metric        One of the CLEAR metric (ex: MOTA)
+  --outdir        Specify the output directory (base of the scoring directory otherwise)
 EOF
 ;
   
