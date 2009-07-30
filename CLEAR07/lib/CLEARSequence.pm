@@ -619,7 +619,10 @@ sub computeMOTA {
 
   if (! defined $other ) { $self->_set_errormsg("Undefined system output"); return -1; }
 
-  my ( $mota, $cerror, $cng );
+  my $cerror;
+  my $mota = "NA";
+  my $cng = 0;
+
   my $outstr = "";
 
   if (defined $logfile) {
@@ -717,17 +720,20 @@ sub computeMOTA {
   }
   
   if ( $cng > 0 ) { 
-    $mota = 1 - ($cerror/$cng); 
+    $mota = 1 - ($cerror/$cng);
     # print "CERROR: $cerror\tTNG: $cng\n";
-    if (defined $logfile) {
-      $outstr .= "\n\n@@ END PROCESSING @@\n\n";
-      $outstr .= "MOTA = 1 - ( CostMD*SumMD + CostFA*SumFA + CostIS*(SumIDSplit + SumIDMerge) ) / NumberOfEvalGT\n";
-      $outstr .= "     = 1 - ( $costMD*$sumMD + $costFA*$sumFA + $costIS*($sumIDsplit + $sumIDmerge) ) / $cng\n";
-      $outstr .= sprintf("     = %s [conf: %.06f]\n", &Compute_printable_MOTA($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng), $mota);
-    }
   }
 
   if (defined $logfile) {
+    $outstr .= "\n\n@@ END PROCESSING @@\n\n";
+    $outstr .= "MOTA = 1 - ( CostMD*SumMD + CostFA*SumFA + CostIS*(SumIDSplit + SumIDMerge) ) / NumberOfEvalGT\n";
+    $outstr .= "     = 1 - ( $costMD*$sumMD + $costFA*$sumFA + $costIS*($sumIDsplit + $sumIDmerge) ) / $cng\n";
+    $outstr .= sprintf
+      ("     = %s [conf: %s]\n",
+       &Compute_printable_MOTA($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng),
+       (MMisc::is_float($mota) ? sprintf("%.06f", $mota) : $mota)
+      );
+
     $outstr .= "\n\n\n" if (MMisc::is_blank($logfile)); # Add extra CR for stdout print
     MMisc::error_quit("Problem while trying to write MOTA log file ($logfile)")
         if (! MMisc::writeTo($logfile, ".tracking_log", 1, 0, $outstr));
