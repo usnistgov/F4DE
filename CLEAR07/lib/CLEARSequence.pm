@@ -1168,11 +1168,9 @@ sub Compute_MOTA {
 #####
 
 sub Compute_printable_MOTA {
-  my $v = &Compute_MOTA(@_);
-  
-  return("NA") if (! defined $v);
-  
-  return(sprintf("%.06f", $v));
+  my ($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng) = @_;
+
+  return(CLEARMetrics::computePrintableMOTA($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng));
 }
 
 #####
