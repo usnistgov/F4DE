@@ -38,6 +38,23 @@ sub computeMOTA {
   return(1 - ( $costMD*$sumMD + $costFA*$sumFA + $costIS*($sumIDsplit + $sumIDmerge)) / $cng);
 }
 
+##########
+
+sub computePrintableMOTA {
+  my $v = &computeMOTA(@_);
+  
+  return("NA") if (! defined $v);
+  
+  return(sprintf("%.06f", $v));
+}
+
+##########
+
+#sub sumMOTAcomp {
+#  my 
+
+#}
+
 ########################################
 
 1;
