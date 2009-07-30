@@ -814,50 +814,47 @@ sub mota_comp_csv {
     
     my $id = "CID: $lcid / SFFN: $sffn";
     $sat->addData($lcid, "Cam ID", $id);
-    for (my $i = 0; $i < scalar @array; $i++) {
+    my @mota_comps_tmp = ();
+    my $proc_done = 0;
+    for (my $i = 0; (($proc_done == 0) && ($i < scalar @array)); $i++) {
       my $v = $larray[$i];
       my $cc = $sat_headers[$i];
       $sat->addData($v, $array[$i], $id);
-      if ((! MMisc::is_integer($v)) && ($cc ne "MOTA")) {
-        MMisc::warn_print("Column ($cc) value ($v) is not an integrer (for CAM ID $lcid)");
+      if ($cc eq "MOTA") {
+        $proc_done = 1;
         next;
       }
-      if ($cc !~ m%^Cost%) { # Cost entries do not add up
-        $mota_comps[$i] += $v ;
-      } else { 
-        $mota_comps[$i] = $v ; # they just get copied as is
+      if (! MMisc::is_integer($v)) {
+        MMisc::error_quit("Column ($cc) value ($v) is not an integrer (for CAM ID $lcid)");
+        next;
       }
+      $mota_comps_tmp[$i] = $v;
     }
     my $lmota = CLEARMetrics::computePrintableMOTA(@larray);
     $sat->addData($lmota, "Computed MOTA", $id);
+    (my $err, @mota_comps) = CLEARMetrics::sumMOTAcomp(@mota_comps, @mota_comps_tmp);
+    MMisc::error_quit("While summing MOTA components: $err") 
+      if (! MMisc::is_blank($err));
   }
   close LOCAL_CSV;
 
-  my $cdi = 1; # can do it
   if (scalar @mota_comps == 0) {
     MMisc::warn_print("Can not compute combined MOTA: no element in Sum array");
     return("");
   }
-  if (scalar @mota_comps != scalar @sat_headers) {
-    MMisc::warn_print("Can not compute combined MOTA: not the same number of element in Sum array (" . scalar @mota_comps .") than in SAT headers (" . scalar @sat_headers . ")");
+  if (scalar @mota_comps != 8) {
+    MMisc::error_quit("Can not compute combined MOTA: not 8 elements (" . scalar @mota_comps .")");
     return("");
   }
+
   my $id = "Combined MOTA";
-  $sat->addData($id, "CAM ID", $id);
+  $sat->addData($id, "Cam ID", $id);
+  $sat->addData("", "MOTA", $id);
   for (my $i = 0; $i < scalar @mota_comps; $i++) {
     my $v = $mota_comps[$i];
     my $cc = $sat_headers[$i];
 
-    if ($cc eq "MOTA") {
-      $sat->addData("", $sat_headers[$i], $id);
-     } else {
-      $sat->addData($v, $sat_headers[$i], $id);
-      if (! MMisc::is_integer($v)) {
-        MMisc::warn_print("Can not compute combined MOTA: some value ($v) are not integers for column: " . $sat_headers[$i]);
-        $cdi = 0;
-        next;
-      }
-    }
+    $sat->addData($v, $sat_headers[$i], $id);
   }
   my $lmota = CLEARMetrics::computePrintableMOTA(@mota_comps);
   $sat->addData($lmota, "Computed MOTA", $id);
