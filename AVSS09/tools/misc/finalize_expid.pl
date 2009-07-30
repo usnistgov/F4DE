@@ -196,7 +196,7 @@ sub finalize_expid {
   return("", "", "While preparing print results : " . $sat->get_errormsg() . "\n")
     if (! $sat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
 
-  my @exp_header = ("Tracking Trial ID","Primary Camera ID","Primary Camera $metric","Cam 1 $metric","Cam 2 $metric","Cam 3 $metric","Cam 4 $metric","Cam 5 $metric","Cam Avg $metric");
+  my @exp_header = ("Tracking Trial ID","Primary Cam ID","Primary Cam $metric","Cam 1 $metric","Cam 2 $metric","Cam 3 $metric","Cam 4 $metric","Cam 5 $metric","Cam Avg $metric");
 
   foreach my $ttid (@ttidl) {
     my $bdd = AVSS09HelperFunctions::get_scoringstep_destdir($scr_dir, "", $site, $expid, $ttid, "");
@@ -283,7 +283,7 @@ sub add_to_mota_sat {
   open CSV, "<$file"
     or return("$file [$file] : $!");
 
-  my @nh = ("CAM ID", "CostMD", "SumMD", "CostFA", "SumFA", "CostIS",
+  my @nh = ("Cam ID", "CostMD", "SumMD", "CostFA", "SumFA", "CostIS",
             "SumIDSplit", "SumIDMerge", "NumberOfEvalGT");
   my $idbase = "$site | $expid | $task | $ttid";
 
