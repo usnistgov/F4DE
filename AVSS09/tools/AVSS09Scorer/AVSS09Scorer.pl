@@ -60,7 +60,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "AVSS09ECF", "AVSS09HelperFunctions", "SimpleAutoTable", "CSVHelper", "CLEARSequence") {
+foreach my $pn ("MMisc", "AVSS09ECF", "AVSS09HelperFunctions", "SimpleAutoTable", "CSVHelper", "CLEARMetrics") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -741,9 +741,9 @@ sub sat_add_results {
 
   $sat->addData($type, "Type", $id);
   $sat->addData($rttid, "Tracking Trial ID", $id);
-  $sat->addData($pc, "Primary Camera ID", $id);
+  $sat->addData($pc, "Primary Cam ID", $id);
   $sat->addData($global_scores{$type}{$rttid}{$gs_spk[0]}{$pc}{$key}, 
-                "Primary Camera $key", $id);
+                "Primary Cam $key", $id);
 
   return() if ($half_fill);
 
@@ -755,8 +755,7 @@ sub sat_add_results {
     $sat->addData($v, "Cam $cid $key", $id);
   }    
 
-  $sat->addData($global_scores{$type}{$rttid}{$gs_spk[2]}{$key}, "Average $key", $id);
-}
+  $sat->addData($global_scores{$type}{$rttid}{$gs_spk[2]}{$key}, "Avg $key", $id);}
 
 ####################
 
@@ -814,7 +813,7 @@ sub mota_comp_csv {
       if ($csvh->error());
     
     my $id = "CID: $lcid / SFFN: $sffn";
-    $sat->addData($lcid, "CAM ID", $id);
+    $sat->addData($lcid, "Cam ID", $id);
     for (my $i = 0; $i < scalar @array; $i++) {
       my $v = $larray[$i];
       my $cc = $sat_headers[$i];
@@ -829,7 +828,7 @@ sub mota_comp_csv {
         $mota_comps[$i] = $v ; # they just get copied as is
       }
     }
-    my $lmota = CLEARSequence::Compute_printable_MOTA(@larray);
+    my $lmota = CLEARMetrics::computePrintableMOTA(@larray);
     $sat->addData($lmota, "Computed MOTA", $id);
   }
   close LOCAL_CSV;
@@ -850,7 +849,8 @@ sub mota_comp_csv {
     my $cc = $sat_headers[$i];
 
     if ($cc eq "MOTA") {
-    } else {
+      $sat->addData("", $sat_headers[$i], $id);
+     } else {
       $sat->addData($v, $sat_headers[$i], $id);
       if (! MMisc::is_integer($v)) {
         MMisc::warn_print("Can not compute combined MOTA: some value ($v) are not integers for column: " . $sat_headers[$i]);
@@ -859,7 +859,7 @@ sub mota_comp_csv {
       }
     }
   }
-  my $lmota = CLEARSequence::Compute_printable_MOTA(@mota_comps);
+  my $lmota = CLEARMetrics::computePrintableMOTA(@mota_comps);
   $sat->addData($lmota, "Computed MOTA", $id);
 
   my $csvfile = "$bd/$rttid-Combined_MOTA.csv";
