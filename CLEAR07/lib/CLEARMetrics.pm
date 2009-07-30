@@ -50,10 +50,52 @@ sub computePrintableMOTA {
 
 ##########
 
-#sub sumMOTAcomp {
-#  my 
+sub __check_sameMOTAcomp {
+  my ($col1, $col2, $name, @array) = @_;
 
-#}
+  my $v1 = $array[$col1];
+  my $v2 = $array[$col2];
+  
+  return("Different $name [$v1 / $v2]")
+    if ($v1 != $v2);
+
+  return("");
+}
+
+#####
+
+sub sumMOTAcomp {
+  my @all = @_;
+
+  # Special case, adding to an empty, return the input as the result
+  return("", @all[0..7]) if (scalar @all == 8);
+
+  return("Strange number of elements (expected 16, got " . scalar @all . ")")
+    if (scalar @all != 16);
+  
+  foreach my $v (@all) {
+    return("Not all values given are integer value [$v]")
+      if (! MMisc::is_integer($v));
+  }
+
+  my $err = "";
+  $err .= &__check_sameMOTAcomp(0, 8, "CostMD", @all);
+  $err .= &__check_sameMOTAcomp(2, 10, "CostFA", @all);
+  $err .= &__check_sameMOTAcomp(4, 12, "CostIS", @all);
+  return($err) if (! MMisc::is_blank($err));
+
+  my @out = ();
+  # Sum all
+  for (my $i = 0; $i < 8; $i++) {
+    $out[$i] = $all[$i] + $all[8 + $i];
+  }
+  # but 3 special cases
+  $out[0] = $all[0];
+  $out[2] = $all[2];
+  $out[4] = $all[4];
+
+  return("", @out);
+}
 
 ########################################
 
