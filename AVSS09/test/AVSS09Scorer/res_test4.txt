@@ -23,24 +23,24 @@
 
 ***** STEP 3: Scoring
 - Scoring "CPSPT_01" ttid
-  Type   Tracking Trial ID  Primary Camera ID  Primary Camera MOTA  Cam 2 MOTA  Cam 5 MOTA  Average MOTA  
---------------------------------------------------------------------------------------------------------
-  cpspt           CPSPT_01                  5             1.000000    0.904762          --      0.952381
+  Type   Tracking Trial ID  Primary Cam ID  Primary Cam MOTA  Cam 2 MOTA  Cam 5 MOTA  Avg MOTA  
+----------------------------------------------------------------------------------------------
+  cpspt           CPSPT_01               5          1.000000    0.904762          --  0.952381
 
 - Scoring "SCSPT05b" ttid
-  Type   Tracking Trial ID  Primary Camera ID  Primary Camera MOTA  
-------------------------------------------------------------------
-  scspt           SCSPT05b                  1             1.000000
+  Type   Tracking Trial ID  Primary Cam ID  Primary Cam MOTA  
+------------------------------------------------------------
+  scspt           SCSPT05b               1          1.000000
 
 
 
 
 
 ########## ECF result table:
-  Type   Tracking Trial ID  Primary Camera ID  Primary Camera MOTA  Cam 1 MOTA  Cam 2 MOTA  Cam 5 MOTA  Average MOTA  
---------------------------------------------------------------------------------------------------------------------
-  cpspt           CPSPT_01                  5             1.000000          NA    0.904762          --      0.952381
-  scspt           SCSPT05b                  1             1.000000          --          NA          NA             1
+  Type   Tracking Trial ID  Primary Cam ID  Primary Cam MOTA  Cam 1 MOTA  Cam 2 MOTA  Cam 5 MOTA  Avg MOTA  
+----------------------------------------------------------------------------------------------------------
+  cpspt           CPSPT_01               5          1.000000          NA    0.904762          --  0.952381
+  scspt           SCSPT05b               1          1.000000          --          NA          NA         1
 
 
 ***** Done *****
