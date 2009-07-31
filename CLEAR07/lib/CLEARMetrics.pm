@@ -43,7 +43,7 @@ sub computeMOTA {
 sub computePrintableMOTA {
   my $v = &computeMOTA(@_);
   
-  return("NA") if (! defined $v);
+  return("NaN") if (! defined $v);
   
   return(sprintf("%.06f", $v));
 }
