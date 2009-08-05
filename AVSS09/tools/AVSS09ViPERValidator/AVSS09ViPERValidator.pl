@@ -108,9 +108,10 @@ my $ttid = "";
 my $tttdir = 0;
 my $ovwrt = 1;
 my $ttid_quit = 0;
+my $ofppid = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A C EF             T  W        fgh      o q st vwx    #
+# Used: A C EF        O    T  W        fgh      o q st vwx    #
 
 my %opt;
 GetOptions
@@ -133,6 +134,7 @@ GetOptions
    'TrackingTrialsDir' => \$tttdir,
    'overwriteNot'    => sub {$ovwrt = 0},
    'quitTTID'        => \$ttid_quit,
+   'OneFilePerPersonID' => \$ofppid,
    # Hiden Option(s)
    'X_show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -204,6 +206,13 @@ if (defined $MemDump) {
 
 MMisc::error_quit("\'skipScoringSequenceMemDump\' can only be used if \'MemDump\' is selected")
 if (($skipScoringSequenceMemDump) && (! defined $MemDump));
+
+MMisc::error_quit("\'OneFilePerPersonID\' can only be used if a \'write\' directory is provided")
+  if (($ofppid) && ($writeback eq ""));
+
+MMisc::error_quit("\'OneFilePerPersonID\' can not be used in conjunction with Tracking Trial mode")
+  if (($ofppid) && ($sk_wb));
+
   
 ##############################
 # Main processing
@@ -260,14 +269,18 @@ foreach my $tmp (@ARGV) {
   print $msg if (! MMisc::is_blank($msg));
   
   if (($writeback != -1) && (! $sk_wb)) {
-    my $lfname = "";
-    
-    if ($writeback ne "") {
-      my ($err, $td, $tf, $te) = MMisc::split_dir_file_ext($fname);
-      $lfname = MMisc::concat_dir_file_ext($writeback, $tf, $te);
+    if ($ofppid) {
+      my @pid = $object->get_person_id_list();
+      print " !! No PERSON IDs in file\n" if (scalar @pid == 0);
+      foreach my $id (sort @pid) {
+        my $no = $object->clone_selected_ids($id);
+        MMisc::error_quit("Problem while cloning selected IDs: " . $object->get_errormsg())
+            if ($object->error());
+        &write_files($fname, $no, sprintf("-PID_%03d", $id));
+      }
+    } else {
+      &write_files($fname, $object, "");
     }
-    
-    AVSS09HelperFunctions::VF_write_XML_MemDumps($object, $lfname, $isgtf, $MemDump, $skipScoringSequenceMemDump, "** XML re-Representation:\n", $ovwrt);
   }
 
   $ndone++;
@@ -475,6 +488,21 @@ sub process_training_trials {
   return(&_process_tt_all($vf, $sffn, $isgtf));
 }
 
+#####
+
+sub write_files {
+  my ($fname, $object, $lfnadd) = @_;
+
+  my $lfname = "";
+  
+  if ($writeback ne "") {
+    my ($err, $td, $tf, $te) = MMisc::split_dir_file_ext($fname);
+    $lfname = MMisc::concat_dir_file_ext($writeback, $tf . $lfnadd, $te);
+  }
+    
+  AVSS09HelperFunctions::VF_write_XML_MemDumps($object, $lfname, $isgtf, $MemDump, $skipScoringSequenceMemDump, "** XML re-Representation:\n", $ovwrt);
+}
+
 ########################################
 
 sub _warn_add {
@@ -498,6 +526,7 @@ B<AVSS09ViPERValidator> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--write> [I<directory>]>
    S<[B<--WriteMemDump> [I<mode>] [B<--skipScoringSequenceMemDump>]]>
    S<[B<--overwriteNot>]]>
+  S<[B<--OneFilePerPersonID>]>
   S<[B<--ECF> I<ecffile.xml> [B<--TrackingTrialsDir>]>
    S<[B<--trackingTrial> I<ttid> [B<--quitTTID>]]>
    S<[B<--AVSSxsd> I<location>]]>
@@ -573,6 +602,12 @@ Display the usage page for this program. Also display some default values and in
 =item B<--man>
 
 Display this man page.
+
+=item B<--OneFilePerPersonID>
+
+When writing validated files to disk, create one file per PERSON ID seen in the file.
+
+The output filename will be composed of the input file name with S<-PID_XXX>, placed before the file extension, where S<XXX> is the ID written on 3 digits.
 
 =item B<--overwriteNot>
 
@@ -697,7 +732,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--gtf] [--frameTol framenbr] [--ForceFilename file] [--write [directory] [--WriteMemDump [mode] [--skipScoringSequenceMemDump]] [--overwriteNot]] [--ECF ecffile.xml [--TrackingTrialsDir] [--trackingTrial ttid [--quitTTID]] [--AVSSxsd location]] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--CLEARxsd location] [--gtf] [--frameTol framenbr] [--ForceFilename file] [--write [directory] [--WriteMemDump [mode] [--skipScoringSequenceMemDump]] [--overwriteNot]] [--OneFilePerPersonID] [--ECF ecffile.xml [--TrackingTrialsDir] [--trackingTrial ttid [--quitTTID]] [--AVSSxsd location]] viper_source_file.xml[transformations] [viper_source_file.xml[transformations] [...]]
 
 Will perform a semantic validation of the AVSS09 ViPER XML file(s) provided.
 
@@ -714,6 +749,7 @@ Will perform a semantic validation of the AVSS09 ViPER XML file(s) provided.
   --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by the Scorer and Merger tools. Two modes possible: $wmd (1st default)
   --skipScoringSequenceMemDump  Do not perform the Scoring Sequence MemDump (which can be used for scoring)
   --overwriteNot  Do not overwrite already existing XML or MemDump files
+  --OneFilePerPersonID  Generate one output file per PERSON ID seen in input file (\"-PID_XXX\" will be added to the output file name)
   --ECF           Specify the ECF XML file to use when rewritting data
   --TrackingTrialsDir  When rewritting data, create a directory hierarchy than is recongizable by the scoring tool
   --trackingTrial Process only the requested \"tracking trial ID\"
