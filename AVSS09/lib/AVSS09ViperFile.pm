@@ -1794,6 +1794,42 @@ sub clone {
   return($ret);
 }
 
+####################
+
+sub clone_selected_ids {
+  my ($self, @ids) = @_;
+
+  return(undef) if ($self->error());
+  my @kidl = $self->get_person_id_list();
+  @ids = MMisc::make_array_of_unique_values(@ids);
+
+  my ($rin, $rout) = MMisc::confirm_first_array_values(\@ids, @kidl);
+  $self->_set_error_and_return("IDs not present: " . join(", ", @$rout), undef)
+  if (scalar @$rout > 0);
+
+  my ($rin, $rout) = MMisc::compare_arrays(\@ids, @kidl);
+ 
+  # We do not need to remove anything ? simply clone
+  my $ret = $self->clone();
+  return($ret) if (scalar @$rout == 0);
+  
+  my (%fhash) = $ret->_get_cldt_fhash();
+ 
+ my $pk = $ok_elements[0];
+  foreach my $id (@$rout) {
+    delete $fhash{$pk}{$id};
+  }
+
+  my $ok = $ret->_set_cldt_fhash(%fhash);
+  return($self->_set_error_and_return("Problem in clone: " . $ret->get_errormsg(), undef))
+    if ($ret->error());
+
+  # Force validation
+  $ret->{validated} = 1;
+
+  return($ret);
+}
+
 ############################################################
 
 1;
