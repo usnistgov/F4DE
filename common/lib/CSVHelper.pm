@@ -49,13 +49,13 @@ sub new {
 
   my $csvh = undef;
 
-  if (! MMisc::is_blank($qc)) {
+  if ((defined $qc) && (length($qc) > 0)) {
     $options{quote_char}  = $qc;
     $options{escape_char} = $qc;
   }
 
   $options{sep_char} = $sc
-    if (! MMisc::is_blank($sc));
+    if ((defined $sc) && (length($sc) > 0));
 
   $csvh = Text::CSV->new(\%options);
 
