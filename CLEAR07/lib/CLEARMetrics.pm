@@ -123,16 +123,18 @@ sub get_Precision_Recall_FrameF1_fromMOTAcomp {
   my $cordet = &get_CorrectDetect_fromMOTAcomp(@_);
 
   my $den = $cordet + $fa;
-  my $prec = ($den == 0) ? "NaN" : &_get_printable_value($cordet / $den);
+  my $v = ($den == 0) ? undef : ($cordet / $den);
+  my $prec = &_get_printable_value($v);
 
   $den = $cordet + $miss;
-  my $rec = ($den == 0) ? "NaN" :  &_get_printable_value($cordet / $den);
+  my $v = ($den == 0) ? undef : ($cordet / $den);
+  my $rec = &_get_printable_value($v);
 
   $den = $prec + $rec;
-  my $ff1 = 
+  my $v = 
     ((! MMisc::is_float($prec)) || (! MMisc::is_float($rec)) || ($den == 0)) 
-      ? "NaN" : 
-        &_get_printable_value((2 * $rec * $prec) / ($rec + $prec));
+      ? undef : ((2 * $rec * $prec) / ($rec + $prec));
+  my $ff1 = &_get_printable_value($v);
 
   return($prec, $rec, $ff1);
 }
