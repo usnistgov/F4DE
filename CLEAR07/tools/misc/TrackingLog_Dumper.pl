@@ -140,14 +140,14 @@ foreach my $line (@content) {
     }
 
   # "-- MOTA frame summary : [NumberOfEvalGT: 0] [MissedDetect: 0] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0]"
-  if ($line =~ m%^\-\-\sMOTA\sframe\ssummary\s*\:\s+\[NumberOfEvalGT\:\s*(\d)+\]\s+\[MissedDetect\:\s*(\d+)\]\s+\[FalseAlarm\:\s*(\d+)\]\s+\[IDSplit\:\s*(\d+)\]\s+\[IDMerge\:\s*(\d+)\]\s*$%) {
+  if ($line =~ m%^\-\-\sMOTA\sframe\ssummary\s*\:\s+\[NumberOfEvalGT\:\s*(\d+)\]\s+\[MissedDetect\:\s*(\d+)\]\s+\[FalseAlarm\:\s*(\d+)\]\s+\[IDSplit\:\s*(\d+)\]\s+\[IDMerge\:\s*(\d+)\]\s*$%) {
     push @linec, ($1, $2, $3, $4, $5);
 
     next;
   }
 
   # "-- MOTA global summary: [NumberOfEvalGT: 0] [MissedDetect: 0] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0] => [MOTA = NaN]"
-  if ($line =~ m%^\-\-\sMOTA\sglobal\ssummary\s*\:\s+\[NumberOfEvalGT\:\s*(\d)+\]\s+\[MissedDetect\:\s*(\d+)\]\s+\[FalseAlarm\:\s*(\d+)\]\s+\[IDSplit\:\s*(\d+)\]\s+\[IDMerge\:\s*(\d+)\]\s+\=\>\s+\[MOTA\s+\=\s+(\-?[\w\.]+)\]\s*$%) {
+  if ($line =~ m%^\-\-\sMOTA\sglobal\ssummary\s*\:\s+\[NumberOfEvalGT\:\s*(\d+)\]\s+\[MissedDetect\:\s*(\d+)\]\s+\[FalseAlarm\:\s*(\d+)\]\s+\[IDSplit\:\s*(\d+)\]\s+\[IDMerge\:\s*(\d+)\]\s+\=\>\s+\[MOTA\s+\=\s+(\-?[\w\.]+)\]\s*$%) {
     push @linec, ($1, $2, $3, $4, $5, $6);
 
     next;
