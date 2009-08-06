@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# Tracking Log MOTA CSV Dumper
+# MOTA Tracking Log CSV Dumper
 #
 # Author:    Martial Michel
 #
@@ -9,7 +9,7 @@
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "Tracking Log MOTA CSV Dumper" is an experimental system.
+# "MOTA Tracking Log CSV Dumper" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -31,7 +31,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "Tracking Log MOTA CSV Dumper Version: $version";
+my $versionid = "MOTA Tracking Log CSV Dumper Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -90,87 +90,170 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 my $usage = &set_usage();
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
+# Used:                                  h      o      v     #
 
-##########
+my $outdir = "";
 
-my $ifile = shift @ARGV;
-my $err = MMisc::check_file_r($ifile);
-MMisc::error_quit("Problem with input file ($ifile): $err")
-  if (! MMisc::is_blank($err));
-
-my $ofile = shift @ARGV;
-MMisc::error_quit("No output file provided, aborting")
-  if (MMisc::is_blank($ofile));
-
-open IFILE, "<$ifile"
-  or MMisc::error_quit("Problem with input file ($ifile): $!");
-my @content = <IFILE>;
-close IFILE;
-chomp @content;
-
-open OFILE, ">$ofile"
-  or MMisc::error_quit("Problem with output file ($ofile): $!");
-
-my $csvh = new CSVHelper();
-
-my @header = 
+my %opt = ();
+GetOptions
   (
-   "Frame", 
-   "frame NumberOfEvalGT", "frame MissedDetect", "frame FalseAlarm", "frame IDSplit", "frame IDMerge", 
-   "global NumberOfEvalGT", "global MissedDetect", "global FalseAlarm", "global IDSplit", "global IDMerge",
-   "global MOTA"
-  );
-$csvh->set_number_of_columns(scalar @header);
-&write_csvline(@header);
+   \%opt,
+   'help',
+   'version',
+   'outdir=s'      => \$outdir,
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-my @linec = ();
-foreach my $line (@content) {
-  next if (! ((substr($line, 0, 2) eq "--") || (substr($line, 0, 5) eq "*****")));
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+
+my $ob = "";
+if (! MMisc::is_blank($outdir)) {
+  my $err = MMisc::check_dir_w($outdir);
+  MMisc::error_quit("Problem with \'outdir\' ($outdir): $err")
+      if (! MMisc::is_blank($err));
+  $outdir =~ s%/$%%;
+  MMisc::error_quit("\'\/\' is not an authorized value for \'outdir\'")
+      if (MMisc::is_blank($outdir));
+  $ob = "$outdir/";
+}
+
+my $done = 0;
+my $todo = 0;
+foreach my $file (@ARGV) {
+  $todo++;
+
+  my $err = &doit($file, $ob);
+  print "$file: ";
+  if (MMisc::is_blank($err)) {
+    print "OK\n";
+    $done++;
+
+    next;
+  } 
+
+  print "ERROR [$err]\n";
+}
+
+MMisc::error_quit("Not all files completed ($done/$todo)\n")
+  if ($done != $todo);
+
+MMisc::ok_quit("Done\n\n");
+
+########################################
+
+sub doit {
+  my ($ifile, $ob) = @_;
+
+  my $err = MMisc::check_file_r($ifile);
+  return("Problem with input file ($ifile): $err")
+      if (! MMisc::is_blank($err));
+  
+  open IFILE, "<$ifile"
+    or return("Problem with input file ($ifile): $!");
+  my @content = <IFILE>;
+  close IFILE;
+  chomp @content;
+
+  my $csvh = new CSVHelper();
+
+  my @header = 
+    (
+     "Frame", 
+     "frame NumberOfEvalGT", "frame MissedDetect", "frame FalseAlarm", "frame IDSplit", "frame IDMerge", 
+     "global NumberOfEvalGT", "global MissedDetect", "global FalseAlarm", "global IDSplit", "global IDMerge",
+     "global MOTA"
+    );
+
+  my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($ifile);
+  return("Problem with filename ($ifile): $err")
+    if (! MMisc::is_blank($err));
+  
+  $ob .= $f;
+  $ob =~ s%\-$%%;
+
+  my $of = "${ob}-TL.csv";
+  my $otxt = "";
+
+  $csvh->set_number_of_columns(scalar @header);
+  my ($ok, $txt) = &generate_csvline($csvh, @header);
+  return("Problem generating CSV line: $txt") if (! $ok);
+  $otxt .= "$txt\n";
+
+  my @linec = ();
+  foreach my $line (@content) {
+    next if (! ((substr($line, 0, 2) eq "--") || (substr($line, 0, 5) eq "*****")));
 
     # "***** Evaluated Frame: 54"
     if ($line =~ m%^\*\*\*\*\* Evaluated\sFrame\:\s+(\d+)\s*$%) {
       my $fn = $1;
       if (scalar @linec > 0) {
-        &write_csvline(@linec);
+        my ($ok, $txt) = &generate_csvline($csvh, @linec);
+        return("Problem generating CSV line: $txt") if (! $ok);
+        $otxt .= "$txt\n";
+
         @linec = ();
       }
       push @linec, $fn;
-
+      
       next;
     }
-
-  # "-- MOTA frame summary : [NumberOfEvalGT: 0] [MissedDetect: 0] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0]"
-  if ($line =~ m%^\-\-\sMOTA\sframe\ssummary\s*\:\s+\[NumberOfEvalGT\:\s*(\d+)\]\s+\[MissedDetect\:\s*(\d+)\]\s+\[FalseAlarm\:\s*(\d+)\]\s+\[IDSplit\:\s*(\d+)\]\s+\[IDMerge\:\s*(\d+)\]\s*$%) {
-    push @linec, ($1, $2, $3, $4, $5);
-
-    next;
+    
+    # "-- MOTA frame summary : [NumberOfEvalGT: 0] [MissedDetect: 0] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0]"
+    if ($line =~ m%^\-\-\sMOTA\sframe\ssummary\s*\:\s+\[NumberOfEvalGT\:\s*(\d+)\]\s+\[MissedDetect\:\s*(\d+)\]\s+\[FalseAlarm\:\s*(\d+)\]\s+\[IDSplit\:\s*(\d+)\]\s+\[IDMerge\:\s*(\d+)\]\s*$%) {
+      push @linec, ($1, $2, $3, $4, $5);
+      
+      next;
+    }
+    
+    # "-- MOTA global summary: [NumberOfEvalGT: 0] [MissedDetect: 0] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0] => [MOTA = NaN]"
+    if ($line =~ m%^\-\-\sMOTA\sglobal\ssummary\s*\:\s+\[NumberOfEvalGT\:\s*(\d+)\]\s+\[MissedDetect\:\s*(\d+)\]\s+\[FalseAlarm\:\s*(\d+)\]\s+\[IDSplit\:\s*(\d+)\]\s+\[IDMerge\:\s*(\d+)\]\s+\=\>\s+\[MOTA\s+\=\s+(\-?[\w\.]+)\]\s*$%) {
+      push @linec, ($1, $2, $3, $4, $5, $6);
+      
+      next;
+    }
+    
+    return("Unknow line [$line], aborting");
   }
+  my ($ok, $txt) = &generate_csvline($csvh, @linec) if (scalar @linec > 0);
+  return("Problem generating CSV line: $txt") if (! $ok);
+  $otxt .= "$txt\n";
+  
+  return("Problem while trying to write CSV file ($of)")
+    if (! MMisc::writeTo($of, "", 1, 0, $otxt));
 
-  # "-- MOTA global summary: [NumberOfEvalGT: 0] [MissedDetect: 0] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0] => [MOTA = NaN]"
-  if ($line =~ m%^\-\-\sMOTA\sglobal\ssummary\s*\:\s+\[NumberOfEvalGT\:\s*(\d+)\]\s+\[MissedDetect\:\s*(\d+)\]\s+\[FalseAlarm\:\s*(\d+)\]\s+\[IDSplit\:\s*(\d+)\]\s+\[IDMerge\:\s*(\d+)\]\s+\=\>\s+\[MOTA\s+\=\s+(\-?[\w\.]+)\]\s*$%) {
-    push @linec, ($1, $2, $3, $4, $5, $6);
-
-    next;
-  }
-
-  MMisc::error_quit("Unknow line [$line], aborting");
+  return("");
 }
-&write_csvline(@linec) if (scalar @linec > 0);
 
-close OFILE;
-MMisc::ok_quit("Done\n\n");
+##########
+
+sub generate_csvline {
+  my ($csvh, @linec) = @_;
+
+  my $cl = $csvh->array2csvline(@linec);
+  return(0, "Problem with CSV line: " . $csvh->get_errormsg())
+    if ($csvh->error());
+
+  return(1, $cl);
+}
 
 ########################################
 
-sub write_csvline {
-  my @linec = @_;
-  my $cl = $csvh->array2csvline(@linec);
-  MMisc::error_quit("Problem with CSV line: " . $csvh->get_errormsg())
-      if ($csvh->error());
-
-  print OFILE "$cl\n";
-}
-
 sub set_usage {
-  return("TBD");
+  my $tmp=<<EOF
+$versionid
+
+Usage: $0 [--help | --version] [--outdir dir] file.tracking_log
+
+Will generate CSV files describing the scored frame per scored frame compoment of the MOTA using MOTA tracking logs
+
+ Where:
+  --help          Print this usage information and exit
+  --version       Print version number and exit
+  --outdir        The output directory in which to generate the results (by default output in the current directory)
+EOF
+;
+  
+  return $tmp;
 }
