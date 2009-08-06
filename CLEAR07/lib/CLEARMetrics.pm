@@ -40,12 +40,20 @@ sub computeMOTA {
 
 ##########
 
-sub computePrintableMOTA {
-  my $v = &computeMOTA(@_);
-  
+sub _get_printable_value {
+  my $v = shift @_;
+
   return("NaN") if (! defined $v);
   
   return(sprintf("%.06f", $v));
+}
+
+#####
+
+sub computePrintableMOTA {
+  my $v = &computeMOTA(@_);
+  
+  return(&_get_printable_value($v));
 }
 
 ##########
@@ -96,6 +104,49 @@ sub sumMOTAcomp {
 
   return("", @out);
 }
+
+##########
+
+sub get_CorrectDetect_fromMOTAcomp {
+  my ($d0, $miss, $d2, $d3, $d4, $d5, $d6, $nref) = @_;
+
+  my $cordet = $nref - $miss;
+
+  return($cordet);
+}
+
+#####
+
+sub get_Precision_Recall_FrameF1_fromMOTAcomp {
+  my ($d0, $miss, $d2, $fa, $d4, $d5, $d6, $nref) = @_;
+
+  my $cordet = &get_CorrectDetect_fromMOTAcomp(@_);
+
+  my $den = $cordet + $fa;
+  my $prec = ($den == 0) ? "NaN" : &_get_printable_value($cordet / $den);
+
+  $den = $cordet + $miss;
+  my $rec = ($den == 0) ? "NaN" :  &_get_printable_value($cordet / $den);
+
+  $den = $prec + $rec;
+  my $ff1 = 
+    ((! MMisc::is_float($prec)) || (! MMisc::is_float($rec)) || ($den == 0)) 
+      ? "NaN" : 
+        &_get_printable_value((2 * $rec * $prec) / ($rec + $prec));
+
+  return($prec, $rec, $ff1);
+}
+
+#####
+
+sub get_NumSys_fromMOTAcomp {
+  my ($d0, $d1, $d2, $fa, $d4, $idsp, $idsw, $d7, $cdet) = @_;
+
+  my $nsys = $cdet + $fa + $idsp + $idsw;
+
+  return($nsys);
+}
+
 
 ########################################
 
