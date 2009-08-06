@@ -243,21 +243,10 @@ sub get_MOTAc {
 ##########
 
 sub get_FrameF1plus {
-  my ($d0, $miss, $d2, $fa, $d4, $d5, $d6, $nref) = @_;
+  my $cordet = CLEARMetrics::get_CorrectDetect_fromMOTAcomp(@_);
 
-  my $cordet = $nref - $miss;
-
-  my $den = $cordet + $fa;
-  my $prec = ($den == 0) ? "NaN" : sprintf("%.06f", $cordet / $den);
-
-  $den = $cordet + $miss;
-  my $rec = ($den == 0) ? "NaN" : sprintf("%.06f", $cordet / $den);
-
-  $den = $prec + $rec;
-  my $ff1 = 
-    ((! MMisc::is_float($prec)) || (! MMisc::is_float($rec)) || ($den == 0)) 
-      ? "NaN" : 
-        sprintf("%.06f", (2 * $rec * $prec) / ($rec + $prec));
+  my ($prec, $rec, $ff1) = 
+    CLEARMetrics::get_Precision_Recall_FrameF1_fromMOTAcomp(@_);
 
   return($cordet, $prec, $rec, $ff1);
 }
@@ -265,11 +254,7 @@ sub get_FrameF1plus {
 ##########
 
 sub get_numSys {
-  my ($d0, $d1, $d2, $fa, $d4, $idsp, $idsw, $d7, $cdet) = @_;
-
-  my $nsys = $cdet + $fa + $idsp + $idsw;
-
-  return($nsys);
+  return(CLEARMetrics::get_NumSys_fromMOTAcomp(@_));
 }
 
 ####################
