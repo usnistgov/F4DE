@@ -126,6 +126,7 @@ MMisc::ok_quit("No metric specified, aborting\n\n$usage\n")
 
 my $mota_sat = undef;
 my $mota_sat_file = "";
+my $added_mota_data = 0;
 if (grep(m%^MOTA$%, @metrics)) {
   $mota_sat = new SimpleAutoTable();
   MMisc::error_quit("While creating MOTA global SAT : " . $mota_sat->get_errormsg())
@@ -144,20 +145,25 @@ foreach my $metric (@metrics) {
 }
 
 if (defined $mota_sat) {
-  my $txtfile = "$mota_sat_file.txt";
-  my $tbl = $mota_sat->renderTxtTable(2);
-  MMisc::error_quit("Problem rendering MOTA SAT: ". $mota_sat->get_errormsg())
-    if (! defined($tbl));
-  MMisc::error_quit("Problem while trying to write MOTA text file ($txtfile)")
-    if (! MMisc::writeTo($txtfile, "", 1, 0, $tbl));
-  
-  my $csvfile = "$mota_sat_file.csv";
-  my $csvtxt = $mota_sat->renderCSV();
-  MMisc::error_quit("Generating MOTA CSV Report: ". $mota_sat->get_errormsg())
-    if (! defined($csvtxt));
-  MMisc::error_quit("Problem while trying to write CSV file ($csvfile)")
-    if (! MMisc::writeTo($csvfile, "", 1, 0, $csvtxt));
+  if ($added_mota_data) {
+    my $txtfile = "$mota_sat_file.txt";
+    my $tbl = $mota_sat->renderTxtTable(2);
+    MMisc::error_quit("Problem rendering MOTA SAT: ". $mota_sat->get_errormsg())
+      if (! defined($tbl));
+    MMisc::error_quit("Problem while trying to write MOTA text file ($txtfile)")
+      if (! MMisc::writeTo($txtfile, "", 1, 0, $tbl));
+    
+    my $csvfile = "$mota_sat_file.csv";
+    my $csvtxt = $mota_sat->renderCSV();
+    MMisc::error_quit("Generating MOTA CSV Report: ". $mota_sat->get_errormsg())
+      if (! defined($csvtxt));
+    MMisc::error_quit("Problem while trying to write CSV file ($csvfile)")
+      if (! MMisc::writeTo($csvfile, "", 1, 0, $csvtxt));
+  } else {
+    MMisc::warn_print("Never added any data to the MOTA sat, not writting it");
+  }
 }
+  
 
 MMisc::ok_quit("All EXPID [$expid] metrics finalized\n");
 
@@ -318,8 +324,10 @@ sub add_to_mota_sat {
     my @array = $csvh->csvline2array($line);
     return("Problem extracting CSV content: " . $csvh->get_errormsg())
       if ($csvh->error());
-    return("")
-      if ($array[0] eq "Combined MOTA");
+    if ($array[0] eq "Combined MOTA") {
+      $added_mota_data++;
+      return("");
+    }
 
     my $id = "$idbase | CSVfile: $file | Line#: $cont";
     $mota_sat->addData($site, "SITE", $id);
