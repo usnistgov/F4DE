@@ -125,8 +125,12 @@ if (! MMisc::is_blank($filebase)) {
   MMisc::error_quit("Problem with \'filebase\' ($filebase): $err")
       if (! MMisc::is_blank($err));
 
-  MMisc::error_quit("Problem with \'filebase\' ($filebase): directory or suffix in value")
-      if (! MMisc::all_blank($d, $e));
+  MMisc::error_quit("Problem with \'filebase\' ($filebase): directoryin value")
+      if (! MMisc::is_blank($d));
+  if (! MMisc::is_blank($e)) {
+    MMisc::warn_print("Found a possible extension in file name, replacing \'.\' by \'_\'");
+    $filebase = $f . "_" . $e;
+  }
   $ob .= $filebase;
   $ob =~ s%\-$%%;
   $ob .= "-";
