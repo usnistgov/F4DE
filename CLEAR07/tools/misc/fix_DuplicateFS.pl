@@ -102,7 +102,7 @@ GetOptions
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+MMisc::ok_quit("\n$usage\n") if (scalar @fl == 0);
 
 if ($doit) {
   print "!!!!! REAL run mode !!!!!\n";
@@ -123,14 +123,17 @@ foreach my $fn (@fl) {
   $g = &processit($g);
 
   if ($g ne $f) {
-    print "\n** $fn differs: \n";
+    print "\n** $fn modified: \n";
     if (scalar(keys %replc) == 0) {
-      MMisc::error_quit("Unknown replacement");
+      MMisc::error_quit("Unknown changes");
     } else {
-      foreach my $id (keys %replc) {
-        my @fs = @{$replc{$id}};
-        MMisc::error_quit("Empty content [ID:$id]") if (scalar @fs == 0);
-        print " - [ID $id] Duplicates: " . join(" ", @fs) . "\n";
+      foreach my $type (keys %replc) {
+        foreach my $id (keys %{$replc{$type}}) {
+          my @fs = @{$replc{$type}{$id}};
+          MMisc::error_quit("Empty content [TYPE: $type] [ID:$id]")
+              if (scalar @fs == 0);
+          print " - [TYPE: $type] [ID $id] Duplicates: " . join(" ", @fs) . "\n";
+        }
       }
     }
 
@@ -159,29 +162,49 @@ sub processit {
 sub process_content {
   my ($v) = @_;
 
-  if ($v !~ m%<object\s+.*?name\s*\=\s*\"PERSON\"%s) {
-    print "Not a person ?\n";
-    return ($v);
-  }
+  MMisc::error_quit("Could not extract object header (ID)")
+      if (! ($v =~ m%^<object\s+.*?id\s*\=\s*\"(\d+)\".*?\>%s));
+  my $id = $1;
+
+  MMisc::error_quit("Could not extract object header (object type)")
+      if (! ($v =~ m%^<object\s+.*?name\s*\=\s*\"([^\"]+?)\".*?\>%s));
+  my $type = $1;
+
+#  print "[$id / $type]\n";
+  $v =~ s%(<attribute\s*([^\>]*?\/>|.+?<\/attribute>))%&process_attribute($id, $type, $1)%sge;
+
+  return($v);
+}
+
+##########
+
+sub process_attribute {
+  my ($id, $type, $v) = @_;
+
+  my $t = $v;
+#  print "[$v]\n";
 
   my $out = "";
   my %fs = ();
-  my $t = $v;
-
-  MMisc::error_quit("Could not extract object header")
-      if (! ($t =~ s%^(<object\s+.*?id\s*\=\s*\"(\d+)\".*?\>)%%s));
-  my $id = $2;
-  my $out .= $1;
-  
-  while ($t =~ s%^(.*?\<data\:bbox\s+.+?\/\>)%%s) {
+  while ($t =~ s%^(.*?\<data\:\w+\s+.+?\/\>)%%s) {
     my $x = $1;
 
-    MMisc::error_quit("Could not extract framespan from line [$x]")
-        if (! ($x =~ m%framespan\s*\=\s*\"([^\"]+?)\"%));
+    if ($x =~ s%^(.+?)(\<data\:)%$2%s) {
+      # Note that this might keep double line skips from the a duplicated fs
+      # but it is not an XML issue
+      $out .= $1;
+    }
+
+    if (! ($x =~ m%^<data\:\w+\s+.*framespan\s*\=\s*\"([^\"]+?)\"%)) {
+      MMisc::error_quit("Can not extract framespan from line [$x], but we could for the same attribute before")
+          if (scalar keys %fs > 0);
+      MMisc::warn_print("Could not extract framespan from line [$x]");
+      next;
+    }
     my $f = $1;
 
     if (exists $fs{$f}) {
-      push @{$replc{$id}}, $f;
+      push @{$replc{$type}{$id}}, $f;
       next;
     }
 
@@ -202,7 +225,7 @@ $versionid
 
 Usage: $0 [--help | --version] [--doit] xmlfiles
 
-Try to fix known duplicate framespan definition for a given object by only keeping the first one found.
+Try to fix known <object>'s <attribute> duplicate framespan definition for a given object by only keeping the first one found.
 
  Where:
   --help          Print this usage information and exit
