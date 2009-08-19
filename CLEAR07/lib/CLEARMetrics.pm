@@ -149,6 +149,31 @@ sub get_NumSys_fromMOTAcomp {
   return($nsys);
 }
 
+##########
+
+sub get_MOTE_comp_fromMOTAcomp {
+  my ($costMD, $sumMD, $costFA, $sumFA, $costIS, $sumIDsplit, $sumIDmerge, $cng) = @_;
+  my $num_md = $costMD * $sumMD;
+  my $v = ($cng == 0) ? undef : ($num_md / $cng);
+  my $emd = &_get_printable_value($v);
+
+  my $num_fa = $costFA * $sumFA;
+  my $v = ($cng == 0) ? undef : ($num_fa / $cng);
+  my $efa = &_get_printable_value($v);
+ 
+  my $num_is = $costIS * $sumIDsplit;
+  my $v = ($cng == 0) ? undef : ($num_is / $cng);
+  my $eis = &_get_printable_value($v);
+
+  my $num_im = $costIS * $sumIDmerge;
+  my $v = ($cng == 0) ? undef : ($num_im / $cng);
+  my $eim = &_get_printable_value($v);
+
+  my $v = ($cng == 0) ? undef : ( ($num_md + $num_fa + $num_is + $num_im) / $cng );
+  my $mote = &_get_printable_value($v);
+
+  return($mote, $emd, $efa, $eis, $eim);
+}
 
 ########################################
 
