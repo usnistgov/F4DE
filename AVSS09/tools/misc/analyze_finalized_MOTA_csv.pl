@@ -91,10 +91,12 @@ my $usage = &set_usage();
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                                f h      o      v     #
+# Used:   C         M                  f h      o      v     #
 
 my $outdir = "";
 my $filebase = "";
+my $compMOTE = 0;
+my $camseq = 0;
 
 my %opt = ();
 GetOptions
@@ -104,6 +106,8 @@ GetOptions
    'version',
    'outdir=s'      => \$outdir,
    'filebase=s'    => \$filebase,
+   'MOTE'          => \$compMOTE,
+   'CamSeq=s'      => \$camseq,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -135,21 +139,22 @@ if (! MMisc::is_blank($filebase)) {
   $ob =~ s%\-$%%;
   $ob .= "-";
 }
-  
+
+my %cseq = ();
+if (! MMisc::is_blank($camseq)) {
+  (my $cseq_csvh, %cseq) = &load_CSV2hash($camseq, "TTID", "Cam ID");
+}
 
 my $in = shift @ARGV;
-
-my $csvh = new CSVHelper();
-my @h = ("SITE", "EXPID", "TASK", "TTID", "Cam ID");
-
-my %out = $csvh->loadCSV_tohash($in, @h);
-MMisc::error_quit("CSV: " . $csvh->get_errormsg())
-  if ($csvh->error());
-#print Dumper(\%out);
+my ($csvh, %out) = &load_CSV2hash($in, "SITE", "EXPID", "TASK", "TTID", "Cam ID");
 
 my $sat = new SimpleAutoTable();
 MMisc::error_quit("While creating SAT : " . $sat->get_errormsg())
   if (! $sat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
+
+#####
+
+my $ksplit = "###";
 
 my @mota_h = ();
 my $mota_s = 1;
@@ -157,6 +162,8 @@ my %motac_mk = ();
 my %motac_ttid = ();
 my %motac_camid = ();
 my %motac_task = ();
+my %motac_pricam = ();
+my %motac_camseq = ();
 foreach my $site (sort keys %out) {
   foreach my $expid (sort keys %{$out{$site}}) {
     foreach my $task (sort keys %{$out{$site}{$expid}}) {
@@ -170,6 +177,12 @@ foreach my $site (sort keys %out) {
           $sat->addData($ttid, "TTID", $mk);
           $sat->addData($camid, "CamID", $mk);
 
+          my $cseqv = undef;
+          if (scalar keys %cseq > 0) {
+            $cseqv = &get_camseq($ttid, $camid);
+            $sat->addData($cseqv, "CamSeq", $mk);
+          }
+
           ##
           my @motac = &addMOTA2sat($sat, $mk, $site, $expid, $task, $ttid, $camid);
 
@@ -181,10 +194,20 @@ foreach my $site (sort keys %out) {
           &addMOTAcomps2hash(\%motac_ttid, $ttid, @motac);
           &addMOTAcomps2hash(\%motac_camid, $camid, @motac);
           &addMOTAcomps2hash(\%motac_task, $task, @motac);
+          
+          ##
+          if (defined $cseqv) {
+            my $spkey = &_join_keys($camid, ($cseqv == 1) ? "Y" : "N");
+            &addMOTAcomps2hash(\%motac_pricam, $spkey, @motac);
+            my $spkey = &_join_keys($camid, $cseqv);
+            &addMOTAcomps2hash(\%motac_camseq, $spkey, @motac);
+          }
 
           ##
           &addFrameF1plus2sat($sat, $mk, @motac);
 
+          # 
+          &addMOTE2sat($sat, $mk, @motac);
         }
       }
     }
@@ -196,7 +219,12 @@ foreach my $site (sort keys %out) {
 &generateSpecialResults(\%motac_ttid, "TTID", "${ob}TTID-motaF1");
 &generateSpecialResults(\%motac_camid, "Cam ID", "${ob}CamID-motaF1");
 &generateSpecialResults(\%motac_task, "TASK", "${ob}TASK-motaF1");
-
+if (scalar keys %cseq > 0) {
+  &generateSpecialResults(\%motac_pricam, "Cam ID",
+                          "${ob}PrimaryCamID-motaF1", "Primary Cam");
+  &generateSpecialResults(\%motac_camseq, "Cam ID",
+                          "${ob}SequenceCamID-motaF1", "Cam Seq");
+}
 
 MMisc::ok_quit("Done\n");
 
@@ -205,7 +233,6 @@ MMisc::ok_quit("Done\n");
 sub _num { $a <=> $b };
 
 #####
-
 
 sub _get_XXX {
   my ($site, $expid, $task, $ttid, $camid, $xxx) = @_;
@@ -314,6 +341,44 @@ sub addFrameF1plus2sat {
 
 ##########
 
+sub addMOTE2sat {
+  return() if (! $compMOTE);
+
+  my ($sat, $id, @motac) = @_;
+
+  my ($mote, $mote_md, $mote_fa, $mote_is, $mote_im) = 
+    CLEARMetrics::get_MOTE_comp_fromMOTAcomp(@motac);
+
+  $sat->addData($mote_md, "MOTE(miss)", $id);
+  $sat->addData($mote_fa, "MOTE(fa)", $id);
+  $sat->addData($mote_is, "MOTE(split)", $id);
+  $sat->addData($mote_im, "MOTE(merge)", $id);
+  
+  $sat->addData($mote, "MOTE", $id);
+}
+
+####################
+
+sub writeFiles {
+  my ($fb, $sat) = @_;
+
+  my $txtfile = "$fb.txt";
+  my $tbl = $sat->renderTxtTable(2);
+  MMisc::error_quit("Problem rendering SAT: ". $sat->get_errormsg())
+      if (! defined($tbl));
+  MMisc::error_quit("Problem while trying to write text file ($txtfile)")
+      if (! MMisc::writeTo($txtfile, "", 1, 0, $tbl));
+  
+  my $csvfile = "$fb.csv";
+  my $csvtxt = $sat->renderCSV();
+  MMisc::error_quit("Generating CSV Report: ". $sat->get_errormsg())
+      if (! defined($csvtxt));
+  MMisc::error_quit("Problem while trying to write CSV file ($csvfile)")
+      if (! MMisc::writeTo($csvfile, "", 1, 0, $csvtxt));
+}
+
+#################### 1 key hash
+
 sub addMOTAcomps2hash {
   my ($rhash, $key, @motac) = @_;
 
@@ -337,26 +402,6 @@ sub finalizeHashMOTAcomps {
 
 #########
 
-sub writeFiles {
-  my ($fb, $sat) = @_;
-
-  my $txtfile = "$fb.txt";
-  my $tbl = $sat->renderTxtTable(2);
-  MMisc::error_quit("Problem rendering SAT: ". $sat->get_errormsg())
-      if (! defined($tbl));
-  MMisc::error_quit("Problem while trying to write text file ($txtfile)")
-      if (! MMisc::writeTo($txtfile, "", 1, 0, $tbl));
-  
-  my $csvfile = "$fb.csv";
-  my $csvtxt = $sat->renderCSV();
-  MMisc::error_quit("Generating CSV Report: ". $sat->get_errormsg())
-      if (! defined($csvtxt));
-  MMisc::error_quit("Problem while trying to write CSV file ($csvfile)")
-      if (! MMisc::writeTo($csvfile, "", 1, 0, $csvtxt));
-}
-
-##########
-
 sub FinalizeResults {
   my ($sat, $rh, $ofb) = @_;
 
@@ -364,27 +409,93 @@ sub FinalizeResults {
   my @mota_comp_sum = &finalizeHashMOTAcomps($rh);
   &addMOTAc2sat($sat, $id, @mota_comp_sum);
   &addFrameF1plus2sat($sat, $id, @mota_comp_sum);
+  &addMOTE2sat($sat, $id, @mota_comp_sum);
   &writeFiles($ofb, $sat);
 }
 
 ##########
 
 sub generateSpecialResults {
-  my ($rh, $ck, $ofb) = @_;
+  my ($rh, $ck, $ofb, $key2) = @_;
 
   my $sat = new SimpleAutoTable();
   MMisc::error_quit("While creating SAT : " . $sat->get_errormsg())
       if (! $sat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
 
   foreach my $key (sort keys %{$rh}) {
-    my $id = "$ck - $key";
-    $sat->addData($key, $ck, $id);
+    my $id = $ck;
+    $id .= " - $key2" if (! MMisc::is_blank($key2));
+    $id .= " - $key";
+    if (MMisc::is_blank($key2)) {
+      $sat->addData($key, $ck, $id);
+    } else {
+      my ($k1, $k2) = &_split_keys($key);
+      $sat->addData($k1, $ck, $id);
+      $sat->addData($k2, $key2, $id);
+    }
     my @motac = @{$$rh{$key}};
     &addMOTAc2sat($sat, $id, @motac);
     &addFrameF1plus2sat($sat, $id, @motac);
+    &addMOTE2sat($sat, $id, @motac);
   }
   
   &FinalizeResults($sat, $rh, $ofb);
+}
+
+####################
+
+sub _join_keys {
+  return(join($ksplit, @_));
+}
+
+#####
+
+sub _split_keys {
+  my $v = shift @_;
+  return(split(m%$ksplit%, $v));
+}
+
+####################
+
+sub load_CSV2hash {
+  my ($file, @h) = @_;
+
+  my $err = MMisc::check_file_r($file);
+  MMisc::error_quit("Problem with input file ($file) : $err")
+      if (! MMisc::is_blank($err));
+
+  my $csvh = new CSVHelper();
+  my %out = $csvh->loadCSV_tohash($file, @h);
+  MMisc::error_quit("For CSV file ($file): " . $csvh->get_errormsg())
+      if ($csvh->error());
+
+  return($csvh, %out);
+}
+
+##########
+
+sub get_camseq {
+  my ($ttid, $camid) = @_;
+  my $xxx = "Cam Seq";
+
+  my $t = "TTID: $ttid / CAMID: $camid / Key: $xxx";
+  if (! exists $cseq{$ttid}{$camid}{$xxx}) {
+    MMisc::warn_print("Could not find [$t], returning '0' (not in set)");
+    return(0);
+  }
+
+  my @v = @{$cseq{$ttid}{$camid}{$xxx}};
+
+  MMisc::error_quit("More than one value possible for [$t]")
+    if (scalar @v > 1);
+
+  return($v[0]);
+}
+
+####################
+
+sub _warn_add {
+  $warn_msg .= "[Warning] " . join(" ", @_) . "\n";
 }
 
 ############################################################
@@ -393,13 +504,15 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] --outdir dir --filebase prefix file-MOTA_Components.csv
+Usage: $0 [--help | --version] [--MOTE] [--CamSeq csvfile] --outdir dir --filebase prefix file-MOTA_Components.csv
 
 Will generate analysises based on data found in the MOTA components files generated by the the finalize EXPID tool
 
  Where:
   --help          Print this usage information and exit
   --version       Print version number and exit
+  --MOTE          Compute the MOTE and its components (where: MOTA = 1 - MOTE)
+  --CamSeq        Specify the CSV file containing the camera sequence definition (needed headers are: \"TTID\", \"Cam ID\" and \"Cam Seq\")
   --outdir        The output directory in which to generate the results
   --filebase      The prefix of all the files written
 EOF
