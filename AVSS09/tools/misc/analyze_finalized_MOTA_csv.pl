@@ -96,7 +96,7 @@ MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 my $outdir = "";
 my $filebase = "";
 my $compMOTE = 0;
-my $camseq = 0;
+my $camseq = "";
 
 my %opt = ();
 GetOptions
@@ -112,7 +112,7 @@ GetOptions
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+MMisc::ok_quit("\n$usage\n") if ((scalar @ARGV == 0) || (scalar @ARGV > 1));
 
 my $ob = "";
 if (! MMisc::is_blank($outdir)) {
@@ -458,7 +458,9 @@ sub _split_keys {
 ####################
 
 sub load_CSV2hash {
-  my ($file, @h) = @_;
+  print join("|", @_), "\n";
+ my ($file, @h) = @_;
+
 
   my $err = MMisc::check_file_r($file);
   MMisc::error_quit("Problem with input file ($file) : $err")
