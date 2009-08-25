@@ -87,17 +87,22 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
+my @slok = ("true", "false"); # Order is important
+my @hash_order = ("SITE", "EXPID", "TASK", "TTID", "Cam ID"); # order is important
+my $slnm = "SelectAdd";
 my $usage = &set_usage();
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:   C         M                  f h      o      v     #
+# Used:   C         M                  f h      o   s  v     #
 
 my $outdir = "";
 my $filebase = "";
 my $compMOTE = 0;
 my $camseq = "";
+my $slf = "";
 
+my @fl = ();
 my %opt = ();
 GetOptions
   (
@@ -108,11 +113,13 @@ GetOptions
    'filebase=s'    => \$filebase,
    'MOTE'          => \$compMOTE,
    'CamSeq=s'      => \$camseq,
+   'select=s'      => \$slf,
+   '<>'            => sub { my $f = shift @_; my $err = MMisc::check_file_r($f); MMisc::error_quit("Problem with input file ($f) : $err") if (! MMisc::is_blank($err)); push @fl, $f;},
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-MMisc::ok_quit("\n$usage\n") if ((scalar @ARGV == 0) || (scalar @ARGV > 1));
+MMisc::ok_quit("\n$usage\n") if (scalar @fl == 0);
 
 my $ob = "";
 if (! MMisc::is_blank($outdir)) {
@@ -145,9 +152,6 @@ if (! MMisc::is_blank($camseq)) {
   (my $cseq_csvh, %cseq) = &load_CSV2hash($camseq, "TTID", "Cam ID");
 }
 
-my $in = shift @ARGV;
-my ($csvh, %out) = &load_CSV2hash($in, "SITE", "EXPID", "TASK", "TTID", "Cam ID");
-
 my $sat = new SimpleAutoTable();
 MMisc::error_quit("While creating SAT : " . $sat->get_errormsg())
   if (! $sat->setProperties({ "SortRowKeyTxt" => "Alpha", "KeyColumnTxt" => "Remove" }));
@@ -164,54 +168,12 @@ my %motac_camid = ();
 my %motac_task = ();
 my %motac_pricam = ();
 my %motac_camseq = ();
-foreach my $site (sort keys %out) {
-  foreach my $expid (sort keys %{$out{$site}}) {
-    foreach my $task (sort keys %{$out{$site}{$expid}}) {
-      foreach my $ttid (sort keys %{$out{$site}{$expid}{$task}}) {
-        foreach my $camid (sort _num keys %{$out{$site}{$expid}{$task}{$ttid}}) {
-          my ($mk) = &_get_XXX($site, $expid, $task, $ttid, $camid, "MasterKey");
 
-          $sat->addData($site, "SITE", $mk);
-          $sat->addData($expid, "EXPID", $mk);
-          $sat->addData($task, "TASK", $mk);
-          $sat->addData($ttid, "TTID", $mk);
-          $sat->addData($camid, "CamID", $mk);
+my %out = ();
 
-          my $cseqv = undef;
-          if (scalar keys %cseq > 0) {
-            $cseqv = &get_camseq($ttid, $camid);
-            $sat->addData($cseqv, "CamSeq", $mk);
-          }
-
-          ##
-          my @motac = &addMOTA2sat($sat, $mk, $site, $expid, $task, $ttid, $camid);
-
-          ##
-          $mota_s = 0;
-
-          ##
-          &addMOTAcomps2hash(\%motac_mk, $mk, @motac);
-          &addMOTAcomps2hash(\%motac_ttid, $ttid, @motac);
-          &addMOTAcomps2hash(\%motac_camid, $camid, @motac);
-          &addMOTAcomps2hash(\%motac_task, $task, @motac);
-          
-          ##
-          if (defined $cseqv) {
-            my $spkey = &_join_keys($camid, ($cseqv == 1) ? "Y" : "N");
-            &addMOTAcomps2hash(\%motac_pricam, $spkey, @motac);
-            my $spkey = &_join_keys($camid, $cseqv);
-            &addMOTAcomps2hash(\%motac_camseq, $spkey, @motac);
-          }
-
-          ##
-          &addFrameF1plus2sat($sat, $mk, @motac);
-
-          # 
-          &addMOTE2sat($sat, $mk, @motac);
-        }
-      }
-    }
-  }
+foreach my $file (@fl) {
+  %out = ();
+  &process_file($file);
 }
 
 # Finalize values
@@ -229,6 +191,91 @@ if (scalar keys %cseq > 0) {
 MMisc::ok_quit("Done\n");
 
 ####################
+
+sub process_file {
+  my ($in) = @_;
+
+  (my $csvh, %out) = &load_CSV2hash($in, @hash_order);
+
+  foreach my $site (sort keys %out) {
+    foreach my $expid (sort keys %{$out{$site}}) {
+      foreach my $task (sort keys %{$out{$site}{$expid}}) {
+        foreach my $ttid (sort keys %{$out{$site}{$expid}{$task}}) {
+          foreach my $camid (sort _num keys %{$out{$site}{$expid}{$task}{$ttid}}) {
+      
+            ##
+            my $cont = 1;
+            my $sladd = "";
+            if (! MMisc::is_blank($slf)) {
+              my ($rc, $so, $se) = 
+                MMisc::do_system_call($slf, $site, $expid, $task, $ttid, $camid);
+              MMisc::error_quit("Problem calling \'select\' ($slf)")
+                  if ($rc != 0);
+              $so =~ s%^(\w+)%%;
+              my $rv = $1;
+              MMisc::error_quit("Did not find a valid select output [$rv]")
+                  if ((MMisc::is_blank($rv)) || (! grep(m%^$rv$%i, @slok)));
+
+              $cont = 0 if ($slok[-1] =~ m%^$rv$%i);
+
+              $sladd = MMisc::clean_begend_spaces($so);
+            }
+            next if (! $cont);
+
+            ##
+            my ($mk) = &_get_XXX($site, $expid, $task, $ttid, $camid, "MasterKey");
+            
+            $sat->addData($site, "SITE", $mk);
+            $sat->addData($expid, "EXPID", $mk);
+            $sat->addData($task, "TASK", $mk);
+            $sat->addData($ttid, "TTID", $mk);
+            $sat->addData($camid, "CamID", $mk);
+            
+            my $cseqv = undef;
+            if (scalar keys %cseq > 0) {
+              $cseqv = &get_camseq($ttid, $camid);
+              $sat->addData($cseqv, "CamSeq", $mk);
+            }
+            
+            ##
+            my @motac = &addMOTA2sat($sat, $mk, $site, $expid, $task, $ttid, $camid);
+            
+            ##
+            $mota_s = 0;
+            
+            ##
+            &addMOTAcomps2hash(\%motac_mk, $mk, @motac);
+            &addMOTAcomps2hash(\%motac_ttid, $ttid, @motac);
+            &addMOTAcomps2hash(\%motac_camid, $camid, @motac);
+            &addMOTAcomps2hash(\%motac_task, $task, @motac);
+            
+            ##
+            if (defined $cseqv) {
+              my $spkey = &_join_keys($camid, ($cseqv == 1) ? "Y" : "N");
+              &addMOTAcomps2hash(\%motac_pricam, $spkey, @motac);
+              my $spkey = &_join_keys($camid, $cseqv);
+              &addMOTAcomps2hash(\%motac_camseq, $spkey, @motac);
+            }
+            
+            ##
+            &addFrameF1plus2sat($sat, $mk, @motac);
+            
+            # 
+            &addMOTE2sat($sat, $mk, @motac);
+
+            ##
+            if (! MMisc::is_blank($sladd)) {
+              $sat->addData($sladd, $slnm, $mk);
+            }
+            
+          }
+        }
+      }
+    }
+  }
+}
+
+##########
 
 sub _num { $a <=> $b };
 
@@ -458,9 +505,7 @@ sub _split_keys {
 ####################
 
 sub load_CSV2hash {
-  print join("|", @_), "\n";
  my ($file, @h) = @_;
-
 
   my $err = MMisc::check_file_r($file);
   MMisc::error_quit("Problem with input file ($file) : $err")
@@ -503,10 +548,13 @@ sub _warn_add {
 ############################################################
 
 sub set_usage {
+  my $slansw = join(", ", @slok);
+  my $t = $slok[0];
+  my $hord = join(", ", @hash_order);
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--MOTE] [--CamSeq csvfile] --outdir dir --filebase prefix file-MOTA_Components.csv
+Usage: $0 [--help | --version] [--MOTE] [--CamSeq csvfile] --outdir dir --filebase prefix --select function file-MOTA_Components.csv
 
 Will generate analysises based on data found in the MOTA components files generated by the the finalize EXPID tool
 
@@ -517,6 +565,7 @@ Will generate analysises based on data found in the MOTA components files genera
   --CamSeq        Specify the CSV file containing the camera sequence definition (needed headers are: \"TTID\", \"Cam ID\" and \"Cam Seq\")
   --outdir        The output directory in which to generate the results
   --filebase      The prefix of all the files written
+  --select        Call a program to check which lines to keep with arguments and expect a specific answer (args: $hord) (answ: $slansw) [for "$t", the word after will be added as the last column of the file named $slnm]
 EOF
 ;
   
