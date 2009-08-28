@@ -734,6 +734,17 @@ sub get_ttid_type {
 
 ##########
 
+sub get_ttid_evaluate {
+  my ($self, $ttid) = @_;
+
+  return($self->_set_error_and_return("Requested TTID ($ttid) not present in ECF", undef))
+    if (! $self->is_ttid_in($ttid));
+
+  return($self->{tracking_trials}{$ttid}{$tt_keys[0]});
+}
+
+#####
+
 sub get_ttid_sffn_evaluate {
   my ($self, $ttid, $sffn) = @_;
 
