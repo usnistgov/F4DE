@@ -1840,7 +1840,14 @@ sub _extract_data {
     return($text, ()) if (! MMisc::is_blank($text));
   }
 
-  if (scalar @attr_beg_frs > 0) {
+  # was:
+#  if (scalar @attr_beg_frs > 0) {
+
+  # modified 2009-09-08 after receiving Vasant's validation code:CONTENT 
+  # and LARGEBOX _only_ are authorized to have non fully overlapping framespans
+  if ( (uc($type) ne "CONTENT") && (uc($type) ne "LARGEBOX") 
+       && (scalar @attr_beg_frs > 0) ) {
+
     @attr_beg_frs = MMisc::reorder_array_numerically(@attr_beg_frs);
     @attr_end_frs = MMisc::reorder_array_numerically(@attr_end_frs);
     my $attr_fr_span = sprintf("%d:%d", $attr_beg_frs[0], $attr_end_frs[-1]);
