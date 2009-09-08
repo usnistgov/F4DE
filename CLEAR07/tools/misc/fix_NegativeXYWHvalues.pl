@@ -109,24 +109,36 @@ if ($doit) {
   print "********** DRYRUN mode **********\n";
 }
 
+my %tmp_res = ();
+my @order = ("neg X", "neg Y", "neg W", "neg H", "zero W", "zero H");
 foreach my $fn (@fl) {
   my $f = MMisc::slurp_file($fn);
   MMisc::error_quit("Problem slurping file [$fn]") if (! defined $f);
 
   my $g = $f;
 
-  my $x = 0; while ($g =~ s%(\sx\s*\=\s*\")\-\d+(\")%${1}0${2}%s) { $x++; }
-  my $y = 0; while ($g =~ s%(\sy\s*\=\s*\")\-\d+(\")%${1}0${2}%s) { $y++; }
- 
-  my $nw = 0; while ($g =~ s%(\swidth\s*\=\s*\")\-\d+(\")%${1}1${2}%s) { $nw++; }
-  my $nh = 0; while ($g =~ s%(\sheight\s*\=\s*\")\-\d+(\")%${1}1${2}%s) { $nh++; }
- 
-  my $w = 0; while ($g =~ s%(\swidth\s*\=\s*\")0(\")%${1}1${2}%s) { $w++; }
-  my $h = 0; while ($g =~ s%(\sheight\s*\=\s*\")0(\")%${1}1${2}%s) { $h++; }
+  %tmp_res = ();
+  $g =~ s%(<data\:(\w+)\s+.+?\/\>)%&fix_element($1, $2)%sge;
 
   if ($g ne $f) {
-    print "\n** $fn differs: [$x neg X] [$y neg Y] [$nw neg W / $w 0 W] [$nh neg H / $h 0 H]\n";
+    MMisc::error_quit("WEIRD: File contents differs but no known changes ?")
+        if (scalar keys %tmp_res == 0);
+    print "\n\n** $fn bbox differs:";
+    foreach my $element (sort keys %tmp_res) {
+      print "\n  + $element: ";
+      my $mods = 0;
+      foreach my $key (@order) {
+        next if (! exists $tmp_res{$element}{$key});
+        my $v = $tmp_res{$element}{$key};
+        print "[${v}x $key] ";
+        $mods++;
+      }
+      MMisc::error_quit("WEIRD: for [$element], no mods but element listed ?")
+          if ($mods == 0);
+    }
+
     if ($doit) {
+      print "\n";
       MMisc::error_quit("Problem writing output file [$fn]")
           if (! MMisc::writeTo($fn, "", 1, 0, $g));
     }
@@ -134,9 +146,37 @@ foreach my $fn (@fl) {
 
 }
 
-MMisc::ok_quit("Done\n");
+MMisc::ok_quit("\n\nDone\n");
 
 ########################################
+
+sub fix_element {
+  my ($line, $element) = @_;
+
+  MMisc::error_quit("No element")
+      if (MMisc::is_blank($element));
+
+  if ((lc($element) ne "obox") && (lc($element) ne "textline")) {
+    if ($line =~ s%(\sx\s*\=\s*\")\-\d+(\")%${1}0${2}%s)
+      { $tmp_res{$element}{$order[0]}++; }
+    if ($line =~ s%(\sy\s*\=\s*\")\-\d+(\")%${1}0${2}%s)
+      { $tmp_res{$element}{$order[1]}++; }
+  }
+
+  if ($line =~ s%(\swidth\s*\=\s*\")\-\d+(\")%${1}1${2}%s) 
+    { $tmp_res{$element}{$order[2]}++; }
+  if ($line =~ s%(\sheight\s*\=\s*\")\-\d+(\")%${1}1${2}%s) 
+    { $tmp_res{$element}{$order[3]}++; }
+ 
+  if ($line =~ s%(\swidth\s*\=\s*\")0(\")%${1}1${2}%s) 
+    { $tmp_res{$element}{$order[4]}++; }
+  if ($line =~ s%(\sheight\s*\=\s*\")0(\")%${1}1${2}%s)
+    { $tmp_res{$element}{$order[5]}++; }
+
+  return($line);
+}
+
+##########
 
 sub set_usage {
   my $tmp=<<EOF
@@ -145,7 +185,7 @@ $versionid
 Usage: $0 [--help | --version] [--doit] xmlfiles
 
 Try to fix known bad file content:
- if (x < 0) or (y < 0) then replace by 0
+ if (x < 0) or (y < 0) then replace by 0 [for all but: obox, textline]
  if (height < 1) or (width < 1) then replace by 1
 
  Where:
