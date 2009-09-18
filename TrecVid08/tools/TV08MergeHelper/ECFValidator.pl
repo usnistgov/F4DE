@@ -199,7 +199,7 @@ sub load_file {
   &valok($tmp, "validates");
 
   # This is really if you are a debugger
-  print("** Memory Representation:\n", $object->_display()) if ($show);
+  $object->_display("** Memory Representation:\n") if ($show);
 
   return(1, $object);
 }
