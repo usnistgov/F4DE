@@ -727,8 +727,9 @@ sub txt_summary {
 #####
 
 sub _display {
-  my ($self) = @_;
+  my ($self, $pretext) = @_;
 
+  print "$pretext" if (! MMisc::is_blank($pretext));
   print MMisc::get_sorted_MemDump(\$self);
 }
 
