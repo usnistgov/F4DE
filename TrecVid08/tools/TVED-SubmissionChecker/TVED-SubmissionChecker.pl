@@ -765,6 +765,7 @@ sub validate_xml {
   }
 
   my $tmp = "$dir/$xf";
+#  print "[$tmp]\n";
   if ($use_bigxml) {
     vprint(5, "Using BigXML tool to generate MemDump version");
     return("No directory given for BigXML", "")
@@ -784,7 +785,7 @@ sub validate_xml {
     $admd = 1;
   }
    
-  vprint(5, "Loading ViperFile");
+  vprint(5, "Loading ViperFile ($tmp)");
   my ($retstatus, $object, $msg) = 
     TrecVid08HelperFunctions::load_ViperFile
     (0, $tmp, $fps, $xmllint, $xsdpath);
