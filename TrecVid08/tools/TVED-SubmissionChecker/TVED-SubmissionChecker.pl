@@ -735,7 +735,9 @@ sub validate_xml {
   my ($derr, $tdir, $exp_key, $ext) = MMisc::split_dir_file_ext($xf);
   return("Problem splitting file and extension for ($xf)", $sffn)
     if (! MMisc::is_blank($derr));
-  
+  return("Expected filename extension is \".xml\", found \".$ext\"")
+    if ($ext ne "xml");
+
   return("Could not find matching sourcefile filename for <DATA> ($data) and xml file ($xf)", $sffn)
     if (! exists $expected_sffn{$data}{$exp_key});
   
@@ -765,7 +767,6 @@ sub validate_xml {
   }
 
   my $tmp = "$dir/$xf";
-#  print "[$tmp]\n";
   if ($use_bigxml) {
     vprint(5, "Using BigXML tool to generate MemDump version");
     return("No directory given for BigXML", "")
