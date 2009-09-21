@@ -164,12 +164,15 @@ MMisc::error_quit("Problem with \'writedir\': $err")
 
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
+my $exp_xf = "";
 while (my $file = shift @ARGV) {
   print "\n** $file\n";
 
   my ($err, $dir, $fn, $ext) = MMisc::split_dir_file_ext($file);
   &valerr($file, $err)
     if (! MMisc::is_blank($err));
+
+  $exp_xf = MMisc::concat_dir_file_ext("", $fn, $ext);
 
   my $bdir = "$writedir/$fn.ValidatorHelper";
   `rm -rf $bdir`
@@ -273,7 +276,7 @@ while (my $file = shift @ARGV) {
   }
 
   my $fvf = "$mdir/$vf";
-  my $xf = "$writedir/$fn.xml";
+  my $xf = "$writedir/$exp_xf";
   &copy_file($fvf, $xf)
     if ($copyxmltoo);
 
