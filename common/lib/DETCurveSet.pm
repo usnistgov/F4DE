@@ -194,6 +194,20 @@ sub getDETForID(){
   return $self->{DETList}->[$id]->{DET};
 }
 
+sub getTitleForKey(){
+  my ($self, $key) = @_;
+  
+  return undef if (! exists($self->{KEYLUT}{$key}));
+  return $self->{DETList}->[$self->{KEYLUT}{$key}]->{KEY};
+}
+
+sub getTitleForID(){
+  my ($self, $id) = @_;
+  
+  return undef if (@{ $self->{DETList} } < $id);
+  return $self->{DETList}->[$id]->{KEY}; 
+}
+
 sub getFSKeyForID(){
   my ($self, $id) = @_;
   

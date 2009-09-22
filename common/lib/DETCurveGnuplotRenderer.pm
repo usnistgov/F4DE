@@ -330,7 +330,7 @@ sub renderUnitTest{
   my $ds = new DETCurveSet("title");
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Name 1", $det1));
   die "Error: Failed to add second det" if ("success" ne $ds->addDET("Name 2", $det2));
-  die "Error: Failed to add second det" if ("success" ne $ds->addDET("Name 3", $det3));
+  die "Error: Failed to add third det"  if ("success" ne $ds->addDET("Name 3", $det3));
 
   system "rm -rf $dir";
   system "mkdir -p $dir";
@@ -398,6 +398,18 @@ sub renderUnitTest{
   print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_1.thresh.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_1.thresh.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_1.thresh.png\"></TD>\n";
+  print HTML "  </TR>\n";
+
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_2.thresh.png\"></TD>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_2.thresh.png\"></TD>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_2.thresh.png\"></TD>\n";
+  print HTML "  </TR>\n";
+
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_3.thresh.png\"></TD>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_3.thresh.png\"></TD>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_3.thresh.png\"></TD>\n";
   print HTML "  </TR>\n";
 
   print HTML " </TABLE>\n";
@@ -1078,7 +1090,14 @@ sub writeMultiDetGraph
     
 #      my $troot = sprintf("%s.sub%02d",$fileRoot,$d);
        my $troot = sprintf("%s.%s",$fileRoot, $detset->getFSKeyForID($d));
-       if ($self->writeGNUGraph($troot, $detset->getDETForID($d))) {
+       
+       #########  Since this is recursive, the title gets appended with the sub-title the set it back
+       my $saveTitle = $self->{title};
+       $self->{title} .= " - " . $detset->getTitleForID($d);
+       my $ret = $self->writeGNUGraph($troot, $detset->getDETForID($d));
+       $self->{title} = $saveTitle;
+       
+       if ($ret) {
          my ($scr, $comb, $miss, $fa) = ($detset->getDETForID($d)->getBestCombDetectionScore(),
                                           $detset->getDETForID($d)->getBestCombComb(),
                                         $detset->getDETForID($d)->getBestCombMMiss(),
