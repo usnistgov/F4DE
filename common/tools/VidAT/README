@@ -1,0 +1,57 @@
+File:  README
+Date:  September 22nd , 2009
+
+
+This directory contains the VidAT (Video Annotation Tool) software use for 
+montage and video annotation.
+
+
+INSTALLATION
+------------
+
+VidAT consist of a set of PERL scripts that can be run in a shell terminal.
+Third part software need to be installed:
+
+ FFmpeg <http://ffmpeg.org/>
+ Ghostscript <http://pages.cs.wisc.edu/~ghost/>
+ ImageMagick <http://www.imagemagick.org> 
+    with JPEG v6b support <ftp://ftp.uu.net/graphics/jpeg/>
+
+
+USAGE
+-----
+
+A manual page can be printed by each command by executing the command
+with the option '--man'.  For example:
+
+   %  vidatLog.pl --man
+
+
+CONTACT
+-------
+
+       Please send bug reports to <nist_f4de@nist.gov>
+
+For the bug report to be useful, please include the command line,
+files and text output, including the error message in your email.
+
+
+AUTHORS
+-------
+
+       Jerome Ajot <jerome.ajot@nist.gov>
+
+
+COPYRIGHT 
+---------
+
+This software was developed at the National Institute of Standards and
+Technology by employees of the Federal Government in the course of their
+official duties.  Pursuant to Title 17 Section 105 of the United States Code
+this software is not subject to copyright protection within the United States
+and is in the public domain. F4DE is an experimental system.  NIST assumes
+no responsibility whatsoever for its use by any party.
+
+THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES
+NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING
+MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
