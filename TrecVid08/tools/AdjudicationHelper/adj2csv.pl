@@ -89,6 +89,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 # Options processing
 
 my $usage = &set_usage();
+MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Default values for variables
 my $filecheck = "";
@@ -97,9 +98,13 @@ my $eeq = 1;
 my $igw = 0;
 my $igt = 0;
 my $writedir = "";
+my $sffnshift = "";
+my $sif = "";
+my $srcdir = "";
+my $sknxml = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                              d f h             v     #
+# Used:                              d fgh      o   s  v x   #
 
 my %opt = ();
 GetOptions
@@ -113,14 +118,17 @@ GetOptions
    'isGood_warn'      => \$igw,
    'IsGood_true'      => \$igt,
    'writedir=s'       => \$writedir,
+   'getSFFNshift=s'   => \$sffnshift,
+   'only_globalCSV'   => \$sif,
+   'xmldir=s'         => \$srcdir,
+   'skip_nonXML'      => \$sknxml,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 MMisc::error_quit("Need at least 1 file arguments to work\n$usage\n") 
-  if (scalar @ARGV < 1);
+  if ((scalar @ARGV < 1) && (MMisc::is_blank($srcdir)));
 
 if (! MMisc::is_blank($writedir)) {
   # Check the directory
@@ -129,6 +137,13 @@ if (! MMisc::is_blank($writedir)) {
     if (! MMisc::is_blank($err));
   $writedir .= "/" if ($writedir !~ m%\/$%); # Add a trailing slash
 }
+
+if (! MMisc::is_blank($sffnshift)) {
+  my $err = MMisc::check_file_x($sffnshift);
+  MMisc::error_quit("Problem with \'getSFFNshift\' select tool ($sffnshift): $err")
+    if (! MMisc::is_blank($err));
+}
+
 ##########
 # Main processing
 
@@ -161,18 +176,49 @@ my $key_note = "note";
 
 my $key_annot = "Annotator";
 
+my @fl = ();
+if (MMisc::is_blank($srcdir)) {
+  @fl = @ARGV;
+} else {
+  my $err = MMisc::check_dir_r($srcdir);
+  MMisc::error_quit("Problem with XML directory ($srcdir): $err")
+    if (! MMisc::is_blank($err));
+  my ($err, $rd, $rf, $ru) = MMisc::list_dirs_files($srcdir);
+  MMisc::error_quit("Problem with directory listing ($srcdir): $err")
+    if (! MMisc::is_blank($err));
+  foreach my $f (@$rf) {
+    push @fl, "$srcdir/$f";
+  }
+}
+
+MMisc::error_quit("No files to process ?")
+  if (scalar @fl == 0);
+
 my %all = ();
-foreach my $x (@ARGV) {
-  print "$x : ";
+foreach my $x (@fl) {
+  print "** $x : ";
 
   my $err = MMisc::check_file_r($x);
   MMisc::error_quit("Problem opening file ($x): $err")
       if (! MMisc::is_blank($err));
 
+  if ($sknxml) {
+    my @cmdline = ("file", $x);
+    my ($rc, $so, $se) = MMisc::do_system_call(@cmdline);
+    MMisc::error_quit("Problem calling \'non xml check\' (" . join(" ", @cmdline) .")\n** Stdout: $so\n\n** Stderr: $se\n") if ($rc != 0);
+    $so =~ s%^.+\:%%;
+    if (! ($so =~ m%^\s*XML%)) {
+      print " Skipped, Not an XML file: $so\n";
+      next;
+    }
+  }
+
   my $fc = MMisc::slurp_file($x);
   MMisc::error_quit("Problem reading file ($x)")
       if (! defined $fc);
 
+  my $esft = 0; # Value to add to each entry extracted from file
+  
   my ($err, $dir, $file, $ext) = MMisc::split_dir_file_ext($x);
   my $lgw = $file;
   if (! MMisc::is_blank($filecheck)) {
@@ -181,7 +227,28 @@ foreach my $x (@ARGV) {
     } else {
       MMisc::error_quit("Problem extracting file name ($file)");
     }
+  } elsif (! MMisc::is_blank($sffnshift)) {
+    my $cmdline = "$sffnshift $file";
+    my ($rc, $so, $se) = MMisc::do_system_call($cmdline);
+    MMisc::error_quit("Problem calling \'select\' ($cmdline)\n** Stdout: $so\n\n** Stderr: $se\n") if ($rc != 0);
+    $so =~ s%^(\w+)%%;
+    my $eok = "ok";
+    my $ok = $1;
+    MMisc::error_quit("Did not receive the expected \"$ok\" value (\"$ok\" instead)")
+      if ($eok ne $ok);
+    $so =~ s%^\s+%%;
+    
+    $so =~ s%^([^\s]+)%%;
+    $lgw = $1;
+    MMisc::error_quit("Empty file name value")
+      if (MMisc::is_blank($lgw));
+    $so =~ s%^\s+%%;
+
+    $esft = MMisc::clean_begend_spaces($so);
+    MMisc::error_quit("Invalid shift value ($esft)")
+      if ((MMisc::is_blank($esft)) || (! MMisc::is_integer($esft)));
   }
+    
   # First, extract the "Agree=" list from the <config> section
   my ($err, @acn) = &list_allconf_names(\$fc);
   MMisc::error_quit($err)
@@ -200,7 +267,7 @@ foreach my $x (@ARGV) {
   $event =~ s%$key_ref$%%;
 
   # Fill %all
-  my $err = &fill_all(\$fc, $lgw, $event, $x, @agl);
+  my $err = &fill_all(\$fc, $lgw, $event, $x, $esft, @agl);
   MMisc::error_quit($err)
     if (! MMisc::is_blank($err));
   
@@ -211,15 +278,22 @@ my $ch = new CSVHelper();
 MMisc::error_quit("Problem creating the CSV object: " . $ch->get_errormsg())
   if ($ch->error());
 
+my $gch = new CSVHelper();
+MMisc::error_quit("Problem creating the CSV object: " . $gch->get_errormsg())
+  if ($gch->error());
+
 my $global = "${writedir}global.csv";
 my $global_txt = "";
 my @gh = ("File", "Event", "AgreeLevel", "MeanDetectionScore", "Framespan", "isGood", "FromADJFile", "NbrAnnot", "AnnotList", "Note");
-$global_txt .= &array2csvline($ch, @gh);
+$global_txt .= &array2csvline($gch, @gh);
+$gch->set_number_of_columns(scalar @gh);
+
+my @a = ("EventType", "Framespan");
+$ch->set_number_of_columns(scalar @a);
 
 foreach my $lgw (sort keys %all) {
   my $file = "$writedir$lgw.csv";
   my $file_txt = "";
-  my @a = ("EventType", "Framespan");
   $file_txt .= &array2csvline($ch, @a);
   foreach my $event (sort keys %{$all{$lgw}}) {
     foreach my $agl (sort keys %{$all{$lgw}{$event}}) {
@@ -243,11 +317,11 @@ foreach my $lgw (sort keys %all) {
         }
 
         my @c = ($lgw, $event, $sagl, $mds, $fs, $isg, $faf, scalar @anl, join(" ", sort @anl), $note);
-        $global_txt .= &array2csvline($ch, @c);
+        $global_txt .= &array2csvline($gch, @c);
       }
     }
   }
-  MMisc::writeTo($file, "", 1, 0, $file_txt);
+  MMisc::writeTo($file, "", 1, 0, $file_txt) if (! $sif);
 }
 MMisc::writeTo($global, "", 1, 0, $global_txt);
 
@@ -290,7 +364,7 @@ sub list_allconf_names {
 #####
 
 sub fill_all {
-  my ($rfc, $lgw, $event, $fn, @agl) = @_;
+  my ($rfc, $lgw, $event, $fn, $esft, @agl) = @_;
 
   my %local = ();
 
@@ -327,9 +401,8 @@ sub fill_all {
         next;
       }
 
-      ($err, $framespan) = &fix_fs($framespan, $osf);
-      return($err)
-        if (! MMisc::is_blank($err));
+      ($err, $framespan) = &fix_fs($framespan, $osf + $esft);
+      return($err) if (! MMisc::is_blank($err));
 
       delete($tofind{$key})
         if (exists $tofind{$key});
@@ -359,7 +432,7 @@ sub fill_all {
       next;
     }
 
-    ($err, $framespan) = &fix_fs($framespan, $osf);
+    ($err, $framespan) = &fix_fs($framespan, $osf + $esft);
     return($err)
       if (! MMisc::is_blank($err));
 
@@ -763,13 +836,18 @@ Usage: $0 [options] file(s).xml
 Will do stuff
 
  Where:
-  --help          Print this usage information and exit
-  --version       Print version number and exit
-  --filecheck     Regular expression used to extract the file structure from source filename (example: \'LGW_\\d{8}_E\\d_CAM\\d\')
+  --help              Print this usage information and exit
+  --version           Print version number and exit
+  --filecheck         Regular expression used to extract the file structure from source filename (example: \'LGW_\\d{8}_E\\d_CAM\\d\')
   --duplicates_warn   When finding duplicate keys, do not exit with error status, simply discard found duplicates
   --ensure_warn       When finding a problem with Agree counts, do not exit with error status, simply print a warning message
   --isGood_warn       When finding a problem with isGood content, do not exit, print a warning and set the isGood value to false
   --IsGood_true       extension to --isGood_warn; instead of setting value to false, set it to true
+  --writedir          Specify the output directory
+  --getSFFNshift      Program called to extract SFFN and shift from adjudicated filename (expected to return three parameters: ok SFFN shiftvalue)
+  --only_globalCSV    Only generate the "global.csv" file
+  --xmldir            Specify a directory to be listed for all XML files to be processed
+  --skip_nonXML       Check that the file is truly XML before trying to load it
 EOF
     ;
 
