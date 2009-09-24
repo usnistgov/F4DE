@@ -102,9 +102,10 @@ my $sffnshift = "";
 my $sif = "";
 my $srcdir = "";
 my $sknxml = 0;
+my $dktrue = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                              d fgh      o   s  v x   #
+# Used:    D                         d fgh      o   s  v x   #
 
 my %opt = ();
 GetOptions
@@ -122,6 +123,7 @@ GetOptions
    'only_globalCSV'   => \$sif,
    'xmldir=s'         => \$srcdir,
    'skip_nonXML'      => \$sknxml,
+   'Duplicate_keepTrue' => \$dktrue,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -195,8 +197,10 @@ MMisc::error_quit("No files to process ?")
   if (scalar @fl == 0);
 
 my %all = ();
+my $todo = scalar @fl;
+my $done = 1;
 foreach my $x (@fl) {
-  print "** $x : ";
+  print "** [$done / $todo] $x : ";
 
   my $err = MMisc::check_file_r($x);
   MMisc::error_quit("Problem opening file ($x): $err")
@@ -272,6 +276,7 @@ foreach my $x (@fl) {
     if (! MMisc::is_blank($err));
   
   print "done\n";
+  $done++;
 }
 
 my $ch = new CSVHelper();
@@ -478,10 +483,20 @@ sub fill_all {
         $txt .= " (**isGood Differ**)" if ($ng != $og);
         $txt .= " (**DetScr Differ**)" if ($od != $ng);
         $txt .= " (**AdjFile Differ**)" if ($of ne $fn);
-        return($txt)
-          if ($roe);
-        print "########## $txt (skipping entry) ##########\n";
-        next;
+
+        return($txt) if ($roe);
+
+        if (! $dktrue) {
+          print "########## $txt (skipping entry) ##########\n";
+          next;
+        }
+        
+        if (! $ng) {
+          print "@@@@@@@@@@ $txt (New entry \'isGood\' false => skipping entry) @@@@@@@@@@\n";
+          next;
+        }
+
+        print "%%%%%%%%%% $txt (New entry \'isGood\' true => replacing entry) %%%%%%%%%%\n";
       }
       
       @{$all{$lgw}{$event}{$agk}{$fs}{$key_annot}} =
@@ -840,6 +855,7 @@ Will do stuff
   --version           Print version number and exit
   --filecheck         Regular expression used to extract the file structure from source filename (example: \'LGW_\\d{8}_E\\d_CAM\\d\')
   --duplicates_warn   When finding duplicate keys, do not exit with error status, simply discard found duplicates
+  --Duplicate_keepTrue  When finding duplicate keys, do not discard isGood=true entry, replace isGood=false ones
   --ensure_warn       When finding a problem with Agree counts, do not exit with error status, simply print a warning message
   --isGood_warn       When finding a problem with isGood content, do not exit, print a warning and set the isGood value to false
   --IsGood_true       extension to --isGood_warn; instead of setting value to false, set it to true
