@@ -848,7 +848,7 @@ $versionid
 
 Usage: $0 [options] file(s).xml 
 
-Will do stuff
+Will generate the global.csv and sffn.csv files needed to reinject adjudicated files into XML files
 
  Where:
   --help              Print this usage information and exit
