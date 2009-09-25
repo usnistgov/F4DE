@@ -101,6 +101,8 @@ my $odir = "";
 my $select = "";
 my $roe = 1;
 my $dktrue = 0;
+my $verb = 0;
+my @qsl = ();
 
 my %opt = ();
 GetOptions
@@ -112,6 +114,8 @@ GetOptions
    'select=s'   => \$select,
    'duplicates_warn'  => sub { $roe = 0; },
    'Duplicate_keepTrue' => \$dktrue,
+   'Verb'     => \$verb,
+   'quick_select=s' => \@qsl,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -138,14 +142,19 @@ my $in = shift @ARGV;
 my $err = MMisc::check_file_r($in);
 MMisc::error_quit("Problem with input file ($in): $err")
   if (! MMisc::is_blank($err));
-
 my %all = &load_globalCSV($in);
+#debug#MMisc::ok_quit(MMisc::writeTo("test", ".md", 1, 0, MMisc::get_sorted_MemDump(\%all)));
 &write_sffnCSV(%all);
 
 MMisc::ok_quit("Done\n");
 
+########## END
 
-########################################
+sub _warn_add {
+  $warn_msg .= "[Warning] " . join(" ", @_) ."\n";
+}
+
+##########
 
 sub find_pos {
   my $rwant = shift @_;
@@ -170,6 +179,7 @@ sub find_pos {
 }
 
 ##########
+
 
 sub load_globalCSV {
   my ($in) = @_;
@@ -204,10 +214,18 @@ sub load_globalCSV {
     my @lcont = $csvh->csvline2array($line);
     MMisc::error_quit("[line #$linec] Problem with CSV line: " . $csvh->get_errormsg())
         if ($csvh->error());
+
+    my ($mcttr, $evt, $ffs, $igv, $antl) = 
+      ($lcont[$pos[0]], $lcont[$pos[1]], $lcont[$pos[2]],
+       $lcont[$pos[3]], $lcont[$pos[4]]);
   
+    my $tmp_antl = $antl;
+    $tmp_antl =~ s%\(.+?\)%%g;
+    print "** [line $linec] Seen: $mcttr / $evt / $ffs / $igv / $tmp_antl\n";
+
     ## duplicate
-    if (exists $all{$lcont[$pos[0]]}{$lcont[$pos[1]]}{$lcont[$pos[2]]}) {  
-      my $tmp_txt = sprintf("[line #$linec] Already have a value for this %s / %s / %s ( %s / %s / %s)", $want[0], $want[1], $want[2], $lcont[$pos[0]], $lcont[$pos[1]], $lcont[$pos[2]]);
+    if (MMisc::safe_exists(\%all, $mcttr, $evt, $ffs)) {  
+      my $tmp_txt = sprintf("[line #$linec] Already have a value for this %s / %s / %s ( %s / %s / %s)", $want[0], $want[1], $want[2], $mcttr, $evt, $ffs);
       MMisc::error_quit($tmp_txt) if ($roe);
 
       if (! $dktrue) {
@@ -215,20 +233,32 @@ sub load_globalCSV {
         next;
       }
 
-      my $ov = $all{$lcont[$pos[0]]}{$lcont[$pos[1]]}{$lcont[$pos[2]]};
-      my $nv = $lcont[$pos[3]];
+      my $ov = $all{$mcttr}{$evt}{$ffs};
 
-      if (! $nv) {
+      if (! $igv) {
         print "$tmp_txt => With \"false\" isGood, skipping\n";
         next;
       }
 
       print "$tmp_txt => new entry with \"true\" isGood, keeping\n";
     }
+
+    ## quick select
+    if (scalar @qsl > 0) {
+      my $keep = 0;
+      for (my $i = 0; (($i < scalar @qsl) && ($keep == 0)); $i++) {
+        my $qs = $qsl[$i];
+        $keep = 1 if ($antl =~ m%$qs%);
+      }
+      if (! $keep) {
+        print "  -- quick select rejection\n";
+        next;
+      }
+    }
     
     ## select
     if (! MMisc::is_blank($select)) {
-      my $cmdline = "$select \"" . $lcont[$pos[4]] . "\"";
+      my $cmdline = "$select \"$antl\"";
       my ($rc, $so, $se) = MMisc::do_system_call($cmdline);
       MMisc::error_quit("[line #$linec] Problem calling \'select\' ($cmdline)\n** Stdout: $so\n\n** Stderr: $se\n") if ($rc != 0);
       $so =~ s%^(\w+)%%;
@@ -243,10 +273,15 @@ sub load_globalCSV {
           if (! grep(m%^$decision$%, @ok_dec));
       
       # Reject: do not add entry to processed list
-      next if ($decision eq $ok_dec[-1]);
+      if ($decision eq $ok_dec[-1]) {
+        print "  -- Rejected\n" if ($verb);
+        next;
+      }
     }
     
-    $all{$lcont[$pos[0]]}{$lcont[$pos[1]]}{$lcont[$pos[2]]} = $lcont[$pos[3]];
+    $all{$mcttr}{$evt}{$ffs} = $igv;
+#debug#print  MMisc::get_sorted_MemDump(\%all), "\n";
+    print "  -> Added\n";
   }
 
   return(%all);
@@ -343,13 +378,16 @@ $versionid
 
 Usage: $0 [options] global.csv 
 
-Will extract data content from a "global.csv" file into sffn.csv files needed to reinject adjudicated files into XML files
+Will extract data content from a "global.csv" file into sffn.csv files needed to reinject adjudicated files into XML files.
+
+FYI: In order, the program does (if selected): duplicate check, then quick select check, then select check.
 
  Where:
   --help              Print this usage information and exit
   --version           Print version number and exit
-  --outdir            Specify the output directory
-  --select            Program called to with the "AnnotList" column from the global.csv file, to "select" if the line should be kept or rejected from the output (expected to return two parameters; "ok" followed by one of: $dok)
+  --outdir dir           Specify the output directory
+  --quick_select text    When checking the "AnnotList" if the text enter is seen, keep the entry. Multiple quick_select can be used, it will work as an "OR".
+  --select program           Program called to with the "AnnotList" column from the global.csv file, to "select" if the line should be kept or rejected from the output (expected to return two parameters; "ok" followed by one of: $dok)
   --duplicates_warn   When finding duplicate keys, do not exit with error status, simply discard found duplicates
   --Duplicate_keepTrue  When finding duplicate keys, do not discard isGood=true entry, replace isGood=false ones
 EOF
