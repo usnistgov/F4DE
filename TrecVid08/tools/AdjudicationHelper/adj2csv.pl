@@ -853,16 +853,16 @@ Will generate the global.csv and sffn.csv files needed to reinject adjudicated f
  Where:
   --help              Print this usage information and exit
   --version           Print version number and exit
-  --filecheck         Regular expression used to extract the file structure from source filename (example: \'LGW_\\d{8}_E\\d_CAM\\d\')
+  --filecheck regexp  Regular expression used to extract the file structure from source filename (example: \'LGW_\\d{8}_E\\d_CAM\\d\')
   --duplicates_warn   When finding duplicate keys, do not exit with error status, simply discard found duplicates
   --Duplicate_keepTrue  When finding duplicate keys, do not discard isGood=true entry, replace isGood=false ones
   --ensure_warn       When finding a problem with Agree counts, do not exit with error status, simply print a warning message
   --isGood_warn       When finding a problem with isGood content, do not exit, print a warning and set the isGood value to false
   --IsGood_true       extension to --isGood_warn; instead of setting value to false, set it to true
-  --writedir          Specify the output directory
-  --getSFFNshift      Program called to extract SFFN and shift from adjudicated filename (expected to return three parameters: ok SFFN shiftvalue)
+  --writedir dir      Specify the output directory
+  --getSFFNshift program      Program called to extract SFFN and shift from adjudicated filename (expected to return three parameters: ok SFFN shiftvalue)
   --only_globalCSV    Only generate the "global.csv" file
-  --xmldir            Specify a directory to be listed for all XML files to be processed
+  --xmldir dir        Specify a directory to be listed for all XML files to be processed
   --skip_nonXML       Check that the file is truly XML before trying to load it
 EOF
     ;
