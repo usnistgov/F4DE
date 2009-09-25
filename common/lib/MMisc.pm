@@ -1419,6 +1419,21 @@ sub unarchive_archive {
   return("", $retcode, $stdout, $stderr);
 }
 
+##########
+
+sub safe_exists {
+  # when doing exists $hash{$k1}{$k2}{$k2}
+  # avoid creating $hash{$k1}{$k2}
+
+  my ($ra, $k, @ks) = @_;
+
+  return(0) if (! exists $$ra{$k});
+
+  return(1) if (scalar @ks == 0);
+
+  return(&safe_exists($$ra{$k}, @ks));
+}
+
 ############################################################
 
 1;
