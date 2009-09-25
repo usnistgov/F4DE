@@ -241,6 +241,8 @@ dist_archive_pre_remove:
 	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRViperValidator/res-test-1b.txt
 	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTScorer/res-test-2.txt
 	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRScorer/res-test-1[ab].txt
+## VidAT
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/VidAT/
 
 create_mans:
 # TrecVid08
