@@ -428,11 +428,11 @@ my $temp = "";
 
 if($tmpDir ne "" && $tmpDir ne "/tmp")
 {
-	$temp = tempdir( "$tmpDir/DETUtil.XXXXXXXX", CLEANUP => !$keepFiles );
+	$temp = File::Temp::tempdir( "$tmpDir/DETUtil.XXXXXXXX", CLEANUP => !$keepFiles );
 }
 else
 {
-	$temp = tempdir( CLEANUP => !$keepFiles );
+	$temp = File::Temp::tempdir( CLEANUP => !$keepFiles );
 }
 
 my $report = $ds->renderAsTxt("$temp/merge", 1, 1, \%options);
