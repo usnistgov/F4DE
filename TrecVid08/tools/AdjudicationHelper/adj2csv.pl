@@ -224,10 +224,10 @@ foreach my $x (@fl) {
   my $esft = 0; # Value to add to each entry extracted from file
   
   my ($err, $dir, $file, $ext) = MMisc::split_dir_file_ext($x);
-  my $lgw = $file;
+  my $sffn = $file;
   if (! MMisc::is_blank($filecheck)) {
     if ($file =~ m%^($filecheck)%) {
-      $lgw = $1;
+      $sffn = $1;
     } else {
       MMisc::error_quit("Problem extracting file name ($file)");
     }
@@ -243,9 +243,9 @@ foreach my $x (@fl) {
     $so =~ s%^\s+%%;
     
     $so =~ s%^([^\s]+)%%;
-    $lgw = $1;
+    $sffn = $1;
     MMisc::error_quit("Empty file name value")
-      if (MMisc::is_blank($lgw));
+      if (MMisc::is_blank($sffn));
     $so =~ s%^\s+%%;
 
     $esft = MMisc::clean_begend_spaces($so);
@@ -271,7 +271,7 @@ foreach my $x (@fl) {
   $event =~ s%$key_ref$%%;
 
   # Fill %all
-  my $err = &fill_all(\$fc, $lgw, $event, $x, $esft, @agl);
+  my $err = &fill_all(\$fc, $sffn, $event, $x, $esft, @agl);
   MMisc::error_quit($err)
     if (! MMisc::is_blank($err));
   
@@ -296,20 +296,20 @@ $gch->set_number_of_columns(scalar @gh);
 my @a = ("EventType", "Framespan");
 $ch->set_number_of_columns(scalar @a);
 
-foreach my $lgw (sort keys %all) {
-  my $file = "$writedir$lgw.csv";
+foreach my $sffn (sort keys %all) {
+  my $file = "$writedir$sffn.csv";
   my $file_txt = "";
   $file_txt .= &array2csvline($ch, @a);
-  foreach my $event (sort keys %{$all{$lgw}}) {
-    foreach my $agl (sort keys %{$all{$lgw}{$event}}) {
-      my @l = keys %{$all{$lgw}{$event}{$agl}};
+  foreach my $event (sort keys %{$all{$sffn}}) {
+    foreach my $agl (sort keys %{$all{$sffn}{$event}}) {
+      my @l = keys %{$all{$sffn}{$event}{$agl}};
       foreach my $fs (sort _fs_sort @l) {
-        my @anl  = @{$all{$lgw}{$event}{$agl}{$fs}{$key_annot}};
-        my $isg  = $all{$lgw}{$event}{$agl}{$fs}{$key_isGood};
-        my $id   = $all{$lgw}{$event}{$agl}{$fs}{$key_id};
-        my $note = $all{$lgw}{$event}{$agl}{$fs}{$key_note};
-        my $mds  = $all{$lgw}{$event}{$agl}{$fs}{$key_ds};
-        my $faf  = $all{$lgw}{$event}{$agl}{$fs}{$key_faf};
+        my @anl  = @{$all{$sffn}{$event}{$agl}{$fs}{$key_annot}};
+        my $isg  = $all{$sffn}{$event}{$agl}{$fs}{$key_isGood};
+        my $id   = $all{$sffn}{$event}{$agl}{$fs}{$key_id};
+        my $note = $all{$sffn}{$event}{$agl}{$fs}{$key_note};
+        my $mds  = $all{$sffn}{$event}{$agl}{$fs}{$key_ds};
+        my $faf  = $all{$sffn}{$event}{$agl}{$fs}{$key_faf};
 
         my $sagl = -1;
         my $sagl = $1 if ($agl =~ m%\=(\d+)$%);
@@ -321,7 +321,7 @@ foreach my $lgw (sort keys %all) {
           $file_txt .= &array2csvline($ch, @b);
         }
 
-        my @c = ($lgw, $event, $sagl, $mds, $fs, $isg, $faf, scalar @anl, join(" ", sort @anl), $note);
+        my @c = ($sffn, $event, $sagl, $mds, $fs, $isg, $faf, scalar @anl, join(" ", sort @anl), $note);
         $global_txt .= &array2csvline($gch, @c);
       }
     }
@@ -369,7 +369,7 @@ sub list_allconf_names {
 #####
 
 sub fill_all {
-  my ($rfc, $lgw, $event, $fn, $esft, @agl) = @_;
+  my ($rfc, $sffn, $event, $fn, $esft, @agl) = @_;
 
   my %local = ();
 
@@ -420,7 +420,7 @@ sub fill_all {
       $local{$key}{$id}{$key_isGood} = $isGood;
       $local{$key}{$id}{$key_note}   = $note;
       $local{$key}{$id}{$key_ds}     = $mds;
-#      print "[$lgw | $event | $key | $id | $framespan | $isGood | $note] ";
+#      print "[$sffn | $event | $key | $id | $framespan | $isGood | $note] ";
     }
   }
 
@@ -451,7 +451,7 @@ sub fill_all {
       if (! exists $local{$agk}{$idk}{$dummy});
     my $idt = $ans[0] . "($id|$framespan)";
     push @{$local{$agk}{$idk}{$key_annot}}, $idt;
-#    print "%[$lgw | $event | $key_unmann | $id | $framespan | [$agk | $idk | ", join(" ", @ans), "] ] ";
+#    print "%[$sffn | $event | $key_unmann | $id | $framespan | [$agk | $idk | ", join(" ", @ans), "] ] ";
   }
 
   # Now check that the count for each 'Agree=' has the proper number of elements
@@ -472,14 +472,14 @@ sub fill_all {
   foreach my $agk (keys %local) {
     foreach my $idk (keys %{$local{$agk}}) {
       my $fs = $local{$agk}{$idk}{$key_fs};
-      if (exists $all{$lgw}{$event}{$agk}{$fs}{$key_annot}) {
-        my $og = $all{$lgw}{$event}{$agk}{$fs}{$key_isGood};
+      if (exists $all{$sffn}{$event}{$agk}{$fs}{$key_annot}) {
+        my $og = $all{$sffn}{$event}{$agk}{$fs}{$key_isGood};
         my $ng = $local{$agk}{$idk}{$key_isGood};
-        my $od = $all{$lgw}{$event}{$agk}{$fs}{$key_ds};
+        my $od = $all{$sffn}{$event}{$agk}{$fs}{$key_ds};
         my $nd = $local{$agk}{$idk}{$key_ds};
-        my $of = $all{$lgw}{$event}{$agk}{$fs}{$key_faf};
-        my $oi = $all{$lgw}{$event}{$agk}{$fs}{$key_id};
-        my $txt = "An entry already exists for [$lgw | $event | $agk | $fs] -- Old: [isGood: $og | DetScr: $od | ID: $oi | AdjFile: $of] vs New: [isGood: $ng | DetScr: $nd | ID: $idk | AdjFile: $fn]";
+        my $of = $all{$sffn}{$event}{$agk}{$fs}{$key_faf};
+        my $oi = $all{$sffn}{$event}{$agk}{$fs}{$key_id};
+        my $txt = "An entry already exists for [$sffn | $event | $agk | $fs] -- Old: [isGood: $og | DetScr: $od | ID: $oi | AdjFile: $of] vs New: [isGood: $ng | DetScr: $nd | ID: $idk | AdjFile: $fn]";
         $txt .= " (**isGood Differ**)" if ($ng != $og);
         $txt .= " (**DetScr Differ**)" if ($od != $ng);
         $txt .= " (**AdjFile Differ**)" if ($of ne $fn);
@@ -499,17 +499,17 @@ sub fill_all {
         print "%%%%%%%%%% $txt (New entry \'isGood\' true => replacing entry) %%%%%%%%%%\n";
       }
       
-      @{$all{$lgw}{$event}{$agk}{$fs}{$key_annot}} =
+      @{$all{$sffn}{$event}{$agk}{$fs}{$key_annot}} =
         @{$local{$agk}{$idk}{$key_annot}};
-      $all{$lgw}{$event}{$agk}{$fs}{$key_isGood} = 
+      $all{$sffn}{$event}{$agk}{$fs}{$key_isGood} = 
         $local{$agk}{$idk}{$key_isGood};
-      $all{$lgw}{$event}{$agk}{$fs}{$key_note} = 
+      $all{$sffn}{$event}{$agk}{$fs}{$key_note} = 
         $local{$agk}{$idk}{$key_note};
-      $all{$lgw}{$event}{$agk}{$fs}{$key_id} = 
+      $all{$sffn}{$event}{$agk}{$fs}{$key_id} = 
         $idk;
-      $all{$lgw}{$event}{$agk}{$fs}{$key_ds} = 
+      $all{$sffn}{$event}{$agk}{$fs}{$key_ds} = 
         $local{$agk}{$idk}{$key_ds};
-      $all{$lgw}{$event}{$agk}{$fs}{$key_faf} = 
+      $all{$sffn}{$event}{$agk}{$fs}{$key_faf} = 
         $fn;
     }
   }
