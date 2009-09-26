@@ -312,10 +312,6 @@ sub write_sffnCSV {
       if ($csvh->error());
   $csvh->set_number_of_columns(scalar @sffn_header);
 
-  my $all_txt = $fh;
-  my $yes_txt = $fh;
-  my $no_txt  = $fh;
-
   my $all_dir = "${odir}00-All_isGood";
   &_die_mkdir($all_dir);
   my $yes_dir = "${odir}01-Yes_isGood";
@@ -325,6 +321,12 @@ sub write_sffnCSV {
   
   foreach my $sffn (sort keys %all) {
     print "** SFFN : $sffn\n";
+ 
+    my $all_txt = "$fh\n";
+    my $yes_txt = "$fh\n";
+    my $no_txt  = "$fh\n";
+    
+    my ($ac, $yc, $nc) = (0, 0, 0);
     
     foreach my $event (sort keys %{$all{$sffn}}) {
       my $allc = 0;
@@ -349,23 +351,41 @@ sub write_sffnCSV {
           $noc++;
         }
       }
+ 
+      $ac += $allc;
+      $yc += $yesc;
+      $nc += $noc;
+
       MMisc::error_quit("YES + NO != ALL ($yesc + $noc != $allc)")
           if ($yesc + $noc != $allc);
       print sprintf(" |-> Event: %20s [ALL: %02d = %02d YES + %02d NO]\n", $event, $allc, $yesc, $noc);
     }
 
-    my $all_file = "$all_dir/$sffn.csv";
-    MMisc::error_quit("Problem writing file ($all_file)")
-        if (! MMisc::writeTo($all_file, "", 1, 0, $all_txt));
+    if ($ac > 0) {
+      my $all_file = "$all_dir/$sffn.csv";
+      MMisc::error_quit("Problem writing file ($all_file)")
+          if (! MMisc::writeTo($all_file, "", 1, 0, $all_txt));
+    } else {
+      print "[$sffn] 0 events, skipping file writing\n";
+    }
 
-    my $yes_file = "$yes_dir/$sffn.csv";
-    MMisc::error_quit("Problem writing file ($yes_file)")
-        if (! MMisc::writeTo($yes_file, "", 1, 0, $yes_txt));
+    if ($yc > 0) {
+      my $yes_file = "$yes_dir/$sffn.csv";
+      MMisc::error_quit("Problem writing file ($yes_file)")
+          if (! MMisc::writeTo($yes_file, "", 1, 0, $yes_txt));
+    } else {
+      print "[$sffn] 0 \"YES\" events, skipping file writing\n";
+    }
 
-    my $no_file = "$no_dir/$sffn.csv";
-    MMisc::error_quit("Problem writing file ($no_file)")
-        if (! MMisc::writeTo($no_file, "", 1, 0, $no_txt));
-  }
+    if ($nc > 0) {
+      my $no_file = "$no_dir/$sffn.csv";
+      MMisc::error_quit("Problem writing file ($no_file)")
+          if (! MMisc::writeTo($no_file, "", 1, 0, $no_txt));
+    } else {
+      print "[$sffn] 0 \"NO\" events, skipping file writing\n";
+    }
+
+ }
 
 }
 
