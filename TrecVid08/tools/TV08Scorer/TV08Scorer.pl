@@ -394,7 +394,7 @@ if (scalar @inputAliCSV == 0) {
 
   ### Load the Trial Structures from CSV alignment files
   foreach my $csvf (@inputAliCSV) {
-    print "* Loading CSV file [$csvf]";
+    print "* Loading CSV file [$csvf]\n";
 
     open (CSV, $csvf) 
       or MMisc::error_quit("Failed to open CSV alignment file ($csvf): $!");
