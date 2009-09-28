@@ -24,6 +24,7 @@ use MetricTestStub;
 use Data::Dumper;
 use DETCurveSet;
 use PropList;
+use MMisc;
 
 my(@tics) = (0.00001, 0.0001, 0.001, 0.004, .01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 60, 80, 90, 95, 98, 99, 99.5, 99.9);
 
@@ -71,9 +72,54 @@ sub unitTest
     print "Test DETCurve\n";
     blockWeightedUnitTest();
     #   unitTestMultiDet();
-
+    # bigDETUnitTest();
     return 1;
   }
+
+sub bigDETUnitTest {
+  printf("Running a series of large DET Curves\n");
+  my ($doProfile) = 0;
+  
+  foreach my $size(10000, 100000, 1000000, 2000000, 3000000, 4000000, 5000000, 6000000){
+#  foreach my $size(2000000, 5000000, 10000000){
+#  foreach my $size(1000003){
+    system "/home/fiscus/Projects/STD/STDEval/tools/ProcGragh/ProcGraph.pl --cumul --Tree --outdir . --filebase BigDet.$size -- ".
+          " perl ".($doProfile ? "-d:DProf" : "")." -I . -e 'use DETCurve; DETCurve::oneBigDET(\"BigDet.$size\", $size)'"; 
+#    print "\n";
+  }
+}
+
+sub oneBigDET
+  {
+   my ($root, $nt) = @_;
+
+    print " Computing big DET Curve... ".($nt)." trials\n";
+    my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
+    
+    #####################################  Without data  ###############################    
+    my $emptyTrial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => $nt) });
+
+    print "   ... adding trials\n";
+    for (my $i=0; $i<$nt/2; $i++){
+    	my $r = (($i % 1000)  == 0 ? 0.5 : rand());
+    	$emptyTrial->addTrial("he", $r, ($r < 0.5 ? "NO" : "YES"), 1);
+      $r = (($i % 1000)  == 0 ? 0.5 : rand());
+      $emptyTrial->addTrial("he", $r, ($r < 0.5 ? "NO" : "YES"), 0);
+    	print "   Made trials < ".(2*$i)."\n" if ($i*2 % 1000000 == 0); 
+    }
+    
+    my $met = new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial);
+    if (ref($met) ne "MetricTestStub") {
+      die "Error: Unable to create a MetricTestStub object with message '$met'\n";
+    }
+    
+    my $emptydet = new DETCurve($emptyTrial, $met, "footitle", \@isolinecoef, undef);
+    use DETCurveSet;
+    my $ds = new DETCurveSet("title");
+    $ds->addDET("Biggy", $emptydet);
+    my %ht = ("createDETfiles", 1);
+    print $ds->renderAsTxt($root, 1, 1, \%ht);
+}
 
 sub blockWeightedUnitTest()
   {
@@ -472,21 +518,14 @@ sub readFromFile
   {
     my ($file, $gzipPROG) = @_;
     my $str = "";
-    my $compressed = 0;
+    my $tmpFile = undef;
     
     if ( ( $file =~ /.+\.gz$/ ) && ( -e $file ) && ( -f $file ) && ( -r $file ) ) {
-      system("$gzipPROG -d -f $file > /dev/null");
-      $compressed = 1;
+      $str = MMisc::file_gunzip($file)
+    } else {
+      $str = MMisc::slurp_file($file, "text")
     }
 
-    $file =~ s/\.gz$//;
-
-    open (FILE, "$file") || die "Failed to open $file for read";
-    while (<FILE>) {
-      $str .= $_ ;
-    }
-    close FILE;
-    system("$gzipPROG -9 -f $file > /dev/null") if( $compressed );
     my $VAR1;
     eval $str;
     $VAR1;
@@ -700,7 +739,7 @@ sub AddIsolineInformation
 sub computePoints
   {
     my $self = shift;
-        
+
     ### This function implements the delayed point computation which only occurs IFF the data is requested
     if ($self->{POINT_COMPUTATION_ATTEMPTED}) {
       return;
@@ -711,6 +750,7 @@ sub computePoints
     $self->{TRIALS}->sortTrials();
         
     $self->{POINTS} = $self->Compute_blocked_DET_points($self->{TRIALS});
+
   }
 
 sub Compute_blocked_DET_points
@@ -781,7 +821,7 @@ sub Compute_blocked_DET_points
     $self->{BESTCOMB}{COMB} = $TWComb;
     $self->{BESTCOMB}{MFA} = $mFa;
     $self->{BESTCOMB}{MMISS} = $mMiss;
-    
+   
     while ($self->updateMinScoreForBlockWeighted(\%blocks, \$minScore, $trial)) {
       # Add info of previous average
       $previousAvgMfa = $mFa;
