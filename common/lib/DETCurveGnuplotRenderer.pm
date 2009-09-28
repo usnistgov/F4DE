@@ -78,6 +78,7 @@ sub _initProps{
   die "Failed to add property FAUnit" unless ($props->addProp("FAUnit", "Prob", ("Prob", "Rate")));
   die "Failed to add property ColorScheme" unless ($props->addProp("ColorScheme", "color", ("color", "grey")));
   die "Failed to add property MissUnit" unless ($props->addProp("MissUnit", "Prob", ("Prob", "Rate")));
+  die "Failed to add property KeySpacing" unless ($props->addProp("KeySpacing", "0.7", ()));
   die "Failed to add property KeyLoc" unless ($props->addProp("KeyLoc", "top", ("left", "right", "center", "top", "bottom", "outside", "below",
                                                               "left top",    "center top",    "right top",
                                                               "left center", "center center", "right center",
@@ -214,7 +215,13 @@ sub _parseOptions{
       die "Error: DET option KeyLoc illegal. ".$self->{props}->get_errormsg();
     }
   }
-      
+  
+  if (exists($options->{KeySpacing})){
+    if (! $self->{props}->setValue("KeySpacing", $options->{KeySpacing})){
+      die "Error: DET option KeySpacing illegal. ".$self->{props}->get_errormsg();
+    }
+  }
+            
   $self->{Isoratiolines} = $options->{Isoratiolines} if (exists($options->{Isoratiolines}));
   $self->{DrawIsoratiolines} = $options->{DrawIsoratiolines} if (exists($options->{DrawIsoratiolines}));
   $self->{Isometriclines} = $options->{Isometriclines} if (exists($options->{Isometriclines}));
@@ -642,9 +649,9 @@ sub write_gnuplot_DET_header{
   my $xScale = $self->{props}->getValue("xScale"); 
   my $yScale = $self->{props}->getValue("yScale"); 
   my $keyLoc = $self->{props}->getValue("KeyLoc"); 
+  my $keySpacing = $self->{props}->getValue("KeySpacing"); 
   my $title = $self->{title}; 
   
-  print $FP "## GNUPLOT command file\n";
   print $FP "set terminal postscript color\n";
   print $FP "set noxzeroaxis\n";
   print $FP "set noyzeroaxis\n";
@@ -653,7 +660,7 @@ sub write_gnuplot_DET_header{
 
   if (defined($keyLoc)) {
     $keyLoc = "bmargin vertical" if ($keyLoc eq "below");  ### Gnuplot changed
-    print $FP "set key $keyLoc spacing .7 ".($keyLoc eq "bmargin vertical" ? "box" : "")."\n";
+    print $FP "set key $keyLoc spacing $keySpacing ".($keyLoc eq "bmargin vertical" ? "box" : "")."\n";
   }
   
   my $ratio = 0.85;
@@ -1202,22 +1209,27 @@ sub writeGNUGraph{
   print DAT "#                        the value \"NA\" is used when n <= 1\n"; 
   print DAT "# 1:score 2:ppndf($missStr) 3:ppndf($faStr) 4:$missStr 5:$faStr 6:$combStr 7:ppndf(-2SE($missStr)) 8:ppndf(-2SE($faStr)) 9:ppndf(+2SE($missStr)) 10:ppndf(+2SE($faStr)) 11:-2SE($missStr) 12:-2SE($faStr) 13:+2SE($missStr) 14:+2SE($faStr) 15:SE($combStr)\n";
   for (my $i=0; $i<@{ $points }; $i++) {
-      print DAT $points->[$i][0]." ".
-        ppndf($points->[$i][1])." ".
-          ppndf($points->[$i][2])." ".
-            $points->[$i][1]." ".
-              $points->[$i][2]." ".
-                $points->[$i][3]." ".
-                  (($points->[$i][7]-1 <= 0) ? "NA" : ppndf($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]-1))))." ".
-                    (($points->[$i][7]-1 <= 0) ? "NA" : ppndf($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]-1))))." ".
-                      (($points->[$i][7]-1 <= 0) ? "NA" : ppndf($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]-1))))." ".
-                        (($points->[$i][7]-1 <= 0) ? "NA" : ppndf($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]-1))))." ".
-                          (($points->[$i][7]-1 <= 0) ? "NA" : ($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]-1))))." ".
-                            (($points->[$i][7]-1 <= 0) ? "NA" : ($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]-1))))." ".
-                              (($points->[$i][7]-1 <= 0) ? "NA" : ($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]-1))))." ".
-                                (($points->[$i][7]-1 <= 0) ? "NA" : ($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]-1))))." ".
-                                  (($points->[$i][7]-1 <= 0) ? "NA" : ($points->[$i][2] - 2*($points->[$i][6] / sqrt($points->[$i][7]-1))))." ".
-                                    "\n";
+      my @a = ($points->[$i][0], 
+               ppndf($points->[$i][1]), 
+               ppndf($points->[$i][2]),
+               $points->[$i][1],
+               $points->[$i][2],
+               $points->[$i][3]);
+      if ($points->[$i][7]-1 <= 0) {
+        push @a, "NA NA NA NA NA NA NA NA";
+      } else {
+        push @a, (ppndf($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]-1))), 
+                  ppndf($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]-1))), 
+                  ppndf($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]-1))),
+                  ppndf($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]-1))),
+                  ($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]-1))),
+                  ($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]-1))),
+                  ($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]-1))),
+                  ($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]-1))),
+                  ($points->[$i][2] - 2*($points->[$i][6] / sqrt($points->[$i][7]-1))));
+      }
+      push @a, "\n";
+      print DAT join(" ",@a);
       $withErrorCurve = 0 if ($points->[$i][7]-1 <= 0)
   }
   close DAT;
