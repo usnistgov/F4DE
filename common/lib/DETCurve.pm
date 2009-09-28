@@ -80,11 +80,11 @@ sub bigDETUnitTest {
   printf("Running a series of large DET Curves\n");
   my ($doProfile) = 0;
   
-  foreach my $size(10000, 100000, 1000000, 2000000, 3000000, 4000000, 5000000, 6000000){
+ foreach my $size(10000, 100000, 1000000, 3000000, 6000000, 8000000, 10000000, 12000000, 14000000, 16000000, 18000000, 20000000){
 #  foreach my $size(2000000, 5000000, 10000000){
 #  foreach my $size(1000003){
-    system "/home/fiscus/Projects/STD/STDEval/tools/ProcGragh/ProcGraph.pl --cumul --Tree --outdir . --filebase BigDet.$size -- ".
-          " perl ".($doProfile ? "-d:DProf" : "")." -I . -e 'use DETCurve; DETCurve::oneBigDET(\"BigDet.$size\", $size)'"; 
+    system "/home/fiscus/Projects/STD/STDEval/tools/ProcGragh/ProcGraph.pl --cumul --Tree --outdir /tmp --filebase BigDet.$size -- ".
+          " perl ".($doProfile ? "-d:DProf" : "")." -I . -e 'use DETCurve; DETCurve::oneBigDET(\"/tmp/BigDet.$size\", $size)'"; 
 #    print "\n";
   }
 }
@@ -117,7 +117,7 @@ sub oneBigDET
     use DETCurveSet;
     my $ds = new DETCurveSet("title");
     $ds->addDET("Biggy", $emptydet);
-    my %ht = ("createDETfiles", 1);
+    my %ht = ("createDETfiles", 1, "noSerialize", 1);
     print $ds->renderAsTxt($root, 1, 1, \%ht);
 }
 
