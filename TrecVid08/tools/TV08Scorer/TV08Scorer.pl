@@ -114,7 +114,7 @@ my $xmllint_env = "F4DE_XMLLINT";
 my $mancmd = "perldoc -F $0";
 my @xtend_modes = ("copy_sys", "copy_ref", "overlap", "extended"); # Order is important
 my @ok_md = ("gzip", "text"); # Default is gzip / order is important
-
+my @dc_range = (0.01, 1000, 5, 99.99); # order is important (xmin;xmax) (ymin;ymax)
 my $usage = &set_usage();
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
@@ -146,9 +146,10 @@ my $MemDump = undef;
 my @inputAliCSV = ();
 my $schc = 0; # Skip CSV Header Check
 my $befc = 0; # Bypass ECF Files Check
+my $dcrange = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: ABCDEFG    LMNO  RST  WX Zab cdefgh  lmnop  st vwx   #
+# Used: ABCDEFG    LMNO  RST  WX Zab cdefgh  lmnop rst vwx   #
 
 my %opt = ();
 my @sys = ();
@@ -190,6 +191,7 @@ GetOptions
    'AlignmentCSV=s'  => \@inputAliCSV,
    'bypassCSVHeader' => \$schc,
    'BypassECFFilesCheck' => \$befc,
+   'rangeDETCurve=s' => \$dcrange,
    # Hidden option
    'Show_internals+' => \$showi,
    # Non options (SYS + REF)
@@ -229,6 +231,27 @@ if (defined $MemDump) {
   MMisc::error_quit("Unknown \'WriteMemDump\' mode ($MemDump), authorized: " . join(" ", @ok_md))
     if (! grep(m%^$MemDump$%, @ok_md));
 }
+
+if (! MMisc::is_blank($dcrange)) {
+  my @list = split(m%\:%, $dcrange);
+  MMisc::error_quit("Problem with \'rangeDETCurve\' did not find 4 elements in provided value ($dcrange), found: " . scalar @list)
+    if (scalar @list != 4);
+  my ($xm, $xM, $ym, $yM) = @list;
+  MMisc::error_quit("Problem with \'rangeDETCurve\': Xmin ($xm) is not a float")
+    if (! MMisc::is_float($xm));
+  MMisc::error_quit("Problem with \'rangeDETCurve\': Xmax ($xM) is not a float")
+    if (! MMisc::is_float($xM));
+  MMisc::error_quit("Problem with \'rangeDETCurve\': Ymin ($ym) is not a float")
+    if (! MMisc::is_float($ym));
+  MMisc::error_quit("Problem with \'rangeDETCurve\': Ymax ($yM) is not a float")
+    if (! MMisc::is_float($yM));
+  MMisc::error_quit("Problem with \'rangeDETCurve\': Xmax ($xM) <= Xmin ($xm)")
+    if ($xM <= $xm);
+  MMisc::error_quit("Problem with \'rangeDETCurve\': Ymax ($yM) <= Ymin ($ym)")
+    if ($yM <= $ym);
+  @dc_range = ($xm, $xM, $ym, $yM);
+}
+   
 
 MMisc::error_quit("\'pruneEvents\' is only usable if \'writexml\' is selected")
   if (($autolt) && ( ! defined $writexml));
@@ -506,12 +529,12 @@ foreach my $event (@all_events) {
 if ($alc == 0) {
   print "  ** Skipped **\n";
 } else {
+  my ($xm, $xM, $ym, $yM)= @dc_range;
   MMisc::writeTo
     ($outputRootFile, ".scores.txt", 1, 0, 
      $detSet->renderAsTxt
      ($outputRootFile . ".det", $doDC, 1, 
-      { (xScale => "log", Ymin => "0.00001", Ymax => "90",
-         Xmin => "0.00001", Xmax => "100", 
+      { (xScale => "log", Xmin => $xm, Xmax => $xM, Ymin => $ym, Ymax => $yM,
          gnuplotPROG => $gnuplotPROG,
          createDETfiles => ($nodetfiles ? 0: 1),
          BuildPNG => ($noPNG ? 0 : 1))
@@ -1531,10 +1554,12 @@ sub set_usage {
   my $ecf_xsdf = join(" ", @ecf_xsdfilesl);
   my $xtend_modes_txt = join(" ", @xtend_modes);
   my $wmd = join(" ", @ok_md);
+  my $txt_dc_range = "Xmin: " . $dc_range[0] . " / Xmax: " . $dc_range[1] 
+    . " / Ymin: " . $dc_range[2] . " / Ymax: " . $dc_range[3];
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--WriteMemDump [mode]] [--pruneEvents] [--XtraMappedObservations mode]] [--Duration seconds] [--ecf ecffile [--BypassECFFilesCheck]] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps [sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]] | --AlignmentCSV file.csv[,file.csv[,...]] [--bypassCSVHeader]]
+Usage: $0 [--help | --man | --version] [--xmllint location] [--TrecVid08xsd location] [--showAT] [--allAT] [--observationCont] [--LimittoSYSEvents | --limitto event1[,event2[...]]] [--writexml [dir] [--WriteMemDump [mode]] [--pruneEvents] [--XtraMappedObservations mode]] [--Duration seconds] [--ecf ecffile [--BypassECFFilesCheck]] [--MissCost value] [--CostFA value] [--Rtarget value] [--computeDETCurve [--titleOfSys title] [--ZipPROG gzip_fullpath] [--OutputFileRoot filebase] [--GnuplotPROG gnuplot_fullpath [--rangeDETCurve Xmin:Xmax:Ymin:Ymax] | --NoDetFiles --noPNG]] [--Ed value] [--Et value] --deltat deltat --fps fps [sys_file.xml [sys_file.xml [...]] --gtf ref_file.xml [ref_file.xml [...]] | --AlignmentCSV file.csv[,file.csv[,...]] [--bypassCSVHeader]]
 
 Will Score the XML file(s) provided (System vs Reference)
 
@@ -1564,6 +1589,7 @@ Will Score the XML file(s) provided (System vs Reference)
   --ZipPROG       Specify the full path name to gzip (Default is to have 'gzip' in your path)
   --OutputFileRoot   Specify the file base of most output files generated (default is to print)
   --GnuplotPROG   Specify the full path name to gnuplot (Default is to have 'gnuplot' in your path)
+  --rangeDETCurve  Specify the gnuplot range (default: $txt_dc_range)
   --NoDetFiles    Do not write any \'.det\' files (required for gnuplot)
   --noPNG         Do not create PNGs if a DET Curve is computed 
   --Et / Ed       Change the default values for Et / Ed (Default: $E_t / $E_d)
