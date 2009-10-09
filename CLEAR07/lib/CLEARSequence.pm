@@ -1131,12 +1131,17 @@ sub __get_obj_info {
 
   my $id = $obj->getId();
   my $ob = $obj->getOBox();
-  my ($x, $y, $w, $h, $o) = 
-    ( $ob->getX(), $ob->getY(), $ob->getWidth(), $ob->getHeight(),
-      $ob->getOrientation() );
+  my ($x, $y, $w, $h, $o, $sptxt) = (0, 0, 0, 0, 0, "");
+  if (defined $ob) {
+    ($x, $y, $w, $h, $o) = 
+      ( $ob->getX(), $ob->getY(), $ob->getWidth(), $ob->getHeight(),
+        $ob->getOrientation() );
+  } else {
+    $sptxt = " {Warning: No obox defined in object}";
+  }
   my $dc = ($obj->getDontCare() == 1) ? "DCO" : "";
 
-  return($id, $x, $y, $w, $h, $o, $dc);
+  return($id, $x, $y, $w, $h, $o, $dc, $sptxt);
 }
  
 ##### 
@@ -1196,8 +1201,8 @@ sub _MOTA_decomposer {
   $$routstr .= "## Number of REF Objects: $NG\n";
   foreach my $key (sort keys %$gtObjList) {
     my $obj = $$gtObjList{$key};
-    my ($id, $x, $y, $w, $h, $o, $dc) = &__get_obj_info($obj);
-    $$routstr .= "++ REF $id [x=$x y=$y w=$w h=$h o=$o] $dc\n";
+    my ($id, $x, $y, $w, $h, $o, $dc, $spstr) = &__get_obj_info($obj);
+    $$routstr .= "++ REF $id [x=$x y=$y w=$w h=$h o=$o] $dc$spstr\n";
     $gtIDs{$id}++ if ($dc eq "");
   }
 
@@ -1212,8 +1217,8 @@ sub _MOTA_decomposer {
   if ($NS > 0) {
     foreach my $key (sort keys %$soObjList) {
       my $obj = $$soObjList{$key};
-      my ($id, $x, $y, $w, $h, $o, $dc) = &__get_obj_info($obj);
-      $$routstr .= "++ SYS $id [x=$x y=$y w=$w h=$h o=$o] $dc\n";
+      my ($id, $x, $y, $w, $h, $o, $dc, $spstr) = &__get_obj_info($obj);
+      $$routstr .= "++ SYS $id [x=$x y=$y w=$w h=$h o=$o] $dc$spstr\n";
       $soIDs{$id}++ if ($dc eq "");
     }
   }
