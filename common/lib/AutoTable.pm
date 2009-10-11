@@ -23,7 +23,7 @@ use strict;
 
 use MErrorH;
 use PropList;
-#use CSVHelper;
+use CSVHelper;
 
 use Data::Dumper;
 
@@ -34,6 +34,8 @@ my $key_SortRowKeyTxt = "SortRowKeyTxt";
 my $key_SortRowKeyCsv = "SortRowKeyCsv";
 my $key_SortColKeyTxt = "SortColKeyTxt";
 my $key_SortColKeyCsv = "SortColKeyCsv";
+my $key_KeepColumnsInOutput = "KeepColumnsInOutput";
+my $key_KeepRowsInOutput = "KeepRowsInOutput";
 
 sub new {
   my ($class) = shift @_;
@@ -70,6 +72,8 @@ sub new {
   $self->{Properties}->addProp($key_SortRowKeyCsv, "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->{Properties}->addProp($key_SortColKeyTxt, "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->{Properties}->addProp($key_SortColKeyCsv, "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_KeepColumnsInOutput, "", ());
+  $self->{Properties}->addProp($key_KeepRowsInOutput, "", ());
   $self->_set_errormsg($self->{Properties}->get_errormsg());
 
   return($self);
@@ -137,7 +141,15 @@ sub unitTest {
 #      $sg->dump();
       print($sg->renderTxtTable(2));
   }
+  
+  $sg->setProperties({ $key_KeepColumnsInOutput => ".*PartA.*|PartB.*col4" });
+  print($sg->renderTxtTable(2));
+  
+  $sg->setProperties({ $key_KeepRowsInOutput => ".*PartZ.*" });
+  print($sg->renderTxtTable(2));
 
+  print($sg->renderCSV(2));
+     
   MMisc::ok_quit(" OK");
 
 }
@@ -205,7 +217,8 @@ sub renderTxtTable(){
     }
     #    print "ColIDs ".join(" ",@colIDs)."\n";
 #    print join(" ",@colIDs)."\n";
-    my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, "Alpha"); #$rowSort);
+    my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, "Alpha",
+                                            $self->{Properties}->getValue($key_KeepRowsInOutput));
 #    print join(" ",@rowIDs)."\n";
     my @lastRowLabel = ();
     foreach my $rowIDStr (@rowIDs) {
@@ -251,16 +264,18 @@ sub renderTxtTable(){
 }
 
 sub _buildLabelHeir(){
-    my ($self, $colVrow, $gap) = @_;
+  my ($self, $colVrow, $gap) = @_;
 
-    my ($labHT, @IDs, $levels);
-    if ($colVrow eq "col") {
-	$labHT = $self->{"colLabOrder"};
-	@IDs = $self->_getOrderedLabelIDs($labHT, $self->{Properties}->getValue($key_SortColKeyTxt));
-    } else {
-	$labHT = $self->{"rowLabOrder"};
-	@IDs = $self->_getOrderedLabelIDs($labHT, $self->{Properties}->getValue($key_SortRowKeyTxt));
-    }
+  my ($labHT, @IDs);
+  if ($colVrow eq "col") {
+    $labHT = $self->{"colLabOrder"};
+    @IDs = $self->_getOrderedLabelIDs($labHT, $self->{Properties}->getValue($key_SortColKeyTxt),  
+                                      $self->{Properties}->getValue($key_KeepColumnsInOutput));
+  } else {
+    $labHT = $self->{"rowLabOrder"};
+    @IDs = $self->_getOrderedLabelIDs($labHT, $self->{Properties}->getValue($key_SortRowKeyTxt), 
+                                      $self->{Properties}->getValue($key_KeepRowsInOutput));
+  }
 
     my $levels = scalar( @{ $labHT->{SubID}{$IDs[0]}{labels} } );
     foreach my $id(@IDs){
@@ -453,7 +468,7 @@ sub _getColLabelWidth(){
 }
 
 sub _getOrderedLabelIDs(){
-  my ($self, $ht, $order) = @_;
+  my ($self, $ht, $order, $IDsToKeep) = @_;
   my @ids = ();
             
   my @sortedKeys = ();
@@ -467,16 +482,34 @@ sub _getOrderedLabelIDs(){
     MMisc::error_quit("Internal Error AutoTable: Sort order '$order' not defined");
   }  
 
+  my @keepIDs = ();
+  my $filterIDs = 0;
+  if (defined($IDsToKeep) && $IDsToKeep ne ""){
+    $filterIDs = 1;
+    @keepIDs = split(/\|/, $IDsToKeep);
+  }
+#  print "Checking\n";
   foreach my $sid (@sortedKeys) {
     if ($ht->{SubID}->{$sid}->{SubIDCount} > 0) {
-      foreach my $labelID ($self->_getOrderedLabelIDs($ht->{SubID}->{$sid}), $order) {
+      foreach my $labelID ($self->_getOrderedLabelIDs($ht->{SubID}->{$sid}), $order,  $IDsToKeep) {
         push @ids, "$sid|$labelID";
       }
+      die;
     } else {
-      push @ids, $sid;
+      if ($filterIDs == 0){
+        push @ids, $sid
+      } else {
+        my $keep = 0;
+        foreach my $exp(@keepIDs){
+          $keep = 1 if (grep(m%^$exp$%, $sid));
+#          print "Check $exp $sid $keep\n";
+        }
+        push @ids, $sid if ($keep);
+      }
     }
   }
-
+#  print join (" ", @ids)."\n";
+  MMisc::error_quit("No IDs in the output") if (@ids < 1);
   @ids;
 }
 
@@ -625,8 +658,8 @@ sub renderCSV {
     $self->_set_errormsg("Unable to to return get the $key_SortRowKeyCsv property.  Message is ".$self->{Properties}->get_errormsg());
     return(undef);
   }
-  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort);
-  my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded");
+  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort, $self->{Properties}->getValue($key_KeepRowsInOutput));
+  my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded", $self->{Properties}->getValue($key_KeepColumnsInOutput));
 
   my $csvh = new CSVHelper();
   return($self->_set_error_and_return("Problem creating CSV handler", 0))
@@ -658,6 +691,37 @@ sub renderCSV {
   }
     
   return($out);
+}
+
+################## Access functions #########################################
+
+sub getData{
+  my ($self, $rowid, $colid) = @_;
+    
+  if (defined($self->{data}{$rowid."-".$colid})) {
+    return $self->{data}{$rowid."-".$colid};
+  }
+  return("oiops");    
+}
+
+sub getColIDs{
+  my ($self, $order) = @_;
+  return $self->_getOrderedLabelIDs($self->{"colLabOrder"}, $order, $self->{Properties}->getValue($key_KeepColumnsInOutput));
+}
+
+sub getRowIDs{
+  my ($self, $order) = @_;
+  return $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $order, $self->{Properties}->getValue($key_KeepRowsInOutput));
+}
+
+sub hasColID{
+  my ($self, $id) = @_;
+  return exists($self->{"colLabOrder"}->{SubID}{$id});
+}
+
+sub hasRowID{
+  my ($self, $id) = @_;
+  return exists($self->{"rowLabOrder"}->{SubID}{$id});
 }
 
 ############################################################
