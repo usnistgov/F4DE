@@ -68,9 +68,8 @@ sub parseVideoInformation
 		
 		for(my $i=0; $i<scalar(@a); $i++)
 		{
-			$self->{container} = $extension if($a[$i] eq "$extension");
+			$self->{container} = $extension if($a[$i] eq $extension);
 		}
-
 	}
 	else
 	{
