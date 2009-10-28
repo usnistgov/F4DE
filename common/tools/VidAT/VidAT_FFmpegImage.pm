@@ -58,18 +58,23 @@ sub parseVideoInformation
 
 	# Get Container
 	my $filename = basename($self->{inFile});
-	$self->{container} = $1 if($filename =~ /^.*?\.([^\.]*)$/);
-	
-	if(!defined($self->{container}))
+	my $extension = "";
+	$extension = $1 if($filename =~ /^.*?\.([^\.]*)$/);
+
+	if($ffmpegInfo =~ /Input \#\d, (.+?), /)
 	{
-		if($ffmpegInfo =~ /Input \#\d, (.+?), /)
+		my @a = split(/,/, $1);
+		$self->{container} = $a[0];
+		
+		for(my $i=0; $i<scalar(@a); $i++)
 		{
-			$self->{container} = $1;
+			$self->{container} = $extension if($a[$i] eq "$extension");
 		}
-		else
-		{
-			$self->{container} = "avi";
-		}
+
+	}
+	else
+	{
+		$self->{container} = "avi";
 	}
 	
 	# Get Codec
