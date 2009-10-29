@@ -1673,6 +1673,9 @@ sub _parse_object_section {
     if (! MMisc::is_blank($text));
 
   # Confirm they are the ones we want
+  MMisc::error_quit("Internal -- Can not find requested key: $object_name / $isgtf")
+      if (! MMisc::safe_exists(\%hash_objects_attributes_types, 
+                               uc($object_name), $isgtf));
   my %expected_hash = %{$hash_objects_attributes_types{uc($object_name)}{$isgtf}};
   @expected = keys %expected_hash;
   ($in, $out) = MMisc::compare_arrays(\@expected, keys %attr);
