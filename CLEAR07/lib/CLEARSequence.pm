@@ -1131,13 +1131,16 @@ sub __get_obj_info {
 
   my $id = $obj->getId();
   my $ob = $obj->getOBox();
+  my $pt = $obj->getPoint();
   my ($x, $y, $w, $h, $o, $sptxt) = (0, 0, 0, 0, 0, "");
   if (defined $ob) {
     ($x, $y, $w, $h, $o) = 
       ( $ob->getX(), $ob->getY(), $ob->getWidth(), $ob->getHeight(),
         $ob->getOrientation() );
+  } elsif (defined $pt) {
+    ($x, $y) = ( $pt->getX(), $pt->getY() );
   } else {
-    $sptxt = " {Warning: No obox defined in object}";
+    $sptxt = "Warning: No obox or point defined";
   }
   my $dc = ($obj->getDontCare() == 1) ? "DCO" : "";
 
@@ -1186,6 +1189,29 @@ sub Compute_printable_MOTA {
 
 #####
 
+sub _sprintf_object_values {
+  my ($id, $x, $y, $w, $h, $o, $dc, $spstr) = @_;
+
+  my $str = "$id";
+
+  if (! MMisc::is_blank($spstr)) {
+    $str .= " {$spstr} $dc";
+    return($str);
+  }
+
+  my $type = (($w == 0) && ($h == 0) && ($o == 0)) ? "point" : "obox";
+  $str .= " $type";
+  $str .= "[x=$x y=$y";
+  if ($type eq "obox") {
+    $str .= " w=$w h=$h o=$o";
+  }
+  $str .= "] $dc";
+
+  return($str);
+}
+
+#####
+
 sub _MOTA_decomposer {
   my ($self, $fnum, $gtFrame, $soFrame,
      $rmdIDs, $rfaIDs, $rspIDs, $rmrIDs,
@@ -1202,7 +1228,8 @@ sub _MOTA_decomposer {
   foreach my $key (sort keys %$gtObjList) {
     my $obj = $$gtObjList{$key};
     my ($id, $x, $y, $w, $h, $o, $dc, $spstr) = &__get_obj_info($obj);
-    $$routstr .= "++ REF $id [x=$x y=$y w=$w h=$h o=$o] $dc$spstr\n";
+    $$routstr .= "++ REF "
+      . &_sprintf_object_values($id, $x, $y, $w, $h, $o, $dc, $spstr) . "\n";
     $gtIDs{$id}++ if ($dc eq "");
   }
 
@@ -1218,7 +1245,8 @@ sub _MOTA_decomposer {
     foreach my $key (sort keys %$soObjList) {
       my $obj = $$soObjList{$key};
       my ($id, $x, $y, $w, $h, $o, $dc, $spstr) = &__get_obj_info($obj);
-      $$routstr .= "++ SYS $id [x=$x y=$y w=$w h=$h o=$o] $dc$spstr\n";
+      $$routstr .= "++ SYS "
+        . &_sprintf_object_values($id, $x, $y, $w, $h, $o, $dc, $spstr) . "\n";
       $soIDs{$id}++ if ($dc eq "");
     }
   }
