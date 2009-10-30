@@ -108,6 +108,9 @@ sub parseVideoInformation
 	{
 		$self->{fps} = 25;
 	}
+	
+	print "$self->{aspect}\n";
+	die;
 }
 
 sub extractJpeg

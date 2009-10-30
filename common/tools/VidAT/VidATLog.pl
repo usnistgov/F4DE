@@ -57,6 +57,8 @@ my $x = new trackinglog($logFile);
 
 $x->addRefPolygon(4);
 $x->addSysPolygon(4);
+$x->addRefPoint(4);
+$x->addSysPoint(4);
 $x->addRefLabel();
 $x->addSysLabel();
 $x->addRefSnailTrail(3);

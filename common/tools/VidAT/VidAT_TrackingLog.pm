@@ -58,7 +58,8 @@ sub new
 	
 	$self->{videoClass} = new VideoEdit();
 	$self->loadFile();
-	$self->process();
+	$self->process("polygon") if(exists($self->{polygon}));
+	$self->process("point") if(exists($self->{point}));
 	
 	return $self;
 }
@@ -89,7 +90,7 @@ sub loadFile
 			next if( ($frame < $self->{restrictMin}) || ($frame > $self->{restrictMax}) );
 		}
 		
-		if($line =~ /REF (\d+) \[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/)
+		if(($line =~ /REF (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/) || ($line =~ /REF (\d+) \[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/))
 		{
 			my $id = int($1);
 			my @tl = ($2, $3);
@@ -113,7 +114,7 @@ sub loadFile
 			$self->{appears}{ref}{$id}{$frame}{REAL} = 1;
 		}
 		
-		if($line =~ /SYS (\d+) \[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/)
+		if(($line =~ /SYS (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/) || ($line =~ /SYS (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/))
 		{
 			my $id = int($1);
 			my @tl = ($2, $3);
@@ -133,6 +134,36 @@ sub loadFile
 			$self->{polygon}{sys}{$id}{$frame}{DCO} = $DCO;
 			$self->{polygon}{sys}{$id}{$frame}{MAPPED} = 0;
 			push( @{ $self->{polygon}{sys}{$id}{$frame}{COORD} }, @tl, @tr, @br, @bl);
+			
+			$self->{appears}{sys}{$id}{$frame}{REAL} = 1;
+		}
+		
+		if(($line =~ /REF (\d+) point\[x=(\d+) y=(\d+)\]/) || ($line =~ /REF (\d+) \[x=(\d+) y=(\d+)\]/))
+		{
+			my $id = int($1);
+			my @pt = ($2, $3);
+			
+			my $DCO = 0;
+			$DCO = 1 if($line =~ /DCO/);
+			
+			$self->{point}{ref}{$id}{$frame}{DCO} = $DCO;
+			$self->{point}{ref}{$id}{$frame}{MAPPED} = 0;
+			push( @{ $self->{point}{ref}{$id}{$frame}{COORD} }, @pt);
+			
+			$self->{appears}{ref}{$id}{$frame}{REAL} = 1;
+		}
+		
+		if(($line =~ /SYS (\d+) point\[x=(\d+) y=(\d+)\]/) || ($line =~ /SYS (\d+) \[x=(\d+) y=(\d+)\]/))
+		{
+			my $id = int($1);
+			my @pt = ($2, $3);
+			
+			my $DCO = 0;
+			$DCO = 1 if($line =~ /DCO/);
+			
+			$self->{point}{sys}{$id}{$frame}{DCO} = $DCO;
+			$self->{point}{sys}{$id}{$frame}{MAPPED} = 0;
+			push( @{ $self->{point}{sys}{$id}{$frame}{COORD} }, @pt);
 			
 			$self->{appears}{sys}{$id}{$frame}{REAL} = 1;
 		}
@@ -200,61 +231,67 @@ sub buildContiniousFrames
 
 sub process
 {
-	my ($self) = @_;
+	my ($self, $object) = @_;
 	
-	foreach my $refId (keys %{ $self->{polygon}{ref} })
+	if(exists($self->{$object}{ref}))
 	{
-		$self->processTypeId("ref", $refId);
+		foreach my $refId (keys %{ $self->{$object}{ref} })
+		{
+			$self->processTypeId($object, "ref", $refId);
+		}
 	}
-	
-	foreach my $sysId (keys %{ $self->{polygon}{sys} })
-	{
-		$self->processTypeId("sys", $sysId);
-	}	
+		
+	if(exists($self->{$object}{sys}))
+	{	
+		foreach my $sysId (keys %{ $self->{$object}{sys} })
+		{
+			$self->processTypeId($object, "sys", $sysId);
+		}
+	}
 }
 
 sub processTypeId
 {
-	my ($self, $type, $id) = @_;
+	my ($self, $object, $type, $id) = @_;
 	
-	my @listRealFrames = sort {$a <=> $b} keys %{ $self->{polygon}{$type}{$id} };
+	# extrapolate
+	my @listRealFrames = sort {$a <=> $b} keys %{ $self->{$object}{$type}{$id} };
 	my $minFrame = $listRealFrames[0];
 	my $maxFrame = $listRealFrames[scalar(@listRealFrames)-1];
 	
-	# extrapolate polygon
 	for(my $i=0; $i<scalar(@listRealFrames)-1; $i++)
 	{
 		my $currFrame = $listRealFrames[$i];
-		my $dco = $self->{polygon}{$type}{$id}{$currFrame}{DCO};
-		my $mapped = $self->{polygon}{$type}{$id}{$currFrame}{MAPPED};
+		my $dco = $self->{$object}{$type}{$id}{$currFrame}{DCO};
+		my $mapped = $self->{$object}{$type}{$id}{$currFrame}{MAPPED};
 		my $mappedId = $self->{mapped}{$type}{$id}{$currFrame};
-		my @currCoord = @{ $self->{polygon}{$type}{$id}{$currFrame}{COORD} };
+		my @currCoord = @{ $self->{$object}{$type}{$id}{$currFrame}{COORD} };
 		
 		if(exists($self->{appears}{$type}{$id}{$currFrame+1}))
 		{
 			# a continious frame exists
-			# extrapolate the polygon
+			# extrapolate the polygon/point
 			my $nextframe = $listRealFrames[$i+1];
-			my @nextCoord = @{ $self->{polygon}{$type}{$id}{$nextframe}{COORD} };
+			my @nextCoord = @{ $self->{$object}{$type}{$id}{$nextframe}{COORD} };
 			my $length = $nextframe - $currFrame;
 			
 			for(my $f=$currFrame+1; $f<=$nextframe-1; $f++)
 			{
 				my $t = ($f-$currFrame)/$length;
-				$self->{polygon}{$type}{$id}{$f}{DCO} = $dco;
-				$self->{polygon}{$type}{$id}{$f}{MAPPED} = $mapped;
+				$self->{$object}{$type}{$id}{$f}{DCO} = $dco;
+				$self->{$object}{$type}{$id}{$f}{MAPPED} = $mapped;
 				$self->{mapped}{$type}{$id}{$f} = $mappedId if($mapped);
 				
 				for(my $c=0; $c<scalar(@currCoord); $c++)
 				{
-					push( @{ $self->{polygon}{$type}{$id}{$f}{COORD} }, int( (1-$t)*$currCoord[$c] + $t*$nextCoord[$c] ) );
+					push( @{ $self->{$object}{$type}{$id}{$f}{COORD} }, int( (1-$t)*$currCoord[$c] + $t*$nextCoord[$c] ) );
 				}
 			}
 		}
 	}
 	
-	# label
-	my @listAppearsFrames = sort {$a <=> $b} keys %{ $self->{polygon}{$type}{$id} };
+	# label Polygon
+	my @listAppearsFrames = sort {$a <=> $b} keys %{ $self->{$object}{$type}{$id} };
 	
 	for(my $i=0; $i<scalar(@listAppearsFrames); $i++)
 	{
@@ -273,7 +310,7 @@ sub processTypeId
 		
 		$label .= "$id";
 		
-		if($self->{polygon}{$type}{$id}{$frm}{MAPPED})
+		if($self->{$object}{$type}{$id}{$frm}{MAPPED})
 		{
 			$label .= " > ";
 			
@@ -296,17 +333,24 @@ sub processTypeId
 	}
 	
 	# Snail Trail
-	
 	my $firstFrame = $listAppearsFrames[0];
 	my $lastFrame = $listAppearsFrames[scalar(@listAppearsFrames)-1];
 
 	my $prevFrame = $listAppearsFrames[0];
-	my $prevDco = $self->{polygon}{$type}{$id}{$prevFrame}{DCO};
-	my $prevMapped = $self->{polygon}{$type}{$id}{$prevFrame}{MAPPED};
+	my $prevDco = $self->{$object}{$type}{$id}{$prevFrame}{DCO};
+	my $prevMapped = $self->{$object}{$type}{$id}{$prevFrame}{MAPPED};
 	
-	push( @{ $self->{snail}{$type}{$id}{$prevFrame}{$prevDco}{$prevMapped}{0}{COORD} }, 
-	      int( ($self->{polygon}{$type}{$id}{$prevFrame}{COORD}[4]+$self->{polygon}{$type}{$id}{$prevFrame}{COORD}[6])/2 ),
-	      int( ($self->{polygon}{$type}{$id}{$prevFrame}{COORD}[5]+$self->{polygon}{$type}{$id}{$prevFrame}{COORD}[7])/2 ) );
+	if($object eq "polygon")
+	{	
+		push( @{ $self->{snail}{$type}{$id}{$prevFrame}{$prevDco}{$prevMapped}{0}{COORD} }, 
+			  int( ($self->{$object}{$type}{$id}{$prevFrame}{COORD}[4]+$self->{$object}{$type}{$id}{$prevFrame}{COORD}[6])/2 ),
+			  int( ($self->{$object}{$type}{$id}{$prevFrame}{COORD}[5]+$self->{$object}{$type}{$id}{$prevFrame}{COORD}[7])/2 ) );
+	}
+	elsif($object eq "point")
+	{
+		push( @{ $self->{snail}{$type}{$id}{$prevFrame}{$prevDco}{$prevMapped}{0}{COORD} }, 
+			  $self->{$object}{$type}{$id}{$prevFrame}{COORD}[0]+$self->{$object}{$type}{$id}{$prevFrame}{COORD}[1]);
+	}
 	
 #	for(my $i=1; $i<scalar(@listAppearsFrames); $i++)
 	for(my $frm=$firstFrame+1; $frm<=$lastFrame; $frm++)
@@ -326,11 +370,11 @@ sub processTypeId
 			}
 		}
 			
-		if(exists($self->{polygon}{$type}{$id}{$frm}))
+		if(exists($self->{$object}{$type}{$id}{$frm}))
 		{
-			my @currCoord = @{ $self->{polygon}{$type}{$id}{$frm}{COORD} };
-			my $currDco = $self->{polygon}{$type}{$id}{$frm}{DCO};
-			my $currMapped = $self->{polygon}{$type}{$id}{$frm}{MAPPED};
+			my @currCoord = @{ $self->{$object}{$type}{$id}{$frm}{COORD} };
+			my $currDco = $self->{$object}{$type}{$id}{$frm}{DCO};
+			my $currMapped = $self->{$object}{$type}{$id}{$frm}{MAPPED};
 			
 			my $currIndex = 0;
 			
@@ -342,23 +386,44 @@ sub processTypeId
 			
 			if( ($currDco == $prevDco) && ($currMapped == $prevMapped) && ($frm-$prevFrame == 1) )
 			{
-				my @prevCoord = @{ $self->{polygon}{$type}{$id}{$prevFrame}{COORD} };
+				my @prevCoord = @{ $self->{$object}{$type}{$id}{$prevFrame}{COORD} };
 				
-				if( ($currCoord[4] != $prevCoord[4]) ||
-					($currCoord[5] != $prevCoord[5]) ||
-					($currCoord[6] != $prevCoord[6]) ||
-					($currCoord[7] != $prevCoord[7]) )
+				if($object eq "polygon")
 				{
-					push( @{ $self->{snail}{$type}{$id}{$frm}{$currDco}{$currMapped}{$currIndex}{COORD} }, 
-						  int( ($currCoord[4]+$currCoord[6])/2 ), 
-						  int( ($currCoord[5]+$currCoord[7])/2 ) );
+					if( ($currCoord[4] != $prevCoord[4]) ||
+						($currCoord[5] != $prevCoord[5]) ||
+						($currCoord[6] != $prevCoord[6]) ||
+						($currCoord[7] != $prevCoord[7]) )
+					{
+						push( @{ $self->{snail}{$type}{$id}{$frm}{$currDco}{$currMapped}{$currIndex}{COORD} }, 
+							  int( ($currCoord[4]+$currCoord[6])/2 ), 
+							  int( ($currCoord[5]+$currCoord[7])/2 ) );
+					}
+				}
+				elsif($object eq "point")
+				{
+					if( ($currCoord[0] != $prevCoord[0]) ||
+						($currCoord[1] != $prevCoord[1]) )
+					{
+						push( @{ $self->{snail}{$type}{$id}{$frm}{$currDco}{$currMapped}{$currIndex}{COORD} }, 
+							  $currCoord[0], $currCoord[1]);
+					}
 				}
 			}
 			else
 			{
-				push( @{ $self->{snail}{$type}{$id}{$frm}{$currDco}{$currMapped}{$currIndex+1}{COORD} }, 
-					  int( ($currCoord[4]+$currCoord[6])/2 ), 
-					  int( ($currCoord[5]+$currCoord[7])/2 ) );
+				if($object eq "polygon")
+				{
+					push( @{ $self->{snail}{$type}{$id}{$frm}{$currDco}{$currMapped}{$currIndex+1}{COORD} }, 
+						  int( ($currCoord[4]+$currCoord[6])/2 ), 
+						  int( ($currCoord[5]+$currCoord[7])/2 ) );
+				}
+				elsif($object eq "point")
+				{
+					push( @{ $self->{snail}{$type}{$id}{$frm}{$currDco}{$currMapped}{$currIndex+1}{COORD} }, 
+						  $currCoord[0], $currCoord[1]);
+
+				}
 			}
 			
 			$prevDco = $currDco;
@@ -414,6 +479,48 @@ sub addRefPolygon
 	}
 }
 
+sub addRefPoint
+{
+	my ($self, $size) = @_;
+	
+	return if(!exists($self->{point}));
+	return if(!exists($self->{point}{ref}));
+	
+	foreach my $refId (keys %{ $self->{point}{ref} })
+	{	
+		foreach my $frm (keys %{ $self->{point}{ref}{$refId} })
+		{
+			my @coord;
+			push(@coord, @{ $self->{point}{ref}{$refId}{$frm}{COORD} });
+			my $dco = $self->{point}{ref}{$refId}{$frm}{DCO};
+			my $mapped = $self->{point}{ref}{$refId}{$frm}{MAPPED};
+			
+			if($dco == 1)
+			{
+				my @border;
+				push(@border, @{ $self->{color_dcob} });
+				
+				$self->{videoClass}->addPoint($frm, 
+							   $frm, 
+							   \@coord, 
+							   $size,
+							   \@border);
+			}
+			else
+			{
+				my @border;
+				push(@border, ($mapped) ? @{ $self->{color_mref} } : @{ $self->{color_uref} });
+			
+				$self->{videoClass}->addPoint($frm, 
+							   $frm, 
+							   \@coord, 
+							   $size,
+							   \@border);		   
+			}
+		}
+	}
+}
+
 sub addSysPolygon
 {
 	my ($self, $size) = @_;
@@ -455,6 +562,48 @@ sub addSysPolygon
 							   \@fill, 
 							   \@border,
 							   1);			   
+			}
+		}
+	}
+}
+
+sub addSysPoint
+{
+	my ($self, $size) = @_;
+	
+	return if(!exists($self->{point}));
+	return if(!exists($self->{point}{sys}));
+	
+	foreach my $sysId (keys %{ $self->{point}{sys} })
+	{	
+		foreach my $frm (keys %{ $self->{point}{sys}{$sysId} })
+		{
+			my @coord;
+			push(@coord, @{ $self->{point}{sys}{$sysId}{$frm}{COORD} });
+			my $dco = $self->{point}{sys}{$sysId}{$frm}{DCO};
+			my $mapped = $self->{point}{sys}{$sysId}{$frm}{MAPPED};
+			
+			if($dco == 1)
+			{
+				my @border;
+				push(@border, @{ $self->{color_dcob} });
+				
+				$self->{videoClass}->addPoint($frm, 
+							   $frm, 
+							   \@coord, 
+							   $size,
+							   \@border);
+			}
+			else
+			{
+				my @border;
+				push(@border, ($mapped) ? @{ $self->{color_msys} } : @{ $self->{color_usys} });
+			
+				$self->{videoClass}->addPoint($frm, 
+							   $frm, 
+							   \@coord, 
+							   $size,
+							   \@border);		   
 			}
 		}
 	}
