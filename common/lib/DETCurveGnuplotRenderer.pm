@@ -345,7 +345,7 @@ sub renderUnitTest{
                    "DrawIsometriclines" => 1,
                    "noSerialize" => 1,
                    "Isometriclines" => [ (0.7, 0.5, 0.3, 0, -5) ],
-                   "DETLineAttr" => { ("DET1" => { label => "New DET1", lineWidth => 9, pointSize => 2, pointTypeSet => "square", color => "rgb \"#0000ff\"" }),
+                   "DETLineAttr" => { ("Name 1" => { label => "New DET1", lineWidth => 9, pointSize => 2, pointTypeSet => "square", color => "rgb \"#0000ff\"" }),
                                     },
                    "PointSet" => [ { MMiss => .4,  MFA => .05, pointSize => 1,  pointType => 10, color => "rgb \"#ff0000\"", label => "Point1=10", justification => "left"}, 
                                    { MMiss => .4,  MFA => .40, pointSize => 8,  pointType => 8, color => "rgb \"#ff0000\"", label => "Point2=8" }, 
@@ -1068,8 +1068,8 @@ sub writeMultiDetGraph
       
       my $lineTitle = $detset->getDETForID($d)->{LINETITLE};
       if (exists($self->{DETLineAttr})){
-        if (exists($self->{DETLineAttr}{$lineTitle})){
-          my $info = $self->{DETLineAttr}{$lineTitle};
+        if (exists($self->{DETLineAttr}{$detset->getTitleForID($d)})){
+          my $info = $self->{DETLineAttr}{$detset->getTitleForID($d)};
           ### Override the plotting style
           $lineTitle = $info->{label} if (exists($info->{label}));
           $thisPointSize = $info->{pointSize} if (exists($info->{pointSize}));
@@ -1178,7 +1178,6 @@ sub writeGNUGraph{
     
   ### Serialize the file for later usage
   $det->serialize("$fileRoot.srl") if ($self->{noSerialize} == 1);
-
   
   ### Set labels for off-graph points
   my @offAxisLabels = ();                                                                                                     
