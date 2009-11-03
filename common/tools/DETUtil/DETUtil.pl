@@ -87,6 +87,7 @@ my $title = undef;
 my $scale = undef;
 my $lineTitleModification = "";
 my $keyLoc = undef;
+my $keySpacing = undef;
 my @KeyLocDefs = ( "left", "right", "center", "top", "bottom", "outside", "below", "((left|right|center)\\s+(top|bottom|center))" );
 my $DetCompare = 0;
 my $DrawIsoratiolines = 0;
@@ -212,6 +213,9 @@ $options{gnuplotPROG} = $gnuplotPROG;
 $options{createDETfiles} = 1;
 
 foreach my $directive(@plotControls){
+  my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
+  my $intRegex = '\d*';
+
   #print "Processing directive $directive\n";
   if ($directive =~ /ColorScheme=gr[ae]y/){
     $options{ColorScheme} = "grey";
@@ -219,10 +223,10 @@ foreach my $directive(@plotControls){
     $options{PointSize} = $1;
   } elsif ($directive =~ /PointSetAreaDefinition=(Area|Radius)/){
     $options{PointSetAreaDefinition} = $1;
+  } elsif ($directive =~ /KeySpacing=($numRegex)/){
+    $options{KeySpacing} = $1;
   } elsif ($directive =~ /ExtraPoint=(.*)$/){
     my $pointDef = $1;
-    my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
-    my $intRegex = '\d*';
     my $colorRegex = 'rgb "#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
     my $fullExp = "^([^:]*):($numRegex):($numRegex):($intRegex):($intRegex):(($colorRegex)|):(left|right|center|)\$";
     die "Error: Point definition /$pointDef/ does not match the pattern /$fullExp/" 
@@ -306,7 +310,7 @@ foreach my $srlDef ( @ARGV )
 	if (defined($newLabel)){
     ### then we will control the plot style
  	  $lineAttr{"label"} = $newLabel if ($newLabel ne "");
- 	  if (defined ($pointSize) && $pointSize ne ""){
+	  if (defined ($pointSize) && $pointSize ne ""){
  	    die "Error: DET Line Attr control for pointSize [3] /$pointSize/ illegal." if ($pointSize !~ /^($numRegex)$/);
  	    $lineAttr{"pointSize"} = $pointSize;
  	  }
@@ -389,7 +393,7 @@ foreach my $srlDef ( @ARGV )
 		}
 		
 		if (scalar(keys %lineAttr) > 0){
-		  $options{DETLineAttr}{$det->getLineTitle()} = \%lineAttr;
+		  $options{DETLineAttr}{$det->getLineTitle() . "$srl"} = \%lineAttr;
 		}
 		my $rtn = $ds->addDET($det->getLineTitle() . "$srl", $det);
     	die "Error: Unable to add DET to DETSet.\n$rtn\n"	if ($rtn ne "success");
@@ -496,7 +500,7 @@ lineWidth -> A floating point number for the line width.
 
 =head1 OPTIONS
 
-=head2 Required file arguments:
+=head2 Requiredd file arguments:
 
 =over
 
@@ -602,6 +606,8 @@ Sets the X and Y axis scale types for the graph:
 
 The B<plotControl> options provides access to fine control the the DET curve display.  The option, which can be used multiple times, specifies one of the following directives via the following BNF definitions:
 
+/KeySpacing=<FLOAT>/ -> Sets the inter-line spaces in the key to the float.  Default is 0.7
+
 /ColorScheme=grey/  ->  Sets the color scheme to greyscale.
 
 /PointSize=\d+/     -> Overrides to default point size to the specified integer.
@@ -638,6 +644,8 @@ No known bugs.
 =head1 NOTES
 
 The default iso-cost ratio coefficients (-R option) and iso-metric coefficients (-Q option) are defined into the metric.
+
+The default font face can be changed by setting the environment variable GNUPLOT_DEFAULT_GDFONT to a ttf font like /Library/Fonts/Arial.
 
 =head1 AUTHOR
 
