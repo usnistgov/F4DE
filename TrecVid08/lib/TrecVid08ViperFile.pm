@@ -2212,8 +2212,8 @@ sub type_changer_init_randomseed { ## Class function
           (! MMisc::is_float($force_randomDetectionScore)));
   
   MMisc::error_quit("[TrecVid08ViperFile] **Internal Error** in \'type_changer_init_randomseed\': can only use \'0\' (false) or \'1\' (true) as valid entries for forcing the value of the random Detection Decision")
-      if ((! MMisc::is_blank($force_randomDetectionScore)) &&
-          ($force_randomDetectionScore !~ m%^[01]$%));
+      if ((! MMisc::is_blank($force_randomDetectionDecision)) &&
+          ($force_randomDetectionDecision !~ m%^[01]$%));
   
   return(1) if (MMisc::is_blank($seed));
 
