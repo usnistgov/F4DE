@@ -24,6 +24,7 @@ use MetricTestStub;
 use DETCurve;
 use SimpleAutoTable;
 use DETCurveGnuplotRenderer;
+use MMisc;
 
 sub new
   {
@@ -307,7 +308,7 @@ sub _buildAutoTable(){
 }
 
 sub renderAsTxt(){
-  my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions) = @_;
+  my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $csvfn) = @_;
     
   if (@{ $self->{DETList} } == 0) {
     return "Error: No DETs provided to produce a report from";
@@ -344,7 +345,10 @@ sub renderAsTxt(){
       $info .= "Combined DET Plot: $multiInfo->{COMBINED_DET_PNG}\n\n";
     }
   }
-  $info . $at->renderTxtTable(2);
+
+  MMisc::writeTo($csvfn, "", 1, 0, $at->renderCSV()) if (! MMisc::is_blank($csvfn));
+
+  return($info . $at->renderTxtTable(2));
 }
 
 sub renderCSV {
