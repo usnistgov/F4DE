@@ -538,7 +538,9 @@ if ($alc == 0) {
          gnuplotPROG => $gnuplotPROG,
          createDETfiles => ($nodetfiles ? 0: 1),
          BuildPNG => ($noPNG ? 0 : 1))
-      } ) );
+      },
+      "$outputRootFile.scores.csv")
+    );
 }
 
 ## reWrite XML files
