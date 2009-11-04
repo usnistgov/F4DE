@@ -33,7 +33,7 @@ sub new
       { 
        Title => $title,
        DETList => [ () ], ### an array of hashes containing the det curves,  
-       KEYLUT => {}
+       KEYLUT => {},
       };
 
     bless $self;
@@ -141,6 +141,7 @@ sub unitTest(){
   print "OK\n";
 } 
 
+##########
 
 sub addDET(){
   my ($self, $name, $det) = @_;
@@ -153,7 +154,9 @@ sub addDET(){
   #Check that the filesystem-safe name is uniq
   my $fskey = $name;
   $fskey =~ s/[\s\/!\@\#\$\%\^\&\*\(\)\[\]\{\}\'\"\?\:\;\<\>]/_/g;
-  # Loop through the DET list
+  # Limit filename to 20 chars
+  $fskey = substr($fskey, 0, 20);
+ # Loop through the DET list
   my $try = 1;
   my $suffix = "";
   my $done = 0;
@@ -167,7 +170,9 @@ sub addDET(){
       }
     }
   }
+
   $fskey .= $suffix;
+#  print "[$name] => [$fskey]\n";
 
   ### Check to make sure the Metrics are all the same in the DETS
   for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
