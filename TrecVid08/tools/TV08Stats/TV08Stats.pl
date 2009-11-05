@@ -161,6 +161,7 @@ while ($tmp = shift @ARGV) {
   MMisc::error_quit("Unable to set the FPS for the file framespan") if (!$fileStatsDB{$fname}->set_fps($fps));
   my $cam = $fname;
   $cam =~ s/.*(CAM.).*$/$1/;
+  $cam =~ s/.*MCTT[RT]..(..).*$/$1/;
   my $day = $fname;
   $day =~ s/_CAM.*//;
   if (! exists($camDurStatsDB{$cam}{$day})) {
@@ -209,7 +210,8 @@ foreach my $obs (@all_observations) {
 
   my $cam = $fn;
   $cam =~ s/.*(CAM.).*$/$1/;
-  
+  $cam =~ s/.*MCTT[RT]..(..).*$/$1/;
+
   MMisc::error_quit("Problem obtaining Observation information (" . $obs->get_errormsg() . ")")
     if ($obs->error());
   MMisc::error_quit("Problem obtaining Observation's framespan information (" . $fs_fs->get_errormsg() . ")")
@@ -284,6 +286,7 @@ foreach my $ev (sort keys %overallStatsDB) {
     $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->min()),                    "Dur|min",    $ev);
     $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->mean()),                   "Dur|mean",   $ev);
     $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->max()),                    "Dur|max",    $ev);
+    $sat->addData(sprintf("%.2f",$overallStatsDB{$ev}{dur}->standard_deviation()),     "Dur|stddev", $ev);
     $sumStat->add_data($overallStatsDB{$ev}{dur}->get_data());
 }
 if (scalar($sumStat->get_data()) != 0){
@@ -293,6 +296,7 @@ if (scalar($sumStat->get_data()) != 0){
     $sat->addData(sprintf("%.2f",$sumStat->min()),                    "Dur|min",    "All Events");
     $sat->addData(sprintf("%.2f",$sumStat->mean()),                   "Dur|mean",   "All Events");
     $sat->addData(sprintf("%.2f",$sumStat->max()),                    "Dur|max",    "All Events");
+    $sat->addData(sprintf("%.2f",$sumStat->standard_deviation()),     "Dur|stddev", "All Events");
 }
 print $sat->renderTxtTable(2);
 
