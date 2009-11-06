@@ -837,11 +837,11 @@ sub Compute_blocked_DET_points
         $self->AddIsolineInformation(\%blocks, $paramt, $isolinecoef, $estMFa, $estMMiss) if( defined ( $paramt ) );
       }
                 
-      push(@Outputs, [ ( $minScore, $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks, "x" ) ] );
+      push(@Outputs, [ ( $minScore, $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks ) ] );
 
       if ($findMaxComb) {
         if ($TWComb > $self->{BESTCOMB}{COMB}) {
-          $self->{BEoSTCOMB}{DETECTIONSCORE} = $minScore;
+          $self->{BESTCOMB}{DETECTIONSCORE} = $minScore;
           $self->{BESTCOMB}{COMB} = $TWComb;
           $self->{BESTCOMB}{MFA} = $mFa;
           $self->{BESTCOMB}{MMISS} = $mMiss;
