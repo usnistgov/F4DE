@@ -324,6 +324,34 @@ sub renderUnitTest{
   $trial3->addTrial("she", 0.95, "YES", 1);
   $trial3->addTrial("she", 1.0, "YES", 1);
 
+  my $trial4 = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
+  
+  $trial4->addTrial("she", 0.50, "NO", 1);
+  $trial4->addTrial("she", 0.50, "NO", 1);
+  $trial4->addTrial("she", 0.50, "NO", 1);
+  $trial4->addTrial("she", 0.50, "NO", 1);
+  $trial4->addTrial("she", 0.50, "NO", 0);
+  $trial4->addTrial("she", 0.50, "NO", 0);
+  $trial4->addTrial("she", 0.50, "NO", 0);
+  $trial4->addTrial("she", 0.50, "NO", 1);
+  $trial4->addTrial("she", 0.50, "NO", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 0);
+  $trial4->addTrial("she", 0.50, "YES", 0);
+  $trial4->addTrial("she", 0.50, "YES", 0);
+  $trial4->addTrial("she", 0.50, "YES", 0);
+  $trial4->addTrial("she", 0.50, "YES", 0);
+  $trial4->addTrial("she", 0.50, "YES", 0);
+  $trial4->addTrial("she", 0.50, "YES", 0);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 0);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+
   my $det1 = new DETCurve($trial, 
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
                           "DET1", \@isolinecoef, undef);
@@ -331,13 +359,17 @@ sub renderUnitTest{
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
                           "DET2", \@isolinecoef, undef);
   my $det3 = new DETCurve($trial3, 
-                          new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
+                          new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial3),
                           "DET3", \@isolinecoef, undef);
+  my $det4 = new DETCurve($trial4, 
+                          new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial4),
+                          "DET4", \@isolinecoef, undef);
     
   my $ds = new DETCurveSet("title");
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Name 1", $det1));
   die "Error: Failed to add second det" if ("success" ne $ds->addDET("Name 2", $det2));
   die "Error: Failed to add third det"  if ("success" ne $ds->addDET("Name 3", $det3));
+  die "Error: Failed to add third 4th"  if ("success" ne $ds->addDET("Name 4", $det4));
 
   system "rm -rf $dir";
   system "mkdir -p $dir";
