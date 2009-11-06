@@ -80,7 +80,7 @@ sub bigDETUnitTest {
   printf("Running a series of large DET Curves\n");
   my ($doProfile) = 0;
   
- foreach my $size(10000, 100000, 1000000, 3000000, 6000000, 8000000, 10000000, 12000000, 14000000, 16000000, 18000000, 20000000){
+ foreach my $size(10000, 100000, 1000000, 3000000, 6000000, 8000000, 10000000){
 #  foreach my $size(2000000, 5000000, 10000000){
 #  foreach my $size(1000003){
     system "/home/fiscus/Projects/STD/STDEval/tools/ProcGragh/ProcGraph.pl --cumul --Tree --outdir /tmp --filebase BigDet.$size -- ".
@@ -117,7 +117,8 @@ sub oneBigDET
     use DETCurveSet;
     my $ds = new DETCurveSet("title");
     $ds->addDET("Biggy", $emptydet);
-    my %ht = ("createDETfiles", 1, "noSerialize", 1);
+#    my %ht = ("createDETfiles", 1, "noSerialize", 1);
+    my %ht = ("createDETfiles", 1);
     print $ds->renderAsTxt($root, 1, 1, \%ht);
 }
 
@@ -325,7 +326,7 @@ sub unitTestMultiDet{
                    "colorScheme" => "grey",
                    "DrawIsometriclines" => 1,
                    "Isometriclines" => [ (0.7, 0.5, 0.4, 0, -5) ],
-                   "DETLineAttr" => { ("DET1" => { label => "New DET1", lineWidth => 9, pointSize => 2, pointTypeSet => "square", color => "rgb \"#0000ff\"" }),
+                   "DETLineAttr" => { ("Name 1" => { label => "New DET1", lineWidth => 9, pointSize => 2, pointTypeSet => "square", color => "rgb \"#0000ff\"" }),
                                     },
                    "PointSet" => [ { MMiss => .4,  MFA => .05, pointSize => 1,  pointType => 10, color => "rgb \"#ff0000\"", label => "Point1=10", justification => "left"}, 
                                    { MMiss => .4,  MFA => .40, pointSize => 8,  pointType => 8, color => "rgb \"#ff0000\"", label => "Point2=8" }, 
@@ -614,6 +615,7 @@ sub getSerializedDET(){
 
 sub getPoints(){
   my ($self) = @_;
+  $self->computePoints();
   (exists($self->{POINTS}) ? $self->{POINTS} : undef); 
 }
 
@@ -835,11 +837,11 @@ sub Compute_blocked_DET_points
         $self->AddIsolineInformation(\%blocks, $paramt, $isolinecoef, $estMFa, $estMMiss) if( defined ( $paramt ) );
       }
                 
-      push(@Outputs, [ ( $minScore, $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks ) ] );
+      push(@Outputs, [ ( $minScore, $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks, "x" ) ] );
 
       if ($findMaxComb) {
         if ($TWComb > $self->{BESTCOMB}{COMB}) {
-          $self->{BESTCOMB}{DETECTIONSCORE} = $minScore;
+          $self->{BEoSTCOMB}{DETECTIONSCORE} = $minScore;
           $self->{BESTCOMB}{COMB} = $TWComb;
           $self->{BESTCOMB}{MFA} = $mFa;
           $self->{BESTCOMB}{MMISS} = $mMiss;
@@ -897,7 +899,8 @@ sub updateMinScoreForBlockWeighted
             (!defined($newMin) || $newMin > $trial->getNonTargDecScr($b, $blocks->{$b}{NONTARGi})));
                                         
       $dataLeft = 1 if (($blocks->{$b}{TARGi} < $blocks->{$b}{TARGNScr}) ||
-                        ($blocks->{$b}{NONTARGi} < $blocks->{$b}{TARGNScr}));
+                        ($blocks->{$b}{NONTARGi} < $blocks->{$b}{NONTARGNScr}));
+                        
     }
         
     if (! $dataLeft) {
