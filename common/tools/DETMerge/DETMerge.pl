@@ -1,7 +1,9 @@
 #!/usr/bin/env perl
 
-# BarPlot.pl
+# DETMerge
+# DETMerge.pl
 # Authors: Jonathan Fiscus
+#          Jerome Ajot
 #          Martial Michel
 # 
 # This software was developed at the National Institute of Standards and
@@ -47,7 +49,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "BarPlot") {
+foreach my $pn ("MMisc", "DETCurve", "DETCurveSet") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -70,18 +72,28 @@ if (! $have_everything) {
 }
 
 my $VERSION = 0.1;
-my $inputCSV = undef;
-my $title = undef;
-my $man = undef;
-my $v = undef;
-my $help = undef;
+my $man = 0;
+my $help = 0;
+my $title = "Combined DET Curve";
+my $titleRegex = undef;
+my @inputSrl = ();
+my $outputSrl = undef;
+my $gzipPROG = "gzip";
+my $mergeType = "blocked";
+my $v = 0;
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 GetOptions
   (
-   'c|csv=s'         => \$inputCSV,
+   'o|output-srl=s'  => \$outputSrl,
+   
    't|title=s'       => \$title,
+   
+   'Z|ZipPROG=s'     => \$gzipPROG,
+
+   'M|MergeType=s'   => \$mergeType,	
+
    'version'         => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; print "$name version $VERSION\n"; exit(0); },
    'h|help'          => \$help,
    'v|verbose'       => \$v,
@@ -93,10 +105,46 @@ pod2usage(1) if $help;
 pod2usage(-exitvalue => 0, -verbose => 2) if $man;
 ##
 
-die if ! defined($inputCSV);
+## Checking inputs
+pod2usage("Error: At least one DET Curve must be specified.\n") if(scalar ( @ARGV ) == 0);
+@inputSrl = @ARGV;
+pod2usage("ERROR: The output must be specified via -o\n") if (! defined($outputSrl));
 
-my $at = AutoTable::loadCSV($inputCSV);
-print $at->renderAsTxt(2);
+my $trial = undef;
+my $firstDet = undef;
+
+foreach my $inDet (@inputSrl){
+  print "Loadind DETCurve '$inDet'\n" if ($v > 0);
+  my $det = DETCurve::readFromFile($inDet, $gzipPROG);
+  
+  if (! defined($firstDet)){
+    $firstDet = $det;
+  }
+
+  ### First Check Compatability
+#  die "Error: dets /$inputSrl[0]/ and /$inDet/ are not compatable"
+#     if (! $firstDet->isCompatible($det));
+  
+  ### Set the Trial metrics based on the metricType
+  Trials::mergeTrials(\$trial, $det->getTrials(), $firstDet->getMetric(), $mergeType);
+
+}
+  
+### Do the merge based on the merge type
+#print Dumper($trial);  
+
+### Make a metric clone
+my $metric = $firstDet->getMetric()->cloneForTrial($trial);
+
+### delete the .gz if it's there
+$outputSrl =~ s/\.gz$//;
+
+my $outDet = new DETCurve($trial, $metric, $title, [()], $gzipPROG);
+print "Computing points\n" if ($v > 0);
+$outDet->computePoints();
+
+print "Writing to '$outputSrl'\n" if ($v > 0);
+$outDet->serialize($outputSrl);
 
 exit 0;
 
