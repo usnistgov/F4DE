@@ -95,8 +95,21 @@ pod2usage(-exitvalue => 0, -verbose => 2) if $man;
 
 die if ! defined($inputCSV);
 
-my $at = AutoTable::loadCSV($inputCSV);
-print $at->renderAsTxt(2);
+my $at = new AutoTable;
+$at->loadCSV($inputCSV);
+print $at->renderTxtTable(2);
+my $bp = new BarPlot();
+
+my @rowIDs = $at->getRowIDs("AsAdded");
+my @colIDs = $at->getColIDs("AsAdded");
+foreach my $row(@rowIDs){
+    foreach my $col(@colIDs){
+	$bp->addData($row, $col, $at->getData($row,$col));
+    }
+}
+
+$bp->horizontal("TRUE");
+$bp->makePlot("foo");
 
 exit 0;
 
