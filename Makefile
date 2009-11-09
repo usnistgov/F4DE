@@ -243,6 +243,10 @@ dist_archive_pre_remove:
 	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRScorer/res-test-1[ab].txt
 ## VidAT
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/VidAT/
+## BarPlot
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/BarPlot/ /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/lib/BarPlot.pm
+## csv_grep
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/csv_grep/
 
 create_mans:
 # TrecVid08
