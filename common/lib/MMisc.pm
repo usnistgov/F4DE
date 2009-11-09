@@ -288,8 +288,9 @@ sub writeTo {
     print FILE $txt;
     print FILE $filetrailer if (! &is_blank($filetrailer));
     close FILE;
+    # Note: do not print action when writing to STDOUT (even when requested)
     print((($da) ? "Appended to file:" : "Wrote:") . " $ofile$filecomment\n") 
-      if ($printfn);
+      if (($ofile ne "-") && ($printfn));
     return(1); # Always return ok: we requested to write to a file and could
   }
 
