@@ -75,6 +75,7 @@ my $title = undef;
 my $man = undef;
 my $v = undef;
 my $help = undef;
+my $root = undef;
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
@@ -85,6 +86,7 @@ GetOptions
    'version'         => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; print "$name version $VERSION\n"; exit(0); },
    'h|help'          => \$help,
    'v|verbose'       => \$v,
+   'r|root=s'        => \$root,
    'm|man'           => \$man,
   );
 
@@ -94,6 +96,7 @@ pod2usage(-exitvalue => 0, -verbose => 2) if $man;
 ##
 
 die if ! defined($inputCSV);
+die if ! defined($root);
 
 my $at = new AutoTable;
 $at->loadCSV($inputCSV);
@@ -109,7 +112,7 @@ foreach my $row(@rowIDs){
 }
 
 $bp->horizontal("TRUE");
-$bp->makePlot("foo");
+$bp->makePlot($root);
 
 exit 0;
 
