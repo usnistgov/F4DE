@@ -103,17 +103,21 @@ my $axisScales = undef;
 my $omitActual = 0;
 my $docsv = 0;
 my @plotControls = ();
+my $dumpFile = 0;
+my $forceRecompute = 0; 
+my $doTxtTable = 0;
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A     G I K   OPQRST     Z  c e ghi klm op rst v     #
+# Used: A    FG I K   OPQRST     Z  cde ghi klm op rst v x   #
 
 GetOptions
   (
    'o|output-png=s'              => \$OutPNGfile,
    'r|ratiostats=s'              => \$IsoRatioStatisticFile,
-   'g|generateCSV'               => \$docsv,                      
+   'g|generateCSV'               => \$docsv,
+   'd|dumpFile'                  => \$dumpFile,                      
    
    't|tmpdir=s'                  => \$tmpDir,
    's|select-filter=s'           => \@selectFilters,
@@ -135,7 +139,9 @@ GetOptions
    'A|AxisScale=s'               => \$axisScales,
    'O|OmitActualCalc'            => \$omitActual, 
    'p|plotControls=s'            => \@plotControls,
-   
+   'F|ForceRecompute'            => \$forceRecompute,
+   'x|txtTable'                  => \$doTxtTable,  
+    
    'version'                     => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; 
                                           print "$name version $VERSION\n"; exit(0); },
    'h|help'                      => \$help,
@@ -336,13 +342,13 @@ foreach my $srlDef ( @ARGV )
 	
 	my $det;
 	
-	if( $DrawIsoratiolines || ($IsoRatioStatisticFile ne ""))
+	if( $DrawIsoratiolines || ($IsoRatioStatisticFile ne "") || $forceRecompute)
 	{
 		$det = new DETCurve($loadeddet->getTrials(), $loadeddet->getMetric(),
 		                    $loadeddet->getLineTitle(),
 		                    \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
 		$det->{LAST_SERIALIZED_DET} = $loadeddet->{LAST_SERIALIZED_DET};
-		
+
 		$det->computePoints();
 	}
 	else
@@ -448,6 +454,22 @@ if ($docsv) {
   $csvf .= ".csv";
   my $csv = $ds->renderCSV("$temp/merge", 1, \%options);
   MMisc::writeTo($csvf, "", 1, 0, $csv);
+}
+
+if ($doTxtTable) {
+  my $txtf = $OutPNGfile;
+  $txtf =~ s/\.png$//i;
+  $txtf .= ".results.txt";
+  my $txt = $ds->renderAsTxt("$temp/merge", 1, \%options);
+  MMisc::writeTo($txtf, "", 1, 0, $txt);
+}
+
+if ($dumpFile){
+  my $dumpf = $OutPNGfile;
+  $dumpf =~ s/\.png$//i;
+  $dumpf .= ".dump.txt";  
+  MMisc::writeTo($dumpf, "", 1, 0, Dumper($ds));
+
 }
 
 exit 0;
@@ -616,6 +638,18 @@ The B<plotControl> options provides access to fine control the the DET curve dis
                     -> Places a point at localtion FA,MISS with the label /text/ with the specified point type, color, size, and label justification.  All colons and the FA and MISS values are required.  Point type is an integer. Point color is /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors.  Point size is a floating point number.  Justification is either /right|left|center/.
 
 /PointSetAreaDefinition=(Area|Radius)/     -> The value of C<pointSize> is display as either area of  the point or the width.  Def. is radius.
+
+=item B<-F>, B<--ForceRecompute>
+
+Force the DET points to be recomputed.  Some of the other options also re-compute the points.
+
+=item B<-x> B<--txtTable>
+
+Generate a table of statistics.  
+
+=item B<-d> B<--dumpFile>
+
+Dump the SRL files into a file that is readable.
 
 =back
 
