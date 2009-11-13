@@ -372,6 +372,40 @@ sub renderCSV {
   return($at->renderCSV());
 }       
 
+#####
+
+sub writeAllTargScr {
+  my ($self, $file) = @_;
+
+  if (@{ $self->{DETList} } == 0) {
+    return "Error: No DETs provided to produce a Target Score report from";
+  }
+ 
+ for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
+    my $trial = $self->{DETList}[$d]->{DET}->getTrials();
+    for (my $xxx = 0; $xxx < 2; $xxx++) {
+      my @scr = ();
+      foreach my $block (sort $trial->getBlockIDs()) {
+        my $ra = undef;
+        if ($xxx) {
+           $ra = $trial->getTargScr($block);
+        } else {
+          $ra = $trial->getNonTargScr($block);
+        }
+        push @scr, @$ra;
+      }
+
+      my $txt = join("\n", @scr) . "\n";
+      my $ofn = $file . ".dat.$d" . (($xxx) ? ".targ" : ".nontarg");
+      MMisc::writeTo($ofn, "", 1, 0, $txt);
+    }
+  }
+
+  return(1);
+}
+
+#####
+
 sub intersection
 {
 	my %l = ();
