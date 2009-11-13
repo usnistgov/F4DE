@@ -387,6 +387,11 @@ sub getNumTargScr {
   scalar(@{ $self->{"trials"}{$block}{"TARG"} });
 }
 
+sub getTargScr {
+  my ($self, $block) = @_;
+  $self->{"trials"}{$block}{"TARG"};
+}
+
 sub getNumNoTarg {
   my ($self, $block) = @_;
   $self->{"trials"}->{$block}->{"NO TARG"};
@@ -415,6 +420,11 @@ sub getNumOmittedTarg {
 sub getNumNonTargScr {
   my ($self, $block) = @_;
   scalar(@{ $self->{"trials"}{$block}{"NONTARG"} });
+}
+
+sub getNonTargScr {
+  my ($self, $block) = @_;
+  $self->{"trials"}{$block}{"NONTARG"};
 }
 
 sub getNumNoNonTarg {
