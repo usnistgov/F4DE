@@ -106,6 +106,7 @@ my @plotControls = ();
 my $dumpFile = 0;
 my $forceRecompute = 0; 
 my $doTxtTable = 0;
+my $dumptarg = "";
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
@@ -117,7 +118,8 @@ GetOptions
    'o|output-png=s'              => \$OutPNGfile,
    'r|ratiostats=s'              => \$IsoRatioStatisticFile,
    'g|generateCSV'               => \$docsv,
-   'd|dumpFile'                  => \$dumpFile,                      
+   'd|dumpFile'                  => \$dumpFile,
+   'D|DumpAllTargScr=s'          => \$dumptarg,
    
    't|tmpdir=s'                  => \$tmpDir,
    's|select-filter=s'           => \@selectFilters,
@@ -472,6 +474,9 @@ if ($dumpFile){
 
 }
 
+MMisc::error_quit("Problem writing All Target Scores")
+  if ((! MMisc::is_blank($dumptarg)) && (! $ds->writeAllTargScr($dumptarg)));
+
 exit 0;
 
 #############################################  End of the program #########################################
@@ -650,6 +655,10 @@ Generate a table of statistics.
 =item B<-d> B<--dumpFile>
 
 Dump the SRL files into a file that is readable.
+
+=item B<-D> B<--DumpAllTargScr> fileroot
+
+Dump all the file's Trials Target and Non Target scores into files starting with i<fileroot>.
 
 =back
 
