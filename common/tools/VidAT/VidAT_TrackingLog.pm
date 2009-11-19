@@ -188,8 +188,9 @@ sub loadFile
 sub rotation
 {
 	my ($x, $y, $cx, $cy, $deg) = @_;
+	my $rad = $deg*3.1415926536/180;
 	
-	return( int(($x-$cx)*cos($deg)+($y-$cy)*sin($deg) + $cx), int(-($x-$cx)*sin($deg)+($y-$cy)*cos($deg)+$cy) );
+	return( int(($x-$cx)*cos($rad)+($y-$cy)*sin($rad) + $cx), int(-($x-$cx)*sin($rad)+($y-$cy)*cos($rad)+$cy) );
 }
 
 sub buildContiniousFrames
