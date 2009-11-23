@@ -22,6 +22,7 @@ use strict;
 use warnings;
 use VideoEdit;
 use Data::Dumper;
+use List::Util qw( max );
 
 1;
 
@@ -73,6 +74,8 @@ sub loadFile
 	
 	my $frame = undef;
 	
+	my %objectIdType;
+	
 	while(<FILE>)
 	{
 		chomp;
@@ -105,6 +108,8 @@ sub loadFile
 			@bl = rotation(@bl, @c, $6);
 			@br = rotation(@br, @c, $6);
 			
+			$objectIdType{$id} = "polygon";
+			
 			my $DCO = 0;
 			$DCO = 1 if($line =~ /DCO/);
 			
@@ -129,6 +134,8 @@ sub loadFile
 			@bl = rotation(@bl, @c, $6);
 			@br = rotation(@br, @c, $6);
 			
+			$objectIdType{$id} = "polygon";
+			
 			my $DCO = 0;
 			$DCO = 1 if($line =~ /DCO/);
 			
@@ -144,6 +151,8 @@ sub loadFile
 			my $id = int($1);
 			my @pt = ($2, $3);
 			
+			$objectIdType{$id} = "point";
+			
 			my $DCO = 0;
 			$DCO = 1 if($line =~ /DCO/);
 			
@@ -158,6 +167,8 @@ sub loadFile
 		{
 			my $id = int($1);
 			my @pt = ($2, $3);
+			
+			$objectIdType{$id} = "point";
 			
 			my $DCO = 0;
 			$DCO = 1 if($line =~ /DCO/);
@@ -176,8 +187,11 @@ sub loadFile
 		
 			$self->{mapped}{sys}{$sysId}{$frame} = $refId;
 			$self->{mapped}{ref}{$refId}{$frame} = $sysId;
-			$self->{polygon}{ref}{$refId}{$frame}{MAPPED} = 1;
-			$self->{polygon}{sys}{$sysId}{$frame}{MAPPED} = 1;
+#			$self->{polygon}{ref}{$refId}{$frame}{MAPPED} = 1;
+#			$self->{polygon}{sys}{$sysId}{$frame}{MAPPED} = 1;
+
+			$self->{$objectIdType{$refId}}{ref}{$refId}{$frame}{MAPPED} = 1;
+			$self->{$objectIdType{$sysId}}{sys}{$sysId}{$frame}{MAPPED} = 1;
 		}
 	}
 	
@@ -331,7 +345,7 @@ sub processTypeId
 		$self->{label}{$type}{$id}{$frm}{TEXT} = $label;
 		
 		push( @{ $self->{label}{$type}{$id}{$frm}{COORD} }, $self->{$object}{$type}{$id}{$frm}{COORD}[0],
-	                                                        $self->{$object}{$type}{$id}{$frm}{COORD}[1]-5);
+	                                                        max($self->{$object}{$type}{$id}{$frm}{COORD}[1]-5, 0));
 	}
 	
 	# Snail Trail
@@ -351,7 +365,7 @@ sub processTypeId
 	elsif($object eq "point")
 	{
 		push( @{ $self->{snail}{$type}{$id}{$prevFrame}{$prevDco}{$prevMapped}{0}{COORD} }, 
-			  $self->{$object}{$type}{$id}{$prevFrame}{COORD}[0]+$self->{$object}{$type}{$id}{$prevFrame}{COORD}[1]);
+			  $self->{$object}{$type}{$id}{$prevFrame}{COORD}[0], $self->{$object}{$type}{$id}{$prevFrame}{COORD}[1]);
 	}
 	
 #	for(my $i=1; $i<scalar(@listAppearsFrames); $i++)
@@ -438,6 +452,9 @@ sub processTypeId
 sub addRefPolygon
 {
 	my ($self, $size) = @_;
+	
+	return if(!defined($self->{polygon}));
+	return if(!defined($self->{polygon}{ref}));
 	
 	foreach my $refId (keys %{ $self->{polygon}{ref} })
 	{	
@@ -527,6 +544,9 @@ sub addSysPolygon
 {
 	my ($self, $size) = @_;
 	
+	return if(!defined($self->{polygon}));
+	return if(!defined($self->{polygon}{sys}));
+	
 	foreach my $sysId (keys %{ $self->{polygon}{sys} })
 	{	
 		foreach my $frm (keys %{ $self->{polygon}{sys}{$sysId} })
@@ -615,6 +635,9 @@ sub addRefLabel
 {
 	my ($self) = @_;
 	
+	return if(!defined($self->{label}));
+	return if(!defined($self->{label}{ref}));
+	
 	foreach my $refId (keys %{ $self->{label}{ref} })
 	{	
 		foreach my $frm (keys %{ $self->{label}{ref}{$refId} })
@@ -634,6 +657,9 @@ sub addSysLabel
 {
 	my ($self) = @_;
 	
+	return if(!defined($self->{label}));
+	return if(!defined($self->{label}{sys}));
+	
 	foreach my $sysId (keys %{ $self->{label}{sys} })
 	{	
 		foreach my $frm (keys %{ $self->{label}{sys}{$sysId} })
@@ -652,6 +678,9 @@ sub addSysLabel
 sub addRefSnailTrail
 {
 	my ($self, $size) = @_;
+	
+	return if(!defined($self->{snail}));
+	return if(!defined($self->{snail}{ref}));
 		
 	foreach my $refId (keys %{ $self->{snail}{ref} })
 	{	
@@ -705,6 +734,9 @@ sub addRefSnailTrail
 sub addSysSnailTrail
 {
 	my ($self, $size) = @_;
+	
+	return if(!defined($self->{snail}));
+	return if(!defined($self->{snail}{sys}));
 		
 	foreach my $sysId (keys %{ $self->{snail}{sys} })
 	{	
@@ -771,6 +803,9 @@ sub addRefFullSnailTrail
 {
 	my ($self, $size) = @_;
 	
+	return if(!defined($self->{snail}));
+	return if(!defined($self->{snail}{ref}));
+	
 	foreach my $refId (keys %{ $self->{snail}{ref} })
 	{
 		# find the final trail 
@@ -828,6 +863,9 @@ sub addRefFullSnailTrail
 sub addSysFullSnailTrail
 {
 	my ($self, $size) = @_;
+	
+	return if(!defined($self->{snail}));
+	return if(!defined($self->{snail}{sys}));
 	
 	foreach my $sysId (keys %{ $self->{snail}{sys} })
 	{
