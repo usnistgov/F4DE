@@ -37,6 +37,7 @@ sub new
 		maxFrame  => undef,
 		frames    => undef,
 		polygon   => undef,
+		point     => undef,
 		videoClass => undef,
 		color_uref => [(251,16,15,0.8)],
 		color_usys => [(255,165,0,0.8)],
@@ -114,7 +115,7 @@ sub loadFile
 			$self->{appears}{ref}{$id}{$frame}{REAL} = 1;
 		}
 		
-		if(($line =~ /SYS (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/) || ($line =~ /SYS (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/))
+		if(($line =~ /SYS (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/) || ($line =~ /SYS (\d+) \[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/))
 		{
 			my $id = int($1);
 			my @tl = ($2, $3);
@@ -329,8 +330,8 @@ sub processTypeId
 		
 		$self->{label}{$type}{$id}{$frm}{TEXT} = $label;
 		
-		push( @{ $self->{label}{$type}{$id}{$frm}{COORD} }, $self->{polygon}{$type}{$id}{$frm}{COORD}[0],
-	                                                        $self->{polygon}{$type}{$id}{$frm}{COORD}[1]-5);
+		push( @{ $self->{label}{$type}{$id}{$frm}{COORD} }, $self->{$object}{$type}{$id}{$frm}{COORD}[0],
+	                                                        $self->{$object}{$type}{$id}{$frm}{COORD}[1]-5);
 	}
 	
 	# Snail Trail
