@@ -22,6 +22,7 @@ use strict;
 use warnings;
 use File::Basename;
 
+
 sub new
 {
 	my ($class, $inFile) = @_;
