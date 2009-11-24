@@ -22,8 +22,10 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Pod::Usage;
+use List::Util qw( min max );
 use VideoEdit;
 use trackinglog;
+use FFmpegImage;
 use Data::Dumper;
 
 my $man = 0;
@@ -53,7 +55,19 @@ pod2usage("Error: Input video must be specified.\n") if($inVideoFile eq "");
 pod2usage("Error: log file must be specified.\n") if($logFile eq "");
 pod2usage("Error: Output file must be specified.\n") if($outFile eq "");
 
-my $x = new trackinglog($logFile);
+my $v = new FFmpegImage($inVideoFile);
+
+my $keepMin = 0;
+my $keepMax = $v->{expectedframes};
+
+if($keep =~ /^(\d+),(\d+)$/)
+{
+	$keepMin = max($keepMin, int($1));
+	$keepMax = min($keepMax, int($2));
+}
+
+my $x = new trackinglog($logFile, $keepMin, $keepMax);
+$x->{videoClass}->addKeepRange($keepMin, $keepMax);
 
 $x->addRefPolygon(4);
 $x->addSysPolygon(4);
@@ -64,13 +78,6 @@ $x->addSysLabel();
 $x->addRefSnailTrail(3);
 $x->addSysSnailTrail(3);
 $x->addTimer();
-
-if($keep =~ /^(\d+),(\d+)$/)
-{
-	$keep1 = int($1);
-	$keep2 = int($2);
-	$x->{videoClass}->addKeepRange($keep1, $keep2);
-}
 
 $x->{videoClass}->loadVideoFile($inVideoFile);
 

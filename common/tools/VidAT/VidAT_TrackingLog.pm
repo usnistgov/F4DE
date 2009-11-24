@@ -212,6 +212,8 @@ sub buildContiniousFrames
 {
 	my ($self) = @_;
 	
+	return if(!defined($self->{frames}));
+	
 	my @listframes = sort {$a <=> $b} @{ $self->{frames} };
 	
 	foreach my $id (keys %{ $self->{appears}{ref} })
@@ -792,6 +794,9 @@ sub addTimer
 	my ($self) = @_;
 	
 	my @coord = (0, 11);
+	
+	$self->{minFrame} = $self->{restrictMin} if( !defined($self->{minFrame}) );
+	$self->{maxFrame} = $self->{restrictMax} if( !defined($self->{maxFrame}) );
 	
 	for(my $i=$self->{minFrame}; $i<=$self->{maxFrame}; $i++)
 	{

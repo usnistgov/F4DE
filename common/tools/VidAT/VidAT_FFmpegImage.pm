@@ -108,6 +108,13 @@ sub parseVideoInformation
 	{
 		$self->{fps} = 25;
 	}
+	
+	# Get Duration
+	if($ffmpegInfo =~ /Duration: (\d+):(\d+):(\d+)/)
+	{
+		$self->{duration} = 3600*$1 + 60*$2 + $3 + 1;
+		$self->{expectedframes} = int($self->{duration}*($self->{fps} + 0.01));
+	}
 }
 
 sub extractJpeg
