@@ -32,6 +32,7 @@ my $inVideoFile = "";
 my $xmlFile = "";
 my $outFile = "";
 my $keep = "";
+my $tmpBaseDir = "/tmp/Vidat.$$";
 
 my $keep1 = 0;
 my $keep2 = 9e99;
