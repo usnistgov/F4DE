@@ -23,6 +23,7 @@ use warnings;
 use Getopt::Long;
 use Pod::Usage;
 use List::Util qw( min max );
+use File::Path qw( rmtree );
 use VideoEdit;
 use trackinglog;
 use FFmpegImage;
@@ -35,6 +36,7 @@ my $inVideoFile = "";
 my $logFile = "";
 my $outFile = "";
 my $keep = "";
+my $tmpBaseDir = "/tmp/Vidat.$$";
 
 my $keep1 = 0;
 my $keep2 = 9e99;
@@ -47,6 +49,7 @@ GetOptions
 	'h|help' => \$help,
 	'man'    => \$man,
 	'k=s'    => \$keep,
+	'tmp=s'  => \$tmpBaseDir,
 ) or pod2usage(1);
 
 pod2usage(1) if $help;
@@ -54,6 +57,8 @@ pod2usage(-exitvalue => 0, -verbose => 2) if $man;
 pod2usage("Error: Input video must be specified.\n") if($inVideoFile eq "");
 pod2usage("Error: log file must be specified.\n") if($logFile eq "");
 pod2usage("Error: Output file must be specified.\n") if($outFile eq "");
+
+mkdir("$tmpBaseDir");
 
 my $v = new FFmpegImage($inVideoFile);
 
@@ -66,7 +71,7 @@ if($keep =~ /^(\d+),(\d+)$/)
 	$keepMax = min($keepMax, int($2));
 }
 
-my $x = new trackinglog($logFile, $keepMin, $keepMax);
+my $x = new trackinglog($logFile, $keepMin, $keepMax, $tmpBaseDir);
 $x->{videoClass}->addKeepRange($keepMin, $keepMax);
 
 $x->addRefPolygon(4);
@@ -94,7 +99,7 @@ else
 	$x->{videoClass}->buildJpegSingle($keep1, $outFile);
 }
 
-$x->{videoClass}->clean();
+rmtree("$tmpBaseDir");
 
 =head1 NAME
 
@@ -102,7 +107,7 @@ vidatLog.pl -- Video Annotation Tool
 
 =head1 SYNOPSIS
 
-B<vidatLog.pl> -i F<VIDEO> -l F<log> -o F<OUTPUT> [-man] [-h]
+B<vidatLog.pl> -i F<VIDEO> -l F<LOG> -o F<OUTPUT> [-tmp F<DIR>] [-man] [-h]
 
 =head1 DESCRIPTION
 
@@ -116,13 +121,17 @@ The software is adding filter information such as polygon masking, point and lab
 
 Input video file..
 
-=item B<-l> F<log>
+=item B<-l> F<LOG>
 
 Input log file.
 
 =item B<-o> F<OUTPUT>
 
 Output video file.
+
+=item B<-tmp> F<DIR>
+
+Specify a temporary directory.
 
 =item B<-k> F<begframe>,F<endframe>
 

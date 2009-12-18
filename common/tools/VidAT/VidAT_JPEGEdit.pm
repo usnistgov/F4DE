@@ -27,7 +27,7 @@ use Data::Dumper;
 
 sub new
 {
-	my ($class, $inFile) = @_;
+	my ($class, $inFile, $tmpBaseDir) = @_;
 	my $self =
 	{
 		MOGRIFY         => 'mogrify',
@@ -38,6 +38,7 @@ sub new
 		jpegQuality     => 85,
 		jpegProgressive => 1,
 		hasChanged      => 0,
+		tmpBaseDir => $tmpBaseDir,
 	};
 	
 	bless $self;
@@ -57,7 +58,7 @@ sub createWorkingImage
 	
 	if(!defined($self->{workingImage}))
 	{
-		(undef, $self->{workingImage}) = tempfile(OPEN => 0, SUFFIX => ".MIFF", UNLINK => 1);
+		(undef, $self->{workingImage}) = tempfile(OPEN => 0, SUFFIX => ".MIFF", UNLINK => 1, DIR => $self->{tmpBaseDir});
 		my $commandToRun = "$self->{CONVERT} '$self->{inFile}' -quality 100 -format MIFF '$self->{workingImage}' 2>&1";
 		my $returnCommand = qx($commandToRun);
 		my $exitStatus = $? >> 8;

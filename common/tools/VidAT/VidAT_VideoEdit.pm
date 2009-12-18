@@ -27,7 +27,7 @@ use FFmpegImage;
 
 sub new
 {
-	my ($class) = @_;
+	my ($class, $tmpBaseDir) = @_;
 	my $self =
 	{
 		videoFile    => undef,
@@ -39,6 +39,7 @@ sub new
 		outputFrames => undef,
 		minFrame     => 9e99,
 		maxFrame     => 0,
+		tmpBaseDir => $tmpBaseDir,
 	};
 	
 	bless $self;
@@ -54,18 +55,11 @@ sub loadVideoFile
 	$self->extractJpegs();
 }
 
-sub clean
-{
-	my ($self) = @_;
-	rmtree($self->{tempDir1}) if(defined($self->{tempDir1}));
-	rmtree($self->{tempDir2}) if(defined($self->{tempDir2}));
-}
-
 sub extractJpegs
 {
 	my ($self) = @_;
 	
-	$self->{tempDir1} = tempdir( CLEANUP => 1 );
+	$self->{tempDir1} = tempdir( CLEANUP => 1 , DIR => $self->{tmpBaseDir});
 	$self->{images} = new FFmpegImage($self->{videoFile});
 	$self->{images}->extractJpeg($self->{tempDir1});
 }
@@ -85,7 +79,7 @@ sub buildVideo
 	if(defined($self->{videoFile}) && $self->{filterLoaded})
 	{
 		# Create tempdir
-		$self->{tempDir2} = tempdir( CLEANUP => 1 );
+		$self->{tempDir2} = tempdir( CLEANUP => 1  , DIR => $self->{tmpBaseDir});
 		$self->processImages();
 		$self->{images}->buildVideo($self->{tempDir2}, $outFile);
 	}
@@ -193,7 +187,7 @@ sub processSingleImage
 		($index <= $self->{maxFrame}) &&
 		($self->doKeep($index)) )
 	{
-		my $jpeg = new JPEGEdit("$self->{tempDir1}/$files[$index]");
+		my $jpeg = new JPEGEdit("$self->{tempDir1}/$files[$index]", $self->{tmpBaseDir});
 		
 		# Apply all the filters
 		my ($polygons, $ellipses, $points, $labels) = $self->hasFilters($index);
@@ -255,7 +249,7 @@ sub processImages
 		next if($i > $self->{maxFrame});
 		next if(! $self->doKeep($i));
 
-		my $jpeg = new JPEGEdit("$self->{tempDir1}/$files[$i]");
+		my $jpeg = new JPEGEdit("$self->{tempDir1}/$files[$i]", $self->{tmpBaseDir});
 		
 		# Apply all the filters
 		my ($polygons, $ellipses, $points, $labels) = $self->hasFilters($i);

@@ -28,7 +28,7 @@ use List::Util qw( max );
 
 sub new
 {
-	my ($class, $inFile, $rmin, $rmax) = @_;
+	my ($class, $inFile, $rmin, $rmax, $tmpBaseDir) = @_;
 	
 	my $self =
 	{
@@ -48,6 +48,7 @@ sub new
 		color_clear => [(0, 0, 0, 0)],
 		restrictMin => 0,
 		restrictMax => 999999,
+		tmpBaseDir => $tmpBaseDir,
 	};
 	
 	bless $self;
