@@ -114,7 +114,8 @@ sub unitTest(){
   my $ds = new DETCurveSet("title");
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Name 1", $det1));
   die "Error: Successful add of duplicate name" if ("success" eq $ds->addDET("Name 1", $det2));
-  my $exp = "Name______________________";
+  my $exp = "Name________________"; # fixed by MM
+# was:  my $exp = "Name______________________";
   my $k2 = "Name !@#\$%^&*(){}[]?'\"\<\>:;";
   die "Error: Failed to add second det" if ("success" ne $ds->addDET($k2, $det2));
   die "Error: Failed to add third (empty) det" if ("success" ne $ds->addDET("EmptyDETCurve", $det3));
