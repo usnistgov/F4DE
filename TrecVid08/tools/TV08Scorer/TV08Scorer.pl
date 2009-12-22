@@ -530,6 +530,8 @@ if ($alc == 0) {
   print "  ** Skipped **\n";
 } else {
   my ($xm, $xM, $ym, $yM)= @dc_range;
+  my $tmp_csvfile = (MMisc::is_blank($outputRootFile)) 
+    ? "" : "$outputRootFile.scores.csv";
   MMisc::writeTo
     ($outputRootFile, ".scores.txt", 1, 0, 
      $detSet->renderAsTxt
@@ -539,7 +541,7 @@ if ($alc == 0) {
          createDETfiles => ($nodetfiles ? 0: 1),
          BuildPNG => ($noPNG ? 0 : 1))
       },
-      "$outputRootFile.scores.csv")
+      $tmp_csvfile)
     );
 }
 
