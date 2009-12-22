@@ -22,10 +22,11 @@ package MMisc;
 
 use strict;
 
-use File::Temp;
+use File::Temp qw(tempfile tempdir);
 use Data::Dumper;
-use Cwd;
-use Time::HiRes;
+use Cwd qw(cwd abs_path);
+use Time::HiRes qw(gettimeofday tv_interval);
+use List::Util qw(reduce);
 
 my $version     = "0.1b";
 
@@ -39,7 +40,7 @@ my $versionid = "MMisc.pm Version: $version";
 ########## No 'new' ... only functions to be useful
 
 sub get_tmpdir {
-  my $name = File::Temp::tempdir();
+  my $name = tempdir();
   
   return($name) 
     if (-d $name);
@@ -54,7 +55,7 @@ sub get_tmpdir {
 #####
 
 sub get_tmpfilename {
-  my (undef, $name) = File::Temp::tempfile( OPEN => 0 );
+  my (undef, $name) = tempfile( OPEN => 0 );
 
   return($name);
 }
@@ -221,23 +222,31 @@ sub min_max {
 
 #####
 
-sub min {
+sub __old_min {
   my $min = shift;
   foreach $_ (@_) { $min = $_ if $_ < $min; }
   return $min;
 }
 
+##
+
+sub min { return(List::Util::min(@_)); }
+
 #####
 
-sub max {
+sub __old_max {
   my $max = shift;
   foreach $_ (@_) { $max = $_ if $_ > $max; }
   return $max;
 }
 
+##
+
+sub max { return(List::Util::max(@_)); }
+
 ##########
 
-sub sum {
+sub __old_sum {
   my $out = 0;
   foreach my $v (@_) {
     $v = &iuv($v, 0);
@@ -246,6 +255,10 @@ sub sum {
 
   return($out);
 }
+
+##
+
+sub sum { return(List::Util::sum(@_)) }
 
 ##########
 
@@ -1152,7 +1165,7 @@ sub concat_dir_file_ext {
 
 ##########
 
-sub get_pwd { return(Cwd::cwd()); }
+sub get_pwd { return(cwd()); }
 
 #####
 
@@ -1164,7 +1177,7 @@ sub get_file_full_path {
   my $f = $rp;
   $f = "$from/$rp" if ($rp !~ m%^\/%);
 
-  my $o = Cwd::abs_path($f);
+  my $o = abs_path($f);
 
   $o = $f
     if (MMisc::is_blank($o)); # The request PATH does not exist, fake it
@@ -1331,11 +1344,11 @@ sub ls_ok {
 
 ####################
 
-sub get_currenttime { return([Time::HiRes::gettimeofday()]); }
+sub get_currenttime { return([gettimeofday()]); }
 
 #####
 
-sub get_elapsedtime { return(Time::HiRes::tv_interval(shift @_)); }
+sub get_elapsedtime { return(tv_interval(shift @_)); }
 
 ##########
 ### Added by Jon Fiscus
