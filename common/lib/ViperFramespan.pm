@@ -20,8 +20,7 @@ package ViperFramespan;
 # $Id$
 
 
-## IMPORTANT NOTE: none of the frames comparison functions check
-##   if the fps match, it is the user's responsibility to check it
+## IMPORTANT NOTE: few of the frames comparison functions check if the fps (if set) match; it is left to the library user to confirm this
 
 use strict;
 
@@ -172,13 +171,7 @@ sub _fs_check_value {
 ##########
 
 sub _fs_make_uniques {
-  my @a = @_;
-
-  my %tmp = ();
-  foreach my $key (@a) {
-    $tmp{$key}++;
-  }
-
+  my %tmp = MMisc::array1d_to_count_hash(@_);
   return(keys %tmp);
 }
 
@@ -234,9 +227,9 @@ sub _fs_shorten_value {
     } elsif ($nb == $b) {       # ex: 1:2 1:3 -> 1:3
       $e = $ne;
       # Works because we can not have multiple same entries (ex: '1:2 1:2' was fixed in _fs_reorder_value)
-      # and because the reorder insure that '1:2 1:3' is fully ordered properly (ex: no '1:3 1:2' possible)
+      # and because the reorder insure that '1:2 1:3' is fully ordered properly (ie: no '1:3 1:2' possible)
     } elsif ($nb < $e) {
-      # All this also work because we have an insured a full re-ordering of pairs
+      # All this also work because we have insured a full re-ordering of pairs
       if ($ne >= $e) {          # ex: 10:30 20:40 -> 10:40
         $e = $ne;
       }
@@ -303,25 +296,15 @@ sub set_value {
 
 sub set_value_beg_end {
   my ($self, $beg, $end) = @_;
-
-  if (($beg !~ m%^\d+$%) || ($end !~ m%^\d+$%)) {
-    $self->_set_errormsg($error_msgs{"WeirdValue"});
-    return(0);
-  }
-
-  my $fs = "$beg:$end";
-
-  return($self->set_value($fs));
+  return($self->set_value("$beg:$end"));
 }
 
 #####
 
 sub set_value_from_beg_to {
   my ($self, $v) = @_;
-
   return($self->set_value_beg_end(1, $v));
 }
-
 
 #####
 
@@ -378,9 +361,9 @@ sub set_fps {
 
   return(0) if ($self->error());
 
-  if ($fps =~ m%^pal$%i) {
+  if (lc($fps) eq "pal") {
     $fps = 25;
-  } elsif ($fps =~ m%^ntsc$%i) {
+  } elsif (lc($fps) eq "ntsc") {
     $fps = 30000 / 1001;
   }
 
