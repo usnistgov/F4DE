@@ -222,41 +222,13 @@ sub min_max {
 
 #####
 
-sub __old_min {
-  my $min = shift;
-  foreach $_ (@_) { $min = $_ if $_ < $min; }
-  return $min;
-}
-
-##
-
 sub min { return(List::Util::min(@_)); }
 
 #####
 
-sub __old_max {
-  my $max = shift;
-  foreach $_ (@_) { $max = $_ if $_ > $max; }
-  return $max;
-}
-
-##
-
 sub max { return(List::Util::max(@_)); }
 
 ##########
-
-sub __old_sum {
-  my $out = 0;
-  foreach my $v (@_) {
-    $v = &iuv($v, 0);
-    $out += $v;
-  }
-
-  return($out);
-}
-
-##
 
 sub sum { return(List::Util::sum(@_)) }
 
@@ -316,7 +288,7 @@ sub writeTo {
 ##########
 
 sub clone {
-  # Clone hash and arrays
+  # Clone hash, arrays and scalars, but no specialized types
   map { ! ref() ? $_ : ref eq 'HASH' ? {clone(%$_)} : ref eq 'ARRAY' ? [clone(@$_)] : &error_quit("Cloning ($_) not supported") } @_;
 }
 
@@ -414,8 +386,8 @@ sub _uc_lc_array_values {
   foreach my $value (@_) {
     my $v = ($mode eq "uc") ? uc($value) :
       ($mode eq "lc") ? lc($value) :
-        ($mode eq "ucf") ? lcfirst($value) :
-          ($mode eq "lcf") ? ucfirst($value) :
+        ($mode eq "ucf") ? ucfirst($value) :
+          ($mode eq "lcf") ? lcfirst($value) :
             $value;
     push @out, $v;
   }
@@ -456,9 +428,8 @@ sub get_decimal_length {
 
   my $l = 0;
 
-  if ($v =~ s%^\d+(\.)%$1%) {
-    $l = length($v) - 1;
-  }
+  $l = length($v)
+    if ($v =~ s%^\d+\.%%);
 
   return($l);
 }
@@ -1236,65 +1207,61 @@ sub dive_structure {
 
 ##########
 
-sub is_get_float {
+sub __extract_float {
   my $str = shift @_;
 
   $str = &clean_begend_spaces($str);
-  return(1, $str)
-    if ($str =~ m%^\-?\d+(\.\d+)?(e[-+]?\d+)?$%i);
+  return($1, undef)
+    if ($str =~ m%^(\-?\d+(e[-+]?\d+)?)$%i);
+ 
+  return($1, $str)
+    if ($str =~ m%^(\-?\d+)\.\d+(e[-+]?\d+)?$%i);
 
-  return(0, undef);
+  return(undef, undef);
 }
 
 #####
 
+sub is_get_float {
+  my ($a, $b) = &__extract_float(@_);
+  return(0, undef) if (! defined $a);
+  return(1, $a) if (! defined $b);
+  return(1, $b);
+}
+
+##
+
 sub is_float {
-  my $str = shift @_;
-
-  my ($ok, $val) = & is_get_float($str);
-
+  my ($ok, $val) = &is_get_float(@_);
   return($ok);
 }
 
-#####
+##
 
 sub get_float {
-  my $str = shift @_;
-
-  my ($ok, $val) = & is_get_float($str);
-
+  my ($ok, $val) = &is_get_float(@_);
   return($val);
 }
 
-##########
+#####
 
 sub is_get_integer {
-  my $str = shift @_;
-  
-  $str = &clean_begend_spaces($str);
-  return(1, $str)
-    if ($str =~ m%^\-?\d+$%);
-  
-  return(0, undef);
+  my ($a, $b) = &__extract_float(@_);
+  return(0, undef) if ((! defined $a) || (defined $b));
+  return(1, $a);
 }
 
 #####
 
 sub is_integer {
-  my $str = shift @_;
-  
-  my ($ok, $val) = & is_get_integer($str);
-  
+  my ($ok, $val) = &is_get_integer(@_);
   return($ok);
 }
 
 #####
 
 sub get_integer {
-  my $str = shift @_;
-  
-  my ($ok, $val) = & is_get_integer($str);
-  
+  my ($ok, $val) = &is_get_integer(@_);
   return($val);
 }
 
@@ -1305,16 +1272,13 @@ sub human_int {
 
   return($v)
     if (length($v) < 4);
-    
-  my $txt = "";
+
+  my @rord = ();
   while (length($v) > 0) {
-    my $c = substr($v, 0, 1, "");
-    $txt .= "$c";
-    $txt .= ","
-      if ((length($v) % 3 == 0) && (length($v) > 0));
+    push @rord, substr($v, -3, 3, "");
   }
 
-  return($txt);
+  return(join(",", reverse(@rord)));
 }
 
 ####################
@@ -1436,7 +1400,7 @@ sub unarchive_archive {
 ##########
 
 sub safe_exists {
-  # when doing exists $hash{$k1}{$k2}{$k2}
+  # when doing exists $hash{$k1}{$k2}{$k3}
   # avoid creating $hash{$k1}{$k2}
 
   my ($ra, $k, @ks) = @_;
