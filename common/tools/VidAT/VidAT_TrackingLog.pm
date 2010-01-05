@@ -59,7 +59,7 @@ sub new
 		$self->{restrictMax} = $rmax;
 	}
 	
-	$self->{videoClass} = new VideoEdit();
+	$self->{videoClass} = new VideoEdit($tmpBaseDir);
 	$self->loadFile();
 	$self->process("polygon") if(exists($self->{polygon}));
 	$self->process("point") if(exists($self->{point}));
