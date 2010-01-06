@@ -141,10 +141,10 @@ sub hasFilters
 {
 	my ($self, $id) = @_;
 	
-	my @outPolygon;
-	my @outPoint;
-	my @outLabel;
-	my @outEllipses;
+	my @outPolygon =();
+	my @outPoint =();
+	my @outLabel = ();
+	my @outEllipses = ();
 	
 	foreach my $bt (keys %{ $self->{filter} })
 	{
@@ -163,6 +163,11 @@ sub hasFilters
 					}
 				}
 			}
+		}
+		else
+		{
+			# Remove the un-needed records in the filter database
+			delete $self->{filter}{$bt};
 		}
 	}
 	
