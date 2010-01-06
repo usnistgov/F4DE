@@ -167,7 +167,7 @@ sub hasFilters
 		else
 		{
 			# Remove the un-needed records in the filter database
-			delete $self->{filter}{$bt};
+			#delete $self->{filter}{$bt};
 		}
 	}
 	
