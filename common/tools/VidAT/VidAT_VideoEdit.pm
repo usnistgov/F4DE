@@ -61,7 +61,7 @@ sub extractJpegs
 	
 	$self->{tempDir1} = tempdir( CLEANUP => 1 , DIR => $self->{tmpBaseDir});
 	$self->{images} = new FFmpegImage($self->{videoFile});
-	$self->{images}->extractJpeg($self->{tempDir1});
+	$self->{images}->extractJpeg($self->{tempDir1}, $self->{minFrame}, $self->{maxFrame});
 }
 
 sub buildVideo
@@ -141,10 +141,10 @@ sub hasFilters
 {
 	my ($self, $id) = @_;
 	
-	my @outPolygon =();
-	my @outPoint =();
-	my @outLabel = ();
-	my @outEllipses = ();
+	my @outPolygon;
+	my @outPoint;
+	my @outLabel;
+	my @outEllipses;
 	
 	foreach my $bt (keys %{ $self->{filter} })
 	{
@@ -154,20 +154,21 @@ sub hasFilters
 			{
 				if($id <= $et)
 				{
-					foreach my $elt (@{ $self->{filter}{$bt}{$et} })
+					for(my $i=0; $i<scalar(@{ $self->{filter}{$bt}{$et} }); $i++)
 					{
+						my $elt = $self->{filter}{$bt}{$et}[$i];
 						push(@outPolygon, $elt) if($elt->{TYPE} eq "polygon");
 						push(@outEllipses, $elt) if($elt->{TYPE} eq "ellipse");
 						push(@outPoint, $elt) if($elt->{TYPE} eq "point");
 						push(@outLabel, $elt) if($elt->{TYPE} eq "label");
 					}
+					
+					if($id == $et)
+					{
+						undef $self->{filter}{$bt}{$et};
+					}
 				}
 			}
-		}
-		else
-		{
-			# Remove the un-needed records in the filter database
-			#delete $self->{filter}{$bt};
 		}
 	}
 	
@@ -205,7 +206,10 @@ sub processSingleImage
 			                   $polygons->[$j]->{WIDTH}, 
 			                   $polygons->[$j]->{FILLCOLOR},
 			                   $polygons->[$j]->{CLOSE});
+			
 		}
+		
+		undef @$polygons;
 		
 		# ellipses
 		for(my $j=0; $j<scalar(@$ellipses); $j++)
@@ -220,6 +224,8 @@ sub processSingleImage
 			                  $ellipses->[$j]->{FILLCOLOR});
 		}
 		
+		undef @$ellipses;
+		
 		# points
 		for(my $j=0; $j<scalar(@$points); $j++)
 		{
@@ -227,12 +233,16 @@ sub processSingleImage
 		   $jpeg->drawPoint(\@coord, $points->[$j]->{COLOR}, $points->[$j]->{WIDTH});
 		}
 		
+		undef @$points;
+		
 		# labels
 		for(my $j=0; $j<scalar(@$labels); $j++)
 		{
 			my @coord = ($labels->[$j]->{X}, $labels->[$j]->{Y});
 			$jpeg->drawLabel($labels->[$j]->{TEXT}, \@coord);
 		}
+		
+		undef @$labels;
 		
 		$jpeg->jpeg($outJpeg);
 		$jpeg->clean();
@@ -248,16 +258,19 @@ sub processImages
 	my @files = grep { /^\d+\.jpeg$/ } readdir(DIR);
 	closedir(DIR);
 	
-	for(my $i=1; $i<=scalar(@files); $i++)
+	for(my $i=0; $i<scalar(@files); $i++)
 	{
-		next if($i < $self->{minFrame});
-		next if($i > $self->{maxFrame});
-		next if(! $self->doKeep($i));
+		my $f = $files[$i];
+		$f =~ s/^0*(\d+)\.jpeg/$1/;
+	
+		next if($f < $self->{minFrame});
+		next if($f > $self->{maxFrame});
+		next if(! $self->doKeep($f));
 
 		my $jpeg = new JPEGEdit("$self->{tempDir1}/$files[$i]", $self->{tmpBaseDir});
 		
 		# Apply all the filters
-		my ($polygons, $ellipses, $points, $labels) = $self->hasFilters($i);
+		my ($polygons, $ellipses, $points, $labels) = $self->hasFilters($f);
 		
 		# polygons
 		for(my $j=0; $j<scalar(@$polygons); $j++)
@@ -268,6 +281,8 @@ sub processImages
 			                   $polygons->[$j]->{FILLCOLOR},
 			                   $polygons->[$j]->{CLOSE});
 		}
+		
+		undef @$polygons;
 		
 		# ellipses
 		for(my $j=0; $j<scalar(@$ellipses); $j++)
@@ -282,6 +297,8 @@ sub processImages
 			                  $ellipses->[$j]->{FILLCOLOR});
 		}
 		
+		undef @$ellipses;
+		
 		# points
 		for(my $j=0; $j<scalar(@$points); $j++)
 		{
@@ -289,15 +306,19 @@ sub processImages
 		   $jpeg->drawPoint(\@coord, $points->[$j]->{COLOR}, $points->[$j]->{WIDTH});
 		}
 		
+		undef @$points;
+		
 		# labels
 		for(my $j=0; $j<scalar(@$labels); $j++)
 		{
 			my @coord = ($labels->[$j]->{X}, $labels->[$j]->{Y});
 			$jpeg->drawLabel($labels->[$j]->{TEXT}, \@coord);
 		}
+		
+		undef @$labels;
 	
 		# Duplicates
-		my $nbrcopy = 1 + $self->doDuplicate($i);
+		my $nbrcopy = 1 + $self->doDuplicate($f);
 	
 		for(my $k=0; $k<$nbrcopy; $k++)
 		{

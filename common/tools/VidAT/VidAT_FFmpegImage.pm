@@ -120,9 +120,19 @@ sub parseVideoInformation
 
 sub extractJpeg
 {
-	my ($self, $dir) = @_;
+	my ($self, $dir, $firstFrame, $lastFrame) = @_;
 	
-	my $commandToRun = "ffmpeg -y -i '$self->{inFile}' -an -sameq -f image2 '$dir/%09d.jpeg'";
+	my $beginSecondTime = $firstFrame/$self->{fps};
+	my $hours = int($beginSecondTime/3600);
+	my $mins = int( ($beginSecondTime - 3600*$hours)/60 );
+	my $secs = int($beginSecondTime - 3600*$hours - $mins*60 );
+	my $msecs = int( 1000*($beginSecondTime - 3600*$hours - $mins*60 - $secs) + 0.5);
+
+	my $nbrFrames = $lastFrame - $firstFrame + 1;
+
+	my $strBegTime = sprintf("%02d:%02d:%02d.%03d", $hours, $mins, $secs, $msecs);
+	
+	my $commandToRun = "ffmpeg -y -i '$self->{inFile}' -ss $strBegTime -vframes $nbrFrames -an -sameq -f image2 '$dir/%09d.jpeg'";
 	my $returnCommand = qx($commandToRun);
 	my $exitStatus = $? >> 8;
 	
@@ -135,6 +145,14 @@ sub extractJpeg
 	opendir(DIR, $dir);
 	my @files = grep { /^\d+\.jpeg$/ } readdir(DIR);
 	closedir(DIR);
+	
+	for(my $i = 0; $i<scalar(@files); $i++)
+	{
+		my $currentFileName = sprintf("$dir/%09d.jpeg", $i+1);
+		my $newFileName = sprintf("$dir/0%09d.jpeg", $i+$firstFrame);
+		
+		rename("$currentFileName", "$newFileName");
+	}
 
 	$self->{nbrJpeg} = scalar(@files);
 }
