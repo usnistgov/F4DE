@@ -212,7 +212,8 @@ sub check_skip {
 sub check_files {
   my ($testname, $subtype, $warn_msg, @lstests) = @_;
   
-  foreach my $lsa (@lstests) {
+  for (my $i = 0; $i < scalar @lstests; $i++) {
+    my $lsa = $lstests[$i];
     next if (MMisc::ls_ok($lsa));
 
     &print_name($testname, $subtype);
@@ -310,7 +311,8 @@ sub _mcfgetf {
   my $mode = shift @_;
   my @vs = @_;
   
-  foreach my $v (@vs) {
+  for (my $i = 0; $i < scalar @vs; $i++) {
+    my $v = $vs[$i];
     my ($sf, $df) = &_split_fn($v);
     my $sfc = &_get_sfc($v);
     return(0) if ($sfc eq $dev);
@@ -327,7 +329,8 @@ sub _mcfgetf {
 sub _cmp_sfc_dfc {
   my @vs = @_;
 
-  foreach my $v (@vs) {
+  for (my $i = 0; $i < scalar @vs; $i++) {
+    my $v = $vs[$i];
     my $sfc = &_get_sfc($v);
     return(0) if ($sfc eq $dev);
 

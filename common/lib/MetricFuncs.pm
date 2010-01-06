@@ -58,14 +58,20 @@ sub isCompatible(){
     
   return 0 if (ref($self) ne ref($met2));
     
-  foreach my $k (keys %{ $self->{PARAMS} }) {
+  my @tmp = keys %{ $self->{PARAMS} };
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $k = $tmp[$i];
     return 0 if (! exists($met2->{PARAMS}->{$k}));
     return 0 if ($self->{PARAMS}->{$k} ne $met2->{PARAMS}->{$k});
   }
-  foreach my $k (keys %{ $met2->{PARAMS} }) {
+
+  my @tmp = keys %{ $met2->{PARAMS} };
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $k = $tmp[$i];
     return 0 if (! exists($self->{PARAMS}->{$k}));
     return 0 if ($self->{PARAMS}->{$k} ne $met2->{PARAMS}->{$k});
   }
+
   return 1;
 }
 
@@ -80,7 +86,9 @@ sub isCompatible(){
   sub getParamsStr(){
     my($self,$prefix) = @_;
     my $str = "{ (";
-    foreach my $k (keys %{ $self->{PARAMS} }) {
+    my @tmp = keys %{ $self->{PARAMS} };
+    for (my $i = 0; $i < scalar @tmp; $i++) {
+      my $k = $tmp[$i];
       $str .= "$prefix$k => '$self->{PARAMS}->{$k}', ";
     }
     $str .= ") }";
@@ -192,8 +200,10 @@ Returns an array of global miss/fa/comb statistics based on the actual decisions
     my ($self) = @_;
     my $b = "";
     my %blocks = ();
-        
-    foreach $b ($self->{TRIALS}->getBlockIDs()) {
+
+    my @tmp = $self->{TRIALS}->getBlockIDs();
+    for (my $i = 0; $i < scalar @tmp; $i++) {
+      my $b = $tmp[$i];
       $blocks{$b}{MFA} = $self->{TRIALS}->getNumFalseAlarm($b);
       $blocks{$b}{MMISS} = $self->{TRIALS}->getNumMiss($b);
     }

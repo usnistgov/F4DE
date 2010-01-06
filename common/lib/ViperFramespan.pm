@@ -155,7 +155,8 @@ sub _fs_check_value {
   # Process pair per pair
   $value = MMisc::clean_begend_spaces($value);
   my @todo = &_fs_split_line($value);
-  foreach my $key (@todo) {
+  for (my $i = 0; $i < scalar @todo; $i++) {
+    my $key = $todo[$i];
     my ($txt, $b, $e) = &_fs_split_pair($key);
     return("", $txt) if (! MMisc::is_blank($txt));
     $txt = &_fs_check_pair($b, $e);
@@ -217,7 +218,8 @@ sub _fs_shorten_value {
   my $entry = shift @ftodo;
   my ($b, $e) = &_fs_split_pair_nocheck($entry);
 
-  foreach $entry (@ftodo) {
+  for (my $i = 0; $i < scalar @ftodo; $i++) {
+    my $entry = $ftodo[$i];
     my ($nb, $ne) = &_fs_split_pair_nocheck($entry);
 
     if ($nb == $e) {            # ex: 1:2 2:6 -> 1:6
@@ -518,7 +520,9 @@ sub get_list_of_framespans {
   my $value = $self->{value};
   my $fps = undef;
   $fps = $self->get_fps() if ($self->is_fps_set());
-  foreach my $p (&_fs_split_line($value)) {
+  my @todo = &_fs_split_line($value);
+  for (my $i = 0; $i < scalar @todo; $i++) {
+    my $p = $todo[$i];
     my $nfs = new ViperFramespan();
     if (! $nfs->set_value($p, 1)) {
       $self->_set_errormsg("Failed to set sub framespan value \'$p\'");
@@ -680,7 +684,8 @@ sub _split_pair_to_2darray {
   my @v = @_;
 
   my @out = ();
-  foreach my $entry (@v) {
+  for (my $i = 0; $i < scalar @v; $i++) {
+    my $entry = $v[$i];
     my ($b, $e) = &_fs_split_pair_nocheck($entry);
     push @out, [$b, $e];
   }
@@ -856,7 +861,8 @@ sub _fs_not_value {
   my @ftodo = &_fs_split_line($fs);
 
   my ($b, $e) = (0, 0);
-  foreach my $entry (@ftodo) {
+  for (my $i = 0; $i < scalar @ftodo; $i++) {
+    my $entry = $ftodo[$i];
     ($b, $e) = &_fs_split_pair_nocheck($entry);
 
     push @o, ($min . ":" . ($b - 1))
@@ -1110,7 +1116,8 @@ sub duration {
   my @pairs = &_fs_split_line($v);
 
   my $d = 0;
-  foreach my $p (@pairs) {
+  for (my $i = 0; $i < scalar @pairs; $i++) {
+    my $p = $pairs[$i];
     my ($b, $e) = &_fs_split_pair_nocheck($p);
 
     # As for extent_duration:
@@ -1155,7 +1162,8 @@ sub gap_shorten {
   my $entry = shift @ftodo;
   my ($b, $e) = &_fs_split_pair_nocheck($entry);
 
-  foreach $entry (@ftodo) {
+  for (my $i = 0; $i < scalar @ftodo; $i++) {
+    my $entry = $ftodo[$i];
     my ($nb, $ne) = &_fs_split_pair_nocheck($entry);
 
     my $v = $nb - $e;
@@ -1431,7 +1439,8 @@ sub value_shift {
 
   my @in = &_fs_split_line($fs);
   my @out = ();
-  foreach my $entry (@in) {
+  for (my $i = 0; $i < scalar @in; $i++) {
+    my $entry = $in[$i];
     my ($b, $e) = &_fs_split_pair_nocheck($entry);
 
     $b += $val;
@@ -1480,7 +1489,8 @@ sub list_frames {
   my $v = $self->{value};
 
   my @todo = &_fs_split_line($v);
-  foreach my $pair (@todo) {
+  for (my $i = 0; $i < scalar @todo; $i++) {
+    my $pair = $todo[$i];
     my ($b, $e) = &_fs_split_pair_nocheck($pair);
 
     for (my $c = $b; $c <= $e; $c++) {

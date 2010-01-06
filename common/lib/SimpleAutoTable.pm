@@ -137,7 +137,9 @@ sub _addLab(){
 sub _getNumLev(){
   my ($self, $ht) = @_;
   my $numLev = 0;
-  foreach my $sid (keys %{ $ht->{SubID} }) {
+  my @tmp = keys %{ $ht->{SubID} };
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $sid = $tmp[$i];
     my $nsl = $self->_getNumLev($ht->{SubID}->{$sid});
     $numLev = (1 + $nsl) if ($numLev < (1 + $nsl));
   }
@@ -160,13 +162,17 @@ sub _getRowLabelWidth(){
   my $len = 0;
   if ($lev == 1) {
     ### Loop through the IDS at this level
-    foreach my $sid (keys %{ $ht->{SubID} }) {
+    my @tmp = keys %{ $ht->{SubID} };
+    for (my $i = 0; $i < scalar @tmp; $i++) {
+      my $sid = $tmp[$i];
       $len = length($sid) if ($len < length($sid));
     }
     return $len
   } else {
     ### recur at the next level
-    foreach my $sid (keys %{ $ht->{SubID} }) {
+    my @tmp = keys %{ $ht->{SubID} };
+    for (my $i = 0; $i < scalar @tmp; $i++) {
+      my $sid = $tmp[$i];
       my $slen = $self->_getRowLabelWidth($ht->{SubID}{$sid}, $lev - 1);
       $len = $slen if ($len < $slen);
     }
@@ -197,9 +203,12 @@ sub _getOrderedLabelIDs(){
     MMisc::error_quit("Internal Error SimpleAutoTable: Sort order '$order' not defined");
   }  
 
-  foreach my $sid (@sortedKeys) {
+  for (my $i1 = 0; $i1 < scalar @sortedKeys; $i1++) {
+    my $sid = $sortedKeys[$i1];
     if ($ht->{SubID}->{$sid}->{SubIDCount} > 0) {
-      foreach my $labelID ($self->_getOrderedLabelIDs($ht->{SubID}->{$sid}), $order) {
+      my @k2tmp = ($self->_getOrderedLabelIDs($ht->{SubID}->{$sid}), $order);
+      for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+        my $labelID = $k2tmp[$i2];
         push @ids, "$sid|$labelID";
       }
     } else {
@@ -327,7 +336,8 @@ sub renderTxtTable(){
            : "") . $self->_nChrStr($data_len, "-");
   $out .= "\n";
   
-  foreach $rowIDStr (@rowIDs) {
+  for (my $i1 = 0; $i1 < scalar @rowIDs; $i1++) {
+    $rowIDStr = $rowIDs[$i1];
     if (! $r1c) {
       for ($c=1; $c<=$numRowLev; $c++) {
         $out .= $self->_leftJust($rowIDStr, $maxRowLabWidth);
@@ -335,7 +345,8 @@ sub renderTxtTable(){
       $out .= "|";
     }
 
-    foreach $colIDStr (@colIDs) {
+    for (my $i2 = 0; $i2 < scalar @colIDs; $i2++) {
+      $colIDStr = $colIDs[$i2];
       $out .= "$gapStr" 
         . $self->_rightJust($self->{data}{$rowIDStr."-".$colIDStr}, 
                             $self->_getColLabelWidth($colIDStr));
@@ -370,7 +381,8 @@ sub loadCSV {
   my %csv = ();
   my %elt1 = ();
   my $inc = 0;
-  foreach my $line (@filec) {
+  for (my $j = 0; $j < scalar @filec; $j++) {
+    my $line = $filec[$j];
     next if ($line =~ m%^\s*$%);
 
     my $key = sprintf("File: $file | Line: %012d", $inc);
@@ -390,13 +402,17 @@ sub loadCSV {
   }
 
   my $cu1cak = 1; # Can use 1st column as (master) key
-  foreach my $key (keys %elt1) {
+  my @k1tmp = keys %elt1;
+  for (my $i1 = 0; $i1 < scalar @k1tmp; $i1++) {
+    my $key = $k1tmp[$i1];
     $cu1cak = 0 if ($elt1{$key} > 1);
   }
   $self->setProperties({ "$key_KeyColumnCsv" => "Remove", "$key_KeyColumnTxt" => "Remove"}) if (! $cu1cak);
 
   my @colIDs = ();
-  foreach my $key (sort keys %csv) {
+  my @k2tmp = sort keys %csv;
+  for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+    my $key = $k2tmp[$i2];
     my @a = @{$csv{$key}};
 
     if (scalar @colIDs == 0) {
@@ -459,10 +475,12 @@ sub renderCSV {
   $csvh->set_number_of_columns(scalar @line);
 
   # line per line
-  foreach my $rowIDStr (@rowIDs) {
+  for (my $i1 = 0; $i1 < scalar @rowIDs; $i1++) {
+    my $rowIDStr = $rowIDs[$i1];
     my @line = ();
     push @line, $rowIDStr if ($k1c);
-    foreach my $colIDStr (@colIDs) {
+    for (my $i2 = 0; $i2 < scalar @colIDs; $i2++) {
+      my $colIDStr = $colIDs[$i2];
       push @line, $self->{data}{$rowIDStr."-".$colIDStr};
     }
     my $txt = $csvh->array2csvline(@line);
@@ -528,7 +546,8 @@ sub add_selected_from_CSV {
       if ($csvh->error());
 
     my $id = "$idbase | CSVfile: $csvfile | Line#: $cont";
-    foreach my $col (@exp_header) {
+    for (my $i = 0; $i < scalar @exp_header; $i++) {
+      my $col = $exp_header[$i];
       if (! exists $pos{$col}) {
         $self->addData($nfv, $col, $id);
       } else {

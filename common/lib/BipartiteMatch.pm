@@ -193,7 +193,8 @@ sub _get_XXX_objects {
   my @xxxs = $self->_get_XXX_ids($xxx);
   return(@out) if (($self->error()) || (scalar @xxxs == 0));
 
-  foreach my $obj_id (@xxxs) {
+  for (my $i = 0; $i < scalar @xxxs; $i++) {
+    my $obj_id = $xxxs[$i];
     my $obj = $self->_get_known_key_in_hash($obj_id, %inhash);
     return(undef) if ($self->error());
 
@@ -248,8 +249,12 @@ sub _set_rev_hash {
   return(undef) if ($self->error());
 
   my %rev_tmp = ();
-  foreach my $ref_id (keys %tmp) {
-    foreach my $sys_id (keys %{$tmp{$ref_id}}) {
+  my @k1tmp = keys %tmp;
+  for (my $i1 = 0; $i1 < scalar @k1tmp; $i1++) {
+    my $ref_id = $k1tmp[$i1];
+    my @k2tmp = keys %{$tmp{$ref_id}};
+    for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+      my $sys_id = $k2tmp[$i2];
       $rev_tmp{$sys_id}{$ref_id} = $tmp{$ref_id}{$sys_id};
     }
   }
@@ -298,7 +303,9 @@ sub get_jointvalues_ref_defined_list {
   }
 
   my @res = ();
-  foreach my $sys_id (keys %{$jv{$ref_id}}) {
+  my @ktmp = keys %{$jv{$ref_id}};
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $sys_id = $ktmp[$i];
     my $v = $self->is_jointvalues_refsys_defined($ref_id, $sys_id);
     return(undef) if ($self->error());
     push @res, $sys_id if ($v);
@@ -326,7 +333,9 @@ sub get_jointvalues_sys_defined_list {
   }
 
   my @res = ();
-  foreach my $ref_id (keys %{$rev_jv{$sys_id}}) {
+  my @ktmp = keys %{$rev_jv{$sys_id}};
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $ref_id = $ktmp[$i];
     my $v = $self->is_jointvalues_refsys_defined($ref_id, $sys_id);
     return(undef) if ($self->error());
     push @res, $ref_id if ($v);
@@ -532,11 +541,15 @@ sub compute {
 
   # Set MappedRecord
   my %ref_ids = ();
-  foreach my $ref_id (keys %refObj) {
+  my @tmp = keys %refObj;
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $ref_id = $tmp[$i];
     $ref_ids{$ref_id}++;
   }
   my %sys_ids = ();
-  foreach my $sys_id (keys %sysObj) {
+  my @tmp = keys %sysObj;
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $sys_id = $tmp[$i];
     $sys_ids{$sys_id}++;
   }
   # 'mapped'
@@ -613,7 +626,9 @@ sub _clique_sys2ref {
   my ($cid, $rjv, $sys_id, $rtdr, $rtds, $cr, $cs) = @_;
 
   my $done = 0;
-  foreach my $ref_id (keys %{$rtdr}) {
+  my @tmp = keys %{$rtdr};
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $ref_id = $tmp[$i];
     next if (! exists $$rtdr{$ref_id});
     if (defined $$rjv{$ref_id}{$sys_id}) {
       delete $$rtds{$sys_id} if (exists $$rtds{$sys_id});
@@ -634,7 +649,9 @@ sub _clique_ref2sys {
   my ($cid, $rjv, $ref_id, $rtdr, $rtds, $cr, $cs) = @_;
   
   my $done = 0;
-  foreach my $sys_id (keys %{$rtds}) {
+  my @tmp = keys %{$rtds};
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $sys_id = $tmp[$i];
     next if (! exists $$rtds{$sys_id});
     if (defined $$rjv{$ref_id}{$sys_id}) {
       delete $$rtdr{$ref_id} if (exists $$rtdr{$ref_id});
@@ -656,9 +673,13 @@ sub _map_ref_to_sys_clique_cohorts {
 
   my %td_ref = ();
   my %td_sys = ();
-  foreach my $ref_id (keys %{$rjv}) { 
+  my @k1tmp = keys %{$rjv};
+  for (my $i1 = 0; $i1 < scalar @k1tmp; $i1++) {
+    my $ref_id = $k1tmp[$i1];
     $td_ref{$ref_id}++;
-    foreach my $sys_id (keys %{$$rjv{$ref_id}}) {
+    my @k2tmp = keys %{$$rjv{$ref_id}};
+    for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+      my $sys_id = $k2tmp[$i2];
       $td_sys{$sys_id}++;
     }
   }
@@ -669,13 +690,17 @@ sub _map_ref_to_sys_clique_cohorts {
   my %c_sys = ();
   
   # Process all refs first
-  foreach my $ref_id (keys %td_ref) {
+  my @tmp = keys %td_ref;
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $ref_id = $tmp[$i];
     next if (! exists $td_ref{$ref_id});
     $cid++ if (&_clique_ref2sys($cid, $rjv, $ref_id, \%td_ref, \%td_sys, \%c_ref, \%c_sys));
   }
   
   # Then the leftover sys
-  foreach my $sys_id (keys %td_sys) {
+  my @tmp = keys %td_sys;
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $sys_id = $tmp[$i];
     next if (! exists $td_sys{$sys_id});
     $cid++ if (&_clique_sys2ref($cid, $rjv, $sys_id, \%td_ref, \%td_sys, \%c_ref, \%c_sys));
   }
@@ -692,17 +717,21 @@ sub _map_ref_to_sys_clique_cohorts {
     next if ((scalar @rl == 0) || (scalar @sl == 0));
 
     my %tmp_jv = ();
-    foreach my $ref_id (@rl) {
-      foreach my $sys_id (@sl) {
+    for (my $i1 = 0; $i1 < scalar @rl; $i1++) {
+      my $ref_id = $rl[$i1];
+      for (my $i2 = 0; $i2 < scalar @sl; $i2++) {
+        my $sys_id = $sl[$i2];
         $tmp_jv{$ref_id}{$sys_id} = $$rjv{$ref_id}{$sys_id};
       }
     }
     my %tmp_fa = ();
-    foreach my $sys_id (@sl) {
+    for (my $j = 0; $j < scalar @sl; $j++) {
+      my $sys_id = $sl[$j];
       $tmp_fa{$sys_id} = $$rfa{$sys_id};
     }
     my %tmp_md = ();
-    foreach my $ref_id (@rl) {
+    for (my $j = 0; $j < scalar @rl; $j++) {
+      my $ref_id = @rl[$j];
       $tmp_md{$ref_id} = $$rmd{$ref_id};
     }
     
@@ -710,7 +739,9 @@ sub _map_ref_to_sys_clique_cohorts {
     return($err, %map) if (! MMisc::is_blank($err));
 
     # Add the temp result to the global result
-    foreach my $ref_id (keys %tmp_map) {
+    my @ktmp = keys %tmp_map;
+    for (my $j = 0; $j < scalar @ktmp; $j++) {
+      my $ref_id = $ktmp[$j];
       $map{$ref_id} = $tmp_map{$ref_id};
     }
     
@@ -737,7 +768,9 @@ sub _map_ref_to_sys_cohorts {
   my %sys_info = ();
   my %reversed_values = ();
 
-  foreach my $ref_id (keys %joint_values) {
+  my @ktmp = keys %joint_values;
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $ref_id = $ktmp[$i];
     return("No missed detect value for ref ID \'$ref_id\'", ())
       if (! defined $md_values{$ref_id});
 
@@ -752,7 +785,9 @@ sub _map_ref_to_sys_cohorts {
     }
   }
 
-  foreach my $sys_id (keys %reversed_values) {
+  my @ktmp = keys %reversed_values;
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $sys_id = $ktmp[$i];
     return("No false alarm value for sys ID \'$sys_id\'", ())
       if (! defined $fa_values{$sys_id});
 
@@ -765,7 +800,9 @@ sub _map_ref_to_sys_cohorts {
 
   # Group ref and sys IDs into "cohort sets" and map each set independently
   my %map = ();
-  foreach my $ref (values %ref_info) {
+  my @ktmp = values %ref_info;
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $ref = $ktmp[$i];
     next if (exists $ref->{cohort});
 
     # Collect cohorts
@@ -781,8 +818,10 @@ sub _map_ref_to_sys_cohorts {
     $ref_map{$ref->{id}} = 1;
     while (@queue > 0) {
       my ($id, $ref_type) = splice(@queue, 0, 2); # Remove (and returns) the first two elements of @queue
-      if ($ref_type) {          # Find sys cohorts for this ref
-        foreach my $sys_id (keys %{$joint_values{$id}}) {
+      if ($ref_type) { # Find sys cohorts for this ref
+        my @k1tmp = keys %{$joint_values{$id}};
+        for (my $i1 = 0; $i1 < scalar @k1tmp; $i1++) {
+          my $sys_id = $k1tmp[$i1];
           next if ((defined $sys_map{$sys_id}) or (not defined $joint_values{$id}{$sys_id}));
           $sys_map{$sys_id} = 1;
           my $sys = $sys_info{$sys_id};
@@ -791,8 +830,10 @@ sub _map_ref_to_sys_cohorts {
           push @sys_cohorts, $sys;
           splice(@queue, scalar @queue, 0, $sys_id, 0); # eq 'push @queue, $sys_id, 0'
         }
-      } else {                  # find ref cohorts for this sys
-        foreach my $ref_id (keys %{$reversed_values{$id}}) {
+      } else {  # find ref cohorts for this sys
+        my @k2tmp = keys %{$reversed_values{$id}};
+        for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+          my $ref_id = $k2tmp[$i2];
           next if ((defined $ref_map{$ref_id}) or (not defined $reversed_values{$id}{$ref_id}));
           $ref_map{$ref_id} = 1;
           my $ref = $ref_info{$ref_id};
@@ -806,9 +847,11 @@ sub _map_ref_to_sys_cohorts {
 
     # Map cohorts
     my %costs = ();
-    foreach my $ref_cohort (@ref_cohorts) {
+    for (my $i3 = 0; $i3 < scalar @ref_cohorts; $i3++) {
+      my $ref_cohort = $ref_cohorts[$i3];
       my ($ref_id, $md_value) = ($ref_cohort->{id}, $ref_cohort->{val});
-      foreach my $sys_cohort (@sys_cohorts) {
+      for (my $i4 = 0; $i4 < scalar @sys_cohorts; $i4++) {
+        my $sys_cohort = $sys_cohorts[$i4];
         my ($sys_id, $fa_value) = ($sys_cohort->{id}, $sys_cohort->{val});
         $costs{$ref_id}{$sys_id} = $md_value + $fa_value - $joint_values{$ref_id}{$sys_id}
           if (defined $joint_values{$ref_id}{$sys_id});
@@ -853,8 +896,10 @@ sub _weighted_bipartite_graph_matching {
     my %costs = %{$score{$key}};
     my %map = ();
     my $imin = undef;
-    foreach my $i (keys %costs) {
-      $imin = $i if ((not defined $imin) or ($costs{$imin} > $costs{$i}));
+    my @tmp = keys %costs;
+    for (my $i = 0; $i < scalar @tmp; $i++) {
+      my $v = $tmp[$i];
+      $imin = $v if ((not defined $imin) or ($costs{$imin} > $costs{$v}));
     }
     $map{$key} = $imin;
     return("", %map);
@@ -886,8 +931,11 @@ sub _weighted_bipartite_graph_matching {
   my @cols = ();
   my %hcols = (); 
   my $min_score = $INF;
-  foreach $row (@rows) {
-    foreach $col (keys %{$score{$row}}) {
+  for (my $i1 = 0; $i1 < scalar @rows; $i1++) {
+    $row = $rows[$i1];
+    my @k2tmp = keys %{$score{$row}};
+    for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+      $col = $k2tmp[$i2];
       $min_score = MMisc::min($min_score, $score{$row}{$col});
       $hcols{$col} = $col;
     }
@@ -896,10 +944,16 @@ sub _weighted_bipartite_graph_matching {
   my $fa = "fa";
   $fa .= "0" if (exists $hcols{$fa}); # ?
   my $reverse_search = scalar @rows < scalar @cols; # search is faster when ncols <= nrows
-  foreach $row (@rows) {
-    foreach $col (keys %{$score{$row}}) {
-      ($reverse_search ? $hcost{$col}{$row} : $hcost{$row}{$col})
-        = $score{$row}{$col} - $min_score;
+  for (my $i1 = 0; $i1 < scalar @rows; $i1++) {
+    $row = $rows[$i1];
+    my @k2tmp = keys %{$score{$row}};
+    for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+      $col = $k2tmp[$i2];
+      if ($reverse_search) {
+        $hcost{$col}{$row} = $score{$row}{$col} - $min_score;
+      } else {
+        $hcost{$row}{$col} = $score{$row}{$col} - $min_score;
+      }
     }
   }
   push @rows, $md;
@@ -920,7 +974,9 @@ sub _weighted_bipartite_graph_matching {
     $col_min[$l] = $no_match_cost;
     next if ($l > $ncols);
     $col = $cols[$l];
-    foreach $row (keys %hcost) {
+    my @k3tmp = keys %hcost;
+    for (my $i3 = 0; $i3 < scalar @k3tmp; $i3++) {
+      $row = $k3tmp[$i3];
       next if (! defined $hcost{$row}{$col});
       my $val = $hcost{$row}{$col};
       $col_min[$l] = $val if ($val < $col_min[$l]);
@@ -1102,7 +1158,8 @@ sub _weighted_bipartite_graph_matching {
 sub _display {
   my ($self, @todisplay) = @_;
 
-  foreach my $td (@todisplay) {
+  for (my $i = 0; $i < scalar @todisplay; $i++) {
+    my $td = $todisplay[$i];
     print "[$td] ", MMisc::get_sorted_MemDump($self->{$td});
   }
 }

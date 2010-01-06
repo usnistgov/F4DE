@@ -222,8 +222,10 @@ sub _check_xsdfiles {
 
   my %xp = ();
   my %xpl = ();
-  foreach my $fname (@xsdfiles) {
-    foreach my $xsdpath (@x) {
+  for (my $i = 0; $i < scalar @xsdfiles; $i++) {
+    my $fname = $xsdfiles[$i];
+    for (my $j = 0; $j < scalar @x; $j++) {
+      my $xsdpath = $x[$j];
       next if (exists $xp{$fname});
 
       $xsdpath =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;

@@ -444,7 +444,9 @@ the CODE DIES as this should never happen.
     #    my $combAvg = $self->combErrCalc($missAvg, $faAvg);
     #    ($combAvg, undef, $missAvg, $missSSD, $faAvg, $faSSD);
 
-    foreach my $block (keys %$data) {
+    my @ktmp = keys %$data;
+    for (my $ik = 0; $ik < scalar @ktmp; $ik++) {
+      my $block = $ktmp[$ik];
       my $luFA = $data->{$block}{MFA};
       my $luMiss = $data->{$block}{MMISS};
       die "Error: Can't calculate errCombBlockSetCalc: key 'MFA' for block '$block' missing" if (! defined($luFA));

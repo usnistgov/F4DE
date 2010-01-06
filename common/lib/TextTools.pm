@@ -54,33 +54,33 @@ sub PunctuationSplit
 	my $strout;
 	my $add;
 	
-	foreach my $str (@spltarr)
-	{
-		$add = 0;
-		
-		if(!($pnct%2))
-		{
-			$strout = $str;
-			$add = 1 if(scalar(@spltarr) == ($pnct + 1));
-		}
-		else
-		{
-			$strout .= $str;
-			$add = 1;
-		}
-		
-		if($add)
-		{
-			$strout =~ s/\s+/ /g;
-			$strout =~ s/^\s+//; 
-			$strout =~ s/\s+$//;
-			$strout =~ s/(\s+)([\.\!\?\;\:])/$2/;
-			$strout =~ s/(\s+)([\)\"])/$2/;
-			$strout =~ s/([\(\"])(\s+)/$1/;
-			push(@output, $strout);
-		}
-		
-		$pnct++;
+        for (my $i = 0; $i < scalar @spltarr; $i++) {
+          my $str = $spltarr[$i];
+          $add = 0;
+          
+          if(!($pnct%2))
+            {
+              $strout = $str;
+              $add = 1 if(scalar(@spltarr) == ($pnct + 1));
+            }
+          else
+            {
+              $strout .= $str;
+              $add = 1;
+            }
+          
+          if($add)
+            {
+              $strout =~ s/\s+/ /g;
+              $strout =~ s/^\s+//; 
+              $strout =~ s/\s+$//;
+              $strout =~ s/(\s+)([\.\!\?\;\:])/$2/;
+              $strout =~ s/(\s+)([\)\"])/$2/;
+              $strout =~ s/([\(\"])(\s+)/$1/;
+              push(@output, $strout);
+            }
+          
+          $pnct++;
 	}
 	
 	return(@output);

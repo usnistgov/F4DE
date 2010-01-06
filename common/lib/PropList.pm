@@ -88,7 +88,9 @@ sub setValueFromHash(){
   my ($self, $ht) = @_;
   my $err = 0;
     
-  foreach my $key (keys %$ht) {
+  my @tmp = keys %$ht;
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $key = $tmp[$i];
     if (! $self->setValue($key, $ht->{$key})) {
       $err ++; 
     }
@@ -192,15 +194,17 @@ sub printPropList {
   my ($self) = @_;
 
   my @pl = $self->getPropList();
-  
-  foreach my $key (sort @pl) {
+  my @tmp = sort @pl;
+  for (my $j = 0; $j < scalar @tmp; $j++) {
+    my $key = $tmp[$j];
     print "KEY: $key\n";
     my $v = $self->getValue($key);
     print "Value: ", ((defined $v) ? $v : "undef"), "\n";
     my @av = $self->getAuthorizedValues($key);
     print "Authorized Values (", scalar @av, "):\n" if (scalar @av > 0);
     my $i = 1;
-    foreach my $a (@av) {
+    for (my $k = 0; $k < scalar @av; $k++) {
+      my $a = $av[$k];
       print $i++, " : ", ((defined $a) ? $a : "undef"), "\n";
     }
     print "\n";

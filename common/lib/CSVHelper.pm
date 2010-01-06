@@ -195,7 +195,8 @@ sub loadCSV_tohash {
 
   my @nf = ();
   my %nd = ();
-  foreach my $h (@keysorder) {
+  for (my $i = 0; $i < scalar @keysorder; $i++) {
+    my $h = $keysorder[$i];
     push @nf, $h
       if (! exists $pos{$h});
     $nd{$h} = $pos{$h};
@@ -219,7 +220,8 @@ sub loadCSV_tohash {
     return(%out) if ($self->error());
 
     my $bt = "push \@\{\$out";
-    foreach my $h (@keysorder) {
+    for (my $i = 0; $i < scalar @keysorder; $i++) {
+      my $h = $keysorder[$i];
       $bt .= "{\'" . $array[$pos{$h}] . "\'}";
     }
 

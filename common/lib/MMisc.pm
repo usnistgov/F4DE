@@ -128,8 +128,9 @@ sub is_blank {
 #####
 
 sub any_blank {
-  foreach my $i (@_) {
-    return(1) if (&is_blank($i));
+  for (my $i = 0; $i < scalar @_; $i++) {
+    my $v = $_[$i];
+    return(1) if (&is_blank($v));
   }
 
   return(0);
@@ -138,8 +139,9 @@ sub any_blank {
 #####
 
 sub all_blank {
-  foreach my $i (@_) {
-    return(0) if (! &is_blank($i));
+  for (my $i = 0; $i < scalar @_; $i++) {
+    my $v = $_[$i];
+    return(0) if (! &is_blank($v));
   }
 
   return(1);
@@ -212,9 +214,10 @@ sub min_max {
   my $min = shift;
   my $max = $min;
   
-  foreach $_ (@_) {
-    $min = $_ if $_ < $min;
-    $max = $_ if $_ > $max;
+  for (my $i = 0; $i < scalar @_; $i++) {
+    my $v = $_[$i];
+    $min = $v if ($v < $min);
+    $max = $v if ($v > $max);
   }
   
   return($min, $max);
@@ -296,7 +299,8 @@ sub clone {
 
 sub array1d_to_count_hash {
   my %ohash = ();
-  foreach my $o (@_) {
+  for (my $i = 0; $i < scalar @_; $i++) {
+    my $o = $_[$i];
     $ohash{$o}++;
   }
 
@@ -341,13 +345,15 @@ sub compare_arrays {
 
   return(\@in, \@out) if (! defined $rexp);
 
-  foreach my $elt (@$rexp) {
+  for (my $i = 0; $i < scalar @$rexp; $i++) {
+    my $elt = $$rexp[$i];
     if (grep(m%^$elt$%i, @_)) {
       push @in, $elt;
     }
   }
 
-  foreach my $elt (@_) {
+  for (my $i = 0; $i < scalar @_; $i++) {
+    my $elt = $_[$i];
     if (! grep(m%^$elt$%i, @$rexp)) {
       push @out, $elt;
     }
@@ -366,7 +372,8 @@ sub confirm_first_array_values {
 
   return(\@in, \@out) if (! defined $rexp);
 
-  foreach my $elt (@$rexp) {
+  for (my $i = 0; $i < scalar @$rexp; $i++) {
+    my $elt = $$rexp[$i];
     if (grep(m%^$elt$%, @_)) {
       push @in, $elt;
     } else {
@@ -383,7 +390,8 @@ sub _uc_lc_array_values {
   my $mode = &iuv(shift @_, "");
 
   my @out = ();
-  foreach my $value (@_) {
+  for (my $i = 0; $i < scalar @_; $i++) {
+    my $value = $_[$i];
     my $v = ($mode eq "uc") ? uc($value) :
       ($mode eq "lc") ? lc($value) :
         ($mode eq "ucf") ? ucfirst($value) :
@@ -726,7 +734,7 @@ sub get_txt_last_Xlines {
   my @a = split(m%\n%, $txt);
   my $e = scalar @a;
   my $b = (($e - $X) > 0) ? ($e - $X) : 0;
-  foreach (my $i = $b; $i < $e; $i++) {
+  for (my $i = $b; $i < $e; $i++) {
     push @toshowa, $a[$i];
   }
 
@@ -915,7 +923,8 @@ sub sort_files {
 
   my %tmp = ();
   my @errs = ();
-  foreach my $file (@_) {
+  for (my $i = 0; $i < scalar @_; $i++) {
+    my $file = $_[$i];
     my ($v, $err) = &$func($file);
     if (! &is_blank($err)) {
       push @errs, $err;
@@ -1007,7 +1016,8 @@ sub make_dir {
 
   my $t = "";
   my @todo = split(m%/%, $dest);
-  foreach my $d (@todo) {
+  for (my $i = 0; $i < scalar @todo; $i++) {
+    my $d = $todo[$i];
     $t .= "$d/";
     next if (-d $t);
 
@@ -1036,7 +1046,8 @@ sub list_dirs_files {
   my @d = ();
   my @f = ();
   my @u = ();
-  foreach my $entry (@fl) {
+  for (my $i = 0; $i < scalar @fl; $i++) {
+    my $entry = $fl[$i];
     my $ff = "$dir/$entry";
     if (-d $ff) {
       push @d, $entry;
@@ -1164,7 +1175,8 @@ sub iuav { # Initialize Undefined Array of Values
   my @a = @$ra;
 
   my @out = ();
-  foreach my $r (@_) {
+  for (my $i = 0; $i < scalar @_; $i++) {
+    my $r = $_[$i];
     my $v = shift @a;
     push @out, &iuv($v, $r);
   }

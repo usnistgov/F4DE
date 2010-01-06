@@ -88,7 +88,9 @@ sub unitTest {
   $sorted->sortTrials();
   print "OK\n";
   print " Checking contents...  ";
-  foreach my $tr ($trial, $trial->copy(), $sorted) {
+  my @tmp = ($trial, $trial->copy(), $sorted);
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $tr = $tmp[$i];
     die "Error: Not enough blocks" if (scalar(keys(%{ $tr->{"trials"} })) != 2);
     die "Error: Not enough 'NO TARG' for block 'second'" if ( $tr->{"trials"}{"second"}{"NO TARG"} != 1);
     die "Error: Not enough 'YES TARG' for block 'second'" if ( $tr->{"trials"}{"second"}{"YES TARG"} != 1);
@@ -113,11 +115,16 @@ sub isCompatible(){
   
   return 0 if (ref($self) ne ref($tr2));
 
-  foreach my $k ($self->getMetricParamKeys()) {
+  my @tmp = $self->getMetricParamKeys();
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $k = $tmp[$i];
     return 0 if (! $tr2->getMetricParamValueExists($k));
 #    return 0 if ($self->getMetricParamValue($k) ne $tr2->getMetricParamValue($k));
   }
-  foreach my $k ($tr2->getMetricParamKeys()) {
+
+  my @tmp = $tr2->getMetricParamKeys();
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $k = $tmp[$i];
     return 0 if (! $self->getMetricParamValueExists($k));
 #    return 0 if ($self->getMetricParamValue($k) ne $tr2->getMetricParamValue($k));
   }
@@ -220,7 +227,9 @@ sub getMetricParamKeys {
 sub getMetricParamsStr {
   my ($self) = @_;
   my $str = "{ (";
-  foreach my $k (keys %{ $self->{metricParams} }) {
+  my @tmp = keys %{ $self->{metricParams} };
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    my $k = $tmp[$i];
     $str .= "'$k' => '$self->{metricParams}->{$k}', ";
   }
   $str .= ') }';
@@ -248,13 +257,19 @@ sub dump {
   my($k1, $k2, $k3) = ("", "", "");
   print $OUT "${pre}Dump of Trial_data  isSorted=".$self->{isSorted}."\n";
   
-  foreach $k1(sort(keys %$self)) {
+  my @k1tmp = sort keys %$self;
+  for (my $i1 = 0; $i1 < scalar @k1tmp; $i1++) {
+    $k1 = $k1tmp[$i1];
     if ($k1 eq "trials") {
       print $OUT "${pre}   $k1 -> $self->{$k1}\n";
-      foreach $k2(keys %{ $self->{$k1} }) {
+      my @k2tmp = keys %{ $self->{$k1} };
+      for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+        $k2 = $k2tmp[$i2];
 	print $OUT "${pre}      $k2 -> $self->{$k1}{$k2}\n";
 	
-	foreach $k3(sort keys %{ $self->{$k1}{$k2} }) {
+        my @k3tmp = sort keys %{ $self->{$k1}{$k2} };
+        for (my $i3 = 0; $i3 < scalar @k3tmp; $i3++) {
+          $k3 = $k3tmp[$i3];
 	  if ($k3 eq "TARG" || $k3 eq "NONTARG") {
 	    my(@a) = @{ $self->{$k1}{$k2}{$k3} };
 	    print $OUT "${pre}         $k3 (".scalar(@a).") -> (";
@@ -296,8 +311,11 @@ sub copy {
     @blocks = keys %{ $self->{"trials"} };
   }
   
-  foreach my $block (@blocks) {
-    foreach my $param (keys %{ $self->{"trials"}{$block} }) {
+  for (my $i1 = 0; $i1 < scalar @blocks; $i1++) {
+    my $block = $blocks[$i1];
+    my @k2tmp = keys %{ $self->{"trials"}{$block} };
+    for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+      my $param = $k2tmp[$i2];
       if ($param eq "TARG" || $param eq "NONTARG") {
 	my(@a) = @{ $self->{"trials"}{$block}{$param} };
 	$copy->{"trials"}{$block}{$param} = [ @a ];
@@ -317,7 +335,9 @@ sub dumpCountSummary {
 
   my $at = new SimpleAutoTable();
   my ($TY, $OT, $NT, $YNT, $NNT) = (0, 0, 0, 0, 0);
-  foreach my $block (sort keys %{ $self->{"trials"} }) {
+  my @ktmp = sort keys %{ $self->{"trials"} };
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
     $at->addData($self->getNumYesTarg($block),     "Corr:YesTarg", $block);
     $at->addData($self->getNumOmittedTarg($block), "Miss:OmitTarg", $block);
     $at->addData($self->getNumNoTarg($block),      "Miss:NoTarg", $block);
@@ -352,10 +372,16 @@ sub dumpCountSummary {
 sub dumpGrid {
   my ($self) = @_;
   
-  foreach my $block (keys %{ $self->{"trials"} }) {
-    foreach my $var (sort keys %{ $self->{"trials"}{$block} }) {
+  my @k1tmp = keys %{ $self->{"trials"} };
+  for (my $i1 = 0; $i1 < scalar @k1tmp; $i1++) {
+    my $block = $k1tmp[$i1];
+    my @k2tmp = sort keys %{ $self->{"trials"}{$block} };
+    for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+      my $var = $k2tmp[$i2];
       if ($var eq "TARG" || $var eq "NONTARG") {
-	foreach my $sc ( @{ $self->{"trials"}{$block}{$var} }) {
+        my @k3tmp = @{ $self->{"trials"}{$block}{$var} };
+        for (my $i3 = 0; $i3 < scalar @k3tmp; $i3++) {
+          my $sc = $k3tmp[$i3];
 	  printf "GRID $sc $block-$var %12.10f $sc-$block\n", $sc;
 	}
       }
@@ -368,8 +394,10 @@ sub numerically { $a <=> $b; }
 sub sortTrials {
   my ($self) = @_;
   return if ($self->{"isSorted"});
-  
-  foreach my $block (keys %{ $self->{"trials"} }) {
+
+  my @ktmp = keys %{ $self->{"trials"} };
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
     $self->{"trials"}{$block}{TARG} = [ sort numerically @{ $self->{"trials"}{$block}{TARG} } ];
     $self->{"trials"}{$block}{NONTARG} = [ sort numerically @{ $self->{"trials"}{$block}{NONTARG} } ];
   }
@@ -463,7 +491,8 @@ sub _stater {
   my $sum = 0;
   my $sumsqr = 0;
   my $n = 0;
-  foreach my $d (@$data) {
+  for (my $i = 0; $i < scalar @$data; $i++) {
+    my $d = $$data[$i];
     $sum += $d;
     $sumsqr += $d * $d;
     $n++;
@@ -474,7 +503,9 @@ sub _stater {
 sub getTotNumTarg {
   my ($self) = @_;
   my @data = ();
-  foreach my $block ($self->getBlockIDs()) {
+  my @ktmp = $self->getBlockIDs();
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
     push @data, $self->getNumTarg($block);
   }
   $self->_stater(\@data);
@@ -483,7 +514,9 @@ sub getTotNumTarg {
 sub getTotNumSys {
   my ($self) = @_;
   my @data = ();
-  foreach my $block ($self->getBlockIDs()) {
+  my @ktmp = $self->getBlockIDs();
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
     push @data, $self->getNumSys($block);
   }
   $self->_stater(\@data);
@@ -492,7 +525,9 @@ sub getTotNumSys {
 sub getTotNumCorr {
   my ($self) = @_;
   my @data = ();
-  foreach my $block ($self->getBlockIDs()) {
+  my @ktmp = $self->getBlockIDs();
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
     push @data, $self->getNumCorr($block);
   }
   $self->_stater(\@data);
@@ -501,7 +536,9 @@ sub getTotNumCorr {
 sub getTotNumFalseAlarm {
   my ($self) = @_;
   my @data = ();
-  foreach my $block ($self->getBlockIDs()) {
+  my @ktmp = $self->getBlockIDs();
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
     push @data, $self->getNumFalseAlarm($block);
   }
   $self->_stater(\@data);
@@ -510,7 +547,9 @@ sub getTotNumFalseAlarm {
 sub getTotNumMiss {
   my ($self) = @_;
   my @data = ();
-  foreach my $block ($self->getBlockIDs()) {
+  my @ktmp = $self->getBlockIDs();
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
     push @data, $self->getNumMiss($block);
   }
   $self->_stater(\@data);
@@ -549,7 +588,9 @@ sub mergeTrials{
   if (! defined($$r_baseTrial)){
     $$r_baseTrial = new Trials($mergeTrial->getTaskID(), $mergeTrial->getBlockID(), $mergeTrial->getDecisionID(), $mergeTrial->getMetricParams());
   } else { 
-    foreach my $mkey ($$r_baseTrial->getMetricParamKeys()){
+    my @ktmp = $$r_baseTrial->getMetricParamKeys();
+    for (my $i = 0; $i < scalar @ktmp; $i++) {
+      my $mkey = $ktmp[$i];
       my $newVal = $metric->trialParamMerge($mkey,
                                             $$r_baseTrial->getMetricParamValue($mkey), 
                                             $mergeTrial->getMetricParamValue($mkey), $mergeType);
