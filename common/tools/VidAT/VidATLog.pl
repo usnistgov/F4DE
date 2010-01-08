@@ -37,6 +37,7 @@ my $logFile = "";
 my $outFile = "";
 my $keep = "";
 my $tmpBaseDir = "/tmp/Vidat.$$";
+my $notrails = 0;
 
 my $keep1 = 0;
 my $keep2 = 9e99;
@@ -50,6 +51,7 @@ GetOptions
 	'man'    => \$man,
 	'k=s'    => \$keep,
 	'tmp=s'  => \$tmpBaseDir,
+	'notrails' => \$notrails,
 ) or pod2usage(1);
 
 pod2usage(1) if $help;
@@ -80,8 +82,13 @@ $x->addRefPoint(4);
 $x->addSysPoint(4);
 $x->addRefLabel();
 $x->addSysLabel();
-$x->addRefSnailTrail(3);
-$x->addSysSnailTrail(3);
+
+if($notrails != 1)
+{
+	$x->addRefSnailTrail(3);
+	$x->addSysSnailTrail(3);
+}
+
 $x->addTimer();
 
 $x->{videoClass}->loadVideoFile($inVideoFile);
@@ -107,7 +114,7 @@ vidatLog.pl -- Video Annotation Tool
 
 =head1 SYNOPSIS
 
-B<vidatLog.pl> -i F<VIDEO> -l F<LOG> -o F<OUTPUT> [-tmp F<DIR>] [-man] [-h]
+B<vidatLog.pl> -i F<VIDEO> -l F<LOG> -o F<OUTPUT> [-tmp F<DIR>] [-k F<begframe>,F<endframe>] [-notrails] [-man] [-h]
 
 =head1 DESCRIPTION
 
@@ -136,6 +143,10 @@ Specify a temporary directory.
 =item B<-k> F<begframe>,F<endframe>
 
 Just create a chunck of the video from begframe to endframe frames.
+
+=item B<-notrails>
+
+Do not generate the snail trails.
 
 =item B<-man>
 
