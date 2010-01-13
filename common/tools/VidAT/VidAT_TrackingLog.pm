@@ -65,6 +65,8 @@ sub new
 	$self->process("point") if(exists($self->{point}));
 	
 	return $self;
+	
+	die;
 }
 
 sub loadFile
@@ -95,7 +97,7 @@ sub loadFile
 			next if( ($frame < $self->{restrictMin}) || ($frame > $self->{restrictMax}) );
 		}
 		
-		if(($line =~ /REF (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/) || ($line =~ /REF (\d+) \[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/))
+		if(($line =~ /REF (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\-?\d+)\]/) || ($line =~ /REF (\d+) \[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\-?\d+)\]/))
 		{
 			my $id = int($1);
 			my @tl = ($2, $3);
@@ -121,7 +123,7 @@ sub loadFile
 			$self->{appears}{ref}{$id}{$frame}{REAL} = 1;
 		}
 		
-		if(($line =~ /SYS (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/) || ($line =~ /SYS (\d+) \[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\d+)\]/))
+		if(($line =~ /SYS (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\-?\d+)\]/) || ($line =~ /SYS (\d+) \[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\-?\d+)\]/))
 		{
 			my $id = int($1);
 			my @tl = ($2, $3);
