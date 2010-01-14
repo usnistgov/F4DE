@@ -38,6 +38,7 @@ my $outFile = "";
 my $keep = "";
 my $tmpBaseDir = "/tmp/Vidat.$$";
 my $notrails = 0;
+my $nointerpolation = 0;
 
 my $keep1 = 0;
 my $keep2 = 9e99;
@@ -52,6 +53,7 @@ GetOptions
 	'k=s'    => \$keep,
 	'tmp=s'  => \$tmpBaseDir,
 	'notrails' => \$notrails,
+	'nointerpolation' => \$nointerpolation,
 ) or pod2usage(1);
 
 pod2usage(1) if $help;
@@ -61,6 +63,8 @@ pod2usage("Error: log file must be specified.\n") if($logFile eq "");
 pod2usage("Error: Output file must be specified.\n") if($outFile eq "");
 
 mkdir("$tmpBaseDir");
+
+$notrails = 1 if($nointerpolation);
 
 my $v = new FFmpegImage($inVideoFile);
 
@@ -73,7 +77,7 @@ if($keep =~ /^(\d+),(\d+)$/)
 	$keepMax = min($keepMax, int($2));
 }
 
-my $x = new trackinglog($logFile, $keepMin, $keepMax, $tmpBaseDir);
+my $x = new trackinglog($logFile, $keepMin, $keepMax, $tmpBaseDir, 1-$nointerpolation);
 $x->{videoClass}->addKeepRange($keepMin, $keepMax);
 
 $x->addRefPolygon(4);

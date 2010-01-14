@@ -28,7 +28,7 @@ use List::Util qw( max );
 
 sub new
 {
-	my ($class, $inFile, $rmin, $rmax, $tmpBaseDir) = @_;
+	my ($class, $inFile, $rmin, $rmax, $tmpBaseDir, $doInterpolate) = @_;
 	
 	my $self =
 	{
@@ -49,10 +49,11 @@ sub new
 		restrictMin => 0,
 		restrictMax => 999999,
 		tmpBaseDir => $tmpBaseDir,
+		interpolate => $doInterpolate,
 	};
 	
 	bless $self;
-	
+		
 	if(defined($rmin) && defined($rmax))
 	{
 		$self->{restrictMin} = $rmin;
@@ -65,8 +66,6 @@ sub new
 	$self->process("point") if(exists($self->{point}));
 	
 	return $self;
-	
-	die;
 }
 
 sub loadFile
@@ -190,8 +189,6 @@ sub loadFile
 		
 			$self->{mapped}{sys}{$sysId}{$frame} = $refId;
 			$self->{mapped}{ref}{$refId}{$frame} = $sysId;
-#			$self->{polygon}{ref}{$refId}{$frame}{MAPPED} = 1;
-#			$self->{polygon}{sys}{$sysId}{$frame}{MAPPED} = 1;
 
 			$self->{$objectIdType{$refId}}{ref}{$refId}{$frame}{MAPPED} = 1;
 			$self->{$objectIdType{$sysId}}{sys}{$sysId}{$frame}{MAPPED} = 1;
@@ -373,11 +370,8 @@ sub processTypeId
 			  $self->{$object}{$type}{$id}{$prevFrame}{COORD}[0], $self->{$object}{$type}{$id}{$prevFrame}{COORD}[1]);
 	}
 	
-#	for(my $i=1; $i<scalar(@listAppearsFrames); $i++)
 	for(my $frm=$firstFrame+1; $frm<=$lastFrame; $frm++)
 	{
-#		my $frm = $listAppearsFrames[$i];
-
 		# Add the previous ones
 		foreach my $dco (keys %{ $self->{snail}{$type}{$id}{$prevFrame} })
 		{
@@ -465,6 +459,9 @@ sub addRefPolygon
 	{	
 		foreach my $frm (keys %{ $self->{polygon}{ref}{$refId} })
 		{
+			# ignore the rest if we do not interpolate
+			next if( ($self->{appears}{ref}{$refId}{$frm}{REAL} == 0) && ($self->{interpolate} == 0) );
+			
 			my @coord;
 			push(@coord, @{ $self->{polygon}{ref}{$refId}{$frm}{COORD} });
 			my $dco = $self->{polygon}{ref}{$refId}{$frm}{DCO};
@@ -472,7 +469,7 @@ sub addRefPolygon
 			
 			my @fill;
 			push(@fill, @{ $self->{color_clear} });
-			
+
 			if($dco == 1)
 			{
 				my @border;
@@ -514,6 +511,9 @@ sub addRefPoint
 	{	
 		foreach my $frm (keys %{ $self->{point}{ref}{$refId} })
 		{
+			# ignore the rest if we do not interpolate
+			next if( ($self->{appears}{ref}{$refId}{$frm}{REAL} == 0) && ($self->{interpolate} == 0) );
+			
 			my @coord;
 			push(@coord, @{ $self->{point}{ref}{$refId}{$frm}{COORD} });
 			my $dco = $self->{point}{ref}{$refId}{$frm}{DCO};
@@ -556,6 +556,9 @@ sub addSysPolygon
 	{	
 		foreach my $frm (keys %{ $self->{polygon}{sys}{$sysId} })
 		{
+			# ignore the rest if we do not interpolate
+			next if( ($self->{appears}{sys}{$sysId}{$frm}{REAL} == 0) && ($self->{interpolate} == 0) );
+			
 			my @coord;
 			push(@coord, @{ $self->{polygon}{sys}{$sysId}{$frm}{COORD} });
 			my $dco = $self->{polygon}{sys}{$sysId}{$frm}{DCO};
@@ -605,6 +608,9 @@ sub addSysPoint
 	{	
 		foreach my $frm (keys %{ $self->{point}{sys}{$sysId} })
 		{
+			# ignore the rest if we do not interpolate
+			next if( ($self->{appears}{sys}{$sysId}{$frm}{REAL} == 0) && ($self->{interpolate} == 0) );
+			
 			my @coord;
 			push(@coord, @{ $self->{point}{sys}{$sysId}{$frm}{COORD} });
 			my $dco = $self->{point}{sys}{$sysId}{$frm}{DCO};
