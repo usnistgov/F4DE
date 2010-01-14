@@ -126,9 +126,7 @@ sub _fs_split_pair {
 sub _fs_split_line {
   my $line = shift @_;
 
-  my @o = split(/[\s|\t]+/, $line);
-
-  return(@o);
+  return(split(/[\s|\t]+/, $line));
 }
 
 #####
@@ -163,10 +161,7 @@ sub _fs_check_value {
     return("", $txt) if (! MMisc::is_blank($txt));
   }
 
-  # Recreate a usable string
-  $value = join(" ", @todo);
-
-  return($value, "");
+  return(MMisc::fast_join(" ", @todo), "");
 }
 
 ##########
@@ -191,9 +186,7 @@ sub _fs_reorder_value {
   return($fs, "WEIRD: While reordering frames, did not find the same number of elements between the original array and the result array")
     if (scalar @ftodo != scalar @o);
 
-  $fs = join(" ", @o);
-
-  return($fs, "");
+  return(MMisc::fast_join(" ", @o), "");
 }
 
 ##########
@@ -244,9 +237,7 @@ sub _fs_shorten_value {
   }
   push @o, "$b:$e";
 
-  $fs = join(" ", @o);
-
-  return($fs, "");
+  return(MMisc::fast_join(" ", @o), "");
 }
 
 #####
@@ -532,6 +523,10 @@ sub get_list_of_framespans {
       $self->_set_errormsg("Failed to set sub framespan fps \'$fps\'");
       return(undef); 
     }
+    if ($nfs->error()) {
+      $self->_set_errormsg($nfs->get_errormsg());
+      return(undef);
+    }
     push @list, $nfs;
   }
   return(\@list);
@@ -789,7 +784,7 @@ sub get_overlap {
   return(undef) if (scalar @ova == 0);
 
   # Generate a new framespan out of it
-  my $ovp = join(" ", @ova);
+  my $ovp = MMisc::fast_join(" ", @ova);
 
 #  print "*****Out: $ovp\n\n";
 
@@ -873,9 +868,7 @@ sub _fs_not_value {
   push @o, "$min:$max"
     if ($e < $max);
 
-  $fs = join(" ", @o);
-
-  return($fs);
+  return(MMisc::fast_join(" ", @o));
 }
 
 #####
@@ -1177,9 +1170,7 @@ sub gap_shorten {
   }
   push @o, "$b:$e";
 
-  $fs = join(" ", @o);
-
-  $self->set_value($fs);
+  $self->set_value(MMisc::fast_join(" ", @o));
   return(0) if ($self->error());
 
   return(1);
@@ -1454,9 +1445,7 @@ sub value_shift {
     push @out, "$b:$e";
   }
 
-  $fs = join(" ", @out);
-
-  return($self->set_value($fs));
+  return($self->set_value(MMisc::fast_join(" ", @out)));
 }
 
 #####
@@ -1573,7 +1562,7 @@ sub unit_test {                 # Xtreme coding and us ;)
   my $out5 = $fs_tmp5->get_value();
   push(@otxt, "$eh [#5a] Error while checking \'new\'[reorder] (expected: $exp_out5 / Got: $out5).")
     if ($out5 ne $exp_out5);
-  
+
   # Reorder (2)
   $in5 = "4:7 1:2 1:2";
   $exp_out5 = "1:2 4:7";
@@ -1685,10 +1674,14 @@ sub unit_test {                 # Xtreme coding and us ;)
     if ($exp_out15 != $out15);
 
   my $out16 = $fs_tmp11->get_list_of_framespans();
-  push(@otxt, "$eh [#16] Error getting a list of framespan expected: 3 / got: ".scalar(@$out16) . ".")
-    if (3 != scalar(@$out16));
   my @expSub = split(/ /, $exp_out11);
-  for (my $_i=0; $_i<scalar @expSub; $_i++) {
+  push(@otxt, "$eh [#16] Error getting a list of framespan expected: 3 / got: ".scalar(@$out16) . ".")
+    if (scalar(@expSub) != scalar(@$out16));
+  MMisc::error_quit($fs_tmp11->get_errormsg())
+        if ($fs_tmp11->error());
+  for (my $_i = 0; $_i < scalar @expSub; $_i++) {
+    MMisc::error_quit($out16->[$_i]->get_errormsg())
+        if ($out16->[$_i]->error());
     push(@otxt, "$eh [#16+] Error get_list_of_framespan list[$_i] incorrect.  expected '$expSub[$_i]' / got '".$out16->[$_i]->get_value()."'. ") 
       if ($expSub[$_i] ne $out16->[$_i]->get_value())
   }
