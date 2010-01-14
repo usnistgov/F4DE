@@ -1424,6 +1424,17 @@ sub safe_exists {
   return(&safe_exists($$ra{$k}, @ks));
 }
 
+#####
+
+sub fast_join {
+  my $txt = $_[1];
+  for (my $i = 2; $i < scalar @_; $i++) {
+    $txt .= $_[0] . $_[$i];
+  }
+
+  return($txt);
+}
+
 ############################################################
 
 1;
