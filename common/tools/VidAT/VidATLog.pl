@@ -162,7 +162,7 @@ Do not generate the interpolated boxes and points. It will display only the time
 
 =item B<-onlyframes>
 
-Generate only images for the frames defined in the tracking log, without the snail trails and it will stored in the directory F<OUTPUT>.
+Generate only images for the frames defined in the tracking log, without the snail trails and it will store them in the directory F<OUTPUT>.
 
 =item B<-man>
 
