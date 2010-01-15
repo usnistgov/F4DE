@@ -120,6 +120,7 @@ sub loadFile
 			push( @{ $self->{polygon}{ref}{$id}{$frame}{COORD} }, @tl, @tr, @br, @bl);
 			
 			$self->{appears}{ref}{$id}{$frame}{REAL} = 1;
+			push(@{ $self->{videoClass}->{realFrames} }, $frame);
 		}
 		
 		if(($line =~ /SYS (\d+) obox\[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\-?\d+)\]/) || ($line =~ /SYS (\d+) \[x=(\d+) y=(\d+) w=(\d+) h=(\d+) o=(\-?\d+)\]/))
@@ -146,6 +147,7 @@ sub loadFile
 			push( @{ $self->{polygon}{sys}{$id}{$frame}{COORD} }, @tl, @tr, @br, @bl);
 			
 			$self->{appears}{sys}{$id}{$frame}{REAL} = 1;
+			push(@{ $self->{videoClass}->{realFrames} }, $frame);
 		}
 		
 		if(($line =~ /REF (\d+) point\[x=(\d+) y=(\d+)\]/) || ($line =~ /REF (\d+) \[x=(\d+) y=(\d+)\]/))
@@ -163,6 +165,7 @@ sub loadFile
 			push( @{ $self->{point}{ref}{$id}{$frame}{COORD} }, @pt);
 			
 			$self->{appears}{ref}{$id}{$frame}{REAL} = 1;
+			push(@{ $self->{videoClass}->{realFrames} }, $frame);
 		}
 		
 		if(($line =~ /SYS (\d+) point\[x=(\d+) y=(\d+)\]/) || ($line =~ /SYS (\d+) \[x=(\d+) y=(\d+)\]/))
@@ -180,6 +183,7 @@ sub loadFile
 			push( @{ $self->{point}{sys}{$id}{$frame}{COORD} }, @pt);
 			
 			$self->{appears}{sys}{$id}{$frame}{REAL} = 1;
+			push(@{ $self->{videoClass}->{realFrames} }, $frame);
 		}
 		
 		if($line =~ /Mapped : SYS (\d+) -> REF (\d+)/)
@@ -653,6 +657,9 @@ sub addRefLabel
 	{	
 		foreach my $frm (keys %{ $self->{label}{ref}{$refId} })
 		{
+			# ignore the rest if we do not interpolate
+			next if( ($self->{appears}{ref}{$refId}{$frm}{REAL} == 0) && ($self->{interpolate} == 0) );
+			
 			my @coord;
 			push(@coord, @{ $self->{label}{ref}{$refId}{$frm}{COORD} });
 			
@@ -675,6 +682,9 @@ sub addSysLabel
 	{	
 		foreach my $frm (keys %{ $self->{label}{sys}{$sysId} })
 		{
+			# ignore the rest if we do not interpolate
+			next if( ($self->{appears}{sys}{$sysId}{$frm}{REAL} == 0) && ($self->{interpolate} == 0) );
+			
 			my @coord;
 			push(@coord, @{ $self->{label}{sys}{$sysId}{$frm}{COORD} });
 			

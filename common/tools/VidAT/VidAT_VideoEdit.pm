@@ -39,7 +39,9 @@ sub new
 		outputFrames => undef,
 		minFrame     => 9e99,
 		maxFrame     => 0,
-		tmpBaseDir => $tmpBaseDir,
+		realFrames   => undef,
+		realFilteredFrames   => undef,
+		tmpBaseDir   => $tmpBaseDir,
 	};
 	
 	bless $self;
@@ -94,6 +96,48 @@ sub buildJpegSingle
 	my ($self, $frameId, $outFile) = @_;
 	
 	$self->processSingleImage($frameId, $outFile);
+}
+
+sub buildJpegs
+{
+	my ($self, $outDir) = @_;
+	
+	# at the end, check if the outframes created something
+	if(!defined($self->{outputFrames}{keep}))
+	{
+		push( @{ $self->{outputFrames}{keep} }, [(1, 9e99)] );
+		$self->{minFrame} = 1;
+		$self->{maxFrame} = 9e99;
+	}
+	
+	if(defined($self->{videoFile}) && $self->{filterLoaded})
+	{
+		# Create tempdir
+		$self->{tempDir2} = tempdir( CLEANUP => 1  , DIR => $self->{tmpBaseDir});
+		$self->processImages();
+		$self->copyImages($self->{tempDir2}, $outDir);
+	}
+	else
+	{
+		$self->copyImages($self->{tempDir1}, $outDir);
+	}
+}
+
+sub copyImages
+{
+	my ($self, $dirIn, $dirOut) = @_;
+	
+	push(@{ $self->{realFrames} }, 0) if(!defined($self->{realFrames}));
+	
+	for(my $i=0; $i<scalar(@{ $self->{realFrames} }); $i++)
+	{
+		if($self->doKeep($self->{realFrames}[$i]))
+		{
+			my $filenameIn = sprintf("%s/%09d.jpeg", $dirIn, $self->{realFrames}[$i] - $self->{minFrame}+1);
+			my $filenameOut = sprintf("%s/%09d.jpeg", $dirOut, $self->{realFrames}[$i]);
+			`cp "$filenameIn" "$filenameOut"`;
+		}
+	}
 }
 
 sub doKeep

@@ -39,6 +39,7 @@ my $keep = "";
 my $tmpBaseDir = "/tmp/Vidat.$$";
 my $notrails = 0;
 my $nointerpolation = 0;
+my $onlyframes = 0;
 
 my $keep1 = 0;
 my $keep2 = 9e99;
@@ -54,6 +55,7 @@ GetOptions
 	'tmp=s'  => \$tmpBaseDir,
 	'notrails' => \$notrails,
 	'nointerpolation' => \$nointerpolation,
+	'onlyframes' => \$onlyframes,
 ) or pod2usage(1);
 
 pod2usage(1) if $help;
@@ -64,6 +66,7 @@ pod2usage("Error: Output file must be specified.\n") if($outFile eq "");
 
 mkdir("$tmpBaseDir");
 
+$nointerpolation = 1 if($onlyframes);
 $notrails = 1 if($nointerpolation);
 
 my $v = new FFmpegImage($inVideoFile);
@@ -97,7 +100,7 @@ $x->addTimer();
 
 $x->{videoClass}->loadVideoFile($inVideoFile);
 
-if($keep1 != $keep2)
+if(!$onlyframes)
 {
 	# Build a video
 	print "Build video file '$outFile'\n";
@@ -105,9 +108,10 @@ if($keep1 != $keep2)
 }
 else
 {
-	# just one image
-	print "Just one jpeg file '$outFile'\n";
-	$x->{videoClass}->buildJpegSingle($keep1, $outFile);
+	# Just images
+	print "Build JPEG files in '$outFile'\n";
+	mkdir($outFile);
+	$x->{videoClass}->buildJpegs($outFile);
 }
 
 rmtree("$tmpBaseDir");
@@ -118,7 +122,7 @@ vidatLog.pl -- Video Annotation Tool
 
 =head1 SYNOPSIS
 
-B<vidatLog.pl> -i F<VIDEO> -l F<LOG> -o F<OUTPUT> [-tmp F<DIR>] [-k F<begframe>,F<endframe>] [-notrails] [-man] [-h]
+B<vidatLog.pl> -i F<VIDEO> -l F<LOG> -o F<OUTPUT> [-tmp F<DIR>] [-k F<begframe>,F<endframe>] [-notrails] [-nointerpolation] [-onlyframes] [-man] [-h]
 
 =head1 DESCRIPTION
 
@@ -138,7 +142,7 @@ Input log file.
 
 =item B<-o> F<OUTPUT>
 
-Output video file.
+Output video file or directory.
 
 =item B<-tmp> F<DIR>
 
@@ -146,11 +150,19 @@ Specify a temporary directory.
 
 =item B<-k> F<begframe>,F<endframe>
 
-Just create a chunck of the video from begframe to endframe frames.
+Ignore the frames outside the defined range.
 
 =item B<-notrails>
 
 Do not generate the snail trails.
+
+=item B<-nointerpolation>
+
+Do not generate the interpolated boxes and points. It will display only the timer and the elements defined in the tracking log.
+
+=item B<-onlyframes>
+
+Generate only images for the frames defined in the tracking log, without the snail trails and it will stored in the directory F<OUTPUT>.
 
 =item B<-man>
 
