@@ -127,16 +127,17 @@ sub copyImages
 {
 	my ($self, $dirIn, $dirOut) = @_;
 	
-	push(@{ $self->{realFrames} }, 0) if(!defined($self->{realFrames}));
+	opendir(DIR, $dirIn);
+	my @files = grep { /^\d+\.jpeg$/ } readdir(DIR);
+	closedir(DIR);
 	
-	for(my $i=0; $i<scalar(@{ $self->{realFrames} }); $i++)
+	my @sortedRealFrames = sort {$a <=> $b} @{ $self->{realFrames} };
+	
+	for(my $i=0; $i<scalar(@files); $i++)
 	{
-		if($self->doKeep($self->{realFrames}[$i]))
-		{
-			my $filenameIn = sprintf("%s/%09d.jpeg", $dirIn, $self->{realFrames}[$i] - $self->{minFrame}+1);
-			my $filenameOut = sprintf("%s/%09d.jpeg", $dirOut, $self->{realFrames}[$i]);
-			`cp "$filenameIn" "$filenameOut"`;
-		}
+		my $filenameIn = sprintf("%s/%s", $dirIn, $files[$i]);
+		my $filenameOut = sprintf("%s/%09d.jpeg", $dirOut, $sortedRealFrames[$i]);
+		`cp "$filenameIn" "$filenameOut"`;
 	}
 }
 

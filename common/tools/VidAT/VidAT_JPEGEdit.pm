@@ -21,7 +21,7 @@ package JPEGEdit;
 use strict;
 use warnings;
 use File::Temp qw( tempfile );
-use POSIX qw(ceil floor);
+use POSIX qw( ceil floor );
 
 use Data::Dumper;
 

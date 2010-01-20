@@ -55,7 +55,7 @@ GetOptions
 	'tmp=s'  => \$tmpBaseDir,
 	'notrails' => \$notrails,
 	'nointerpolation' => \$nointerpolation,
-	'onlyframes' => \$onlyframes,
+	'onlyframes' => \$onlyframes, # Display only key Frames
 ) or pod2usage(1);
 
 pod2usage(1) if $help;
@@ -82,6 +82,8 @@ if($keep =~ /^(\d+),(\d+)$/)
 
 my $x = new trackinglog($logFile, $keepMin, $keepMax, $tmpBaseDir, 1-$nointerpolation);
 $x->{videoClass}->addKeepRange($keepMin, $keepMax);
+
+$x->keepOnlyKeyFrames() if($onlyframes);
 
 $x->addRefPolygon(4);
 $x->addSysPolygon(4);

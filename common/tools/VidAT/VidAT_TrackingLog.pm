@@ -945,6 +945,20 @@ sub addSysFullSnailTrail
 	}
 }
 
+sub keepOnlyKeyFrames
+{
+	my ($self) = @_;
+	
+	$self->{videoClass}->{minFrame} = 9e99;
+	$self->{videoClass}->{maxFrame} = 1;
+	$self->{videoClass}->{outputFrames} = undef;
+	
+	foreach my $frm (@{ $self->{videoClass}->{realFrames} })
+	{
+		$self->{videoClass}->addKeepRange($frm, $frm);
+	}
+}
+
 sub XMLFile
 {
 	my ($self) = @_;
