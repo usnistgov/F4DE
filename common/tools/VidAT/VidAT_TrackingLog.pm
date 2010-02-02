@@ -959,6 +959,21 @@ sub keepOnlyKeyFrames
 	}
 }
 
+sub keepOnlyKeyFramesRange
+{
+	my ($self) = @_;
+	
+	$self->{videoClass}->{minFrame} = 9e99;
+	$self->{videoClass}->{maxFrame} = 1;
+	$self->{videoClass}->{outputFrames} = undef;
+	
+	my @sortedRealFrames = sort {$a <=> $b} @{ $self->{videoClass}->{realFrames} };
+	my $firstKeyFrame = $sortedRealFrames[0];
+	my $lastKeyFrame = $sortedRealFrames[scalar(@sortedRealFrames)-1];
+	
+	$self->{videoClass}->addKeepRange($firstKeyFrame, $lastKeyFrame);
+}
+
 sub XMLFile
 {
 	my ($self) = @_;

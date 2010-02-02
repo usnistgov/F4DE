@@ -83,6 +83,7 @@ if($keep =~ /^(\d+),(\d+)$/)
 my $x = new trackinglog($logFile, $keepMin, $keepMax, $tmpBaseDir, 1-$nointerpolation);
 $x->{videoClass}->addKeepRange($keepMin, $keepMax);
 
+$x->{videoClass}->keepOnlyKeyFramesRange() if($keep eq "auto");
 $x->keepOnlyKeyFrames() if($onlyframes);
 
 $x->addRefPolygon(4);
@@ -124,7 +125,7 @@ vidatLog.pl -- Video Annotation Tool
 
 =head1 SYNOPSIS
 
-B<vidatLog.pl> -i F<VIDEO> -l F<LOG> -o F<OUTPUT> [-tmp F<DIR>] [-k F<begframe>,F<endframe>] [-notrails] [-nointerpolation] [-onlyframes] [-man] [-h]
+B<vidatLog.pl> -i F<VIDEO> -l F<LOG> -o F<OUTPUT> [-tmp F<DIR>] [-k [F<begframe>,F<endframe>|auto]] [-notrails] [-nointerpolation] [-onlyframes] [-man] [-h]
 
 =head1 DESCRIPTION
 
@@ -153,6 +154,10 @@ Specify a temporary directory.
 =item B<-k> F<begframe>,F<endframe>
 
 Ignore the frames outside the defined range.
+
+=item B<-k> F<auto>
+
+Ignore the frames outside the defined range in the trackinglog.
 
 =item B<-notrails>
 
