@@ -83,7 +83,7 @@ if($keep =~ /^(\d+),(\d+)$/)
 my $x = new trackinglog($logFile, $keepMin, $keepMax, $tmpBaseDir, 1-$nointerpolation);
 $x->{videoClass}->addKeepRange($keepMin, $keepMax);
 
-$x->{videoClass}->keepOnlyKeyFramesRange() if($keep eq "auto");
+$x->keepOnlyKeyFramesRange() if($keep eq "auto");
 $x->keepOnlyKeyFrames() if($onlyframes);
 
 $x->addRefPolygon(4);
