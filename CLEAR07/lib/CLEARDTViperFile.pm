@@ -1451,9 +1451,7 @@ sub _parse_sourcefile_section {
                     foreach my $key (keys %oattr) {
                         if (exists $res{$object_type}{$object_id}{$key}) {
                             my %inhash = %{$oattr{$key}};
-                            foreach my $inkey (keys %inhash) {
-                                $res{$object_type}{$object_id}{$key}{$inkey} = $inhash{$inkey};
-                            }
+                            map { $res{$object_type}{$object_id}{$key}{$_} = $inhash{$_} } keys %inhash;
                         }
                         else {
                             $res{$object_type}{$object_id}{$key} = $oattr{$key};
