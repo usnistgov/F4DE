@@ -327,7 +327,7 @@ sub validate_events_list {
 
   @events = split(m%\,%, join(",", @events));
   @events = $self-> _expand_events_star(@events);
-  @events = MMisc::make_array_of_unique_values(@events);
+  @events = MMisc::make_array_of_unique_values(\@events);
 
   # A non validated entry does not have 'subtype' set yet, so any subtype
   # would be dropped, so skip the 'reformat_events' function until then
@@ -2656,7 +2656,7 @@ sub list_all_xtra_attributes {
       push @aa, keys %{$fhash{$event}{$id}{$key_xtra}};
     }
   }
-  @aa = MMisc::make_array_of_unique_values(@aa);
+  @aa = MMisc::make_array_of_unique_values(\@aa);
 
   return(@aa);
 }

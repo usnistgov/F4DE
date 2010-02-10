@@ -161,13 +161,14 @@ sub _fs_check_value {
     return("", $txt) if (! MMisc::is_blank($txt));
   }
 
-  return(MMisc::fast_join(" ", @todo), "");
+  return(MMisc::fast_join(" ", \@todo), "");
 }
 
 ##########
 
 sub _fs_make_uniques {
-  my %tmp = MMisc::array1d_to_count_hash(@_);
+  my ($ra) = @_;
+  my %tmp = MMisc::array1d_to_count_hash($ra);
   return(keys %tmp);
 }
 
@@ -181,12 +182,12 @@ sub _fs_reorder_value {
 
   # More than 1 element, reorder
   my @ftodo = &_fs_split_line($fs);
-  @ftodo = &_fs_make_uniques(@ftodo); # ex: '1:2 1:2' -> '1:2'
+  @ftodo = &_fs_make_uniques(\@ftodo); # ex: '1:2 1:2' -> '1:2'
   my @o = sort _fs_sort @ftodo;
   return($fs, "WEIRD: While reordering frames, did not find the same number of elements between the original array and the result array")
     if (scalar @ftodo != scalar @o);
 
-  return(MMisc::fast_join(" ", @o), "");
+  return(MMisc::fast_join(" ", \@o), "");
 }
 
 ##########
@@ -237,7 +238,7 @@ sub _fs_shorten_value {
   }
   push @o, "$b:$e";
 
-  return(MMisc::fast_join(" ", @o), "");
+  return(MMisc::fast_join(" ", \@o), "");
 }
 
 #####
@@ -784,7 +785,7 @@ sub get_overlap {
   return(undef) if (scalar @ova == 0);
 
   # Generate a new framespan out of it
-  my $ovp = MMisc::fast_join(" ", @ova);
+  my $ovp = MMisc::fast_join(" ", \@ova);
 
 #  print "*****Out: $ovp\n\n";
 
@@ -868,7 +869,7 @@ sub _fs_not_value {
   push @o, "$min:$max"
     if ($e < $max);
 
-  return(MMisc::fast_join(" ", @o));
+  return(MMisc::fast_join(" ", \@o));
 }
 
 #####
@@ -1170,7 +1171,7 @@ sub gap_shorten {
   }
   push @o, "$b:$e";
 
-  $self->set_value(MMisc::fast_join(" ", @o));
+  $self->set_value(MMisc::fast_join(" ", \@o));
   return(0) if ($self->error());
 
   return(1);
@@ -1445,7 +1446,7 @@ sub value_shift {
     push @out, "$b:$e";
   }
 
-  return($self->set_value(MMisc::fast_join(" ", @out)));
+  return($self->set_value(MMisc::fast_join(" ", \@out)));
 }
 
 #####
@@ -1507,9 +1508,8 @@ sub list_pairs {
   my $v = $self->{value};
 
   my @todo = &_fs_split_line($v);
-  my @res = MMisc::make_array_of_unique_values(@todo);
 
-  return(@res);
+  return(MMisc::make_array_of_unique_values(\@todo));
 }
 
 ########################################

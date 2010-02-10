@@ -802,7 +802,8 @@ sub do_alignment {
         print " -- Will not process the following event(s) (not present in the matching sys files): ", join(" ", @leftover), "\n";
       }
         
-      my @listed_events = MMisc::make_array_of_unique_values(@sys_events, @ref_events);
+      my @tmpa = (@sys_events, @ref_events);
+      my @listed_events = MMisc::make_array_of_unique_values(\@tmpa);
       if (scalar @listed_events == 0) {
         print " -- No Events left, skipping\n\n";
         
@@ -826,8 +827,9 @@ sub do_alignment {
       @ref_events = @$rla;
       print " -- Left in REF Event list: ", join(" ", @ref_events), "\n";
     }
-
-    my @listed_events = MMisc::make_array_of_unique_values(@sys_events, @ref_events);
+ 
+    my @tmpa = (@sys_events, @ref_events);
+    my @listed_events = MMisc::make_array_of_unique_values(\@tmpa);
 
     if (scalar @listed_events == 0) {
       print "|->File: $file\n";

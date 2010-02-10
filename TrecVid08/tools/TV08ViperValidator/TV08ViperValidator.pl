@@ -307,7 +307,7 @@ if (scalar @toremove > 0) {
   foreach my $e (@toremove) {
     push @tmp, split(m%\,%, $e);
   }
-  @toremove = MMisc::make_array_of_unique_values(@tmp);
+  @toremove = MMisc::make_array_of_unique_values(\@tmp);
   my @tmp = ();
   foreach my $tor (@toremove) {
     push @tmp, $tor if (! grep(m%$tor$%, @ok_remove));

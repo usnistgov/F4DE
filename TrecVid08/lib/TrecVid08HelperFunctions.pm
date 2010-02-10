@@ -458,7 +458,7 @@ sub confirm_all_ECF_sffn_are_listed {
   return("SourceFilenames list seems to contain blank values (" . join("|", @flist) . ")", \@missing_from_ECF, \@not_in_ECF)
     if (MMisc::any_blank(@flist));
 
-  my @tfl = MMisc::make_array_of_unique_values(@flist);
+  my @tfl = MMisc::make_array_of_unique_values(\@flist);
 
   my ($rla, $rlb) = MMisc::confirm_first_array_values(\@ecflist, @tfl);
   @missing_from_ECF = @$rlb; # ie: present in ECF but not in file list

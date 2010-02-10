@@ -437,7 +437,7 @@ sub format_warnings_notes {
 
   my @todo = keys %notes;
   push @todo, keys %warnings;
-  @todo = MMisc::make_array_of_unique_values(@todo);
+  @todo = MMisc::make_array_of_unique_values(\@todo);
   foreach my $key (@todo) {
     $txt .= "  -- $key\n";
     if (exists $warnings{$key}) {
@@ -618,7 +618,7 @@ sub check_exp_dirfiles {
   return(\@ep, "Found no files")
     if (scalar @$rf == 0);
   
-  my %leftf = MMisc::array1d_to_count_hash(@$rf);
+  my %leftf = MMisc::array1d_to_count_hash($rf);
   vprint(4, "Checking for expected text file");
   my $expected_exp = "$exp.txt";
   my @txtf = grep(m%\.txt$%, @$rf);
