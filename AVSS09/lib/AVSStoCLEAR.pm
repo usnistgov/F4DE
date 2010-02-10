@@ -481,7 +481,7 @@ sub get_appear_order {
   return(undef)
     if (scalar @ids == 0);
 
-  @ids = MMisc::make_array_of_unique_values(@ids);
+  @ids = MMisc::make_array_of_unique_values(\@ids);
 
   my %resk = ();
   my %resbf = ();

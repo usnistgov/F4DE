@@ -1801,7 +1801,7 @@ sub clone_selected_ids {
 
   return(undef) if ($self->error());
   my @kidl = $self->get_person_id_list();
-  @ids = MMisc::make_array_of_unique_values(@ids);
+  @ids = MMisc::make_array_of_unique_values(\@ids);
 
   my ($rin, $rout) = MMisc::confirm_first_array_values(\@ids, @kidl);
   $self->_set_error_and_return("IDs not present: " . join(", ", @$rout), undef)

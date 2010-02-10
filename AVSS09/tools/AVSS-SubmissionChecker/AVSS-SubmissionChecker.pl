@@ -477,7 +477,7 @@ sub format_warnings_notes_errors {
   my @todo = keys %notes;
   push @todo, keys %warnings;
   push @todo, keys %errors;
-  @todo = MMisc::make_array_of_unique_values(@todo);
+  @todo = MMisc::make_array_of_unique_values(\@todo);
 
   foreach my $key (@todo) {
     my $tmp = "";
