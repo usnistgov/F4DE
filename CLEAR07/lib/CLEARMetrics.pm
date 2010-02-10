@@ -81,7 +81,8 @@ sub sumMOTAcomp {
   return("Strange number of elements (expected 16, got " . scalar @all . ")")
     if (scalar @all != 16);
   
-  foreach my $v (@all) {
+  for (my $i = 0; $i < scalar @all; $i++) {
+    my $v = $all[$i];
     return("Not all values given are integer value [$v]")
       if (! MMisc::is_integer($v));
   }
