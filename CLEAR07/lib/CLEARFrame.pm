@@ -435,8 +435,9 @@ sub computeAndSetSpatialMeasures {
 
     my $soFrameNum = $other->getFrameNum();
     my $soObjList = $other->getObjectList();
-  	 $evalSOIDs = { MMisc::array1d_to_count_hash(keys %$soObjList) };
-	 my $ND = scalar keys %$evalSOIDs;
+    my @tmpa = keys %$soObjList;
+    $evalSOIDs = { MMisc::array1d_to_count_hash(\@tmpa) };
+    my $ND = scalar keys %$evalSOIDs;
 
     # Check for simple cases
     if ( ($NG == 0) || ($ND == 0) ) {
@@ -506,7 +507,7 @@ sub computeAndSetSpatialMeasures {
             }
 
             my @unmapped_ref_ids = $evalBPM->get_unmapped_ref_ids();
-            $mdIDs = { MMisc::array1d_to_count_hash(@unmapped_ref_ids) };
+            $mdIDs = { MMisc::array1d_to_count_hash(\@unmapped_ref_ids) };
             
             # For each unmapped_sys, check if it overlaps with a dont care object. If yes, don't penalize it. Reduce
             # the sys_count by 1.
@@ -523,7 +524,7 @@ sub computeAndSetSpatialMeasures {
                                    }
                      }
             }
-            else { $faIDs = { MMisc::array1d_to_count_hash(@unmapped_sys_ids) }; }
+            else { $faIDs = { MMisc::array1d_to_count_hash(\@unmapped_sys_ids) }; }
     }
     elsif (defined $dcoBPM) {
             foreach my $sys_id (keys %$evalSOIDs) {
@@ -536,8 +537,10 @@ sub computeAndSetSpatialMeasures {
                                     $faIDs->{$sys_id} = 1;
                            }
             }
+    } else {
+      my @tmpa = keys %$evalSOIDs;
+      $faIDs = { MMisc::array1d_to_count_hash(\@tmpa) };
     }
-    else { $faIDs = { MMisc::array1d_to_count_hash(keys %$evalSOIDs) }; }
 
     $self->_setSpatialMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs );
     $self->_storeBPM( $evalBPM, $dcoBPM );
@@ -599,7 +602,8 @@ sub computeAndSetTemporalMeasures {
 
     my $soFrameNum = $other->getFrameNum();
     my $soObjList = $other->getObjectList();
-    $evalSOIDs = { MMisc::array1d_to_count_hash(keys %$soObjList) };
+    my @tmpa = keys %$soObjList;
+    $evalSOIDs = { MMisc::array1d_to_count_hash(\@tmpa) };
     my $ND = scalar keys %$evalSOIDs;
 
     # Check for simple cases
@@ -727,7 +731,7 @@ sub computeAndSetTemporalMeasures {
         }
 
         my @unmapped_ref_ids = $evalBPM->get_unmapped_ref_ids();
-        $mdIDs = { MMisc::array1d_to_count_hash(@unmapped_ref_ids) };
+        $mdIDs = { MMisc::array1d_to_count_hash(\@unmapped_ref_ids) };
         
         # For each unmapped_sys, check if it overlaps with a dont care object. If yes, don't penalize it. Reduce
         # the sys_count by 1.
@@ -744,7 +748,7 @@ sub computeAndSetTemporalMeasures {
                 }
             }
         }
-        else { $faIDs = { MMisc::array1d_to_count_hash(@unmapped_sys_ids) }; }
+        else { $faIDs = { MMisc::array1d_to_count_hash(\@unmapped_sys_ids) }; }
     }
     elsif (defined $dcoBPM) {
             foreach my $sys_id (keys %new_sys_objs) {
@@ -757,8 +761,10 @@ sub computeAndSetTemporalMeasures {
                                     $faIDs->{$sys_id} = 1;
                            }
             }
+    } else {
+      my @tmpa = keys %new_sys_objs;
+      $faIDs = { MMisc::array1d_to_count_hash(\@tmpa) }; 
     }
-    else { $faIDs = { MMisc::array1d_to_count_hash(keys %new_sys_objs) }; }
 
     # Add to that the overlap ratio from mappings that are being carried from previous frames
     # Also, add the ref-sys pair to the mappedObjIDs array
@@ -812,7 +818,8 @@ sub computeAndSetTextRecMeasures {
 
     my $soFrameNum = $other->getFrameNum();
     my $soObjList = $other->getObjectList();
-    $evalSOIDs = { MMisc::array1d_to_count_hash(keys %$soObjList) };
+    my @tmpa = keys %$soObjList;
+    $evalSOIDs = { MMisc::array1d_to_count_hash(\@tmpa) };
     my $ND = scalar keys %$evalSOIDs;
 
     # Check for simple cases
@@ -909,7 +916,7 @@ sub computeAndSetTextRecMeasures {
 	    }
 
             my @unmapped_ref_ids = $evalBPM->get_unmapped_ref_ids();
-            $mdIDs = { MMisc::array1d_to_count_hash(@unmapped_ref_ids) };
+            $mdIDs = { MMisc::array1d_to_count_hash(\@unmapped_ref_ids) };
             
             # For each unmapped_sys, check if it overlaps with a dont care object. If yes, don't penalize it. Reduce
             # the sys_count by 1.
@@ -926,7 +933,7 @@ sub computeAndSetTextRecMeasures {
                    }
                }
             }
-            else { $faIDs = { MMisc::array1d_to_count_hash(@unmapped_sys_ids) }; }
+            else { $faIDs = { MMisc::array1d_to_count_hash(\@unmapped_sys_ids) }; }
     }
     elsif (defined $dcoBPM) {
             foreach my $sys_id (keys %$evalSOIDs) {
@@ -939,8 +946,10 @@ sub computeAndSetTextRecMeasures {
                                     $faIDs->{$sys_id} = 1;
                            }
             }
+    } else {
+      my @tmpa = keys %$evalSOIDs;
+      $faIDs = { MMisc::array1d_to_count_hash(\@tmpa) };
     }
-    else { $faIDs = { MMisc::array1d_to_count_hash(keys %$evalSOIDs) }; }
 
     $self->_setTextRecMeasures( $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $subIDs ); 
     $self->_computeAndSetCharacterErrors($other, $costInsDel, $costSub);
@@ -1037,8 +1046,10 @@ sub get_jointvalues_ref_defined_values {
    if (! defined $evalBPM) { return(@out); }
 
    my @sysList = $evalBPM->get_jointvalues_ref_defined_list($ref_id);
-   foreach my $sys_id (@sysList) {
-        push @out, $evalBPM->get_jointvalues_refsys_value($ref_id, $sys_id);
+#   foreach my $sys_id (@sysList) {
+   for (my $si = 0; $si < scalar @sysList; $si++) {
+     my $sys_id = $sysList[$si];
+     push @out, $evalBPM->get_jointvalues_refsys_value($ref_id, $sys_id);
    }
 
    return(@out);
