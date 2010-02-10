@@ -298,10 +298,11 @@ sub clone {
 ##########
 
 sub array1d_to_count_hash {
+  my ($ra) = @_;
+
   my %ohash = ();
-  for (my $i = 0; $i < scalar @_; $i++) {
-    my $o = $_[$i];
-    $ohash{$o}++;
+  for (my $i = 0; $i < scalar @$ra; $i++) {
+    $ohash{$$ra[$i]}++;
   }
 
   return(%ohash);
@@ -310,11 +311,11 @@ sub array1d_to_count_hash {
 #####
 
 sub array1d_to_ordering_hash {
-  my @all = @_;
+  my ($ra) = @_;
 
   my %ohash = ();
-  for (my $i = 0; $i < scalar @all; $i++) {
-    my $v = $all[$i];
+  for (my $i = 0; $i < scalar @$ra; $i++) {
+    my $v = $$ra[$i];
     next if (exists $ohash{$v});
     $ohash{$v} = $i;
   }
@@ -325,9 +326,11 @@ sub array1d_to_ordering_hash {
 #####
 
 sub make_array_of_unique_values {
-  return(@_) if (scalar @_ < 2);
+  my ($ra) = @_;
 
-  my %tmp = &array1d_to_ordering_hash(@_);
+  return(@$ra) if (scalar @$ra < 2);
+
+  my %tmp = &array1d_to_ordering_hash($ra);
   my @tosort = keys %tmp;
 
   my @out = sort {$tmp{$a} <=> $tmp{$b}} @tosort;
@@ -1427,9 +1430,13 @@ sub safe_exists {
 #####
 
 sub fast_join {
-  my $txt = $_[1];
-  for (my $i = 2; $i < scalar @_; $i++) {
-    $txt .= $_[0] . $_[$i];
+  my ($j, $ra) = @_;
+
+  return("") if (scalar @$ra == 0);
+
+  my $txt = $$ra[0];
+  for (my $i = 1; $i < scalar @$ra; $i++) {
+    $txt .= $j . $$ra[$i];
   }
 
   return($txt);
