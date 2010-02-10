@@ -483,10 +483,11 @@ sub computeATA {
         next if ($gtFrame->getDontCare());
         push @evalFrameNums, $frameNums[$loop];
         my $gtObjList = $gtFrame->getObjectList();
+        
         foreach my $okey (keys %$gtObjList) {
-            $gtObjTrks{$okey}{$frameNums[$loop]} = $gtObjList->{$okey};
-            if (! $gtObjList->{$okey}->getDontCare()) { $gtIsEvalObj{$okey} = 1; }
-            elsif (! exists $gtIsEvalObj{$okey}) { $gtIsEvalObj{$okey} = undef; }
+          $gtObjTrks{$okey}{$frameNums[$loop]} = $gtObjList->{$okey};
+          if (! $gtObjList->{$okey}->getDontCare()) { $gtIsEvalObj{$okey} = 1; }
+          elsif (! exists $gtIsEvalObj{$okey}) { $gtIsEvalObj{$okey} = undef; }
         }
     }
 
@@ -498,19 +499,23 @@ sub computeATA {
         }
     }
 
-    $evalObjectIDs = { MMisc::array1d_to_count_hash(keys %gtObjTrks) };
-    my $dcoIDs = { MMisc::array1d_to_count_hash(keys %dcObjTrks) };
+    my @tmpa = keys %gtObjTrks;
+    $evalObjectIDs = { MMisc::array1d_to_count_hash(\@tmpa) };
+    my @tmpa = keys %dcObjTrks;
+    my $dcoIDs = { MMisc::array1d_to_count_hash(\@tmpa) };
 
-    foreach my $fkey (@evalFrameNums) {
-        next if (($fkey == $frameNums[0]) || ($fkey == $frameNums[-1]) || (! exists $soFrameList->{$fkey}));
-        my $soFrame = $soFrameList->{$fkey};
-        my $soObjList = $soFrame->getObjectList();
-        foreach my $okey (keys %$soObjList) {
-            $soObjTrks{$okey}{$fkey} = $soObjList->{$okey};
-        }
+    for (my $fki = 0; $fki < scalar @evalFrameNums; $fki++) {
+      my $fkey = $evalFrameNums[$fki];
+      next if (($fkey == $frameNums[0]) || ($fkey == $frameNums[-1]) || (! exists $soFrameList->{$fkey}));
+      my $soFrame = $soFrameList->{$fkey};
+      my $soObjList = $soFrame->getObjectList();
+      foreach my $okey (keys %$soObjList) {
+        $soObjTrks{$okey}{$fkey} = $soObjList->{$okey};
+      }
     }
 
-    $evalSOIDs = { MMisc::array1d_to_count_hash(keys %soObjTrks) };
+    my @tmpa = keys %soObjTrks;
+    $evalSOIDs = { MMisc::array1d_to_count_hash(\@tmpa) };
 
     my @frame_dims = ($eval_type eq "Point") ? $self->getFrameDims() : ();
     my @params = [$thres, $bin, @frame_dims];
@@ -548,7 +553,7 @@ sub computeATA {
         }
 
         my @unmapped_ref_ids = $evalBPM->get_unmapped_ref_ids();
-        $mdIDs = { MMisc::array1d_to_count_hash(@unmapped_ref_ids) };
+        $mdIDs = { MMisc::array1d_to_count_hash(\@unmapped_ref_ids) };
         
         @temp_unmapped_sys_ids = $evalBPM->get_unmapped_sys_ids();
     }
@@ -590,10 +595,10 @@ sub computeATA {
         last if (scalar @temp_unmapped_sys_ids == 0);
     }
     
-    $noPenaltySysIDs = { MMisc::array1d_to_count_hash(@temp_unmapped_sys_ids) };
+    $noPenaltySysIDs = { MMisc::array1d_to_count_hash(\@temp_unmapped_sys_ids) };
 
     # print "Actual false alarms: " , join(" ", MMisc::reorder_array_numerically(@unmapped_sys_ids)) , "\n";
-    $faIDs = { MMisc::array1d_to_count_hash(@unmapped_sys_ids) };
+    $faIDs = { MMisc::array1d_to_count_hash(\@unmapped_sys_ids) };
 
     $self->_setSpatioTemporalMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs );
 
@@ -924,23 +929,24 @@ sub computeSpatioTemporalOverlapRatio {
 
     my ( $ref_object_id, $sys_object_id);
 
-    foreach my $gtObjFrameNum (@gtObjFrameNums) {
-        my $refObject = $gtObjFrameList{$gtObjFrameNum};
-        if ($refObject->getDontCare()) { $gtDCCount++; }
-
-        next if (! exists $soObjFrameList{$gtObjFrameNum});
-        my $sysObject = $soObjFrameList{$gtObjFrameNum};
-
-        $ref_object_id = $refObject->getId();
-        $sys_object_id = $sysObject->getId();
-
-        my ($txt, $overlap) = CLEARObject::kernelFunction($refObject, $sysObject, $params);
-        if (! MMisc::is_blank($txt)) { return("Error while computing overlap between objects ($txt). ", undef); }
-
-        if (defined $overlap) { 
-            if (! $refObject->getDontCare()) { $spatioTemporalOverlap += $overlap; }
-            $intCount++;
-        }
+    for (my $gtoi = 0; $gtoi < scalar @gtObjFrameNums; $gtoi++) {
+      my $gtObjFrameNum = $gtObjFrameNums[$gtoi];
+      my $refObject = $gtObjFrameList{$gtObjFrameNum};
+      if ($refObject->getDontCare()) { $gtDCCount++; }
+      
+      next if (! exists $soObjFrameList{$gtObjFrameNum});
+      my $sysObject = $soObjFrameList{$gtObjFrameNum};
+      
+      $ref_object_id = $refObject->getId();
+      $sys_object_id = $sysObject->getId();
+      
+      my ($txt, $overlap) = CLEARObject::kernelFunction($refObject, $sysObject, $params);
+      if (! MMisc::is_blank($txt)) { return("Error while computing overlap between objects ($txt). ", undef); }
+      
+      if (defined $overlap) { 
+        if (! $refObject->getDontCare()) { $spatioTemporalOverlap += $overlap; }
+        $intCount++;
+      }
     }
 
     my $numOfFrames = (scalar keys %gtObjFrameList) - $gtDCCount + (scalar keys %soObjFrameList) - $intCount;
@@ -1031,7 +1037,10 @@ sub splitTextLineObjects {
 
     my $frameList = $self->getFrameList();
     my @frameNums = MMisc::reorder_array_numerically(keys %$frameList);
-    foreach my $frameNum (@frameNums) {
+    
+    for (my $fni = 0; $fni < scalar @frameNums; $fni++) {
+      my $frameNum = $frameNums[$fni];
+
         my $objectList = $frameList->{$frameNum}->getObjectList();
 
         next if (! defined $objectList);
@@ -1292,7 +1301,8 @@ sub _MOTA_decomposer {
 
   my @mapl = $bpm->get_mapped_ids();
   if (@mapl) {
-    foreach my $ra (@mapl) {
+    for (my $mai = 0; $mai < scalar @mapl; $mai++) {
+      my $ra = $mapl[$mai];
       my @a = @$ra;
       my $rid = $a[1];
       my $sid = $a[0];
