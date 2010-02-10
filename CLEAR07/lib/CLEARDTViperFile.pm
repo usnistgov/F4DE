@@ -1486,7 +1486,8 @@ sub _parse_sourcefile_section {
   ##### Final Sanity Checks
 
   if (($check_ids_start_at_zero) || ($check_ids_are_consecutive)) {
-    foreach my $object (@ok_objects) {
+    for (my $obi = 0; $obi < scalar @ok_objects; $obi++) {
+      my $object = $ok_objects[$obi];
       next if (! exists $res{$object});
       my @list = sort _numerically keys %{$res{$object}};
       
@@ -1512,7 +1513,8 @@ sub _make_array_of_unique_values {
   my @a = @_;
 
   my %tmp;
-  foreach my $key (@a) {
+  for (my $ki = 0; $ki < scalar @a; $ki++) {
+    my $key = $a[$ki];
     $tmp{$key}++;
   }
 
@@ -1568,7 +1570,8 @@ sub _parse_file_section {
     if (scalar @$out > 0);
 
   # Check they are of valid type & reformat them for the output file hash
-  foreach my $key (@expected) {
+  for (my $ki = 0; $ki < scalar @expected; $ki++) {
+    my $key = $expected[$ki];
     $file_hash{uc($key)} = undef;
     my $val = $expected_hash{$key};
     next if (! defined $val);
@@ -1680,7 +1683,9 @@ sub _parse_object_section {
   if ((scalar @$in != scalar @expected) && $isgtf) {
      # If you don't find all the attributes, check if all the required ones are present.
      my $domain = $self->get_domain();
-     foreach my $attr_name (&get_values_from_array_of_hashes("name", @{$list_objects_attributes{$domain}{uc($object_name)}})) {
+     my @tmpa = &get_values_from_array_of_hashes("name", @{$list_objects_attributes{$domain}{uc($object_name)}});
+     for (my $inc = 0; $inc < scalar @tmpa; $inc++) {
+       my $attr_name = $tmpa[$inc];
         return("Could not find all the expected \'$wtag\' attributes", ())
            if (! grep(m%^$attr_name$%i, @$in));
      }
@@ -1692,7 +1697,8 @@ sub _parse_object_section {
   my @det_sub = @not_gtf_required_objects_attributes;
 
   # Check they are of valid type & reformat them for the output object hash
-  foreach my $key (@expected) {
+  for (my $ki = 0; $ki < scalar @expected; $ki++) {
+    my $key = $expected[$ki];
     my $val = $expected_hash{$key};
     next if (! defined $val);
     my @comp = keys %{$attr{$key}};
@@ -1736,7 +1742,8 @@ sub _data_process_array_core {
     if (scalar @$out > 0);
 
   my @res;
-  foreach my $key (@expected) {
+  for (my $ki = 0; $ki < scalar @expected; $ki++) {
+    my $key = $expected[$ki];
     push @res, $$rattr{$key};
   }
 
@@ -1805,7 +1812,8 @@ sub _extract_data {
       return("ViperFramespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_lfspan->error());
       return("ViperFramespan ($lfspan) contains more than $max_pair_per_fs range pair(s)") if (($max_pair_per_fs) && ($pc > $max_pair_per_fs));
 
-      foreach my $fs_tmp (@afspan) {
+      for (my $fsi = 0; $fsi < scalar @afspan; $fsi++) {
+        my $fs_tmp = $afspan[$fsi];
 	my $ov = $fs_lfspan->check_if_overlap($fs_tmp);
 	return("ViperFramespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_tmp->error());
 	return("ViperFramespan ($lfspan) overlap another framespan (" . $fs_tmp->get_original_value() . ") within the same object attribute", ()) if ($ov);
@@ -2020,7 +2028,9 @@ sub _writeback_object {
             if (! $fs_tmp->set_value($fs));
 	push @afs, $fs_tmp;
       }
-      foreach my $fs_fs (sort _framespan_sort @afs) {
+      my @tafs = sort _framespan_sort @afs;
+      for (my $tafsi = 0; $tafsi < scalar @tafs; $tafsi++) {
+        my $fs_fs = $tafs[$tafsi];
 	my $fs = $fs_fs->get_value();
 	$txt .= &_wb_print
 	  ($indent,
@@ -2081,7 +2091,8 @@ sub _writeback2xml {
   $txt .= &_wb_print(--$indent, "</descriptor>\n");
 
   # Write all objects
-  foreach my $object (@asked_objects) {
+  for (my $oi = 0; $oi < scalar @asked_objects; $oi++) {
+    my $object = $asked_objects[$oi];
     next if (! exists $lhash{$object});
     $txt .= &_wb_print($indent++, "<descriptor name=\"$object\" type=\"OBJECT\">\n");
     foreach my $key (sort keys %{$hash_objects_attributes_types{$object}{$isgtf}}) {
@@ -2111,10 +2122,13 @@ sub _writeback2xml {
     $txt .= &_writeback_file($indent, %{$lhash{'file'}});
 
     # Objects
-    foreach my $object (@asked_objects) {
+    for (my $oi = 0; $oi < scalar @asked_objects; $oi++) {
+      my $object = $asked_objects[$oi];
       if (exists $lhash{$object}) {
 	my @ids = keys %{$lhash{$object}};
-	foreach my $id (sort _numerically @ids) {
+        my @tids = sort _numerically @ids;
+        for (my $idi = 0; $idi < scalar @tids; $idi++) {
+          my $id = $tids[$idi];
 	  $txt .= &_writeback_object($domain, $isgtf, $indent, $object, $id, %{$lhash{$object}{$id}});
 	}
       }
@@ -2142,7 +2156,8 @@ sub _clone_fhash_selected_objects {
 
   %{$out_hash{"file"}} = %{$in_hash{"file"}};
 
-  foreach my $object (@asked_objects) {
+  for (my $oi = 0; $oi < scalar @asked_objects; $oi++) {
+    my $object = $asked_objects[$oi];
     if (exists $in_hash{$object}) {
       %{$out_hash{$object}} = %{$in_hash{$object}};
     }
@@ -2281,7 +2296,8 @@ sub _set_frame_instances {
   my @ovlp_frames = MMisc::reorder_array_numerically($ovlp_fs->list_frames());
   $eval_sequence->setSeqFrSpan($ovlp_frames[0], $ovlp_frames[-1]);
 
-  foreach my $frameNum (@ovlp_frames) {
+  for (my $fni = 0; $fni < scalar @ovlp_frames; $fni++) {
+    my $frameNum = $ovlp_frames[$fni];
     my $frame = CLEARFrame->new($frameNum);
     if (ref($frame) ne "CLEARFrame") {
       $self->_set_errormsg("Failed 'CLEARFrame' instance creation ($frame)");
@@ -2311,7 +2327,8 @@ sub _set_frame_instances {
 
         my @attr_frames = $attr_fs->list_frames();
         my @att_value = @{$attr{$attkey}};
-        foreach my $attr_fr (@attr_frames) {
+        for (my $ati = 0; $ati < scalar @attr_frames; $ati++) {
+          my $attr_fr = $attr_frames[$ati];
           if ($att_value[0] ne $hash_objects_attributes_types_default{'FRAME'}{$isgtf}->{$fakey}) { $gtFrameList->{$attr_fr}->setDontCare(1); }
           elsif (! defined $gtFrameList->{$attr_fr}->getDontCare()) { $gtFrameList->{$attr_fr}->setDontCare(0); }
         }
@@ -2357,7 +2374,8 @@ sub _set_object_instances {
   }
 
   my $frameList = $eval_sequence->getFrameList();
-  foreach my $object_id (@okey) {
+  for (my $oi = 0; $oi < scalar @okey; $oi++) {
+    my $object_id = $okey[$oi];
     if (! $ob_fs->set_value($object_hash{$object_id}{'framespan'})) {
       $self->_set_errormsg("OBJECT: ViperFramespan ($object_hash{$object_id}{'framespan'}) error (" . $ob_fs->get_errormsg() . ")");
       return(0);
@@ -2367,7 +2385,8 @@ sub _set_object_instances {
     next if(! defined $obj_fs);
 
     my @obj_frames = $obj_fs->list_frames();
-    foreach my $objFrNum (@obj_frames) {
+    for (my $ofn = 0; $ofn < scalar @obj_frames; $ofn++) {
+      my $objFrNum = $obj_frames[$ofn];
       my $object = CLEARObject->new($object_id);
       if(ref($object) ne "CLEARObject") {
         $self->_set_errormsg("Failed 'CLEARObject' instance creation ($object)");
@@ -2426,7 +2445,8 @@ sub _set_object_instances {
 
           my @attr_frames = $attr_fs->list_frames();
           my @att_value = @{$attr{$attkey}};
-          foreach my $attr_fr (@attr_frames) {
+          for (my $afi = 0; $afi < scalar @attr_frames; $afi++) {
+            my $attr_fr = $attr_frames[$afi];
             # We have already validated. The attribute type should be correct. 
             my $objectList = $frameList->{$attr_fr}->getObjectList();
             my $loc = undef;
@@ -2508,7 +2528,8 @@ sub _set_object_instances {
              my @attr_frames = $attr_fs->list_frames();
              my ($attr_beg_fr, $attr_end_fr) = MMisc::min_max(@attr_frames);
              my @att_value = @{$attr{$attkey}};
-             foreach my $attr_fr (@attr_frames) {
+             for (my $afi = 0; $afi < scalar @attr_frames; $afi++) {
+               my $attr_fr = $attr_frames[$afi];
                my $objectList = $frameList->{$attr_fr}->getObjectList();
                next if (! exists $objectList->{$object_id});
                if (($hash_objects_attributes_types{$eval_obj}{$isgtf}->{$fakey} eq "bvalue") || ($hash_objects_attributes_types{$eval_obj}{$isgtf}->{$fakey} eq "dvalue")) {
@@ -2542,7 +2563,8 @@ sub get_values_from_array_of_hashes {
   my @array_of_hash = @_;
 
   my @out;
-  foreach my $hash (@array_of_hash) {
+  for (my $hi = 0; $hi < scalar @array_of_hash; $hi++) {
+    my $hash = $array_of_hash[$hi];
     push @out, $hash->{$key};
   }
 

@@ -243,7 +243,8 @@ sub computeIntersectionArea {
     my ( $intTopLeftX, $intTopLeftY );
 
     # Find gtBox vertices contained in soOBox
-    foreach my $gtKey (@vertexOrder) {
+    for (my $vi = 0; $vi < scalar @vertexOrder; $vi++) {
+      my $gtKey = $vertexOrder[$vi];
         my $vertSlope1 = ($gtVertexSet->{$gtKey}[1] - $soVertexSet->{topRight}[1])*($soVertexSet->{botLeft}[0] - $soVertexSet->{topLeft}[0]) - 
                          ($gtVertexSet->{$gtKey}[0] - $soVertexSet->{topRight}[0])*($soVertexSet->{botLeft}[1] - $soVertexSet->{topLeft}[1]);
         my $vertSlope2 = ($gtVertexSet->{$gtKey}[1] - $soVertexSet->{topLeft}[1])*($soVertexSet->{botLeft}[0] - $soVertexSet->{topLeft}[0]) - 
@@ -267,7 +268,8 @@ sub computeIntersectionArea {
     }
 
     # Find soBox vertices contained in gtOBox
-    foreach my $soKey (@vertexOrder) {
+    for (my $vi = 0; $vi < scalar @vertexOrder; $vi++) {
+      my $soKey = $vertexOrder[$vi];
         my $vertSlope1 = ($soVertexSet->{$soKey}[1] - $gtVertexSet->{topRight}[1])*($gtVertexSet->{botLeft}[0] - $gtVertexSet->{topLeft}[0]) - 
                          ($soVertexSet->{$soKey}[0] - $gtVertexSet->{topRight}[0])*($gtVertexSet->{botLeft}[1] - $gtVertexSet->{topLeft}[1]);
         my $vertSlope2 = ($soVertexSet->{$soKey}[1] - $gtVertexSet->{topLeft}[1])*($gtVertexSet->{botLeft}[0] - $gtVertexSet->{topLeft}[0]) - 
