@@ -41,7 +41,7 @@ sub computeMOTA {
 ##########
 
 sub _get_printable_value {
-  my $v = shift @_;
+  my $v = $_[0];
 
   return("NaN") if (! defined $v);
   

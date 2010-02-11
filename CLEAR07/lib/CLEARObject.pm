@@ -77,84 +77,84 @@ sub unitTest {
 #######################
 
 sub getId {
-    my ( $self ) = @_;
+    my $self = $_[0];
     return $self->{_objectId};
 }
 
 #######################
 
 sub setOBox {
-    my ( $self, $oBox ) = @_;
+    my ($self, $oBox) = @_;
 
     if (! defined $oBox)   { $self->_set_errormsg("'oBox' not defined in setOBox"); return -1;}
     $self->{_oBox} = $oBox;
 }
 
 sub getOBox {
-    my ( $self ) = @_;
+    my $self = $_[0];
     return $self->{_oBox};
 }
 
 #######################
 
 sub setPoint {
-    my ( $self, $point ) = @_;
+    my ($self, $point) = @_;
 
     if (! defined $point)   { $self->_set_errormsg("'point' not defined in setPoint"); return -1;}
     $self->{_point} = $point;
 }
 
 sub getPoint {
-    my ( $self ) = @_;
+    my $self = $_[0];
     return $self->{_point};
 }
 
 #######################
 
 sub setContent {
-    my ( $self, $content ) = @_;
+    my ($self, $content) = @_;
 
     if (! defined $content)   { $self->_set_errormsg("'content' not defined in setContent"); return -1; }
     $self->{_content} = $content;
 }
 
 sub getContent {
-    my ( $self ) = @_;
+    my $self = $_[0];
     return $self->{_content};
 }
 
 #######################
 
 sub setOffset {
-    my ( $self, $offset ) = @_;
+    my ($self, $offset) = @_;
 
     if (! defined $offset)   { $self->_set_errormsg("'offset' not defined in setOffset"); return -1; }
     $self->{_offset} = $offset;
 }
 
 sub getOffset {
-    my ( $self ) = @_;
+    my $self = $_[0];
     return $self->{_offset};
 }
 
 #######################
 
 sub setDontCare {
-    my ( $self, $dontCare ) = @_;
+    my ($self, $dontCare) = @_;
 
     if (! defined $dontCare)   { $self->_set_errormsg("'dontCare' not defined in setDontCare"); return -1; }
     $self->{_dontCare} = $dontCare;
 }
 
 sub getDontCare {
-    my ( $self ) = @_;
+    my $self = $_[0];
     return $self->{_dontCare};
 }
 
 #######################
 
 sub setOBoxCentroid {
-    my ( $self ) = @_;
+    my $self = $_[0];
 
     my $oBox = $self->getOBox();
     if (! defined $oBox) {
@@ -172,7 +172,7 @@ sub setOBoxCentroid {
 #######################
 
 sub computeOverlapRatio {
-    my ( $self, $other, $thres, $bin ) = @_;
+    my ($self, $other, $thres, $bin) = @_;
 
     # We handle thresholded metric value computation and regular
     # metric value computation through one sub-routine. When computing 
@@ -200,7 +200,7 @@ sub computeOverlapRatio {
 #######################
 
 sub computeNormDistance {
-    my ( $self, $other, $thres, $bin, @frameDims ) = @_;
+    my ($self, $other, $thres, $bin, @frameDims) = @_;
 
     my $gtPoint = $self->getPoint();
 
@@ -242,14 +242,14 @@ sub computeNormDistance {
 #######################
 
 sub computeEditDistance {
-    my ( $refText, $sysText, $costInsDel, $costSub ) = @_;
+    my ($refText, $sysText, $costInsDel, $costSub) = @_;
     return (Levenshtein(lc($refText), lc($sysText), $costInsDel, $costSub, 0, 0, 0));
 }
 
 #######################
 
 sub computeCharacterErrorRate {
-    my ( $self, $other, $costInsDel, $costSub ) = @_;
+    my ($self, $other, $costInsDel, $costSub) = @_;
 
     my $gtText = $self->getContent();
     return ("Cannot evaluate against an undefined 'content' (reference)", undef) if (! defined $gtText);
@@ -267,7 +267,7 @@ sub computeCharacterErrorRate {
 #######################
 
 sub padHypSys {
-    my ($self) = @_;
+    my $self = $_[0];
 
     return($self->get_errormsg(), 0) if ($self->error());
 
@@ -278,7 +278,7 @@ sub padHypSys {
 #######################
 
 sub padHypRef {
-    my ($self) = @_;
+    my $self = $_[0];
 
     return($self->get_errormsg(), 0) if ($self->error());
 
@@ -289,7 +289,7 @@ sub padHypRef {
 #######################
 
 sub kernelFunction {
-    my ( $ref, $sys, $params ) = @_;
+    my ($ref, $sys, $params) = @_;
     
     my @kernel_params = @$params;
     my $thres = shift @kernel_params;
@@ -311,7 +311,7 @@ sub kernelFunction {
 #######################
 
 sub textRecKernelFunction {
-    my ( $ref, $sys, $params ) = @_;
+    my ($ref, $sys, $params) = @_;
     
     my @kernel_params = @$params;
     my $thres = shift @kernel_params;
@@ -346,7 +346,7 @@ sub textRecKernelFunction {
 #######################
 
 sub display {
-  my ( $self, @todisplay ) = @_;
+  my ($self, @todisplay) = @_;
 
   foreach my $td (@todisplay) {
     print "[$td] ", Dumper($self->{$td});
@@ -356,7 +356,7 @@ sub display {
 #######################
 
 sub displayAll {
-  my ( $self ) = @_;
+  my $self = $_[0];
 
   print Dumper($self);
 }
@@ -369,12 +369,12 @@ sub _set_errormsg {
 }
 
 sub get_errormsg {
-  my ($self) = @_;
+  my $self = $_[0];
   return($self->{_errormsg}->errormsg());
 }
 
 sub error {
-  my ($self) = @_;
+  my $self = $_[0];
   return($self->{_errormsg}->error());
 }
 

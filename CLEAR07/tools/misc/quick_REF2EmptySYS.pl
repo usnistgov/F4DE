@@ -109,8 +109,7 @@ MMisc::ok_quit("\n$usage\n") if (scalar @ARGV != 2);
 
 my $etxt= "ERROR_____TEXT";
 
-my $if = shift @ARGV;
-my $of = shift @ARGV;
+my ($if, $of) = @ARGV;
 
 my $err = MMisc::check_file_r($if);
 MMisc::error_quit("Problem witn input file [$if]: $err") 

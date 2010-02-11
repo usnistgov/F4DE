@@ -223,11 +223,10 @@ my $check_ids_are_consecutive = 0;
 
 ## Constructor
 sub new {
-  my ($class) = shift @_;
+  my ($class, $evaldomain, $spmode) = 
+    ($_[0], MMisc::iuv($_[1],  ""), MMisc::iuv($_[2],  ""));
 
-  my $errortxt = (scalar @_ > 2) ? "CLEARDTViperFile takes maximum of 2 parameter (evaluation domain, special mode)" : "";
-  my $evaldomain = MMisc::iuv(shift @_,  "");
-  my $spmode = MMisc::iuv(shift @_, "");
+  my $errortxt = (scalar @_ > 3) ? "CLEARDTViperFile takes maximum of 2 parameter (evaluation domain, special mode)" : "";
 
   # If the evaluation domain is not known at this point, we will set the required hashes later when 
   # the command line options are processed. This is for 'dummy' object that is used to do checks 
@@ -266,8 +265,8 @@ sub new {
 #####
 
 sub _fill_required_hashes {
-  my $evaldomain = shift @_;
-  my $spmode = shift @_;
+  my ($evaldomain, $spmode) = @_;
+
   my $checkFlag = 0;
 
   for (my $outloop = 0; $outloop < scalar @ok_objects; $outloop++) {
@@ -400,29 +399,28 @@ sub set_frame_tolerance {
 }
 
 sub get_frame_tolerance {
-  my ($self) = @_;
+  my $self = $_[0];
   return $self->{tol_in_frames};
 }
 
 ####################
 
 sub _set_domain {
-  my ( $self, $evaldomain ) = @_;
+  my ($self, $evaldomain) = @_;
 
   if (! defined $evaldomain) { $self->_set_errormsg("'evaldomain is not defined in '_set_domain'"); return 0; }
   $self->{domain} = $evaldomain;
 }
 
 sub get_domain {
-  my ( $self ) = @_;
+  my $self = $_[0];
   return($self->{domain});
 }
 
 ####################
 
 sub get_version {
-  my ($self) = @_;
-
+  my $self = $_[0];
   return($versionid);
 }
 
@@ -436,21 +434,21 @@ sub _set_errormsg {
 ##########
 
 sub get_errormsg {
-  my ($self) = @_;
+  my $self = $_[0];
   return($self->{errormsg}->errormsg());
 }
 
 ##########
 
 sub error {
-  my ($self) = @_;
+  my $self = $_[0];
   return($self->{errormsg}->error());
 }
 
 ############################################################
 
 sub get_required_xsd_files_list {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -478,7 +476,7 @@ sub validate_objects_list {
 #####
 
 sub get_full_objects_list {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -488,7 +486,7 @@ sub get_full_objects_list {
 #####
 
 sub _get_hasharray_inline_attributes {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -515,7 +513,7 @@ sub set_xmllint {
 #####
 
 sub _is_xmllint_set {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -525,7 +523,7 @@ sub _is_xmllint_set {
 #####
 
 sub get_xmllint {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -556,7 +554,7 @@ sub set_xsdpath {
 #####
 
 sub _is_xsdpath_set {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -566,7 +564,7 @@ sub _is_xsdpath_set {
 #####
 
 sub get_xsdpath {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -581,7 +579,7 @@ sub get_xsdpath {
 ########## 'gtf'
 
 sub set_as_gtf {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -592,7 +590,7 @@ sub set_as_gtf {
 #####
 
 sub check_if_gtf {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -602,7 +600,7 @@ sub check_if_gtf {
 #####
 
 sub check_if_sys {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -625,7 +623,7 @@ sub _set_fhash {
 #####
 
 sub _is_fhash_set {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -637,7 +635,7 @@ sub _is_fhash_set {
 #####
 
 sub _get_fhash {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -687,7 +685,7 @@ sub set_file {
 #####
 
 sub _is_file_set {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -699,7 +697,7 @@ sub _is_file_set {
 #####
 
 sub get_file {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -714,7 +712,7 @@ sub get_file {
 ########## 'framespan_max'
 
 sub _is_framespan_max_set {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -733,7 +731,7 @@ sub _is_framespan_max_set {
 #####
 
 sub _get_framespan_max_value {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -757,7 +755,7 @@ sub _get_framespan_max_value {
 #####
 
 sub _get_framespan_max_object {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -815,7 +813,7 @@ sub _addto_comment {
 #####
 
 sub _is_comment_set {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -827,7 +825,7 @@ sub _is_comment_set {
 #####
 
 sub _get_comment {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -842,7 +840,7 @@ sub _get_comment {
 ########################################
 
 sub is_validated {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -854,7 +852,7 @@ sub is_validated {
 #####
 
 sub validate {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -967,7 +965,7 @@ sub get_base_xml {
 ####################
 
 sub _display_all {
-  my ($self) = shift @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -977,8 +975,7 @@ sub _display_all {
 #####
 
 sub _display {
-  my ($self) = shift @_;
-  my @limitto_objects = @_;
+  my ($self, @limitto_objects) = @_;
 
   return(-1) if ($self->error());
 
@@ -1003,7 +1000,7 @@ sub _display {
 ########################################
 
 sub _get_short_sf_file {
-  my ($txt) = shift @_;
+  my $txt = $_[0];
 
   # Remove all 'file:' or related
   $txt =~ s%^.+\:%%g;
@@ -1020,7 +1017,7 @@ sub _get_short_sf_file {
 #####
 
 sub get_sourcefile_filename {
-  my ($self) = shift @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -1046,7 +1043,7 @@ sub get_sourcefile_filename {
 ####################
 
 sub remove_all_objects {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -1106,7 +1103,7 @@ sub _clone_core {
 #####
 
 sub clone {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return($self->_clone_core(1));
 }
@@ -1114,7 +1111,7 @@ sub clone {
 #####
 
 sub clone_with_no_objects {
- my ($self) = @_;
+ my $self = $_[0];
 
   return($self->_clone_core(0));
 }
@@ -1122,7 +1119,7 @@ sub clone_with_no_objects {
 ##########
 
 sub _get_fhash_file_numframes {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -1272,8 +1269,7 @@ sub change_sourcefile_filename {
 ########################################
 
 sub _data_cleanup {
-  my $bigstring = shift @_;
-  my $isgtf = shift @_;
+  my ($bigstring, $isgtf) = @_;
 
   # Remove all XML comments
   $bigstring =~ s%\<\!\-\-.+?\-\-\>%%sg;
@@ -1300,9 +1296,7 @@ sub _data_cleanup {
 ########################################
 
 sub _data_processor {
-  my ($self) = shift @_;
-  my $string = shift @_;
-  my $isgtf = shift @_;
+  my ($self, $string, $isgtf) = @_;
 
   my $res = "";
   my %fdata = ();
@@ -1349,8 +1343,7 @@ sub _data_processor {
 #####
 
 sub _find_hash_key {
-  my $name = shift @_;
-  my %hash = @_;
+  my ($name, %hash) = @_;
 
   my @keys = keys %hash;
 
@@ -1366,10 +1359,7 @@ sub _find_hash_key {
 ####################
 
 sub _parse_sourcefile_section {
-  my ($self) = shift @_;
-  my $name = shift @_;
-  my $str = shift @_;
-  my $isgtf = shift @_;
+  my ($self, $name, $str, $isgtf) = @_;
 
   my %res;
   
@@ -1512,11 +1502,9 @@ sub _parse_sourcefile_section {
 ####################
 
 sub _make_array_of_unique_values {
-  my @a = @_;
-
   my %tmp;
-  for (my $ki = 0; $ki < scalar @a; $ki++) {
-    my $key = $a[$ki];
+  for (my $ki = 0; $ki < scalar @_; $ki++) {
+    my $key = $_[$ki];
     $tmp{$key}++;
   }
 
@@ -1526,10 +1514,8 @@ sub _make_array_of_unique_values {
 #####
 
 sub _parse_file_section {
-  my ($self) = shift @_;
-  my $str = shift @_;
-  my $wtag = shift @_;
-  my $isgtf = shift @_;
+  my ($self, $str, $wtag, $isgtf) = @_;
+
   my %file_hash;
 
   my ($text, %attr) = MtXML::get_inline_xml_attributes($wtag, $str);
@@ -1612,9 +1598,7 @@ sub _parse_file_section {
 ##########
 
 sub _parse_object_section {
-  my ($self) = shift @_;
-  my $str = shift @_;
-  my $isgtf = shift @_;
+  my ($self, $str, $isgtf) = @_;
 
   # print "$str\n";
   my $wtag = "object";
@@ -1771,7 +1755,7 @@ sub _data_process_type {
 #####
 
 sub _extract_data {
-  my ( $self, $str, $fspan, $allow_nofspan, $type, $obj_name, $isgtf ) = @_;
+  my ($self, $str, $fspan, $allow_nofspan, $type, $obj_name, $isgtf) = @_;
 
   my %attr;
   my (@afspan, @attr_beg_frs, @attr_end_frs);
@@ -1879,13 +1863,9 @@ sub _extract_data {
 #####
 
 sub _parse_attributes {
-  my ($self) = shift @_;
-  my $rstr = shift @_;
-  my $obj_name = shift @_;
-  my $isgtf = shift @_;
-  my $fspan = shift @_;
-  my %attrs;
+  my ($self, $rstr, $obj_name, $isgtf, $fspan) = @_;
 
+  my %attrs;
   my $allow_nofspan = 0;
   if (MMisc::is_blank($fspan)) {
     if (! $self->_is_framespan_max_set()) {
@@ -1948,7 +1928,8 @@ sub _framespan_sort {
 ########################################
 
 sub _wbi { # writeback indent
-  my $indent = shift @_;
+  my $indent = $_[0];
+
   my $spacer = "  ";
   my $txt = "";
   
@@ -1962,8 +1943,7 @@ sub _wbi { # writeback indent
 #####
 
 sub _wb_print { # writeback print
-  my $indent = shift @_;
-  my @content = @_;
+  my ($indent, @content) = @_;
 
   my $txt = "";
 
@@ -1976,10 +1956,9 @@ sub _wb_print { # writeback print
 #####
 
 sub _writeback_file {
-  my $indent = shift @_;
-  my %file_hash = @_;
-  my $txt = "";
+  my ($indent, %file_hash) = @_;
 
+  my $txt = "";
   $txt .= &_wb_print($indent++, "<file id=\"" . $file_hash{'file_id'} . "\" name=\"Information\">\n");
 
   foreach my $key (sort keys %hash_file_attributes_types) {
@@ -2001,15 +1980,9 @@ sub _writeback_file {
 #####
 
 sub _writeback_object {
-  my $domain = shift @_;
-  my $isgtf = shift @_;
-  my $indent = shift @_;
-  my $object = shift @_;
-  my $id = shift @_;
-  my %object_hash = @_;
+  my ($domain, $isgtf, $indent, $object, $id, %object_hash) = @_;
 
   my $txt = "";
-
   $txt .= &_wb_print($indent++, "<object name=\"$object\" id=\"$id\" framespan=\"" . $object_hash{'framespan'} . "\">\n");
 
   # comment (optional)
@@ -2045,9 +2018,9 @@ sub _writeback_object {
 	my @subtxta;
 	my @name_a = @{$hasharray_inline_attributes{$hash_objects_attributes_types{$object}{$isgtf}->{$key}}};
 	my @value_a = @{$object_hash{$key}{$fs}};
-	while (scalar @name_a > 0) {
-	  my $name= shift @name_a;
-	  my $value = shift @value_a;
+        for (my $ai = 0; $ai < scalar @name_a; $ai++) {
+	  my $name = $name_a[$ai];
+	  my $value = $value_a[$ai];
 	  push @subtxta, "$name\=\"$value\"";
 	}
 	$txt .= join(" ", @subtxta);
@@ -2070,7 +2043,7 @@ sub _writeback_object {
 ##########
 
 sub _writeback2xml {
-  my ( $comment, $domain, $isgtf, $rlhash, @asked_objects ) = @_;
+  my ($comment, $domain, $isgtf, $rlhash, @asked_objects) = @_;
 
   my $txt = "";
   my $indent = 0;
@@ -2152,8 +2125,7 @@ sub _writeback2xml {
 ########################################
 
 sub _clone_fhash_selected_objects {
-  my $rin_hash = shift @_;
-  my @asked_objects = @_;
+  my ($rin_hash, @asked_objects) = @_;
 
   my %in_hash = %{$rin_hash};
   my %out_hash;
@@ -2223,7 +2195,7 @@ sub reformat_ds {
 ##########
 
 sub _set_file_details {
-  my ( $self, $eval_sequence, $isgtf ) = @_;
+  my ($self, $eval_sequence, $isgtf) = @_;
 
   return(-1) if ($self->error());
 
@@ -2255,7 +2227,7 @@ sub _set_file_details {
 ##########
 
 sub _set_frame_instances {
-  my ( $self, $eval_sequence, $isgtf ) = @_;
+  my ($self, $eval_sequence, $isgtf) = @_;
 
   return(-1) if ($self->error());
 
@@ -2347,7 +2319,7 @@ sub _set_frame_instances {
 ##########
 
 sub _set_object_instances {
-  my ( $self, $eval_sequence, $ovlp_fs, $isgtf, @asked_objects ) = @_;
+  my ($self, $eval_sequence, $ovlp_fs, $isgtf, @asked_objects) = @_;
   
   return(-1) if ($self->error());
   if(ref($ovlp_fs) ne "ViperFramespan") {
@@ -2564,8 +2536,7 @@ sub _set_object_instances {
 ##########
 
 sub get_values_from_array_of_hashes {
-  my ($key) = shift @_;
-  my @array_of_hash = @_;
+  my ($key, @array_of_hash) = @_;
 
   my @out;
   for (my $hi = 0; $hi < scalar @array_of_hash; $hi++) {
@@ -2587,8 +2558,7 @@ sub get_AVSS09_spmode_key { return($spmode_ok_list[0]); }
 #####
 
 sub is_spmode_ok {
-  my ($self) = shift @_;
-  my ($mode) = shift @_;
+  my ($self, $mode) = @_;
 
   if (! grep(m%^$mode$%, @spmode_ok_list)) {
     $self->_set_errormsg("Unknow special mode ($mode)");
@@ -2601,8 +2571,7 @@ sub is_spmode_ok {
 ##### 
 
 sub set_spmode {
-  my ($self) = shift @_;
-  my ($mode) = shift @_;
+  my ($self, $mode) = @_;
 
   my $t = $self->get_spmode();
   if ((! MMisc::is_blank($t)) && ($t ne $mode)) {
@@ -2619,8 +2588,7 @@ sub set_spmode {
 ##### 
   
 sub get_spmode {
-  my ($self) = shift @_;
-
+  my $self = $_[0];
   return($self->{spmode});
 }
 

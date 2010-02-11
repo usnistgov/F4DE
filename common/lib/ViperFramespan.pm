@@ -58,9 +58,8 @@ my %error_msgs =
 
 ## Constructor
 sub new {
-  my ($class) = shift @_;
+  my ($class, $tmp) = @_;
 
-  my $tmp = shift @_;
   my ($value, $errmsg) = &_fs_check_and_optimize_value($tmp, 1);
   my $errormsg = new MErrorH('ViperFramespan');
   $errormsg->set_errormsg($errmsg) if (! MMisc::is_blank($errmsg));
@@ -80,7 +79,7 @@ sub new {
 ####################
 
 sub get_version {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return($versionid);
 }
@@ -102,7 +101,7 @@ sub _fs_check_pair {
 #####
 
 sub _fs_split_pair_nocheck {
-  my $fs = shift @_;
+  my $fs = $_[0];
 
   my $sc = index($fs, ':', 0);
   my $bf = substr($fs, 0, $sc);
@@ -114,7 +113,7 @@ sub _fs_split_pair_nocheck {
 #####
 
 sub _fs_split_pair {
-  my ($pair) = shift @_;
+  my $pair = $_[0];
 
   return('', $1, $2)  if ($pair =~ m%^(\d+)\:(\d+)$%);
 
@@ -123,25 +122,16 @@ sub _fs_split_pair {
 
 #####
 
-sub _fs_split_line {
-  my $line = shift @_;
-
-  return(split(/[\s|\t]+/, $line));
-}
+sub _fs_split_line { return(split(/[\s|\t]+/, $_[0])); }
 
 #####
 
-sub _fs_split_line_count {
-  my $line = shift @_;
-
-  return(scalar &_fs_split_line($line));
-}
+sub _fs_split_line_count { return(scalar &_fs_split_line($_[0])); }
 
 #####
 
 sub _fs_check_value {
-  my $value = shift @_;
-  my $from_new = shift @_;
+  my ($value, $from_new) = @_;
 
   if ($value eq '') { # Ok not to called 'is_blank'
     # If called from new, it is ok
@@ -167,15 +157,14 @@ sub _fs_check_value {
 ##########
 
 sub _fs_make_uniques {
-  my ($ra) = @_;
-  my %tmp = MMisc::array1d_to_count_hash($ra);
+  my %tmp = MMisc::array1d_to_count_hash($_[0]);
   return(keys %tmp);
 }
 
 #####
 
 sub _fs_reorder_value {
-  my $fs = shift @_;
+  my $fs = $_[0];
 
   # Only 1 element, nothing to do
   return($fs, '') if (&_fs_split_line_count($fs) == 1);
@@ -193,7 +182,7 @@ sub _fs_reorder_value {
 ##########
 
 sub _fs_shorten_value {
-  my $fs = shift @_;
+  my $fs = $_[0];
 
   my $errormsg = '';
 
@@ -209,10 +198,9 @@ sub _fs_shorten_value {
   my @o = ();
 
   # Get the first element
-  my $entry = shift @ftodo;
-  my ($b, $e) = &_fs_split_pair_nocheck($entry);
+  my ($b, $e) = &_fs_split_pair_nocheck($ftodo[0]);
 
-  for (my $i = 0; $i < scalar @ftodo; $i++) {
+  for (my $i = 1; $i < scalar @ftodo; $i++) {
     my $entry = $ftodo[$i];
     my ($nb, $ne) = &_fs_split_pair_nocheck($entry);
 
@@ -244,8 +232,7 @@ sub _fs_shorten_value {
 #####
 
 sub _fs_check_and_optimize_value {
-  my $value = shift @_;
-  my $from_new = shift @_;
+  my ($value, $from_new) = @_;
 
   my $errormsg = '';
 
@@ -382,7 +369,7 @@ sub set_fps {
 #####
 
 sub is_fps_set {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -394,7 +381,7 @@ sub is_fps_set {
 #####
 
 sub get_fps {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -409,7 +396,7 @@ sub get_fps {
 ##########
 
 sub get_value {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return($self->{value});
 }
@@ -417,7 +404,7 @@ sub get_value {
 #####
 
 sub get_original_value {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return($self->{original_value});
 }
@@ -425,7 +412,7 @@ sub get_original_value {
 ##########
 
 sub is_value_set {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -439,7 +426,7 @@ sub is_value_set {
 ####################
 
 sub _fs_get_begend {
-  my $fs = shift @_;
+  my $fs = $_[0];
 
   my $sc = index($fs, ':', 0);
   my $bf = substr($fs, 0, $sc);
@@ -482,7 +469,7 @@ sub sort_cmp {
 ##########
 
 sub count_pairs_in_value {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -499,7 +486,7 @@ sub count_pairs_in_value {
 ##########
 
 sub get_list_of_framespans {
-  my ($self) = @_;
+  my $self = $_[0];
 
   my @list = ();
   return(undef) if ($self->error());
@@ -536,7 +523,7 @@ sub get_list_of_framespans {
 #####
 
 sub count_pairs_in_original_value {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -805,7 +792,7 @@ sub get_overlap {
 ##########
 
 sub get_beg_end_fs {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -1020,7 +1007,7 @@ sub remove {
 ##########
 
 sub extent_middlepoint {
-  my ($self) = @_;
+  my $self = $_[0];
 
   my ($v_beg, $v_end) = $self->get_beg_end_fs();
   return(0) if ($self->error());
@@ -1058,7 +1045,7 @@ sub extent_middlepoint_distance {
 #####
 
 sub extent_duration {
-  my ($self) = @_;
+  my $self = $_[0];
 
   my ($v_beg, $v_end) = $self->get_beg_end_fs();
   return(-1) if ($self->error());
@@ -1074,7 +1061,7 @@ sub extent_duration {
 #####
 
 sub get_beg_fs {
-  my ($self) = @_;
+  my $self = $_[0];
 
   my ($v_beg, $v_end) = $self->get_beg_end_fs();
   return(0) if ($self->error());
@@ -1085,7 +1072,7 @@ sub get_beg_fs {
 #####
 
 sub get_end_fs {
-  my ($self) = @_;
+  my $self = $_[0];
 
   my ($v_beg, $v_end) = $self->get_beg_end_fs();
   return(0) if ($self->error());
@@ -1096,7 +1083,7 @@ sub get_end_fs {
 ##########
 
 sub duration {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -1153,10 +1140,9 @@ sub gap_shorten {
   my @o = ();
 
   # Get the first element
-  my $entry = shift @ftodo;
-  my ($b, $e) = &_fs_split_pair_nocheck($entry);
+  my ($b, $e) = &_fs_split_pair_nocheck($ftodo[0]);
 
-  for (my $i = 0; $i < scalar @ftodo; $i++) {
+  for (my $i = 1; $i < scalar @ftodo; $i++) {
     my $entry = $ftodo[$i];
     my ($nb, $ne) = &_fs_split_pair_nocheck($entry);
 
@@ -1266,7 +1252,7 @@ sub end_ts_to_frame {
 ##########
 
 sub _get_begend_ts_core {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(0) if ($self->error());
 
@@ -1297,7 +1283,7 @@ sub _get_begend_ts_core {
 #####
 
 sub get_beg_end_ts {
-  my ($self) = @_;
+  my $self = $_[0];
 
   my ($beg, $end) = $self->_get_begend_ts_core();
   return($beg) if ($self->error());
@@ -1311,7 +1297,7 @@ sub get_beg_end_ts {
 #####
 
 sub get_beg_ts {
-  my ($self) = @_;
+  my $self = $_[0];
 
   my ($beg, $end) = $self->get_beg_end_ts();
   return($beg) if ($self->error());
@@ -1322,7 +1308,7 @@ sub get_beg_ts {
 #####
 
 sub get_end_ts {
-  my ($self) = @_;
+  my $self = $_[0];
 
   my ($beg, $end) = $self->get_beg_end_ts();
   return($beg) if ($self->error());
@@ -1333,7 +1319,7 @@ sub get_end_ts {
 ##########
 
 sub extent_middlepoint_ts {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -1368,7 +1354,7 @@ sub extent_middlepoint_distance_ts {
 #####
 
 sub extent_duration_ts {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -1386,7 +1372,7 @@ sub extent_duration_ts {
 #####
 
 sub duration_ts {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(-1) if ($self->error());
 
@@ -1465,7 +1451,7 @@ sub value_shift_auto {
 ######################################## list of frames
 
 sub list_frames {
-  my ($self) = @_;
+  my $self = $_[0];
 
   my @out = ();
 
@@ -1494,7 +1480,7 @@ sub list_frames {
 #####
 
 sub list_pairs {
-  my ($self) = @_;
+  my $self = $_[0];
 
   my @out = ();
 
@@ -1515,8 +1501,8 @@ sub list_pairs {
 ########################################
 
 sub unit_test {                 # Xtreme coding and us ;)
-  my $notverb = shift @_;
-  my $makecall = shift @_;
+  my ($notverb, $makecall) = @_;
+
   my $eh = 'unit_test:';
   my @otxt = ();
 
@@ -1917,7 +1903,7 @@ sub unit_test {                 # Xtreme coding and us ;)
 #################### 'clone'
 
 sub clone {
-  my ($self) = @_;
+  my $self = $_[0];
 
   return(undef) if ($self->error());
 
@@ -1937,21 +1923,21 @@ sub _set_errormsg {
 ##########
 
 sub get_errormsg {
-  my ($self) = @_;
+  my $self = $_[0];
   return($self->{errormsg}->errormsg());
 }
 
 ##########
 
 sub error {
-  my ($self) = @_;
+  my $self = $_[0];
   return($self->{errormsg}->error());
 }
 
 ##########
 
 sub clear_error {
-  my ($self) = @_;
+  my $self = $_[0];
   return($self->{errormsg}->clear());
 }
 

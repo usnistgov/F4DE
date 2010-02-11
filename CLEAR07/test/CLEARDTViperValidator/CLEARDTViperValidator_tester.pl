@@ -5,10 +5,9 @@ use strict;
 use F4DE_TestCore;
 use MMisc;
 
-my $validator = shift @ARGV;
+my ($validator, $mode) = @ARGV;
 MMisc::error_quit("ERROR: Validator ($validator) empty or not an executable\n")
   if (($validator eq "") || (! -f $validator) || (! -x $validator));
-my $mode = shift @ARGV;
 
 print "** Running CLEARDTViperValidator tests:\n";
 

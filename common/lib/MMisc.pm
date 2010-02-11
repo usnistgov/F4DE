@@ -90,7 +90,7 @@ sub slurp_file {
 ##########
 
 sub check_package {
-  my $package = &iuv(shift @_, '');
+  my $package = &iuv($_[0], '');
 
   return(0) if (&is_blank($package));
 
@@ -104,8 +104,7 @@ sub check_package {
 ##########
 
 sub get_env_val {
-  my $envv = &iuv(shift @_, '');
-  my $default = shift @_;
+  my ($envv, $default) = (&iuv($_[0], ''), $_[1]);
 
   return(undef) if (&is_blank($envv));
 
@@ -119,9 +118,11 @@ sub get_env_val {
 ##########
 
 sub is_blank {
-  my ($txt) = @_;
+  my $txt = $_[0];
+
   return(1) if (! defined $txt);
   return(1) if (length($txt) == 0);
+
   return(($txt =~ m%^\s*$%s));
 }
 
@@ -150,7 +151,7 @@ sub all_blank {
 ##########
 
 sub clean_beg_spaces {
-  my $rstr = shift @_;
+  my $rstr = $_[0];
 
   my $cont = 1;
   while ((length($$rstr) > 1024) && ($cont)) {
@@ -167,7 +168,7 @@ sub clean_beg_spaces {
 #####
 
 sub clean_end_spaces {
-  my $rstr = shift @_;
+  my $rstr = $_[0];
 
   my $cont = 1;
   while ((length($$rstr) > 1024) && ($cont)) {
@@ -183,7 +184,7 @@ sub clean_end_spaces {
 
 #####
 sub clean_begend_spaces {
-  my $txt = shift @_;
+  my $txt = $_[0];
 
   return('') if (&is_blank($txt));
 
@@ -196,14 +197,14 @@ sub clean_begend_spaces {
 ##########
 
 sub reorder_array_numerically {
-  my ($ra) = @_;
+  my $ra = $_[0];
   return(sort { $a <=> $b } @$ra);
 }
 
 ####
 
 sub get_msize {
-  my ($str) = @_;
+  my $str = $_[0];
   my $x = `/bin/ps -aux | grep $$ | grep -v "grep" | awk '{print \$5}'`;
   $x =~ s/\s//g;
   return("$x $str");
@@ -216,7 +217,7 @@ sub min_max { return(&min_max_r(\@_)); }
 ##
 
 sub min_max_r {
-  my ($ra) = @_;
+  my $ra = $_[0];
 
   my $min = $$ra[0];
   my $max = $min;
@@ -236,7 +237,7 @@ sub min { return(&min_r(\@_)); }
 
 ##
 
-sub min_r { my ($ra) = @_; return(List::Util::min(@$ra)); }
+sub min_r { my $ra = $_[0]; return(List::Util::min(@$ra)); }
 
 #####
 
@@ -244,7 +245,7 @@ sub max { return(&max_r(\@_)); }
 
 ##
 
-sub max_r { my ($ra) = @_; return(List::Util::max(@$ra)); }
+sub max_r { my $ra = $_[0]; return(List::Util::max(@$ra)); }
 
 ##########
 
@@ -252,7 +253,7 @@ sub sum { return(&sum_r(\@_)); }
 
 ##
 
-sub sum_r { my ($ra) = @_; return(List::Util::sum(@$ra)); }
+sub sum_r { my $ra = $_[0]; return(List::Util::sum(@$ra)); }
 
 ##########
 
@@ -317,7 +318,7 @@ sub clone {
 ##########
 
 sub array1d_to_count_hash {
-  my ($ra) = @_;
+  my $ra = $_[0];
 
   my %ohash = ();
   for (my $i = 0; $i < scalar @$ra; $i++) {
@@ -330,7 +331,7 @@ sub array1d_to_count_hash {
 #####
 
 sub array1d_to_ordering_hash {
-  my ($ra) = @_;
+  my $ra = $_[0];
 
   my %ohash = ();
   for (my $i = $#{@$ra}; $i >= 0; $i--) {
@@ -344,7 +345,7 @@ sub array1d_to_ordering_hash {
 #####
 
 sub make_array_of_unique_values {
-  my ($ra) = @_;
+  my $ra = $_[0];
 
   return(@$ra) if (scalar @$ra < 2);
 
@@ -451,7 +452,7 @@ sub lcfirst_array_values {
 ##########
 
 sub get_decimal_length {
-  my $v = &iuv(shift @_, '');
+  my $v = &iuv($_[0], '');
 
   return(0) if (&is_blank($v));
 
@@ -500,8 +501,7 @@ sub are_float_equal {
 ##########
 
 sub get_sorted_MemDump {
-  my $obj = shift @_;
-  my $indent = &iuv(shift @_, 2);
+  my ($obj, $indent) = ($_[0], &iuv($_[1], 2));
 
   # Save the default sort key
   my $s_dso = $Data::Dumper::Sortkeys;
@@ -584,7 +584,7 @@ sub load_memory_object {
 ##########
 
 sub mem_gzip {
-  my $tozip = &iuv(shift @_, '');
+  my $tozip = &iuv($_[0], '');
 
   return(undef) if (&is_blank($tozip));
 
@@ -600,7 +600,7 @@ sub mem_gzip {
 #####
 
 sub mem_gunzip {
-  my $tounzip = &iuv(shift @_, '');
+  my $tounzip = &iuv($_[0], '');
 
   return(undef) if (&is_blank($tounzip));
 
@@ -616,7 +616,7 @@ sub mem_gunzip {
 #####
 
 sub file_gunzip {
-  my $in = &iuv(shift @_, '');
+  my $in = &iuv($_[0], '');
 
   return(undef) if (&is_blank($in));
   return(undef) if (! &is_file_r($in));
@@ -655,11 +655,11 @@ sub strip_header {
 ##########
 
 sub _system_call_logfile {
-  my $logfile = shift @_;
+  my ($logfile, @rest) = @_;
   
-  return(-1, '', '') if (scalar @_ == 0);
+  return(-1, '', '') if (scalar @rest == 0);
 
-  my $cmdline = '(' . join(' ', @_) . ')'; 
+  my $cmdline = '(' . join(' ', @rest) . ')'; 
 
   my $retcode = -1;
   my $stdoutfile = '';
@@ -765,7 +765,7 @@ sub get_txt_last_Xlines {
 ##########
 
 sub cmd_which {
-  my $cmd = shift @_;
+  my $cmd = $_[0];
   
   my ($retcode, $stdout, $stderr) = &do_system_call('which', $cmd);
   
@@ -885,7 +885,7 @@ sub is_dir_x { return( &is_blank( &check_dir_x(@_) ) ); }
 #####
 
 sub get_file_stat {
-  my $file = &iuv(shift @_, '');
+  my $file = &iuv($_[0], '');
 
   my $err = &check_file_e($file);
   return($err, undef) if (! &is_blank($err));
@@ -927,7 +927,7 @@ sub get_file_ctime {return(&_get_file_info_core(10, @_));}
 
 # Note: will only keep "ok" files in the output list
 sub sort_files {
-  my $criteria = &iuv(shift @_, '');
+  my $criteria = &iuv($_[0], '');
 
   my $func = undef;
   if ($criteria eq 'size') {
@@ -944,7 +944,7 @@ sub sort_files {
 
   my %tmp = ();
   my @errs = ();
-  for (my $i = 0; $i < scalar @_; $i++) {
+  for (my $i = 1; $i < scalar @_; $i++) {
     my $file = $_[$i];
     my ($v, $err) = &$func($file);
     if (! &is_blank($err)) {
@@ -1054,7 +1054,7 @@ sub make_dir {
 ##########
 
 sub list_dirs_files {
-  my $dir = &iuv(shift @_, '');
+  my $dir = &iuv($_[0], '');
 
   return('Empty dir name', undef, undef, undef)
     if (&is_blank($dir));
@@ -1087,7 +1087,7 @@ sub list_dirs_files {
 #####
 
 sub get_dirs_list {
-  my $dir = &iuv(shift @_, '');
+  my $dir = &iuv($_[0], '');
 
   my @out = ();
 
@@ -1103,7 +1103,7 @@ sub get_dirs_list {
 #####
 
 sub get_files_list {
-  my $dir = &iuv(shift @_, '');
+  my $dir = &iuv($_[0], '');
 
   my @out = ();
 
@@ -1119,7 +1119,7 @@ sub get_files_list {
 ##########
 
 sub split_dir_file_ext {
-  my $ff = &iuv(shift @_, '');
+  my $ff = &iuv($_[0], '');
 
   return ('empty filename', '', '', '')
     if (&is_blank($ff));
@@ -1191,14 +1191,12 @@ sub get_file_full_path {
 ##########
 
 sub iuav { # Initialize Undefined Array of Values
-  my $ra = shift @_;
-
-  my @a = @$ra;
+  my ($ra, @rest) = @_;
 
   my @out = ();
-  for (my $i = 0; $i < scalar @_; $i++) {
-    my $r = $_[$i];
-    my $v = shift @a;
+  for (my $i = 0; $i < scalar @rest; $i++) {
+    my $r = $rest[$i];
+    my $v = $$ra[$i];
     push @out, &iuv($v, $r);
   }
 
@@ -1219,7 +1217,7 @@ sub iuv { # Initialize Undefined Values
 ##########
 
 sub dive_structure {
-  my $r = shift @_;
+  my $r = $_[0];
 
   return('', $r) if (! ref($r));
 
@@ -1241,7 +1239,7 @@ sub dive_structure {
 ##########
 
 sub __extract_float {
-  my $str = shift @_;
+  my $str = $_[0];
 
   $str = &clean_begend_spaces($str);
   return($1, undef)
@@ -1256,7 +1254,7 @@ sub __extract_float {
 #####
 
 sub is_get_float {
-  my ($a, $b) = &__extract_float(@_);
+  my ($a, $b) = &__extract_float($_[0]);
   return(0, undef) if (! defined $a);
   return(1, $a) if (! defined $b);
   return(1, $b);
@@ -1265,21 +1263,21 @@ sub is_get_float {
 ##
 
 sub is_float {
-  my ($ok, $val) = &is_get_float(@_);
+  my ($ok, $val) = &is_get_float($_[0]);
   return($ok);
 }
 
 ##
 
 sub get_float {
-  my ($ok, $val) = &is_get_float(@_);
+  my ($ok, $val) = &is_get_float($_[0]);
   return($val);
 }
 
 #####
 
 sub is_get_integer {
-  my ($a, $b) = &__extract_float(@_);
+  my ($a, $b) = &__extract_float($_[0]);
   return(0, undef) if ((! defined $a) || (defined $b));
   return(1, $a);
 }
@@ -1287,21 +1285,21 @@ sub is_get_integer {
 #####
 
 sub is_integer {
-  my ($ok, $val) = &is_get_integer(@_);
+  my ($ok, $val) = &is_get_integer($_[0]);
   return($ok);
 }
 
 #####
 
 sub get_integer {
-  my ($ok, $val) = &is_get_integer(@_);
+  my ($ok, $val) = &is_get_integer($_[0]);
   return($val);
 }
 
 ##########
 
 sub human_int {
-  my $v = shift @_;
+  my $v = $_[0];
 
   return($v)
     if (length($v) < 4);
@@ -1345,14 +1343,14 @@ sub get_currenttime { return([gettimeofday()]); }
 
 #####
 
-sub get_elapsedtime { return(tv_interval(shift @_)); }
+sub get_elapsedtime { return(tv_interval($_[0])); }
 
 ##########
 ### Added by Jon Fiscus
 ### This routine returns 0 if the value to take the sqrt of is essentially zero, but negative do
 ### to floating point problems
 sub safe_sqrt {
-  my $v = shift @_;
+  my $v = $_[0];
 
   $v = 0.0 if (defined $v && $v > -0.00000000001 && $v < 0.00000000000);
   

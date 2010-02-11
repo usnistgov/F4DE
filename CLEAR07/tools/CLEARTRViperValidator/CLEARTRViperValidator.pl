@@ -188,7 +188,8 @@ my $tmp;
 my %all = ();
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
-while ($tmp = shift @ARGV) {
+for (my $fi = 0; $fi < $ntodo; $fi++) {
+  $tmp = $ARGV[$fi];
   my ($ok, $object) = &load_file($isgtf, $tmp);
   next if (! $ok);
 

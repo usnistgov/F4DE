@@ -5,10 +5,9 @@ use strict;
 use F4DE_TestCore;
 use MMisc;
 
-my $scorer = shift @ARGV;
+my ($scorer, $mode) = @ARGV;
 MMisc::error_quit("ERROR: Scorer ($scorer) empty or not an executable\n")
   if (($scorer eq "") || (! -f $scorer) || (! -x $scorer));
-my $mode = shift @ARGV;
 
 print "** Running CLEARTRScorer tests:\n";
 
