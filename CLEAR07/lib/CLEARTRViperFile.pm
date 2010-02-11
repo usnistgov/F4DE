@@ -366,12 +366,13 @@ sub get_required_xsd_files_list {
 #####
 
 sub validate_objects_list {
-  my ($self) = shift @_;
-  my @objects = MMisc::uppercase_array_values(@_);
+  my ($self, @tmpa) = @_;
+
+  my @objects = MMisc::uppercase_array_values(\@tmpa);
 
   @objects = split(m%\,%, join(",", @objects));
   @objects = &_make_array_of_unique_values(@objects);
-  my ($in, $out) = MMisc::compare_arrays(\@ok_objects, @objects);
+  my ($in, $out) = MMisc::compare_arrays(\@ok_objects, \@objects);
   if (scalar @$out > 0) {
     $self->_set_errormsg("Found some unknown object type: " . join(" ", @$out));
     return();
@@ -819,9 +820,9 @@ sub validate {
 ####################
 
 sub reformat_xml {
-  my ($self) = shift @_;
-  my $isgtf = shift @_;
-  my @limitto_objects = MMisc::uppercase_array_values(@_);
+  my ($self, $isgtf, @tmpa) = @_;
+
+  my @limitto_objects = MMisc::uppercase_array_values(\@tmpa);
   my $domain = $self->get_domain();
 
   return(-1) if ($self->error());
@@ -849,9 +850,9 @@ sub reformat_xml {
 ##########
 
 sub get_base_xml {
-  my ($self) = shift @_;
-  my $isgtf = shift @_;
-  my @limitto_objects = MMisc::uppercase_array_values(@_);
+  my ($self, $isgtf, @tmpa) = @_;
+
+  my @limitto_objects = MMisc::uppercase_array_values(\@tmpa);
   my $domain = $self->get_domain();
 
   return(-1) if ($self->error());
@@ -1433,10 +1434,8 @@ sub _make_array_of_unique_values {
 #####
 
 sub _parse_file_section {
-  my ($self) = shift @_;
-  my $str = shift @_;
-  my $wtag = shift @_;
-  my $isgtf = shift @_;
+  my ($self, $str, $wtag, $isgtf) = @_;
+
   my %file_hash;
 
   my ($text, %attr) = MtXML::get_inline_xml_attributes($wtag, $str);
@@ -1445,7 +1444,8 @@ sub _parse_file_section {
   my $framespan_max = $framespan_max_default;
 
   my @expected = @array_file_inline_attributes;
-  my ($in, $out) = MMisc::compare_arrays(\@expected, keys %attr);
+  my @tmpa = keys %attr;
+  my ($in, $out) = MMisc::compare_arrays(\@expected, \@tmpa);
   return("Could not find all the expected inline \'$wtag\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected inline \'$wtag\' attributes (" . join(", ", @$out) . ")", ())
@@ -1472,7 +1472,8 @@ sub _parse_file_section {
   # Confirm they are the ones we want
   my %expected_hash = %hash_file_attributes_types;
   @expected = keys %expected_hash;
-  ($in, $out) = MMisc::compare_arrays(\@expected, keys %attr);
+  my @tmpa = keys %attr;
+  ($in, $out) = MMisc::compare_arrays(\@expected, \@tmpa);
   return("Could not find all the expected \'$wtag\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected \'$wtag\' attributes (" . join(", ", @$out) . ")", ())
@@ -1487,7 +1488,7 @@ sub _parse_file_section {
     next if (scalar @comp == 0);
     my @expected2;
     push @expected2, $val;
-    ($in, $out) = MMisc::compare_arrays(\@expected2, @comp);
+    ($in, $out) = MMisc::compare_arrays(\@expected2, \@comp);
     return("Could not confirm all the expected \'$wtag\' attributes", ())
       if (scalar @$in != scalar @expected2);
     return("Found some unexpected \'$wtag\' attributes type (" . join(", ", @$out) . ")", ())
@@ -1516,9 +1517,7 @@ sub _parse_file_section {
 ##########
 
 sub _parse_object_section {
-  my ($self) = shift @_;
-  my $str = shift @_;
-  my $isgtf = shift @_;
+  my ($self, $str, $isgtf) = @_;
 
   # print "$str\n";
   my $wtag = "object";
@@ -1539,7 +1538,8 @@ sub _parse_object_section {
   return("Problem obtaining the \'framespan_max\' object", ()) if ($self->error());
 
   my @expected = @array_objects_inline_attributes;
-  my ($in, $out) = MMisc::compare_arrays(\@expected, keys %attr);
+  my @tmpa = keys %attr;
+  my ($in, $out) = MMisc::compare_arrays(\@expected, \@tmpa);
   return("WARNING: Could not find all the expected inline \'$wtag\' attributes. Skipping \'$wtag\' section", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected inline \'$wtag\' attributes (" . join(", ", @$out) . ")", ())
@@ -1584,11 +1584,14 @@ sub _parse_object_section {
   # Confirm they are the ones we want
   my %expected_hash = %{$hash_objects_attributes_types{uc($object_name)}{$isgtf}};
   @expected = keys %expected_hash;
-  ($in, $out) = MMisc::compare_arrays(\@expected, keys %attr);
+  my @tmpa = keys %attr;
+  ($in, $out) = MMisc::compare_arrays(\@expected, \@tmpa);
   if ((scalar @$in != scalar @expected) && $isgtf) {
      # If you don't find all the attributes, check if all the required ones are present.
      my $domain = $self->get_domain();
-     foreach my $attr_name (&get_values_from_array_of_hashes("name", @{$list_objects_attributes{$domain}{uc($object_name)}{$isgtf}})) {
+     my @tmpa = &get_values_from_array_of_hashes("name", @{$list_objects_attributes{$domain}{uc($object_name)}{$isgtf}});
+     for (my $ai = 0; $ai < scalar @tmpa; $ai++) {
+       my $attr_name = $tmpa[$ai];
         return("Could not find all the expected \'$wtag\' attributes", ())
            if (! grep(m%^$attr_name$%i, @$in));
      }
@@ -1616,7 +1619,7 @@ sub _parse_object_section {
     }
     my @expected2;
     push @expected2, $val;
-    ($in, $out) = MMisc::compare_arrays(\@expected2, @comp);
+    ($in, $out) = MMisc::compare_arrays(\@expected2, \@comp);
     return("Could not confirm all the expected \'$wtag\' attributes", ())
       if (scalar @$in != scalar @expected2);
     return("Found some unexpected \'$wtag\' attributes type (" . join(", ", @$out) . ")", ())
@@ -1633,11 +1636,10 @@ sub _parse_object_section {
 ####################
 
 sub _data_process_array_core {
-  my $name = shift @_;
-  my $rattr = shift @_;
-  my @expected = @_;
+  my ($name, $rattr, @expected) = @_;
 
-  my ($in, $out) = MMisc::compare_arrays(\@expected, keys %$rattr);
+  my @tmpa = keys %$rattr;
+  my ($in, $out) = MMisc::compare_arrays(\@expected, \@tmpa);
   return("Could not find all the expected \'data\:$name\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected \'data\:$name\' attributes (" . join(", ", @$out) . ")", ())
@@ -2037,10 +2039,9 @@ sub _clone_fhash_selected_objects {
 ########################################
 
 sub reformat_ds {
-  my ($self) = shift @_;
-  my $eval_sequence = shift @_;
-  my $isgtf = shift @_;
-  my @limitto_objects = MMisc::uppercase_array_values(@_);
+  my ($self, $eval_sequence, $isgtf, @tmpa) = @_;
+
+  my @limitto_objects = MMisc::uppercase_array_values(\@tmpa);
 
   return(-1) if ($self->error());
 
@@ -2161,7 +2162,8 @@ sub _set_frame_instances {
     return(0);
   }
 
-  my @ovlp_frames = MMisc::reorder_array_numerically($ovlp_fs->list_frames());
+  my @tmpa = $ovlp_fs->list_frames();
+  my @ovlp_frames = MMisc::reorder_array_numerically(\@tmpa);
   $eval_sequence->setSeqFrSpan($ovlp_frames[0], $ovlp_frames[-1]);
 
   foreach my $frameNum (@ovlp_frames) {
@@ -2231,7 +2233,8 @@ sub _set_object_instances {
 
   my $ob_fs = ViperFramespan->new();
   my %object_hash = %{$tmp{$eval_obj}};
-  my @okey = MMisc::reorder_array_numerically(keys %object_hash);
+  my @tmpa = keys %object_hash;
+  my @okey = MMisc::reorder_array_numerically(\@tmpa);
 
   $eval_sequence->setSeqObjectIds(\@okey);
   if ($eval_sequence->error()) {
@@ -2265,7 +2268,7 @@ sub _set_object_instances {
       }
     }
 
-    my ($obj_beg_fr, $obj_end_fr) = MMisc::min_max(@obj_frames);
+    my ($obj_beg_fr, $obj_end_fr) = MMisc::min_max_r(\@obj_frames);
 
     my %obj_attr = %{$object_hash{$object_id}};
 
@@ -2416,7 +2419,7 @@ sub _set_object_instances {
          next if(! defined $attr_fs);
 
          my @attr_frames = $attr_fs->list_frames();
-         my ($attr_beg_fr, $attr_end_fr) = MMisc::min_max(@attr_frames);
+         my ($attr_beg_fr, $attr_end_fr) = MMisc::min_max_r(\@attr_frames);
          my @att_value = @{$attr{$attkey}};
          foreach my $attr_fr (@attr_frames) {
            my $objectList = $frameList->{$attr_fr}->getObjectList();

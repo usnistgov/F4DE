@@ -678,11 +678,12 @@ sub generate_EventList {
 ########################################
 
 sub Obs_array_to_hash {
-  my @all = @_;
+  my ($ra) = @_;
 
   my %ohash = ();
 
-  foreach my $o (@all) {
+  for (my $i = 0; $i < scalar @$ra; $i++) {
+    my $o = $$ra[$i];
     my $key = $o->get_unique_id();
     MMisc::error_quit("While trying to obtain a unique Observation id (". $o->get_errormsg() . ")")
       if ($o->error());
@@ -793,7 +794,7 @@ sub do_alignment {
 
     # limit to sys events ?
     if ($ltse) {
-      my ($rla, $rlb) = MMisc::confirm_first_array_values(\@ref_events, @sys_events);
+      my ($rla, $rlb) = MMisc::confirm_first_array_values(\@ref_events, \@sys_events);
       my @leftover = @$rlb;
       @ref_events = ();
 
@@ -819,11 +820,11 @@ sub do_alignment {
     } elsif (scalar @asked_events != scalar @ok_events) {
       print "|->File: $file\n";
       print " -- Will only score on the following events: ", join(" ", @asked_events), "\n";
-      my ($rla, $rlb) = MMisc::confirm_first_array_values(\@asked_events, @sys_events);
+      my ($rla, $rlb) = MMisc::confirm_first_array_values(\@asked_events, \@sys_events);
       @sys_events = @$rla;
       print " -- Left in SYS Event list: ", join(" ", @sys_events), "\n";
       
-      my ($rla, $rlb) = MMisc::confirm_first_array_values(\@asked_events, @ref_events);
+      my ($rla, $rlb) = MMisc::confirm_first_array_values(\@asked_events, \@ref_events);
       @ref_events = @$rla;
       print " -- Left in REF Event list: ", join(" ", @ref_events), "\n";
     }
@@ -851,8 +852,8 @@ sub do_alignment {
       MMisc::error_quit("While trying to obtain a list of observations for REF event ($evt) and file ($file) (" . $refEL->get_errormsg() . ")")
         if ($refEL->error());
 
-      my %sys_bpm = &Obs_array_to_hash(@sys_events_obs);
-      my %ref_bpm = &Obs_array_to_hash(@ref_events_obs);
+      my %sys_bpm = &Obs_array_to_hash(\@sys_events_obs);
+      my %ref_bpm = &Obs_array_to_hash(\@ref_events_obs);
 
       my $tomatch = scalar @sys_events_obs + scalar @ref_events_obs;
       print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, " | Total Observations: $tomatch elements\n";

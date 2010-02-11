@@ -581,7 +581,7 @@ sub check_for_output_dir {
   return("Found a different amount of directories in the base directory than expected (expected: " . join(" ", @expected_dir_output) . ") (seen: " . join(" ", @d) . ")")
   if (scalar @d != scalar @expected_dir_output);
 
-  my ($ri, $ro) = MMisc::confirm_first_array_values(\@expected_dir_output, @d);
+  my ($ri, $ro) = MMisc::confirm_first_array_values(\@expected_dir_output, \@d);
   return("Not all expected directories (" . join(" ", @expected_dir_output) . ") found")
     if (scalar @$ri != scalar @expected_dir_output);
 

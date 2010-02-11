@@ -871,7 +871,8 @@ sub computeAndSetTextRecMeasures {
     # If two system objects are equi-distant from a ref object, we break the tie by computing the Character Error Rate
     my $redoMapping = 0;
     foreach my $ref_id (scalar keys %$evalObjectIDs) {
-        my @refsys_jointvalues = MMisc::reorder_array_numerically($self->get_jointvalues_ref_defined_values);
+      my @tmpa = $self->get_jointvalues_ref_defined_values;
+        my @refsys_jointvalues = MMisc::reorder_array_numerically(\@tmpa);
         if ($refsys_jointvalues[0] == $refsys_jointvalues[1]) {
             $redoMapping = 1;
             last;

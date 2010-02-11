@@ -336,14 +336,14 @@ sub validate_events_list {
 
   my ($rev, $rsev) = $self->split_events_subevents(@events);
 
-  my ($in, $out) = MMisc::confirm_first_array_values($rev, @ok_events);
+  my ($in, $out) = MMisc::confirm_first_array_values($rev, \@ok_events);
   if (scalar @$out > 0) {
     $self->_set_errormsg("Found some unknown event type: " . join(" ", @$out));
     return();
   }
 
   if (scalar @$rsev > 0) {
-    my ($in, $out) = MMisc::confirm_first_array_values($rsev, @ok_subevents);
+    my ($in, $out) = MMisc::confirm_first_array_values($rsev, \@ok_subevents);
     if (scalar @$out > 0) {
       $self->_set_errormsg("Found some unknown sub event type: " . join(" ", @$out));
       return();
@@ -2936,7 +2936,8 @@ sub _parse_file_section {
   my $framespan_max = $framespan_max_default;
 
   my @expected = @array_file_inline_attributes;
-  my ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
+  my @tmpa = keys %attr;
+  my ($in, $out) = MMisc::confirm_first_array_values(\@expected, \@tmpa);
   return("Could not find all the expected inline \'$wtag\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected inline \'$wtag\' attributes", ())
@@ -2963,7 +2964,8 @@ sub _parse_file_section {
   # Confirm they are the ones we want
   my %expected_hash = %hash_file_attributes_types;
   @expected = keys %expected_hash;
-  ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
+  my @tmpa = keys %attr;
+  ($in, $out) = MMisc::confirm_first_array_values(\@expected, \@tmpa);
   return("Could not find all the expected \'$wtag\' attributes [Found: " . join(" ", @$in) ."] [Expected: " . join(" ", @expected) . "]", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected \'$wtag\' attributes [" . join(" ", @$out) . "]", ())
@@ -2978,7 +2980,7 @@ sub _parse_file_section {
     next if (scalar @comp == 0);
     my @expected2 = ();
     push @expected2, $val;
-    ($in, $out) = MMisc::confirm_first_array_values(\@expected2, @comp);
+    ($in, $out) = MMisc::confirm_first_array_values(\@expected2, \@comp);
     return("Could not confirm all the expected \'$wtag\' attributes", ())
       if (scalar @$in != scalar @expected2);
     return("Found some unexpected \'$wtag\' attributes type", ())
@@ -3007,9 +3009,7 @@ sub _parse_file_section {
 ##########
 
 sub _parse_object_section {
-  my ($self) = shift @_;
-  my $str = shift @_;
-  my $isgtf = shift @_;
+  my ($self, $str, $isgtf) = @_;
 
   my $wtag = "object";
 
@@ -3027,7 +3027,8 @@ sub _parse_object_section {
   return("Problem obtaining the \'framespan_max\' object", ()) if ($self->error());
 
   my @expected = @array_objects_inline_attributes;
-  my ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
+  my @tmpa = keys %attr;
+  my ($in, $out) = MMisc::confirm_first_array_values(\@expected, \@tmpa);
   return("Could not find all the expected inline \'object\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected inline \'object\' attributes", ())
@@ -3072,7 +3073,8 @@ sub _parse_object_section {
   # Confirm they are the ones we want (except for xtra ones)
   my %expected_hash = %hash_objects_attributes_types_expected;
   @expected = keys %expected_hash;
-  ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %attr);
+  my @tmpa = keys %attr;
+  ($in, $out) = MMisc::confirm_first_array_values(\@expected, \@tmpa);
   return("Could not find all the expected \'$wtag\' attributes [Found: " . join(" ", @$in) ."] [Expected: " . join(" ", @expected) . "]", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected \'$wtag\' attributes[" . join(" ", @$out) . "]", ())
@@ -3097,7 +3099,7 @@ sub _parse_object_section {
     }
     my @expected2 = ();
     push @expected2, $val;
-    ($in, $out) = MMisc::confirm_first_array_values(\@expected2, @comp);
+    ($in, $out) = MMisc::confirm_first_array_values(\@expected2, \@comp);
     return("Could not confirm all the expected \'$wtag\' attributes", ())
       if (scalar @$in != scalar @expected2);
     return("Found some unexpected \'$wtag\' attributes type", ())
@@ -3120,11 +3122,10 @@ sub _parse_object_section {
 ####################
 
 sub _data_process_array_core {
-  my $name = shift @_;
-  my $rattr = shift @_;
-  my @expected = @_;
+  my ($name, $rattr, @expected) = @_;
 
-  my ($in, $out) = MMisc::confirm_first_array_values(\@expected, keys %$rattr);
+  my @tmpa = keys %$rattr;
+  my ($in, $out) = MMisc::confirm_first_array_values(\@expected, \@tmpa);
   return("Could not find all the expected \'data\:$name\' attributes", ())
     if (scalar @$in != scalar @expected);
   return("Found some unexpected \'data\:$name\' attributes", ())

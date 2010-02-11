@@ -2328,11 +2328,11 @@ sub _csvtxt2array {
 sub CF_check_csv_keys {
   my @keys = @_;
 
-  my ($rla, $rlb) = MMisc::confirm_first_array_values(\@keys, @ok_csv_keys);
+  my ($rla, $rlb) = MMisc::confirm_first_array_values(\@keys, \@ok_csv_keys);
   return("Found unauthorized keys for CSV work: " . join(" ", @$rlb))
     if (scalar @$rlb > 0);
 
-  my ($rla, $rlb) = MMisc::confirm_first_array_values(\@required_csv_keys, @keys);
+  my ($rla, $rlb) = MMisc::confirm_first_array_values(\@required_csv_keys, \@keys);
   return("Not all required keys (" . join(" ", @required_csv_keys) . ") could be found (only seen: " . join(" ", @$rla) .")")
     if (scalar @$rla != scalar @required_csv_keys);
 

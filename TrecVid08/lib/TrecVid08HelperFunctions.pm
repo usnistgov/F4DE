@@ -460,10 +460,10 @@ sub confirm_all_ECF_sffn_are_listed {
 
   my @tfl = MMisc::make_array_of_unique_values(\@flist);
 
-  my ($rla, $rlb) = MMisc::confirm_first_array_values(\@ecflist, @tfl);
+  my ($rla, $rlb) = MMisc::confirm_first_array_values(\@ecflist, \@tfl);
   @missing_from_ECF = @$rlb; # ie: present in ECF but not in file list
 
-  my ($rla, $rlb) = MMisc::confirm_first_array_values(\@tfl, @ecflist);
+  my ($rla, $rlb) = MMisc::confirm_first_array_values(\@tfl, \@ecflist);
   @not_in_ECF = @$rlb; # ie: not present in the ECF
 
   return("", \@missing_from_ECF, \@not_in_ECF);

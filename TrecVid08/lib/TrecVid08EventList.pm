@@ -710,7 +710,7 @@ sub _get_global_DetectionScore_minMax {
 
   return() if ($self->error());
 
-  return(MMisc::min_max(@all_ds));
+  return(MMisc::min_max_r(\@all_ds));
 }
 
 ####################

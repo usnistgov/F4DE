@@ -449,7 +449,7 @@ sub get_obs_extended_framespan {
     push @vals, @tmp;
   }
 
-  my ($min, $max) = MMisc::min_max(@vals);
+  my ($min, $max) = MMisc::min_max_r(\@vals);
   
   return(&create_fs_from_beg_end($min, $max, $addmargin));
 }

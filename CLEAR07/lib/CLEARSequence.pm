@@ -291,7 +291,8 @@ sub computeSFDA {
     # than the framespan mentioned in the index files. So, exclude the first
     # and the last frames from evaluation
 
-    my @frameNums = MMisc::reorder_array_numerically(keys %$gtFrameList);
+    my @tmpa = keys %$gtFrameList;
+    my @frameNums = MMisc::reorder_array_numerically(\@tmpa);
     my @frame_dims = ($eval_type eq "Point") ? $self->getFrameDims() : ();
     for (my $loop = 1; $loop < $#frameNums; $loop++) {
         my $fda;
@@ -361,7 +362,8 @@ sub computeMODA {
     # and the last frames from evaluation
 
     $cng = 0;
-    my @frameNums = MMisc::reorder_array_numerically(keys %$gtFrameList);
+    my @tmpa = keys %$gtFrameList;
+    my @frameNums = MMisc::reorder_array_numerically(\@tmpa);
     my @frame_dims = ($eval_type eq "Point") ? $self->getFrameDims() : ();
     for (my $loop = 1; $loop < $#frameNums; $loop++) {
         my $gtFrame = $gtFrameList->{$frameNums[$loop]};
@@ -426,7 +428,8 @@ sub computeMODP {
     # than the framespan mentioned in the index files. So, exclude the first
     # and the last frames from evaluation
 
-    my @frameNums = MMisc::reorder_array_numerically(keys %$gtFrameList);
+    my @tmpa = keys %$gtFrameList;
+    my @frameNums = MMisc::reorder_array_numerically(\@tmpa);
     my @frame_dims = ($eval_type eq "Point") ? $self->getFrameDims() : ();
     for (my $loop = 1; $loop < $#frameNums; $loop++) {
         my $modp;
@@ -476,7 +479,8 @@ sub computeATA {
     # Re-organize it as a hash of objects with each object being a hash of frames in which the object was present.
     my ( %gtObjTrks, %dcObjTrks, %soObjTrks, %gtIsEvalObj ); # gtIsEvalObj is a hash to check if a reference object was a dont care in the entire sequence
 
-    my @frameNums = MMisc::reorder_array_numerically(keys %$gtFrameList);
+    my @tmpa = keys %$gtFrameList;
+    my @frameNums = MMisc::reorder_array_numerically(\@tmpa);
     my @evalFrameNums;
     for (my $loop = 1; $loop < $#frameNums; $loop++) { 
         my $gtFrame = $gtFrameList->{$frameNums[$loop]};
@@ -597,7 +601,7 @@ sub computeATA {
     
     $noPenaltySysIDs = { MMisc::array1d_to_count_hash(\@temp_unmapped_sys_ids) };
 
-    # print "Actual false alarms: " , join(" ", MMisc::reorder_array_numerically(@unmapped_sys_ids)) , "\n";
+    # print "Actual false alarms: " , join(" ", MMisc::reorder_array_numerically(\@unmapped_sys_ids)) , "\n";
     $faIDs = { MMisc::array1d_to_count_hash(\@unmapped_sys_ids) };
 
     $self->_setSpatioTemporalMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs );
@@ -646,7 +650,8 @@ sub computeMOTA {
   
   my ( $prevGTMap, $prevSOMap ) = ( {}, {} );
   my %opgtm = ();
-  my @frameNums = MMisc::reorder_array_numerically(keys %$gtFrameList);
+  my @tmpa = keys %$gtFrameList;
+  my @frameNums = MMisc::reorder_array_numerically(\@tmpa);
   my @frame_dims = ($eval_type eq "Point") ? $self->getFrameDims() : ();
   my $gtOcclCount = {};
   
@@ -787,7 +792,8 @@ sub computeMOTP {
     # and the last frames from evaluation
 
     my ( $prevGTMap, $prevSOMap ) = ( {}, {} );
-    my @frameNums = MMisc::reorder_array_numerically(keys %$gtFrameList);
+    my @tmpa = keys %$gtFrameList;
+    my @frameNums = MMisc::reorder_array_numerically(\@tmpa);
     my @frame_dims = ($eval_type eq "Point") ? $self->getFrameDims() : ();
     my $gtOcclCount = {};
 
@@ -839,7 +845,8 @@ sub computeARPM {
     # than the framespan mentioned in the index files. So, exclude the first
     # and the last frames from evaluation
 
-    my @frameNums = MMisc::reorder_array_numerically(keys %$gtFrameList);
+    my @tmpa = keys %$gtFrameList;
+    my @frameNums = MMisc::reorder_array_numerically(\@tmpa);
     my @frame_dims = ($eval_type eq "Point") ? $self->getFrameDims() : ();
     for (my $loop = 1; $loop < $#frameNums; $loop++) {
         my $gtFrame = $gtFrameList->{$frameNums[$loop]};
@@ -924,7 +931,8 @@ sub computeSpatioTemporalOverlapRatio {
     my %gtObjFrameList = %$ref;
     my %soObjFrameList = %$sys;
 
-    my @gtObjFrameNums = MMisc::reorder_array_numerically(keys %gtObjFrameList);
+    my @tmpa = keys %gtObjFrameList;
+    my @gtObjFrameNums = MMisc::reorder_array_numerically(\@tmpa);
     my ( $intCount, $gtDCCount, $spatioTemporalOverlap ) = ( 0, 0, 0 );
 
     my ( $ref_object_id, $sys_object_id);
@@ -956,7 +964,8 @@ sub computeSpatioTemporalOverlapRatio {
         $retVal = $spatioTemporalOverlap/$numOfFrames; 
         # print "GT ID: $ref_object_id \tGTCount: " . ((scalar keys %gtObjFrameList) - $gtDCCount) . "\tSO ID: $sys_object_id \tSOCount: " . (scalar keys %soObjFrameList) . "\tintCount: $intCount \tunionNum: $numOfFrames \t Overlap: $spatioTemporalOverlap \tValue: $retVal\tDCCount: $gtDCCount\n"; 
         # print "GT frames are: ", join(", ", @gtObjFrameNums) , "\n";
-        # print "SO frames are: ", join(", ", MMisc::reorder_array_numerically(keys %soObjFrameList)) , "\n";
+        # my @tmpa = keys %soObjFrameList;
+        # print "SO frames are: ", join(", ", MMisc::reorder_array_numerically(\@tmpa)) , "\n";
         # print(Dumper(\%gtObjFrameList));
     }
 
@@ -1036,7 +1045,8 @@ sub splitTextLineObjects {
     my $PI = 3.1415926535897932384626433;
 
     my $frameList = $self->getFrameList();
-    my @frameNums = MMisc::reorder_array_numerically(keys %$frameList);
+    my @tmpa = keys %$frameList;
+    my @frameNums = MMisc::reorder_array_numerically(\@tmpa);
     
     for (my $fni = 0; $fni < scalar @frameNums; $fni++) {
       my $frameNum = $frameNums[$fni];

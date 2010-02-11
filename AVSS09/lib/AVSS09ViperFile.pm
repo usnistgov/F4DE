@@ -447,7 +447,7 @@ sub __check_cldt_validity {
   return(0) if ($self->error());
 
   my @fh_keys = keys %fhash;
-  my ($rin, $rout) = MMisc::compare_arrays(\@ok_elements, @fh_keys);
+  my ($rin, $rout) = MMisc::compare_arrays(\@ok_elements, \@fh_keys);
   return($self->_set_error_and_return("Found unknown elements in file [" . join(", ", @$rout) . "]", 0))
     if (scalar @$rout > 0);
 
@@ -470,8 +470,8 @@ sub __check_cldt_validity {
     my @slope = @lope; # Selected "local" ok_person_elements
     @slope = @lope[0..1] if ($issys);
 
-#    my ($rin, $rout) = MMisc::compare_arrays(\@keys, @slope);
-    my ($rin, $rout) = MMisc::compare_arrays(\@slope, @keys);
+#    my ($rin, $rout) = MMisc::compare_arrays(\@keys, \@slope);
+    my ($rin, $rout) = MMisc::compare_arrays(\@slope, \@keys);
     return($self->_set_error_and_return("Found unknown elements in file [" . join(", ", @$rout) . "]", 0))
       if (scalar @$rout > 0);
 
@@ -543,7 +543,8 @@ sub add_to_id {
   my $pk = $ok_elements[0];
   return(1) if (! exists $fhash{$pk});
 
-  my @keys = MMisc::reorder_array_numerically(keys %{$fhash{$pk}});
+  my @tmpa = keys %{$fhash{$pk}};
+  my @keys = MMisc::reorder_array_numerically(\@tmpa);
   @keys = reverse @keys
     if ($toadd > 0); # start from the end if we add to value to avoid duplicate
 
@@ -1803,11 +1804,11 @@ sub clone_selected_ids {
   my @kidl = $self->get_person_id_list();
   @ids = MMisc::make_array_of_unique_values(\@ids);
 
-  my ($rin, $rout) = MMisc::confirm_first_array_values(\@ids, @kidl);
+  my ($rin, $rout) = MMisc::confirm_first_array_values(\@ids, \@kidl);
   $self->_set_error_and_return("IDs not present: " . join(", ", @$rout), undef)
   if (scalar @$rout > 0);
 
-  my ($rin, $rout) = MMisc::compare_arrays(\@ids, @kidl);
+  my ($rin, $rout) = MMisc::compare_arrays(\@ids, \@kidl);
  
   # We do not need to remove anything ? simply clone
   my $ret = $self->clone();

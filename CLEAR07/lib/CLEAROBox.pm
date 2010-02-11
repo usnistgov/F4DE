@@ -398,7 +398,8 @@ sub computeIntersectionArea {
     }
 
     # Compute individual triangle areas and add them up
-    my @hullOrder = MMisc::reorder_array_numerically(keys %$convHull);
+    my @tmpa = keys %$convHull;
+    my @hullOrder = MMisc::reorder_array_numerically(\@tmpa);
     my $intersectionArea = 0;
     for (my $loop = 0; $loop < $#hullOrder; $loop++ ) {
         # print "$convHull->{$hullOrder[$loop]}[0] $convHull->{$hullOrder[$loop]}[1]\n";
