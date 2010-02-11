@@ -28,7 +28,7 @@ use Cwd qw(cwd abs_path);
 use Time::HiRes qw(gettimeofday tv_interval);
 use List::Util qw(reduce);
 
-my $version     = "0.1b";
+my $version     = '0.1b';
 
 if ($version =~ m/b$/) {
   (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
@@ -63,14 +63,14 @@ sub get_tmpfilename {
 #####
 
 sub slurp_file {
-  my ($fname, $mode) = &iuav(\@_, "", "text");
+  my ($fname, $mode) = &iuav(\@_, '', 'text');
 
   return(undef) if (&is_blank($fname));
 
-  my $out = "";
+  my $out = '';
   open FILE, "<$fname"
     or return(undef);
-  if ($mode eq "bin") {
+  if ($mode eq 'bin') {
     binmode FILE;
     my $buffer = '';
     while ( read(FILE, $buffer, 65536) ) {
@@ -80,7 +80,7 @@ sub slurp_file {
     my @all = <FILE>;
     chomp @all;
 
-    $out = join("\n", @all);
+    $out = fast_join("\n", \@all);
   }
   close FILE;
 
@@ -90,7 +90,7 @@ sub slurp_file {
 ##########
 
 sub check_package {
-  my $package = &iuv(shift @_, "");
+  my $package = &iuv(shift @_, '');
 
   return(0) if (&is_blank($package));
 
@@ -104,7 +104,7 @@ sub check_package {
 ##########
 
 sub get_env_val {
-  my $envv = &iuv(shift @_, "");
+  my $envv = &iuv(shift @_, '');
   my $default = shift @_;
 
   return(undef) if (&is_blank($envv));
@@ -154,7 +154,7 @@ sub clean_beg_spaces {
 
   my $cont = 1;
   while ((length($$rstr) > 1024) && ($cont)) {
-    my $txt = substr($$rstr, 0, 1024, "");
+    my $txt = substr($$rstr, 0, 1024, '');
     $txt =~ s%^\s+%%s;
     if (length($txt) > 0) {
       substr($$rstr, 0, 0, $txt);
@@ -171,7 +171,7 @@ sub clean_end_spaces {
 
   my $cont = 1;
   while ((length($$rstr) > 1024) && ($cont)) {
-    my $txt = substr($$rstr, -1024, 1024, "");
+    my $txt = substr($$rstr, -1024, 1024, '');
     $txt =~ s%\s+$%%s;
     if (length($txt) > 0) {
       $$rstr .= $txt;
@@ -185,7 +185,7 @@ sub clean_end_spaces {
 sub clean_begend_spaces {
   my $txt = shift @_;
 
-  return("") if (&is_blank($txt));
+  return('') if (&is_blank($txt));
 
   &clean_beg_spaces(\$txt);
   &clean_end_spaces(\$txt);
@@ -241,11 +241,11 @@ sub writeTo {
   my ($file, $addend, $printfn, $append, $txt,
       $filecomment, $stdoutcomment,
       $fileheader, $filetrailer) 
-    = &iuav(\@_, "", "", 0, 0, "", "", "", "", "");
+    = &iuav(\@_, '', '', 0, 0, '', '', '', '', '');
 
   my $rv = 1;
 
-  my $ofile = "";
+  my $ofile = '';
   if (! &is_blank($file)) {
     if (-d $file) {
       &warn_print("Provided file ($file) is a directory, will write to STDOUT\n");
@@ -261,9 +261,9 @@ sub writeTo {
     my $tofile = $ofile;
     if ($append) {
       $da = 1 if (-f $ofile);
-      open FILE, ">>$ofile" or ($ofile = "");
+      open FILE, ">>$ofile" or ($ofile = '');
     } else {
-      open FILE, ">$ofile" or ($ofile = "");
+      open FILE, ">$ofile" or ($ofile = '');
     }
     if (&is_blank($ofile)) {
       &warn_print("Could not create \'$tofile\' (will write to STDOUT): $!\n");
@@ -277,8 +277,8 @@ sub writeTo {
     print FILE $filetrailer if (! &is_blank($filetrailer));
     close FILE;
     # Note: do not print action when writing to STDOUT (even when requested)
-    print((($da) ? "Appended to file:" : "Wrote:") . " $ofile$filecomment\n") 
-      if (($ofile ne "-") && ($printfn));
+    print((($da) ? 'Appended to file:' : 'Wrote:') . " $ofile$filecomment\n") 
+      if (($ofile ne '-') && ($printfn));
     return(1); # Always return ok: we requested to write to a file and could
   }
 
@@ -390,15 +390,15 @@ sub confirm_first_array_values {
 ##########
 
 sub _uc_lc_array_values {
-  my $mode = &iuv(shift @_, "");
+  my $mode = &iuv(shift @_, '');
 
   my @out = ();
   for (my $i = 0; $i < scalar @_; $i++) {
     my $value = $_[$i];
-    my $v = ($mode eq "uc") ? uc($value) :
-      ($mode eq "lc") ? lc($value) :
-        ($mode eq "ucf") ? ucfirst($value) :
-          ($mode eq "lcf") ? lcfirst($value) :
+    my $v = ($mode eq 'uc') ? uc($value) :
+      ($mode eq 'lc') ? lc($value) :
+        ($mode eq 'ucf') ? ucfirst($value) :
+          ($mode eq 'lcf') ? lcfirst($value) :
             $value;
     push @out, $v;
   }
@@ -409,31 +409,31 @@ sub _uc_lc_array_values {
 #####
 
 sub uppercase_array_values {
-  return(&_uc_lc_array_values("uc", @_));
+  return(&_uc_lc_array_values('uc', @_));
 }
 
 #####
 
 sub lowercase_array_values {
-  return(&_uc_lc_array_values("lc", @_));
+  return(&_uc_lc_array_values('lc', @_));
 }
 
 #####
 
 sub ucfirst_array_values {
-  return(&_uc_lc_array_values("ucf", @_));
+  return(&_uc_lc_array_values('ucf', @_));
 }
 
 #####
 
 sub lcfirst_array_values {
-  return(&_uc_lc_array_values("lcf", @_));
+  return(&_uc_lc_array_values('lcf', @_));
 }
 
 ##########
 
 sub get_decimal_length {
-  my $v = &iuv(shift @_, "");
+  my $v = &iuv(shift @_, '');
 
   return(0) if (&is_blank($v));
 
@@ -514,7 +514,7 @@ sub get_sorted_MemDump {
 
 sub dump_memory_object {
   my ($file, $ext, $obj, $txt_fileheader, $gzip_fileheader, $printfn) =
-    &iuav(\@_, "", "", undef, undef, undef, 1);
+    &iuav(\@_, '', '', undef, undef, undef, 1);
 
   return(0) if (! defined $obj);
   
@@ -533,17 +533,17 @@ sub dump_memory_object {
     # Otherwise, we will write the text version
   }
 
-  return( &writeTo($file, $ext, $printfn, 0, $str, "", "", $fileheader, "") );
+  return( &writeTo($file, $ext, $printfn, 0, $str, '', '', $fileheader, '') );
 }
 
 #####
 
 sub load_memory_object {
-  my ($file, $gzhdsk) = &iuav(\@_, "", undef);
+  my ($file, $gzhdsk) = &iuav(\@_, '', undef);
 
   return(undef) if (&is_blank($file));
 
-  my $str = &slurp_file($file, "bin");
+  my $str = &slurp_file($file, 'bin');
   return(undef) if (! defined $str);
 
   if (defined $gzhdsk) {
@@ -566,7 +566,7 @@ sub load_memory_object {
 ##########
 
 sub mem_gzip {
-  my $tozip = &iuv(shift @_, "");
+  my $tozip = &iuv(shift @_, '');
 
   return(undef) if (&is_blank($tozip));
 
@@ -576,13 +576,13 @@ sub mem_gzip {
   print FH $tozip;
   close FH;
 
-  return(&slurp_file($filename, "bin"));
+  return(&slurp_file($filename, 'bin'));
 }
 
 #####
 
 sub mem_gunzip {
-  my $tounzip = &iuv(shift @_, "");
+  my $tounzip = &iuv(shift @_, '');
 
   return(undef) if (&is_blank($tounzip));
 
@@ -598,12 +598,12 @@ sub mem_gunzip {
 #####
 
 sub file_gunzip {
-  my $in = &iuv(shift @_, "");
+  my $in = &iuv(shift @_, '');
 
   return(undef) if (&is_blank($in));
   return(undef) if (! &is_file_r($in));
 
-  my $unzip = "";
+  my $unzip = '';
   open(FH, "gzip -dc $in |")
     or return(undef);
   while (my $line = <FH>) { 
@@ -619,10 +619,10 @@ sub file_gunzip {
 ##########
 
 sub strip_header {
-  my ($header, $str) = &iuav(\@_, "", "");
+  my ($header, $str) = &iuav(\@_, '', '');
 
   return($str) if (&is_blank($header));
-  return("") if (&is_blank($str));
+  return('') if (&is_blank($str));
   
   my $lh = length($header);
   
@@ -639,23 +639,23 @@ sub strip_header {
 sub _system_call_logfile {
   my $logfile = shift @_;
   
-  return(-1, "", "") if (scalar @_ == 0);
+  return(-1, '', '') if (scalar @_ == 0);
 
-  my $cmdline = "(" . join(" ", @_) . ")"; 
+  my $cmdline = '(' . join(' ', @_) . ')'; 
 
   my $retcode = -1;
-  my $stdoutfile = "";
-  my $stderrfile = "";
+  my $stdoutfile = '';
+  my $stderrfile = '';
   if ((! defined $logfile) || (MMisc::is_blank($logfile))) {
     # Get temporary filenames (created by the command line call)
     $stdoutfile = &get_tmpfilename();
     $stderrfile = &get_tmpfilename();
   } else {
-    $stdoutfile = $logfile . ".stdout";
-    $stderrfile = $logfile . ".stderr";
+    $stdoutfile = $logfile . '.stdout';
+    $stderrfile = $logfile . '.stderr';
     # Create a place holder for the final logfile
     open TMP, ">$logfile"
-      or return(-1, "", "");
+      or return(-1, '', '');
     print TMP "Placedholder for final combined log\n\nCommandline: [$cmdline]\n\nSee \"$stdoutfile\" and \"$stderrfile\" files until the process is concluded\n";
     close TMP
   }
@@ -689,20 +689,20 @@ sub do_system_call {
 #####
 
 sub write_syscall_logfile {
-  my $ofile = &iuv(shift @_, "");
+  my $ofile = &iuv(shift @_, '');
 
-  return(0, "", "", "", "") 
+  return(0, '', '', '', '') 
     if ( (&is_blank($ofile)) || (scalar @_ == 0) );
 
   my ($retcode, $stdout, $stderr) = &_system_call_logfile($ofile, @_);
 
-  my $otxt = "[[COMMANDLINE]] " . join(" ", @_) . "\n"
+  my $otxt = '[[COMMANDLINE]] ' . join(' ', @_) . "\n"
     . "[[RETURN CODE]] $retcode\n"
       . "[[STDOUT]]\n$stdout\n\n"
         . "[[STDERR]]\n$stderr\n";
 
   return(0, $otxt, $stdout, $stderr, $retcode, $ofile)
-    if (! &writeTo($ofile, "", 0, 0, $otxt));
+    if (! &writeTo($ofile, '', 0, 0, $otxt));
 
   return(1, $otxt, $stdout, $stderr, $retcode, $ofile);
 }
@@ -710,9 +710,9 @@ sub write_syscall_logfile {
 #####
 
 sub write_syscall_smart_logfile {
-  my $ofile = &iuv(shift @_, "");
+  my $ofile = &iuv(shift @_, '');
 
-  return(0, "", "", "", "") 
+  return(0, '', '', '', '') 
     if ( (&is_blank($ofile)) || (scalar @_ == 0) );
 
   if (-e $ofile) {
@@ -727,7 +727,7 @@ sub write_syscall_smart_logfile {
 #####
 
 sub get_txt_last_Xlines {
-  my ($txt, $X) = &iuav(\@_, "", 0);
+  my ($txt, $X) = &iuav(\@_, '', 0);
 
   my @out = ();
 
@@ -759,7 +759,7 @@ sub cmd_which {
 ####################
 
 sub warn_print {
-  print("[Warning] ", join(" ", @_), "\n");
+  print('[Warning] ', join(' ', @_), "\n");
 }
 
 ##########
@@ -771,7 +771,7 @@ sub error_exit {
 #####
 
 sub error_quit {
-  print("[ERROR] ", join(" ", @_), "\n");
+  print('[ERROR] ', join(' ', @_), "\n");
   &error_exit();
 }
 
@@ -784,75 +784,75 @@ sub ok_exit {
 #####
 
 sub ok_quit {
-  print(join(" ", @_), "\n");
+  print(join(' ', @_), "\n");
   &ok_exit();
 }
 
 ####################
 
 sub _check_file_dir_core {
-  my ($entity, $mode) = &iuav(\@_, "", "");
+  my ($entity, $mode) = &iuav(\@_, '', '');
 
-  return("empty mode")
+  return('empty mode')
     if (&is_blank($mode));
 
   return("empty $mode name")
     if (&is_blank($entity));
   return("$mode does not exist")
     if (! -e $entity);
-  if ($mode eq "dir") {
+  if ($mode eq 'dir') {
     return("is not a $mode")
       if (! -d $entity);
-  } elsif ($mode eq "file") {
+  } elsif ($mode eq 'file') {
     return("is not a $mode")
       if (! -f $entity);
   }
 
-  return("");
+  return('');
 }  
 
 #####
 
 sub _check_file_dir_XXX {
-  my ($mode, $totest, $x) = &iuav(\@_, "", "", "");
+  my ($mode, $totest, $x) = &iuav(\@_, '', '', '');
 
-  return("empty mode")
+  return('empty mode')
     if (&is_blank($mode));
-  return("empty test")
+  return('empty test')
     if (&is_blank($totest));
 
   my $txt = &_check_file_dir_core($x, $mode);
   return($txt) if (! &is_blank($txt));
 
-  return("") if ($totest eq "e");
+  return('') if ($totest eq 'e');
 
-  if ($totest eq "r") {
+  if ($totest eq 'r') {
     return("$mode is not readable")
       if (! -r $x);
-  } elsif ($totest eq "w") {
+  } elsif ($totest eq 'w') {
     return("$mode is not writable")
       if (! -w $x);
-  } elsif ($totest eq "x") {
+  } elsif ($totest eq 'x') {
     return("$mode is not executable")
       if (! -x $x);
   } else {
-    return("unknown mode");
+    return('unknown mode');
   }
 
-  return("");
+  return('');
 }
 
 #####
 
-sub check_file_e { return(&_check_file_dir_XXX("file", "e", @_)); }
-sub check_file_r { return(&_check_file_dir_XXX("file", "r", @_)); }
-sub check_file_w { return(&_check_file_dir_XXX("file", "w", @_)); }
-sub check_file_x { return(&_check_file_dir_XXX("file", "x", @_)); }
+sub check_file_e { return(&_check_file_dir_XXX('file', 'e', @_)); }
+sub check_file_r { return(&_check_file_dir_XXX('file', 'r', @_)); }
+sub check_file_w { return(&_check_file_dir_XXX('file', 'w', @_)); }
+sub check_file_x { return(&_check_file_dir_XXX('file', 'x', @_)); }
 
-sub check_dir_e { return(&_check_file_dir_XXX("dir", "e", @_)); }
-sub check_dir_r { return(&_check_file_dir_XXX("dir", "r", @_)); }
-sub check_dir_w { return(&_check_file_dir_XXX("dir", "w", @_)); }
-sub check_dir_x { return(&_check_file_dir_XXX("dir", "x", @_)); }
+sub check_dir_e { return(&_check_file_dir_XXX('dir', 'e', @_)); }
+sub check_dir_r { return(&_check_file_dir_XXX('dir', 'r', @_)); }
+sub check_dir_w { return(&_check_file_dir_XXX('dir', 'w', @_)); }
+sub check_dir_x { return(&_check_file_dir_XXX('dir', 'x', @_)); }
 
 sub does_file_exists { return( &is_blank( &check_file_e(@_) ) ); }
 sub is_file_r { return( &is_blank( &check_file_r(@_) ) ); }
@@ -867,7 +867,7 @@ sub is_dir_x { return( &is_blank( &check_dir_x(@_) ) ); }
 #####
 
 sub get_file_stat {
-  my $file = &iuv(shift @_, "");
+  my $file = &iuv(shift @_, '');
 
   my $err = &check_file_e($file);
   return($err, undef) if (! &is_blank($err));
@@ -877,15 +877,15 @@ sub get_file_stat {
   return("No stat obtained ($file)", undef)
     if (scalar @a == 0);
 
-  return("", @a);
+  return('', @a);
 }
 
 #####
 
 sub _get_file_info_core {
-  my ($pos, $file) = &iuav(\@_, -1, "");
+  my ($pos, $file) = &iuav(\@_, -1, '');
 
-  return(undef, "Problem with function arguments")
+  return(undef, 'Problem with function arguments')
     if ( ($pos == -1) || (&is_blank($file)) );
 
   my ($err, @a) = &get_file_stat($file);
@@ -893,7 +893,7 @@ sub _get_file_info_core {
   return(undef, $err)
     if (! &is_blank($err));
 
-  return($a[$pos], "");
+  return($a[$pos], '');
 }
 
 #####
@@ -909,19 +909,19 @@ sub get_file_ctime {return(&_get_file_info_core(10, @_));}
 
 # Note: will only keep "ok" files in the output list
 sub sort_files {
-  my $criteria = &iuv(shift @_, "");
+  my $criteria = &iuv(shift @_, '');
 
   my $func = undef;
-  if ($criteria eq "size") {
+  if ($criteria eq 'size') {
     $func = \&get_file_size;
-  } elsif ($criteria eq "atime") {
+  } elsif ($criteria eq 'atime') {
     $func = \&get_file_atime;
-  } elsif ($criteria eq "mtime") {
+  } elsif ($criteria eq 'mtime') {
     $func = \&get_file_mtime;
-  } elsif ($criteria eq "ctime") {
+  } elsif ($criteria eq 'ctime') {
     $func = \&get_file_ctime;
   } else {
-    return("Unknown criteria", undef);
+    return('Unknown criteria', undef);
   }
 
   my %tmp = ();
@@ -942,7 +942,7 @@ sub sort_files {
 
   my @out = sort { $tmp{$a} <=> $tmp{$b} } keys %tmp;
 
-  my $errmsg = join(". ", @errs);
+  my $errmsg = join('. ', @errs);
 
   return($errmsg, @out);
 }
@@ -951,7 +951,7 @@ sub sort_files {
 
 # Note: will return undef if any file in the list is not "ok"
 sub _XXXest_core {
-  my $mode = &iuv(shift @_, "");
+  my $mode = &iuv(shift @_, '');
 
   my @out = ();
 
@@ -968,7 +968,7 @@ sub _XXXest_core {
 #####
 
 sub newest {
-  my @or = &_XXXest_core("mtime", @_);
+  my @or = &_XXXest_core('mtime', @_);
 
   return(undef) if (scalar @or == 0);
 
@@ -978,7 +978,7 @@ sub newest {
 #####
 
 sub oldest {
-  my @or = &_XXXest_core("mtime", @_);
+  my @or = &_XXXest_core('mtime', @_);
 
   return(undef) if (scalar @or == 0);
 
@@ -988,7 +988,7 @@ sub oldest {
 #####
 
 sub biggest {
-  my @or = &_XXXest_core("size", @_);
+  my @or = &_XXXest_core('size', @_);
 
   return(undef) if (scalar @or == 0);
 
@@ -998,7 +998,7 @@ sub biggest {
 #####
 
 sub smallest {
-  my @or = &_XXXest_core("size", @_);
+  my @or = &_XXXest_core('size', @_);
 
   return(undef) if (scalar @or == 0);
 
@@ -1009,7 +1009,7 @@ sub smallest {
 
 # Will create directories up to requested depth
 sub make_dir {
-  my ($dest, $perm) = &iuav(\@_, "", 0755);
+  my ($dest, $perm) = &iuav(\@_, '', 0755);
 
   return(0) if (&is_blank($dest));
 
@@ -1017,7 +1017,7 @@ sub make_dir {
 
   $perm = 0755 if (&is_blank($perm)); # default permissions
 
-  my $t = "";
+  my $t = '';
   my @todo = split(m%/%, $dest);
   for (my $i = 0; $i < scalar @todo; $i++) {
     my $d = $todo[$i];
@@ -1036,9 +1036,9 @@ sub make_dir {
 ##########
 
 sub list_dirs_files {
-  my $dir = &iuv(shift @_, "");
+  my $dir = &iuv(shift @_, '');
 
-  return("Empty dir name", undef, undef, undef)
+  return('Empty dir name', undef, undef, undef)
     if (&is_blank($dir));
 
   opendir DIR, "$dir"
@@ -1063,13 +1063,13 @@ sub list_dirs_files {
     push @u, $entry;
   }
 
-  return("", \@d, \@f, \@u);
+  return('', \@d, \@f, \@u);
 }
 
 #####
 
 sub get_dirs_list {
-  my $dir = &iuv(shift @_, "");
+  my $dir = &iuv(shift @_, '');
 
   my @out = ();
 
@@ -1085,7 +1085,7 @@ sub get_dirs_list {
 #####
 
 sub get_files_list {
-  my $dir = &iuv(shift @_, "");
+  my $dir = &iuv(shift @_, '');
 
   my @out = ();
 
@@ -1101,16 +1101,16 @@ sub get_files_list {
 ##########
 
 sub split_dir_file_ext {
-  my $ff = &iuv(shift @_, "");
+  my $ff = &iuv(shift @_, '');
 
-  return ("empty filename", "", "", "")
+  return ('empty filename', '', '', '')
     if (&is_blank($ff));
 
-  my $dir = "";
-  my $file = "";
-  my $ext = "";
+  my $dir = '';
+  my $file = '';
+  my $ext = '';
 
-  my $tkf = "";
+  my $tkf = '';
 
   $dir = $1 if ($ff =~ s%^(\/)%%);
 
@@ -1125,15 +1125,15 @@ sub split_dir_file_ext {
   # Note that 'file' can be a '.cshrc' file 
   $file = $tkf . $ff;
 
-  return("", $dir, $file, $ext);
+  return('', $dir, $file, $ext);
 }
 
 ##########
 
 sub concat_dir_file_ext {
-  my ($dir, $file, $ext) = &iuav(\@_, "", "", "");
+  my ($dir, $file, $ext) = &iuav(\@_, '', '', '');
 
-  my $out = "";
+  my $out = '';
 
   if (! &is_blank($dir)) {
     $dir =~ s%/$%%;
@@ -1155,7 +1155,7 @@ sub get_pwd { return(cwd()); }
 #####
 
 sub get_file_full_path {
-  my ($rp, $from) = &iuav(\@_, "", &get_pwd());
+  my ($rp, $from) = &iuav(\@_, '', &get_pwd());
 
   return($rp) if (MMisc::is_blank($rp));
 
@@ -1203,16 +1203,16 @@ sub iuv { # Initialize Undefined Values
 sub dive_structure {
   my $r = shift @_;
 
-  return("", $r) if (! ref($r));
+  return('', $r) if (! ref($r));
 
-  return("", $$r[0]) 
+  return('', $$r[0]) 
     if (ref($r) eq 'ARRAY');
 
-  return("Not a HASH (" . ref($r) . ")", undef)
+  return('Not a HASH (' . ref($r) . ')', undef)
     if (ref($r) ne 'HASH');
   
   my @keys = keys %$r;
-  return("Found multiple keys (" . join(" ", @keys) . ")", undef) 
+  return('Found multiple keys (' . join(' ', @keys) . ')', undef) 
     if (scalar @keys > 1);
 
   $r = $$r{$keys[0]};
@@ -1290,24 +1290,24 @@ sub human_int {
 
   my @rord = ();
   while (length($v) > 0) {
-    push @rord, substr($v, -3, 3, "");
+    push @rord, substr($v, -3, 3, '');
   }
 
-  return(join(",", reverse(@rord)));
+  return(join(',', reverse(@rord)));
 }
 
 ####################
 
 sub do_ls {
-  return("Empty \"ls\" argument", undef) if (scalar @_ == 0);
+  return('Empty \"ls\" argument', undef) if (scalar @_ == 0);
 
-  my $cmd = "ls " . join(" ", @_);
+  my $cmd = 'ls ' . join(' ', @_);
 
   my ($rc, $stdout, $stderr) = &do_system_call($cmd);
 
   return($stderr, undef) if ($rc);
 
-  return("", $stdout);
+  return('', $stdout);
 } 
 
 #####
@@ -1351,25 +1351,25 @@ my %exp_ext_cmd = ();
 sub __set_unarchived_ext_list {
   return() if (scalar keys %exp_ext_cmd > 0);
 
-  my $tar      = "tar xf";
-  my $targzip  = "tar xfz";
-  my $tarbzip2 = "tar xfj";
-  my $zip      = "unzip";
+  my $tar      = 'tar xf';
+  my $targzip  = 'tar xfz';
+  my $tarbzip2 = 'tar xfj';
+  my $zip      = 'unzip';
 
   %exp_ext_cmd = 
     (
      # TAR
-     "tar"     => $tar,
+     'tar'     => $tar,
      # TAR + GZIP
-     "tar.gz"  => $targzip,
-     "tgz"     => $targzip,
+     'tar.gz'  => $targzip,
+     'tgz'     => $targzip,
      # TAR + BZIP2
-     "tar.bz2" => $tarbzip2,
-     "tbz2"    => $tarbzip2,
-     "tbz"     => $tarbzip2,
-     "tb2"     => $tarbzip2,
+     'tar.bz2' => $tarbzip2,
+     'tbz2'    => $tarbzip2,
+     'tbz'     => $tarbzip2,
+     'tb2'     => $tarbzip2,
      # ZIP
-     "zip"     => $zip,
+     'zip'     => $zip,
     );
 }
 
@@ -1391,7 +1391,7 @@ sub unarchive_archive {
   return("Problem with archive filename: $err") if (! &is_blank($err));
   
   $ext = lc($ext);
-  return("Problem with archive extension ($ext), is not in the list of recognized extensions (" . join(" ", &get_unarchived_ext_list()) . ")")
+  return("Problem with archive extension ($ext), is not in the list of recognized extensions (" . join(' ', &get_unarchived_ext_list()) . ')')
     if (! exists $exp_ext_cmd{$ext});
 
   my $pwd = &get_pwd();
@@ -1409,7 +1409,7 @@ sub unarchive_archive {
   my ($retcode, $stdout, $stderr) = MMisc::do_system_call($cmd);
   chdir($pwd);
   
-  return("", $retcode, $stdout, $stderr);
+  return('', $retcode, $stdout, $stderr);
 }
 
 ##########
@@ -1432,7 +1432,7 @@ sub safe_exists {
 sub fast_join {
   my ($j, $ra) = @_;
 
-  return("") if (scalar @$ra == 0);
+  return('') if (scalar @$ra == 0);
 
   my $txt = $$ra[0];
   for (my $i = 1; $i < scalar @$ra; $i++) {

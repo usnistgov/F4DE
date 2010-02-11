@@ -22,7 +22,7 @@ package BipartiteMatch;
 
 use strict;
 
-my $version     = "0.1b";
+my $version     = '0.1b';
 
 if ($version =~ m/b$/) {
   (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
@@ -44,16 +44,16 @@ use MErrorH;
 sub new {
   my ($class) = shift @_;
   
-  my $errormsg = new MErrorH("BipartiteMatch");
+  my $errormsg = new MErrorH('BipartiteMatch');
 
-  my $errortxt = (scalar @_ != 4) ? "BipartiteMatch \'new\' parameters are: (\\%%refObjects, \\%%sysObjects, \\&KernelFunction, \\\@KernelFunction_AdditionalParameters). " : "";
+  my $errortxt = (scalar @_ != 4) ? 'BipartiteMatch \'new\' parameters are: (\\%%refObjects, \\%%sysObjects, \\&KernelFunction, \\\@KernelFunction_AdditionalParameters). ' : '';
 
   my ($rrefObjects, $rsysObjects, $rKernelFunction, $rKernelAdditionalParameters) = @_;
 
-  $errortxt .= "The refObjects reference can not be undef, it has to be a reference to an empty hash at minimum. " if (! defined $rrefObjects);
-  $errortxt .= "The sysObjects reference can not be undef, it has to be a reference to an empty hash at minimum. " if (! defined $rsysObjects);
-  $errortxt .= "The KernelFunction reference can not be undef, it has to be a reference to an empty function at minimum" if (! defined $rKernelFunction);
-  $errortxt .= "The KernelFunction Additional Parameters reference can not be undef, it has to be a reference to an empty array at minimum" if (! defined $rKernelAdditionalParameters);
+  $errortxt .= 'The refObjects reference can not be undef, it has to be a reference to an empty hash at minimum. ' if (! defined $rrefObjects);
+  $errortxt .= 'The sysObjects reference can not be undef, it has to be a reference to an empty hash at minimum. ' if (! defined $rsysObjects);
+  $errortxt .= 'The KernelFunction reference can not be undef, it has to be a reference to an empty function at minimum' if (! defined $rKernelFunction);
+  $errortxt .= 'The KernelFunction Additional Parameters reference can not be undef, it has to be a reference to an empty array at minimum' if (! defined $rKernelAdditionalParameters);
 
   $errormsg->set_errormsg($errortxt);
 
@@ -117,7 +117,7 @@ sub _get_XXX_ids {
 sub get_mapped_ids {
   my ($self) = @_;
 
-  return($self->_get_XXX_ids("mapped"));
+  return($self->_get_XXX_ids('mapped'));
 }
 
 #####
@@ -125,7 +125,7 @@ sub get_mapped_ids {
 sub get_unmapped_ref_ids {
   my ($self) = @_;
 
-  return($self->_get_XXX_ids("unmapped_ref"));
+  return($self->_get_XXX_ids('unmapped_ref'));
 }
 
 #####
@@ -133,7 +133,7 @@ sub get_unmapped_ref_ids {
 sub get_unmapped_sys_ids {
   my ($self) = @_;
 
-  return($self->_get_XXX_ids("unmapped_sys"));
+  return($self->_get_XXX_ids('unmapped_sys'));
 }
 
 ########## 'mapped', 'unmapped_ref', 'unmapped_sys' Objects
@@ -211,7 +211,7 @@ sub get_unmapped_ref_objects {
 
   my %refObj = %{$self->{refObj}};
 
-  return($self->_get_XXX_objects("unmapped_ref", %refObj));
+  return($self->_get_XXX_objects('unmapped_ref', %refObj));
 }
 
 #####
@@ -221,7 +221,7 @@ sub get_unmapped_sys_objects {
 
   my %sysObj = %{$self->{sysObj}};
 
-  return($self->_get_XXX_objects("unmapped_sys", %sysObj));
+  return($self->_get_XXX_objects('unmapped_sys', %sysObj));
 }
 
 ########## 'joint_values', 'false_alarm_values', 'missed_detect_values', 'mapping'
@@ -230,7 +230,7 @@ sub _get_XXX_hash {
   my ($self, $xxx) = @_;
 
   if (! $self->is_computed()) {
-    $self->_set_errormsg("Can only obtain values from a computed BPM");
+    $self->_set_errormsg('Can only obtain values from a computed BPM');
     return(undef);
   }
   
@@ -267,7 +267,7 @@ sub _set_rev_hash {
 sub get_jointvalues_refsys_value {
   my ($self, $ref_id, $sys_id) = @_;
 
-  my %jv = $self->_get_XXX_hash("joint_values");
+  my %jv = $self->_get_XXX_hash('joint_values');
   return(undef) if ($self->error());
 
   if (! exists $jv{$ref_id}{$sys_id}) {
@@ -294,7 +294,7 @@ sub is_jointvalues_refsys_defined {
 sub get_jointvalues_ref_defined_list {
   my ($self, $ref_id) = @_;
 
-  my %jv = $self->_get_XXX_hash("joint_values");
+  my %jv = $self->_get_XXX_hash('joint_values');
   return(undef) if ($self->error());
 
   if (! exists $jv{$ref_id}) {
@@ -320,11 +320,11 @@ sub get_jointvalues_sys_defined_list {
   my ($self, $sys_id) = @_;
 
   # First create it if not set yet
-  $self->_set_rev_hash("joint_values", "rev_joint_values")
+  $self->_set_rev_hash('joint_values', 'rev_joint_values')
     if (! defined $self->{rev_joint_values});
   return(undef) if ($self->error());
 
-  my %rev_jv = $self->_get_XXX_hash("rev_joint_values");
+  my %rev_jv = $self->_get_XXX_hash('rev_joint_values');
   return(undef) if ($self->error());
 
   if (! exists $rev_jv{$sys_id}) {
@@ -349,7 +349,7 @@ sub get_jointvalues_sys_defined_list {
 sub get_sys_falsealarmvalues {
   my ($self, $sys_id) = @_;
 
-  my %fav = $self->_get_XXX_hash("false_alarm_values");
+  my %fav = $self->_get_XXX_hash('false_alarm_values');
   return(undef) if ($self->error());
 
   if (! exists $fav{$sys_id}) {
@@ -365,7 +365,7 @@ sub get_sys_falsealarmvalues {
 sub get_ref_misseddetectvalues {
   my ($self, $ref_id) = @_;
 
-  my %mdv = $self->_get_XXX_hash("missed_detect_values");
+  my %mdv = $self->_get_XXX_hash('missed_detect_values');
   return(undef) if ($self->error());
 
   if (! exists $mdv{$ref_id}) {
@@ -381,7 +381,7 @@ sub get_ref_misseddetectvalues {
 sub get_ref_mapping {
   my ($self, $ref_id) = @_;
 
-  my %map = $self->_get_XXX_hash("mapping");
+  my %map = $self->_get_XXX_hash('mapping');
   return(undef) if ($self->error());
 
   return(undef)
@@ -409,11 +409,11 @@ sub get_sys_mapping {
   my ($self, $sys_id) = @_;
 
   # First create it if not set yet
-  $self->_set_rev_hash("mapping", "rev_mapping")
+  $self->_set_rev_hash('mapping', 'rev_mapping')
     if (! defined $self->{rev_mapping});
   return(undef) if ($self->error());
 
-  my %rev_map = $self->_get_XXX_hash("rev_mapping");
+  my %rev_map = $self->_get_XXX_hash('rev_mapping');
   return(undef) if ($self->error());
 
   return(undef)
@@ -747,7 +747,7 @@ sub _map_ref_to_sys_clique_cohorts {
     
   }
 
-  return("", %map);
+  return('', %map);
 }
 
 ####################
@@ -866,7 +866,7 @@ sub _map_ref_to_sys_cohorts {
     }
   }
 
-  return("", %map);
+  return('', %map);
 }
 
 ################################################################################
@@ -878,7 +878,7 @@ sub _map_ref_to_sys_cohorts {
 sub _weighted_bipartite_graph_matching {
   my ($rscore) = @_;
 
-  return("input undefined", ())
+  return('input undefined', ())
     if (! defined $rscore);
 
   my %score = %{$rscore};
@@ -887,7 +887,7 @@ sub _weighted_bipartite_graph_matching {
   #  print "[%score] ", MMisc::get_sorted_MemDump(\%score);
 
   # No element
-  return ("", ()) 
+  return ('', ()) 
     if (scalar @keys == 0);
 
   # 1 element: skip graph matching an simply pick the minimum cost map
@@ -902,7 +902,7 @@ sub _weighted_bipartite_graph_matching {
       $imin = $v if ((not defined $imin) or ($costs{$imin} > $costs{$v}));
     }
     $map{$key} = $imin;
-    return("", %map);
+    return('', %map);
   }
   
   # More than 1 element
@@ -926,8 +926,8 @@ sub _weighted_bipartite_graph_matching {
   my $t = 0;
   
   my @rows = keys %score;
-  my $md = "md";
-  $md .= "0" if (exists $score{$md}); # ?
+  my $md = 'md';
+  $md .= '0' if (exists $score{$md}); # ?
   my @cols = ();
   my %hcols = (); 
   my $min_score = $INF;
@@ -941,8 +941,8 @@ sub _weighted_bipartite_graph_matching {
     }
   }
   @cols = keys %hcols;
-  my $fa = "fa";
-  $fa .= "0" if (exists $hcols{$fa}); # ?
+  my $fa = 'fa';
+  $fa .= '0' if (exists $hcols{$fa}); # ?
   my $reverse_search = scalar @rows < scalar @cols; # search is faster when ncols <= nrows
   for (my $i1 = 0; $i1 < scalar @rows; $i1++) {
     $row = $rows[$i1];
@@ -1149,7 +1149,7 @@ sub _weighted_bipartite_graph_matching {
     }
   }
 
-  return("", %map);
+  return('', %map);
 }
 
 
@@ -1198,14 +1198,14 @@ sub error {
 sub _unit_test_kernel {
   my ($ref, $sys, @params) = @_;
 
-  return("", -1) if (! defined $sys);
-  return("", 0) if (! defined $ref);
+  return('', -1) if (! defined $sys);
+  return('', 0) if (! defined $ref);
 
 
   if ((($ref % 10) < 5) || (($sys % 10) < 5)) {
-    return("", 1);
+    return('', 1);
   } else {
-    return("", undef);
+    return('', undef);
   }
 }
 
@@ -1227,21 +1227,21 @@ sub unit_test {
   my @kp = ();
 
   my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&_unit_test_kernel, \@kp);
-  MMisc::error_quit("While creating the Bipartite Matching object (" . $bpm->get_errormsg() . ")")
+  MMisc::error_quit('While creating the Bipartite Matching object (' . $bpm->get_errormsg() . ')')
     if ($bpm->error());
 
   $bpm->compute();
-  MMisc::error_quit("While computing the Bipartite Matching (" . $bpm->get_errormsg() . ")")
+  MMisc::error_quit('While computing the Bipartite Matching (' . $bpm->get_errormsg() . ')')
     if ($bpm->error());
 
   if (! $makecall) {
-    $bpm->_display("joint_values");
-    $bpm->_display("mapped", "unmapped_ref", "unmapped_sys");
+    $bpm->_display('joint_values');
+    $bpm->_display('mapped', 'unmapped_ref', 'unmapped_sys');
     
     return(1);
   }
 
-  MMisc::ok_quit(" OK");
+  MMisc::ok_quit(' OK');
 }
 
 

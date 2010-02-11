@@ -27,7 +27,7 @@ use strict;
 use MErrorH;
 use MMisc;
 
-my $version     = "0.1b";
+my $version     = '0.1b';
 
 if ($version =~ m/b$/) {
   (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
@@ -39,21 +39,21 @@ my $versionid = "ViperFramespan.pm Version: $version";
 my %error_msgs =
   (
    # from 'new'
-   "NotFramespan"      => "Entry is not a valid framespan. ",
-   "EmptyValue"        => "Must provide a non empty \'value\'. ",
-   "BadRangePair"      => "Badly formed range pair. ",
-   "NegativeValue"     => "Framespan range pair values can not be negative. ",
-   "NotOrdered"        => "Framespan range pair is not ordered. ",
-   "StartAt0"          => "Framespan can not start at 0. ",
-   "WeirdValue"        => "Strange value provided. ",
+   'NotFramespan'      => 'Entry is not a valid framespan. ',
+   'EmptyValue'        => "Must provide a non empty \'value\'. ",
+   'BadRangePair'      => 'Badly formed range pair. ',
+   'NegativeValue'     => 'Framespan range pair values can not be negative. ',
+   'NotOrdered'        => 'Framespan range pair is not ordered. ',
+   'StartAt0'          => 'Framespan can not start at 0. ',
+   'WeirdValue'        => 'Strange value provided. ',
    # Other
-   "NoFramespanSet"    => "No framespan set. ",
+   'NoFramespanSet'    => 'No framespan set. ',
    # 'fps'
-   "negFPS"            => "FPS can not negative. ",
-   "zeroFPS"           => "FPS can not be equal to 0. ",
-   "FPSNotSet"         => "FPS not set, can not perform time based operations. ",
-   "NotAFrame"         => "Value is not a valid frame value. ",
-   "NotAts"            => "Value is not a valid value in seconds. ",
+   'negFPS'            => 'FPS can not negative. ',
+   'zeroFPS'           => 'FPS can not be equal to 0. ',
+   'FPSNotSet'         => 'FPS not set, can not perform time based operations. ',
+   'NotAFrame'         => 'Value is not a valid frame value. ',
+   'NotAts'            => 'Value is not a valid value in seconds. ',
   );
 
 ## Constructor
@@ -62,7 +62,7 @@ sub new {
 
   my $tmp = shift @_;
   my ($value, $errmsg) = &_fs_check_and_optimize_value($tmp, 1);
-  my $errormsg = new MErrorH("ViperFramespan");
+  my $errormsg = new MErrorH('ViperFramespan');
   $errormsg->set_errormsg($errmsg) if (! MMisc::is_blank($errmsg));
 
   my $self =
@@ -90,13 +90,13 @@ sub get_version {
 sub _fs_check_pair {
   my ($b, $e) = @_;
 
-  return($error_msgs{"NotOrdered"})
+  return($error_msgs{'NotOrdered'})
     if ($e < $b);
 
-  return($error_msgs{"StartAt0"})
+  return($error_msgs{'StartAt0'})
     if ($b == 0);
 
-  return("");
+  return('');
 }
 
 #####
@@ -104,7 +104,7 @@ sub _fs_check_pair {
 sub _fs_split_pair_nocheck {
   my $fs = shift @_;
 
-  my $sc = index($fs, ":", 0);
+  my $sc = index($fs, ':', 0);
   my $bf = substr($fs, 0, $sc);
   my $ef = substr($fs, $sc + 1); # go until end of string
 
@@ -116,9 +116,9 @@ sub _fs_split_pair_nocheck {
 sub _fs_split_pair {
   my ($pair) = shift @_;
 
-  return("", $1, $2)  if ($pair =~ m%^(\d+)\:(\d+)$%);
+  return('', $1, $2)  if ($pair =~ m%^(\d+)\:(\d+)$%);
 
-  return($error_msgs{"NotFramespan"}, 0, 0);
+  return($error_msgs{'NotFramespan'}, 0, 0);
 }
 
 #####
@@ -143,11 +143,11 @@ sub _fs_check_value {
   my $value = shift @_;
   my $from_new = shift @_;
 
-  if ($value eq "") { # Ok not to called 'is_blank'
+  if ($value eq '') { # Ok not to called 'is_blank'
     # If called from new, it is ok
-    return($value, "") if ($from_new);
+    return($value, '') if ($from_new);
     # Otherwise it should not happen
-    return("", $error_msgs{"EmptyValue"});
+    return('', $error_msgs{'EmptyValue'});
   }
 
   # Process pair per pair
@@ -156,12 +156,12 @@ sub _fs_check_value {
   for (my $i = 0; $i < scalar @todo; $i++) {
     my $key = $todo[$i];
     my ($txt, $b, $e) = &_fs_split_pair($key);
-    return("", $txt) if (! MMisc::is_blank($txt));
+    return('', $txt) if (! MMisc::is_blank($txt));
     $txt = &_fs_check_pair($b, $e);
-    return("", $txt) if (! MMisc::is_blank($txt));
+    return('', $txt) if (! MMisc::is_blank($txt));
   }
 
-  return(MMisc::fast_join(" ", \@todo), "");
+  return(MMisc::fast_join(' ', \@todo), '');
 }
 
 ##########
@@ -178,16 +178,16 @@ sub _fs_reorder_value {
   my $fs = shift @_;
 
   # Only 1 element, nothing to do
-  return($fs, "") if (&_fs_split_line_count($fs) == 1);
+  return($fs, '') if (&_fs_split_line_count($fs) == 1);
 
   # More than 1 element, reorder
   my @ftodo = &_fs_split_line($fs);
   @ftodo = &_fs_make_uniques(\@ftodo); # ex: '1:2 1:2' -> '1:2'
   my @o = sort _fs_sort @ftodo;
-  return($fs, "WEIRD: While reordering frames, did not find the same number of elements between the original array and the result array")
+  return($fs, 'WEIRD: While reordering frames, did not find the same number of elements between the original array and the result array')
     if (scalar @ftodo != scalar @o);
 
-  return(MMisc::fast_join(" ", \@o), "");
+  return(MMisc::fast_join(' ', \@o), '');
 }
 
 ##########
@@ -195,7 +195,7 @@ sub _fs_reorder_value {
 sub _fs_shorten_value {
   my $fs = shift @_;
 
-  my $errormsg = "";
+  my $errormsg = '';
 
   ($fs, $errormsg) = &_fs_reorder_value($fs);
   return($fs, $errormsg) if (! MMisc::is_blank($errormsg));
@@ -203,7 +203,7 @@ sub _fs_shorten_value {
   my @ftodo = &_fs_split_line($fs);
 
   # Only 1 element, nothing to do
-  return($fs, "") if (scalar @ftodo == 1);
+  return($fs, '') if (scalar @ftodo == 1);
 
   # More than one element: compute
   my @o = ();
@@ -238,7 +238,7 @@ sub _fs_shorten_value {
   }
   push @o, "$b:$e";
 
-  return(MMisc::fast_join(" ", \@o), "");
+  return(MMisc::fast_join(' ', \@o), '');
 }
 
 #####
@@ -247,14 +247,14 @@ sub _fs_check_and_optimize_value {
   my $value = shift @_;
   my $from_new = shift @_;
 
-  my $errormsg = "";
+  my $errormsg = '';
 
   # Check the value
   ($value, $errormsg) = &_fs_check_value($value, $from_new);
   return($value, $errormsg) if (! MMisc::is_blank($errormsg));
 
   # Then optimize it (if a value is present)
-  if ($value ne "") { # Ok not to use 'is_blank' as value is checked after
+  if ($value ne '') { # Ok not to use 'is_blank' as value is checked after
     ($value, $errormsg) = &_fs_shorten_value($value);
     return($value, $errormsg) if (! MMisc::is_blank($errormsg));
   }
@@ -308,7 +308,7 @@ sub add_fs_to_value {
   return(0) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
 
@@ -326,12 +326,12 @@ sub union {
   return(0) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
 
   if (! $other->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
 
@@ -355,23 +355,23 @@ sub set_fps {
 
   return(0) if ($self->error());
 
-  if (lc($fps) eq "pal") {
+  if (lc($fps) eq 'pal') {
     $fps = 25;
-  } elsif (lc($fps) eq "ntsc") {
+  } elsif (lc($fps) eq 'ntsc') {
     $fps = 30000 / 1001;
   }
 
   my ($ok, $fps) = MMisc::is_get_float($fps);
   if ((! $ok) || (! defined($fps))) {
-    $self->_set_errormsg($error_msgs{"WeirdValue"});
+    $self->_set_errormsg($error_msgs{'WeirdValue'});
     return(0);
   }
 
   if ($fps < 0) {
-    $self->_set_errormsg($error_msgs{"negFPS"});
+    $self->_set_errormsg($error_msgs{'negFPS'});
     return(0);
   } elsif ($fps == 0) {
-    $self->_set_errormsg($error_msgs{"zeroFPS"});
+    $self->_set_errormsg($error_msgs{'zeroFPS'});
     return(0);
   }
 
@@ -399,7 +399,7 @@ sub get_fps {
   return(0) if ($self->error());
 
   if (! $self->is_fps_set()) {
-    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(0);
   }
 
@@ -441,10 +441,10 @@ sub is_value_set {
 sub _fs_get_begend {
   my $fs = shift @_;
 
-  my $sc = index($fs, ":", 0);
+  my $sc = index($fs, ':', 0);
   my $bf = substr($fs, 0, $sc);
 
-  $sc = rindex($fs, ":"); # look from end of string
+  $sc = rindex($fs, ':'); # look from end of string
   my $ef = substr($fs, $sc + 1); # go until the end of string
 
   return($bf, $ef);
@@ -487,7 +487,7 @@ sub count_pairs_in_value {
   return(-1) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(-1);
   }
 
@@ -505,7 +505,7 @@ sub get_list_of_framespans {
   return(undef) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(undef);
   }
 
@@ -541,7 +541,7 @@ sub count_pairs_in_original_value {
   return(-1) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(-1);
   }
 
@@ -572,7 +572,7 @@ sub check_if_overlap {
 
   if ( (! $self->is_value_set()) 
        || (! defined $other) || (! $other->is_value_set()) ) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
   
@@ -715,7 +715,7 @@ sub get_overlap {
 
   # Check error in the 'other'
   if ($other->error()) {
-    $self->_set_errormsg("Can not \'get_overlap\' from bad \'other\' (" . $other->get_errormsg() . ")");
+    $self->_set_errormsg("Can not \'get_overlap\' from bad \'other\' (" . $other->get_errormsg() . ')');
     return(undef);
   }
 
@@ -785,17 +785,17 @@ sub get_overlap {
   return(undef) if (scalar @ova == 0);
 
   # Generate a new framespan out of it
-  my $ovp = MMisc::fast_join(" ", \@ova);
+  my $ovp = MMisc::fast_join(' ', \@ova);
 
 #  print "*****Out: $ovp\n\n";
 
   my $nfs = new ViperFramespan($ovp);
   if ($nfs->error()) {
-    $self->_set_errormsg("Problem creating new ViperFramespan for overlap value (" . $nfs->get_errormsg() . ")");
+    $self->_set_errormsg('Problem creating new ViperFramespan for overlap value (' . $nfs->get_errormsg() . ')');
     return(undef);
   }
   if (defined($fps) && (! $nfs->set_fps($fps))) {
-    $self->_set_errormsg("Failed to set new ViperFramespan fps '$fps' (" . $nfs->get_errormsg() . ")");
+    $self->_set_errormsg("Failed to set new ViperFramespan fps '$fps' (" . $nfs->get_errormsg() . ')');
     return(undef); 
   }
 
@@ -810,7 +810,7 @@ sub get_beg_end_fs {
   return(-1) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(-1);
   }
 
@@ -861,7 +861,7 @@ sub _fs_not_value {
     my $entry = $ftodo[$i];
     ($b, $e) = &_fs_split_pair_nocheck($entry);
 
-    push @o, ($min . ":" . ($b - 1))
+    push @o, ($min . ':' . ($b - 1))
       if ($b > $min);
 
     $min = $e + 1; # Move 'min' each time
@@ -869,7 +869,7 @@ sub _fs_not_value {
   push @o, "$min:$max"
     if ($e < $max);
 
-  return(MMisc::fast_join(" ", \@o));
+  return(MMisc::fast_join(' ', \@o));
 }
 
 #####
@@ -880,7 +880,7 @@ sub bounded_not {
   return(undef) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(undef);
   }
 
@@ -918,12 +918,12 @@ sub get_xor {
   return(undef) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(undef);
   }
 
   if (! $other->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(undef);
   }
 
@@ -936,21 +936,21 @@ sub get_xor {
   # Get the union
   my $ok = $cl1->union($other);
   if ($cl1->error()) {
-    $self->_set_errormsg("In XOR during union: " . $cl1->get_errormsg());
+    $self->_set_errormsg('In XOR during union: ' . $cl1->get_errormsg());
     return(undef);
   }
 
   # Need min/Max of union for not overlap bounding
   my ($min, $max) = $cl1->get_beg_end_fs();
   if ($cl1->error()) {
-    $self->_set_errormsg("In XOR during beg/end get: " . $cl1->get_errormsg());
+    $self->_set_errormsg('In XOR during beg/end get: ' . $cl1->get_errormsg());
     return(undef);
   }
 
   # Get the overlap
   my $ov = $cl2->get_overlap($other);
   if ($cl2->error()) {
-    $self->_set_errormsg("In XOR during intersection: " . $cl2->get_errormsg());
+    $self->_set_errormsg('In XOR during intersection: ' . $cl2->get_errormsg());
     return(undef);
   }
 
@@ -978,12 +978,12 @@ sub get_xor {
   # Do the intersection between the non overlap and the union
   my $res = $nov->get_overlap($cl1);
   if ($nov->error()) {
-    $self->_set_errormsg("In XOR during final step: " . $nov->get_errormsg());
+    $self->_set_errormsg('In XOR during final step: ' . $nov->get_errormsg());
     return(undef);
   }
 
   if ($res->error()) {
-    $self->_set_errormsg("In XOR, in result: " . $res->get_errormsg());
+    $self->_set_errormsg('In XOR, in result: ' . $res->get_errormsg());
     return(undef);
   }
 
@@ -1004,7 +1004,7 @@ sub remove {
   my $x = $self->get_xor($other);
   return(0) if ($self->error());
   if (! defined $x) {
-    $self->_set_errormsg("In remove, could not perform first step");
+    $self->_set_errormsg('In remove, could not perform first step');
     return(0);
   }
     
@@ -1039,12 +1039,12 @@ sub extent_middlepoint_distance {
   return(-1) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(-1);
   }
 
   if (! $other->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(-1);
   }
 
@@ -1101,7 +1101,7 @@ sub duration {
   return(0) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
 
@@ -1137,7 +1137,7 @@ sub gap_shorten {
   }
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
 
@@ -1171,7 +1171,7 @@ sub gap_shorten {
   }
   push @o, "$b:$e";
 
-  $self->set_value(MMisc::fast_join(" ", \@o));
+  $self->set_value(MMisc::fast_join(' ', \@o));
   return(0) if ($self->error());
 
   return(1);
@@ -1185,13 +1185,13 @@ sub _frame_to_ts {
   return(0) if ($self->error());
 
   if (! $self->is_fps_set()) {
-    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(0);
   }
 
   my ($ok, $frame) = MMisc::is_get_float($frame);
   if ((! $ok) || (! defined($frame))) {
-    $self->_set_errormsg($error_msgs{"NotAFrame"});
+    $self->_set_errormsg($error_msgs{'NotAFrame'});
     return(0);
   }
 
@@ -1227,13 +1227,13 @@ sub _ts_to_frame {
   return(0) if ($self->error());
 
   if (! $self->is_fps_set()) {
-    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(0);
   }
 
   my ($ok, $ts) = MMisc::is_get_float($ts);
   if ((! $ok) || (! defined($ts))) {
-    $self->_set_errormsg($error_msgs{"NotAts"});
+    $self->_set_errormsg($error_msgs{'NotAts'});
     return(0);
   }
 
@@ -1271,11 +1271,11 @@ sub _get_begend_ts_core {
   return(0) if ($self->error());
 
   if (! $self->is_fps_set()) {
-    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(0);
   }
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
 
@@ -1338,7 +1338,7 @@ sub extent_middlepoint_ts {
   return(-1) if ($self->error());
 
   if (! $self->is_fps_set()) {
-    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(-1);
   }
 
@@ -1373,7 +1373,7 @@ sub extent_duration_ts {
   return(-1) if ($self->error());
 
   if (! $self->is_fps_set()) {
-    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(-1);
   }
 
@@ -1391,7 +1391,7 @@ sub duration_ts {
   return(-1) if ($self->error());
 
   if (! $self->is_fps_set()) {
-    $self->_set_errormsg($error_msgs{"FPSNotSet"});
+    $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(-1);
   }
 
@@ -1420,7 +1420,7 @@ sub value_shift {
   return(0) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
 
@@ -1446,7 +1446,7 @@ sub value_shift {
     push @out, "$b:$e";
   }
 
-  return($self->set_value(MMisc::fast_join(" ", \@out)));
+  return($self->set_value(MMisc::fast_join(' ', \@out)));
 }
 
 #####
@@ -1472,7 +1472,7 @@ sub list_frames {
   return(@out) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(@out);
   }
 
@@ -1501,7 +1501,7 @@ sub list_pairs {
   return(@out) if ($self->error());
 
   if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{"NoFramespanSet"});
+    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(@out);
   }
 
@@ -1517,46 +1517,46 @@ sub list_pairs {
 sub unit_test {                 # Xtreme coding and us ;)
   my $notverb = shift @_;
   my $makecall = shift @_;
-  my $eh = "unit_test:";
+  my $eh = 'unit_test:';
   my @otxt = ();
 
-  print "Testing ViperFramespan ... " if ($makecall);
+  print 'Testing ViperFramespan ... ' if ($makecall);
 
   # Let us try to set a bad value
-  my $fs_tmp1 = new ViperFramespan("Not a framespan");
+  my $fs_tmp1 = new ViperFramespan('Not a framespan');
   my $err1 = $fs_tmp1->get_errormsg();
-  my $ee = $error_msgs{"NotFramespan"};
+  my $ee = $error_msgs{'NotFramespan'};
   push(@otxt, "$eh [#1] Error while checking \'set_value\'[1] ($err1).")
     if ($err1 !~ m%$ee$%);
   
   # Or an empty framespan
   my $fs_tmp2 = new ViperFramespan();
-  $fs_tmp2->set_value("");
+  $fs_tmp2->set_value('');
   my $err2 = $fs_tmp2->get_errormsg();
-  $ee = $error_msgs{"EmptyValue"};
+  $ee = $error_msgs{'EmptyValue'};
   push(@otxt, "$eh [#2] Error while checking \'set_value\'[2] ($err2).")
     if ($err2 !~ m%$ee$%);
   
   # Not ordered framespan
-  my $in3 = "5:4";
+  my $in3 = '5:4';
   my $fs_tmp3 = new ViperFramespan($in3);
   my $err3 = $fs_tmp3->get_errormsg();
-  $ee = $error_msgs{"NotOrdered"};
+  $ee = $error_msgs{'NotOrdered'};
   push(@otxt, "$eh [#3] Error while checking \'set_value\'[3] ($err3).")
     if ($err3 !~ m%$ee$%);
   
   # Start a 0
-  my $in4 = "0:1";
+  my $in4 = '0:1';
   my $fs_tmp4 = new ViperFramespan();
   $fs_tmp4->set_value($in4);
   my $err4 = $fs_tmp4->get_errormsg();
-  $ee = $error_msgs{"StartAt0"};
+  $ee = $error_msgs{'StartAt0'};
   push(@otxt, "$eh [#4] Error while checking \'new\'[4] ($err4).")
     if ($err4 !~ m%$ee$%);
   
   # Reorder
-  my $in5 = "4:5 1:2 12:26 8:8";
-  my $exp_out5 = "1:2 4:5 8:8 12:26";
+  my $in5 = '4:5 1:2 12:26 8:8';
+  my $exp_out5 = '1:2 4:5 8:8 12:26';
   my $fs_tmp5 = new ViperFramespan();
   $fs_tmp5->set_value($in5);
   my $out5 = $fs_tmp5->get_value();
@@ -1564,16 +1564,16 @@ sub unit_test {                 # Xtreme coding and us ;)
     if ($out5 ne $exp_out5);
 
   # Reorder (2)
-  $in5 = "4:7 1:2 1:2";
-  $exp_out5 = "1:2 4:7";
+  $in5 = '4:7 1:2 1:2';
+  $exp_out5 = '1:2 4:7';
   $fs_tmp5->set_value($in5);
   $out5 = $fs_tmp5->get_value();
   push(@otxt, "$eh [#5b] Error while checking \'new\'[reorder] (expected: $exp_out5 / Got: $out5). ")
     if ($out5 ne $exp_out5);
   
   # Shorten
-  my $in6 = "1:2 2:3 4:5";
-  my $exp_out6 = "1:5";
+  my $in6 = '1:2 2:3 4:5';
+  my $exp_out6 = '1:5';
   my $fs_tmp6 = new ViperFramespan();
   $fs_tmp6->set_value($in6);
   my $out6 = $fs_tmp6->get_value();
@@ -1581,8 +1581,8 @@ sub unit_test {                 # Xtreme coding and us ;)
     if ($out6 ne $exp_out6);
   
   # Shorten (2)
-  $in6 = "1:3 1:2";
-  $exp_out6 = "1:3";
+  $in6 = '1:3 1:2';
+  $exp_out6 = '1:3';
   $fs_tmp6->set_value($in6);
   my $out6 = $fs_tmp6->get_value();
   push(@otxt, "$eh [#6b] Error while checking \'new\'[shorten] (expected: $exp_out6 / Got: $out6).")
@@ -1592,14 +1592,14 @@ sub unit_test {                 # Xtreme coding and us ;)
   my $fs_tmp7 = new ViperFramespan();
   my $test7 = $fs_tmp7->check_if_overlap(); # We are checking against nothing here
   my $err7 = $fs_tmp7->get_errormsg();
-  $ee = $error_msgs{"NoFramespanSet"};
+  $ee = $error_msgs{'NoFramespanSet'};
   push(@otxt, "$eh [#7] Error while checking \'check_if_overlap\' ($err7).")
     if ($err7 !~ m%$ee$%);
   
   # Overlap & Within
-  my $in8  = "1:10";
-  my $in9  = "4:16";
-  my $in10 = "11:15";
+  my $in8  = '1:10';
+  my $in9  = '4:16';
+  my $in10 = '11:15';
   my $fs_tmp8  = new ViperFramespan();
   my $fs_tmp9  = new ViperFramespan();
   my $fs_tmp10 = new ViperFramespan();
@@ -1624,8 +1624,8 @@ sub unit_test {                 # Xtreme coding and us ;)
     if ($testd);
   
   # optimize + count_pairs
-  my $in11 = "20:40 1:2 1:1 2:6 8:12 20:40"; # 6 pairs (not optimized)
-  my $exp_out11 = "1:6 8:12 20:40"; # 3 pairs (once optimized)
+  my $in11 = '20:40 1:2 1:1 2:6 8:12 20:40'; # 6 pairs (not optimized)
+  my $exp_out11 = '1:6 8:12 20:40'; # 3 pairs (once optimized)
   my $fs_tmp11 = new ViperFramespan();
   $fs_tmp11->set_value($in11);
   my $out11 = $fs_tmp11->get_value();
@@ -1643,14 +1643,14 @@ sub unit_test {                 # Xtreme coding and us ;)
     if ($etmp11b != $tmp11b);
   
   # extent_middlepoint + extent_middlepoint_distance
-  my $in12 = "20:39";
+  my $in12 = '20:39';
   my $fs_tmp12 = new ViperFramespan($in12);
   my $exp_out12 = 30;           # = 20 + (((39+1) - 20) / 2)
   my $out12 = $fs_tmp12->extent_middlepoint();
   push(@otxt, "$eh [#12] Error while checking \'extent_middlepoint\' (expected: $exp_out12 / Got: $out12).")
     if ($exp_out12 != $out12);
   
-  my $in13 = "100:199";         # extent_middlepoint: 150
+  my $in13 = '100:199';         # extent_middlepoint: 150
   my $fs_tmp13 = new ViperFramespan($in13);
 
   my $out13 = $fs_tmp12->extent_middlepoint_distance($fs_tmp13);
@@ -1675,7 +1675,7 @@ sub unit_test {                 # Xtreme coding and us ;)
 
   my $out16 = $fs_tmp11->get_list_of_framespans();
   my @expSub = split(/ /, $exp_out11);
-  push(@otxt, "$eh [#16] Error getting a list of framespan expected: 3 / got: ".scalar(@$out16) . ".")
+  push(@otxt, "$eh [#16] Error getting a list of framespan expected: 3 / got: ".scalar(@$out16) . '.')
     if (scalar(@expSub) != scalar(@$out16));
   MMisc::error_quit($fs_tmp11->get_errormsg())
         if ($fs_tmp11->error());
@@ -1691,17 +1691,17 @@ sub unit_test {                 # Xtreme coding and us ;)
   my $fs_tmp18 = new ViperFramespan();
   my @pairs = 
     (
-     [ "3:6", "3:6", "3:6" ], 
-     [ "3:6", "4:6", "4:6" ], 
-     [ "3:6", "6:6", "6:6" ], 
-     [ "3:6", "4:7", "4:6" ], 
-     [ "3:6", "6:7", "6:6" ], 
-     [ "3:6", "7:8", "" ],
-     [ "1:5 10:15 20:50", "8:40", "10:15 20:40" ],
-     [ "1:5 8:20 25:50 55:80 85:100", "1:100", "1:5 8:20 25:50 55:80 85:100" ],
-     [ "2:2 6:6 12:12", "6:6", "6:6" ],
-     [ "1:1 3:3", "2:2", "" ],
-     [ "1:1 3:3 5:5 7:7 9:9", "9:9 3:5", "3:3 5:5 9:9" ],
+     [ '3:6', '3:6', '3:6' ], 
+     [ '3:6', '4:6', '4:6' ], 
+     [ '3:6', '6:6', '6:6' ], 
+     [ '3:6', '4:7', '4:6' ], 
+     [ '3:6', '6:7', '6:6' ], 
+     [ '3:6', '7:8', '' ],
+     [ '1:5 10:15 20:50', '8:40', '10:15 20:40' ],
+     [ '1:5 8:20 25:50 55:80 85:100', '1:100', '1:5 8:20 25:50 55:80 85:100' ],
+     [ '2:2 6:6 12:12', '6:6', '6:6' ],
+     [ '1:1 3:3', '2:2', '' ],
+     [ '1:1 3:3 5:5 7:7 9:9', '9:9 3:5', '3:3 5:5 9:9' ],
     );
   for (my $p = 0; $p < scalar @pairs; $p++) {
     $fs_tmp17->set_value($pairs[$p][0]);
@@ -1710,39 +1710,39 @@ sub unit_test {                 # Xtreme coding and us ;)
 #    print ("[*] ", $fs_tmp17->get_errormsg(), "\n") if ($fs_tmp17->error());
     if (MMisc::is_blank($pairs[$p][2])) {
       if (defined $fs_new) {
-        push(@otxt, "$eh [#17a] Error overlap calc for (".join(", ",@{ $pairs[$p] }[0..1]).") returned something [ " . $fs_new->get_value() . "]");
+        push(@otxt, "$eh [#17a] Error overlap calc for (".join(', ',@{ $pairs[$p] }[0..1]).') returned something [ ' . $fs_new->get_value() . ']');
         next;
       }
 #      print "[undef]\n";
     } else {
       if (! defined $fs_new) {
-        push(@otxt, "$eh [#17b] Error overlap calc for (".join(", ",@{ $pairs[$p] }[0..1]).") did not return anything [expected: " . $pairs[$p][2] . "]");
+        push(@otxt, "$eh [#17b] Error overlap calc for (".join(', ',@{ $pairs[$p] }[0..1]).') did not return anything [expected: ' . $pairs[$p][2] . ']');
         next;
       }
       my $ret = $fs_new->get_value();
 #     print "[" . $pairs[$p][0] . "] ov [" . $pairs[$p][1] . "] -> [$ret]\n";
-      push(@otxt, "$eh [#17c] Error overlap calc for (".join(", ",@{ $pairs[$p] }).") returned " . $ret . ".") 
+      push(@otxt, "$eh [#17c] Error overlap calc for (".join(', ',@{ $pairs[$p] }).') returned ' . $ret . '.') 
         if ($ret ne $pairs[$p][2]);
     }
   }
     
   # List frames
-  my $in19 = "4:7 1:2 1:2";
-  my $exp_out19 = "1 2 4 5 6 7";
+  my $in19 = '4:7 1:2 1:2';
+  my $exp_out19 = '1 2 4 5 6 7';
   my $fs_tmp19 = new ViperFramespan($in19);
   my @aout19 = $fs_tmp19->list_frames();
-  my $out19 = join(" ", @aout19);
+  my $out19 = join(' ', @aout19);
   push(@otxt, "$eh [#19] Error while checking \'list_frames\' (expected: $exp_out19 / Got: $out19).")
     if ($out19 ne $exp_out19);
     
   # xor
-  my $in20_1 = "500:800 900:1000 1200:1300";
-  my $in20_2 = "100:1100";
-  my $exp_out20_1 = "500:800 900:1000"; # overlap ( <=> and )
-  my $exp_out20_2 = "100:1100 1200:1300"; # union ( <=> or )
-  my $exp_out20_3 = "100:499 801:899 1001:1300"; # bounded not (of overlap)
-  my $exp_out20_4 = "100:499 801:899 1001:1100 1200:1300"; # xor
-  my $exp_out20_5 = "100:499 801:899 1001:1100"; # remove 1 from 2
+  my $in20_1 = '500:800 900:1000 1200:1300';
+  my $in20_2 = '100:1100';
+  my $exp_out20_1 = '500:800 900:1000'; # overlap ( <=> and )
+  my $exp_out20_2 = '100:1100 1200:1300'; # union ( <=> or )
+  my $exp_out20_3 = '100:499 801:899 1001:1300'; # bounded not (of overlap)
+  my $exp_out20_4 = '100:499 801:899 1001:1100 1200:1300'; # xor
+  my $exp_out20_5 = '100:499 801:899 1001:1100'; # remove 1 from 2
   
   my $fs_tmp20_1 = new ViperFramespan($in20_1);
   my $fs_tmp20_2 = new ViperFramespan($in20_2);
@@ -1774,11 +1774,11 @@ sub unit_test {                 # Xtreme coding and us ;)
     if ($out20_5 ne $exp_out20_5);
   
   # not (bounded) + xor
-  my $in21_1 = "20:50 60:80";
-  my $in21_2 = "10:20 80:100";
-  my $exp_out21_1 = "10:19 51:59 81:100";
-  my $exp_out21_2 = "21:79";
-  my $exp_out21_5 = "10:100";
+  my $in21_1 = '20:50 60:80';
+  my $in21_2 = '10:20 80:100';
+  my $exp_out21_1 = '10:19 51:59 81:100';
+  my $exp_out21_2 = '21:79';
+  my $exp_out21_5 = '10:100';
 
   my $fs_tmp21_1 = new ViperFramespan($in21_1);
   my $fs_tmp21_2 = new ViperFramespan($in21_2);
@@ -1799,15 +1799,15 @@ sub unit_test {                 # Xtreme coding and us ;)
     if ($out21_5 ne $exp_out21_5);
 
   # xor, overlap
-  my $in22_1 = "1:10 20:30 40:50 60:70";
-  my $in22_2 = "10:20 30:60";
-  my $exp_out22_1 = "1:9 11:19 21:29 31:39 51:59 61:70"; # xor
-  my $exp_out22_2 = "10:10 20:20 30:30 40:50 60:60"; # ov
-  my $exp_out22_3 = "1:70"; # union
+  my $in22_1 = '1:10 20:30 40:50 60:70';
+  my $in22_2 = '10:20 30:60';
+  my $exp_out22_1 = '1:9 11:19 21:29 31:39 51:59 61:70'; # xor
+  my $exp_out22_2 = '10:10 20:20 30:30 40:50 60:60'; # ov
+  my $exp_out22_3 = '1:70'; # union
   my $exp_out22_4 = $exp_out22_1; # not of ov 
-  my $exp_out22_5 = "1:9 21:29 61:70"; # rem 2 from 1
-  my $exp_out22_6 = "80:90"; # ! in1 between (80,90)
-  my $exp_out22_7 = "11:19"; # ! in1 between (10,20)
+  my $exp_out22_5 = '1:9 21:29 61:70'; # rem 2 from 1
+  my $exp_out22_6 = '80:90'; # ! in1 between (80,90)
+  my $exp_out22_7 = '11:19'; # ! in1 between (10,20)
   #8: ! in 2 between (10,20) => undef
   
   my $fs_tmp22_1 = new ViperFramespan($in22_1);
@@ -1863,9 +1863,9 @@ sub unit_test {                 # Xtreme coding and us ;)
     push @a_tmp23b, sprintf("%d:%d", $f*100 + 25, $f*100 + 50 + 25);
     push @a_out23,  sprintf("%d:%d", $f*100 + 25, $f*100 + 50);
   }
-  my $fs_tmp23a = new ViperFramespan(join(" ", @a_tmp23a));
-  my $fs_tmp23b = new ViperFramespan(join(" ", @a_tmp23b));
-  my $exp_out23 = join(" ", @a_out23);
+  my $fs_tmp23a = new ViperFramespan(join(' ', @a_tmp23a));
+  my $fs_tmp23b = new ViperFramespan(join(' ', @a_tmp23b));
+  my $exp_out23 = join(' ', @a_out23);
   my $fs_out23 = $fs_tmp23a->get_overlap($fs_tmp23b);
   my $out23 = $fs_out23->get_value();
   push(@otxt, "$eh [#23] Error while checking (big1) \'get_overlap\' (expected: $exp_out23 / Got: $out23).")
@@ -1881,18 +1881,18 @@ sub unit_test {                 # Xtreme coding and us ;)
     next if ($f > 249);
     push @a_out24,  sprintf("%d:%d", $f*8, $f*8);
   }
-  my $fs_tmp24a = new ViperFramespan(join(" ", @a_tmp24a));
-  my $fs_tmp24b = new ViperFramespan(join(" ", @a_tmp24b));
-  my $exp_out24 = join(" ", @a_out24);
+  my $fs_tmp24a = new ViperFramespan(join(' ', @a_tmp24a));
+  my $fs_tmp24b = new ViperFramespan(join(' ', @a_tmp24b));
+  my $exp_out24 = join(' ', @a_out24);
   my $fs_out24 = $fs_tmp24a->get_overlap($fs_tmp24b);
   my $out24 = $fs_out24->get_value();
   push(@otxt, "$eh [#24] Error while checking (big2) \'get_overlap\' (expected: $exp_out24 / Got: $out24).")
     if ($exp_out24 ne $out24);
 
   # Specific overlap
-  my $fs_tmp25a = new ViperFramespan("5401:5401 5413:5413 5425:5425 5437:5437 5449:5449 5461:5461 5473:5473 5485:5485 5497:5497 5509:5509 5521:5521 5533:5533 5545:5545 5557:5557 5569:5569 5581:5581 5593:5593 5605:5605 5617:5617 5629:5629 5641:5641 5653:5653 5665:5665 5677:5677 5689:5689 5701:5701 5713:5713 5725:5725 5737:5737 5749:5749 5761:5761 5773:5773 5785:5785 5797:5797 5809:5809 5821:5821 5833:5833 5845:5845 5857:5857 5869:5869 5881:5881 5893:5893 5905:5905 5917:5917 5929:5929 5941:5941 5953:5953 5965:5965 5977:5977 5989:5989 6001:6001 6013:6013 6025:6025 6037:6037 6049:6049 6061:6061 6073:6073 6085:6085 6097:6097 6109:6109 6121:6121 6133:6133 6145:6145 6157:6157 6169:6169 6181:6181 6193:6193 6205:6205 6217:6217 6229:6229 6241:6241 6253:6253 6265:6265 6277:6277 6289:6289 6301:6301 6313:6313 6325:6325 6337:6337 6349:6349 6361:6361 6373:6373 6385:6385 6397:6397 6409:6409 6421:6421 6433:6433 6445:6445 6457:6457 6469:6469 6481:6481 6493:6493 6505:6505 6517:6517 6529:6529 6541:6541 6553:6553 6565:6565 6577:6577 6589:6589 6601:6601 6613:6613 6625:6625 6637:6637 6649:6649 6661:6661 6673:6673 6685:6685 6697:6697 6709:6709 6721:6721 6733:6733 6745:6745 6757:6757 6769:6769 6781:6781 6793:6793 6805:6805 6817:6817 6829:6829 6841:6841 6853:6853 6865:6865 6877:6877 6889:6889 6901:6901 6913:6913 6925:6925 6937:6937 6949:6949 6961:6961 6973:6973 6985:6985 6997:6997 7009:7009 7021:7021 7033:7033 7045:7045 7057:7057 7069:7069 7081:7081 7093:7093 7105:7105 7117:7117 7129:7129 7141:7141 7153:7153 7165:7165 7177:7177 7189:7189 7201:7201 7213:7213 7225:7225 7237:7237 7249:7249 7261:7261 7273:7273 7285:7285 7297:7297 7309:7309 7321:7321 7333:7333 7345:7345 7357:7357 7369:7369 7381:7381 7393:7393 7405:7405 7417:7417 7429:7429 7441:7441 7453:7453 7465:7465 7477:7477 7489:7489 7501:7501 7513:7513 7525:7525 7537:7537 7549:7549 7561:7561 7573:7573 7585:7585 7597:7597 7609:7609 7621:7621 7633:7633 7645:7645 7657:7657 7669:7669 7681:7681 7693:7693 7705:7705 7717:7717 7729:7729 7741:7741 7753:7753 7765:7765 7777:7777 7789:7789 7801:7801 7813:7813 7825:7825 7837:7837 7849:7849 7861:7861 7873:7873 7885:7885 7897:7897 7909:7909 7921:7921 7933:7933 7945:7945 7957:7957 7969:7969 7981:7981 7993:7993 8005:8005 8017:8017 8029:8029 8041:8041 8053:8053 8065:8065 8077:8077 8089:8089 8101:8101 8113:8113 8125:8125 8137:8137 8149:8149 8161:8161 8173:8173 8185:8185 8197:8197 8209:8209 8221:8221 8233:8233");
-  my $fs_tmp25b = new ViperFramespan("7519:7699 7701:7701 7708:7723 7725:7725 7727:7867 7889:7889 7891:7896 7902:7983 7985:7989 7991:7991 8051:8051 8085:8085 8087:8240");
-  my $exp25 = "7525:7525 7537:7537 7549:7549 7561:7561 7573:7573 7585:7585 7597:7597 7609:7609 7621:7621 7633:7633 7645:7645 7657:7657 7669:7669 7681:7681 7693:7693 7717:7717 7729:7729 7741:7741 7753:7753 7765:7765 7777:7777 7789:7789 7801:7801 7813:7813 7825:7825 7837:7837 7849:7849 7861:7861 7909:7909 7921:7921 7933:7933 7945:7945 7957:7957 7969:7969 7981:7981 8089:8089 8101:8101 8113:8113 8125:8125 8137:8137 8149:8149 8161:8161 8173:8173 8185:8185 8197:8197 8209:8209 8221:8221 8233:8233";
+  my $fs_tmp25a = new ViperFramespan('5401:5401 5413:5413 5425:5425 5437:5437 5449:5449 5461:5461 5473:5473 5485:5485 5497:5497 5509:5509 5521:5521 5533:5533 5545:5545 5557:5557 5569:5569 5581:5581 5593:5593 5605:5605 5617:5617 5629:5629 5641:5641 5653:5653 5665:5665 5677:5677 5689:5689 5701:5701 5713:5713 5725:5725 5737:5737 5749:5749 5761:5761 5773:5773 5785:5785 5797:5797 5809:5809 5821:5821 5833:5833 5845:5845 5857:5857 5869:5869 5881:5881 5893:5893 5905:5905 5917:5917 5929:5929 5941:5941 5953:5953 5965:5965 5977:5977 5989:5989 6001:6001 6013:6013 6025:6025 6037:6037 6049:6049 6061:6061 6073:6073 6085:6085 6097:6097 6109:6109 6121:6121 6133:6133 6145:6145 6157:6157 6169:6169 6181:6181 6193:6193 6205:6205 6217:6217 6229:6229 6241:6241 6253:6253 6265:6265 6277:6277 6289:6289 6301:6301 6313:6313 6325:6325 6337:6337 6349:6349 6361:6361 6373:6373 6385:6385 6397:6397 6409:6409 6421:6421 6433:6433 6445:6445 6457:6457 6469:6469 6481:6481 6493:6493 6505:6505 6517:6517 6529:6529 6541:6541 6553:6553 6565:6565 6577:6577 6589:6589 6601:6601 6613:6613 6625:6625 6637:6637 6649:6649 6661:6661 6673:6673 6685:6685 6697:6697 6709:6709 6721:6721 6733:6733 6745:6745 6757:6757 6769:6769 6781:6781 6793:6793 6805:6805 6817:6817 6829:6829 6841:6841 6853:6853 6865:6865 6877:6877 6889:6889 6901:6901 6913:6913 6925:6925 6937:6937 6949:6949 6961:6961 6973:6973 6985:6985 6997:6997 7009:7009 7021:7021 7033:7033 7045:7045 7057:7057 7069:7069 7081:7081 7093:7093 7105:7105 7117:7117 7129:7129 7141:7141 7153:7153 7165:7165 7177:7177 7189:7189 7201:7201 7213:7213 7225:7225 7237:7237 7249:7249 7261:7261 7273:7273 7285:7285 7297:7297 7309:7309 7321:7321 7333:7333 7345:7345 7357:7357 7369:7369 7381:7381 7393:7393 7405:7405 7417:7417 7429:7429 7441:7441 7453:7453 7465:7465 7477:7477 7489:7489 7501:7501 7513:7513 7525:7525 7537:7537 7549:7549 7561:7561 7573:7573 7585:7585 7597:7597 7609:7609 7621:7621 7633:7633 7645:7645 7657:7657 7669:7669 7681:7681 7693:7693 7705:7705 7717:7717 7729:7729 7741:7741 7753:7753 7765:7765 7777:7777 7789:7789 7801:7801 7813:7813 7825:7825 7837:7837 7849:7849 7861:7861 7873:7873 7885:7885 7897:7897 7909:7909 7921:7921 7933:7933 7945:7945 7957:7957 7969:7969 7981:7981 7993:7993 8005:8005 8017:8017 8029:8029 8041:8041 8053:8053 8065:8065 8077:8077 8089:8089 8101:8101 8113:8113 8125:8125 8137:8137 8149:8149 8161:8161 8173:8173 8185:8185 8197:8197 8209:8209 8221:8221 8233:8233');
+  my $fs_tmp25b = new ViperFramespan('7519:7699 7701:7701 7708:7723 7725:7725 7727:7867 7889:7889 7891:7896 7902:7983 7985:7989 7991:7991 8051:8051 8085:8085 8087:8240');
+  my $exp25 = '7525:7525 7537:7537 7549:7549 7561:7561 7573:7573 7585:7585 7597:7597 7609:7609 7621:7621 7633:7633 7645:7645 7657:7657 7669:7669 7681:7681 7693:7693 7717:7717 7729:7729 7741:7741 7753:7753 7765:7765 7777:7777 7789:7789 7801:7801 7813:7813 7825:7825 7837:7837 7849:7849 7861:7861 7909:7909 7921:7921 7933:7933 7945:7945 7957:7957 7969:7969 7981:7981 8089:8089 8101:8101 8113:8113 8125:8125 8137:8137 8149:8149 8161:8161 8173:8173 8185:8185 8197:8197 8209:8209 8221:8221 8233:8233';
   my $fs_ov25 = $fs_tmp25a->get_overlap($fs_tmp25b);
   my $out25 = $fs_ov25->get_value();
   push(@otxt, "$eh [#25] Error while checking (specific) \'get_overlap\' (expected: $exp25 / Got: $out25).")
@@ -1909,7 +1909,7 @@ sub unit_test {                 # Xtreme coding and us ;)
     return(0);
   }
  
-  MMisc::ok_quit("OK") if ($makecall);
+  MMisc::ok_quit('OK') if ($makecall);
   # return 1 if no error found
   return(1);
 }
