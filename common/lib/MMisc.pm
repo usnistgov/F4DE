@@ -119,7 +119,7 @@ sub get_env_val {
 ##########
 
 sub is_blank {
-  my $txt = shift @_;
+  my ($txt) = @_;
   return(1) if (! defined $txt);
   return(1) if (length($txt) == 0);
   return(($txt =~ m%^\s*$%s));
@@ -196,7 +196,8 @@ sub clean_begend_spaces {
 ##########
 
 sub reorder_array_numerically {
-  return(sort { $a <=> $b } @_);
+  my ($ra) = @_;
+  return(sort { $a <=> $b } @$ra);
 }
 
 ####
@@ -210,12 +211,18 @@ sub get_msize {
 
 #####
 
-sub min_max {
-  my $min = shift;
+sub min_max { return(&min_max_r(\@_)); }
+
+##
+
+sub min_max_r {
+  my ($ra) = @_;
+
+  my $min = $$ra[0];
   my $max = $min;
-  
-  for (my $i = 0; $i < scalar @_; $i++) {
-    my $v = $_[$i];
+
+  for (my $i = 1; $i < scalar @$ra; $i++) {
+    my $v = $$ra[$i];
     $min = $v if ($v < $min);
     $max = $v if ($v > $max);
   }
@@ -225,15 +232,27 @@ sub min_max {
 
 #####
 
-sub min { return(List::Util::min(@_)); }
+sub min { return(&min_r(\@_)); }
+
+##
+
+sub min_r { my ($ra) = @_; return(List::Util::min(@$ra)); }
 
 #####
 
-sub max { return(List::Util::max(@_)); }
+sub max { return(&max_r(\@_)); }
+
+##
+
+sub max_r { my ($ra) = @_; return(List::Util::max(@$ra)); }
 
 ##########
 
-sub sum { return(List::Util::sum(@_)) }
+sub sum { return(&sum_r(\@_)); }
+
+##
+
+sub sum_r { my ($ra) = @_; return(List::Util::sum(@$ra)); }
 
 ##########
 
@@ -314,9 +333,8 @@ sub array1d_to_ordering_hash {
   my ($ra) = @_;
 
   my %ohash = ();
-  for (my $i = 0; $i < scalar @$ra; $i++) {
+  for (my $i = $#{@$ra}; $i >= 0; $i--) {
     my $v = $$ra[$i];
-    next if (exists $ohash{$v});
     $ohash{$v} = $i;
   }
 
@@ -341,7 +359,7 @@ sub make_array_of_unique_values {
 ##########
 
 sub compare_arrays {
-  my $rexp = shift @_;
+  my ($rexp, $ra) = @_;
 
   my @in  = ();
   my @out = ();
@@ -350,13 +368,13 @@ sub compare_arrays {
 
   for (my $i = 0; $i < scalar @$rexp; $i++) {
     my $elt = $$rexp[$i];
-    if (grep(m%^$elt$%i, @_)) {
+    if (grep(m%^$elt$%i, @$ra)) {
       push @in, $elt;
     }
   }
 
-  for (my $i = 0; $i < scalar @_; $i++) {
-    my $elt = $_[$i];
+  for (my $i = 0; $i < scalar @$ra; $i++) {
+    my $elt = $$ra[$i];
     if (! grep(m%^$elt$%i, @$rexp)) {
       push @out, $elt;
     }
@@ -368,7 +386,7 @@ sub compare_arrays {
 #####
 
 sub confirm_first_array_values {
-  my $rexp = shift @_;
+  my ($rexp, $ra) = @_;
 
   my @in = ();
   my @out = ();
@@ -377,7 +395,7 @@ sub confirm_first_array_values {
 
   for (my $i = 0; $i < scalar @$rexp; $i++) {
     my $elt = $$rexp[$i];
-    if (grep(m%^$elt$%, @_)) {
+    if (grep(m%^$elt$%, @$ra)) {
       push @in, $elt;
     } else {
       push @out, $elt;
@@ -390,15 +408,15 @@ sub confirm_first_array_values {
 ##########
 
 sub _uc_lc_array_values {
-  my $mode = &iuv(shift @_, '');
+  my ($mode, $ra) = @_; 
 
   my @out = ();
-  for (my $i = 0; $i < scalar @_; $i++) {
-    my $value = $_[$i];
-    my $v = ($mode eq 'uc') ? uc($value) :
-      ($mode eq 'lc') ? lc($value) :
-        ($mode eq 'ucf') ? ucfirst($value) :
-          ($mode eq 'lcf') ? lcfirst($value) :
+  for (my $i = 0; $i < scalar @$ra; $i++) {
+    my $value = $$ra[$i];
+    my $v = ($mode == 1) ? uc($value) :
+      ($mode == 2) ? lc($value) :
+        ($mode == 3) ? ucfirst($value) :
+          ($mode == 4) ? lcfirst($value) :
             $value;
     push @out, $v;
   }
@@ -409,25 +427,25 @@ sub _uc_lc_array_values {
 #####
 
 sub uppercase_array_values {
-  return(&_uc_lc_array_values('uc', @_));
+  return(&_uc_lc_array_values(1, @_));
 }
 
 #####
 
 sub lowercase_array_values {
-  return(&_uc_lc_array_values('lc', @_));
+  return(&_uc_lc_array_values(2, @_));
 }
 
 #####
 
 sub ucfirst_array_values {
-  return(&_uc_lc_array_values('ucf', @_));
+  return(&_uc_lc_array_values(3, @_));
 }
 
 #####
 
 sub lcfirst_array_values {
-  return(&_uc_lc_array_values('lcf', @_));
+  return(&_uc_lc_array_values(4, @_));
 }
 
 ##########
