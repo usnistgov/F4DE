@@ -460,7 +460,8 @@ sub __check_cldt_validity {
 
   my @pid = keys %{$fhash{$pk}};
 
-  foreach my $id (@pid) {
+  for (my $pi = 0; $pi < scalar @pid; $pi++) {
+    my $id = $pid[$pi];
     my @keys = keys %{$fhash{$pk}{$id}};
 
     my @lope = MMisc::clone(@ok_person_elements);
@@ -547,7 +548,8 @@ sub add_to_id {
   @keys = reverse @keys
     if ($toadd > 0); # start from the end if we add to value to avoid duplicate
 
-  foreach my $key (@keys) {
+  for (my $ki = 0; $ki < scalar @keys; $ki++) {
+    my $key = $keys[$ki];
     my $nk = $key + $toadd;
     return($self->_set_error_and_return("Can not change ID to \"$nk\" (from \"$key\"), not an authorized value", 0))
       if ($nk < 0);
@@ -602,9 +604,12 @@ sub modify_bboxes {
   my @keys = keys %{$fhash{$pk}};
   my $lk = "LOCATION";
 
-  foreach my $key (@keys) {
+  for (my $ki = 0; $ki < scalar @keys; $ki++) {
+    my $key = $keys[$ki];
     next if (! exists $fhash{$pk}{$key}{$lk});
-    foreach my $fs (keys %{$fhash{$pk}{$key}{$lk}}) {
+    my @tmpa = keys %{$fhash{$pk}{$key}{$lk}};
+    for (my $fi = 0; $fi < scalar @tmpa; $fi++) {
+      my $fs = $tmpa[$fi];
       my @bbox = @{$fhash{$pk}{$key}{$lk}{$fs}};
       return($self->_set_error_and_return("WEIRD: bbox contains other than just x,y,h,w ?", 0))
         if (scalar @bbox != 4);
@@ -723,8 +728,12 @@ sub _shift_fhash_set {
   my $fsk = "framespan";
   my $max = 0;
 
-  foreach my $id (keys %{$fhash{$k}}) {
-    foreach my $key (keys %{$fhash{$k}{$id}}) {
+  my @tmpa = keys %{$fhash{$k}};
+  for (my $ii = 0; $ii < scalar @tmpa; $ii++) {
+    my $id = $tmpa[$ii];
+    my @tmpb = keys %{$fhash{$k}{$id}};
+    for (my $ki = 0; $ki < scalar @tmpb; $ki++) {
+      my $key = $tmpb[$ki];
       if ($key eq $fsk) { # Special case, no depth
         my $v = $fhash{$k}{$id}{$key};
         (my $err, $v, my $tm) = &_shift_fs($v, $fss);
@@ -734,9 +743,9 @@ sub _shift_fhash_set {
         $max = $tm if ($tm > $max);
       } else { # 1 additional depth to keys of framespan
         my @fsl = sort _fs_sort keys %{$fhash{$k}{$id}{$key}};
-        @fsl = reverse @fsl
-          if ($fss > 0); # start from the end if we add to framespan values
-        foreach my $csf (@fsl) {
+        for (my $li = 0; $li < scalar @fsl; $li++) {
+          # start from the end if we add to framespan values
+          my $csf = $fsl[($fss > 0) ? $#fsl - $li : $li];
           my ($err, $v, $tm) = &_shift_fs($csf, $fss);
           return("While trying to shift \"$k\"'s \"$key\" entry by ($fss): $err")
             if (! MMisc::is_blank($err));
@@ -812,7 +821,8 @@ sub shift_frames {
   return(0) if ($self->error());
 
   push @atc, "Shifted framespans by $fss";
-  foreach my $cmt (@atc) {
+  for (my $ai = 0; $ai < scalar @atc; $ai++) {
+    my $cmt = $atc[$ai];
     $self->_addto_comment($cmt);
     return(0) if ($self->error());
   }
@@ -874,8 +884,8 @@ sub get_transformations_from_key {
     if (scalar @allk != 5);
   
   my @out = ();
-  foreach my $entry (@allk) {
-    push @out, sprintf("%d", $entry);
+  for (my $ki = 0; $ki < scalar @allk; $ki++) {
+    push @out, sprintf("%d", $allk[$ki]);
   }
 
   return("", $fname, @out);
@@ -1044,8 +1054,12 @@ sub _union_fhash_set {
   my $fsk = "framespan";
   my $max = 0;
 
-  foreach my $id (keys %{$fhash2{$k}}) {
-    foreach my $key (keys %{$fhash2{$k}{$id}}) {
+  my @tmpa = keys %{$fhash2{$k}};
+  for (my $ii = 0; $ii < scalar @tmpa; $ii++) {
+    my $id = $tmpa[$ii];
+    my @tmpb = keys %{$fhash2{$k}{$id}};
+    for (my $ki = 0; $ki < scalar @tmpb; $ki++) {
+      my $key = $tmpb[$ki];
       return("Could not find corresonding entity in master hash ($k / $id / $key)")
         if (! exists $fhash1{$k}{$id}{$key});
 
@@ -1119,7 +1133,9 @@ sub merge {
   # PERSON (the easy one: copy each ID from 2 to 1 and error if already exist)
   my $k = $ak[0];
   if (exists $fhash2{$k}) {
-    foreach my $id (keys %{$fhash2{$k}}) {
+    my @tmpa = keys %{$fhash2{$k}};
+    for (my $ii = 0; $ii < scalar @tmpa; $ii++) {
+      my $id = $tmpa[$ii];
       return($self->_set_error_and_return("\"$k\" ID ($id) already exist, will not overwrite it", 0))
         if (exists $fhash1{$k}{$id});
       %{$fhash1{$k}{$id}} = MMisc::clone(%{$fhash2{$k}{$id}});
@@ -1159,7 +1175,8 @@ sub merge {
   return(0) if ($self->error());
 
   push @atc, "Merged another file onto this one";
-  foreach my $cmt (@atc) {
+  for (my $ai = 0; $ai < scalar @atc; $ai++) {
+    my $cmt = $atc[$ai];
     $self->_addto_comment($cmt);
     return(0) if ($self->error());
   }
@@ -1294,7 +1311,8 @@ sub __get_fslist_key_is {
   return(undef) if ($self->error());
 
   my @ofs = ();
-  foreach my $fs (@fs_list) {
+  for (my $fi = 0; $fi < scalar @fs_list; $fi++) {
+    my $fs = $fs_list[$fi];
     return($self->_set_error_and_return("Can not find fhash location [$k1 / $k2 / $k3 / $fs]", undef))
       if (! exists $fhash{$k1}{$k2}{$k3}{$fs});
     my $tv = $fhash{$k1}{$k2}{$k3}{$fs};
@@ -1464,12 +1482,12 @@ sub __set_key_truefalse_fs_to {
   delete $fhash{$k1}{$k2}{$k3};
 
   # Fill the "to" values
-  foreach my $fs (@to_list) {
-    $fhash{$k1}{$k2}{$k3}{$fs} = [ $to ];    
+  for (my $ti = 0; $ti < scalar @to_list; $ti++) {
+    $fhash{$k1}{$k2}{$k3}{$to_list[$ti]} = [ $to ];    
   }
   # Then the "other" values
-  foreach my $fs (@other_list) {
-    $fhash{$k1}{$k2}{$k3}{$fs} = [ $other ];    
+  for (my $oi = 0; $oi < scalar @other_list; $oi++) {
+    $fhash{$k1}{$k2}{$k3}{$other_list[$oi]} = [ $other ];    
   }
 
   $self->_set_cldt_fhash(%fhash);
@@ -1613,7 +1631,9 @@ sub _create_object_core {
 
   $object{'framespan'} = $fs;
 
-  foreach my $lfs (keys %$rloc_fs_bbox) {
+  my @tmpa = keys %$rloc_fs_bbox;
+  for (my $li = 0; $li < scalar @tmpa; $li++) {
+    my $lfs = $tmpa[$li];
     my ($err, $fs_lfs) = &__fs2vfs($lfs);
     return($self->_set_error_and_return("Invalid location framespan ($lfs): $err", undef))
       if (! MMisc::is_blank($err));
@@ -1682,7 +1702,8 @@ sub create_REF_object {
   return($self->_set_error_and_return("Invalid list of occluded framespans", 0))
     if (! defined $rocc_fs);
   my @occ_fsl = ();
-  foreach my $lfs (@{$rocc_fs}) {
+  for (my $li = 0; $li < scalar @{$rocc_fs}; $li++) {
+    my $lfs = $$rocc_fs[$li];
     my ($err, $fs_lfs) = &__fs2vfs($lfs);
     return($self->_set_error_and_return("Invalid occluded framespan ($lfs): $err", 0))
       if (! MMisc::is_blank($err));
@@ -1809,8 +1830,9 @@ sub clone_selected_ids {
   
   my (%fhash) = $ret->_get_cldt_fhash();
  
- my $pk = $ok_elements[0];
-  foreach my $id (@$rout) {
+  my $pk = $ok_elements[0];
+  for (my $ii = 0; $ii < scalar @$rout; $ii++) {
+    my $id = $$rout[$ii];
     delete $fhash{$pk}{$id};
   }
 

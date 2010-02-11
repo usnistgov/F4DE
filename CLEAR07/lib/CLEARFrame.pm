@@ -145,7 +145,9 @@ sub setDontCareObjectIDs {
     my $objList = $self->getObjectList();
 
     $self->{_dontCareObjectIDs} = {};
-    foreach my $okey (keys %$objList) {
+    my @tmpa = keys %$objList;
+    for (my $oi = 0; $oi < scalar @tmpa; $oi++) {
+      my $okey = $tmpa[$oi];
         if ( $objList->{$okey}->getDontCare() ) { 
             $self->{_dontCareObjectIDs}{$okey} = 1; 
         }
@@ -255,7 +257,9 @@ sub setEvalObjectIDs {
     my $objList = $self->getObjectList();
 
     if (! defined $self->{_evalObjectIDs}) { $self->{_evalObjectIDs} = {}; }
-    foreach my $okey (keys %$objList) {
+    my @tmpa = keys %$objList;
+    for (my $oi = 0; $oi < scalar @tmpa; $oi++) {
+      my $okey = $tmpa[$oi];
         if (! $objList->{$okey}->getDontCare() ) { 
             $self->{_evalObjectIDs}{$okey} = 1; 
         }
@@ -449,7 +453,9 @@ sub computeAndSetSpatialMeasures {
 
     # Start computation when both NG and ND is > 0
     my ( $evalGTObjs, $dcGTObjs );
-    foreach my $key (keys %$gtObjList) {
+    my @tmpa = keys %$gtObjList;
+    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+      my $key = $tmpa[$ki];
         if ($self->{_dontCareObjectIDs}{$key}) { $dcGTObjs->{$key} = $gtObjList->{$key}; } 
         else { $evalGTObjs->{$key} = $gtObjList->{$key}; }
     }
@@ -527,7 +533,9 @@ sub computeAndSetSpatialMeasures {
             else { $faIDs = { MMisc::array1d_to_count_hash(\@unmapped_sys_ids) }; }
     }
     elsif (defined $dcoBPM) {
-            foreach my $sys_id (keys %$evalSOIDs) {
+      my @tmpa = keys %$evalSOIDs;
+      for (my $si = 0; $si < scalar @tmpa; $si++) {
+         my $sys_id = $tmpa[$si];
                            my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($sys_id);
                            if (scalar @gtDCOList > 0) { 
                                     $noPenaltySysIDs->{$sys_id} = 1; 
@@ -585,18 +593,29 @@ sub computeAndSetTemporalMeasures {
     # the same way as objects that are occluded.
 
     # Create a key (if it doesn't exist already) in the occlusion list for each object in the current frame
-    foreach my $key (keys %$gtObjList) {
+    my @tmpa = keys %$gtObjList;
+    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+      my $key = $tmpa[$ki];
         if (! exists $gtOcclCount->{$key}) { $gtOcclCount->{$key} = 0; }
     }
-    foreach my $key (keys %$gtOcclCount) { $gtOcclCount->{$key}++; }
+    my @tmpa = keys %$gtOcclCount;
+    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+      $gtOcclCount->{$tmpa[$ki]}++;
+    }
 
     # For each valid evaluation object in current frame, reduce the count by 1 to get to the occlusion count before this frame.
-    foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key}--; }
+    my @tmpa = keys %$evalObjectIDs;
+    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+      $gtOcclCount->{$tmpa[$ki]}--;
+    }
 
     if (! defined $other ) { 
         $mdIDs = $evalObjectIDs;
         $self->_setTemporalMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $idSplitObjIDs, $idMergeObjIDs );
-        foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key} = 0; }
+        my @tmpa = keys %$evalObjectIDs;
+        for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+          $gtOcclCount->{$tmpa[$ki]} = 0; 
+        }
         return 1;
     }
 
@@ -611,7 +630,10 @@ sub computeAndSetTemporalMeasures {
         $mdIDs = $evalObjectIDs;
         $faIDs = $evalSOIDs;
         $self->_setTemporalMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $idSplitObjIDs, $idMergeObjIDs );
-        foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key} = 0; }
+        my @tmpa = keys %$evalObjectIDs;
+        for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+          $gtOcclCount->{$tmpa[$ki]} = 0;
+        }
         return 1;
     }
 
@@ -631,39 +653,46 @@ sub computeAndSetTemporalMeasures {
             $prevGTMap->{$mappedIDs[$loop][1]} = $mappedIDs[$loop][0];
             $prevSOMap->{$mappedIDs[$loop][0]} = $mappedIDs[$loop][1];
         }
-        foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key} = 0; }
+        my @tmpa = keys %$evalObjectIDs;
+        for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+          $gtOcclCount->{$tmpa[$ki]} = 0;
+        }
         return 1;
     }
 
     # Start computation when both NG and ND is > 0 and there exists a previous mapping
     my ( $evalGTObjs, $dcGTObjs );
-    foreach my $key (keys %$gtObjList) {
-        if ($self->{_dontCareObjectIDs}{$key}) { $dcGTObjs->{$key} = $gtObjList->{$key}; } 
-        else { $evalGTObjs->{$key} = $gtObjList->{$key}; }
+    my @tmpa = keys %$gtObjList;
+    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+      my $key = $tmpa[$ki];
+      if ($self->{_dontCareObjectIDs}{$key}) { $dcGTObjs->{$key} = $gtObjList->{$key}; } 
+      else { $evalGTObjs->{$key} = $gtObjList->{$key}; }
     }
 
     # Retain existing mapping from previous frame if the current mapping satifies criterion.
     my $threshold = 0.2;
     my %new_sys_objs = %{$soObjList};
     my ( %new_ref_objs, %continuing_map, %continuing_joint_values );
-    foreach my $key (keys %$evalGTObjs) {
-        if ( (! exists $prevGTMap->{$key}) || (! exists $new_sys_objs{$prevGTMap->{$key}}) ) { 
-            $new_ref_objs{$key} = $evalGTObjs->{$key}; 
+    my @tmpa = keys %$evalGTObjs;
+    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+      my $key = $tmpa[$ki];
+      if ( (! exists $prevGTMap->{$key}) || (! exists $new_sys_objs{$prevGTMap->{$key}}) ) { 
+        $new_ref_objs{$key} = $evalGTObjs->{$key}; 
+      }
+      else {
+        my ( $msg, $res ) = CLEARObject::kernelFunction( $evalGTObjs->{$key}, $new_sys_objs{$prevGTMap->{$key}}, @params);
+        if (! MMisc::is_blank($msg)) {
+          $self->_set_errormsg("Error while computing temporal measures (" . $msg . ")" );
+          return -1;
         }
-        else {
-            my ( $msg, $res ) = CLEARObject::kernelFunction( $evalGTObjs->{$key}, $new_sys_objs{$prevGTMap->{$key}}, @params);
-            if (! MMisc::is_blank($msg)) {
-                $self->_set_errormsg("Error while computing temporal measures (" . $msg . ")" );
-                return -1;
-            }
 
-            if ( $res >= $threshold ) { 
-                $continuing_map{$key} = $prevGTMap->{$key};
-                $continuing_joint_values{$key}{$prevGTMap->{$key}} = $res;
-                delete $new_sys_objs{$prevGTMap->{$key}};
-            }
-            else { $new_ref_objs{$key} = $evalGTObjs->{$key}; }
+        if ( $res >= $threshold ) { 
+          $continuing_map{$key} = $prevGTMap->{$key};
+          $continuing_joint_values{$key}{$prevGTMap->{$key}} = $res;
+          delete $new_sys_objs{$prevGTMap->{$key}};
         }
+        else { $new_ref_objs{$key} = $evalGTObjs->{$key}; }
+      }
     }
 
     # Proceed to do a Hungarian matching on the remaining reference and system output objects
@@ -751,7 +780,9 @@ sub computeAndSetTemporalMeasures {
         else { $faIDs = { MMisc::array1d_to_count_hash(\@unmapped_sys_ids) }; }
     }
     elsif (defined $dcoBPM) {
-            foreach my $sys_id (keys %new_sys_objs) {
+      my @tmpa = keys %new_sys_objs;
+      for (my $si = 0; $si < scalar @tmpa; $si++) {
+         my $sys_id = $tmpa[$si];
                            my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($sys_id);
                            if (scalar @gtDCOList > 0) { 
                                     $noPenaltySysIDs->{$sys_id} = 1; 
@@ -768,14 +799,19 @@ sub computeAndSetTemporalMeasures {
 
     # Add to that the overlap ratio from mappings that are being carried from previous frames
     # Also, add the ref-sys pair to the mappedObjIDs array
-    foreach my $key (keys %continuing_map) {
+    my @tmpa = keys %continuing_map;
+    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+       my $key = $tmpa[$ki];
         $mappedOverlapRatio += $continuing_joint_values{$key}{$continuing_map{$key}};
         push( @{$mappedObjIDs->[scalar @{$mappedObjIDs}]}, ($continuing_map{$key}, $key) );
     }
 
     $self->_setTemporalMeasures( $mappedOverlapRatio, $mappedObjIDs, $evalObjectIDs, $evalSOIDs, $noPenaltySysIDs, $mdIDs, $faIDs, $idSplitObjIDs, $idMergeObjIDs );
     $self->_storeBPM( $evalBPM, $dcoBPM );
-    foreach my $key (keys %$evalObjectIDs) { $gtOcclCount->{$key} = 0; }
+    my @tmpa = keys %$evalObjectIDs;
+    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+      $gtOcclCount->{$tmpa[$ki]} = 0; 
+    }
     return 1;
 }
 
@@ -833,7 +869,9 @@ sub computeAndSetTextRecMeasures {
 
     # Start computation when both NG and ND is > 0
     my ( $evalGTObjs, $dcGTObjs );
-    foreach my $key (keys %$gtObjList) {
+    my @tmpa = keys %$gtObjList;
+    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+      my $key = $tmpa[$ki];
         if ($self->{_dontCareObjectIDs}{$key}) { $dcGTObjs->{$key} = $gtObjList->{$key}; } 
         else { $evalGTObjs->{$key} = $gtObjList->{$key}; }
     }
@@ -870,7 +908,7 @@ sub computeAndSetTextRecMeasures {
 
     # If two system objects are equi-distant from a ref object, we break the tie by computing the Character Error Rate
     my $redoMapping = 0;
-    foreach my $ref_id (scalar keys %$evalObjectIDs) {
+    foreach my $ref_id (scalar keys %$evalObjectIDs) { # MM[20100211]: this seems strange
       my @tmpa = $self->get_jointvalues_ref_defined_values;
         my @refsys_jointvalues = MMisc::reorder_array_numerically(\@tmpa);
         if ($refsys_jointvalues[0] == $refsys_jointvalues[1]) {
@@ -937,7 +975,9 @@ sub computeAndSetTextRecMeasures {
             else { $faIDs = { MMisc::array1d_to_count_hash(\@unmapped_sys_ids) }; }
     }
     elsif (defined $dcoBPM) {
-            foreach my $sys_id (keys %$evalSOIDs) {
+      my @tmpa = keys %$evalSOIDs;
+      for (my $si = 0; $si < scalar @tmpa; $si++) {
+        my $sys_id = $tmpa[$si];
                            my @gtDCOList = $dcoBPM->get_jointvalues_sys_defined_list($sys_id);
                            if (scalar @gtDCOList > 0) { 
                                     $noPenaltySysIDs->{$sys_id} = 1; 
@@ -980,7 +1020,9 @@ sub _computeAndSetCharacterErrors {
     my $soObjList = $other->getObjectList();
 
     if (%mdIDs) {
-        foreach my $mdID (keys %mdIDs) {
+      my @tmpa = keys %mdIDs;
+      for (my $mi = 0; $mi < scalar @tmpa; $mi++) {
+        my $mdID = $tmpa[$mi];
 	    my $refText = $gtObjList->{$mdID}->getContent();
             $numOfCharErrs += length($refText);
             $numOfChars += length($refText);
@@ -988,7 +1030,9 @@ sub _computeAndSetCharacterErrors {
     }
 
     if (%faIDs) {
-        foreach my $faID (keys %faIDs) {
+      my @tmpa = keys %faIDs;
+      for (my $fi = 0; $fi < scalar @tmpa; $fi++) {
+        my $faID = $tmpa[$fi];
 	    my $sysText = $soObjList->{$faID}->getContent();
             $numOfCharErrs += length($sysText);
         }
@@ -1047,7 +1091,6 @@ sub get_jointvalues_ref_defined_values {
    if (! defined $evalBPM) { return(@out); }
 
    my @sysList = $evalBPM->get_jointvalues_ref_defined_list($ref_id);
-#   foreach my $sys_id (@sysList) {
    for (my $si = 0; $si < scalar @sysList; $si++) {
      my $sys_id = $sysList[$si];
      push @out, $evalBPM->get_jointvalues_refsys_value($ref_id, $sys_id);

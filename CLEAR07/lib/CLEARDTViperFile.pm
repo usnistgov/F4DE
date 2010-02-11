@@ -1440,7 +1440,9 @@ sub _parse_sourcefile_section {
                     my $new_fs = $obj_fs->add_fs_to_value($in_fs->get_value());
                     $res{$object_type}{$object_id}{"framespan"} = $obj_fs->get_value();
 
-                    foreach my $key (keys %oattr) {
+                    my @tmpa = keys %oattr;
+                    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+                      my $key = $tmpa[$ki];
                         if (exists $res{$object_type}{$object_id}{$key}) {
                             my %inhash = %{$oattr{$key}};
                             map { $res{$object_type}{$object_id}{$key}{$_} = $inhash{$_} } keys %inhash;
@@ -1710,7 +1712,9 @@ sub _parse_object_section {
     return("Found some unexpected \'$wtag\' attributes type (" . join(", ", @$out) . ")", ())
       if (scalar @$out > 0);
 
-    foreach my $fs (keys %{$attr{$key}{$val}}) {
+    my @tmpa = keys %{$attr{$key}{$val}};
+    for (my $fi = 0; $fi < scalar @tmpa; $fi++) {
+      my $fs = $tmpa[$fi];
       @{$object_hash{uc($key)}{$fs}} = @{$attr{$key}{$val}{$fs}};
     }
   }
@@ -1961,7 +1965,9 @@ sub _writeback_file {
   my $txt = "";
   $txt .= &_wb_print($indent++, "<file id=\"" . $file_hash{'file_id'} . "\" name=\"Information\">\n");
 
-  foreach my $key (sort keys %hash_file_attributes_types) {
+  my @tmpa = sort keys %hash_file_attributes_types;
+  for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+    my $key = $tmpa[$ki];
     $txt .= &_wb_print($indent, "<attribute name=\"$key\"");
     if (defined $file_hash{$key}) {
       $txt .= ">\n";
@@ -1990,7 +1996,9 @@ sub _writeback_object {
     if (exists $object_hash{"comment"});
 
   # attributes
-  foreach my $key (sort keys %{$hash_objects_attributes_types{$object}{$isgtf}}) {
+  my @tmpa = sort keys %{$hash_objects_attributes_types{$object}{$isgtf}};
+  for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+    my $key = $tmpa[$ki];
     # If an optional attribute is not defined, don't write to file.
     next if ((! defined $object_hash{$key}) && grep(m%^$key$%, &get_values_from_array_of_hashes("name", @{$opt_list_objects_attributes{$domain}{$object}})));
     $txt .= &_wb_print($indent, "<attribute name=\"$key\"");
@@ -1999,7 +2007,9 @@ sub _writeback_object {
 
       $indent++;
       my @afs;
-      foreach my $fs (keys %{$object_hash{$key}}) {
+      my @tmpb = keys %{$object_hash{$key}};
+      for (my $fi = 0; $fi < scalar @tmpb; $fi++) {
+        my $fs = $tmpb[$fi];
 	my $fs_tmp = ViperFramespan->new();
 	MMisc::error_quit("[CLEARDTViperFile] Internal Error: WEIRD: In \'_writeback_object\' (" . $fs_tmp->get_errormsg() .")")
             if (! $fs_tmp->set_value($fs));
@@ -2072,7 +2082,9 @@ sub _writeback2xml {
     my $object = $asked_objects[$oi];
     next if (! exists $lhash{$object});
     $txt .= &_wb_print($indent++, "<descriptor name=\"$object\" type=\"OBJECT\">\n");
-    foreach my $key (sort keys %{$hash_objects_attributes_types{$object}{$isgtf}}) {
+    my @tmpa = sort keys %{$hash_objects_attributes_types{$object}{$isgtf}};
+    for (my $ki = 0; $ki < scalar @tmpa; $ki++) {
+      my $key = $tmpa[$ki];
       $txt .= &_wb_print
 	($indent,
 	 "<attribute dynamic=\"",
@@ -2289,10 +2301,14 @@ sub _set_frame_instances {
   if ($isgtf) {
     my $gtFrameList = $eval_sequence->getFrameList();
     my %frame_attr = %{$frame_hash{$fkey[0]}};
-    foreach my $fakey (keys %frame_attr) {
+    my @tmpa = keys %frame_attr;
+    for (my $fi = 0; $fi < scalar @tmpa; $fi++) {
+      my $fakey = $tmpa[$fi];
       next if ($fakey eq "framespan"); # We have already taken care of this
       my %attr = %{$frame_attr{$fakey}};
-      foreach my $attkey (keys %attr) {
+      my @tmpb = keys %attr;
+      for (my $ai = 0; $ai < scalar @tmpb; $ai++) {
+        my $attkey = $tmpb[$ai];
         if (! $fr_fs->set_value($attkey)) {
           $self->_set_errormsg("$fakey: ViperFramespan ($attkey) error (" . $fr_fs->get_errormsg() . ")");
           return(0);
@@ -2330,7 +2346,9 @@ sub _set_object_instances {
   my %tmp = $self->_get_fhash();
   my $domain = $self->get_domain();
   my $eval_obj = "";
-  foreach my $tkey (keys %tmp) {
+  my @tmpa = keys %tmp;
+  for (my $ti = 0; $ti < scalar @tmpa; $ti++) {
+    my $tkey = $tmpa[$ti];
     next if (($tkey eq "file") || ($tkey eq "I-FRAMES") || ($tkey eq "FRAME")); # We have already taken care of this
     $eval_obj = $tkey;
     last;
@@ -2411,7 +2429,9 @@ sub _set_object_instances {
         $isDontCare = 1 if (($isgtf) && (! $checkFlag) && ($inloop > 0)) ;
 
         my %attr = %{$obj_attr{$location_attrs[$inloop]}};
-        foreach my $attkey (keys %attr) {
+        my @tmpb = keys %attr;
+        for (my $ai = 0; $ai < scalar @tmpb; $ai++) {
+          my $attkey = $tmpb[$ai];
           if (! $fr_fs->set_value($attkey)) {
             $self->_set_errormsg("$location_attrs[$inloop]: ViperFramespan ($attkey) error (" . $fr_fs->get_errormsg() . ")");
             return(0);
@@ -2487,13 +2507,17 @@ sub _set_object_instances {
     }
 
     if ($isgtf) {
-        foreach my $fakey (keys %obj_attr) { # Set the rest of the attributes in the reference annotation
+      my @tmpa = keys %obj_attr;
+      for (my $fi = 0; $fi < scalar @tmpa; $fi++) {
+        my $fakey = $tmpa[$fi]; # Set the rest of the attributes in the reference annotation
            next if (($fakey eq "framespan") || (grep(m%^$fakey$%, @location_attrs))); # We have already taken care of this
            # Skip if it is an attribute that doesn't affect the evaluation settings. E.g. HEADGEAR in FACE annotation
            next if (grep(m%^$fakey$%, &get_values_from_array_of_hashes("name", @{$dont_care_list_objects_attributes{$domain}{$eval_obj}}))); 
 
            my %attr = %{$obj_attr{$fakey}};
-           foreach my $attkey (keys %attr) {
+        my @tmpb = keys %attr;
+        for (my $ai = 0; $ai < scalar @tmpb; $ai++) {
+           my $attkey = $tmpb[$ai];
              if (! $fr_fs->set_value($attkey)) {
                     $self->_set_errormsg("$fakey: ViperFramespan ($attkey) error (" . $fr_fs->get_errormsg() . ")");
                     return(0);
