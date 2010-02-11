@@ -51,9 +51,9 @@ my @ttp_keys = ("dont_care_region", "dont_care_frames", "template_xml", $tt_keys
 
 ## Constructor
 sub new {
-  my ($class) = shift @_;
+  my ($class) = @_;
 
-  my $errortxt = (scalar @_ > 0) ? "AVSS09ECF does not accept parameters" : "";
+  my $errortxt = (scalar @_ > 1) ? "AVSS09ECF does not accept parameters" : "";
 
   my $xmllintobj = new xmllintHelper();
   $xmllintobj->set_xsdfilesl(@xsdfilesl);
@@ -966,8 +966,7 @@ sub error {
 #####
 
 sub _set_error_and_return {
-  my $self = shift @_;
-  my $errormsg = shift @_;
+  my ($self, $errormsg) = @_;
 
   $self->_set_errormsg($errormsg);
 

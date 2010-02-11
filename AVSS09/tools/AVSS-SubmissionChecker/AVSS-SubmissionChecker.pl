@@ -448,9 +448,7 @@ sub __extend_error_notes_warnings {
 #####
 
 sub format_list {
-  my $txt = shift @_;
-  my $skipbl = shift @_;
-  my @list = @_;
+  my ($txt, $skipbl, @list) = @_;
 
   return("$txt None\n")
     if (scalar @list == 0);
@@ -509,7 +507,7 @@ sub format_warnings_notes_errors {
 ##########
 
 sub check_archive_extension {
-  my $ext = MMisc::iuv(shift @_, "");
+  my $ext = MMisc::iuv($_[0], "");
 
   return(&cmp_exp("file extension", lc($ext), @expected_ext));
 }
@@ -517,7 +515,7 @@ sub check_archive_extension {
 ##########
 
 sub check_archive_name {
-  my $file = MMisc::iuv(shift @_, "");
+  my $file = MMisc::iuv($_[0], "");
 
   my $et = "Archive name not of the form \'<SITE>_<SUB-NUM>\'";
 
@@ -535,7 +533,8 @@ sub check_archive_name {
 ##########
 
 sub uncompress_archive {
-  my ($dir, $file, $ext, $rtmpdir) = MMisc::iuav(\@_, "", "", "", undef);
+  my ($dir, $file, $ext, $rtmpdir) = 
+    ($_[0], $_[1], $_[2], MMisc::iuv($_[3], undef));
 
   my $tmpdir = "";
   if (! defined $rtmpdir) {
@@ -562,7 +561,7 @@ sub uncompress_archive {
 ##########
 
 sub check_for_output_dir {
-  my $tmpdir = MMisc::iuv(shift @_, "");
+  my $tmpdir = MMisc::iuv($_[0], "");
 
   return("Empty directory ?")
     if (MMisc::is_blank($tmpdir));
@@ -903,11 +902,12 @@ sub cmp_exp {
 
 sub vprint {
   return if (! $verb);
+  my ($h, @rest) = @_;
 
   my $s = "********************";
 
 
-  print substr($s, 0, shift @_), " ", join("", @_), "\n";
+  print substr($s, 0, $h), " ", join("", @rest), "\n";
 }
 
 ############################################################

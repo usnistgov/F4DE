@@ -139,8 +139,7 @@ sub get_required_xsd_files_list {
 
 ## Constructor
 sub new {
-  my $class = shift @_;
-  my $tmp = MMisc::iuv(shift @_, undef);
+  my ($class, $tmp) = ($_[0], MMisc::iuv($_[1], undef));
 
   my $errortxt = "";
 
@@ -190,12 +189,11 @@ sub error {
 ##########
 
 sub _set_error_and_return {
-  my $self = shift @_;
-  my $errormsg = shift @_;
+  my ($self, $errormsg, @rest) = @_;
 
   $self->_set_errormsg($errormsg);
 
-  return(@_);
+  return(@rest);
 }
 
 ############################################################
@@ -475,7 +473,7 @@ sub __check_cldt_validity {
     return($self->_set_error_and_return("Found unknown elements in file [" . join(", ", @$rout) . "]", 0))
       if (scalar @$rout > 0);
 
-    my $dummy = shift @slope; # Get 'framespan'
+    my $dummy = $slope[0]; # Get 'framespan'
     my $fsv = $fhash{$pk}{$id}{$dummy};
     $fsv = $self->__validate_fs($fsv);
     return(0) if ($self->error());
@@ -488,9 +486,10 @@ sub __check_cldt_validity {
     $fsv = $self->__validate_fs("$b:$e");
     return(0) if ($self->error());
 
-    $dummy = shift @slope; # Remove LOCATION
-    $dummy = shift @slope; # and OCCLUSION
-    foreach my $attr (@slope) {
+    $dummy = $slope[1]; # Remove LOCATION
+    $dummy = $slope[2]; # and OCCLUSION
+    for (my $ai = 3; $ai < scalar @slope; $ai++) {
+      my $attr = $slope[$ai];
       next if (! exists $fhash{$pk}{$id}{$attr});
       my @fsl = keys %{$fhash{$pk}{$id}{$attr}};
       my $tfs = join(" ", @fsl);
@@ -574,9 +573,7 @@ sub add_to_id {
 #################### Modify bounding boxes
 
 sub _adddiv_bbv {
-  my $v = shift @_;
-  my $add = shift @_;
-  my $mul = shift @_;
+  my ($v, $add, $mul) = @_;
 
   $v *= $mul;
   $v += $add;
@@ -609,24 +606,20 @@ sub modify_bboxes {
     next if (! exists $fhash{$pk}{$key}{$lk});
     foreach my $fs (keys %{$fhash{$pk}{$key}{$lk}}) {
       my @bbox = @{$fhash{$pk}{$key}{$lk}{$fs}};
-      my $x = shift @bbox;
-      $x = &_adddiv_bbv($x, $xadd, $hwmul);
-      my $y = shift @bbox;
-      $y = &_adddiv_bbv($y, $yadd, $hwmul);
-      my $h = shift @bbox;
-      $h = &_adddiv_bbv($h, 0, $hwmul);
-      my $w = shift @bbox;
-      $w = &_adddiv_bbv($w, 0, $hwmul);
-      return($self->_set_error_and_return("WEIRD: bbox contains more than just x,y,h,w ?", 0))
-        if (scalar @bbox > 0);
-      push @bbox, $x, $y, $h, $w;
+      return($self->_set_error_and_return("WEIRD: bbox contains other than just x,y,h,w ?", 0))
+        if (scalar @bbox != 4);
+      my $x = &_adddiv_bbv($bbox[0], $xadd, $hwmul);
+      my $y = &_adddiv_bbv($bbox[1], $yadd, $hwmul);
+      my $h = &_adddiv_bbv($bbox[2], 0, $hwmul);
+      my $w = &_adddiv_bbv($bbox[3], 0, $hwmul);
+      my @nbbox = ($x, $y, $h, $w);
       
-      foreach my $v (@bbox) {
+      foreach my $v (@nbbox) {
         return($self->_set_error_and_return("Modified bbox contains negative values", 0))
           if ($v < 0);
       }
       
-      @{$fhash{$pk}{$key}{$lk}{$fs}} = @bbox;
+      @{$fhash{$pk}{$key}{$lk}{$fs}} = @nbbox;
     }
   }
 
@@ -781,28 +774,28 @@ sub shift_frames {
   my @atc = ();
 
   # PERSON
-  my $k = shift @ak;
+  my $k = $ak[0];
   (my $err, my $tm, %fhash) = &_shift_fhash_set($k, $fss, %fhash);
   return($self->_set_error_and_return($err, 0))
     if (! MMisc::is_blank($err));
   $max = $tm if ($tm > $max);
 
   # I-FRAMES
-  my $k = shift @ak;
+  my $k = $ak[1];
   (my $err, my $tm, %fhash) = &_shift_fhash_set($k, $fss, %fhash);
   return($self->_set_error_and_return($err, 0))
     if (! MMisc::is_blank($err));
   $max = $tm if ($tm > $max);
 
   # FRAME
-  my $k = shift @ak;
+  my $k = $ak[2];
   (my $err, my $tm, %fhash) = &_shift_fhash_set($k, $fss, %fhash);
   return($self->_set_error_and_return($err, 0))
     if (! MMisc::is_blank($err));
   $max = $tm if ($tm > $max);
   
   # file's NUMFRAMES
-  my $k = shift @ak;
+  my $k = $ak[3];
   my $nf = "NUMFRAMES";
   return($self->_set_error_and_return("Could not find \"$k\"'s \"$nf\" key", 0))
     if (! exists $fhash{$k}{$nf});
@@ -1124,7 +1117,7 @@ sub merge {
   my @atc = ();
 
   # PERSON (the easy one: copy each ID from 2 to 1 and error if already exist)
-  my $k = shift @ak;
+  my $k = $ak[0];
   if (exists $fhash2{$k}) {
     foreach my $id (keys %{$fhash2{$k}}) {
       return($self->_set_error_and_return("\"$k\" ID ($id) already exist, will not overwrite it", 0))
@@ -1134,19 +1127,19 @@ sub merge {
   } # else: nothing to duplicate to first hash
 
   # I-FRAMES (ViperFramespan overlap entries)
-  my $k = shift @ak;
+  my $k = $ak[1];
   my ($err) = &_union_fhash_set($k, \%fhash1, %fhash2);
   return($self->_set_error_and_return("Problem while working on \"$k\": $err", 0))
     if (! MMisc::is_blank($err));
 
   # FRAMES
-  my $k = shift @ak;
+  my $k = $ak[2];
   my ($err) = &_union_fhash_set($k, \%fhash1, %fhash2);
   return($self->_set_error_and_return("Problem while working on \"$k\": $err", 0))
     if (! MMisc::is_blank($err));
 
   # file's NUMFRAMES
-  my $k = shift @ak;
+  my $k = $ak[3];
   my $nf = "NUMFRAMES";
   return($self->_set_error_and_return("Could not find master's \"$k\"'s \"$nf\" key", 0))
     if (! exists $fhash1{$k}{$nf});

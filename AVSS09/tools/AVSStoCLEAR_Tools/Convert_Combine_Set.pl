@@ -77,8 +77,7 @@ if (! $have_everything) {
 
 my $usage = "$0 input_dir output_file\n\nConvert all the files within the input_dir directory from AVSS to one multiple camera views CLEAR ViPER file\nRequires a \'Set\' to work: needs 5 camera views that will be placed on 2 lines with cameras 1,2 and 3 on the first line, and camera 4 and 5 on the second.\nNote: video size will be halved during this operation.\n";
 
-my $in = shift @ARGV;
-my $out = shift @ARGV;
+my ($in, $out) = @ARGV;
 
 MMisc::error_quit("No input_dir provided.\n $usage")
   if (MMisc::is_blank($out));

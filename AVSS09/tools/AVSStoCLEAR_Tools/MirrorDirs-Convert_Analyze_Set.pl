@@ -118,8 +118,7 @@ MMisc::error_quit("\'sys\', \'StarterSys\' or \'EmptySys\' can not be used at th
 MMisc::error_quit("Invalid \'IFramesGap\' value [$ifgap], must be positive and not equal to zero\n$usage")
   if ($ifgap < 1);
 
-my $in = shift @ARGV;
-my $out = shift @ARGV;
+my ($in, $out) = @ARGV;
 
 MMisc::error_quit("No input_dir provided.\n $usage")
   if (MMisc::is_blank($out));
@@ -134,7 +133,7 @@ my $err = MMisc::check_dir_w($out);
 MMisc::error_quit("output_dir [$out] problem: $err")
   if (! MMisc::is_blank($err));
 
-my $tool = MMisc::iuv(shift @ARGV, MMisc::get_pwd() . "/${toolsb}.pl");
+my $tool = MMisc::iuv($ARGV[2], MMisc::get_pwd() . "/${toolsb}.pl");
 my $err = MMisc::check_file_x($tool);
 MMisc::error_quit("tool [$tool] problem: $err")
   if (! MMisc::is_blank($err));
@@ -156,8 +155,7 @@ MMisc::ok_quit("\nDone\n");
 ############################################################
 
 sub do_xmls {
-  my $in = shift @_;
-  my $out = shift @_;
+  my ($in, $out) = @_;
 
   my $cwd = MMisc::get_pwd();
 
@@ -209,10 +207,7 @@ sub split_into_sets {
 ####################
 
 sub process_set {
-  my $set_dir = shift @_;
-  my $set_indir = shift @_;
-  my $set_outdir = shift @_;
-  my @set_files = @_;
+  my ($set_dir, $set_indir, $set_outdir, @set_files) = @_;
 
   MMisc::error_quit("No XML files expected ?")
       if (scalar @set_files == 0);

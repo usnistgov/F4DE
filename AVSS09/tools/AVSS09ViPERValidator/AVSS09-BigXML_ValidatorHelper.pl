@@ -166,7 +166,8 @@ my $smd_ext = "SSmemdump";
 
 my $ntodo = scalar @ARGV;
 my $ndone = 0;
-while (my $file = shift @ARGV) {
+for (my $fi = 0; $fi < scalar @ARGV; $fi++) {
+  my $file = $ARGV[$fi];
   print "\n** $file\n";
 
   my ($err, $dir, $fn, $ext) = MMisc::split_dir_file_ext($file);
@@ -299,8 +300,7 @@ sub valerr {
 ####################
 
 sub prep_sub_files {
-  my $odir = shift @_;
-  my $file = shift @_;
+  my ($odir, $file) = @_;
   
   my ($err, $dir, $fn, $ext) = MMisc::split_dir_file_ext($file);
   return($err)

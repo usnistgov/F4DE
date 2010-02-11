@@ -117,7 +117,7 @@ GetOptions
    'CamSeq=s'      => \$camseq,
    'select=s'      => \$slf,
    'includeECFGlobalResults' => \$iegr,
-   '<>'            => sub { my $f = shift @_; my $err = MMisc::check_file_r($f); MMisc::error_quit("Problem with input file ($f) : $err") if (! MMisc::is_blank($err)); push @fl, $f;},
+   '<>'            => sub { my $f = $_[0]; my $err = MMisc::check_file_r($f); MMisc::error_quit("Problem with input file ($f) : $err") if (! MMisc::is_blank($err)); push @fl, $f;},
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -360,9 +360,9 @@ sub addMOTA2sat {
   my @comps = &get_MOTAc($site, $expid, $task, $ttid, $camid);
 
   my @motac = ();
-  while (scalar @comps > 0) {
-    my $h = shift @comps;
-    my $v = shift @comps;
+  for (my $i = 0; $i < scalar @comps; $i++) {
+    my $h = $comps[$i];
+    my $v = $comps[$i+1];
     push @motac, $v;
     push @mota_h, $h if ($mota_s);
   }
@@ -508,16 +508,11 @@ sub generateSpecialResults {
 
 ####################
 
-sub _join_keys {
-  return(join($ksplit, @_));
-}
+sub _join_keys { return(join($ksplit, @_)); }
 
 #####
 
-sub _split_keys {
-  my $v = shift @_;
-  return(split(m%$ksplit%, $v));
-}
+sub _split_keys { return(split(m%$ksplit%, $_[0])); }
 
 ####################
 

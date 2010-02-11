@@ -136,9 +136,9 @@ print "\n\n\n";
 MMisc::ok_quit("OK");
 
 sub obj_print {
+  my ($doval, $doprint) = @_;
+
   my ($txt) = $object->reformat_xml();
-  my $doval   = shift @_;
-  my $doprint = shift @_;
 
   &doprint($txt) if ($doprint);
 

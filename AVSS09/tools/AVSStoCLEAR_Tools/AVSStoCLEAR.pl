@@ -119,8 +119,7 @@ MMisc::error_quit("Invalid \'IFramesGap\' value [$ifgap], must be positive and n
 
 my $avcl = new AVSStoCLEAR();
 
-my $in = shift @ARGV;
-my $out = shift @ARGV;
+my ($in, $out) = @ARGV;
 MMisc::error_quit("No output_file provided.\n $usage")
   if (MMisc::is_blank($out));
 open OUT, ">$out"

@@ -42,10 +42,9 @@ my $usage = "$0 indir outfile.csv\n\nProgram will copy content from multiple CSV
 die($usage) 
   if (scalar @ARGV != 2);
 
-my $dir = shift @ARGV;
+my ($dir, $out) = @ARGV;
 die("[$dir] is not a directory ?")
   if (! -d $dir);
-my $out = shift @ARGV;
 
 my @list = `find $dir -name "*.csv"`;
 chomp @list;
@@ -84,7 +83,7 @@ exit(0);
 #####
 
 sub get_lc {
-  my $file = shift @_;
+  my ($file) = @_;
 
   my $alc = `wc $file`;
   my $lc = 0;

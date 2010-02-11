@@ -39,7 +39,7 @@ my $avcl_xmlerrorstring = "AVSStoCLEAR-XML_PARSE_ERROR";
 
 ## Constructor
 sub new {
-  my ($class) = shift @_;
+  my ($class) = @_;
   
   my $errormsg = new MErrorH("AVSStoCLEAR");
 
@@ -99,21 +99,18 @@ sub error {
 ##########
 
 sub _set_error_and_return {
-  my $self = shift @_;
-  my $errormsg = shift @_;
+  my ($self, $errormsg, @rest) = @_;
 
   $self->_set_errormsg($errormsg);
 
-  return(@_);
+  return(@rest);
 }
 
 ############################################################
 
 sub load_ViPER_AVSS {
-  my $self = shift @_;
-  my $in = shift @_;
-  my $ifgap = MMisc::iuv(shift @_, 5);
-  my $gapsh = MMisc::iuv(shift @_, 25);
+  my ($self, $in, $ifgap, $gapsh) =
+    ($_[0], $_[1], MMisc::iuv($_[2], 5), MMisc::iuv($_[3], 25));
 
   return($self->_set_error_and_return("No input file provided", 0))
     if (MMisc::is_blank($in));
@@ -338,10 +335,7 @@ sub load_ViPER_AVSS {
 ##########
 
 sub _create_CLEAR_ViPER {
-  my $self = shift @_;
-  my $in = shift @_;
-  my $gtf = shift @_;
-  my $sps = shift @_;
+  my ($self, $in, $gtf, $sps) = @_;
 
   return("") if ($self->error());
 
@@ -404,9 +398,7 @@ sub create_CLEAR_EmptySYS_ViPER { # Empty SYS
 ##########
 
 sub get_comparables {
-  my $self = shift @_;
-  my $in1 = shift @_;
-  my $in2 = shift @_;
+  my ($self, $in1, $in2) = @_;
 
   return($self->_set_error_and_return("First key [$in1] not found", undef))
     if (! exists $self->{clip}{$in1});
@@ -465,8 +457,7 @@ sub get_comparables {
 ##########
 
 sub get_appear_order {
-  my $self = shift @_;
-  my @keys = @_;
+  my ($self, @keys) = @_;
 
   my @ids = ();
   foreach my $key (@keys) {
@@ -510,8 +501,7 @@ sub get_appear_order {
 ##########
 
 sub get_cam_id {
-  my $self = shift @_;
-  my $in = shift @_;
+  my ($self, $in) = @_;
 
   return($self->_set_error_and_return("Clip information not available for key [$in]", undef))
     if (! exists $self->{clip}{$in});
@@ -538,11 +528,8 @@ sub get_cam_id {
 ####################
 
 sub create_composite_CLEAR_ViPER {
-  my $self = shift @_;
-  my $clipname = shift @_;
-  my $rk = shift @_;
-  my $rorder = shift @_;
-  my $gtf = MMisc::iuv(shift @_, 1);
+  my ($self, $clipname, $rk, $rorder, $gtf) = 
+    ($_[0], $_[1], $_[2], $_[3], MMisc::iuv($_[4], 1));
 
   my $gfs = "";
   my $endf = 0;
@@ -588,8 +575,7 @@ sub create_composite_CLEAR_ViPER {
 ########################################
 
 sub get_clip_csv_data_headers {
-  my $self = shift @_;
-  my $in = shift @_;
+  my ($self, $in) = @_;
 
   return($self->_set_error_and_return("Clip not found [$in]", undef, undef))
     if (! exists $self->{clip_csv_data}{$in});
@@ -603,8 +589,7 @@ sub get_clip_csv_data_headers {
 #####
 
 sub get_clip_csv_data {
-  my $self = shift @_;
-  my $in = shift @_;
+  my ($self, $in) = @_;
 
   return($self->_set_error_and_return("Clip not found [$in]", undef, undef))
     if (! exists $self->{clip_csv_data}{$in});
@@ -627,8 +612,7 @@ sub get_clip_csv_data {
 ##########
 
 sub get_obj_csv_data_headers {
-  my $self = shift @_;
-  my $in = shift @_;
+  my ($self, $in) = @_;
 
   return($self->_set_error_and_return("Clip not found [$in]", undef, undef))
     if (! exists $self->{clip_csv_data}{$in});
@@ -642,9 +626,7 @@ sub get_obj_csv_data_headers {
 #####
 
 sub get_obj_csv_data {
-  my $self = shift @_;
-  my $in = shift @_;
-  my $id = shift @_;
+  my ($self, $in, $id) = @_;
 
   return($self->_set_error_and_return("Clip not found [$in]", undef))
     if (! exists $self->{clip_csv_data}{$in});
@@ -686,14 +668,14 @@ sub _compute_iflist {
       if ($fs_fs->error());
     
     # from "1" to the first listed entry
-    my $prev = shift @fsl;
+    my $prev = $fsl[0];
     for (my $v = $prev; $v > 0; $v -= $gap) {
       push @ofsl, "$v:$v";
     }
 
     # from $prev to $cur
-    while (scalar @fsl > 0) {
-      $cur = shift @fsl;
+    for (my $inc = 1; $inc < scalar @fsl; $inc++) {
+      $cur = $fsl[$inc];
       
       # spacing is less than '$gap'
       if ($cur - $prev < $gap) {
@@ -709,7 +691,7 @@ sub _compute_iflist {
       
       $prev = $cur;
     }
-  } 
+  }
   
   # Fill till the end  (If no target was found cur = 1)
   for (my $v = $cur; $v < $end; $v += $gap) {
@@ -733,10 +715,8 @@ sub _compute_iflist {
 ####################
 
 sub _xmlrender_loc_occ {
-  my $self = shift @_;
-  my $in = shift @_;
-  my $id = shift @_;
-  my $gtf = MMisc::iuv(shift @_, 1);
+  my ($self, $in, $id, $gtf) = 
+    ($_[0], $_[1], $_[2], MMisc::iuv($_[3], 1));
   
   return($self->_set_error_and_return("Could not find key [$in]", undef))
     if (! exists $self->{clip}{$in});
@@ -757,13 +737,8 @@ sub _xmlrender_loc_occ {
 #####
 
 sub _shiftdiv_bboxes {
-  my $self = shift @_;
-  my $in = shift @_;
-  my $id = shift @_;
-  my $xp = shift @_;
-  my $yp = shift @_;
-  my $div = shift @_;
-  my $gtf = MMisc::iuv(shift @_, 1);
+  my ($self, $in, $id, $xp, $yp, $div, $gtf) =
+    ($_[0], $_[1], $_[2], $_[3], $_[4], $_[5], MMisc::iuv($_[6], 1));
 
   return($self->_set_error_and_return("Could not find key [$in]", undef))
     if (! exists $self->{clip}{$in});
@@ -788,34 +763,30 @@ sub _shiftdiv_bboxes {
 ##########
 
 sub _shiftdiv_bbox {
-  my $self = shift @_;
-  my $xp = shift @_;
-  my $yp = shift @_;
-  my $div = shift @_;
-  my %bbl = @_;
+  my ($self, $xp, $yp, $div, %bbl) = @_;
 
   my %out = ();
   foreach my $k (keys %bbl) {
     my $bb = $bbl{$k};
 
     my $v = "x";
-    $bb = _shiftdiv_bbV($bb, $v, $xp, $div);
+    $bb = &_shiftdiv_bbV($bb, $v, $xp, $div);
     return($self->_set_error_and_return("Could not find \"$v\" in bbox", undef))
       if (! defined $bb);
 
     $v = "y";
-    $bb = _shiftdiv_bbV($bb, $v, $yp, $div);
+    $bb = &_shiftdiv_bbV($bb, $v, $yp, $div);
     return($self->_set_error_and_return("Could not find \"$v\" in bbox", undef))
       if (! defined $bb);
 
     if ($div != 1) {
       $v = "width";
-      $bb = _shiftdiv_bbV($bb, $v, 0, $div);
+      $bb = &_shiftdiv_bbV($bb, $v, 0, $div);
       return($self->_set_error_and_return("Could not find \"$v\" in bbox", undef))
         if (! defined $bb);
       
       $v = "height";
-      $bb = _shiftdiv_bbV($bb, $v, 0, $div);
+      $bb = &_shiftdiv_bbV($bb, $v, 0, $div);
       return($self->_set_error_and_return("Could not find \"$v\" in bbox", undef))
         if (! defined $bb);
     }
@@ -829,10 +800,7 @@ sub _shiftdiv_bbox {
 #####
 
 sub _shiftdiv_bbV {
-  my $line = shift @_;
-  my $name = shift @_;
-  my $value = shift @_;
-  my $div = shift @_;
+  my ($line, $name, $value, $div) = @_;
 
   return(undef)
     unless ($line =~ m%\s$name=\"(\d+)\"%);
@@ -850,12 +818,9 @@ sub _shiftdiv_bbV {
 ############################################################
 
 sub _create_all_objects_xml {
-  my $self = shift @_;
-  my $in = shift @_;
-  my $gtf = MMisc::iuv(shift @_, 1);
-  # where: 1 = GTF / 0 = SYS / -1 = StarterSYS / -2 = EmptySYS 
-  my $rshdivs = shift @_;
+  my ($self, $in, $gtf, $rshdivs) = ($_[0], $_[1], MMisc::iuv($_[2], 1), $_[3]);
 
+  # where 'gtf' : 1 = GTF / 0 = SYS / -1 = StarterSYS / -2 = EmptySYS 
   return("", "") # For EmptySYS, simply return an empty objects string
     if ($gtf == -2);
 
@@ -883,10 +848,10 @@ sub _create_all_objects_xml {
         if (! MMisc::is_blank($err));
     } else {
       my @todo = MMisc::clone(@$rshdivs);
-      $idadd = shift @todo;
-      my $xp = sprintf("%d", shift @todo); # Rounding
-      my $yp = sprintf("%d", shift @todo);
-      my $div = shift @todo;
+      $idadd = $todo[0];
+      my $xp = sprintf("%d", $todo[1]); # Rounding
+      my $yp = sprintf("%d", $todo[2]);
+      my $div = $todo[3];
       $div = 1 if ($div == 0);
 
       (my $err, $loc_xml, $occ_xml, $fsv, $sfsv) = 
@@ -910,12 +875,8 @@ sub _create_all_objects_xml {
 #####
 
 sub _generate_object_xml {
-  my $idv  = shift @_;
-  my $fsv  = shift @_;
-  my $sfs  = shift @_;
-  my $loc_xml = shift @_;
-  my $occ_xml = shift @_;
-  my $gtf = MMisc::iuv(shift @_, 1);
+  my ($idv, $fsv, $sfs, $loc_xml, $occ_xml, $gtf) =
+    ($_[0], $_[1], $_[2], $_[3], $_[4], MMisc::iuv($_[5], 1));
 
   my $sts = 0;
   if ($gtf < 0) {
@@ -990,8 +951,7 @@ EOF
 ############################################################
 
 sub _process_section {
-  my $name = shift @_;
-  my $section = shift @_;
+  my ($name, $section) = @_;
 
   my $lfk = "name";
   my $lfv = "Target";
@@ -1069,9 +1029,7 @@ sub _process_section {
 ##########
 
 sub _get_remove_section {
-  my $rstr = shift @_;
-  my $atk = shift @_;
-  my $atc = shift @_;
+  my ($rstr, $atk, $atc) = @_;
 
   my $str = MtXML::get_named_xml_section_with_inline_content($atk, $atc, $rstr, $avcl_xmlerrorstring);
 
@@ -1086,10 +1044,7 @@ sub _get_remove_section {
 #####
 
 sub _get_bboxes {
-  my $rstr = shift @_;
-  my $atk = shift @_;
-  my $atc = shift @_;
-  my @opt_atc = @_;
+  my ($rstr, $atk, $atc, @opt_atc) = @_;
 
   my %res = ();
 
@@ -1132,7 +1087,7 @@ sub _get_bboxes {
 ##########
 
 sub _extract_fs {
-  my $str = shift @_;
+  my ($str) = @_;
 
   if ($str =~ m%framespan\=\"([^\"]+?)\"%) {
     my $fs_fs = new ViperFramespan();
@@ -1148,10 +1103,8 @@ sub _extract_fs {
 ####################
 
 sub _xmlrender_location_and_occluded_and_gfs {
-  my $rbb = shift @_;
-  my $robb = shift @_;
-  my $gtf = MMisc::iuv(shift @_, 1);
-  my $ifg = MMisc::iuv(shift @_, 0);
+  my ($rbb, $robb, $gtf, $ifg) =
+    ($_[0], $_[1], MMisc::iuv($_[2], 1), MMisc::iuv($_[3], 0));
 
   my $sts = 0;
   if ($gtf < 0) {
@@ -1247,9 +1200,7 @@ sub _xmlrender_location_and_occluded_and_gfs {
 ####################
 
 sub _extract_named_Xvalue {
-  my $name = shift @_;
-  my $Xvalue = shift @_;
-  my $section = shift @_;
+  my ($name, $Xvalue, $section) = @_;
 
   return($1)
     if ($section =~ m%<attribute\s+name=\"${name}\">.*?<data:${Xvalue}\s+value=\"([^\"]+?)\"%s);
@@ -1260,8 +1211,7 @@ sub _extract_named_Xvalue {
 ####################
 
 sub _simplify_fs {
-  my $self = shift @_;
-  my $v = shift @_;
+  my ($self, $v) = @_;
 
   my $fs_fs = new ViperFramespan();
   $fs_fs->set_value($v);
@@ -1274,8 +1224,7 @@ sub _simplify_fs {
 #####
 
 sub _get_short_fs {
-  my $self = shift @_;
-  my $v = shift @_;
+  my ($self, $v) = @_;
 
   my $fs_fs = new ViperFramespan();
   $fs_fs->set_value($v);
@@ -1297,7 +1246,7 @@ sub _get_short_fs {
 #####
 
 sub _get_begend_noself {
-  my $v = shift @_;
+  my ($v) = @_;
 
   my $fs_fs = new ViperFramespan();
   $fs_fs->set_value($v);
@@ -1313,8 +1262,7 @@ sub _get_begend_noself {
 #####
 
 sub _get_beg_end {
-  my $self = shift @_;
-  my $v = shift @_;
+  my ($self, $v) = @_;
 
   my ($err, $b, $e) = &_get_begend_noself($v);
   return($self->_set_error_and_return($err, -1, -1))
@@ -1341,8 +1289,7 @@ sub _fs_sort {
 ####################
 
 sub _get_ids {
-  my $self = shift @_;
-  my $in = shift @_;
+  my ($self, $in) = @_;
 
   return($self->_set_error_and_return("Key not present [$in]", undef))
     if (! exists $self->{id_fs}{$in});
@@ -1355,7 +1302,7 @@ sub _get_ids {
 ####################
 
 sub _adapt_clip {
-  my $name = shift @_;
+  my ($name) = @_;
 
   $name =~ s%\\%\/%g;
   $name =~ s%^\/%file:\/\/%;
@@ -1370,9 +1317,7 @@ sub _adapt_clip {
 #####
 
 sub _write_header {
-  my $clip = shift @_;
-  my $endf = shift @_;
-  my $gtf = shift @_;
+  my ($clip, $endf, $gtf) = @_;
 
   $clip = &_adapt_clip($clip);
 
@@ -1449,9 +1394,7 @@ EOF
 #####
 
 sub _write_trailer {
-  my $gfs = shift @_;
-  my $sgfs = shift @_;
-  my $gtf = shift @_;
+  my ($gfs, $sgfs, $gtf) = @_;
 
 
   my $txt=<<EOF

@@ -87,15 +87,14 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
-my $usage = "$0 outfile.csv [inputfile.csv [inputfile.csv [...]]]\n\nProgram will copy content from multiple CSV files to one output CSV file (it will copy the CSV header of the first file only)\n";
+my $usage = "$0 dir outfile.csv\n\nProgram will copy content from multiple CSV files found in dir to one output CSV file (it will copy the CSV header of the first file only)\n";
 
 MMisc::error_quit($usage) 
   if (scalar @ARGV < 2);
 
-my $dir = shift @ARGV;
+my ($dir, $out) = @ARGV;
 die("[$dir] is not a directory ?")
   if (! -d $dir);
-my $out = shift @ARGV;
 
 my @list = `find $dir -name "*.csv"`;
 chomp @list;
@@ -134,7 +133,7 @@ exit(0);
 #####
 
 sub get_lc {
-  my $file = shift @_;
+  my ($file) = @_;
 
   my $alc = `wc $file`;
   my $lc = 0;

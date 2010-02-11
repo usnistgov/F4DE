@@ -288,7 +288,8 @@ sub load_preprocessing {
   }
 
   my %all = ();
-  while (my $tmp = shift @filelist) {
+  for (my $fi = 0; $fi < scalar @filelist; $fi++) {
+    my $tmp = $filelist[$fi];
     print "- Working on ",  ($isgtf) ? "GTF" : "SYS", " file: $tmp\n";
 
     my $err = MMisc::check_file_r($tmp);

@@ -116,8 +116,7 @@ MMisc::error_quit("\'sys\', \'StarterSys\' or \'EmptySys\' can not be used at th
 MMisc::error_quit("Invalid \'IFramesGap\' value [$ifgap], must be positive and not equal to zero\n$usage")
   if ($ifgap < 1);
 
-my $in = shift @ARGV;
-my $out = shift @ARGV;
+my ($in, $out) = @ARGV;
 
 MMisc::error_quit("No input_dir provided.\n $usage")
   if (MMisc::is_blank($out));

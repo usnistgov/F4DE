@@ -5,12 +5,11 @@ use strict;
 use F4DE_TestCore;
 use MMisc;
 
-my $tool = shift @ARGV;
+my ($tool, $mode, @rest) = @ARGV;
 MMisc::error_quit("ERROR: Tool ($tool) empty or not an executable\n")
   if ((MMisc::is_blank($tool)) || (! MMisc::is_file_x($tool)));
-my $mode = shift @ARGV;
-$tool .= " " . join(" ", @ARGV)
-  if (scalar @ARGV > 0);
+$tool .= " " . join(" ", @rest)
+  if (scalar @rest > 0);
 my $mmk = F4DE_TestCore::get_magicmode_comp_key();
 
 print "** Running AVSS09Scorer tests:\n";
