@@ -48,18 +48,14 @@ sub new {
 
 ####################
 
-sub get_version {
-  my ($self) = @_;
-
-  return($versionid);
-}
+sub get_version { return($versionid); }
 
 ##########
 
 sub set_header {
-  my ($self, $header) = @_;
-
-  $self->{header} = $header;
+  # arg 0: self
+  # arg 1: header
+  $_[0]->{header} = $_[1];
 
   return(1);
 }
@@ -93,46 +89,38 @@ sub _remove_header {
 #####
 
 sub set_errormsg {
-  my ($self, $txt) = @_;
-
-  my $header = $self->{header};
-
-  $self->{errormsg} = &_set_errormsg_txt($self->{errormsg}, $txt, $header);
+  # arg 0: self
+  # arg 1: text
+  $_[0]->{errormsg} = &_set_errormsg_txt($_[0]->{errormsg}, $_[1], $_[0]->{header});
 }
 
 ##########
 
 sub errormsg {
-  my ($self) = @_;
-
-  return($self->{errormsg});
+  # arg 0: self
+  return($_[0]->{errormsg});
 }
 
 #####
 
 sub clean_errormsg {
-  my ($self) = @_;
-
-  my $em = $self->{errormsg};
-  return(&_remove_header($em));
+  # arg 0: self
+  return(&_remove_header($_[0]->{errormsg}));
 }
 
 ##########
 
 ## returns 0 if no error, something else otherwise
 sub error {
-  my ($self) = @_;
-
-  return(length($self->{errormsg}));
+  # arg 0: self
+  return(length($_[0]->{errormsg}));
 }
 
 ##########
 
 sub clear {
-  my ($self) = @_;
-
-  $self->{errormsg} = "";
-
+  # arg 0: self
+  $_[0]->{errormsg} = "";
   return(1);
 }
 
