@@ -104,26 +104,25 @@ sub check_package {
 ##########
 
 sub get_env_val {
-  my ($envv, $default) = (&iuv($_[0], ''), $_[1]);
+  # arg 0: env variable
+  # arg 1: default returned value (if not set)
+  my $envv = &iuv($_[0], '');
 
   return(undef) if (&is_blank($envv));
 
-  my $var = $default;
+  return($_[1]) if (! exists $ENV{$envv});
 
-  $var = $ENV{$envv} if (exists $ENV{$envv});
-
-  return($var);
+  return($ENV{$envv});
 }
 
 ##########
 
 sub is_blank {
-  my $txt = $_[0];
+  # arg 0: variable to check
+  return(1) if (! defined($_[0]));
+  return(1) if (length($_[0]) == 0);
 
-  return(1) if (! defined $txt);
-  return(1) if (length($txt) == 0);
-
-  return(($txt =~ m%^\s*$%s));
+  return(($_[0] =~ m%^\s*$%s));
 }
 
 #####
