@@ -412,13 +412,10 @@ sub get_original_value {
 ##########
 
 sub is_value_set {
-  my $self = $_[0];
+  # arg 0: self
+  return(0) if ($_[0]->error());
 
-  return(0) if ($self->error());
-
-  my $v = $self->{value};
-
-  return(0) if (MMisc::is_blank($v));
+  return(0) if (MMisc::is_blank($_[0]->{value}));
 
   return(1);
 }
@@ -426,13 +423,12 @@ sub is_value_set {
 ####################
 
 sub _fs_get_begend {
-  my $fs = $_[0];
+  # arg 0: fs
+  my $sc = index($_[0], ':', 0);
+  my $bf = substr($_[0], 0, $sc);
 
-  my $sc = index($fs, ':', 0);
-  my $bf = substr($fs, 0, $sc);
-
-  $sc = rindex($fs, ':'); # look from end of string
-  my $ef = substr($fs, $sc + 1); # go until the end of string
+  $sc = rindex($_[0], ':'); # look from end of string
+  my $ef = substr($_[0], $sc + 1); # go until the end of string
 
   return($bf, $ef);
 }
@@ -446,10 +442,10 @@ sub _fs_sort {
 #####
 
 sub _fs_sort_core {
-  my ($a, $b) = @_;
-
-  my ($b1, $e1) = &_fs_get_begend($a);
-  my ($b2, $e2) = &_fs_get_begend($b);
+  # arg 0: first fs
+  # arg 1: second fs
+  my ($b1, $e1) = &_fs_get_begend($_[0]);
+  my ($b2, $e2) = &_fs_get_begend($_[1]);
 
   # Order by beginning first
   return($b1 <=> $b2) if ($b1 != $b2);
