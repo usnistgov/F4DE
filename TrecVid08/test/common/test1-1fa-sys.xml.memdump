@@ -1,94 +1,73 @@
 #  TrecVid08ViperFile MemDump
 
 $VAR1 = bless( {
-                 'file' => '../../test/common/test1-1fa-sys.xml',
+                 'comment' => '',
+                 'errormsg' => bless( {
+                                        'errormsg' => '',
+                                        'errorset' => 0,
+                                        'header' => 'TrecVid08ViperFile'
+                                      }, 'MErrorH' ),
                  'fhash' => {
-                              'ObjectPut' => {
+                              'CellToEar' => {
                                                '0' => {
-                                                        'framespan' => '938:1493',
-                                                        'DetectionScore' => {
-                                                                              '938:1493' => [
-                                                                                              '0.45'
-                                                                                            ]
-                                                                            },
                                                         'DetectionDecision' => {
-                                                                                 '938:1493' => [
-                                                                                                 'true'
-                                                                                               ]
+                                                                                 '3503:3738' => [
+                                                                                                  'true'
+                                                                                                ]
                                                                                },
-                                                        'subtype' => '',
-                                                        'BoundingBox' => {
-                                                                           '1120:1120' => [
-                                                                                            '78',
-                                                                                            '178',
-                                                                                            '88',
-                                                                                            '234'
-                                                                                          ],
-                                                                           '1117:1117' => [
-                                                                                            '99',
-                                                                                            '168',
-                                                                                            '89',
-                                                                                            '166'
-                                                                                          ],
-                                                                           '1123:1123' => [
-                                                                                            '163',
-                                                                                            '216',
-                                                                                            '52',
-                                                                                            '123'
-                                                                                          ],
-                                                                           '1122:1122' => [
-                                                                                            '202',
-                                                                                            '292',
-                                                                                            '115',
-                                                                                            '110'
-                                                                                          ],
-                                                                           '1121:1121' => [
-                                                                                            '32',
-                                                                                            '281',
-                                                                                            '81',
-                                                                                            '195'
-                                                                                          ],
-                                                                           '1119:1119' => [
-                                                                                            '98',
-                                                                                            '56',
-                                                                                            '138',
-                                                                                            '187'
-                                                                                          ],
-                                                                           '1116:1116' => [
-                                                                                            '105',
-                                                                                            '168',
-                                                                                            '101',
-                                                                                            '131'
-                                                                                          ],
-                                                                           '1118:1118' => [
-                                                                                            '38',
-                                                                                            '298',
-                                                                                            '81',
-                                                                                            '158'
-                                                                                          ]
-                                                                         },
-                                                        'Point' => {
-                                                                     '1124:1124' => [
-                                                                                      '263',
-                                                                                      '353'
-                                                                                    ]
-                                                                   }
+                                                        'DetectionScore' => {
+                                                                              '3503:3738' => [
+                                                                                               '0.01'
+                                                                                             ]
+                                                                            },
+                                                        'framespan' => '3503:3738',
+                                                        'subtype' => ''
+                                                      },
+                                               '1' => {
+                                                        'DetectionDecision' => {
+                                                                                 '3503:3739' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'DetectionScore' => {
+                                                                              '3503:3739' => [
+                                                                                               '0.23'
+                                                                                             ]
+                                                                            },
+                                                        'framespan' => '3503:3739',
+                                                        'subtype' => ''
+                                                      },
+                                               '2' => {
+                                                        'DetectionDecision' => {
+                                                                                 '3503:3739' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'DetectionScore' => {
+                                                                              '3503:3739' => [
+                                                                                               '0.99'
+                                                                                             ]
+                                                                            },
+                                                        'framespan' => '3503:3739',
+                                                        'subtype' => ''
+                                                      },
+                                               '4' => {
+                                                        'DetectionDecision' => {
+                                                                                 '3:739' => [
+                                                                                              'false'
+                                                                                            ]
+                                                                               },
+                                                        'DetectionScore' => {
+                                                                              '3:739' => [
+                                                                                           '-250'
+                                                                                         ]
+                                                                            },
+                                                        'framespan' => '3:739',
+                                                        'subtype' => ''
                                                       }
                                              },
                               'ObjectGet' => {
                                                '0' => {
-                                                        'framespan' => '1493:3327',
-                                                        'DetectionScore' => {
-                                                                              '1493:3327' => [
-                                                                                               '0.78'
-                                                                                             ]
-                                                                            },
-                                                        'DetectionDecision' => {
-                                                                                 '1493:3327' => [
-                                                                                                  'false'
-                                                                                                ]
-                                                                               },
-                                                        'subtype' => '',
                                                         'BoundingBox' => {
                                                                            '3327:3327' => [
                                                                                             '126',
@@ -96,106 +75,131 @@ $VAR1 = bless( {
                                                                                             '101',
                                                                                             '138'
                                                                                           ]
-                                                                         }
+                                                                         },
+                                                        'DetectionDecision' => {
+                                                                                 '1493:3327' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'DetectionScore' => {
+                                                                              '1493:3327' => [
+                                                                                               '0.78'
+                                                                                             ]
+                                                                            },
+                                                        'framespan' => '1493:3327',
+                                                        'subtype' => ''
+                                                      }
+                                             },
+                              'ObjectPut' => {
+                                               '0' => {
+                                                        'BoundingBox' => {
+                                                                           '1116:1116' => [
+                                                                                            '105',
+                                                                                            '168',
+                                                                                            '101',
+                                                                                            '131'
+                                                                                          ],
+                                                                           '1117:1117' => [
+                                                                                            '99',
+                                                                                            '168',
+                                                                                            '89',
+                                                                                            '166'
+                                                                                          ],
+                                                                           '1118:1118' => [
+                                                                                            '38',
+                                                                                            '298',
+                                                                                            '81',
+                                                                                            '158'
+                                                                                          ],
+                                                                           '1119:1119' => [
+                                                                                            '98',
+                                                                                            '56',
+                                                                                            '138',
+                                                                                            '187'
+                                                                                          ],
+                                                                           '1120:1120' => [
+                                                                                            '78',
+                                                                                            '178',
+                                                                                            '88',
+                                                                                            '234'
+                                                                                          ],
+                                                                           '1121:1121' => [
+                                                                                            '32',
+                                                                                            '281',
+                                                                                            '81',
+                                                                                            '195'
+                                                                                          ],
+                                                                           '1122:1122' => [
+                                                                                            '202',
+                                                                                            '292',
+                                                                                            '115',
+                                                                                            '110'
+                                                                                          ],
+                                                                           '1123:1123' => [
+                                                                                            '163',
+                                                                                            '216',
+                                                                                            '52',
+                                                                                            '123'
+                                                                                          ]
+                                                                         },
+                                                        'DetectionDecision' => {
+                                                                                 '938:1493' => [
+                                                                                                 'true'
+                                                                                               ]
+                                                                               },
+                                                        'DetectionScore' => {
+                                                                              '938:1493' => [
+                                                                                              '0.45'
+                                                                                            ]
+                                                                            },
+                                                        'Point' => {
+                                                                     '1124:1124' => [
+                                                                                      '263',
+                                                                                      '353'
+                                                                                    ]
+                                                                   },
+                                                        'framespan' => '938:1493',
+                                                        'subtype' => ''
                                                       }
                                              },
                               'file' => {
-                                          'SOURCETYPE' => undef,
-                                          'H-FRAME-SIZE' => undef,
                                           'FRAMERATE' => '1.0',
-                                          'filename' => 'file:20050519-1503-Excerpt.mpg',
+                                          'H-FRAME-SIZE' => undef,
+                                          'NUMFRAMES' => '5121',
+                                          'SOURCETYPE' => undef,
                                           'V-FRAME-SIZE' => undef,
                                           'file_id' => 0,
-                                          'NUMFRAMES' => '5121'
-                                        },
-                              'CellToEar' => {
-                                               '1' => {
-                                                        'framespan' => '3503:3739',
-                                                        'DetectionScore' => {
-                                                                              '3503:3739' => [
-                                                                                               '0.23'
-                                                                                             ]
-                                                                            },
-                                                        'DetectionDecision' => {
-                                                                                 '3503:3739' => [
-                                                                                                  'false'
-                                                                                                ]
-                                                                               },
-                                                        'subtype' => ''
-                                                      },
-                                               '4' => {
-                                                        'framespan' => '3:739',
-                                                        'DetectionScore' => {
-                                                                              '3:739' => [
-                                                                                           '-250'
-                                                                                         ]
-                                                                            },
-                                                        'DetectionDecision' => {
-                                                                                 '3:739' => [
-                                                                                              'false'
-                                                                                            ]
-                                                                               },
-                                                        'subtype' => ''
-                                                      },
-                                               '0' => {
-                                                        'framespan' => '3503:3738',
-                                                        'DetectionScore' => {
-                                                                              '3503:3738' => [
-                                                                                               '0.01'
-                                                                                             ]
-                                                                            },
-                                                        'DetectionDecision' => {
-                                                                                 '3503:3738' => [
-                                                                                                  'true'
-                                                                                                ]
-                                                                               },
-                                                        'subtype' => ''
-                                                      },
-                                               '2' => {
-                                                        'framespan' => '3503:3739',
-                                                        'DetectionScore' => {
-                                                                              '3503:3739' => [
-                                                                                               '0.99'
-                                                                                             ]
-                                                                            },
-                                                        'DetectionDecision' => {
-                                                                                 '3503:3739' => [
-                                                                                                  'false'
-                                                                                                ]
-                                                                               },
-                                                        'subtype' => ''
-                                                      }
-                                             }
+                                          'filename' => 'file:20050519-1503-Excerpt.mpg'
+                                        }
                             },
+                 'file' => '../../test/common/test1-1fa-sys.xml',
+                 'force_subtype' => 0,
+                 'fps' => -1,
+                 'fs_framespan_max' => bless( {
+                                                'errormsg' => bless( {
+                                                                       'errormsg' => '',
+                                                                       'errorset' => 0,
+                                                                       'header' => 'ViperFramespan'
+                                                                     }, 'MErrorH' ),
+                                                'fps' => -1,
+                                                'original_value' => '1:5121',
+                                                'value' => '1:5121',
+                                                'valueset' => 1
+                                              }, 'ViperFramespan' ),
+                 'gtf' => 0,
+                 'validated' => 1,
                  'xmllintobj' => bless( {
-                                          'xsdpath' => '../../data',
                                           'errormsg' => bless( {
                                                                  'errormsg' => '',
+                                                                 'errorset' => 0,
                                                                  'header' => 'xmllintHelper'
                                                                }, 'MErrorH' ),
+                                          'xmllint' => 'xmllint',
                                           'xsdfilesl' => [
                                                            'TrecVid08.xsd',
                                                            'TrecVid08-viper.xsd',
                                                            'TrecVid08-viperdata.xsd'
                                                          ],
-                                          'xmllint' => '/opt/local/bin/xmllint'
-                                        }, 'xmllintHelper' ),
-                 'validated' => 1,
-                 'force_subtype' => 0,
-                 'gtf' => 0,
-                 'comment' => '',
-                 'errormsg' => bless( {
-                                        'errormsg' => '',
-                                        'header' => 'TrecVid08ViperFile'
-                                      }, 'MErrorH' ),
-                 'fps' => -1,
-                 'fs_framespan_max' => bless( {
-                                                'errormsg' => bless( {
-                                                                       'errormsg' => '',
-                                                                       'header' => 'ViperFramespan'
-                                                                     }, 'MErrorH' ),
-                                                'fps' => -1,
-                                                'value' => undef,
-                                                'original_value' => undef
-                                              }, 'ViperFramespan' )
+                                          'xsdpath' => '../../data'
+                                        }, 'xmllintHelper' )
                }, 'TrecVid08ViperFile' );

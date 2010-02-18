@@ -130,6 +130,7 @@ $VAR1 = bless( {
                  'comment' => '',
                  'errormsg' => bless( {
                                         'errormsg' => '',
+                                        'errorset' => 0,
                                         'header' => 'TrecVid08ViperFile'
                                       }, 'MErrorH' ),
                  'fhash' => {
@@ -303,17 +304,20 @@ $VAR1 = bless( {
                  'fs_framespan_max' => bless( {
                                                 'errormsg' => bless( {
                                                                        'errormsg' => '',
+                                                                       'errorset' => 0,
                                                                        'header' => 'ViperFramespan'
                                                                      }, 'MErrorH' ),
                                                 'fps' => -1,
                                                 'original_value' => '1:5121',
-                                                'value' => '1:5121'
+                                                'value' => '1:5121',
+                                                'valueset' => 1
                                               }, 'ViperFramespan' ),
                  'gtf' => 0,
                  'validated' => 1,
                  'xmllintobj' => bless( {
                                           'errormsg' => bless( {
                                                                  'errormsg' => '',
+                                                                 'errorset' => 0,
                                                                  'header' => 'xmllintHelper'
                                                                }, 'MErrorH' ),
                                           'xmllint' => 'xmllint',
@@ -431,6 +435,7 @@ $VAR1 = bless( {
                  'comment' => '',
                  'errormsg' => bless( {
                                         'errormsg' => '',
+                                        'errorset' => 0,
                                         'header' => 'TrecVid08ViperFile'
                                       }, 'MErrorH' ),
                  'fhash' => {
@@ -526,17 +531,20 @@ $VAR1 = bless( {
                  'fs_framespan_max' => bless( {
                                                 'errormsg' => bless( {
                                                                        'errormsg' => '',
+                                                                       'errorset' => 0,
                                                                        'header' => 'ViperFramespan'
                                                                      }, 'MErrorH' ),
                                                 'fps' => -1,
                                                 'original_value' => '1:5121',
-                                                'value' => '1:5121'
+                                                'value' => '1:5121',
+                                                'valueset' => 1
                                               }, 'ViperFramespan' ),
                  'gtf' => 0,
                  'validated' => 1,
                  'xmllintobj' => bless( {
                                           'errormsg' => bless( {
                                                                  'errormsg' => '',
+                                                                 'errorset' => 0,
                                                                  'header' => 'xmllintHelper'
                                                                }, 'MErrorH' ),
                                           'xmllint' => 'xmllint',

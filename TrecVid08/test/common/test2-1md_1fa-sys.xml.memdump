@@ -1,123 +1,127 @@
 #  TrecVid08ViperFile MemDump
 
 $VAR1 = bless( {
-                 'file' => '../../test/common/test2-1md_1fa-sys.xml',
+                 'comment' => '',
+                 'errormsg' => bless( {
+                                        'errormsg' => '',
+                                        'errorset' => 0,
+                                        'header' => 'TrecVid08ViperFile'
+                                      }, 'MErrorH' ),
                  'fhash' => {
-                              'ObjectGet' => {
-                                               '0' => {
-                                                        'framespan' => '1100:3327',
-                                                        'DetectionScore' => {
-                                                                              '1100:3327' => [
-                                                                                               '99'
-                                                                                             ]
-                                                                            },
-                                                        'DetectionDecision' => {
-                                                                                 '1100:3327' => [
-                                                                                                  'false'
-                                                                                                ]
-                                                                               },
-                                                        'subtype' => ''
-                                                      }
-                                             },
-                              'PersonRuns' => {
-                                                '0' => {
-                                                         'framespan' => '1:1000',
-                                                         'DetectionScore' => {
-                                                                               '1:1000' => [
-                                                                                             '-10'
-                                                                                           ]
-                                                                             },
-                                                         'DetectionDecision' => {
-                                                                                  '1:1000' => [
-                                                                                                'true'
-                                                                                              ]
-                                                                                },
-                                                         'subtype' => ''
-                                                       }
-                                              },
-                              'file' => {
-                                          'SOURCETYPE' => undef,
-                                          'H-FRAME-SIZE' => undef,
-                                          'FRAMERATE' => '1.0',
-                                          'filename' => 'file:20050519-1503-Excerpt.mpg',
-                                          'V-FRAME-SIZE' => undef,
-                                          'file_id' => 0,
-                                          'NUMFRAMES' => '5121'
-                                        },
                               'CellToEar' => {
-                                               '1' => {
-                                                        'framespan' => '2503:3739',
-                                                        'DetectionScore' => {
-                                                                              '2503:3739' => [
-                                                                                               '101'
-                                                                                             ]
-                                                                            },
-                                                        'DetectionDecision' => {
-                                                                                 '2503:3739' => [
-                                                                                                  'false'
-                                                                                                ]
-                                                                               },
-                                                        'subtype' => ''
-                                                      },
                                                '0' => {
-                                                        'framespan' => '203:3738',
-                                                        'DetectionScore' => {
-                                                                              '203:3738' => [
-                                                                                              '-100'
-                                                                                            ]
-                                                                            },
                                                         'DetectionDecision' => {
                                                                                  '203:3738' => [
                                                                                                  'true'
                                                                                                ]
                                                                                },
+                                                        'DetectionScore' => {
+                                                                              '203:3738' => [
+                                                                                              '-100'
+                                                                                            ]
+                                                                            },
+                                                        'framespan' => '203:3738',
+                                                        'subtype' => ''
+                                                      },
+                                               '1' => {
+                                                        'DetectionDecision' => {
+                                                                                 '2503:3739' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'DetectionScore' => {
+                                                                              '2503:3739' => [
+                                                                                               '101'
+                                                                                             ]
+                                                                            },
+                                                        'framespan' => '2503:3739',
                                                         'subtype' => ''
                                                       },
                                                '2' => {
-                                                        'framespan' => '3503:3739',
-                                                        'DetectionScore' => {
-                                                                              '3503:3739' => [
-                                                                                               '-0.99'
-                                                                                             ]
-                                                                            },
                                                         'DetectionDecision' => {
                                                                                  '3503:3739' => [
                                                                                                   'false'
                                                                                                 ]
                                                                                },
+                                                        'DetectionScore' => {
+                                                                              '3503:3739' => [
+                                                                                               '-0.99'
+                                                                                             ]
+                                                                            },
+                                                        'framespan' => '3503:3739',
                                                         'subtype' => ''
                                                       }
-                                             }
+                                             },
+                              'ObjectGet' => {
+                                               '0' => {
+                                                        'DetectionDecision' => {
+                                                                                 '1100:3327' => [
+                                                                                                  'false'
+                                                                                                ]
+                                                                               },
+                                                        'DetectionScore' => {
+                                                                              '1100:3327' => [
+                                                                                               '99'
+                                                                                             ]
+                                                                            },
+                                                        'framespan' => '1100:3327',
+                                                        'subtype' => ''
+                                                      }
+                                             },
+                              'PersonRuns' => {
+                                                '0' => {
+                                                         'DetectionDecision' => {
+                                                                                  '1:1000' => [
+                                                                                                'true'
+                                                                                              ]
+                                                                                },
+                                                         'DetectionScore' => {
+                                                                               '1:1000' => [
+                                                                                             '-10'
+                                                                                           ]
+                                                                             },
+                                                         'framespan' => '1:1000',
+                                                         'subtype' => ''
+                                                       }
+                                              },
+                              'file' => {
+                                          'FRAMERATE' => '1.0',
+                                          'H-FRAME-SIZE' => undef,
+                                          'NUMFRAMES' => '5121',
+                                          'SOURCETYPE' => undef,
+                                          'V-FRAME-SIZE' => undef,
+                                          'file_id' => 0,
+                                          'filename' => 'file:20050519-1503-Excerpt.mpg'
+                                        }
                             },
+                 'file' => '../../test/common/test2-1md_1fa-sys.xml',
+                 'force_subtype' => 0,
+                 'fps' => -1,
+                 'fs_framespan_max' => bless( {
+                                                'errormsg' => bless( {
+                                                                       'errormsg' => '',
+                                                                       'errorset' => 0,
+                                                                       'header' => 'ViperFramespan'
+                                                                     }, 'MErrorH' ),
+                                                'fps' => -1,
+                                                'original_value' => '1:5121',
+                                                'value' => '1:5121',
+                                                'valueset' => 1
+                                              }, 'ViperFramespan' ),
+                 'gtf' => 0,
+                 'validated' => 1,
                  'xmllintobj' => bless( {
-                                          'xsdpath' => '../../data',
                                           'errormsg' => bless( {
                                                                  'errormsg' => '',
+                                                                 'errorset' => 0,
                                                                  'header' => 'xmllintHelper'
                                                                }, 'MErrorH' ),
+                                          'xmllint' => 'xmllint',
                                           'xsdfilesl' => [
                                                            'TrecVid08.xsd',
                                                            'TrecVid08-viper.xsd',
                                                            'TrecVid08-viperdata.xsd'
                                                          ],
-                                          'xmllint' => '/opt/local/bin/xmllint'
-                                        }, 'xmllintHelper' ),
-                 'validated' => 1,
-                 'force_subtype' => 0,
-                 'gtf' => 0,
-                 'comment' => '',
-                 'errormsg' => bless( {
-                                        'errormsg' => '',
-                                        'header' => 'TrecVid08ViperFile'
-                                      }, 'MErrorH' ),
-                 'fps' => -1,
-                 'fs_framespan_max' => bless( {
-                                                'errormsg' => bless( {
-                                                                       'errormsg' => '',
-                                                                       'header' => 'ViperFramespan'
-                                                                     }, 'MErrorH' ),
-                                                'fps' => -1,
-                                                'value' => undef,
-                                                'original_value' => undef
-                                              }, 'ViperFramespan' )
+                                          'xsdpath' => '../../data'
+                                        }, 'xmllintHelper' )
                }, 'TrecVid08ViperFile' );
