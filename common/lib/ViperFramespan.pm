@@ -66,9 +66,10 @@ sub new {
 
   my $self =
     {
-     value => $value,
+     value    => $value,
+     valueset => (length($value) > 0) ? 1 : 0,
      original_value => $tmp,
-     fps => -1,
+     fps      => -1,
      errormsg => $errormsg,
     };
 
@@ -268,6 +269,7 @@ sub set_value {
   }
 
   $self->{value} = $value;
+  $self->{valueset} = (length($value) > 0) ? 1 : 0;
   $self->{original_value} = $tmp;
 
   return($ok);
@@ -294,7 +296,7 @@ sub add_fs_to_value {
 
   return(0) if ($self->error());
 
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
@@ -308,23 +310,18 @@ sub add_fs_to_value {
 #########
 
 sub union {
-  my ($self, $other) = @_;
+  # arg 0: self
+  # arg 1: other
 
-  return(0) if ($self->error());
+  return(0) if ($_[0]->error());
 
-  if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
+  if ( (! $_[0]->{valueset}) 
+       || (! defined $_[1]) || (! $_[1]->{valueset}) ) {
+    $_[0]->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
 
-  if (! $other->is_value_set()) {
-    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
-    return(0);
-  }
-
-  my $cfs = $other->{value};
-
-  return($self->add_fs_to_value($cfs));
+  return($_[0]->add_fs_to_value($_[1]->{value}));
 }
 
 #####
@@ -413,11 +410,10 @@ sub get_original_value {
 
 sub is_value_set {
   # arg 0: self
+
   return(0) if ($_[0]->error());
 
-  return(0) if (MMisc::is_blank($_[0]->{value}));
-
-  return(1);
+  return($_[0]->{valueset});
 }
 
 ####################
@@ -456,27 +452,24 @@ sub _fs_sort_core {
 ##########
 
 sub sort_cmp {
-  my ($self, $other) = @_;
-
-  return(&_fs_sort_core($self->{value}, $other->{value}));
+  # arg 0: self
+  # arg 1: other
+  return(&_fs_sort_core($_[0]->{value}, $_[1]->{value}));
 }
 
 
 ##########
 
 sub count_pairs_in_value {
-  my $self = $_[0];
+  # arg 0: self
+  return(-1) if ($_[0]->error());
 
-  return(-1) if ($self->error());
-
-  if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
+  if (! $_[0]->{valueset}) {
+    $_[0]->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(-1);
   }
 
-  my $value = $self->{value};
-
-  return(&_fs_split_line_count($value));
+  return(&_fs_split_line_count($_[0]->{value}));
 }
 
 ##########
@@ -487,7 +480,7 @@ sub get_list_of_framespans {
   my @list = ();
   return(undef) if ($self->error());
 
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(undef);
   }
@@ -523,7 +516,7 @@ sub count_pairs_in_original_value {
 
   return(-1) if ($self->error());
 
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(-1);
   }
@@ -536,10 +529,11 @@ sub count_pairs_in_original_value {
 ##########
 
 sub _does_overlap {
-  my ($ifs, $cfs) = @_;
+  # arg 0: fs #1 (i)
+  # arg 1: fs #2 (c)
 
-  my ($i_beg, $i_end) = &_fs_get_begend($ifs);
-  my ($c_beg, $c_end) = &_fs_get_begend($cfs);
+  my ($i_beg, $i_end) = &_fs_get_begend($_[0]);
+  my ($c_beg, $c_end) = &_fs_get_begend($_[1]);
 
   # No overlap possible
   return(0) if (($c_end < $i_beg) || ($i_end < $c_beg));
@@ -551,20 +545,18 @@ sub _does_overlap {
 #####
 
 sub check_if_overlap {
-  my ($self, $other) = @_;
+  # arg 0: self
+  # arg 1: other
 
-  if ( (! $self->is_value_set()) 
-       || (! defined $other) || (! $other->is_value_set()) ) {
-    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
+  if ( (! $_[0]->{valueset}) 
+       || (! defined $_[1]) || (! $_[1]->{valueset}) ) {
+    $_[0]->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
   
-  return(0) if ($self->error());
+  return(0) if ($_[0]->error());
 
-  my $ifs = $self->{value};
-  my $cfs = $other->{value};
-
-  return(&_does_overlap($ifs, $cfs));
+  return(&_does_overlap($_[0]->{value}, $_[1]->{value}));
 }
 
 ##########
@@ -707,15 +699,12 @@ sub get_overlap {
   return(undef) if ($self->error());
 
   # Now in order to compute the overlap we work pair per pair
-  my $sv = $self->{value};
-  my $ov = $other->{value};
-
-#  print "******************** Overlap\n*****In1: $sv\n*****In2: $ov\n";
+#  print "******************** Overlap\n*****In1: " . $self->{value} . "\n*****In2: " . $other->{value} . "\n";
 
   # [MM 20090420 with Jon's Help] New technique : go from o(n*m) to o(n+m) 
 
-  my @spl = &_split_pair_to_2darray(&_fs_split_line($sv));
-  my @opl = &_split_pair_to_2darray(&_fs_split_line($ov));
+  my @spl = &_split_pair_to_2darray(&_fs_split_line($self->{value}));
+  my @opl = &_split_pair_to_2darray(&_fs_split_line($other->{value}));
 
   # Resulting overlap array
    my @ova = ();
@@ -792,7 +781,7 @@ sub get_beg_end_fs {
 
   return(-1) if ($self->error());
 
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(-1);
   }
@@ -862,7 +851,7 @@ sub bounded_not {
 
   return(undef) if ($self->error());
 
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(undef);
   }
@@ -896,44 +885,41 @@ sub bounded_not {
 ##########
 
 sub get_xor {
-  my ($self, $other) = @_;
+  # arg 0: self
+  # arg 1: other
 
-  return(undef) if ($self->error());
+  return(undef) if ($_[0]->error());
 
-  if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
+  if ( (! $_[0]->{valueset}) 
+       || (! defined $_[1]) || (! $_[1]->{valueset}) ) {
+    $_[0]->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(undef);
   }
 
-  if (! $other->is_value_set()) {
-    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
-    return(undef);
-  }
-
-  ### XOR is equivalent to the not of the overlap interescting with the union
+  ### XOR is equivalent to the not of the overlap intersecting with the union
 
   # Work with clones in order not to modify source value
-  my $cl1 = $self->clone();
-  my $cl2 = $self->clone();
+  my $cl1 = $_[0]->clone();
+  my $cl2 = $_[0]->clone();
   
   # Get the union
-  my $ok = $cl1->union($other);
+  my $ok = $cl1->union($_[1]);
   if ($cl1->error()) {
-    $self->_set_errormsg('In XOR during union: ' . $cl1->get_errormsg());
+    $_[0]->_set_errormsg('In XOR during union: ' . $cl1->get_errormsg());
     return(undef);
   }
 
   # Need min/Max of union for not overlap bounding
   my ($min, $max) = $cl1->get_beg_end_fs();
   if ($cl1->error()) {
-    $self->_set_errormsg('In XOR during beg/end get: ' . $cl1->get_errormsg());
+    $_[0]->_set_errormsg('In XOR during beg/end get: ' . $cl1->get_errormsg());
     return(undef);
   }
 
   # Get the overlap
-  my $ov = $cl2->get_overlap($other);
+  my $ov = $cl2->get_overlap($_[1]);
   if ($cl2->error()) {
-    $self->_set_errormsg('In XOR during intersection: ' . $cl2->get_errormsg());
+    $_[0]->_set_errormsg('In XOR during intersection: ' . $cl2->get_errormsg());
     return(undef);
   }
 
@@ -945,28 +931,28 @@ sub get_xor {
     # Get the not of the overlap restricted to min/Max
     $nov = $ov->bounded_not($min, $max);
     if ($ov->error()) {
-      $self->_set_errormsg("In XOR during \"not overlap\": " . $ov->get_errormsg());
+      $_[0]->_set_errormsg("In XOR during \"not overlap\": " . $ov->get_errormsg());
       return(undef);
     }
   }
   if (! defined $nov) {
-    $self->_set_errormsg("In XOR during \"not overlap\": Could not create a value");
+    $_[0]->_set_errormsg("In XOR during \"not overlap\": Could not create a value");
     return(undef);
   }
   if ($nov->error()) {
-    $self->_set_errormsg("In XOR during \"not overlap\": " . $nov->get_errormsg());
+    $_[0]->_set_errormsg("In XOR during \"not overlap\": " . $nov->get_errormsg());
     return(undef);
   }
 
   # Do the intersection between the non overlap and the union
   my $res = $nov->get_overlap($cl1);
   if ($nov->error()) {
-    $self->_set_errormsg('In XOR during final step: ' . $nov->get_errormsg());
+    $_[0]->_set_errormsg('In XOR during final step: ' . $nov->get_errormsg());
     return(undef);
   }
 
   if ($res->error()) {
-    $self->_set_errormsg('In XOR, in result: ' . $res->get_errormsg());
+    $_[0]->_set_errormsg('In XOR, in result: ' . $res->get_errormsg());
     return(undef);
   }
 
@@ -1017,26 +1003,19 @@ sub extent_middlepoint {
 #####
 
 sub extent_middlepoint_distance {
-  my ($self, $other) = @_;
+  # arg 0: self
+  # arg 1: other
 
-  return(-1) if ($self->error());
+  return(-1) if ($_[0]->error());
 
-  if (! $self->is_value_set()) {
-    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
-    return(-1);
+  if ( (! $_[0]->{valueset}) 
+       || (! defined $_[1]) || (! $_[1]->{valueset}) ) {
+    $_[0]->_set_errormsg($error_msgs{'NoFramespanSet'});
+    return(0);
   }
 
-  if (! $other->is_value_set()) {
-    $self->_set_errormsg($error_msgs{'NoFramespanSet'});
-    return(-1);
-  }
-
-  my $m1 = $self->extent_middlepoint();
-  my $m2 = $other->extent_middlepoint();
-
-  return($m2 - $m1);
+  return($_[1]->extent_middlepoint() - $_[0]->extent_middlepoint());
 }
-
 
 #####
 
@@ -1083,7 +1062,7 @@ sub duration {
 
   return(0) if ($self->error());
 
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
@@ -1119,7 +1098,7 @@ sub gap_shorten {
     return(0);
   }
 
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
@@ -1256,7 +1235,7 @@ sub _get_begend_ts_core {
     $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(0);
   }
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
@@ -1315,32 +1294,33 @@ sub get_end_ts {
 ##########
 
 sub extent_middlepoint_ts {
-  my $self = $_[0];
+  # arg 0: self
 
-  return(-1) if ($self->error());
+  return(-1) if ($_[0]->error());
 
-  if (! $self->is_fps_set()) {
-    $self->_set_errormsg($error_msgs{'FPSNotSet'});
+  if (! $_[0]->is_fps_set()) {
+    $_[0]->_set_errormsg($error_msgs{'FPSNotSet'});
     return(-1);
   }
 
-  my $mf = $self->extent_middlepoint();
-  return($mf) if ($self->error());
+  my $mf = $_[0]->extent_middlepoint();
+  return($mf) if ($_[0]->error());
 
-  return($self->end_frame_to_ts($mf));
+  return($_[0]->end_frame_to_ts($mf));
 }
 
 #####
 
 sub extent_middlepoint_distance_ts {
-  my ($self, $other) = @_;
+  # arg 0: self
+  # arg 1: other
 
-  my $m1 = $self->extent_middlepoint_ts();
-  return($m1) if ($self->error());
+  my $m1 = $_[0]->extent_middlepoint_ts();
+  return($m1) if ($_[0]->error());
 
-  my $m2 = $other->extent_middlepoint_ts();
-  if ($other->error()) {
-    $self->_set_errormsg($other->get_errormsg());
+  my $m2 = $_[1]->extent_middlepoint_ts();
+  if ($_[1]->error()) {
+    $_[0]->_set_errormsg($_[1]->get_errormsg());
     return($m2);
   }
 
@@ -1401,7 +1381,7 @@ sub value_shift {
 
   return(0) if ($self->error());
 
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(0);
   }
@@ -1453,7 +1433,7 @@ sub list_frames {
 
   return(@out) if ($self->error());
 
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(@out);
   }
@@ -1482,7 +1462,7 @@ sub list_pairs {
 
   return(@out) if ($self->error());
 
-  if (! $self->is_value_set()) {
+  if (! $self->{valueset}) {
     $self->_set_errormsg($error_msgs{'NoFramespanSet'});
     return(@out);
   }
@@ -1926,8 +1906,8 @@ sub get_errormsg {
 ##########
 
 sub error {
-  my $self = $_[0];
-  return($self->{errormsg}->error());
+  # arg 0: self
+  return($_[0]->{errormsg}->error());
 }
 
 ##########

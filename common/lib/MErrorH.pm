@@ -40,6 +40,7 @@ sub new {
     {
      header   => $header,
      errormsg => "",
+     errorset => 0,
     };
 
   bless $self;
@@ -92,6 +93,7 @@ sub set_errormsg {
   # arg 0: self
   # arg 1: text
   $_[0]->{errormsg} = &_set_errormsg_txt($_[0]->{errormsg}, $_[1], $_[0]->{header});
+  $_[0]->{errorset} = (length($_[0]->{errormsg}) > 0) ? 1 : 0;
 }
 
 ##########
@@ -113,7 +115,7 @@ sub clean_errormsg {
 ## returns 0 if no error, something else otherwise
 sub error {
   # arg 0: self
-  return(length($_[0]->{errormsg}));
+  return($_[0]->{errorset});
 }
 
 ##########
@@ -121,6 +123,7 @@ sub error {
 sub clear {
   # arg 0: self
   $_[0]->{errormsg} = "";
+  $_[0]->{errorset} = 0;
   return(1);
 }
 
