@@ -176,11 +176,14 @@ $VAR1 = bless( {
                  'force_subtype' => 0,
                  'fps' => -1,
                  'fs_framespan_max' => bless( {
-                                                'errormsg' => bless( {
-                                                                       'errormsg' => '',
-                                                                       'errorset' => 0,
-                                                                       'header' => 'ViperFramespan'
-                                                                     }, 'MErrorH' ),
+                                                'beg' => '1',
+                                                'end' => '5121',
+                                                'errorh' => bless( {
+                                                                     'errormsg' => '',
+                                                                     'errorset' => 0,
+                                                                     'header' => 'ViperFramespan'
+                                                                   }, 'MErrorH' ),
+                                                'errorv' => 0,
                                                 'fps' => -1,
                                                 'original_value' => '1:5121',
                                                 'value' => '1:5121',
