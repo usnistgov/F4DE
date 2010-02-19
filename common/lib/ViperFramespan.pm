@@ -555,6 +555,35 @@ sub check_if_overlap {
   return(1);
 }
 
+#####
+
+sub check_if_overlap_s {
+  # arg 0: self
+  # arg 1: ref to array of ViperFramespan
+  # return on first overlap found (and a ref to the ViperFramespan that overlaps)
+
+  if (! $_[0]->{valueset}) {
+    $_[0]->_set_errormsg($error_msgs{'NoFramespanSet'});
+    return(0, undef);
+  }
+
+  return(0, undef) if (scalar @_ == 1);
+  return(0, undef) if (scalar @{$_[1]} == 0);
+
+  for (my $i = 1; $i < scalar @{$_[1]}; $i++) {
+    if ( (! defined ${$_[1]}[$i]) || (! ${$_[1]}[$i]->{valueset}) ) {
+      $_[0]->_set_errormsg($error_msgs{'NoFramespanSet'});
+      return(0, undef);
+    }
+    next if
+      ((${$_[1]}[$i]->{end} < $_[0]->{beg}) 
+       || ($_[0]->{end} < ${$_[1]}[$i]->{beg}));
+    return(1, \${$_[1]}[$i]);
+  }
+
+  return(0, undef);
+}
+
 ##########
 
 sub _get_overlap_core {
@@ -1577,6 +1606,15 @@ sub unit_test {                 # Xtreme coding and us ;)
   push(@otxt, "$eh [#8d] Error while checking \'is_within\' ($in9 is not within $in10, but test says otherwise).")
     if ($testd);
   
+  my @tmpa = ($fs_tmp10, $fs_tmp9);
+  my ($teste, $rfs) = $fs_tmp8->check_if_overlap_s(\@tmpa);
+  if (! $teste) {
+    push(@otxt, "$eh [#8e] Error while checking \'check_if_overlap_s\' ($in8 vs $in10 and $in9 do overlap, but test says otherwise).");
+  } else {
+    push(@otxt, "$eh [#8e] Error while checking \'check_if_overlap_s\' ($in8 vs $in10 and $in9 do overlap for part of $in9, but returned ViperFramepsan object [" . $$rfs->get_value() . "] is different")
+    if ($$rfs->get_value() ne $in9);
+  }
+  
   # optimize + count_pairs
   my $in11 = '20:40 1:2 1:1 2:6 8:12 20:40'; # 6 pairs (not optimized)
   my $exp_out11 = '1:6 8:12 20:40'; # 3 pairs (once optimized)
@@ -1907,7 +1945,8 @@ sub error {
 
 sub clear_error {
   my $self = $_[0];
-  return($self->{errormsg}->clear());
+  $self->{errorv} = 0;
+  return($self->{errorh}->clear());
 }
 
 ############################################################

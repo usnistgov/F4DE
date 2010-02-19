@@ -3204,10 +3204,10 @@ sub _extract_data {
       return("ViperFramespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_lfspan->error());
       return("ViperFramespan ($lfspan) contains more than $max_pair_per_fs range pair(s)") if (($max_pair_per_fs) && ($pc > $max_pair_per_fs));
 
-      foreach my $fs_tmp (@afspan) {
-        my $ov = $fs_lfspan->check_if_overlap($fs_tmp);
-        return("ViperFramespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_tmp->error());
-        return("ViperFramespan ($lfspan) overlap another framespan (" . $fs_tmp->get_original_value() . ") within the same object attribute", ()) if ($ov);
+      if (scalar @afspan > 0) {
+        my ($ov, $rovfs) = $fs_lfspan->check_if_overlap_s(\@afspan);
+        return("ViperFramespan ($lfspan) error (" . $fs_lfspan->get_errormsg() . ")", ()) if ($fs_lfspan->error());
+        return("ViperFramespan ($lfspan) overlap another framespan (" . $$rovfs->get_original_value() . ") within the same object attribute", ()) if ($ov);
       }
       push @afspan, $fs_lfspan;
 
