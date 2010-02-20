@@ -926,50 +926,51 @@ sub kernelFunction {
 #######################
 
 sub computeSpatioTemporalOverlapRatio {
-    my ( $ref, $sys, $params ) = @_;
+  # arg 0: ref
+  # arg 1: sys
+  # arg 2: params
 
-    my %gtObjFrameList = %$ref;
-    my %soObjFrameList = %$sys;
-
-    my @tmpa = keys %gtObjFrameList;
-    my @gtObjFrameNums = MMisc::reorder_array_numerically(\@tmpa);
-    my ( $intCount, $gtDCCount, $spatioTemporalOverlap ) = ( 0, 0, 0 );
-
-    my ( $ref_object_id, $sys_object_id);
-
-    for (my $gtoi = 0; $gtoi < scalar @gtObjFrameNums; $gtoi++) {
-      my $gtObjFrameNum = $gtObjFrameNums[$gtoi];
-      my $refObject = $gtObjFrameList{$gtObjFrameNum};
-      if ($refObject->getDontCare()) { $gtDCCount++; }
-      
-      next if (! exists $soObjFrameList{$gtObjFrameNum});
-      my $sysObject = $soObjFrameList{$gtObjFrameNum};
-      
-      $ref_object_id = $refObject->getId();
-      $sys_object_id = $sysObject->getId();
-      
-      my ($txt, $overlap) = CLEARObject::kernelFunction($refObject, $sysObject, $params);
-      if (! MMisc::is_blank($txt)) { return("Error while computing overlap between objects ($txt). ", undef); }
-      
-      if (defined $overlap) { 
-        if (! $refObject->getDontCare()) { $spatioTemporalOverlap += $overlap; }
-        $intCount++;
-      }
-    }
-
-    my $numOfFrames = (scalar keys %gtObjFrameList) - $gtDCCount + (scalar keys %soObjFrameList) - $intCount;
-    my $retVal;
+  my @tmpa = keys %{$_[0]};
+  my @gtObjFrameNums = MMisc::reorder_array_numerically(\@tmpa);
+  my ( $intCount, $gtDCCount, $spatioTemporalOverlap ) = ( 0, 0, 0 );
+  
+  my ( $ref_object_id, $sys_object_id);
+  
+  for (my $gtoi = 0; $gtoi < scalar @gtObjFrameNums; $gtoi++) {
+    my $gtObjFrameNum = $gtObjFrameNums[$gtoi];
+    my $refObject = ${$_[0]}{$gtObjFrameNum};
+    if ($refObject->getDontCare()) { $gtDCCount++; }
     
-    if ($spatioTemporalOverlap > 0) { 
-        $retVal = $spatioTemporalOverlap/$numOfFrames; 
-        # print "GT ID: $ref_object_id \tGTCount: " . ((scalar keys %gtObjFrameList) - $gtDCCount) . "\tSO ID: $sys_object_id \tSOCount: " . (scalar keys %soObjFrameList) . "\tintCount: $intCount \tunionNum: $numOfFrames \t Overlap: $spatioTemporalOverlap \tValue: $retVal\tDCCount: $gtDCCount\n"; 
-        # print "GT frames are: ", join(", ", @gtObjFrameNums) , "\n";
-        # my @tmpa = keys %soObjFrameList;
-        # print "SO frames are: ", join(", ", MMisc::reorder_array_numerically(\@tmpa)) , "\n";
-        # print(Dumper(\%gtObjFrameList));
+    next if (! exists ${$_[1]}{$gtObjFrameNum});
+    my $sysObject = ${$_[1]}{$gtObjFrameNum};
+    
+    $ref_object_id = $refObject->getId();
+    $sys_object_id = $sysObject->getId();
+    
+    my ($txt, $overlap) = CLEARObject::kernelFunction($refObject, $sysObject, $_[2]);
+    if (! MMisc::is_blank($txt)) { return("Error while computing overlap between objects ($txt). ", undef); }
+    
+    if (defined $overlap) { 
+      if (! $refObject->getDontCare()) { $spatioTemporalOverlap += $overlap; }
+      $intCount++;
     }
-
-    return("", $retVal);
+  }
+  
+  my $numOfFrames = (scalar keys %{$_[0]}) - $gtDCCount + (scalar keys %{$_[1]}) - $intCount;
+  my $retVal;
+  
+  if ($spatioTemporalOverlap > 0) { 
+    $retVal = $spatioTemporalOverlap / $numOfFrames; 
+    # my %gtObjFrameList = %$_[0];
+    # my %soObjFrameList = %$_[1];
+    # print "GT ID: $ref_object_id \tGTCount: " . ((scalar keys %gtObjFrameList) - $gtDCCount) . "\tSO ID: $sys_object_id \tSOCount: " . (scalar keys %soObjFrameList) . "\tintCount: $intCount \tunionNum: $numOfFrames \t Overlap: $spatioTemporalOverlap \tValue: $retVal\tDCCount: $gtDCCount\n"; 
+    # print "GT frames are: ", join(", ", @gtObjFrameNums) , "\n";
+    # my @tmpa = keys %soObjFrameList;
+    # print "SO frames are: ", join(", ", MMisc::reorder_array_numerically(\@tmpa)) , "\n";
+    # print(Dumper(\%gtObjFrameList));
+  }
+  
+  return("", $retVal);
 }
 
 #######################
