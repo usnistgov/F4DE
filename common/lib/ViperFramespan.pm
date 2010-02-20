@@ -374,44 +374,40 @@ sub set_fps {
 #####
 
 sub is_fps_set {
-  my $self = $_[0];
+  # arg 0: self
 
-  return(0) if ($self->{errorv});
+  return(0) if ($_[0]->{errorv});
 
-  return(1) if ($self->{fps} != -1);
-
-  return(0);
+  return($_[0]->{fps} != -1);
 }
 
 #####
 
 sub get_fps {
-  my $self = $_[0];
+  # arg 0: self
 
-  return(0) if ($self->{errorv});
+  return(0) if ($_[0]->{errorv});
 
-  if (! $self->is_fps_set()) {
-    $self->_set_errormsg($error_msgs{'FPSNotSet'});
+  if ($_[0]->{fps} == -1) {
+    $_[0]->_set_errormsg($error_msgs{'FPSNotSet'});
     return(0);
   }
 
-  return($self->{fps});
+  return($_[0]->{fps});
 }
 
 ##########
 
 sub get_value {
-  my $self = $_[0];
-
-  return($self->{value});
+  # arg 0: self
+  return($_[0]->{value});
 }
 
 #####
 
 sub get_original_value {
-  my $self = $_[0];
-
-  return($self->{original_value});
+  # arg 0: self
+  return($_[0]->{original_value});
 }
 
 ##########
@@ -494,8 +490,7 @@ sub get_list_of_framespans {
   }
 
   my $value = $self->{value};
-  my $fps = undef;
-  $fps = $self->get_fps() if ($self->is_fps_set());
+  my $fps = ($self->{fps} == -1) ? undef : $self->{fps};
   my @todo = &_fs_split_line($value);
   for (my $i = 0; $i < scalar @todo; $i++) {
     my $p = $todo[$i];
@@ -693,10 +688,8 @@ sub get_overlap {
   # arg 1: other
 
   # Worry about the fps first
-  my $sfps = undef;
-  my $ofps = undef;
-  $sfps = $_[0]->get_fps() if ($_[0]->is_fps_set());
-  $ofps = $_[1]->get_fps() if ($_[1]->is_fps_set());
+  my $sfps = ($_[0]->{fps} == -1) ? undef : $_[0]->{fps};
+  my $ofps = ($_[1]->{fps} == -1) ? undef : $_[1]->{fps};
   my $fps = undef;
   if ((defined $sfps) && (defined $ofps)) {
     if ($sfps != $ofps) {
@@ -1168,7 +1161,7 @@ sub _frame_to_ts {
 
   return(0) if ($self->{errorv});
 
-  if (! $self->is_fps_set()) {
+  if ($self->{fps} == -1) {
     $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(0);
   }
@@ -1181,18 +1174,17 @@ sub _frame_to_ts {
 
   $frame += $inc;
 
-  my $fps = $self->get_fps();
-
-  return($frame / $fps);
+  return($frame / $self->{fps});
 }
 
 #####
 
 sub frame_to_ts {
-  my ($self, $frame) = @_;
+  # arg 0: self
+  # arg 1: frame number
 
   # Decrease 1 because a '0' ts is a '1' frame
-  return($self->_frame_to_ts($frame, -1.0));
+  return($_[0]->_frame_to_ts($_[1], -1.0));
 }
 
 #####
@@ -1210,7 +1202,7 @@ sub _ts_to_frame {
 
   return(0) if ($self->{errorv});
 
-  if (! $self->is_fps_set()) {
+  if ($self->{fps} == -1) {
     $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(0);
   }
@@ -1221,9 +1213,7 @@ sub _ts_to_frame {
     return(0);
   }
 
-  my $fps = $self->get_fps();
-
-  my $frame = $fps * $ts;
+  my $frame = $self->{fps} * $ts;
 
   $frame += $inc;
   # Convert to dec 
@@ -1254,7 +1244,7 @@ sub _get_begend_ts_core {
 
   return(0) if ($self->{errorv});
 
-  if (! $self->is_fps_set()) {
+  if ($self->{fps} == -1) {
     $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(0);
   }
@@ -1319,7 +1309,7 @@ sub extent_middlepoint_ts {
 
   return(-1) if ($_[0]->{errorv});
 
-  if (! $_[0]->is_fps_set()) {
+  if ($_[0]->{fps} == -1) {
     $_[0]->_set_errormsg($error_msgs{'FPSNotSet'});
     return(-1);
   }
@@ -1355,7 +1345,7 @@ sub extent_duration_ts {
 
   return(-1) if ($self->{errorv});
 
-  if (! $self->is_fps_set()) {
+  if ($self->{fps} == -1) {
     $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(-1);
   }
@@ -1373,7 +1363,7 @@ sub duration_ts {
 
   return(-1) if ($self->{errorv});
 
-  if (! $self->is_fps_set()) {
+  if ($self->{fps} == -1) {
     $self->_set_errormsg($error_msgs{'FPSNotSet'});
     return(-1);
   }
@@ -1914,7 +1904,7 @@ sub clone {
   return(undef) if ($self->{errorv});
 
   my $clone = new ViperFramespan($self->get_original_value());
-  $clone->set_fps($self->get_fps()) if ($self->is_fps_set());
+  $clone->set_fps($self->{fps}) if ($self->{fps} != -1);
 
   return($clone);
 }
