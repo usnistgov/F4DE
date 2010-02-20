@@ -82,8 +82,9 @@ sub new {
   $errortxt .= "Could not obtain the list authorized events ($tmp). "
     if (! MMisc::is_blank($tmp));
 
-  my $errormsg = new MErrorH("TrecVid08Observation");
-  $errormsg->set_errormsg($errortxt);
+  my $errorh = new MErrorH("TrecVid08Observation");
+  $errorh->set_errormsg($errortxt);
+  my $errorv = $errorh->error();
 
   my $self =
     {
@@ -105,7 +106,8 @@ sub new {
      Xtra        => undef, # xtra attributes
      validated   => 0,    # To confirm all the values required are set
      cloneid     => 0,    # When cloning, still confirm that the uid is unique
-     errormsg    => $errormsg,
+     errorh      => $errorh,
+     errorv      => $errorv,
     };
 
   bless $self;
@@ -142,7 +144,7 @@ sub get_version {
 sub set_eventtype {
   my ($self, $etype) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! grep(m%^$etype$%, @full_ok_events) ) {
     $self->_set_errormsg("Type given ($etype) is not part of the authorized events list. ");
@@ -158,7 +160,7 @@ sub set_eventtype {
 sub _is_eventtype_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (! MMisc::is_blank($self->{eventtype}));
 
@@ -170,7 +172,7 @@ sub _is_eventtype_set {
 sub get_key_dummy_eventtype {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return($dummy_et);
 }
@@ -180,7 +182,7 @@ sub get_key_dummy_eventtype {
 sub get_eventtype {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->_is_eventtype_set()) {
     $self->_set_errormsg("\'eventtype\' not set. ");
@@ -195,7 +197,7 @@ sub get_eventtype {
 sub set_eventsubtype {
   my ($self, $stype) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! grep(m%^$stype$%, @ok_subevents) ) {
     $self->_set_errormsg("Type given ($stype) is not part of the authorized event subtypes list. ");
@@ -211,7 +213,7 @@ sub set_eventsubtype {
 sub is_eventsubtype_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (! MMisc::is_blank($self->{eventsubtype}));
 
@@ -223,7 +225,7 @@ sub is_eventsubtype_set {
 sub get_eventsubtype {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->is_eventsubtype_set()) {
     $self->_set_errormsg("\'eventsubtype\' not set. ");
@@ -238,7 +240,7 @@ sub get_eventsubtype {
 sub set_full_eventtype {
   my ($self, $ftype) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my ($etype, $stype) = TrecVid08ViperFile::split_full_event($ftype);
 
@@ -257,13 +259,13 @@ sub get_full_eventtype {
   my ($self) = @_;
 
   my $etype = $self->get_eventtype();
-  return("") if ($self->error());
+  return("") if ($self->{errorv});
 
   return(TrecVid08ViperFile::get_printable_full_event($etype, ""))
     if (! $self->is_eventsubtype_set());
   
   my $stype = $self->get_eventsubtype();
-  return("") if ($self->error());
+  return("") if ($self->{errorv});
 
   return(TrecVid08ViperFile::get_printable_full_event($etype, $stype, 1));
 }
@@ -273,7 +275,7 @@ sub get_full_eventtype {
 sub set_id {
   my ($self, $id) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if ($id < 0) {
     $self->_set_errormsg("\'id\' can not be negative. ");
@@ -289,7 +291,7 @@ sub set_id {
 sub _is_id_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if ($self->{id} != -1);
 
@@ -301,7 +303,7 @@ sub _is_id_set {
 sub get_id {
   my ($self) = @_;
 
-  return(-1) if ($self->error());
+  return(-1) if ($self->{errorv});
 
   if (! $self->_is_id_set()) {
     $self->_set_errormsg("\'id\' not set. ");
@@ -315,7 +317,7 @@ sub get_id {
 sub set_filename {
   my ($self, $fname) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (MMisc::is_blank($fname)) {
     $self->_set_errormsg("Empty \'filename\'. ");
@@ -331,7 +333,7 @@ sub set_filename {
 sub _is_filename_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (! MMisc::is_blank($self->{filename}));
 
@@ -343,7 +345,7 @@ sub _is_filename_set {
 sub get_filename {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->_is_filename_set()) {
     $self->_set_errormsg("\'filename\' not set. ");
@@ -357,7 +359,7 @@ sub get_filename {
 sub set_xmlfilename {
   my ($self, $fname) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (MMisc::is_blank($fname)) {
     $self->_set_errormsg("Empty \'xmlfilename\'. ");
@@ -373,7 +375,7 @@ sub set_xmlfilename {
 sub _is_xmlfilename_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (! MMisc::is_blank($self->{xmlfilename}));
 
@@ -385,7 +387,7 @@ sub _is_xmlfilename_set {
 sub get_xmlfilename {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->_is_xmlfilename_set()) {
     $self->_set_errormsg("\'xmlfilename\' not set. ");
@@ -399,7 +401,7 @@ sub get_xmlfilename {
 sub set_fps {
   my ($self, $fps) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   # use ViperFramespan to create the accepted value
   my $fs_tmp = new ViperFramespan();
@@ -423,7 +425,7 @@ sub set_fps {
 sub is_fps_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(0) if ($self->{fps} == -1);
 
@@ -435,7 +437,7 @@ sub is_fps_set {
 sub get_fps {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->is_fps_set()) {
     $self->_set_errormsg("\'fps\' is not set");
@@ -450,7 +452,7 @@ sub get_fps {
 sub set_framespan {
   my ($self, $fs_fs) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if ( (! defined $fs_fs) || (! $fs_fs->is_value_set() ) ) {
     $self->_set_errormsg("Invalid \'framespan\'. ");
@@ -471,7 +473,7 @@ sub set_framespan {
   } else {
     $self->set_fps($ffps);
   }
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   $self->{framespan} = $fs_fs;
   return(1);
@@ -480,30 +482,28 @@ sub set_framespan {
 #####
 
 sub _is_framespan_set {
-  my ($self) = @_;
+  # arg 0: self
 
-  return(0) if ($self->error());
+  return(0) if ($_[0]->{errorv});
 
-  return(0) if (! defined $self->{framespan});
+  return(0) if (! defined $_[0]->{framespan});
 
-  return(1) if ($self->{framespan}->is_value_set());
-
-  return(0);
+  return($_[0]->{framespan}->is_value_set());
 }
 
 #####
 
 sub get_framespan {
-  my ($self) = @_;
+  # arg 0: self
 
-  return(0) if ($self->error());
+  return(0) if ($_[0]->{errorv});
 
-  if (! $self->_is_framespan_set()) {
-    $self->_set_errormsg("\'framespan\' not set. ");
+  if (! $_[0]->_is_framespan_set()) {
+    $_[0]->_set_errormsg("\'framespan\' not set. ");
     return(0);
   }
 
-  return($self->{framespan});
+  return($_[0]->{framespan});
 }
 
 ########## 'fs_file'
@@ -511,7 +511,7 @@ sub get_framespan {
 sub set_fs_file {
   my ($self, $fs_file) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if ( (! defined $fs_file) || (! $fs_file->is_value_set() ) ) {
     $self->_set_errormsg("Invalid \'fs_file\'. ");
@@ -531,7 +531,7 @@ sub set_fs_file {
   } else {
     $self->set_fps($ffps);
   }
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   $self->{fs_file} = $fs_file;
   return(1);
@@ -542,7 +542,7 @@ sub set_fs_file {
 sub _is_fs_file_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(0) if (! defined $self->{fs_file});
 
@@ -556,7 +556,7 @@ sub _is_fs_file_set {
 sub get_fs_file {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->_is_fs_file_set()) {
     $self->_set_errormsg("\'fs_file\' not set. ");
@@ -571,7 +571,7 @@ sub get_fs_file {
 sub set_isgtf {
   my ($self, $status) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   $self->{isgtf} = $status;
   return(1);
@@ -582,7 +582,7 @@ sub set_isgtf {
 sub _is_isgtf_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if ($self->{isgtf} != -1);
 
@@ -594,7 +594,7 @@ sub _is_isgtf_set {
 sub get_isgtf {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->_is_isgtf_set()) {
     $self->_set_errormsg("\'isgtf\' not set. ");
@@ -609,7 +609,7 @@ sub get_isgtf {
 sub set_ofi {
   my ($self, %entries) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (scalar %entries == 0) {
     $self->_set_errormsg("Empty \'ofi\'. ");
@@ -633,7 +633,7 @@ sub set_ofi {
 sub _is_ofi_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (defined $self->{ofi});
 
@@ -645,7 +645,7 @@ sub _is_ofi_set {
 sub get_ofi {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->_is_ofi_set()) {
     $self->_set_errormsg("\'ofi\' not set. ");
@@ -664,7 +664,7 @@ sub get_ofi {
 sub addto_comment {
   my ($self, $comment) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   $self->{comment} .= "\n" if ($self->is_comment_set());
 
@@ -677,7 +677,7 @@ sub addto_comment {
 sub is_comment_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (! MMisc::is_blank($self->{comment}));
 
@@ -689,7 +689,7 @@ sub is_comment_set {
 sub get_comment {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->is_comment_set()) {
     $self->_set_errormsg("\'comment\' not set. ");
@@ -704,7 +704,7 @@ sub get_comment {
 sub clear_comment {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (! $self->is_comment_set());
 
@@ -718,7 +718,7 @@ sub clear_comment {
 sub set_DetectionScore {
   my ($self, $DetectionScore) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   $self->{DetectionScore} = $DetectionScore;
   return(1);
@@ -729,7 +729,7 @@ sub set_DetectionScore {
 sub _is_DetectionScore_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (defined $self->{DetectionScore});
 
@@ -741,7 +741,7 @@ sub _is_DetectionScore_set {
 sub get_DetectionScore {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->_is_DetectionScore_set()) {
     $self->_set_errormsg("\'DetectionScore\' not set. ");
@@ -756,7 +756,7 @@ sub get_DetectionScore {
 sub set_DetectionDecision {
   my ($self, $DetectionDecision) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if ($DetectionDecision =~ m%^true$%i) {
     $DetectionDecision = 1;
@@ -776,7 +776,7 @@ sub set_DetectionDecision {
 sub _is_DetectionDecision_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if ($self->{DetectionDecision} != -1);
 
@@ -788,7 +788,7 @@ sub _is_DetectionDecision_set {
 sub get_DetectionDecision {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->_is_DetectionDecision_set()) {
     $self->_set_errormsg("\'DetectionDecision\' not set. ");
@@ -802,7 +802,7 @@ sub get_DetectionDecision {
 sub set_BoundingBox {
   my ($self, %entries) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (scalar %entries == 0) {
     $self->_set_errormsg("Empty \'BoundingBox\'. ");
@@ -818,7 +818,7 @@ sub set_BoundingBox {
 sub is_BoundingBox_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (defined $self->{BoundingBox});
 
@@ -830,7 +830,7 @@ sub is_BoundingBox_set {
 sub get_BoundingBox {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->is_BoundingBox_set()) {
     $self->_set_errormsg("\'BoundingBox\' not set. ");
@@ -849,7 +849,7 @@ sub get_BoundingBox {
 sub set_Point {
   my ($self, %entries) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (scalar %entries == 0) {
     $self->_set_errormsg("Empty \'Point\'. ");
@@ -865,7 +865,7 @@ sub set_Point {
 sub is_Point_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (defined $self->{Point});
 
@@ -877,7 +877,7 @@ sub is_Point_set {
 sub get_Point {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->is_Point_set()) {
     $self->_set_errormsg("\'Point\' not set. ");
@@ -947,7 +947,7 @@ sub unset_selected {
   
   my $choice = shift @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my @ok_choices = &_get_set_selected_ok_choices();
   if (! grep(m%^$choice$%, @ok_choices)) {
@@ -965,7 +965,7 @@ sub set_selected {
   
   my $choice = shift @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my @ok_choices = &_get_set_selected_ok_choices();
   if (! grep(m%^$choice$%, @ok_choices)) {
@@ -1051,7 +1051,7 @@ sub set_xtra_attribute {
   my $self = shift @_;
   my ($attr, $value, $replace) = MMisc::iuav(\@_, "", "", 0);
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (MMisc::is_blank($attr)) {
     $self->_set_errormsg("Can not set an empty attribute");
@@ -1072,7 +1072,7 @@ sub set_xtra_attribute {
 sub is_xtra_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (defined $self->{Xtra});
 
@@ -1084,7 +1084,7 @@ sub is_xtra_set {
 sub is_xtra_attribute_set {
   my ($self, $attr) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(0) if (! $self->is_xtra_set());
 
@@ -1098,7 +1098,7 @@ sub is_xtra_attribute_set {
 sub get_xtra_value {
   my ($self, $attr) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->is_xtra_set()) {
     $self->_set_errormsg("\'Xtra\' not set. ");
@@ -1120,7 +1120,7 @@ sub list_all_xtra_attributes {
 
   my @aa = ();
 
-  return(@aa) if ($self->error());
+  return(@aa) if ($self->{errorv});
 
   return(@aa) if (! $self->is_xtra_set());
 
@@ -1147,7 +1147,7 @@ sub list_xtra_attributes {
 sub unset_xtra {
   my ($self, $attr) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(0)
     if (! exists $self->{Xtra}{$attr});
@@ -1165,7 +1165,7 @@ sub unset_xtra {
 sub unset_all_xtra {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (! defined $self->{Xtra});
 
@@ -1174,7 +1174,7 @@ sub unset_all_xtra {
     $self->unset_xtra($attr);
   }
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1);
 }
@@ -1184,7 +1184,7 @@ sub unset_all_xtra {
 sub is_trackingcomment_set {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(0) if (! $self->is_xtra_set());
 
@@ -1198,7 +1198,7 @@ sub is_trackingcomment_set {
 sub get_trackingcomment_txt {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->is_trackingcomment_set()) {
     $self->_set_errormsg("Can not obtain \'tracking comment\', it is not set");
@@ -1215,7 +1215,7 @@ sub get_trackingcomment_txt {
 sub unset_trackingcomment {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if (! $self->is_trackingcomment_set());
 
@@ -1227,7 +1227,7 @@ sub unset_trackingcomment {
 sub is_validated {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if ($self->{validated} == 1);
 
@@ -1239,7 +1239,7 @@ sub is_validated {
 sub validate {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1) if ($self->is_validated());
   # Confirm all is set in the observation
@@ -1289,7 +1289,7 @@ sub validate {
       return(0);
     }
   }
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   # We do not really care if 'BoundingBox' or 'Point' are present or not
 
@@ -1302,7 +1302,7 @@ sub validate {
 sub redo_validation {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   $self->{validated} = 0;
 
@@ -1314,7 +1314,7 @@ sub redo_validation {
 sub _display {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return MMisc::get_sorted_MemDump(\$self);
 }
@@ -1325,7 +1325,7 @@ sub is_comparable_to {
   my ($self, $other) = @_;
 
   # Error (pre)
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
   if ($other->error()) {
     $self->_set_errormsg("Problem in the compared to object (" . $other->get_errormsg() ."). ");
     return(0);
@@ -1352,7 +1352,7 @@ sub is_comparable_to {
   return(0) if ($f1 ne $f2);
 
   # Error (post)
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
   if ($other->error()) {
     $self->_set_errormsg("Problem in the compared to object (" . $other->get_errormsg() ."). ");
     return(0);
@@ -1366,7 +1366,7 @@ sub is_comparable_to {
 sub get_unique_id {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(0) if (!$self->is_validated());
 
@@ -1381,7 +1381,7 @@ sub get_unique_id {
   my $fs_file = $self->get_fs_file();
   my $cl = $self->get_clone_id();
 
-  if ($self->error()) {
+  if ($self->{errorv}) {
     $self->_set_errormsg("Problem while generating a unique id. ");
     return(0);
   }
@@ -1408,16 +1408,10 @@ sub get_unique_id {
 ######################################## Scoring prerequisites
 
 sub _get_obs_framespan_core {
-  my ($self) = @_;
-
-  return(0, undef) if ($self->error());
-
-  if (! $self->_is_framespan_set()) {
-    $self->_set_errormsg("\'framespan\' not set. ");
-    return(0, undef);
-  }
-
-  my $fs_v = $self->get_framespan();
+  # arg 0: self
+  
+  my $fs_v = $_[0]->get_framespan();
+  return(0, undef) if ($_[0]->{errorv});
 
   return (1, $fs_v);
 }
@@ -1495,10 +1489,10 @@ sub Mid {
 sub Dec {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my $isgtf = $self->get_isgtf();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if ($isgtf) {
     $self->_set_errormsg("Can not get the \'DetectionScore' for a GTF observation. ");
@@ -1506,7 +1500,7 @@ sub Dec {
   }
 
   my $ds = $self->get_DetectionScore();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return($ds);
 }
@@ -1517,19 +1511,19 @@ sub Dec {
 sub _get_BOTH_Beg_Mid_End_Dur{
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my $b = $self->Beg();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my $m = $self->Mid();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my $e = $self->End();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my $du = $self->Dur();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return ($b, $m, $e, $du);
 }
@@ -1539,7 +1533,7 @@ sub _get_BOTH_Beg_Mid_End_Dur{
 sub get_REF_Beg_Mid_End_Dur {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return($self->_get_BOTH_Beg_Mid_End_Dur());
 }
@@ -1549,13 +1543,13 @@ sub get_REF_Beg_Mid_End_Dur {
 sub get_SYS_Beg_Mid_End_Dur_Dec {
   my ($self) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my @o = $self->_get_BOTH_Beg_Mid_End_Dur();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my $de = $self->Dec();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(@o, $de);
 }
@@ -1580,7 +1574,7 @@ sub _shift_framespan_selected {
   # therefore we can simply perform a simple shift on the ViperFramespan "keys"
   # and regenerate the primary key from the shifted value
   my ($isset, %chash) = $self->get_selected($choice);
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
   return(1) if (! $isset);
 
   my %ohash = ();
@@ -1615,7 +1609,7 @@ sub _shift_framespan_selected {
 sub negative_shift_framespan {
   my ($self, $val) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return($self->shift_framespan($val, 1));
 }
@@ -1625,7 +1619,7 @@ sub negative_shift_framespan {
 sub shift_framespan {
   my ($self, $val, $neg) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->is_validated()) {
     $self->_set_errormsg("Can only shift framespan on validated Observations");
@@ -1633,10 +1627,10 @@ sub shift_framespan {
   }
 
   my $fs_fs = $self->get_framespan();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my $fs_file = $self->get_fs_file();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if ($neg) {
     $fs_fs->negative_value_shift($val);
@@ -1678,12 +1672,12 @@ sub shift_framespan {
   my @ok_choices = &_get_set_selected_ok_choices();
   foreach my $choice (@ok_choices) {
     $self->_shift_framespan_selected($choice, $val, $neg);
-    return(0) if ($self->error());
+    return(0) if ($self->{errorv});
   }
 
   # Add a comment
   $self->addto_comment("Framespan was shifted by $val");
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1);
 }
@@ -1707,7 +1701,7 @@ sub _trim_framespan_selected {
   # therefore we can simply perform a prunning
   # and regenerate the primary key from the shifted value
   my ($isset, %chash) = $self->get_selected($choice);
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
   return(1) if (! $isset);
 
   my %ohash = ();
@@ -1741,7 +1735,7 @@ sub _trim_framespan_selected {
     $self->set_selected($choice, %ohash);
   }
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1)
 }
@@ -1751,7 +1745,7 @@ sub _trim_framespan_selected {
 sub trim_to_fs {
   my ($self, $lfs) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if (! $self->is_validated()) {
     $self->_set_errormsg("Can only trim framespan on validated Observations");
@@ -1767,14 +1761,14 @@ sub trim_to_fs {
   }
 
   my $fs_ov = $self->get_framespan_overlap_from_fs($fs);
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   # If there is no overlap possible, simply return '0' but do not set an error
   return(0) if (! defined $fs_ov);
   
   ## From here on, we know there is an overlap possible
   my $fs_fs = $self->get_framespan();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
   my $beg_range = $fs_fs->get_value();
   if ($fs_fs->error()) {
     $self->_set_errormsg("Prolem obtaining the Observation framespan value (" . $fs_fs . ")");
@@ -1783,11 +1777,11 @@ sub trim_to_fs {
   
   # First, set the file framespan to the requested range
   $self->set_fs_file($fs);
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
   
   # Then, set the observation framespan to the overlap range
   $self->set_framespan($fs_ov);
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   # 'ofi' NUMFRAMES
   my $key = TrecVid08ViperFile::get_Numframes_fileattrkey();
@@ -1808,12 +1802,12 @@ sub trim_to_fs {
   my @ok_choices = &_get_set_selected_ok_choices();
   foreach my $choice (@ok_choices) {
     $self->_trim_framespan_selected($choice, $fs_ov);
-    return(0) if ($self->error());
+    return(0) if ($self->{errorv});
   }
 
   # Add a comment
   my $fs_fs = $self->get_framespan();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
   my $end_range = $fs_fs->get_value();
   if ($fs_fs->error()) {
     $self->_set_errormsg("Problem obtaining the Observation framespan value (" . $fs_fs . ")");
@@ -1821,7 +1815,7 @@ sub trim_to_fs {
   }
 
   $self->addto_comment("Trimmed from [$beg_range] to [$end_range]");
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return(1);
 }
@@ -1834,7 +1828,7 @@ sub _ov_get_fs_file {
   my ($self) = @_;
 
   # Error (pre)
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   # Validated ?
   if (! $self->is_validated()) {
@@ -1843,7 +1837,7 @@ sub _ov_get_fs_file {
   }
 
   my $fs_self = $self->get_fs_file();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return($fs_self);
 }
@@ -1868,7 +1862,7 @@ sub get_fs_file_extent_middlepoint_distance_from_obs {
   my ($self, $other) = @_;
 
   my $fs_self = $self->_ov_get_fs_file();
-  return(undef) if ($self->error());
+  return(undef) if ($self->{errorv});
 
   my $fs_other = $other->_ov_get_fs_file();
   if ($other->error()) {
@@ -1885,7 +1879,7 @@ sub get_fs_file_extent_middlepoint_distance_from_ts {
   my ($self, $fs_other) = @_;
 
   my $fs_self = $self->_ov_get_fs_file();
-  return(undef) if ($self->error());
+  return(undef) if ($self->{errorv});
 
   return($self->get_fs_file_extent_middlepoint_distance($fs_self, $fs_other));
 }
@@ -1910,7 +1904,7 @@ sub get_fs_file_overlap_from_obs {
   my ($self, $other) = @_;
 
   my $fs_self = $self->_ov_get_fs_file();
-  return(undef) if ($self->error());
+  return(undef) if ($self->{errorv});
 
   my $fs_other = $other->_ov_get_fs_file();
   if ($other->error()) {
@@ -1927,7 +1921,7 @@ sub get_fs_file_overlap_from_fs {
   my ($self, $fs_other) = @_;
 
   my $fs_self = $self->_ov_get_fs_file();
-  return(undef) if ($self->error());
+  return(undef) if ($self->{errorv});
 
   return($self->get_fs_file_overlap($fs_self, $fs_other));
 }
@@ -1938,7 +1932,7 @@ sub _ov_get_framespan {
   my ($self) = @_;
 
   # Error (pre)
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   # Validated ?
   if (! $self->is_validated()) {
@@ -1947,7 +1941,7 @@ sub _ov_get_framespan {
   }
 
   my $fs_self = $self->get_framespan();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   return($fs_self);
 }
@@ -1972,7 +1966,7 @@ sub get_framespan_extent_middlepoint_distance_from_obs {
   my ($self, $other) = @_;
 
   my $fs_self = $self->_ov_get_framespan();
-  return(undef) if ($self->error());
+  return(undef) if ($self->{errorv});
 
   my $fs_other = $other->_ov_get_framespan();
   if ($other->error()) {
@@ -1989,7 +1983,7 @@ sub get_framespan_extent_middlepoint_distance_from_fs {
   my ($self, $fs_other) = @_;
 
   my $fs_self = $self->_ov_get_framespan();
-  return(undef) if ($self->error());
+  return(undef) if ($self->{errorv});
 
   return($self->get_framespan_extent_middlepoint_distance($fs_self, $fs_other));
 }
@@ -2014,7 +2008,7 @@ sub get_framespan_overlap_from_obs {
   my ($self, $other) = @_;
 
   my $fs_self = $self->_ov_get_framespan();
-  return(undef) if ($self->error());
+  return(undef) if ($self->{errorv});
 
   my $fs_other = $other->_ov_get_framespan();
   if ($other->error()) {
@@ -2031,7 +2025,7 @@ sub get_framespan_overlap_from_fs {
   my ($self, $fs_other) = @_;
 
   my $fs_self = $self->_ov_get_framespan();
-  return(undef) if ($self->error());
+  return(undef) if ($self->{errorv});
 
   return($self->get_framespan_overlap($fs_self, $fs_other));
 }
@@ -2066,7 +2060,7 @@ sub get_extended_framespan_from_obs {
   my ($self, $other) = @_;
 
   my $fs_self = $self->_ov_get_framespan();
-  return(undef) if ($self->error());
+  return(undef) if ($self->{errorv});
 
   my $fs_other = $other->_ov_get_framespan();
   if ($other->error()) {
@@ -2083,7 +2077,7 @@ sub get_extended_framespan_from_fs {
   my ($self, $fs_other) = @_;
 
   my $fs_self = $self->_ov_get_framespan();
-  return(undef) if ($self->error());
+  return(undef) if ($self->{errorv});
 
   return($self->get_extended_framespan($fs_self, $fs_other));
 }
@@ -2344,7 +2338,7 @@ sub CF_check_csv_keys {
 sub check_csv_keys {
   my ($self, @keys) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my $tmp = &CF_check_csv_keys(@keys);
 
@@ -2361,7 +2355,7 @@ sub check_csv_keys {
 sub mod_from_csv_array {
   my ($self, $rh, @values) = @_;
   
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my @headers = @$rh;
   if (scalar @headers == 0) {
@@ -2501,7 +2495,7 @@ sub _csvset_BB_Pt {
     if (MMisc::is_blank($value));
 
   my $fps = $self->get_fps();
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   my @columns = $self->_csvtxt2array($value);
   if ((scalar @columns) % 2 != 0) {
@@ -2530,7 +2524,7 @@ sub _csvset_BB_Pt {
     $x{$attr_framespan_key} = $fs_fs;
     $tmp{$fs} = \%x;
   }
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
 
   if ($mode eq $self->get_BoundingBox_csv_key()) {
     return($self->set_BoundingBox(%tmp));
@@ -2548,10 +2542,10 @@ sub _csvset_BB_Pt {
 sub _csvset_ofi {
   my ($self, $value) = @_;
   
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
   
   my %tmp = $self->_csvtxt2array($value);
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
   
   return($self->set_ofi(%tmp));
 }
@@ -2563,7 +2557,7 @@ sub get_csv_array {
 
   my @tmp = ();
 
-  return(@tmp) if ($self->error());
+  return(@tmp) if ($self->{errorv});
 
   if (scalar @keys == 0) {
     $self->_set_errormsg("No key requested");
@@ -2575,11 +2569,11 @@ sub get_csv_array {
   my @out = ();
   foreach my $key (@keys) {
     my $txt = $self->_csv_get_XXX($key);
-    return(@tmp) if ($self->error());
+    return(@tmp) if ($self->{errorv});
     push @out, $txt;
   }
 
-  return(@tmp) if ($self->error());
+  return(@tmp) if ($self->{errorv});
 
   if (scalar @out != scalar @keys) {
     $self->_set_errormsg("No enough information extracted");
@@ -2653,7 +2647,7 @@ sub _csvget_Xtra {
   my @array = ();
   foreach my $attr (sort @todo) {
     my $v = $self->get_xtra_value($attr);
-    return($txt) if ($self->error());
+    return($txt) if ($self->{errorv});
     push @array, $attr;
     push @array, $v;
   }
@@ -2675,7 +2669,7 @@ sub _csvget_aframespan {
     $fs_tmp = $self->get_fs_file();
   }
 
-  return("") if ($self->error());
+  return("") if ($self->{errorv});
   if (! defined $fs_tmp) {
     $self->_set_errormsg("Could not obtain framespan ($xxx)");
     return("");
@@ -2743,7 +2737,7 @@ sub _csvget_BB_Pt {
 sub _csvget_ofi {
   my ($self) = @_;
 
-  return("") if ($self->error());
+  return("") if ($self->{errorv});
 
   if (! $self->_is_ofi_set()) {
     $self->_set_errormsg("\'Other File Information\' not set");
@@ -2770,28 +2764,30 @@ sub _csvget_ofi {
 
 sub _set_errormsg {
   my ($self, $txt) = @_;
-  $self->{errormsg}->set_errormsg($txt);
+  $self->{errorh}->set_errormsg($txt);
+  $self->{errorv} = $self->{errorh}->error();
 }
 
 ##########
 
 sub get_errormsg {
   my ($self) = @_;
-  return($self->{errormsg}->errormsg());
+  return($self->{errorh}->errormsg());
 }
 
 ##########
 
 sub error {
-  my ($self) = @_;
-  return($self->{errormsg}->error());
+  # arg 0: self
+  return($_[0]->{errorv});
 }
 
 ##########
 
 sub clear_error {
   my ($self) = @_;
-  return($self->{errormsg}->clear());
+  $self->{errorv} = 0;
+  return($self->{errorh}->clear());
 }
 
 ############################################################
