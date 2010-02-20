@@ -196,8 +196,8 @@ sub clean_begend_spaces {
 ##########
 
 sub reorder_array_numerically {
-  my $ra = $_[0];
-  return(sort { $a <=> $b } @$ra);
+  # arg 0: ref to array of values
+  return(sort { $a <=> $b } @{$_[0]});
 }
 
 ####
@@ -216,13 +216,13 @@ sub min_max { return(&min_max_r(\@_)); }
 ##
 
 sub min_max_r {
-  my $ra = $_[0];
+  # arg 0: ref to array of values
 
-  my $min = $$ra[0];
+  my $min = ${$_[0]}[0];
   my $max = $min;
 
-  for (my $i = 1; $i < scalar @$ra; $i++) {
-    my $v = $$ra[$i];
+  for (my $i = 1; $i < scalar @{$_[0]}; $i++) {
+    my $v = ${$_[0]}[$i];
     $min = $v if ($v < $min);
     $max = $v if ($v > $max);
   }
@@ -232,27 +232,36 @@ sub min_max_r {
 
 #####
 
-sub min { return(&min_r(\@_)); }
+sub min { return(List::Util::min(@_)); }
 
 ##
 
-sub min_r { my $ra = $_[0]; return(List::Util::min(@$ra)); }
+sub min_r {
+  # arg 0: ref to array of values
+  return(List::Util::max(@{$_[0]})); 
+}
 
 #####
 
-sub max { return(&max_r(\@_)); }
+sub max { return(List::Util::max(@_)); }
 
 ##
 
-sub max_r { my $ra = $_[0]; return(List::Util::max(@$ra)); }
+sub max_r {
+  # arg 0: ref to array of values
+  return(List::Util::max(@{$_[0]}));
+}
 
 ##########
 
-sub sum { return(&sum_r(\@_)); }
+sub sum { return(List::Util::sum(\@_)); }
 
 ##
 
-sub sum_r { my $ra = $_[0]; return(List::Util::sum(@$ra)); }
+sub sum_r {
+  # arg 0: ref to array of values
+  return(List::Util::sum(@{$_[0]}));
+}
 
 ##########
 
@@ -317,11 +326,10 @@ sub clone {
 ##########
 
 sub array1d_to_count_hash {
-  my $ra = $_[0];
-
+  # arg 0: ref to array of values
   my %ohash = ();
-  for (my $i = 0; $i < scalar @$ra; $i++) {
-    $ohash{$$ra[$i]}++;
+  for (my $i = 0; $i < scalar @{$_[0]}; $i++) {
+    $ohash{${$_[0]}[$i]}++;
   }
 
   return(%ohash);
@@ -330,12 +338,11 @@ sub array1d_to_count_hash {
 #####
 
 sub array1d_to_ordering_hash {
-  my $ra = $_[0];
+  # arg 0: ref to array of values
 
   my %ohash = ();
-  for (my $i = $#{@$ra}; $i >= 0; $i--) {
-    my $v = $$ra[$i];
-    $ohash{$v} = $i;
+  for (my $i = $#{@{$_[0]}}; $i >= 0; $i--) {
+    $ohash{${$_[0]}[$i]} = $i;
   }
 
   return(%ohash);
@@ -344,14 +351,13 @@ sub array1d_to_ordering_hash {
 #####
 
 sub make_array_of_unique_values {
-  my $ra = $_[0];
+  # arg 0: ref to array of values
 
-  return(@$ra) if (scalar @$ra < 2);
+  return(@{$_[0]}) if (scalar @{$_[0]} < 2);
 
-  my %tmp = &array1d_to_ordering_hash($ra);
-  my @tosort = keys %tmp;
+  my %tmp = &array1d_to_ordering_hash($_[0]);
 
-  my @out = sort {$tmp{$a} <=> $tmp{$b}} @tosort;
+  my @out = sort {$tmp{$a} <=> $tmp{$b}} keys %tmp;
 
   return(@out);
 }
@@ -1194,9 +1200,7 @@ sub iuav { # Initialize Undefined Array of Values
 
   my @out = ();
   for (my $i = 0; $i < scalar @rest; $i++) {
-    my $r = $rest[$i];
-    my $v = $$ra[$i];
-    push @out, &iuv($v, $r);
+    push @out, &iuv($$ra[$i], $rest[$i]);
   }
 
   return(@out);
@@ -1205,12 +1209,9 @@ sub iuav { # Initialize Undefined Array of Values
 #####
 
 sub iuv { # Initialize Undefined Values
-  my ($v, $r) = @_;
-
-  # Note: '$r' can be 'undef'
-  return($r) if (! defined $v);
-
-  return($v);
+  # arg 0: value to check
+  # arg 1: replacement if undefined (can be 'undef')
+  return(defined $_[0] ? $_[0] : $_[1]);
 }
 
 ##########
@@ -1445,13 +1446,14 @@ sub safe_exists {
 #####
 
 sub fast_join {
-  my ($j, $ra) = @_;
+  # arg 0: join separator
+  # arg 1: reference to array of entries to be joined
 
-  return('') if (scalar @$ra == 0);
+  return('') if (scalar @{$_[1]} == 0);
 
-  my $txt = $$ra[0];
-  for (my $i = 1; $i < scalar @$ra; $i++) {
-    $txt .= $j . $$ra[$i];
+  my $txt = ${$_[1]}[0];
+  for (my $i = 1; $i < scalar @{$_[1]}; $i++) {
+    $txt .= $_[0] . ${$_[1]}[$i];
   }
 
   return($txt);
