@@ -147,8 +147,8 @@ sub setDontCare {
 }
 
 sub getDontCare {
-    my $self = $_[0];
-    return $self->{_dontCare};
+  # arg 0: self
+  return($_[0]->{_dontCare});
 }
 
 #######################
