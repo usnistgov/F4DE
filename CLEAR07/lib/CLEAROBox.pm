@@ -96,60 +96,65 @@ sub unitTest {
 #######################
 
 sub _setX {
-    my ( $self, $x ) = @_;
-    $self->{_x} = $x;
+  # arg 0: self
+  # arg 1: value
+  $_[0]->{_x} = $_[1];
 }
 
 sub getX {
-    my ( $self ) = @_;
-    return $self->{_x};
+  # arg 0: self
+  return $_[0]->{_x};
 }
 
 sub _setY {
-    my ( $self, $y ) = @_;
-    $self->{_y} = $y;
+  # arg 0: self
+  # arg 1: value
+  $_[0]->{_y} = $_[1];
 }
 
 sub getY {
-    my ( $self ) = @_;
-    return $self->{_y}; 
+  # arg 0: self
+  return $_[0]->{_y}; 
 }
 
 sub _setWidth {
-    my ( $self, $width ) = @_;
-    $self->{_width} = $width;
+  # arg 0: self
+  # arg 1: value
+  $_[0]->{_width} = $_[1];
 }
 
 sub getWidth {
-    my ( $self ) = @_;
-    return $self->{_width}; 
+  # arg 0: self
+  return $_[0]->{_width}; 
 }
 
 sub _setHeight {
-    my ( $self, $height ) = @_;
-    $self->{_height} = $height;
+  # arg 0: self
+  # arg 1: value
+  $_[0]->{_height} = $_[1];
 }
 
 sub getHeight {
-    my ( $self ) = @_;
-    return $self->{_height};
+  # arg 0: self
+  return $_[0]->{_height};
 }
 
 sub _setOrientation {
-    my ( $self, $orientation ) = @_;
-    $self->{_orientation} = $orientation;
+  # arg 0: self
+  # arg 1: value
+  $_[0]->{_orientation} = $_[1];
 }
 
 sub getOrientation {
-    my ( $self ) = @_;
-    return $self->{_orientation};
+  # arg 0: self
+  return $_[0]->{_orientation};
 }
 
 #######################
 
 sub computeArea {
-    my ( $self ) = @_;
-    return $self->getWidth()*$self->getHeight();
+  # arg 0: self
+  return($_[0]->{_width} * $_[0]->{_height});
 }
 
 #######################
@@ -176,33 +181,37 @@ sub computeCentroid {
 #######################
 
 sub computeIntersectionArea {
-    my ( $self, $other ) = @_;
+  # arg 0: self
+  # arg 1: other
 
-    my $PI = 3.1415926535897932384626433;
-    my $MACHINE_LOW = 0.0001;
+  # Check for the trivial case
+  if ( ($_[0]->{_x} == $_[1]->{_x}) 
+       && ($_[0]->{_y} == $_[1]->{_y}) 
+       && ($_[0]->{_width} == $_[1]->{_width}) 
+       && ($_[0]->{_height} == $_[1]->{_height}) 
+       && ($_[0]->{_orientation} == $_[1]->{_orientation}) ) {
+    return ($_[0]->{_width}*$_[0]->{_height});
+  }
 
-    my $gtBox = { 
-                 x => $self->getX(), 
-                 y => $self->getY(), 
-                 width => $self->getWidth(), 
-                 height => $self->getHeight(), 
-                 orientation => $self->getOrientation()/180.0*$PI,
-                };
-    my $soBox = { 
-                 x => $other->getX(), 
-                 y => $other->getY(), 
-                 width => $other->getWidth(), 
-                 height => $other->getHeight(), 
-                 orientation => $other->getOrientation()/180.0*$PI,
-                };
+  my $PI = 3.1415926535897932384626433;
+  my $MACHINE_LOW = 0.0001;
 
-    # Check for the trivial case
-    if ( ($gtBox->{x} == $soBox->{x}) && ($gtBox->{y} == $soBox->{y}) && ($gtBox->{width} == $soBox->{width}) && 
-         ($gtBox->{height} == $soBox->{height}) && ($gtBox->{orientation} == $soBox->{orientation}) ) {
-        return ($gtBox->{width}*$gtBox->{height});
-    }
+  my $gtBox = { 
+               x => $_[0]->{_x}, 
+               y => $_[0]->{_y}, 
+               width => $_[0]->{_width}, 
+               height => $_[0]->{_height}, 
+               orientation => $_[0]->{_orientation} / 180.0 * $PI,
+              };
+  my $soBox = { 
+               x => $_[1]->{_x}, 
+               y => $_[1]->{_y}, 
+               width => $_[1]->{_width}, 
+               height => $_[1]->{_height}, 
+               orientation => $_[1]->{_orientation} / 180.0 * $PI,
+              };
 
-    # Build vertex set for both gtBox and soBox
+  # Build vertex set for both gtBox and soBox
     my $gtVertexSet = {
                         topLeft  => [ $gtBox->{x}, $gtBox->{y} ],
                         botLeft  => [ $gtBox->{x}+$gtBox->{height}*sin($gtBox->{orientation}), 
@@ -356,7 +365,7 @@ sub computeIntersectionArea {
                             $convHull->{$PI/2} = [@{ $intVertices->[$loop] }];
                         }
                         elsif ((abs($intTopLeftX - $$intVertices[$loop][0]) > $MACHINE_LOW) || (abs($intTopLeftY - $$intVertices[$loop][1]) > $MACHINE_LOW)) {
-                            $self->_set_errormsg("WEIRD: There are 3 unique collinear points forming an area");
+                            $_[0]->_set_errormsg("WEIRD: There are 3 unique collinear points forming an area");
                             return -1;
                         }
                     }
@@ -371,7 +380,7 @@ sub computeIntersectionArea {
                             $convHull->{-$PI/2} = [@{ $intVertices->[$loop] }];
                         }
                         elsif ((abs($intTopLeftX - $$intVertices[$loop][0]) > $MACHINE_LOW) || (abs($intTopLeftY - $$intVertices[$loop][1]) > $MACHINE_LOW)) {
-                            $self->_set_errormsg("WEIRD: There are 3 unique collinear points forming an area");
+                            $_[0]->_set_errormsg("WEIRD: There are 3 unique collinear points forming an area");
                             return -1;
                         }
                     }
@@ -388,7 +397,7 @@ sub computeIntersectionArea {
                             $convHull->{angle} = [@{ $intVertices->[$loop] }];
                         }
                         elsif ((abs($intTopLeftX - $$intVertices[$loop][0]) > $MACHINE_LOW) || (abs($intTopLeftY - $$intVertices[$loop][1]) > $MACHINE_LOW)) {
-                            $self->_set_errormsg("WEIRD: There are 3 unique collinear points forming an area");
+                            $_[0]->_set_errormsg("WEIRD: There are 3 unique collinear points forming an area");
                             return -1;
                         }
                     }
