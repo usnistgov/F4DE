@@ -1,11 +1,11 @@
-# STDEval
+# F4DE
 # Trials.pm
 # Author: Jon Fiscus
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
 # Title 17 Section 105 of the United States Code this software is not subject to copyright
-# protection within the United States and is in the public domain. STDEval is
+# protection within the United States and is in the public domain. F4DE is
 # an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
 # 
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -64,7 +64,7 @@ sub unitTest {
   print "Test Trials\n";
   my $trial = new Trials("Term Detection", "Term", "Occurrence", { (TOTAL_TRIALS => 78) } );
   
-  ## How to handle cases in STDEval
+  ## How to handle cases in F4DE
   ## Mapped 
   #$trial->addTrial("she", 0.3, <DEC>, 1);
   ## unmapped Ref

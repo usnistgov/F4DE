@@ -1,11 +1,11 @@
-# STDEval
+# F4DE
 # DETCurveGnuplotRenderer.pm
 # Author: Jon Fiscus, Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
 # Title 17 Section 105 of the United States Code this software is not subject to copyright
-# protection within the United States and is in the public domain. STDEval is
+# protection within the United States and is in the public domain. F4DE is
 # an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
 # 
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -324,33 +324,25 @@ sub renderUnitTest{
   $trial3->addTrial("she", 0.95, "YES", 1);
   $trial3->addTrial("she", 1.0, "YES", 1);
 
-  my $trial4 = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
+  my $trial4 = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 20) });
   
-  $trial4->addTrial("she", 0.50, "NO", 1);
-  $trial4->addTrial("she", 0.50, "NO", 1);
-  $trial4->addTrial("she", 0.50, "NO", 1);
-  $trial4->addTrial("she", 0.50, "NO", 1);
-  $trial4->addTrial("she", 0.50, "NO", 0);
-  $trial4->addTrial("she", 0.50, "NO", 0);
-  $trial4->addTrial("she", 0.50, "NO", 0);
-  $trial4->addTrial("she", 0.50, "NO", 1);
-  $trial4->addTrial("she", 0.50, "NO", 1);
   $trial4->addTrial("she", 0.50, "YES", 1);
   $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", 0.50, "YES", 1);
+  $trial4->addTrial("she", undef, "OMITTED", 1);
+  $trial4->addTrial("she", undef, "OMITTED", 1);
+  $trial4->addTrial("she", undef, "OMITTED", 1);
+  $trial4->addTrial("she", undef, "OMITTED", 1);
+  $trial4->addTrial("she", undef, "OMITTED", 1);
   $trial4->addTrial("she", 0.50, "YES", 0);
   $trial4->addTrial("she", 0.50, "YES", 0);
   $trial4->addTrial("she", 0.50, "YES", 0);
   $trial4->addTrial("she", 0.50, "YES", 0);
   $trial4->addTrial("she", 0.50, "YES", 0);
-  $trial4->addTrial("she", 0.50, "YES", 0);
-  $trial4->addTrial("she", 0.50, "YES", 0);
-  $trial4->addTrial("she", 0.50, "YES", 1);
-  $trial4->addTrial("she", 0.50, "YES", 1);
-  $trial4->addTrial("she", 0.50, "YES", 0);
-  $trial4->addTrial("she", 0.50, "YES", 1);
-  $trial4->addTrial("she", 0.50, "YES", 1);
-  $trial4->addTrial("she", 0.50, "YES", 1);
-  $trial4->addTrial("she", 0.50, "YES", 1);
 
   my $det1 = new DETCurve($trial, 
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
@@ -364,7 +356,6 @@ sub renderUnitTest{
   my $det4 = new DETCurve($trial4, 
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial4),
                           "DET4", \@isolinecoef, undef);
-    
   my $ds = new DETCurveSet("title");
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Name 1", $det1));
   die "Error: Failed to add second det" if ("success" ne $ds->addDET("Name 2", $det2));
@@ -416,6 +407,18 @@ sub renderUnitTest{
   $options->{ColorScheme} = "color";
   $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/g1.lin.lin",  $ds);
+
+  $options->{xScale} = "log";
+  $options->{yScale} = "nd";
+  $options->{Ymax} = "99.9";
+  $options->{Ymin} = "5";
+  $options->{title} = "ND vs. LOG";
+  $options->{KeyLoc} = "bottom";
+  $options->{reportActual} = 0;
+  $options->{PointSize} = 4;
+  $options->{ColorScheme} = "color";
+  $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/g1.nd.log",  $ds);
   
   open (HTML, ">$dir/index.html") || die("Error making multi-det HTML file");
   print HTML "<HTML>\n";
@@ -425,30 +428,35 @@ sub renderUnitTest{
   print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.log.log.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.png\"></TD>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.nd.log.png\"></TD>\n";
   print HTML "  </TR>\n";
   
   print HTML "  <TR>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_1.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_1.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_1.png\"></TD>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.nd.log.Name_1.png\"></TD>\n";
   print HTML "  </TR>\n";
 
   print HTML "  <TR>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_1.thresh.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_1.thresh.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_1.thresh.png\"></TD>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.nd.log.Name_1.thresh.png\"></TD>\n";
   print HTML "  </TR>\n";
 
   print HTML "  <TR>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_2.thresh.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_2.thresh.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_2.thresh.png\"></TD>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.nd.log.Name_2.thresh.png\"></TD>\n";
   print HTML "  </TR>\n";
 
   print HTML "  <TR>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_3.thresh.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_3.thresh.png\"></TD>\n";
   print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_3.thresh.png\"></TD>\n";
+  print HTML "   <TD width=33%> <IMG src=\"g1.nd.log.Name_3.thresh.png\"></TD>\n";
   print HTML "  </TR>\n";
 
   print HTML " </TABLE>\n";

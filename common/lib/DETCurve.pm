@@ -1,11 +1,11 @@
-# STDEval
+# F4DE Package
 # DETCurve.pm
 # Author: Jon Fiscus
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
 # Title 17 Section 105 of the United States Code this software is not subject to copyright
-# protection within the United States and is in the public domain. STDEval is
+# protection within the United States and is in the public domain. F4DE is
 # an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
 # 
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -412,7 +412,7 @@ sub serialize
   {
     my ($self, $file) = @_;
     $self->{LAST_SERIALIZED_DET} = $file;
-    open (FILE, ">$file") || die "Error: Unable to open file '$file' to serialize STDDETSet to";
+    open (FILE, ">$file") || die "Error: Unable to open file '$file' to serialize DETCurve to";
     my $orig = $Data::Dumper::Indent; 
     $Data::Dumper::Indent = 0;
     
@@ -520,7 +520,7 @@ sub readFromFile
     my ($file, $gzipPROG) = @_;
     my $str = "";
     my $tmpFile = undef;
-    
+ 
     if ( ( $file =~ /.+\.gz$/ ) && ( -e $file ) && ( -f $file ) && ( -r $file ) ) {
       $str = MMisc::file_gunzip($file)
     } else {
@@ -769,7 +769,7 @@ sub Compute_blocked_DET_points
     my $previousAvgMmiss = 0;
     my $previousAvgMfa = 0;
     my $findMaxComb = ($self->{METRIC}->combType() eq "maximizable" ? 1 : 0);
-    
+
     ### Reduce the block set to only ones with targets and setup the DS!
     foreach $block ($trial->getBlockIDs()) {
       next if ($trial->getNumTarg($block) <= 0);
