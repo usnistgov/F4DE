@@ -1,5 +1,5 @@
 # F4DE
-# 0MetricSTD.pm
+# MetricSTD.pm
 # Author: Jon Fiscus
 # 
 # This software was developed at the National Institute of Standards and Technology by
