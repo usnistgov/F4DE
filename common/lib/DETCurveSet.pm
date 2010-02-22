@@ -22,7 +22,8 @@ use Data::Dumper;
 use Trials;
 use MetricTestStub;
 use DETCurve;
-use AutoTable;
+#AT#use AutoTable;
+use SimpleAutoTable;
 use DETCurveGnuplotRenderer;
 use MMisc;
 
@@ -114,16 +115,10 @@ sub unitTest(){
   my $ds = new DETCurveSet("title");
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Name 1", $det1));
   die "Error: Successful add of duplicate name" if ("success" eq $ds->addDET("Name 1", $det2));
-<<<<<<< DETCurveSet.pm
 
-   my $txt = $ds->renderAsTxt("foomerge", 1, 1, {(createDETfiles => 1)});
-   print $txt;
-
-  my $exp = "Name______________________";
-=======
   my $exp = "Name________________"; # fixed by MM
 # was:  my $exp = "Name______________________";
->>>>>>> 1.26
+
   my $k2 = "Name !@#\$%^&*(){}[]?'\"\<\>:;";
   die "Error: Failed to add second det" if ("success" ne $ds->addDET($k2, $det2));
   die "Error: Failed to add third (empty) det" if ("success" ne $ds->addDET("EmptyDETCurve", $det3));
@@ -261,7 +256,8 @@ sub _PN(){
 sub _buildAutoTable(){
   my ($self, $buildCurves, $includeCounts, $reportActual) = @_;
     
-  my $at = new AutoTable();
+#AT#  my $at = new AutoTable();
+  my $at = new SimpleAutoTable();
 
   for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
     my $det = $self->{DETList}[$d]->{DET};
@@ -284,32 +280,45 @@ sub _buildAutoTable(){
       my ($corrSum, $corrAvg, $corrSSD) = $trial->getTotNumCorr();
       my ($faSum, $faAvg, $faSSD) = $trial->getTotNumFalseAlarm();
       my ($missSum, $missAvg, $missSSD) = $trial->getTotNumMiss();
-      $at->addData($refSum,           "Inputs|#Ref",   $key);
-      $at->addData($sysSum,           "Inputs|#Sys",   $key);
-      $at->addData($corrSum,          "Actual Cost Analysis|#CorDet",   $key);
-      $at->addData($faSum,            "Actual Cost Analysis|#FA",   $key);
-      $at->addData($missSum,          "Actual Cost Analysis|#Miss",   $key);
-           
+#AT#      $at->addData($refSum,           "Inputs|#Ref",   $key);
+#AT#      $at->addData($sysSum,           "Inputs|#Sys",   $key);
+#AT#      $at->addData($corrSum,          "Actual Cost Analysis|#CorDet",   $key);
+#AT#      $at->addData($faSum,            "Actual Cost Analysis|#FA",   $key);
+#AT#      $at->addData($missSum,          "Actual Cost Analysis|#Miss",   $key);
+      $at->addData($refSum,           "#Ref",   $key);
+      $at->addData($sysSum,           "#Sys",   $key);
+      $at->addData($corrSum,          "#CorDet",   $key);
+      $at->addData($faSum,            "#FA",   $key);
+      $at->addData($missSum,          "#Miss",   $key);
     }
     
     if ($reportActual){
       my $act = "Act. ";
-      $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     "Actual Cost Analysis|". $act . $metric->errFALab(),   $key);
-      $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissAvg), "Actual Cost Analysis|". $act . $metric->errMissLab(), $key);
-      $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    "Actual Cost Analysis|". $act . $metric->combLab(),    $key);
+#AT#      $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     "Actual Cost Analysis|". $act . $metric->errFALab(),   $key);
+#AT#      $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissAvg), "Actual Cost Analysis|". $act . $metric->errMissLab(), $key);
+#AT#      $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    "Actual Cost Analysis|". $act . $metric->combLab(),    $key);
+      $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     $act . $metric->errFALab(),   $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissAvg), $act . $metric->errMissLab(), $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    $act . $metric->combLab(),    $key);
   }    
     if ($buildCurves) {
       my $opt = ($metric->combType() eq "maximizable" ? "Max " : "Min ");
-      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),     "Minimum Cost Analysis|" . $opt . $metric->errFALab(),   $key);
-      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombMMiss()), "Minimum Cost Analysis|" . $opt . $metric->errMissLab(), $key);
-      $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),     "Minimum Cost Analysis|" . $opt . $metric->combLab(),    $key);
-      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), "Minimum Cost Analysis|Det. Score", $key);
-        
+#AT#      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),     "Minimum Cost Analysis|" . $opt . $metric->errFALab(),   $key);
+#AT#      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombMMiss()), "Minimum Cost Analysis|" . $opt . $metric->errMissLab(), $key);
+#AT#      $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),     "Minimum Cost Analysis|" . $opt . $metric->combLab(),    $key);
+#AT#      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), "Minimum Cost Analysis|Det. Score", $key);
+      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),     $opt . $metric->errFALab(),   $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombMMiss()),     $opt . $metric->errMissLab(), $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),       $opt . $metric->combLab(),    $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), "Det. Score", $key);
+
       if ($det->getDETPng() ne "") {
-        $at->addData($det->getDETPng(), "DET Curve Graphs|DET Curve", $key);
+#AT#        $at->addData($det->getDETPng(), "DET Curve Graphs|DET Curve", $key);
+        $at->addData($det->getDETPng(), "DET Curve", $key);
       }
       if ($det->getThreshPng() ne "") {
-        $at->addData($det->getThreshPng(), "DET Curve Graphs|Threshold Curve", $key);
+#AT#        $at->addData($det->getThreshPng(), "DET Curve Graphs|Threshold Curve", $key);
+        $at->addData($det->getThreshPng(), "Threshold Curve", $key);
       }
     }
   }
