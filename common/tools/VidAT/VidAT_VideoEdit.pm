@@ -1,20 +1,13 @@
-# VidAT
 # VideoEdit.pm
-# Authors: Jerome Ajot
+# Author: Jerome Ajot
 # 
-# This software was developed at the National Institute of Standards and
-# Technology by employees of the Federal Government in the course of
-# their official duties.  Pursuant to Title 17 Section 105 of the United
-# States Code this software is not subject to copyright protection within
-# the United States and is in the public domain. It is an experimental
-# system.  NIST assumes no responsibility whatsoever for its use by any
-# party.
+# This software was developed at the National Institute of Standards and Technology by employees of the Federal 
+# Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this 
+# software is not subject to copyright protection within the United States and is in the public domain. It is an 
+# experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
 # 
-# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST
-# MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER,
-# INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
-
-# $Id $
+# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY 
+# MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
 package VideoEdit;
 
@@ -24,6 +17,7 @@ use File::Temp qw( tempdir );
 use File::Path qw( rmtree );
 use JPEGEdit;
 use FFmpegImage;
+use Data::Dumper;
 
 sub new
 {
@@ -49,6 +43,14 @@ sub new
 	return $self;
 }
 
+=pod
+
+=item B<loadVideoFile>(I<$videoFile>)
+
+Extract the needed frames from I<$videoFile> to be used.
+
+=cut
+
 sub loadVideoFile
 {
 	my ($self, $videoFile) = @_;
@@ -57,14 +59,30 @@ sub loadVideoFile
 	$self->extractJpegs();
 }
 
+=pod
+
+=item B<extractJpegs>(I<$videoFile>)
+
+Extract the needed frames to be used.
+
+=cut
+
 sub extractJpegs
 {
 	my ($self) = @_;
 	
-	$self->{tempDir1} = tempdir( CLEANUP => 1 , DIR => $self->{tmpBaseDir});
+	$self->{tempDir1} = tempdir( CLEANUP => 1, DIR => $self->{tmpBaseDir});
 	$self->{images} = new FFmpegImage($self->{videoFile});
 	$self->{images}->extractJpeg($self->{tempDir1}, $self->{minFrame}, $self->{maxFrame});
 }
+
+=pod
+
+=item B<buildVideo>(I<$outFile>)
+
+Encode the video I<$outFile> from the processed jpegs.
+
+=cut
 
 sub buildVideo
 {
@@ -91,12 +109,29 @@ sub buildVideo
 	}
 }
 
+=pod
+
+=item B<buildJpegSingle>(I<$frameId>, I<$outFile>)
+
+Build the new jpeg I<$outFile> for the frame I<$frameId> regarding the appropiate filtesr passed previously in the 
+process.
+
+=cut
+
 sub buildJpegSingle
 {
 	my ($self, $frameId, $outFile) = @_;
 	
 	$self->processSingleImage($frameId, $outFile);
 }
+
+=pod
+
+=item B<buildJpegs>(I<$outDir>)
+
+Build the all jpeg to the directory I<$outDir> regarding the appropiate filters passed previously in the process.
+
+=cut
 
 sub buildJpegs
 {
@@ -113,7 +148,7 @@ sub buildJpegs
 	if(defined($self->{videoFile}) && $self->{filterLoaded})
 	{
 		# Create tempdir
-		$self->{tempDir2} = tempdir( CLEANUP => 1  , DIR => $self->{tmpBaseDir});
+		$self->{tempDir2} = tempdir( CLEANUP => 1, DIR => $self->{tmpBaseDir});
 		$self->processImages();
 		$self->copyImages($self->{tempDir2}, $outDir);
 	}
@@ -123,6 +158,14 @@ sub buildJpegs
 	}
 }
 
+=pod
+
+=item B<copyImages>(I<$dirIn>, I<$dirOut>)
+
+Copy and rename the processed jpegs from the directory I<$dirIn> to the directory I<$dirOut>.
+
+=cut
+
 sub copyImages
 {
 	my ($self, $dirIn, $dirOut) = @_;
@@ -131,7 +174,7 @@ sub copyImages
 	my @files = grep { /^\d+\.jpeg$/ } readdir(DIR);
 	closedir(DIR);
 	
-	my @sortedRealFrames = sort {$a <=> $b} @{ $self->{realFrames} };
+	my @sortedRealFrames = sort {$a <=> $b} unique(@{ $self->{realFrames} });
 	
 	for(my $i=0; $i<scalar(@files); $i++)
 	{
@@ -140,6 +183,14 @@ sub copyImages
 		`cp "$filenameIn" "$filenameOut"`;
 	}
 }
+
+=pod
+
+=item B<doKeep>(I<$id>)
+
+Check if the frame I<$id> has to be kept for processing.
+
+=cut
 
 sub doKeep
 {
@@ -165,6 +216,14 @@ sub doKeep
 	return $keep;
 }
 
+=pod
+
+=item B<doDuplicate>(I<$id>)
+
+Duplicate the frame I<$id> without any processing.
+
+=cut
+
 sub doDuplicate
 {
 	my ($self, $id) = @_;
@@ -181,6 +240,14 @@ sub doDuplicate
 	
 	return $c;
 }
+
+=pod
+
+=item B<hasFilters>(I<$id>)
+
+Check if the frame I<$id> need to be processed.
+
+=cut
 
 sub hasFilters
 {
@@ -225,6 +292,14 @@ sub hasFilters
 	
 	return(\@outPolygon, \@outEllipses, \@outPoint, \@outLabel);
 }
+
+=pod
+
+=item B<processSingleImage>(I<$index>, I<$outJpeg>)
+
+Process the frame I<$id> regarding all the appropriate filters and generate the final jpeg I<$outJpeg>.
+
+=cut
 
 sub processSingleImage
 {
@@ -293,6 +368,14 @@ sub processSingleImage
 		$jpeg->clean();
 	}
 }
+
+=pod
+
+=item B<processImages>()
+
+Process all the frames regarding the appropriate filters and generate the final jpegs.
+
+=cut
 
 sub processImages
 {
@@ -376,6 +459,14 @@ sub processImages
 	}
 }
 
+=pod
+
+=item B<addKeepRange>(I<$begf>, I<$endf>)
+
+Update the filter of frames to process by adding the range [I<$begf>, I<$endf>].
+
+=cut
+
 sub addKeepRange
 {
 	my ($self, $begf, $endf) = @_;
@@ -386,6 +477,14 @@ sub addKeepRange
 	$self->{filterLoaded} = 1;
 }
 
+=pod
+
+=item B<addNotKeepRange>(I<$begf>, I<$endf>)
+
+Update the filter of frames to process by removing the range [I<$begf>, I<$endf>].
+
+=cut
+
 sub addNotKeepRange
 {
 	my ($self, $begf, $endf) = @_;
@@ -394,6 +493,14 @@ sub addNotKeepRange
 	$self->{filterLoaded} = 1;
 }
 
+=pod
+
+=item B<addDuplicate>(I<$frm>, I<$count>)
+
+Update the filter of frames to process by adding the frame I<$frm> and duplicate it I<$count> times.
+
+=cut
+
 sub addDuplicate
 {
 	my ($self, $frm, $count) = @_;
@@ -401,6 +508,14 @@ sub addDuplicate
 	$self->{outputFrames}{duplicate}{$frm} = $count;
 	$self->{filterLoaded} = 1;
 }
+
+=pod
+
+=item B<loadXMLFile>(I<$filterFile>)
+
+Load the XML file I<$filterFile> representing the filters to apply to the video.
+
+=cut
 
 sub loadXMLFile
 {
@@ -516,6 +631,14 @@ sub loadXMLFile
 	}
 }
 
+=pod
+
+=item B<parseAttributes>(I<$string>)
+
+Parse XML attributes and return a hash.
+
+=cut
+
 sub parseAttributes
 {
 	my ($string) = @_;
@@ -530,6 +653,14 @@ sub parseAttributes
 	
 	return \%out;
 }
+
+=pod
+
+=item B<saveXMLFile>(I<$filterFile>)
+
+Save the filter into an XML file I<$filterFile> or to the standard output if I<$filterFile> is I<undef>.
+
+=cut
 
 sub saveXMLFile
 {
@@ -644,6 +775,16 @@ sub saveXMLFile
 	}
 }
 
+=pod
+
+=item B<addLabel>(I<$bf>, I<$ef>, I<$text>, I<$coord>)
+
+Add the label with the text I<$text> to the coordinates I<$coord> for the frame range [I<$bf>, I<$ef>].
+
+I<$coord> is a pair of coordinates [ x, y ].
+
+=cut
+
 sub addLabel
 {
 	my ($self, $bf, $ef, $text, $coord) = @_;
@@ -658,6 +799,14 @@ sub addLabel
 	push(@{ $self->{filter}{$object{BEGT}}{$object{ENDT}} }, \%object);
 	$self->{filterLoaded} = 1;
 }
+
+=pod
+
+=item B<parseLabel>(I<$str>)
+
+Parse the label from the XML format and return a hash represention the label structure.
+
+=cut
 
 sub parseLabel
 {
@@ -697,6 +846,21 @@ sub parseLabel
 	$self->addLabel($b, $e, $text, \@coord);
 }
 
+=pod
+
+=item B<addPoint>(I<$bf>, I<$ef>, I<$coord>, I<$width>, I<$color>)
+
+Add the point of the size I<$width> with the color I<$color> to the coordinates I<$coord> for the frame range [I<$bf>, I<$ef>].
+
+I<$coord> is a pair of coordinates [ x, y ].
+
+I<$color> is a array of RGB, alpha. RGB codes must be between 0 and 255 and alpha transparency is a floating point
+value between 0 and 1.
+
+I<$width> is a integer for the size of the point.
+
+=cut
+
 sub addPoint
 {
 	my ($self, $bf, $ef, $coord, $width, $color) = @_;
@@ -712,6 +876,14 @@ sub addPoint
 	push(@{ $self->{filter}{$object{BEGT}}{$object{ENDT}} }, \%object);
 	$self->{filterLoaded} = 1;
 }
+
+=pod
+
+=item B<parsePoint>(I<$str>)
+
+Parse the point from the XML format and return a hash represention the point structure.
+
+=cut
 
 sub parsePoint
 {
@@ -750,6 +922,29 @@ sub parsePoint
 	$self->addPoint($b, $e, \@coord, $width, \@color);
 }
 
+=pod
+
+=item B<addPolygon>(I<$bf>, I<$ef>, I<$coord>, I<$width>, I<$colorfill>, I<$colorborder>, I<$close>)
+
+Add the polygon using the I<$coord> as corner points, I<$colorborder> the color for the 
+border, I<$width> as a pixel size of the border, I<$colorfill> as the color to fill the polygon, and I<$close> 
+as a boolean to define is the polygon is closed or not, for the frame range [I<$bf>, I<$ef>].
+
+I<$coord> is a list of corner coordinates
+[ x1, y1, x2, y2, x3, y3, ... ] where the corners are (x1, y1) , (x2, y2), (x3, y3). The number of elements if 
+I<$coord> must be even.
+
+I<$colorborder> is a array of RGB, alpha. RGB codes must be between 0 and 255 and alpha transparency is a floating point
+value between 0 and 1.
+
+I<$width> is a integer for the size of the border.
+
+I<$colorfill> is a array RGB, alpha following the same convension than I<$borderColor>.
+
+A closed polygon, link the last corner to the first one.
+
+=cut
+
 sub addPolygon
 {
 	my ($self, $bf, $ef, $coord, $width, $colorfill, $colorborder, $close) = @_;
@@ -779,6 +974,14 @@ sub addPolygon
 	push(@{ $self->{filter}{$object{BEGT}}{$object{ENDT}} }, \%object);
 	$self->{filterLoaded} = 1;
 }
+
+=pod
+
+=item B<parsePolygon>(I<$str>)
+
+Parse the polygon from the XML format and return a hash represention the polygon structure.
+
+=cut
 
 sub parsePolygon
 {
@@ -835,6 +1038,14 @@ sub parsePolygon
 	
 	$self->addPolygon($b, $e, \@coord, $width, \@fillcolor, \@bordercolor, $close);
 }
+
+=pod
+
+=item B<parseEllipse>(I<$str>)
+
+Parse the ellipse from the XML format and return a hash represention the ellipse structure.
+
+=cut
 
 sub parseEllipse
 {
@@ -902,6 +1113,32 @@ sub parseEllipse
 	$self->addEllipse($b, $e, \@center, \@radii, $rotation, $width, \@fillcolor, \@bordercolor, \@angles);
 }
 
+=pod
+
+=item B<addEllipse>(I<$bf>, I<$ef>, I<$center>, I<$radii>, I<$rotation>, I<$width>, I<$colorfill>, I<$colorborder>, I<$angles>)
+
+Add the ellipse at the center point I<$center> with the two radii I<$radii>, following a main axe rotation of 
+I<$rotation>, with the border color of I<$colorborder>, a border size of I<$width> and filling up the ellipse
+with the color I<$colorfill>. Only a portion of the ellipse can be drawed be providing the begin and end angle 
+I<$angles>, for the frame range [I<$bf>, I<$ef>].
+
+I<$centerPoint> is a pair of coordinates [ x, y ] to the center of the ellipse.
+
+I<$radii> are the two radii of the ellipse.
+
+I<$startToEndAngles> are the two angles in degree.
+
+I<$borderColor> is a array of RGB, alpha. RGB codes must be between 0 and 255 and alpha transparency is a floating point
+value between 0 and 1.
+
+I<$borderWidth> is a integer for the size of the border.
+
+I<$fillEllipse> is a array RGB, alpha following the same convension than I<$borderColor>.
+
+I<$rotation> is the angle in degree of the ellipse rotation based on its center point.
+
+=cut
+
 sub addEllipse
 {
 	my ($self, $bf, $ef, $center, $radii, $rotation, $width, $colorfill, $colorborder, $angles) = @_;
@@ -934,6 +1171,13 @@ sub max
 	my $max = shift;
 	foreach my $x (@_) {if(defined($x)) { $max = $x if($x > $max); } }	
 	return $max;
+}
+
+sub unique
+{
+	my %l = ();
+	foreach my $e (@_) { $l{$e}=1; }
+	return keys %l;
 }
 
 1;

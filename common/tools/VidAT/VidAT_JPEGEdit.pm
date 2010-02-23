@@ -1,20 +1,13 @@
-# VidAT
 # JPEGEdit.pm
-# Authors: Jerome Ajot
+# Author: Jerome Ajot
 # 
-# This software was developed at the National Institute of Standards and
-# Technology by employees of the Federal Government in the course of
-# their official duties.  Pursuant to Title 17 Section 105 of the United
-# States Code this software is not subject to copyright protection within
-# the United States and is in the public domain. It is an experimental
-# system.  NIST assumes no responsibility whatsoever for its use by any
-# party.
+# This software was developed at the National Institute of Standards and Technology by employees of the Federal 
+# Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this 
+# software is not subject to copyright protection within the United States and is in the public domain. It is an 
+# experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
 # 
-# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST
-# MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER,
-# INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
-
-# $Id $
+# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY 
+# MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
 package JPEGEdit;
 
@@ -46,11 +39,27 @@ sub new
 	return $self;
 }
 
+=pod
+
+=item B<clean>()
+
+Cleanup all the remaining temporary files.
+
+=cut
+
 sub clean
 {
 	my ($self) = @_;
 	$self->deleteWorkingImage();
 }
+
+=pod
+
+=item B<createWorkingImage>()
+
+Create the file that will be used for frame editing. Using the ImageMagick format.
+
+=cut
 
 sub createWorkingImage
 {
@@ -71,11 +80,27 @@ sub createWorkingImage
 	}
 }
 
+=pod
+
+=item B<deleteWorkingImage>()
+
+Delete the working image.
+
+=cut
+
 sub deleteWorkingImage
 {
 	my ($self) = @_;
 	unlink($self->{workingImage}) if(defined($self->{workingImage}));
 }
+
+=pod
+
+=item B<duplicateInputImage>(I<$outFile>)
+
+Duplicate the image into I<$outFile> file.
+
+=cut
 
 sub duplicateInputImage
 {
@@ -91,6 +116,14 @@ sub duplicateInputImage
 		return(0);
 	}
 }
+
+=pod
+
+=item B<jpeg>(I<$outFile>)
+
+Convert the working image into I<$outFile> as JPEG.
+
+=cut
 
 sub jpeg
 {
@@ -119,9 +152,30 @@ sub jpeg
 	return 1;
 }
 
+=pod
+
+=item B<drawPolygon>(I<$polygonCorners>, I<$borderColor>, I<$borderWidth>, I<$fillPolygon>, I<$close>)
+
+Draw a polygon in the working image using the I<$polygonCorners> as corner points, I<$borderColor> the color for the 
+border, I<$borderWidth> as a pixel size of the border, I<$fillPolygon> as the color to fill the polygon, and I<$close> 
+as a boolean to define is the polygon is closed or not.
+
+I<$polygonCorners> is a list of corner coordinates
+[ x1, y1, x2, y2, x3, y3, ... ] where the corners are (x1, y1) , (x2, y2), (x3, y3). The number of elements if 
+I<$polygonCorners> must be even.
+
+I<$borderColor> is a array of RGB, alpha. RGB codes must be between 0 and 255 and alpha transparency is a floating point
+value between 0 and 1.
+
+I<$borderWidth> is a integer for the size of the border.
+
+I<$fillPolygon> is a array RGB, alpha following the same convension than I<$borderColor>.
+
+A closed polygon, link the last corner to the first one.
+
+=cut
+
 sub drawPolygon
-# $polygonCorners is an array of x,y,x,y,x,y,x,y,etc...
-# $borderColor is [R, G, B, alpha] R,G, and B in 255 alpha in 1.0
 {
 	my ($self, $polygonCorners, $borderColor, $borderWidth, $fillPolygon, $close) = @_;
 	
@@ -169,6 +223,21 @@ sub drawPolygon
 	return(1);
 }
 
+=pod
+
+=item B<drawPoint>(I<$point>, I<$color>, I<$width>)
+
+Draw a point at the coordinates defined in I<$point> with the color I<$color> and the size I<$width>.
+
+I<$point> is a pair of coordinates [ x, y ] .
+
+I<$color> is a array of RGB, alpha. RGB codes must be between 0 and 255 and alpha transparency is a floating point
+value between 0 and 1.
+
+I<$width> is a integer for the size of the point.
+
+=cut
+
 sub drawPoint
 {
 	my ($self, $point, $color, $width) = @_;
@@ -207,8 +276,19 @@ sub drawPoint
 	return(1);
 }
 
+=pod
+
+=item B<drawLabel>(I<$label>, I<$point>)
+
+Draw a test I<$label> at the coordinates defined in I<$point>.
+
+I<$point> is a pair of coordinates [ x, y ].
+
+I<$label> is the text to be displayed.
+
+=cut
+
 sub drawLabel
-## Point is the bottom-left point
 {
 	my ($self, $label, $point) = @_;
 	
@@ -229,8 +309,33 @@ sub drawLabel
 	return(1);
 }
 
+=pod
+
+=item B<drawEllipse>(I<$centerPoint>, I<$radii>, I<$rotation>, I<$startToEndAngles>, I<$borderColor>, I<$borderWidth>, I<$fillEllipse>)
+
+Draw an ellipse at the center point I<$centerPoint> with the two radii I<$radii>, following a main axe rotation of 
+I<$rotation>, with the border color of I<$borderColor>, a border size of I<$borderWidth> and filling up the ellipse
+with the color I<$fillEllipse>. Only a portion of the ellipse can be drawed be providing the begin and end angle 
+I<$startToEndAngles>.
+
+I<$centerPoint> is a pair of coordinates [ x, y ] to the center of the ellipse.
+
+I<$radii> are the two radii of the ellipse.
+
+I<$startToEndAngles> are the two angles in degree.
+
+I<$borderColor> is a array of RGB, alpha. RGB codes must be between 0 and 255 and alpha transparency is a floating point
+value between 0 and 1.
+
+I<$borderWidth> is a integer for the size of the border.
+
+I<$fillEllipse> is a array RGB, alpha following the same convension than I<$borderColor>.
+
+I<$rotation> is the angle in degree of the ellipse rotation based on its center point.
+
+=cut
+
 sub drawEllipse
-# $fillEllipse and $borderColor is [R, G, B, alpha] R,G, and B in 255 alpha in 1.0
 {
 	my ($self, $centerPoint, $radii, $rotation, $startToEndAngles, $borderColor, $borderWidth, $fillEllipse) = @_;
 	

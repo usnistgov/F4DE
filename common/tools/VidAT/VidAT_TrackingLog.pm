@@ -1,27 +1,19 @@
-# VidAT
-# tackinglog.pm
-# Authors: Jerome Ajot
+# trackinglog.pm
+# Author: Jerome Ajot
 # 
-# This software was developed at the National Institute of Standards and
-# Technology by employees of the Federal Government in the course of
-# their official duties.  Pursuant to Title 17 Section 105 of the United
-# States Code this software is not subject to copyright protection within
-# the United States and is in the public domain. It is an experimental
-# system.  NIST assumes no responsibility whatsoever for its use by any
-# party.
+# This software was developed at the National Institute of Standards and Technology by employees of the Federal 
+# Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this 
+# software is not subject to copyright protection within the United States and is in the public domain. It is an 
+# experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
 # 
-# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST
-# MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER,
-# INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
-
-# $Id $
+# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY 
+# MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
 package trackinglog;
 
 use strict;
 use warnings;
 use VideoEdit;
-use Data::Dumper;
 use List::Util qw( max );
 
 1;
@@ -67,6 +59,14 @@ sub new
 	
 	return $self;
 }
+
+=pod
+
+=item B<loadFile>()
+
+Load and store information of the tracking log file provided at the the creation of the object.
+
+=cut
 
 sub loadFile
 {
@@ -204,6 +204,15 @@ sub loadFile
 	$self->buildContiniousFrames();
 }
 
+=pod
+
+=item B<rotation>(I<$x>, I<$y>, I<$cx>, I<$cy>, I<$deg>)
+
+Provide the new coordinate of the point (I<$x>, I<$y>) after a rotation of I<$deg> degrees from the center point
+(I<$cx>, I<$cy>).
+
+=cut
+
 sub rotation
 {
 	my ($x, $y, $cx, $cy, $deg) = @_;
@@ -211,6 +220,15 @@ sub rotation
 	
 	return( int(($x-$cx)*cos($rad)+($y-$cy)*sin($rad) + $cx), int(-($x-$cx)*sin($rad)+($y-$cy)*cos($rad)+$cy) );
 }
+
+=pod
+
+=item B<buildContiniousFrames>()
+
+Private method that goes through the frames defined in the previously loaded tracking log and defines frames present in
+the log and the intermediate frame used for interpolation.
+
+=cut
 
 sub buildContiniousFrames
 {
@@ -251,6 +269,15 @@ sub buildContiniousFrames
 	}
 }
 
+=pod
+
+=item B<process>(I<$object>)
+
+Main interface method that process the data from the I<$object> object ('polygon' or 'point') to create the appropriate 
+data need to be used for the display.
+
+=cut
+
 sub process
 {
 	my ($self, $object) = @_;
@@ -271,6 +298,15 @@ sub process
 		}
 	}
 }
+
+=pod
+
+=item B<process>(I<$object, I<$type>, I<$id>)
+
+Interface method that process the data from the I<$object> object ('polygon' or 'point'), type ('ref' or 'hyp'), and the 
+specific frame ID I<$id> to create the appropriate data need to be used for the display.
+
+=cut
 
 sub processTypeId
 {
@@ -452,6 +488,15 @@ sub processTypeId
 	}
 }
 
+=pod
+
+=item B<addRefPolygon>(I<$size>)
+
+Bridge method that adds the information of all the reference polygons in the data structure with a border size of I<$size> to the 
+video structure that will be used to generate the drawing.
+
+=cut
+
 sub addRefPolygon
 {
 	my ($self, $size) = @_;
@@ -504,6 +549,15 @@ sub addRefPolygon
 	}
 }
 
+=pod
+
+=item B<addRefPoint>(I<$size>)
+
+Bridge method that adds the information of all the reference points in the data structure with a border size of I<$size> to the 
+video structure that will be used to generate the drawing.
+
+=cut
+
 sub addRefPoint
 {
 	my ($self, $size) = @_;
@@ -548,6 +602,15 @@ sub addRefPoint
 		}
 	}
 }
+
+=pod
+
+=item B<addSysPolygon>(I<$size>)
+
+Bridge method that adds the information of all the system polygons in the data structure with a border size of I<$size> to the 
+video structure that will be used to generate the drawing.
+
+=cut
 
 sub addSysPolygon
 {
@@ -601,6 +664,15 @@ sub addSysPolygon
 	}
 }
 
+=pod
+
+=item B<addSysPoint>(I<$size>)
+
+Bridge method that adds the information of all the system points in the data structure with a border size of I<$size> to the 
+video structure that will be used to generate the drawing.
+
+=cut
+
 sub addSysPoint
 {
 	my ($self, $size) = @_;
@@ -646,6 +718,15 @@ sub addSysPoint
 	}
 }
 
+=pod
+
+=item B<addRefLabel>()
+
+Bridge method that adds the information of all the reference label in the data structure to the video structure that 
+will be used to generate the drawing.
+
+=cut
+
 sub addRefLabel
 {
 	my ($self) = @_;
@@ -671,6 +752,15 @@ sub addRefLabel
 	}
 }
 
+=pod
+
+=item B<addSysLabel>()
+
+Bridge method that adds the information of all the system label in the data structure to the video structure that 
+will be used to generate the drawing.
+
+=cut
+
 sub addSysLabel
 {
 	my ($self) = @_;
@@ -695,6 +785,15 @@ sub addSysLabel
 		}
 	}
 }
+
+=pod
+
+=item B<addRefSnailTrail>(I<$size>)
+
+Bridge method that adds the information of all the reference snail trail in the data structure with a line width of 
+I<$size> to the video structure that will be used to generate the drawing.
+
+=cut
 
 sub addRefSnailTrail
 {
@@ -752,6 +851,15 @@ sub addRefSnailTrail
 	}
 }
 
+=pod
+
+=item B<addSysSnailTrail>(I<$size>)
+
+Bridge method that adds the information of all the system snail trail in the data structure with a line width of 
+I<$size> to the video structure that will be used to generate the drawing.
+
+=cut
+
 sub addSysSnailTrail
 {
 	my ($self, $size) = @_;
@@ -808,6 +916,14 @@ sub addSysSnailTrail
 	}
 }
 
+=pod
+
+=item B<addTimer>()
+
+Bridge method that adds the timer on the top left corner of all frames.
+
+=cut
+
 sub addTimer
 {
 	my ($self) = @_;
@@ -822,6 +938,18 @@ sub addTimer
 		$self->{videoClass}->addLabel($i, $i, "Frame: $i", \@coord);
 	}
 }
+
+=pod
+
+=item B<addRefFullSnailTrail>(I<$size>)
+
+Bridge method that adds the information of all the reference full snail trail in the data structure with a line width of 
+I<$size> to the video structure that will be used to generate the drawing.
+
+Compare to the regular snail trails, the full snail trails stay on the image even if the tracked element disappear from 
+the frame. If a lot of object are tracked, using full snail trail can produce a heavy picture over time.
+
+=cut
 
 sub addRefFullSnailTrail
 {
@@ -884,6 +1012,18 @@ sub addRefFullSnailTrail
 	}
 }
 
+=pod
+
+=item B<addSysFullSnailTrail>(I<$size>)
+
+Bridge method that adds the information of all the system full snail trail in the data structure with a line width of 
+I<$size> to the video structure that will be used to generate the drawing.
+
+Compare to the regular snail trails, the full snail trails stay on the image even if the tracked element disappear from 
+the frame. If a lot of object are tracked, using full snail trail can produce a heavy picture over time.
+
+=cut
+
 sub addSysFullSnailTrail
 {
 	my ($self, $size) = @_;
@@ -945,6 +1085,15 @@ sub addSysFullSnailTrail
 	}
 }
 
+=pod
+
+=item B<keepOnlyKeyFrames>(I<$size>)
+
+Define the frames to be kept to the final product based only if the frames have been present in the tracking log.
+This is used when generating jpegs only of the annotated frames in the tracking log.
+
+=cut
+
 sub keepOnlyKeyFrames
 {
 	my ($self) = @_;
@@ -958,6 +1107,15 @@ sub keepOnlyKeyFrames
 		$self->{videoClass}->addKeepRange($frm, $frm);
 	}
 }
+
+=pod
+
+=item B<keepOnlyKeyFramesRange>(I<$size>)
+
+Define the frames range to be kept to the final product based only if the frames have been present in the tracking log.
+This is used when generating a video where only that runs only during the annotation frames defined in the tracking log.
+
+=cut
 
 sub keepOnlyKeyFramesRange
 {
@@ -973,6 +1131,14 @@ sub keepOnlyKeyFramesRange
 	
 	$self->{videoClass}->addKeepRange($firstKeyFrame, $lastKeyFrame);
 }
+
+=pod
+
+=item B<XMLFile>(I<$size>)
+
+Produce an XML file into the standard output representing the authoring data structure.
+
+=cut
 
 sub XMLFile
 {

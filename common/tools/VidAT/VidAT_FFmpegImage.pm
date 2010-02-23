@@ -1,27 +1,19 @@
-# VidAT
 # FFmpegImage.pm
-# Authors: Jerome Ajot
+# Author: Jerome Ajot
 # 
-# This software was developed at the National Institute of Standards and
-# Technology by employees of the Federal Government in the course of
-# their official duties.  Pursuant to Title 17 Section 105 of the United
-# States Code this software is not subject to copyright protection within
-# the United States and is in the public domain. It is an experimental
-# system.  NIST assumes no responsibility whatsoever for its use by any
-# party.
+# This software was developed at the National Institute of Standards and Technology by employees of the Federal 
+# Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this 
+# software is not subject to copyright protection within the United States and is in the public domain. It is an 
+# experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
 # 
-# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST
-# MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER,
-# INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
-
-# $Id $
+# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY 
+# MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
 package FFmpegImage;
 
 use strict;
 use warnings;
 use File::Basename;
-
 
 sub new
 {
@@ -48,6 +40,15 @@ sub new
 	
 	return $self;
 }
+
+=pod
+
+=item B<parseVideoInformation>()
+
+Parse the the video information (FPS, Duration, DAR, Codec) from the video file provided at the the creation of the 
+object.
+
+=cut
 
 sub parseVideoInformation
 {
@@ -118,6 +119,15 @@ sub parseVideoInformation
 	}
 }
 
+=pod
+
+=item B<extractJpeg>(I<$dir>, I<$firstFrame>, I<$lastFrame>)
+
+Extract all the frames defined between I<$firstFrame> and I<$lastFrame> into the directory I<$dir>. Frames will be a 
+JPEG is the name will be the frame number.
+
+=cut
+
 sub extractJpeg
 {
 	my ($self, $dir, $firstFrame, $lastFrame) = @_;
@@ -156,6 +166,14 @@ sub extractJpeg
 
 	$self->{nbrJpeg} = scalar(@files);
 }
+
+=pod
+
+=item B<buildVideo>(I<$dir>, I<$outFile>)
+
+Recontruct the video I<$outFile> from the JPEG files in the directory I<$dir>.
+
+=cut
 
 sub buildVideo
 {

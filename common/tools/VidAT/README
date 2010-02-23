@@ -1,9 +1,18 @@
-File:  README
-Date:  September 22nd , 2009
+Tool: ViDAT
+File: README
+Date: February 22nd, 2010
 
 
-This directory contains the VidAT (Video Annotation Tool) software use for 
-montage and video annotation.
+This suite of tools is designed to overlay video with boxes, polygons, etc. on 
+a frame by frame basis.  The primary specification of the drawed objects is 
+specified by an Tracking log file that is described in generated with 
+CLEARDTScorer.
+
+The suite has two scripts:
+ - vidatLog.pl which generates an annotated video regarding a set of parameters,
+   a original video, and a tracking log from CLEARDTScorer.
+ - pmontage.pl is a authoring script which create a mozaic video of all input 
+   video.
 
 
 INSTALLATION
@@ -15,31 +24,99 @@ Third part software need to be installed:
  FFmpeg <http://ffmpeg.org/>
  Ghostscript <http://pages.cs.wisc.edu/~ghost/>
  ImageMagick <http://www.imagemagick.org> 
-    with JPEG v6b support <ftp://ftp.uu.net/graphics/jpeg/>
+    with JPEG v6b support <http://www.ijg.org>
 
 
 USAGE
 -----
 
-A manual page can be printed by each command by executing the command
-with the option '--man'.  For example:
+vidatLog.pl is the main script that perform the overlay of boxes, points, and
+labeling on a video regarding the annotation provided by the tracking log file
+created by the CLEARDTScorer.
 
-   %  vidatLog.pl --man
+to invoke the script:
+perl -I<VIDAT_DIRECTORY> <VIDAT_DIRECTORY>/vidatLog.pl \
+ -i video_file \
+ -l CLEARDTScorer_trackinglog \
+ -o output_video_file
+ 
+The script will generate the 'output_video_file' by reproducing the inout
+'video_file' and overlaying it with the information contained in the 
+'CLEARDTScorer_trackinglog' CLEARDTScorer tracking log file.
+
+The CLEARDTScorer tracking log information are represented as follow.
+The obox elements SYS <ID> obox[...] or REF <ID> obox[...]
+are represented by a rectangle defined by its coordinates in [...] with the 
+label "SYS: <ID>" or "REF: <ID>".
+The point elements SYS <ID> point[...] or REF <ID> obox[...]
+are represented by a point defined by its coordinates in [...] with the 
+label "SYS: <ID>" or "REF: <ID>".
+
+The colors used for the elements are defined regarding the matching status.
+The un-mapped reference elements are in red.
+The un-mapped system elements are in orange.
+The mapped reference elements are in blue.
+The mapped system elements are in green.
+The DCO object are in yellow.
+
+All elements are considered as un-mapped unless the tracking log contains the 
+line: "Mapped : SYS <ID> -> REF <ID>".
+
+The default behavior of vidatLog.pl is to generate a video with the boxes and 
+points defined in the tracking log. It also adds snail trails of the points and 
+boxes.
+
+Several options can alter the default behavior:
+'-notrails' option deactivates the snail trails. This option is useful when lots
+of elements are tracked.
+
+'-nointerpolation' option deactivates the interpolation between frame elements 
+defined in the tracking log. In the tracking log, elements are defined for 
+specific frames and are not continuous. To produce a smooth video, the default
+behavior is to interpolate the position of every elements for the frame they 
+have not be defined for. Using this option, the elements (points and boxes) will
+only appears for the frames they have been defined in the tracking log.
+
+'-k <begframe>,<endframe>' option trims the video to the frames between the 
+boundary defined by <begframe> and <endframe>.
+'-k auto' option trims the video to the frames defined in the tracking log.
+
+'-onlyframes' option output only the frames defined in the tracking log without
+the snail trails and in a JPEG format. This is the only option that changes the
+output format from video to still images.
+
+
+EXAMPLE
+-------
+
+The following command line will generate a video with the snail trails for the 
+frames between the frames defined in the tracking log:
+$ perl -I. vidatLog.pl -i example/sample.mpeg \
+                       -l example/sample.tracking_log \
+                       -k auto \
+                       -o example/sample.mpeg
+
+The following command line will generate frames without the snail trails for the 
+frames defined in the tracking log:
+$ perl -I. vidatLog.pl -i example/sample.mpeg \
+                       -l example/sample.tracking_log \
+                       -onlyframes \
+                       -o example/sample.frames
 
 
 CONTACT
 -------
 
-       Please send bug reports to <nist_f4de@nist.gov>
+Please send bug reports to <nist_f4de@nist.gov>
 
-For the bug report to be useful, please include the command line,
-files and text output, including the error message in your email.
+For the bug report to be useful, please include the command line, files and 
+text output, including the error message in your email.
 
 
 AUTHORS
 -------
 
-       Jerome Ajot <jerome.ajot@nist.gov>
+Jerome Ajot <jerome.ajot@nist.gov>
 
 
 COPYRIGHT 
@@ -49,8 +126,8 @@ This software was developed at the National Institute of Standards and
 Technology by employees of the Federal Government in the course of their
 official duties.  Pursuant to Title 17 Section 105 of the United States Code
 this software is not subject to copyright protection within the United States
-and is in the public domain. F4DE is an experimental system.  NIST assumes
-no responsibility whatsoever for its use by any party.
+and is in the public domain. This is an experimental system.  NIST assumes no 
+responsibility whatsoever for its use by any party.
 
 THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES
 NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING
