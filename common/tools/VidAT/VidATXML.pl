@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# vidatXML.pl
+# VidATXML.pl
 # Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by employees of the Federal 
@@ -75,11 +75,11 @@ $x->clean();
 
 =head1 NAME
 
-vidatXML.pl -- Video Annotation Tool 
+VidATXML.pl -- Video Annotation Tool 
 
 =head1 SYNOPSIS
 
-B<vidatXML.pl> -i F<VIDEO> -x F<XML> -o F<OUTPUT> [-man] [-h]
+B<VidATXML.pl> -i F<VIDEO> -x F<XML> -o F<OUTPUT> [-man] [-h]
 
 =head1 DESCRIPTION
 

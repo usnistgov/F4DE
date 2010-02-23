@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# vidatLog.pl
+# VidATLog.pl
 # Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by employees of the Federal 
@@ -18,7 +18,7 @@ use Pod::Usage;
 use List::Util qw( min max );
 use File::Path qw( rmtree );
 use VideoEdit;
-use trackinglog;
+use TrackingLog;
 use FFmpegImage;
 use Data::Dumper;
 
@@ -29,7 +29,7 @@ my $inVideoFile = "";
 my $logFile = "";
 my $outFile = "";
 my $keep = "";
-my $tmpBaseDir = "/tmp/Vidat.$$";
+my $tmpBaseDir = "/tmp/VidAT.$$";
 my $notrails = 0;
 my $nointerpolation = 0;
 my $onlyframes = 0;
@@ -73,7 +73,7 @@ if($keep =~ /^(\d+),(\d+)$/)
 	$keepMax = min($keepMax, int($2));
 }
 
-my $x = new trackinglog($logFile, $keepMin, $keepMax, $tmpBaseDir, 1-$nointerpolation);
+my $x = new TrackingLog($logFile, $keepMin, $keepMax, $tmpBaseDir, 1-$nointerpolation);
 $x->{videoClass}->addKeepRange($keepMin, $keepMax);
 
 $x->keepOnlyKeyFramesRange() if($keep eq "auto");
@@ -114,18 +114,18 @@ rmtree("$tmpBaseDir");
 
 =head1 NAME
 
-vidatLog.pl -- Video Annotation Tool 
+VidATLog.pl -- Video Annotation Tool 
 
 =head1 SYNOPSIS
 
-B<vidatLog.pl> -i F<VIDEO> -l F<LOG> -o F<OUTPUT> [-tmp F<DIR>] [-k [F<begframe>,F<endframe>|auto]] [-notrails] [-nointerpolation] [-onlyframes] [-man] [-h]
+B<VidATLog.pl> -i F<VIDEO> -l F<LOG> -o F<OUTPUT> [-tmp F<DIR>] [-k [F<begframe>,F<endframe>|auto]] [-notrails] [-nointerpolation] [-onlyframes] [-man] [-h]
 
 =head1 DESCRIPTION
 
-B<vidatLog.pl> overlays bounding boxes,
+B<VidATLog.pl> overlays bounding boxes,
 points, and labels on a video regarding the annotation provided by
 the tracking log file created by the B<CLEARDTScorer.pl>.  The default
-behavior of vidatLog.pl is the following:
+behavior of VidATLog.pl is the following:
 
 =over 4 
 
@@ -175,9 +175,9 @@ The colors used for the drawn elements indicate how the bounding boxes were scor
 
 =head1 EXAMPLE EXECUTION
 
-perl -I <VIDAT_DIRECTORY> <VIDAT_DIRECTORY>/vidatLog.pl \
+perl -I <VIDAT_DIRECTORY> <VIDAT_DIRECTORY>/VidATLog.pl \
  -i video_file \
- -l CLEARDTScorer_trackinglog \
+ -l CLEARDTScorer_TrackingLog \
  -o output_video_file
  
 
@@ -218,7 +218,7 @@ of elements are tracked.
 =item B<-nointerpolation>
 
 This option deactivates the interpolation between evaluated frames as 
-defined in the tracking log. See the DESCRIPTION in the manual page 'vidatLog.pl -man' for a description of the
+defined in the tracking log. See the DESCRIPTION in the manual page 'VidATLog.pl -man' for a description of the
 interpolation algorithm. Using this option, the elements (points and boxes) will
 only appear for the frames they have been defined in the tracking log.
  

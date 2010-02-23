@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# tracklog2xml.pl
+# TrackingLog2Xml.pl
 # Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by employees of the Federal 
@@ -13,7 +13,7 @@
 
 use strict;
 use warnings;
-use trackinglog;
+use TrackingLog;
 use Data::Dumper;
 use Pod::Usage;
 
@@ -24,7 +24,7 @@ if(scalar(@ARGV) != 1)
 
 my $inFile = "$ARGV[0]";
 
-my $x = new trackinglog($inFile);
+my $x = new TrackingLog($inFile);
 
 $x->addRefPolygon(4);
 $x->addSysPolygon(4);
@@ -38,7 +38,7 @@ print $x->XMLFile();
 
 =head1 NAME
 
-tracklog2xml.pl -- Tracking log into XML file 
+TrackingLog2Xml.pl -- Tracking log into XML file 
 
 =head1 SYNOPSIS
 

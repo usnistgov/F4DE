@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# pmontage.pl
+# Montage.pl
 # Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by employees of the Federal 
@@ -362,11 +362,11 @@ sub max
 
 =head1 NAME
 
-pmontage.pl -- Video Montage Tool 
+Montage.pl -- Video Montage Tool 
 
 =head1 SYNOPSIS
 
-B<pmontage.pl> -i F<VIDEO> [-i F<VIDEO> [...]] [-t F<threads>] -o F<OUTPUT> [-k F<begframe>,F<endframe>] [-man] [-h]
+B<Montage.pl> -i F<VIDEO> [-i F<VIDEO> [...]] [-t F<threads>] -o F<OUTPUT> [-k F<begframe>,F<endframe>] [-man] [-h]
 
 =head1 DESCRIPTION
 
