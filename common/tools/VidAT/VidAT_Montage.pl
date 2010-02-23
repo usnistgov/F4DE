@@ -370,7 +370,7 @@ B<pmontage.pl> -i F<VIDEO> [-i F<VIDEO> [...]] [-t F<threads>] -o F<OUTPUT> [-k 
 
 =head1 DESCRIPTION
 
-The software is creating a composite video from multiple inputs. It is frame accurate.
+The software creates a composite video from multiple video inputs into a single video.  The program combines the images on a frame-by-frame basis.
 
 =head1 OPTIONS
 

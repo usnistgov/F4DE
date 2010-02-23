@@ -122,7 +122,64 @@ B<vidatLog.pl> -i F<VIDEO> -l F<LOG> -o F<OUTPUT> [-tmp F<DIR>] [-k [F<begframe>
 
 =head1 DESCRIPTION
 
-The software is adding filter information such as polygon masking, point and labels into the video. It is frame accurate.
+B<vidatLog.pl> overlays bounding boxes,
+points, and labels on a video regarding the annotation provided by
+the tracking log file created by the B<CLEARDTScorer.pl>.  The default
+behavior of vidatLog.pl is the following:
+
+=over 4 
+
+=item * the video is generated with the boxes and points defined in the tracking log.  The boxes are color coded indicating how the bounding boxes were scored.
+
+=item * bounding boxes for frames NOT referenced in the tracking log are added by the tool by computing a linearly interpolated transformation between successive evaluated frames. The interpolation ends when there is an evaluated frame not containing the object.
+
+=item * Object IDs are added as labels to the bounding boxes. 
+
+=item * A "snail trail" is added to the video indicating the object's bounding box frame history.  The trail remains visible while the object continues to have successive evaluated frames. '-notrails' disables this option. 
+
+=back
+
+
+The CLEARDTScorer tracking log information is represented as follows:
+
+=over 4 
+
+=item * The obox elements SYS <ID> obox[...] or REF <ID> obox[...]
+    are represented by a rectangle defined by its coordinates in [...] with the 
+    text label "SYS: <ID>" or "REF: <ID>".
+
+=item * The point elements SYS <ID> point[...] or REF <ID> point[...]
+    are represented by a point defined by its coordinates in [...] with the 
+    label "SYS: <ID>" or "REF: <ID>".
+
+=back
+
+The colors used for the drawn elements indicate how the bounding boxes were scored by parsing the 
+"Mapped : SYS <ID> -> REF <ID>" lines in the tracking log.  The default colors are: 
+
+=over 4
+
+=item * The un-mapped reference elements are in red.
+
+=item * The un-mapped system elements are in orange.
+
+=item * The mapped reference elements are in blue.
+
+=item * The mapped system elements are in green.
+
+=item * The Don't Care Objects (DCO) are in yellow.
+
+=back
+
+
+
+=head1 EXAMPLE EXECUTION
+
+perl -I <VIDAT_DIRECTORY> <VIDAT_DIRECTORY>/vidatLog.pl \
+ -i video_file \
+ -l CLEARDTScorer_trackinglog \
+ -o output_video_file
+ 
 
 =head1 OPTIONS
 
@@ -146,23 +203,34 @@ Specify a temporary directory.
 
 =item B<-k> F<begframe>,F<endframe>
 
-Ignore the frames outside the defined range.
+Create the output video by including only the frames between the 
+boundary defined by <begframe> and <endframe>.
 
 =item B<-k> F<auto>
 
-Ignore the frames outside the defined range in the trackinglog.
+Create the output video by including only the frames included in the tracking log.
 
 =item B<-notrails>
 
-Do not generate the snail trails.
+Deactivate the snail trails. This option is useful when lots
+of elements are tracked.
 
 =item B<-nointerpolation>
 
-Do not generate the interpolated boxes and points. It will display only the timer and the elements defined in the tracking log.
+This option deactivates the interpolation between evaluated frames as 
+defined in the tracking log. See the DESCRIPTION in the manual page 'vidatLog.pl -man' for a description of the
+interpolation algorithm. Using this option, the elements (points and boxes) will
+only appear for the frames they have been defined in the tracking log.
+ 
+The timer remains shown.
 
 =item B<-onlyframes>
 
-Generate only images for the frames defined in the tracking log, without the snail trails and it will store them in the directory F<OUTPUT>.
+Generate output images only for the frames defined in the tracking log
+without the snail trails and in a JPEG format. Images will be stored
+in the directory F<OUTPUT>. This is the only option that changes the
+output format from video to still images.
+
 
 =item B<-man>
 
