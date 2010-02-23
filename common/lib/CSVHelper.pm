@@ -141,6 +141,21 @@ sub csvline2array {
   return(@columns);
 }
 
+#####
+
+sub csvline2hash {
+  my ($self, $value, $rha) = @_;
+
+  my @columns = $self->csvline2array($value);
+  return() if ($self->error());
+  my %out = ();
+  for (my $i = 0; $i < scalar @$rha; $i++) {
+    $out{$$rha[$i]} = $columns[$i];
+  }
+
+  return(%out);
+}
+
 ##########
 
 sub __loadCSV {
