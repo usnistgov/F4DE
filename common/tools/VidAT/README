@@ -52,10 +52,21 @@ $ perl -I. vidatLog.pl -i example/sample.mpeg \
                        -onlyframes \
                        -o example/sample.frames
 
-To build a montage video from the original and the annotated form:
-$ perl -I . pmontage.pl -i example/sample.mpeg \
-                        -i example/sample.new.mpeg \
-                        -o example/montage.mpeg
+To build a montage video from the original and an annotated video, the input 
+video files must have the same duration, especially the same number of frames.
+To do so, make sure that, if vidatLog.pl has been used to generate the video, 
+the '-k' option has the same value.
+In the following example, the original video is used as the first input and a 
+not trimmed annotated video is used as a second input. To insure that both 
+videos have the same number of frames, the '-k' option is ignored, therefore the
+number of frames are kept the same.
+$ perl -I. vidatLog.pl -i example/sample.mpeg \
+                       -l example/sample.tracking_log \
+                       -o example/sample.full.mpeg
+                       
+$ perl -I. pmontage.pl -i example/sample.mpeg \
+                       -i example/sample.full.mpeg \
+                       -o example/montage.mpeg
 
 
 CONTACT

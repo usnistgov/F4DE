@@ -416,6 +416,9 @@ No known bugs.
 
 =head1 NOTE
 
+To build a montage video, the input video files must have the same duration, especially the same number of frames.
+If vidatLog.pl has been used to generate the video, the vidatLog '-k' option has the same value.
+
 =head1 AUTHORS
 
  Jerome Ajot <jerome.ajot@nist.gov>
