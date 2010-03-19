@@ -64,14 +64,16 @@ sub new {
     $errortxt = "Problem creating CSV handler: " . Text::CSV->error_diag();
   }
 
-  my $errormsg = new MErrorH("CSVHelper");
-  $errormsg->set_errormsg($errortxt);
+  my $errorh = new MErrorH("CSVHelper");
+  $errorh->set_errormsg($errortxt);
+  my $errorv = $errorh->error();
 
   my $self =
     {
      csvh            => $csvh,
      col_nbr         => undef,
-     errormsg        => $errormsg,
+     errorv          => $errorv,
+     errorh          => $errorh,
     };
 
   bless $self;
@@ -264,21 +266,22 @@ sub loadCSV_tohash {
 
 sub _set_errormsg {
   my ($self, $txt) = @_;
-  $self->{errormsg}->set_errormsg($txt);
+  $self->{errorh}->set_errormsg($txt);
+  $self->{errorv} = $self->{errorh}->error();
 }
 
 #####
 
 sub get_errormsg {
-  my ($self) = @_;
-  return($self->{errormsg}->errormsg());
+  # arg 0: self
+  return($_[0]->{errorh}->errormsg());
 }
 
 #####
 
 sub error {
-  my ($self) = @_;
-  return($self->{errormsg}->error());
+  # arg 0: self
+  return($_[0]->{errorv});
 }
 
 #####
