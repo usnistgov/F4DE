@@ -245,6 +245,8 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/BarPlot/ /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/lib/BarPlot.pm
 ## CSVUtil
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/CSVUtil/
+## DEVA
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/DEVA
 
 create_mans:
 # TrecVid08
