@@ -42,7 +42,7 @@ BEGIN {
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib");
+      : ("../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -58,7 +58,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("MMisc", "CSVHelper", "MtSQLite") {
+foreach my $pn ("MMisc", "MtSQLite") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);

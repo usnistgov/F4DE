@@ -42,7 +42,7 @@ BEGIN {
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib");
+      : ("../../../common/lib");
 }
 use lib (@f4bv);
 
