@@ -259,7 +259,7 @@ Where:
   --help     This help message
   --version  Version information
   --referenceDBfile  The Reference SQLite file (loaded as 'referenceDB', contains the 'Reference' table, whose columns are: TrialID, Targ)
-  --systemDBfile     The System SQLite file (loaded as 'systemDB', contains the 'System' table, whose columns are: TrialID, Decision, Score
+  --systemDBfile     The System SQLite file (loaded as 'systemDB', contains the 'System' table, whose columns are: TrialID, Decision, Score)
   --metadataDBfile   The metadata SQLite file (loaded as 'metadataDB')
   --filterCMD        Set of SQLite commands
   --FilterCMDfile    File containing set of SQLite commands
