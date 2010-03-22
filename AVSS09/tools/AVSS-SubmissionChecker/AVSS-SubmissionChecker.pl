@@ -43,21 +43,20 @@ BEGIN {
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib", "../../../CLEAR07/lib", "../../../common/lib");
+      : ("../../../AVSS09/lib", "../../../CLEAR07/lib", "../../../common/lib");
 }
 use lib (@f4bv);
 
 sub eo2pe {
-  my @a = @_;
-  my $oe = join(" ", @a);
-  my $pe = ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "";
-  return($pe);
+  my $oe = join(" ", @_);
+  return( ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "" );
 }
 
 ## Then try to load everything
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
+sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
 foreach my $pn ("MMisc", "AVSS09ViperFile", "AVSS09ECF", "AVSS09HelperFunctions") {
@@ -908,12 +907,6 @@ sub vprint {
 
 
   print substr($s, 0, $h), " ", join("", @rest), "\n";
-}
-
-############################################################
-
-sub _warn_add {
-  $warn_msg .= "[Warning] " . join(" ", @_) ."\n";
 }
 
 ############################################################ Manual
