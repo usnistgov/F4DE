@@ -93,14 +93,17 @@ my $refDBfile = "";
 my $refDBname = "referenceDB";
 my $sysDBfile = "";
 my $sysDBname = "systemDB";
-my $resDBfile = "";
+my @resDBfiles = ();
 my $resDBname = "resultsDB";
 #
 my $tablename = "resultsTable";
 my $TrialIDcolumn = "TrialID";
 
+my @ok_modes = ("AND", "OR"); # order is important
+my $mode = $ok_modes[0];
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                  R               h         rs  v      #
+# Used:                  R               h    m    rs  v      #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -109,16 +112,25 @@ GetOptions
    \%opt,
    'help',
    'version',
-   'ResultDBfile=s'     => \$resDBfile,
+   'ResultDBfile=s'     => \@resDBfiles,
    'referenceDBfile=s'  => \$refDBfile,
    'systemDBfile=s'     => \$sysDBfile,
-
+   'mode=s'             => \$mode,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-MMisc::error_quit("No resultsDBfile information provided\n\n$usage") 
+MMisc::error_quit("No ScoreDBfile information provided\n\n$usage") 
   if (scalar @ARGV != 1);
+MMisc::error_quit("No \'referenceDBfile\' provided\n\n$usage")
+  if (MMisc::is_blank($refDBfile));
+MMisc::error_quit("No \'systemDBfile\' provided\n\n$usage")
+  if (MMisc::is_blank($sysDBfile));
+MMisc::error_quit("No \'referenceDBfile\' provided\n\n$usage")
+  if (scalar @resDBfiles == 0);
+&check_DBs_r($refDBfile, $sysDBfile, @resDBfiles);
+MMisc::error_quit("Unrecognized \'mode\' [$mode], authorized values are: " . join(" ", @ok_modes))
+  if (! grep(m%^$mode$%, @ok_modes));
 
 my ($dbfile) = @ARGV;
 
@@ -127,7 +139,15 @@ my $cmdlines = "";
 # Attach the REF and SYS databases
 MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$refDBfile\" AS $refDBname");
 MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$sysDBfile\" AS $sysDBname");
-MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$resDBfile\" AS $resDBname");
+my $used_resDBname = "";
+my @resDBnames = ();
+for (my $i = 0; $i < scalar @resDBfiles; $i++) {
+  my $resDBfile = $resDBfiles[$i];
+  my $lresDBname = $resDBname . sprintf("_%03d", $i);
+  MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$resDBfile\" AS $lresDBname");
+  push @resDBnames, $lresDBname;
+}
+$used_resDBname = &joinResDBfiles(\$cmdlines, $mode, @resDBnames);
 
 # Create the Final table
 
@@ -135,9 +155,9 @@ my $tmp=<<EOF
 DROP TABLE IF EXISTS ref;
 DROP TABLE IF EXISTS sys;
 
-CREATE TABLE ref AS SELECT $tablename.TrialID,Targ FROM $resDBname.$tablename INNER JOIN $refDBname.Reference WHERE $tablename.$TrialIDcolumn = Reference.$TrialIDcolumn;
+CREATE TABLE ref AS SELECT $tablename.$TrialIDcolumn,Targ FROM $used_resDBname.$tablename INNER JOIN $refDBname.Reference WHERE $tablename.$TrialIDcolumn = Reference.$TrialIDcolumn;
 
-CREATE TABLE sys AS SELECT $tablename.TrialID,Decision,Score FROM $resDBname.$tablename INNER JOIN $sysDBname.System WHERE $tablename.$TrialIDcolumn = System.$TrialIDcolumn;
+CREATE TABLE sys AS SELECT $tablename.$TrialIDcolumn,Decision,Score FROM $used_resDBname.$tablename INNER JOIN $sysDBname.System WHERE $tablename.$TrialIDcolumn = System.$TrialIDcolumn;
 EOF
   ;
 
@@ -217,6 +237,64 @@ MMisc::ok_quit("Done");
 
 ####################
 
+sub check_DBs_r {
+  for (my $i = 0; $i < scalar @_; $i++) {
+    my $fn = $_[$i];
+    my $err = MMisc::check_file_r($fn);
+    MMisc::error_quit("Problem with DB file [$fn]: $err")
+      if (! MMisc::is_blank($err));
+  }
+}
+
+####################
+
+sub ANDtworesDB {
+  my ($rcmd, $in1, $in2, $out) = @_;
+
+  my $tmp=<<EOF
+DROP TABLE IF EXISTS $out.$tablename;
+CREATE TABLE $out.$tablename AS SELECT $in1.$tablename.TrialID FROM $in1.$tablename INNER JOIN $in2.$tablename WHERE $in1.$tablename.$TrialIDcolumn = $in2.$tablename.$TrialIDcolumn;
+
+EOF
+  ;
+
+  MtSQLite::commandAdd($rcmd, $tmp);
+}
+
+#####
+
+sub ANDresDBs {
+  my ($rcmd, @dbl) = @_;
+
+  # We know we have at least 2 tables in the list at this point
+  my $in1 = shift @dbl;
+  my $in2 = shift @dbl;
+  my $jres = "temp.${resDBname}_init";
+  &ANDtworesDB($rcmd, $in1, $in2, $jres);
+  my $pjres = $jres;
+  for (my $i = 0; $i < scalar @dbl; $i++) {
+    $jres = "temp.${resDBname}_" . sprint("%04d", $i);
+    &ANDtworesDB($rcmd, $pjres, $dbl[$i], $jres);
+  }
+
+  return($jres);
+}
+
+#####
+
+sub joinResDBfiles {
+  my ($rcmd, $mode, @dbl) = @_;
+
+  return($dbl[0]) if (scalar @dbl == 1);
+
+  return(&ANDresDBs($rcmd, @dbl))
+    if ($mode eq $ok_modes[0]);
+
+  MMisc::error_quit("Not yet ready mode");
+}
+
+####################
+
 sub confirm_table {
   my ($dbfile, $tablename, @columns) = @_;
   
@@ -271,7 +349,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
