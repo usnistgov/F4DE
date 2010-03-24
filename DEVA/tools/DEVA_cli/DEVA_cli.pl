@@ -98,8 +98,13 @@ my $score = 1;
 my $refcsv = "";
 my $syscsv = "";
 
+my $wrefDBfile = "";
+my $wsysDBfile = "";
+my $wmdDBfile  = "";
+my @addResDBfiles = ();
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   C  F             T        c  f h      o  rs  v      #
+# Used:   C  F           RST      a c  f h    m o  rs  v      #
 
 my %opt = ();
 GetOptions
@@ -115,7 +120,10 @@ GetOptions
    'filterSkip' => sub { $filter = 0},
    'FilterCMDfile=s' => \$filtercmdfile,
    'TrialScoreSkip' => sub { $score = 0},
-
+   'RefDBfile=s'    => \$wrefDBfile,
+   'SysDBfile=s'    => \$wsysDBfile,
+   'metadataDBfile=s' => \$wmdDBfile,
+   'addResDBfiles=s'   => \@addResDBfiles,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -132,17 +140,17 @@ MMisc::error_quit("Could not create log dir ($logdir)")
 
 my $mdDBbase = "$outdir/metadataDB";
 my $mdDBcfg  = "$mdDBbase.cfg";
-my $mdDBfile = "$mdDBbase.sql";
+my $mdDBfile = (MMisc::is_blank($wmdDBfile)) ? "$mdDBbase.sql" : $wmdDBfile;
 my $mdDBlogb = "$logdir/metadataDB";
 
 my $refDBbase = "$outdir/referenceDB";
 my $refDBcfg  = "$refDBbase.cfg";
-my $refDBfile = "$refDBbase.sql";
+my $refDBfile = (MMisc::is_blank($wrefDBfile)) ? "$refDBbase.sql" : $wrefDBfile;
 my $refDBlogb = "$logdir/referenceDB";
 
 my $sysDBbase = "$outdir/systemDB";
 my $sysDBcfg  = "$sysDBbase.cfg";
-my $sysDBfile = "$sysDBbase.sql";
+my $sysDBfile = (MMisc::is_blank($wsysDBfile)) ? "$sysDBbase.sql" : $wsysDBfile;
 my $sysDBlogb = "$logdir/systemDB";
 
 my $resDBbase = "$outdir/filterDB";
@@ -163,32 +171,40 @@ if ($doCfg) {
       ($refDBcfg, "${refDBlogb}_cfggen.log", "-T Reference -p TrialID", $refcsv);
     &check_isin($tmp, '^newtable:\s+Reference$', '^column\*:\s+TrialID;INT$', '^column:\s+Targ;TEXT$');
   }
-
+  
   if (! MMisc::is_blank($syscsv)) {
     print "** SYS\n";
     my $tmp = &do_cfgfile
       ($sysDBcfg, "${sysDBlogb}_cfggen.log", "-T System -p TrialID", $syscsv);
     &check_isin($tmp, '^newtable: System$', '^column\*:\s+TrialID;INT$', '^column:\s+Decision;TEXT$', '^column:\s+Score;REAL$');
   }
-
-  print "** Metadata\n";
-  my $tmp = &do_cfgfile
-    ($mdDBcfg, "${mdDBlogb}_cfggen.log", 
-     "-c ${mdDBbase}_columninfo.txt -t ${mdDBbase}_tableinfo.txt", 
-     @csvlist);
+  
+  if (scalar @csvlist > 0) {
+    print "** Metadata\n";
+    my $tmp = &do_cfgfile
+      ($mdDBcfg, "${mdDBlogb}_cfggen.log", 
+       "-c ${mdDBbase}_columninfo.txt -t ${mdDBbase}_tableinfo.txt", 
+       @csvlist);
+  }
 }
 
 if ($createDBs) {
-  print "***** Creating initial DataBases\n";
-
-  print "** REF\n";
-  &db_create($refDBcfg, $refDBfile, "${refDBlogb}_DBgen.log");
-
-  print "** SYS\n";
-  &db_create($sysDBcfg, $sysDBfile, "${sysDBlogb}_DBgen.log");
-
-  print "** Metadata\n";
-  &db_create($mdDBcfg, $mdDBfile, "${mdDBlogb}_DBgen.log");
+  print "***** Creating initial DataBases (if not already present)\n";
+  
+  if (MMisc::does_file_exists($refDBcfg)) {
+    print "** REF\n";
+    &db_create($refDBcfg, $refDBfile, "${refDBlogb}_DBgen.log");
+  }
+  
+  if (MMisc::does_file_exists($sysDBcfg)) {
+    print "** SYS\n";
+    &db_create($sysDBcfg, $sysDBfile, "${sysDBlogb}_DBgen.log");
+  }
+  
+  if (MMisc::does_file_exists($mdDBcfg)) {
+    print "** Metadata\n";
+    &db_create($mdDBcfg, $mdDBfile, "${mdDBlogb}_DBgen.log");
+  }
 }
 
 if ($filter) {
@@ -196,11 +212,11 @@ if ($filter) {
   
   MMisc::error_quit("No such \'FilterCMDfile\' ($filtercmdfile)")
     if ((MMisc::is_blank($filtercmdfile)) || (! MMisc::is_file_r($filtercmdfile)));
-
+  
   &check_file_r($refDBfile);
   &check_file_r($sysDBfile);
   &check_file_r($mdDBfile);
-
+  
   &run_filter("$logdir/filterTool.log", $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile);
 }
 
@@ -210,8 +226,11 @@ if ($score) {
   &check_file_r($refDBfile);
   &check_file_r($sysDBfile);
   &check_file_r($resDBfile);
+  for (my $i = 0; $i < scalar @addResDBfiles; $i++) {
+    &check_file_r($addResDBfiles[$i]);
+  }
 
-  &run_scorer("$logdir/TrialScore.log", $refDBfile, $sysDBfile, $resDBfile, $finalDBfile);
+  &run_scorer("$logdir/TrialScore.log", $refDBfile, $sysDBfile, $resDBfile, $finalDBfile, @addResDBfiles);
 }
 
 MMisc::ok_quit("Done");
@@ -250,6 +269,11 @@ sub do_cfgfile {
 
 sub db_create {
   my ($cfgfile, $dbfile, $log) = @_;
+
+  if (MMisc::does_file_exists($dbfile)) {
+    print " -> DB file already exists, not overwriting it\n";
+    return();
+  }
 
   my $err = MMisc::check_file_r($cfgfile);
   MMisc::error_quit("Problem with config file ($cfgfile): $err")
@@ -290,13 +314,18 @@ sub run_filter {
 ##########
 
 sub run_scorer {
-  my ($log, $refDBfile, $sysDBfile, $resDBfile, $finalDBfile) = @_;
+  my ($log, $refDBfile, $sysDBfile, $resDBfile, $finalDBfile, @xres) = @_;
 
   my $tool = "../DEVA_sci/DEVA_sci.pl";
   &check_tool($tool);
 
+  my $cmdp = "-r $refDBfile -s $sysDBfile -R $resDBfile $finalDBfile";
+  for (my $i = 0; $i < scalar @xres; $i++) {
+    $cmdp = " -R " . $xres[$i];
+  }
   my ($ok, $otxt, $so, $se, $rc, $of) = 
-    &run_tool($log, $tool, "-r $refDBfile -s $sysDBfile -R $resDBfile $finalDBfile");}
+    &run_tool($log, $tool, $cmdp);
+}
 
 ##########
 
@@ -338,7 +367,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--TrialScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--FilterCMDfile SQLite_commands_file] [csvfile [csvfile [...]]
+$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--TrialScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--metadataDBfile file] [--FilterCMDfile SQLite_commands_file] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -353,10 +382,13 @@ Where:
   --CreateDBSkip  Bypasss Databases creation step
   --filterSkip    Bypasss Filter tool step
   --TrialScoreSkip  Bypass Scoring Interface step
-  --refcsv  Specify the Reference csv file
-  --syscsv  Specify the System csv file
+  --refcsv     Specify the Reference csv file
+  --syscsv     Specify the System csv file
+  --RefDBfile  Specify the Reference SQLite database file
+  --SysDBfile  Specify the System SQLite database file
+  --metadataDBfile  Specify the metadata SQLite database file
   --FilterCMDfile  Specify the SQLite command file
-
+  --addResDBfiles  Additional filter results database files to give the scorer (will do an AND on the TrialIDs)
 EOF
 ;
 
