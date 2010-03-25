@@ -150,7 +150,9 @@ MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$sysDBfile\" AS $sysDBname")
 
 # Create the Result table
 MtSQLite::commandAdd(\$cmdlines, "DROP TABLE IF EXISTS $tablename");
-MtSQLite::commandAdd(\$cmdlines, "CREATE TABLE $tablename ( $TrialIDcolumn INTEGER PRIMARY KEY )");
+#MtSQLite::commandAdd(\$cmdlines, "CREATE TABLE $tablename ( $TrialIDcolumn INTEGER PRIMARY KEY )");
+# was removed: we need to copy the type of the column instead of forcing it to INTEGER
+MtSQLite::commandAdd(\$cmdlines, "CREATE TABLE $tablename AS SELECT $TrialIDcolumn FROM $refDBname.reference WHERE $TrialIDcolumn=\"not a value found here\"");
 
 $filtercmd = MMisc::slurp_file($filtercmdfile)
   if (! MMisc::is_blank($filtercmdfile));
