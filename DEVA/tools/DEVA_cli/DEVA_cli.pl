@@ -102,9 +102,10 @@ my $wrefDBfile = "";
 my $wsysDBfile = "";
 my $wmdDBfile  = "";
 my @addResDBfiles = ();
+my $resDBbypass = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   C  F           RST      a c  f h    m o  rs  v      #
+# Used: A C  F           RST      a c  f h    m o  rs  v      #
 
 my %opt = ();
 GetOptions
@@ -124,6 +125,7 @@ GetOptions
    'SysDBfile=s'    => \$wsysDBfile,
    'metadataDBfile=s' => \$wmdDBfile,
    'addResDBfiles=s'   => \@addResDBfiles,
+   'AllowResDBfileBypass' => \$resDBbypass,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -162,21 +164,24 @@ my $finalDBfile = "$finalDBbase.sql";
 
 if ($doCfg) {
   print "***** Generating config files\n";
-  MMisc::error_quit("No CVS file list given, aborting")
-    if (scalar @csvlist == 0);
+  my $done = 0;
+#  MMisc::warn_print("No CVS file list given, no metadataDB file will be generated")
+#    if (scalar @csvlist == 0);
 
   if (! MMisc::is_blank($refcsv)) {
     print "** REF\n";
     my $tmp = &do_cfgfile
       ($refDBcfg, "${refDBlogb}_cfggen.log", "-T Reference -p TrialID", $refcsv);
-    &check_isin($tmp, '^newtable:\s+Reference$', '^column\*:\s+TrialID;INT$', '^column:\s+Targ;TEXT$');
+    &check_isin($tmp, '^newtable:\s+Reference$', '^column\*:\s+TrialID;', '^column:\s+Targ;TEXT$');
+    $done++;
   }
   
   if (! MMisc::is_blank($syscsv)) {
     print "** SYS\n";
     my $tmp = &do_cfgfile
       ($sysDBcfg, "${sysDBlogb}_cfggen.log", "-T System -p TrialID", $syscsv);
-    &check_isin($tmp, '^newtable: System$', '^column\*:\s+TrialID;INT$', '^column:\s+Decision;TEXT$', '^column:\s+Score;REAL$');
+    &check_isin($tmp, '^newtable: System$', '^column\*:\s+TrialID;', '^column:\s+Decision;TEXT$', '^column:\s+Score;');
+    $done++;
   }
   
   if (scalar @csvlist > 0) {
@@ -185,26 +190,35 @@ if ($doCfg) {
       ($mdDBcfg, "${mdDBlogb}_cfggen.log", 
        "-c ${mdDBbase}_columninfo.txt -t ${mdDBbase}_tableinfo.txt", 
        @csvlist);
+    $done++;
   }
+
+  print "-> $done config file generated\n";
 }
 
 if ($createDBs) {
   print "***** Creating initial DataBases (if not already present)\n";
+  my $done = 0;
   
   if (MMisc::does_file_exists($refDBcfg)) {
     print "** REF\n";
     &db_create($refDBcfg, $refDBfile, "${refDBlogb}_DBgen.log");
+    $done++;
   }
   
   if (MMisc::does_file_exists($sysDBcfg)) {
     print "** SYS\n";
     &db_create($sysDBcfg, $sysDBfile, "${sysDBlogb}_DBgen.log");
+    $done++;
   }
   
   if (MMisc::does_file_exists($mdDBcfg)) {
     print "** Metadata\n";
     &db_create($mdDBcfg, $mdDBfile, "${mdDBlogb}_DBgen.log");
+    $done++;
   }
+
+  print "-> $done DB file generated\n";
 }
 
 if ($filter) {
@@ -215,7 +229,7 @@ if ($filter) {
   
   &check_file_r($refDBfile);
   &check_file_r($sysDBfile);
-  &check_file_r($mdDBfile);
+  $mdDBfile = &check_file_r($mdDBfile, 1);
   
   &run_filter("$logdir/filterTool.log", $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile);
 }
@@ -225,12 +239,12 @@ if ($score) {
 
   &check_file_r($refDBfile);
   &check_file_r($sysDBfile);
-  &check_file_r($resDBfile);
+  $resDBfile = &check_file_r($resDBfile, $resDBbypass);
   for (my $i = 0; $i < scalar @addResDBfiles; $i++) {
     &check_file_r($addResDBfiles[$i]);
   }
 
-  &run_scorer("$logdir/TrialScore.log", $refDBfile, $sysDBfile, $resDBfile, $finalDBfile, @addResDBfiles);
+  &run_scorer("$logdir/TrialScore.log", $refDBfile, $sysDBfile, $finalDBfile, $resDBfile, @addResDBfiles);
 }
 
 MMisc::ok_quit("Done");
@@ -292,11 +306,18 @@ sub db_create {
 ##########
 
 sub check_file_r {
-  my ($file) = @_;
+  my ($file, $lenient) = @_;
 
   my $err = MMisc::check_file_r($file);
-  MMisc::error_quit("Problem with file ($file): $err")
-    if (! MMisc::is_blank($err));
+  if (! MMisc::is_blank($err)) {
+    if ($lenient) {
+      MMisc::warn_print("Issue with non mandatory file ($file): $err");
+      return("");
+    }
+    MMisc::error_quit("Problem with file ($file): $err")
+  }
+
+  return($file);
 }
 
 #####
@@ -308,21 +329,25 @@ sub run_filter {
   &check_tool($tool);
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
-    &run_tool($log, $tool, "-r $refDBfile -s $sysDBfile -m $mdDBfile -F $filtercmdfile $resDBfile");
+    &run_tool($log, $tool, "-r $refDBfile -s $sysDBfile" .
+              ((MMisc::is_blank($mdDBfile)) ? "" : " -m $mdDBfile" ) .
+              " -F $filtercmdfile $resDBfile");
 }
 
 ##########
 
 sub run_scorer {
-  my ($log, $refDBfile, $sysDBfile, $resDBfile, $finalDBfile, @xres) = @_;
+  my ($log, $refDBfile, $sysDBfile, $finalDBfile, @xres) = @_;
 
   my $tool = "../DEVA_sci/DEVA_sci.pl";
   &check_tool($tool);
 
-  my $cmdp = "-r $refDBfile -s $sysDBfile -R $resDBfile $finalDBfile";
+  my $cmdp = "-r $refDBfile -s $sysDBfile" 
   for (my $i = 0; $i < scalar @xres; $i++) {
     $cmdp = " -R " . $xres[$i];
   }
+  $cmdp .= " -b ${finalDBbase}_DET";
+  $cmdp .= " $finalDBfile";
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdp);
 }
