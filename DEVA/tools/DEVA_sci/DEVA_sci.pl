@@ -99,6 +99,8 @@ my $resDBname = "resultsDB";
 my $tablename = "resultsTable";
 my $TrialIDcolumn = "TrialID";
 
+my $bDETf = "DET";
+
 my @ok_modes = ("AND", "OR"); # order is important
 my $mode = $ok_modes[0];
 
@@ -116,6 +118,7 @@ GetOptions
    'referenceDBfile=s'  => \$refDBfile,
    'systemDBfile=s'     => \$sysDBfile,
    'mode=s'             => \$mode,
+   'baseDETfile=s'      => \$bDETf,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -222,15 +225,15 @@ MMisc::error_quit("Error adding DET to the DETSet: $rtn")
 my @dc_range = (0.01, 1000, 5, 99.99); # order is important (xmin;xmax) (ymin;ymax)
 my ($xm, $xM, $ym, $yM)= @dc_range;
 MMisc::writeTo
-    ("DET", ".scores.txt", 1, 0, 
+    ($bDETf, ".scores.txt", 1, 0, 
      $detSet->renderAsTxt
-     ("DET" . ".det", 1, 1, 
+     ("$bDETf.det", 1, 1, 
       { (xScale => "log", Xmin => $xm, Xmax => $xM, Ymin => $ym, Ymax => $yM,
          gnuplotPROG => "gnuplot",
          createDETfiles => 1,
          BuildPNG => 1),
       },
-      "DET.csv")
+      "$bDETf.csv")
     );
 
 MMisc::ok_quit("Done");
@@ -349,7 +352,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--baseDETfile filebase] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
@@ -361,7 +364,7 @@ Where:
   --referenceDBfile  The Reference SQLite file (must contains the 'Reference' table, whose columns are: TrialID, Targ)
   --systemDBfile     The System SQLite file (must contains the 'System' table, whose columns are: TrialID, Decision, Score)
   --ResultDBfile     The Filter tool resulting DB (must contain the \'$tablename\' table, which only column is: $TrialIDcolumn)
-
+  --baseDETfile      When working with DET curves, all the relevant files will start with this value (default: $bDETf)
 EOF
 ;
 
