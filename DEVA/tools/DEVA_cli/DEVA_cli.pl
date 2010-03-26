@@ -342,9 +342,9 @@ sub run_scorer {
   my $tool = "../DEVA_sci/DEVA_sci.pl";
   &check_tool($tool);
 
-  my $cmdp = "-r $refDBfile -s $sysDBfile" 
+  my $cmdp = "-r $refDBfile -s $sysDBfile";
   for (my $i = 0; $i < scalar @xres; $i++) {
-    $cmdp = " -R " . $xres[$i];
+    $cmdp .= " -R " . $xres[$i];
   }
   $cmdp .= " -b ${finalDBbase}_DET";
   $cmdp .= " $finalDBfile";
