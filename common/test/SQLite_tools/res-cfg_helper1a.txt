@@ -1,0 +1,12 @@
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_cfg_helper.pl ../common/ref.csv
+[[RETURN CODE]] 0
+[[STDOUT]]
+## Automaticaly generated table definition #1 (seen 16 lines of data)
+newtable: ref
+csvfile: ../common/ref.csv
+column: ;TEXT
+
+## Done
+
+[[STDERR]]
+

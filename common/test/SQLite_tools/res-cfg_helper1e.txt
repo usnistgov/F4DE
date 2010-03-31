@@ -1,0 +1,26 @@
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_cfg_helper.pl ../common/md.csv ../common/md.csv
+[[RETURN CODE]] 0
+[[STDOUT]]
+## Automaticaly generated table definition #1 (seen 50 lines of data)
+newtable: md
+csvfile: ../common/md.csv
+column: TrialID;INT
+column: name;TEXT
+column: year;INT
+column: color;TEXT
+# Primary key candidate: TrialID
+
+## Automaticaly generated table definition #2 (seen 50 lines of data)
+# Warning: this is possibly a duplicate table, as a table named 'md' already exists, will use a different name
+newtable: md_
+csvfile: ../common/md.csv
+column: TrialID;INT
+column: name;TEXT
+column: year;INT
+column: color;TEXT
+# Primary key candidate: TrialID
+
+## Done
+
+[[STDERR]]
+

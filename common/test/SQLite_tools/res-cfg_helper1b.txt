@@ -1,0 +1,14 @@
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_cfg_helper.pl ../common/sys.csv
+[[RETURN CODE]] 0
+[[STDOUT]]
+## Automaticaly generated table definition #1 (seen 50 lines of data)
+newtable: sys
+csvfile: ../common/sys.csv
+column: TrialID;INT
+column: Score;REAL
+column: Decision;TEXT
+
+## Done
+
+[[STDERR]]
+

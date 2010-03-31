@@ -1,0 +1,28 @@
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_cfg_helper.pl -p TrialID ../common/ref.csv ../common/sys.csv ../common/md.csv
+[[RETURN CODE]] 0
+[[STDOUT]]
+## Automaticaly generated table definition #1 (seen 16 lines of data)
+newtable: ref
+csvfile: ../common/ref.csv
+column: ;TEXT
+
+## Automaticaly generated table definition #2 (seen 50 lines of data)
+newtable: sys
+csvfile: ../common/sys.csv
+column*: TrialID;INT
+column: Score;REAL
+column: Decision;TEXT
+
+## Automaticaly generated table definition #3 (seen 50 lines of data)
+newtable: md
+csvfile: ../common/md.csv
+column*: TrialID;INT
+column: name;TEXT
+column: year;INT
+column: color;TEXT
+# Primary key candidate: TrialID
+
+## Done
+
+[[STDERR]]
+
