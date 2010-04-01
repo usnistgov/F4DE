@@ -39,8 +39,12 @@ $tn = "cfg_helper1e";
 $testr += &do_simple_test($tn, "(duplicate table renaming)", "$tool ../common/md.csv ../common/md.csv", "res-$tn.txt");
 
 ##
-$tn = "cfg_helper2";
-$testr += &do_simple_test($tn, "(columninfo)", "$tool -c ../common/ref.csv ../common/sys.csv ../common/md.csv", "res-$tn.txt");
+$tn = "cfg_helper2a";
+$testr += &do_simple_test($tn, "(columninfo)", "$tool ../common/ref.csv ../common/sys.csv ../common/md.csv -c", "res-$tn.txt");
+
+##
+$tn = "cfg_helper2b";
+$testr += &do_simple_test($tn, "(tableinfo)", "$tool ../common/ref.csv ../common/sys.csv ../common/md.csv -t", "res-$tn.txt");
 
 ##
 $tn = "cfg_helper3";
