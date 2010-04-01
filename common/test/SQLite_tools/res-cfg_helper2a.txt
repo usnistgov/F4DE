@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_cfg_helper.pl ../common/ref.csv ../common/sys.csv ../common/md.csv
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_cfg_helper.pl ../common/ref.csv ../common/sys.csv ../common/md.csv -c
 [[RETURN CODE]] 0
 [[STDOUT]]
 ## Automaticaly generated table definition #1 (seen 50 lines of data)
@@ -23,6 +23,26 @@ column: name;TEXT
 column: year;INT
 column: color;TEXT
 # Primary key candidate: TrialID
+
+
+## FYI: Original Columns name information:
+# Column 'Decision' is in the following tables:
+#   - 'sys'
+# Column 'Score' is in the following tables:
+#   - 'sys'
+# Column 'Targ' is in the following tables:
+#   - 'ref'
+# Column 'TrialID' is in the following tables:
+#   - 'md'
+#   - 'ref'
+#   - 'sys'
+# Column 'color' is in the following tables:
+#   - 'md'
+# Column 'name' is in the following tables:
+#   - 'md'
+# Column 'year' is in the following tables:
+#   - 'md'
+
 
 ## Done
 

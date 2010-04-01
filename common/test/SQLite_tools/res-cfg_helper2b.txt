@@ -1,0 +1,60 @@
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_cfg_helper.pl ../common/ref.csv ../common/sys.csv ../common/md.csv -t
+[[RETURN CODE]] 0
+[[STDOUT]]
+## Automaticaly generated table definition #1 (seen 50 lines of data)
+newtable: ref
+csvfile: ../common/ref.csv
+column: TrialID;INT
+column: Targ;TEXT
+# Primary key candidate: TrialID
+
+## Automaticaly generated table definition #2 (seen 50 lines of data)
+newtable: sys
+csvfile: ../common/sys.csv
+column: TrialID;INT
+column: Score;REAL
+column: Decision;TEXT
+
+## Automaticaly generated table definition #3 (seen 50 lines of data)
+newtable: md
+csvfile: ../common/md.csv
+column: TrialID;INT
+column: name;TEXT
+column: year;INT
+column: color;TEXT
+# Primary key candidate: TrialID
+
+
+## FYI: Tables / Original Columns matches :
+# Table 'md' uses the following columns:
+#   - 'TrialID' also is used in the following table(s):
+#      + 'md' 
+#      + 'ref' 
+#      + 'sys' 
+#   - 'color' also is used in the following table(s):
+#      + 'md' 
+#   - 'name' also is used in the following table(s):
+#      + 'md' 
+#   - 'year' also is used in the following table(s):
+#      + 'md' 
+# Table 'ref' uses the following columns:
+#   - 'Targ' also is used in the following table(s):
+#      + 'ref' 
+#   - 'TrialID' also is used in the following table(s):
+#      + 'md' 
+#      + 'ref' 
+#      + 'sys' 
+# Table 'sys' uses the following columns:
+#   - 'Decision' also is used in the following table(s):
+#      + 'sys' 
+#   - 'Score' also is used in the following table(s):
+#      + 'sys' 
+#   - 'TrialID' also is used in the following table(s):
+#      + 'md' 
+#      + 'ref' 
+#      + 'sys' 
+
+## Done
+
+[[STDERR]]
+
