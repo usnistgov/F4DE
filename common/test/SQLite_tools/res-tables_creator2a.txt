@@ -1,0 +1,9 @@
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_tables_creator.pl - ../common/ref2.cfg
+[[RETURN CODE]] 0
+[[STDOUT]]
+DROP TABLE IF EXISTS Reference;
+CREATE TABLE Reference (TrialID INT PRIMARY KEY, Targ TEXT);
+
+
+[[STDERR]]
+

@@ -1,0 +1,9 @@
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_tables_creator.pl - ../common/sys2.cfg
+[[RETURN CODE]] 0
+[[STDOUT]]
+DROP TABLE IF EXISTS System;
+CREATE TABLE System (TrialID INT PRIMARY KEY, Score REAL, Decision TEXT);
+
+
+[[STDERR]]
+

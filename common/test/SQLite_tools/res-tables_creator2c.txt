@@ -1,0 +1,9 @@
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_tables_creator.pl - ../common/md2.cfg
+[[RETURN CODE]] 0
+[[STDOUT]]
+DROP TABLE IF EXISTS Metadata;
+CREATE TABLE Metadata (TrialID INT PRIMARY KEY, name TEXT, year INT, color TEXT);
+
+
+[[STDERR]]
+

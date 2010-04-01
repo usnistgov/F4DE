@@ -1,0 +1,7 @@
+[[COMMANDLINE]] sqlite3 /tmp/SQLite_tools_tester-Temp_tables_creator3b/database.sql < add_checker_sql.cmd
+[[RETURN CODE]] 0
+[[STDOUT]]
+Metadata   Reference  System   
+
+[[STDERR]]
+
