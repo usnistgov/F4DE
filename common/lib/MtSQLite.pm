@@ -163,11 +163,21 @@ sub doOneCommand {
 
 ####################
 
-sub commandAdd {
-  my ($rstr, $cmd) = @_;
+sub _fixcmd {
+  my ($cmd) = @_;
 
   my $tcmd = MMisc::clean_begend_spaces($cmd);
   $tcmd .= ";" if ($tcmd !~ m%\;$%);
+
+  return($tcmd);
+}
+
+##
+
+sub commandAdd {
+  my ($rstr, $cmd) = @_;
+
+  my $tcmd = &_fixcmd($cmd);
 
   $$rstr .= "/* New command */\n";
   $$rstr .= "$tcmd\n";
