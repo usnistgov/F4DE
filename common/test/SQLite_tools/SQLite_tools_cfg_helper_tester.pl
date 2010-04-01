@@ -10,7 +10,7 @@ MMisc::error_quit("ERROR: Tool ($tool) empty or not an executable\n")
   if ((MMisc::is_blank($tool)) || (! MMisc::is_file_x($tool)));
 my $mode = shift @ARGV;
 
-print "** Running SQLite_tools tests:\n";
+print "** Running SQLite_cfg_helper tests:\n";
 
 my $totest = 0;
 my $testr = 0;
