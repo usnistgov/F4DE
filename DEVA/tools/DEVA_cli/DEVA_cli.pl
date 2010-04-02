@@ -325,7 +325,7 @@ sub check_file_r {
 sub run_filter {
   my ($log, $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile) = @_;
 
-  my $tool = "../DEVA_filter/DEVA_filter.pl";
+  my $tool = "../../../DEVA/tools/DEVA_filter/DEVA_filter.pl";
   &check_tool($tool);
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
@@ -339,7 +339,7 @@ sub run_filter {
 sub run_scorer {
   my ($log, $refDBfile, $sysDBfile, $finalDBfile, @xres) = @_;
 
-  my $tool = "../DEVA_sci/DEVA_sci.pl";
+  my $tool = "../../../DEVA/tools/DEVA_sci/DEVA_sci.pl";
   &check_tool($tool);
 
   my $cmdp = "-r $refDBfile -s $sysDBfile";
