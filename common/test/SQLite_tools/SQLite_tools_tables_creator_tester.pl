@@ -10,7 +10,7 @@ MMisc::error_quit("ERROR: Tool ($tool) empty or not an executable\n")
   if ((MMisc::is_blank($tool)) || (! MMisc::is_file_x($tool)));
 my $mode = shift @ARGV;
 
-print "** Running SQLite_tables_creator tests:\n";
+print "** Running SQLite_tables_creator (and SQLite_load_csv) tests:\n";
 
 my $mmk = F4DE_TestCore::get_magicmode_comp_key();
 
