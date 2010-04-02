@@ -92,9 +92,9 @@ sub do_less_simple_test {
   
   my $command = "$tool $db $cadd";
 
-  my $retval1 = &do_simple_test($testname, $subtype, $command, $res, $rev);
+  my $retval = &do_simple_test($testname, "$subtype [run]", $command, $res, $rev);
 
-  my $retval2 = &do_simple_test($testname, "(DB check)", "sqlite3 $db < add_checker_sql.cmd", $res . "-DBcheck", $rev);
+  $retval += &do_simple_test($testname, "$subtype [DBcheck]", "sqlite3 $db < add_checker_sql.cmd", $res . "-DBcheck", $rev);
 
   if ($mode eq $mmk) {
     print "  (keeping: $tdir)\n";
@@ -102,5 +102,5 @@ sub do_less_simple_test {
     `rm -rf $tdir`;
   }
 
- return($retval1 + $retval2);
+ return($retval);
 }
