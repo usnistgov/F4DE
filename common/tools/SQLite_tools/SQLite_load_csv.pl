@@ -166,7 +166,8 @@ $0 [--help | --version] [--columnsname col1,col2[,...]] dbfile csvfile tablename
 
 Will load a given csvfile into the SQLite dbfile's table called tablename.
 
-NOTE: dbfile must already exist with a properly created table named tablename in itNOTE: columns name will ne copied from the first row of cvsfile
+NOTE: dbfile must already exist with a properly created table named tablename in it
+NOTE: default is to copy the column names from the first row of cvsfile
 
 Where:
   --help     This help message
