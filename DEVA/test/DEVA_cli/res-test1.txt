@@ -1,0 +1,19 @@
+[[COMMANDLINE]] ../../tools/DEVA_cli/DEVA_cli.pl -o /tmp/DEVA_cli_tester-Temp_test1 -r ../../../common/test/common/ref.csv -s ../../../common/test/common/sys.csv ../../../common/test/common/md.csv -F ../common/filter1.cmd
+[[RETURN CODE]] 0
+[[STDOUT]]
+***** Generating config files
+** REF
+** SYS
+** Metadata
+-> 3 config file generated
+***** Creating initial DataBases (if not already present)
+** REF
+** SYS
+** Metadata
+-> 3 DB file generated
+***** Running Filter
+***** Scoring
+Done
+
+[[STDERR]]
+

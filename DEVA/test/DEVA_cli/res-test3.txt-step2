@@ -1,0 +1,9 @@
+[[COMMANDLINE]] ../../tools/DEVA_cli/DEVA_cli.pl -c -C -R /tmp/DEVA_cli_tester-Temp_test3/step1/referenceDB.sql -S /tmp/DEVA_cli_tester-Temp_test3/step1/systemDB.sql -m /tmp/DEVA_cli_tester-Temp_test3/step1/metadataDB.sql -o /tmp/DEVA_cli_tester-Temp_test3/step2 -F ../common/filter2.cmd
+[[RETURN CODE]] 0
+[[STDOUT]]
+***** Running Filter
+***** Scoring
+Done
+
+[[STDERR]]
+

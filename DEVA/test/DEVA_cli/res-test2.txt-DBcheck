@@ -1,0 +1,27 @@
+[[COMMANDLINE]] sqlite3 /tmp/DEVA_cli_tester-Temp_test2/scoreDB.sql < add_checker_sql.cmd
+[[RETURN CODE]] 0
+[[STDOUT]]
+ref  sys
+TrialID|Targ
+1|n
+11|y
+18|y
+20|y
+26|n
+32|y
+40|y
+43|n
+48|n
+TrialID|Decision|Score
+1|y|0.1
+11|y|1.1
+18|n|1.8
+20|n|2.0
+26|n|2.6
+32|n|3.2
+40|n|4.0
+43|y|4.3
+48|n|4.8
+
+[[STDERR]]
+
