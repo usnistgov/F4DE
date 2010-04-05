@@ -137,6 +137,10 @@ MMisc::error_quit("Unrecognized \'mode\' [$mode], authorized values are: " . joi
 
 my ($dbfile) = @ARGV;
 
+my ($err, $sqlitecmd) = MtSQLite::get_sqlitecmd();
+MMisc::error_quit($err)
+  if (MMisc::is_blank($sqlitecmd));
+
 my $cmdlines = "";
 
 # Attach the REF and SYS databases
@@ -167,7 +171,7 @@ EOF
 MtSQLite::commandAdd(\$cmdlines, $tmp);
 
 my ($err, $log, $stdout, $stderr) = 
-  MtSQLite::sqliteCommands("sqlite3", $dbfile, $cmdlines);
+  MtSQLite::sqliteCommands($sqlitecmd, $dbfile, $cmdlines);
 MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
 my %ref = &confirm_table($dbfile, 'ref', 'TrialID', 'Targ');
