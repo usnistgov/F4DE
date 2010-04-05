@@ -1,5 +1,7 @@
 # common/test/SQLite_tools
 
+PRE_tests=pre_tests.pl
+DBI_check=DBI_check.pl
 SQLite_tools_tester1=SQLite_tools_cfg_helper_tester.pl
 SQLite_tools_tester2=SQLite_tools_tables_creator_tester.pl
 
@@ -19,8 +21,11 @@ install:
 	@echo "Nothing to do for install"
 
 makecompcheckfiles makecheckfiles check: \
+	${PRE_tests} ${DBI_check} \
 	${SQLite_tools_tester1} ${SQLite_tools1} \
 	${SQLite_tools_tester2} ${SQLite_tools2}
+	@(${PERL} ${PRE_tests})
+	@(${PERL} ${DBI_check})
 	@(${PERL} ${SQLite_tools_tester1} ${SQLite_tools1} $@)
 	@(${PERL} ${SQLite_tools_tester2} ${SQLite_tools2} $@)
 
