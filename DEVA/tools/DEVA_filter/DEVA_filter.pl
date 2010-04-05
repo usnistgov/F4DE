@@ -139,6 +139,10 @@ if (! MMisc::is_blank($filtercmdfile)) {
 
 my ($dbfile) = @ARGV;
 
+my ($err, $sqlitecmd) = MtSQLite::get_sqlitecmd();
+MMisc::error_quit($err)
+  if (MMisc::is_blank($sqlitecmd));
+
 my $cmdlines = "";
 
 MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$mdDBfile\" AS $mdDBname;")
@@ -163,7 +167,7 @@ MMisc::error_quit("Empty SQL command ? ($filtercmd)")
 MtSQLite::commandAdd(\$cmdlines, $filtercmd);
 
 my ($err, $log, $stdout, $stderr) = 
-  MtSQLite::sqliteCommands("sqlite3", $dbfile, $cmdlines);
+  MtSQLite::sqliteCommands($sqlitecmd, $dbfile, $cmdlines);
 MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
 &load_stdout($stdout)
