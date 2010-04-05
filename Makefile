@@ -23,12 +23,14 @@ all:
 	@echo "  TV08check       only run checks for the TrecVid08 subsection"
 	@echo "  CLEAR07check    only run checks for the CLEAR07 subsection"
 	@echo "  AVSS09check     only run checks for the AVSS09 subsection"
+	@echo "  DEVAcheck       only run checks for the DEVA subsection"
 	@echo ""
 	@echo "[install section -- requires the F4DE_BASE environment variable set]"
 	@echo "  install         to install all the softwares"
 	@echo "  TV08install     only install the TrecVid08 subsection"
 	@echo "  CLEAR07install  only install the CLEAR07 subsection"
 	@echo "  AVSS09install   only install the AVSS09 subsection"
+#	@echo "  DEVAinstall   only install the AVSS09 subsection"
 	@echo ""
 	@make from_installdir
 
@@ -43,6 +45,7 @@ install:
 	@make TV08install
 	@make CLEAR07install
 	@make AVSS09install
+#	@make DEVAinstall
 
 #####
 
@@ -50,6 +53,7 @@ install_noman:
 	@make TV08install_noman
 	@make CLEAR07install
 	@make AVSS09install_noman
+#	@make DEVAinstall_noman
 
 #####
 
@@ -142,6 +146,10 @@ AVSS09install_noman:
 
 #####
 
+DEVADIR=DEVA
+
+##########
+
 install_head:
 	@echo "** Checking that the F4DE_BASE environment variable is set"
 	@test ${F4DE_BASE}
@@ -162,6 +170,7 @@ check:
 	@make TV08check
 	@make CLEAR07check
 	@make AVSS09check
+	@make DEVAcheck
 	@echo ""
 	@echo "***** All check tests successful"
 	@echo ""
@@ -192,6 +201,13 @@ AVSS09check:
 	@(cd ${AV09DIR}/test; make check)
 	@echo ""
 	@echo "***** All AVSS09 checks ran succesfully"
+	@echo ""
+
+DEVAcheck:
+	@echo "***** Running DEVA checks ..."
+	@(cd ${DEVADIR}/test; make check)
+	@echo ""
+	@echo "***** All DEVA checks ran succesfully"
 	@echo ""
 
 check_common:
