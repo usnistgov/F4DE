@@ -1410,4 +1410,52 @@ sub buildPNG
     system("cat $fileRoot.plt | perl -pe \'\$_ = \"$newTermCommand\n\" if (\$_ =~ /set terminal/)\' | $gnuplot > $fileRoot.png");
   }
 
+####################
+my $gnuplotcmdb = "gnuplot";
+my $gnuplotcmd = "";
+my $gnuplotminv = "4.2";
+
+sub get_gnuplotcmd { 
+  return("", $gnuplotcmd, "")
+    if (! MMisc::is_blank($gnuplotcmd));
+
+  $gnuplotcmd = MMisc::cmd_which($gnuplotcmdb);
+  my ($err, $version) = &__check_gnuplot();
+  return($err, $gnuplotcmd, $version);
+}
+
+##
+sub __check_gnuplot {
+  return("No gnuplot command location information")
+    if (MMisc::is_blank($gnuplotcmd));
+
+  my $cmd = "$gnuplotcmd --version";
+  my ($rc, $oso, $se) = MMisc::do_system_call($cmd);
+  return("Problem obtaining Gnuplot ($gnuplotcmd) version [using: $cmd]")
+    if ($rc != 0);
+  chomp($oso);
+  my $so = $oso;
+  return("version information does not start with proper \'gnuplot\' keyword ($so)")
+    if (! ($so =~ s%^gnuplot\s%%));
+
+  # gnuplot 4.2 patchlevel 5 -> 4.2.0.5
+  $so =~ s%^(\d+\.\d+)\s%$1.0%;
+  $so =~ s%\s*patchlevel\s+%.%;
+  $so =~ s%\s+$%%;
+
+  my ($err, $bv) = MMisc::get_version_comp($gnuplotminv, 5, 1000);
+  return("Problem obtaining default version number ($err)") 
+    if (! MMisc::is_blank($err));
+  my ($err, $cv) = MMisc::get_version_comp($so, 5, 1000);
+  return("Problem obtaining comparable version number ($err) [$oso / $so]") 
+    if (! MMisc::is_blank($err));
+  
+  return("Version of Gnuplot ($so) [at: $gnuplotcmd] is not at least minimum required version ($gnuplotminv)")
+    if ($cv < $bv);
+
+  return("", $oso);
+}
+
+
+####################
 1;
