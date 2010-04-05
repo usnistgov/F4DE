@@ -31,6 +31,50 @@ use CSVHelper;
 # No 'new', simply functions
 
 ##########
+my $sqlitecmdb = "sqlite3";
+my $sqlitecmd = "";
+my $sqliteminv = "3.6.12";
+
+sub set_sqlitecmd {
+  $sqlitecmd = $_[0];
+  return(&__check_sqlite());
+}
+
+##
+sub get_sqlitecmd { 
+  return("", $sqlitecmd)
+    if (! MMisc::is_blank($sqlitecmd));
+
+  $sqlitecmd = MMisc::cmd_which($sqlitecmdb);
+  my ($err, $v) = &__check_sqlite();
+  return($err, $sqlitecmd, $v);
+}
+
+##
+sub __check_sqlite {
+  return("No SQLite command location information")
+    if (MMisc::is_blank($sqlitecmd));
+
+  my $cmd = "$sqlitecmd --version";
+  my ($rc, $so, $se) = MMisc::do_system_call($cmd);
+  return("Problem obtaining SQLite ($sqlitecmd) version [using: $cmd]")
+    if ($rc != 0);
+  chomp($so);
+
+  my ($err, $bv) = MMisc::get_version_comp($sqliteminv, 4, 1000);
+  return("Problem obtaining default version number") 
+    if (! MMisc::is_blank($err));
+  my ($err, $cv) = MMisc::get_version_comp($so, 4, 1000);
+  return("Problem obtaining comparable version number") 
+    if (! MMisc::is_blank($err));
+  
+  return("Version of SQLite ($so) [at: $sqlitecmd] is not at least minimum required version ($sqliteminv)")
+    if ($cv < $bv);
+
+  return("", $so);
+}
+
+##########
 
 sub get_dbh {
   my ($dbfile) = @_;
@@ -195,12 +239,12 @@ sub sqliteCommands {
   return("Problem writing command file ($tf)")
     if (! MMisc::writeTo($tf, "", "", "", $cmdlist));
   
-#  print "* Generated temporary command file used for sqlite3 call: $tf\n";
+#  print "* Generated temporary command file used for $sqlitecmdb call: $tf\n";
   my $lf = "$tf.logfile";
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     MMisc::write_syscall_smart_logfile($lf, "$sqlitecmd $dbfile < $tf");
 
-#  print "* Log file for sqlite3 call: $of\n";
+#  print "* Log file for $sqlitecmdb call: $of\n";
   return("There was a problem running the sqlite commands, see: $of")
     if ((! $ok) || ($rc != 0));
 
