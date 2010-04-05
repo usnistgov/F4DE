@@ -267,7 +267,9 @@ sub check_fn4 {
 sub do_cfgfile {
   my ($cfgfile, $log, $cmdadd, @csvfl) = @_;
 
-  my $tool = "../../../common/tools/SQLite_tools/SQLite_cfg_helper.pl";
+  my $toolb = "SQLite_cfg_helper";
+  my $tool = (exists $ENV{$f4b}) ? $toolb 
+    : "../../../common/tools/SQLite_tools/${toolb}.pl";
   &check_tool($tool);
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
@@ -293,14 +295,21 @@ sub db_create {
   MMisc::error_quit("Problem with config file ($cfgfile): $err")
     if (! MMisc::is_blank($err));
 
-  my $tool = "../../../common/tools/SQLite_tools/SQLite_tables_creator.pl";
+  my $toolb = "SQLite_tables_creator";
+  my $tool = (exists $ENV{$f4b}) ? $toolb 
+    : "../../../common/tools/SQLite_tools/${toolb}.pl";
   &check_tool($tool);
 
-  my $tool2 = "../../../common/tools/SQLite_tools/SQLite_load_csv.pl";
-  &check_tool($tool2);
+  my $tool2 = "";
+  if (! exists $ENV{$f4b}) {
+    $tool2 = "../../../common/tools/SQLite_tools/SQLite_load_csv.pl";
+    &check_tool($tool2);
+  }
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
-    &run_tool($log, $tool, "-l -L $tool2 $dbfile $cfgfile");
+    &run_tool($log, $tool, 
+              "-l" . (MMisc::is_blank($tool2) ? "" : " -L $tool2") 
+              . " $dbfile $cfgfile");
 }
 
 ##########
@@ -325,7 +334,9 @@ sub check_file_r {
 sub run_filter {
   my ($log, $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile) = @_;
 
-  my $tool = "../../../DEVA/tools/DEVA_filter/DEVA_filter.pl";
+  my $toolb = "DEVA_filter";
+  my $tool = (exists $ENV{$f4b}) ? $toolb 
+    : "../../../DEVA/tools/DEVA_filter/${toolb}.pl";
   &check_tool($tool);
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
@@ -339,7 +350,9 @@ sub run_filter {
 sub run_scorer {
   my ($log, $refDBfile, $sysDBfile, $finalDBfile, @xres) = @_;
 
-  my $tool = "../../../DEVA/tools/DEVA_sci/DEVA_sci.pl";
+  my $toolb = "DEVA_sci";
+  my $tool = (exists $ENV{$f4b}) ? $toolb 
+    : "../../../DEVA/tools/DEVA_sci/${toolb}.pl";
   &check_tool($tool);
 
   my $cmdp = "-r $refDBfile -s $sysDBfile";
