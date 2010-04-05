@@ -1459,6 +1459,25 @@ sub fast_join {
   return($txt);
 }
 
+##########
+
+sub get_version_comp {
+  my ($value, $comps, $mul) = @_;
+
+  return("Version number does not contain only digits or dots [$value]")
+    if (! ($value =~ m%^[0-9\.]+$%));
+
+  my @c = split(m%\.%, $value);
+  
+  my $ret = 0;
+  for (my $i = 0; $i < $comps; $i++) {
+    my $x = 1; for (my $j = 1 + $i; $j < $comps; $j++) { $x *= $mul; } 
+    $ret += ($c[$i] * $x);
+  }
+
+  return("", $ret);
+}
+
 ############################################################
 
 1;
