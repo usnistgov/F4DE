@@ -87,7 +87,8 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 # Options processing
 
 my $usage = &set_usage();
-my $tool = "./SQLite_load_csv.pl";
+my $toolb = "SQLite_load_csv";
+my $tool = (exists $ENV{$f4b}) ? $toolb : "./${toolb}.pl";
 my $loadcsv = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
