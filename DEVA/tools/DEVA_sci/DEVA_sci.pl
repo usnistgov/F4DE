@@ -233,7 +233,7 @@ MMisc::writeTo
      $detSet->renderAsTxt
      ("$bDETf.det", 1, 1, 
       { (xScale => "log", Xmin => $xm, Xmax => $xM, Ymin => $ym, Ymax => $yM,
-         gnuplotPROG => "gnuplot",
+         gnuplotPROG => MMisc::cmd_which("gnuplot"),
          createDETfiles => 1,
          BuildPNG => 1),
       },
