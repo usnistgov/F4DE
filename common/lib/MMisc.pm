@@ -339,9 +339,8 @@ sub array1d_to_count_hash {
 
 sub array1d_to_ordering_hash {
   # arg 0: ref to array of values
-
   my %ohash = ();
-  for (my $i = $#{@{$_[0]}}; $i >= 0; $i--) {
+  for (my $i = scalar(@{$_[0]}) - 1; $i >= 0; $i--) {
     $ohash{${$_[0]}[$i]} = $i;
   }
 
