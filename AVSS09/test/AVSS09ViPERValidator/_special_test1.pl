@@ -8,9 +8,11 @@ use MMisc;
 use AVSS09ViperFile;
 use AVSS09HelperFunctions;
 
+my $xmllint_env = "F4DE_XMLLINT";
+my $xmllint = MMisc::get_env_val($xmllint_env, "");
 my $xsdpath = "../../../CLEAR07/data";
 my ($retstatus, $object, $msg) = 
-    AVSS09HelperFunctions::load_ViperFile(1, "../common/test_file3.clear.xml", 0, "", $xsdpath);
+    AVSS09HelperFunctions::load_ViperFile(1, "../common/test_file3.clear.xml", 0, $xmllint, $xsdpath);
 
 MMisc::error_quit("ERROR: $msg")
   if (! $retstatus);
@@ -149,7 +151,7 @@ sub obj_print {
       if (! $object->write_XML($fname, 1, ""));
 
   my ($retstatus, $obj, $msg) = 
-    AVSS09HelperFunctions::load_ViperFile(1, $fname, 0, "", $xsdpath);
+    AVSS09HelperFunctions::load_ViperFile(1, $fname, 0, $xmllint, $xsdpath);
 
   MMisc::error_quit("ERROR reloading rewritten file: $msg")
       if (! $retstatus);
