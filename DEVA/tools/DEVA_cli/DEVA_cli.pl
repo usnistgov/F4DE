@@ -86,6 +86,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
+my $mancmd = "perldoc -F $0";
 my $usage = &set_usage();
 my $outdir = "";
 my $filtercmdfile = "";
@@ -105,7 +106,7 @@ my @addResDBfiles = ();
 my $resDBbypass = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A C  F           RST      a c  f h    m o  rs  v      #
+# Used: A C  F      M    RST      a c  f h    m o  rs  v      #
 
 my %opt = ();
 GetOptions
@@ -113,6 +114,7 @@ GetOptions
    \%opt,
    'help',
    'version',
+   'man',
    'outdir=s'   => \$outdir,
    'refcsv=s'   => \$refcsv,
    'syscsv=s'   => \$syscsv,
@@ -123,12 +125,17 @@ GetOptions
    'TrialScoreSkip' => sub { $score = 0},
    'RefDBfile=s'    => \$wrefDBfile,
    'SysDBfile=s'    => \$wsysDBfile,
-   'metadataDBfile=s' => \$wmdDBfile,
+   'MetadataDBfile=s' => \$wmdDBfile,
    'addResDBfiles=s'   => \@addResDBfiles,
    'AllowResDBfileBypass' => \$resDBbypass,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
+if ($opt{'man'}) {
+  my ($r, $o, $e) = MMisc::do_system_call($mancmd);
+  MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
+  MMisc::ok_quit($o);
+}
 
 my @csvlist = @ARGV;
 
@@ -399,13 +406,157 @@ sub run_tool {
   return($ok, $otxt, $so, $se, $rc, $of);
 }
 
+############################################################ Manual
+
+=pod
+
+=head1 NAME
+
+DEVA_cli - DEVA Command Line Interface
+
+=head1 SYNOPSIS
+
+B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
+  S<B<--outdir> I<dir>>
+  S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--TrialScoreSkip>]>
+  S<[B<--refcsv> I<csvfile>] [B<--syscsv> I<csvfile>]>
+  S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>] [B<--MetadataDBfile> I<file>]>
+  S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
+  [I<csvfile> [I<csvfile> [I<...>]]
+  
+=head1 DESCRIPTION
+
+B<DEVA_cli> is a wrapper script to start from a set of CSV files, generate its configuraion file, then its database, apply a select filter on the database to obtain DETCurve information.
+
+The script will work with the following tools (lookup their man page for more details):
+
+=over
+
+=item B<SQLite_cfg_helper> 
+
+=item B<SQLite_tables_creator>
+
+=item B<DEVA_filter>
+
+=item B<DEVA_sci>
+
+=back
+
+=head1 PREREQUISITES
+
+B<DEVA_cli> relies on some external software and files.
+
+=over
+
+=item B<SOFTWARE> 
+
+I<sqlite3> (S<http://www.sqlite.org/>) is required (at least version 3.6.12) to perform all the SQL work.
+
+I<gnuplot> (S<http://www.gnuplot.info/>) is also required (at least version 4.2) to generate the DETCurve plots.
+
+=item B<GLOBAL ENVIRONMENT VARIABLE>
+
+Once you have installed the software, setting B<F4DE_BASE> to the installation location, and extending your B<PATH> to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
+
+=back
+
+=head1 OPTIONS
+
+=over
+
+=item B<--help>
+
+Display the usage page for this program. Also display some default values and information.
+
+=item B<--man>
+
+Display this man page.
+
+=item B<--version>
+
+Display the B<DEVA_cli> version information.
+
+=item B<--outdir> I<dir>
+
+Specify the directory in which all files relevant to this call to B<DEVA_cli> will be placed (or looked for).
+
+=item B<--configSkip>
+
+Skip the generation of the configuration files required for the generation of the database tables.
+
+This process read each CSV file (I<refcsv>, I<syscsv> and metadata I<csvfile(s)>), determine the tables name, columns names and types and write them in S<outdir/referenceDB.cfg>, S<outdir/systemDB.cfg> and S<outdir/metadataDB.cfg> files.
+
+=item B<--CreateDBSkip>
+
+Skip the database and tables generation.
+
+This step uses the files created in the configuration generation step and generate multiple SQLite databases containing the tables specified their respective configuration files.
+
+Files created during this step would be S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<outdir/metadataDB.sql>
+
+=item B<--filterSkip>
+
+Skip step that uses the SQL I<SELECT>s commands specified in the B<--FilterCMDfile> step to create the S<outdir/filterDB.sql> database (which only contains S<TrialID> information).
+
+=item B<--TrialScoreSkip>
+
+Skip the Trial Scoring step (including DETCurve processing).
+
+This step rely on the S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<<outdir/filterDB.sql> files to extract into S<outdir/scoreDB.sql> a I<ref> and I<sys> table that only contains the I<TrialID>s left post-filtering.
+This step also generate a few files starting with S<outdir/scoreDB_DET> that are the results of the DETCurve generation process.
+
+=item B<--refcsv> I<csvfile>
+
+Specify the location of the Reference CSV file (expected to contain a S<TrialID> and S<Targ> columns).
+
+=item B<--syscsv> I<csvfile>
+
+Specify the location of the System CSV file (expected to contain S<TrialID>, S<Score> and S<Decision> columns).
+
+=item B<--RefDBfile> I<file>
+
+Specify the location of the Reference database file to use/generate.
+
+=item B<--SysDBfile> I<file>
+
+Specify the location of the System database file to use/generate.
+
+=item B<--metadataDBfile> I<file>
+
+Specify the location of the Metadata database file to use/generate.
+
+=item B<--FilterCMDfile> I<SQLite_commands_file>
+
+Specify the location of the SQL commands file used to extract the list of I<TrialID> that will be inserted in <output/filterDB.sql>.
+
+=back
+
+=head1 USAGE
+
+
+=head1 BUGS
+
+Please send bug reports to <nist_f4de@nist.gov>
+
+=head1 AUTHORS
+
+Martial Michel <martial.michel@nist.gov>
+
+=head1 COPYRIGHT 
+
+This software was developed at the National Institute of Standards and Technology by employees of the Federal Government in the course of their official duties.  Pursuant to Title 17 Section 105 of the United States Code this software is not subject to copyright protection within the United States and is in the public domain. It is an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
+
+THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+
+=cut
+
 ##########
 
 sub set_usage {  
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--TrialScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--metadataDBfile file] [--FilterCMDfile SQLite_commands_file] [csvfile [csvfile [...]]
+$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--TrialScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -424,7 +575,7 @@ Where:
   --syscsv     Specify the System csv file
   --RefDBfile  Specify the Reference SQLite database file
   --SysDBfile  Specify the System SQLite database file
-  --metadataDBfile  Specify the metadata SQLite database file
+  --MetadataDBfile  Specify the metadata SQLite database file
   --FilterCMDfile  Specify the SQLite command file
   --addResDBfiles  Additional filter results database files to give the scorer (will do an AND on the TrialIDs)
 EOF
