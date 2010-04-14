@@ -107,7 +107,7 @@ sub do_skip_test {
   my $db = "$tdir1/scoreDB.sql";
   $retval += &do_simple_test($testname, "$subtype [step1 DBcheck]", "sqlite3 $db < add_checker_sql.cmd", $res . "-step1_DBcheck", $rev);
 
-  $command = "$tool -c -C -R $tdir1/referenceDB.sql -S $tdir1/systemDB.sql -m $tdir1/metadataDB.sql -o $tdir2 $cadd2";
+  $command = "$tool -c -C -R $tdir1/referenceDB.sql -S $tdir1/systemDB.sql -M $tdir1/metadataDB.sql -o $tdir2 $cadd2";
 
   $retval += &do_simple_test($testname, "$subtype [step2]", $command, $res . "-step2", $rev);
 
