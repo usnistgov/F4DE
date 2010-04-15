@@ -10,7 +10,7 @@ my $err = 0;
 print "** Checking for Perl Required Packages:\n";
 my $ms = 1;
 
-$ms = &_chkpkg("DBD::SQLite", "DBI", "SQL::Abstract");
+$ms = &_chkpkg("DBI", "DBD::SQLite", "SQL::Abstract");
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the program (and some F4DE package will most likely fail this step), install the missing packages and re-run the checks\n\n";
   $err++;
