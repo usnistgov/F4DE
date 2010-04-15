@@ -428,7 +428,7 @@ B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
 
 B<DEVA_cli> is a wrapper script to start from a set of CSV files, generate its configuraion file, then its database, apply a select filter on the database to obtain DETCurve information.
 
-The script will work with the following tools (lookup their man page for more details):
+The script will work with the following tools (lookup their help page for more details):
 
 =over
 
@@ -464,28 +464,6 @@ Once you have installed the software, setting B<F4DE_BASE> to the installation l
 
 =over
 
-=item B<--help>
-
-Display the usage page for this program. Also display some default values and information.
-
-=item B<--man>
-
-Display this man page.
-
-=item B<--version>
-
-Display the B<DEVA_cli> version information.
-
-=item B<--outdir> I<dir>
-
-Specify the directory in which all files relevant to this call to B<DEVA_cli> will be placed (or looked for).
-
-=item B<--configSkip>
-
-Skip the generation of the configuration files required for the generation of the database tables.
-
-This process read each CSV file (I<refcsv>, I<syscsv> and metadata I<csvfile(s)>), determine the tables name, columns names and types and write them in S<outdir/referenceDB.cfg>, S<outdir/systemDB.cfg> and S<outdir/metadataDB.cfg> files.
-
 =item B<--CreateDBSkip>
 
 Skip the database and tables generation.
@@ -494,9 +472,51 @@ This step uses the files created in the configuration generation step and genera
 
 Files created during this step would be S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<outdir/metadataDB.sql>
 
+=item B<--configSkip>
+
+Skip the generation of the configuration files required for the generation of the database tables.
+
+This process read each CSV file (I<refcsv>, I<syscsv> and metadata I<csvfile(s)>), determine the tables name, columns names and types and write them in S<outdir/referenceDB.cfg>, S<outdir/systemDB.cfg> and S<outdir/metadataDB.cfg> files.
+
+=item B<--FilterCMDfile> I<SQLite_commands_file>
+
+Specify the location of the SQL commands file used to extract the list of I<TrialID> that will be inserted in <output/filterDB.sql>.
+
 =item B<--filterSkip>
 
 Skip step that uses the SQL I<SELECT>s commands specified in the B<--FilterCMDfile> step to create the S<outdir/filterDB.sql> database (which only contains S<TrialID> information).
+
+=item B<--help>
+
+Display the usage page for this program. Also display some default values and information.
+
+=item B<--man>
+
+Display this man page.
+
+=item B<--outdir> I<dir>
+
+Specify the directory in which all files relevant to this call to B<DEVA_cli> will be placed (or looked for).
+
+=item B<--RefDBfile> I<file>
+
+Specify the location of the Reference database file to use/generate.
+
+=item B<--refcsv> I<csvfile>
+
+Specify the location of the Reference CSV file (expected to contain a S<TrialID> and S<Targ> columns).
+
+=item B<--SysDBfile> I<file>
+
+Specify the location of the System database file to use/generate.
+
+=item B<--syscsv> I<csvfile>
+
+Specify the location of the System CSV file (expected to contain S<TrialID>, S<Score> and S<Decision> columns).
+
+=item B<--metadataDBfile> I<file>
+
+Specify the location of the Metadata database file to use/generate.
 
 =item B<--TrialScoreSkip>
 
@@ -505,34 +525,59 @@ Skip the Trial Scoring step (including DETCurve processing).
 This step rely on the S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<<outdir/filterDB.sql> files to extract into S<outdir/scoreDB.sql> a I<ref> and I<sys> table that only contains the I<TrialID>s left post-filtering.
 This step also generate a few files starting with S<outdir/scoreDB_DET> that are the results of the DETCurve generation process.
 
-=item B<--refcsv> I<csvfile>
+=item B<--version>
 
-Specify the location of the Reference CSV file (expected to contain a S<TrialID> and S<Targ> columns).
-
-=item B<--syscsv> I<csvfile>
-
-Specify the location of the System CSV file (expected to contain S<TrialID>, S<Score> and S<Decision> columns).
-
-=item B<--RefDBfile> I<file>
-
-Specify the location of the Reference database file to use/generate.
-
-=item B<--SysDBfile> I<file>
-
-Specify the location of the System database file to use/generate.
-
-=item B<--metadataDBfile> I<file>
-
-Specify the location of the Metadata database file to use/generate.
-
-=item B<--FilterCMDfile> I<SQLite_commands_file>
-
-Specify the location of the SQL commands file used to extract the list of I<TrialID> that will be inserted in <output/filterDB.sql>.
+Display the B<DEVA_cli> version information.
 
 =back
 
 =head1 USAGE
 
+=item B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --FilterCMDfile filter1.cmd>
+
+This will process the four steps expected of the command line interface:
+
+=over
+
+=item Step 1 (uses B<SQLite_cfg_helper>)
+
+Will use I<ref.csv> as the Reference CSV file, I<sys.csv> as the System CSV file and I<md.csv> as the Metadata CSV file.
+From those files, the first step will generate the database creation configuration files by loading each rows and columns in the CSV to determine their SQLite type, and determine if the column header name as to be adapted to avoid characters not recognized by SQLite. This process will create the I<outdir/referenceDB.cfg>, I<outdir/systemDB.cfg> and I<outdir/metadataDB.cfg> files.
+
+=item Step 2 (uses B<SQLite_tables_creator>)
+
+The next step will use those configuration files to create SQLite database files containing:
+
+=over
+
+=item
+
+One table called I<Reference> (containing at least one primary key column called I<TrialID> and one column called I<Targ> with S<y> or S<n> content) for I<outdir/referenceDB.sql> which content is loaded from I<refrence.csv>.
+
+=item
+
+One table called I<System> (containing at least on primary key column called I<TrialID> as well as one I<Score> column and one I<Decision> with S<y> or S<n> content) for I<outdir/systemDB.sql> which content is loaded from I<system.csv>
+
+=item
+
+As many tables as metadata CSV files (here only one) are added to <outdir/metadataDB.sql>.
+
+=back
+
+=item Step 3 (uses B<DEVA_filter>)
+
+The next step will use the I<filter1.cmd> SQL command lines file to apply the given filter. For this step I<outdir/referenceDB.sql> is loaded as I<referenceDB> (and contains a table named I<Reference>. Also, I<outdir/systemDB.sql> is loaded as I<systemDB> (and contain a table named I<System>. And I<outdir/metadataDB.sql> is loaded as I<metadataDB> and contain the table list specified in I<outdir/metadataDB.cfg>.
+The filter is expected to only return a list of I<TrialID>s that will added be to I<outdir/filterDB.sql>'s I<resultsTable> table.
+
+=item Step 4 (uses B<DEVA_sci>)
+
+The final step will use I<outdir/referenceDB.sql>, I<outdir/systemDB.sql> and I<outdir/filterDB.sql> to select only the I<TrialID>s that are both in the I<resultsTables> and I<Reference> tables to create in the I<outdir/scoreDB.sql> SQLite database file a I<ref> table that only contain the reference information matching the given I<TrialID>s.
+The same is made from I<resultsTables> and I<System> tables to add a I<sys> table.
+
+I<Trials> are then generated so that if a given entry is both in I<ref> and I<sys> is is considered I<mapped>, if it is only in I<ref> it is an I<unmapped_ref> entry, and if it is only is <sys> it is an I<unmapped_sys> entry.
+Those I<Trials> are used for I<DETCurve> work. Each file starting with I<outdir/scoreDB_DET> is one of those results.
+
+=back
 
 =head1 BUGS
 
