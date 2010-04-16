@@ -501,30 +501,6 @@ sub renderTxtTable(){
   my @colIDs = ();  ####$self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded");
   foreach my $nd(@nodeSet){ 
     push @colIDs, $nd->{subs}[0];
-##=======
-##    
-##    for (my $node=0; $node < @nodeSet; $node ++){
-##      $out .= $self->_centerJust($nodeSet[$node]{id}, $nodeSet[$node]{width});
-##      $out .= "|" if ($node < @nodeSet - 1);	    
-##>>>>>>> 1.3
-  }
-  $out .= "|\n";
-  
-  
-  ### The separator
-  for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
-    $out .= $self->_nChrStr($self->{render}{rowLabelWidth}->[$rowLevel] + $gap, "-");
-  }
-  $out .= "+";
-  for (my $node=0; $node<@nodeSet; $node++) {
-    $out .= "" . $self->_nChrStr($nodeSet[$node]{width},"-") . "+";
-  }    
-  $out .= "\n";
-  
-  #### NOW: @nodeSet is the formatting informatlion for the columns!!!
-  my @colIDs = ();  ####$self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded");
-  foreach my $nd(@nodeSet){ 
-    push @colIDs, $nd->{subs}[0];
   }
   #    print "ColIDs ".join(" ",@colIDs)."\n";
 #    print join(" ",@colIDs)."\n";
