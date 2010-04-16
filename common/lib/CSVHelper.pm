@@ -85,7 +85,7 @@ sub new {
 sub set_number_of_columns {
   my ($self, $n) = @_;
 
-  return(0) if ($self->error());
+  return(0) if ($self->{errorv});
   
   return($self->_set_error_and_return("\'column number\' can not be less than 1", 0))
     if ($n < 1);
@@ -149,7 +149,7 @@ sub csvline2hash {
   my ($self, $value, $rha) = @_;
 
   my @columns = $self->csvline2array($value);
-  return() if ($self->error());
+  return() if ($self->{errorv});
   my %out = ();
   for (my $i = 0; $i < scalar @$rha; $i++) {
     $out{$$rha[$i]} = $columns[$i];
@@ -203,7 +203,7 @@ sub loadCSV_tohash {
   my $line = <CSV>;
 
   my @headers = $self->csvline2array($line);
-  return(%out) if ($self->error());
+  return(%out) if ($self->{errorv});
 
   my %pos = ();
   for (my $i = 0; $i < scalar @headers; $i++) {
@@ -222,7 +222,7 @@ sub loadCSV_tohash {
     if (scalar @nf > 0);
 
   $self->set_number_of_columns(scalar @headers);
-  return(%out) if ($self->error());
+  return(%out) if ($self->{errorv});
 
   my $cont = 1;
   my $code = "";
@@ -234,7 +234,7 @@ sub loadCSV_tohash {
     }
     
     my @array = $self->csvline2array($line);
-    return(%out) if ($self->error());
+    return(%out) if ($self->{errorv});
 
     my $bt = "push \@\{\$out";
     for (my $i = 0; $i < scalar @keysorder; $i++) {
