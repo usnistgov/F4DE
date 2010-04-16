@@ -30,6 +30,7 @@ use Data::Dumper;
 
 my $key_KeyColumnTxt = "KeyColumnTxt";
 my $key_KeyColumnCsv = "KeyColumnCsv";
+my $key_KeyColumnHTML = "KeyColumnHTML";
 my $key_SortRowKeyTxt = "SortRowKeyTxt";
 my $key_SortRowKeyCsv = "SortRowKeyCsv";
 my $key_SortColKeyTxt = "SortColKeyTxt";
@@ -37,43 +38,56 @@ my $key_SortColKeyCsv = "SortColKeyCsv";
 my $key_KeepColumnsInOutput = "KeepColumnsInOutput";
 my $key_KeepRowsInOutput = "KeepRowsInOutput";
 
+my $key_htmlColHeadBGColor = "html.colhead.bgcolor";
+my $key_htmlRowHeadBGColor = "html.rowhead.bgcolor";
+my $key_htmlCellBGColor = "html.cell.bgcolor";
+my $key_htmlCellJust = "html.cell.justification";
+
+
 sub new {
   my ($class) = shift @_;
   
   my $errormsg = new MErrorH("AutoTable");
   
   my $self =
+  {
+    hasData => 0,
+    data => { },
+    rowLabOrder => 
     {
-      hasData => 0,
-      data => { },
-      rowLabOrder => 
-	{
-	  ThisIDNum    => 0,
-	  SubIDCount   => 0,
-	  SubID        => {},
-	  width        => { charLen => 0 },
-	},
-      colLabOrder => 
-	{
-	  ThisIDNum    => 0,
-	  SubIDCount   => 0,
-	  SubID        => {},
-	  width        => { charLen => 0 },
-	},
-      Properties  => new PropList(),
-      errormsg    => $errormsg,
-    };
+      ThisIDNum    => 0,
+      SubIDCount   => 0,
+      SubID        => {},
+      width        => { charLen => 0 },
+    },
+    colLabOrder => 
+    {
+      ThisIDNum    => 0,
+      SubIDCount   => 0,
+      SubID        => {},
+      width        => { charLen => 0 },
+    },
+    Properties  => new PropList(),
+    errormsg    => $errormsg,
+  };
   
   bless $self;
   
   $self->{Properties}->addProp($key_KeyColumnCsv, "Keep", ("Keep", "Remove"));
   $self->{Properties}->addProp($key_KeyColumnTxt, "Keep", ("Keep", "Remove"));
+  $self->{Properties}->addProp($key_KeyColumnHTML, "Keep", ("Keep", "Remove"));
   $self->{Properties}->addProp($key_SortRowKeyTxt, "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->{Properties}->addProp($key_SortRowKeyCsv, "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->{Properties}->addProp($key_SortColKeyTxt, "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->{Properties}->addProp($key_SortColKeyCsv, "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->{Properties}->addProp($key_KeepColumnsInOutput, "", ());
   $self->{Properties}->addProp($key_KeepRowsInOutput, "", ());
+  
+  $self->{Properties}->addProp($key_htmlColHeadBGColor, "", ());
+  $self->{Properties}->addProp($key_htmlRowHeadBGColor, "", ());
+  $self->{Properties}->addProp($key_htmlCellBGColor, "", ());
+  $self->{Properties}->addProp($key_htmlCellJust, "right", ("left", "center", "right"));
+  
   $self->_set_errormsg($self->{Properties}->get_errormsg());
   
   return($self);
@@ -97,7 +111,47 @@ sub unitTest {
   my $makecall = shift @_;
   
   print "Testing AutoTable ..." if ($makecall);
+#<<<<<<< AutoTable.pm
   
+  my $at = new AutoTable();
+#  $at->addData({value => "1x1", link => "/etc/hosts"},  "CCC|col1|A", "srow1|row1");
+#  $at->addData({value => "1x1", link => "/etc/hosts", linkText => "foo"},  "CCC|col1|A", "srow1|row1");
+  $at->addData("1x1",  "CCC|col1|A", "srow1|row1");
+  $at->addData("1x1",  "CCC|col1|B", "srow1|row1");
+  $at->addData("1x2",  "CCC|col1|C", "srow1|row1");
+  $at->addData("1x1",  "CCC|col2|A", "srow1|row1");
+  $at->addData("1x1",  "CCC|col2|B", "srow1|row1");
+  $at->addData("1x2",  "CCC|col2|C", "srow1|row1");
+  $at->addData("1x1",  "CCC|col1|A", "srow1|row2");
+  $at->addData("1x1",  "CCC|col1|B", "srow1|row2");
+  $at->addData("1x2",  "CCC|col1|C", "srow1|row2");
+  $at->addData("1x1",  "CCC|col2|A", "srow1|row2");
+  $at->addData("1x1",  "CCC|col2|B", "srow1|row2");
+  $at->addData("1x2",  "CCC|col2|C", "srow1|row2");
+  $at->addData("1x1",  "CCC|col1|A", "srow2|row1");
+  $at->addData("1x1",  "CCC|col1|B", "srow2|row1");
+  $at->addData("1x2",  "CCC|col1|C", "srow2|row1");
+  $at->addData("1x1",  "CCC|col2|A", "srow2|row1");
+  $at->addData("1x1",  "CCC|col2|B", "srow2|row1");
+  $at->addData("1x2",  "CCC|col2|C", "srow2|row1");
+  $at->addData("1x1",  "CCC|col1|A", "srow2|row2");
+  $at->addData("1x1",  "CCC|col1|B", "srow2|row2");
+  $at->addData("1x2",  "CCC|col1|C", "srow2|row2");
+  $at->addData("1x1",  "CCC|col2|A", "srow2|row2");
+  $at->addData("1x1",  "CCC|col2|B", "srow2|row2");
+  $at->addData("1x2",  "CCC|col2|C", "srow2|row2");
+  
+  print "<html>\n";
+  print "Simple Table\n";
+  print "<pre>\n";
+  print($at->renderTxtTable(1));
+  print($at->renderCSV(2));
+  print "<\pre>\n";
+  print($at->renderHTMLTable());
+  
+##=======
+##  
+##>>>>>>> 1.3
   my $sg = new AutoTable();
   $sg->addData("1",  "abcdefghijabcdefghijabcdefghijabcdefghij|A|col1", "Sub|PartZ|ObjectPut");
   $sg->addData("2",  "abcdefghijabcdefghijabcdefghijabcdefghij|A|col2", "Sub|PartZ|ObjectPut");
@@ -134,22 +188,62 @@ sub unitTest {
     $sg->{Properties}->setValue($key_SortRowKeyTxt, "Alpha");
   }
   ### Get the order of column
+#<<<<<<< AutoTable.pm
   
-#  my $colLabTree = $sg->_buildLabelHeir("col", "Alpha");
-  
-  if (! $makecall) {
-#      $sg->dump();
-    print($sg->renderTxtTable(2));
-  }
-  
-  $sg->setProperties({ $key_KeepColumnsInOutput => ".*PartA.*|PartB.*col4" });
+  print "Complex Table\n";
+  print "<pre>\n";
   print($sg->renderTxtTable(2));
+  print($sg->renderCSV());
+  print "</pre>\n";
+  print($sg->renderHTMLTable());
+  
+##=======
+##  
+###  my $colLabTree = $sg->_buildLabelHeir("col", "Alpha");
+##  
+##  if (! $makecall) {
+###      $sg->dump();
+##    print($sg->renderTxtTable(2));
+##  }
+##  
+##>>>>>>> 1.3
+  $sg->setProperties({ $key_KeepColumnsInOutput => ".*PartA.*|PartB.*col4" });
+  print "Complex table = keepColumns .*PartA.*|PartB.*col4\n";
+  print "<pre>\n";
+  print($sg->renderTxtTable(2));
+  print($sg->renderCSV());
+  print "</pre>\n";
+  print($sg->renderHTMLTable());
   
   $sg->setProperties({ $key_KeepRowsInOutput => ".*PartZ.*" });
+  $sg->setProperties({ $key_htmlColHeadBGColor => "pink" });
+  $sg->setProperties({ $key_htmlRowHeadBGColor => "orange" });
+  $sg->setProperties({ $key_htmlCellBGColor => "read" });
+  $sg->setProperties({ $key_htmlCellJust => "center" });
+  print "Complex table = keepRows *PartZ.*, HTML props\n";
+  print "<pre>\n";
   print($sg->renderTxtTable(2));
+#<<<<<<< AutoTable.pm
+  print($sg->renderCSV());
+  print "</pre>\n";
+  print($sg->renderHTMLTable());
   
-  print($sg->renderCSV(2));
+  $sg->setProperties({ $key_KeyColumnHTML => "Remove" });
+  $sg->setProperties({ $key_KeyColumnTxt => "Remove" });
+  $sg->setProperties({ $key_KeyColumnCsv => "Remove" });
+  print "Complex table = remnove key column\n";
+  print "<pre>\n";
+  print($sg->renderTxtTable(2));
+  print($sg->renderCSV());
+  print "</pre>\n";
+  print($sg->renderHTMLTable());
   
+  print "</html>\n";
+##=======
+##  
+##  print($sg->renderCSV(2));
+##  
+##>>>>>>> 1.3
   MMisc::ok_quit(" OK");
   
 }
@@ -160,23 +254,183 @@ sub _buildHeir(){
   $self->_buildLabelHeir("col", $gap);
   $self->_buildLabelHeir("row", $gap);
 }
+## snowbird209.63.19.148
+
+sub renderHTMLTable(){
+  my ($self) = @_;
+  my $out = "";
+  
+  
+  ##########
+  my $keyCol = $self->{Properties}->getValue($key_KeyColumnHTML);
+  if ($self->{Properties}->error()) {
+    $self->_set_errormsg("Unable to get the $key_KeyColumnHTML property.  Message is ".$self->{Properties}->get_errormsg());
+    return(undef);
+  }
+  my $k1c = ($keyCol eq "Keep") ? 1 : 0;
+  
+  ########## HTML options
+  my $colHeadBGColor = $self->{Properties}->getValue($key_htmlColHeadBGColor);
+  if ($self->{Properties}->error()) {
+    $self->_set_errormsg("Unable to get the $key_htmlColHeadBGColor property.  Message is ".$self->{Properties}->get_errormsg());
+    return(undef);
+  }
+  $colHeadBGColor = " bgcolor=\"$colHeadBGColor\""if ($colHeadBGColor ne "");
+  
+  ########## HTML options
+  my $rowHeadBGColor = $self->{Properties}->getValue($key_htmlRowHeadBGColor);
+  if ($self->{Properties}->error()) {
+    $self->_set_errormsg("Unable to get the $key_htmlRowHeadBGColor property.  Message is ".$self->{Properties}->get_errormsg());
+    return(undef);
+  }
+  $rowHeadBGColor = " bgcolor=\"$rowHeadBGColor\""if ($rowHeadBGColor ne "");
+  ####
+  my $cellBGColor = $self->{Properties}->getValue($key_htmlCellBGColor);
+  if ($self->{Properties}->error()) {
+    $self->_set_errormsg("Unable to get the $key_htmlCellBGColor property.  Message is ".$self->{Properties}->get_errormsg());
+    return(undef);
+  }
+  $cellBGColor = " bgcolor=\"$cellBGColor\""if ($cellBGColor ne "");
+  ####
+  my $cellJust = $self->{Properties}->getValue($key_htmlCellJust);
+  if ($self->{Properties}->error()) {
+    $self->_set_errormsg("Unable to get the $key_htmlCellJust property.  Message is ".$self->{Properties}->get_errormsg());
+    return(undef);
+  }
+  $cellJust = " align=\"$cellJust\""if ($cellJust ne "");
+  
+  $self->_buildHeir(1);
+  
+#    print Dumper($self);
+  my @IDs = $self->{render}{colIDs};
+  my $levels = $self->{render}{colLabelLevels};
+  
+  my @nodeSet;
+  die "Internal Error: No levels defined" if ($levels < 1);
+  $out .= "<table border=1>\n";
+  for (my $level=0; $level < $levels; $level++){
+    $out .= "<tr>\n";
+    ### Render the row data 
+    my $numRowHead = scalar(@{ $self->{render}{rowLabelWidth} });
+    $out .= "  <th rowspan=$levels colspan=$numRowHead> &nbsp; </th>\n" if ($k1c && $level == 0);
+    
+    ### Render the col data
+    my $tree = $self->{render}{colLabelHeir}; 
+    @nodeSet = @{ $tree->{nodes} };
+    my $searchLevel = $level;
+    while ($searchLevel > 0){
+      my @stack = @nodeSet;
+      @nodeSet = ();
+      foreach my $nd(@stack){ 
+	push @nodeSet, @{ $nd->{nodes} };
+      }
+      $searchLevel --;
+    }
+    
+    for (my $node=0; $node < @nodeSet; $node ++){
+      my $ncol = scalar( @{ $nodeSet[$node]{subs} });
+      $out .= "  <th".($ncol > 1 ? " colspan=$ncol" : "")." $colHeadBGColor> $nodeSet[$node]{id}  </th>\n";
+    }
+    $out .= "</tr>\n";
+  }
+  
+  #### NOW: @nodeSet is the formatting informatlion for the columns!!!
+  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, "Alpha",
+					  $self->{Properties}->getValue($key_KeepRowsInOutput));
+  #print join(" ",@rowIDs)."\n";
+  #### compute the rowspans for each 
+  my @lastRowLabel = ();
+  #### make a 2D table of ids
+  my @idlist = ();
+  foreach (@rowIDs) {
+    push @idlist, [ split(/\|/, $_) ];
+  }
+  for (my $row=0; $row<@rowIDs; $row++) {
+    $out .= "<tr>\n";
+    
+    if ($k1c){
+      my @ids = @{ $idlist[$row] };
+      for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
+	$lastRowLabel[$rowLevel] = "" if (! defined($lastRowLabel[$rowLevel]));
+	
+	my $print = 1;
+	if ($lastRowLabel[$rowLevel] eq $ids[$rowLevel]){
+	  $print = 0;
+	} else {
+	  ### if we print a level, then print all levels below
+	  for (my $trl=$rowLevel+1; $trl < @{ $self->{render}{rowLabelWidth} }; $trl++){
+	    $lastRowLabel[$trl] = "";
+	  }
+	}
+	if ($print){
+	  ### look forward to see when to stop
+	  my $span = 0;
+	  my $stop = 0;
+	  for (my $larow=$row; $larow<@rowIDs && $stop == 0; $larow++){
+	    ### is this value the same
+	    $stop = 1 if ($ids[$rowLevel] ne $idlist[$larow][$rowLevel]);
+	    ### do any of the left label values change
+	    for (my $leftlev=0; $leftlev < $rowLevel; $leftlev ++){
+	      $stop = 1 if ($ids[$leftlev] ne $idlist[$larow][$leftlev]);
+	    }
+	    $span ++ if (! $stop);
+	  }
+	  $out .= "  <th".($span > 1 ? " rowspan=$span" : "")." $rowHeadBGColor> $ids[$rowLevel] </th>\n";
+	} else {
+	  $out .= "  <!-- <th> ".($print ? $ids[$rowLevel] : "&nbsp;")." </th> -->\n";
+	}
+	
+	$lastRowLabel[$rowLevel] = $ids[$rowLevel];
+      }
+    }
+    for (my $node=0; $node<@nodeSet; $node++) {
+      my $str = (defined($self->{data}{$rowIDs[$row]."-".$nodeSet[$node]{subs}[0]}) ? 
+		 $self->{data}{$rowIDs[$row]."-".$nodeSet[$node]{subs}[0]} : "&nbsp;");
+      $out .= "  <td $cellJust $cellBGColor> ".$str." </td>".
+	"  <!-- $rowIDs[$row] $nodeSet[$node]{subs}[0]  --> \n";
+    }
+    $out .= "</tr>\n";
+  }   
+  $out .= "</table>\n";
+  $out;
+}
 
 sub renderTxtTable(){
+#<<<<<<< AutoTable.pm
   my ($self, $gap) = @_;
+  
+  $gap = 1 if (!defined($gap));
+  
+  my $keyCol = $self->{Properties}->getValue($key_KeyColumnTxt);
+  if ($self->{Properties}->error()) {
+    $self->_set_errormsg("Unable to get the $key_KeyColumnTxt property.  Message is ".$self->{Properties}->get_errormsg());
+    return(undef);
+  }
+  my $k1c = ($keyCol eq "Keep") ? 1 : 0;
   
   my $out = "";
   $self->_buildHeir($gap);
   
+##=======
+##  my ($self, $gap) = @_;
+##  
+##  my $out = "";
+##  $self->_buildHeir($gap);
+##  
+##>>>>>>> 1.3
 #    print Dumper($self);
+#<<<<<<< AutoTable.pm
   my @IDs = $self->{render}{colIDs};
   my $levels = $self->{render}{colLabelLevels};
   my @nodeSet;
   die "Internal Error: No levels defined" if ($levels < 1);
   for (my $level=0; $level < $levels; $level++){
     ### Render the row data
-    for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
-      $out .= $self->_centerJust("", $self->{render}{rowLabelWidth}->[$rowLevel]);    
-      $out .= $self->_centerJust("", $gap); 
+    if ($k1c){
+      for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
+	$out .= $self->_centerJust("", $self->{render}{rowLabelWidth}->[$rowLevel]);    
+	$out .= $self->_centerJust("", $gap); 
+      }
     }
     $out .= "|";
     
@@ -199,7 +453,63 @@ sub renderTxtTable(){
       $out .= "|" if ($node < @nodeSet - 1);	    
     }
     $out .= "|\n";
+##=======
+##  my @IDs = $self->{render}{colIDs};
+##  my $levels = $self->{render}{colLabelLevels};
+##  my @nodeSet;
+##  die "Internal Error: No levels defined" if ($levels < 1);
+##  for (my $level=0; $level < $levels; $level++){
+##    ### Render the row data
+##    for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
+##      $out .= $self->_centerJust("", $self->{render}{rowLabelWidth}->[$rowLevel]);    
+##      $out .= $self->_centerJust("", $gap); 
+##>>>>>>> 1.3
   }
+#<<<<<<< AutoTable.pm
+  ### The separator
+  if ($k1c){
+    for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
+      $out .= $self->_nChrStr($self->{render}{rowLabelWidth}->[$rowLevel] + $gap, "-");
+    }
+    $out .= "+";
+  } else {
+    $out .= "|";
+##=======
+##    $out .= "|";
+##    
+##    ### Render the col data
+##    my $tree = $self->{render}{colLabelHeir}; 
+##    @nodeSet = @{ $tree->{nodes} };
+##    
+##    my $searchLevel = $level;
+##    while ($searchLevel > 0){
+##      my @stack = @nodeSet;
+##      @nodeSet = ();
+##      foreach my $nd(@stack){ 
+##	push @nodeSet, @{ $nd->{nodes} };
+##      }
+##      $searchLevel --;
+##>>>>>>> 1.3
+  }
+#<<<<<<< AutoTable.pm
+  for (my $node=0; $node<@nodeSet; $node++) {
+    $out .= "" . $self->_nChrStr($nodeSet[$node]{width},"-") . "+";
+  }    
+  $out .= "\n";
+  
+  #### NOW: @nodeSet is the formatting informatlion for the columns!!!
+  my @colIDs = ();  ####$self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded");
+  foreach my $nd(@nodeSet){ 
+    push @colIDs, $nd->{subs}[0];
+##=======
+##    
+##    for (my $node=0; $node < @nodeSet; $node ++){
+##      $out .= $self->_centerJust($nodeSet[$node]{id}, $nodeSet[$node]{width});
+##      $out .= "|" if ($node < @nodeSet - 1);	    
+##>>>>>>> 1.3
+  }
+  $out .= "|\n";
+  
   
   ### The separator
   for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
@@ -221,17 +531,11 @@ sub renderTxtTable(){
   my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, "Alpha",
 					  $self->{Properties}->getValue($key_KeepRowsInOutput));
 #    print join(" ",@rowIDs)."\n";
+#<<<<<<< AutoTable.pm
   my @lastRowLabel = ();
   foreach my $rowIDStr (@rowIDs) {
-#	if (! $r1c) {
-#	    for (my $c=1; $c<=$numRowLev; $c++) {
-#	    for (my $c=1; $c<=1; $c++) {
-#		$out .= $self->_leftJust($rowIDStr, $maxRowLabWidth);
-#	    }
-#	    $out .= "|";
-#	}
     ### Render the row header column 
-    if (1){
+    if ($k1c){
       my @ids = split(/\|/, $rowIDStr);
       my $print = 1;
       for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
@@ -248,13 +552,43 @@ sub renderTxtTable(){
 	}
 	
 	$out .= $self->_leftJust($print ? $ids[$rowLevel] : "", $self->{render}{rowLabelWidth}->[$rowLevel]);    
+##=======
+##  my @lastRowLabel = ();
+##  foreach my $rowIDStr (@rowIDs) {
+###	if (! $r1c) {
+###	    for (my $c=1; $c<=$numRowLev; $c++) {
+###	    for (my $c=1; $c<=1; $c++) {
+###		$out .= $self->_leftJust($rowIDStr, $maxRowLabWidth);
+###	    }
+###	    $out .= "|";
+###	}
+##    ### Render the row header column 
+##    if (1){
+##      my @ids = split(/\|/, $rowIDStr);
+##      my $print = 1;
+##      for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
+##	$lastRowLabel[$rowLevel] = "" if (! defined($lastRowLabel[$rowLevel]));
+##	
+##	$print = 1;
+##	if ($lastRowLabel[$rowLevel] eq $ids[$rowLevel]){
+##	  $print = 0;
+##	} else {
+##	  ### if we print a level, then print all levels below
+##	  for (my $trl=$rowLevel+1; $trl < @{ $self->{render}{rowLabelWidth} }; $trl++){
+##	    $lastRowLabel[$trl] = "";
+##	  }
+##	}
+##	
+##	$out .= $self->_leftJust($print ? $ids[$rowLevel] : "", $self->{render}{rowLabelWidth}->[$rowLevel]);    
+##>>>>>>> 1.3
 #		$out .= $self->_leftJust("", $gap) if ($rowLevel != 0);
+#<<<<<<< AutoTable.pm
 	$out .= $self->_leftJust("", $gap);
 	
 	$lastRowLabel[$rowLevel] = $ids[$rowLevel];
       }
-      $out .= "|";
     }
+    $out .= "|";
     for (my $node=0; $node<@nodeSet; $node++) {
       $out .= " " . $self->_rightJust($self->{data}{$rowIDStr."-".$nodeSet[$node]{subs}[0]}, $nodeSet[$node]{width} - 2) . " |";
     }
@@ -262,6 +596,21 @@ sub renderTxtTable(){
     $out .= "\n";
   }   
   $out;
+###=======
+###	$out .= $self->_leftJust("", $gap);
+###	
+###	$lastRowLabel[$rowLevel] = $ids[$rowLevel];
+###      }
+###      $out .= "|";
+###    }
+###    for (my $node=0; $node<@nodeSet; $node++) {
+###      $out .= " " . $self->_rightJust($self->{data}{$rowIDStr."-".$nodeSet[$node]{subs}[0]}, $nodeSet[$node]{width} - 2) . " |";
+###    }
+###    
+###    $out .= "\n";
+###  }   
+###  $out;
+###>>>>>>> 1.3
 }
 
 sub _buildLabelHeir(){
@@ -275,7 +624,7 @@ sub _buildLabelHeir(){
   } else {
     $labHT = $self->{"rowLabOrder"};
     @IDs = $self->_getOrderedLabelIDs($labHT, $self->{Properties}->getValue($key_SortRowKeyTxt), 
-                                      $self->{Properties}->getValue($key_KeepRowsInOutput));
+				      $self->{Properties}->getValue($key_KeepRowsInOutput));
   }
   
   my $levels = scalar( @{ $labHT->{SubID}{$IDs[0]}{labels} } );
@@ -450,14 +799,14 @@ sub _getRowLabelWidth(){
       $len = length($sid) if ($len < length($sid));
     }
     return $len
-    } else {
-      ### recur at the next level
-      foreach my $sid (keys %{ $ht->{SubID} }) {
-	my $slen = $self->_getRowLabelWidth($ht->{SubID}{$sid}, $lev - 1);
-	$len = $slen if ($len < $slen);
-      }
-      return $len           
-      }
+  } else {
+    ### recur at the next level
+    foreach my $sid (keys %{ $ht->{SubID} }) {
+      my $slen = $self->_getRowLabelWidth($ht->{SubID}{$sid}, $lev - 1);
+      $len = $slen if ($len < $slen);
+    }
+    return $len           
+}
   MMisc::error_quit("[AutoTable] Internal Error");
 }
 
@@ -481,7 +830,7 @@ sub _getOrderedLabelIDs(){
     @sortedKeys = sort keys %{ $ht->{SubID} };
   } else {
     MMisc::error_quit("Internal Error AutoTable: Sort order '$order' not defined");
-    }  
+  }  
   
   my @keepIDs = ();
   my $filterIDs = 0;
@@ -498,15 +847,15 @@ sub _getOrderedLabelIDs(){
       die;
     } else {
       if ($filterIDs == 0){
-        push @ids, $sid
-	} else {
-	  my $keep = 0;
-	  foreach my $exp(@keepIDs){
-	    $keep = 1 if (grep(m%^$exp$%, $sid));
+	push @ids, $sid
+      } else {
+	my $keep = 0;
+	foreach my $exp(@keepIDs){
+	  $keep = 1 if (grep(m%^$exp$%, $sid));
 #          print "Check $exp $sid $keep\n";
-	  }
-	  push @ids, $sid if ($keep);
 	}
+	push @ids, $sid if ($keep);
+      }
     }
   }
 #  print join (" ", @ids)."\n";
