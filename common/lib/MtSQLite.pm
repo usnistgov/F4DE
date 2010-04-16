@@ -23,7 +23,6 @@ package MtSQLite;
 use strict;
 
 use DBI;
-use SQL::Abstract;
 
 use MMisc;
 use CSVHelper;
@@ -113,6 +112,27 @@ sub fix_entries {
 
 ##########
 
+sub get_column_names {
+  my ($dbh, $table) = @_;
+
+  my $sth = $dbh->prepare("SELECT * FROM $table LIMIT 1") 
+    or return("Problem obtaining column names : " . $dbh->errstr);
+  $sth->execute();
+
+  my $fields = $sth->{NUM_OF_FIELDS};
+
+  my @colsname = ();
+  for (my $i = 0; $i < $fields; $i++ ) {
+    push @colsname, $sth->{NAME}->[$i];
+  }
+
+  $sth->finish();
+
+  return("", @colsname);
+}
+
+#####
+
 sub insertCSV {
   my ($dbh, $csvfile, $tablename, @columnsname) = @_;
 
@@ -151,28 +171,38 @@ sub insertCSV {
   return("Not the same number of columns in file (" . scalar @csvheader . "[" . join(" | ", @csvheader) ."]) vs provided list (" . scalar @columnsname . "[" . join(" | ", @columnsname) ."])", 0)
     if (scalar @csvheader != scalar @columnsname);
 
-  $dbh->do('begin');
-  my $sql = SQL::Abstract->new;
+  # Check columns match
+  my ($err, @itcn) = &get_column_names($dbh, $tablename);
+  return($err, 0) if (! MMisc::is_blank($err));
+  
+  return("More columns in CSV (" . scalar @columnsname . "[" . join(" | ", @columnsname) ."]) than table ($tablename) list (" . scalar @itcn . "[" . join(" | ", @itcn) ."])", 0)
+    if (scalar @itcn < scalar @columnsname);
+
+  my ($err, %match) = MMisc::get_array1posinarray2(\@columnsname, \@itcn);
+  return($err) if (! MMisc::is_blank($err));
+
   # process csv rows
   my $inserted = 0;
+  my $ac = "(" . join(",", @columnsname) . ")";
+  my $qm = "(";
+  for (my $i = 0; $i < scalar @columnsname - 1; $i++) { $qm .= "?,"; }
+  $qm .= "?)";
+  my $sth = $dbh->prepare("INSERT INTO $tablename$ac VALUES $qm");
+
   while (my $line = <CSV>) {
-    my %fieldvals = $csvh->csvline2hash($line, \@columnsname);
+    my @fields = $csvh->csvline2array($line);
     return("Problem with CSV line extraction: " . $csvh->get_errormsg(), 0)
       if ($csvh->error());
 
-    # SQL::Abstract sets up the DBI variables
-    my ($stmt, @bind) = $sql->insert($tablename, \%fieldvals);
-    
-    # insert the row
-    my $sth = $dbh->prepare($stmt);
-    $inserted += $sth->execute(@bind);
+    $inserted += $sth->execute(@fields)
+      or return("Problem trying to execute SQL statement: " . $dbh->errstr);
 
     my $err = $sth->errstr();
-    return("Problem whie CSV line insert (row: $inserted) [command: $stmt]: $err", 0)
+    return("Problem during CSV line insert (row: $inserted): $err", 0)
       if (! MMisc::is_blank($err));
 
     my $err = $dbh->errstr();
-    return("Problem whie CSV line insert (row: $inserted): $err", 0)
+    return("Problem during CSV line insert (row: $inserted): $err", 0)
       if (! MMisc::is_blank($err));
   }
 
