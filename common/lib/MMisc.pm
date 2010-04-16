@@ -412,6 +412,37 @@ sub confirm_first_array_values {
 
 ##########
 
+sub get_array1posinarray2 {
+  my ($ra1, $ra2) = @_;
+
+  my @a1 = &make_array_of_unique_values($ra1);
+  return("Array1 does not contain unique values")
+    if (scalar @a1 != scalar @$ra1);
+
+  my @a2 = &make_array_of_unique_values($ra2);
+  return("Array2 does not contain unique values")
+    if (scalar @a2 != scalar @$ra2);
+
+  my %h2 = &array1d_to_ordering_hash(\@a2);
+
+  my %match = ();
+  my @bad = ();
+  for (my $i = 0; $i < scalar @a1; $i++) {
+    if (exists $h2{$a1[$i]}) {
+      $match{$a1[$i]} = $h2{$a1[$i]};
+    } else {
+      push @bad, $a1[$i];
+    }
+  }
+
+  return("Some values not in array comp: " . join(" ", @bad))
+    if (scalar @bad > 0);
+
+  return("", %match);
+}
+
+##########
+
 sub _uc_lc_array_values {
   my ($mode, $ra) = @_; 
 
