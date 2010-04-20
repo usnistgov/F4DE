@@ -21,6 +21,13 @@ if ($ms > 0) {
 }
 
 ##########
+print "** Recommended Perl Packages:\n";
+$ms = &_chkpkg("Text::CSV_XS");
+if ($ms > 0) {
+  print "  ** WARNING: The optional yet recommended \"Text::CSV_XS\" package is not available in your perl installation. It can greatly improve the speed of CSV handling (especially for DEVA).\n";
+}
+
+##########
 print "\n** Checking for \'rsync\' (needed by installer): ";
 my $rsync = MMisc::cmd_which("rsync");
 if (! defined $rsync) {
