@@ -224,7 +224,7 @@ sub confirm_table {
     if (! MMisc::is_blank($err));
   
   # Read the matching records and print them out
-  my @tidl = ();
+  my $tidc = 0;
   my $doit = 1;
   while ($doit) {
     my ($err, @data) = MtSQLite::sth_fetchrow_array($sth);
@@ -234,7 +234,7 @@ sub confirm_table {
       $doit = 0;
       next;
     }
-    push @tidl, $data[0];
+    $tidc++;
   }
 
   my $err = MtSQLite::sth_finish($sth);
@@ -242,9 +242,9 @@ sub confirm_table {
     if (! MMisc::is_blank($err));
 
   MMisc::error_quit("No entry in table, this DB will not be scorable")
-    if (scalar @tidl == 0);
+    if ($tidc == 0);
 
-  print "* Confirmed that Found $tablename.$TrialIDcolumn contains data (". scalar @tidl . "x datum)\n";
+  print "* Confirmed that Found $tablename.$TrialIDcolumn contains data (${tidc}x datum)\n";
   
   MtSQLite::release_dbh($dbh);
 }
