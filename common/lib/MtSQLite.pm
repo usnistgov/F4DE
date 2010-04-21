@@ -90,12 +90,12 @@ sub get_dbh {
 #######
 
 sub release_dbh {
-  my ($dbh) = @_;
+  # arg 0 : dbh
 
   # jut to be safe if there were any changes made to the DB
   # commit before disconnecting
-  $dbh->commit();
-  $dbh->disconnect();
+  $_[0]->commit();
+  $_[0]->disconnect();
 }
 
 #####
@@ -151,8 +151,9 @@ sub insertCSV {
   return("Problem obtaining a CSV handler", 0) if (! defined $csvh);
   return("Problem with CSV handler: " . $csvh->get_errormsg(), 0)
     if ($csvh->error());
+
   open CSV, "<$csvfile"
-    or MMisc::error_quit("Problem with CSV file ($csvfile): $!", 0);
+    or return("Problem with CSV file ($csvfile): $!", 0);
 
   my $line = <CSV>;
   my @csvheader = $csvh->csvline2array($line);
@@ -212,6 +213,74 @@ sub insertCSV {
   return("", $inserted);
 }
 
+#####
+
+sub dumpCSV {
+  my ($dbh, $table, $csvfile) = @_;
+
+  return("No DB handler") 
+    if (! defined $dbh);
+  
+  my $err = $dbh->errstr();
+  return("Problem with DB handler: $err")
+    if (! MMisc::is_blank($err));
+  
+  my $csvh = new CSVHelper();
+  return("Problem obtaining a CSV handler", 0) if (! defined $csvh);
+  return("Problem with CSV handler: " . $csvh->get_errormsg(), 0)
+    if ($csvh->error());
+
+  open CSV, ">$csvfile"
+    or return("Problem with CSV file ($csvfile): $!", 0);
+
+  # Header
+  my ($err, @colsname) = &get_column_names($dbh, $table);
+  return($err, 0) if (! MMisc::is_blank($err));
+
+  $csvh->set_number_of_columns(scalar @colsname);
+  return("Problem with CSV handler: " . $csvh->get_errormsg(), 0)
+    if ($csvh->error());
+  
+  my $text = $csvh->array2csvline(@colsname);
+  return("Problem with CSV handler: " . $csvh->get_errormsg(), 0)
+    if ($csvh->error());
+
+  print CSV "$text\n";
+
+  ## Data
+  my $sth = $dbh->prepare("SELECT * FROM $table") 
+    or return("Problem obtaining column names : " . $dbh->errstr);
+  $sth->execute();
+
+  my $inc = 0;
+  my $doit = 1;
+  while ($doit) {
+    my @data = $sth->fetchrow_array();
+    if (scalar @data == 0) {
+      $doit = 0;
+      next;
+    }
+
+    my $text = $csvh->array2csvline(@data);
+    return("Problem with CSV handler: " . $csvh->get_errormsg(), 0)
+      if ($csvh->error());
+    print CSV "$text\n";
+    
+    $inc++;
+#    print "\r $inc     ";
+  }
+  close CSV;
+  my $err = $sth->errstr();
+  return("Problem with Statement handler: $err")
+    if (! MMisc::is_blank($err));
+  $sth->finish();
+  my $err = $dbh->errstr();
+  return("DB handler: $err")
+    if (! MMisc::is_blank($err));
+  
+  return("", $inc);
+}
+
 ##########
 
 sub doOneCommand {
@@ -238,11 +307,9 @@ sub doOneCommand {
 ####################
 
 sub _fixcmd {
-  my ($cmd) = @_;
-
-  my $tcmd = MMisc::clean_begend_spaces($cmd);
+  # arg 0 : cmd
+  my $tcmd = MMisc::clean_begend_spaces($_[0]);
   $tcmd .= ";" if ($tcmd !~ m%\;$%);
-
   return($tcmd);
 }
 
@@ -353,20 +420,7 @@ sub sth_finish {
 
 sub get_sth_error { return($_[0]->errstr); }
 
-####################
-
-sub error {
-  my ($dbh) = @_;
-
-  my $err = $dbh->errstr();
-  return(MMisc::is_blank($err));
-}
-
-##
-
-sub get_errormsg {
-  return($_[0]->errstr());
-}
+sub get_errormsg { return($_[0]->errstr()); }
 
 ############################################################
 1;
