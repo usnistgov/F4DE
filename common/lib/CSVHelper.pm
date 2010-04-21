@@ -39,9 +39,7 @@ my $versionid = "CSVHelper.pm Version: $version";
 
 ## Constructor
 sub new {
-  my ($class) = shift @_;
-  my $qc = shift @_;
-  my $sc = shift @_;
+  my ($class, $qc, $sc) = @_;
 
   my %options = ();
   $options{always_quote} = 1;
@@ -83,12 +81,15 @@ sub new {
 #####
 
 sub set_number_of_columns {
-  my ($self, $n) = @_;
+  # arg 0: self
+  # arg 1: number of columns
 
-  return(0) if ($self->{errorv});
+  return(0) if ($_[0]->{errorv});
   
-  return($self->_set_error_and_return("\'column number\' can not be less than 1", 0))
-    if ($n < 1);
+  return($_[0]->_set_error_and_return("\'column number\' can not be less than 1", 0))
+    if ($_[1] < 1);
+
+  $_[0]->{col_nbr} = $_[1];
 
   return(1);
 }
@@ -96,49 +97,45 @@ sub set_number_of_columns {
 #####
 
 sub get_number_of_columns {
-  my ($self) = @_;
-  return($self->{col_nbr}); 
+  # arg 0 : self
+  return($_[0]->{col_nbr}); 
 }
 
 #####
 
 sub array2csvline {
-  my ($self, @array) = @_;
+  # arg 0 : self
+  # rest  : array
+  my $self = shift @_;
 
-  my $cn  = $self->{col_nbr};
-  return($self->_set_error_and_return("Given number of elements in array (" . scalar @array . ") is different from expected number ($cn)", undef))
-    if ((defined $cn) && ($cn != scalar @array));
+  return($self->_set_error_and_return("Given number of elements in array (" . scalar @_ . ") is different from expected number (" . $self->{col_nbr} . ")", undef))
+    if ((defined $self->{col_nbr}) && ($self->{col_nbr} != scalar @_));
 
-  my $ch = $self->{csvh};
   return($self->_set_error_and_return
          ("Problem adding elements to CSV: " 
-          . $ch->error_diag() . " (" . $ch->error_input() . ")"
+          . $self->{csvh}->error_diag() . " (" . $self->{csvh}->error_input() . ")"
           , undef))
-    if (! $ch->combine(@array));
+    if (! $self->{csvh}->combine(@_));
 
-  my $txt = $ch->string();
-
-  return($txt);
+  return($self->{csvh}->string());
 }
 
 #####
 
 sub csvline2array {
-  my ($self, $value) = @_;
+  # arg 0 : self
+  # arg 1 : value
 
   my @bad = ();
-
-  my $ch = $self->{csvh};
-  return($self->_set_error_and_return
-         ("Problem obtaining array from CSV line [$value]: " 
-          . $ch->error_diag() . " (" . $ch->error_input() . ")"
+  return($_[0]->_set_error_and_return
+         ("Problem obtaining array from CSV line [" . $_[1] . "]: " 
+          . $_[0]->{csvh}->error_diag() . " (" . $_[0]->{csvh}->error_input() . ")"
           , @bad))
-    if (! $ch->parse($value));
+    if (! $_[0]->{csvh}->parse($_[1]));
 
-  my @columns = $ch->fields();
-  my $cn  = $self->{col_nbr};
-  return($self->_set_error_and_return("Number of elements in extracted array (" . scalar @columns . ") is different from expected number ($cn)", @bad))
-    if ((defined $cn) && ($cn != scalar @columns));
+  my @columns = $_[0]->{csvh}->fields();
+  return($_[0]->_set_error_and_return("Number of elements in extracted array (" . scalar @columns . ") is different from expected number (" . $_[0]->{col_nbr} . ")", @bad))
+    if ((defined $_[0]->{col_nbr}) && ($_[0]->{col_nbr} != scalar @columns));
 
   return(@columns);
 }
@@ -146,13 +143,15 @@ sub csvline2array {
 #####
 
 sub csvline2hash {
-  my ($self, $value, $rha) = @_;
+  # arg 0 : self
+  # arg 1 : value
+  # arg 2 : reference to array of columns headers
 
-  my @columns = $self->csvline2array($value);
-  return() if ($self->{errorv});
+  my @columns = $_[0]->csvline2array($_[1]);
+  return() if ($_[0]->{errorv});
   my %out = ();
-  for (my $i = 0; $i < scalar @$rha; $i++) {
-    $out{$$rha[$i]} = $columns[$i];
+  for (my $i = 0; $i < scalar @{$_[2]}; $i++) {
+    $out{${$_[2]}[$i]} = $columns[$i];
   }
 
   return(%out);
@@ -161,14 +160,15 @@ sub csvline2hash {
 ##########
 
 sub __loadCSV {
-  my ($self, $file) = @_;
+  # arg 0 : self
+  # arg 1 : file name
 
-  my $err = MMisc::check_file_r($file);
-  return("Problem with file ($file): $err")
+  my $err = MMisc::check_file_r($_[1]);
+  return("Problem with file ($_[1]): $err")
     if (! MMisc::is_blank($err));
 
-  open CSV, "<$file"
-    or return("Problem while opening file ($file): $!");
+  open CSV, "<" . $_[1]
+    or return("Problem while opening file ($_[1]): $!");
  
   return("");
 }
@@ -176,23 +176,28 @@ sub __loadCSV {
 #####
 
 sub loadCSV_getheader {
-  my ($self, $file) = @_;
+  # arg 0 : self
+  # arg 1 : file name
 
   my @h = ();
-  my $err = $self->__loadCSV($file);
-  return($self->_set_error_and_return($err, @h))
+  my $err = $_[0]->__loadCSV($_[1]);
+  return($_[0]->_set_error_and_return($err, @h))
     if (! MMisc::is_blank($err));
 
   my $line = <CSV>;
   close CSV;
 
-  return($self->csvline2array($line));
+  return($_[0]->csvline2array($line));
 }
 
 #####
 
 sub loadCSV_tohash {
-  my ($self, $file, @keysorder) = @_;
+  # arg 0 : self
+  # arg 1 : file name
+  my $self = shift @_;
+  my $file = shift @_;
+  # rest : keys order
 
   my %out = ();
 
@@ -212,8 +217,8 @@ sub loadCSV_tohash {
 
   my @nf = ();
   my %nd = ();
-  for (my $i = 0; $i < scalar @keysorder; $i++) {
-    my $h = $keysorder[$i];
+  for (my $i = 0; $i < scalar @_; $i++) {
+    my $h = $_[$i];
     push @nf, $h
       if (! exists $pos{$h});
     $nd{$h} = $pos{$h};
@@ -237,8 +242,8 @@ sub loadCSV_tohash {
     return(%out) if ($self->{errorv});
 
     my $bt = "push \@\{\$out";
-    for (my $i = 0; $i < scalar @keysorder; $i++) {
-      my $h = $keysorder[$i];
+    for (my $i = 0; $i < scalar @_; $i++) {
+      my $h = $_[$i];
       $bt .= "{\'" . $array[$pos{$h}] . "\'}";
     }
 
