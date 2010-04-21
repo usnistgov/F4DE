@@ -89,8 +89,6 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 my $usage = &set_usage();
 
 # Default values for variables
-my $dbfile  = "";
-my $csvfile = "";
 my @tmpc = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
@@ -128,7 +126,7 @@ MMisc::error_quit("Problem with CSV file ($csvfile): $err")
 
 ##
 my ($t) = MtSQLite::fix_entries($tablename);
-MMisc::error_quit("Asked tablename ($tablename) does not comply with name requiremetnts (should have been: \'$t\')")
+MMisc::error_quit("Asked tablename ($tablename) does not comply with name requirements (should have been: \'$t\')")
   if ($t ne $tablename);
 
 my @tmpc = MtSQLite::fix_entries(@colsname);
@@ -149,7 +147,7 @@ my ($err, $inserted) = MtSQLite::insertCSV($dbh, $csvfile, $tablename, @colsname
 MMisc::error_quit("Problem inserting CSV file ($csvfile) into DB ($dbfile)'s table ($tablename): $err")
   if (! MMisc::is_blank($err));
 
-print "\nInserted $inserted records\n";
+print "\nInserted $inserted rows\n";
 
 MtSQLite::release_dbh($dbh);
 
