@@ -216,15 +216,21 @@ sub loadCSV_tohash {
   }
 
   my @nf = ();
+  my %rh = MMisc::clone(%pos);
   my %nd = ();
   for (my $i = 0; $i < scalar @_; $i++) {
     my $h = $_[$i];
-    push @nf, $h
-      if (! exists $pos{$h});
+    if (! exists $pos{$h}) {
+      push @nf, $h;
+      next;
+    }
     $nd{$h} = $pos{$h};
+    delete $rh{$h};
   }
   return($self->_set_error_and_return("Could not find requested headers: " . join(", ", @nf), %out))
     if (scalar @nf > 0);
+
+  my $doa = scalar(keys %rh); # do filled array or do increments ?
 
   $self->set_number_of_columns(scalar @headers);
   return(%out) if ($self->{errorv});
@@ -241,27 +247,36 @@ sub loadCSV_tohash {
     my @array = $self->csvline2array($line);
     return(%out) if ($self->{errorv});
 
-    my $bt = "push \@\{\$out";
-    for (my $i = 0; $i < scalar @_; $i++) {
-      my $h = $_[$i];
-      $bt .= "{\'" . $array[$pos{$h}] . "\'}";
+    if ($doa) {
+      my $bt = "push \@\{\$out";
+      for (my $i = 0; $i < scalar @_; $i++) {
+        my $h = $_[$i];
+        $bt .= "{\'" . $array[$pos{$h}] . "\'}";
+      }
+      
+      for (my $i = 0; $i < scalar @headers; $i++) {
+        my $h = $headers[$i];
+        next if (exists $nd{$h});
+        
+        my $v = $array[$i];
+        $code .= $bt . "{\'$h\'}}, \'$v\';\n";
+      }
+    } else { # increment value
+      my $bt = "\$out";
+      for (my $i = 0; $i < scalar @_; $i++) {
+        my $h = $_[$i];
+        $bt .= "{\'" . $array[$pos{$h}] . "\'}";
+      }
+      $code .= $bt . "++;\n";
     }
-
-  for (my $i = 0; $i < scalar @headers; $i++) {
-    my $h = $headers[$i];
-    next if (exists $nd{$h});
-
-    my $v = $array[$i];
-    $code .= $bt . "{\'$h\'}}, \'$v\';\n"
-    }
-
+    
     $cont++;
   }
   close CSV;
 
+#  print "** Code:\n$code\n";
   return($self->_set_error_and_return("Do not have any code data to reload", %out))
     if (MMisc::is_blank($code));
-#  print "** Code:\n$code\n";
   eval $code;
 
   return(%out);
