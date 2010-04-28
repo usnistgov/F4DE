@@ -86,6 +86,9 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
+my $defusedmetric = "MetricTestStub";
+my $usedmetric = "";
+my @usedmetparams = ();
 my $mancmd = "perldoc -F $0";
 my $usage = &set_usage();
 my $outdir = "";
@@ -128,6 +131,8 @@ GetOptions
    'MetadataDBfile=s' => \$wmdDBfile,
    'addResDBfiles=s'   => \@addResDBfiles,
    'AllowResDBfileBypass' => \$resDBbypass,
+   'usedMetric'  => \$usedmetric,
+   'UsedMetricParams' => \@usedmetparams,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -135,6 +140,12 @@ if ($opt{'man'}) {
   my ($r, $o, $e) = MMisc::do_system_call($mancmd);
   MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
   MMisc::ok_quit($o);
+}
+
+if (MMisc::is_blank($usedmetric)) {
+#  MMisc::warn_print("No metric provided, will use default ($defusedmetric) with default parameters");
+  $usedmetric = $defusedmetric;
+  @usedmetparams = ('ValueC=0.1', 'ValueV=1', 'ProbOfTerm=0.0001' );
 }
 
 my @csvlist = @ARGV;
@@ -367,6 +378,10 @@ sub run_scorer {
     $cmdp .= " -R " . $xres[$i];
   }
   $cmdp .= " -b ${finalDBbase}_DET";
+  $cmdp .= " -m $usedmetric";
+  foreach my $mk (@usedmetparams) {
+    $cmdp .= " -M $mk";
+  }
   $cmdp .= " $finalDBfile";
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdp);
@@ -601,7 +616,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--TrialScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [csvfile [csvfile [...]]
+$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--TrialScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric packagetouse] [--UsedMetricParams param=value [--UsedMetricParams param=value [...]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -623,6 +638,9 @@ Where:
   --MetadataDBfile  Specify the metadata SQLite database file
   --FilterCMDfile  Specify the SQLite command file
   --addResDBfiles  Additional filter results database files to give the scorer (will do an AND on the TrialIDs)
+  --usedMetric    Package to load for metric uses
+  --UsedMetricParams Metric Package parameters
+
 EOF
 ;
 
