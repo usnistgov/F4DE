@@ -58,7 +58,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("MMisc", "CSVHelper", "MtSQLite", "Trials", "MetricFuncs", "MetricTestStub", "DETCurve", "DETCurveSet") {
+foreach my $pn ("MMisc", "CSVHelper", "MtSQLite", "Trials", "MetricFuncs", "DETCurve", "DETCurveSet") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -104,8 +104,11 @@ my $bDETf = "DET";
 my @ok_modes = ("AND", "OR"); # order is important
 my $mode = $ok_modes[0];
 
+my $metric = "";
+my %metparams = ();
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                  R               h    m    rs  v      #
+# Used:             M    R               h    m o  rs  v      #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -117,8 +120,10 @@ GetOptions
    'ResultDBfile=s'     => \@resDBfiles,
    'referenceDBfile=s'  => \$refDBfile,
    'systemDBfile=s'     => \$sysDBfile,
-   'mode=s'             => \$mode,
+   'operator=s'         => \$mode,
    'baseDETfile=s'      => \$bDETf,
+   'metricPackage=s'    => \$metric,
+   'MetricParameters=s' => \%metparams,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -134,6 +139,12 @@ MMisc::error_quit("No \'referenceDBfile\' provided\n\n$usage")
 &check_DBs_r($refDBfile, $sysDBfile, @resDBfiles);
 MMisc::error_quit("Unrecognized \'mode\' [$mode], authorized values are: " . join(" ", @ok_modes))
   if (! grep(m%^$mode$%, @ok_modes));
+
+MMisc::error_quit("No \'metric\' specified, aborting")
+  if (MMisc::is_blank($metric));
+unless (eval "use $metric; 1") {
+  MMisc::error_quit("Metric package \"$metric\" is not available in your Perl installation. " . &eo2pe($@));
+}
 
 my ($dbfile) = @ARGV;
 
@@ -214,11 +225,15 @@ print "-- Total number of entries in REF + SYS    = $tot1\n";
 print "-- 2x mapped + Unmapped REF + Unmapped SYS = $tot2\n";
 MMisc::error_quit("Problem at check point") if ($tot1 != $tot2);
 
+my $met = undef;
+my $metcmd = "\$met = new $metric (\\\%metparams, \$trial);";
+unless (eval "$metcmd; 1") {
+  MMisc::error_quit("Problem creating Metric ($metric) object (" . join(" ", @_) . ")");
+}
+MMisc::error_quit("Problem with metric ($metric)")
+  if (! defined $met);
 my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
-my $det = new DETCurve
-  ($trial,
-   new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
-   "footitle", \@isolinecoef, "gzip");
+my $det = new DETCurve($trial, $met, "footitle", \@isolinecoef, "gzip");
 #$det->computePoints();
 #my $sroot = "serialize";
 #$det->serialize($sroot);
@@ -356,7 +371,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--baseDETfile filebase] ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] --metricPackage package --MetricParameters parameter=value [--MetricParameters parameter=value [...]] [--baseDETfile filebase] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
@@ -368,6 +383,8 @@ Where:
   --referenceDBfile  The Reference SQLite file (must contains the 'Reference' table, whose columns are: TrialID, Targ)
   --systemDBfile     The System SQLite file (must contains the 'System' table, whose columns are: TrialID, Decision, Score)
   --ResultDBfile     The Filter tool resulting DB (must contain the \'$tablename\' table, which only column is: $TrialIDcolumn)
+  --metricPackage    Package to load for metric uses
+  --MetricParameters Metric Package parameters
   --baseDETfile      When working with DET curves, all the relevant files will start with this value (default: $bDETf)
 EOF
 ;
