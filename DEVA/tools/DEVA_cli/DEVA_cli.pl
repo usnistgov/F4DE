@@ -87,10 +87,9 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 # Options processing
 
 my $defusedmetric = "MetricTestStub";
-my $usedmetric = "";
-my @usedmetparams = ();
 my $mancmd = "perldoc -F $0";
 my $usage = &set_usage();
+
 my $outdir = "";
 my $filtercmdfile = "";
 
@@ -108,8 +107,14 @@ my $wmdDBfile  = "";
 my @addResDBfiles = ();
 my $resDBbypass = 0;
 
+my $usedmetric = "";
+my @usedmetparams = ();
+
+my $trialslabels = "";
+my @trialsparams = ();
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A C  F      M    RST      a c  f h    m o  rs  v      #
+# Used: A CD F      M    RST      a c  f h    m o  rst v      #
 
 my %opt = ();
 GetOptions
@@ -125,7 +130,7 @@ GetOptions
    'CreateDBSkip' => sub { $createDBs = 0},
    'filterSkip' => sub { $filter = 0},
    'FilterCMDfile=s' => \$filtercmdfile,
-   'TrialScoreSkip' => sub { $score = 0},
+   'DETScoreSkip' => sub { $score = 0},
    'RefDBfile=s'    => \$wrefDBfile,
    'SysDBfile=s'    => \$wsysDBfile,
    'MetadataDBfile=s' => \$wmdDBfile,
@@ -133,6 +138,8 @@ GetOptions
    'AllowResDBfileBypass' => \$resDBbypass,
    'usedMetric'  => \$usedmetric,
    'UsedMetricParams' => \@usedmetparams,
+   'trialsLabels=s'     => \$trialslabels,
+   'TrialsParams=s'     => \@trialsparams,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -382,6 +389,12 @@ sub run_scorer {
   foreach my $mk (@usedmetparams) {
     $cmdp .= " -M $mk";
   }
+  if (! MMisc::is_blank($trialslabels)) {
+    $cmdp .= " -t $trialslabels";
+  }
+  foreach my $mk (@trialsparams) {
+    $cmdp .= " -T $mk";
+  }
   $cmdp .= " $finalDBfile";
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdp);
@@ -433,7 +446,7 @@ DEVA_cli - DEVA Command Line Interface
 
 B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
   S<B<--outdir> I<dir>>
-  S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--TrialScoreSkip>]>
+  S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--DETScoreSkip>]>
   S<[B<--refcsv> I<csvfile>] [B<--syscsv> I<csvfile>]>
   S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>] [B<--MetadataDBfile> I<file>]>
   S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
@@ -533,7 +546,7 @@ Specify the location of the System CSV file (expected to contain S<TrialID>, S<S
 
 Specify the location of the Metadata database file to use/generate.
 
-=item B<--TrialScoreSkip>
+=item B<--DETScoreSkip>
 
 Skip the Trial Scoring step (including DETCurve processing).
 
@@ -616,7 +629,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--TrialScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric packagetouse] [--UsedMetricParams param=value [--UsedMetricParams param=value [...]] [csvfile [csvfile [...]]
+$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric packagetouse] [--UsedMetricParams param=value [--UsedMetricParams param=value [...]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -630,7 +643,7 @@ Where:
   --configSkip    Bypass csv config helper step
   --CreateDBSkip  Bypasss Databases creation step
   --filterSkip    Bypasss Filter tool step
-  --TrialScoreSkip  Bypass Scoring Interface step
+  --DETScoreSkip  Bypass Scoring Interface step
   --refcsv     Specify the Reference csv file
   --syscsv     Specify the System csv file
   --RefDBfile  Specify the Reference SQLite database file
