@@ -22,15 +22,15 @@ my $t0 = F4DE_TestCore::get_currenttime();
 
 ##
 $tn = "test1";
-$testr += &do_less_simple_test($tn, "(filter1)", "-r ../../../common/test/common/ref.csv -s ../../../common/test/common/sys.csv ../../../common/test/common/md.csv -F ../common/filter1.cmd", "res-$tn.txt");
+$testr += &do_less_simple_test($tn, "(filter1)", "-r ../../../common/test/common/ref.csv -s ../../../common/test/common/sys.csv ../../../common/test/common/md.csv -F ../common/filter1.sql", "res-$tn.txt");
 
 ##
 $tn = "test2";
-$testr += &do_less_simple_test($tn, "(filter2)", "-r ../../../common/test/common/ref.csv -s ../../../common/test/common/sys.csv ../../../common/test/common/md.csv -F ../common/filter2.cmd", "res-$tn.txt");
+$testr += &do_less_simple_test($tn, "(filter2)", "-r ../../../common/test/common/ref.csv -s ../../../common/test/common/sys.csv ../../../common/test/common/md.csv -F ../common/filter2.sql", "res-$tn.txt");
 
 ##
 $tn = "test3";
-$testr += &do_skip_test($tn, "(filter1, skip DB recreation, filter2)", "-r ../../../common/test/common/ref.csv -s ../../../common/test/common/sys.csv ../../../common/test/common/md.csv -F ../common/filter1.cmd", "res-$tn.txt", "-F ../common/filter2.cmd");
+$testr += &do_skip_test($tn, "(filter1, skip DB recreation, filter2)", "-r ../../../common/test/common/ref.csv -s ../../../common/test/common/sys.csv ../../../common/test/common/md.csv -F ../common/filter1.sql", "res-$tn.txt", "-F ../common/filter2.sql");
 
 #####
 
@@ -69,8 +69,8 @@ sub do_less_simple_test {
 
   my $retval = &do_simple_test($testname, $subtype, $command, $res, $rev);
 
-  my $db = "$tdir/scoreDB.sql";
-  $retval += &do_simple_test($testname, "(DB check)", "sqlite3 $db < add_checker_sql.cmd", $res . "-DBcheck", $rev);
+  my $db = "$tdir/scoreDB.db";
+  $retval += &do_simple_test($testname, "(DB check)", "sqlite3 $db < add_checker.sql", $res . "-DBcheck", $rev);
 
   if ($mode eq $mmk) {
     print "  (keeping: $tdir)\n";
@@ -104,15 +104,15 @@ sub do_skip_test {
 
   my $retval = &do_simple_test($testname, "$subtype [step1]", $command, $res . "-step1", $rev);
 
-  my $db = "$tdir1/scoreDB.sql";
-  $retval += &do_simple_test($testname, "$subtype [step1 DBcheck]", "sqlite3 $db < add_checker_sql.cmd", $res . "-step1_DBcheck", $rev);
+  my $db = "$tdir1/scoreDB.db";
+  $retval += &do_simple_test($testname, "$subtype [step1 DBcheck]", "sqlite3 $db < add_checker.sql", $res . "-step1_DBcheck", $rev);
 
-  $command = "$tool -c -C -R $tdir1/referenceDB.sql -S $tdir1/systemDB.sql -M $tdir1/metadataDB.sql -o $tdir2 $cadd2";
+  $command = "$tool -c -C -R $tdir1/referenceDB.db -S $tdir1/systemDB.db -M $tdir1/metadataDB.db -o $tdir2 $cadd2";
 
   $retval += &do_simple_test($testname, "$subtype [step2]", $command, $res . "-step2", $rev);
 
-  $db = "$tdir2/scoreDB.sql";
-  $retval += &do_simple_test($testname, "$subtype [step2 DBcheck]", "sqlite3 $db < add_checker_sql.cmd", $res . "-step2_DBcheck", $rev);
+  $db = "$tdir2/scoreDB.db";
+  $retval += &do_simple_test($testname, "$subtype [step2 DBcheck]", "sqlite3 $db < add_checker.sql", $res . "-step2_DBcheck", $rev);
 
   if ($mode eq $mmk) {
     print "  (keeping: $tdir)\n";

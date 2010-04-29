@@ -1,4 +1,4 @@
-[[COMMANDLINE]] sqlite3 /tmp/DEVA_cli_tester-Temp_test1/scoreDB.sql < add_checker_sql.cmd
+[[COMMANDLINE]] sqlite3 /tmp/DEVA_cli_tester-Temp_test1/scoreDB.db < add_checker.sql
 [[RETURN CODE]] 0
 [[STDOUT]]
 ref  sys
