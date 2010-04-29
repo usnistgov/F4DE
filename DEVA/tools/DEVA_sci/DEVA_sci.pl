@@ -98,6 +98,7 @@ my $resDBname = "resultsDB";
 #
 my $tablename = "resultsTable";
 my $TrialIDcolumn = "TrialID";
+my $BlockIDcolumn = "BlockID";
 
 my $bDETf = "DET";
 
@@ -159,8 +160,10 @@ MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$refDBfile\" AS $refDBname")
 MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$sysDBfile\" AS $sysDBname");
 my $used_resDBname = "";
 my @resDBnames = ();
+my %tid2bid = ();
 for (my $i = 0; $i < scalar @resDBfiles; $i++) {
   my $resDBfile = $resDBfiles[$i];
+  &confirm_table(\%tid2bid, $resDBfile, $tablename, $TrialIDcolumn, $BlockIDcolumn);
   my $lresDBname = $resDBname . sprintf("_%03d", $i);
   MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$resDBfile\" AS $lresDBname");
   push @resDBnames, $lresDBname;
@@ -185,8 +188,10 @@ my ($err, $log, $stdout, $stderr) =
   MtSQLite::sqliteCommands($sqlitecmd, $dbfile, $cmdlines);
 MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
-my %ref = &confirm_table($dbfile, 'ref', 'TrialID', 'Targ');
-my %sys = &confirm_table($dbfile, 'sys', 'TrialID', 'Decision', 'Score');
+my %ref = ();
+&confirm_table(\%ref, $dbfile, 'ref', $TrialIDcolumn, 'Targ');
+my %sys = ();
+&confirm_table(\%sys, $dbfile, 'sys', $TrialIDcolumn, 'Decision', 'Score');
 
 my $tot1 = scalar(keys %ref) + scalar(keys %sys);
 
@@ -197,18 +202,22 @@ my $trial = new Trials("REF_SYS", "Trials", "NotSure", { ("TOTALTRIALS" => 10) }
 my ($mapped, $unmapped_sys, $unmapped_ref) = (0, 0, 0);
 
 foreach my $key (keys %sys) {
+  my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
+    ? $tid2bid{$key}{$BlockIDcolumn} : $BlockIDcolumn;
   if (exists $ref{$key}) { # mapped
-    $trial->addTrial("NotSure", $sys{$key}{'Score'}, ($sys{$key}{'Decision'} eq 'y') ? 'YES' : 'NO', 1);
+    $trial->addTrial($bid, $sys{$key}{'Score'}, ($sys{$key}{'Decision'} eq 'y') ? 'YES' : 'NO', 1);
     $mapped++;
   } else { # unmapped sys
-    $trial->addTrial("NotSure", $sys{$key}{'Score'}, ($sys{$key}{'Decision'} eq 'y') ? 'YES' : 'NO', 0);
+    $trial->addTrial($bid, $sys{$key}{'Score'}, ($sys{$key}{'Decision'} eq 'y') ? 'YES' : 'NO', 0);
     $unmapped_sys++;
   }
 }
 
 foreach my $key (keys %ref) {
   if (! exists $sys{$key}) { # unmapped ref
-    $trial->addTrial("NotSure", undef, "OMITTED", 1);
+    my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
+      ? $tid2bid{$key}{$BlockIDcolumn} : $BlockIDcolumn;
+    $trial->addTrial($bid, undef, "OMITTED", 1);
     $unmapped_ref++;
   }
   
@@ -275,7 +284,7 @@ sub ANDtworesDB {
 
   my $tmp=<<EOF
 DROP TABLE IF EXISTS $out.$tablename;
-CREATE TABLE $out.$tablename AS SELECT $in1.$tablename.TrialID FROM $in1.$tablename INNER JOIN $in2.$tablename WHERE $in1.$tablename.$TrialIDcolumn = $in2.$tablename.$TrialIDcolumn;
+CREATE TABLE $out.$tablename AS SELECT $in1.$tablename.$TrialIDcolumn FROM $in1.$tablename INNER JOIN $in2.$tablename WHERE $in1.$tablename.$TrialIDcolumn = $in2.$tablename.$TrialIDcolumn;
 
 EOF
   ;
@@ -318,7 +327,7 @@ sub joinResDBfiles {
 ####################
 
 sub confirm_table {
-  my ($dbfile, $tablename, @columns) = @_;
+  my ($rh, $dbfile, $tablename, @columns) = @_;
   
   my ($err, $dbh) = MtSQLite::get_dbh($dbfile);
   MMisc::error_quit($err)
@@ -333,7 +342,6 @@ sub confirm_table {
   MMisc::error_quit("Problem processing SELECT on \'$tablename\': $err")
     if (! MMisc::is_blank($err));
 
-  my %res = ();
   my $doit = 1;
   while ($doit) {
     my ($err, @data) = MtSQLite::sth_fetchrow_array($sth);
@@ -348,7 +356,9 @@ sub confirm_table {
     for (my $i = 1; $i < scalar @columns; $i++) {
       my $c = $columns[$i];
       my $v = $data[$i];
-      $res{$mk}{$c} = $v;
+      MMisc::error_quit("In DB ($dbfile)'s table ($tablename), $mk / $c = $v was already found and its previous value was different : " . $$rh{$mk}{$c})
+        if ((MMisc::safe_exists($rh, $mk, $c)) && ($$rh{$mk}{$c} ne $v));
+      $$rh{$mk}{$c} = $v;
 #      print "# $mk / $c / $v\n";
     }
 
@@ -358,11 +368,9 @@ sub confirm_table {
   MMisc::error_quit("Problem while completing statement: $err")
     if (! MMisc::is_blank($err));
 
-  print "* Extracted from $tablename ". scalar(keys %res) . "x datum\n";
+  print "* Extracted from $tablename ". scalar(keys %$rh) . "x datum\n";
   
   MtSQLite::release_dbh($dbh);
-
-  return(%res);
 }
 
 ########## 
@@ -382,7 +390,7 @@ Where:
   --version  Version information
   --referenceDBfile  The Reference SQLite file (must contains the 'Reference' table, whose columns are: TrialID, Targ)
   --systemDBfile     The System SQLite file (must contains the 'System' table, whose columns are: TrialID, Decision, Score)
-  --ResultDBfile     The Filter tool resulting DB (must contain the \'$tablename\' table, which only column is: $TrialIDcolumn)
+  --ResultDBfile     The Filter tool resulting DB (must contain the \'$tablename\' table, with the following columns: $TrialIDcolumn $BlockIDcolumn)
   --metricPackage    Package to load for metric uses
   --MetricParameters Metric Package parameters
   --baseDETfile      When working with DET curves, all the relevant files will start with this value (default: $bDETf)
