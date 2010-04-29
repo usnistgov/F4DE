@@ -160,24 +160,24 @@ MMisc::error_quit("Could not create log dir ($logdir)")
 
 my $mdDBbase = "$outdir/metadataDB";
 my $mdDBcfg  = "$mdDBbase.cfg";
-my $mdDBfile = (MMisc::is_blank($wmdDBfile)) ? "$mdDBbase.sql" : $wmdDBfile;
+my $mdDBfile = (MMisc::is_blank($wmdDBfile)) ? "$mdDBbase.db" : $wmdDBfile;
 my $mdDBlogb = "$logdir/metadataDB";
 
 my $refDBbase = "$outdir/referenceDB";
 my $refDBcfg  = "$refDBbase.cfg";
-my $refDBfile = (MMisc::is_blank($wrefDBfile)) ? "$refDBbase.sql" : $wrefDBfile;
+my $refDBfile = (MMisc::is_blank($wrefDBfile)) ? "$refDBbase.db" : $wrefDBfile;
 my $refDBlogb = "$logdir/referenceDB";
 
 my $sysDBbase = "$outdir/systemDB";
 my $sysDBcfg  = "$sysDBbase.cfg";
-my $sysDBfile = (MMisc::is_blank($wsysDBfile)) ? "$sysDBbase.sql" : $wsysDBfile;
+my $sysDBfile = (MMisc::is_blank($wsysDBfile)) ? "$sysDBbase.db" : $wsysDBfile;
 my $sysDBlogb = "$logdir/systemDB";
 
 my $resDBbase = "$outdir/filterDB";
-my $resDBfile = "$resDBbase.sql";
+my $resDBfile = "$resDBbase.db";
 
 my $finalDBbase = "$outdir/scoreDB";
-my $finalDBfile = "$finalDBbase.sql";
+my $finalDBfile = "$finalDBbase.db";
 
 
 if ($doCfg) {
@@ -548,7 +548,7 @@ Display the B<DEVA_cli> version information.
 
 =head1 USAGE
 
-=item B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --FilterCMDfile filter1.cmd>
+=item B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --FilterCMDfile filter1.sql>
 
 This will process the four steps expected of the command line interface:
 
@@ -567,26 +567,26 @@ The next step will use those configuration files to create SQLite database files
 
 =item
 
-One table called I<Reference> (containing at least one primary key column called I<TrialID> and one column called I<Targ> with S<y> or S<n> content) for I<outdir/referenceDB.sql> which content is loaded from I<refrence.csv>.
+One table called I<Reference> (containing at least one primary key column called I<TrialID> and one column called I<Targ> with S<y> or S<n> content) for I<outdir/referenceDB.db> which content is loaded from I<refrence.csv>.
 
 =item
 
-One table called I<System> (containing at least on primary key column called I<TrialID> as well as one I<Score> column and one I<Decision> with S<y> or S<n> content) for I<outdir/systemDB.sql> which content is loaded from I<system.csv>
+One table called I<System> (containing at least on primary key column called I<TrialID> as well as one I<Score> column and one I<Decision> with S<y> or S<n> content) for I<outdir/systemDB.db> which content is loaded from I<system.csv>
 
 =item
 
-As many tables as metadata CSV files (here only one) are added to <outdir/metadataDB.sql>.
+As many tables as metadata CSV files (here only one) are added to <outdir/metadataDB.db>.
 
 =back
 
 =item Step 3 (uses B<DEVA_filter>)
 
-The next step will use the I<filter1.cmd> SQL command lines file to apply the given filter. For this step I<outdir/referenceDB.sql> is loaded as I<referenceDB> (and contains a table named I<Reference>. Also, I<outdir/systemDB.sql> is loaded as I<systemDB> (and contain a table named I<System>. And I<outdir/metadataDB.sql> is loaded as I<metadataDB> and contain the table list specified in I<outdir/metadataDB.cfg>.
-The filter is expected to only return a list of I<TrialID>s that will added be to I<outdir/filterDB.sql>'s I<resultsTable> table.
+The next step will use the I<filter1.sql> SQL command lines file to apply the given filter. For this step I<outdir/referenceDB.db> is loaded as I<referenceDB> (and contains a table named I<Reference>. Also, I<outdir/systemDB.db> is loaded as I<systemDB> (and contain a table named I<System>. And I<outdir/metadataDB.db> is loaded as I<metadataDB> and contain the table list specified in I<outdir/metadataDB.cfg>.
+The filter is expected to only return a list of I<TrialID>s that will added be to I<outdir/filterDB.db>'s I<resultsTable> table.
 
 =item Step 4 (uses B<DEVA_sci>)
 
-The final step will use I<outdir/referenceDB.sql>, I<outdir/systemDB.sql> and I<outdir/filterDB.sql> to select only the I<TrialID>s that are both in the I<resultsTables> and I<Reference> tables to create in the I<outdir/scoreDB.sql> SQLite database file a I<ref> table that only contain the reference information matching the given I<TrialID>s.
+The final step will use I<outdir/referenceDB.db>, I<outdir/systemDB.db> and I<outdir/filterDB.db> to select only the I<TrialID>s that are both in the I<resultsTables> and I<Reference> tables to create in the I<outdir/scoreDB.db> SQLite database file a I<ref> table that only contain the reference information matching the given I<TrialID>s.
 The same is made from I<resultsTables> and I<System> tables to add a I<sys> table.
 
 I<Trials> are then generated so that if a given entry is both in I<ref> and I<sys> is is considered I<mapped>, if it is only in I<ref> it is an I<unmapped_ref> entry, and if it is only is <sys> it is an I<unmapped_sys> entry.
