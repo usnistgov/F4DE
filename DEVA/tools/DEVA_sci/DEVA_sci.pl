@@ -394,7 +394,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] --metricPackage package --MetricParameters parameter=value [--MetricParameters parameter=value [...]] [--trialsLabel label1,label2,label3] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--baseDETfile filebase] ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] --metricPackage package --MetricParameters parameter=value [--MetricParameters parameter=value [...]] [--trialsLabels label1,label2,label3] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--baseDETfile filebase] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
