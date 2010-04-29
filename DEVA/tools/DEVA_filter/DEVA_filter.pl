@@ -223,7 +223,7 @@ sub confirm_table {
   MMisc::error_quit($err)
     if (! MMisc::is_blank($err));
 
-  my $cmd = "SELECT $TrialIDcolumn FROM $tablename";
+  my $cmd = "SELECT $TrialIDcolumn,$BlockIDcolumn FROM $tablename";
   my ($err, $sth) = MtSQLite::get_command_sth($dbh, $cmd);
   MMisc::error_quit("Problem confirming \'$tablename\' . \'$TrialIDcolumn\' presence: $err")
    if (! MMisc::is_blank($err));
