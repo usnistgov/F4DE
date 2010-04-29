@@ -101,6 +101,7 @@ my $sysDBname = "systemDB";
 #
 my $tablename = "resultsTable";
 my $TrialIDcolumn = "TrialID";
+my $BlockIDcolumn = "BlockID";
 #
 my $filtercmd = "";
 my $filtercmdfile = "";
@@ -158,6 +159,9 @@ MtSQLite::commandAdd(\$cmdlines, "DROP TABLE IF EXISTS $tablename");
 # was removed: we need to copy the type of the column instead of forcing it to INTEGER
 MtSQLite::commandAdd(\$cmdlines, "CREATE TABLE $tablename AS SELECT $TrialIDcolumn FROM $refDBname.reference WHERE $TrialIDcolumn=\"not a value found here\"");
 
+# Add a new column for the BlockID (string type)
+MtSQLite::commandAdd(\$cmdlines, "ALTER TABLE $tablename ADD COLUMN $BlockIDcolumn STRING;");
+
 $filtercmd = MMisc::slurp_file($filtercmdfile)
   if (! MMisc::is_blank($filtercmdfile));
 
@@ -183,17 +187,22 @@ sub load_stdout {
   my ($so) = @_;
 
   my @list = split(m%[\n\r]%, $so);
-  print "* Found " . scalar @list . "x datum on sqlite stdout, considering them as input to $tablename.$TrialIDcolumn and trying to insert them\n";
+  print "* Found " . scalar @list . "x rows on sqlite stdout, considering them as input to $tablename.$TrialIDcolumn (and $BlockIDcolumn) and trying to insert them\n";
   my ($err, $dbh) = MtSQLite::get_dbh($dbfile);
   MMisc::error_quit($err)
     if (! MMisc::is_blank($err));
-  my $cmd = "INSERT OR ABORT INTO $tablename ( $TrialIDcolumn ) VALUES ( ? )";
+  my $cmd = "INSERT OR ABORT INTO $tablename ( $TrialIDcolumn, $BlockIDcolumn ) VALUES ( ?, ? )";
   my ($err, $sth) = MtSQLite::get_command_sth($dbh, $cmd);
   MMisc::error_quit("Problem while inserting data into $tablename.$TrialIDcolumn: $err")
     if (! MMisc::is_blank($err));
   
   foreach my $entry (@list) {
-    my ($err) = MtSQLite::execute_sth($sth, $entry);
+    # only authorized splits characters are '|', ';' or ','
+    my @values = split(m%[\,\|\;]%, $entry);
+    push(@values, $BlockIDcolumn) if (scalar @values == 1);
+    MMisc::error_quit("Found more than two values ($entry)")
+      if (scalar @values > 2);
+    my ($err) = MtSQLite::execute_sth($sth, @values);
     MMisc::error_quit("Problem during data insertion into $tablename.$TrialIDcolumn: $err")
       if (! MMisc::is_blank($err));
   }
@@ -257,9 +266,10 @@ $versionid
 
 $0 [--help | --version] --referenceDBfile file --systemDBfile file [--metadataDBfile file] resultsDBfile [--filterCMD \"SQLite COMMAND;\" | --FilterCMDfile SQLite_commands_file]
 
-Will apply provided filter to databases and try to generate the results database that only contain the TrialID that will be given to the scoring interface
+Will apply provided filter to databases and try to generate the results database that only contain the TrialID and BlockID that will be given to the scoring interface
 
 NOTE: will create resultsDBfile
+NOTE: if BlockID is not provided, \"BlockID\" will be used
 
 Where:
   --help     This help message
