@@ -450,6 +450,10 @@ B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--refcsv> I<csvfile>] [B<--syscsv> I<csvfile>]>
   S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>] [B<--MetadataDBfile> I<file>]>
   S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
+  S<[B<--usedMetric> I<package>]>
+  S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]>
+  S<[B<--trialsLabels> I<label1,label2,label3>]>
+  S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
   [I<csvfile> [I<csvfile> [I<...>]]
   
 =head1 DESCRIPTION
@@ -506,6 +510,13 @@ Skip the generation of the configuration files required for the generation of th
 
 This process read each CSV file (I<refcsv>, I<syscsv> and metadata I<csvfile(s)>), determine the tables name, columns names and types and write them in S<outdir/referenceDB.cfg>, S<outdir/systemDB.cfg> and S<outdir/metadataDB.cfg> files.
 
+=item B<--DETScoreSkip>
+
+Skip the Trial Scoring step (including DETCurve processing).
+
+This step rely on the S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<<outdir/filterDB.sql> files to extract into S<outdir/scoreDB.sql> a I<ref> and I<sys> table that only contains the I<TrialID>s left post-filtering.
+This step also generate a few files starting with S<outdir/scoreDB_DET> that are the results of the DETCurve generation process.
+
 =item B<--FilterCMDfile> I<SQLite_commands_file>
 
 Specify the location of the SQL commands file used to extract the list of I<TrialID> that will be inserted in <output/filterDB.sql>.
@@ -517,6 +528,10 @@ Skip step that uses the SQL I<SELECT>s commands specified in the B<--FilterCMDfi
 =item B<--help>
 
 Display the usage page for this program. Also display some default values and information.
+
+=item B<--MetadataDBfile> I<file>
+
+Specify the location of the Metadata database file to use/generate.
 
 =item B<--man>
 
@@ -542,16 +557,21 @@ Specify the location of the System database file to use/generate.
 
 Specify the location of the System CSV file (expected to contain S<TrialID>, S<Score> and S<Decision> columns).
 
-=item B<--metadataDBfile> I<file>
+=item B<--TrialsParameters> I<parameter=value>
 
-Specify the location of the Metadata database file to use/generate.
+Specify the parameters given during the Trial creation process.
 
-=item B<--DETScoreSkip>
+=item B<--trialsLabels> I<label1,label2,label3>
 
-Skip the Trial Scoring step (including DETCurve processing).
+Specify the three labels used during the Trial creation process.
 
-This step rely on the S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<<outdir/filterDB.sql> files to extract into S<outdir/scoreDB.sql> a I<ref> and I<sys> table that only contains the I<TrialID>s left post-filtering.
-This step also generate a few files starting with S<outdir/scoreDB_DET> that are the results of the DETCurve generation process.
+=item B<--UsedMetricParameters> I<parameter=value>
+
+Specify the parameters given during the Metric creation process.
+
+=item B<--usedMetric> I<package>
+
+Specify the Metric package to use for scoring data (must be in your perl serch path -- or part of F4DE).
 
 =item B<--version>
 
@@ -629,7 +649,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric packagetouse] [--UsedMetricParams param=value [--UsedMetricParams param=value [...]] [csvfile [csvfile [...]]
+$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--trialsLabels label1,label2,label3] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -652,7 +672,10 @@ Where:
   --FilterCMDfile  Specify the SQLite command file
   --addResDBfiles  Additional filter results database files to give the scorer (will do an AND on the TrialIDs)
   --usedMetric    Package to load for metric uses
-  --UsedMetricParams Metric Package parameters
+  --UsedMetricParameters Metric Package parameters
+  --trialsLabels     Labels given to new Trials
+  --TrialsParameters Trials Package parameters
+
 
 EOF
 ;
