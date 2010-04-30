@@ -386,7 +386,7 @@ sub randomCurveUnitTest(){
   use Math::Random::OO::Uniform;
 
   my @Ptargs = (0.5, 0.01);
-  my @isolinecoef = ( );
+  my @isolinecoef = (.1, 1, 3);
 
   print "Build a random DET curve for Ptarg=(".join(",",@Ptargs).") Dir=/$dir/\n";
   my $decisionScoreRand = Math::Random::OO::Uniform->new(0,1);
@@ -397,7 +397,7 @@ sub randomCurveUnitTest(){
     print "  Working on Ptarg=$Ptarg\n";
     my $trial = new Trials("Term Detection", "Term", "Occurrence", { () });
   
-    for (my $epoch = 0; $epoch<30; $epoch ++){
+    for (my $epoch = 0; $epoch<5; $epoch ++){
       print "    Epoch $epoch\n";
       for (my $nt = 0; $nt<10000; $nt ++){
         my $scr = $decisionScoreRand->next();
@@ -423,7 +423,8 @@ sub randomCurveUnitTest(){
        "createDETfiles" => 1,
 		   "DrawIsoratiolines" => 1,
        "noSerialize" => 1,
-       "Isometriclines" => [ (1.0) ],
+       "Isoratiolines" => [ (100.0, 10.0, 1.0) ],
+       "Isometriclines" => \@isolinecoef,
        "PointSet" => [] ) };
 
   print $ds->renderAsTxt("$dir/MNLCF.randomTest.det", 1, 1, $options, "");                                                                     
