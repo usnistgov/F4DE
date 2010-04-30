@@ -616,4 +616,50 @@ sub mergeTrials{
   
 }
 
+sub exportForDEVA{
+  my ($self, $root) = @_;
+  my $trialNum = 1;
+  my $tid;
+  
+  my @blockIDs = $self->getBlockIDs();
+  if (@blockIDs > 1){
+    open (MD, ">$root.metadata.csv") || die "Error: Failed to open $root.metadata.csv for metadata";
+    print MD "TrialID,Block\n";
+  }
+  open (REF, ">$root.ref.csv") || die "Error: Failed to open $root.ref.csv for reference file";
+  print REF "TrialID,Targ\n";
+  open (SYS, ">$root.sys.csv") || die "Error: Failed to open $root.sys.csv for system file";
+  print SYS "TrialID,Score,Decision\n";
+  
+  for (my $block; $block < @blockIDs; $block++){
+    ### The TARGETS
+    my $dec = $self->getTargScr($blockIDs[$block]);
+    for (my $d = 0; $d < @$dec; $d++){
+      $tid = sprintf("TID-%07.f", $trialNum++);    
+      print REF "$tid,y\n";
+      print SYS "$tid,$dec->[$d],y\n";
+      if (@blockIDs > 1){
+        print MD "$tid,$blockIDs[$block]\n";
+      }
+    }
+    ### The NONTARGETS
+    my $dec = $self->getNonTargScr($blockIDs[$block]);
+    for (my $d = 0; $d < @$dec; $d++){
+      $tid = sprintf("TID-%07.f", $trialNum++);    
+      print REF "$tid,n\n";
+      print SYS "$tid,$dec->[$d],y\n";
+      if (@blockIDs > 1){
+        print MD "$tid,$blockIDs[$block]\n";
+      }
+    }
+  }
+
+  if (@blockIDs > 1){
+    close MD;
+  }
+  open REF;
+  open SYS;
+  
+}
+
 1;

@@ -406,6 +406,8 @@ sub randomCurveUnitTest(){
     } 
     my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $trial);
 
+#    $trial->exportForDEVA("DEVA.rand");
+#    die "Stop";
     my $det1 = new DETCurve($trial, $met, "Ptarg = $Ptarg", \@isolinecoef, undef);
 
     die "Error: Failed to add first det" if ("success" ne $ds->addDET("Ptarg = $Ptarg", $det1));
