@@ -18,6 +18,8 @@ my $totest = 0;
 my $testr = 0;
 my $tn = "";
 
+my $metcmd = "-u MetricTestStub -U ValueC=0.1 -U ValueV=1 -U ProbOfTerm=0.0001";
+
 my $t0 = F4DE_TestCore::get_currenttime();
 
 ##
@@ -65,7 +67,7 @@ sub do_less_simple_test {
   MMisc::error_quit("Could not make temporary dir for testing ($tdir)")
     if (! MMisc::make_wdir($tdir));
   
-  my $command = "$tool -o $tdir $cadd";
+  my $command = "$tool -o $tdir $cadd $metcmd";
 
   my $retval = &do_simple_test($testname, $subtype, $command, $res, $rev);
 
@@ -100,14 +102,14 @@ sub do_skip_test {
   MMisc::error_quit("Could not make temporary dir for testing ($tdir2)")
     if (! MMisc::make_wdir($tdir2));
 
-  my $command = "$tool -o $tdir1 $cadd1";
+  my $command = "$tool -o $tdir1 $cadd1 $metcmd";
 
   my $retval = &do_simple_test($testname, "$subtype [step1]", $command, $res . "-step1", $rev);
 
   my $db = "$tdir1/scoreDB.db";
   $retval += &do_simple_test($testname, "$subtype [step1 DBcheck]", "sqlite3 $db < add_checker.sql", $res . "-step1_DBcheck", $rev);
 
-  $command = "$tool -c -C -R $tdir1/referenceDB.db -S $tdir1/systemDB.db -M $tdir1/metadataDB.db -o $tdir2 $cadd2";
+  $command = "$tool -c -C -R $tdir1/referenceDB.db -S $tdir1/systemDB.db -M $tdir1/metadataDB.db -o $tdir2 $cadd2 $metcmd";
 
   $retval += &do_simple_test($testname, "$subtype [step2]", $command, $res . "-step2", $rev);
 
