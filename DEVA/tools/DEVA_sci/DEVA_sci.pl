@@ -111,6 +111,7 @@ my %trialsparams = ();
 
 my $metric = "";
 my %metparams = ();
+my $sp_MetricTestStub = "MetricTestStub";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
 # Used:             M    R T             h    m o  rst v      #
@@ -152,14 +153,16 @@ if (! MMisc::is_blank($tmp_tl)) {
   MMisc::error_quit("For \'trialsLabels', did not provide 3x labels (" . join(" ", @trialslabels) . ")")
     if (scalar @trialslabels != 3);
 }
-$trialsparams{'TOTALTRIALS'} = 10 # Temporary solution
-  if (! exists $trialsparams{'TOTALTRIALS'});
 
 MMisc::error_quit("No \'metric\' specified, aborting")
   if (MMisc::is_blank($metric));
 unless (eval "use $metric; 1") {
   MMisc::error_quit("Metric package \"$metric\" is not available in your Perl installation. " . &eo2pe($@));
 }
+
+# Just to avoid potential issues
+$trialsparams{'TOTALTRIALS'} = 10
+  if (($metric eq $sp_MetricTestStub) && (! exists $trialsparams{'TOTALTRIALS'}));
 
 my ($dbfile) = @ARGV;
 
