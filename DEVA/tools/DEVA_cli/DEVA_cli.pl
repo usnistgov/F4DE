@@ -136,8 +136,8 @@ GetOptions
    'MetadataDBfile=s' => \$wmdDBfile,
    'addResDBfiles=s'   => \@addResDBfiles,
    'AllowResDBfileBypass' => \$resDBbypass,
-   'usedMetric'  => \$usedmetric,
-   'UsedMetricParams' => \@usedmetparams,
+   'usedMetric=s'       => \$usedmetric,
+   'UsedMetricParams=s' => \@usedmetparams,
    'trialsLabels=s'     => \$trialslabels,
    'TrialsParams=s'     => \@trialsparams,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -152,8 +152,14 @@ if ($opt{'man'}) {
 if (MMisc::is_blank($usedmetric)) {
 #  MMisc::warn_print("No metric provided, will use default ($defusedmetric) with default parameters");
   $usedmetric = $defusedmetric;
-  @usedmetparams = ('ValueC=0.1', 'ValueV=1', 'ProbOfTerm=0.0001' );
+#  @usedmetparams = ('ValueC=0.1', 'ValueV=1', 'ProbOfTerm=0.0001' );
+#  @usedmetparams = ( 'CostFA=1', 'CostMiss=1', 'Ptarg=0.1' );
 }
+
+#if (1) {
+#  use Trials;
+#  print "[" . Trials::getMetricParams() . "]\n";
+#}
 
 my @csvlist = @ARGV;
 
