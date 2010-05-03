@@ -1086,6 +1086,12 @@ sub make_dir {
   return(1);
 }
 
+sub make_wdir {
+  my $ok = &make_dir(@_);
+  return($ok) if (! $ok);
+  return(&is_dir_w($_[0]));
+}
+
 ##########
 
 sub list_dirs_files {
