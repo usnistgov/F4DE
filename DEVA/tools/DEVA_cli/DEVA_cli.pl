@@ -86,7 +86,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
-my $defusedmetric = "MetricTestStub";
+my $defusedmetric = "MetricNormLinearCostFunct";
 my $mancmd = "perldoc -F $0";
 my $usage = &set_usage();
 
@@ -671,7 +671,7 @@ Where:
   --MetadataDBfile  Specify the metadata SQLite database file
   --FilterCMDfile  Specify the SQLite command file
   --addResDBfiles  Additional filter results database files to give the scorer (will do an AND on the TrialIDs)
-  --usedMetric    Package to load for metric uses
+  --usedMetric    Package to load for metric uses (if none provided, default used: $defusedmetric)
   --UsedMetricParameters Metric Package parameters
   --trialsLabels     Labels given to new Trials
   --TrialsParameters Trials Package parameters
