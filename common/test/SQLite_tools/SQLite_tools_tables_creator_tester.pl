@@ -87,7 +87,7 @@ sub do_less_simple_test {
   my $tdir = "/tmp/SQLite_tools_tester-Temp_$testname";
   `rm -rf $tdir` if (-e $tdir); # Erase the previous one if present
   MMisc::error_quit("Could not make temporary dir for testing ($tdir)")
-    if (! MMisc::make_dir($tdir));
+    if (! MMisc::make_wdir($tdir));
   my $db = "$tdir/database.sql";
   
   my $command = "$tool $db $cadd";

@@ -63,7 +63,7 @@ sub do_less_simple_test {
   my $tdir = "/tmp/DEVA_cli_tester-Temp_$testname";
   `rm -rf $tdir` if (-e $tdir); # Erase the previous one if present
   MMisc::error_quit("Could not make temporary dir for testing ($tdir)")
-    if (! MMisc::make_dir($tdir));
+    if (! MMisc::make_wdir($tdir));
   
   my $command = "$tool -o $tdir $cadd";
 
@@ -90,15 +90,15 @@ sub do_skip_test {
   my $tdir = "/tmp/DEVA_cli_tester-Temp_$testname";
   `rm -rf $tdir` if (-e $tdir); # Erase the previous one if present
   MMisc::error_quit("Could not make temporary dir for testing ($tdir)")
-    if (! MMisc::make_dir($tdir));
+    if (! MMisc::make_wdir($tdir));
   
   my $tdir1 = "$tdir/step1";
   MMisc::error_quit("Could not make temporary dir for testing ($tdir1)")
-    if (! MMisc::make_dir($tdir1));
+    if (! MMisc::make_wdir($tdir1));
 
   my $tdir2 = "$tdir/step2";
   MMisc::error_quit("Could not make temporary dir for testing ($tdir2)")
-    if (! MMisc::make_dir($tdir2));
+    if (! MMisc::make_wdir($tdir2));
 
   my $command = "$tool -o $tdir1 $cadd1";
 

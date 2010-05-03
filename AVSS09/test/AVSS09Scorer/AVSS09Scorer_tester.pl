@@ -58,13 +58,13 @@ sub do_simple_test {
   my $tdir = "/tmp/AVSS09Scorer_tester-Temp_$testname";
   `rm -rf $tdir` if (-e $tdir); # Erase the previous one if present
   MMisc::error_quit("Could not make temporary dir for testing ($tdir)")
-    if (! MMisc::make_dir($tdir));
+    if (! MMisc::make_wdir($tdir));
   my $sdir = "$tdir/SYS";
   MMisc::error_quit("Could not make temporary dir for testing ($sdir)")
-    if (! MMisc::make_dir($sdir));
+    if (! MMisc::make_wdir($sdir));
   my $gdir = "$tdir/GTF";
   MMisc::error_quit("Could not make temporary dir for testing ($gdir)")
-    if (! MMisc::make_dir($gdir));
+    if (! MMisc::make_wdir($gdir));
 
   $command .= " -w $tdir -D $sdir -d $gdir";
 
