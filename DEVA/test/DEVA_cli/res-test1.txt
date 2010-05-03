@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/DEVA_cli/DEVA_cli.pl -o /tmp/DEVA_cli_tester-Temp_test1 -r ../../../common/test/common/ref.csv -s ../../../common/test/common/sys.csv ../../../common/test/common/md.csv -F ../common/filter1.sql
+[[COMMANDLINE]] ../../tools/DEVA_cli/DEVA_cli.pl -o /tmp/DEVA_cli_tester-Temp_test1 -r ../../../common/test/common/ref.csv -s ../../../common/test/common/sys.csv ../../../common/test/common/md.csv -F ../common/filter1.sql -u MetricTestStub -U ValueC=0.1 -U ValueV=1 -U ProbOfTerm=0.0001
 [[RETURN CODE]] 0
 [[STDOUT]]
 ***** Generating config files
