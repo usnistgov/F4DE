@@ -1,6 +1,7 @@
 # F4DE
-# Trials.pm
+# TrialsFuncs.pm
 # Author: Jon Fiscus
+# Additions: Martial Michel
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
@@ -12,19 +13,18 @@
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-package Trials;
+package TrialsFuncs;
 
 use strict;
 use MMisc;
 use Data::Dumper;
 use SimpleAutoTable;
-use MetricFuncs;
 
 =pod
 
 =head1 NAME
 
-common/lib/Trials - A database object for holding detection decision trials.  
+common/lib/TrialsFuncs - A database object for holding detection decision trials.  
 
 =head1 SYNOPSIS
 
@@ -63,8 +63,8 @@ sub new {
 }
 
 sub unitTest {
-  print "Test Trials\n";
-  my $trial = new Trials("Term Detection", "Term", "Occurrence", { (TOTAL_TRIALS => 78) } );
+  print "Test TrialsFuncs\n";
+  my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { (TOTAL_TRIALS => 78) } );
   
   ## How to handle cases in F4DE
   ## Mapped 
@@ -318,7 +318,7 @@ sub dump {
 
 sub copy {
   my ($self, $block) = @_;
-  my ($copy) = new Trials($self->getTaskID(), $self->getBlockID(), $self->getDecisionID(), $self->getMetricParams());
+  my ($copy) = new TrialsFuncs($self->getTaskID(), $self->getBlockID(), $self->getDecisionID(), $self->getMetricParams());
     
   my @blocks = ();
   if (defined($block)) {
@@ -604,7 +604,7 @@ sub mergeTrials{
 
   ### First the params
   if (! defined($$r_baseTrial)){
-    $$r_baseTrial = new Trials($mergeTrial->getTaskID(), $mergeTrial->getBlockID(), $mergeTrial->getDecisionID(), $mergeTrial->getMetricParams());
+    $$r_baseTrial = new TrialsFuncs($mergeTrial->getTaskID(), $mergeTrial->getBlockID(), $mergeTrial->getDecisionID(), $mergeTrial->getMetricParams());
   } else { 
     my @ktmp = $$r_baseTrial->getMetricParamKeys();
     for (my $i = 0; $i < scalar @ktmp; $i++) {
