@@ -19,7 +19,7 @@ package DETCurveSet;
 
 use strict;
 use Data::Dumper;
-use Trials;
+use TrialsFuncs;
 use MetricTestStub;
 use DETCurve;
 use AutoTable;
@@ -46,7 +46,7 @@ sub unitTest(){
   print "Test DETCurveSet\n";
 
   my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
-  my $trial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
+  my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
     
   $trial->addTrial("she", 0.10, "NO", 0);
   $trial->addTrial("she", 0.15, "NO", 0);
@@ -68,7 +68,7 @@ sub unitTest(){
   $trial->addTrial("she", 0.95, "YES", 1);
   $trial->addTrial("she", 1.0, "YES", 1);
 
-  my $trial2 = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
+  my $trial2 = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
     
   $trial2->addTrial("she", 0.10, "NO", 0);
   $trial2->addTrial("she", 0.15, "NO", 0);
@@ -90,7 +90,7 @@ sub unitTest(){
   $trial2->addTrial("she", 0.95, "YES", 1);
   $trial2->addTrial("she", 1.0, "YES", 1);
 
-  my $emptyTrial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
+  my $emptyTrial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
 
   $emptyTrial->addTrial("he", undef, "OMITTED", 1);
   $emptyTrial->addTrial("he", undef, "OMITTED", 1);
@@ -126,7 +126,7 @@ sub unitTest(){
 
   print " Added Non-Compatible DETs... ";
   my $k2Diff  = "Name non-compatable";
-  my $ncTrial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTAL" => 1000) });
+  my $ncTrial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTAL" => 1000) });
   my $det2Diff = new DETCurve($ncTrial, 
                               new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
                               "DET2", \@isolinecoef, undef);

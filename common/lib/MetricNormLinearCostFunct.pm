@@ -245,7 +245,7 @@ sub unitTest(){
 ### PFa == 0    - 0  FA  
 ### Cost == 1
 
-  my $DNtrial = new Trials("Term Detection", "Term", "Occurrence", { () });
+  my $DNtrial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { () });
   $DNtrial->addTrial("she", 0.03, "NO", 0);
   $DNtrial->addTrial("she", 0.04, "NO", 1);
   $DNtrial->addTrial("she", 0.05, "NO",  1);
@@ -273,7 +273,7 @@ sub unitTest(){
 ### PFa == 0.0075  - 3 FA  
 ### Cost == 0.8425
      
-  my $trial = new Trials("Term Detection", "Term", "Occurrence", { () });
+  my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { () });
   $trial->addTrial("she", 0.03, "NO", 0);
   $trial->addTrial("she", 0.04, "NO", 0);
   $trial->addTrial("she", 0.05, "NO",  0);
@@ -395,7 +395,7 @@ sub randomCurveUnitTest(){
       
   foreach my $Ptarg (@Ptargs){
     print "  Working on Ptarg=$Ptarg\n";
-    my $trial = new Trials("Term Detection", "Term", "Occurrence", { () });
+    my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { () });
   
     for (my $epoch = 0; $epoch<5; $epoch ++){
       print "    Epoch $epoch\n";
@@ -452,7 +452,7 @@ sub MEDSettingsUnitTest(){
 ### PFa == 0.0075  - 3 FA  
 ### Cost == 0.8425
      
-  my $trial = new Trials("Term Detection", "Term", "Occurrence", { () });
+  my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { () });
   $trial->addTrial("she", 0.03, "NO", 0);
   $trial->addTrial("she", 0.04, "NO", 0);
   $trial->addTrial("she", 0.05, "NO",  0);

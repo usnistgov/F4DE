@@ -18,7 +18,7 @@
 package DETCurveGnuplotRenderer;
 
 use strict;
-use Trials;
+use TrialsFuncs;
 use MetricFuncs;
 use MetricTestStub;
 use Data::Dumper;
@@ -258,7 +258,7 @@ sub renderUnitTest{
 
   print "Test DETCurveGnuplotRenderer...Dir=$dir...";
   my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
-  my $trial = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
+  my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
     
   $trial->addTrial("she", 0.10, "NO", 0);
   $trial->addTrial("she", 0.15, "NO", 0);
@@ -280,7 +280,7 @@ sub renderUnitTest{
   $trial->addTrial("she", 0.95, "YES", 1);
   $trial->addTrial("she", 1.0, "YES", 1);
 
-  my $trial2 = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
+  my $trial2 = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
     
   $trial2->addTrial("she", 0.10, "NO", 0);
   $trial2->addTrial("she", 0.15, "NO", 0);
@@ -302,7 +302,7 @@ sub renderUnitTest{
   $trial2->addTrial("she", 0.95, "YES", 1);
   $trial2->addTrial("she", 1.0, "YES", 1);
 
-  my $trial3 = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
+  my $trial3 = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
     
   $trial3->addTrial("she", 0.10, "NO", 1);
   $trial3->addTrial("she", 0.15, "NO", 1);
@@ -324,7 +324,7 @@ sub renderUnitTest{
   $trial3->addTrial("she", 0.95, "YES", 1);
   $trial3->addTrial("she", 1.0, "YES", 1);
 
-  my $trial4 = new Trials("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 20) });
+  my $trial4 = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 20) });
   
   $trial4->addTrial("she", 0.50, "YES", 1);
   $trial4->addTrial("she", 0.50, "YES", 1);

@@ -1,5 +1,5 @@
 # F4DE
-# Metr0icFuncs.pm
+# MetrticFuncs.pm
 # Author: Jon Fiscus
 # 
 # This software was developed at the National Institute of Standards and Technology by
@@ -17,7 +17,7 @@
 
 package MetricFuncs;
 
-use Trials;
+use TrialsFuncs;
 use strict;
 use Data::Dumper;
 
