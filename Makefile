@@ -30,7 +30,7 @@ all:
 	@echo "  TV08install     only install the TrecVid08 subsection"
 	@echo "  CLEAR07install  only install the CLEAR07 subsection"
 	@echo "  AVSS09install   only install the AVSS09 subsection"
-#	@echo "  DEVAinstall   only install the AVSS09 subsection"
+	@echo "  DEVAinstall     only install the DEVA subsection"
 	@echo ""
 	@make from_installdir
 
@@ -45,7 +45,7 @@ install:
 	@make TV08install
 	@make CLEAR07install
 	@make AVSS09install
-#	@make DEVAinstall
+	@make DEVAinstall
 
 #####
 
@@ -53,17 +53,24 @@ install_noman:
 	@make TV08install_noman
 	@make CLEAR07install
 	@make AVSS09install_noman
-#	@make DEVAinstall_noman
+	@make DEVAinstall_noman
 
 #####
 
 CM_DIR=common
+COMMONTOOLS=tools/{DETEdit/DETEdit.pl,DETMerge/DETMerge.pl,DETUtil/DETUtil.pl,SQLite_tools/{SQLite_cfg_helper.pl,SQLite_dump_csv.pl,SQLite_load_csv.pl,SQLite_tables_creator.pl}}
+VIDATDIR=common/tools/VidAT
+
 
 commoninstall:
 	@make from_installdir
 	@make install_head
 	@echo "** Installing common files"
 	@perl installer.pl ${F4DE_BASE} lib ${CM_DIR}/lib/*.pm
+	@perl installer.pl -x -r ${F4DE_BASE} bin ${CM_DIR}/${COMMONTOOLS}
+#	@echo "** Installing VidAT"
+#	@perl installer.pl ${F4DE_BASE} lib ${VIDATDIR}/*.pm
+#	@perl installer.pl -x -r ${F4DE_BASE} bin ${VIDATDIR}/*.pl
 
 #####
 
@@ -147,6 +154,10 @@ AVSS09install_noman:
 #####
 
 DEVADIR=DEVA
+DEVATOOL=tools/DEVA_{cli/DEVA_cli,filter/DEVA_filter,sci/DEVA_sci}.pl
+
+DEVAinstall_man DEVAinstall_noman:
+	@perl installer.pl -x -r ${F4DE_BASE} bin ${DEVADIR}/${DEVATOOLS}
 
 ##########
 
@@ -261,8 +272,6 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/BarPlot/ /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/lib/BarPlot.pm
 ## CSVUtil
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/CSVUtil/
-## DEVA
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/DEVA
 
 create_mans:
 # TrecVid08
