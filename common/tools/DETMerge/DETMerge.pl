@@ -34,7 +34,7 @@ BEGIN {
 }
 use lib (@f4bv);
 
-use Trials;
+use TrialsFuncs;
 
 sub eo2pe {
   my @a = @_;
@@ -126,7 +126,7 @@ foreach my $inDet (@inputSrl){
 #     if (! $firstDet->isCompatible($det));
   
   ### Set the Trial metrics based on the metricType
-  Trials::mergeTrials(\$trial, $det->getTrials(), $firstDet->getMetric(), $mergeType);
+  TrialsFuncs::mergeTrials(\$trial, $det->getTrials(), $firstDet->getMetric(), $mergeType);
 
 }
   
