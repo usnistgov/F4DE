@@ -1,6 +1,7 @@
 # F4DE
-# MetricSTD.pm
+# TrecVid08Metric.pm
 # Author: Jon Fiscus
+# Additions: Martial Michel
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
@@ -12,17 +13,20 @@
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-package MetricTV08;
+package TrecVid08Metric;
+
 use MetricFuncs;
 @ISA = qw(MetricFuncs);
 
 use strict;
+
 use Data::Dumper;
+use MMisc;
 
 =pod
 =head1 NAME
 
-TrecVid08/lib/MetricTV08 - Compiled 2-class detection metrics for TRECViD '08 Event Detection
+TrecVid08/lib/TrecVid08Metric - Compiled 2-class detection metrics for TRECViD '08 Event Detection
 
 =head1 SYNOPSIS
 
@@ -37,7 +41,7 @@ this class of evaluation.  All methods in this class are required.
 =over 4
 
 ####################################################################################################
-=item B<new>(I<$%HashOfConstants>, I<$TrailsObject>)  
+=item B<new>(I<$%HashOfConstants>, I<$TrialsObject>)  
 
 Returns a new metrics object.  On failure to validate the arguements, returns NULL.  For this object, the costants hash
 must contain 'CostMiss', 'CostFA', and 'RateFA'.   The Trials object must also contain the constant 'TOTALDURATION' which 
@@ -53,6 +57,14 @@ whether or not the object was created.
 
 =cut
 
+my @metric_params = ("CostMiss", "CostFA", "Rtarget");
+
+sub getParamsList { return(@metric_params); }
+
+my @trials_params = ("TOTALDURATION");
+
+sub getTrialsNeededParamsList { return(@trials_params); }
+
 sub new
   {
     my ($class, $parameters, $trial) = @_;
@@ -60,14 +72,18 @@ sub new
     my $self = MetricFuncs->new($parameters, $trial);
 
     #######  customizations
-    die "Error: parameter 'CostMiss' not defined"     if (! exists($self->{PARAMS}->{CostMiss}));
-    die "Error: parameter 'CostFA' not defined"       if (! exists($self->{PARAMS}->{CostFA}));
-    die "Error: parameter 'Rtarget' not defined"      if (! exists($self->{PARAMS}->{Rtarget}));
-    die "Error: trials parameter TOTALDURATION does not exist" if (! exists($self->{TRIALPARAMS}->{TOTALDURATION}));
-    die "Error: TOTALDURATION must be > 0" if ($self->{TRIALPARAMS}->{TOTALDURATION} <= 0);
-    die "Error: CostMiss must be > 0"      if ($self->{PARAMS}->{CostMiss} <= 0);
-    die "Error: CostFA must be > 0"        if ($self->{PARAMS}->{CostFA} <= 0);
-    die "Error: Rtarget must be > 0"       if ($self->{PARAMS}->{Rtarget} <= 0);
+    foreach my $p (@metric_params) {
+      MMisc::error_quit("parameter \'$p\' not defined")
+          if (! exists($self->{PARAMS}->{$p}));
+      MMisc::error_quit("parameter \'$p\' must br ")
+          if (! exists($self->{PARAMS}->{$p}));
+    }
+    foreach my $p (@trials_params) {
+      MMisc::error_quit("Trials parameter \'$p\' does not exist")
+          if (! exists($self->{TRIALPARAMS}->{$p}));
+    }
+    MMisc::error_quit("TOTALDURATION must be > 0")
+        if ($self->{TRIALPARAMS}->{TOTALDURATION} <= 0);
 
     $self->{PARAMS}->{BETA} = $self->{PARAMS}->{CostFA} / 
       ($self->{PARAMS}->{CostMiss} * $self->{PARAMS}->{Rtarget});
