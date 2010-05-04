@@ -75,8 +75,8 @@ sub new
     foreach my $p (@metric_params) {
       MMisc::error_quit("parameter \'$p\' not defined")
           if (! exists($self->{PARAMS}->{$p}));
-      MMisc::error_quit("parameter \'$p\' must br ")
-          if (! exists($self->{PARAMS}->{$p}));
+      MMisc::error_quit("parameter \'$p\' must > 0")
+          if ($self->{PARAMS}->{$p} <= 0);
     }
     foreach my $p (@trials_params) {
       MMisc::error_quit("Trials parameter \'$p\' does not exist")
