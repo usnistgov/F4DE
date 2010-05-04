@@ -10,28 +10,6 @@ my $err = 0;
 print "** Checking for Perl Packages:\n";
 my $ms = 1;
 
-print "[F4DE Common Packages]\n";
-$ms = &_chkpkg
-  (
-   # common/lib
-   "BipartiteMatch",
-   "F4DE_TestCore",
-   "Levenshtein",
-   "MErrorH",
-   "MMisc",
-   "SimpleAutoTable",
-   "TextTools",
-   "ViperFramespan",
-   "xmllintHelper",
-   "CSVHelper",
-  );
-if ($ms > 0) {
-  print "  ** ERROR: Not all packages found, you will not be able to run the programs, please install the missing ones\n\n";
-  $err++;
-} else {
-  print "  Found all packages\n\n";
-}
-
 print "[F4DE's CLEAR07 Packages]\n";
 $ms = &_chkpkg
   (
