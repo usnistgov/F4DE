@@ -13,11 +13,12 @@
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 package Trials;
+
 use strict;
+use MMisc;
 use Data::Dumper;
 use SimpleAutoTable;
 use MetricFuncs;
-use MetricTV08;
 
 =pod
 
@@ -44,7 +45,8 @@ This is the new
 sub new {
   my ($class, $taskId, $blockId, $decisionId, $metricParams) = @_;
   
-  die "Error: new Trial() called without a \$metricParams value" if (! defined($metricParams));
+  MMisc::error_quit("new Trial() called without a \$metricParams value") 
+    if (! defined($metricParams));
   
   my $self =
     {
@@ -91,19 +93,30 @@ sub unitTest {
   my @tmp = ($trial, $trial->copy(), $sorted);
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $tr = $tmp[$i];
-    die "Error: Not enough blocks" if (scalar(keys(%{ $tr->{"trials"} })) != 2);
-    die "Error: Not enough 'NO TARG' for block 'second'" if ( $tr->{"trials"}{"second"}{"NO TARG"} != 1);
-    die "Error: Not enough 'YES TARG' for block 'second'" if ( $tr->{"trials"}{"second"}{"YES TARG"} != 1);
-    die "Error: Not enough 'NO TARG' for block 'second'" if ( $tr->{"trials"}{"second"}{"NO NONTARG"} != 1);
-    die "Error: Not enough 'YES TARG' for block 'second'" if ( $tr->{"trials"}{"second"}{"YES NONTARG"} != 1);
-    die "Error: Not enough TARGs for block 'second'" if (scalar(@{ $tr->{"trials"}{"second"}{"TARG"} }) != 2);
-    die "Error: Not enough NONTARGs for block 'second'" if (scalar(@{ $tr->{"trials"}{"second"}{"NONTARG"} }) != 2);
+    MMisc::error_quit("Not enough blocks")
+        if (scalar(keys(%{ $tr->{"trials"} })) != 2);
+    MMisc::error_quit("Not enough 'NO TARG' for block 'second'")
+        if ( $tr->{"trials"}{"second"}{"NO TARG"} != 1);
+    MMisc::error_quit("Not enough 'YES TARG' for block 'second'")
+        if ( $tr->{"trials"}{"second"}{"YES TARG"} != 1);
+    MMisc::error_quit("Not enough 'NO TARG' for block 'second'")
+        if ( $tr->{"trials"}{"second"}{"NO NONTARG"} != 1);
+    MMisc::error_quit("Not enough 'YES TARG' for block 'second'")
+        if ( $tr->{"trials"}{"second"}{"YES NONTARG"} != 1);
+    MMisc::error_quit("Not enough TARGs for block 'second'")
+        if (scalar(@{ $tr->{"trials"}{"second"}{"TARG"} }) != 2);
+    MMisc::error_quit("Not enough NONTARGs for block 'second'")
+        if (scalar(@{ $tr->{"trials"}{"second"}{"NONTARG"} }) != 2);
     if ($tr->{isSorted}) {
-      die "Error: TARGs not sorted" if ($tr->{"trials"}{"second"}{"TARG"}[0] > $tr->{"trials"}{"second"}{"TARG"}[1]);
-      die "Error: NONTARGs not sorted" if ($tr->{"trials"}{"second"}{"NONTARG"}[0] > $tr->{"trials"}{"second"}{"NONTARG"}[1]);
+      MMisc::error_quit("TARGs not sorted")
+          if ($tr->{"trials"}{"second"}{"TARG"}[0] > $tr->{"trials"}{"second"}{"TARG"}[1]);
+      MMisc::error_quit("NONTARGs not sorted")
+          if ($tr->{"trials"}{"second"}{"NONTARG"}[0] > $tr->{"trials"}{"second"}{"NONTARG"}[1]);
     }
-    die "Error: pooledTotal trials does not exist" if (! $tr->getMetricParamValueExists("TOTAL_TRIALS"));
-    die "Error: pooledTotal trials not set" if ($tr->getMetricParamValue("TOTAL_TRIALS") != 78);
+    MMisc::error_quit("pooledTotal trials does not exist")
+        if (! $tr->getMetricParamValueExists("TOTAL_TRIALS"));
+    MMisc::error_quit("pooledTotal trials not set")
+        if ($tr->getMetricParamValue("TOTAL_TRIALS") != 78);
     
   }
   print "OK\n";
@@ -168,7 +181,8 @@ I<$isTarg> is a boolean indicating if the trial is an instance of the target or 
 sub addTrial {
   my ($self, $block, $sysscore, $decision, $isTarg) = @_;
   
-  die "Error: Decision must be \"YES|NO|OMITTED\" not '$decision'" if ($decision !~ /^(YES|NO|OMITTED)$/);
+  MMisc::error_quit("Decision must be \"YES|NO|OMITTED\" not '$decision'")
+      if ($decision !~ /^(YES|NO|OMITTED)$/);
   my $attr = ($isTarg ? "TARG" : "NONTARG");
   
   $self->_initForBlock($block);
@@ -178,8 +192,10 @@ sub addTrial {
   if ($decision ne "OMITTED") {
     push(@{ $self->{"trials"}{$block}{$attr} }, $sysscore);
   } else {
-    die "Error: Adding an OMITTED target trail with and defined decision score is illegal" if (defined($sysscore));
-    die "Error: OMITTED trials must be Target trials" if (! $isTarg);
+    MMisc::error_quit("Adding an OMITTED target trail with and defined decision score is illegal")
+        if (defined($sysscore));
+    MMisc::error_quit("OMITTED trials must be Target trials")
+        if (! $isTarg);
   }
   $self->{"trials"}{$block}{$decision." $attr"} ++;
 }
@@ -581,8 +597,10 @@ sub mergeTrials{
 
   ### Sanity Check 
   my @blockIDs = $mergeTrial->getBlockIDs();
-  die "Error: trial merge with multi-block trial data not supported" if (@blockIDs > 1);
-  die "Error: trial merge requires at least one block ID" if (@blockIDs > 1);
+  MMisc::error_quit("trial merge with multi-block trial data not supported")
+      if (@blockIDs > 1);
+  MMisc::error_quit("trial merge requires at least one block ID")
+      if (@blockIDs > 1);
 
   ### First the params
   if (! defined($$r_baseTrial)){
@@ -623,12 +641,12 @@ sub exportForDEVA{
   
   my @blockIDs = $self->getBlockIDs();
   if (@blockIDs > 1){
-    open (MD, ">$root.metadata.csv") || die "Error: Failed to open $root.metadata.csv for metadata";
+    open (MD, ">$root.metadata.csv") || MMisc::error_quit("Failed to open $root.metadata.csv for metadata");
     print MD "TrialID,Block\n";
   }
-  open (REF, ">$root.ref.csv") || die "Error: Failed to open $root.ref.csv for reference file";
+  open (REF, ">$root.ref.csv") || MMisc::error_quit("Failed to open $root.ref.csv for reference file");
   print REF "TrialID,Targ\n";
-  open (SYS, ">$root.sys.csv") || die "Error: Failed to open $root.sys.csv for system file";
+  open (SYS, ">$root.sys.csv") || MMisc::error_quit("Failed to open $root.sys.csv for system file");
   print SYS "TrialID,Score,Decision\n";
   
   for (my $block; $block < @blockIDs; $block++){
