@@ -19,6 +19,14 @@ use MetricFuncs;
 use strict;
 use Data::Dumper;
  
+my @metric_params = ("ValueV", "ValueC", "ProbOfTerm");
+
+sub getParamsList { return(@metric_params); }
+
+my @trials_params = ("TOTALTRIALS");
+
+sub getTrialsNeededParamsList { return(@trials_params); }
+
 sub new
   {
     my ($class, $parameters, $trial) = @_;
@@ -26,13 +34,16 @@ sub new
     my $self = MetricFuncs->new($parameters, $trial);
 
     #######  customizations
-
-    return "Error: parameter 'ValueV' not defined"     if (! exists($self->{PARAMS}->{ValueV}));
-    return "Error: parameter 'ValueC' not defined"     if (! exists($self->{PARAMS}->{ValueC}));
-    return "Error: parameter 'ProbOfTerm' not defined" if (! exists($self->{PARAMS}->{ProbOfTerm}));
+    foreach my $p (@metric_params) {
+      MMisc::error_quit("parameter \'$p\' not defined")
+          if (! exists($self->{PARAMS}->{$p}));
+    }
+    foreach my $p (@trials_params) {
+      MMisc::error_quit("Trials parameter \'$p\' does not exist")
+          if (! exists($self->{TRIALPARAMS}->{$p}));
+    }
 
     #    print Dumper($self->{TRIALPARAMS});
-    return "Error: trials parameter 'TOTALTRIALS' does not exist" if (! exists($self->{TRIALPARAMS}->{TOTALTRIALS}));
 
     $self->{PARAMS}->{BETA} = $self->{PARAMS}->{ValueC} / $self->{PARAMS}->{ValueV} * 
       ((1 / $self->{PARAMS}->{ProbOfTerm}) - 1);
