@@ -160,10 +160,6 @@ unless (eval "use $metric; 1") {
   MMisc::error_quit("Metric package \"$metric\" is not available in your Perl installation. " . &eo2pe($@));
 }
 
-# Just to avoid potential issues
-$trialsparams{'TOTALTRIALS'} = 10
-  if (($metric eq $sp_MetricTestStub) && (! exists $trialsparams{'TOTALTRIALS'}));
-
 my ($dbfile) = @ARGV;
 
 my ($err, $sqlitecmd) = MtSQLite::get_sqlitecmd();
