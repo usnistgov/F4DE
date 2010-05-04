@@ -38,6 +38,7 @@ $ms = &_chkpkg
    "MetricFuncs",
    "MetricNormLinearCostFunct",
    "MetricTestStub",
+   "MetricTV08",
    "MtSQLite",
    "MtXML",
    "PropList",
@@ -46,6 +47,7 @@ $ms = &_chkpkg
    "TrialSummaryTable",
    "TrialsFuncs",
    "TrialsTestStub",
+   "TrialsTV08",
    "ViperFramespan",
    "xmllintHelper"
   );
