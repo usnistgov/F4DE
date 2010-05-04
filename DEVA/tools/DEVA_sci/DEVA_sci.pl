@@ -58,7 +58,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("MMisc", "CSVHelper", "MtSQLite", "TrialsFuncs", "MetricFuncs", "DETCurve", "DETCurveSet") {
+foreach my $pn ("MMisc", "CSVHelper", "MtSQLite", "DETCurve", "DETCurveSet") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -105,16 +105,13 @@ my $bDETf = "DET";
 my @ok_modes = ("AND", "OR"); # order is important
 my $mode = $ok_modes[0];
 
-my @trialslabels = ("Detection", "Block", "Trial");
-my $tmp_tl = "";
 my %trialsparams = ();
 
-my $metric = "";
+my $metric = "MetricNormLinearCostFunct";
 my %metparams = ();
-my $sp_MetricTestStub = "MetricTestStub";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:             M    R T             h    m o  rst v      #
+# Used:             M    R T             h    m o  rs  v      #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -130,7 +127,6 @@ GetOptions
    'baseDETfile=s'      => \$bDETf,
    'metricPackage=s'    => \$metric,
    'MetricParameters=s' => \%metparams,
-   'trialsLabels=s'     => \$tmp_tl,
    'TrialsParameters=s' => \%trialsparams,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -148,16 +144,15 @@ MMisc::error_quit("No \'referenceDBfile\' provided\n\n$usage")
 MMisc::error_quit("Unrecognized \'mode\' [$mode], authorized values are: " . join(" ", @ok_modes))
   if (! grep(m%^$mode$%, @ok_modes));
 
-if (! MMisc::is_blank($tmp_tl)) {
-  @trialslabels = split(m%\,%, $tmp_tl);
-  MMisc::error_quit("For \'trialsLabels', did not provide 3x labels (" . join(" ", @trialslabels) . ")")
-    if (scalar @trialslabels != 3);
-}
-
 MMisc::error_quit("No \'metric\' specified, aborting")
   if (MMisc::is_blank($metric));
 unless (eval "use $metric; 1") {
   MMisc::error_quit("Metric package \"$metric\" is not available in your Perl installation. " . &eo2pe($@));
+}
+my $trialn = $metric;
+$trialn =~ s%^Metric%Trials%; # Trial specialized function automatically selected based on selected metric
+unless (eval "use $trialn; 1") {
+  MMisc::error_quit("Metric package \"$trialn\" is not available in your Perl installation. " . &eo2pe($@));
 }
 
 my ($dbfile) = @ARGV;
@@ -211,7 +206,13 @@ my $tot1 = scalar(keys %ref) + scalar(keys %sys);
 #print MMisc::get_sorted_MemDump(\%ref);
 #print MMisc::get_sorted_MemDump(\%sys);
 
-my $trial = new TrialsFuncs(@trialslabels, \%trialsparams);
+my $trial = undef;
+my $trialcmd = "\$trial = new $trialn (\\\%trialsparams);";
+unless (eval "$trialcmd; 1") {
+  MMisc::error_quit("Problem creating Trial ($trialn) object (" . join(" ", $@) . ")");
+}
+MMisc::error_quit("Problem with Trial ($trialn)")
+  if (! defined $trial);
 my ($mapped, $unmapped_sys, $unmapped_ref) = (0, 0, 0);
 
 foreach my $key (keys %sys) {
@@ -250,7 +251,7 @@ MMisc::error_quit("Problem at check point") if ($tot1 != $tot2);
 my $met = undef;
 my $metcmd = "\$met = new $metric (\\\%metparams, \$trial);";
 unless (eval "$metcmd; 1") {
-  MMisc::error_quit("Problem creating Metric ($metric) object (" . join(" ", @_) . ")");
+  MMisc::error_quit("Problem creating Metric ($metric) object (" . join(" ", $@) . ")");
 }
 MMisc::error_quit("Problem with metric ($metric)")
   if (! defined $met);
@@ -389,11 +390,10 @@ sub confirm_table {
 ########## 
 
 sub set_usage {  
-  my $tls = join(" ", @trialslabels);
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] --metricPackage package --MetricParameters parameter=value [--MetricParameters parameter=value [...]] [--trialsLabels label1,label2,label3] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--baseDETfile filebase] ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--baseDETfile filebase] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
@@ -405,10 +405,9 @@ Where:
   --referenceDBfile  The Reference SQLite file (must contains the 'Reference' table, whose columns are: TrialID, Targ)
   --systemDBfile     The System SQLite file (must contains the 'System' table, whose columns are: TrialID, Decision, Score)
   --ResultDBfile     The Filter tool resulting DB (must contain the \'$tablename\' table, with the following columns: $TrialIDcolumn $BlockIDcolumn)
-  --trialsLabels     Labels given to new Trials (default: $tls)
-  --TrialsParameters Trials Package parameters
-  --metricPackage    Package to load for metric uses
+  --metricPackage    Package to load for metric uses (default: $metric)
   --MetricParameters Metric Package parameters
+  --TrialsParameters Trials Package parameters
   --baseDETfile      When working with DET curves, all the relevant files will start with this value (default: $bDETf)
 EOF
 ;
