@@ -110,7 +110,6 @@ my $resDBbypass = 0;
 my $usedmetric = "";
 my @usedmetparams = ();
 
-my $trialslabels = "";
 my @trialsparams = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
@@ -138,7 +137,6 @@ GetOptions
    'AllowResDBfileBypass' => \$resDBbypass,
    'usedMetric=s'       => \$usedmetric,
    'UsedMetricParams=s' => \@usedmetparams,
-   'trialsLabels=s'     => \$trialslabels,
    'TrialsParams=s'     => \@trialsparams,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -390,9 +388,6 @@ sub run_scorer {
   foreach my $mk (@usedmetparams) {
     $cmdp .= " -M $mk";
   }
-  if (! MMisc::is_blank($trialslabels)) {
-    $cmdp .= " -t $trialslabels";
-  }
   foreach my $mk (@trialsparams) {
     $cmdp .= " -T $mk";
   }
@@ -453,7 +448,6 @@ B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
   S<[B<--usedMetric> I<package>]>
   S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]>
-  S<[B<--trialsLabels> I<label1,label2,label3>]>
   S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
   [I<csvfile> [I<csvfile> [I<...>]]
   
@@ -562,10 +556,6 @@ Specify the location of the System CSV file (expected to contain S<TrialID>, S<S
 
 Specify the parameters given during the Trial creation process.
 
-=item B<--trialsLabels> I<label1,label2,label3>
-
-Specify the three labels used during the Trial creation process.
-
 =item B<--UsedMetricParameters> I<parameter=value>
 
 Specify the parameters given during the Metric creation process.
@@ -650,7 +640,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--trialsLabels label1,label2,label3] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [csvfile [csvfile [...]]
+$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -674,7 +664,6 @@ Where:
   --addResDBfiles  Additional filter results database files to give the scorer (will do an AND on the TrialIDs)
   --usedMetric    Package to load for metric uses (if none provided, default used: $defusedmetric)
   --UsedMetricParameters Metric Package parameters
-  --trialsLabels     Labels given to new Trials
   --TrialsParameters Trials Package parameters
 
 
