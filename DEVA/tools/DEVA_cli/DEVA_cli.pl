@@ -156,11 +156,6 @@ if (MMisc::is_blank($usedmetric)) {
 #  @usedmetparams = ( 'CostFA=1', 'CostMiss=1', 'Ptarg=0.1' );
 }
 
-#if (1) {
-#  use Trials;
-#  print "[" . Trials::getMetricParams() . "]\n";
-#}
-
 my @csvlist = @ARGV;
 
 my $err = MMisc::check_dir_w($outdir);
