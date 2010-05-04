@@ -60,7 +60,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "TrecVid08ViperFile", "TrecVid08ECF", "TrecVid08EventList", "KernelFunctions", "MetricTV08", "BipartiteMatch", "Trials", "TrialSummaryTable", "SimpleAutoTable", "DETCurve", "DETCurveSet", "TrecVid08HelperFunctions", "CSVHelper") {
+foreach my $pn ("MMisc", "TrecVid08ViperFile", "TrecVid08ECF", "TrecVid08EventList", "TrecVid08KernelFunctions", "TrecVid08Metric", "BipartiteMatch", "TrecVid08Trials", "TrialSummaryTable", "SimpleAutoTable", "DETCurve", "DETCurveSet", "TrecVid08HelperFunctions", "CSVHelper") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -379,7 +379,7 @@ if (scalar @inputAliCSV == 0) {
   
   ## Aligning Files and Events
   print "\n\n***** STEP ", $stepc++, ": Aligning Files and Events\n\n";
-  my $kernel = new KernelFunctions();
+  my $kernel = new TrecVid08KernelFunctions();
   $kernel->set_delta_t($delta_t);
   $kernel->set_E_t($E_t);
   $kernel->set_E_d($E_d);
@@ -391,9 +391,9 @@ if (scalar @inputAliCSV == 0) {
   push @all_events, $key_allevents;
   push @all_events, @asked_events;
   foreach my $event (@all_events) {
-    my $trial = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
+    my $trial = new TrecVid08Trials(\%metrics_params);
     $all_trials{$event} = $trial;
-    $all_metric{$event} = new MetricTV08({ ('CostMiss' => $CostMiss, 'CostFA' => $CostFA, 'Rtarget' => $Rtarget ) }, $trial);
+    $all_metric{$event} = new TrecVid08Metric({ ('CostMiss' => $CostMiss, 'CostFA' => $CostFA, 'Rtarget' => $Rtarget ) }, $trial);
   }
   $gtrial = $all_trials{$key_allevents};
 
@@ -412,7 +412,7 @@ if (scalar @inputAliCSV == 0) {
   @inputAliCSV = @tmp;
 
   %metrics_params = ( TOTALDURATION => $duration );
-  $all_trials{$key_allevents} = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
+  $all_trials{$key_allevents} = new TrecVid08Trials(\%metrics_params);
   my %allEvents = ();
 
   ### Load the Trial Structures from CSV alignment files
@@ -463,8 +463,8 @@ if (scalar @inputAliCSV == 0) {
         ($data[3], $data[2], $data[10], $data[11]);
 
       if (! exists($all_trials{$evt})){
-        $all_trials{$evt} = new Trials("Event Detection", "Event", "Observation", \%metrics_params);
-        $all_metric{$evt} = new MetricTV08({ ('CostMiss' => $CostMiss, 'CostFA' => $CostFA, 'Rtarget' => $Rtarget ) }, $all_trials{$evt});
+        $all_trials{$evt} = new TrecVid08Trials(\%metrics_params);
+        $all_metric{$evt} = new TrecVid08Metric({ ('CostMiss' => $CostMiss, 'CostFA' => $CostFA, 'Rtarget' => $Rtarget ) }, $all_trials{$evt});
       }
 
       if ($type eq "Mapped"){
@@ -857,7 +857,7 @@ sub do_alignment {
 
       my $tomatch = scalar @sys_events_obs + scalar @ref_events_obs;
       print "|-> Filename: $file | Event: $evt | SYS elements: ", scalar @sys_events_obs, " | REF elements: ", scalar @ref_events_obs, " | Total Observations: $tomatch elements\n";
-      my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&KernelFunctions::kernel_function, \@kp);
+      my $bpm = new BipartiteMatch(\%ref_bpm, \%sys_bpm, \&TrecVid08KernelFunctions::kernel_function, \@kp);
       MMisc::error_quit("While creating the Bipartite Matching object for event ($evt) and file ($file) (" . $bpm->get_errormsg() . ")")
         if ($bpm->error());
 
