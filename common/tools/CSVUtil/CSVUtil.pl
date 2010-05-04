@@ -1,8 +1,16 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
 use strict;
 
-use strict;
+my ($f4b, @f4bv);
+BEGIN {
+  $f4b = "F4DE_BASE";
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : ("../../../common/lib");
+}
+use lib (@f4bv);
+
 use Data::Dumper;
 use AutoTable;
 use MMisc;
