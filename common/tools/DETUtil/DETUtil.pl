@@ -33,7 +33,7 @@ BEGIN {
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib", "../../../common/lib", "../../../TrecVid08/lib");
+      : ("../../lib", "../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -50,7 +50,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "MetricFuncs", "DETCurve", "DETCurveSet", "Trials") {
+foreach my $pn ("MMisc", "DETCurve", "DETCurveSet") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);

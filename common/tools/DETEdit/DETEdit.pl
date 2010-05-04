@@ -47,7 +47,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "MetricTV08", "Trials", "DETCurve", "DETCurveSet") {
+foreach my $pn ("MMisc", "DETCurve", "DETCurveSet") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
