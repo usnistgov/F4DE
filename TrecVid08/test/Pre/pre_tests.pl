@@ -21,7 +21,6 @@ $ms = &_chkpkg
    "TrecVid08KernelFunctions",
    "TrecVid08Observation",
    "TrecVid08ViperFile",
-   "TrecVid08Trials",
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all TrecVid08 packages found, you will not be able to run the program, please install the missing ones\n\n";
