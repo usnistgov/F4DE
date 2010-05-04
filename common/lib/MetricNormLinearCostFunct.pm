@@ -13,11 +13,21 @@
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 package MetricNormLinearCostFunct;
+
 use MetricFuncs;
 @ISA = qw(MetricFuncs);
 
 use strict;
 use Data::Dumper;
+
+my @metric_params = ("CostMiss", "CostFA", "Ptarg");
+
+sub getParamsList { return(@metric_params); }
+
+my @trials_params = ();
+
+sub getTrialsNeededParamsList { return(@trials_params); }
+
  
 sub new
   {
@@ -26,13 +36,16 @@ sub new
     my $self = MetricFuncs->new($parameters, $trial);
 
     #######  customizations
-
-    die "Error: parameter 'CostFA' not defined"      if (! exists($self->{PARAMS}->{CostFA}));
-    die "Error: parameter 'CostMiss' not defined"    if (! exists($self->{PARAMS}->{CostMiss}));
-    die "Error: parameter 'Ptarg' not defined"       if (! exists($self->{PARAMS}->{Ptarg}));
-    die "Error: CostMiss must be > 0"      if ($self->{PARAMS}->{CostMiss} <= 0);
-    die "Error: CostFA must be > 0"        if ($self->{PARAMS}->{CostFA} <= 0);
-    die "Error: Rtarget must be > 0"       if ($self->{PARAMS}->{Ptarg} <= 0);
+    foreach my $p (@metric_params) {
+      MMisc::error_quit("parameter \'$p\' not defined")
+          if (! exists($self->{PARAMS}->{$p}));
+      MMisc::error_quit("parameter \'$p\' must > 0")
+          if ($self->{PARAMS}->{$p} <= 0);
+    }
+    foreach my $p (@trials_params) {
+      MMisc::error_quit("Trials parameter \'$p\' does not exist")
+          if (! exists($self->{TRIALPARAMS}->{$p}));
+    }
 
     ## Add normalization constants so they don't need recomputed
     $self->{CONST_MISS_FACT} = $self->{PARAMS}->{CostMiss} * $self->{PARAMS}->{Ptarg};
