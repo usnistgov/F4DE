@@ -1,4 +1,4 @@
-package KernelFunctions;
+package TrecVid08KernelFunctions;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # Kernel Functions
@@ -10,7 +10,7 @@ package KernelFunctions;
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
 # copyright protection within the United States and is in the public domain.
 #
-# "KernelFunctions.pm" is an experimental system.
+# "TrecVid08KernelFunctions.pm" is an experimental system.
 # NIST assumes no responsibility whatsoever for its use by any party.
 #
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
@@ -33,7 +33,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "KernelFunctions.pm Version: $version";
+my $versionid = "TrecVid08KernelFunctions.pm Version: $version";
 
 ####################
 
@@ -43,7 +43,7 @@ my @kernel_params_list = ("delta_t", "MinDec_s", "RangeDec_s", "E_t", "E_d"); # 
 sub new {
   my ($class) = shift @_;
 
-  my $errormsg = new MErrorH("KernelFunctions");
+  my $errormsg = new MErrorH("TrecVid08KernelFunctions");
 
   $errormsg->set_errormsg("\'new\' does not accept any parameter. ") 
     if (scalar @_ > 0);
