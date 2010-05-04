@@ -1,5 +1,5 @@
 # F4DE
-# TrecVid08Metric.pm
+# MetricTV08.pm
 # Author: Jon Fiscus
 # Additions: Martial Michel
 # 
@@ -13,7 +13,7 @@
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-package TrecVid08Metric;
+package MetricTV08;
 
 use MetricFuncs;
 @ISA = qw(MetricFuncs);
@@ -26,7 +26,7 @@ use MMisc;
 =pod
 =head1 NAME
 
-TrecVid08/lib/TrecVid08Metric - Compiled 2-class detection metrics for TRECViD '08 Event Detection
+TrecVid08/lib/MetricTV08 - Compiled 2-class detection metrics for TRECViD '08 Event Detection
 
 =head1 SYNOPSIS
 

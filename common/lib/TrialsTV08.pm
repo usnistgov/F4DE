@@ -1,5 +1,5 @@
 # F4DE
-# TrecVid08Trials.pm
+# TrialsTV08.pm
 # Author: Jon Fiscus
 # 
 # This software was developed at the National Institute of Standards and Technology by
@@ -12,7 +12,7 @@
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-package TrecVid08Trials;
+package TrialsTV08;
 
 use TrialsFuncs;
 @ISA = qw(TrialsFuncs);
@@ -26,7 +26,7 @@ use SimpleAutoTable;
 sub new {
   my ($class, $metricParams) = @_;
 
-  MMisc::error_quit("new TrecVid08Trials called without a \$metricParams value") 
+  MMisc::error_quit("new TrialsTV08 called without a \$metricParams value") 
     if (! defined($metricParams));
  
   my $self = TrialsFuncs->new("Event Detection", "Event", "Observation", $metricParams);
