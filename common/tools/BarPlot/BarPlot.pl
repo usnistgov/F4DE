@@ -32,8 +32,6 @@ BEGIN {
 }
 use lib (@f4bv);
 
-use Trials;
-
 sub eo2pe {
   my @a = @_;
   my $oe = join(" ", @a);
