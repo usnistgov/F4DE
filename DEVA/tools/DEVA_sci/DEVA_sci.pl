@@ -58,7 +58,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("MMisc", "CSVHelper", "MtSQLite", "Trials", "MetricFuncs", "DETCurve", "DETCurveSet") {
+foreach my $pn ("MMisc", "CSVHelper", "MtSQLite", "TrialsFuncs", "MetricFuncs", "DETCurve", "DETCurveSet") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -211,7 +211,7 @@ my $tot1 = scalar(keys %ref) + scalar(keys %sys);
 #print MMisc::get_sorted_MemDump(\%ref);
 #print MMisc::get_sorted_MemDump(\%sys);
 
-my $trial = new Trials(@trialslabels, \%trialsparams);
+my $trial = new TrialsFuncs(@trialslabels, \%trialsparams);
 my ($mapped, $unmapped_sys, $unmapped_ref) = (0, 0, 0);
 
 foreach my $key (keys %sys) {
