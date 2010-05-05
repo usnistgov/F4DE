@@ -21,13 +21,24 @@ use strict;
 
 use MMisc;
 
-sub new {
-  my ($class, $metricParams) = @_;
+my @trials_params = ("TOTALTRIALS");
+sub getParamsList { return(@trials_params); }
 
-  MMisc::error_quit("new TrialsTestStub called without a \%metricParams value") 
-    if (! defined($metricParams));
+sub new {
+  my ($class, $trialParams) = @_;
+
+  MMisc::error_quit("new TrialsTestStub called without a \$trialParams value") 
+    if (! defined($trialParams));
  
-  my $self = TrialsFuncs->new("Detection", "Block", "Trial", $metricParams);
+  my $self = TrialsFuncs->new("Detection", "Block", "Trial", $trialParams);
+
+  #######  customizations
+  foreach my $p (@trials_params) {
+    MMisc::error_quit("parameter \'$p\' not defined")
+        if (! exists($self->{trialParams}->{$p}));
+    MMisc::error_quit("parameter \'$p\' must > 0")
+        if ($self->{trialParams}->{$p} <= 0);
+  }
 
   bless($self, $class);
 

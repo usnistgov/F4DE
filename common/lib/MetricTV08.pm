@@ -23,6 +23,14 @@ use strict;
 use Data::Dumper;
 use MMisc;
 
+my @metric_params = ("CostMiss", "CostFA", "Rtarget");
+
+use TrialsTV08;
+my @trials_params = TrialsTV08::getParamsList();
+
+sub getParamsList { return(@metric_params); }
+sub getTrialsParamsList { return(@trials_params); }
+
 =pod
 =head1 NAME
 
@@ -57,14 +65,6 @@ whether or not the object was created.
 
 =cut
 
-my @metric_params = ("CostMiss", "CostFA", "Rtarget");
-
-sub getParamsList { return(@metric_params); }
-
-my @trials_params = ("TOTALDURATION");
-
-sub getTrialsNeededParamsList { return(@trials_params); }
-
 sub new
   {
     my ($class, $parameters, $trial) = @_;
@@ -81,9 +81,9 @@ sub new
     foreach my $p (@trials_params) {
       MMisc::error_quit("Trials parameter \'$p\' does not exist")
           if (! exists($self->{TRIALPARAMS}->{$p}));
+      MMisc::error_quit("Trials parameter \'$p\' must be > 0")
+          if ($self->{TRIALPARAMS}->{$p} <= 0);
     }
-    MMisc::error_quit("TOTALDURATION must be > 0")
-        if ($self->{TRIALPARAMS}->{TOTALDURATION} <= 0);
 
     $self->{PARAMS}->{BETA} = $self->{PARAMS}->{CostFA} / 
       ($self->{PARAMS}->{CostMiss} * $self->{PARAMS}->{Rtarget});

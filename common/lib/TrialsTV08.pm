@@ -20,16 +20,25 @@ use TrialsFuncs;
 use strict;
 
 use MMisc;
-use Data::Dumper;
-use SimpleAutoTable;
+
+my @trials_params = ("TOTALDURATION");
+sub getParamsList { return(@trials_params); }
 
 sub new {
-  my ($class, $metricParams) = @_;
+  my ($class, $trialsParams) = @_;
 
-  MMisc::error_quit("new TrialsTV08 called without a \$metricParams value") 
-    if (! defined($metricParams));
+  MMisc::error_quit("new TrialsTV08 called without a \$trialsParams value") 
+    if (! defined($trialsParams));
  
-  my $self = TrialsFuncs->new("Event Detection", "Event", "Observation", $metricParams);
+  my $self = TrialsFuncs->new("Event Detection", "Event", "Observation", $trialsParams);
+
+  #######  customizations
+  foreach my $p (@trials_params) {
+    MMisc::error_quit("parameter \'$p\' not defined")
+        if (! exists($self->{trialParams}->{$p}));
+    MMisc::error_quit("parameter \'$p\' must > 0")
+        if ($self->{trialParams}->{$p} <= 0);
+  }
 
   bless($self, $class);
 

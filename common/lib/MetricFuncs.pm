@@ -22,6 +22,7 @@ use strict;
 use Data::Dumper;
 
 =pod
+
 =head1 NAME
 
 common/lib/MetricFuncs - a set of inhereited functions for Metrics objects
@@ -56,7 +57,7 @@ sub new {
       {
        "PARAMS" => $parameters,
        "TRIALS" => $trial,
-       "TRIALPARAMS" => $trial->getMetricParams(),
+       "TRIALPARAMS" => $trial->getTrialParams(),
        "errMissLab" => "PMiss",
        "errMissUnit" => "Prob",
        "errMissUnitLabel" => "",

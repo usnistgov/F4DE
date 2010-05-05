@@ -127,8 +127,8 @@ sub renderAsTxt(){
     
   ### Add all the parameters:
   my $info = "Constant parameters:\n";
-  foreach my $key ($self->{Trial}->getMetricParamKeys()) {
-    $info .= "   $key = ".$self->{Trial}->getMetricParamValue($key)."\n";
+  foreach my $key ($self->{Trial}->getTrialParamKeys()) {
+    $info .= "   $key = ".$self->{Trial}->getTrialParamValue($key)."\n";
   }
   foreach my $key ($self->{Metric}->getParamKeys()) {
     $info .= "   $key = ".$self->{Metric}->getParamValue($key)."\n";

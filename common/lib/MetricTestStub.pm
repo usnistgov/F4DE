@@ -17,15 +17,17 @@ use MetricFuncs;
 @ISA = qw(MetricFuncs);
 
 use strict;
+
 use Data::Dumper;
+use MMisc;
  
 my @metric_params = ("ValueV", "ValueC", "ProbOfTerm");
 
+use TrialsTestStub;
+my @trials_params = TrialsTestStub::getParamsList();
+
 sub getParamsList { return(@metric_params); }
-
-my @trials_params = ("TOTALTRIALS");
-
-sub getTrialsNeededParamsList { return(@trials_params); }
+sub getTrialsParamsList { return(@trials_params); }
 
 sub new
   {

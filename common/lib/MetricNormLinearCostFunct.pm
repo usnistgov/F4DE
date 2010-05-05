@@ -18,16 +18,17 @@ use MetricFuncs;
 @ISA = qw(MetricFuncs);
 
 use strict;
+
 use Data::Dumper;
+use MMisc;
 
 my @metric_params = ("CostMiss", "CostFA", "Ptarg");
 
+use TrialsNormLinearCostFunct;
+my @trials_params = TrialsNormLinearCostFunct::getParamsList();
+
 sub getParamsList { return(@metric_params); }
-
-my @trials_params = ();
-
-sub getTrialsNeededParamsList { return(@trials_params); }
-
+sub getTrialsParamsList { return(@trials_params); }
  
 sub new
   {
