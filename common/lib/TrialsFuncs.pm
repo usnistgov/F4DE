@@ -16,6 +16,7 @@
 package TrialsFuncs;
 
 use strict;
+
 use MMisc;
 use Data::Dumper;
 use SimpleAutoTable;
@@ -43,10 +44,10 @@ This is the new
 =cut
 
 sub new {
-  my ($class, $taskId, $blockId, $decisionId, $metricParams) = @_;
+  my ($class, $taskId, $blockId, $decisionId, $trialParams) = @_;
   
-  MMisc::error_quit("new Trial() called without a \$metricParams value") 
-    if (! defined($metricParams));
+  MMisc::error_quit("new Trial() called without a \$trialParams value") 
+    if (! defined($trialParams));
   
   my $self =
     {
@@ -55,7 +56,7 @@ sub new {
      "DecisionID" => $decisionId,
      "isSorted" => 1,
      "trials" => {},          ### This gets built as you add trials
-     "metricParams" => $metricParams ### Hash table for passing info to the Metric* objects 
+     "trialParams" => $trialParams ### Hash table for passing info to the Trial* objects 
     };
   
   bless $self;
@@ -114,9 +115,9 @@ sub unitTest {
           if ($tr->{"trials"}{"second"}{"NONTARG"}[0] > $tr->{"trials"}{"second"}{"NONTARG"}[1]);
     }
     MMisc::error_quit("pooledTotal trials does not exist")
-        if (! $tr->getMetricParamValueExists("TOTAL_TRIALS"));
+        if (! $tr->getTrialParamValueExists("TOTAL_TRIALS"));
     MMisc::error_quit("pooledTotal trials not set")
-        if ($tr->getMetricParamValue("TOTAL_TRIALS") != 78);
+        if ($tr->getTrialParamValue("TOTAL_TRIALS") != 78);
     
   }
   print "OK\n";
@@ -128,18 +129,18 @@ sub isCompatible(){
   
   return 0 if (ref($self) ne ref($tr2));
 
-  my @tmp = $self->getMetricParamKeys();
+  my @tmp = $self->getTrialParamKeys();
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $k = $tmp[$i];
-    return 0 if (! $tr2->getMetricParamValueExists($k));
-#    return 0 if ($self->getMetricParamValue($k) ne $tr2->getMetricParamValue($k));
+    return 0 if (! $tr2->getTrialParamValueExists($k));
+#    return 0 if ($self->getTrialParamValue($k) ne $tr2->getTrialParamValue($k));
   }
 
-  my @tmp = $tr2->getMetricParamKeys();
+  my @tmp = $tr2->getTrialParamKeys();
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $k = $tmp[$i];
-    return 0 if (! $self->getMetricParamValueExists($k));
-#    return 0 if ($self->getMetricParamValue($k) ne $tr2->getMetricParamValue($k));
+    return 0 if (! $self->getTrialParamValueExists($k));
+#    return 0 if ($self->getTrialParamValue($k) ne $tr2->getTrialParamValue($k));
   }
 
   return 1;    
@@ -230,41 +231,41 @@ sub getDecisionID {
   $self->{DecisionID};
 }
 
-sub getMetricParams {
+sub getTrialParams {
   my ($self) = @_;
-  $self->{metricParams};
+  $self->{trialParams};
 }
 
-sub getMetricParamKeys {
+sub getTrialParamKeys {
   my ($self) = @_;
-  keys %{ $self->{metricParams} };
+  keys %{ $self->{trialParams} };
 }
 
-sub getMetricParamsStr {
+sub getTrialParamsStr {
   my ($self) = @_;
   my $str = "{ (";
-  my @tmp = keys %{ $self->{metricParams} };
+  my @tmp = keys %{ $self->{trialParams} };
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $k = $tmp[$i];
-    $str .= "'$k' => '$self->{metricParams}->{$k}', ";
+    $str .= "'$k' => '$self->{trialParams}->{$k}', ";
   }
   $str .= ') }';
   $str;   
 }
 
-sub setMetricParamValue {
+sub setTrialParamValue {
   my ($self, $key, $val) = @_;
-  $self->{metricParams}->{$key} = $val;
+  $self->{trialParams}->{$key} = $val;
 }
 
-sub getMetricParamValueExists(){
+sub getTrialParamValueExists(){
   my ($self, $key) = @_;
-  exists($self->{metricParams}->{$key});
+  exists($self->{trialParams}->{$key});
 }
 
-sub getMetricParamValue(){
+sub getTrialParamValue(){
   my ($self, $key) = @_;
-  $self->{metricParams}->{$key};
+  $self->{trialParams}->{$key};
 }
 
 sub dump {
@@ -318,7 +319,7 @@ sub dump {
 
 sub copy {
   my ($self, $block) = @_;
-  my ($copy) = new TrialsFuncs($self->getTaskID(), $self->getBlockID(), $self->getDecisionID(), $self->getMetricParams());
+  my ($copy) = new TrialsFuncs($self->getTaskID(), $self->getBlockID(), $self->getDecisionID(), $self->getTrialParams());
     
   my @blocks = ();
   if (defined($block)) {
@@ -593,7 +594,7 @@ sub getDecisionId {
   
 ### This is not an instance method
 sub mergeTrials{
-  my ($r_baseTrial, $mergeTrial, $metric, $mergeType) = @_;
+  my ($r_baseTrial, $mergeTrial, $trial, $mergeType) = @_;
 
   ### Sanity Check 
   my @blockIDs = $mergeTrial->getBlockIDs();
@@ -604,15 +605,15 @@ sub mergeTrials{
 
   ### First the params
   if (! defined($$r_baseTrial)){
-    $$r_baseTrial = new TrialsFuncs($mergeTrial->getTaskID(), $mergeTrial->getBlockID(), $mergeTrial->getDecisionID(), $mergeTrial->getMetricParams());
+    $$r_baseTrial = new TrialsFuncs($mergeTrial->getTaskID(), $mergeTrial->getBlockID(), $mergeTrial->getDecisionID(), $mergeTrial->getTrialParams());
   } else { 
-    my @ktmp = $$r_baseTrial->getMetricParamKeys();
+    my @ktmp = $$r_baseTrial->getTrialParamKeys();
     for (my $i = 0; $i < scalar @ktmp; $i++) {
       my $mkey = $ktmp[$i];
-      my $newVal = $metric->trialParamMerge($mkey,
-                                            $$r_baseTrial->getMetricParamValue($mkey), 
-                                            $mergeTrial->getMetricParamValue($mkey), $mergeType);
-      $$r_baseTrial->setMetricParamValue($mkey, $newVal);
+      my $newVal = $trial->trialParamMerge($mkey,
+                                            $$r_baseTrial->getTrialParamValue($mkey), 
+                                            $mergeTrial->getTrialParamValue($mkey), $mergeType);
+      $$r_baseTrial->setTrialParamValue($mkey, $newVal);
     }
   }
 
