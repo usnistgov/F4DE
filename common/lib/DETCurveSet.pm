@@ -340,8 +340,8 @@ sub renderAsTxt(){
   my $info = "Performance Summary Over and Ensemble of Subsets\n\n";
   $info .= "System Title: ".(defined($self->{Title}) ? $self->{Title} : 'N/A')."\n\n"; 
   $info .= "Constant parameters:\n";
-  foreach my $key ($trial->getMetricParamKeys()) {
-    $info .= "   $key = ".$trial->getMetricParamValue($key)."\n";
+  foreach my $key ($trial->getTrialParamKeys()) {
+    $info .= "   $key = ".$trial->getTrialParamValue($key)."\n";
   }
   foreach my $key ($metric->getParamKeys()) {
     $info .= "   $key = ".$metric->getParamValue($key)."\n";

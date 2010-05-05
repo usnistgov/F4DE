@@ -1239,7 +1239,7 @@ sub writeGNUGraph{
   open(DAT,"> $fileRoot.dat.1") ||
     die("unable to open DET gnuplot file $fileRoot.dat.1"); 
   print DAT "# DET Graph made by DETCurve\n";
-  print DAT "# Trial Params = ".($det->getTrials()->getMetricParamsStr())."\n";
+  print DAT "# Trial Params = ".($det->getTrials()->getTrialParamsStr())."\n";
   print DAT "# Metric Params = ".($metric->getParamsStr(""))."\n";
   #    print DAT "# DET Type: $typeStr\n";
   print DAT "# Abbreviations: ssd() is the sample Standard Deviation of a Variable\n";
