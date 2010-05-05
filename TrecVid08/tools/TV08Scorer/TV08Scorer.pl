@@ -342,7 +342,7 @@ if (scalar @inputAliCSV == 0) {
     print "\n** SUMMARY: ECF file loaded\n";
     print $ecfobj->txt_summary();
   }
-  %metrics_params = ( TOTALDURATION => $duration );
+  %metrics_params = ( 'TOTALDURATION' => $duration );
 
   ## Generate event lists
   print "\n\n***** STEP ", $stepc++, ": Generating EventLists",
