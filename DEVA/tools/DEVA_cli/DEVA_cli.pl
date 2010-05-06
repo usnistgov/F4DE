@@ -98,6 +98,10 @@ my $createDBs = 1;
 my $filter = 1;
 my $score = 1;
 
+my $wrefCFfile = "";
+my $wsysCFfile = "";
+my $wmdCFfile  = "";
+
 my $refcsv = "";
 my $syscsv = "";
 
@@ -113,7 +117,7 @@ my @trialsparams = ();
 my $listparams = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A CD F      M    RST      a c  f h   lm o  rst v      #
+# Used: A CD F     LM    RST  W   a c  fgh   lm o  rst vwx    #
 
 my %opt = ();
 GetOptions
@@ -139,6 +143,9 @@ GetOptions
    'UsedMetricParams=s' => \@usedmetparams,
    'TrialsParams=s' => \@trialsparams,
    'listParams' => \$listparams,
+   'wREFcfg=s'  => \$wrefCFfile,
+   'WSYScfg=s'  => \$wsysCFfile,
+   'xMDcfg=s'   => \$wmdCFfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -179,17 +186,17 @@ MMisc::error_quit("Could not create log dir ($logdir)")
   if (! MMisc::make_dir($logdir));
 
 my $mdDBbase = "$outdir/metadataDB";
-my $mdDBcfg  = "$mdDBbase.cfg";
+my $mdDBcfg  = (MMisc::is_blank($wmdCFfile)) ? "$mdDBbase.cfg" : $wmdCFfile;
 my $mdDBfile = (MMisc::is_blank($wmdDBfile)) ? "$mdDBbase.db" : $wmdDBfile;
 my $mdDBlogb = "$logdir/metadataDB";
 
 my $refDBbase = "$outdir/referenceDB";
-my $refDBcfg  = "$refDBbase.cfg";
+my $refDBcfg  = (MMisc::is_blank($wrefCFfile)) ? "$refDBbase.cfg" : $wrefCFfile;
 my $refDBfile = (MMisc::is_blank($wrefDBfile)) ? "$refDBbase.db" : $wrefDBfile;
 my $refDBlogb = "$logdir/referenceDB";
 
 my $sysDBbase = "$outdir/systemDB";
-my $sysDBcfg  = "$sysDBbase.cfg";
+my $sysDBcfg  = (MMisc::is_blank($wsysCFfile)) ? "$sysDBbase.cfg" : $wsysCFfile;
 my $sysDBfile = (MMisc::is_blank($wsysDBfile)) ? "$sysDBbase.db" : $wsysDBfile;
 my $sysDBlogb = "$logdir/systemDB";
 
@@ -410,15 +417,19 @@ sub check_isin {
 
 sub path_tool {
   my ($toolb, $relpath) = @_;
-  my $tool = (exists $ENV{$f4b}) ? $toolb : "$relpath/${toolb}.pl";
-  &check_tool($tool);
+  my $tool = (exists $ENV{$f4b}) 
+    ? MMisc::cmd_which($toolb) 
+    : "$relpath/${toolb}.pl";
+  &check_tool($tool, $toolb);
   return($tool);
 }
 
 #####
 
 sub check_tool {
-  my ($tool) = @_;
+  my ($tool, $toolb) = @_;
+  MMisc::error("No location found for tool ($toolb)")
+    if (MMisc::is_blank($tool));
   my $err = MMisc::check_file_x($tool);
   MMisc::error_quit("Problem with tool ($tool): $err")
     if (! MMisc::is_blank($err));
@@ -453,11 +464,13 @@ B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
   S<B<--outdir> I<dir>>
   S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--DETScoreSkip>]>
   S<[B<--refcsv> I<csvfile>] [B<--syscsv> I<csvfile>]>
+  S<[B<--wREFcfg> I<file>] [B<--WSYScfg> I<file>] [B<--xMDcfg> I<file>]>
   S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>] [B<--MetadataDBfile> I<file>]>
   S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
   S<[B<--usedMetric> I<package>]>
   S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]>
   S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
+  S<[B<--listParameters>]>
   [I<csvfile> [I<csvfile> [I<...>]]
   
 =head1 DESCRIPTION
@@ -533,6 +546,10 @@ Skip step that uses the SQL I<SELECT>s commands specified in the B<--FilterCMDfi
 
 Display the usage page for this program. Also display some default values and information.
 
+=item B<--listParameters>
+
+List Metric and Trial package authorized parameters
+
 =item B<--MetadataDBfile> I<file>
 
 Specify the location of the Metadata database file to use/generate.
@@ -576,6 +593,18 @@ Specify the Metric package to use for scoring data (must be in your perl serch p
 =item B<--version>
 
 Display the B<DEVA_cli> version information.
+
+=item B<--WSYScfg> I<file>
+
+Specify the System configuration file
+
+=item B<--wREFcfg> I<file>
+
+Specify the Refefence configuration file
+
+=item B<--xMDcfg> I<file>
+
+Specify the metadata configuration file
 
 =back
 
@@ -649,7 +678,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [csvfile [csvfile [...]]
+$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--xMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -664,6 +693,9 @@ Where:
   --CreateDBSkip  Bypasss Databases creation step
   --filterSkip    Bypasss Filter tool step
   --DETScoreSkip  Bypass Scoring Interface step
+  --wREFcfg    Specify the Refefence configuration file
+  --WSYScfg    Specify the System configuration file
+  --xMDcfg     Specify the metadata configuration file
   --refcsv     Specify the Reference csv file
   --syscsv     Specify the System csv file
   --RefDBfile  Specify the Reference SQLite database file
@@ -674,7 +706,7 @@ Where:
   --usedMetric    Package to load for metric uses (if none provided, default used: $defusedmetric)
   --UsedMetricParameters Metric Package parameters
   --TrialsParameters Trials Package parameters
-
+  --listParameters   List Metric and Trial package authorized parameters
 
 EOF
 ;
