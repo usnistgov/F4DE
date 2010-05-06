@@ -88,7 +88,9 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 my $usage = &set_usage();
 my $toolb = "SQLite_load_csv";
-my $tool = (exists $ENV{$f4b}) ? $toolb : "./${toolb}.pl";
+my $tool = (exists $ENV{$f4b}) 
+  ? MMisc::cmd_which($toolb) 
+  : "../../../common/tools/SQLite_tools/${toolb}.pl";
 my $loadcsv = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
@@ -114,6 +116,8 @@ my ($dbfile, $conffile) = @ARGV;
 if ($loadcsv) {
   MMisc::error_quit("Requested command print instead of DB creation, can not use \'loadCSV\' with it")
     if ($dbfile eq $sodbk);
+  MMisc::error("No location found for tool ($toolb)")
+    if (MMisc::is_blank($tool));
   my $err = MMisc::check_file_x($tool);
   MMisc::error_quit("Problem with tool ($tool): $err")
     if (! MMisc::is_blank($err));
