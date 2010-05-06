@@ -105,13 +105,14 @@ my $bDETf = "DET";
 my @ok_modes = ("AND", "OR"); # order is important
 my $mode = $ok_modes[0];
 
-my %trialsparams = ();
-
 my $metric = "MetricNormLinearCostFunct";
 my %metparams = ();
+my %trialsparams = ();
+my $listparams = 0;
+
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:             M    R T             h    m o  rs  v      #
+# Used:             M    R T             h   lm o  rs  v      #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -128,9 +129,44 @@ GetOptions
    'metricPackage=s'    => \$metric,
    'MetricParameters=s' => \%metparams,
    'TrialsParameters=s' => \%trialsparams,
+   'listParameters'     => \$listparams,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
+
+MMisc::error_quit("No \'metric\' specified, aborting")
+  if (MMisc::is_blank($metric));
+MMisc::error_quit("Specified \'metric\' does not seem to be using a valid name ($metric), should start with \"Metric\"")
+  if (! ($metric =~ m%^metric%i));
+unless (eval "use $metric; 1") {
+  MMisc::error_quit("Metric package \"$metric\" is not available in your Perl installation. " . &eo2pe($@));
+}
+my $trialn = $metric;
+$trialn =~ s%^Metric%Trials%; # Trial specialized function automatically selected based on selected metric
+unless (eval "use $trialn; 1") {
+  MMisc::error_quit("Metric package \"$trialn\" is not available in your Perl installation. " . &eo2pe($@));
+}
+
+if ($listparams) {
+  print "Metric: $metric\n";
+  my @lp = ();
+  my $lpcmd = "\@lp = $metric\:\:getParamsList()";
+  unless (eval "$lpcmd; 1") {
+    MMisc::error_quit("Problem obtaining Metric ($metric) parameters (" . join(" ", $@) . ")");
+  }
+  print "Metric Parameters (" . scalar @lp . "): " . join(", ", @lp) . "\n";
+
+  print "Trials: $trialn\n";
+  my @lp = ();
+  my $lpcmd = "\@lp = $trialn\:\:getParamsList();";
+  unless (eval "$lpcmd; 1") {
+    MMisc::error_quit("Problem obtaining Trials ($trialn) parameters (" . join(" ", $@) . ")");
+  }
+  
+  print "Trials Parameters (" . scalar @lp . "): " . join(", ", @lp) . "\n";
+
+  MMisc::ok_quit("");
+}
 
 MMisc::error_quit("No ScoreDBfile information provided\n\n$usage") 
   if (scalar @ARGV != 1);
@@ -143,17 +179,6 @@ MMisc::error_quit("No \'referenceDBfile\' provided\n\n$usage")
 &check_DBs_r($refDBfile, $sysDBfile, @resDBfiles);
 MMisc::error_quit("Unrecognized \'mode\' [$mode], authorized values are: " . join(" ", @ok_modes))
   if (! grep(m%^$mode$%, @ok_modes));
-
-MMisc::error_quit("No \'metric\' specified, aborting")
-  if (MMisc::is_blank($metric));
-unless (eval "use $metric; 1") {
-  MMisc::error_quit("Metric package \"$metric\" is not available in your Perl installation. " . &eo2pe($@));
-}
-my $trialn = $metric;
-$trialn =~ s%^Metric%Trials%; # Trial specialized function automatically selected based on selected metric
-unless (eval "use $trialn; 1") {
-  MMisc::error_quit("Metric package \"$trialn\" is not available in your Perl installation. " . &eo2pe($@));
-}
 
 my ($dbfile) = @ARGV;
 
@@ -393,7 +418,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--baseDETfile filebase] ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--baseDETfile filebase] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
