@@ -433,6 +433,7 @@ Where:
   --metricPackage    Package to load for metric uses (default: $metric)
   --MetricParameters Metric Package parameters
   --TrialsParameters Trials Package parameters
+  --listParameters   List Metric and Trial package authorized parameters
   --baseDETfile      When working with DET curves, all the relevant files will start with this value (default: $bDETf)
 EOF
 ;
