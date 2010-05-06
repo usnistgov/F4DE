@@ -152,7 +152,7 @@ sub errFABlockCalc(){
   my $NNonTargTrials = (defined($self->{TRIALPARAMS}->{TOTALTRIALS}) ? 
                         $self->{TRIALPARAMS}->{TOTALTRIALS} - $self->{TRIALS}->getNumTarg($block) : 
                         $self->{TRIALS}->getNumNonTarg($block));
-  $nFa / $NNonTargTrials;
+  ($NNonTargTrials > 0) ? $nFa / $NNonTargTrials : undef;
 }
 
 sub combCalcWeightedMiss(){
