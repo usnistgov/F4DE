@@ -109,11 +109,11 @@ my $resDBbypass = 0;
 
 my $usedmetric = "";
 my @usedmetparams = ();
-
 my @trialsparams = ();
+my $listparams = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A CD F      M    RST      a c  f h    m o  rst v      #
+# Used: A CD F      M    RST      a c  f h   lm o  rst v      #
 
 my %opt = ();
 GetOptions
@@ -122,22 +122,23 @@ GetOptions
    'help',
    'version',
    'man',
-   'outdir=s'   => \$outdir,
-   'refcsv=s'   => \$refcsv,
-   'syscsv=s'   => \$syscsv,
+   'outdir=s' => \$outdir,
+   'refcsv=s' => \$refcsv,
+   'syscsv=s' => \$syscsv,
    'configSkip' => sub { $doCfg = 0},
    'CreateDBSkip' => sub { $createDBs = 0},
    'filterSkip' => sub { $filter = 0},
    'FilterCMDfile=s' => \$filtercmdfile,
    'DETScoreSkip' => sub { $score = 0},
-   'RefDBfile=s'    => \$wrefDBfile,
-   'SysDBfile=s'    => \$wsysDBfile,
+   'RefDBfile=s' => \$wrefDBfile,
+   'SysDBfile=s' => \$wsysDBfile,
    'MetadataDBfile=s' => \$wmdDBfile,
-   'addResDBfiles=s'   => \@addResDBfiles,
+   'addResDBfiles=s' => \@addResDBfiles,
    'AllowResDBfileBypass' => \$resDBbypass,
-   'usedMetric=s'       => \$usedmetric,
+   'usedMetric=s' => \$usedmetric,
    'UsedMetricParams=s' => \@usedmetparams,
-   'TrialsParams=s'     => \@trialsparams,
+   'TrialsParams=s' => \@trialsparams,
+   'listParams' => \$listparams,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -147,11 +148,24 @@ if ($opt{'man'}) {
   MMisc::ok_quit($o);
 }
 
-if (MMisc::is_blank($usedmetric)) {
-#  MMisc::warn_print("No metric provided, will use default ($defusedmetric) with default parameters");
-  $usedmetric = $defusedmetric;
-#  @usedmetparams = ('ValueC=0.1', 'ValueV=1', 'ProbOfTerm=0.0001' );
-#  @usedmetparams = ( 'CostFA=1', 'CostMiss=1', 'Ptarg=0.1' );
+my ($sqlite_cfg_helper, $sqlite_tables_creator, $sqlite_load_csv, 
+  $deva_filter, $deva_sci) =
+  ( "SQLite_cfg_helper", "SQLite_tables_creator", "SQLite_load_csv", 
+    "DEVA_filter", "DEVA_sci");
+
+if ($listparams) {
+  MMisc::error_quit("Specified \'metric\' does not seem to be using a valid name ($usedmetric), should start with \"Metric\"")
+    if ((! MMisc::is_blank($usedmetric)) && (! ($usedmetric =~ m%^metric%i)));
+
+  my $tool = &path_tool($deva_sci, "../../../DEVA/tools/DEVA_sci");
+
+  my $cmdp = "-l";
+  $cmdp .= " -m $usedmetric" if (! MMisc::is_blank($usedmetric));
+
+  my ($ok, $otxt, $so, $se, $rc, $of) = 
+    &run_tool("", $tool, $cmdp);
+
+  MMisc::ok_quit($so);
 }
 
 my @csvlist = @ARGV;
@@ -291,10 +305,7 @@ sub check_fn4 {
 sub do_cfgfile {
   my ($cfgfile, $log, $cmdadd, @csvfl) = @_;
 
-  my $toolb = "SQLite_cfg_helper";
-  my $tool = (exists $ENV{$f4b}) ? $toolb 
-    : "../../../common/tools/SQLite_tools/${toolb}.pl";
-  &check_tool($tool);
+  my $tool = &path_tool($sqlite_cfg_helper, "../../../common/tools/SQLite_tools");
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdadd, @csvfl);
@@ -319,16 +330,9 @@ sub db_create {
   MMisc::error_quit("Problem with config file ($cfgfile): $err")
     if (! MMisc::is_blank($err));
 
-  my $toolb = "SQLite_tables_creator";
-  my $tool = (exists $ENV{$f4b}) ? $toolb 
-    : "../../../common/tools/SQLite_tools/${toolb}.pl";
-  &check_tool($tool);
-
-  my $tool2 = "";
-  if (! exists $ENV{$f4b}) {
-    $tool2 = "../../../common/tools/SQLite_tools/SQLite_load_csv.pl";
-    &check_tool($tool2);
-  }
+  my $tool = &path_tool($sqlite_tables_creator, "../../../common/tools/SQLite_tools");
+  my $tool2 = (exists $ENV{$f4b}) ? "" : 
+    &path_tool($sqlite_load_csv, "../../../common/tools/SQLite_tools");
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, 
@@ -358,10 +362,7 @@ sub check_file_r {
 sub run_filter {
   my ($log, $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile) = @_;
 
-  my $toolb = "DEVA_filter";
-  my $tool = (exists $ENV{$f4b}) ? $toolb 
-    : "../../../DEVA/tools/DEVA_filter/${toolb}.pl";
-  &check_tool($tool);
+  my $tool = &path_tool($deva_filter, "../../../DEVA/tools/DEVA_filter");
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, "-r $refDBfile -s $sysDBfile" .
@@ -374,17 +375,14 @@ sub run_filter {
 sub run_scorer {
   my ($log, $refDBfile, $sysDBfile, $finalDBfile, @xres) = @_;
 
-  my $toolb = "DEVA_sci";
-  my $tool = (exists $ENV{$f4b}) ? $toolb 
-    : "../../../DEVA/tools/DEVA_sci/${toolb}.pl";
-  &check_tool($tool);
+  my $tool = &path_tool($deva_sci, "../../../DEVA/tools/DEVA_sci");
 
   my $cmdp = "-r $refDBfile -s $sysDBfile";
   for (my $i = 0; $i < scalar @xres; $i++) {
     $cmdp .= " -R " . $xres[$i];
   }
   $cmdp .= " -b ${finalDBbase}_DET";
-  $cmdp .= " -m $usedmetric";
+  $cmdp .= " -m $usedmetric" if (! MMisc::is_blank($usedmetric));
   foreach my $mk (@usedmetparams) {
     $cmdp .= " -M $mk";
   }
@@ -410,6 +408,15 @@ sub check_isin {
 
 #####
 
+sub path_tool {
+  my ($toolb, $relpath) = @_;
+  my $tool = (exists $ENV{$f4b}) ? $toolb : "$relpath/${toolb}.pl";
+  &check_tool($tool);
+  return($tool);
+}
+
+#####
+
 sub check_tool {
   my ($tool) = @_;
   my $err = MMisc::check_file_x($tool);
@@ -421,7 +428,9 @@ sub check_tool {
 
 sub run_tool {
   my ($lf, $tool, @cmds) = @_;
-  
+
+  $lf = MMisc::get_tmpfilename() if (MMisc::is_blank($lf));
+
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     MMisc::write_syscall_smart_logfile($lf, $tool, @cmds); 
   MMisc::error_quit("There was a problem running the tool ($tool) command, see: $of")
