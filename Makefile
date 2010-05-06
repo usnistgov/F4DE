@@ -154,7 +154,7 @@ AVSS09install_noman:
 #####
 
 DEVADIR=DEVA
-DEVATOOL=tools/DEVA_{cli/DEVA_cli,filter/DEVA_filter,sci/DEVA_sci}.pl
+DEVATOOLS=tools/DEVA_{cli/DEVA_cli,filter/DEVA_filter,sci/DEVA_sci}.pl
 
 DEVAinstall_man DEVAinstall_noman:
 	@echo ""
