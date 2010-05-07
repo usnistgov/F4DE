@@ -281,12 +281,12 @@ unless (eval "$metcmd; 1") {
 MMisc::error_quit("Problem with metric ($metric)")
   if (! defined $met);
 my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
-my $det = new DETCurve($trial, $met, "footitle", \@isolinecoef, "gzip");
-#$det->computePoints();
-#my $sroot = "serialize";
-#$det->serialize($sroot);
-my $detSet = new DETCurveSet("sysTitle");
-my $rtn = $detSet->addDET(" Event", $det);
+my $det = new DETCurve($trial, $met, "DEVA DET", 
+                       \@isolinecoef, MMisc::cmd_which("gzip"));
+$det->computePoints();
+$det->serialize($bDETf . ".srl");
+my $detSet = new DETCurveSet("DEVA DET Set");
+my $rtn = $detSet->addDET("DEVA", $det);
 MMisc::error_quit("Error adding DET to the DETSet: $rtn")
   if ($rtn ne "success");
 my @dc_range = (0.01, 1000, 5, 99.99); # order is important (xmin;xmax) (ymin;ymax)
