@@ -19,8 +19,12 @@ package DETCurve;
 
 use strict;
 use TrialsFuncs;
+
 use MetricFuncs;
 use MetricTestStub;
+use MetricTV08;
+use MetricNormLinearCostFunct;
+
 use Data::Dumper;
 use DETCurveSet;
 use PropList;
