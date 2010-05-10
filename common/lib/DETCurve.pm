@@ -121,7 +121,7 @@ sub oneBigDET
     use DETCurveSet;
     my $ds = new DETCurveSet("title");
     $ds->addDET("Biggy", $emptydet);
-#    my %ht = ("createDETfiles", 1, "noSerialize", 1);
+#    my %ht = ("createDETfiles", 1, "serialize", 0);
     my %ht = ("createDETfiles", 1);
     print $ds->renderAsTxt($root, 1, 1, \%ht);
 }

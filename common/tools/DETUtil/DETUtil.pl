@@ -211,7 +211,7 @@ foreach $_(@editFilters)
 
 my %options = ();
 $options{title} = $title if (defined $title);
-$options{noSerialize} = 1;
+$options{serialize} = 0;
 
 $options{lTitleNoDETType} = 1 if ($lineTitleModification =~ /T/);
 $options{lTitleNoPointInfo} = 1 if ($lineTitleModification =~ /P/);

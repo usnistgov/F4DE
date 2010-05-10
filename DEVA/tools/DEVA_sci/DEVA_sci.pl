@@ -283,8 +283,6 @@ MMisc::error_quit("Problem with metric ($metric)")
 my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
 my $det = new DETCurve($trial, $met, "DEVA DET", 
                        \@isolinecoef, MMisc::cmd_which("gzip"));
-#$det->computePoints();
-#$det->serialize($bDETf . ".srl");
 my $detSet = new DETCurveSet("DEVA DET Set");
 my $rtn = $detSet->addDET("DEVA", $det);
 MMisc::error_quit("Error adding DET to the DETSet: $rtn")
