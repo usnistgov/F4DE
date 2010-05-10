@@ -283,19 +283,21 @@ MMisc::error_quit("Problem with metric ($metric)")
 my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
 my $det = new DETCurve($trial, $met, "DEVA DET", 
                        \@isolinecoef, MMisc::cmd_which("gzip"));
-$det->computePoints();
-$det->serialize($bDETf . ".srl");
+#$det->computePoints();
+#$det->serialize($bDETf . ".srl");
 my $detSet = new DETCurveSet("DEVA DET Set");
 my $rtn = $detSet->addDET("DEVA", $det);
 MMisc::error_quit("Error adding DET to the DETSet: $rtn")
   if ($rtn ne "success");
-my @dc_range = (0.01, 1000, 5, 99.99); # order is important (xmin;xmax) (ymin;ymax)
+my @dc_range = (0.1, 95, .1, 95); # order is important (xmin;xmax) (ymin;ymax)
 my ($xm, $xM, $ym, $yM)= @dc_range;
 MMisc::writeTo
     ($bDETf, ".scores.txt", 1, 0, 
      $detSet->renderAsTxt
      ("$bDETf.det", 1, 1, 
-      { (xScale => "log", Xmin => $xm, Xmax => $xM, Ymin => $ym, Ymax => $yM,
+      { (xScale => "nd", yScale => "nd", 
+         Xmin => $xm, Xmax => $xM,
+         Ymin => $ym, Ymax => $yM,
          gnuplotPROG => MMisc::cmd_which("gnuplot"),
          createDETfiles => 1,
          BuildPNG => 1),
