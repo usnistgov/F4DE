@@ -1217,7 +1217,7 @@ sub writeGNUGraph{
   }
     
   ### Serialize the file for later usage
-  $det->serialize("$fileRoot.srl") if ($self->{noSerialize} == 1);
+  $det->serialize("$fileRoot.srl") if ($self->{noSerialize} == 0);
   
   ### Set labels for off-graph points
   my @offAxisLabels = ();                                                                                                     
