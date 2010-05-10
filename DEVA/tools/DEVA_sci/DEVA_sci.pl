@@ -298,6 +298,7 @@ MMisc::writeTo
          Ymin => $ym, Ymax => $yM,
          gnuplotPROG => MMisc::cmd_which("gnuplot"),
          createDETfiles => 1,
+         serialize => 1,
          BuildPNG => 1),
       },
       "$bDETf.csv")

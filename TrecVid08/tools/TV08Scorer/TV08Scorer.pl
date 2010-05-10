@@ -539,7 +539,8 @@ if ($alc == 0) {
       { (xScale => "log", Xmin => $xm, Xmax => $xM, Ymin => $ym, Ymax => $yM,
          gnuplotPROG => $gnuplotPROG,
          createDETfiles => ($nodetfiles ? 0: 1),
-         BuildPNG => ($noPNG ? 0 : 1))
+         BuildPNG => ($noPNG ? 0 : 1)),
+        serialize => 1, # we want SRL files
       },
       $tmp_csvfile)
     );
