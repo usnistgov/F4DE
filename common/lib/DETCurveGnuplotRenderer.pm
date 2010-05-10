@@ -46,7 +46,7 @@ sub new
        DETLineAttr => undef,
        lTitleNoBestComb => 1,
        lTitleNoPointInfo => 1,
-       noSerialize => 0,
+       serialize => 1,
        BuildPNG => 1,
        
        ### Display ranges
@@ -199,9 +199,10 @@ sub _parseOptions{
     ### This needs validation
   }
   
-  $self->{noSerialize} = $options->{noSerialize} if (exists($options->{noSerialize}));
+  $self->{serialize} = $options->{serialize} 
+    if (exists($options->{serialize}));
   
-  $self->{noSerialize} = $options->{BuildPNG} if (exists($options->{BuildPNG}));
+  $self->{BuildPNG} = $options->{BuildPNG} if (exists($options->{BuildPNG}));
 
   $self->{Bounds}{xmin}{req} = $options->{Xmin} if (exists($options->{Xmin}));
   $self->{Bounds}{xmax}{req} = $options->{Xmax} if (exists($options->{Xmax}));
@@ -366,7 +367,7 @@ sub renderUnitTest{
   system "mkdir -p $dir";
   my $options = { ("ColorScheme" => "grey",
                    "DrawIsometriclines" => 1,
-                   "noSerialize" => 1,
+                   "serialize" => 0,
                    "Isometriclines" => [ (0.7, 0.5, 0.3, 0, -5) ],
                    "DETLineAttr" => { ("Name 1" => { label => "New DET1", lineWidth => 9, pointSize => 2, pointTypeSet => "square", color => "rgb \"#0000ff\"" }),
                                     },
@@ -988,7 +989,7 @@ sub _getIsoMetricLineLabel
 
 ### Options for graphs:
 ### title  -> the plot title
-### noSerialize -> do not write the serialized DET Curves if the element exists
+### serialize -> write the serialized DET Curves
 ### Xmin -> Set the minimum X coordinate
 ### Xmax -> Set the maximum X coordinate
 ### Ymin -> Set the minimum Y coordinate
@@ -1204,7 +1205,7 @@ sub writeGNUGraph{
   my $xScale = $self->{props}->getValue("xScale");
   my $yScale = $self->{props}->getValue("yScale");    
 
-  my ($missStr, $faStr, $ combStr) = ( $metric->errMissLab(), $metric->errFALab(), $metric->combLab());
+  my ($missStr, $faStr, $combStr) = ( $metric->errMissLab(), $metric->errFALab(), $metric->combLab());
   my $combType = ($ metric->combType() eq "minimizable" ? "Min" : "Max");
 
   ## Make sure the points are computed
@@ -1215,9 +1216,9 @@ sub writeGNUGraph{
     print STDERR "WARNING: Writing DET plot to $fileRoot.* failed.  Points not computed\n";
     return 0;
   }
-    
+ 
   ### Serialize the file for later usage
-  $det->serialize("$fileRoot.srl") if ($self->{noSerialize} == 0);
+  $det->serialize("$fileRoot.srl") if ($self->{serialize});
   
   ### Set labels for off-graph points
   my @offAxisLabels = ();                                                                                                     
