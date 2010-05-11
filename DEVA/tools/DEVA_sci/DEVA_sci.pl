@@ -244,7 +244,7 @@ foreach my $key (keys %sys) {
   my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
     ? $tid2bid{$key}{$BlockIDcolumn} : $BlockIDcolumn;
   if (exists $ref{$key}) { # mapped
-    $trial->addTrial($bid, $sys{$key}{'Score'}, ($sys{$key}{'Decision'} eq 'y') ? 'YES' : 'NO', 1);
+    $trial->addTrial($bid, $sys{$key}{'Score'}, ($sys{$key}{'Decision'} eq 'y') ? 'YES' : 'NO', ($ref{$key}{'Targ'} eq 'y') ? 1 : 0);
     $mapped++;
   } else { # unmapped sys
     $trial->addTrial($bid, $sys{$key}{'Score'}, ($sys{$key}{'Decision'} eq 'y') ? 'YES' : 'NO', 0);
@@ -256,12 +256,14 @@ foreach my $key (keys %ref) {
   if (! exists $sys{$key}) { # unmapped ref
     my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
       ? $tid2bid{$key}{$BlockIDcolumn} : $BlockIDcolumn;
-    $trial->addTrial($bid, undef, "OMITTED", 1);
+    $trial->addTrial($bid, undef, "OMITTED", ($ref{$key}{'Targ'} eq 'y') ? 1 : 0);
     $unmapped_ref++;
   }
   
 # mapped: already done
 }
+
+print $trial->dumpCountSummary();
 
 print "Mapped      : $mapped\n";
 print "UnMapped REF: $unmapped_ref\n";
