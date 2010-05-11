@@ -256,7 +256,10 @@ foreach my $key (keys %ref) {
   if (! exists $sys{$key}) { # unmapped ref
     my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
       ? $tid2bid{$key}{$BlockIDcolumn} : $BlockIDcolumn;
-    $trial->addTrial($bid, undef, "OMITTED", ($ref{$key}{'Targ'} eq 'y') ? 1 : 0);
+    # If the ref TID is omitted and it is a non-target trial, then it is NOT an erroe AND it does not get added to the trials
+    if ($ref{$key}{'Targ'} eq 'y'){
+      $trial->addTrial($bid, undef, "OMITTED", 1);
+    }
     $unmapped_ref++;
   }
   
