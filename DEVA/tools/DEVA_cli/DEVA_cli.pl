@@ -626,6 +626,34 @@ Specify the System configuration file
 
 Specify the Refefence configuration file
 
+=item B<--detName> I<name>
+
+Specify the name added to the DET curve (as well as the specialzied file generated for this process)
+
+=item B<--Xmax> I<val>
+
+Specify the max value of the X axis (PFA) of the DET curve
+
+=item B<--xmin> I<val>
+
+Specify the min value of the X axis (PFA) of the DET curve
+
+=item B<--Ymax> I<val>
+
+Specify the max value of the Y axis (PMisss) of the DET curve
+
+=item B<--ymin> I<val>
+
+Specify the min value of the Y axis (PMisss) of the DET curve
+
+=item B<--ZusedYscale> I<set>
+
+Specify the scale used for the Y axis of the DET curve
+
+=item B<--zusedXscale> I<set>
+
+Specify the scale used for the X axis of the DET curve
+
 =back
 
 =head1 USAGE
