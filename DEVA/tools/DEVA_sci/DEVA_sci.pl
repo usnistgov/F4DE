@@ -89,16 +89,19 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 # Default values for variables
 #
-my $refDBfile = "";
-my $refDBname = "referenceDB";
-my $sysDBfile = "";
-my $sysDBname = "systemDB";
+my $refDBfile = '';
+my $refDBname = 'referenceDB';
+my $sysDBfile = '';
+my $sysDBname = 'systemDB';
 my @resDBfiles = ();
-my $resDBname = "resultsDB";
+my $resDBname = 'resultsDB';
 #
-my $tablename = "resultsTable";
-my $TrialIDcolumn = "TrialID";
-my $BlockIDcolumn = "BlockID";
+my $tablename = 'resultsTable';
+my $TrialIDcolumn = 'TrialID';
+my $BlockIDcolumn = 'BlockID';
+my $Targcolumn = 'Targ';
+my $Decisioncolumn = 'Decision';
+my $Scorecolumn = 'Score';
 
 my $bDETf = "DET";
 
@@ -110,9 +113,13 @@ my %metparams = ();
 my %trialsparams = ();
 my $listparams = 0;
 
+my $devadetname = "DEVA";
+my @ok_scales = ('nd', 'log', 'linear'); # order is important
+my ($xm, $xM, $ym, $yM, $xscale, $yscale)
+  = (0.1, 95, 0.1, 95, $ok_scales[0], $ok_scales[0]);
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:             M    R T             h   lm o  rs  v      #
+# Used:             M    R TU  XY    d   h   lm o  rs uv xy   #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -130,10 +137,19 @@ GetOptions
    'MetricParameters=s' => \%metparams,
    'TrialsParameters=s' => \%trialsparams,
    'listParameters'     => \$listparams,
+   'detName=s'          => \$devadetname,
+   'xmin=i'             => \$xm,
+   'Xmax=i'             => \$xM,
+   'ymin=i'             => \$ym,
+   'Ymax=i'             => \$yM,
+   'usedXscale=i'       => \$xscale,
+   'UsedYscale=i'       => \$yscale,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
+MMisc::error_quit("No \'detname\' specified, aborting")
+  if (MMisc::is_blank($devadetname));
 MMisc::error_quit("No \'metric\' specified, aborting")
   if (MMisc::is_blank($metric));
 MMisc::error_quit("Specified \'metric\' does not seem to be using a valid name ($metric), should start with \"Metric\"")
@@ -167,6 +183,11 @@ if ($listparams) {
 
   MMisc::ok_quit("");
 }
+
+MMisc::error_quit("Invalid value for \'usedXscale\' ($xscale) (possible values: " . join(", ", @ok_scales) . ")")
+  if (! grep(m%^$xscale$%, @ok_scales));
+MMisc::error_quit("Invalid value for \'UsedYscale\' ($yscale) (possible values: " . join(", ", @ok_scales) . ")")
+  if (! grep(m%^$yscale$%, @ok_scales));
 
 MMisc::error_quit("No ScoreDBfile information provided\n\n$usage") 
   if (scalar @ARGV != 1);
@@ -209,9 +230,9 @@ my $tmp=<<EOF
 DROP TABLE IF EXISTS ref;
 DROP TABLE IF EXISTS sys;
 
-CREATE TABLE ref AS SELECT $tablename.$TrialIDcolumn,Targ FROM $used_resDBname.$tablename INNER JOIN $refDBname.Reference WHERE $tablename.$TrialIDcolumn = Reference.$TrialIDcolumn;
+CREATE TABLE ref AS SELECT $tablename.$TrialIDcolumn,$Targcolumn FROM $used_resDBname.$tablename INNER JOIN $refDBname.Reference WHERE $tablename.$TrialIDcolumn = Reference.$TrialIDcolumn;
 
-CREATE TABLE sys AS SELECT $tablename.$TrialIDcolumn,Decision,Score FROM $used_resDBname.$tablename INNER JOIN $sysDBname.System WHERE $tablename.$TrialIDcolumn = System.$TrialIDcolumn;
+CREATE TABLE sys AS SELECT $tablename.$TrialIDcolumn,$Decisioncolumn,$Scorecolumn FROM $used_resDBname.$tablename INNER JOIN $sysDBname.System WHERE $tablename.$TrialIDcolumn = System.$TrialIDcolumn;
 EOF
   ;
 
@@ -222,9 +243,9 @@ my ($err, $log, $stdout, $stderr) =
 MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
 my %ref = ();
-&confirm_table(\%ref, $dbfile, 'ref', $TrialIDcolumn, 'Targ');
+&confirm_table(\%ref, $dbfile, 'ref', $TrialIDcolumn, $Targcolumn);
 my %sys = ();
-&confirm_table(\%sys, $dbfile, 'sys', $TrialIDcolumn, 'Decision', 'Score');
+&confirm_table(\%sys, $dbfile, 'sys', $TrialIDcolumn, $Decisioncolumn, $Scorecolumn);
 
 my $tot1 = scalar(keys %ref) + scalar(keys %sys);
 
@@ -244,10 +265,14 @@ foreach my $key (keys %sys) {
   my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
     ? $tid2bid{$key}{$BlockIDcolumn} : $BlockIDcolumn;
   if (exists $ref{$key}) { # mapped
-    $trial->addTrial($bid, $sys{$key}{'Score'}, ($sys{$key}{'Decision'} eq 'y') ? 'YES' : 'NO', ($ref{$key}{'Targ'} eq 'y') ? 1 : 0);
+    $trial->addTrial($bid, $sys{$key}{$Scorecolumn},
+                     ($sys{$key}{$Decisioncolumn} eq 'y') ? 'YES' : 'NO',
+                     ($ref{$key}{$Targcolumn} eq 'y') ? 1 : 0
+      );
     $mapped++;
   } else { # unmapped sys
-    $trial->addTrial($bid, $sys{$key}{'Score'}, ($sys{$key}{'Decision'} eq 'y') ? 'YES' : 'NO', 0);
+    $trial->addTrial($bid, $sys{$key}{$Scorecolumn}, 
+                     ($sys{$key}{$Decisioncolumn} eq 'y') ? 'YES' : 'NO', 0);
     $unmapped_sys++;
   }
 }
@@ -256,10 +281,9 @@ foreach my $key (keys %ref) {
   if (! exists $sys{$key}) { # unmapped ref
     my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
       ? $tid2bid{$key}{$BlockIDcolumn} : $BlockIDcolumn;
-    # If the ref TID is omitted and it is a non-target trial, then it is NOT an erroe AND it does not get added to the trials
-    if ($ref{$key}{'Targ'} eq 'y'){
-      $trial->addTrial($bid, undef, "OMITTED", 1);
-    }
+    # If the ref TID is omitted and it is a non-target trial, then it is NOT an error AND it does not get added to the trials, therefore:
+    $trial->addTrial($bid, undef, "OMITTED", 1) 
+      if ($ref{$key}{$Targcolumn} eq 'y');
     $unmapped_ref++;
   }
   
@@ -286,19 +310,17 @@ unless (eval "$metcmd; 1") {
 MMisc::error_quit("Problem with metric ($metric)")
   if (! defined $met);
 my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
-my $det = new DETCurve($trial, $met, "DEVA DET", 
+my $det = new DETCurve($trial, $met, $devadetname, 
                        \@isolinecoef, MMisc::cmd_which("gzip"));
 my $detSet = new DETCurveSet("DEVA DET Set");
-my $rtn = $detSet->addDET("DEVA", $det);
+my $rtn = $detSet->addDET($devadetname, $det);
 MMisc::error_quit("Error adding DET to the DETSet: $rtn")
   if ($rtn ne "success");
-my @dc_range = (0.1, 95, .1, 95); # order is important (xmin;xmax) (ymin;ymax)
-my ($xm, $xM, $ym, $yM)= @dc_range;
 MMisc::writeTo
     ($bDETf, ".scores.txt", 1, 0, 
      $detSet->renderAsTxt
      ("$bDETf.det", 1, 1, 
-      { (xScale => "nd", yScale => "nd", 
+      { (xScale => $xscale, yScale => $yscale, 
          Xmin => $xm, Xmax => $xM,
          Ymin => $ym, Ymax => $yM,
          gnuplotPROG => MMisc::cmd_which("gnuplot"),
@@ -420,11 +442,13 @@ sub confirm_table {
 
 ########## 
 
-sub set_usage {  
+sub set_usage {
+  my $pv = join(", ", @ok_scales);
+
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--baseDETfile filebase] ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--baseDETfile filebase] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--usedXscale set] [--UsedYscale set] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
@@ -433,14 +457,18 @@ NOTE: will create ScoreDBfile
 Where:
   --help     This help message
   --version  Version information
-  --referenceDBfile  The Reference SQLite file (must contains the 'Reference' table, whose columns are: TrialID, Targ)
-  --systemDBfile     The System SQLite file (must contains the 'System' table, whose columns are: TrialID, Decision, Score)
-  --ResultDBfile     The Filter tool resulting DB (must contain the \'$tablename\' table, with the following columns: $TrialIDcolumn $BlockIDcolumn)
+  --referenceDBfile  The Reference SQLite file (must contains the 'Reference' table, whose columns are: $TrialIDcolumn, $Targcolumn)
+  --systemDBfile     The System SQLite file (must contains the 'System' table, whose columns are: $TrialIDcolumn, $Decisioncolumn, $Scorecolumn)
+  --ResultDBfile     The Filter tool resulting DB (must contain the \'$tablename\' table, with the following columns: $TrialIDcolumn, $BlockIDcolumn)
   --metricPackage    Package to load for metric uses (default: $metric)
   --MetricParameters Metric Package parameters
   --TrialsParameters Trials Package parameters
   --listParameters   List Metric and Trial package authorized parameters
-  --baseDETfile      When working with DET curves, all the relevant files will start with this value (default: $bDETf)
+  --baseDETfile      When working with DET curve, all the relevant files will start with this value (default: $bDETf)
+  --detName          Specify the name added to the DET curve (as well as the specialzied file generated for this process) (default: $devadetname)
+  --xmin --Xmax      Specify the min and max value of the X axis (PFA) of the DET curve (default: $xm and $xM)
+  --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (default: $ym and $yM)
+  --usedXscale --UsedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (default: $xscale and $yscale) 
 EOF
 ;
 
