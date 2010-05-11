@@ -87,37 +87,48 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 # Options processing
 
 my $defusedmetric = "MetricNormLinearCostFunct";
+my @ok_scales = ('nd', 'log', 'linear'); # order is important
 my $mancmd = "perldoc -F $0";
+
+my ($sqlite_cfg_helper, $sqlite_tables_creator, $sqlite_load_csv, 
+  $deva_filter, $deva_sci) =
+  ( "SQLite_cfg_helper", "SQLite_tables_creator", "SQLite_load_csv", 
+    "DEVA_filter", "DEVA_sci");
+
 my $usage = &set_usage();
 
 my $outdir = "";
-my $filtercmdfile = "";
+my $filtercmdfile = '';
 
 my $doCfg = 1;
 my $createDBs = 1;
 my $filter = 1;
 my $score = 1;
 
-my $wrefCFfile = "";
-my $wsysCFfile = "";
-my $wmdCFfile  = "";
+my $wrefCFfile = '';
+my $wsysCFfile = '';
+my $wmdCFfile  = '';
 
 my $refcsv = "";
 my $syscsv = "";
 
-my $wrefDBfile = "";
-my $wsysDBfile = "";
-my $wmdDBfile  = "";
+my $wrefDBfile = '';
+my $wsysDBfile = '';
+my $wmdDBfile  = '';
 my @addResDBfiles = ();
 my $resDBbypass = 0;
 
-my $usedmetric = "";
+my $usedmetric = '';
 my @usedmetparams = ();
 my @trialsparams = ();
 my $listparams = 0;
 
+my $devadetname = '';
+my ($xm, $xM, $ym, $yM, $xscale, $yscale) 
+  = (undef, undef, undef, undef, undef, undef);
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A CD F     LM    RST  W   a c  fgh   lm o  rst vwx    #
+# Used: A CD F     LM    RSTUVWXYZa cd fgh   lm o  rstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -145,7 +156,14 @@ GetOptions
    'listParams' => \$listparams,
    'wREFcfg=s'  => \$wrefCFfile,
    'WSYScfg=s'  => \$wsysCFfile,
-   'xMDcfg=s'   => \$wmdCFfile,
+   'VMDcfg=s'   => \$wmdCFfile,
+   'detName=s'          => \$devadetname,
+   'xmin=i'             => \$xm,
+   'Xmax=i'             => \$xM,
+   'ymin=i'             => \$ym,
+   'Ymax=i'             => \$yM,
+   'zusedXscale=i'       => \$xscale,
+   'ZusedYscale=i'       => \$yscale,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -154,11 +172,6 @@ if ($opt{'man'}) {
   MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
   MMisc::ok_quit($o);
 }
-
-my ($sqlite_cfg_helper, $sqlite_tables_creator, $sqlite_load_csv, 
-  $deva_filter, $deva_sci) =
-  ( "SQLite_cfg_helper", "SQLite_tables_creator", "SQLite_load_csv", 
-    "DEVA_filter", "DEVA_sci");
 
 if ($listparams) {
   MMisc::error_quit("Specified \'metric\' does not seem to be using a valid name ($usedmetric), should start with \"Metric\"")
@@ -174,6 +187,11 @@ if ($listparams) {
 
   MMisc::ok_quit($so);
 }
+
+MMisc::error_quit("Invalid value for \'usedXscale\' ($xscale) (possible values: " . join(", ", @ok_scales) . ")")
+  if ((defined $xscale) && (! grep(m%^$xscale$%, @ok_scales)));
+MMisc::error_quit("Invalid value for \'UsedYscale\' ($yscale) (possible values: " . join(", ", @ok_scales) . ")")
+  if ((defined $yscale) && (! grep(m%^$yscale$%, @ok_scales)));
 
 my @csvlist = @ARGV;
 
@@ -464,13 +482,15 @@ B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
   S<B<--outdir> I<dir>>
   S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--DETScoreSkip>]>
   S<[B<--refcsv> I<csvfile>] [B<--syscsv> I<csvfile>]>
-  S<[B<--wREFcfg> I<file>] [B<--WSYScfg> I<file>] [B<--xMDcfg> I<file>]>
+  S<[B<--wREFcfg> I<file>] [B<--WSYScfg> I<file>] [B<--VMDcfg> I<file>]>
   S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>] [B<--MetadataDBfile> I<file>]>
   S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
   S<[B<--usedMetric> I<package>]>
   S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]>
   S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
-  S<[B<--listParameters>]>
+  S<[B<--listParameters>] [B<--detName> I<name>]>
+  S<[B<--xmin> I<val>] [B<--Xmax> I<val>] [B<--ymin> I<val>] [B<--Ymax> I<val>]>
+  S<[B<--zusedXscale> I<set>] [B<--ZusedYscale> I<set>]>
   [I<csvfile> [I<csvfile> [I<...>]]
   
 =head1 DESCRIPTION
@@ -590,6 +610,10 @@ Specify the parameters given during the Metric creation process.
 
 Specify the Metric package to use for scoring data (must be in your perl serch path -- or part of F4DE).
 
+=item B<--VMDcfg> I<file>
+
+Specify the metadata configuration file
+
 =item B<--version>
 
 Display the B<DEVA_cli> version information.
@@ -602,15 +626,11 @@ Specify the System configuration file
 
 Specify the Refefence configuration file
 
-=item B<--xMDcfg> I<file>
-
-Specify the metadata configuration file
-
 =back
 
 =head1 USAGE
 
-=item B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --FilterCMDfile filter1.sql>
+B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --FilterCMDfile filter1.sql>
 
 This will process the four steps expected of the command line interface:
 
@@ -674,11 +694,13 @@ THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO 
 
 ##########
 
-sub set_usage {  
+sub set_usage {
+  my $pv = join(", ", @ok_scales);
+
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--xMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [csvfile [csvfile [...]]
+$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -695,7 +717,7 @@ Where:
   --DETScoreSkip  Bypass Scoring Interface step
   --wREFcfg    Specify the Refefence configuration file
   --WSYScfg    Specify the System configuration file
-  --xMDcfg     Specify the metadata configuration file
+  --VMDcfg     Specify the metadata configuration file
   --refcsv     Specify the Reference csv file
   --syscsv     Specify the System csv file
   --RefDBfile  Specify the Reference SQLite database file
@@ -707,6 +729,12 @@ Where:
   --UsedMetricParameters Metric Package parameters
   --TrialsParameters Trials Package parameters
   --listParameters   List Metric and Trial package authorized parameters
+  --detName          Specify the name added to the DET curve (as well as the specialzied file generated for this process) (*1)
+  --xmin --Xmax      Specify the min and max value of the X axis (PFA) of the DET curve (*1)
+  --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (*1)
+  --zusedXscale --ZusedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (*1)
+
+*1: default values can be obtained from \"$deva_sci\" 's help
 
 EOF
 ;
