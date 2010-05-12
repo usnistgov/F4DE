@@ -151,8 +151,8 @@ GetOptions
    'addResDBfiles=s' => \@addResDBfiles,
    'AllowResDBfileBypass' => \$resDBbypass,
    'usedMetric=s' => \$usedmetric,
-   'UsedMetricParams=s' => \@usedmetparams,
-   'TrialsParams=s' => \@trialsparams,
+   'UsedMetricParameters=s' => \@usedmetparams,
+   'TrialsParameters=s' => \@trialsparams,
    'listParams' => \$listparams,
    'wREFcfg=s'  => \$wrefCFfile,
    'WSYScfg=s'  => \$wsysCFfile,
@@ -203,27 +203,28 @@ my $logdir = "$outdir/_logs";
 MMisc::error_quit("Could not create log dir ($logdir)")
   if (! MMisc::make_dir($logdir));
 
-my $mdDBbase = "$outdir/metadataDB";
+my $mdDBb    = "metadataDB";
+my $mdDBbase = "$outdir/$mdDBb";
 my $mdDBcfg  = (MMisc::is_blank($wmdCFfile)) ? "$mdDBbase.cfg" : $wmdCFfile;
 my $mdDBfile = (MMisc::is_blank($wmdDBfile)) ? "$mdDBbase.db" : $wmdDBfile;
-my $mdDBlogb = "$logdir/metadataDB";
 
-my $refDBbase = "$outdir/referenceDB";
+my $refDBb    = "referenceDB";
+my $refDBbase = "$outdir/$refDBb";
 my $refDBcfg  = (MMisc::is_blank($wrefCFfile)) ? "$refDBbase.cfg" : $wrefCFfile;
 my $refDBfile = (MMisc::is_blank($wrefDBfile)) ? "$refDBbase.db" : $wrefDBfile;
-my $refDBlogb = "$logdir/referenceDB";
 
-my $sysDBbase = "$outdir/systemDB";
+my $sysDBb    = "systemDB";
+my $sysDBbase = "$outdir/$sysDBb";
 my $sysDBcfg  = (MMisc::is_blank($wsysCFfile)) ? "$sysDBbase.cfg" : $wsysCFfile;
 my $sysDBfile = (MMisc::is_blank($wsysDBfile)) ? "$sysDBbase.db" : $wsysDBfile;
-my $sysDBlogb = "$logdir/systemDB";
 
-my $resDBbase = "$outdir/filterDB";
+my $resDBb    = "filterDB";
+my $resDBbase = "$outdir/$resDBb";
 my $resDBfile = "$resDBbase.db";
 
-my $finalDBbase = "$outdir/scoreDB";
+my $finalDBb    = "scoreDB";
+my $finalDBbase = "$outdir/$finalDBb";
 my $finalDBfile = "$finalDBbase.db";
-
 
 if ($doCfg) {
   print "***** Generating config files\n";
@@ -234,7 +235,7 @@ if ($doCfg) {
   if (! MMisc::is_blank($refcsv)) {
     print "** REF\n";
     my $tmp = &do_cfgfile
-      ($refDBcfg, "${refDBlogb}_cfggen.log", "-T Reference -p TrialID", $refcsv);
+      ($refDBcfg, "$logdir/CfgGen_${refDBb}.log", "-T Reference -p TrialID", $refcsv);
     &check_isin($tmp, '^newtable:\s+Reference$', '^column\*:\s+TrialID;', '^column:\s+Targ;TEXT$');
     $done++;
   }
@@ -242,7 +243,7 @@ if ($doCfg) {
   if (! MMisc::is_blank($syscsv)) {
     print "** SYS\n";
     my $tmp = &do_cfgfile
-      ($sysDBcfg, "${sysDBlogb}_cfggen.log", "-T System -p TrialID", $syscsv);
+      ($sysDBcfg, "$logdir/CfgGen_${sysDBb}.log", "-T System -p TrialID", $syscsv);
     &check_isin($tmp, '^newtable: System$', '^column\*:\s+TrialID;', '^column:\s+Decision;TEXT$', '^column:\s+Score;');
     $done++;
   }
@@ -250,7 +251,7 @@ if ($doCfg) {
   if (scalar @csvlist > 0) {
     print "** Metadata\n";
     my $tmp = &do_cfgfile
-      ($mdDBcfg, "${mdDBlogb}_cfggen.log", 
+      ($mdDBcfg, "$logdir/CfgGen_${mdDBb}.log", 
        "-c ${mdDBbase}_columninfo.txt -t ${mdDBbase}_tableinfo.txt", 
        @csvlist);
     $done++;
@@ -265,19 +266,19 @@ if ($createDBs) {
   
   if (MMisc::does_file_exists($refDBcfg)) {
     print "** REF\n";
-    &db_create($refDBcfg, $refDBfile, "${refDBlogb}_DBgen.log");
+    &db_create($refDBcfg, $refDBfile, "$logdir/DBgen_${refDBb}.log");
     $done++;
   }
   
   if (MMisc::does_file_exists($sysDBcfg)) {
     print "** SYS\n";
-    &db_create($sysDBcfg, $sysDBfile, "${sysDBlogb}_DBgen.log");
+    &db_create($sysDBcfg, $sysDBfile, "$logdir/DBgen_${sysDBb}.log");
     $done++;
   }
   
   if (MMisc::does_file_exists($mdDBcfg)) {
     print "** Metadata\n";
-    &db_create($mdDBcfg, $mdDBfile, "${mdDBlogb}_DBgen.log");
+    &db_create($mdDBcfg, $mdDBfile, "$logdir/DBgen_${mdDBb}.log");
     $done++;
   }
 
@@ -294,7 +295,7 @@ if ($filter) {
   &check_file_r($sysDBfile);
   $mdDBfile = &check_file_r($mdDBfile, 1);
   
-  &run_filter("$logdir/filterTool.log", $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile);
+  &run_filter("$logdir/${resDBb}.log", $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile);
 }
 
 if ($score) {
@@ -307,7 +308,7 @@ if ($score) {
     &check_file_r($addResDBfiles[$i]);
   }
 
-  &run_scorer("$logdir/TrialScore.log", $refDBfile, $sysDBfile, $finalDBfile, $resDBfile, @addResDBfiles);
+  &run_scorer("$logdir/${finalDBb}.log", $refDBfile, $sysDBfile, $finalDBfile, $resDBfile, @addResDBfiles);
 }
 
 MMisc::ok_quit("Done");
@@ -658,7 +659,7 @@ Specify the scale used for the X axis of the DET curve
 
 =head1 USAGE
 
-B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --FilterCMDfile filter1.sql>
+B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --FilterCMDfile filter1.sql --usedMetric MetricNormLinearCostFunct --UsedMetricParameters Ptarg=0.1  --UsedMetricParameters CostMiss=1 --UsedMetricParameters CostFA=1>
 
 This will process the four steps expected of the command line interface:
 
@@ -666,8 +667,32 @@ This will process the four steps expected of the command line interface:
 
 =item Step 1 (uses B<SQLite_cfg_helper>)
 
-Will use I<ref.csv> as the Reference CSV file, I<sys.csv> as the System CSV file and I<md.csv> as the Metadata CSV file.
-From those files, the first step will generate the database creation configuration files by loading each rows and columns in the CSV to determine their SQLite type, and determine if the column header name as to be adapted to avoid characters not recognized by SQLite. This process will create the I<outdir/referenceDB.cfg>, I<outdir/systemDB.cfg> and I<outdir/metadataDB.cfg> files.
+TODO note that it is the user's responsiblity to provide properly formatted files with proper columsn
+
+Will use I<ref.csv> as the Reference CSV file, I<sys.csv> as the System CSV file and I<md.csv> as the one Metadata CSV file (multiple Metadata CSV can be used, we only use one in this example).
+
+From those files, the first step will generate the database creation configuration files by loading each rows and columns in the CSV to determine their SQLite type, and determine if the column header name has to be adapted to avoid characters not recognized by SQLite. 
+
+To be proper, the I<ref.csv> must contain at least a I<TrialID> and I<Targ> columns (I<TrialID> must be a primary key and I<Targ> values must be a either I<y> or I<n>). 
+The I<sys.csv> must contain at least a I<TrialID>, I<Score> and I<Decision> columns (I<TrialID> must be a primary key, I<Score> a numerical value and I<Targ> values must be a either I<y> or I<n>).
+
+The metadata CSV(s) should contain the information that should be important to be I<SELECT>ed during the I<filtering> step (3rd step of this process) as well as at least one table with a I<TrialID> and optionally a I<BlockID> column , both of which are expected during the I<filtering> step (if I<BlockID> is not provided, a default value will be used).
+
+This process will create the I<outdir/referenceDB.cfg>, I<outdir/systemDB.cfg> and I<outdir/metadataDB.cfg> files. Note that the location of the CSV files is embedded within the config file. A configuration file structure specify a corresponding I<SQLite> S<CREATE TABLE> but is human readable and composed of simple one line definitions:
+
+=over
+
+=item S<newtable: tablename> starts the definition of a new table and specify the table name as I<tablename>
+
+=item S<csvfile: location> specify the full path I<location> of the CSV file to load. If I<location> is of the form: S<path/filename.suffix>
+
+TODO complete
+
+=item S<column: usedname>
+
+=back
+
+This step also create I<outdir/metadataDB_columninfo.txt> and I<outdir/metadataDB_tableinfo.txt>, which contain details on the relationship between columns and tables that will compose the metadata database. 
 
 =item Step 2 (uses B<SQLite_tables_creator>)
 
@@ -677,30 +702,90 @@ The next step will use those configuration files to create SQLite database files
 
 =item
 
-One table called I<Reference> (containing at least one primary key column called I<TrialID> and one column called I<Targ> with S<y> or S<n> content) for I<outdir/referenceDB.db> which content is loaded from I<refrence.csv>.
+One table called I<Reference> (containing at least one primary key column called I<TrialID> and one column called I<Targ> with S<y> or S<n> value) for I<outdir/referenceDB.db> which content is loaded from I<ref.csv>.
 
 =item
 
-One table called I<System> (containing at least on primary key column called I<TrialID> as well as one I<Score> column and one I<Decision> with S<y> or S<n> content) for I<outdir/systemDB.db> which content is loaded from I<system.csv>
+One table called I<System> (containing at least on primary key column called I<TrialID> as well as one I<Score> column with numerical value and one I<Decision> with S<y> or S<n> value) for I<outdir/systemDB.db> which content is loaded from I<sys.csv>
 
 =item
 
-As many tables as metadata CSV files (here only one) are added to <outdir/metadataDB.db>.
+As many tables as metadata CSV files (here only one) are added to <outdir/metadataDB.db> loaded from the metadata CSV file list provided (here only I<md.csv>).
 
 =back
 
 =item Step 3 (uses B<DEVA_filter>)
 
-The next step will use the I<filter1.sql> SQL command lines file to apply the given filter. For this step I<outdir/referenceDB.db> is loaded as I<referenceDB> (and contains a table named I<Reference>. Also, I<outdir/systemDB.db> is loaded as I<systemDB> (and contain a table named I<System>. And I<outdir/metadataDB.db> is loaded as I<metadataDB> and contain the table list specified in I<outdir/metadataDB.cfg>.
-The filter is expected to only return a list of I<TrialID>s that will added be to I<outdir/filterDB.db>'s I<resultsTable> table.
+The next step will use the I<filter1.sql> SQL command lines file to apply the given filter. For this step I<outdir/referenceDB.db> is loaded as I<referenceDB> (and contains a table named I<Reference>). I<outdir/systemDB.db> is loaded as I<systemDB> (and contains a table named I<System>). And I<outdir/metadataDB.db> is loaded as I<metadataDB> and contain the table list specified in I<outdir/metadataDB.cfg>.
+The filter file contains a SQLite set of commands. It is left to the user to create and store all temporary tables in the non permanent I<temp> internal database (automatically deleted when the database connection is closed).
+Users should not output anything but the final select that must contain only the following data in the expected order: I<TrialID> and I<BlockID>.
+If no I<BlockID> is provided, a default value will be inserted in its stead.
+Both columns will then be made to populate I<outdir/filterDB.db>'s I<resultsTable> table.
 
 =item Step 4 (uses B<DEVA_sci>)
 
-The final step will use I<outdir/referenceDB.db>, I<outdir/systemDB.db> and I<outdir/filterDB.db> to select only the I<TrialID>s that are both in the I<resultsTables> and I<Reference> tables to create in the I<outdir/scoreDB.db> SQLite database file a I<ref> table that only contain the reference information matching the given I<TrialID>s.
-The same is made from I<resultsTables> and I<System> tables to add a I<sys> table.
+The final step will use I<outdir/referenceDB.db>, I<outdir/systemDB.db> and I<outdir/filterDB.db> to select from the I<Reference> and I<System> tables only the I<TrialID>s present in I<resultsTables> and create the I<outdir/scoreDB.db> SQLite database file a I<Reference> and I<System> tables that only contain the rows  matching the given I<TrialID>s.
 
-I<Trials> are then generated so that if a given entry is both in I<ref> and I<sys> is is considered I<mapped>, if it is only in I<ref> it is an I<unmapped_ref> entry, and if it is only is <sys> it is an I<unmapped_sys> entry.
-Those I<Trials> are used for I<DETCurve> work. Each file starting with I<outdir/scoreDB_DET> is one of those results.
+I<Trials> are then generated, using the I<BlockID> column from I<resultsTable> as the I<Trial>'s block information, so that:
+
+=over
+
+=item if a given entry is both in I<Reference> and I<System> it is I<mapped> (the I<System>'s I<Score> and I<Decision> columns as well as the I<Reference>'s I<Targ> column are used to specify the I<Trial>'s I<sysScore>, I<decision> and I<isTarg> information).
+
+=item if an entry is only in <System>, it is an I<unmapped_sys> entry (the I<System>'s I<Score> and I<Decision> columns specify the I<Trial>'s I<sysScore> and I<decision> information, I<isTarg> is always 0 in this case).
+
+=item if an entry is only in I<Reference> it is an I<unmapped_ref> entry, but only I<y>es I<Targ> entries are added as I<OMMITTED> I<Trial>.
+
+=back
+
+I<DETCurve>s are then generated using the I<Trials> using the I<MetricNormLinearCostFunct> specified I<Metric> (and the specified I<UsedMetricParameters>) 
+Each file starting with I<outdir/scoreDB_DET> is one of those results:
+
+=over
+
+=item I<outdir/scoreDB_DET.scores.txt> contains the I<DETCurve>'s I<Performance Summary Over and Ensemble of Subsets>
+
+=item I<outdir/scoreDB_DET.csv> is a Comma Separated Value dump of the previous data's table.
+
+=item Files starting with I<outidr/scoreDB_DET.det> are used by and for the graphic representation of the curve points:
+
+=over
+
+=item files with a I<.dat.X> suffix (where I<X> is a numerical value) are S<gnuplot> data files. 
+
+=item files with a I<.plt> suffix are S<gnuplot> command files
+
+=item files with a I<.png> suffix are I<Portable Network Graphics> image files results from the corresponding I<.plt> S<gnuplot> commands files
+
+=item files with a I<.srl> (or I<.srl.gz>) suffix are I<serialized> I<DETCurve> files and can be used as input to tools such as S<DETUtil> to merge multiple curves together
+
+=back
+
+=back
+
+=item Notes:
+
+=over
+
+=item A I<outdir/_logs> is created and populated by each step, so that files starting with I<CfgGen_> and I<DBgen_> are generated respectively during Step 1 and 2, I<filterDB.log> during Step 3 and I<scoreDB.log> during Step 4. In case a file of the expected name is already present, a tag consisting of S<-YYYYMMDD-HHMMSS> (year, month, day, hour, minute, seconds) will be added to the newly created log file.
+
+=item It is possible to I<bypass> entirely some steps. For example:
+
+=over
+
+=item B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --CreateDBSkip --filterSkip --DETScoreSkip>
+
+Will only create the configuration files, but not the database, or run the filter or scorer. This is useful if one wants to edit the I<outdir/metadataDB.cfg> file to rename some columns or look at the automatic renaming of some metadata table (adapted from the file name) or columns names (to avoid SQLite unauthorized characters) in order to adapt the filter step.
+
+Note that since the location of the CSV files is embedded within the config files, one can not do the following after running the previous command:
+
+B<DEVA_cli --outdir outdir --refcsv ref2.csv --syscsv sys2.csv md2.csv --configSkip --filterSkip --DETScoreSkip>
+
+I<ref2.csv>, I<sys2.csv> and I<md2.csv> will not be used by the database creation process (Step 2), since I<ref.csv>, I<sys.csv> and I<md.csv> are specified in the S<csvfile:> line of the respective config file.
+
+TODO more examples
+
+=back
 
 =back
 
