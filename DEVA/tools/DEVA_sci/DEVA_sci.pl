@@ -89,9 +89,11 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 # Default values for variables
 #
+my $refDBtable = 'Reference';
 my $refDBfile = '';
 my $refDBname = 'referenceDB';
 my $sysDBfile = '';
+my $sysDBtable = 'System';
 my $sysDBname = 'systemDB';
 my @resDBfiles = ();
 my $resDBname = 'resultsDB';
@@ -230,9 +232,9 @@ my $tmp=<<EOF
 DROP TABLE IF EXISTS ref;
 DROP TABLE IF EXISTS sys;
 
-CREATE TABLE ref AS SELECT $tablename.$TrialIDcolumn,$Targcolumn FROM $used_resDBname.$tablename INNER JOIN $refDBname.Reference WHERE $tablename.$TrialIDcolumn = Reference.$TrialIDcolumn;
+CREATE TABLE $refDBtable AS SELECT $tablename.$TrialIDcolumn,$Targcolumn FROM $used_resDBname.$tablename INNER JOIN $refDBname.$refDBtable WHERE $tablename.$TrialIDcolumn = $refDBtable.$TrialIDcolumn;
 
-CREATE TABLE sys AS SELECT $tablename.$TrialIDcolumn,$Decisioncolumn,$Scorecolumn FROM $used_resDBname.$tablename INNER JOIN $sysDBname.System WHERE $tablename.$TrialIDcolumn = System.$TrialIDcolumn;
+CREATE TABLE $sysDBtable AS SELECT $tablename.$TrialIDcolumn,$Decisioncolumn,$Scorecolumn FROM $used_resDBname.$tablename INNER JOIN $sysDBname.$sysDBtable WHERE $tablename.$TrialIDcolumn = $sysDBtable.$TrialIDcolumn;
 EOF
   ;
 
@@ -243,9 +245,9 @@ my ($err, $log, $stdout, $stderr) =
 MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
 my %ref = ();
-&confirm_table(\%ref, $dbfile, 'ref', $TrialIDcolumn, $Targcolumn);
+&confirm_table(\%ref, $dbfile, $refDBtable, $TrialIDcolumn, $Targcolumn);
 my %sys = ();
-&confirm_table(\%sys, $dbfile, 'sys', $TrialIDcolumn, $Decisioncolumn, $Scorecolumn);
+&confirm_table(\%sys, $dbfile, $sysDBtable, $TrialIDcolumn, $Decisioncolumn, $Scorecolumn);
 
 my $tot1 = scalar(keys %ref) + scalar(keys %sys);
 
@@ -351,7 +353,7 @@ sub ANDtworesDB {
 
   my $tmp=<<EOF
 DROP TABLE IF EXISTS $out.$tablename;
-CREATE TABLE $out.$tablename AS SELECT $in1.$tablename.$TrialIDcolumn FROM $in1.$tablename INNER JOIN $in2.$tablename WHERE $in1.$tablename.$TrialIDcolumn = $in2.$tablename.$TrialIDcolumn;
+CREATE TABLE $out.$tablename AS SELECT $in1.$tablename.$TrialIDcolumn,$in1.$tablename.$BlockIDcolumn FROM $in1.$tablename INNER JOIN $in2.$tablename WHERE $in1.$tablename.$TrialIDcolumn = $in2.$tablename.$TrialIDcolumn;
 
 EOF
   ;
