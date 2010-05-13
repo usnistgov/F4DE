@@ -137,20 +137,21 @@ sub load_csv {
 
   my @ok_types = ("INT", "REAL", "TEXT"); # in order
   my $csvh = new CSVHelper();
-  MMisc::error_quit("Problem with CSV handler: " . $csvh->get_errormsg())
+  MMisc::error_quit("While processing file [$csvfile], problem with CSV handler: " . $csvh->get_errormsg())
       if ($csvh->error());
   open CSV, "<$csvfile"
     or MMisc::error_quit("Problem with CSV file ($csvfile): $!");
   my $line = <CSV>;
   my @csvheader = $csvh->csvline2array($line);
-  MMisc::error_quit("Problem with CSV header extraction: " . $csvh->get_errormsg())
+  MMisc::error_quit("While processing file [$csvfile], problem with CSV header extraction: " . $csvh->get_errormsg())
       if ($csvh->error());
   MMisc::error_quit("No header in CSV ?")
       if (scalar @csvheader == 0);
   my @tmpa = MMisc::make_array_of_unique_values(\@csvheader);
-  MMisc::error_quit("Header has multiple entries with the same name ?")
+  MMisc::error_quit("While processing file [$csvfile]: Header has multiple entries with the same name ?")
       if (scalar @tmpa != scalar @csvheader);
   $csvh->set_number_of_columns(scalar @csvheader);
+#  print scalar @csvheader , " --- ", join(" | ", @csvheader), "\n";
 
   my %all = ();
   my %type = ();
@@ -161,7 +162,7 @@ sub load_csv {
   my $linec = 0;
   while (my $line = <CSV>) {
     my %fieldvals = $csvh->csvline2hash($line, \@csvheader);
-    MMisc::error_quit("Problem with CSV line extraction: " . $csvh->get_errormsg())
+    MMisc::error_quit("While processing file [$csvfile], problem with CSV line extraction (data line #$linec): " . $csvh->get_errormsg())
         if ($csvh->error());
 
     for (my $i = 0; $i < scalar @csvheader; $i++) {
