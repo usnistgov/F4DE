@@ -116,7 +116,8 @@ my $wrefDBfile = '';
 my $wsysDBfile = '';
 my $wmdDBfile  = '';
 my @addResDBfiles = ();
-my $resDBbypass = 0;
+
+my @addDBs = ();
 
 my $usedmetric = '';
 my @usedmetparams = ();
@@ -148,8 +149,7 @@ GetOptions
    'RefDBfile=s' => \$wrefDBfile,
    'SysDBfile=s' => \$wsysDBfile,
    'MetadataDBfile=s' => \$wmdDBfile,
-   'addResDBfiles=s' => \@addResDBfiles,
-   'AllowResDBfileBypass' => \$resDBbypass,
+   'additionalResDBfile=s' => \@addResDBfiles,
    'usedMetric=s' => \$usedmetric,
    'UsedMetricParameters=s' => \@usedmetparams,
    'TrialsParameters=s' => \@trialsparams,
@@ -164,6 +164,7 @@ GetOptions
    'Ymax=i'             => \$yM,
    'zusedXscale=i'       => \$xscale,
    'ZusedYscale=i'       => \$yscale,
+   'AdditionalFilterDB=s'  => \@addDBs,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -303,7 +304,7 @@ if ($score) {
 
   &check_file_r($refDBfile);
   &check_file_r($sysDBfile);
-  $resDBfile = &check_file_r($resDBfile, $resDBbypass);
+  $resDBfile = &check_file_r($resDBfile, 0);
   for (my $i = 0; $i < scalar @addResDBfiles; $i++) {
     &check_file_r($addResDBfiles[$i]);
   }
@@ -447,7 +448,7 @@ sub path_tool {
 
 sub check_tool {
   my ($tool, $toolb) = @_;
-  MMisc::error("No location found for tool ($toolb)")
+  MMisc::error_quit("No location found for tool ($toolb)")
     if (MMisc::is_blank($tool));
   my $err = MMisc::check_file_x($tool);
   MMisc::error_quit("Problem with tool ($tool): $err")
@@ -486,12 +487,14 @@ B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--wREFcfg> I<file>] [B<--WSYScfg> I<file>] [B<--VMDcfg> I<file>]>
   S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>] [B<--MetadataDBfile> I<file>]>
   S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
-  S<[B<--usedMetric> I<package>]>
+  S<[B<--AdditionalFilterDB> I<file:name> [B<--AdditionalFilterDB> I<file:name> [...]]]>
+ S<[B<--usedMetric> I<package>]>
   S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]>
   S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
   S<[B<--listParameters>] [B<--detName> I<name>]>
   S<[B<--xmin> I<val>] [B<--Xmax> I<val>] [B<--ymin> I<val>] [B<--Ymax> I<val>]>
   S<[B<--zusedXscale> I<set>] [B<--ZusedYscale> I<set>]>
+  S<[B<--additionalResDBfile> I<file> [B<--additionalResDBfile> I<file> [...]]]>
   [I<csvfile> [I<csvfile> [I<...>]]
   
 =head1 DESCRIPTION
@@ -534,6 +537,14 @@ Once you have installed the software, setting B<F4DE_BASE> to the installation l
 
 =over
 
+=item B<--AdditionalFilterDB> I<file:name>
+
+Attach additional SQLite database(s) during I<Filtering Step>. Load I<file> as I<name> (tables within can be accessed as I<name>.I<tablename>).
+
+=item B<--additionalResDBfile> I<file>
+
+Attach additional I<Filtering Step> result SQLite database(s) during I<DETCurve generation Step>. Tables will be merged by doing an B<AND> on the I<TrialID>s.
+
 =item B<--CreateDBSkip>
 
 Skip the database and tables generation.
@@ -555,9 +566,13 @@ Skip the Trial Scoring step (including DETCurve processing).
 This step rely on the S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<<outdir/filterDB.sql> files to extract into S<outdir/scoreDB.sql> a I<ref> and I<sys> table that only contains the I<TrialID>s left post-filtering.
 This step also generate a few files starting with S<outdir/scoreDB_DET> that are the results of the DETCurve generation process.
 
+=item B<--detName> I<name>
+
+Specify the name added to the DETCurve (as well as the specialzied file generated for this process)
+
 =item B<--FilterCMDfile> I<SQLite_commands_file>
 
-Specify the location of the SQL commands file used to extract the list of I<TrialID> that will be inserted in <output/filterDB.sql>.
+Specify the location of the SQL commands file used to extract the list of I<TrialID> that will be inserted in I<output/filterDB.sql>.
 
 =item B<--filterSkip>
 
@@ -667,8 +682,6 @@ This will process the four steps expected of the command line interface:
 
 =item Step 1 (uses B<SQLite_cfg_helper>)
 
-TODO note that it is the user's responsiblity to provide properly formatted files with proper columsn
-
 Will use I<ref.csv> as the Reference CSV file, I<sys.csv> as the System CSV file and I<md.csv> as the one Metadata CSV file (multiple Metadata CSV can be used, we only use one in this example).
 
 From those files, the first step will generate the database creation configuration files by loading each rows and columns in the CSV to determine their SQLite type, and determine if the column header name has to be adapted to avoid characters not recognized by SQLite. 
@@ -678,13 +691,15 @@ The I<sys.csv> must contain at least a I<TrialID>, I<Score> and I<Decision> colu
 
 The metadata CSV(s) should contain the information that should be important to be I<SELECT>ed during the I<filtering> step (3rd step of this process) as well as at least one table with a I<TrialID> and optionally a I<BlockID> column , both of which are expected during the I<filtering> step (if I<BlockID> is not provided, a default value will be used).
 
+Please note that it is the user's responsiblity to provide properly formatted CSV files with the expected columns (especially for the Reference and System CSV files).
+
 This process will create the I<outdir/referenceDB.cfg>, I<outdir/systemDB.cfg> and I<outdir/metadataDB.cfg> files. Note that the location of the CSV files is embedded within the config file. A configuration file structure specify a corresponding I<SQLite> S<CREATE TABLE> but is human readable and composed of simple one line definitions:
 
 =over
 
-=item S<newtable: tablename> starts the definition of a new table and specify the table name as I<tablename>
+=item S<newtable: tablename> starts the definition of a new table and specify the table name as I<tablename> (must be the first line for each new table definition). Note that this step tries to infer the I<tablename> from the I<csvfile>'s I<filename>. 
 
-=item S<csvfile: location> specify the full path I<location> of the CSV file to load. If I<location> is of the form: S<path/filename.suffix>
+=item S<csvfile: location> specify the full path I<location> of the CSV file to load. If I<location> is of the form: S<path/filename.suffix>, the default --unless it is overridden by the user or for specific tables (such as I<Reference> and I<System>-- is to TODO
 
 TODO complete
 
@@ -813,7 +828,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [csvfile [csvfile [...]]
+$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -836,8 +851,10 @@ Where:
   --RefDBfile  Specify the Reference SQLite database file
   --SysDBfile  Specify the System SQLite database file
   --MetadataDBfile  Specify the metadata SQLite database file
+Filter (Step 3) specific options:
   --FilterCMDfile  Specify the SQLite command file
-  --addResDBfiles  Additional filter results database files to give the scorer (will do an AND on the TrialIDs)
+  --AdditionalFilterDB  Load additional SQLite database 'file' for the filtering step (loaded as 'name')
+DETCurve generation (Step 4) specific options:
   --usedMetric    Package to load for metric uses (if none provided, default used: $defusedmetric)
   --UsedMetricParameters Metric Package parameters
   --TrialsParameters Trials Package parameters
@@ -846,6 +863,7 @@ Where:
   --xmin --Xmax      Specify the min and max value of the X axis (PFA) of the DET curve (*1)
   --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (*1)
   --zusedXscale --ZusedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (*1)
+  --additionalResDBfile  Additional Filter results database files to give the scorer (will do an AND on the TrialIDs)
 
 *1: default values can be obtained from \"$deva_sci\" 's help
 
