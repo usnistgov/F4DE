@@ -115,21 +115,21 @@ my $syscsv = "";
 my $wrefDBfile = '';
 my $wsysDBfile = '';
 my $wmdDBfile  = '';
-my @addResDBfiles = ();
 
+my $wresDBfile = '';
 my @addDBs = ();
 
+my @addResDBfiles = ();
 my $usedmetric = '';
 my @usedmetparams = ();
 my @trialsparams = ();
 my $listparams = 0;
-
 my $devadetname = '';
 my ($xm, $xM, $ym, $yM, $xscale, $yscale) 
   = (undef, undef, undef, undef, undef, undef);
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A CD F     LM    RSTUVWXYZa cd fgh   lm o  rstuvwxyz  #
+# Used: A CD F     LM    RSTUVWXYZa cd fghi  lm o  rstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -165,6 +165,7 @@ GetOptions
    'zusedXscale=i'       => \$xscale,
    'ZusedYscale=i'       => \$yscale,
    'AdditionalFilterDB=s'  => \@addDBs,
+   'iFilterDBfile=s' => \$wresDBfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -221,7 +222,7 @@ my $sysDBfile = (MMisc::is_blank($wsysDBfile)) ? "$sysDBbase.db" : $wsysDBfile;
 
 my $resDBb    = "filterDB";
 my $resDBbase = "$outdir/$resDBb";
-my $resDBfile = "$resDBbase.db";
+my $resDBfile = (MMisc::is_blank($wresDBfile)) ? "$resDBbase.db" : $wresDBfile;
 
 my $finalDBb    = "scoreDB";
 my $finalDBbase = "$outdir/$finalDBb";
@@ -295,18 +296,8 @@ if ($filter) {
   &check_file_r($refDBfile);
   &check_file_r($sysDBfile);
   $mdDBfile = &check_file_r($mdDBfile, 1);
-  my $addcmd = "";
-  for (my $i = 0; $i < scalar @addDBs; $i++) {
-    my $v = $addDBs[$i];
-    my ($file, $name, @rest) = split(m%\:%, $v);
-    MMisc::error_quit("Too many values for \'AdditionalFilterDB\', expected \'file:name\' got more ($v)")
-      if (scalar @rest > 0);
-    MMisc::error_quit("Missing arguments for \'AdditionalFilterDB\', expected \'file:name\' (got: $v)")
-      if ((MMisc::is_blank($name)) || (MMisc::is_blank($file)));
-    $addcmd .= " -a $v";
-  }
 
-  &run_filter("$logdir/${resDBb}.log", $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile, $addcmd);
+  &run_filter("$logdir/${resDBb}.log", $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile, @addDBs);
 }
 
 if ($score) {
@@ -397,9 +388,20 @@ sub check_file_r {
 #####
 
 sub run_filter {
-  my ($log, $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile, $addcmd) = @_;
+  my ($log, $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile, @addDBs) = @_;
 
   my $tool = &path_tool($deva_filter, "../../../DEVA/tools/DEVA_filter");
+
+  my $addcmd = "";
+  for (my $i = 0; $i < scalar @addDBs; $i++) {
+    my $v = $addDBs[$i];
+    my ($file, $name, @rest) = split(m%\:%, $v);
+    MMisc::error_quit("Too many values for \'AdditionalFilterDB\', expected \'file:name\' got more ($v)")
+      if (scalar @rest > 0);
+    MMisc::error_quit("Missing arguments for \'AdditionalFilterDB\', expected \'file:name\' (got: $v)")
+      if ((MMisc::is_blank($name)) || (MMisc::is_blank($file)));
+    $addcmd .= " -a $v";
+  }
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, "-r $refDBfile -s $sysDBfile" .
@@ -495,7 +497,8 @@ B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--DETScoreSkip>]>
   S<[B<--refcsv> I<csvfile>] [B<--syscsv> I<csvfile>]>
   S<[B<--wREFcfg> I<file>] [B<--WSYScfg> I<file>] [B<--VMDcfg> I<file>]>
-  S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>] [B<--MetadataDBfile> I<file>]>
+  S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>]>
+  S<[B<--MetadataDBfile> I<file>] [B<--iFilterDBfile> I<file>]>
   S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
   S<[B<--AdditionalFilterDB> I<file:name> [B<--AdditionalFilterDB> I<file:name> [...]]]>
  S<[B<--usedMetric> I<package>]>
@@ -591,6 +594,10 @@ Skip step that uses the SQL I<SELECT>s commands specified in the B<--FilterCMDfi
 =item B<--help>
 
 Display the usage page for this program. Also display some default values and information.
+
+=item B<--iFilterDBfile> I<file>
+
+Specify the filtering SQLite database file
 
 =item B<--listParameters>
 
@@ -838,7 +845,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
+$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -861,6 +868,7 @@ Where:
   --RefDBfile  Specify the Reference SQLite database file
   --SysDBfile  Specify the System SQLite database file
   --MetadataDBfile  Specify the metadata SQLite database file
+  --iFilterDBfile  Specify the filtering SQLite database file
 Filter (Step 3) specific options:
   --FilterCMDfile  Specify the SQLite command file
   --AdditionalFilterDB  Load additional SQLite database 'file' for the filtering step (loaded as 'name')
