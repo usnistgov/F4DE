@@ -86,8 +86,6 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
-my $usage = &set_usage();
-
 # Default values for variables
 #
 my $mdDBfile = "";
@@ -106,8 +104,12 @@ my $BlockIDcolumn = "BlockID";
 my $filtercmd = "";
 my $filtercmdfile = "";
 
+my @addDBs = ();
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:      F                         f h    m    rs  v      #
+# Used:      F                    a    f h    m    rs  v      #
+
+my $usage = &set_usage();
 
 my %opt = ();
 GetOptions
@@ -120,6 +122,7 @@ GetOptions
    'systemDBfile=s'     => \$sysDBfile,
    'filterCMD=s'        => \$filtercmd,
    'FilterCMDfile=s'    => \$filtercmdfile,
+   'additionalDB=s'    => \@addDBs,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -145,13 +148,26 @@ MMisc::error_quit($err)
   if (MMisc::is_blank($sqlitecmd));
 
 my $cmdlines = "";
+my @attachedDBs = ("temp"); # forbid use of this one already
 
-MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$mdDBfile\" AS $mdDBname;")
+&attach_dbfile_as($mdDBfile, $mdDBname, \$cmdlines, \@attachedDBs)
   if (! MMisc::is_blank($mdDBfile));
 
+
 # Attach the REF and SYS databases
-MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$refDBfile\" AS $refDBname");
-MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$sysDBfile\" AS $sysDBname");
+&attach_dbfile_as($refDBfile, $refDBname, \$cmdlines, \@attachedDBs);
+&attach_dbfile_as($sysDBfile, $sysDBname, \$cmdlines, \@attachedDBs);
+
+# Attach additional DBs
+for (my $i = 0; $i < scalar @addDBs; $i++) {
+  my $v = $addDBs[$i];
+  my ($file, $name, @rest) = split(m%\:%, $v);
+  MMisc::error_quit("Too many values for \'additionalDB\', expected \'file:name\' got more ($v)")
+    if (scalar @rest > 0);
+  MMisc::error_quit("Missing arguments for \'additionalDB\', expected \'file:name\' (got: $v)")
+    if ((MMisc::is_blank($name)) || (MMisc::is_blank($file)));
+  &attach_dbfile_as($file, $name, \$cmdlines, \@attachedDBs);
+}
 
 # Create the Result table
 MtSQLite::commandAdd(\$cmdlines, "DROP TABLE IF EXISTS $tablename");
@@ -182,6 +198,24 @@ MMisc::error_quit($err) if (! MMisc::is_blank($err));
 MMisc::ok_quit("Done");
 
 ####################
+
+sub attach_dbfile_as {
+  my ($dbfile, $dbname, $rcmd, $rdbl) = @_;
+
+  my $err = MMisc::check_file_r($dbfile);
+  MMisc::error_quit("Problem with \'$dbname\' DB file ($dbfile): $err")
+    if (! MMisc::is_blank($err));
+  my ($fname) = MtSQLite::fix_entries($dbname);
+  MMisc::error_quit("Database name \$dbname\' is not properly formatted to use with SQLite (ok form: $fname)")
+    if ($fname ne $dbname);
+  MMisc::error_quit("Database name ($dbname) is unauthorized or already loaded")
+    if (grep(m%^$dbname$%i, @$rdbl));
+
+  MtSQLite::commandAdd($rcmd, "ATTACH DATABASE \"$dbfile\" AS $dbname;");
+  push @$rdbl, $dbname;
+}
+
+##########
 
 sub load_stdout {
   my ($so) = @_;
@@ -264,7 +298,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file [--metadataDBfile file] resultsDBfile [--filterCMD \"SQLite COMMAND;\" | --FilterCMDfile SQLite_commands_file]
+$0 [--help | --version] --referenceDBfile file --systemDBfile file [--metadataDBfile file] [--additionalDB file:name [--additionalDB file:name [...]]] [--filterCMD \"SQLite COMMAND;\" | --FilterCMDfile SQLite_commands_file] resultsDBfile 
 
 Will apply provided filter to databases and try to generate the results database that only contain the TrialID and BlockID that will be given to the scoring interface
 
@@ -274,9 +308,10 @@ NOTE: if BlockID is not provided, \"BlockID\" will be used
 Where:
   --help     This help message
   --version  Version information
-  --referenceDBfile  The Reference SQLite file (loaded as 'referenceDB', contains the 'Reference' table, whose columns are: TrialID, Targ)
-  --systemDBfile     The System SQLite file (loaded as 'systemDB', contains the 'System' table, whose columns are: TrialID, Decision, Score)
-  --metadataDBfile   The metadata SQLite file (loaded as 'metadataDB')
+  --referenceDBfile  The Reference SQLite file (loaded as '$refDBname', contains the 'Reference' table, whose columns are: TrialID, Targ)
+  --systemDBfile     The System SQLite file (loaded as '$sysDBname', contains the 'System' table, whose columns are: TrialID, Decision, Score)
+  --metadataDBfile   The metadata SQLite file (loaded as '$mdDBname')
+  --additionalDB     Load an additional SQLite database 'file' as 'name'
   --filterCMD        Set of SQLite commands
   --FilterCMDfile    File containing set of SQLite commands
 
