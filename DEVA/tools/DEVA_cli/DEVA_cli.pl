@@ -303,7 +303,7 @@ if ($filter) {
       if (scalar @rest > 0);
     MMisc::error_quit("Missing arguments for \'AdditionalFilterDB\', expected \'file:name\' (got: $v)")
       if ((MMisc::is_blank($name)) || (MMisc::is_blank($file)));
-    $addmcd .= " -a $v";
+    $addcmd .= " -a $v";
   }
 
   &run_filter("$logdir/${resDBb}.log", $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile, $addcmd);
