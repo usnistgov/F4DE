@@ -295,8 +295,18 @@ if ($filter) {
   &check_file_r($refDBfile);
   &check_file_r($sysDBfile);
   $mdDBfile = &check_file_r($mdDBfile, 1);
-  
-  &run_filter("$logdir/${resDBb}.log", $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile);
+  my $addcmd = "";
+  for (my $i = 0; $i < scalar @addDBs; $i++) {
+    my $v = $addDBs[$i];
+    my ($file, $name, @rest) = split(m%\:%, $v);
+    MMisc::error_quit("Too many values for \'AdditionalFilterDB\', expected \'file:name\' got more ($v)")
+      if (scalar @rest > 0);
+    MMisc::error_quit("Missing arguments for \'AdditionalFilterDB\', expected \'file:name\' (got: $v)")
+      if ((MMisc::is_blank($name)) || (MMisc::is_blank($file)));
+    $addmcd .= " -a $v";
+  }
+
+  &run_filter("$logdir/${resDBb}.log", $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile, $addcmd);
 }
 
 if ($score) {
@@ -387,14 +397,14 @@ sub check_file_r {
 #####
 
 sub run_filter {
-  my ($log, $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile) = @_;
+  my ($log, $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile, $addcmd) = @_;
 
   my $tool = &path_tool($deva_filter, "../../../DEVA/tools/DEVA_filter");
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, "-r $refDBfile -s $sysDBfile" .
               ((MMisc::is_blank($mdDBfile)) ? "" : " -m $mdDBfile" ) .
-              " -F $filtercmdfile $resDBfile");
+              "$addcmd -F $filtercmdfile $resDBfile");
 }
 
 ##########
@@ -529,7 +539,7 @@ I<gnuplot> (S<http://www.gnuplot.info/>) is also required (at least version 4.2)
 
 =item B<GLOBAL ENVIRONMENT VARIABLE>
 
-Once you have installed the software, setting B<F4DE_BASE> to the installation location, and extending your B<PATH> to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
+Once you have installed the software, setting the enviroment variable B<F4DE_BASE> to the installation location, and extending your B<PATH> environment variable to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
 
 =back
 
