@@ -515,7 +515,8 @@ B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
   S<[B<--zusedXscale> I<set>] [B<--ZusedYscale> I<set>]>
   S<[B<--additionalResDBfile> I<file> [B<--additionalResDBfile> I<file> [...]]]>
   [I<csvfile> [I<csvfile> [I<...>]]
-  
+
+
 =head1 DESCRIPTION
 
 B<DEVA_cli> is a wrapper script to start from a set of CSV files, generate its configuraion file, then its database, apply a select filter on the database to obtain DETCurve information.
@@ -526,7 +527,7 @@ The script will work with the following tools (lookup their help page for more d
 
 =item B<SQLite_cfg_helper> 
 
-=item B<SQLite_tables_creator>
+=item B<SQLite_tables_creator> (and B<SQLite_load_csv>)
 
 =item B<DEVA_filter>
 
@@ -568,7 +569,7 @@ Attach additional I<Filtering Step> result SQLite database(s) during I<DETCurve 
 
 Skip the database and tables generation.
 
-This step uses the files created in the configuration generation step and generate multiple SQLite databases containing the tables specified their respective configuration files.
+This step uses the files created in the configuration generation step and generate multiple SQLite databases containing the tables specified in their respective configuration files.
 
 Files created during this step would be S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<outdir/metadataDB.sql>
 
@@ -720,13 +721,28 @@ This process will create the I<outdir/referenceDB.cfg>, I<outdir/systemDB.cfg> a
 
 =over
 
-=item S<newtable: tablename> starts the definition of a new table and specify the table name as I<tablename> (must be the first line for each new table definition). Note that this step tries to infer the I<tablename> from the I<csvfile>'s I<filename>. 
+=item S<newtable: tablename>
 
-=item S<csvfile: location> specify the full path I<location> of the CSV file to load. If I<location> is of the form: S<path/filename.suffix>, the default --unless it is overridden by the user or for specific tables (such as I<Reference> and I<System>-- is to TODO
+Starts the definition of a new table and specify the table name as I<tablename> (must be the first line for each new table definition). Note that this step tries to infer the I<tablename> from the I<csvfile>'s I<filename>.
 
-TODO complete
+=item S<csvfile: location>
 
-=item S<column: usedname>
+Specify the full path I<location> of the CSV file to load. If I<location> is of the form S<path/filename.suffix>, the default --unless it is overridden by the user or for specific tables (such as I<Reference> and I<System>)-- is to use I<filename> as the I<tablename>.
+
+An I<entry renaming rule> apply to all I<tablename> and I<columnUsedName> so that any character other than S<a> to S<z>, S<A> to S<Z>, S<0> to S<9> and S<_> are replaced by S<_>. In addition, if a I<location> has multiple I<suffix> entries, only the last one if removed.
+Therefore, f I<location> if of the form S<filename.suffix1.suffix>, the default corresponding I<tablename> would be S<filename_suffix1>.
+
+Note that the I<path> is the exact same as specified on the command line for the corresponding CSV file (if the specified CSV file is S<../test.csv>, the I<location> will be S<../test.csv> too) it is therefore important to run the tools from the same location when creating the configuration file and its database creation.
+
+=item S<column: columnUsedName;columnType>
+
+Specify a column seen in the CSV file, each column seen has to be detailed this way and the order in the configuration file as to match to column order in the CSV file. If a CSV file has I<X> columns, the configuration file must have I<X> S<column:> definitions.
+
+S<column*:> specify that the column is the table's primary key. A given table can only have one primary key.
+
+S<columnUsedName> specify the column name as it can be accessed from its I<tablename> within I<SQLite>. If a column has a name to which the I<entry renaming rule> applis, S<column:> gets redifined as S<column: columnName=columnUsedName;columnType>, where S<columnName> is the original column name. For example if the original column name is S<name.has;to:fixed> (of I<TEXT> S<columnType>), the S<column:> definition will read S<column: name.has;to:fixed=name_has_to_fixed;TEXT>.
+
+S<columnType> is one of S<INT>, S<REAL> or S<TEXT>.
 
 =back
 
@@ -768,11 +784,17 @@ I<Trials> are then generated, using the I<BlockID> column from I<resultsTable> a
 
 =over
 
-=item if a given entry is both in I<Reference> and I<System> it is I<mapped> (the I<System>'s I<Score> and I<Decision> columns as well as the I<Reference>'s I<Targ> column are used to specify the I<Trial>'s I<sysScore>, I<decision> and I<isTarg> information).
+=item
 
-=item if an entry is only in <System>, it is an I<unmapped_sys> entry (the I<System>'s I<Score> and I<Decision> columns specify the I<Trial>'s I<sysScore> and I<decision> information, I<isTarg> is always 0 in this case).
+If a given entry is both in I<Reference> and I<System> it is I<mapped> (the I<System>'s I<Score> and I<Decision> columns as well as the I<Reference>'s I<Targ> column are used to specify the I<Trial>'s I<sysScore>, I<decision> and I<isTarg> information).
 
-=item if an entry is only in I<Reference> it is an I<unmapped_ref> entry, but only I<y>es I<Targ> entries are added as I<OMMITTED> I<Trial>.
+=item
+
+If an entry is only in <System>, it is an I<unmapped_sys> entry (the I<System>'s I<Score> and I<Decision> columns specify the I<Trial>'s I<sysScore> and I<decision> information, I<isTarg> is always 0 in this case).
+
+=item
+
+If an entry is only in I<Reference> it is an I<unmapped_ref> entry, but only I<y>es I<Targ> entries are added as I<OMMITTED> I<Trial>.
 
 =back
 
@@ -781,47 +803,71 @@ Each file starting with I<outdir/scoreDB_DET> is one of those results:
 
 =over
 
-=item I<outdir/scoreDB_DET.scores.txt> contains the I<DETCurve>'s I<Performance Summary Over and Ensemble of Subsets>
+=item
 
-=item I<outdir/scoreDB_DET.csv> is a Comma Separated Value dump of the previous data's table.
+I<outdir/scoreDB_DET.scores.txt>
+contains the I<DETCurve>'s I<Performance Summary Over and Ensemble of Subsets>
 
-=item Files starting with I<outidr/scoreDB_DET.det> are used by and for the graphic representation of the curve points:
+=item
 
-=over
+I<outdir/scoreDB_DET.csv>
+is a Comma Separated Value dump of the previous data's table.
 
-=item files with a I<.dat.X> suffix (where I<X> is a numerical value) are S<gnuplot> data files. 
+=item
 
-=item files with a I<.plt> suffix are S<gnuplot> command files
+Files starting with I<outidr/scoreDB_DET.det> are used by and for the graphic representation of the curve points:
 
-=item files with a I<.png> suffix are I<Portable Network Graphics> image files results from the corresponding I<.plt> S<gnuplot> commands files
+=item
 
-=item files with a I<.srl> (or I<.srl.gz>) suffix are I<serialized> I<DETCurve> files and can be used as input to tools such as S<DETUtil> to merge multiple curves together
+files with a I<.dat.X> suffix (where I<X> is a numerical value) are S<gnuplot> data files. 
+
+=item
+
+files with a I<.plt> suffix are S<gnuplot> command files
+
+=item
+
+files with a I<.png> suffix are I<Portable Network Graphics> image files results from the corresponding I<.plt> S<gnuplot> commands files
+
+=item
+
+files with a I<.srl> (or I<.srl.gz>) suffix are I<serialized> I<DETCurve> files and can be used as input to tools such as S<DETUtil> to merge multiple curves together
 
 =back
 
 =back
 
-=item Notes:
+=head1 Notes
 
 =over
 
-=item A I<outdir/_logs> is created and populated by each step, so that files starting with I<CfgGen_> and I<DBgen_> are generated respectively during Step 1 and 2, I<filterDB.log> during Step 3 and I<scoreDB.log> during Step 4. In case a file of the expected name is already present, a tag consisting of S<-YYYYMMDD-HHMMSS> (year, month, day, hour, minute, seconds) will be added to the newly created log file.
+=item Logdirs
 
-=item It is possible to I<bypass> entirely some steps. For example:
+A I<outdir/_logs> is created and populated by each step, so that files starting with I<CfgGen_> and I<DBgen_> are generated respectively during Step 1 and 2, I<filterDB.log> during Step 3 and I<scoreDB.log> during Step 4.
+
+In case a file of the expected name is already present, a tag consisting of S<-YYYYMMDD-HHMMSS> (year, month, day, hour, minute, seconds) will be added to the newly created log file.
+
+=item Step(s) bypass
+
+It is possible to I<bypass> entirely some steps. For example:
 
 =over
 
-=item B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --CreateDBSkip --filterSkip --DETScoreSkip>
+=item 
+
+B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --CreateDBSkip --filterSkip --DETScoreSkip>
 
 Will only create the configuration files, but not the database, or run the filter or scorer. This is useful if one wants to edit the I<outdir/metadataDB.cfg> file to rename some columns or look at the automatic renaming of some metadata table (adapted from the file name) or columns names (to avoid SQLite unauthorized characters) in order to adapt the filter step.
 
 Note that since the location of the CSV files is embedded within the config files, one can not do the following after running the previous command:
 
+=item
+
 B<DEVA_cli --outdir outdir --refcsv ref2.csv --syscsv sys2.csv md2.csv --configSkip --filterSkip --DETScoreSkip>
 
 I<ref2.csv>, I<sys2.csv> and I<md2.csv> will not be used by the database creation process (Step 2), since I<ref.csv>, I<sys.csv> and I<md.csv> are specified in the S<csvfile:> line of the respective config file.
 
-TODO more examples
+=item TODO more examples
 
 =back
 
