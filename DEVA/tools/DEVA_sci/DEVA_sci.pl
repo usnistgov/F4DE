@@ -140,12 +140,12 @@ GetOptions
    'TrialsParameters=s' => \%trialsparams,
    'listParameters'     => \$listparams,
    'detName=s'          => \$devadetname,
-   'xmin=i'             => \$xm,
-   'Xmax=i'             => \$xM,
-   'ymin=i'             => \$ym,
-   'Ymax=i'             => \$yM,
-   'usedXscale=i'       => \$xscale,
-   'UsedYscale=i'       => \$yscale,
+   'xmin=f'             => \$xm,
+   'Xmax=f'             => \$xM,
+   'ymin=f'             => \$ym,
+   'Ymax=f'             => \$yM,
+   'usedXscale=s'       => \$xscale,
+   'UsedYscale=s'       => \$yscale,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
