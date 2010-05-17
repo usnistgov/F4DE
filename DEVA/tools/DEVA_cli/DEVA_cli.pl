@@ -428,6 +428,12 @@ sub run_scorer {
   foreach my $mk (@trialsparams) {
     $cmdp .= " -T $mk";
   }
+  $cmdp .= " -x $xm" if (defined $xm);
+  $cmdp .= " -X $xM" if (defined $xM);
+  $cmdp .= " -y $ym" if (defined $ym);
+  $cmdp .= " -Y $yM" if (defined $yM);
+  $cmdp .= " -u $xscale" if (defined $xscale);
+  $cmdp .= " -U $yscale" if (defined $yscale);
   $cmdp .= " $finalDBfile";
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdp);
