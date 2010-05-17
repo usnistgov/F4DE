@@ -2,6 +2,8 @@
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 use strict;
+use xmllintHelper;
+use DETCurveGnuplotRenderer;
 use MMisc;
 
 my $err = 0;
@@ -30,6 +32,38 @@ if ($ms > 0) {
   $err++;
 } else {
   print "  Found all packages\n\n";
+}
+
+##########
+print "\n** Checking for \'xmllint\':\n";
+my $xmllint_env = "F4DE_XMLLINT";
+my $xmllint = MMisc::get_env_val($xmllint_env, "");
+if ($xmllint ne "") {
+  print "- using the one specified by the $xmllint_env environment variable ($xmllint)\n";
+}
+
+my $error = "";
+# Confirm xmllint is present and at least 2.6.30
+my $xobj = new xmllintHelper();
+$xobj->set_xmllint($xmllint);
+if ($xobj->error()) {
+  print $xobj->get_errormsg();
+  print "After installing a suitable version, set the $xmllint_env environment variable to ensure the use of the proper version if it is not the first available in your PATH\n";
+  $err++;
+} else {
+  $xmllint = $xobj->get_xmllint();
+  print "  xmllint ($xmllint) is valid and its version is recent enough\n";
+}
+
+##########
+print "** Checking for gnuplot : ";
+
+my ($err, $gnuplot, $gv) = DETCurveGnuplotRenderer::get_gnuplotcmd();
+if (MMisc::is_blank($err)) {
+  print "$gnuplot [$gv]\n\n";
+} else {
+  print "  ** $err **\n\n";
+  $err++;
 }
 
 ####################

@@ -3,31 +3,31 @@
 
 use strict;
 use MMisc;
+use DETCurveGnuplotRenderer;
 
 my $err = 0;
 
 ##########
-print "** Checking for Perl Required Packages:\n";
+print "** Checking for F4DE Perl Required Packages:\n";
 my $ms = 1;
 
-$ms = &_chkpkg("DBI", "DBD::SQLite");
+$ms = &_chkpkg("MtSQLite", "DETCurveGnuplotRenderer");
 if ($ms > 0) {
-  print "  ** ERROR: Not all packages found, you will not be able to run the program (and some F4DE package will most likely fail this step), install the missing packages and re-run the checks\n\n";
+  print "  ** ERROR: Not all packages found, you will not be able to run the program\n\n";
   $err++;
 } else {
   print "  Found all packages\n\n";
 }
 
 ##########
-print "** Checking for F4DE Perl Required Packages:\n";
-my $ms = 1;
+print "** Checking for gnuplot : ";
 
-$ms = &_chkpkg("MtSQLite");
-if ($ms > 0) {
-  print "  ** ERROR: Not all packages found, you will not be able to run the program\n\n";
-  $err++;
+my ($err, $gnuplot, $gv) = DETCurveGnuplotRenderer::get_gnuplotcmd();
+if (MMisc::is_blank($err)) {
+  print "$gnuplot [$gv]\n\n";
 } else {
-  print "  Found all packages\n\n";
+  print "  ** $err **\n\n";
+  $err++;
 }
 
 ####################
