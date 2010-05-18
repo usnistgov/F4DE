@@ -155,13 +155,19 @@ AVSS09install_noman:
 
 DEVADIR=DEVA
 DEVATOOLS=tools/DEVA_{cli/DEVA_cli,filter/DEVA_filter,sci/DEVA_sci}.pl
+DEVATOOLS_MAN=tools/DEVA_cli/DEVA_cli.pl
 
-DEVAinstall_man DEVAinstall_noman:
+DEVAinstall_noman:
 	@echo ""
 	@echo "********** Installing DEVA tools"
 	@make commoninstall
 	@echo "** Installing DEVA tools"
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${DEVADIR}/${DEVATOOLS}
+
+DEVAinstall_man:
+	@make DEVAinstall_noman
+	@perl installer.pl ${F4DE_BASE} man/man1 ${DEVADIR}/man/*.1
+
 
 ##########
 
@@ -284,6 +290,10 @@ create_mans:
 # AVSS09
 	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man
 	@for i in ${AV09TOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man/$$g.1; done
+# DEVA
+	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/man
+	@for i in ${DEVATOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${EVADIR}/man/$$g.1; done
+
 
 dist_common:
 	@cp ${F4DE_VERSION} /tmp
