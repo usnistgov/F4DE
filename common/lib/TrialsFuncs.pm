@@ -681,4 +681,73 @@ sub exportForDEVA{
   
 }
 
+sub buildScoreDistributions{
+  my ($self, $root) = @_;
+
+  use Statistics::Descriptive;
+  use Data::Dumper;
+  
+  my @blockIDs = $self->getBlockIDs();
+  for (my $block; $block < @blockIDs; $block++){
+    my $targStat = Statistics::Descriptive::Full->new();
+    my $nontargStat = Statistics::Descriptive::Full->new();
+
+    my $dec = $self->getTargScr($blockIDs[$block]);
+    for (my $d = 0; $d < @$dec; $d++){
+      $targStat->add_data($dec->[$d]);
+    }
+    ### The NONTARGETS
+    my $dec = $self->getNonTargScr($blockIDs[$block]);
+    for (my $d = 0; $d < @$dec; $d++){
+      $nontargStat->add_data($dec->[$d]);
+    }
+
+    my $visMin = $targStat->min();
+    $visMin = $nontargStat->min() if ($nontargStat->min() < $visMin);
+
+    my $visMax = $targStat->max();
+    $visMax = $nontargStat->max() if ($nontargStat->max() > $visMax);
+    
+    print "Block $block: visMin=$visMin, visMax=$visMax\n";
+    
+    ### 
+    open TARG, "| his -n 100 -r $visMin:$visMax - | tee targ.his | his2dist_func > targ.his.dist" || die;
+    print TARG join("\n",$targStat->get_data())."\n";
+    close TARG;
+    open NONTARG, "| his -n 100 -r $visMin:$visMax - | tee nontarg.his | his2dist_func > nontarg.his.dist" || die;
+    print NONTARG join("\n",$nontargStat->get_data())."\n";
+    close NOTARG;
+    
+    print "./his2gnuplot -s -f targ.his -l Targets -f nontarg.his -l NonTargets foo\n";
+    print "hp_plt -png -color foo.plt > foo.png\n";
+    
+    open DIST, ">CDF.plt" || die;
+    print DIST "set terminal postscript\n";                                                                                                                                                                    
+    print DIST "set ylabel \"Percent\"\n";                                                                                                                                                                        
+    print DIST "set xlabel \"Decision Score\"\n";                                                                                                                                                                        
+    print DIST "set title  \"Cumulative distributions of Targets and Non-Targets\"\n";
+    print DIST "plot 'targ.his.dist' using 1:2 title \"Targets\" with lines,";                                                                                                                              
+    print DIST "     'nontarg.his.dist' using 1:2 title \"NonTargets\" with lines\n";
+    close DIST;                                          
+    print "hp_plt -png -color CDF.plt > CDF.png\n";
+                                                                                                                                                                                           
+                                                                   
+##    my @partitions = ($visMin);
+##    my $nPartitions = 10;
+##    for (my $i=0; $i <= $nPartitions; $i++){
+##      push @partitions, $visMin + $i * (($visMax - $visMin) / $nPartitions);
+##    }
+##    print Dumper(\@partitions);
+##      
+##    my %targHist = $targStat->frequency_distribution(\@partitions);
+##    my %nontargHist = $nontargStat->frequency_distribution(\@partitions);
+##    my @keys = sort {$a <=> $b} keys %targHist;
+##
+##    foreach my $k(@keys){
+##      print "$k -> $targHist{$k} $nontargHist{$k}\n";
+##    }
+   
+  }
+}
+
 1;
