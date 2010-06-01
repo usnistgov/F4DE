@@ -456,7 +456,15 @@ Run the unit test to set good parameters for the MED test.
 
 sub MEDSettingsUnitTest(){
   my ($dir) = @_;
+  
+  use Math::Random::OO::Normal;
+  use Math::Random::OO::Uniform;
+  use DETCurve;
+  use DETCurveSet;
+  use DETCurveGnuplotRenderer;
 
+  $dir = "." if (!defined($dir));
+  
   die "Error: randomCurveUnitTest(\$dir) requires a defined $dir" if (! defined($dir));
 
   print "Test MetricNormLinearCostFunct - MED setings ...Dir=/$dir/\n";
@@ -467,6 +475,8 @@ sub MEDSettingsUnitTest(){
 ### Cost == 0.8425
      
   my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { () });
+  my $randTrial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { () });
+
   $trial->addTrial("she", 0.03, "NO", 0);
   $trial->addTrial("she", 0.04, "NO", 0);
   $trial->addTrial("she", 0.05, "NO",  0);
@@ -491,52 +501,115 @@ sub MEDSettingsUnitTest(){
   $trial->addTrial("she", 1.0, "YES", 1);
 
 
+  my $decisionScoreRand = Math::Random::OO::Normal->new(0,1);
+  my $targetRand = Math::Random::OO::Uniform->new(0,1);
+  my $seedRand = Math::Random::OO::Uniform->new(0,9999999);
+  my $seed = $seedRand->next();
+  $seed =~ s/\..*$//;
+  print "SEED $seed\n";
+
+#2011  foreach my $threshPair ("A:-0.87:0.6:$seed:$seed"){
+#2012  foreach my $threshPair ("A:-1.87:0.0"){
+#2013  foreach my $threshPair ("A:-2.2:-0.3"){
+#2014 foreach my $threshPair ("A:-2.6:-0.5"){
+ foreach my $threshPair ("A:-3.1:-0.9"){
+    my ($sys, $offset, $thresh, $seed1, $seed2) = split(/:/,$threshPair);
+    print "  Working on System $sys, offset=$offset, threshold=$thresh seed1=$seed1, seed2=$seed2\n";
+#    $decisionScoreRand->seed(($seed1));
+#    $targetRand->seed($seed2);
+  
+    for (my $epoch = 0; $epoch<1; $epoch ++){
+      print "    Epoch $epoch\n";
+      for (my $nt = 0; $nt<15000; $nt ++){
+        my $scr = $decisionScoreRand->next();
+        my $isTarg = $targetRand->next() <= 0.01;
+        my $newScr = $scr + ($isTarg ? 0.0 : $offset);
+        $randTrial->addTrial("epoch $epoch", $newScr, ($newScr <= $thresh ? "NO" : "YES" ), ($isTarg ? 1 : 0));
+      }
+    } 
+  } 
+
+  $randTrial->buildScoreDistributions("foo");
+  
   my @isolinecoef = ( );
 
-  use DETCurve;
-  use DETCurveSet;
-  use DETCurveGnuplotRenderer;
-  my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $trial);
+  my $randMet = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $randTrial);
+  my $met =     new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10 , 'Ptarg' => 0.01 ) }, $trial);
 
   my $det1 = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef);
+  my $det2 = new DETCurve($randTrial, $randMet, "MED 2011 Operating Point", \@isolinecoef, undef);
 
   my $ds = new DETCurveSet("MetricNormLinearFunction Tests");
-  die "Error: Failed to add first det" if ("success" ne $ds->addDET("Targetted Point", $det1));
+#  die "Error: Failed to add first det" if ("success" ne $ds->addDET("Targetted Point", $det1));
+#  print $ds->addDET("Random", $det2)."\n";
+  die "Error: Failed to add second det" if ("success" ne $ds->addDET("MED 2015 Operating Point", $det2));
   
-  my $med2011Cost = $met->combCalc(0.8,  0.06);
-  my $med2012Cost = $met->combCalc(0.57, 0.045);
-  my $med2013Cost = $met->combCalc(0.4,  0.03);
-  my $med2014Cost = $met->combCalc(0.29, 0.02);
-  my $med2015Cost = $met->combCalc(0.2,  0.015);
+  
+  my ($med2011MI, $med2011FA) = (0.75, 0.06);
+  my ($med2012MI, $med2012FA) = (0.50, 0.04);
+  my ($med2013MI, $med2013FA) = (0.35, 0.028);
+  my ($med2014MI, $med2014FA) = (0.25, 0.02);
+  my ($med2015MI, $med2015FA) = (0.18, 0.0144);
+  
+  my $med2011Cost = $met->combCalc($med2011MI, $med2011FA);
+  my $med2012Cost = $met->combCalc($med2012MI, $med2012FA);
+  my $med2013Cost = $met->combCalc($med2013MI, $med2013FA);
+  my $med2014Cost = $met->combCalc($med2014MI, $med2014FA);
+  my $med2015Cost = $met->combCalc($med2015MI, $med2015FA);
+
+  my $med2011Ratio = $med2011MI /  $med2011FA;
+  my $med2012Ratio = $med2012MI /  $med2012FA;
+  my $med2013Ratio = $med2013MI /  $med2013FA;
+  my $med2014Ratio = $med2014MI /  $med2014FA;
+  my $med2015Ratio = $med2015MI /  $med2015FA;
 
   my $options = { 
       ("Xmin" => 0.1,
-		   "Xmax" => 99.9,
-		   "Ymin" => .1,
-		   "Ymax" => 99.9,
+		   "Xmax" => 99,
+		   "Ymin" => 0.1,
+		   "Ymax" => 99,
 		   "xScale" => "nd",
 		   "yScale" => "nd",
 		   "ColorScheme" => "color",
        "DrawIsometriclines" => 1,
        "createDETfiles" => 1,
+       "ReportActual" => 1,
+		   "ReportMinumum" => 0,
 		   "DrawIsoratiolines" => 1,
        "serialize" => 1,
-       "Isometriclines" => [ ($med2011Cost, $med2012Cost, $med2013Cost, $med2014Cost, $med2015Cost, 1.0) ],
-       "Isoratiolines" => [ (13.333) ],
-       "PointSet" => [ { MMiss => .8,  MFA => .06, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2011 cost ".sprintf("%.4f", $med2011Cost)}, 
-                       { MMiss => .57,  MFA => .045, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2012 cost ".sprintf("%.4f", $med2012Cost)}, 
-                       { MMiss => .4,  MFA => .03, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2013 cost ".sprintf("%.4f", $med2013Cost)}, 
-                       { MMiss => .29,  MFA => .02, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2014 cost ".sprintf("%.4f", $med2014Cost)}, 
-                       { MMiss => .2,  MFA => .015, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2015 cost ".sprintf("%.4f", $med2015Cost)}, 
-                                   
-                       { MMiss => .565,  MFA => .0424, pointSize => 1,  pointType => 10, color => "rgb \"#ff0000\"", label => "Act  ", justification => "right"}, 
-                       { MMiss => .2828,  MFA => .0212, pointSize => 1,  pointType => 10, color => "rgb \"#ff0000\"", label => "Act  ", justification => "right"}, 
-                     ] ) };
+       "Isoratiolines" => [ (12.5) ],
+       "PointSet" => [ { MMiss => $med2011MI,  MFA => $med2011FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2011"}, 
+                       { MMiss => $med2012MI,  MFA => $med2012FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2012"}, 
+                       { MMiss => $med2013MI,  MFA => $med2013FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2013"}, 
+                       { MMiss => $med2014MI,  MFA => $med2014FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2014"}, 
+                       { MMiss => $med2015MI,  MFA => $med2015FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2015"}, 
+                       ] ) };
   
 #  my $dcRend = new DETCurveGnuplotRenderer($options);
 #  $dcRend->writeMultiDetGraph("$dir/g1", $ds);
+#       "Isometriclines" => [ ($med2011Cost, $med2012Cost, $med2013Cost, $med2014Cost, $med2015Cost) ],
 
-  print $ds->renderAsTxt("$dir/MNLCF.MEDSettings.det", 1, 1, $options, "");                                                                     
+#### Used to generate an empty curve with JUST the target points
+###  my $options = { 
+###      ("Xmin" => 0.1,
+###		   "Xmax" => 99,
+###		   "Ymin" => 0.1,
+###		   "Ymax" => 99,
+###		   "xScale" => "nd",
+###		   "yScale" => "nd",
+###		   "ColorScheme" => "color",
+###       "DrawIsometriclines" => 1,
+###       "createDETfiles" => 1,
+###		   "DrawIsoratiolines" => 1,
+###       "serialize" => 1,
+###       "Isoratiolines" => [ (12.5) ],
+###       "PointSet" => [ { MMiss => $med2011MI,  MFA => $med2011FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2011"}, 
+###                       { MMiss => $med2012MI,  MFA => $med2012FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2012"}, 
+###                       { MMiss => $med2013MI,  MFA => $med2013FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2013"}, 
+###                       { MMiss => $med2014MI,  MFA => $med2014FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2014"}, 
+###                       { MMiss => $med2015MI,  MFA => $med2015FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2015"}, 
+###                       ] ) };
+  print $ds->renderAsTxt("$dir/MNLCF-01.MEDSettings.det", 1, 1, $options, "");                                                                     
 
 }
 
