@@ -128,9 +128,11 @@ sub renderAsTxt(){
   ### Add all the parameters:
   my $info = "Constant parameters:\n";
   foreach my $key ($self->{Trial}->getTrialParamKeys()) {
+    next if ($key =~ m%^__%); # Skip hidden keys
     $info .= "   $key = ".$self->{Trial}->getTrialParamValue($key)."\n";
   }
   foreach my $key ($self->{Metric}->getParamKeys()) {
+    next if ($key =~ m%^__%); # Skip hidden keys
     $info .= "   $key = ".$self->{Metric}->getParamValue($key)."\n";
   }
   $info .= "\n";

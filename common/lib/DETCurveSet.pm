@@ -341,9 +341,11 @@ sub renderAsTxt(){
   $info .= "System Title: ".(defined($self->{Title}) ? $self->{Title} : 'N/A')."\n\n"; 
   $info .= "Constant parameters:\n";
   foreach my $key ($trial->getTrialParamKeys()) {
+    next if ($key =~ m%^__%); # Skip hidden keys
     $info .= "   $key = ".$trial->getTrialParamValue($key)."\n";
   }
   foreach my $key ($metric->getParamKeys()) {
+    next if ($key =~ m%^__%); # Skip hidden keys
     $info .= "   $key = ".$metric->getParamValue($key)."\n";
   }
   $info .= "\n";
