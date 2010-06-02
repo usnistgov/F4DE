@@ -35,10 +35,14 @@ sub new {
   #######  customizations
   foreach my $p (@trials_params) {
     MMisc::error_quit("parameter \'$p\' not defined")
-        if (! exists($self->{trialParams}->{$p}));
+        if (! $self->getTrialParamValueExists($p));
     MMisc::error_quit("parameter \'$p\' must > 0")
-        if ($self->{trialParams}->{$p} <= 0);
+        if ($self->getTrialParamValue($p) <= 0);
   }
+
+  # For TOTALDURATION: we will have a special "hidden" 
+  # entry that is converted to hours
+  $self->setTrialParamValue("__TOTALDURATION_HOUR", $self->getTrialParamValue($trials_params[0]) / 3600);
 
   bless($self, $class);
 
