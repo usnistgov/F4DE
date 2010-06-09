@@ -31,6 +31,8 @@ all:
 	@echo "  TV08install     only install the TrecVid08 subsection"
 	@echo "  CLEAR07install  only install the CLEAR07 subsection"
 	@echo "  AVSS09install   only install the AVSS09 subsection"
+	@echo "  VidATinstall    only install the VidAT tools set"
+	@echo "  SQLitetoolsinstall  only install the SQLite tools set"
 #	@echo "  DEVAinstall     only install the DEVA subsection"
 	@echo ""
 	@make from_installdir
