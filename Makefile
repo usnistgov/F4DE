@@ -23,14 +23,15 @@ all:
 	@echo "  TV08check       only run checks for the TrecVid08 subsection"
 	@echo "  CLEAR07check    only run checks for the CLEAR07 subsection"
 	@echo "  AVSS09check     only run checks for the AVSS09 subsection"
-	@echo "  DEVAcheck       only run checks for the DEVA subsection"
+	@echo "  SQLitetoolscheck  only run checks for the SQLite_tools subsection"
+#	@echo "  DEVAcheck       only run checks for the DEVA subsection"
 	@echo ""
 	@echo "[install section -- requires the F4DE_BASE environment variable set]"
 	@echo "  install         to install all the softwares"
 	@echo "  TV08install     only install the TrecVid08 subsection"
 	@echo "  CLEAR07install  only install the CLEAR07 subsection"
 	@echo "  AVSS09install   only install the AVSS09 subsection"
-	@echo "  DEVAinstall     only install the DEVA subsection"
+#	@echo "  DEVAinstall     only install the DEVA subsection"
 	@echo ""
 	@make from_installdir
 
@@ -45,7 +46,9 @@ install:
 	@make TV08install
 	@make CLEAR07install
 	@make AVSS09install
-	@make DEVAinstall
+	@make VidATinstall
+	@make SQLitetoolsinstall
+#	@make DEVAinstall
 
 #####
 
@@ -53,14 +56,16 @@ install_noman:
 	@make TV08install_noman
 	@make CLEAR07install
 	@make AVSS09install_noman
-	@make DEVAinstall_noman
+	@make VidATinstall
+	@make SQLitetoolsinstall
+#	@make DEVAinstall_noman
 
 #####
 
 CM_DIR=common
-COMMONTOOLS=tools/{DETEdit/DETEdit.pl,DETMerge/DETMerge.pl,DETUtil/DETUtil.pl,SQLite_tools/{SQLite_cfg_helper.pl,SQLite_dump_csv.pl,SQLite_load_csv.pl,SQLite_tables_creator.pl}}
-VIDATDIR=common/tools/VidAT
-
+COMMONTOOLS=tools/{DETEdit/DETEdit.pl,DETMerge/DETMerge.pl,DETUtil/DETUtil.pl}
+VIDATDIR=${CM_DIR}/tools/VidAT
+SQLITETOOLSDIR=${CM_DIR}/tools/SQLite_tools
 
 commoninstall:
 	@make from_installdir
@@ -68,9 +73,16 @@ commoninstall:
 	@echo "** Installing common files"
 	@perl installer.pl ${F4DE_BASE} lib ${CM_DIR}/lib/*.pm
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${CM_DIR}/${COMMONTOOLS}
-#	@echo "** Installing VidAT"
-#	@perl installer.pl ${F4DE_BASE} lib ${VIDATDIR}/*.pm
-#	@perl installer.pl -x -r ${F4DE_BASE} bin ${VIDATDIR}/*.pl
+
+VidATinstall:
+	@echo "** Installing VidAT"
+	@perl installer.pl ${F4DE_BASE} lib ${VIDATDIR}/*.pm
+	@perl installer.pl -x -r ${F4DE_BASE} bin ${VIDATDIR}/*.pl
+
+SQLitetoolsinstall:
+	@echo "** Installing SQLite_tools"
+	@perl installer.pl -x -r ${F4DE_BASE} bin ${SQLITETOOLSDIR}/*.pl
+
 
 #####
 
@@ -191,7 +203,8 @@ check:
 	@make TV08check
 	@make CLEAR07check
 	@make AVSS09check
-	@make DEVAcheck
+	@make SQLitetoolscheck
+#	@make DEVAcheck
 	@echo ""
 	@echo "***** All check tests successful"
 	@echo ""
@@ -224,6 +237,13 @@ AVSS09check:
 	@echo "***** All AVSS09 checks ran succesfully"
 	@echo ""
 
+SQLitetoolscheck:
+	@echo "***** Running SQLite_tools checks ..."
+	@(cd ${CM_DIR}/test/SQLite_tools; make check)
+	@echo ""
+	@echo "***** All SQLite_tools checks ran succesfully"
+	@echo ""
+
 DEVAcheck:
 	@echo "***** Running DEVA checks ..."
 	@(cd ${DEVADIR}/test; make check)
@@ -237,6 +257,17 @@ check_common:
 ########################################
 ########## For distribution purpose
 
+VIDAT_EX_DIR=${VIDATDIR}/example
+VIDAT_EX_TBZ=VidAT_example.tar.bz2
+
+VidAT_example: ${VIDAT_EX_DIR}
+	@(cd ${VIDATDIR} && tar cfj ../../../${VIDAT_EX_TBZ} --exclude CVS --exclude .DS_Store --exclude "*~" example)
+	@make VidAT_example_post
+
+VidAT_example_post: ${VIDAT_EX_TBZ}
+	@echo "Created: ${VIDAT_EX_TBZ}"
+
+#####
 
 # 'cvsdist' can only be run by developpers
 cvsdist:
@@ -282,6 +313,10 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/BarPlot/ /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/lib/BarPlot.pm
 ## CSVUtil
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/CSVUtil/
+## VidAT example
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${VIDAT_EX_DIR}
+## DEVA
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}
 
 create_mans:
 # TrecVid08
@@ -291,8 +326,8 @@ create_mans:
 	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man
 	@for i in ${AV09TOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man/$$g.1; done
 # DEVA
-	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/man
-	@for i in ${DEVATOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${EVADIR}/man/$$g.1; done
+#	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/man
+#	@for i in ${DEVATOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${EVADIR}/man/$$g.1; done
 
 
 dist_common:
