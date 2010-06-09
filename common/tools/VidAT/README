@@ -9,9 +9,11 @@ specified by an Tracking log file that is described in generated with
 CLEARDTScorer.
 
 The suite has two scripts:
- - VidATLog.pl which generates an annotated video regarding a set of parameters,
+
+ - VidATLog which generates an annotated video regarding a set of parameters,
    a original video, and a tracking log from CLEARDTScorer.
- - Montage.pl is an script which creates a mozaic video of a set of input 
+
+ - Vidat_Montage is an script which creates a mozaic video of a set of input 
    videos.
 
 
@@ -32,41 +34,49 @@ USAGE
 
 Consult the manual pages by running the commands:
 
-   %perl -I<VIDAT_DIRECTORY> <VIDAT_DIRECTORY>/VidATLog.pl --man
-   %perl -I<VIDAT_DIRECTORY> <VIDAT_DIRECTORY>/Montage.pl --man
+   % VidATLog --man
+   % VidAT_Montage --man
 
 EXAMPLE
 -------
 
+In order to run the example, please dowload and uncompress the example video and tracking log from:
+
+ftp://jaguar.ncsl.nist.gov/outgoing/VidAT_example.tar.bz2
+
 The following command line will generate a video with the snail trails for the 
 frames between the frames defined in the tracking log:
-$ perl -I. VidATLog.pl -i example/sample.mpeg \
-                       -l example/sample.tracking_log \
-                       -k auto \
-                       -o example/sample.new.mpeg
+
+$ VidATLog -i example/sample.mpeg \
+           -l example/sample.tracking_log \
+           -k auto \
+           -o example/sample.new.mpeg
 
 The following command line will generate frames without the snail trails for the 
 frames defined in the tracking log:
-$ perl -I. VidATLog.pl -i example/sample.mpeg \
-                       -l example/sample.tracking_log \
-                       -onlyframes \
-                       -o example/sample.frames
+
+$ VidATLog -i example/sample.mpeg \
+           -l example/sample.tracking_log \
+           -onlyframes \
+           -o example/sample.frames
 
 To build a montage video from the original and an annotated video, the input 
 video files must have the same duration, especially the same number of frames.
-To do so, make sure that, if VidATLog.pl has been used to generate the video, 
+To do so, make sure that, if VidATLog has been used to generate the video, 
 the '-k' option has the same value.
+
 In the following example, the original video is used as the first input and a 
 not trimmed annotated video is used as a second input. To insure that both 
 videos have the same number of frames, the '-k' option is ignored, therefore the
 number of frames are kept the same.
-$ perl -I. VidATLog.pl -i example/sample.mpeg \
-                       -l example/sample.tracking_log \
-                       -o example/sample.full.mpeg
+
+$ VidATLog -i example/sample.mpeg \
+           -l example/sample.tracking_log \
+           -o example/sample.full.mpeg
                        
-$ perl -I. Montage.pl -i example/sample.mpeg \
-                      -i example/sample.full.mpeg \
-                      -o example/montage.mpeg
+$ VidAT_Montage -i example/sample.mpeg \
+                -i example/sample.full.mpeg \
+                -o example/montage.mpeg
 
 
 CONTACT
@@ -81,7 +91,7 @@ text output, including the error message in your email.
 AUTHORS
 -------
 
-Jerome Ajot <jerome.ajot@nist.gov>
+Jerome Ajot
 
 
 COPYRIGHT 
