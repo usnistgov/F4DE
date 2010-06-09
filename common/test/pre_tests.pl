@@ -26,7 +26,7 @@ $ms = &_chkpkg
   (
    # common/lib
    "AutoTable",
-   "BarPlot",
+#   "BarPlot",
    "BipartiteMatch",
    "CSVHelper",
    "DETCurve",
