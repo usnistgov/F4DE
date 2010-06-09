@@ -1,4 +1,4 @@
-# JPEGEdit.pm
+# VidAT_JPEGEdit.pm
 # Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by employees of the Federal 
@@ -9,7 +9,7 @@
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY 
 # MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
-package JPEGEdit;
+package VidAT_JPEGEdit;
 
 use strict;
 use warnings;

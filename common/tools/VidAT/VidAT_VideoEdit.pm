@@ -1,4 +1,4 @@
-# VideoEdit.pm
+# VidAT_VideoEdit.pm
 # Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by employees of the Federal 
@@ -9,14 +9,14 @@
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY 
 # MATTER WHATSOEVER, INCLUDING MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 
-package VideoEdit;
+package VidAT_VideoEdit;
 
 use strict;
 use warnings;
 use File::Temp qw( tempdir );
 use File::Path qw( rmtree );
-use JPEGEdit;
-use FFmpegImage;
+use VidAT_JPEGEdit;
+use VidAT_FFmpegImage;
 use Data::Dumper;
 
 sub new
@@ -72,7 +72,7 @@ sub extractJpegs
 	my ($self) = @_;
 	
 	$self->{tempDir1} = tempdir( CLEANUP => 1, DIR => $self->{tmpBaseDir});
-	$self->{images} = new FFmpegImage($self->{videoFile});
+	$self->{images} = new VidAT_FFmpegImage($self->{videoFile});
 	$self->{images}->extractJpeg($self->{tempDir1}, $self->{minFrame}, $self->{maxFrame});
 }
 
@@ -313,7 +313,7 @@ sub processSingleImage
 		($index <= $self->{maxFrame}) &&
 		($self->doKeep($index)) )
 	{
-		my $jpeg = new JPEGEdit("$self->{tempDir1}/$files[$index]", $self->{tmpBaseDir});
+		my $jpeg = new VidAT_JPEGEdit("$self->{tempDir1}/$files[$index]", $self->{tmpBaseDir});
 		
 		# Apply all the filters
 		my ($polygons, $ellipses, $points, $labels) = $self->hasFilters($index);
@@ -395,7 +395,7 @@ sub processImages
 		next if($f > $self->{maxFrame});
 		next if(! $self->doKeep($f));
 
-		my $jpeg = new JPEGEdit("$self->{tempDir1}/$files[$i]", $self->{tmpBaseDir});
+		my $jpeg = new VidAT_JPEGEdit("$self->{tempDir1}/$files[$i]", $self->{tmpBaseDir});
 		
 		# Apply all the filters
 		my ($polygons, $ellipses, $points, $labels) = $self->hasFilters($f);

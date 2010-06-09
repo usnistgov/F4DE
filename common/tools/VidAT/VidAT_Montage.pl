@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# Montage.pl
+# VidAT_Montage.pl
 # Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by employees of the Federal 
@@ -13,6 +13,16 @@
 
 use strict;
 use warnings;
+
+my ($f4b, @f4bv);
+BEGIN {
+  $f4b = "F4DE_BASE";
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : (".");
+}
+use lib (@f4bv);
+
 use File::Temp qw( tempdir tempfile );
 use File::Path qw( rmtree );
 use Getopt::Long;
@@ -200,6 +210,8 @@ else
 # Clean up
 cleanup();
 
+exit(0);
+
 ## FUNCTIONS
 sub pextractJpeg
 {
@@ -362,11 +374,11 @@ sub max
 
 =head1 NAME
 
-Montage.pl -- Video Montage Tool 
+VidAT_Montage -- Video Montage Tool 
 
 =head1 SYNOPSIS
 
-B<Montage.pl> -i F<VIDEO> [-i F<VIDEO> [...]] [-t F<threads>] -o F<OUTPUT> [-k F<begframe>,F<endframe>] [-man] [-h]
+B<VidAT_Montage> -i F<VIDEO> [-i F<VIDEO> [...]] [-t F<threads>] -o F<OUTPUT> [-k F<begframe>,F<endframe>] [-man] [-h]
 
 =head1 DESCRIPTION
 
@@ -417,11 +429,11 @@ No known bugs.
 =head1 NOTE
 
 To build a montage video, the input video files must have the same duration, especially the same number of frames.
-If vidatLog.pl has been used to generate the video, the vidatLog '-k' option has the same value.
+If B<VidATLog> has been used to generate the video, the vidatLog '-k' option has the same value.
 
 =head1 AUTHORS
 
- Jerome Ajot <jerome.ajot@nist.gov>
+ Jerome Ajot
 
 =head1 VERSION
 

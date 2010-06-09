@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# TrackingLog2Xml.pl
+# VidAT_TrackingLog2Xml.pl
 # Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by employees of the Federal 
@@ -13,7 +13,18 @@
 
 use strict;
 use warnings;
-use TrackingLog;
+
+my ($f4b, @f4bv);
+BEGIN {
+  $f4b = "F4DE_BASE";
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : (".");
+}
+use lib (@f4bv);
+
+use VidAT_TrackingLog;
+
 use Data::Dumper;
 use Pod::Usage;
 
@@ -24,7 +35,7 @@ if(scalar(@ARGV) != 1)
 
 my $inFile = "$ARGV[0]";
 
-my $x = new TrackingLog($inFile);
+my $x = new VidAT_TrackingLog($inFile);
 
 $x->addRefPolygon(4);
 $x->addSysPolygon(4);
@@ -36,13 +47,15 @@ $x->addTimer();
 
 print $x->XMLFile();
 
+exit(0);
+
 =head1 NAME
 
-TrackingLog2Xml.pl -- Tracking log into XML file 
+VidAT_TrackingLog2Xml -- Tracking log into XML file 
 
 =head1 SYNOPSIS
 
-B<vidat.pl> F<log>
+B<VidAT_TrackingLog2Xml> F<log>
 
 =head1 DESCRIPTION
 
@@ -74,7 +87,7 @@ No known bugs.
 
 =head1 AUTHORS
 
- Jerome Ajot <jerome.ajot@nist.gov>
+ Jerome Ajot
 
 =head1 VERSION
 

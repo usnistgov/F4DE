@@ -13,9 +13,21 @@
 
 use strict;
 use warnings;
+
+my ($f4b, @f4bv);
+BEGIN {
+  $f4b = "F4DE_BASE";
+  push @f4bv, (exists $ENV{$f4b}) 
+    ? ($ENV{$f4b} . "/lib") 
+      : (".");
+}
+use lib (@f4bv);
+
 use Getopt::Long;
 use Pod::Usage;
-use VideoEdit;
+
+use VidAT_VideoEdit;
+
 use Data::Dumper;
 
 my $man = 0;
@@ -46,7 +58,7 @@ pod2usage("Error: Input video must be specified.\n") if($inVideoFile eq "");
 pod2usage("Error: XML file must be specified.\n") if($xmlFile eq "");
 pod2usage("Error: Output file must be specified.\n") if($outFile eq "");
 
-my $x = new VideoEdit();
+my $x = new VidAT_VideoEdit();
 
 if($keep =~ /^(\d+),(\d+)$/)
 {
@@ -73,13 +85,15 @@ else
 
 $x->clean();
 
+exit(0);
+
 =head1 NAME
 
-VidATXML.pl -- Video Annotation Tool 
+VidATXML -- Video Annotation Tool 
 
 =head1 SYNOPSIS
 
-B<VidATXML.pl> -i F<VIDEO> -x F<XML> -o F<OUTPUT> [-man] [-h]
+B<VidATXML> -i F<VIDEO> -x F<XML> -o F<OUTPUT> [-man] [-h]
 
 =head1 DESCRIPTION
 
@@ -131,7 +145,7 @@ No known bugs.
 
 =head1 AUTHORS
 
- Jerome Ajot <jerome.ajot@nist.gov>
+ Jerome Ajot
 
 =head1 VERSION
 
