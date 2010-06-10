@@ -25,12 +25,12 @@ my @trials_params = ("TOTALDURATION");
 sub getParamsList { return(@trials_params); }
 
 sub new {
-  my ($class, $trialsParams) = @_;
+  my ($class, $taskId, $blockId, $decisionId, $trialsParams) = @_;
 
   MMisc::error_quit("new TrialsCBCD09 called without a \$trialsParams value") 
     if (! defined($trialsParams));
  
-  my $self = TrialsFuncs->new("Event Detection", "Event", "Observation", $trialsParams);
+  my $self = TrialsFuncs->new($taskId, $blockId, $decisionId, $trialsParams);
 
   #######  customizations
   foreach my $p (@trials_params) {
@@ -39,6 +39,10 @@ sub new {
     MMisc::error_quit("parameter \'$p\' must > 0")
         if ($self->{trialParams}->{$p} <= 0);
   }
+ 
+  # For TOTALDURATION: we will have a special "hidden" 
+  # entry that is converted to hours
+  $self->setTrialParamValue("__TOTALDURATION_HOUR", $self->getTrialParamValue($trials_params[0]));
 
   bless($self, $class);
 
