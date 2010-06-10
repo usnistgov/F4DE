@@ -1,5 +1,5 @@
 # F4DE
-# TrialsCNCD09.pm
+# TrialsCBCD09.pm
 # Author: Jon Fiscus
 # 
 # This software was developed at the National Institute of Standards and Technology by
