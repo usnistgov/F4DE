@@ -26,7 +26,7 @@ use MMisc;
 
 my @metric_params = ("CostMiss", "CostFA", "Rtarget");
 
-use TrialsCBCD09;
+use TrialsCBCD10;
 my @trials_params = TrialsCBCD09::getParamsList();
 
 sub getParamsList { return(@metric_params); }
@@ -78,5 +78,139 @@ sub new
 
     return $self;
   }
+
+sub unitTest(){
+  my ($dir) = ".";
+
+  print "Test MetricCBCD10...".(defined($dir) ? " Dir=/$dir/" : "(Skipping DET Curve Generation)")."\n";
+
+  my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
+
+################################### A do nothing system
+### Pmiss == 1  - 10 misses
+### PFa == 0    - 0  FA  
+### Cost == 1
+
+  my $DNtrial = new TrialsCBCD10("Term Detection", "Term", "Occurrence", { () });
+  $DNtrial->addTrial("she", 0.03, "NO", 0);
+  $DNtrial->addTrial("she", 0.04, "NO", 1);
+  $DNtrial->addTrial("she", 0.05, "NO",  1);
+  $DNtrial->addTrial("she", 0.10, "NO", 0);
+  $DNtrial->addTrial("she", 0.15, "NO", 0);
+  foreach (1..259){
+    $DNtrial->addTrial("she", 0.17, "NO", 0);
+  }
+  $DNtrial->addTrial("she", 0.17, "NO", 0);
+  $DNtrial->addTrial("she", 0.20, "NO", 1);
+  $DNtrial->addTrial("she", 0.25, "NO", 1);
+  $DNtrial->addTrial("she", 0.65, "NO", 1);
+  $DNtrial->addTrial("she", 0.70, "NO", 1);
+  $DNtrial->addTrial("she", 0.70, "NO", 1);
+  $DNtrial->addTrial("she", 0.75, "NO", 0);
+  $DNtrial->addTrial("she", 0.75, "NO", 1);
+  $DNtrial->addTrial("she", 0.85, "NO", 0);
+  $DNtrial->addTrial("she", 0.85, "NO", 1);
+  $DNtrial->addTrial("she", 0.98, "NO", 0);
+  $DNtrial->addTrial("she", 0.98, "NO", 0);
+  $DNtrial->addTrial("she", 1.00, "NO", 1);
+
+################################### A target point
+### Pmiss == 0.1  - 1 misses
+### PFa == 0.0075  - 3 FA  
+### Cost == 0.8425
+     
+  my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { () });
+  $trial->addTrial("she", 0.03, "NO", 0);
+  $trial->addTrial("she", 0.04, "NO", 0);
+  $trial->addTrial("she", 0.05, "NO",  0);
+  $trial->addTrial("she", 0.10, "NO", 0);
+  $trial->addTrial("she", 0.15, "NO", 1);
+  foreach (1..391){
+    $trial->addTrial("she", 0.17, "NO", 0);
+  }
+  $trial->addTrial("she", 0.17, "NO", 0);
+  $trial->addTrial("she", 0.20, "NO", 0);
+  $trial->addTrial("she", 0.25, "YES", 1);
+  $trial->addTrial("she", 0.65, "YES", 1);
+  $trial->addTrial("she", 0.70, "YES", 0);
+  $trial->addTrial("she", 0.70, "YES", 0);
+  $trial->addTrial("she", 0.70, "YES", 0);
+  $trial->addTrial("she", 0.75, "YES", 1);
+  $trial->addTrial("she", 0.75, "YES", 1);
+  $trial->addTrial("she", 0.85, "YES", 1);
+  $trial->addTrial("she", 0.85, "YES", 1);
+  $trial->addTrial("she", 0.98, "YES", 1);
+  $trial->addTrial("she", 0.98, "YES", 1);
+  $trial->addTrial("she", 1.0, "YES", 1);
+
+
+  my @isolinecoef = ( 31 );
+
+  use DETCurve;
+  use DETCurveSet;
+  use DETCurveGnuplotRenderer;
+  my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial),
+  my $DNmet = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $DNtrial);
+
+  ##############################################################################################
+  print "  Testing Calculations .. ";
+  my ($exp, $ret);
+  $exp = 1; $ret = $met->combCalc(1.0, 0.0); 
+  die "\nError: Cost for Pmiss=1.0, Pfa=0.0 was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
+  $exp = 9.9; $ret = $met->combCalc(0.0, 1.0); 
+  die "\nError: Cost for Pmiss=0.0, Pfa=1.0 was = $ret NOT $exp\n" if (abs($ret - $exp) > 0.0001);
+  $exp = 0.17425; $ret = $met->combCalc(0.1, 0.0075); 
+  die "\nError: Cost for Pmiss=0.1, Pfa=0.0075 was = $ret NOT $exp\n" if (abs($ret - $exp) > 0.0001);
+
+  ## Inverse calculations for MISS
+  $exp = 0.1; $ret = $met->MISSForGivenComb(0.17425, 0.0075); 
+  die "\nError: MISS for Cost=0.8425, Pfa=0.0075 was = $ret NOT $exp\n" if (abs($ret - $exp) > 0.0001);
+  $exp = 1.0; $ret = $met->MISSForGivenComb(1.0, 0.0); 
+  die "\nError: MISS for Cost=1.0, Pfa=0.0 was = $ret NOT $exp\n" if (abs($ret - $exp) > 0.0001);
+  
+  ## Inverse calculations for FA
+  $exp = 0.0075; $ret = $met->FAForGivenComb(0.17425, 0.1); 
+  die "\nError: FA for Cost=0.8425, Pmiss=0.1 was = $ret NOT $exp\n" if (abs($ret - $exp) > 0.0001);
+  $exp = 1.0; $ret = $met->FAForGivenComb(9.9, 0.0); 
+  die "\nError: FA for Cost=1.0, Pmiss=0.0 was = $ret NOT $exp\n" if (abs($ret - $exp) > 0.0001);
+  
+  if (defined($dir)){
+    my $det1 = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef);
+    my $DNdet = new DETCurve($DNtrial, $DNmet, "Do Nothing", \@isolinecoef, undef);
+
+    my $ds = new DETCurveSet("MetricNormLinearFunction Tests");
+    die "Error: Failed to add first det" if ("success" ne $ds->addDET("Targetted Point", $det1));
+    die "Error: Failed to add second det" if ("success" ne $ds->addDET("Do Nothing", $DNdet));
+
+    my $options = { ("Xmin" => .1,
+		   "Xmax" => 95,
+		   "Ymin" => .1,
+		   "Ymax" => 95,
+		   "xScale" => "nd",
+		   "yScale" => "nd",
+		   "ColorScheme" => "color",
+       "DrawIsometriclines" => 1,
+       "createDETfiles" => 1,
+		   "DrawIsoratiolines" => 1,
+                   "serialize" => 1,
+                   "Isometriclines" => [ (0.1745) ],
+                   "Isoratiolines" => [ (13.333) ],
+                   "DETLineAttr" => { ("Name 1" => { label => "New DET1", lineWidth => 9, pointSize => 2, pointTypeSet => "square", color => "rgb \"#0000ff\"" }),
+                                    },
+                   "PointSet" => [ { MMiss => .8,  MFA => .06, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2011"}, 
+                                   { MMiss => .57,  MFA => .045, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2012"}, 
+                                   { MMiss => .4,  MFA => .03, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2013"}, 
+                                   { MMiss => .29,  MFA => .02, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2014"}, 
+                                   { MMiss => .2,  MFA => .015, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2015"}, 
+                                   
+                                   { MMiss => .565,  MFA => .0424, pointSize => 1,  pointType => 10, color => "rgb \"#ff0000\"", label => "Act  ", justification => "right"}, 
+                                   { MMiss => .2828,  MFA => .0212, pointSize => 1,  pointType => 10, color => "rgb \"#ff0000\"", label => "Act  ", justification => "right"}, 
+                                   ] ) };
+  
+    print $ds->renderAsTxt("$dir/MNLCF.unitTest.det", 1, 1, $options, "");                                                                     
+  }
+  printf "Done\n";
+  ###############################################################################################
+}
 
 1;
