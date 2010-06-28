@@ -47,13 +47,15 @@ sub new
       MMisc::error_quit("Trials parameter \'$p\' does not exist")
           if (! exists($self->{TRIALPARAMS}->{$p}));
     }
+    MMisc::error_quit("\'Ptarg\' parameter must be different than 1.0")
+        if ($self->{PARAMS}->{Ptarg} == 1.0);
 
     ## Add normalization constants so they don't need recomputed
     $self->{CONST_MISS_FACT} = $self->{PARAMS}->{CostMiss} * $self->{PARAMS}->{Ptarg};
     $self->{CONST_FA_FACT} = $self->{PARAMS}->{CostFA} * (1 - $self->{PARAMS}->{Ptarg});
     $self->{CONST_NORM} = ($self->{CONST_MISS_FACT} < $self->{CONST_FA_FACT}) ? $self->{CONST_MISS_FACT} : $self->{CONST_FA_FACT};
 
-    #    print Dumper($self->{TRIALPARAMS});
+   #     print Dumper($self);
 
     bless ($self, $class);
 
