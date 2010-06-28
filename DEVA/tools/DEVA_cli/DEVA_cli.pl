@@ -153,7 +153,7 @@ GetOptions
    'usedMetric=s' => \$usedmetric,
    'UsedMetricParameters=s' => \@usedmetparams,
    'TrialsParameters=s' => \@trialsparams,
-   'listParams' => \$listparams,
+   'listParameters' => \$listparams,
    'wREFcfg=s'  => \$wrefCFfile,
    'WSYScfg=s'  => \$wsysCFfile,
    'VMDcfg=s'   => \$wmdCFfile,
