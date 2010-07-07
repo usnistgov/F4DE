@@ -494,9 +494,20 @@ sub run_tool {
 
 =head1 NAME
 
-DEVA_cli - DEVA Command Line Interface
+DEVA_cli - Dtection EVAluation Scorer Command Line Interface
 
 =head1 SYNOPSIS
+
+!!! Divide up these into sets to nake it simpler to userstand
+- required 
+  - input files
+  - output 
+- options  
+  - Metric maniputations
+  - Graphing manipulations
+  - Report generations
+  - 
+
 
 B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
   S<B<--outdir> I<dir>>
@@ -519,21 +530,79 @@ B<DEVA_cli> S<[ B<--help> | B<--man> | B<--version> ]>
 
 =head1 DESCRIPTION
 
-B<DEVA_cli> is a wrapper script to start from a set of CSV files, generate its configuraion file, then its database, apply a select filter on the database to obtain DETCurve information.
+B<DEVA_cli> is the main wrapper script for the Detection EVAluation
+(DEVA) tool set.  The SCORING PIPELINE section below describes the steps performed by the wrapper.
 
-The script will work with the following tools (lookup their help page for more details):
+The DEVA tools are designed to score the output of a
+binary detection system using a variety of evaluation metrics.  The tool set reads a set of comma
+separated value (CSV) input data files and then uses a SQLite database backend to
+select what to score.  
+
+The DEVA tool set uses the notion of a 'detection trial' as the
+fundmental building block for the tool.  A detection trial is a test
+probe of a detection system in which a system is given a particular
+piece of data and the system provides a numeric estimate expressing
+the confidence that the peice of data is a member of the target class.  A
+trial can be a 'target trial' in which the piece of data IS an
+instance of the class or a 'non-target trial' in which the piece of
+data IS NOT a member of the class.  The tool does not interact with
+the source data in any manner so the probe data and class definition can be of
+any construction.
+
+The DEVA tool set has three design features that make it a powerful
+evaluation tool: 
 
 =over
 
-=item B<SQLite_cfg_helper> 
+1. There are two modes of operation, simple and
+wizard mode.   See the INPUT FILES and QUICK START sections below to see how to use the tool in its simplest form.  
+See the SPEED OPTIMIZATION section below for methods to enhance processing speed.  
 
-=item B<SQLite_tables_creator> (and B<SQLite_load_csv>)
+2. The tool set uses SQLite data bases to store the
+input data and SQL queries to condition the scoring based on supplied
+metadata.  See the SQL FILTERS section to understand how to use SQL filters.
 
-=item B<DEVA_filter>
-
-=item B<DEVA_sci>
+3. Commandline-selectable evaluation metrics and parameters.  See the
+METRICS section for how to select and provide parameters for the
+metrics.
 
 =back
+
+The two modes of operations make it possible for a casual user to use
+the scoring tools quickely without understanding the intricacies of
+the tool while providing richer functionality for the more advanced
+user.  In simple mode, a user provides CSV-formatted system and
+reference files and a simple SQL query, the tool then performs the
+full scoring pipeline.  In wizard mode, a user re-uses previous
+computations to speed execution by skipping steps that are often repetative.  
+
+The SQLite provides both an efficient data store and a mechanism to
+performed conditioned scoring by filtering the system output based on
+additional factors.  The filter operation is performed by an SQL query
+that selects both the target and non-target trials to score.  See the SQL FILTERS section below.
+
+Commandline-selectable evaluation metrics permit the same tool to be
+used for a variety of evaluations. The metrics are implemented as
+source code modules provided with the tool set.  The metrics set
+expanded only through additional coding.
+
+
+
+=head1 SCORING PIPELINE
+
+Describe the scoring pipeline steps.. 
+
+=head1 INPUT FILES
+
+Describe the REF, SYSTEM, and metadata Input FILES
+
+=head1 SQL FILTERS
+
+Describe the filters and the role it plays
+
+=head1 METRICS
+
+Describe the METRICS facilities.
 
 =head1 PREREQUISITES
 
@@ -870,6 +939,22 @@ I<ref2.csv>, I<sys2.csv> and I<md2.csv> will not be used by the database creatio
 =item TODO more examples
 
 =back
+
+=back
+
+=head1 RELATED TOOLS
+
+The script will work with the following tools (lookup their help page for more details):
+
+=over
+
+=item B<SQLite_cfg_helper> 
+
+=item B<SQLite_tables_creator> (and B<SQLite_load_csv>)
+
+=item B<DEVA_filter>
+
+=item B<DEVA_sci>
 
 =back
 
