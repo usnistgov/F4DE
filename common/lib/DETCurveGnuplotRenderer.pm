@@ -676,7 +676,9 @@ sub write_gnuplot_threshold_header{
 
   print $FP "## GNUPLOT command file\n";
   print $FP "set terminal postscript color\n";
-  print $FP "set data style lines\n";
+  #  print $FP "set data style lines\n"; 
+  # ^ obsoleted 
+  print $FP "set style data lines\n";
   print $FP "set title '$title'\n";
   print $FP "set xlabel 'Detection Score'\n";
   print $FP "set grid\n";
@@ -806,9 +808,9 @@ sub _drawIsoratiolines{
       printf ISODAT "$pfa $pmiss\n";
             
       if   ( $x < 0.0001 ) { $x += 0.000001; }
-   		elsif( $x < 0.001  ) { $x += 0.00001; }
+      elsif( $x < 0.001  ) { $x += 0.00001; }
       elsif( $x < 0.004  ) { $x += 0.00004; }
-    	elsif( $x < 0.01   ) { $x += 0.0001; }
+      elsif( $x < 0.01   ) { $x += 0.0001; }
       elsif( $x < 0.02   ) { $x += 0.0002; } 
       elsif( $x < 0.05   ) { $x += 0.0005; }
       elsif( $x < 0.1    ) { $x += 0.001; }
@@ -1032,10 +1034,10 @@ sub writeMultiDetGraph
     
     ### Check the metric types to see if the random curve is defined
     if ($self->{props}->getValue("MissUnit") eq "Prob" && $self->{props}->getValue("FAUnit") eq "Prob"){
-       push @PLOTCOMS, "  -x title 'Random Performance' with lines 1";
+       push @PLOTCOMS, "  -x title 'Random Performance' with lines lt 1";
     }
 
-   	### Draw the isometriclines
+    ### Draw the isometriclines
     $self->_drawIsometriclines($fileRoot, \@PLOTCOMS, \@offAxisLabels, $detset->getDETForID(0)->{METRIC});
 
     ### Draw the isoratiolines
@@ -1357,21 +1359,21 @@ sub writeGNUGraph{
   $self->write_gnuplot_threshold_header(*THRESHPLT, "Threshold Plot for $self->{title}");
   if (defined($threshMin)){
     print THRESHPLT "plot [$threshMin:$threshMax]  \\\n";
-    print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines 2, \\\n";
-    print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines 3, \\\n";
-    print THRESHPLT "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines 4";
+    print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines lt 2, \\\n";
+    print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines lt 3, \\\n";
+    print THRESHPLT "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines lt 4";
     if ($self->{reportActual}){
-      print THRESHPLT ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines 5";
+      print THRESHPLT ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines lt 5";
     }
     if (defined($det->getBestCombComb())) {
-      print THRESHPLT ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points 6";
-#      print THRESHPLT ", \\\n  ".$det->getBestCombComb()." title '$combType $combStr' with lines 6";
+      print THRESHPLT ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points lt 6";
+#      print THRESHPLT ", \\\n  ".$det->getBestCombComb()." title '$combType $combStr' with lines lt 6";
     }
     print THRESHPLT "\n";
   } else {
     print THRESHPLT "set label \"No detection outputs produced by the system.  Threshold plot is empty.\" at graph 0.2, graph 0.5\n";
     print THRESHPLT "set size ratio 1\n"; 
-    print THRESHPLT "plot [0:1] [0:1] -x notitle with points \n";
+    print THRESHPLT "plot [0:1] [0:1] -x notitle with points\n";
   }
   close THRESHPLT;
   if ($self->{BuildPNG}) {
