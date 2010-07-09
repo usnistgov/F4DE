@@ -127,9 +127,10 @@ my $listparams = 0;
 my $devadetname = '';
 my ($xm, $xM, $ym, $yM, $xscale, $yscale) 
   = (undef, undef, undef, undef, undef, undef);
+my $blockavg = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: A CD F     LM    RSTUVWXYZa cd fghi  lm o  rstuvwxyz  #
+# Used: ABCD F     LM    RSTUVWXYZa cd fghi  lm o  rstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -166,6 +167,7 @@ GetOptions
    'ZusedYscale=s'       => \$yscale,
    'AdditionalFilterDB=s'  => \@addDBs,
    'iFilterDBfile=s' => \$wresDBfile,
+   'BlockAverage'    => \$blockavg,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -434,6 +436,7 @@ sub run_scorer {
   $cmdp .= " -Y $yM" if (defined $yM);
   $cmdp .= " -u $xscale" if (defined $xscale);
   $cmdp .= " -U $yscale" if (defined $yscale);
+  $cmdp .= " -B" if ($blockavg);
   $cmdp .= " $finalDBfile";
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdp);
@@ -488,6 +491,7 @@ sub run_tool {
   return($ok, $otxt, $so, $se, $rc, $of);
 }
 
+
 ############################################################ Manual
 
 =pod
@@ -498,15 +502,8 @@ DEVA_cli - Detection EVAluation Scorer Command Line Interface
 
 =head1 SYNOPSIS
 
-
- options  
-  - Metric maniputations
-  - Graphing manipulations
-  - Report generations
-  - 
-
-
-B<DEVA_cli> S<[B<--help> | B<--man> | B<--version>]>
+B<DEVA_cli> 
+  S<[B<--help> | B<--man> | B<--version>]>
   S<B<--outdir> I<dir>>
   S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--DETScoreSkip>]>
   S<[B<--refcsv> I<csvfile>] [B<--syscsv> I<csvfile>]>
@@ -515,14 +512,15 @@ B<DEVA_cli> S<[B<--help> | B<--man> | B<--version>]>
   S<[B<--MetadataDBfile> I<file>] [B<--iFilterDBfile> I<file>]>
   S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
   S<[B<--AdditionalFilterDB> I<file:name> [B<--AdditionalFilterDB> I<file:name> [...]]]>
- S<[B<--usedMetric> I<package>]>
-  S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]>
+  S<[B<--usedMetric> I<package>]>
+  S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]]>
   S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
   S<[B<--listParameters>] [B<--detName> I<name>]>
   S<[B<--xmin> I<val>] [B<--Xmax> I<val>] [B<--ymin> I<val>] [B<--Ymax> I<val>]>
   S<[B<--zusedXscale> I<set>] [B<--ZusedYscale> I<set>]>
+  S<[B<--BlockAverage>]>
   S<[B<--additionalResDBfile> I<file> [B<--additionalResDBfile> I<file> [...]]]>
-  [I<csvfile> [I<csvfile> [I<...>]]
+  S<[I<csvfile> [I<csvfile> [I<...>]]>
 
 
 =head1 DESCRIPTION
@@ -537,7 +535,7 @@ The wrapper performs four steps to complete thes scoring process.  The USAGE sec
 
 =over  
 
-=item Step 1. Scheme configuration generation
+=item Step 1: Scheme configuration generation
 
 Required arguments:
  S<B<--outdir> I<dir>>
@@ -553,7 +551,7 @@ Optional arguments:
 Bypass step:
  S<[B<--configSkip>]>
 
-=item Step 2. SQL table creation and populating
+=item Step 2: SQL table creation and populating
 
 Required arguments:
  S<B<--outdir> I<dir>>
@@ -569,7 +567,7 @@ Optional arguments:
 Bypass step: 
  S<[B<--CreateDBSkip>]>
 
-=item Step 3. SQL Filtering
+=item Step 3: SQL Filtering
 
 Required arguments:
  S<B<--outdir> I<dir>>
@@ -585,7 +583,7 @@ Optional arguments:
 Bypass step: 
  S<[B<--filterSkip>]>
 
-=item Step 4. Scoring with DETCurve generation
+=item Step 4: Scoring with DETCurve generation
 
 Required arguments:
  S<B<--outdir> I<dir>>
@@ -595,7 +593,7 @@ Optional arguments:
  S<[B<--SysDBfile> I<file>]>
  S<[B<--iFilterDBfile> I<file>]>
  S<[B<--usedMetric> I<package>]>
- S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]>
+ S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]]>
  S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
  S<[B<--listParameters>]>
  S<[B<--detName> I<name>]>
@@ -606,6 +604,7 @@ Optional arguments:
  S<[B<--zusedXscale> I<set>]>
  S<[B<--ZusedYscale> I<set>]>
  S<[B<--additionalResDBfile> I<file> [B<--additionalResDBfile> I<file> [...]]]>
+ S<[B<--BlockAverage>]>
 
 Bypass step: 
  S<[B<--DETScoreSkip>]>
@@ -674,9 +673,9 @@ The I<reference> CSV file must contain two columns: I<TrialID> and I<Targ>, wher
 The I<system> CSV file must contain three columns: I<TrialID>, I<Score> and I<Decision>, where I<TrialID> must be a primary key, I<Score> a numerical value and I<Targ> values must be a either I<y> or I<n>.
 
 Examples of CSV files can be found in the F4DE source in:
-S<common/test/common/ref.csv>
-S<common/test/common/sys.csv>
-S<common/test/common/md.csv>
+ F<common/test/common/ref.csv>
+ F<common/test/common/sys.csv>
+ F<common/test/common/md.csv>
 
 =head2 Configuration files
 
@@ -705,17 +704,20 @@ Specify a column seen in the CSV file, each column seen has to be detailed this 
 
 S<column*:> specify that the column is the table's primary key. A given table can only have one primary key.
 
-S<columnUsedName> specify the column name as it can be accessed from its I<tablename> within I<SQLite>. If a column has a name to which the I<entry renaming rule> applis, S<column:> gets redifined as S<column: columnName=columnUsedName;columnType>, where S<columnName> is the original column name. For example if the original column name is S<name.has;to:fixed> (of I<TEXT> S<columnType>), the S<column:> definition will read S<column: name.has;to:fixed=name_has_to_fixed;TEXT>.
+S<columnUsedName> specify the column name as it can be accessed from its I<tablename> within I<SQLite>. If a column has a name to which the I<entry renaming rule> applis, S<column:> gets redifined as S<column: columnName=columnUsedName;columnType>, where S<columnName> is the original column name. For example if the original column name is
+ S<name.has;to:fixed> (of I<TEXT> S<columnType>)
+, the S<column:> definition will read
+ S<column: name.has;to:fixed=name_has_to_fixed;TEXT>
 
 S<columnType> is one of S<INT>, S<REAL> or S<TEXT>.
 
 =back
 
 Examples of configuration files can be found in the F4DE source in:
-S<common/test/common/ref1.cfg>
-S<common/test/common/sys2.cfg>
-S<common/test/common/md2.cfg>
-S<common/test/common/mix2.cfg>
+ F<common/test/common/ref1.cfg>
+ F<common/test/common/sys2.cfg>
+ F<common/test/common/md2.cfg>
+ F<common/test/common/mix2.cfg>
 
 =head1 SQL FILTERS
 
@@ -731,23 +733,28 @@ Both columns will then be made to populate I<outdir/filterDB.db>'s I<resultsTabl
 
 An example of such select can be:
 
-SELECT system.TrialID FROM system INNER JOIN md WHERE system.TrialID=md.TrialID;
+ SELECT system.TrialID FROM system INNER JOIN md WHERE system.TrialID=md.TrialID;
 
 which will "select the list of TrialID from the system table and the metadata table where both TrialID match". Note that this will use the default I<BlockID>.
 
 A more complex example given a I<color> column in the metadata database that will be used as the BlockID:
 
-SELECT system.TrialID,color FROM system INNER JOIN md WHERE system.TrialID=md.TrialID AND Decision>"1.2";
+ SELECT system.TrialID,color FROM system INNER JOIN md WHERE system.TrialID=md.TrialID AND Decision>"1.2";
 
-which will "select the list of TrialIDs and corresponding color from the system table and the metadata table where both TrialID match and the system's decision is at least 1.2". This will use the I<color> entry as the I<BlockID>.
+which will "select the list of TrialIDs and corresponding color from the system table and the metadata table where both TrialID match and the system's decision is more than 1.2". This will use the I<color> entry as the I<BlockID>.
 
 Examples of SQL filter files can be found in the F4DE source in:
-S<DEVA/test/common/filter1.sql>
-S<DEVA/test/common/filter2.sql>
+ F<DEVA/test/common/filter1.sql>
+ F<DEVA/test/common/filter2.sql>
 
 =head1 METRICS
 
-This section is TBD.
+This section is TBD
+TODO
+ Metric maniputations
+ Graphing manipulations
+ Report generations
+
 
 =head1 PREREQUISITES
 
@@ -778,6 +785,10 @@ Attach additional SQLite database(s) during I<Filtering Step>. Load I<file> as I
 =item B<--additionalResDBfile> I<file>
 
 Attach additional I<Filtering Step> result SQLite database(s) during I<DETCurve generation Step>. Tables will be merged by doing an B<AND> on the I<TrialID>s.
+
+=item B<--BlockAverage>
+
+For scoring step, combine all Trial in one DET instead of splitting them per BlockID
 
 =item B<--CreateDBSkip>
 
@@ -1054,8 +1065,6 @@ B<DEVA_cli --outdir outdir --refcsv ref2.csv --syscsv sys2.csv md2.csv --configS
 
 I<ref2.csv>, I<sys2.csv> and I<md2.csv> will not be used by the database creation process (Step 2), since I<ref.csv>, I<sys.csv> and I<md.csv> are specified in the S<csvfile:> line of the respective config file.
 
-=item TODO more examples
-
 =back
 
 =back
@@ -1100,7 +1109,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
+$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1136,7 +1145,9 @@ DETCurve generation (Step 4) specific options:
   --xmin --Xmax      Specify the min and max value of the X axis (PFA) of the DET curve (*1)
   --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (*1)
   --zusedXscale --ZusedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (*1)
+  --BlockAverage    Combine all Trial in one DET instead of splitting them per BlockID
   --additionalResDBfile  Additional Filter results database files to give the scorer (will do an AND on the TrialIDs)
+
 
 *1: default values can be obtained from \"$deva_sci\" 's help
 
