@@ -11,45 +11,95 @@
 <h2>Description: </h2>
 This document provides a high-level overview of how to use the F4DE
 tools for the TRECVid MED Evaluations.&nbsp;
-This document refers to examples in the F4DE
-distribution to get a researcher quickly up to speed using the toolkit
-to evaluate the performance of their systems.<br>
 <br>
-There are five sections in this document: nomenclature, file format
-definitions,
-executable script synopses, annotation file validation, and scoring
-scripts.&nbsp;
+There are five sections in this document:<a
+href="#nomenclature">nomenclature</a>, <a href="#executable">executable
+script synopsis</a>, <a href="#format">file format</a>, <a
+href="#cliuse">using the tool</a>, and <a href="#scoring">scoring a submission</a>.&nbsp;
 The examples below assume the F4DE package has been
 installed and is working properly according to the README including
 $F4DE_BASE is defined and $F4DE_BASE/bin is in your path
 variable.&nbsp;
 The variable DIST used below is the path to the F4DE
 source directory and is not part of the F4DE installation instructions.<br>
-<h2>Nomenclature:</h2>
-The Multimedia Event Detection (MED) evaluation track is part of the TRECVID Evaluation. The multi-year goal of MED is to assemble core detection technologies into a system that can quickly and accurately search a multimedia collection for user-defined events. An event for MED 2010 is &quote;an activity-centered happening that involves people engaged in process-driven actions with other people and/or objects at a specific place and time&quote;.<br>
+
+<a name="nomenclature"><h2>Nomenclature:</h2></a>
+The Multimedia Event Detection (MED) evaluation track is part of the TRECVID Evaluation. The multi-year goal of MED is to assemble core detection technologies into a system that can quickly and accurately search a multimedia collection for user-defined events. An event for MED 2010 is &quot;an activity-centered happening that involves people engaged in process-driven actions with other people and/or objects at a specific place and time&quot;.<br>
 A user searching for events in multimedia material may be interested in a wide variety of potential events. Since it is an intractable task to build special purpose detectors for each event a priori, a technology is needed that can take as input a definition of the event that a human can use to search a collection of multimedia clips.<br>
 The MED task is: given an Event Kit, find all clips that contain the event in a video collection.<br>
 The MED task is a "multimedia" task in that systems will be expected to detect evidence of the event using either or both the audio and video streams (but not human-created textual metadata) of the clips.<br>
-<h2>File Formats:</h2>
+
+
+<a name="executable"><h2>Executable Script Synopsys:</h2></a>
+<b>DEVA_cli</b> is the <i>Detection EVAluation command line
+interface</i> software that is used for scoring the MED
+evaluation.<br>
+The software is designed to use SQL tables to do queries.<br>
+The software reads one reference <i>Comma Separated Values</i> (CSV)
+file, one system CSV file and optionaly mulitple metadata CSV files,
+and create multiple databases (one for reference, one for system and
+one for all metadata tables), and will apply a SQL <i>SELECT</i> on
+these databases.<br>
+
+
+<a name="format"><h2>File Formats:</h2></a>
 The TRECVid MED tools use <i>Comma Separated Values</i> (CSV) files to
 generate SQL tables that will be used by the scoring tool.<br>
-<h2>Executable Script Synopses:</h2>
-<ul>
-  <li>DEVA_cli - the Detection EVAluation command line interface, the
-  software that will be used for scoring the MED evaluation.</li>
-</ul>
-<h2>Scoring a DEV submission</h2>
-A site submission (with a CSV file named &quote;SITE_1.csv&quote;) should contain all the <i>TrialID</i> present in the <i>DEV_TrialIndex.csv</i> file.<br>
+
+For the metadata, the CSV file names will be used as SQL table name, and must have as a first row the column headers that will be used as the SQL table column name.
+To avoid issues in processing the data, it is recommended that each
+column content be quoted and comma separated. For example, a table
+whose SQL table name is expected to be &quot;Employee&quot; will be
+represented as the &quot;Employee.csv&quot; file and contain a first
+row: <pre>"ID","FirstName","LastName"</pre> and an example a one
+such  entry could be: <pre>"1","John","Doe"</pre>
 <br>
-&nbsp;&nbsp;&nbsp; % DEVA_cli --outdir SITE_Results --refcsv
+The program leave the content of the database free for most metadata content. One of the table that is part of that database should contain a <i>TrialID</i> column that match the one present in the <b>reference</b> or <b>system</b> CSV.
+<br>
+The <b>reference</b> CSV file must contain two columns: <i>TrialID</i> and <i>Targ</i>, where <i>TrialID</i> must be a primary key and <i>Targ</i> values must be a either <i>y</i> or <i>n</i>.
+<br>
+The <b>system</b> CSV file must contain three columns: <i>TrialID</i>, <i>Score</i> and <i>Decision</i>, where <i>TrialID</i> must be a primary key, <i>Score</i> a numerical value and <i>Targ</i> values must be a either <i>y</i> or <i>n</i>.
+
+<a name="cliuse"><h2>Using the DEVA_cli tool:</h2></a>
+For further information about the DEVA_cli tool (available as part of
+the F4DE), please refer to its manual:
+<pre>DEVA_cli --man</pre>
+
+<a name="scoring"><h2>Scoring a MED submission</h2></a>
+
+The following is an example of scoring a DEV submission, using some of
+the CSV files that are provided in the I<doc> directory of the DEV
+set and a site submission CSV file named &quot;SITE_1.csv&quot;,
+which follows the rules set for a system CSV file and contains all the <i>TrialID</i> present in the <i>DEV_TrialIndex.csv</i> file.<br>
+<br>
+<pre>% DEVA_cli --outdir SITE_Results --refcsv
 DEV_Ref.csv --syscsv SITE_1.csv --FilterCMDfile med10_filter.cmd
 --UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.1'
 --UsedMetricParameters 'CostFA=1' DEV_ClipMD.csv DEV_JudgementMD.csv
-DEV_TrialIndex.csv<br>
+DEV_TrialIndex.csv</pre>
 <br>
-where the SQL filter (&quote;med10_filter.cmd&quote;) is:
-<br>
-SELECT TrialID,Event FROM DEV_TrialIndex;
-<br>
-For further information about the TRECVid MED and its operation, including details about using it, please refer to the DEVA_cli manual available as part of the F4DE tools (DEVA_cli --man).
-</body></html>
+where the SQL filter (&quot;med10_filter.cmd&quot;) is:
+<pre>SELECT TrialID,Event FROM DEV_TrialIndex;</pre>
+
+This will run through the four step process done by DEVA_cli, and
+under the <i>SITE_Results</i> will be present afile titled
+<i>scoreDB_DET.scores.txt</i> that will contain a human readable
+detail:
+<ul>
+  <li> the number of <i>y</i> <i>Targ</i> <b>Reference</b> entries
+  (<code>#Ref</code>)
+  <li> the number of <b>System</b> entries (<code>#Sys</code>)
+  <li> the number of correct detections of <i>y</i> <i>Targ</i>
+  <b>Reference</b> by the <b>System</b> (<code>#CorDet</code>)
+  <li> the number of false alarms: <i>y</i> <b>System</b>
+  <i>Decision</i> for a <i>n</i> <i>Targ</i> <b>Reference</b>
+  (<code>$FA</code>)
+  <li> the number of missed detections of a  <i>y</i> <i>Targ</i>
+  <b>Reference</b> by the <b>System</b> (<code>#Miss</code>)
+</ul>
+Note that the correct detection of a <i>n</i> <i>Targ</i>
+<b>Reference</b> is not counted.
+
+
+</body>
+</html>
