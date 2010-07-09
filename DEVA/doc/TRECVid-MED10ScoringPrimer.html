@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
+  <title>TRECVid MED Scoring Primer</title>
+</head><body>
+<div style="text-align: center;"><big><big><big>TRECVid MED Scoring Primer</big></big></big><br>
+</div>
+<div style="text-align: center;"><small>Updated July 9, 2010</small><br>
+</div>
+<br>
+<h2>Description: </h2>
+This document provides a high-level overview of how to use the F4DE
+tools for the TRECVid MED Evaluations.&nbsp;
+This document refers to examples in the F4DE
+distribution to get a researcher quickly up to speed using the toolkit
+to evaluate the performance of their systems.<br>
+<br>
+There are five sections in this document: nomenclature, file format
+definitions,
+executable script synopses, annotation file validation, and scoring
+scripts.&nbsp;
+The examples below assume the F4DE package has been
+installed and is working properly according to the README including
+$F4DE_BASE is defined and $F4DE_BASE/bin is in your path
+variable.&nbsp;
+The variable DIST used below is the path to the F4DE
+source directory and is not part of the F4DE installation instructions.<br>
+<h2>Nomenclature:</h2>
+The Multimedia Event Detection (MED) evaluation track is part of the TRECVID Evaluation. The multi-year goal of MED is to assemble core detection technologies into a system that can quickly and accurately search a multimedia collection for user-defined events. An event for MED 2010 is &quote;an activity-centered happening that involves people engaged in process-driven actions with other people and/or objects at a specific place and time&quote;.<br>
+A user searching for events in multimedia material may be interested in a wide variety of potential events. Since it is an intractable task to build special purpose detectors for each event a priori, a technology is needed that can take as input a definition of the event that a human can use to search a collection of multimedia clips.<br>
+The MED task is: given an Event Kit, find all clips that contain the event in a video collection.<br>
+The MED task is a "multimedia" task in that systems will be expected to detect evidence of the event using either or both the audio and video streams (but not human-created textual metadata) of the clips.<br>
+<h2>File Formats:</h2>
+The TRECVid MED tools use <i>Comma Separated Values</i> (CSV) files to
+generate SQL tables that will be used by the scoring tool.<br>
+<h2>Executable Script Synopses:</h2>
+<ul>
+  <li>DEVA_cli - the Detection EVAluation command line interface, the
+  software that will be used for scoring the MED evaluation.</li>
+</ul>
+<h2>Scoring a DEV submission</h2>
+A site submission (with a CSV file named &quote;SITE_1.csv&quote;) should contain all the <i>TrialID</i> present in the <i>DEV_TrialIndex.csv</i> file.<br>
+<br>
+&nbsp;&nbsp;&nbsp; % DEVA_cli --outdir SITE_Results --refcsv
+DEV_Ref.csv --syscsv SITE_1.csv --FilterCMDfile med10_filter.cmd
+--UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.1'
+--UsedMetricParameters 'CostFA=1' DEV_ClipMD.csv DEV_JudgementMD.csv
+DEV_TrialIndex.csv<br>
+<br>
+where the SQL filter (&quote;med10_filter.cmd&quote;) is:
+<br>
+SELECT TrialID,Event FROM DEV_TrialIndex;
+<br>
+For further information about the TRECVid MED and its operation, including details about using it, please refer to the DEVA_cli manual available as part of the F4DE tools (DEVA_cli --man).
+</body></html>
