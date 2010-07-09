@@ -120,8 +120,11 @@ my @ok_scales = ('nd', 'log', 'linear'); # order is important
 my ($xm, $xM, $ym, $yM, $xscale, $yscale)
   = (0.1, 95, 0.1, 95, $ok_scales[0], $ok_scales[0]);
 
+my $blockavg = 0;
+my $blockavg_text = "BlockAverage";
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:             M    R TU  XY    d   h   lm o  rs uv xy   #
+# Used:  B          M    R TU  XY    d   h   lm o  rs uv xy   #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -146,6 +149,7 @@ GetOptions
    'Ymax=f'             => \$yM,
    'usedXscale=s'       => \$xscale,
    'UsedYscale=s'       => \$yscale,
+   'BlockAverage'       => \$blockavg,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -254,45 +258,53 @@ my $tot1 = scalar(keys %ref) + scalar(keys %sys);
 #print MMisc::get_sorted_MemDump(\%ref);
 #print MMisc::get_sorted_MemDump(\%sys);
 
-my $trial = undef;
-my $trialcmd = "\$trial = new $trialn (\\\%trialsparams);";
-unless (eval "$trialcmd; 1") {
-  MMisc::error_quit("Problem creating Trial ($trialn) object (" . join(" ", $@) . ")");
-}
-MMisc::error_quit("Problem with Trial ($trialn)")
-  if (! defined $trial);
 my ($mapped, $unmapped_sys, $unmapped_ref) = (0, 0, 0);
 
+my %bid_trials = ();
+
+##
 foreach my $key (keys %sys) {
+
   my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
     ? $tid2bid{$key}{$BlockIDcolumn} : $BlockIDcolumn;
+
+  my $ubid = ($blockavg) ? $blockavg_text : $bid;
+
+  &def_bid_trials($ubid);
+
+  my $decision = ($sys{$key}{$Decisioncolumn} eq 'y') ? 'YES' : 'NO';
+  my $istarg   = 0;
+
   if (exists $ref{$key}) { # mapped
-    $trial->addTrial($bid, $sys{$key}{$Scorecolumn},
-                     ($sys{$key}{$Decisioncolumn} eq 'y') ? 'YES' : 'NO',
-                     ($ref{$key}{$Targcolumn} eq 'y') ? 1 : 0
-      );
+    $istarg   = ($ref{$key}{$Targcolumn} eq 'y') ? 1 : 0;
     $mapped++;
   } else { # unmapped sys
-    $trial->addTrial($bid, $sys{$key}{$Scorecolumn}, 
-                     ($sys{$key}{$Decisioncolumn} eq 'y') ? 'YES' : 'NO', 0);
     $unmapped_sys++;
   }
+
+  $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg);
 }
 
 foreach my $key (keys %ref) {
   if (! exists $sys{$key}) { # unmapped ref
     my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
       ? $tid2bid{$key}{$BlockIDcolumn} : $BlockIDcolumn;
+    my $ubid = ($blockavg) ? $blockavg_text : $bid;
     # If the ref TID is omitted and it is a non-target trial, then it is NOT an error AND it does not get added to the trials, therefore:
-    $trial->addTrial($bid, undef, "OMITTED", 1) 
-      if ($ref{$key}{$Targcolumn} eq 'y');
+    if ($ref{$key}{$Targcolumn} eq 'y') {
+      &def_bid_trials($ubid);
+      $bid_trials{$ubid}->addTrial($bid, undef, "OMITTED", 1);
+    }
     $unmapped_ref++;
   }
   
 # mapped: already done
 }
 
-print $trial->dumpCountSummary();
+foreach my $key (keys %bid_trials) {
+  print "[***** $key]\n";
+  print $bid_trials{$key}->dumpCountSummary();
+}
 
 print "Mapped      : $mapped\n";
 print "UnMapped REF: $unmapped_ref\n";
@@ -304,34 +316,7 @@ print "-- Total number of entries in REF + SYS    = $tot1\n";
 print "-- 2x mapped + Unmapped REF + Unmapped SYS = $tot2\n";
 MMisc::error_quit("Problem at check point") if ($tot1 != $tot2);
 
-my $met = undef;
-my $metcmd = "\$met = new $metric (\\\%metparams, \$trial);";
-unless (eval "$metcmd; 1") {
-  MMisc::error_quit("Problem creating Metric ($metric) object (" . join(" ", $@) . ")");
-}
-MMisc::error_quit("Problem with metric ($metric)")
-  if (! defined $met);
-my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
-my $det = new DETCurve($trial, $met, $devadetname, 
-                       \@isolinecoef, MMisc::cmd_which("gzip"));
-my $detSet = new DETCurveSet("DEVA DET Set");
-my $rtn = $detSet->addDET($devadetname, $det);
-MMisc::error_quit("Error adding DET to the DETSet: $rtn")
-  if ($rtn ne "success");
-MMisc::writeTo
-    ($bDETf, ".scores.txt", 1, 0, 
-     $detSet->renderAsTxt
-     ("$bDETf.det", 1, 1, 
-      { (xScale => $xscale, yScale => $yscale, 
-         Xmin => $xm, Xmax => $xM,
-         Ymin => $ym, Ymax => $yM,
-         gnuplotPROG => MMisc::cmd_which("gnuplot"),
-         createDETfiles => 1,
-         serialize => 1,
-         BuildPNG => 1),
-      },
-      "$bDETf.csv")
-    );
+&doDETwork(%bid_trials);
 
 MMisc::ok_quit("Done");
 
@@ -442,6 +427,69 @@ sub confirm_table {
   MtSQLite::release_dbh($dbh);
 }
 
+##########
+
+sub def_bid_trials {
+  my ($bid) = @_;
+
+  MMisc::error_quit("Empty BlockID are not authorized")
+    if (MMisc::is_blank($bid));
+
+  return if (exists $bid_trials{$bid});
+
+  $bid_trials{$bid} = undef;
+  my $trialcmd = "\$bid_trials\{\$bid\} = new $trialn (\\\%trialsparams);";
+  unless (eval "$trialcmd; 1") {
+    MMisc::error_quit("Problem creating BlockID ($bid)'s Trial ($trialn) object (" . join(" ", $@) . ")");
+  }
+  MMisc::error_quit("Problem with BlockID ($bid)'s Trial ($trialn)")
+    if (! defined $bid_trials{$bid});
+}
+
+#####
+
+sub doDETwork {
+  my %bid_trials = @_;
+
+  my $detSet = new DETCurveSet("DEVA DET Set");
+  my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
+
+  foreach my $bid (keys %bid_trials) {
+    my $usedtrial = $bid_trials{$bid};
+    my $met = undef;
+    my $metcmd = "\$met = new $metric (\\\%metparams, \$usedtrial);";
+    unless (eval "$metcmd; 1") {
+      MMisc::error_quit("Problem creating BlockID ($bid)'s Metric ($metric) object (" . join(" ", $@) . ")");
+    }
+    MMisc::error_quit("Problem with BlockID ($bid)'s Metric ($metric)")
+      if (! defined $met);
+
+    my $detname = $devadetname . " ($bid)";
+
+    my $det = new DETCurve($usedtrial, $met, $detname, 
+                           \@isolinecoef, MMisc::cmd_which("gzip"));
+
+    my $rtn = $detSet->addDET($detname, $det);
+    MMisc::error_quit("Error adding DET to the DETSet: $rtn")
+      if ($rtn ne "success");
+  }
+
+  MMisc::writeTo
+    ($bDETf, ".scores.txt", 1, 0, 
+     $detSet->renderAsTxt
+     ("$bDETf.det", 1, 1, 
+      { (xScale => $xscale, yScale => $yscale, 
+         Xmin => $xm, Xmax => $xM,
+         Ymin => $ym, Ymax => $yM,
+         gnuplotPROG => MMisc::cmd_which("gnuplot"),
+         createDETfiles => 1,
+         serialize => 1,
+         BuildPNG => 1),
+      },
+      "$bDETf.csv")
+    );
+}
+
 ########## 
 
 sub set_usage {
@@ -450,7 +498,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--baseDETfile filebase] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--usedXscale set] [--UsedYscale set] ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--baseDETfile filebase] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--usedXscale set] [--UsedYscale set] [--BlockAverage] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
@@ -471,6 +519,7 @@ Where:
   --xmin --Xmax      Specify the min and max value of the X axis (PFA) of the DET curve (default: $xm and $xM)
   --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (default: $ym and $yM)
   --usedXscale --UsedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (default: $xscale and $yscale) 
+  --BlockAverage    Combine all Trial in one DET instead of splitting them per BlockID
 EOF
 ;
 
