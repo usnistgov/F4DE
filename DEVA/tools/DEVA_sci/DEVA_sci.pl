@@ -116,6 +116,7 @@ my %trialsparams = ();
 my $listparams = 0;
 
 my $devadetname = "Block";
+my $taskName = "Detection";
 my @ok_scales = ('nd', 'log', 'linear'); # order is important
 my ($xm, $xM, $ym, $yM, $xscale, $yscale)
   = (0.1, 95, 0.1, 95, $ok_scales[0], $ok_scales[0]);
@@ -124,7 +125,7 @@ my $blockavg = 0;
 my $blockavg_text = "BlockAverage";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:  B D        M    R TU  XY  b     h   lm o  rs uv xy   #
+# Used:  B D        M    R TU  XY  b     h   lm o  rstuv xy   #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -150,12 +151,15 @@ GetOptions
    'usedXscale=s'       => \$xscale,
    'UsedYscale=s'       => \$yscale,
    'BlockAverage'       => \$blockavg,
+   'taskName=s'         => \$taskName,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
 MMisc::error_quit("No \'blockName\' specified, aborting")
   if (MMisc::is_blank($devadetname));
+MMisc::error_quit("No \'taskName\' specified, aborting")
+  if (MMisc::is_blank($taskName));
 MMisc::error_quit("No \'metric\' specified, aborting")
   if (MMisc::is_blank($metric));
 MMisc::error_quit("Specified \'metric\' does not seem to be using a valid name ($metric), should start with \"Metric\"")
@@ -438,7 +442,7 @@ sub def_bid_trials {
   return if (exists $bid_trials{$bid});
 
   $bid_trials{$bid} = undef;
-  my $trialcmd = "\$bid_trials\{\$bid\} = new $trialn (\"Detection\", \"$devadetname\", \"Trial\", \\\%trialsparams);";
+  my $trialcmd = "\$bid_trials\{\$bid\} = new $trialn (\"$taskName\", \"$devadetname\", \"Trial\", \\\%trialsparams);";
   unless (eval "$trialcmd; 1") {
     MMisc::error_quit("Problem creating BlockID ($bid)'s Trial ($trialn) object (" . join(" ", $@) . ")");
   }

@@ -125,6 +125,7 @@ my @usedmetparams = ();
 my @trialsparams = ();
 my $listparams = 0;
 my $devadetname = '';
+my $taskName = '';
 my ($xm, $xM, $ym, $yM, $xscale, $yscale) 
   = (undef, undef, undef, undef, undef, undef);
 my $blockavg = 0;
@@ -168,6 +169,7 @@ GetOptions
    'AdditionalFilterDB=s'  => \@addDBs,
    'iFilterDBfile=s' => \$wresDBfile,
    'BlockAverage'    => \$blockavg,
+   'taskName=s'        => \$taskName,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -424,6 +426,7 @@ sub run_scorer {
   }
   $cmdp .= " -D ${finalDBbase}";
   $cmdp .= " -b ${devadetname}" if (! MMisc::is_blank($devadetname));
+  $cmdp .= " -t ${taskName}" if (! MMisc::is_blank($taskName));
   $cmdp .= " -m $usedmetric" if (! MMisc::is_blank($usedmetric));
   foreach my $mk (@usedmetparams) {
     $cmdp .= " -M $mk";
