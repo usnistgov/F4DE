@@ -74,7 +74,7 @@ the CSV files that are provided in the I<doc> directory of the DEV
 set and a site submission CSV file named &quot;SITE_1.csv&quot;,
 which follows the rules set for a system CSV file and contains all the <i>TrialID</i> present in the <i>DEV_TrialIndex.csv</i> file.<br>
 <br>
-<pre>% DEVA_cli --outdir SITE_Results --refcsv \
+<pre>% DEVA_cli --taskName MED --blockName Event --outdir SITE_Results --refcsv \
 DEV_Ref.csv --syscsv SITE_1.csv --FilterCMDfile med10_filter.cmd \
 --UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.1' \
 --UsedMetricParameters 'CostFA=1' DEV_ClipMD.csv DEV_JudgementMD.csv \
