@@ -30,7 +30,7 @@ sub new {
   MMisc::error_quit("new TrialsTestStub called without a \$trialParams value") 
     if (! defined($trialParams));
  
-  my $self = TrialsFuncs->new("Detection", "Block", "Trial", $trialParams);
+  my $self = TrialsFuncs->new($trialParams, "Detection", "Block", "Trial");
 
   #######  customizations
   foreach my $p (@trials_params) {

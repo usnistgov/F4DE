@@ -46,7 +46,8 @@ sub unitTest(){
   print "Test DETCurveSet\n";
 
   my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
-  my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
+  my $trial = new TrialsFuncs({ ("TOTALTRIALS" => 1000) },
+                              "Term Detection", "Term", "Occurrence");
     
   $trial->addTrial("she", 0.10, "NO", 0);
   $trial->addTrial("she", 0.15, "NO", 0);
@@ -68,7 +69,8 @@ sub unitTest(){
   $trial->addTrial("she", 0.95, "YES", 1);
   $trial->addTrial("she", 1.0, "YES", 1);
 
-  my $trial2 = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
+  my $trial2 = new TrialsFuncs({ ("TOTALTRIALS" => 1000) },
+                               "Term Detection", "Term", "Occurrence");
     
   $trial2->addTrial("she", 0.10, "NO", 0);
   $trial2->addTrial("she", 0.15, "NO", 0);
@@ -90,7 +92,8 @@ sub unitTest(){
   $trial2->addTrial("she", 0.95, "YES", 1);
   $trial2->addTrial("she", 1.0, "YES", 1);
 
-  my $emptyTrial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 1000) });
+  my $emptyTrial = new TrialsFuncs({ ("TOTALTRIALS" => 1000) },
+                                   "Term Detection", "Term", "Occurrence");
 
   $emptyTrial->addTrial("he", undef, "OMITTED", 1);
   $emptyTrial->addTrial("he", undef, "OMITTED", 1);
@@ -126,7 +129,8 @@ sub unitTest(){
 
   print " Added Non-Compatible DETs... ";
   my $k2Diff  = "Name non-compatable";
-  my $ncTrial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTAL" => 1000) });
+  my $ncTrial = new TrialsFuncs({ ("TOTAL" => 1000) },
+                                "Term Detection", "Term", "Occurrence");
   my $det2Diff = new DETCurve($ncTrial, 
                               new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
                               "DET2", \@isolinecoef, undef);

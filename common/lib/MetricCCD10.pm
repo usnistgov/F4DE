@@ -91,7 +91,7 @@ sub unitTest(){
 ### PFa == 0    - 0  FA  
 ### Cost == 1
 
-  my $DNtrial = new TrialsCBCD10("Term Detection", "Term", "Occurrence", { () });
+  my $DNtrial = new TrialsCBCD10({ () }, "Term Detection", "Term", "Occurrence");
   $DNtrial->addTrial("she", 0.03, "NO", 0);
   $DNtrial->addTrial("she", 0.04, "NO", 1);
   $DNtrial->addTrial("she", 0.05, "NO",  1);
@@ -119,7 +119,7 @@ sub unitTest(){
 ### PFa == 0.0075  - 3 FA  
 ### Cost == 0.8425
      
-  my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { () });
+  my $trial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
   $trial->addTrial("she", 0.03, "NO", 0);
   $trial->addTrial("she", 0.04, "NO", 0);
   $trial->addTrial("she", 0.05, "NO",  0);

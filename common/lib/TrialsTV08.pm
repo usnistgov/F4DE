@@ -25,12 +25,15 @@ my @trials_params = ("TOTALDURATION");
 sub getParamsList { return(@trials_params); }
 
 sub new {
-  my ($class, $trialsParams) = @_;
+  my $class = shift @_;
+  my $trialsParams = shift @_;
+  my ($taskId, $blockId, $decisionId) = 
+    MMisc::iuav(\@_, "Event Detection", "Event", "Observation");
 
   MMisc::error_quit("new TrialsTV08 called without a \$trialsParams value") 
     if (! defined($trialsParams));
  
-  my $self = TrialsFuncs->new("Event Detection", "Event", "Observation", $trialsParams);
+  my $self = TrialsFuncs->new($trialsParams, $taskId, $blockId, $decisionId);
 
   #######  customizations
   foreach my $p (@trials_params) {

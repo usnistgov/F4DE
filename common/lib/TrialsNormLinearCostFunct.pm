@@ -25,12 +25,14 @@ my @trials_params = ();
 sub getParamsList { return(@trials_params); }
 
 sub new {
-  my ($class, $taskId, $blockId, $decisionId, $trialParams) = @_;
+  my $class = shift @_;
+  my $trialParams =shift  @_;
+  my ($taskId, $blockId, $decisionId) = MMisc::iuav(\@_, "Detection", "Block", "Trial");
 
   MMisc::error_quit("new TrialsNormLinearCostFunct called without a \$trialParams value") 
     if (! defined($trialParams));
  
-  my $self = TrialsFuncs->new( $taskId, $blockId, $decisionId, $trialParams);
+  my $self = TrialsFuncs->new($trialParams, $taskId, $blockId, $decisionId);
 
   #######  customizations
   foreach my $p (@trials_params) {

@@ -442,7 +442,7 @@ sub def_bid_trials {
   return if (exists $bid_trials{$bid});
 
   $bid_trials{$bid} = undef;
-  my $trialcmd = "\$bid_trials\{\$bid\} = new $trialn (\"$taskName\", \"$devadetname\", \"Trial\", \\\%trialsparams);";
+  my $trialcmd = "\$bid_trials\{\$bid\} = new $trialn (\\\%trialsparams, \"$taskName\", \"$devadetname\", \"Trial\");";
   unless (eval "$trialcmd; 1") {
     MMisc::error_quit("Problem creating BlockID ($bid)'s Trial ($trialn) object (" . join(" ", $@) . ")");
   }

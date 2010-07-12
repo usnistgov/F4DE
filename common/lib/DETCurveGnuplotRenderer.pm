@@ -259,7 +259,8 @@ sub renderUnitTest{
 
   print "Test DETCurveGnuplotRenderer...Dir=$dir...";
   my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
-  my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
+  my $trial = new TrialsFuncs({ ("TOTALTRIALS" => 40) }, 
+                              "Term Detection", "Term", "Occurrence");
     
   $trial->addTrial("she", 0.10, "NO", 0);
   $trial->addTrial("she", 0.15, "NO", 0);
@@ -281,7 +282,8 @@ sub renderUnitTest{
   $trial->addTrial("she", 0.95, "YES", 1);
   $trial->addTrial("she", 1.0, "YES", 1);
 
-  my $trial2 = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
+  my $trial2 = new TrialsFuncs({ ("TOTALTRIALS" => 40) },
+                               "Term Detection", "Term", "Occurrence");
     
   $trial2->addTrial("she", 0.10, "NO", 0);
   $trial2->addTrial("she", 0.15, "NO", 0);
@@ -303,7 +305,8 @@ sub renderUnitTest{
   $trial2->addTrial("she", 0.95, "YES", 1);
   $trial2->addTrial("she", 1.0, "YES", 1);
 
-  my $trial3 = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 40) });
+  my $trial3 = new TrialsFuncs({ ("TOTALTRIALS" => 40) },
+                               "Term Detection", "Term", "Occurrence");
     
   $trial3->addTrial("she", 0.10, "NO", 1);
   $trial3->addTrial("she", 0.15, "NO", 1);
@@ -325,7 +328,8 @@ sub renderUnitTest{
   $trial3->addTrial("she", 0.95, "YES", 1);
   $trial3->addTrial("she", 1.0, "YES", 1);
 
-  my $trial4 = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 20) });
+  my $trial4 = new TrialsFuncs({ ("TOTALTRIALS" => 20) },
+                               "Term Detection", "Term", "Occurrence");
   
   $trial4->addTrial("she", 0.50, "YES", 1);
   $trial4->addTrial("she", 0.50, "YES", 1);

@@ -101,7 +101,8 @@ sub oneBigDET
     my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
     
     #####################################  Without data  ###############################    
-    my $emptyTrial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => $nt) });
+    my $emptyTrial = new TrialsFuncs({ ("TOTALTRIALS" => $nt) },
+                                     "Term Detection", "Term", "Occurrence");
 
     print "   ... adding trials\n";
     for (my $i=0; $i<$nt/2; $i++){
@@ -132,7 +133,8 @@ sub blockWeightedUnitTest()
     my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
     
     #####################################  Without data  ###############################    
-    my $emptyTrial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 100) });
+    my $emptyTrial = new TrialsFuncs({ ("TOTALTRIALS" => 100) },
+                                    "Term Detection", "Term", "Occurrence");
 
     $emptyTrial->addTrial("he", undef, "OMITTED", 1);
     $emptyTrial->addTrial("he", undef, "OMITTED", 1);
@@ -156,7 +158,8 @@ sub blockWeightedUnitTest()
 
     #####################################  With data  ###############################    
     print " Computing blocked curve with data...";
-    my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { ("TOTALTRIALS" => 10) });
+    my $trial = new TrialsFuncs({ ("TOTALTRIALS" => 10) },
+                               "Term Detection", "Term", "Occurrence");
 
     $trial->addTrial("she", 0.1, "NO", 0);
     $trial->addTrial("she", 0.2, "NO", 0);

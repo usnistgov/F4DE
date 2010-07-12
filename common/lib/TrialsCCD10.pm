@@ -25,12 +25,12 @@ my @trials_params = ("TOTALDURATION");
 sub getParamsList { return(@trials_params); }
 
 sub new {
-  my ($class, $taskId, $blockId, $decisionId, $trialsParams) = @_;
+  my ($class, $trialsParams, $taskId, $blockId, $decisionId) = @_;
 
   MMisc::error_quit("new TrialsCBCD09 called without a \$trialsParams value") 
     if (! defined($trialsParams));
  
-  my $self = TrialsFuncs->new($taskId, $blockId, $decisionId, $trialsParams);
+  my $self = TrialsFuncs->new($trialsParams, $taskId, $blockId, $decisionId);
 
   #######  customizations
   foreach my $p (@trials_params) {

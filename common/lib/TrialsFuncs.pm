@@ -44,7 +44,10 @@ This is the new
 =cut
 
 sub new {
-  my ($class, $taskId, $blockId, $decisionId, $trialParams) = @_;
+  my $class = shift @_;
+  my $trialParams = shift @_;
+  my ($taskId, $blockId, $decisionId) = 
+    MMisc::iuav(\@_, "Term Detection", "Term", "Occurrence");
   
   MMisc::error_quit("new Trial() called without a \$trialParams value") 
     if (! defined($trialParams));
@@ -65,7 +68,8 @@ sub new {
 
 sub unitTest {
   print "Test TrialsFuncs\n";
-  my $trial = new TrialsFuncs("Term Detection", "Term", "Occurrence", { (TOTAL_TRIALS => 78) } );
+  my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) },
+                              "Term Detection", "Term", "Occurrence");
   
   ## How to handle cases in F4DE
   ## Mapped 
@@ -319,7 +323,8 @@ sub dump {
 
 sub copy {
   my ($self, $block) = @_;
-  my ($copy) = new TrialsFuncs($self->getTaskID(), $self->getBlockID(), $self->getDecisionID(), $self->getTrialParams());
+  my ($copy) = new TrialsFuncs($self->getTrialParams(), $self->getTaskID(), 
+                               $self->getBlockID(), $self->getDecisionID());
     
   my @blocks = ();
   if (defined($block)) {
@@ -605,7 +610,9 @@ sub mergeTrials{
 
   ### First the params
   if (! defined($$r_baseTrial)){
-    $$r_baseTrial = new TrialsFuncs($mergeTrial->getTaskID(), $mergeTrial->getBlockID(), $mergeTrial->getDecisionID(), $mergeTrial->getTrialParams());
+    $$r_baseTrial = new TrialsFuncs($mergeTrial->getTrialParams(),
+                                    $mergeTrial->getTaskID(), $mergeTrial->getBlockID(),
+                                    $mergeTrial->getDecisionID());
   } else { 
     my @ktmp = $$r_baseTrial->getTrialParamKeys();
     for (my $i = 0; $i < scalar @ktmp; $i++) {
