@@ -319,6 +319,8 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${VIDAT_EX_DIR}
 ## DEVA
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}
+## CCD
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/CCD
 
 create_mans:
 # TrecVid08
