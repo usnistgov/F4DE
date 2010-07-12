@@ -115,7 +115,7 @@ my %metparams = ();
 my %trialsparams = ();
 my $listparams = 0;
 
-my $devadetname = "DEVA";
+my $devadetname = "Block";
 my @ok_scales = ('nd', 'log', 'linear'); # order is important
 my ($xm, $xM, $ym, $yM, $xscale, $yscale)
   = (0.1, 95, 0.1, 95, $ok_scales[0], $ok_scales[0]);
@@ -124,7 +124,7 @@ my $blockavg = 0;
 my $blockavg_text = "BlockAverage";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:  B          M    R TU  XY    d   h   lm o  rs uv xy   #
+# Used:  B D        M    R TU  XY  b     h   lm o  rs uv xy   #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -137,12 +137,12 @@ GetOptions
    'referenceDBfile=s'  => \$refDBfile,
    'systemDBfile=s'     => \$sysDBfile,
    'operator=s'         => \$mode,
-   'baseDETfile=s'      => \$bDETf,
+   'DETfile=s'      => \$bDETf,
    'metricPackage=s'    => \$metric,
    'MetricParameters=s' => \%metparams,
    'TrialsParameters=s' => \%trialsparams,
    'listParameters'     => \$listparams,
-   'detName=s'          => \$devadetname,
+   'blockName=s'        => \$devadetname,
    'xmin=f'             => \$xm,
    'Xmax=f'             => \$xM,
    'ymin=f'             => \$ym,
@@ -154,7 +154,7 @@ GetOptions
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-MMisc::error_quit("No \'detname\' specified, aborting")
+MMisc::error_quit("No \'blockName\' specified, aborting")
   if (MMisc::is_blank($devadetname));
 MMisc::error_quit("No \'metric\' specified, aborting")
   if (MMisc::is_blank($metric));
@@ -438,7 +438,7 @@ sub def_bid_trials {
   return if (exists $bid_trials{$bid});
 
   $bid_trials{$bid} = undef;
-  my $trialcmd = "\$bid_trials\{\$bid\} = new $trialn (\\\%trialsparams);";
+  my $trialcmd = "\$bid_trials\{\$bid\} = new $trialn (\"Detection\", \"$devadetname\", \"Trial\", \\\%trialsparams);";
   unless (eval "$trialcmd; 1") {
     MMisc::error_quit("Problem creating BlockID ($bid)'s Trial ($trialn) object (" . join(" ", $@) . ")");
   }
@@ -451,7 +451,7 @@ sub def_bid_trials {
 sub doDETwork {
   my %bid_trials = @_;
 
-  my $detSet = new DETCurveSet("DEVA DET Set");
+  my $detSet = new DETCurveSet("DET Set");
   my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
 
   foreach my $bid (keys %bid_trials) {
@@ -464,7 +464,7 @@ sub doDETwork {
     MMisc::error_quit("Problem with BlockID ($bid)'s Metric ($metric)")
       if (! defined $met);
 
-    my $detname = $devadetname . " ($bid)";
+    my $detname = $devadetname . " $bid";
 
     my $det = new DETCurve($usedtrial, $met, $detname, 
                            \@isolinecoef, MMisc::cmd_which("gzip"));
@@ -486,7 +486,7 @@ sub doDETwork {
          serialize => 1,
          BuildPNG => 1),
       },
-      "$bDETf.csv")
+      "$bDETf.scores.csv")
     );
 }
 
@@ -498,7 +498,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--baseDETfile filebase] [--detName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--usedXscale set] [--UsedYscale set] [--BlockAverage] ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--DETfile filebase] [--blockName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--usedXscale set] [--UsedYscale set] [--BlockAverage] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
@@ -514,8 +514,8 @@ Where:
   --MetricParameters Metric Package parameters
   --TrialsParameters Trials Package parameters
   --listParameters   List Metric and Trial package authorized parameters
-  --baseDETfile      When working with DET curve, all the relevant files will start with this value (default: $bDETf)
-  --detName          Specify the name added to the DET curve (as well as the specialzied file generated for this process) (default: $devadetname)
+  --DETfile          When working with DET curve, all the relevant files will start with this value (default: $bDETf)
+  --blockName        Specify the name of the block type (default: $devadetname)
   --xmin --Xmax      Specify the min and max value of the X axis (PFA) of the DET curve (default: $xm and $xM)
   --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (default: $ym and $yM)
   --usedXscale --UsedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (default: $xscale and $yscale) 
