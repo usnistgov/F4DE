@@ -159,17 +159,17 @@ GetOptions
    'wREFcfg=s'  => \$wrefCFfile,
    'WSYScfg=s'  => \$wsysCFfile,
    'VMDcfg=s'   => \$wmdCFfile,
-   'blockName=s'          => \$devadetname,
+   'blockName=s'        => \$devadetname,
    'xmin=f'             => \$xm,
    'Xmax=f'             => \$xM,
    'ymin=f'             => \$ym,
    'Ymax=f'             => \$yM,
-   'zusedXscale=s'       => \$xscale,
-   'ZusedYscale=s'       => \$yscale,
+   'zusedXscale=s'      => \$xscale,
+   'ZusedYscale=s'      => \$yscale,
    'AdditionalFilterDB=s'  => \@addDBs,
    'iFilterDBfile=s' => \$wresDBfile,
    'BlockAverage'    => \$blockavg,
-   'taskName=s'        => \$taskName,
+   'taskName=s'      => \$taskName,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -519,7 +519,7 @@ B<DEVA_cli>
   S<[B<--usedMetric> I<package>]>
   S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]]>
   S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
-  S<[B<--listParameters>] [B<--blockName> I<name>]>
+  S<[B<--listParameters>] [B<--blockName> I<name>] [B<--taskName> I<name>]>
   S<[B<--xmin> I<val>] [B<--Xmax> I<val>] [B<--ymin> I<val>] [B<--Ymax> I<val>]>
   S<[B<--zusedXscale> I<set>] [B<--ZusedYscale> I<set>]>
   S<[B<--BlockAverage>]>
@@ -566,7 +566,7 @@ Optional arguments:
  S<[B<--VMDcfg> I<file>]>
  S<[B<--RefDBfile> I<file>]>
  S<[B<--SysDBfile> I<file>]>
- S<[B<--MetadataDBfile> I<file>]
+ S<[B<--MetadataDBfile> I<file>]>
 
 Bypass step: 
  S<[B<--CreateDBSkip>]>
@@ -601,6 +601,7 @@ Optional arguments:
  S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
  S<[B<--listParameters>]>
  S<[B<--blockName> I<name>]>
+ S<[B<--taskName> I<name>]>
  S<[B<--xmin> I<val>]>
  S<[B<--Xmax> I<val>]>
  S<[B<--ymin> I<val>]>
@@ -817,7 +818,7 @@ This process read each CSV file (I<refcsv>, I<syscsv> and metadata I<csvfile(s)>
 Skip the Trial Scoring step (including DETCurve processing).
 
 This step rely on the S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<<outdir/filterDB.sql> files to extract into S<outdir/scoreDB.sql> a I<ref> and I<sys> table that only contains the I<TrialID>s left post-filtering.
-This step also generate a few files starting with S<outdir/scoreDB_DET> that are the results of the DETCurve generation process.
+This step also generate a few files starting with S<outdir/scoreDB.det> that are the results of the DETCurve generation process.
 
 =item B<--FilterCMDfile> I<SQLite_commands_file>
 
@@ -871,6 +872,10 @@ Specify the location of the System CSV file (expected to contain S<TrialID>, S<S
 
 Specify the parameters given during the Trial creation process.
 
+=item B<--taskName> I<name>
+
+Specify the name of the task (the type of evaluation, for example: detection).
+
 =item B<--UsedMetricParameters> I<parameter=value>
 
 Specify the parameters given during the Metric creation process.
@@ -923,7 +928,7 @@ Specify the scale used for the X axis of the DET curve
 
 =head1 USAGE
 
-B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --FilterCMDfile filter1.sql --usedMetric MetricNormLinearCostFunct --UsedMetricParameters Ptarg=0.1  --UsedMetricParameters CostMiss=1 --UsedMetricParameters CostFA=1>
+B<DEVA_cli --outdir outdir --refcsv ref.csv --syscsv sys.csv md.csv --FilterCMDfile filter1.sql --usedMetric MetricNormLinearCostFunct --UsedMetricParameters 'Ptarg=0.1'  --UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'CostFA=1'>
 
 This will process the four steps expected of the command line interface:
 
@@ -997,23 +1002,23 @@ If an entry is only in I<Reference> it is an I<unmapped_ref> entry, but only I<y
 =back
 
 I<DETCurve>s are then generated using the I<Trials> using the I<MetricNormLinearCostFunct> specified I<Metric> (and the specified I<UsedMetricParameters>) 
-Each file starting with I<outdir/scoreDB_DET> is one of those results:
+Each file starting with I<outdir/scoreDB.scores> is one of those results:
 
 =over
 
 =item
 
-I<outdir/scoreDB_DET.scores.txt>
+I<outdir/scoreDB.scores.txt>
 contains the I<DETCurve>'s I<Performance Summary Over and Ensemble of Subsets>
 
 =item
 
-I<outdir/scoreDB_DET.csv>
+I<outdir/scoreDB.scores.csv>
 is a Comma Separated Value dump of the previous data's table.
 
 =item
 
-Files starting with I<outidr/scoreDB_DET.det> are used by and for the graphic representation of the curve points:
+Files starting with I<outidr/scoreDB.det> are used by and for the graphic representation of the curve points:
 
 =item
 
@@ -1109,7 +1114,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
+$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1141,7 +1146,8 @@ DETCurve generation (Step 4) specific options:
   --UsedMetricParameters Metric Package parameters
   --TrialsParameters Trials Package parameters
   --listParameters   List Metric and Trial package authorized parameters
-  --blockName          Specify the name of the type of blocks (*1)
+  --blockName        Specify the name of the type of blocks (*1)
+  --taskName         Specify the name of the task (*1)
   --xmin --Xmax      Specify the min and max value of the X axis (PFA) of the DET curve (*1)
   --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (*1)
   --zusedXscale --ZusedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (*1)
