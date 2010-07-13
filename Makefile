@@ -24,7 +24,7 @@ all:
 	@echo "  CLEAR07check    only run checks for the CLEAR07 subsection"
 	@echo "  AVSS09check     only run checks for the AVSS09 subsection"
 	@echo "  SQLitetoolscheck  only run checks for the SQLite_tools subsection"
-#	@echo "  DEVAcheck       only run checks for the DEVA subsection"
+	@echo "  DEVAcheck       only run checks for the DEVA subsection"
 	@echo ""
 	@echo "[install section -- requires the F4DE_BASE environment variable set]"
 	@echo "  install         to install all the softwares"
@@ -33,7 +33,7 @@ all:
 	@echo "  AVSS09install   only install the AVSS09 subsection"
 	@echo "  VidATinstall    only install the VidAT tools set"
 	@echo "  SQLitetoolsinstall  only install the SQLite tools set"
-#	@echo "  DEVAinstall     only install the DEVA subsection"
+	@echo "  DEVAinstall     only install the DEVA subsection"
 	@echo ""
 	@make from_installdir
 
@@ -50,7 +50,7 @@ install:
 	@make AVSS09install
 	@make VidATinstall
 	@make SQLitetoolsinstall
-#	@make DEVAinstall
+	@make DEVAinstall
 
 #####
 
@@ -60,7 +60,7 @@ install_noman:
 	@make AVSS09install_noman
 	@make VidATinstall
 	@make SQLitetoolsinstall
-#	@make DEVAinstall_noman
+	@make DEVAinstall_noman
 
 #####
 
@@ -206,7 +206,7 @@ check:
 	@make CLEAR07check
 	@make AVSS09check
 	@make SQLitetoolscheck
-#	@make DEVAcheck
+	@make DEVAcheck
 	@echo ""
 	@echo "***** All check tests successful"
 	@echo ""
@@ -318,7 +318,7 @@ dist_archive_pre_remove:
 ## VidAT example
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${VIDAT_EX_DIR}
 ## DEVA
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}
+#	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}
 ## CCD
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/CCD
 
@@ -330,8 +330,8 @@ create_mans:
 	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man
 	@for i in ${AV09TOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man/$$g.1; done
 # DEVA
-#	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/man
-#	@for i in ${DEVATOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${EVADIR}/man/$$g.1; done
+	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/man
+	@for i in ${DEVATOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/man/$$g.1; done
 
 
 dist_common:
