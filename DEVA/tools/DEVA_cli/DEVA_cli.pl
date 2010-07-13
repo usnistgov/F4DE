@@ -754,12 +754,7 @@ Examples of SQL filter files can be found in the F4DE source in:
 
 =head1 METRICS
 
-This section is TBD
-TODO
- Metric maniputations
- Graphing manipulations
- Report generations
-
+Please refer to the I<Evaluation Scoring Primer> for details on the I<Metric> to be used (specified using B<--usedMetric>), as well as the parameters both for the Metric itself (specified using B<--UsedMetricParameters>) and the associated I<Trial> (specified using B<--TrialsParameters>).
 
 =head1 PREREQUISITES
 
