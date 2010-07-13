@@ -1,13 +1,13 @@
 File:  README
-Date:  June 9th, 2010
-F4DE Version: 2.1
+Date:  July 14th, 2010
+F4DE Version: 2.2
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
 software package.  It contains a set of evaluation tools for detection
 evaluations and for specific NIST-coordinated evaluations listed below.
 
-  *  CLEAR07 Evaluation. 
+  *  2007 CLEAR Evaluation. 
       - Domains: Broadcast News, Meeting Room, Surveillance and UAV
       - Measures: Area and Point
     - Detection and Tracking (DT) tools:
@@ -19,7 +19,7 @@ evaluations and for specific NIST-coordinated evaluations listed below.
       - CLEARTRViperValidator - A syntactic and semantic validator for 
         both system output ViPER files and reference annotation files.
 	
-  *  2008 TRECVid Event Detection Evaluation. 
+  *  2008 TRECVid Surveillance Event Detection Evaluation. 
     - TV08Scorer - The main evaluation script. 
     - TV08ViperValidator - A syntactic and semantic validator for 
       both system output ViPER files and reference annotation files.
@@ -31,18 +31,32 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - TV08ED-SubmissionChecker - A tool designed to help confirm submission
       archives before transmitting them to NIST. 
 
-  *  2009 TRECVid Event Detection Evaluation. 
-    - Same tools as the 2008 TRECVid Event Detection Evaluation (TV08Scorer,
-      TV08ViperValidator, TV08MergeHelper, TV08_BigXML_ValidatorHelper)
-    - TV09ED-SubmissionChecker - A tool designed to help confirm submission
-      archives before transmitting them to NIST. 
-
-  *  AVSS09 Evaluation.
+  *  2009 AVSS Evaluation.
     - AVSS09Scorer - The main evaluation script. 
     - AVSS09ViperValidator - A syntactic and semantic validator for 
       both system output ViPER files and reference annotation files.
     - AVSS09-SubmissionChecker - A tool designed to help confirm submission
       archives before transmitting them to NIST. 
+
+  *  2009 TRECVid Surveillance Event Detection Evaluation. 
+    - Same tools as the 2008 TRECVid Surveillance Event Detection Evaluation
+      (TV08Scorer, TV08ViperValidator, TV08MergeHelper, 
+      TV08_BigXML_ValidatorHelper)
+    - TV09ED-SubmissionChecker - A tool designed to help confirm submission
+      archives before transmitting them to NIST. 
+
+  *  2010 AVSS Evaluation.
+    - Same tools as the 2009 AVSS Evaluation (AVSS09Scorer, 
+      AVSS09ViperValidator, AVSS09-SubmissionChecker)
+
+  *  2010 TRECVid Multimedia Event Detection Evaluation. 
+    - DEVA_cli - The main evaluation script. 
+
+  *  2010 TRECVid Surveillance Event Detection Evaluation. 
+    - Same tools as the 2009 TRECVid Surveillance Event Detection Evaluation
+      (TV08Scorer, TV08ViperValidator, TV08MergeHelper,
+      TV08_BigXML_ValidatorHelper, TV09ED-SubmissionChecker)
+
 
 In addition to evaluation tools, the package contains the following related tools:
 
@@ -55,6 +69,8 @@ In addition to evaluation tools, the package contains the following related tool
   * SQLite_tools (common/tools/SQLite_tools)
     - A suite of tools designed to help interface CSV files and SQLite databases.
       The tool suite requires SQLite.
+
+
 
 INSTALLATION
 ------------
@@ -107,13 +123,13 @@ CYGWIN PRE-INSTALLATION NOTES
 The tools have been confirmed to work under windows when running cygwin.
 After downloading the latest "setup.exe" from http://www.cygwin.com/
 make sure to add the following when in the "Select Packages":
- - in "Devel", select "make" (required)
- - in "Perl", select "perl" (required)
- - in "Libs", select "libxml2" (required)
- - in "Net", select "rsync" (required) 
- - in "Math", select "gnuplot" (to be able to use TV08Scorer)
- - in "Archive", select "unzip" (to be able to use zip files with
-   submission checker tools)
+ - in "Devel", select "make"
+ - in "Perl", select "perl"
+ - in "Libs", select "libxml2"
+ - in "Net", select "rsync" 
+ - in "Math", select "gnuplot" 
+ - in "Archive", select "unzip"
+ - in "Database", select "sqlite3"
 
 
 USAGE
@@ -133,6 +149,7 @@ relative to the evaluation tool you are trying to test, in
 first line of the res*.txt test case files.
 
 
+
 CONTACT
 -------
 
@@ -142,20 +159,22 @@ For the bug report to be useful, please include the command line,
 files and text output, including the error message in your email.
 
 
+
 TEST CASE BUG REPORT
 --------------------
 
-If the error occurred wile doing a 'make check', go in the directory 
-associated with the tool that failed ('CLEAR/test/<TOOLNAME>',
-'TrecVid08/test/<TOOLNAME>' or 'AVSS09/test/<TOOLNAME>') and type 
-'make makecompcheckfiles'. This process will create a file corresponding
-to each test number named "res_test*.txt-comp". These file are (like their
-.txt equivalent) text files that can be compared to the original 
-"res_test*.txt" files.
+If the error occurred wile doing a 'make check', go in the directory
+associated with the tool that failed (for example:
+'CLEAR/test/<TOOLNAME>'), and type 'make makecompcheckfiles'. This
+process will create a file corresponding to each test number named
+"res_test*.txt-comp". These file are (like their .txt equivalent) text
+files that can be compared to the original "res_test*.txt" files.
+
  When a test fails, please send us the "res_test*.txt-comp" file of the
 failed test(s) for us to try to understand what happened, as well as 
 information about your system (OS, architecture, ...) that you think
 might help us.  Thank you for helping us improve F4DE.
+
 
 
 AUTHORS
@@ -168,6 +187,7 @@ AUTHORS
        Jonathan Fiscus <jonathan.fiscus@nist.gov>
 
        Jerome Ajot
+
 
 
 COPYRIGHT 
