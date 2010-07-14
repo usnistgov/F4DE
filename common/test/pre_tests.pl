@@ -13,7 +13,7 @@ my $ms = 1;
 $ms = &_chkpkg("Getopt::Long", "Data::Dumper", "File::Temp",
                "Cwd", "Text::CSV", "Time::HiRes", 
                "Math::Random::OO::Uniform", "Math::Random::OO::Normal",
-               "Statistics::Descriptive");
+               "Statistics::Descriptive", "DBI", "DBD::SQLite");
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the program (and some F4DE package will most likely fail this step), install the missing packages and re-run the checks\n\n";
   $err++;
@@ -40,6 +40,7 @@ $ms = &_chkpkg
    "MetricNormLinearCostFunct",
    "MetricTestStub",
    "MetricTV08",
+#   "MetricCCD10",
    "MtSQLite",
    "MtXML",
    "PropList",
@@ -49,6 +50,8 @@ $ms = &_chkpkg
    "TrialsFuncs",
    "TrialsTestStub",
    "TrialsTV08",
+#   "TrialsCCD10",
+   "TrialsNormLinearCostFunct",
    "ViperFramespan",
    "xmllintHelper"
   );
