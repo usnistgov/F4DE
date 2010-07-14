@@ -134,11 +134,18 @@ make sure to add the following when in the "Select Packages":
    and "perl-ExtUtils-PkgConfig"
 
 After installation, from shell, run 'cpan' from which you will
-want to "install" first the "ExtUtils::CBuilder" and then the following
-packages: Text::CSV  Text::CSV_XS  Math::Random::OO::Uniform
-Math::Random::OO::Normal  Statistics::Descriptive  DBI  DBD::SQLite
+want to "install" first the "ExtUtils::CBuilder" package and then 
+the following packages: 
+ Text::CSV
+ Text::CSV_XS
+ Math::Random::OO::Uniform
+ Math::Random::OO::Normal
+ Statistics::Descriptive
+ DBI
+ DBD::SQLite
 
-After this, you should be able to succefully complete "make check"
+After this, you should be able to succefully complete "make check" 
+and use the tools.
 
 USAGE
 -----
