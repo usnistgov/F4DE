@@ -126,9 +126,9 @@ After downloading the latest "setup.exe" from http://www.cygwin.com/
 make sure to add the following when in the "Select Packages":
  - in "Archive", select "unzip"
  - in "Database", select "sqlite3"
- - in "Devel", select "make", "gcc" and "gcc-4"
- - in "Math", select "gnuplot" 
+ - in "Devel", select "make", "gcc" and "gcc4"
  - in "Libs", select "libxml2"
+ - in "Math", select "gnuplot" 
  - in "Net", select "rsync" 
  - in "Perl", select "perl", "perl-ExtUtils-Depends" 
    and "perl-ExtUtils-PkgConfig"
