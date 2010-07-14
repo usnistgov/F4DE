@@ -205,7 +205,8 @@ check:
 	@make TV08check
 	@make CLEAR07check
 	@make AVSS09check
-	@make SQLitetoolscheck
+#	@make SQLitetoolscheck
+# SQLitetoolscheck is done as part of DEVAcheck
 	@make DEVAcheck
 	@echo ""
 	@echo "***** All check tests successful"
