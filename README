@@ -120,17 +120,25 @@ first line in the COMMANDLINE section.
 CYGWIN PRE-INSTALLATION NOTES
 ----------------------------
 
-The tools have been confirmed to work under windows when running cygwin.
+The tools have been confirmed to work under windows when running cygwin 
+(tested under Cygwin 1.7.5-1). 
 After downloading the latest "setup.exe" from http://www.cygwin.com/
 make sure to add the following when in the "Select Packages":
- - in "Devel", select "make"
- - in "Perl", select "perl"
- - in "Libs", select "libxml2"
- - in "Net", select "rsync" 
- - in "Math", select "gnuplot" 
  - in "Archive", select "unzip"
  - in "Database", select "sqlite3"
+ - in "Devel", select "make", "gcc" and "gcc-4"
+ - in "Math", select "gnuplot" 
+ - in "Libs", select "libxml2"
+ - in "Net", select "rsync" 
+ - in "Perl", select "perl", "perl-ExtUtils-Depends" 
+   and "perl-ExtUtils-PkgConfig"
 
+After installation, from shell, run 'cpan' from which you will
+want to "install" first the "ExtUtils::CBuilder" and then the following
+packages: Text::CSV  Text::CSV_XS  Math::Random::OO::Uniform
+Math::Random::OO::Normal  Statistics::Descriptive  DBI  DBD::SQLite
+
+After this, you should be able to succefully complete "make check"
 
 USAGE
 -----
