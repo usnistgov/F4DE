@@ -718,7 +718,7 @@ sub _system_call_logfile {
 
   open (CMD, "$cmdline 1> $stdoutfile 2> $stderrfile |");
   close CMD;
-  $retcode = $?;
+  $retcode = $? >> 8;
 
   $| = $ov;
 
