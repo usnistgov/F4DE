@@ -1,5 +1,5 @@
 [[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test2-1md_1fa-sys.xml ../common/test3-sys.xml -g ../common/test2-gtf.xml ../common/test3-gtf.xml -s -o -D 1000 -e ../common/tests-BAD.ecf
-[[RETURN CODE]] 256
+[[RETURN CODE]] 1
 [[STDOUT]]
 ***** STEP 1: Loading files in Memory
 (SYS) ../common/test2-1md_1fa-sys.xml: Loaded
