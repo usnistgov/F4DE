@@ -161,8 +161,7 @@ sub _run_core {
 
   my $tst = join("\n  ## ", @toshow);
 
-  return(0, $ofile, $tst, $elapsed) if (($retcode >> 8) != $erv);
-  # 'perldoc -f system': to get the actual exit value, shift right by eight
+  return(0, $ofile, $tst, $elapsed) if ($retcode != $erv);
 
   return(1, $ofile, $tst, $elapsed) if (&_is_magic($mode));
 
