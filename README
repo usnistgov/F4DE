@@ -1,5 +1,5 @@
 File:  README
-Date:  July 14th, 2010
+Date:  July 20th, 2010
 F4DE Version: 2.2
 
 
@@ -19,11 +19,11 @@ evaluations and for specific NIST-coordinated evaluations listed below.
       - CLEARTRViperValidator - A syntactic and semantic validator for 
         both system output ViPER files and reference annotation files.
 	
-  *  2008 TRECVid Surveillance Event Detection Evaluation. 
+  *  2008 TRECVID Surveillance Event Detection Evaluation. 
     - TV08Scorer - The main evaluation script. 
     - TV08ViperValidator - A syntactic and semantic validator for 
       both system output ViPER files and reference annotation files.
-    - TV08MergeHelper - A TRECVid '08 ViPER-formatted file merging program.  
+    - TV08MergeHelper - A TRECVID '08 ViPER-formatted file merging program.  
     - TV08_BigXML_ValidatorHelper - A helper program (that relies 
       on TV08ViperValidator and TV08MergeHelper) to perform syntactic
       and semantic validation on ViPER-formatted files containing 
@@ -38,8 +38,8 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - AVSS09-SubmissionChecker - A tool designed to help confirm submission
       archives before transmitting them to NIST. 
 
-  *  2009 TRECVid Surveillance Event Detection Evaluation. 
-    - Same tools as the 2008 TRECVid Surveillance Event Detection Evaluation
+  *  2009 TRECVID Surveillance Event Detection Evaluation. 
+    - Same tools as the 2008 TRECVID Surveillance Event Detection Evaluation
       (TV08Scorer, TV08ViperValidator, TV08MergeHelper, 
       TV08_BigXML_ValidatorHelper)
     - TV09ED-SubmissionChecker - A tool designed to help confirm submission
@@ -49,11 +49,11 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - Same tools as the 2009 AVSS Evaluation (AVSS09Scorer, 
       AVSS09ViperValidator, AVSS09-SubmissionChecker)
 
-  *  2010 TRECVid Multimedia Event Detection Evaluation. 
+  *  2010 TRECVID Multimedia Event Detection Evaluation. 
     - DEVA_cli - The main evaluation script. 
 
-  *  2010 TRECVid Surveillance Event Detection Evaluation. 
-    - Same tools as the 2009 TRECVid Surveillance Event Detection Evaluation
+  *  2010 TRECVID Surveillance Event Detection Evaluation. 
+    - Same tools as the 2009 TRECVID Surveillance Event Detection Evaluation
       (TV08Scorer, TV08ViperValidator, TV08MergeHelper,
       TV08_BigXML_ValidatorHelper, TV09ED-SubmissionChecker)
 
