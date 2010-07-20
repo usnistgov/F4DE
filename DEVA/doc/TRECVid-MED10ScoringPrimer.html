@@ -5,7 +5,7 @@
 </head><body>
 <div style="text-align: center;"><big><big><big>TRECVid MED Scoring Primer</big></big></big><br>
 </div>
-<div style="text-align: center;"><small>Updated July 12, 2010</small><br>
+<div style="text-align: center;"><small>Updated July 20th, 2010</small><br>
 </div>
 <br>
 <h2>Description: </h2>
@@ -78,11 +78,20 @@ which follows the rules set for a system CSV file and contains all the <i>TrialI
 
 <pre>% DEVA_cli --taskName MED --blockName Event --outdir SITE_Results \
 --refcsv DEV_Ref.csv --syscsv SITE_1.csv --FilterCMDfile med10_filter.cmd \
---UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.1' \
+--UsedMetricParameters 'CostMiss=79.92' --UsedMetricParameters 'Ptarg=0.001' \
 --UsedMetricParameters 'CostFA=1' DEV_ClipMD.csv DEV_JudgementMD.csv \
 DEV_TrialIndex.csv</pre>
 where the SQL filter (&quot;med10_filter.cmd&quot;) contains:
 <pre>SELECT TrialID,Event FROM DEV_TrialIndex;</pre>
+
+<b>MetricNormLinearCostFunct</b> is the metric used for scoring (and
+the default for DEVA). 
+Scoring will be done using the following parameters:
+<ul>
+  <li>CostMiss = 79.92
+  <li>CostFA = 1
+  <li>Ptarg = 0.001
+</ul>
 
 This will run through the four step process done by DEVA_cli, and
 under the <i>SITE_Results</i> will be present a file titled
