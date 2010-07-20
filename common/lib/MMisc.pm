@@ -122,7 +122,9 @@ sub is_blank {
   return(1) if (! defined($_[0]));
   return(1) if (length($_[0]) == 0);
 
-  return(($_[0] =~ m%^\s*$%s));
+  return(1) if ($_[0] =~ m%^\s*$%s);
+
+  return(0);
 }
 
 #####
@@ -268,8 +270,8 @@ sub sum_r {
 sub writeTo {
   my ($file, $addend, $printfn, $append, $txt,
       $filecomment, $stdoutcomment,
-      $fileheader, $filetrailer) 
-    = &iuav(\@_, '', '', 0, 0, '', '', '', '', '');
+      $fileheader, $filetrailer, $makexec)
+    = &iuav(\@_, '', '', 0, 0, '', '', '', '', '', 0);
 
   my $rv = 1;
 
@@ -307,6 +309,13 @@ sub writeTo {
     # Note: do not print action when writing to STDOUT (even when requested)
     print((($da) ? 'Appended to file:' : 'Wrote:') . " $ofile$filecomment\n") 
       if (($ofile ne '-') && ($printfn));
+    if ($ofile ne '-') {
+      if ($makexec) { # Make it executable (if requested)
+        chmod(0755, $ofile);
+      } else { # otherwise at least try to make it world readable
+        chmod(0644, $ofile);
+      }
+    }
     return(1); # Always return ok: we requested to write to a file and could
   }
 
@@ -897,25 +906,25 @@ sub _check_file_dir_XXX {
 
 #####
 
-sub check_file_e { return(&_check_file_dir_XXX('file', 'e', @_)); }
-sub check_file_r { return(&_check_file_dir_XXX('file', 'r', @_)); }
-sub check_file_w { return(&_check_file_dir_XXX('file', 'w', @_)); }
-sub check_file_x { return(&_check_file_dir_XXX('file', 'x', @_)); }
+sub check_file_e { return(&_check_file_dir_XXX('file', 'e', $_[0])); }
+sub check_file_r { return(&_check_file_dir_XXX('file', 'r', $_[0])); }
+sub check_file_w { return(&_check_file_dir_XXX('file', 'w', $_[0])); }
+sub check_file_x { return(&_check_file_dir_XXX('file', 'x', $_[0])); }
 
-sub check_dir_e { return(&_check_file_dir_XXX('dir', 'e', @_)); }
-sub check_dir_r { return(&_check_file_dir_XXX('dir', 'r', @_)); }
-sub check_dir_w { return(&_check_file_dir_XXX('dir', 'w', @_)); }
-sub check_dir_x { return(&_check_file_dir_XXX('dir', 'x', @_)); }
+sub check_dir_e { return(&_check_file_dir_XXX('dir', 'e', $_[0])); }
+sub check_dir_r { return(&_check_file_dir_XXX('dir', 'r', $_[0])); }
+sub check_dir_w { return(&_check_file_dir_XXX('dir', 'w', $_[0])); }
+sub check_dir_x { return(&_check_file_dir_XXX('dir', 'x', $_[0])); }
 
-sub does_file_exists { return( &is_blank( &check_file_e(@_) ) ); }
-sub is_file_r { return( &is_blank( &check_file_r(@_) ) ); }
-sub is_file_w { return( &is_blank( &check_file_w(@_) ) ); }
-sub is_file_x { return( &is_blank( &check_file_x(@_) ) ); }
+sub does_file_exists { return( &is_blank( &check_file_e($_[0]) ) ); }
+sub is_file_r { return( &is_blank( &check_file_r($_[0]) ) ); }
+sub is_file_w { return( &is_blank( &check_file_w($_[0]) ) ); }
+sub is_file_x { return( &is_blank( &check_file_x($_[0]) ) ); }
 
-sub does_dir_exists { return( &is_blank( &check_dir_e(@_) ) ); }
-sub is_dir_r { return( &is_blank( &check_dir_r(@_) ) ); }
-sub is_dir_w { return( &is_blank( &check_dir_w(@_) ) ); }
-sub is_dir_x { return( &is_blank( &check_dir_x(@_) ) ); }
+sub does_dir_exists { return( &is_blank( &check_dir_e($_[0]) ) ); }
+sub is_dir_r { return( &is_blank( &check_dir_r($_[0]) ) ); }
+sub is_dir_w { return( &is_blank( &check_dir_w($_[0]) ) ); }
+sub is_dir_x { return( &is_blank( &check_dir_x($_[0]) ) ); }
 
 #####
 
@@ -1455,10 +1464,10 @@ sub unarchive_archive {
   $err = &check_dir_w($destdir);
   return("Problem with destination directory ($destdir): $err") if (! &is_blank($err));
   
-  my $cmd = $exp_ext_cmd{$ext} . " $ff";
+  my @cmd = ($exp_ext_cmd{$ext},  $ff);
 
   chdir($destdir);
-  my ($retcode, $stdout, $stderr) = MMisc::do_system_call($cmd);
+  my ($retcode, $stdout, $stderr) = MMisc::do_system_call(@cmd);
   chdir($pwd);
   
   return('', $retcode, $stdout, $stderr);
