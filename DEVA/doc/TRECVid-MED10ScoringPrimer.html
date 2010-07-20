@@ -1,16 +1,16 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
   <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
-  <title>TRECVid MED Scoring Primer</title>
+  <title>TRECVID MED Scoring Primer</title>
 </head><body>
-<div style="text-align: center;"><big><big><big>TRECVid MED Scoring Primer</big></big></big><br>
+<div style="text-align: center;"><big><big><big>TRECVID MED Scoring Primer</big></big></big><br>
 </div>
 <div style="text-align: center;"><small>Updated July 20th, 2010</small><br>
 </div>
 <br>
 <h2>Description: </h2>
 This document provides a high-level overview of how to use the F4DE
-tools for the <a href="http://www.nist.gov/itl/iad/mig/med.cfm">TRECVid MED Evaluations</a>.  The Multimedia Event Detection (MED) evaluation track is part of the
+tools for the <a href="http://www.nist.gov/itl/iad/mig/med.cfm">TRECVID MED Evaluations</a>.  The Multimedia Event Detection (MED) evaluation track is part of the
 TRECVID Evaluation. The multi-year goal of MED is to assemble core
 detection technologies into a system that can quickly and accurately
 search a multimedia collection for user-defined events.  See the web site for specific details about the evaluation.
@@ -38,7 +38,7 @@ metadata CSV files.
 
 <a name="format"><h2>File Formats:</h2></a>
 
-The TRECVid MED tools use <i>Comma Separated Values</i> (CSV) files to
+The TRECVID MED tools use <i>Comma Separated Values</i> (CSV) files to
 generate SQL tables that will be used by the scoring tool.<br>
 CSV files are flat files where delimited fields use a comma to
 separate values. They can be used to represent database tables. 
@@ -71,18 +71,18 @@ name. The program leave the content of the database free for most metadata conte
 the F4DE), please refer to its manual:
 <code>DEVA_cli --man</code></i></p>
 
-The following is an example of scoring a DEV submission, using some of
-the CSV files that are provided in the I<doc> directory of the DEV
+The following is an example of scoring a DRYRUN submission, using some of
+the CSV files that are provided in the I<doc> directory of the DRYRUN
 set and a site submission CSV file named &quot;SITE_1.csv&quot;,
-which follows the rules set for a system CSV file and contains all the <i>TrialID</i> present in the <i>DEV_TrialIndex.csv</i> file.<br>
+which follows the rules set for a system CSV file and contains all the <i>TrialID</i> present in the <i>DRYRUN_TrialIndex.csv</i> file.<br>
 
 <pre>% DEVA_cli --taskName MED --blockName Event --outdir SITE_Results \
---refcsv DEV_Ref.csv --syscsv SITE_1.csv --FilterCMDfile med10_filter.cmd \
+--refcsv DRYRUN_Ref.csv --syscsv SITE_1.csv --FilterCMDfile med10_filter.cmd \
 --UsedMetricParameters 'CostMiss=79.92' --UsedMetricParameters 'Ptarg=0.001' \
---UsedMetricParameters 'CostFA=1' DEV_ClipMD.csv DEV_JudgementMD.csv \
-DEV_TrialIndex.csv</pre>
+--UsedMetricParameters 'CostFA=1' DRYRUN_ClipMD.csv DRYRUN_JudgementMD.csv \
+DRYRUN_TrialIndex.csv</pre>
 where the SQL filter (&quot;med10_filter.cmd&quot;) contains:
-<pre>SELECT TrialID,Event FROM DEV_TrialIndex;</pre>
+<pre>SELECT TrialID,Event FROM DRYRUN_TrialIndex;</pre>
 
 <b>MetricNormLinearCostFunct</b> is the metric used for scoring (and
 the default for DEVA). 
