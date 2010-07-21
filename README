@@ -1,5 +1,5 @@
 File:  README
-Date:  July 20th, 2010
+Date:  July 21st, 2010
 F4DE Version: 2.2
 
 
@@ -56,6 +56,8 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - Same tools as the 2009 TRECVID Surveillance Event Detection Evaluation
       (TV08Scorer, TV08ViperValidator, TV08MergeHelper,
       TV08_BigXML_ValidatorHelper, TV09ED-SubmissionChecker)
+    - TV10SED-SubmissionChecker - A tool designed to help confirm submission
+      archives before transmitting them to NIST.
 
 
 In addition to evaluation tools, the package contains the following related tools:
