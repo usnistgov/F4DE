@@ -78,20 +78,18 @@ which follows the rules set for a system CSV file and contains all the <i>TrialI
 
 <pre>% DEVA_cli --taskName MED --blockName Event --outdir SITE_Results \
 --refcsv DRYRUN_Ref.csv --syscsv SITE_1.csv --FilterCMDfile med10_filter.cmd \
---UsedMetricParameters 'CostMiss=79.92' --UsedMetricParameters 'Ptarg=0.001' \
+--UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.5' \
 --UsedMetricParameters 'CostFA=1' DRYRUN_ClipMD.csv DRYRUN_JudgementMD.csv \
 DRYRUN_TrialIndex.csv</pre>
 where the SQL filter (&quot;med10_filter.cmd&quot;) contains:
 <pre>SELECT TrialID,Event FROM DRYRUN_TrialIndex;</pre>
 
 <b>MetricNormLinearCostFunct</b> is the metric used for scoring (and
-the default for DEVA). 
-Scoring will be done using the following parameters:
-<ul>
-  <li>CostMiss = 79.92
-  <li>CostFA = 1
-  <li>Ptarg = 0.001
-</ul>
+the default for DEVA).
+<b>Please not that the values provided for the metric parameters for
+<i>CostMiss</i>, <i>CostFA</i> and <i>Ptarg</i> are only for
+illustration purpose. Final values to be used for MED10 scoring will be made
+available through the evaluation website</b>
 
 This will run through the four step process done by DEVA_cli, and
 under the <i>SITE_Results</i> will be present a file titled
