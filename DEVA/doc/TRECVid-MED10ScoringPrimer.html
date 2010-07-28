@@ -74,22 +74,38 @@ the F4DE), please refer to its manual:
 The following is an example of scoring a DRYRUN submission, using some of
 the CSV files that are provided in the I<doc> directory of the DRYRUN
 set and a site submission CSV file named &quot;SITE_1.csv&quot;,
-which follows the rules set for a system CSV file and contains all the <i>TrialID</i> present in the <i>DRYRUN_TrialIndex.csv</i> file.<br>
+which follows the rules set for a system CSV file and contains all the
+<i>TrialID</i>s present in the <i>DRYRUN_TrialIndex.csv</i> file for
+the events processed.<br>
 
-<pre>% DEVA_cli --taskName MED --blockName Event --outdir SITE_Results \
---refcsv DRYRUN_Ref.csv --syscsv SITE_1.csv --FilterCMDfile med10_filter.cmd \
+<pre>% DEVA_cli \
+--taskName MED --blockName Event \
+--outdir SITE_1-Results \
+--refcsv DRYRUN_Ref.csv \
+--syscsv SITE_1.csv \
+--FilterCMDfile med10_filter.cmd \
 --UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.5' \
---UsedMetricParameters 'CostFA=1' DRYRUN_ClipMD.csv DRYRUN_JudgementMD.csv \
+--UsedMetricParameters 'CostFA=1' \
+DRYRUN_ClipMD.csv DRYRUN_JudgementMD.csv \
 DRYRUN_TrialIndex.csv</pre>
-where the SQL filter (&quot;med10_filter.cmd&quot;) contains:
-<pre>SELECT TrialID,Event FROM DRYRUN_TrialIndex;</pre>
+where the &quot;SITE_1-Results&quot; directory need to be created before
+running this command.<br>
+The tool will use the scoring SQL filter (&quot;med10_filter.cmd&quot;):
+<pre>SELECT system.TrialID,DRYRUN_TrialIndex.Event FROM DRYRUN_TrialIndex INNER JOIN system WHERE system.TrialID==DRYRUN_TrialIndex.TrialID;</pre>
 
-<b>MetricNormLinearCostFunct</b> is the metric used for scoring (and
+<u>Note:</u> if the participating site only participated in some of the
+three events, the SQL filter will insure that only the <i>TrialID</i>s
+listed in the system CSV will be used. A submission checker will be
+used to confirm that all required <i>TrialID</i>s for a given event
+present in &quot;DRYRUN_TrialIndex.csv&quot; are in the system
+submission.<br>
+
+<p>MetricNormLinearCostFunct</b> is the metric used for scoring (and
 the default for DEVA).
 <b>Please not that the values provided for the metric parameters for
 <i>CostMiss</i>, <i>CostFA</i> and <i>Ptarg</i> are only for
 illustration purpose. Final values to be used for MED10 scoring will be made
-available through the evaluation website</b>
+available through the evaluation website.</b></p>
 
 This will run through the four step process done by DEVA_cli, and
 under the <i>SITE_Results</i> will be present a file titled
