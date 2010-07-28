@@ -83,14 +83,14 @@ the events processed.<br>
 --outdir SITE_1-Results \
 --refcsv DRYRUN_Ref.csv \
 --syscsv SITE_1.csv \
---FilterCMDfile med10_filter.cmd \
+--FilterCMDfile MED_2010_DRYRUN_filter.cmd \
 --UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.5' \
 --UsedMetricParameters 'CostFA=1' \
 DRYRUN_ClipMD.csv DRYRUN_JudgementMD.csv \
 DRYRUN_TrialIndex.csv</pre>
 where the &quot;SITE_1-Results&quot; directory need to be created before
 running this command.<br>
-The tool will use the scoring SQL filter (&quot;med10_filter.cmd&quot;):
+The tool will use the scoring SQL filter (&quot;MED_2010_DRYRUN_filter.cmd&quot;):
 <pre>SELECT system.TrialID,DRYRUN_TrialIndex.Event FROM DRYRUN_TrialIndex INNER JOIN system WHERE system.TrialID==DRYRUN_TrialIndex.TrialID;</pre>
 
 <u>Note:</u> if the participating site only participated in some of the
