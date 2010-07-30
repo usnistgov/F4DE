@@ -102,7 +102,7 @@ which follows the rules set for a system CSV file and contains all the
 <i>TrialID</i>s present in the <i>DRYRUN_TrialIndex.csv</i> file for
 the events processed.<br>
 </doc>
-<pre>% DEVA_cli \<br>--taskName MED --blockName Event \<br>--outdir SITE_1-Results \<br>--refcsv DRYRUN_Ref.csv \<br>--syscsv DRYRUN_random_sys.csv \<br>--FilterCMDfile MED_2010_DRYRUN_filter.cmd \<br>--UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.5' \<br>--UsedMetricParameters 'CostFA=1' \<br>DRYRUN_ClipMD.csv DRYRUN_JudgementMD.csv \<br>DRYRUN_TrialIndex.csv</pre>
+<pre>% mkdir SITE_1-Results<br>% echo 'SELECT system.TrialID,DRYRUN_TrialIndex.Event FROM DRYRUN_TrialIndex INNER JOIN system WHERE system.TrialID==DRYRUN_TrialIndex.TrialID;' &gt; \<br>MED_2010_DRYRUN_filter.cmd<br>% DEVA_cli \<br>--taskName MED --blockName Event \<br>--outdir SITE_1-Results \<br>--refcsv DRYRUN_Ref.csv \<br>--syscsv DRYRUN_random_sys.csv \<br>--FilterCMDfile MED_2010_DRYRUN_filter.cmd \<br>--UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.5' \<br>--UsedMetricParameters 'CostFA=1' \<br>DRYRUN_ClipMD.csv DRYRUN_JudgementMD.csv \<br>DRYRUN_TrialIndex.csv</pre>
 where:<br>
 <ul>
   <li>The "SITE_1-Results" directory is created before
@@ -115,12 +115,11 @@ for
 illustration purpose. Final values to be used for MED10 scoring will be
 made
 available through the evaluation website.</b></li>
-  <li>The "MED_2010_DRYRUN_filter.cmd" file contains the following SQL
-query:<br>
+  <li>The "MED_2010_DRYRUN_filter.cmd" file contains an SQL
+query.&nbsp; <br>
   </li>
 </ul>
-<pre>	SELECT system.TrialID,DRYRUN_TrialIndex.Event FROM DRYRUN_TrialIndex INNER JOIN system WHERE system.TrialID==DRYRUN_TrialIndex.TrialID;<br><br><span
- style="text-decoration: underline;"></span></pre>
+<pre><span style="text-decoration: underline;"></span></pre>
 <div style="margin-left: 40px;"><u>Note:</u> For sites only
 participating in some of the
 three events, the SQL filter will insure that only the <i>TrialID</i>s
