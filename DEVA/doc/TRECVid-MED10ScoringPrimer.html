@@ -1,131 +1,152 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html><head>
-  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="Content-Type">
   <title>TRECVID MED Scoring Primer</title>
-</head><body>
-<div style="text-align: center;"><big><big><big>TRECVID MED Scoring Primer</big></big></big><br>
+</head>
+<body>
+<div style="text-align: center;"><big><big><big>TRECVID MED Scoring
+Primer</big></big></big><br>
 </div>
 <div style="text-align: center;"><small>Updated July 20th, 2010</small><br>
 </div>
 <br>
 <h2>Description: </h2>
 This document provides a high-level overview of how to use the F4DE
-tools for the <a href="http://www.nist.gov/itl/iad/mig/med.cfm">TRECVID MED Evaluations</a>.  The Multimedia Event Detection (MED) evaluation track is part of the
+tools for the <a href="http://www.nist.gov/itl/iad/mig/med.cfm">TRECVID
+MED Evaluations</a>. The Multimedia Event Detection (MED) evaluation
+track is part of the
 TRECVID Evaluation. The multi-year goal of MED is to assemble core
 detection technologies into a system that can quickly and accurately
-search a multimedia collection for user-defined events.  See the web site for specific details about the evaluation.
-
-<p>
-
-There are three sections in this document:<a href="#executable">executable
+search a multimedia collection for user-defined events. See the web
+site for specific details about the evaluation.
+<p>There are three sections in this document: <a href="#executable">executable
 script synopsis</a>, <a href="#format">file format</a>, and <a
-href="#cliuse">using the tool to score a MED submission</a>.
+ href="#cliuse">using the tool to score a MED submission</a>.
 The examples below assume the F4DE package has been
-installed and is working properly according to the README including
-$F4DE_BASE is defined and $F4DE_BASE/bin is in your path
+installed and is working properly according to the README.&nbsp; This
+includes defining the $F4DE_BASE environment variable and
+$F4DE_BASE/bin is in your path
 variable.&nbsp;
 The variable DIST used below is the path to the F4DE
 source directory and is not part of the F4DE installation instructions.<br>
-
-<a name="executable"><h2>Executable Script Synopsys:</h2></a>
-<b>DEVA_cli</b> is the <i>Detection EVAluation command line
+<a name="executable">
+<h2>Executable Script Synopsis:</h2>
+</a><b>DEVA_cli</b> is the <i>Detection EVAluation command line
 interface</i> software that is used for scoring the MED evaluation.
 The software uses <a href="http://www.sqlite.org">SQLite</a> to manage
-the data tables and then uses SQLite compatible queries to selecte
-data to score.  The software reads one reference <i>Comma Separated
-Values</i> (CSV) file, one system CSV file, and optionaly mulitple
+the data tables and then uses SQLite compatible queries to select
+data to score. The software reads one reference <i>Comma Separated
+Value</i> (CSV) file, one system CSV file, and optionally multiple
 metadata CSV files.
-
-<a name="format"><h2>File Formats:</h2></a>
-
-The TRECVID MED tools use <i>Comma Separated Values</i> (CSV) files to
-generate SQL tables that will be used by the scoring tool.<br>
-CSV files are flat files where delimited fields use a comma to
-separate values. They can be used to represent database tables. 
-The following is a valid CSV row that contains three columns:
-<code>1,John,Doe</code><br>
-To avoid issues in processing the data, it is recommended that each
-column content be quoted, so the previous example would become:
-<code>&quot;1&quot;,&quot;John&quot;,&quot;Doe&quot;</code><br>
-The first row of a given CSV file should contain the column's
-header. For the previous example, it would be:
-<code>&quot;ID&quot;,&quot;FirstName&quot;,&quot;LastName&quot;</code>
+<a name="format">
+<h2>File Formats:</h2>
+</a>The TRECVID MED tools use <i>Comma Separated Values</i> (CSV)
+files to
+generate SQL tables that will be used by the scoring tool. CSV files
+are flat files where commas are used to
+separate values. and double quotes are used to enclose values. The
+following is a valid CSV row that contains three columns:
+<br>
 </p>
-
-<p>The scoring tool make use of one CSV file for its <b>reference</b>
-database, one CSV file for its <b>system</b> database and optionaly,
-multiple CSV files for a <b>metadata</b> database.<br>
-For the scoring tool, the first row of a given CSV file must
-contain the column's header, as each column header will be used as its
-SQL equivalent column name for the table.</p>
+<p>&nbsp;<code></code><code>&nbsp;&nbsp;&nbsp; "1","John","Doe"</code><br>
+</p>
+<p>The DEVA tools require the first row of a CSV file to contain the
+column's
+header. For the previous example, it would be:
+<br>
+</p>
+<p><code>&nbsp;&nbsp;&nbsp; "ID","FirstName","LastName"</code>
+</p>
+<p>The scoring tool make requires one <b>reference</b>
+CSV file and one <span style="font-weight: bold;">system</span> CSV
+file.&nbsp; The tool optionally accepts multiple CSV files that provide
+<b>metadata</b> about the test trials.&nbsp; The metadata files can be
+used to conditionally score the system.&nbsp; The DEVA tools will use
+the CSV files to build SQlite database tables. <br>
+</p>
+<p>Each column header will be used as its
+SQL equivalent column name for the table.&nbsp; The header and field
+order of the reference and system files is rigidly defined.<br>
+</p>
 <ul>
-<li>The <b>reference</b> CSV file must contain two columns: <i>TrialID</i> and <i>Targ</i>, where <i>TrialID</i> must be a primary key and <i>Targ</i> values must be a either <i>y</i> or <i>n</i>.
-<li>The <b>system</b> CSV file must contain three columns: <i>TrialID</i>, <i>Score</i> and <i>Decision</i>, where <i>TrialID</i> must be a primary key, <i>Score</i> a numerical value and <i>Targ</i> values must be a either <i>y</i> or <i>n</i>.
-<li>For the optional metadata database, the CSV file names will be used as SQL table
-name. The program leave the content of the database free for most metadata content. One of the table that is part of that database should contain a <i>TrialID</i> column that match the one present in the <b>reference</b> or <b>system</b> CSV.
+  <li>The <b>reference</b> CSV file must contain two columns: <i>TrialID</i>
+and <i>Targ</i>, where <i>TrialID</i> must be a primary key and <i>Targ</i>
+values must be a either <i>y</i> or <i>n</i>.
+  </li>
+  <li>The <b>system</b> CSV file must contain three columns: <i>TrialID</i>,
+    <i>Score,</i> and <i>Decision</i>, where <i>TrialID</i> must be a
+primary key, <i>Score</i> a numerical value and <i>Targ</i> values
+must be a either <i>"y"</i> or "<i>n"</i>.</li>
 </ul>
-
-<a name="cliuse"><h2>Using the DEVA_cli tool to Score a MED submission</h2></a>
-
-<p><i>For further information about the DEVA_cli tool (available as part of
+For the optional metadata database files, the CSV file names will be
+used as SQL table
+name. The program leaves the content of the database to be free-form.
+Although, at least one of the tables should contain a <i>TrialID</i>
+column that match the 'TrialID" present in the <b>reference</b> or <b>system</b>
+CSV.
+<br>
+<a name="cliuse">
+<h2>Using the DEVA_cli tool to Score a MED submission</h2>
+</a>
+<p><i>For further information about the DEVA_cli tool (available as
+part of
 the F4DE), please refer to its manual:
 <code>DEVA_cli --man</code></i></p>
-
-The following is an example of scoring a DRYRUN submission, using some of
-the CSV files that are provided in the I<doc> directory of the DRYRUN
-set and a site submission CSV file named &quot;SITE_1.csv&quot;,
+The following is an example of scoring a DRYRUN submission using files
+provided in the <doc>DRYRUN
+index files found on the MED web site.&nbsp; set and a site submission
+CSV file named "SITE_1.csv",
 which follows the rules set for a system CSV file and contains all the
 <i>TrialID</i>s present in the <i>DRYRUN_TrialIndex.csv</i> file for
 the events processed.<br>
-
-<pre>% DEVA_cli \
---taskName MED --blockName Event \
---outdir SITE_1-Results \
---refcsv DRYRUN_Ref.csv \
---syscsv SITE_1.csv \
---FilterCMDfile MED_2010_DRYRUN_filter.cmd \
---UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.5' \
---UsedMetricParameters 'CostFA=1' \
-DRYRUN_ClipMD.csv DRYRUN_JudgementMD.csv \
-DRYRUN_TrialIndex.csv</pre>
-where the &quot;SITE_1-Results&quot; directory need to be created before
-running this command.<br>
-The tool will use the scoring SQL filter (&quot;MED_2010_DRYRUN_filter.cmd&quot;):
-<pre>SELECT system.TrialID,DRYRUN_TrialIndex.Event FROM DRYRUN_TrialIndex INNER JOIN system WHERE system.TrialID==DRYRUN_TrialIndex.TrialID;</pre>
-
-<u>Note:</u> if the participating site only participated in some of the
-three events, the SQL filter will insure that only the <i>TrialID</i>s
-listed in the system CSV will be used. A submission checker will be
-used to confirm that all required <i>TrialID</i>s for a given event
-present in &quot;DRYRUN_TrialIndex.csv&quot; are in the system
-submission.<br>
-
-<p>MetricNormLinearCostFunct</b> is the metric used for scoring (and
-the default for DEVA).
-<b>Please not that the values provided for the metric parameters for
-<i>CostMiss</i>, <i>CostFA</i> and <i>Ptarg</i> are only for
-illustration purpose. Final values to be used for MED10 scoring will be made
-available through the evaluation website.</b></p>
-
-This will run through the four step process done by DEVA_cli, and
-under the <i>SITE_Results</i> will be present a file titled
-<i>scoreDB.scores.txt</i> that will contain a human readable
-detail:
+</doc>
+<pre>% DEVA_cli \<br>--taskName MED --blockName Event \<br>--outdir SITE_1-Results \<br>--refcsv DRYRUN_Ref.csv \<br>--syscsv DRYRUN_random_sys.csv \<br>--FilterCMDfile MED_2010_DRYRUN_filter.cmd \<br>--UsedMetricParameters 'CostMiss=1' --UsedMetricParameters 'Ptarg=0.5' \<br>--UsedMetricParameters 'CostFA=1' \<br>DRYRUN_ClipMD.csv DRYRUN_JudgementMD.csv \<br>DRYRUN_TrialIndex.csv</pre>
+where:<br>
 <ul>
-  <li> the number of <i>y</i> <i>Targ</i> <b>Reference</b> entries
-  (<code>#Ref</code>)
-  <li> the number of <b>System</b> entries (<code>#Sys</code>)
-  <li> the number of correct detections of <i>y</i> <i>Targ</i>
-  <b>Reference</b> by the <b>System</b> (<code>#CorDet</code>)
-  <li> the number of false alarms: <i>y</i> <b>System</b>
-  <i>Decision</i> for a <i>n</i> <i>Targ</i> <b>Reference</b>
-  (<code>#FA</code>)
-  <li> the number of missed detections of a  <i>y</i> <i>Targ</i>
-  <b>Reference</b> by the <b>System</b> (<code>#Miss</code>)
+  <li>The "SITE_1-Results" directory is created before
+running this command.</li>
+  <li>MetricNormLinearCostFunct is the metric used for scoring (and
+the default for DEVA).
+    <b>Please not that the values provided for the metric parameters
+for
+    <i>CostMiss</i>, <i>CostFA</i> and <i>Ptarg</i> are only for
+illustration purpose. Final values to be used for MED10 scoring will be
+made
+available through the evaluation website.</b></li>
+  <li>The "MED_2010_DRYRUN_filter.cmd" file contains the following SQL
+query:<br>
+  </li>
+</ul>
+<pre>	SELECT system.TrialID,DRYRUN_TrialIndex.Event FROM DRYRUN_TrialIndex INNER JOIN system WHERE system.TrialID==DRYRUN_TrialIndex.TrialID;<br><br><span
+ style="text-decoration: underline;"></span></pre>
+<div style="margin-left: 40px;"><u>Note:</u> For sites only
+participating in some of the
+three events, the SQL filter will insure that only the <i>TrialID</i>s
+listed in the system CSV will be used.&nbsp; A submission checker will
+be released soon the verifies that all <span
+ style="font-style: italic;">TrialIDs </span>for an event are present
+in the system file.<br>
+</div>
+<br>
+The script will run through the four steps of the DEVA_cli scorer and
+place in the "<i>SITE-1_Results</i>" directory&nbsp; a file named
+<i>scoreDB.scores.txt</i> that contains a scoring report which
+includes:
+<ul>
+  <li> the number of <i>y</i> <i>Targ</i> <b>Reference</b> entries (<code>#Ref</code>)
+  </li>
+  <li> the number of <b>System</b> entries (<code>#Sys</code>) </li>
+  <li> the number of correct detections of <i>y</i> <i>Targ</i> <b>Reference</b>
+by the <b>System</b> (<code>#CorDet</code>) </li>
+  <li> the number of false alarms: <i>y</i> <b>System</b> <i>Decision</i>
+for a <i>n</i> <i>Targ</i> <b>Reference</b> (<code>#FA</code>) </li>
+  <li> the number of missed detections of a <i>y</i> <i>Targ</i> <b>Reference</b>
+by the <b>System</b> (<code>#Miss</code>)
+  </li>
 </ul>
 Note that the correct detection of a <i>n</i> <i>Targ</i>
 <b>Reference</b> is not counted.
-
-
 </body>
 </html>
