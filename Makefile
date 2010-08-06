@@ -171,6 +171,9 @@ DEVADIR=DEVA
 DEVATOOLS=tools/DEVA_{cli/DEVA_cli,filter/DEVA_filter,sci/DEVA_sci}.pl
 DEVATOOLS_MAN=tools/DEVA_cli/DEVA_cli.pl
 
+DEVAinstall:
+	@make DEVAinstall_man
+
 DEVAinstall_noman:
 	@echo ""
 	@echo "********** Installing DEVA tools"
