@@ -25,6 +25,7 @@ all:
 	@echo "  AVSS09check     only run checks for the AVSS09 subsection"
 	@echo "  SQLitetoolscheck  only run checks for the SQLite_tools subsection"
 	@echo "  DEVAcheck       only run checks for the DEVA subsection"
+	@echo "NOTE: for each tool specific check it is highly recommended to run first 'make mincheck' to insure that the minimum requirements are met"
 	@echo ""
 	@echo "[install section -- requires the F4DE_BASE environment variable set]"
 	@echo "  install         to install all the softwares"
@@ -34,8 +35,8 @@ all:
 	@echo "  VidATinstall    only install the VidAT tools set"
 	@echo "  SQLitetoolsinstall  only install the SQLite tools set"
 	@echo "  DEVAinstall     only install the DEVA subsection"
+	@echo "NOTE: before installing a tool subset, it is highly recommended to run both 'make mincheck' and the check related to this tool to confirm that your system has all the required components to run the tool"
 	@echo ""
-	@make from_installdir
 
 from_installdir:
 	@echo "** Checking that \"make\" is called from the source directory"
@@ -188,10 +189,17 @@ DEVAinstall_man:
 
 ##########
 
-install_head:
+check_f4debase_set:
 	@echo "** Checking that the F4DE_BASE environment variable is set"
 	@test ${F4DE_BASE}
 	@test ${F4DE_BASE} != "notset"
+
+check_f4debase_notset:
+	@echo "** Checking that the F4DE_BASE environment variable is NOT set"
+	@test ${F4DE_BASE} == "notset"
+
+install_head:
+	@make check_f4debase_set
 	@echo "** Checking that the F4DE_BASE is a writable directory"
 	@test -d ${F4DE_BASE}
 	@test -w ${F4DE_BASE}
@@ -201,10 +209,11 @@ install_head:
 
 mincheck:
 	@make check_common
+	@make check_f4debase_notset
 	@make commoncheck
 
 check:
-	@make commoncheck
+	@make mincheck
 	@make TV08check
 	@make CLEAR07check
 	@make AVSS09check
