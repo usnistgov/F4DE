@@ -360,7 +360,7 @@ sub addMOTA2sat {
   my @comps = &get_MOTAc($site, $expid, $task, $ttid, $camid);
 
   my @motac = ();
-  for (my $i = 0; $i < scalar @comps; $i++) {
+  for (my $i = 0; $i < scalar @comps; $i += 2) {
     my $h = $comps[$i];
     my $v = $comps[$i+1];
     push @motac, $v;
