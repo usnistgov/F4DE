@@ -90,13 +90,15 @@ my $usage = &set_usage();
 
 my $mddrop = 0;
 my $outfile = "";
+my $dostdout = 0;
 my %opt = ();
 GetOptions
   (
    \%opt,
    'help',
    'MDthreshold=i' => \$mddrop,
-   'outfile=s'     => \$outfile
+   'outfile=s'     => \$outfile,
+   'stdout'        => \$dostdout,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 
@@ -105,12 +107,16 @@ MMisc::error_quit("$usage") if (scalar @ARGV < 1);
 MMisc::error_quit("Problem with \'mddrop\' must be at least 1")
   if ($mddrop <= 1);
 
-MMisc::error_quit("\'outfile\' not set")
-  if (MMisc::is_blank($outfile));
+if ($dostdout) {
+  MMisc::error_quit("When using \'stdout\' mode only one file is authorized")
+    if (scalar @ARGV > 1);
+} else {
+  MMisc::error_quit("\'outfile\' not set")
+    if (MMisc::is_blank($outfile));
 
-open OFILE, ">$outfile"
-  or MMisc::error_quit("Problem with \'outfile\' ($outfile) : $!");
-
+  open OFILE, ">$outfile"
+    or MMisc::error_quit("Problem with \'outfile\' ($outfile) : $!");
+}
 my %all = ();
 foreach my $if (@ARGV) {
   &process_file($if);
@@ -120,12 +126,22 @@ my $csvh = &prep_file_header();
 foreach my $if (@ARGV) {
   &write_file_details($csvh, $if);
 }
-close OFILE;
-print "[*****] Wrote \'$outfile\'\n";
+if (! $dostdout) {
+  close OFILE;
+  print "[*****] Wrote \'$outfile\'\n";
+}
 
-MMisc::ok_quit("Done");
+MMisc::ok_quit($dostdout ? "" : "Done");
 
 ##########
+
+sub vprint {
+  return if ($dostdout);
+
+  print @_;
+}
+
+#####
 
 sub csverr {
   MMisc::error_quit("No CSV handler ?") if (! defined $_[0]);
@@ -138,7 +154,7 @@ sub csverr {
 sub process_file {
   my ($file) = @_;
 
-  print "[*] Loading \'$file\'\n";
+  &vprint("[*] Loading \'$file\'\n");
   
   open FILE, "<$file"
     or MMisc::error_quit("Problem opening file ($file) : $!");
@@ -147,7 +163,7 @@ sub process_file {
   my $line = <FILE>; chomp $line;
   my @header = $csvh->csvline2array($line); &csverr($csvh);
 
-  print "  ";
+  &vprint("  ");
 
   my $c_mp = '@';
   my $c_md = '-';
@@ -173,10 +189,9 @@ sub process_file {
   my $ftt = -1;
   my $track = "";
   my $str = 0;
-  my $cont = 1;
   my $frd = 0;
   my $pfr = 0;
-  while (($cont) && ($line = <FILE>)) {
+  while ($line = <FILE>) {
     chomp $line;
     my ($fr, $mp, $md, $fa, $dco) = $csvh->csvline2array($line);
     &csverr($csvh);
@@ -189,12 +204,12 @@ sub process_file {
         && (MMisc::is_blank($mp))
          && (MMisc::is_blank($dco)) ) {
       $track .= ($str) ? $c_none : "";
-      print $c_none;
+      &vprint($c_none);
       next;
     }
 
     if (! MMisc::is_blank($mp)) {
-      print $c_mp;
+      &vprint($c_mp);
       $track .= $c_mp;
       $str++;
       $beg = ($beg == 0) ? $fr : $beg;
@@ -209,15 +224,13 @@ sub process_file {
     if (! MMisc::is_blank($md)) {
       $ftbeg = ($ftbeg == 0) ? $fr : $ftbeg;
       $ftend = $fr;
-#      $ftt = ($ftt == -1) ? 1 : $ftt;
 
       if (MMisc::is_blank($fa)) {
-        print $c_md;
+        &vprint($c_md);
         $track .= $c_md;
       } else {
-        print $c_mdfa;
+        &vprint($c_mdfa);
         $track .= $c_mdfa;
-        $str++;
       }
       $str++;
       $mdc++;
@@ -235,22 +248,19 @@ sub process_file {
           }
         }
         if ($beg != 0) {
-#          $cont = 0;
           $track .= "![$frc/$max]";
           $ftt = 0;
         }
         $frc = 0;
         $mdc = 0;
-        if ($cont) {
-          $beg = 0;
-          $end = 0;
-        }
+        $beg = 0;
+        $end = 0;
       }
       next;
     }
 
     if (! MMisc::is_blank($fa)) {
-      print $c_fa;
+      &vprint($c_fa);
       $track .= $c_fa;
       $str++;
       next;
@@ -258,7 +268,7 @@ sub process_file {
 
     if (! MMisc::is_blank($dco)) {
       $track .= ($str) ? $c_dco : "";
-      print $c_dco;
+      &vprint($c_dco);
       next;
     }
 
@@ -288,19 +298,22 @@ sub process_file {
                  $fmx, $fbeg, $fend, 
                  $ftt, $ftl, $ftbeg, $ftend];
 
-  print "\n   (max: $max)\n";
+  &vprint("\n   (max: $max)\n");
 }
 
 ##########
 
 sub prep_file_header {
   my $csvh = new CSVHelper(); &csverr($csvh);
+  return($csvh) if ($dostdout);
+
   my @h = ("FileName", 
            "FirstTrackedLife", "FirstBegFr", "FirstEndFr",
            "MaxTrackedLife", "MaxBegFr", "MaxEndFr",
-           "CompleteTrackBool", "CompeteTrackLife", 
-           "CompleteBegFr", "CompleteEndFr",
-           "MDThresold", "TrackDetail");
+           "TrackedToEnd",
+           "CompleteTrackLife", "CompleteBegFr", "CompleteEndFr",
+           "MDThresold", 
+           "TrackDetail");
   $csvh->set_number_of_columns(scalar @h); &csverr($csvh);
   print OFILE $csvh->array2csvline(@h) . "\n"; &csverr($csvh);
   
@@ -315,8 +328,16 @@ sub write_file_details {
   my ($max, $track, $beg, $end, $mt, $fmx, $fbeg, $fend, $ctt, $ctl, $ctbeg, $ctend) 
     = @{$all{$file}};
 
-  my @a = ($file, $fmx, $fbeg, $fend, $max, $beg, $end, $ctt, $ctl, $ctbeg, $ctend, $mt, $track);
-  print OFILE $csvh->array2csvline(@a) . "\n"; &csverr($csvh);
+  my @a = ();
+  push(@a, $file) if (! $dostdout);
+  push @a, ($fmx, $fbeg, $fend, $max, $beg, $end, $ctt, $ctl, $ctbeg, $ctend, $mt, $track);
+  
+  my $str = $csvh->array2csvline(@a); &csverr($csvh);
+  if ($dostdout) {
+    print "$str\n";
+  } else {
+    print OFILE  "$str\n"; 
+  }
 }
 
 ####################
@@ -325,14 +346,36 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help] --outfile file trackinglogfile [trackinglogfile [...]]
+$0 [--help] --MDthreshold value [--outfile file | --stdout] trackinglogfile [trackinglogfile [...]]
 
 Will generate a Tracking Details CSV from a Tracking Log CSV.
 
 Where:
   --help     This help message
+  --MDthreshold  The value when a track is considered lost (in processed entries from the tracking log, ie if it was annotated every 5 frames at 25 fps a value of 10 means 10 * (5/25) = 2 seconds)
   --outfile  Specify the output file
+  --stdout   Print the CSV line to stdout. In this mode, only one trackinglogfile can be specified, and the line will not contain the FileName field (1st field in the normal CSV file)
 
+A Track is started at the first Mapping of the REF to the SYS and is extended for each Mapped entry seen, until either the MDthreshold is triggered (a new mapped resets the threshold counter) or we reach the end of file.
+
+The Complete Track is from the first Mapped to the last Mapped or Miss Detect (not taking into account the MDthreshold trigger)
+
+A TrackLife is the framespan of a given Track.
+
+Information made available in the CSV file are:
+  FileName      The filename as given on the command line (omitted when using --stdout)
+  FirstTrackedLife   The first seen Track Life (framespan)
+   FirstBegFr        The beginning frame of the First Track Life
+   FirstEndFr        The end frame of the First Track Life
+  MaxTrackedLife     The longest seen Track Life
+   MaxBegFr          The beginning frame of the Max Track Life
+   MaxEndFr          The end frame of the Max Track Life
+  TrackedToEnd       A boolean that specify if the MDthreshold was never triggered (1 = true / 0 = false)
+  CompleteTrackLife  The framespan of the Complete Track
+   CompleteBegFr     The beginning frame of the Complete Track
+   CompleteEndFr     The end frame of the Complete Track
+  MDThresold         The Missed Detect Thresold as given on the command line
+  TrackDetail        A text based tracking information from the first non DCO or no Objects in Frame (detailed below)
 
 TrackingDetails code are:
   .    No Objects
