@@ -208,10 +208,10 @@ sub do_incircle {
           $center + (($center - 10)-(20*$inc))*$s1,
           $center + (($center - 10)-(20*$inc))*$c2,
           $center + (($center - 10)-(20*$inc))*$s2,
-          $center + (($center - 30)-(20*$inc))*$c2,
-          $center + (($center - 30)-(20*$inc))*$s2,
-          $center + (($center - 30)-(20*$inc))*$c1,
-          $center + (($center - 30)-(20*$inc))*$s1
+          $center + (($center - 27)-(20*$inc))*$c2,
+          $center + (($center - 27)-(20*$inc))*$s2,
+          $center + (($center - 27)-(20*$inc))*$c1,
+          $center + (($center - 27)-(20*$inc))*$s1
           );
       } else { # circles
         my $c1 = cos($div*(5*$i+2));
