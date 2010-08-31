@@ -175,5 +175,18 @@ sub print_line {
 ####################
 
 sub set_usage {
-  return("$0 [--help] trackinglogfile outfile");
+  my $tmp=<<EOF
+$versionid
+
+$0 [--help] trackinglogfile outfile
+
+Will generate a CSV file from a given Tracking Log.
+
+Where:
+  --help     This help message
+
+EOF
+;
+
+  return($tmp);
 }
