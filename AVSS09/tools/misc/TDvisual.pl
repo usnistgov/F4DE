@@ -90,9 +90,10 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 my @ok_modes = ('rect', 'circle');
 my @ok_shapes = ('circle', 'polygon');
 my $mode = $ok_modes[0];
-my $poly = $ok_shapes[0];
+my $shape = $ok_shapes[0];
 
 my $usage = &set_usage();
+MMisc::error_quit($usage) if (scalar @ARGV == 0);
 
 my $ofile = "";
 my %opt = ();
@@ -101,47 +102,63 @@ GetOptions
    \%opt,
    'help',
    'container=s' => \$mode,
-   'shape=s' => \$poly,
+   'shape=s' => \$shape,
    'output=s' => \$ofile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 
-MMisc::error_quit("No TrackingDetails on the command line ?")
+MMisc::error_quit("Too many arguments on hte command line\n$usage")
+  if (scalar @ARGV > 2);
+
+MMisc::error_quit("No TrackingDetails File specified\n$usage")
   if (scalar @ARGV == 0);
 
-MMisc::error_quit("Too many arguments left on the command line, on \'TrackingDetails\' should be left ?")
-  if (scalar @ARGV != 1);
-
-my $test = shift @ARGV;
-
-MMisc::error_quit("No \'output\' specified, aborting")
+MMisc::error_quit("No \'output\' specified, aborting\n$usage")
   if (MMisc::is_blank($ofile));
 
 MMisc::error_quit("Wrong option for \'container\' ($mode), authorized values: " . join(" ", @ok_modes))
   if ((MMisc::is_blank($mode)) || (! (grep(m%^$mode$%, @ok_modes))));
 
-MMisc::error_quit("Wrong option for \'shape\' ($poly), authorized values: " . join(" ", @ok_shapes))
-  if ((MMisc::is_blank($poly)) || (! (grep(m%^$poly$%, @ok_shapes))));
+MMisc::error_quit("Wrong option for \'shape\' ($shape), authorized values: " . join(" ", @ok_shapes))
+  if ((MMisc::is_blank($shape)) || (! (grep(m%^$shape$%, @ok_shapes))));
 
-my @colors = &process_text($test);
+my $if = shift @ARGV;
+open FILE, "<$if"
+  or MMisc::error_quit("Problem with input file ($if) : $!");
 
-&do_plot($ofile);
+my @all = ();
+while (my $entry =<FILE>) {
+  chomp $entry;
+
+  my @colors = &process_text($entry);
+  push @all, \@colors;
+}
+
+&do_plot($ofile, @all);
 
 MMisc::ok_quit("Done");
 
 ##########
 
 sub do_plot {
-  my ($fn) = @_;
+  my ($fn, @entries) = @_;
   $fn .= ".png" if (! ($fn =~ m%\.png$%));
 
   my $image = Image::Magick->new;
+
+  my ($max_x, $max_y) = 0;
+  foreach my $entry (@entries) {
+    $max_y++;
+    my $v = scalar @{$entry};
+    $max_x = $v if ($v > $max_x);
+  }
   
   if ($mode eq 'rect') {
-    &do_inrect($image);
+    &do_inrect($image, $max_x, $max_y, @entries);
   } else {
-    &do_incircle($image);
+    &do_incircle($image, $max_x, $max_y, @entries);
   }
+
   my $err = $image->Write(filename => $fn, compression => 'None');
   MMisc::error_quit("Problem during file write : $err")
       if (! MMisc::is_blank($err));
@@ -164,68 +181,85 @@ sub prep_image {
 #####
 
 sub do_incircle {
-  my ($image) = @_;
-
-  my $txt = '1000x1000';
+  my ($image, $max_x, $max_y, @entries) = @_;
+  
+  my $side = 1000 + ($max_y*20);
+  my $txt = sprintf('%dx%d', $side, $side);
+  my $center = sprintf("%d", $side / 2);
   &prep_image($image, $txt);
-  my $div = &pi2 / (5.0 * (scalar @colors));
-
-  my $prim = ($poly eq 'poly') ? 'polygon' : 'circle';
-  for (my $i = 0; $i < scalar @colors; $i++) {
-    my $c = $colors[$i];
-
-    if ($poly eq 'poly') {
-      my $c1 = cos($div*(5*$i));
-      my $c2 = cos($div*((5*$i)+3));
-      my $s1 = sin($div*(5*$i));
-      my $s2 = sin($div*((5*$i)+3));
+  
+  my $div = &pi2 / (5.0 * $max_x);
+    
+  for (my $inc = 0; $inc < scalar @entries; $inc++) {
+    my @colors = @{$entries[$inc]};
+    
+    for (my $i = 0; $i < scalar @colors; $i++) {
+      my $c = $colors[$i];
       
-      $txt = sprintf("%d,%d %d,%d %d,%d %d,%d", 
-                     500 + 490*$c1, 500 + 490*$s1,
-                     500 + 490*$c2, 500 + 490*$s2,
-                     500 + 460*$c2, 500 + 460*$s2,
-                     500 + 460*$c1, 500 + 460*$s1);
-    } else { # circles
-      my $c1 = cos($div*(5*$i+2));
-      my $s1 = sin($div*(5*$i+2));
+      if ($shape eq $ok_shapes[1]) {
+        my $c1 = cos($div*(5*$i));
+        my $c2 = cos($div*((5*$i)+3));
+        my $s1 = sin($div*(5*$i));
+        my $s2 = sin($div*((5*$i)+3));
+        
+        $txt = sprintf(
+          "%d,%d %d,%d %d,%d %d,%d", 
+          $center + (($center - 10)-(20*$inc))*$c1,
+          $center + (($center - 10)-(20*$inc))*$s1,
+          $center + (($center - 10)-(20*$inc))*$c2,
+          $center + (($center - 10)-(20*$inc))*$s2,
+          $center + (($center - 30)-(20*$inc))*$c2,
+          $center + (($center - 30)-(20*$inc))*$s2,
+          $center + (($center - 30)-(20*$inc))*$c1,
+          $center + (($center - 30)-(20*$inc))*$s1
+          );
+      } else { # circles
+        my $c1 = cos($div*(5*$i+2));
+        my $s1 = sin($div*(5*$i+2));
+        
+        my $x = $center+((($center - 10)-(20*$inc))*$c1);
+        my $y = $center+((($center - 10)-(20*$inc))*$s1);
+        $txt = sprintf("%d,%d %d,%d", $x, $y, $x+2, $y+2);
+      }
 
-      my $x = 500+(490*$c1);
-      my $y = 500+(490*$s1);
-      $txt = sprintf("%d,%d %d,%d", $x, $y, $x+2, $y+2);
-    }
-
-    my $err = $image->Draw('primitive'=>$prim, 'fill' => $c, 'points' => $txt);
-    MMisc::error_quit("Problem during \'$prim\' plot : $err")
+      my $err = $image->Draw('primitive'=>$shape, 'fill' => $c, 'points' => $txt);
+      MMisc::error_quit("Problem during \'$shape\' plot : $err")
         if (! MMisc::is_blank($err));
+    }
   }
 }
 
 #####
 
 sub do_inrect {
-  my ($image) = @_;
+  my ($image, $max_x, $max_y, @entries) = @_;
 
-  my $txt = sprintf("%dx20", 5*scalar(@colors));
+  my $txt = sprintf("%dx%d", 5*$max_x, 20*$max_y);
   &prep_image($image, $txt);
 
-  my $prim = ($poly eq 'poly') ? 'polygon' : 'circle';
-  for (my $i = 0; $i < scalar @colors; $i++) {
-    my $c = $colors[$i];
+  for (my $inc = 0; $inc < scalar @entries; $inc++) {
+    my @colors = @{$entries[$inc]};
     
-    if ($poly eq 'poly') {
-      $txt = sprintf("%d,%d %d,%d %d,%d %d,%d", 
-                     5*$i, 0,
-                     5*$i + 3, 0,
-                     5*$i + 3, 19,
-                     5*$i, 19);
-    } else { # circles
-      my $v = 5*$i+2;
-      $txt = sprintf("%d,%d,%d,%d", $v, 10, $v + 2, 12);
-    }
+    for (my $i = 0; $i < scalar @colors; $i++) {
+      my $c = $colors[$i];
+      
+      if ($shape eq $ok_shapes[1]) {
+        $txt = sprintf(
+          "%d,%d %d,%d %d,%d %d,%d", 
+          5*$i, 20*$inc,
+          5*$i + 3, 20*$inc,
+          5*$i + 3, (20*$inc)+17,
+          5*$i, (20*$inc) + 17
+          );
+      } else { # circles
+        my $v = (5*$i)+2;
+        $txt = sprintf("%d,%d,%d,%d", $v, 10 + (20 * $inc), $v + 2, 12 + (20 * $inc));
+      }
 
-    my $err = $image->Draw('primitive' => $prim, 'fill' => $c, 'points' => $txt);
-    MMisc::error_quit("Problem during \'$prim\' plot : $err")
+      my $err = $image->Draw('primitive' => $shape, 'fill' => $c, 'points' => $txt);
+      MMisc::error_quit("Problem during \'$shape\' plot : $err")
         if (! MMisc::is_blank($err));
+    }
   }
 }
 
@@ -280,14 +314,14 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help] [--container mode] [--shape shape] --output file.png 'TrackingDetails'
+$0 [--help] [--container mode] [--shape shape] --output file.png TrackingDetailsFile
 
-Will generate a Tracking Details visual representation.
+Will generate a Tracking Details visual representation. Each new line from the TrackingDetailsFile is considered as a new entry to process
 
 Where:
   --help     This help message
-  --container  Specify the shape of the plot detail (valid modes are: $tokm)
-  --shape    Specify the shape of the individual entry occurrences (valid modes are: $toks)
+  --container  Specify the shape of the plot detail (valid modes are: $tokm) [default: $mode]
+  --shape    Specify the shape of the individual entry occurrences (valid modes are: $toks) [default: $shape]
   --output   Specify the output PNG file
 
 TrackingDetails code and corresponding Colors on the plot are:
