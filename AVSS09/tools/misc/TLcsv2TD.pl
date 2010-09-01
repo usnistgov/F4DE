@@ -91,6 +91,7 @@ my $usage = &set_usage();
 my $mddrop = 0;
 my $outfile = "";
 my $dostdout = 0;
+my $stdoutheaders = 0;
 my %opt = ();
 GetOptions
   (
@@ -99,8 +100,17 @@ GetOptions
    'MDthreshold=i' => \$mddrop,
    'outfile=s'     => \$outfile,
    'stdout'        => \$dostdout,
+   'HeadersOnly'   => \$stdoutheaders,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+
+MMisc::error_quit("\'headersOnly\' requested but \'stdout\' not requested\n$usage")
+  if (($stdoutheaders) && (! $dostdout));
+
+if (($stdoutheaders) && ($dostdout)) {
+  &prep_file_header();
+  MMisc::ok_quit("");
+}
 
 MMisc::error_quit("$usage") if (scalar @ARGV < 1);
 
@@ -305,17 +315,25 @@ sub process_file {
 
 sub prep_file_header {
   my $csvh = new CSVHelper(); &csverr($csvh);
-  return($csvh) if ($dostdout);
+  return($csvh) if (($dostdout) && (! $stdoutheaders));
 
-  my @h = ("FileName", 
-           "FirstTrackedLife", "FirstBegFr", "FirstEndFr",
-           "MaxTrackedLife", "MaxBegFr", "MaxEndFr",
-           "TrackedToEnd",
-           "CompleteTrackLife", "CompleteBegFr", "CompleteEndFr",
-           "MDThresold", 
-           "TrackDetail");
+  my @h = ();
+  push (@h, "FileName") if (! $stdoutheaders);
+  push @h, (
+    "FirstTrackedLife", "FirstBegFr", "FirstEndFr",
+    "MaxTrackedLife", "MaxBegFr", "MaxEndFr",
+    "TrackedToEnd",
+    "CompleteTrackLife", "CompleteBegFr", "CompleteEndFr",
+    "MDThresold", 
+    "TrackDetail"
+  );
   $csvh->set_number_of_columns(scalar @h); &csverr($csvh);
-  print OFILE $csvh->array2csvline(@h) . "\n"; &csverr($csvh);
+  my $txt = $csvh->array2csvline(@h);
+  if ($stdoutheaders) {
+    print "$txt\n";
+  } else {
+    print OFILE "$txt\n"; &csverr($csvh);
+  }
   
   return($csvh);
 }
@@ -346,7 +364,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help] --MDthreshold value [--outfile file | --stdout] trackinglogfile [trackinglogfile [...]]
+$0 [--help] --MDthreshold value [--outfile file | --stdout [--HeadersOnly]] trackinglogfile [trackinglogfile [...]]
 
 Will generate a Tracking Details CSV from a Tracking Log CSV.
 
@@ -355,6 +373,7 @@ Where:
   --MDthreshold  The value when a track is considered lost (in processed entries from the tracking log, ie if it was annotated every 5 frames at 25 fps a value of 10 means 10 * (5/25) = 2 seconds)
   --outfile  Specify the output file
   --stdout   Print the CSV line to stdout. In this mode, only one trackinglogfile can be specified, and the line will not contain the FileName field (1st field in the normal CSV file)
+  --HeadersOnly  Print the CSV headers only to stdout (does not need a trackinglogfile)
 
 A Track is started at the first Mapping of the REF to the SYS and is extended for each Mapped entry seen, until either the MDthreshold is triggered (a new mapped resets the threshold counter) or we reach the end of file.
 
