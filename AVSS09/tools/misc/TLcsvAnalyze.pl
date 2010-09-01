@@ -177,10 +177,8 @@ sub add2fs {
   &check_fs($fs);
 
   if ($c) {
-#    print "+[$beg:$end]\n";
     $fs->add_fs_to_value("$beg:$end");
   } else {
-#    print "*[$beg:$end]\n";
     $fs->set_value_beg_end($beg, $end);
   }
   &check_fs($fs);
