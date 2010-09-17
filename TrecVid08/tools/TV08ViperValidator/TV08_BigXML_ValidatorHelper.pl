@@ -68,7 +68,7 @@ foreach my $pn ("TrecVid08ViperFile", "TrecVid08HelperFunctions", "xmllintHelper
 }
 
 # usualy part of the Perl Core
-foreach my $pn ("Getopt::Long") {
+foreach my $pn ("Getopt::Long", "File::Copy") {
   unless (eval "use $pn; 1") {
     &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
     $have_everything = 0;
@@ -551,10 +551,8 @@ sub vprint {
 sub copy_file {
   my ($a, $b) = @_;
 
-  my $cmd = "cp $a $b";
-  my ($rc, $so, $se) = MMisc::do_system_call($cmd);
-  MMisc::error_quit("Could not copy [$a] to [$b]: $se")
-    if ($rc != 0);
+  copy($a, $b)
+    or MMisc::error_quit("Problem copying file [$a] to [$b] : $!");
 }
 
 ##########
