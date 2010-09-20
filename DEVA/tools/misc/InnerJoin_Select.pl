@@ -58,7 +58,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("MMisc", "MtSQLite") {
+foreach my $pn ("MMisc", "MtSQLite", "CSVHelper") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -145,6 +145,7 @@ MMisc::error_quit("Problem with tool ($tool) : $err")
   if (! MMisc::is_blank($err));
 
 &check_tables();
+&check_csv_columns();
 MMisc::error_quit("Sorry, currently can only work with two tables, here: " . scalar @tord)
   if (scalar @tord != 2);
 
@@ -158,7 +159,7 @@ MMisc::ok_quit("Done");
 ####################
 
 sub fix_entries {
-  my ($h, @v) = @_;
+  my ($h, $print, @v) = @_;
 
   my @tmp = MtSQLite::fix_entries(@v);
 
@@ -168,7 +169,8 @@ sub fix_entries {
 
     next if ($n eq $o);
 
-    print " !! For \'$h\' value \'$o\' had to be adaptapted for SQLite use as \'$n\'\n";
+    print " !! For \'$h\' value \'$o\' had to be adaptapted for SQLite use as \'$n\'\n"
+      if ($print);
   }
 
   return(@tmp);
@@ -179,7 +181,7 @@ sub fix_entries {
 sub set_ctable {
   my ($ct) = @_;
 
-  ($ctable) = &fix_entries("Table", $ct);
+  ($ctable) = &fix_entries("Table", 1, $ct);
 
   MMisc::error_quit("Table name already used ($ctable)")
       if (MMisc::safe_exists(\%tables, $ctable));
@@ -219,7 +221,7 @@ sub add_innerjoin_to_table {
                     . $tables{$ctable}{$col_ijc})
       if (MMisc::safe_exists(\%tables, $ctable, $col_ijc));
 
-  my ($f) = &fix_entries($col_ijc, $ijc);
+  my ($f) = &fix_entries($col_ijc, 1, $ijc);
 
   $tables{$ctable}{$col_ijc} = $f;
 }
@@ -232,7 +234,7 @@ sub add_usecolumn_to_table {
   MMisc::error_quit("No table specified")
       if ($ctable eq "default");
 
-  my ($f) = &fix_entries($col_use, $use);
+  my ($f) = &fix_entries($col_use, 1, $use);
 
   push @{$tables{$ctable}{$col_use}}, $f;
 }
@@ -252,6 +254,46 @@ sub check_tables {
     }
   }
   MMisc::error_quit("Problem with provided list of tables: $errtxt")
+      if (! MMisc::is_blank($errtxt));
+}
+
+##########
+
+sub get_csv_file_columns {
+  my ($csvf) = @_;
+
+  my $csvh = new CSVHelper();
+  &csverr($csvh);
+  my @h = $csvh->loadCSV_getheader($csvf);
+  &csverr($csvh);
+
+  return(@h);
+}
+
+#####
+
+sub check_csv_columns {
+  my $errtxt = "";
+  foreach my $tab (@tord) {
+    my $csvf = $tables{$tab}{$col_csv};
+    my @cols = ();
+    push @cols, $tables{$tab}{$col_ijc};
+    push @cols, @{$tables{$tab}{$col_use}};
+
+    my @fcols = &fix_entries("CSV File [$csvf]", 0, &get_csv_file_columns($csvf));
+    my %tmp = MMisc::array1d_to_count_hash(\@fcols);
+    foreach my $c (@cols) {
+      if (! MMisc::safe_exists(\%tmp, $c)) {
+        $errtxt .= " - Required column [$c] not found in CSV file [$csvf]\n";
+        next;
+      }
+      if ($tmp{$c} > 1) {
+        $errtxt .= " - Required column [$c] has multiple candidates (" 
+          . $tmp{$c} . ") in CSV file [$csvf]\n";
+      }
+    }
+  }
+  MMisc::error_quit("Problem with provided CSV columns for tables: $errtxt")
       if (! MMisc::is_blank($errtxt));
 }
 
@@ -450,7 +492,7 @@ Each table needs to be defined as follow:
 
 Note: \'columnname\' and \'tablename\' will be adapted if they do not match proper SQLite usage.
 
-Note: No checks will be performed to confirm that any \'columname\' column is present in \'csvfile\'
+Note: Only the first \'innerjoin\' \'columnname\' will be printed in the resulting CSV file
 
 EOF
 ;
