@@ -23,6 +23,7 @@ package MMisc;
 use strict;
 
 use File::Temp qw(tempfile tempdir);
+use File::Copy;
 use Data::Dumper;
 use Cwd qw(cwd abs_path);
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -1521,6 +1522,25 @@ sub get_version_comp {
   }
 
   return("", $ret);
+}
+
+##########
+
+sub filecopy {
+  my ($if, $of) = @_;
+
+  my $err = MMisc::check_file_r($if);
+  return("Problem with copy input file ($if) : $err")
+    if (! MMisc::is_blank($err));
+
+  copy($if, $of)
+    or return("Problem copying file [$if] -> [$of] : $!");
+  
+  my $err = MMisc::check_file_r($of);
+  return("Problem with copy output file ($of) : $err")
+      if (! MMisc::is_blank($err));
+
+  return("");
 }
 
 ############################################################
