@@ -116,7 +116,7 @@ sub get_column_names {
   my ($dbh, $table) = @_;
 
   my $sth = $dbh->prepare("SELECT * FROM $table LIMIT 1") 
-    or return("Problem obtaining column names : " . $dbh->errstr);
+    or return("Problem obtaining column names : " . $dbh->errstr());
   $sth->execute();
 
   my $fields = $sth->{NUM_OF_FIELDS};
@@ -196,7 +196,7 @@ sub insertCSV {
       if ($csvh->error());
 
     $inserted += $sth->execute(@fields)
-      or return("Problem trying to execute SQL statement: " . $dbh->errstr);
+      or return("Problem trying to execute SQL statement: " . $dbh->errstr());
 
     my $err = $sth->errstr();
     return("Problem during CSV line insert (row: $inserted): $err", 0)
@@ -249,7 +249,7 @@ sub dumpCSV {
 
   ## Data
   my $sth = $dbh->prepare("SELECT * FROM $table") 
-    or return("Problem obtaining column names : " . $dbh->errstr);
+    or return("Problem obtaining column names : " . $dbh->errstr());
   $sth->execute();
 
   my $inc = 0;
@@ -361,7 +361,7 @@ sub get_command_sth {
     if (! MMisc::is_blank($err));
 
   my $sth = $dbh->prepare($cmd)
-    or return("Could not prepare statement: " . $dbh->errstr, undef);
+    or return("Could not prepare statement: " . $dbh->errstr(), undef);
   
   return("", $sth);
 }
@@ -379,7 +379,7 @@ sub execute_sth {
     if (! MMisc::is_blank($err));
  
   $sth->execute(@parameters)
-    or return("Could not execute statement: " . $sth->errstr);
+    or return("Could not execute statement: " . $sth->errstr());
 
   return("");
 }
@@ -418,7 +418,7 @@ sub sth_finish {
 
 #####
 
-sub get_sth_error { return($_[0]->errstr); }
+sub get_sth_error { return($_[0]->errstr()); }
 
 sub get_errormsg { return($_[0]->errstr()); }
 
