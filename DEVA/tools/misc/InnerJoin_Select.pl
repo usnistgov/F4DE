@@ -67,7 +67,7 @@ foreach my $pn ("MMisc", "MtSQLite") {
 }
 
 # usualy part of the Perl Core
-foreach my $pn ("Getopt::Long", "File::Copy") {
+foreach my $pn ("Getopt::Long") {
   unless (eval "use $pn; 1") {
     &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
     $have_everything = 0;
@@ -260,16 +260,8 @@ sub check_tables {
 sub cp {
   my ($if, $of) = @_;
 
-  my $err = MMisc::check_file_r($if);
-  MMisc::error_quit("Problem with copy input file ($if) : $err")
-      if (! MMisc::is_blank($err));
-
-  copy($if, $of)
-    or MMisc::error_quit("Problem copying file [$if] -> [$of] : $!");
-  
-  my $err = MMisc::check_file_r($of);
-  MMisc::error_quit("Problem with copy output file ($of) : $err")
-      if (! MMisc::is_blank($err));
+  my $err = MMisc::filecopy($if, $of);
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
 }
 
 #####
@@ -457,6 +449,7 @@ Each table needs to be defined as follow:
   --usecolumn  Specify the name of the column to print in the resulting CSV file (will appear as \'tablename.columnname\')
 
 Note: \'columnname\' and \'tablename\' will be adapted if they do not match proper SQLite usage.
+
 Note: No checks will be performed to confirm that any \'columname\' column is present in \'csvfile\'
 
 EOF
