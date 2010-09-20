@@ -709,7 +709,7 @@ sub _system_call_logfile {
   my $retcode = -1;
   my $stdoutfile = '';
   my $stderrfile = '';
-  if ((! defined $logfile) || (MMisc::is_blank($logfile))) {
+  if ((! defined $logfile) || (&is_blank($logfile))) {
     # Get temporary filenames (created by the command line call)
     $stdoutfile = &get_tmpfilename();
     $stderrfile = &get_tmpfilename();
@@ -1226,7 +1226,7 @@ sub get_pwd { return(cwd()); }
 sub get_file_full_path {
   my ($rp, $from) = &iuav(\@_, '', &get_pwd());
 
-  return($rp) if (MMisc::is_blank($rp));
+  return($rp) if (&is_blank($rp));
 
   my $f = $rp;
   $f = "$from/$rp" if ($rp !~ m%^\/%);
@@ -1234,7 +1234,7 @@ sub get_file_full_path {
   my $o = abs_path($f);
 
   $o = $f
-    if (MMisc::is_blank($o)); # The request PATH does not exist, fake it
+    if (&is_blank($o)); # The request PATH does not exist, fake it
 
   return($o);
 }
@@ -1378,7 +1378,7 @@ sub ls_ok {
   my ($err, $val) = &do_ls(@_);
 
   return(0) if (! defined $val);
-  return(0) if (! MMisc::is_blank($err));
+  return(0) if (! &is_blank($err));
 
   return(1);
 }
@@ -1468,7 +1468,7 @@ sub unarchive_archive {
   my @cmd = ($exp_ext_cmd{$ext},  $ff);
 
   chdir($destdir);
-  my ($retcode, $stdout, $stderr) = MMisc::do_system_call(@cmd);
+  my ($retcode, $stdout, $stderr) = &do_system_call(@cmd);
   chdir($pwd);
   
   return('', $retcode, $stdout, $stderr);
@@ -1529,16 +1529,16 @@ sub get_version_comp {
 sub filecopy {
   my ($if, $of) = @_;
 
-  my $err = MMisc::check_file_r($if);
+  my $err = &check_file_r($if);
   return("Problem with copy input file ($if) : $err")
-    if (! MMisc::is_blank($err));
+    if (! &is_blank($err));
 
   copy($if, $of)
     or return("Problem copying file [$if] -> [$of] : $!");
   
-  my $err = MMisc::check_file_r($of);
+  my $err = &check_file_r($of);
   return("Problem with copy output file ($of) : $err")
-      if (! MMisc::is_blank($err));
+      if (! &is_blank($err));
 
   return("");
 }
