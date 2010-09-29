@@ -48,7 +48,8 @@ sub new
        lTitleNoPointInfo => 1,
        serialize => 1,
        BuildPNG => 1,
-       
+       HD => 0,
+
        ### Display ranges
        Bounds => { xmin => { disp => undef, req => undef, metric => undef} ,
                    xmax => { disp => undef, req => undef, metric => undef} ,
@@ -159,6 +160,10 @@ sub _parseOptions{
   my ($self, $options) = @_;
   
   return unless (defined $options);
+
+  if (exists($options->{HD})){
+    $self->{HD} = $options->{HD};
+  }
   
   if (exists($options->{yScale})) {
     if (! $self->{props}->setValue("yScale", $options->{"yScale"})){
@@ -1195,7 +1200,7 @@ sub writeMultiDetGraph
 
     if ($self->{makePNG}) {
       $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
-      buildPNG($fileRoot, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef));
+      buildPNG($fileRoot, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef), $self->{HD});
     }
     \%multiInfo;
   }
@@ -1347,7 +1352,7 @@ sub writeGNUGraph{
   close PLT;
   
   if ($self->{BuildPNG}) {
-    buildPNG($fileRoot, $self->{gnuplotPROG});
+    buildPNG($fileRoot, $self->{gnuplotPROG}, $self->{HD});
     $det->setDETPng("$fileRoot.png");
   }
   
@@ -1381,7 +1386,7 @@ sub writeGNUGraph{
   }
   close THRESHPLT;
   if ($self->{BuildPNG}) {
-    buildPNG($fileRoot.".thresh", $self->{gnuplotPROG});
+    buildPNG($fileRoot.".thresh", $self->{gnuplotPROG}, $self->{HD});
     $det->setThreshPng("$fileRoot.thresh.png");
   }
   1;
@@ -1391,9 +1396,12 @@ sub writeGNUGraph{
 ### To see the test pattern: (echo set terminal png medium size 600,400; echo test) | gnuplot > foo.png
 sub buildPNG
 {
-    my ($fileRoot, $gnuplot) = @_;
+    my ($fileRoot, $gnuplot, $hd) = @_;
 
-    $gnuplot = "gnuplot" if (!defined($gnuplot));
+    if (MMisc::is_blank($gnuplot)) {
+      (my $err, $gnuplot, my $version) = &get_gnuplotcmd();
+      MMisc::error_quit($err) if (! MMisc::is_blank($err));
+    } 
  
     my $hasbMargin = 0;
     my $numTitle = 0;
@@ -1410,9 +1418,14 @@ sub buildPNG
     ## Use this with gnuplot 3.X
     #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
 #    my $newTermCommand = "set terminal png medium size 740,2048 crop xffffff x000000 x404040 x000000 xc0c0c0 x909090 x606060   x000000 xc0c0c0 x909090 x606060";
-    my $newTermCommand = "set terminal png medium size 740,2048 crop";
+    my $newTermCommand = "set terminal png "
+      . (($hd) ? "font arial 12 size 1600,2048" : "medium size 740,2048")
+        . " crop";
     if ($hasbMargin){
-      $newTermCommand = "set terminal png medium size 768,".(652+($numTitle*22))." crop"
+      $newTermCommand = "set terminal png " 
+        . (($hd) ? ("font arial 12 size 1600," . (2048+($numTitle*22)))
+           : ("medium size 768,". (652+($numTitle*22))) )
+          . " crop";
     }
     system("cat $fileRoot.plt | perl -pe \'\$_ = \"$newTermCommand\n\" if (\$_ =~ /set terminal/)\' | $gnuplot > $fileRoot.png");
   }
