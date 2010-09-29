@@ -107,11 +107,12 @@ my $dumpFile = 0;
 my $forceRecompute = 0; 
 my $doTxtTable = 0;
 my $dumptarg = "";
+my $HD = 0;
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A    FG I K   OPQRST     Z  cde ghi klm op rst v x   #
+# Used: A    FGHI K   OPQRST     Z  cde ghi klm op rst v x   #
 
 GetOptions
   (
@@ -144,6 +145,8 @@ GetOptions
    'F|ForceRecompute'            => \$forceRecompute,
    'x|txtTable'                  => \$doTxtTable,  
     
+   'H|HD'                        => \$HD,
+
    'version'                     => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; 
                                           print "$name version $VERSION\n"; exit(0); },
    'h|help'                      => \$help,
@@ -219,6 +222,8 @@ $options{lTitleNoBestComb} = 1 if ($lineTitleModification =~ /M/);
 
 $options{gnuplotPROG} = $gnuplotPROG;
 $options{createDETfiles} = 1;
+
+$options{HD} = $HD;
 
 foreach my $directive(@plotControls){
   my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
@@ -448,7 +453,8 @@ else
 }
 
 my $report = $ds->renderAsTxt("$temp/merge", 1, 1, \%options);
-system "cp $temp/merge.png $OutPNGfile";
+my $err =  MMisc::filecopy("$temp/merge.png", $OutPNGfile);
+MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
 if ($docsv) {
   my $csvf = $OutPNGfile;
@@ -578,6 +584,10 @@ Specify the full path name to gnuplot (default: 'gnuplot').
 =head2 Graph tweaks:
 
 =over
+
+=item B<-H>, B<--HD>
+
+Draw higher resolution graph.
 
 =item B<-i>, B<--iso-costratiolines>
 
