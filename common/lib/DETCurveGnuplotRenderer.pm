@@ -1428,7 +1428,7 @@ sub buildPNG
   close FILE;
   #MMisc::error_quit("[$fileRoot]");
   
-  my $font = ($hd) ? "font arial 16" : "medium";
+  my $font = ($hd) ? "font arial 20" : "medium";
 
   ## Use this with gnuplot 3.X
   #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
