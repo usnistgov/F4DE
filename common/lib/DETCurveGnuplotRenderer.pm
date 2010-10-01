@@ -26,6 +26,9 @@ use DETCurveSet;
 use PropList;
 use DETCurve;
 
+my $bvc = "bmargin vertical center";
+my $bvh = "bmargin horizontal center";
+
 sub new
   {
     my ($class, $options) = @_;
@@ -49,7 +52,8 @@ sub new
        serialize => 1,
        BuildPNG => 1,
        HD => 0,
-
+       AutoAdapt => 0,
+                
        ### Display ranges
        Bounds => { xmin => { disp => undef, req => undef, metric => undef} ,
                    xmax => { disp => undef, req => undef, metric => undef} ,
@@ -163,6 +167,10 @@ sub _parseOptions{
 
   if (exists($options->{HD})){
     $self->{HD} = $options->{HD};
+  }
+
+  if (exists($options->{AutoAdapt})){
+    $self->{AutoAdapt} = $options->{AutoAdapt};
   }
   
   if (exists($options->{yScale})) {
@@ -711,8 +719,8 @@ sub write_gnuplot_DET_header{
   print $FP "### Using yScale = $yScale\n";
 
   if (defined($keyLoc)) {
-    $keyLoc = "bmargin vertical" if ($keyLoc eq "below");  ### Gnuplot changed
-    print $FP "set key $keyLoc spacing $keySpacing ".($keyLoc eq "bmargin vertical" ? "box" : "")."\n";
+    $keyLoc = $bvc if ($keyLoc eq "below");  ### Gnuplot changed
+    print $FP "set key $keyLoc spacing $keySpacing ". ($keyLoc eq $bvc ? "box" : "")."\n";
   }
   
   my $ratio = 0.85;
@@ -1200,7 +1208,7 @@ sub writeMultiDetGraph
 
     if ($self->{makePNG}) {
       $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
-      buildPNG($fileRoot, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef), $self->{HD});
+      buildPNG($fileRoot, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef), $self->{HD}, $self->{AutoAdapt});
     }
     \%multiInfo;
   }
@@ -1352,7 +1360,7 @@ sub writeGNUGraph{
   close PLT;
   
   if ($self->{BuildPNG}) {
-    buildPNG($fileRoot, $self->{gnuplotPROG}, $self->{HD});
+    buildPNG($fileRoot, $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt});
     $det->setDETPng("$fileRoot.png");
   }
   
@@ -1386,7 +1394,7 @@ sub writeGNUGraph{
   }
   close THRESHPLT;
   if ($self->{BuildPNG}) {
-    buildPNG($fileRoot.".thresh", $self->{gnuplotPROG}, $self->{HD});
+    buildPNG($fileRoot.".thresh", $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt});
     $det->setThreshPng("$fileRoot.thresh.png");
   }
   1;
@@ -1396,39 +1404,72 @@ sub writeGNUGraph{
 ### To see the test pattern: (echo set terminal png medium size 600,400; echo test) | gnuplot > foo.png
 sub buildPNG
 {
-    my ($fileRoot, $gnuplot, $hd) = @_;
-
-    if (MMisc::is_blank($gnuplot)) {
-      (my $err, $gnuplot, my $version) = &get_gnuplotcmd();
-      MMisc::error_quit($err) if (! MMisc::is_blank($err));
-    } 
- 
-    my $hasbMargin = 0;
-    my $numTitle = 0;
-    my $inPlot = 0;
-    ### Pre-read the file to count titles so that IF 'set key bmargin' is used, it looks good. 
-    open (FILE, $fileRoot.".plt") || die "Error: Failed to open GNUPLOT driver file '$fileRoot.plt' for read\n";
-    while (<FILE>){
-      if ($_ =~ /plot\s+\[/) { $inPlot = 1; }
-      if ($_ =~ /set\s+key\s+bmargin/) { $hasbMargin = 1; }
-      if ($inPlot && $_ =~ /\susing\s.*\s+title\s/) { $numTitle++; }
-    }
-    close FILE;
-    
-    ## Use this with gnuplot 3.X
-    #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
-#    my $newTermCommand = "set terminal png medium size 740,2048 crop xffffff x000000 x404040 x000000 xc0c0c0 x909090 x606060   x000000 xc0c0c0 x909090 x606060";
-    my $newTermCommand = "set terminal png "
-      . (($hd) ? "font arial 12 size 1600,2048" : "medium size 740,2048")
-        . " crop";
-    if ($hasbMargin){
-      $newTermCommand = "set terminal png " 
-        . (($hd) ? ("font arial 12 size 1600," . (2048+($numTitle*22)))
-           : ("medium size 768,". (652+($numTitle*22))) )
-          . " crop";
-    }
-    system("cat $fileRoot.plt | perl -pe \'\$_ = \"$newTermCommand\n\" if (\$_ =~ /set terminal/)\' | $gnuplot > $fileRoot.png");
+  my ($fileRoot, $gnuplot, $hd, $aa) = @_;
+  
+  my ($w, $h, $sp1, $sp2) = ($hd) ? (1920, 1920, 6, 6) : (800, 800, 12, 12);
+  
+#  print "\n** [$fileRoot, $gnuplot, $hd, $aa | $w, $h, $sp1, $sp2]\n";
+  if (MMisc::is_blank($gnuplot)) {
+    (my $err, $gnuplot, my $version) = &get_gnuplotcmd();
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));
+  } 
+  
+  my $hasbMargin = 0;
+  my $numTitle = 0;
+  my $inPlot = 0;
+  ### Pre-read the file to count titles so that IF 'set key bmargin' is used, it looks good. 
+  open (FILE, $fileRoot.".plt") || die "Error: Failed to open GNUPLOT driver file '$fileRoot.plt' for read\n";
+  while (<FILE>){
+    if ($_ =~ /plot\s+\[/) { $inPlot = 1; }
+    if ($_ =~ /set\s+key\s+bmargin/) { $hasbMargin = 1; }
+    if ($inPlot && $_ =~ /\susing\s.*\s+title\s/) { $numTitle++; }
+#    print "$_";
   }
+  close FILE;
+  #MMisc::error_quit("[$fileRoot]");
+  
+  my $font = ($hd) ? "font arial 16" : "medium";
+
+  ## Use this with gnuplot 3.X
+  #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
+  #    my $newTermCommand = "set terminal png medium size 740,2048 crop xffffff x000000 x404040 x000000 xc0c0c0 x909090 x606060   x000000 xc0c0c0 x909090 x606060";
+
+  my ($W, $H) = ($w + $aa, $h + $aa);
+  my $sedv = $bvc;
+
+  if ($hasbMargin){
+    my $sp = $sp2;
+    if ($numTitle > 10) { # After 10, we try to force double columns
+      $sp = $sp1;
+      $sedv = $bvh; # switch labels from vertical to horizontal
+    }
+ 
+    $W = $w + ($aa * (1 + $hd));
+    $H = $h + ($aa/2) + ($numTitle*$sp);
+  }
+
+  my $newTermCommand = "set terminal png $font size " . sprintf("%d,%d", $W ,$H) . " crop";
+
+  my $pngf = "$fileRoot.png";
+  system("cat $fileRoot.plt | perl -pe \'s%$bvc%$sedv%\' | perl -pe \'\$_ = \"$newTermCommand\n\" if (\$_ =~ /set terminal/)\' | tee $fileRoot\_png.plt | $gnuplot > $pngf");
+  
+  if ($aa) {
+    my $cmd = "identify $pngf";
+    my ($rc, $stdout, $stderr) = MMisc::do_system_call($cmd);
+    MMisc::error_quit("Could not run \'$cmd\'") if ($rc != 0);
+    # ex: 05-Reports/Comps_00/CellToEar/global.det.png PNG 795x1848
+    if ($stdout =~ m%PNG\s+(\d+)x(\d+)%) {
+      my ($x, $y) = ($1, $2);
+#      print " ****** [$x / $y] *****\n";
+      return() if ($x > ($w*0.9)); # at least 90% of expected width !
+    } else {
+      MMisc::error_quit("Could not extract size of PNG");
+    }
+    
+    &buildPNG($fileRoot, $gnuplot, $hd, $aa + 100); # add 100 pixels to height
+  }
+  
+}
 
 ####################
 my $gnuplotcmdb = "gnuplot";

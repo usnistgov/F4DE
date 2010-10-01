@@ -108,11 +108,12 @@ my $forceRecompute = 0;
 my $doTxtTable = 0;
 my $dumptarg = "";
 my $HD = 0;
+my $AutoAdapt = 0;
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A    FGHI K   OPQRST     Z  cde ghi klm op rst v x   #
+# Used: A    FGHI K   OPQRST     Za cde ghi klm op rst v x   #
 
 GetOptions
   (
@@ -146,6 +147,7 @@ GetOptions
    'x|txtTable'                  => \$doTxtTable,  
     
    'H|HD'                        => \$HD,
+   'a|autoAdapt'                 => \$AutoAdapt,
 
    'version'                     => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; 
                                           print "$name version $VERSION\n"; exit(0); },
@@ -224,6 +226,7 @@ $options{gnuplotPROG} = $gnuplotPROG;
 $options{createDETfiles} = 1;
 
 $options{HD} = $HD;
+$options{AutoAdapt} = $AutoAdapt;
 
 foreach my $directive(@plotControls){
   my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
@@ -588,6 +591,11 @@ Specify the full path name to gnuplot (default: 'gnuplot').
 =item B<-H>, B<--HD>
 
 Draw higher resolution graph.
+
+=item B<-a>, B<--autoAdapt>
+
+Try to auto adapt height for more readable plot.
+Note that this mode relies on I<ImageMagick>'s B<identify> and will fail if it is not available and in your PATH.
 
 =item B<-i>, B<--iso-costratiolines>
 
