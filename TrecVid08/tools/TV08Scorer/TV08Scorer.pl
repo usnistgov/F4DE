@@ -295,6 +295,8 @@ if (scalar @asked_events == 0) {
   MMisc::error_quit("While checking \'limitto\' events list (" . $dummy->get_errormsg() .")")
     if ($dummy->error());
 }
+my %asked_events_kc = ();
+foreach my $evt (@asked_events) { $asked_events_kc{$evt}++; }
 
 ########## Main processing
 my $stepc = 1;
@@ -461,6 +463,8 @@ if (scalar @inputAliCSV == 0) {
 
       ($type, $evt, $detscr, $detdec) =
         ($data[3], $data[2], $data[10], $data[11]);
+
+      next if (! exists $asked_events_kc{$evt}); # only process asked events
 
       if (! exists($all_trials{$evt})){
         $all_trials{$evt} = new TrialsTV08(\%metrics_params);
