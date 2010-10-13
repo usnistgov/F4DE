@@ -468,7 +468,7 @@ sub cloneForTrial(){
   my $metType = ref($self);
   my $VAR1;
   eval (Dumper($self->getParams()));
-  new $metType->new($VAR1, $trial);
+  return($metType->new($VAR1, $trial));
 }
 
 ####################################################################################################
