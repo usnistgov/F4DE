@@ -119,7 +119,8 @@ trial structure is empty), then this value must be C<undef>.  C<valueToMerge> is
 sub trialParamMerge(){
   my ($self, $param, $mergedValue, $toMergeValue, $mergeType) = @_;
 
-  if ($param eq "TOTALDURATION"){
+  my @td_names = ("TOTALDURATION", "__TOTALDURATION_HOUR");
+  if (grep(m%^$param$%, @td_names)){
     if ($mergeType eq "pooled"){
       ### if pooled, totalduration added
       return (defined($mergedValue) ? $mergedValue : 0) + $toMergeValue;
@@ -135,6 +136,7 @@ sub trialParamMerge(){
       die "Error: Unknown merge type /$mergeType/\n";
     }
   }
+
   die "Error: Trial parameter merge for /$param/ Failed.  $param not defined in the metric";
 }
 
