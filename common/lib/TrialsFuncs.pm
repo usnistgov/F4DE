@@ -610,9 +610,12 @@ sub mergeTrials{
 
   ### First the params
   if (! defined($$r_baseTrial)){
-    $$r_baseTrial = new TrialsFuncs($mergeTrial->getTrialParams(),
-                                    $mergeTrial->getTaskID(), $mergeTrial->getBlockID(),
-                                    $mergeTrial->getDecisionID());
+    my $tmode = ref($mergeTrial);
+    $$r_baseTrial = $tmode->new
+      ( $mergeTrial->getTrialParams(),
+        $mergeTrial->getTaskID(),
+        $mergeTrial->getBlockID(),
+        $mergeTrial->getDecisionID() );
   } else { 
     my @ktmp = $$r_baseTrial->getTrialParamKeys();
     for (my $i = 0; $i < scalar @ktmp; $i++) {
