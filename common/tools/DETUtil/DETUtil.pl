@@ -109,11 +109,12 @@ my $doTxtTable = 0;
 my $dumptarg = "";
 my $HD = 0;
 my $AutoAdapt = 0;
+my $verbose = 0;
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A    FGHI K   OPQRST     Za cde ghi klm op rst v x   #
+# Used: A    FGHI K   OPQRST V   Za cde ghi klm op rst v x   #
 
 GetOptions
   (
@@ -149,6 +150,7 @@ GetOptions
    'H|HD'                        => \$HD,
    'a|autoAdapt'                 => \$AutoAdapt,
 
+   'V|Verbose'                   => \$verbose,
    'version'                     => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; 
                                           print "$name version $VERSION\n"; exit(0); },
    'h|help'                      => \$help,
@@ -214,6 +216,12 @@ foreach $_(@editFilters)
 #
 ##
 
+sub vprint {
+  return() if (! $verbose);
+  print(join("", @_));
+}
+
+
 my %options = ();
 $options{title} = $title if (defined $title);
 $options{serialize} = 0;
@@ -232,7 +240,7 @@ foreach my $directive(@plotControls){
   my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
   my $intRegex = '\d*';
 
-  #print "Processing directive $directive\n";
+  &vprint("[*] Processing directive \'$directive\'\n");
   if ($directive =~ /ColorScheme=gr[ae]y/){
     $options{ColorScheme} = "grey";
   } elsif ($directive =~ /PointSize=(\d+)/){
@@ -321,7 +329,8 @@ foreach my $srlDef ( @ARGV )
 
   my ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth) = split(/:/,$srlDef);
   
-	my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
+  vprint("[*] Loading SRL file ($srl)\n"); 
+  my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
   my %lineAttr = ();
 	if (defined($newLabel)){
     ### then we will control the plot style
@@ -418,6 +427,7 @@ foreach my $srlDef ( @ARGV )
 
 if($IsoRatioStatisticFile ne "")
 {
+  vprint ("[*] Performing 'renderIsoRatioIntersection'\n");
 	open(FILESTATS, ">", $IsoRatioStatisticFile) or die "$!";
 	print FILESTATS $ds->renderIsoRatioIntersection();
 	close(FILESTATS)
@@ -425,6 +435,7 @@ if($IsoRatioStatisticFile ne "")
 
 if($DetCompare)
 {
+  vprint ("[*] Performing 'renderDETCompare'\n");
 	my ($str, $conclusion, $list_isopoints) = $ds->renderDETCompare($confidenceIsoThreshold);
 	print $str;
 	print $conclusion;
@@ -454,12 +465,17 @@ else
 {
 	$temp = File::Temp::tempdir( CLEANUP => !$keepFiles );
 }
+&vprint("[*] Temp dir \'$temp\'\n");
 
+&vprint("[*] Performing 'renderAsTxt'\n");
 my $report = $ds->renderAsTxt("$temp/merge", 1, 1, \%options);
-my $err =  MMisc::filecopy("$temp/merge.png", $OutPNGfile);
+my $inf = "$temp/merge.png";
+&vprint("[*] Copying [$inf] to [$OutPNGfile]\n");
+my $err =  MMisc::filecopy($inf, $OutPNGfile);
 MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
 if ($docsv) {
+  &vprint("[*] Doing 'generateCSV'\n");
   my $csvf = $OutPNGfile;
   $csvf =~ s/\.png$//i;
   $csvf .= ".csv";
@@ -468,6 +484,7 @@ if ($docsv) {
 }
 
 if ($doTxtTable) {
+  &vprint("[*] Doing \'txtTable\'\n");
   my $txtf = $OutPNGfile;
   $txtf =~ s/\.png$//i;
   $txtf .= ".results.txt";
@@ -476,6 +493,7 @@ if ($doTxtTable) {
 }
 
 if ($dumpFile){
+  &vprint("[*] Doing 'dumpFile'\n");
   my $dumpf = $OutPNGfile;
   $dumpf =~ s/\.png$//i;
   $dumpf .= ".dump.txt";  
@@ -691,6 +709,10 @@ Print the help.
 =item B<-m>, B<--man>
 
 Print the manual.
+
+=item B<--Verbose>
+
+Print a little more verbose information during processing.
 
 =item B<--version>
 
