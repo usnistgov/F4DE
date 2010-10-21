@@ -1,6 +1,6 @@
 File:  README
-Date:  July 30, 2010
-F4DE Version: 2.2
+Date:  October 21, 2010
+F4DE Version: 2.2.1
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
@@ -143,6 +143,7 @@ the following packages:
  Math::Random::OO::Uniform
  Math::Random::OO::Normal
  Statistics::Descriptive
+ Statistics::Descriptive::Discrete
  DBI
  DBD::SQLite
 
