@@ -21,6 +21,7 @@ $ms = &_chkpkg
    "Math::Random::OO::Uniform",
    "Math::Random::OO::Normal",
    "Statistics::Descriptive",
+   "Statistics::Descriptive::Discrete",
    "DBI",
    "DBD::SQLite"
   );
