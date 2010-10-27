@@ -83,15 +83,18 @@ commoninstall:
 
 VidATinstall:
 	@echo "** Installing VidAT"
+	@make commoninstall
 	@perl installer.pl ${F4DE_BASE} lib ${VIDATDIR}/*.pm
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${VIDATDIR}/*.pl
 
 SQLitetoolsinstall:
 	@echo "** Installing SQLite_tools"
+	@make commoninstall
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${SQLITETOOLSDIR}/*.pl
 
 JobRunnerinstall:
 	@echo "** Installing JobRunner"
+	@make commoninstall
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${JOBRUNNERDIR}/*.pl
 
 #####
