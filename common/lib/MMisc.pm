@@ -1262,6 +1262,29 @@ sub iuv { # Initialize Undefined Values
 
 ##########
 
+sub dive_hash {
+  my ($rh, @keys) = @_;
+
+  return('Not a HASH', undef)
+    if (ref($rh) ne 'HASH');
+
+  my $key = shift @keys;
+
+  return("Key [$key] not in HASH", undef)
+    if (! exists $$rh{$key});
+
+  return('', $$rh{$key})
+    if (scalar @keys == 0);
+
+  my $nrh = $$rh{$key};
+  return('Not a HASH', undef)
+    if (ref($nrh) ne 'HASH');
+
+  return &dive_hash($nrh, @keys);
+}
+
+#####
+
 sub dive_structure {
   my $r = $_[0];
 
