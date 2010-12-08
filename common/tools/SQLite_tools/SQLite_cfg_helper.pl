@@ -155,24 +155,32 @@ sub load_csv {
 
   my %all = ();
   my %type = ();
+  my %is_pkc = ();  # Primary Key candidate ?
   for (my $i = 0; $i < scalar @csvheader; $i++) {
+    $is_pkc{$csvheader[$i]} = 1;
     $type{$csvheader[$i]} = 0;
   }
 
   my $linec = 0;
   while (my $line = <CSV>) {
-    my %fieldvals = $csvh->csvline2hash($line, \@csvheader);
+    my @fieldvals = $csvh->csvline2array($line);
     MMisc::error_quit("While processing file [$csvfile], problem with CSV line extraction (data line #$linec): " . $csvh->get_errormsg())
         if ($csvh->error());
 
     for (my $i = 0; $i < scalar @csvheader; $i++) {
       my $h = $csvheader[$i];
-      my $v = $fieldvals{$h};
-      $all{$h}{$v}++;
+      my $v = $fieldvals[$i];
+
+      $is_pkc{$h} = 0 if (($is_pkc{$h}) && (++$all{$h}{$v} > 1));
+ 
       next if ($type{$h} == 2);
+
       next if (($type{$h} == 0) && (MMisc::is_integer($v)));
+
       $type{$h} = 1;
+
       next if (MMisc::is_float($v));
+
       $type{$h} = 2;
     }
     $linec++;
@@ -201,10 +209,7 @@ sub load_csv {
   my $pkc = 0;
   my @pkcl = ();
   my @rc = ();
-  for (my $i = 0; $i < scalar @csvheader; $i++) {
-    my $h = $csvheader[$i];
-    $pkc++ if (scalar(keys %{$all{$h}}) == $linec);
-  }
+  for (my $i = 0; $i < scalar @csvheader; $i++) { $pkc += $is_pkc{$csvheader[$i]}; }
   for (my $i = 0; $i < scalar @csvheader; $i++) {
     my $h = $csvheader[$i];
     my ($n) = MtSQLite::fix_entries($h);
@@ -221,7 +226,7 @@ sub load_csv {
     }
     print ";" . $ok_types[$type{$h}];
     print "\n";
-    push(@pkcl, $n) if (($pkc == 1) && (scalar(keys %{$all{$h}}) == $linec));
+    push(@pkcl, $n) if (($pkc == 1) && ($is_pkc{$h}));
   }
 
   # renammed columns list
