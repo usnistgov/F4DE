@@ -129,9 +129,10 @@ my $taskName = '';
 my ($xm, $xM, $ym, $yM, $xscale, $yscale) 
   = (undef, undef, undef, undef, undef, undef);
 my $blockavg = 0;
+my $GetTrialsDB = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: ABCD F     LM    RSTUVWXYZabc  fghi  lm o  rstuvwxyz  #
+# Used: ABCD FG    LM    RSTUVWXYZabc  fghi  lm o  rstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -170,6 +171,7 @@ GetOptions
    'iFilterDBfile=s' => \$wresDBfile,
    'BlockAverage'    => \$blockavg,
    'taskName=s'      => \$taskName,
+   'GetTrialsDB'     => \$GetTrialsDB,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -441,6 +443,7 @@ sub run_scorer {
   $cmdp .= " -u $xscale" if (defined $xscale);
   $cmdp .= " -U $yscale" if (defined $yscale);
   $cmdp .= " -B" if ($blockavg);
+  $cmdp .= " -G" if ($GetTrialsDB);
   $cmdp .= " $finalDBfile";
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdp);
@@ -823,6 +826,10 @@ Specify the location of the SQL commands file used to extract the list of I<Tria
 
 Skip step that uses the SQL I<SELECT>s commands specified in the B<--FilterCMDfile> step to create the S<outdir/filterDB.sql> database (which only contains S<TrialID> information).
 
+=item B<--GetTrialsDB>
+
+Add a table to the scoring database containing each individual Trial component.
+
 =item B<--help>
 
 Display the usage page for this program. Also display some default values and information.
@@ -1109,7 +1116,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
+$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1137,6 +1144,7 @@ Filter (Step 3) specific options:
   --FilterCMDfile  Specify the SQLite command file
   --AdditionalFilterDB  Load additional SQLite database 'file' for the filtering step (loaded as 'name')
 DETCurve generation (Step 4) specific options:
+  --GetTrialsDB   Add a table to the scoring database containing each individual Trial component
   --usedMetric    Package to load for metric uses (if none provided, default used: $defusedmetric)
   --UsedMetricParameters Metric Package parameters
   --TrialsParameters Trials Package parameters

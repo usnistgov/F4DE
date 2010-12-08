@@ -104,6 +104,8 @@ my $BlockIDcolumn = 'BlockID';
 my $Targcolumn = 'Targ';
 my $Decisioncolumn = 'Decision';
 my $Scorecolumn = 'Score';
+#
+my $TrialsDB = 'TrialsDB';
 
 my $bDETf = "DET";
 
@@ -124,8 +126,10 @@ my ($xm, $xM, $ym, $yM, $xscale, $yscale)
 my $blockavg = 0;
 my $blockavg_text = "BlockAverage";
 
+my $GetTrialsDB = 0;
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:  B D        M    R TU  XY  b     h   lm o  rstuv xy   #
+# Used:  B D  G     M    R TU  XY  b     h   lm o  rstuv xy   #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -152,6 +156,7 @@ GetOptions
    'UsedYscale=s'       => \$yscale,
    'BlockAverage'       => \$blockavg,
    'taskName=s'         => \$taskName,
+   'GetTrialsDB'        => \$GetTrialsDB,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -243,8 +248,15 @@ DROP TABLE IF EXISTS sys;
 CREATE TABLE $refDBtable AS SELECT $tablename.$TrialIDcolumn,$Targcolumn FROM $used_resDBname.$tablename INNER JOIN $refDBname.$refDBtable WHERE $tablename.$TrialIDcolumn = $refDBtable.$TrialIDcolumn;
 
 CREATE TABLE $sysDBtable AS SELECT $tablename.$TrialIDcolumn,$Decisioncolumn,$Scorecolumn FROM $used_resDBname.$tablename INNER JOIN $sysDBname.$sysDBtable WHERE $tablename.$TrialIDcolumn = $sysDBtable.$TrialIDcolumn;
+
 EOF
   ;
+
+$tmp.=<<EOF
+CREATE TABLE $TrialsDB AS SELECT $tablename.$TrialIDcolumn,$BlockIDcolumn,$Decisioncolumn,$Scorecolumn,$Targcolumn FROM $used_resDBname.$tablename,$refDBname.$refDBtable,$sysDBname.$sysDBtable WHERE $Targcolumn == 'NOT A VALID VALUE';
+
+EOF
+  if ($GetTrialsDB);
 
 MtSQLite::commandAdd(\$cmdlines, $tmp);
 
@@ -266,6 +278,7 @@ my ($mapped, $unmapped_sys, $unmapped_ref) = (0, 0, 0);
 
 my %bid_trials = ();
 
+my @at = ();
 ##
 foreach my $key (keys %sys) {
 
@@ -287,6 +300,8 @@ foreach my $key (keys %sys) {
   }
 
   $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg);
+  push(@at, [$key, $bid, $sys{$key}{$Scorecolumn},
+             $decision, ($istarg == 1) ? 'TARG' : 'NonTARG']) if ($GetTrialsDB);
 }
 
 foreach my $key (keys %ref) {
@@ -298,6 +313,7 @@ foreach my $key (keys %ref) {
     if ($ref{$key}{$Targcolumn} eq 'y') {
       &def_bid_trials($ubid);
       $bid_trials{$ubid}->addTrial($bid, undef, "OMITTED", 1);
+      push(@at, [$key, $bid, $sys{$key}{$Scorecolumn}, 'OMITTED', 'TARG']) if ($GetTrialsDB);
     }
     $unmapped_ref++;
   }
@@ -320,11 +336,38 @@ print "-- Total number of entries in REF + SYS    = $tot1\n";
 print "-- 2x mapped + Unmapped REF + Unmapped SYS = $tot2\n";
 MMisc::error_quit("Problem at check point") if ($tot1 != $tot2);
 
+&add_array2TrialsDB($dbfile, \@at) if (($GetTrialsDB) && (scalar @at > 0));
+
 &doDETwork(%bid_trials);
 
 MMisc::ok_quit("Done");
 
 ####################
+
+sub add_array2TrialsDB {
+  my ($dbfile, $ra) = @_;
+
+  my ($err, $dbh) = MtSQLite::get_dbh($dbfile);
+  MMisc::error_quit($err)
+    if (! MMisc::is_blank($err));
+
+  my $cmd = "INSERT OR ABORT INTO $TrialsDB ( $TrialIDcolumn, $BlockIDcolumn, $Decisioncolumn, $Scorecolumn, $Targcolumn ) VALUES ( ?, ?, ?, ?, ? )";
+  my ($err, $sth) = MtSQLite::get_command_sth($dbh, $cmd);
+  MMisc::error_quit("Problem while inserting data into $tablename.$TrialIDcolumn: $err")
+    if (! MMisc::is_blank($err));
+  foreach my $entry (@$ra) {
+    my ($err) = MtSQLite::execute_sth($sth, @$entry);
+    MMisc::error_quit("Problem during data insertion into $tablename.$TrialIDcolumn: $err")
+      if (! MMisc::is_blank($err));
+  }
+  my $err = MtSQLite::sth_finish($sth);
+  MMisc::error_quit("Problem while completing insertion of data into $tablename.$TrialIDcolumn: $err")
+    if (! MMisc::is_blank($err));
+
+  MtSQLite::release_dbh($dbh);
+}
+
+##########
 
 sub check_DBs_r {
   for (my $i = 0; $i < scalar @_; $i++) {
@@ -514,6 +557,7 @@ Where:
   --referenceDBfile  The Reference SQLite file (must contains the 'Reference' table, whose columns are: $TrialIDcolumn, $Targcolumn)
   --systemDBfile     The System SQLite file (must contains the 'System' table, whose columns are: $TrialIDcolumn, $Decisioncolumn, $Scorecolumn)
   --ResultDBfile     The Filter tool resulting DB (must contain the \'$tablename\' table, with the following columns: $TrialIDcolumn, $BlockIDcolumn)
+  --GetTrialsDB      Add a table to the scoring database containing each individual Trial component (table name: $TrialsDB)
   --metricPackage    Package to load for metric uses (default: $metric)
   --MetricParameters Metric Package parameters
   --TrialsParameters Trials Package parameters
