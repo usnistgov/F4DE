@@ -188,7 +188,7 @@ sub insertCSV {
   my $qm = "(";
   for (my $i = 0; $i < scalar @columnsname - 1; $i++) { $qm .= "?,"; }
   $qm .= "?)";
-  my $sth = $dbh->prepare("INSERT INTO $tablename$ac VALUES $qm");
+  my $sth = $dbh->prepare("INSERT INTO $tablename $ac VALUES $qm");
 
   while (my $line = <CSV>) {
     my @fields = $csvh->csvline2array($line);
