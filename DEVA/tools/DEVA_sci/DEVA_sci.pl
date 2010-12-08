@@ -242,8 +242,9 @@ $used_resDBname = &joinResDBfiles(\$cmdlines, $mode, @resDBnames);
 # Create the Final table
 
 my $tmp=<<EOF
-DROP TABLE IF EXISTS ref;
-DROP TABLE IF EXISTS sys;
+DROP TABLE IF EXISTS main.$refDBtable;
+DROP TABLE IF EXISTS main.$sysDBtable;
+DROP TABLE IF EXISTS main.$TrialsDB;
 
 CREATE TABLE $refDBtable AS SELECT $tablename.$TrialIDcolumn,$Targcolumn FROM $used_resDBname.$tablename INNER JOIN $refDBname.$refDBtable WHERE $tablename.$TrialIDcolumn = $refDBtable.$TrialIDcolumn;
 
