@@ -130,9 +130,10 @@ my ($xm, $xM, $ym, $yM, $xscale, $yscale)
   = (undef, undef, undef, undef, undef, undef);
 my $blockavg = 0;
 my $GetTrialsDB = 0;
+my $quickConfig = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: ABCD FG    LM    RSTUVWXYZabc  fghi  lm o  rstuvwxyz  #
+# Used: ABCD FG    LM    RSTUVWXYZabc  fghi  lm o qrstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -172,6 +173,7 @@ GetOptions
    'BlockAverage'    => \$blockavg,
    'taskName=s'      => \$taskName,
    'GetTrialsDB'     => \$GetTrialsDB,
+   'quickConfig:i'   => \$quickConfig,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -340,6 +342,11 @@ sub do_cfgfile {
   my ($cfgfile, $log, $cmdadd, @csvfl) = @_;
 
   my $tool = &path_tool($sqlite_cfg_helper, "../../../common/tools/SQLite_tools");
+
+  if (defined $quickConfig) {
+    $cmdadd .= " -q";
+    $cmdadd .= " $quickConfig" if ($quickConfig > 0);
+  }
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdadd, @csvfl);
@@ -514,11 +521,13 @@ B<DEVA_cli>
   S<B<--outdir> I<dir>>
   S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--DETScoreSkip>]>
   S<[B<--refcsv> I<csvfile>] [B<--syscsv> I<csvfile>]>
+  S<[B<--quickConfig> [I<linecount>]]>
   S<[B<--wREFcfg> I<file>] [B<--WSYScfg> I<file>] [B<--VMDcfg> I<file>]>
   S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>]>
   S<[B<--MetadataDBfile> I<file>] [B<--iFilterDBfile> I<file>]>
   S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
   S<[B<--AdditionalFilterDB> I<file:name> [B<--AdditionalFilterDB> I<file:name> [...]]]>
+  S<[B<--GetTrialsDB>]>
   S<[B<--usedMetric> I<package>]>
   S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]]>
   S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
@@ -548,6 +557,7 @@ Required arguments:
  S<B<--outdir> I<dir>>
 
 Optional arguments:
+ S<[B<--quickConfig> [I<linecount>]]>
  S<[B<--refcsv> I<csvfile>]>
  S<[B<--syscsv> I<csvfile>]>
  S<[B<--wREFcfg> I<file>]>
@@ -599,6 +609,7 @@ Optional arguments:
  S<[B<--RefDBfile> I<file>]>
  S<[B<--SysDBfile> I<file>]>
  S<[B<--iFilterDBfile> I<file>]>
+ S<[B<--GetTrialsDB>]>
  S<[B<--usedMetric> I<package>]>
  S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]]>
  S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
@@ -853,6 +864,10 @@ Display this man page.
 =item B<--outdir> I<dir>
 
 Specify the directory in which all files relevant to this call to B<DEVA_cli> will be placed (or looked for).
+
+=item B<--quickConfig> [I<linecount>]
+
+Specify the number of lines to be read in Step 1 to decide on file content for config helper step (wihtout quickConfig, process all lines)
 
 =item B<--RefDBfile> I<file>
 
@@ -1116,7 +1131,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
+$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--quickConfig [linecount]] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1136,6 +1151,7 @@ Where:
   --VMDcfg     Specify the metadata configuration file
   --refcsv     Specify the Reference csv file
   --syscsv     Specify the System csv file
+  --quickConfig    Specify the number of lines to be read in Step 1 to decide on file content for config helper step (wihtout quickConfig, process all lines) (*2)
   --RefDBfile  Specify the Reference SQLite database file
   --SysDBfile  Specify the System SQLite database file
   --MetadataDBfile  Specify the metadata SQLite database file
@@ -1159,6 +1175,7 @@ DETCurve generation (Step 4) specific options:
 
 
 *1: default values can be obtained from \"$deva_sci\" 's help
+*2: default number of lines if no value is set can be obtained from \"$sqlite_cfg_helper\" 's help
 
 EOF
 ;

@@ -86,16 +86,17 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
+my $qcd = 500;
 my $usage = &set_usage();
 my $xcolinfo = undef;
 my $xtabinfo = undef;
 my $forcedtn = "";
 my $primkey = "";
-
+my $quickConfig = undef;
 # Default values for variables
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                    T        c    h       p   t v      #
+# Used:                    T        c    h       pq  t v      #
 
 my %opt = ();
 GetOptions
@@ -107,6 +108,7 @@ GetOptions
    'tableinfo:s'  => \$xtabinfo,
    'Tablename=s'  => \$forcedtn,
    'primaryKey=s' => \$primkey,
+   'quickConfig:i'   => \$quickConfig,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -115,6 +117,8 @@ MMisc::error_quit("No arguments given\n$usage\n") if (scalar @ARGV == 0);
 
 MMisc::error_quit("When \'Tablename\' is used, only one CSV file can be specified")
   if ((! MMisc::is_blank($forcedtn)) && (scalar @ARGV > 1));
+
+$quickConfig = $qcd if ((defined $quickConfig) && ($quickConfig == 0));
 
 my %tns = ();
 my %cnl = ();
@@ -162,7 +166,9 @@ sub load_csv {
   }
 
   my $linec = 0;
-  while (my $line = <CSV>) {
+  my $kr = 1;
+  while (($kr) && (my $line = <CSV>)) {
+
     my @fieldvals = $csvh->csvline2array($line);
     MMisc::error_quit("While processing file [$csvfile], problem with CSV line extraction (data line #$linec): " . $csvh->get_errormsg())
         if ($csvh->error());
@@ -184,10 +190,11 @@ sub load_csv {
       $type{$h} = 2;
     }
     $linec++;
+    $kr = 0 if (($quickConfig) && ($linec >= $quickConfig));
   }
   close FILE;
 
-  print "\#\# Automaticaly generated table definition \#$nbr (seen $linec lines of data)\n";
+  print "\#\# Automaticaly generated table definition \#$nbr (seen $linec lines of data)" . ($quickConfig ? " [quickConfig]" : "") . "\n";
 
   my $tn = $forcedtn;
   if (MMisc::is_blank($tn)) {
@@ -305,7 +312,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] [--columninfo [filename]] [--tableinfo [filename]] [--Tablename name] [--primaryKey key] csvfile [csvfile [...]]
+$0 [--help | --version] [--columninfo [filename]] [--tableinfo [filename]] [--Tablename name] [--primaryKey key] [--quickConfig [linecount]] csvfile [csvfile [...]]
 
 Will provide a config file entry for given csvfile.
 NOTE: output will be printed to stdout.
@@ -317,6 +324,7 @@ Where:
   --tableinfo    Will print tables information to stdout (or filename is specfied)
   --Tablename    Will force the tablename to be specified name (can only load one csvfile when using this mode)
   --primarykey   Will treat any matching key as the table's primary key
+  --quickConfig  Specify the number of lines to be read to decide on file's column content (wihtout quickConfig, process all lines) (when used without a value, read $qcd lines)
 EOF
 ;
 
