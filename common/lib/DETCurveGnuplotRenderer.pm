@@ -47,7 +47,7 @@ sub new
        reportActual => 1,
        PointSet => undef,
        DETLineAttr => undef,
-       lTitleNoBestComb => 1,
+       lTitleNoBestComb => undef,
        lTitleNoPointInfo => 1,
        serialize => 1,
        BuildPNG => 1,
