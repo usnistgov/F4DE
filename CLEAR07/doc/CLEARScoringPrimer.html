@@ -6,6 +6,237 @@
   <title>CLEAR Scoring Primer</title>
 </head>
 <body>
-Stub for&nbsp; the CLEAR Scoring Primer<br>
-</body>
-</html>
+<h2>Description: </h2>
+This document provides a high-level overview of how to use the F4DE
+tools for the CLEAR Evaluations.&nbsp; This document refers to examples in the F4DE
+distribution to get a researcher quickly up to speed using the toolkit
+to evaluate the performance of their systems.<br>
+<br>
+
+There are five sections in this document: nomenclature, file format
+definitions,
+executable script synopses, annotation file validation, and scoring
+scripts.&nbsp; The examples below assume the F4DE package has been
+installed and is working properly according to the README including
+$F4DE_BASE is defined and $F4DE_BASE/bin is in your path
+variable.&nbsp; The variable DIST used below is the path to the F4DE
+source directory and is not part of the F4DE installation instructions.<br>
+
+
+<span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
+<h2>Nomenclature:</h2>
+The CLEAR evaluation is designed to evaluate systems that can track a
+single, specific object within an ensemble of concurrently recorded
+videos.&nbsp; We call the object to track the 'target'.<br>
+<br>
+We refer to collection of the following as a 'track instance' which
+defines the inputs to the system for a single tested track:<br>
+<ul>
+  <li><span style="font-weight: bold;">Start and end frame:</span> this
+is the duration of the test sequence for the&nbsp; (across all cameras
+for the system to process the video data)</li>
+  <li><span style="font-weight: bold;">Target Tracking Frames (TTF): </span>video
+frames containing the bounding box annotations for the subject.&nbsp;
+Systems will use the TTFs to build a model of the target for later tracking.</li>
+</ul>
+
+
+<span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
+<h2>File Formats:</h2>
+The CLEAR tools use XML ViPER files as inputs to the
+scripts.&nbsp; The ViPER file format is structurally
+defined by a set of XSD files located in the '$F4DE_BASE/lib/data'
+directory.&nbsp; The main XSD file is CLEAR.xsd which includes CLEAR-viper.xsd and CLEAR-viperdata.xsd. 
+<br>
+
+
+<span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
+<h2>Executable Script Synopses:</h2>
+<ul>
+  <li>CLEARDTViperValidator - a syntactic and semantic validator for
+ViPER-formatted CLEAR Detection and Tracking files.</li>
+  <li>CLEARTRViperValidator - a syntactic and semantic validator for
+ViPER-formatted CLEAR Text Recognition files.</li>
+  <li>CLEARDTScorer - a scoring script designed specifically for the
+CLEAR Detection and Tracking evaluation. <br>
+  <li>CLEARTRScorer - a scoring script designed specifically for the
+CLEAR Text Recognition evaluation. <br>
+  </li>
+</ul>
+Running any of the afore mentioned program should bring up a usage
+entry detailling the tool's accepted options.
+
+In the following examples, $DIST is your path to the F4DE source directory.
+
+Some examples might require a small frame tolerance allowance for attributes
+to be outside of the object framespan greater than the default of 0;
+this is done adding to the command line: --frameTol 15
+
+Additionaly, although the <i>Evaluation Domain</i> and <i>Evauation
+Measure</i> are supported by the tool, here we only present example
+for which an XML file is present in the distribution.
+
+
+<span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
+<h2>File Validation:</h2>
+In order to ensure systems generate correctly formatted ViPER files
+for CLEAR, the scoring tools include a validator to check system-generated
+ViPER files, both syntactically (properly structure XML files) and
+semantically (e.g., coherent frame spans and bounding boxes within the frame spans, etc).&nbsp; <br>
+
+<h3>Detection and Tracking</h3>
+
+<table border="1">
+  <tr><th>Domain</th><th>Content</th><th>FileType</th><th>Command</th></tr>
+  
+  <tr>
+    <td rowspan="3">Broadcast News</td>
+    <td rowspan="2">Face</td>
+    <td>System</td>
+    <td>CLEARDTViperValidator --Domain BN $DIST/CLEAR07/test/common/BN_FDT/*.rdf</td>
+  </tr>
+  <tr>
+    <td>Reference</td>
+    <td>CLEARDTViperValidator --Domain BN --gtf $DIST/CLEAR07/test/common/BN_FDT/*.gtf</td>
+  </tr>
+  <tr>
+    <td>Text</td>
+    <td>Reference</td>
+    <td>CLEARDTViperValidator --Domain BN --gtf $DIST/CLEAR07/test/common/BN_TDT/*.gtf</td>
+  </tr>
+  
+  <tr>
+    <td rowspan="6">Meeting Room</td>
+    <td rowspan="2">Face</td>
+    <td>System</td>
+    <td>CLEARDTViperValidator --Domain MR $DIST/CLEAR07/test/common/MR_FDT/*.rdf</td>
+  </tr>
+  <tr>
+    <td>Reference</td>
+    <td>CLEARDTViperValidator --Domain MR --gtf $DIST/CLEAR07/test/common/MR_FDT/*.gtf</td>
+  </tr>
+  <tr>
+    <td rowspan="2">Hand</td>
+    <td>System</td>
+    <td>CLEARDTViperValidator --Domain MR $DIST/CLEAR07/test/common/MR_HDT/*.rdf</td>
+  </tr>
+  <tr>
+    <td>Reference</td>
+    <td>CLEARDTViperValidator --Domain MR --gtf $DIST/CLEAR07/test/common/MR_HDT/*.gtf</td>
+  </tr>
+  <tr>
+    <td rowspan="2">Person</td>
+    <td>System</td>
+    <td>CLEARDTViperValidator --Domain MR $DIST/CLEAR07/test/common/MR_PDT/*.rdf</td>
+  </tr>
+  <tr>
+    <td>Reference</td>
+    <td>CLEARDTViperValidator --Domain MR --gtf $DIST/CLEAR07/test/common/MR_PDT/*.gtf</td>
+  </tr>
+  
+  <tr>
+    <td rowspan="4">Surveillance</td>
+    <td rowspan="2">Person</td>
+    <td>System</td>
+    <td>CLEARDTViperValidator --Domain SV $DIST/CLEAR07/test/common/SV_PDT/*.rdf</td>
+  </tr>
+  <tr>
+    <td>Reference</td>
+    <td>CLEARDTViperValidator --Domain SV --gtf $DIST/CLEAR07/test/common/SV_PDT/*.gtf</td>
+  </tr>
+  <tr>
+    <td rowspan="2">Vehicle</td>
+    <td>System</td>
+    <td>CLEARDTViperValidator --Domain SV $DIST/CLEAR07/test/common/SV_VDT/*.rdf</td>
+  </tr>
+  <tr>
+    <td>Reference</td>
+    <td>CLEARDTViperValidator --Domain SV --gtf $DIST/CLEAR07/test/common/SV_VDT/*.gtf</td>
+  </tr>
+  
+  <tr>
+    <td rowspan="2">UAV</td>
+    <td rowspan="2">Vehicle</td>
+    <td>System</td>
+    <td>CLEARDTViperValidator --Domain UV $DIST/CLEAR07/test/common/UV_CDT/*.rdf</td>
+  </tr>
+  <tr>
+    <td>Reference</td>
+    <td>CLEARDTViperValidator --Domain UV --gtf $DIST/CLEAR07/test/common/UV_VDT/*.gtf</td>
+  </tr>
+  
+</table>
+
+<h3>Text Recognition</h3>
+
+<table border="1">
+  <tr><th>Domain</th><th>Content</th><th>FileType</th><th>Command</th></tr>
+  
+  <tr>
+    <td>Broadcast News</td>
+    <td>Text</td>
+    <td>Reference</td>
+    <td>CLEARTRViperValidator --Domain BN $DIST/CLEAR07/test/common/BN_TR/*.rdf</td>
+  </tr>
+</table>
+
+
+<span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
+<h2>Scoring:</h2>
+CLEARDTScorer and CLEARTRScorer are wrapper scripts to score the
+output of a CLEAR system.&nbsp; This version of the script implements the
+full evaluation formalism to score a series of track instances,
+ignoring un-scored frames, and limiting the evaluated span of
+frames.&nbsp;
+
+<h3>Detection and Tracking</h3>
+
+<table border="1">
+  <tr><th>Domain</th><th>Content</th><th>Measure</th><th>Command</th></tr>
+  
+  <tr>
+    <td>Broadcast News</td>
+    <td>Face</td>
+    <td>Area</td>
+    <td>CLEARDTScorer --Domain BN --Eval Area $DIST/CLEAR07/test/common/BN_FDT/*.rdf --gtf $DIST/CLEAR07/test/common/BN_FDT/*.gtf</td>
+  </tr>
+  <tr>
+    <td rowspan="3">Meeting Room</td>
+    <td>Face</td>
+    <td>Area</td>
+    <td>CLEARDTScorer --Domain MR --Eval Area $DIST/CLEAR07/test/common/MR_FDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_FDT/*.rdf</td>
+  </tr>
+  <tr>
+    <td>Hand</td>
+    <td>Point</td>
+    <td>CLEARDTScorer --Domain MR --Eval Point $DIST/CLEAR07/test/common/MR_HDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_HDT/*.rdf </td>
+  </tr>
+  <tr>
+    <td>Person</td>
+    <td>Area</td>
+    <td>CLEARDTScorer --Domain MR --Eval Area $DIST/CLEAR07/test/common/MR_PDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_PDT/*.rdf </td>
+  </tr>
+ 
+  <tr>
+    <td rowspan="2">Surveillance</td>
+    <td>Person</td>
+    <td>Area</td>
+    <td>CLEARDTScorer --Domain SV --Eval Area $DIST/CLEAR07/test/common/SV_PDT/*.rdf --gtf $DIST/CLEAR07/test/common/SV_PDT/*.rdf </td>
+  </tr>
+  <tr>
+    <td>Vehicle</td>
+    <td>Area</td>
+    <td>CLEARDTScorer --Domain SV --Eval Area $DIST/CLEAR07/test/common/SV_VDT/*.rdf --gtf $DIST/CLEAR07/test/common/SV_VDT/*.rdf </td>
+  </tr>
+ 
+  <tr>
+    <td>UAV</td>
+    <td>Vehicle</td>
+    <td>Area</td>
+    <td>CLEARDTScorer --Domain UV --Eval Area $DIST/CLEAR07/test/common/UV_VDT/*.rdf --gtf $DIST/CLEAR07/test/common/UV_VDT/*.rdf </td>
+ </tr>
+ 
+</table>
+
+
+</body></html>
