@@ -330,18 +330,16 @@ dist_archive_pre_remove:
 # Sys files
 	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/common/BN_{TDT,TR}/*.rdf
 # Corresponding "res" files
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTViperValidator/res-test-2b.txt
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRViperValidator/res-test-1b.txt
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTScorer/res-test-2.txt
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRScorer/res-test-1[ab].txt
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTViperValidator/res-test2b.txt
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRViperValidator/res-test1b.txt
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTScorer/res-test2.txt
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRScorer/res-test1[ab].txt
 ## BarPlot
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/BarPlot/ /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/lib/BarPlot.pm
 ## CSVUtil
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/CSVUtil/
 ## VidAT example
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${VIDAT_EX_DIR}
-## DEVA
-#	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}
 ## CCD
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/CCD
 
