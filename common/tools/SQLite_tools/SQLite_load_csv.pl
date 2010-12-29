@@ -90,9 +90,10 @@ my $usage = &set_usage();
 
 # Default values for variables
 my @tmpc = ();
+my $nullmode = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                             c    h             v      #
+# Used:              N              c    h             v      #
 
 my %opt = ();
 GetOptions
@@ -101,6 +102,7 @@ GetOptions
    'help',
    'version',
    'columnsname=s'=> \@tmpc,
+   'NULLfields' => \$nullmode,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if (($opt{'help'}) || (scalar @ARGV == 0));
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -143,7 +145,8 @@ my ($err, $dbh) = MtSQLite::get_dbh($dbfile);
 MMisc::error_quit("Problem using DB ($dbfile): $err")
   if (! MMisc::is_blank($err));
 
-my ($err, $inserted) = MtSQLite::insertCSV($dbh, $csvfile, $tablename, @colsname);
+my ($err, $inserted) = MtSQLite::insertCSV_handler($dbh, $csvfile, $tablename,
+                                                   $nullmode, @colsname);
 MMisc::error_quit("Problem inserting CSV file ($csvfile) into DB ($dbfile)'s table ($tablename): $err")
   if (! MMisc::is_blank($err));
 
@@ -160,7 +163,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] [--columnsname col1,col2[,...]] dbfile csvfile tablename
+$0 [--help | --version] [--columnsname col1,col2[,...]] [--NULLfields] dbfile csvfile tablename
 
 Will load a given csvfile into the SQLite dbfile's table called tablename.
 
@@ -171,6 +174,7 @@ Where:
   --help     This help message
   --version  Version information
   --columnsname  Discard the information provided in the first row of csvfile and force the column names
+  --NULLfields   Empty fields will be inserted as the NULL value (the default is to insert them as the empty value of the defined type, ie '' for TEXTs)
 
 EOF
 ;

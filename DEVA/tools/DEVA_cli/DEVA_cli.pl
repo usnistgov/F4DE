@@ -131,9 +131,10 @@ my ($xm, $xM, $ym, $yM, $xscale, $yscale)
 my $blockavg = 0;
 my $GetTrialsDB = 0;
 my $quickConfig = undef;
+my $nullmode = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: ABCD FG    LM    RSTUVWXYZabc  fghi  lm o qrstuvwxyz  #
+# Used: ABCD FG    LMN   RSTUVWXYZabc  fghi  lm o qrstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -174,6 +175,7 @@ GetOptions
    'taskName=s'      => \$taskName,
    'GetTrialsDB'     => \$GetTrialsDB,
    'quickConfig:i'   => \$quickConfig,
+   'NULLfields'      => \$nullmode,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -245,7 +247,7 @@ if ($doCfg) {
   if (! MMisc::is_blank($refcsv)) {
     print "** REF\n";
     my $tmp = &do_cfgfile
-      ($refDBcfg, "$logdir/CfgGen_${refDBb}.log", "-T Reference -p TrialID", $refcsv);
+      ($refDBcfg, 0, "$logdir/CfgGen_${refDBb}.log", "-T Reference -p TrialID", $refcsv);
     &check_isin($tmp, '^newtable:\s+Reference$', '^column\*:\s+TrialID;', '^column:\s+Targ;TEXT$');
     $done++;
   }
@@ -253,7 +255,7 @@ if ($doCfg) {
   if (! MMisc::is_blank($syscsv)) {
     print "** SYS\n";
     my $tmp = &do_cfgfile
-      ($sysDBcfg, "$logdir/CfgGen_${sysDBb}.log", "-T System -p TrialID", $syscsv);
+      ($sysDBcfg, 0, "$logdir/CfgGen_${sysDBb}.log", "-T System -p TrialID", $syscsv);
     &check_isin($tmp, '^newtable: System$', '^column\*:\s+TrialID;', '^column:\s+Decision;TEXT$', '^column:\s+Score;');
     $done++;
   }
@@ -261,7 +263,7 @@ if ($doCfg) {
   if (scalar @csvlist > 0) {
     print "** Metadata\n";
     my $tmp = &do_cfgfile
-      ($mdDBcfg, "$logdir/CfgGen_${mdDBb}.log", 
+      ($mdDBcfg, 1, "$logdir/CfgGen_${mdDBb}.log", 
        "-c ${mdDBbase}_columninfo.txt -t ${mdDBbase}_tableinfo.txt", 
        @csvlist);
     $done++;
@@ -276,19 +278,19 @@ if ($createDBs) {
   
   if (MMisc::does_file_exists($refDBcfg)) {
     print "** REF\n";
-    &db_create($refDBcfg, $refDBfile, "$logdir/DBgen_${refDBb}.log");
+    &db_create($refDBcfg, 0, $refDBfile, "$logdir/DBgen_${refDBb}.log");
     $done++;
   }
   
   if (MMisc::does_file_exists($sysDBcfg)) {
     print "** SYS\n";
-    &db_create($sysDBcfg, $sysDBfile, "$logdir/DBgen_${sysDBb}.log");
+    &db_create($sysDBcfg, 0, $sysDBfile, "$logdir/DBgen_${sysDBb}.log");
     $done++;
   }
   
   if (MMisc::does_file_exists($mdDBcfg)) {
     print "** Metadata\n";
-    &db_create($mdDBcfg, $mdDBfile, "$logdir/DBgen_${mdDBb}.log");
+    &db_create($mdDBcfg, 1, $mdDBfile, "$logdir/DBgen_${mdDBb}.log");
     $done++;
   }
 
@@ -339,7 +341,7 @@ sub check_fn4 {
 #####
 
 sub do_cfgfile {
-  my ($cfgfile, $log, $cmdadd, @csvfl) = @_;
+  my ($cfgfile, $nullok, $log, $cmdadd, @csvfl) = @_;
 
   my $tool = &path_tool($sqlite_cfg_helper, "../../../common/tools/SQLite_tools");
 
@@ -347,6 +349,8 @@ sub do_cfgfile {
     $cmdadd .= " -q";
     $cmdadd .= " $quickConfig" if ($quickConfig > 0);
   }
+
+  $cmdadd .= " -N" if (($nullok) && ($nullmode));
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdadd, @csvfl);
@@ -360,7 +364,7 @@ sub do_cfgfile {
 ##########
 
 sub db_create {
-  my ($cfgfile, $dbfile, $log) = @_;
+  my ($cfgfile, $nullok, $dbfile, $log) = @_;
 
   if (MMisc::does_file_exists($dbfile)) {
     print " -> DB file already exists, not overwriting it\n";
@@ -378,6 +382,7 @@ sub db_create {
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, 
               "-l" . (MMisc::is_blank($tool2) ? "" : " -L $tool2") 
+              . (($nullok && $nullmode) ? " -N" : "")
               . " $dbfile $cfgfile");
 }
 
@@ -521,7 +526,7 @@ B<DEVA_cli>
   S<B<--outdir> I<dir>>
   S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--DETScoreSkip>]>
   S<[B<--refcsv> I<csvfile>] [B<--syscsv> I<csvfile>]>
-  S<[B<--quickConfig> [I<linecount>]]>
+  S<[B<--quickConfig> [I<linecount>]] [B<--NULLfields>]>
   S<[B<--wREFcfg> I<file>] [B<--WSYScfg> I<file>] [B<--VMDcfg> I<file>]>
   S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>]>
   S<[B<--MetadataDBfile> I<file>] [B<--iFilterDBfile> I<file>]>
@@ -558,6 +563,7 @@ Required arguments:
 
 Optional arguments:
  S<[B<--quickConfig> [I<linecount>]]>
+ S<[B<--NULLfields>]>
  S<[B<--refcsv> I<csvfile>]>
  S<[B<--syscsv> I<csvfile>]>
  S<[B<--wREFcfg> I<file>]>
@@ -574,6 +580,7 @@ Required arguments:
  S<B<--outdir> I<dir>>
 
 Optional arguments:
+ S<[B<--NULLfields>]>
  S<[B<--wREFcfg> I<file>]>
  S<[B<--WSYScfg> I<file>]>
  S<[B<--VMDcfg> I<file>]>
@@ -861,6 +868,10 @@ Specify the location of the Metadata database file to use/generate.
 
 Display this man page.
 
+=item B<--NULLfields>
+
+Empty columns will be inserted as the NULL value to allow proper JOIN (the default is to insert them as the empty value of the defined type, ie '' for TEXTs). This behavior only apply to metadata CSV files.
+
 =item B<--outdir> I<dir>
 
 Specify the directory in which all files relevant to this call to B<DEVA_cli> will be placed (or looked for).
@@ -1131,7 +1142,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--quickConfig [linecount]] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
+$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile [csvfile [...]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1152,6 +1163,7 @@ Where:
   --refcsv     Specify the Reference csv file
   --syscsv     Specify the System csv file
   --quickConfig    Specify the number of lines to be read in Step 1 to decide on file content for config helper step (wihtout quickConfig, process all lines) (*2)
+  --NULLfields   Empty columns will be inserted as the NULL value (the default is to insert them as the empty value of the defined type, ie '' for TEXTs). This behavior only apply to metadata CSV files.
   --RefDBfile  Specify the Reference SQLite database file
   --SysDBfile  Specify the System SQLite database file
   --MetadataDBfile  Specify the metadata SQLite database file

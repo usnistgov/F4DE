@@ -93,10 +93,10 @@ my $xtabinfo = undef;
 my $forcedtn = "";
 my $primkey = "";
 my $quickConfig = undef;
-# Default values for variables
+my $nullmode = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                    T        c    h       pq  t v      #
+# Used:              N     T        c    h       pq  t v      #
 
 my %opt = ();
 GetOptions
@@ -109,6 +109,7 @@ GetOptions
    'Tablename=s'  => \$forcedtn,
    'primaryKey=s' => \$primkey,
    'quickConfig:i'   => \$quickConfig,
+   'NULLfields'      => \$nullmode,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -176,6 +177,8 @@ sub load_csv {
     for (my $i = 0; $i < scalar @csvheader; $i++) {
       my $h = $csvheader[$i];
       my $v = $fieldvals[$i];
+
+      next if (($nullmode) && ($v eq ''));
 
       $is_pkc{$h} = 0 if (($is_pkc{$h}) && (++$all{$h}{$v} > 1));
  
@@ -312,7 +315,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] [--columninfo [filename]] [--tableinfo [filename]] [--Tablename name] [--primaryKey key] [--quickConfig [linecount]] csvfile [csvfile [...]]
+$0 [--help | --version] [--columninfo [filename]] [--tableinfo [filename]] [--Tablename name] [--primaryKey key] [--quickConfig [linecount]] [--NULLfields] csvfile [csvfile [...]]
 
 Will provide a config file entry for given csvfile.
 NOTE: output will be printed to stdout.
@@ -325,6 +328,7 @@ Where:
   --Tablename    Will force the tablename to be specified name (can only load one csvfile when using this mode)
   --primarykey   Will treat any matching key as the table's primary key
   --quickConfig  Specify the number of lines to be read to decide on file's column content (wihtout quickConfig, process all lines) (when used without a value, read $qcd lines)
+  --NULLfields   Empty fields will be skipped to not force type detection, and can therefore be later inserted as the NULL value (the default is to insert them as the empty value of the defined type, ie '' for TEXTs)
 EOF
 ;
 
