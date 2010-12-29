@@ -135,6 +135,20 @@ sub get_column_names {
 
 sub insertCSV {
   my ($dbh, $csvfile, $tablename, @columnsname) = @_;
+  return(&insertCSV($$dbh, $csvfile, $tablename, 0, @columnsname));
+}
+
+##
+
+sub insertCSV_NULLfields {
+  my ($dbh, $csvfile, $tablename, @columnsname) = @_;
+  return(&insertCSV($$dbh, $csvfile, $tablename, 1, @columnsname));
+}  
+
+##
+
+sub insertCSV_handler {
+  my ($dbh, $csvfile, $tablename, $nullmode, @columnsname) = @_;
 
   return("No DB handler") 
     if (! defined $dbh);
@@ -195,8 +209,14 @@ sub insertCSV {
     return("Problem with CSV line extraction: " . $csvh->get_errormsg(), 0)
       if ($csvh->error());
 
+    if ($nullmode) {
+      for (my $i = 0; $i < scalar @fields; $i++) {
+        $fields[$i] = undef if ($fields[$i] eq '');
+      }
+    }
+
     $inserted += $sth->execute(@fields)
-      or return("Problem trying to execute SQL statement: " . $dbh->errstr());
+      or return("Problem trying to execute SQL statement: " . $dbh->errstr(), 0);
 
     my $err = $sth->errstr();
     return("Problem during CSV line insert (row: $inserted): $err", 0)
