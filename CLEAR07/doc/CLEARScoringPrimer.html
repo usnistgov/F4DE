@@ -1,12 +1,36 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="Content-Type">
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
   <title>CLEAR Scoring Primer</title>
+  <STYLE type="text/css">
+    BODY {
+    counter-reset: chapter;
+    }
+    H1:before {
+    content: counter(chapter) ". ";
+    counter-increment: chapter;  /* Add 1 to chapter */
+    }
+    H1 {
+    counter-reset: section subsection;      /* Set section to 0 */
+   }
+    H2:before {
+    content: counter(chapter) "." counter(section) " ";
+    counter-increment: section;
+    }
+    H2 {
+    counter-reset: subsection;
+    }
+    H3:before {
+    content: counter(chapter) "." counter(section) "." counter(subsection) " ";
+    counter-increment: subsection;
+    }
+ </STYLE>
 </head>
 <body>
-<h2>Description: </h2>
+  <u>CLEAR Scoring Primer</u>
+
+<h1>Description: </h1>
 This document provides a high-level overview of how to use the F4DE
 tools for the CLEAR Evaluations.&nbsp; This document refers to examples in the F4DE
 distribution to get a researcher quickly up to speed using the toolkit
@@ -24,7 +48,7 @@ source directory and is not part of the F4DE installation instructions.<br>
 
 
 <span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
-<h2>Nomenclature:</h2>
+<h1>Nomenclature:</h1>
 The CLEAR evaluation is designed to evaluate systems that can track a
 single, specific object within an ensemble of concurrently recorded
 videos.&nbsp; We call the object to track the 'target'.<br>
@@ -42,16 +66,21 @@ Systems will use the TTFs to build a model of the target for later tracking.</li
 
 
 <span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
-<h2>File Formats:</h2>
+<h1>File Formats:</h1>
 The CLEAR tools use XML ViPER files as inputs to the
 scripts.&nbsp; The ViPER file format is structurally
 defined by a set of XSD files located in the '$F4DE_BASE/lib/data'
-directory.&nbsp; The main XSD file is CLEAR.xsd which includes CLEAR-viper.xsd and CLEAR-viperdata.xsd. 
+directory.&nbsp; The main XSD file is CLEAR.xsd which includes
+CLEAR-viper.xsd and CLEAR-viperdata.xsd.
+<br>
+Details on the XML files content with a detailled list of tags and
+their possible values can be found in
+<b>Annotation Guidelines for Video Analysis and Content Extraction (VACE-II)</b>.
 <br>
 
 
 <span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
-<h2>Executable Script Synopses:</h2>
+<h1>Executable Script Synopses:</h1>
 <ul>
   <li>CLEARDTViperValidator - a syntactic and semantic validator for
 ViPER-formatted CLEAR Detection and Tracking files.</li>
@@ -73,18 +102,18 @@ to be outside of the object framespan greater than the default of 0;
 this is done adding to the command line: --frameTol 15
 
 Additionaly, although the <i>Evaluation Domain</i> and <i>Evauation
-Measure</i> are supported by the tool, here we only present example
+Measure</i> are supported by the tool, here we only present examples
 for which an XML file is present in the distribution.
 
 
 <span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
-<h2>File Validation:</h2>
+<h1>File Validation:</h1>
 In order to ensure systems generate correctly formatted ViPER files
 for CLEAR, the scoring tools include a validator to check system-generated
 ViPER files, both syntactically (properly structure XML files) and
 semantically (e.g., coherent frame spans and bounding boxes within the frame spans, etc).&nbsp; <br>
 
-<h3>Detection and Tracking</h3>
+<h2>Detection and Tracking</h2>
 
 <table border="1">
   <tr><th>Domain</th><th>Content</th><th>FileType</th><th>Command</th></tr>
@@ -167,7 +196,7 @@ semantically (e.g., coherent frame spans and bounding boxes within the frame spa
   
 </table>
 
-<h3>Text Recognition</h3>
+<h2>Text Recognition</h2>
 
 <table border="1">
   <tr><th>Domain</th><th>Content</th><th>FileType</th><th>Command</th></tr>
@@ -182,14 +211,85 @@ semantically (e.g., coherent frame spans and bounding boxes within the frame spa
 
 
 <span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
-<h2>Scoring:</h2>
+<h1>Scoring</h1>
 CLEARDTScorer and CLEARTRScorer are wrapper scripts to score the
 output of a CLEAR system.&nbsp; This version of the script implements the
 full evaluation formalism to score a series of track instances,
 ignoring un-scored frames, and limiting the evaluated span of
 frames.&nbsp;
 
-<h3>Detection and Tracking</h3>
+<h2>Steps involved</h2>
+
+In order to score, for each <i>System Submission</i> a corresponding
+<i>Ground Truth File</i> must exist.
+The scoring steps are as follow:
+<ol>
+  <li>The system and reference XML files are validated
+  <li>The list of <i>Video</i> files information contained in each REF
+  and SYS XML file (ie the <i>sourcefile filename</i>) is obtained and
+  compared; the tool scores a REF to a SYS if they have matching video files.
+  <li>A matching algorithm is applied to the data contained within the
+  XML files to obtain scoring metric informations such as
+  the number of <i>Missed Detections</i> (a REF
+  entry exists, but no matching SYS entry exists), <i>False Alarms</i>
+  (a SYS entry exists, but no matching REF entry exists) and <i>Correct
+  Detection</i> (a REF entry exists, and a matching SYS entry also
+  exists).
+  Tracking accuracy is also used in this step, as well as
+  some additional tracking information:
+  <ul>
+    <li>Tracking consistency: if at any point during a proper tracking
+    the system's object lost track of the reference object.
+    <li>ID Switching: if at any point during a proper tracking the
+    system's object ID changed for a same object being tracked.
+      <li>ID Merging: when two objects that were previously tracked
+      become only one tracked object in the SYS, but there is still
+      two in the REF annotations.
+  </ul>
+  During this step, the scoring as to take into account the possiblity
+  for <i>Don't Care</i> <i>Object</i>s, <i>Region</i>s
+  and <i>Frame</i>s.
+  <li>Multiple metrics scores are produced from the maching step
+  (details are in the next section), with one line per <i>Video</i>
+  file information.
+</ol>
+
+A more complete explaination of the different scoring process and
+metrics can be found in:
+<ul>
+  <li>"The CLEAR 2006 Evaluation"
+  <li>"The CLEAR 2007 Evaluation"
+  <li>"Framework for Performance Evaluation of Face, Text, and Vehicle Detection and Tracking in
+Video: Data, Metrics, and Protocol"
+</ul>
+
+<h2>Computed Scoring Metrics</h2>
+
+Following is a short description of what the different computed
+metrics during a Detection and Tracking scoring represent:
+<ul>
+  <li><b>Sequence Frame Detection Accuracy</b> (SFDA): a frame-level measure that accounts for number of objects detected, missed detects, false positives, and spatial alignment of system output and ground truth objects.
+  <li><b>Average Tracking Accuracy</b> (ATA): a spatio-temporal
+  measure which penalizes fragmentations in both the temporal and
+  spatial dimensions while accounting for the number of objects
+  detected and tracked, missed objects, and false positives.
+  <li><b>Multiple Object Detection Accuracy</b> (MODA): serves to
+  assess the accuracy aspect of system performance; only the missed
+  counts and false alarm counts are used.
+  <li><b>Multiple Object Detection Precision</b> (MODP): here, the
+  spatial overlap information between the ground truth and the system
+  output is used to compute an Overlap Ratio.
+ <li><b>Multiple Object Tracking Accuracy</b> (MOTA): expresses the
+  tracker's performance at estimating the number of objects, and at
+  keeping consistent trajectories.
+  <li><b>Multiple Object Tracking Precision</b> (MOTP): shows the
+  tracker’s ability to estimate precise object positions.
+</ul>
+
+For <i>Text Recognition</i> the <b>Average Recognition Performance
+  Measure</b> (ARPM) is the computed metric score.
+
+<h2>Scoring software use (Detection and Tracking)</h2>
 
 <table border="1">
   <tr><th>Domain</th><th>Content</th><th>Measure</th><th>Command</th></tr>
@@ -204,39 +304,102 @@ frames.&nbsp;
     <td rowspan="3">Meeting Room</td>
     <td>Face</td>
     <td>Area</td>
-    <td>CLEARDTScorer --Domain MR --Eval Area $DIST/CLEAR07/test/common/MR_FDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_FDT/*.rdf</td>
+    <td>CLEARDTScorer --Domain MR --Eval Area $DIST/CLEAR07/test/common/MR_FDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_FDT/*.gtf</td>
   </tr>
   <tr>
     <td>Hand</td>
     <td>Point</td>
-    <td>CLEARDTScorer --Domain MR --Eval Point $DIST/CLEAR07/test/common/MR_HDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_HDT/*.rdf </td>
+    <td>CLEARDTScorer --Domain MR --Eval Point $DIST/CLEAR07/test/common/MR_HDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_HDT/*.gtf </td>
   </tr>
   <tr>
     <td>Person</td>
     <td>Area</td>
-    <td>CLEARDTScorer --Domain MR --Eval Area $DIST/CLEAR07/test/common/MR_PDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_PDT/*.rdf </td>
+    <td>CLEARDTScorer --Domain MR --Eval Area $DIST/CLEAR07/test/common/MR_PDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_PDT/*.gtf </td>
   </tr>
  
   <tr>
     <td rowspan="2">Surveillance</td>
     <td>Person</td>
     <td>Area</td>
-    <td>CLEARDTScorer --Domain SV --Eval Area $DIST/CLEAR07/test/common/SV_PDT/*.rdf --gtf $DIST/CLEAR07/test/common/SV_PDT/*.rdf </td>
+    <td>CLEARDTScorer --Domain SV --Eval Area $DIST/CLEAR07/test/common/SV_PDT/*.rdf --gtf $DIST/CLEAR07/test/common/SV_PDT/*.gtf </td>
   </tr>
   <tr>
     <td>Vehicle</td>
     <td>Area</td>
-    <td>CLEARDTScorer --Domain SV --Eval Area $DIST/CLEAR07/test/common/SV_VDT/*.rdf --gtf $DIST/CLEAR07/test/common/SV_VDT/*.rdf </td>
+    <td>CLEARDTScorer --Domain SV --Eval Area $DIST/CLEAR07/test/common/SV_VDT/*.rdf --gtf $DIST/CLEAR07/test/common/SV_VDT/*.gtf </td>
   </tr>
  
   <tr>
     <td>UAV</td>
     <td>Vehicle</td>
     <td>Area</td>
-    <td>CLEARDTScorer --Domain UV --Eval Area $DIST/CLEAR07/test/common/UV_VDT/*.rdf --gtf $DIST/CLEAR07/test/common/UV_VDT/*.rdf </td>
+    <td>CLEARDTScorer --Domain UV --Eval Area $DIST/CLEAR07/test/common/UV_VDT/*.rdf --gtf $DIST/CLEAR07/test/common/UV_VDT/*.gtf </td>
  </tr>
  
 </table>
 
+The scoring results will contains one result per <i>Video</i> file,
+and have computed values for the <b>SFDA</b>, <b>ATA</b>, <b>MODA</b>, <b>MODP</b>, <b>MOTA</b>
+and <b>MOTP</b> measurements.
 
-</body></html>
+<h2>Vizualisation of results (for Detection and Tracking evaluation)</h2>
+
+This step use the <i>VidAT</i> toolset. Please see
+the <i>$DIST/common/tools/VidAT/README</i> file considerations on tool
+requirements (such as <i>ffmpeg</i>) before using it.
+
+When using <i>CLEARDTScorer</i>, it is possible to request for the
+tool to generate a log file per <i>Video</i> is written, containing an
+evaluated-frame per evaluated-frame decomposition of the tracking
+analysis. To do so, run the tool normally and add <i>--motaLogDir --directory</i> 
+to the command line to obtain an evaluated-frame per evaluated-frame
+analysis of the scoring components of the MOTA measurement.
+
+For example, for the <i>Meeting Room</i> / <i>Person</i> / <i>Area</i>
+example, instead of using:<br>
+<code>CLEARDTScorer --Domain MR --Eval Area $DIST/CLEAR07/test/common/MR_PDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_PDT/*.gtf</code><br>
+one would use:<br>
+<code>CLEARDTScorer --Domain MR --Eval Area $DIST/CLEAR07/test/common/MR_PDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_PDT/*.gtf --motaLogDir .</code><br>
+and would obtain in the current directory a file
+named <i>NIST_20020911-1033_C05_NONE.MPG.tracking_log</i> (the <i>Vdeo
+  file</i> name was <i>NIST_20020911-1033_C05_NONE.MPG</i>) that is a
+human readable file that details on each evaluated-frame its
+decomposition.
+<br><br>
+For example (taken from the file):
+<pre>
+***** Evaluated Frame: 45456
+## Number of REF Objects: 5
+++ REF 1 obox[x=434 y=69 w=93 h=106 o=4] 
+++ REF 2 obox[x=315 y=230 w=125 h=180 o=2] 
+++ REF 3 obox[x=290 y=60 w=73 h=118 o=2] 
+++ REF 4 obox[x=150 y=32 w=81 h=114 o=0] 
+++ REF 5 obox[x=7 y=217 w=140 h=188 o=0] 
+## Number of SYS Objects: 1
+++ SYS 2 obox[x=251 y=226 w=245 h=183 o=0] 
+== MD : REF 1
+== MD : REF 4
+== MD : REF 3
+== MD : REF 5
+== Mapped : SYS 2 -> REF 2 [previously matched]
+-- MOTA frame summary : [NumberOfEvalGT: 5] [MissedDetect: 4] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0]
+-- MOTA global summary: [NumberOfEvalGT: 16] [MissedDetect: 13] --
+-- [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0] => [MOTA = 0.187500]
+</pre>
+specify that on evaluated frame #45456, there were 5 REF objects and 1
+SYS object. 4 of those REF objects went unmapped (<i>MD</i>), and only
+1 was <i>Mapped</i> (SYS 2 and REF 2) and it was <i>previously
+  matched</i> (tracking was not lost and no ID splitting or merging
+happened). The MOTA components for the current frame are presented on
+the <i>MOTA frame summary</i> line and the file MOTA (up to this
+frame) is presented on the <i>MOTA global summary</i> line.
+
+This <i>tracking log</i> can then be used with the <i>VidAT</i> tool
+to obtain an annotated video with bouding boxes.
+<br><br>
+<b>Please refer to the <i>EXAMPLE</i> section of
+the <i>VidAT</i> <i>README</i> file for a detailed example of use of
+the tool. </b>
+
+</body>
+</html>
