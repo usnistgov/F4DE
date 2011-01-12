@@ -73,7 +73,7 @@ defined by a set of XSD files located in the '<code>$F4DE_BASE/lib/data</code>'
 directory.&nbsp; The specialized ViPER XSD file is <code>CLEAR.xsd</code> which includes
 <code>CLEAR-viper.xsd</code> and <code>CLEAR-viperdata.xsd</code>.
 <br>
-Details on the XML files content with a detailled list of tags and
+Details on the XML files content with a detailed list of tags and
 their possible values can be found in
 <a href="http://isl.ira.uka.de/clear07/downloads/Annotation_Guidelines_Version_6.2-1.pdf">Annotation Guidelines for Video Analysis and Content Extraction (VACE-II)</a>.
 <br>
@@ -83,7 +83,7 @@ their possible values can be found in
 <h1>Executable Script Synopses</h1>
 Two tool sets are available, each work on a specific evaluation task:
 <ol>
-  <li>For <b>Detection and Tracking</b> tasks:
+  <li>For <b>Object Detection and Tracking</b> tasks:
   <ul>
     <li><code>CLEARDTViperValidator</code>: a syntactic and semantic validator for
     ViPER-formatted CLEAR Detection and Tracking files.
@@ -99,15 +99,7 @@ Two tool sets are available, each work on a specific evaluation task:
   </ul>
 </ol>
 Running any of the afore mentioned program should bring up a usage
-entry detailling the tool's accepted options.<br>
-<br>
-In the examples presented in the following sections, <code>$DIST</code> is your path to the
-<i>F4DE</i> source directory.<br>
-Additionaly, although the <i>Evaluation Domain</i> and <i>Evauation
-Measure</i> are supported by the tool, here we only present examples
-for which an XML file is present in the distribution.
-
-
+entry detailing the tool's accepted options.<br>
 <span style="font-weight: bold;"></span><span style="font-weight: bold;"><br></span>
 <h1>Annotation File Validation</h1>
 
@@ -228,7 +220,11 @@ this is done adding to the command line: <code>--frameTol 15</code>
 output of a CLEAR system.&nbsp; This version of the script implements the
 full evaluation formalism to score a series of track instances,
 ignoring un-scored frames, and limiting the evaluated span of
-frames.&nbsp;
+frames. 
+<p>
+Additionally, although the <i>Evaluation Domain</i> and <i>Evauation
+Measure</i> are supported by the tool, here we only present examples
+for which an XML file is present in the distribution.
 
 <h2>Steps involved</h2>
 
@@ -357,7 +353,7 @@ and <b>MOTP</b> measurements.
 
 <i>F4DE</i> contains a suite of tools designed to overlay video with boxes, polygons, etc. on 
 a frame by frame basis. This set of tool is named <code>VidAT</code>. The primary specification of the drawed objects is 
-specified by a <i>Tracking log</i> file that is described in generated with 
+specified by a <i>Tracking log</i> file that is generated with 
 <code>CLEARDTScorer</code>.
 Please see the <code>$DIST/common/tools/VidAT/README</code> file considerations on tool
 requirements (such as <code>ffmpeg</code>) before using it.
@@ -382,6 +378,7 @@ decomposition. This <i>tracking log</i> can then be used with the <i>VidAT</i> t
 to obtain an annotated video with bouding boxes.
 <br><br>
 An example of the human readable content taken from this <i>tracking log</i> file:
+<dir>
 <pre>
 ***** Evaluated Frame: 45456
 ## Number of REF Objects: 5
@@ -400,17 +397,17 @@ An example of the human readable content taken from this <i>tracking log</i> fil
 -- MOTA frame summary : [NumberOfEvalGT: 5] [MissedDetect: 4] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0]
 -- MOTA global summary: [NumberOfEvalGT: 16] [MissedDetect: 13] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0] => [MOTA = 0.187500]
 </pre>
-specify that on evaluated frame #45456, there were 5 REF objects and 1
+specifies that on evaluated frame #45456, there were 5 REF objects and 1
 SYS object. 4 of those REF objects went unmapped (<i>MD</i>), and only
 1 was <i>Mapped</i> (SYS 2 and REF 2) and it was <i>previously
   matched</i> (tracking was not lost and no ID splitting or merging
 happened). The MOTA components for the current frame are presented on
 the <code>MOTA frame summary</code> line and the file MOTA (up to this
 frame) is presented on the <i>MOTA global summary</i> line.
-
+</dir>
 <br><br>
 <b>Please refer to the <i>EXAMPLE</i> section of
-the <code>VidAT</code> <code>README</code> file for a detailed example of use of
+the <code>VidAT</code> <code>README</code> for a detailed example of use of
 the tool. </b>
 
 </body>
