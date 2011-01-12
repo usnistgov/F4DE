@@ -347,38 +347,78 @@ Video: Data, Metrics, and Protocol</a>
 The scoring results will contains one result per <i>Video</i> file,
 and have computed values for the <b>SFDA</b>, <b>ATA</b>, <b>MODA</b>, <b>MODP</b>, <b>MOTA</b>
 and <b>MOTP</b> measurements.
+<br>
+Mapping and Metric computation can be influenced by command line option to modify some
+scoring parameters, such as:
+<ul>
+  <li><code>--frameTol</code> to alter the frame tolerance allowed for attributes to be outside of the object framespan,
+<li><code>--detthres</code>: set the threshold for spatial overlap
+  between reference and system objects when computing detection
+  measures
+  <li><code>--trkthres</code>: set the threshold for spatial overlap between reference and system objects when computing tracking measures
+  <li><code>--bin</code>: specify if the thresholding should be
+  <i>binary</i> or <i>regular</i>
+  <li><code>--MissCost</code>: set the Metric's Cost for a Miss
+  <li><code>--FACost</code>: set the Metric's Cost for a False Alarm
+  <li><code>--ISCost</code>: set the Metric's Cost for an ID Switch
+</ul>
+To see all possible modifiers and their default values, run:
+<code>CLEARDTScorer --help</code> 
 
+
+<h2>Scoring software example commands for Text Recognition</h2>
+
+The scoring for <i>Text Recognition</i> task is used in a way similar
+to the <i>Detection and Tracking</i> task's <code>--Domain</code> and
+<code>--Eval</code> but using the
+<code>CLEARTRScorer</code> tool.
+
+The scoring results will contains one result per <i>Video</i> file,
+and have computed values for the <b>ARPM</b> measurements.
+<br>
+Mapping and Metric computation can be influenced by command line option to modify some
+scoring parameters, such as:
+<ul>
+<li><code>--frameTol</code> to alter the frame tolerance allowed for attributes to be outside of the object framespan
+<li><code>--detthres</code>: set the threshold for spatial overlap between reference and system objects when computing detection measures
+<li><code>--spatialweight</code>: specify the spatial weight
+<li><code>--cerweight</code>: specify the Character Error Rate weight
+<li><code>--bin</code>: specify if the thresholding should be <i>binary</i>
+  or <i>regular</i>
+<li><code>--insDelCost</code>: specify the Insertion/Deletion cost
+<li><code>--SubCost</code>: specify the Substitution cost
+</ul>
+To see all possible modifiers and their default values, run:
+<code>CLEARTRScorer --help</code> 
 
 <h2>Vizualisation of results (only for Detection and Tracking tasks)</h2>
 
 <i>F4DE</i> contains a suite of tools designed to overlay video with boxes, polygons, etc. on 
-a frame by frame basis. This set of tool is named <code>VidAT</code>. The primary specification of the drawed objects is 
+a frame by frame basis. This set of tool is named
+<code>VidAT</code>. The primary specification of the objects to draw is 
 specified by a <i>Tracking log</i> file that is generated with 
 <code>CLEARDTScorer</code>.
 Please see the <code>$DIST/common/tools/VidAT/README</code> file considerations on tool
 requirements (such as <code>ffmpeg</code>) before using it.
 
-When using <i>CLEARDTScorer</i>, it is possible to request for the
-tool to generate a log file per <i>Video</i> is written, containing an
+When scoring a <i>Detection and Tracking</i> task using
+<i>CLEARDTScorer</i>, a human-readable log file per <i>Video</i> is written, containing an
 evaluated-frame per evaluated-frame decomposition of the tracking
-analysis. To do so, run the tool normally and add <code>--motaLogDir <i>directoryname</i></code> 
-to the command line to obtain an evaluated-frame per evaluated-frame
-analysis of the scoring components of the MOTA measurement.<br>
+analysis for MOTA computation can be generated using the <code>--motaLogDir <i>directoryname</i></code> 
+command line option.<br>
 <br>
 For example, for the <i>Meeting Room</i> / <i>Person</i> / <i>Area</i>
 example, instead of using:<br>
 <code>CLEARDTScorer --Domain MR --Eval Area $DIST/CLEAR07/test/common/MR_PDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_PDT/*.gtf</code><br>
-one would use:<br>
+use:<br>
 <code>CLEARDTScorer --Domain MR --Eval Area $DIST/CLEAR07/test/common/MR_PDT/*.rdf --gtf $DIST/CLEAR07/test/common/MR_PDT/*.gtf --motaLogDir .</code><br>
-and would obtain in the current directory a file
+This would create a file
 named <code>NIST_20020911-1033_C05_NONE.MPG.tracking_log</code> (the <i>Video
-  file</i> name was <code>NIST_20020911-1033_C05_NONE.MPG</code>) that is a
-human readable file that details on each evaluated-frame its
-decomposition. This <i>tracking log</i> can then be used with the <i>VidAT</i> tool
-to obtain an annotated video with bouding boxes.
+  file</i> name was <code>NIST_20020911-1033_C05_NONE.MPG</code>) in
+the current directory (<code>.</code>) containing the 
+human-readable tracking analysis of each evaluated-frame. 
 <br><br>
-An example of the human readable content taken from this <i>tracking log</i> file:
-<dir>
+An example of content taken from this <i>tracking log</i> file:
 <pre>
 ***** Evaluated Frame: 45456
 ## Number of REF Objects: 5
@@ -397,15 +437,16 @@ An example of the human readable content taken from this <i>tracking log</i> fil
 -- MOTA frame summary : [NumberOfEvalGT: 5] [MissedDetect: 4] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0]
 -- MOTA global summary: [NumberOfEvalGT: 16] [MissedDetect: 13] [FalseAlarm: 0] [IDSplit: 0] [IDMerge: 0] => [MOTA = 0.187500]
 </pre>
-specifies that on evaluated frame #45456, there were 5 REF objects and 1
-SYS object. 4 of those REF objects went unmapped (<i>MD</i>), and only
-1 was <i>Mapped</i> (SYS 2 and REF 2) and it was <i>previously
-  matched</i> (tracking was not lost and no ID splitting or merging
+specifies that on evaluated frame #45456, there were five REF objects and one
+SYS object. Four of those REF objects went unmapped (<i>MD</i>), and only
+one was <i>Mapped</i> (SYS 2 to REF 2) that was <i>previously
+  matched</i> (i.e. tracking was not lost and no ID splitting or merging
 happened). The MOTA components for the current frame are presented on
 the <code>MOTA frame summary</code> line and the file MOTA (up to this
 frame) is presented on the <i>MOTA global summary</i> line.
-</dir>
 <br><br>
+This <i>tracking log</i> can be used with the <i>VidAT</i> tool
+to obtain an annotated video with bouding boxes.
 <b>Please refer to the <i>EXAMPLE</i> section of
 the <code>VidAT</code> <code>README</code> for a detailed example of use of
 the tool. </b>
