@@ -109,9 +109,10 @@ my $writeback = -1;
 my $xmlbasefile = -1;
 my $evaldomain = undef;
 my $MemDump = undef;
+my $xtracheck = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   CD                  WX       fgh             vwx    # 
+# Used:   CD                  WX      efgh             vwx    # 
 
 my %opt;
 my $dbgftmp = "";
@@ -129,6 +130,7 @@ GetOptions
    'frameTol=i'      => \$frameTol,
    'write:s'         => \$writeback,
    'WriteMemDump:s'  => \$MemDump,
+   'extrachecks'     => \$xtracheck,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -256,7 +258,7 @@ sub load_file {
   my ($isgtf, $tmp) = @_;
 
   my ($retstatus, $object, $msg) = 
-    CLEARDTHelperFunctions::load_ViperFile($isgtf, $tmp, $evaldomain, $frameTol, $xmllint, $xsdpath);
+    CLEARDTHelperFunctions::load_ViperFile($isgtf, $tmp, $evaldomain, $frameTol, $xmllint, $xsdpath, undef, $xtracheck);
 
   if ($retstatus) { # OK return
     &valok($tmp, "validates");
@@ -277,7 +279,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--XMLbase [file]] [--xmllint location] [--CLEARxsd location] --Domain domain [--frameTol framenbr] [--gtf] [--write [directory]] [--WriteMemDump [mode]] viper_source_file.xml [viper_source_file.xml [...]]
+Usage: $0 [--help] [--version] [--XMLbase [file]] [--xmllint location] [--CLEARxsd location] --Domain domain [--frameTol framenbr] [--extrachecks] [--gtf] [--write [directory]] [--WriteMemDump [mode]] viper_source_file.xml [viper_source_file.xml [...]]
 
 Will perform a semantic validation of the Viper XML file(s) provided.
 
@@ -288,7 +290,8 @@ Will perform a semantic validation of the Viper XML file(s) provided.
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --CLEARxsd  Path where the XSD files can be found
   --Domain        Specify the domain of the source file. Possible values are: BN, MR, SV, UV (for "Broadcast News", "Meeting Room", "Surveillance", and "UAV")
-  --frameTol       The frame tolerance allowed for attributes to be outside of the object framespan (default value: $frameTol)
+  --frameTol      The frame tolerance allowed for attributes to be outside of the object framespan (default value: $frameTol)
+  --extrachecks   Will perform more complete check on the framespan contained within each object definition (only usable when reading XML files)
   --gtf           Specify that the file to validate is a Ground Truth File
   --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
   --WriteMemDump  Write a memory representation of validated ViPER Files that can be used by CLEAR tools. Also write a sequence MemDump. Two modes possible: $wmd (1st default)
