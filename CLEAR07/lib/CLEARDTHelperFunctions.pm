@@ -152,7 +152,7 @@ sub save_ScoringSequence_MemDump {
 ##########
 
 sub load_ViperFile {
-  my ($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode) = @_;
+  my ($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode, $xtracheck) = @_;
 
   my $err = MMisc::check_file_r($filename);
   return(0, undef, $err)
@@ -169,13 +169,13 @@ sub load_ViperFile {
     if ( ($header eq $VF_MemDump_FileHeader_cmp)
 	|| ($header eq $VF_MemDump_FileHeader_gz_cmp) );
   
-  return(&_load_XML_ViperFile($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode));
+  return(&_load_XML_ViperFile($isgtf, $filename, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode, $xtracheck));
 }
 
 #####
 
 sub _load_XML_ViperFile {
-  my ($isgtf, $tmp, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode) = @_;
+  my ($isgtf, $tmp, $evaldomain, $frameTol, $xmllint, $xsdpath, $spmode, $xtracheck) = @_;
 
   # Prepare the object
   my $object = new CLEARDTViperFile($evaldomain, $spmode);
@@ -202,7 +202,7 @@ sub _load_XML_ViperFile {
 
   # Validate
   return(0, undef, $object->get_errormsg())
-    if (! $object->validate());
+    if (! $object->validate($xtracheck));
 
   return(1, $object, "");
 }
