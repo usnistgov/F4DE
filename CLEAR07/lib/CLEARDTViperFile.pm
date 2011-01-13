@@ -852,7 +852,8 @@ sub is_validated {
 #####
 
 sub validate {
-  my $self = $_[0];
+  my ($self, $xtracheck) = $_[0];
+
 
   return(0) if ($self->error());
 
@@ -903,10 +904,56 @@ sub validate {
     return(0);
   }
 
+  if ($xtracheck) {
+    my $res = &_validate_frames(\%fdata);
+    if (! MMisc::is_blank($res)) {
+      $self->_set_errormsg($res);
+      return(0);
+    }
+  }
+
   $self->_set_fhash(%fdata);
   $self->{validated} = 1;
 
   return(1);
+}
+
+#####
+
+sub _validate_frames {
+  my ($rh) = @_;
+
+  my @pbl = ();
+  for (my $i = 0; $i < scalar @eval_objects; $i++) {
+    next if (! MMisc::safe_exists($rh, $eval_objects[$i]));
+
+    foreach my $id (keys %{$$rh{$eval_objects[$i]}}) {
+      next if (! MMisc::safe_exists($rh, $eval_objects[$i], $id, $array_objects_inline_attributes[2]));
+      my $gfs = $$rh{$eval_objects[$i]}{$id}{$array_objects_inline_attributes[2]};
+      my $gfs_fs = ViperFramespan->new();
+      return("Problem with " . $eval_objects[$i] . " # $id 's framespan ($gfs): " . $gfs_fs->get_errormsg)
+        if (! $gfs_fs->set_value($gfs));
+
+      my $gfs_fsv = $gfs_fs->get_value();
+
+      foreach my $key (keys %{$$rh{$eval_objects[$i]}{$id}}) {
+        next if ($key eq $array_objects_inline_attributes[2]);
+
+        my $tmpfs = join(" ", keys %{$$rh{$eval_objects[$i]}{$id}{$key}});
+        my $tmpfs_fs = ViperFramespan->new();
+        return("Problem with " . $eval_objects[$i] . " # $id 's $key framespan ($tmpfs_fs): " . $tmpfs_fs->get_errormsg)
+        if (! $tmpfs_fs->set_value($tmpfs));
+        
+        my $tmpfs_fsv = $tmpfs_fs->get_value();
+
+        # At this point, post cleanup the strings should be exactly the same
+        push @pbl, ("Problem with " . $eval_objects[$i] . " # $id 's $key, contained framepsans ($tmpfs_fsv) does not exactly match container's framespan ($gfs_fsv).  ##### ")
+          if ($tmpfs_fsv ne $gfs_fsv);
+      }
+    }
+  }
+
+  return(join("", @pbl));
 }
 
 ####################
