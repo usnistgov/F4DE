@@ -128,6 +128,8 @@ my $qins = 0;
 my $cont_md = 0;
 my $use_bigxml = 0;
 my $specfile = "";
+my $pc_check = 0;
+my %pc_check_h = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:  BC               ST VW    bcdef h        q s uvwx   #
@@ -587,6 +589,12 @@ sub check_name {
     . join(" ", @expected_sysid_beg) . "). "
     if (! grep(m%^$b$%, @expected_sysid_beg));
   
+  if ($b eq $expected_sysid_beg[0]) {
+    $err .= "<SYSID> ($lsysid) can only have one primary \'EXP-ID\'"
+      if (($pc_check) && (exists $pc_check_h{$site}));
+    $pc_check_h{$site}++;
+  }
+
   $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
     if ( ($lversion !~ m%^\d+$%) || ($lversion =~ m%^0%) || ($lversion > 19) );
   # More than 19 submissions would make anybody suspicious ;)
