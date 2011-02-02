@@ -1124,6 +1124,7 @@ sub writeMultiDetGraph
       my $closedPoint = $self->{pointTypes}->[ $d % scalar(@{ $self->{pointTypes} }) ]->[1];
       my $lineWidth = $self->{lineWidths}->[ $d % scalar(@{ $self->{lineWidths} }) ];
       my $color = $self->{colorsRGB}->[ $d % scalar(@{ $self->{colorsRGB} }) ];
+      my $nokey = "";
       my $thisPointSize = $self->{pointSize};
       
       my $lineTitle = $detset->getDETForID($d)->{LINETITLE};
@@ -1135,6 +1136,7 @@ sub writeMultiDetGraph
           $thisPointSize = $info->{pointSize} if (exists($info->{pointSize}));
           $lineWidth = $info->{lineWidth} if (exists($info->{lineWidth}));
           $color = $info->{color}         if (exists($info->{color}));
+          $nokey = $info->{nokey} if (exists($info->{nokey}));
           if (exists($info->{pointTypeSet})){
              if ($info->{pointTypeSet} eq "square")    { $openPoint = 4;  $closedPoint = 5; } 
              if ($info->{pointTypeSet} eq "circle")    { $openPoint = 6;  $closedPoint = 7; } 
@@ -1181,7 +1183,7 @@ sub writeMultiDetGraph
         push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol notitle with lines lc $color lw $lineWidth";
         $xcol = ($xScale eq "nd" ? "6" : "4");
         $ycol = ($yScale eq "nd" ? "5" : "3");
-        push @PLOTCOMS, "  '$troot.dat.2' using $xcol:$ycol title '$ltitle' with linespoints lc $color pt $closedPoint lw $lineWidth ps $thisPointSize";
+        push @PLOTCOMS, "  '$troot.dat.2' using $xcol:$ycol ${nokey}title '$ltitle' with linespoints lc $color pt $closedPoint lw $lineWidth ps $thisPointSize";
         my $bestlab = $self->_getOffAxisLabel($miss, $fa, $color, $closedPoint, $thisPointSize, 0); 
         push (@offAxisLabels, $bestlab) if ($bestlab ne "");
 
@@ -1189,7 +1191,7 @@ sub writeMultiDetGraph
           $xcol = ($xScale eq "nd" ? "11" : "9");
           $ycol = ($yScale eq "nd" ? "10" : "8");
   
-          push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $color pt $openPoint ps $thisPointSize";
+          push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol ${nokey}title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $color pt $openPoint ps $thisPointSize";
 
           my $lab = $self->_getOffAxisLabel($actMiss, $actFa, $color, $openPoint, $thisPointSize, 0); 
           push (@offAxisLabels, $lab) if ($lab ne "");
@@ -1406,7 +1408,7 @@ sub buildPNG
 {
   my ($fileRoot, $gnuplot, $hd, $aa) = @_;
   
-  my ($w, $h, $sp1, $sp2) = ($hd) ? (1920, 1920, 6, 6) : (800, 800, 12, 12);
+  my ($w, $h, $sp1, $sp2) = ($hd) ? (3000, 3000, 6, 6) : (800, 800, 12, 12);
   
 #  print "\n** [$fileRoot, $gnuplot, $hd, $aa | $w, $h, $sp1, $sp2]\n";
   if (MMisc::is_blank($gnuplot)) {
@@ -1432,7 +1434,7 @@ sub buildPNG
 
   ## Use this with gnuplot 3.X
   #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
-  #    my $newTermCommand = "set terminal png medium size 740,2048 crop xffffff x000000 x404040 x000000 xc0c0c0 x909090 x606060   x000000 xc0c0c0 x909090 x606060";
+  #    my $newTermCommand = "set terminal png medium size 10000,10000 crop xffffff x000000 x404040 x000000 xc0c0c0 x909090 x606060   x000000 xc0c0c0 x909090 x606060";
 
   my ($W, $H) = ($w + $aa, $h + $aa);
   my $sedv = $bvc;

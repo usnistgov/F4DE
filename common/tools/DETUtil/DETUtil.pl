@@ -111,10 +111,18 @@ my $HD = 0;
 my $AutoAdapt = 0;
 my $verbose = 0;
 
+# Variables for Brad's hacks.
+my $sortBy = undef;
+my $firstSetSize = 10;
+my $firstSet = "";
+my $secondSetSize = 10;
+my $secondSet = "";
+my $restSet = "";
+
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A    FGHI K   OPQRST V   Za cde ghi klm op rst v x   #
+# Used: ABCDEFGHIJKL  OPQRST V   Za cde ghi klm op rst v x   #
 
 GetOptions
   (
@@ -155,6 +163,13 @@ GetOptions
                                           print "$name version $VERSION\n"; exit(0); },
    'h|help'                      => \$help,
    'm|man'                       => \$man,
+
+   'B|sortBy=s'                  => \$sortBy,
+   'C|firstSet=s'                => \$firstSet,
+   'D|secondSet=s'               => \$secondSet,
+   'E|restSet=s'                 => \$restSet,
+   'J|firstSetSize=i'            => \$firstSetSize,
+   'L|secondSetSize=i'           => \$secondSetSize,
   );
 
 ## Docs
@@ -286,7 +301,7 @@ if (defined($scale))
 {
 	die "Error: Invalid Scale '$scale'. must match N:N:N:N"
 		if ($scale !~ /^(\d+|\d*.\d+):(\d+|\d*.\d+):(\d+|\d*.\d+):(\d+|\d*.\d+)$/);
-		
+
 	$options{Xmin} = $1;
 	$options{Xmax} = $2;
 	$options{Ymin} = $3;
@@ -319,6 +334,9 @@ sub attrValueStringToHT{
   \%ht;
 }
 
+my $firstSetCounter = 0;
+my $secondSetCounter = 0;
+
 foreach my $srlDef ( @ARGV )
 {
   ### The SRL files can now include various plotting attributes.  
@@ -327,10 +345,30 @@ foreach my $srlDef ( @ARGV )
   my $intRegex = '\d*';
   my $colorRegex = 'rgb "#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
 
-  my ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth) = split(/:/,$srlDef);
+  my ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey);
+
+  if ($firstSet ne "" && $firstSetCounter < $firstSetSize) {
+    print "first set: $firstSet\n";
+    ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$srlDef);
+    ($newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$firstSet);
+    $firstSetCounter++;
+  } elsif ($firstSet ne "" && $secondSet ne "" && $secondSetCounter < $secondSetSize) {
+    print "second set: $secondSet\n";
+    ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$srlDef);
+    ($newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$secondSet);
+    $secondSetCounter++;
+  } elsif ($firstSet ne "" && $restSet ne "") {
+    print "rest set: $restSet\n";
+    ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$srlDef);
+    ($newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$restSet);
+  } else {
+    ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$srlDef);
+  }
   
   vprint("[*] Loading SRL file ($srl)\n"); 
+
   my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
+
   my %lineAttr = ();
 	if (defined($newLabel)){
     ### then we will control the plot style
@@ -351,6 +389,10 @@ foreach my $srlDef ( @ARGV )
  	    die "Error: DET Line Attr control for LineWidth [6] /$lineWidth/ illegal." if ($lineWidth !~ /^($numRegex)$/);
  	    $lineAttr{"lineWidth"} = $lineWidth;
  	  }
+      if (defined ($nokey) && $nokey ne "") {
+        die "Error: DET Line Attr control for nokey [7] /$nokey/ illegal." if ($nokey !~ /^(true|false)$/);
+        $lineAttr{"nokey"} = ($nokey eq "true") ? "no" : "";
+      }
 	} 
 	
 	@listIsoratiolineCoef = $loadeddet->getMetric()->isoCostRatioCoeffForDETCurve()
@@ -368,6 +410,7 @@ foreach my $srlDef ( @ARGV )
 		                    \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
 		$det->{LAST_SERIALIZED_DET} = $loadeddet->{LAST_SERIALIZED_DET};
 
+		print "[Calling 'computePoint']\n";
 		$det->computePoints();
 	}
 	else
@@ -454,6 +497,10 @@ if($DrawIsometriclines)
 	$options{DrawIsometriclines} = 1;
 }
 
+if ($sortBy) {
+    $ds->sort($sortBy);
+}
+
 ## Reports
 my $temp = "";
 
@@ -536,7 +583,7 @@ The script merges multiple serialized DET Curves into a single PNG file and can 
 
 The specification of the serialized DET Curves can optionally include a re-specification of the title and plot characteristics on the DET curve.  The BNF of the specification is below.  All fields can be empty in which case the default value will be used for the attribute
 
-  SRL[:title[:pointSize[:pointType[:color[:lineWidth]]]]]
+  SRL[:title[:pointSize[:pointType[:color[:lineWidth[:displayKey]]]]]]
   
 =over
 
@@ -549,6 +596,8 @@ pointType -> Must be one of /(square|circle|triangle|utriangle|diamond)/.
 color -> The RGB color formatted as /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors.
 
 lineWidth -> A floating point number for the line width.
+
+displayKey -> A boolean value for whether or not the SRL will be displayed in the key. Must be formatted as /(true|false)/.
 
 =back
 
@@ -695,6 +744,30 @@ Dump the SRL files into a file that is readable.
 =item B<-D> B<--DumpAllTargScr> fileroot
 
 Dump all the file's Trials Target and Non Target scores into files starting with i<fileroot>.
+
+=item B<-B> B<--sortBy> actual | best
+
+Sorts the SRL files by the actual score or best score.
+
+=item B<-C> B<--firstSet> formatstr 
+
+Applies the given format string to the first set of SRLs. 
+
+=item B<-D> B<--secondSet> formatstr 
+
+Applies the given format string to the second set of SRLs. 
+
+=item B<-E> B<--restSet> formatstr 
+
+Applies the given format string to the rest of the SRLs. 
+
+=item B<-J> B<--firstSetSize> size 
+
+Sets the size of the first set of SRLs. 
+
+=item B<-L> B<--secondSetSize> size 
+
+Sets the size of the second set of SRLs. 
 
 =back
 

@@ -148,7 +148,49 @@ sub unitTest(){
 #  print $txt;
 
   print "OK\n";
+
+  sortTest($ds);
 } 
+
+sub sortTest {
+    my ($ds) = @_;
+    print " Sort det curves test ... ";
+
+    #####
+    # DET1 Actual: -0.192839415387444
+    # DET2 Actual: -2.33
+    # DET3 Actual: 0
+    $ds->sort('actual');
+
+    my @tmp = $ds->getDETForID(0)->getMetric()->getActualDecisionPerformance();
+    my $score1 = $tmp[0];
+
+    @tmp = $ds->getDETForID(1)->getMetric()->getActualDecisionPerformance();
+    my $score2 = $tmp[0];
+
+    @tmp = $ds->getDETForID(2)->getMetric()->getActualDecisionPerformance();
+    my $score3 = $tmp[0];
+
+    # Desired Results: -2.33, -0.192839415387444, 0
+    die " Error: Det curves are improperly sorted for actual cost" 
+        if ($score1 < $score2 || $score2 < $score3);
+
+    #####
+    # DET1 Best: 0.636363636363636
+    # DET2 Best: 0.4
+    # DET3 Best: 0
+    $ds->sort('best');
+
+    $score1 = $ds->getDETForID(0)->getBestCombComb();
+    $score2 = $ds->getDETForID(1)->getBestCombComb();
+    $score3 = $ds->getDETForID(2)->getBestCombComb();
+
+    # Desired Results: 0, 0.4, 0.636363636363636
+    die " Error: Det curves are improperly sorted for best cost" 
+        if ($score1 < $score2 || $score2 < $score3);
+
+    print "OK\n";
+}
 
 ##########
 
@@ -689,6 +731,50 @@ sub renderIsoRatioIntersection
 	}
 	
 	return $at->renderTxtTable(2);
+}
+
+sub sort {
+    my ($self, $actual) = @_;
+    my $maximize;
+
+    if (@{$self->{DETList}} > 0) {
+        die "Error: Sort can only be performed on actual or best scores." 
+        if ($actual !~ /^(actual|best)$/);
+ 
+        $actual = ($actual eq "actual") ? 1 : 0;    
+
+        #print "Presort\n";
+        #foreach my $det (@{$self->{DETList}}) {
+        #    my $score;
+        #    if ($actual) {
+        #        my @tmp = $det->{DET}->getMetric()->getActualDecisionPerformance();
+        #        $score = $tmp[0];
+        #    } else {
+        #        $score = $det->{DET}->getBestCombComb();
+        #    }
+        #    #print "Final Score: $score\n";
+        #}
+
+        if ($actual) {
+            my @a = sort DETCurve::compareActual @{$self->{DETList}};
+            $self->{DETList} = \@a;
+        } else {
+            my @a = sort DETCurve::compareBest @{$self->{DETList}};
+            $self->{DETList} = \@a;
+        }
+
+        #print "\nPostsort\n";
+        #foreach my $det (@{$self->{DETList}}) {
+        #    my $score;
+        #    if ($actual) {
+        #        my @tmp = $det->{DET}->getMetric()->getActualDecisionPerformance();
+        #        $score = $tmp[0];
+        #    } else {
+        #        $score = $det->{DET}->getBestCombComb();
+        #    }
+        #    #print "Final Score: $score\n";
+        #}
+    }
 }
 
 1;
