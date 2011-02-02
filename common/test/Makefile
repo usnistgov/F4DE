@@ -18,6 +18,7 @@ check:
 	@(cd ../lib; perl -I. -e 'use BipartiteMatch; BipartiteMatch::unit_test(1);')
 	@(cd ../lib; perl -I. -e 'use PropList; PropList::unit_test(1);')
 	@(cd ../lib; perl -I. -e 'use SimpleAutoTable; SimpleAutoTable::unitTest(1);')
+	@(cd ../lib; perl -I. -e 'use MMisc; MMisc::unitTest();')
 	@echo ""
 	@echo "***** All tests ran succesfully"
 

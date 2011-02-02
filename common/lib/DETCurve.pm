@@ -34,7 +34,7 @@ my(@tics) = (0.00001, 0.0001, 0.001, 0.004, .01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2
 
 sub new
   {
-    my ($class, $trials, $metric, $lineTitle, $listIsolineCoef, $gzipPROG) = @_;
+    my ($class, $trials, $metric, $lineTitle, $listIsolineCoef, $gzipPROG, $evalstruct) = @_;
         
     my $self =
       { 
@@ -55,6 +55,7 @@ sub new
        ISOLINE_COEFFICIENTS_INDEX => 0,         
        ISOPOINTS => {},
        GZIPPROG => (defined($gzipPROG) ? $gzipPROG : "gzip"),
+       EVALSTRUCT => (defined($evalstruct)) ? 1 : 0,
        POINT_COMPUTATION_ATTEMPTED => 0,
       };
         
@@ -64,7 +65,7 @@ sub new
         
     die "Error: Combined metric must have the output of combType() be 'maximizable|minimizable'" 
       if ($metric->combType() !~ /^(maximizable|minimizable)$/);
-    $self->{MAXIMIZEBESTC} = ($metric->combType() eq "maximizable");
+    $self->{MAXIMIZEBEST} = ($metric->combType() eq "maximizable");
                 
     return $self;
   }
@@ -75,10 +76,87 @@ sub unitTest
   {
     print "Test DETCurve\n";
     blockWeightedUnitTest();
+    srlLoadTest();
     #   unitTestMultiDet();
     # bigDETUnitTest();
     return 1;
   }
+
+sub srlLoadTest {
+    print " Testing srl loading\n";
+
+    use MetricNormLinearCostFunct;
+    ################################### A target point
+    ### Pmiss == 0.1  - 1 misses
+    ### PFa == 0.0075  - 3 FA  
+    ### Cost == 0.8425
+         
+    my $trial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+    $trial->addTrial("she", 0.03, "NO", 0);
+    $trial->addTrial("she", 0.04, "NO", 0);
+    $trial->addTrial("she", 0.05, "NO",  0);
+    $trial->addTrial("she", 0.10, "NO", 0);
+    $trial->addTrial("she", 0.15, "NO", 1);
+    foreach (1..391){
+        $trial->addTrial("she", 0.17, "NO", 0);
+    }
+    $trial->addTrial("she", 0.17, "NO", 0);
+    $trial->addTrial("she", 0.20, "NO", 0);
+    $trial->addTrial("she", 0.25, "YES", 1);
+    $trial->addTrial("she", 0.65, "YES", 1);
+    $trial->addTrial("she", 0.70, "YES", 0);
+    $trial->addTrial("she", 0.70, "YES", 0);
+    $trial->addTrial("she", 0.70, "YES", 0);
+    $trial->addTrial("she", 0.75, "YES", 1);
+    $trial->addTrial("she", 0.75, "YES", 1);
+    $trial->addTrial("she", 0.85, "YES", 1);
+    $trial->addTrial("she", 0.85, "YES", 1);
+    $trial->addTrial("she", 0.98, "YES", 1);
+    $trial->addTrial("she", 0.98, "YES", 1);
+    $trial->addTrial("she", 1.0, "YES", 1);
+
+    my $sortKeys = $Data::Dumper::Sortkeys;
+    $Data::Dumper::Sortkeys = 1;
+
+    my @isolinecoef = ( 31 );
+    my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial);
+    my $legacyDet = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef, 1);
+    $legacyDet->computePoints();
+    my $binaryDet = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef, undef);
+    $binaryDet->computePoints();
+
+    print "  Legacy srl load test ... ";
+    # Write the det to a file the old school way and read it back in.
+    my $tmp = "/tmp/serialize";
+    $legacyDet->serialize($tmp);
+    my $readLegacyDet = DETCurve::readFromFile("$tmp.gz", "gzip");
+
+    # Compare the dets.
+    die "  Error: Legacy dets don't match.\n" if (Dumper(\$legacyDet) ne Dumper(\$readLegacyDet));
+
+    # Delete the temp file.
+    if (unlink("$tmp.gz") != 1) {
+      print "  !!! Warning: Serialization tests passed but file removal of '$tmp.gz' failed\n";
+    }
+    print "OK\n";
+
+    print "  Binary srl load test ... ";
+    # Write the det to a file the old school way and read it back in.
+    my $tmp = "/tmp/serialize";
+    $binaryDet->serialize($tmp);
+    my $readBinaryDet = DETCurve::readFromFile("$tmp.gz", "gzip");
+
+    # Compare the dets.
+    die "  Error: Binary dets don't match.\n" if (Dumper(\$legacyDet) ne Dumper(\$readLegacyDet));
+
+    # Delete the temp file.
+    if (unlink("$tmp.gz") != 1) {
+      print "  !!! Warning: Serialization tests passed but file removal of '$tmp.gz' failed\n";
+    }
+    print "OK\n";
+
+    $Data::Dumper::Sortkeys = $sortKeys;
+}
 
 sub bigDETUnitTest {
   printf("Running a series of large DET Curves\n");
@@ -284,39 +362,8 @@ sub serialize
 
     print FILE Dumper($self);
     
-	##	
     my $origTerse = $Data::Dumper::Terse;
     $Data::Dumper::Terse = 1;
-    
-    # POINTS
-    print FILE "\$VAR1->{'POINTS'} = [";
-    
-    for(my $i=0; $i<scalar(@$p); $i++)
-	{
-		print FILE "," if($i>0);
-
-		print FILE "[";
-		
-		for(my $j=0; $j<scalar(@{$p->[$i]}); $j++)
-		{
-			print FILE "," if($j>0);
-			print FILE Dumper $p->[$i][$j];
-			
-			#if(defined($p->[$i][$j]))
-			#{
-			#	print FILE "'"."$p->[$i][$j]"."'";
-			#}
-			#else
-			#{
-			#	print FILE "undef";
-			#}
-		}
-		
-		print FILE "]";
-	}
-	
-	print FILE "];";
-	#
 	
 	# TRIALS
 	print FILE "\$VAR1->{'TRIALS'}{'trials'} = {";
@@ -358,15 +405,48 @@ sub serialize
     }
     
     print FILE "};";
-	#
 	
+    # POINTS
+    if ($self->{EVALSTRUCT}) {
+        print FILE "\$VAR1->{'POINTS'} = [";
+        
+        for(my $i=0; $i<scalar(@$p); $i++)
+    	{
+    		print FILE "," if($i>0);
+
+            print FILE "[";
+
+    		for(my $j=0; $j<scalar(@{$p->[$i]}); $j++)
+    		{
+    			print FILE "," if($j>0);
+    			print FILE Dumper $p->[$i][$j];
+    			
+    			#if(defined($p->[$i][$j]))
+    			#{
+    			#	print FILE "'"."$p->[$i][$j]"."'";
+    			#}
+    			#else
+    			#{
+    			#	print FILE "undef";
+    			#}
+    		}
+    		
+    		print FILE "]";
+    	}
+    	
+        print FILE "];";
+    } else {
+        print FILE "\n";
+        print FILE MMisc::marshal_matrix(@$p);
+    }
+
+    close FILE;
+    system("$self->{GZIPPROG} -9 -f $file > /dev/null");
+
     $Data::Dumper::Indent = $orig;
     $Data::Dumper::Purity = $origPurity;
     $Data::Dumper::Terse = $origTerse;
-        
-    close FILE;
-    system("$self->{GZIPPROG} -9 -f $file > /dev/null");
-    
+   
     $self->{'POINTS'} = $p;
     $self->{'TRIALS'}{'trials'} = $t;
   }
@@ -376,6 +456,11 @@ sub readFromFile
     my ($file, $gzipPROG) = @_;
     my $str = "";
     my $tmpFile = undef;
+
+    ### The following vars are used for the new-skool marshalling, sweet.
+    my $marshal_str = "";
+    my $binary = 0;
+    my @arr = undef;
  
     if ( ( $file =~ /.+\.gz$/ ) && ( -e $file ) && ( -f $file ) && ( -r $file ) ) {
       $str = MMisc::file_gunzip($file)
@@ -383,8 +468,22 @@ sub readFromFile
       $str = MMisc::slurp_file($file, "text")
     }
 
+    ### Check to see if this sucker is a binary srl.
+    if ($str =~ m/(begin\s+\d+\s+\d+.+)/s) {
+      $binary = 1;
+      $marshal_str = $1;
+      $str =~ s/begin\s+\d+\s+\d+.+//s;
+    }
+
     my $VAR1;
     eval $str;
+
+    ### If it's a binary we're going to have to parse it.
+    if ($binary) {
+      @arr = MMisc::unmarshal_matrix($marshal_str);
+      $VAR1->{"POINTS"} = \@arr;
+    }
+
     $VAR1;
   }
 
@@ -439,7 +538,7 @@ sub getTrials(){
   $self->{TRIALS};
 }
 
-sub getMetric(){
+sub getMetric{
   my ($self) = @_;
   $self->{METRIC};
 }
@@ -501,6 +600,8 @@ sub getSystemDecisionValue{
 sub getLineTitle{
   my $self = shift;
   
+  return("EMPTY") if (! exists $self->{LINETITLE});
+
   $self->{LINETITLE};
 }
 
@@ -508,6 +609,12 @@ sub setLineTitle{
   my ($self, $title) = @_;
   
   $self->{LINETITLE} = $title;
+}
+
+sub getMaximizable {
+    my ($self) = @_;
+
+    (defined($self->{MAXIMIZEBEST})) ? 1 : 0;
 }
 
 sub IntersectionIsolineParameter
@@ -598,11 +705,14 @@ sub computePoints
   {
     my $self = shift;
 
+
     ### This function implements the delayed point computation which only occurs IFF the data is requested
     if ($self->{POINT_COMPUTATION_ATTEMPTED}) {
       return;
     }
     $self->{POINT_COMPUTATION_ATTEMPTED} = 1;
+
+    #print "[*] Entered 'computePoints'\n";
         
     ## For faster computation;
     $self->{TRIALS}->sortTrials();
@@ -853,5 +963,32 @@ sub ppndf
         
     return ($retval);
   }
+
+sub compareActual ($$) {
+    my ($a, $b) = @_;
+    my ($a_score, $b_score, @tmp) = (0, 0, undef);
+
+    @tmp = $a->{DET}->getMetric()->getActualDecisionPerformance();
+    $a_score = $tmp[0];
+
+    @tmp = $b->{DET}->getMetric()->getActualDecisionPerformance();
+    $b_score = $tmp[0];
+
+    if ($a->{DET}->getMaximizable()) {
+        return $b_score <=> $a_score; 
+    } else {
+        return $a_score <=> $b_score; 
+    }
+}
+
+sub compareBest ($$) {
+    my ($a, $b) = @_;
+
+    if ($a->{DET}->getMaximizable()) {
+        return $b->{DET}->getBestCombComb() <=> $a->{DET}->getBestCombComb();
+    } else {
+        return $a->{DET}->getBestCombComb() <=> $b->{DET}->getBestCombComb();
+    }
+}
 
 1;

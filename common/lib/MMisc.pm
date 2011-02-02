@@ -1568,4 +1568,123 @@ sub filecopy {
 
 ############################################################
 
+sub marshal_matrix { 
+    # Parse arguments.
+    my (@arr) = @_;
+
+    # Initalize some variables including the header string.
+    my $cols = @{$arr[0]};
+    my $rows = @arr;
+    my $str = "begin $rows $cols\n";
+
+    # Generate the format string.
+    my $format = "";
+    for my $x (1 .. $cols) {
+        $format .= "d";
+    }
+
+    # Loop through each row and pack it into a string and 
+    # append it to the header string. 
+    foreach my $row (@arr) {
+        my $val = pack($format, @$row);
+        $str .= "$val";
+    }
+
+    # Return the packed string.
+    $str;
+}
+
+sub unmarshal_matrix {
+    # Parse arguments.
+    my ($str) = @_;
+
+    # Initialize output array
+    my @arr = ();
+
+    # Initialize the columns and rows
+    # Note: Rows are not used at the moment.
+    my $rows = undef;
+    my $cols = undef;
+    if ($str =~ /begin (\d+) (\d+)/) {
+        $rows = $1;
+        $cols = $2;
+    }
+
+    # Generate the format string. 
+    # Note: when the pattern contains an asterisk
+    #       perl will repeat the pattern until there
+    #       are no bytes left. The () just denote
+    #       what to repeat.
+    my $format = "(";
+    for my $x (1 .. $cols) {
+        $format .= "d";
+    }
+    $format .= ")*";
+
+    
+    # Where all the magic happens.
+    #   1) Strip the header off of the binary data.
+    #   2) Initialize the counter and the temporary row.
+    #   Loop:
+    #       1) Push the new value of x onto the temporary row.
+    #       2) If the temporary row is full, make a new 
+    #           reference to it and throw it into the array.
+    #       3) Increment our friendly counter.
+    $str =~ s/^begin \d+ \d+\n//;
+    my $ctr = 1;
+    my @tmp = ();
+    for my $x ( unpack($format, $str) ){
+        push @tmp, $x;
+        if ($ctr % $cols == 0) {
+            my @retmp = @tmp;
+            push @arr, \@retmp;
+            @tmp = ();
+        }
+        $ctr++;
+    }
+    
+    # Return the array. 
+    @arr;
+}
+############################################################
+
+sub unitTest {
+	print "Test MMisc\n";
+	marshalTest();
+	return 1;
+}
+
+sub marshalTest {
+	print " Testing marshaling and unmarshaling of matricies\n";
+	print "  Simple matrix test ... ";
+	my @testarr = ([1, 2, 3], [4, 5, 6], [7, 8, 9]);
+	my $teststr = marshal_matrix(@testarr);
+	my @resultarr = unmarshal_matrix($teststr);
+
+	my $cols = @{$resultarr[0]};
+	my $rows = @resultarr;
+	my $j = 0;
+	for (my $i=0; $i < $rows; $i++) {
+		for (my $j=0; $j < $cols; $j++) {
+			die "Error: unmarshaling the matrix." if ($testarr[$i]->[$j] != $resultarr[$i]->[$j]);
+		}
+	}
+	print "OK\n";
+
+	print "  Floating point matrix test ... ";
+	@testarr = ([0.1, 0.2, 0.3], [0.44, 0.55, 0.66], [0.777, 0.888, 0.999]);
+	$teststr = marshal_matrix(@testarr);
+	@resultarr = unmarshal_matrix($teststr);
+
+	$cols = @{$resultarr[0]};
+	$rows = @resultarr;
+	$j = 0;
+	for (my $i=0; $i < $rows; $i++) {
+		for (my $j=0; $j < $cols; $j++) {
+			die "Error: unmarshaling the matrix." if ($testarr[$i]->[$j] != $resultarr[$i]->[$j]);
+		}
+	}
+	print "OK\n";
+}
+
 1;

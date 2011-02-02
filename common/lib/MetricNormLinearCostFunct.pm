@@ -249,7 +249,7 @@ will be generated.
 
 =cut
 
-sub unitTest(){
+sub unitTest {
   my ($dir) = @_;
 
   print "Test MetricNormLinearCostFunct...".(defined($dir) ? " Dir=/$dir/" : "(Skipping DET Curve Generation)")."\n";
@@ -378,6 +378,11 @@ sub unitTest(){
                                    ] ) };
   
     print $ds->renderAsTxt("$dir/MNLCF.unitTest.det", 1, 1, $options, "");                                                                     
+    ################ HACKED UNIT TEST #################
+    # Check to see if the unmarshalling works.
+    $det1 = DETCurve::readFromFile("MNLCF.unitTest.det.Do_Nothing.srl.gz");    
+    ###################################################
+
   }
   printf "Done\n";
   ###############################################################################################
