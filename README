@@ -59,6 +59,13 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - TV10SED-SubmissionChecker - A tool designed to help confirm submission
       archives before transmitting them to NIST.
 
+  *  2011 TRECVID Surveillance Event Detection Evaluation. 
+    - Same tools as the 2008 TRECVID Surveillance Event Detection Evaluation
+      (TV08Scorer, TV08ViperValidator, TV08MergeHelper, 
+      TV08_BigXML_ValidatorHelper)
+    - TV11SED-SubmissionChecker - A tool designed to help confirm submission
+      archives before transmitting them to NIST. 
+
 
 In addition to evaluation tools, the package contains the following related tools:
 
@@ -203,6 +210,8 @@ AUTHORS
        Vasant Manohar
 
        Jonathan Fiscus <jonathan.fiscus@nist.gov>
+
+       Bradford N. Barr <bradford.barr@nist.gov>
 
        Jerome Ajot
 
