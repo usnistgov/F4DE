@@ -65,6 +65,7 @@ my @ok_csv_keys =
    "Duration", "Beginning", "End", "MiddlePoint", # 14,15,16,17
    # Xtra
    "Xtra", # 18
+   "FileDuration", # 19
   );
 my @required_csv_keys = @ok_csv_keys[0,1];
 my $csv_quote_char = '~';
@@ -2274,6 +2275,7 @@ sub get_Beginning_csv_key            { return $ok_csv_keys[15]; }
 sub get_End_csv_key                  { return $ok_csv_keys[16]; }
 sub get_MiddlePoint_csv_key          { return $ok_csv_keys[17]; }
 sub get_Xtra_csv_key                 { return $ok_csv_keys[18]; }
+sub get_FileDuration_csv_key         { return $ok_csv_keys[19]; }
 
 #####
 
@@ -2405,7 +2407,7 @@ sub _csv_set_XXX {
   } elsif ($task eq $self->get_Comment_csv_key()) {
     $self->clear_comment();
     return($self->addto_comment($value));
-  } elsif (grep(m%^$task$%, ($self->get_Duration_csv_key(), $self->get_Beginning_csv_key(), $self->get_End_csv_key(), $self->get_MiddlePoint_csv_key()))) {
+  } elsif (grep(m%^$task$%, ($self->get_Duration_csv_key(), $self->get_FileDuration_csv_key(), $self->get_Beginning_csv_key(), $self->get_End_csv_key(), $self->get_MiddlePoint_csv_key()))) {
     return(1); # discard those entirely
   } elsif ($task eq $self->get_Framespan_csv_key()) {
     return($self->_csvset_aframespan("frame", $value));
@@ -2630,6 +2632,8 @@ sub _csv_get_XXX {
     return($self->_csvget_ofi());
   } elsif ($key eq $self->get_Xtra_csv_key()) {
     return($self->_csvget_Xtra());
+  } elsif ($key eq $self->get_FileDuration_csv_key()) {
+    return($self->_csvget_afileduration("file"));
   }
 
   $self->_set_errormsg("Unknow request");
@@ -2654,6 +2658,28 @@ sub _csvget_Xtra {
 
   $txt = $self->_array2csvtxt(@array);
   return($txt);
+}
+
+#####
+
+sub _csvget_afileduration {
+  my ($self, $xxx) = @_;
+
+  my $fs_v = $self->get_fs_file();
+
+  return("") if ($self->{errorv});
+  if (! defined $fs_v) {
+    $self->_set_errormsg("Could not obtain framespan ($xxx)");
+    return("");
+  }
+
+  my $d = $fs_v->extent_duration_ts();
+  if ($fs_v->error()) {
+    $self->_set_errormsg("While getting $xxx's framespan's duration (" . $fs_v->get_errormsg() . "). ");
+    return("");
+  }
+
+  return($d);
 }
 
 #####
