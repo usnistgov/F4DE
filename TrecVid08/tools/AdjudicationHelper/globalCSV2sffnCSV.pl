@@ -103,6 +103,7 @@ my $roe = 1;
 my $dktrue = 0;
 my $verb = 0;
 my @qsl = ();
+my $qsfile = "";
 
 my %opt = ();
 GetOptions
@@ -116,6 +117,7 @@ GetOptions
    'Duplicate_keepTrue' => \$dktrue,
    'Verb'     => \$verb,
    'quick_select=s' => \@qsl,
+   'Quick_Selected=s' => \$qsfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -142,9 +144,11 @@ my $in = shift @ARGV;
 my $err = MMisc::check_file_r($in);
 MMisc::error_quit("Problem with input file ($in): $err")
   if (! MMisc::is_blank($err));
+my %qs_all = ();
 my %all = &load_globalCSV($in);
 #debug#MMisc::ok_quit(MMisc::writeTo("test", ".md", 1, 0, MMisc::get_sorted_MemDump(\%all)));
 &write_sffnCSV(%all);
+&write_qsCSV($qsfile, %qs_all) if (! MMisc::is_blank($qsfile));
 
 MMisc::ok_quit("Done\n");
 
@@ -244,11 +248,15 @@ sub load_globalCSV {
     }
 
     ## quick select
+    my %qs_keep = ();
     if (scalar @qsl > 0) {
       my $keep = 0;
       for (my $i = 0; (($i < scalar @qsl) && ($keep == 0)); $i++) {
         my $qs = $qsl[$i];
-        $keep = 1 if ($antl =~ m%$qs%);
+        if ($antl =~ m%$qs%) {
+          $keep = 1;
+          $qs_keep{$qs}++;
+        }
       }
       if (! $keep) {
         print "  -- quick select rejection\n";
@@ -281,6 +289,16 @@ sub load_globalCSV {
     
     $all{$mcttr}{$evt}{$ffs} = $igv;
 #debug#print  MMisc::get_sorted_MemDump(\%all), "\n";
+    ## Quick Select
+    for (my $qs_i = 0; $qs_i < scalar @qsl; $qs_i++) {
+      if (MMisc::safe_exists(\%qs_all, $mcttr, $evt, $ffs, $qsl[$qs_i])) {
+        delete $qs_all{$mcttr}{$evt}{$ffs}{$qsl[$qs_i]};
+      }
+    }
+    foreach my $qs_v (keys %qs_keep) {
+      $qs_all{$mcttr}{$evt}{$ffs}{$qs_v} = $igv;
+    }
+
     print "  -> Added\n";
   }
 
@@ -294,6 +312,58 @@ sub _die_mkdir {
 
   MMisc::error_quit("Could not create directory: $dir")
       if (! MMisc::make_dir($dir));
+}
+
+#####
+
+sub write_qsCSV {
+  my ($ofile, %tmp_all) = @_;
+
+  # Get CSV Handler
+  my $csvh = new CSVHelper();
+  MMisc::error_quit("Could not create valid CSVHelper")
+      if (! defined $csvh);
+
+  my @header = ("XMLFile", "EventType", "Framespan", "isGood");
+  push @header, @qsl;
+  my $fh = $csvh->array2csvline(@header);
+  MMisc::error_quit("Problem with CSV header: " . $csvh->get_errormsg())
+      if ($csvh->error());
+  $csvh->set_number_of_columns(scalar @header);
+
+  my $all_txt = "";
+  foreach my $xf (sort keys %tmp_all) {
+    foreach my $evt (sort keys %{$tmp_all{$xf}}) {
+      foreach my $fs (sort keys %{$tmp_all{$xf}{$evt}}) {
+        my $igv = undef;
+        my @tmpa = ();
+        for (my $qs_i = 0; $qs_i < scalar @qsl; $qs_i++) {
+          my $qs_v = 0;
+          if (MMisc::safe_exists(\%qs_all, $xf, $evt, $fs, $qsl[$qs_i])) {
+            $igv = $qs_all{$xf}{$evt}{$fs}{$qsl[$qs_i]}
+              if (! defined $igv);
+            $qs_v = 1;
+          }
+          push @tmpa, $qs_v;
+        }
+        my @line = ($xf, $evt, $fs, $igv, @tmpa);
+        
+        my $fl = $csvh->array2csvline(@line);
+        MMic::error_quit("Problem generating file line: " . $csvh->get_errormsg())
+            if ($csvh->error());
+
+        $all_txt .= "$fl\n";
+      }
+    }
+  }
+
+  if (MMisc::is_blank($all_txt)) {
+    print "[**] Nothing to write for \'$ofile\'\n";
+    return();
+  }
+    
+  MMisc::error_quit("Problem writing file ($ofile)")
+      if (! MMisc::writeTo($ofile, "", 1, 0, "$fh\n$all_txt"));
 }
 
 #####
