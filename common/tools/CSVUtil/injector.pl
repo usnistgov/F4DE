@@ -56,7 +56,23 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
-my $usage = "$0 infile.csv replacefile.csv outfile.csv\nReplace columns from input file by columns from replacefile (match is done on the first column in replacefile, and column names have to match)\n";
+my $usage = &set_usage();
+MMisc::error_quit($usage) if (scalar @ARGV == 0);
+
+# Default values for variables
+my $addCol = 0;
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
+# Used:                           a      h                    #
+
+my %opt = ();
+GetOptions
+  (
+   \%opt,
+   'help',
+   'addColumns' => \$addCol,
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+MMisc::ok_quit("\n$usage\n") if (($opt{'help'}) || (scalar @ARGV == 0));
 
 MMisc::error_quit($usage) 
   if (scalar @ARGV < 3);
@@ -82,6 +98,7 @@ my %seen_mk = ();
 my %unseen_mk = ();
 foreach my $mk (keys %replace) { $unseen_mk{$mk}++; }
 my %repl_count = ();
+my $inlc = 0;
 while (my $line = <IFILE>) {
   my @inh = $icsvh->csvline2array($line);
   MMisc::error_quit("Problem with input CSV : " . $icsvh->get_errormsg() . "\n[Line $sh : $line]")
@@ -89,14 +106,22 @@ while (my $line = <IFILE>) {
 
   if ($sh == 1) { # Header
     &get_colm(@inh);
-    $icsvh->set_number_of_columns(scalar @inh);
-    $ocsvh->set_number_of_columns(scalar @inh);
-    foreach my $k ($replace_mk, @repl_colname) {
-      MMisc::error_quit("Required key ($k) not found")
-          if (! exists $colm{$k});
+    $inlc = scalar @inh;
+    $icsvh->set_number_of_columns($inlc);
+    MMisc::error_quit("Required primary key ($replace_mk) not found")
+        if (! exists $colm{$replace_mk});
+    foreach my $k (@repl_colname) {
+      if ((! exists $colm{$k}) && ($addCol)) {
+        $colm{$k} = scalar @inh; # count before adding => get last count
+        push @inh, $k;
+        next;
+      }
+      MMisc::error_quit("Required key ($k) not found");
     }
+    $inlc = scalar @inh;
+    $ocsvh->set_number_of_columns($inlc);
   } else {
-    @inh = &fixline($replace_mk, @inh);
+    @inh = &fixline($replace_mk, $inlc, @inh);
   }
 
   my $otxt = $ocsvh->array2csvline(@inh);
@@ -134,9 +159,12 @@ sub get_colm {
 ##########
 
 sub fixline {
-  my ($rmk, @in) = @_;
+  my ($rmk, $inlc, @in) = @_;
 
   my $mk = $in[$colm{$rmk}];
+  
+  # extend columns to the expected output number
+  while (scalar @in < $inlc) { push @in, ""; }
 
   if (! exists $replace{$mk}) {
     $unseen_mk{$mk}++;
@@ -204,4 +232,24 @@ sub load_replace {
   close RIFILE;
 
   return($rmc, \@col_name, %repl);
+}
+
+####################
+
+sub set_usage{
+  my $tmp=<<EOF
+
+$0 [--help] [--addColumns] infile.csv replacefile.csv outfile.csv
+
+Replace columns from input file by columns from replacefile.
+Match is done on the first column in replacefile (conisdered a primary key), and replaced column names have to match.
+
+Where:
+  --help        This help message
+  --addColumns  If a column name in 'replacefile.csv' does not exist in 'infile.csv', it will be added to 'outfile.csv'
+
+EOF
+;
+
+  return($tmp);
 }
