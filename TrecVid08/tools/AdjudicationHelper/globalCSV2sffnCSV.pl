@@ -93,9 +93,6 @@ my @ok_dec = ("keep", "reject"); # order is important
 my $usage = &set_usage();
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
-# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:    D                         d fgh      o   s  v x   #
-
 # Default values for variables
 my $odir = "";
 my $select = "";
@@ -104,6 +101,10 @@ my $dktrue = 0;
 my $verb = 0;
 my @qsl = ();
 my $qsfile = "";
+my $qsa_more = 0;
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
+# Used: Q  D            Q            d fgh      o   s  v x   #
 
 my %opt = ();
 GetOptions
@@ -117,7 +118,8 @@ GetOptions
    'Duplicate_keepTrue' => \$dktrue,
    'Verb'     => \$verb,
    'quick_select=s' => \@qsl,
-   'Quick_Selected=s' => \$qsfile,
+   'QS_Analyze=s' => \$qsfile,
+   'AnalyzeMore' => \$qsa_more,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -249,16 +251,22 @@ sub load_globalCSV {
 
     ## quick select
     my %qs_keep = ();
+    my %qs_keep_more = ();
     if (scalar @qsl > 0) {
       my $keep = 0;
-      for (my $i = 0; (($i < scalar @qsl) && ($keep == 0)); $i++) {
+      for (my $i = 0; (($i < scalar @qsl) && ($keep <= 0)); $i++) {
         my $qs = $qsl[$i];
         if ($antl =~ m%$qs%) {
-          $keep = 1;
+          $keep = (MMisc::is_blank($qsfile)) ? 1 : -1;
           $qs_keep{$qs}++;
+          if ($qsa_more) {
+            MMisc::error_quit("Can not extract extra information for [$qs] from [$antl]")
+                if (! ($antl =~ m%$qs\(\d+\|([\d\:\s]+?)\)%));
+            $qs_keep_more{$qs} = $1;
+          }
         }
       }
-      if (! $keep) {
+      if ($keep == 0) {
         print "  -- quick select rejection\n";
         next;
       }
@@ -296,7 +304,7 @@ sub load_globalCSV {
       }
     }
     foreach my $qs_v (keys %qs_keep) {
-      $qs_all{$mcttr}{$evt}{$ffs}{$qs_v} = $igv;
+      $qs_all{$mcttr}{$evt}{$ffs}{$qs_v} = [$igv, ($qsa_more) ? $qs_keep_more{$qs_v}: ""];
     }
 
     print "  -> Added\n";
@@ -316,6 +324,24 @@ sub _die_mkdir {
 
 #####
 
+sub fs_begend {
+  my ($tfs) = @_;
+
+  return("", "") if (MMisc::is_blank($tfs));
+  
+  MMisc::error_quit("Could not extract beg from framespan ($tfs)")
+      if (! ($tfs =~ m%^(\d+)\:%));
+  my $beg = $1;
+  
+  MMisc::error_quit("Could not extract end from framespan ($tfs)")
+      if (! ($tfs =~ m%\:(\d+)$%));
+  my $end = $1;
+
+  return($beg, $end);
+}
+
+##
+
 sub write_qsCSV {
   my ($ofile, %tmp_all) = @_;
 
@@ -324,8 +350,14 @@ sub write_qsCSV {
   MMisc::error_quit("Could not create valid CSVHelper")
       if (! defined $csvh);
 
-  my @header = ("XMLFile", "EventType", "Framespan", "isGood");
-  push @header, @qsl;
+  my @header = ("XMLFile", "EventType", "Framespan");
+  push(@header, ("BegFrame", "EndFrame")) if ($qsa_more);
+  push @header, ("isGood");
+  for (my $i = 0; $i < scalar @qsl; $i++) {
+    my $n = $qsl[$i];
+    push @header, $n;
+    push(@header, ("$n Framespan", "$n BegFrame", "$n EndFrame")) if ($qsa_more);
+  }
   my $fh = $csvh->array2csvline(@header);
   MMisc::error_quit("Problem with CSV header: " . $csvh->get_errormsg())
       if ($csvh->error());
@@ -339,14 +371,18 @@ sub write_qsCSV {
         my @tmpa = ();
         for (my $qs_i = 0; $qs_i < scalar @qsl; $qs_i++) {
           my $qs_v = 0;
+          my $tfs = "";
           if (MMisc::safe_exists(\%qs_all, $xf, $evt, $fs, $qsl[$qs_i])) {
-            $igv = $qs_all{$xf}{$evt}{$fs}{$qsl[$qs_i]}
-              if (! defined $igv);
+            ($igv, $tfs) = @{$qs_all{$xf}{$evt}{$fs}{$qsl[$qs_i]}};
             $qs_v = 1;
           }
           push @tmpa, $qs_v;
+          push(@tmpa, ($tfs, &fs_begend($tfs))) if ($qsa_more);
         }
-        my @line = ($xf, $evt, $fs, $igv, @tmpa);
+
+        my @line = ($xf, $evt, $fs);
+        push(@line, (&fs_begend($fs))) if ($qsa_more);
+        push @line, ($igv, @tmpa);
         
         my $fl = $csvh->array2csvline(@line);
         MMic::error_quit("Problem generating file line: " . $csvh->get_errormsg())
