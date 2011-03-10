@@ -111,7 +111,8 @@ while (my $line = <IFILE>) {
     MMisc::error_quit("Required primary key ($replace_mk) not found")
         if (! exists $colm{$replace_mk});
     foreach my $k (@repl_colname) {
-      if ((! exists $colm{$k}) && ($addCol)) {
+      next if (exists $colm{$k});
+      if ($addCol) {
         $colm{$k} = scalar @inh; # count before adding => get last count
         push @inh, $k;
         next;
