@@ -26,6 +26,7 @@ sub eo2pe {
 my $have_everything = 1;
 my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
 my $warn_msg = "";
+sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
 foreach my $pn ("MMisc", "CSVHelper") {
