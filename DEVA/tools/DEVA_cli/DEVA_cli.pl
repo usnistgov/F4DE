@@ -58,7 +58,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("MMisc") {
+foreach my $pn ("MMisc", "MtSQLite") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -97,6 +97,10 @@ my ($sqlite_cfg_helper, $sqlite_tables_creator, $sqlite_load_csv,
 
 my $usage = &set_usage();
 
+my ($err, $sqlitecmd) = MtSQLite::get_sqlitecmd();
+MMisc::error_quit($err)
+  if (MMisc::is_blank($sqlitecmd));
+
 my $outdir = "";
 my $filtercmdfile = '';
 
@@ -110,7 +114,7 @@ my $wsysCFfile = '';
 my $wmdCFfile  = '';
 
 my $refcsv = "";
-my $syscsv = "";
+my @syscsvs = ();
 
 my $wrefDBfile = '';
 my $wsysDBfile = '';
@@ -132,9 +136,12 @@ my $blockavg = 0;
 my $GetTrialsDB = 0;
 my $quickConfig = undef;
 my $nullmode = 0;
+my $dividedSys = 0;
+my $JoinDSysFile = undef;
+my $profile = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: ABCD FG    LMN   RSTUVWXYZabc  fghi  lm o qrstuvwxyz  #
+# Used: ABCD FG  J LMN   RSTUVWXYZabcd fghi  lm opqrstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -145,7 +152,7 @@ GetOptions
    'man',
    'outdir=s' => \$outdir,
    'refcsv=s' => \$refcsv,
-   'syscsv=s' => \$syscsv,
+   'syscsv=s' => \@syscsvs,
    'configSkip' => sub { $doCfg = 0},
    'CreateDBSkip' => sub { $createDBs = 0},
    'filterSkip' => sub { $filter = 0},
@@ -176,6 +183,9 @@ GetOptions
    'GetTrialsDB'     => \$GetTrialsDB,
    'quickConfig:i'   => \$quickConfig,
    'NULLfields'      => \$nullmode,
+   'dividedSys'       => \$dividedSys,
+   'JoinDivSysCmds=s' => \$JoinDSysFile,
+#   'profile=s'       => \$profile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -224,11 +234,13 @@ my $refDBb    = "referenceDB";
 my $refDBbase = "$outdir/$refDBb";
 my $refDBcfg  = (MMisc::is_blank($wrefCFfile)) ? "$refDBbase.cfg" : $wrefCFfile;
 my $refDBfile = (MMisc::is_blank($wrefDBfile)) ? "$refDBbase.db" : $wrefDBfile;
+my $refTN     = "Reference";
 
 my $sysDBb    = "systemDB";
 my $sysDBbase = "$outdir/$sysDBb";
 my $sysDBcfg  = (MMisc::is_blank($wsysCFfile)) ? "$sysDBbase.cfg" : $wsysCFfile;
 my $sysDBfile = (MMisc::is_blank($wsysDBfile)) ? "$sysDBbase.db" : $wsysDBfile;
+my $sysTN     = "System";
 
 my $resDBb    = "filterDB";
 my $resDBbase = "$outdir/$resDBb";
@@ -239,6 +251,12 @@ my $finalDBbase = "$outdir/$finalDBb";
 my $finalDBfile = "$finalDBbase.db";
 
 if ($doCfg) {
+  ## Pre-check(s)
+  MMisc::error_quit("\'dividedSys\' selected but less than 2 \'syscsv' files provided on the command line, aborting")
+    if ((scalar @syscsvs > 0) && ($dividedSys) && (scalar @syscsvs < 2));
+  MMisc::error_quit("More than one \'syscsv\' provided on the command line, aborting")
+    if ((scalar @syscsvs > 0) && (! $dividedSys) && (scalar @syscsvs != 1));
+  
   print "***** Generating config files\n";
   my $done = 0;
 #  MMisc::warn_print("No CVS file list given, no metadataDB file will be generated")
@@ -247,19 +265,31 @@ if ($doCfg) {
   if (! MMisc::is_blank($refcsv)) {
     print "** REF\n";
     my $tmp = &do_cfgfile
-      ($refDBcfg, 0, "$logdir/CfgGen_${refDBb}.log", "-T Reference -p TrialID", $refcsv);
+      ($refDBcfg, 0, "$logdir/CfgGen_${refDBb}.log", "-T $refTN -p TrialID", $refcsv);
     &check_isin($tmp, '^newtable:\s+Reference$', '^column\*:\s+TrialID;', '^column:\s+Targ;TEXT$');
     $done++;
   }
   
-  if (! MMisc::is_blank($syscsv)) {
-    print "** SYS\n";
-    my $tmp = &do_cfgfile
-      ($sysDBcfg, 0, "$logdir/CfgGen_${sysDBb}.log", "-T System -p TrialID", $syscsv);
-    &check_isin($tmp, '^newtable: System$', '^column\*:\s+TrialID;', '^column:\s+Decision;TEXT$', '^column:\s+Score;');
-    $done++;
+  if (scalar @syscsvs > 0) {
+    if (! $dividedSys) {
+      my $syscsv = $syscsvs[0];
+      if (! MMisc::is_blank($syscsv)) {
+        print "** SYS\n";
+        my $tmp = &do_cfgfile
+          ($sysDBcfg, 0, "$logdir/CfgGen_${sysDBb}.log", "-T $sysTN -p TrialID", $syscsv);
+        &check_isin($tmp, '^newtable: System$', '^column\*:\s+TrialID;', '^column:\s+Decision;TEXT$', '^column:\s+Score;');
+        $done++;
+      }
+    } else { # dividedSys mode
+      print "** Divided SYS\n";
+      my $tmp = &do_cfgfile
+        ($sysDBcfg, 1, "$logdir/CfgGen_${sysDBb}.log", 
+         "-c ${sysDBbase}_columninfo.txt -t ${sysDBbase}_tableinfo.txt", 
+         @syscsvs);
+      $done++;
+    }
   }
-  
+      
   if (scalar @csvlist > 0) {
     print "** Metadata\n";
     my $tmp = &do_cfgfile
@@ -276,6 +306,12 @@ if ($createDBs) {
   print "***** Creating initial DataBases (if not already present)\n";
   my $done = 0;
   
+  if (MMisc::does_file_exists($mdDBcfg)) {
+    print "** Metadata\n";
+    &db_create($mdDBcfg, 1, $mdDBfile, "$logdir/DBgen_${mdDBb}.log");
+    $done++;
+  }
+
   if (MMisc::does_file_exists($refDBcfg)) {
     print "** REF\n";
     &db_create($refDBcfg, 0, $refDBfile, "$logdir/DBgen_${refDBb}.log");
@@ -286,14 +322,10 @@ if ($createDBs) {
     print "** SYS\n";
     &db_create($sysDBcfg, 0, $sysDBfile, "$logdir/DBgen_${sysDBb}.log");
     $done++;
+
+    &dividedSys_Merge($sysDBfile, $mdDBfile, $JoinDSysFile);
   }
   
-  if (MMisc::does_file_exists($mdDBcfg)) {
-    print "** Metadata\n";
-    &db_create($mdDBcfg, 1, $mdDBfile, "$logdir/DBgen_${mdDBb}.log");
-    $done++;
-  }
-
   print "-> $done DB file generated\n";
 }
 
@@ -510,6 +542,30 @@ sub run_tool {
   return($ok, $otxt, $so, $se, $rc, $of);
 }
 
+########################################
+
+sub dividedSys_Merge {
+  return() if (! $dividedSys);
+
+  my ($dbfile, $mddb, $jcmdf) = @_;
+
+  my $err = MMisc::check_file_r($jcmdf);
+  MMisc::error_quit("Problem with \'JoinDivSysCmds\' file ($jcmdf) : $err")
+    if (! MMisc::is_blank($err));
+
+  my $cmd = "";
+
+  $cmd .= "DROP TABLE IF EXISTS $sysTN;\n";
+  $cmd .= "CREATE TABLE $sysTN (TrialID TEXT PRIMARY KEY, Score REAL, Decision TEXT);\n";
+  $cmd .= "ATTACH DATABASE \"$mddb\" AS $mdDBb;\n" if (MMisc::does_file_exists($mddb));
+  
+  $cmd .= MMisc::slurp_file($jcmdf);
+
+  ## SQLite usage
+  my ($err, $log, $stdout, $stderr) = 
+    MtSQLite::sqliteCommands($sqlitecmd, $dbfile, $cmd);
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
+}
 
 ############################################################ Manual
 
