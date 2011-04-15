@@ -134,11 +134,10 @@ MMisc::ok_quit("## Done");
 
 ####################
 
-
-##########
-
 sub load_csv {
-  my ($nbr, $csvfile) = @_;
+  my ($nbr, $xcsvfile) = @_;
+
+  my ($csvfile, $utn) = split(m%\:%, $xcsvfile);
 
   my @ok_types = ("INT", "REAL", "TEXT"); # in order
   my $csvh = new CSVHelper();
@@ -199,7 +198,7 @@ sub load_csv {
 
   print "\#\# Automaticaly generated table definition \#$nbr (seen $linec lines of data)" . ($quickConfig ? " [quickConfig]" : "") . "\n";
 
-  my $tn = $forcedtn;
+  my $tn = (! MMisc::is_blank($forcedtn)) ? $forcedtn : $utn;
   if (MMisc::is_blank($tn)) {
     my ($err, $dir, $filen, $ext) = MMisc::split_dir_file_ext($csvfile);
     return("Problem with filename: $err") if (! MMisc::is_blank($err));
@@ -315,9 +314,9 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] [--columninfo [filename]] [--tableinfo [filename]] [--Tablename name] [--primaryKey key] [--quickConfig [linecount]] [--NULLfields] csvfile [csvfile [...]]
+$0 [--help | --version] [--columninfo [filename]] [--tableinfo [filename]] [--Tablename name] [--primaryKey key] [--quickConfig [linecount]] [--NULLfields] csvfile[:tablename] [csvfile[:tablename] [...]]
 
-Will provide a config file entry for given csvfile.
+Will provide a config file entry for given csvfile (if a tablename is provided, try to use that name for the table, does not override \'--Tablename\' option)
 NOTE: output will be printed to stdout.
 
 Where:
