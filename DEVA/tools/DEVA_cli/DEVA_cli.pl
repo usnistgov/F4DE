@@ -136,12 +136,11 @@ my $blockavg = 0;
 my $GetTrialsDB = 0;
 my $quickConfig = undef;
 my $nullmode = 0;
-my $dividedSys = 0;
-my $JoinDSysFile = undef;
+my $dividedSys = undef;
 my $profile = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: ABCD FG  J LMN   RSTUVWXYZabcd fghi  lm opqrstuvwxyz  #
+# Used: ABCD FG    LMN   RSTUVWXYZabcd fghi  lm opqrstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -183,8 +182,7 @@ GetOptions
    'GetTrialsDB'     => \$GetTrialsDB,
    'quickConfig:i'   => \$quickConfig,
    'NULLfields'      => \$nullmode,
-   'dividedSys'       => \$dividedSys,
-   'JoinDivSysCmds=s' => \$JoinDSysFile,
+   'dividedSys:s'       => \$dividedSys,
 #   'profile=s'       => \$profile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -253,9 +251,9 @@ my $finalDBfile = "$finalDBbase.db";
 if ($doCfg) {
   ## Pre-check(s)
   MMisc::error_quit("\'dividedSys\' selected but less than 2 \'syscsv' files provided on the command line, aborting")
-    if ((scalar @syscsvs > 0) && ($dividedSys) && (scalar @syscsvs < 2));
+    if ((scalar @syscsvs > 0) && (defined $dividedSys) && (scalar @syscsvs < 2));
   MMisc::error_quit("More than one \'syscsv\' provided on the command line, aborting")
-    if ((scalar @syscsvs > 0) && (! $dividedSys) && (scalar @syscsvs != 1));
+    if ((scalar @syscsvs > 0) && (! defined $dividedSys) && (scalar @syscsvs != 1));
   
   print "***** Generating config files\n";
   my $done = 0;
@@ -271,7 +269,7 @@ if ($doCfg) {
   }
   
   if (scalar @syscsvs > 0) {
-    if (! $dividedSys) {
+    if (! defined $dividedSys) {
       my $syscsv = $syscsvs[0];
       if (! MMisc::is_blank($syscsv)) {
         print "** SYS\n";
@@ -323,7 +321,7 @@ if ($createDBs) {
     &db_create($sysDBcfg, 0, $sysDBfile, "$logdir/DBgen_${sysDBb}.log");
     $done++;
 
-    &dividedSys_Merge($sysDBfile, $mdDBfile, $JoinDSysFile);
+    &dividedSys_Merge($sysDBfile, $mdDBfile);
   }
   
   print "-> $done DB file generated\n";
@@ -545,12 +543,12 @@ sub run_tool {
 ########################################
 
 sub dividedSys_Merge {
-  return() if (! $dividedSys);
+  my ($dbfile, $mddb) = @_;
 
-  my ($dbfile, $mddb, $jcmdf) = @_;
+  return() if (! defined $dividedSys);
 
-  my $err = MMisc::check_file_r($jcmdf);
-  MMisc::error_quit("Problem with \'JoinDivSysCmds\' file ($jcmdf) : $err")
+  my $err = MMisc::check_file_r($dividedSys);
+  MMisc::error_quit("Problem with \'dividedSys\' file ($dividedSys) : $err")
     if (! MMisc::is_blank($err));
 
   my $cmd = "";
@@ -559,7 +557,7 @@ sub dividedSys_Merge {
   $cmd .= "CREATE TABLE $sysTN (TrialID TEXT PRIMARY KEY, Score REAL, Decision TEXT);\n";
   $cmd .= "ATTACH DATABASE \"$mddb\" AS $mdDBb;\n" if (MMisc::does_file_exists($mddb));
   
-  $cmd .= MMisc::slurp_file($jcmdf);
+  $cmd .= MMisc::slurp_file($dividedSys);
 
   ## SQLite usage
   my ($err, $log, $stdout, $stderr) = 
