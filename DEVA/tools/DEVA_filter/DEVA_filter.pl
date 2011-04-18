@@ -103,11 +103,12 @@ my $BlockIDcolumn = "BlockID";
 #
 my $filtercmd = "";
 my $filtercmdfile = "";
+my $blockIDname = $BlockIDcolumn;
 
 my @addDBs = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:      F                    a    f h    m    rs  v      #
+# Used:  B   F                    a    f h    m    rs  v      #
 
 my $usage = &set_usage();
 
@@ -117,12 +118,13 @@ GetOptions
    \%opt,
    'help',
    'version',
-   'metadataDBfile=s'   => \$mdDBfile,
-   'referenceDBfile=s'  => \$refDBfile,
-   'systemDBfile=s'     => \$sysDBfile,
-   'filterCMD=s'        => \$filtercmd,
-   'FilterCMDfile=s'    => \$filtercmdfile,
+   'metadataDBfile=s'  => \$mdDBfile,
+   'referenceDBfile=s' => \$refDBfile,
+   'systemDBfile=s'    => \$sysDBfile,
+   'filterCMD=s'       => \$filtercmd,
+   'FilterCMDfile=s'   => \$filtercmdfile,
    'additionalDB=s'    => \@addDBs,
+   'BlockIDname=s'     => \$blockIDname,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -140,6 +142,9 @@ if (! MMisc::is_blank($filtercmdfile)) {
   MMisc::error_quit("Problem with \'FilterCMDfile\' file ($filtercmdfile): $err")
     if (! MMisc::is_blank($err));
 }
+
+MMisc::error_quit("The empty value is not authorized for \'BlockIDName\'")
+  if (MMisc::is_blank($blockIDname));
 
 my ($dbfile) = @ARGV;
 
@@ -233,7 +238,7 @@ sub load_stdout {
   foreach my $entry (@list) {
     # only authorized splits characters are '|', ';' or ','
     my @values = split(m%[\,\|\;]%, $entry);
-    push(@values, $BlockIDcolumn) if (scalar @values == 1);
+    push(@values, $blockIDname) if (scalar @values == 1);
     MMisc::error_quit("Found more than two values ($entry)")
       if (scalar @values > 2);
     my ($err) = MtSQLite::execute_sth($sth, @values);
@@ -298,12 +303,12 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file [--metadataDBfile file] [--additionalDB file:name [--additionalDB file:name [...]]] [--filterCMD \"SQLite COMMAND;\" | --FilterCMDfile SQLite_commands_file] resultsDBfile 
+$0 [--help | --version] --referenceDBfile file --systemDBfile file [--metadataDBfile file] [--additionalDB file:name [--additionalDB file:name [...]]] [--filterCMD \"SQLite COMMAND;\" | --FilterCMDfile SQLite_commands_file] [--BlockIDname name] resultsDBfile 
 
 Will apply provided filter to databases and try to generate the results database that only contain the TrialID and BlockID that will be given to the scoring interface
 
 NOTE: will create resultsDBfile
-NOTE: if BlockID is not provided, \"BlockID\" will be used
+NOTE: if the \"BlockID\" column is not \'SELECT\'-ed as part of the filter, the literal \"$BlockIDcolumn\" will be added (unless overriden by the \"BlockIDname\" option)
 
 Where:
   --help     This help message
@@ -314,6 +319,8 @@ Where:
   --additionalDB     Load an additional SQLite database 'file' as 'name'
   --filterCMD        Set of SQLite commands
   --FilterCMDfile    File containing set of SQLite commands
+  --BlockIDname      Specify the \"$BlockIDcolumn\" value used if the column is not \'SELECT\'-ed 
+
 
 EOF
 ;
