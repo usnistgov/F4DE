@@ -137,10 +137,11 @@ my $GetTrialsDB = 0;
 my $quickConfig = undef;
 my $nullmode = 0;
 my $dividedSys = undef;
+my $blockIDname = undef;
 my $profile = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: ABCD FG    LMN   RSTUVWXYZabcd fghi  lm opqrstuvwxyz  #
+# Used: ABCD FG    LMN P RSTUVWXYZabcd fghi  lm opqrstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -182,7 +183,8 @@ GetOptions
    'GetTrialsDB'     => \$GetTrialsDB,
    'quickConfig:i'   => \$quickConfig,
    'NULLfields'      => \$nullmode,
-   'dividedSys:s'       => \$dividedSys,
+   'dividedSys:s'    => \$dividedSys,
+   'PrintedBlockID=s' => \$blockIDname, 
 #   'profile=s'       => \$profile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -449,6 +451,10 @@ sub run_filter {
     MMisc::error_quit("Missing arguments for \'AdditionalFilterDB\', expected \'file:name\' (got: $v)")
       if ((MMisc::is_blank($name)) || (MMisc::is_blank($file)));
     $addcmd .= " -a $v";
+  }
+
+  if (defined $blockIDname) {
+    $addcmd .= " -B $blockIDname";
   }
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
@@ -817,7 +823,7 @@ An example of such select can be:
 
 which will "select the list of TrialID from the system table and the metadata table where both TrialID match". Note that this will use the default I<BlockID>.
 
-A more complex example given a I<color> column in the metadata database that will be used as the BlockID:
+A more complex example given a I<color> column in the metadata database that will be used as the I<BlockID>:
 
  SELECT system.TrialID,color FROM system INNER JOIN md WHERE system.TrialID=md.TrialID AND Decision>"1.2";
 
