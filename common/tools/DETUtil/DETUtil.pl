@@ -575,13 +575,13 @@ DETUtil.pl -- Merge DET Curves and statistical analyses.
 
 =head1 SYNOPSIS
 
-B<DETUtil.pl> [ OPTIONS ] -o F<PNG_FILE>  F<SERIALIZED_DET[:OPTs]> [F<SERIALIZED_DET>[:OPTs] [...]]
+B<DETUtil.pl> [ OPTIONS ] -o F<PNG_FILE>  F<SRL[:OPTs]> [F<SRL>[:OPTs] [...]]
 
 =head1 DESCRIPTION
 
-The script merges multiple serialized DET Curves into a single PNG file and can provide a sign test when comparing two (2) DET Curves.  
+The primary purpose of this script is to build a single PNG plot containing multiple DET curve line traces.  The inputs to the program includes options and multiple serialized DET Curves (SRL files).  The primary output is a PNG file.  Secondarily, the pragram can statistically compare two block-averaged DET curves (-c option).
 
-The specification of the serialized DET Curves can optionally include a re-specification of the title and plot characteristics on the DET curve.  The BNF of the specification is below.  All fields can be empty in which case the default value will be used for the attribute
+The SRL files are built when a DET curve is produced by a F4DE utility.  The files end with the extension .srl.gz and are located in the scoring output directory.  The SRL command line argument can optionally include a re-specification of the title and plot characteristics of the DET line trace for the SRL file.  The BNF of the specification is below.  All fields can be empty in which case the default value will be used for the attribute. If spaces are used in the title, make sure single or double quotes are used in your shell to make the SRL argument is a single one.
 
   SRL[:title[:pointSize[:pointType[:color[:lineWidth[:displayKey]]]]]]
   
