@@ -215,10 +215,10 @@ sub load_csv {
   print "csvfile: $csvfile\n";
 
   my %tncs = ();
-  my $pkc = 0;
+#  my $pkc = 0;
   my @pkcl = ();
   my @rc = ();
-  for (my $i = 0; $i < scalar @csvheader; $i++) { $pkc += $is_pkc{$csvheader[$i]}; }
+#  for (my $i = 0; $i < scalar @csvheader; $i++) { $pkc += $is_pkc{$csvheader[$i]}; }
   for (my $i = 0; $i < scalar @csvheader; $i++) {
     my $h = $csvheader[$i];
     my ($n) = MtSQLite::fix_entries($h);
@@ -235,7 +235,8 @@ sub load_csv {
     }
     print ";" . $ok_types[$type{$h}];
     print "\n";
-    push(@pkcl, $n) if (($pkc == 1) && ($is_pkc{$h}));
+#    push(@pkcl, $n) if (($pkc == 1) && ($is_pkc{$h}));
+    push(@pkcl, $n) if ($is_pkc{$h});
   }
 
   # renammed columns list
@@ -245,7 +246,7 @@ sub load_csv {
   }
 
   # SQLite can only have one primary key, so we let the user to make the choice
-  print "# Primary key candidate: " . join(" ", @pkcl) . "\n" 
+  print "# Primary key candidate(s): " . join(" ", @pkcl) . "\n" 
     if (scalar @pkcl > 0);
 
   print "\n";
