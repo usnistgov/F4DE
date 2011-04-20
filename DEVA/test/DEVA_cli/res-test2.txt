@@ -7,9 +7,9 @@
 ** Metadata
 -> 3 config file generated
 ***** Creating initial DataBases (if not already present)
+** Metadata
 ** REF
 ** SYS
-** Metadata
 -> 3 DB file generated
 ***** Running Filter
 ***** Scoring
