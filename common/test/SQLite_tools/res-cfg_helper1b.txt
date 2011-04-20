@@ -7,6 +7,7 @@ csvfile: ../common/sys.csv
 column: TrialID;INT
 column: Score;REAL
 column: Decision;TEXT
+# Primary key candidate(s): TrialID Score
 
 ## Done
 

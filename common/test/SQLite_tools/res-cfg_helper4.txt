@@ -6,7 +6,7 @@ newtable: ref
 csvfile: ../common/ref.csv
 column*: TrialID;INT
 column: Targ;TEXT
-# Primary key candidate: TrialID
+# Primary key candidate(s): TrialID
 
 ## Automaticaly generated table definition #2 (seen 50 lines of data)
 newtable: sys
@@ -14,6 +14,7 @@ csvfile: ../common/sys.csv
 column*: TrialID;INT
 column: Score;REAL
 column: Decision;TEXT
+# Primary key candidate(s): TrialID Score
 
 ## Automaticaly generated table definition #3 (seen 50 lines of data)
 newtable: md
@@ -22,7 +23,7 @@ column*: TrialID;INT
 column: name;TEXT
 column: year;INT
 column: color;TEXT
-# Primary key candidate: TrialID
+# Primary key candidate(s): TrialID
 
 ## Done
 

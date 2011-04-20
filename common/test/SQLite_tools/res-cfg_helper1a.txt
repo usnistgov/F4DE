@@ -6,7 +6,7 @@ newtable: ref
 csvfile: ../common/ref.csv
 column: TrialID;INT
 column: Targ;TEXT
-# Primary key candidate: TrialID
+# Primary key candidate(s): TrialID
 
 ## Done
 

@@ -8,7 +8,7 @@ column: TrialID;INT
 column: name;TEXT
 column: year;INT
 column: color;TEXT
-# Primary key candidate: TrialID
+# Primary key candidate(s): TrialID
 
 ## Automaticaly generated table definition #2 (seen 50 lines of data)
 # Warning: this is possibly a duplicate table, as a table named 'md' already exists, will use a different name
@@ -18,7 +18,7 @@ column: TrialID;INT
 column: name;TEXT
 column: year;INT
 column: color;TEXT
-# Primary key candidate: TrialID
+# Primary key candidate(s): TrialID
 
 ## Done
 

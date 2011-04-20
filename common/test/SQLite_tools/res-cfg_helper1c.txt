@@ -8,7 +8,7 @@ column: TrialID;INT
 column: name;TEXT
 column: year;INT
 column: color;TEXT
-# Primary key candidate: TrialID
+# Primary key candidate(s): TrialID
 
 ## Done
 
