@@ -803,6 +803,8 @@ The default iso-cost ratio coefficients (-R option) and iso-metric coefficients 
 
 The default font face can be changed by setting the environment variable GNUPLOT_DEFAULT_GDFONT to a ttf font like /Library/Fonts/Arial.
 
+In some cases, gnuplot will complain of missing fonts, if this happens, extend the GDFONTPATH environment variable with the directory location of the missing fonts.
+
 =head1 AUTHOR
 
  Jonathan Fiscus <jonathan.fiscus@nist.gov>
