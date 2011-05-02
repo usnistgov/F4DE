@@ -1,0 +1,7 @@
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_tables_creator.pl /tmp/SQLite_tools_tester-Temp_tables_creator4c/database.sql ../common/mix3.cfg -l -L ../../../common/tools/SQLite_tools/SQLite_load_csv.pl
+[[RETURN CODE]] 0
+[[STDOUT]]
+Done
+
+[[STDERR]]
+

@@ -1,10 +1,10 @@
-[[COMMANDLINE]] sqlite3 /tmp/SQLite_tools_tester-Temp_tables_creator3c/database.sql < add_checker_sql.cmd
+[[COMMANDLINE]] sqlite3 /tmp/SQLite_tools_tester-Temp_tables_creator4c/database.sql < add_checker_sql.cmd
 [[RETURN CODE]] 0
 [[STDOUT]]
 Metadata   Reference  System   
 CREATE TABLE Metadata (TrialID INT PRIMARY KEY, name TEXT, year INT, color TEXT);
-CREATE TABLE Reference (TrialID INT PRIMARY KEY, Targ TEXT);
-CREATE TABLE System (TrialID INT PRIMARY KEY, Score REAL, Decision TEXT);
+CREATE TABLE Reference (TrialID INT PRIMARY KEY, Targ TEXT CHECK(Targ=="y" OR Targ=="n"));
+CREATE TABLE System (TrialID INT PRIMARY KEY, Score REAL, Decision TEXT CHECK(Decision=="y" OR Decision=="n"));
 TrialID|name|year|color
 1|jack|1959|blue
 2|jack|1965|red

@@ -54,6 +54,10 @@ $testr += &do_simple_test($tn, "(Tablename)", "$tool -T SystemOut ../common/sys.
 $tn = "cfg_helper4";
 $testr += &do_simple_test($tn, "(primarykey)", "$tool -p TrialID ../common/ref.csv ../common/sys.csv ../common/md.csv", "res-$tn.txt");
 
+##
+$tn = "cfg_helper5";
+$testr += &do_simple_test($tn, "(ColumnConstraint + inlined table rename + quickConfig)", "$tool -p TrialID ../common/ref.csv:Reference ../common/sys.csv:System ../common/md.csv:Metadata -q 25 -C Targ:\'CHECK(Targ==\"y\" OR Targ==\"n\")\' -C Decision:\'CHECK(Decision==\"y\" OR Decision==\"n\")\'", "res-$tn.txt");
+
 #####
 
 my $elapsed = F4DE_TestCore::get_elapsedtime($t0);

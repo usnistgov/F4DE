@@ -2,6 +2,9 @@
 [[RETURN CODE]] 0
 [[STDOUT]]
 Metadata   Reference  System   
+CREATE TABLE Metadata (TrialID INT PRIMARY KEY, name TEXT, year INT, color TEXT);
+CREATE TABLE Reference (TrialID INT PRIMARY KEY, Targ TEXT);
+CREATE TABLE System (TrialID INT PRIMARY KEY, Score REAL, Decision TEXT);
 
 [[STDERR]]
 

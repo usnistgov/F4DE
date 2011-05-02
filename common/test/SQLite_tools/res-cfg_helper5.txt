@@ -1,0 +1,31 @@
+[[COMMANDLINE]] ../../tools/SQLite_tools/SQLite_cfg_helper.pl -p TrialID ../common/ref.csv:Reference ../common/sys.csv:System ../common/md.csv:Metadata -q 25 -C Targ:'CHECK(Targ=="y" OR Targ=="n")' -C Decision:'CHECK(Decision=="y" OR Decision=="n")'
+[[RETURN CODE]] 0
+[[STDOUT]]
+## Automaticaly generated table definition #1 (seen 25 lines of data) [quickConfig]
+newtable: Reference
+csvfile: ../common/ref.csv
+column*: TrialID;INT
+column: Targ;TEXT:CHECK(Targ=="y" OR Targ=="n")
+# Primary key candidate(s): TrialID
+
+## Automaticaly generated table definition #2 (seen 25 lines of data) [quickConfig]
+newtable: System
+csvfile: ../common/sys.csv
+column*: TrialID;INT
+column: Score;REAL
+column: Decision;TEXT:CHECK(Decision=="y" OR Decision=="n")
+# Primary key candidate(s): TrialID Score
+
+## Automaticaly generated table definition #3 (seen 25 lines of data) [quickConfig]
+newtable: Metadata
+csvfile: ../common/md.csv
+column*: TrialID;INT
+column: name;TEXT
+column: year;INT
+column: color;TEXT
+# Primary key candidate(s): TrialID
+
+## Done
+
+[[STDERR]]
+

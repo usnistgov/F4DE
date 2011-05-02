@@ -56,6 +56,18 @@ $testr += &do_less_simple_test($tn, "(prev + DB creation)", "../common/mix2.cfg"
 $tn = "tables_creator3c";
 $testr += &do_less_simple_test($tn, "(prev + load CSVs)", "../common/mix2.cfg -l -L ../../../common/tools/SQLite_tools/SQLite_load_csv.pl", "res-$tn.txt");
 
+##
+$tn = "tables_creator4a";
+$testr += &do_simple_test($tn, "(primary key with multiple tables and constraints)", "$tool - ../common/mix3.cfg", "res-$tn.txt");
+
+##
+$tn = "tables_creator4b";
+$testr += &do_less_simple_test($tn, "(prev + DB creation)", "../common/mix3.cfg", "res-$tn.txt");
+
+##
+$tn = "tables_creator4c";
+$testr += &do_less_simple_test($tn, "(prev + load CSVs)", "../common/mix3.cfg -l -L ../../../common/tools/SQLite_tools/SQLite_load_csv.pl", "res-$tn.txt");
+
 #####
 
 my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
