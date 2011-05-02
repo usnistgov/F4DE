@@ -94,9 +94,10 @@ my $forcedtn = "";
 my $primkey = "";
 my $quickConfig = undef;
 my $nullmode = 0;
+my @colConstr = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:              N     T        c    h       pq  t v      #
+# Used:   C          N     T        c    h       pq  t v      #
 
 my %opt = ();
 GetOptions
@@ -110,6 +111,7 @@ GetOptions
    'primaryKey=s' => \$primkey,
    'quickConfig:i'   => \$quickConfig,
    'NULLfields'      => \$nullmode,
+   'ColumnConstraint=s' => \@colConstr,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -120,6 +122,22 @@ MMisc::error_quit("When \'Tablename\' is used, only one CSV file can be specifie
   if ((! MMisc::is_blank($forcedtn)) && (scalar @ARGV > 1));
 
 $quickConfig = $qcd if ((defined $quickConfig) && ($quickConfig == 0));
+
+my %colC = ();
+foreach my $cc (@colConstr) {
+  my ($cn, $cstr) = ("", "");
+  if ($cc =~ s%^([^\:]+?)\:%%) {
+    $cn = $1;
+    $cstr = $cc;
+  } else {
+    MMisc::error_quit("Problem obtaining \'columnname:contraint\' from \'--ColumnConstraint\'");
+  }
+  MMisc::error_quit("Empty \'columnname\' for \'--ColumnConstraint\'")
+    if (MMisc::is_blank($cn));
+  MMisc::error_quit("Empty \'constraint\' for \'--ColumnConstraint\'")
+    if (MMisc::is_blank($cstr));
+  $colC{$cn} = $cstr;
+}
 
 my %tns = ();
 my %cnl = ();
@@ -234,6 +252,7 @@ sub load_csv {
       push @rc, [$h, $n];
     }
     print ";" . $ok_types[$type{$h}];
+    print(":" . $colC{$h}) if (exists $colC{$h});
     print "\n";
 #    push(@pkcl, $n) if (($pkc == 1) && ($is_pkc{$h}));
     push(@pkcl, $n) if ($is_pkc{$h});
@@ -315,7 +334,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] [--columninfo [filename]] [--tableinfo [filename]] [--Tablename name] [--primaryKey key] [--quickConfig [linecount]] [--NULLfields] csvfile[:tablename] [csvfile[:tablename] [...]]
+$0 [--help | --version] [--columninfo [filename]] [--tableinfo [filename]] [--Tablename name] [--primaryKey key] [--ColumnConstraint columnname:constraint [...]] [--quickConfig [linecount]] [--NULLfields] csvfile[:tablename] [csvfile[:tablename] [...]]
 
 Will provide a config file entry for given csvfile (if a tablename is provided, try to use that name for the table, does not override \'--Tablename\' option)
 NOTE: output will be printed to stdout.
@@ -327,6 +346,7 @@ Where:
   --tableinfo    Will print tables information to stdout (or filename is specfied)
   --Tablename    Will force the tablename to be specified name (can only load one csvfile when using this mode)
   --primarykey   Will treat any matching key as the table's primary key
+  --ColumnConstraint   Add the specified SQLite-proper constraint when creating the column. Note that this will apply to all columns found with the specified columnname.
   --quickConfig  Specify the number of lines to be read to decide on file's column content (wihtout quickConfig, process all lines) (when used without a value, read $qcd lines)
   --NULLfields   Empty fields will be skipped to not force type detection, and can therefore be later inserted as the NULL value (the default is to insert them as the empty value of the defined type, ie '' for TEXTs)
 EOF
