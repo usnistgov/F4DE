@@ -436,7 +436,61 @@ sub sth_finish {
   return("");
 }
 
-#####
+########################################
+
+sub confirm_table {
+  my ($dbfile, $rh, $tablename, @columns) = @_;
+  
+  my ($err, $dbh) = &get_dbh($dbfile);
+  return($err)
+    if (! MMisc::is_blank($err));
+
+  my $cmd = "SELECT " . join(",", @columns) . " FROM $tablename";
+  my ($err, $sth) = &get_command_sth($dbh, $cmd);
+  return("Problem doing a SELECT on \'$tablename\': $err")
+   if (! MMisc::is_blank($err));
+
+  my $err = &execute_sth($sth);
+  return("Problem processing SELECT on \'$tablename\': $err")
+    if (! MMisc::is_blank($err));
+
+  my $tidc = 1;
+  my $doit = 1;
+  while ($doit) {
+    my ($err, @data) = &sth_fetchrow_array($sth);
+    return("Problem obtaining row (#" . 1 + $tidc . "): $err")
+      if (! MMisc::is_blank($err));
+    if (scalar @data == 0) {
+      $doit = 0;
+      next;
+    }
+
+    if (defined $rh) {
+      my $mk = $data[0]; # _must be_ a primary key
+      for (my $i = 1; $i < scalar @columns; $i++) {
+        my $c = $columns[$i];
+        my $v = $data[$i];
+        return("In DB ($dbfile)'s table ($tablename), $mk / $c = $v was already found and its previous value was different : " . $$rh{$mk}{$c})
+            if ((MMisc::safe_exists($rh, $mk, $c)) && ($$rh{$mk}{$c} ne $v));
+        $$rh{$mk}{$c} = $v;
+#      print "# $mk / $c / $v\n";
+      }
+    }
+
+    $tidc++;
+  }
+
+  my $err = &sth_finish($sth);
+  return("Problem while completing statement: $err")
+    if (! MMisc::is_blank($err));
+
+  &release_dbh($dbh);
+
+  return("", $tidc);
+}
+
+########################################
+
 
 sub get_sth_error { return($_[0]->errstr()); }
 
