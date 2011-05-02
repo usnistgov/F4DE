@@ -212,8 +212,11 @@ sub load_info {
     if ($key =~ m%$ok_keys[2](\*?)%) { # columns
       my $mk = ($1 eq "*") ? 1 : 0;
 
-      my ($cn, $ucn, $type) = ("", "", "");
+      my ($cn, $ucn, $type, $cstr) = ("", "", "", "");
  
+      $cstr = MMisc::clean_begend_spaces($1)
+        if ($val =~ s%\:(.+)$%%);
+
      if ($val =~ s%\;(\w+)$%%) {
         $type = MMisc::clean_begend_spaces($1);
       } else {
@@ -226,7 +229,9 @@ sub load_info {
       my $cn = MMisc::clean_begend_spaces($val);
       $ucn = $cn if (MMisc::is_blank($ucn));
 
-      my $tccadd = "$ucn $type" . (($mk) ? " PRIMARY KEY" : "");
+      my $tccadd = "$ucn $type" 
+        . (($mk) ? " PRIMARY KEY" : "") 
+        . ((! MMisc::is_blank($cstr)) ? " $cstr" : "");
       $tcc .= ((MMisc::is_blank($tcc)) ? "" : ", ") . $tccadd;
 
       push @{$colinfo{$tn}}, $ucn;
