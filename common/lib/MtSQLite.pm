@@ -454,7 +454,7 @@ sub confirm_table {
   return("Problem processing SELECT on \'$tablename\': $err")
     if (! MMisc::is_blank($err));
 
-  my $tidc = 1;
+  my $tidc = 0;
   my $doit = 1;
   while ($doit) {
     my ($err, @data) = &sth_fetchrow_array($sth);
