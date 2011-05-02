@@ -181,7 +181,7 @@ MtSQLite::commandAdd(\$cmdlines, "DROP TABLE IF EXISTS $tablename");
 MtSQLite::commandAdd(\$cmdlines, "CREATE TABLE $tablename AS SELECT $TrialIDcolumn FROM $refDBname.reference WHERE $TrialIDcolumn=\"not a value found here\"");
 
 # Add a new column for the BlockID (string type)
-MtSQLite::commandAdd(\$cmdlines, "ALTER TABLE $tablename ADD COLUMN $BlockIDcolumn STRING;");
+MtSQLite::commandAdd(\$cmdlines, "ALTER TABLE $tablename ADD COLUMN $BlockIDcolumn STRING DEFAULT \'$blockIDname\';");
 
 $filtercmd = MMisc::slurp_file($filtercmdfile)
   if (! MMisc::is_blank($filtercmdfile));
@@ -194,9 +194,6 @@ MtSQLite::commandAdd(\$cmdlines, $filtercmd);
 my ($err, $log, $stdout, $stderr) = 
   MtSQLite::sqliteCommands($sqlitecmd, $dbfile, $cmdlines);
 MMisc::error_quit($err) if (! MMisc::is_blank($err));
-
-&load_stdout($stdout)
-  if (! MMisc::is_blank($stdout));
 
 &confirm_table($dbfile);
 
@@ -222,79 +219,16 @@ sub attach_dbfile_as {
 
 ##########
 
-sub load_stdout {
-  my ($so) = @_;
-
-  my @list = split(m%[\n\r]%, $so);
-  print "* Found " . scalar @list . "x rows on sqlite stdout, considering them as input to $tablename.$TrialIDcolumn (and $BlockIDcolumn) and trying to insert them\n";
-  my ($err, $dbh) = MtSQLite::get_dbh($dbfile);
-  MMisc::error_quit($err)
-    if (! MMisc::is_blank($err));
-  my $cmd = "INSERT OR ABORT INTO $tablename ( $TrialIDcolumn, $BlockIDcolumn ) VALUES ( ?, ? )";
-  my ($err, $sth) = MtSQLite::get_command_sth($dbh, $cmd);
-  MMisc::error_quit("Problem while inserting data into $tablename.$TrialIDcolumn: $err")
-    if (! MMisc::is_blank($err));
-  
-  foreach my $entry (@list) {
-    # only authorized splits characters are '|', ';' or ','
-    my @values = split(m%[\,\|\;]%, $entry);
-    push(@values, $blockIDname) if (scalar @values == 1);
-    MMisc::error_quit("Found more than two values ($entry)")
-      if (scalar @values > 2);
-    my ($err) = MtSQLite::execute_sth($sth, @values);
-    MMisc::error_quit("Problem during data insertion into $tablename.$TrialIDcolumn: $err")
-      if (! MMisc::is_blank($err));
-  }
-  my $err = MtSQLite::sth_finish($sth);
-  MMisc::error_quit("Problem while completing insertion of data into $tablename.$TrialIDcolumn: $err")
-    if (! MMisc::is_blank($err));
-
-  MtSQLite::release_dbh($dbh);
-}
-
-
-##########
-
 sub confirm_table {
   my ($dbfile) = @_;
   
-  my ($err, $dbh) = MtSQLite::get_dbh($dbfile);
-  MMisc::error_quit($err)
-    if (! MMisc::is_blank($err));
-
-  my $cmd = "SELECT $TrialIDcolumn,$BlockIDcolumn FROM $tablename";
-  my ($err, $sth) = MtSQLite::get_command_sth($dbh, $cmd);
-  MMisc::error_quit("Problem confirming \'$tablename\' . \'$TrialIDcolumn\' presence: $err")
-   if (! MMisc::is_blank($err));
-
-  my $err = MtSQLite::execute_sth($sth);
-  MMisc::error_quit("Problem confirming \'$tablename\' . \'$TrialIDcolumn\' presence: $err")
-    if (! MMisc::is_blank($err));
-  
-  # Read the matching records and print them out
-  my $tidc = 0;
-  my $doit = 1;
-  while ($doit) {
-    my ($err, @data) = MtSQLite::sth_fetchrow_array($sth);
-    MMisc::error_quit("Problem obtaining row: $err")
-      if (! MMisc::is_blank($err));
-    if (scalar @data == 0) {
-      $doit = 0;
-      next;
-    }
-    $tidc++;
-  }
-
-  my $err = MtSQLite::sth_finish($sth);
-  MMisc::error_quit("Problem while completing statement: $err")
-    if (! MMisc::is_blank($err));
+  my ($err, $tidc) = MtSQLite::confirm_table($dbfile, undef, $tablename, $TrialIDcolumn, $BlockIDcolumn);
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
   MMisc::error_quit("No entry in table, this DB will not be scorable")
     if ($tidc == 0);
 
   print "* Confirmed that Found $tablename.$TrialIDcolumn contains data (${tidc}x datum)\n";
-  
-  MtSQLite::release_dbh($dbh);
 }
 
 ########## 
@@ -305,10 +239,13 @@ $versionid
 
 $0 [--help | --version] --referenceDBfile file --systemDBfile file [--metadataDBfile file] [--additionalDB file:name [--additionalDB file:name [...]]] [--filterCMD \"SQLite COMMAND;\" | --FilterCMDfile SQLite_commands_file] [--BlockIDname name] resultsDBfile 
 
-Will apply provided filter to databases and try to generate the results database that only contain the TrialID and BlockID that will be given to the scoring interface
+Will apply provided "INSERT / SELECT" filter from provided databases and willgenerate in the results database a new table named \'$tablename\' that only contain the \'$TrialIDcolumn\' and \'$BlockIDcolumn\' that will be given to the scoring interface.
 
-NOTE: will create resultsDBfile
-NOTE: if the \"BlockID\" column is not \'SELECT\'-ed as part of the filter, the literal \"$BlockIDcolumn\" will be added (unless overriden by the \"BlockIDname\" option)
+Note that filter must be written in the form of a "INSERT ... SELECT" statement such as:
+
+INSERT OR ABORT INTO ResultsTable ( TrialID ) SELECT System.TrialID FROM System INNER JOIN Reference WHERE System.TrialID==Reference.TrialID;
+
+NOTE: if the \"BlockID\" column is not \'SELECT\'-ed as part of the filter, the literal \"$BlockIDcolumn\" will be added (unless overriden by the \"--BlockIDname\" option)
 
 Where:
   --help     This help message
