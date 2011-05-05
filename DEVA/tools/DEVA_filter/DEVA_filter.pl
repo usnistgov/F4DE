@@ -222,7 +222,7 @@ sub attach_dbfile_as {
 sub confirm_table {
   my ($dbfile) = @_;
   
-  my ($err, $tidc) = MtSQLite::confirm_table($dbfile, undef, $tablename, $TrialIDcolumn, $BlockIDcolumn);
+  my ($err, $tidc) = MtSQLite::select_helper__count_rows($dbfile, $tablename, "", $TrialIDcolumn, $BlockIDcolumn);
   MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
   MMisc::error_quit("No entry in table, this DB will not be scorable")
