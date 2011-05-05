@@ -155,8 +155,32 @@ MMisc::ok_quit("## Done");
 sub load_csv {
   my ($nbr, $xcsvfile) = @_;
 
-  my ($csvfile, $utn) = split(m%\:%, $xcsvfile);
+  my ($csvfile, $utn, $rest) = ("", "", "");
+  if ($xcsvfile =~ m%^([^\:^\%]+?)(\:[^\%]+?)?(\%.+)?$%) {
+    ($csvfile, $utn, $rest) = ($1, $2, $3);
+    $utn =~ s%^\:%%;
+    $rest =~ s%^\%%%;
+  } else {
+    MMisc::error_quit("Could not process \'csvfile[:tablename][\%columnname:constraint[...]]\' entry");
+  }
 
+  my %sp_colC = ();
+  my @cCstr = split(m%\%%, $rest);
+  foreach my $cc (@cCstr) {
+    my ($cn, $cstr) = ("", "");
+    if ($cc =~ s%^([^\:]+?)\:%%) {
+      $cn = $1;
+      $cstr = $cc;
+    } else {
+      MMisc::error_quit("While extracting \'csvfile[:tablename][\%columnname:constraint[...]]\' entry: problem obtaining \'columnname:contraint\'");
+    }
+    MMisc::error_quit("While extracting \'csvfile[:tablename][\%columnname:constraint[...]]\' entry: Empty \'columnname\'")
+      if (MMisc::is_blank($cn));
+    MMisc::error_quit("While extracting \'csvfile[:tablename][\%columnname:constraint[...]]\' entry: Empty \'constraint\'")
+      if (MMisc::is_blank($cstr));
+    $sp_colC{$cn} = $cstr;
+  }
+  
   my @ok_types = ("INT", "REAL", "TEXT"); # in order
   my $csvh = new CSVHelper();
   MMisc::error_quit("While processing file [$csvfile], problem with CSV handler: " . $csvh->get_errormsg())
@@ -252,7 +276,11 @@ sub load_csv {
       push @rc, [$h, $n];
     }
     print ";" . $ok_types[$type{$h}];
-    print(":" . $colC{$h}) if (exists $colC{$h});
+    if (exists $sp_colC{$h}) {
+      print ":" . $sp_colC{$h};
+    } else {
+      print(":" . $colC{$h}) if (exists $colC{$h});
+    }
     print "\n";
 #    push(@pkcl, $n) if (($pkc == 1) && ($is_pkc{$h}));
     push(@pkcl, $n) if ($is_pkc{$h});
@@ -334,9 +362,14 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] [--columninfo [filename]] [--tableinfo [filename]] [--Tablename name] [--primaryKey key] [--ColumnConstraint columnname:constraint [...]] [--quickConfig [linecount]] [--NULLfields] csvfile[:tablename] [csvfile[:tablename] [...]]
+$0 [--help | --version] [--columninfo [filename]] [--tableinfo [filename]] [--Tablename name] [--primaryKey key] [--ColumnConstraint columnname:constraint [...]] [--quickConfig [linecount]] [--NULLfields] csvfile[:tablename][\%columnname:constraint[...]] [csvfile[:tablename][...]] [...]]
 
-Will provide a config file entry for given csvfile (if a tablename is provided, try to use that name for the table, does not override \'--Tablename\' option)
+Will provide a config file entry for given csvfile.
+If a tablename is provided after the csvfile, try to use that name for the table (does not override \'--Tablename\' option).
+One or more 'columnname:constraint' can be used for a specific table (separated by a %) (does overide \'--ColumnConstraint\').
+
+WARNING: There can be only one \'PRIMARY KEY\' per table, and is selected using the \'--primaryKey\' option. If you want to insure that all data are unique in a column, use a \'UNIQUE\' constraint.
+
 NOTE: output will be printed to stdout.
 
 Where:
