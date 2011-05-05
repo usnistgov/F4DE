@@ -313,6 +313,7 @@ sub doOneCommand {
   return("Problem with DB handler: $err")
     if (! MMisc::is_blank($err));
 
+#  print "[$cmd]\n";
   $dbh->do($cmd);
   my $err = $dbh->errstr();
   return("Problem with command processing: $err")
@@ -438,14 +439,37 @@ sub sth_finish {
 
 ########################################
 
-sub confirm_table {
-  my ($dbfile, $rh, $tablename, @columns) = @_;
+sub select_helper__count_rows {
+  my ($dbfile, $tablename, $subselect, @columns) = @_;
+  return(&__select_helper($dbfile, undef, undef, $tablename, $subselect, @columns));
+}
+
+##
+
+sub select_helper__to_hash {
+  my ($dbfile, $rh, $tablename, $subselect, @columns) = @_;
+  return(&__select_helper($dbfile, $rh, undef, $tablename, $subselect, @columns));
+}
+
+##
+
+sub select_helper__to_array {
+  my ($dbfile, $ra, $tablename, $subselect, @columns) = @_;
+  return(&__select_helper($dbfile, undef, $ra, $tablename, $subselect, @columns));
+}
+
+##
+
+sub __select_helper {
+  my ($dbfile, $rh, $ra, $tablename, $subselect, @columns) = @_;
   
   my ($err, $dbh) = &get_dbh($dbfile);
   return($err)
     if (! MMisc::is_blank($err));
 
-  my $cmd = "SELECT " . join(",", @columns) . " FROM $tablename";
+  my $cmd = "SELECT " . join(",", @columns) . " FROM $tablename"
+    . ((! MMisc::is_blank($subselect)) ? " $subselect" : "");
+
   my ($err, $sth) = &get_command_sth($dbh, $cmd);
   return("Problem doing a SELECT on \'$tablename\': $err")
    if (! MMisc::is_blank($err));
@@ -475,6 +499,10 @@ sub confirm_table {
         $$rh{$mk}{$c} = $v;
 #      print "# $mk / $c / $v\n";
       }
+    }
+
+    if (defined $ra) {
+      push @$ra, [ @data ];
     }
 
     $tidc++;
