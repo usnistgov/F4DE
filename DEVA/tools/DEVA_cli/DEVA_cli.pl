@@ -95,6 +95,9 @@ my ($sqlite_cfg_helper, $sqlite_tables_creator, $sqlite_load_csv,
   ( "SQLite_cfg_helper", "SQLite_tables_creator", "SQLite_load_csv", 
     "DEVA_filter", "DEVA_sci");
 
+my $profiles_path = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
+my %ok_profiles = &get_profiles_list($profiles_path, "DEVAcli_profile-", ".perl");
+
 my $usage = &set_usage();
 
 my ($err, $sqlitecmd) = MtSQLite::get_sqlitecmd();
@@ -185,7 +188,7 @@ GetOptions
    'NULLfields'      => \$nullmode,
    'dividedSys:s'    => \$dividedSys,
    'PrintedBlockID=s' => \$blockIDname, 
-#   'profile=s'       => \$profile,
+   'profile=s'       => \$profile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -194,6 +197,32 @@ if ($opt{'man'}) {
   MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
   MMisc::ok_quit($o);
 }
+
+my @csvlist = @ARGV;
+
+# new variables used for special checks
+my @Cfg_errorquit_sys_checks = ();
+my @Cfg_warn_sys_checks = ();
+my @Cfg_errorquit_divsys_checks = ();
+my @Cfg_warn_divsys_checks = ();
+# load profiles and run its internal variables checks
+if (defined $profile) {
+  MMisc::error_quit("A \'profile\' was selected when no profile are available, aborting")
+    if (scalar(keys %ok_profiles) == 0);
+  MMisc::error_quit("Unknown profile name ($profile), known name: " . join(" ", sort(keys %ok_profiles)))
+    if (! exists $ok_profiles{$profile});
+
+  my $specfile = $ok_profiles{$profile};
+  my $err = MMisc::check_file_r($specfile);
+  MMisc::error_quit("Problem with \'profile\' specfile ($specfile) : $err")
+    if (! MMisc::is_blank($err));
+  my $tmpstr = MMisc::slurp_file($specfile);
+  MMisc::error_quit("Problem loading \'profile\' specfile ($specfile)")
+    if (! defined $tmpstr);
+# the 'use strict' insure that variables set in the specfile must be already defined (otherwise their scope would not got beyond this 'if' statement)
+  eval $tmpstr; 
+}
+## run the regular options check now
 
 if ($listparams) {
   MMisc::error_quit("Specified \'metric\' does not seem to be using a valid name ($usedmetric), should start with \"Metric\"")
@@ -214,8 +243,6 @@ MMisc::error_quit("Invalid value for \'usedXscale\' ($xscale) (possible values: 
   if ((defined $xscale) && (! grep(m%^$xscale$%, @ok_scales)));
 MMisc::error_quit("Invalid value for \'UsedYscale\' ($yscale) (possible values: " . join(", ", @ok_scales) . ")")
   if ((defined $yscale) && (! grep(m%^$yscale$%, @ok_scales)));
-
-my @csvlist = @ARGV;
 
 my $err = MMisc::check_dir_w($outdir);
 MMisc::error_quit("Problem with output directory ($outdir): $err\n$usage\n")
@@ -265,8 +292,13 @@ if ($doCfg) {
   if (! MMisc::is_blank($refcsv)) {
     print "** REF\n";
     my $tmp = &do_cfgfile
-      ($refDBcfg, 0, "$logdir/CfgGen_${refDBb}.log", "-T $refTN -p TrialID", $refcsv);
-    &check_isin($tmp, '^newtable:\s+Reference$', '^column\*:\s+TrialID;', '^column:\s+Targ;TEXT$');
+      ($refDBcfg, 0, "$logdir/CfgGen_${refDBb}.log", "-T $refTN -p TrialID -C Targ:\'CHECK(Targ==\"y\" OR Targ==\"n\")\'", $refcsv);
+    &check_isin(
+        $tmp, 1, "During Reference CSV configuration generation", 
+        '^newtable:\s+Reference$', "Issue with table name (expected \'Reference\')",
+        '^column\*:\s+TrialID;', "Problem with \'TrialID\' column (primary key)",
+        '^column:\s+Targ;TEXT', "Problem with \'Targ\' column (expected \'y\' or \'n\' values)",
+      );
     $done++;
   }
   
@@ -276,8 +308,19 @@ if ($doCfg) {
       if (! MMisc::is_blank($syscsv)) {
         print "** SYS\n";
         my $tmp = &do_cfgfile
-          ($sysDBcfg, 0, "$logdir/CfgGen_${sysDBb}.log", "-T $sysTN -p TrialID", $syscsv);
-        &check_isin($tmp, '^newtable: System$', '^column\*:\s+TrialID;', '^column:\s+Decision;TEXT$', '^column:\s+Score;');
+          ($sysDBcfg, 0, 
+           "$logdir/CfgGen_${sysDBb}.log", "-T $sysTN -p TrialID -C Decision:\'CHECK(Decision==\"y\" OR Decision==\"n\")\'", $syscsv);
+        &check_isin(
+            $tmp, 1, "During System CSV configuration generation",
+            '^newtable: System$', "Issue with table name (expected \'System\')",
+            '^column\*:\s+TrialID;', "Problem with \'TrialID\' column (primary key)",
+            '^column:\s+Decision;TEXT', "Problem with \'Decision\' column (expected \'y\' or \'n\' values)",
+            '^column:\s+Score;', "Problem with \'Score\' column",
+          );
+        &check_isin($tmp, 1, @Cfg_errorquit_sys_checks)
+          if (scalar @Cfg_errorquit_sys_checks > 0);
+        &check_isin($tmp, 0, @Cfg_warn_sys_checks)
+          if (scalar @Cfg_warn_sys_checks > 0);
         $done++;
       }
     } else { # dividedSys mode
@@ -286,6 +329,10 @@ if ($doCfg) {
         ($sysDBcfg, 1, "$logdir/CfgGen_${sysDBb}.log", 
          "-c ${sysDBbase}_columninfo.txt -t ${sysDBbase}_tableinfo.txt", 
          @syscsvs);
+      &check_isin($tmp, 1, @Cfg_errorquit_divsys_checks)
+        if (scalar @Cfg_errorquit_divsys_checks > 0);
+      &check_isin($tmp, 0, @Cfg_warn_divsys_checks)
+        if (scalar @Cfg_warn_divsys_checks > 0);
       $done++;
     }
   }
@@ -321,9 +368,9 @@ if ($createDBs) {
   if (MMisc::does_file_exists($sysDBcfg)) {
     print "** SYS\n";
     &db_create($sysDBcfg, 0, $sysDBfile, "$logdir/DBgen_${sysDBb}.log");
-    $done++;
-
     &dividedSys_Merge($sysDBfile, $mdDBfile);
+    
+    $done++;
   }
   
   print "-> $done DB file generated\n";
@@ -500,12 +547,21 @@ sub run_scorer {
 ##########
 
 sub check_isin {
-  my ($txt, @entries) = @_;
+  my ($txt, $qoe, $be, @entries) = @_;
+  # txt: text to parse
+  # qoe: "quit on error"
+  # be: base error
+  # @entries => always in pair : regexp / errortext
 
-  for (my $i = 0; $i < scalar @entries; $i++) {
-    my $v = $entries[$i];
-    MMisc::error_quit("Could not find expected entry [$v]")
-      if (! ($txt =~ m%$v%m));
+  while (scalar @entries > 0) {
+    my $r = shift @entries;
+    my $e = shift @entries;
+
+    if (! ($txt =~ m%$r%m)) {
+      my $et = "$be : $e (Could not find expected regular expression [$r])";
+      MMisc::error_quit($et) if ($qoe);
+      MMisc::warn_print($et);
+    }
   }
 }
 
@@ -548,6 +604,17 @@ sub run_tool {
 
 ########################################
 
+sub __runDB_cmd {
+  my ($dbfile, $cmd) = @_;
+  
+## SQLite usage
+  my ($err, $log, $stdout, $stderr) = 
+    MtSQLite::sqliteCommands($sqlitecmd, $dbfile, $cmd);
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
+}
+
+#####
+
 sub dividedSys_Merge {
   my ($dbfile, $mddb) = @_;
 
@@ -560,15 +627,36 @@ sub dividedSys_Merge {
   my $cmd = "";
 
   $cmd .= "DROP TABLE IF EXISTS $sysTN;\n";
-  $cmd .= "CREATE TABLE $sysTN (TrialID TEXT PRIMARY KEY, Score REAL, Decision TEXT);\n";
+  $cmd .= "CREATE TABLE $sysTN (TrialID TEXT PRIMARY KEY, Score REAL, Decision TEXT CHECK(Decision==\"y\" OR Decision==\"n\"));\n";
   $cmd .= "ATTACH DATABASE \"$mddb\" AS $mdDBb;\n" if (MMisc::does_file_exists($mddb));
   
   $cmd .= MMisc::slurp_file($dividedSys);
 
-  ## SQLite usage
-  my ($err, $log, $stdout, $stderr) = 
-    MtSQLite::sqliteCommands($sqlitecmd, $dbfile, $cmd);
-  MMisc::error_quit($err) if (! MMisc::is_blank($err));
+  &__runDB_cmd($dbfile, $cmd);
+}
+
+##########
+
+sub get_profiles_list {
+  my ($dir, $beg, $end) = @_;
+
+  my %ok_list = ();
+  opendir DIR, "$dir"
+    or return(%ok_list);
+  my @fl = grep(m%^${beg}.+${end}$%, grep(! m%^\.\.?$%, readdir(DIR)));
+  chomp @fl;
+  closedir DIR;
+
+  return(%ok_list) if (scalar @fl == 0);
+
+  foreach my $f (@fl) {
+    my $fp = "$dir/$f";
+    $f =~ s%^$beg%%;
+    $f =~ s%$end$%%;
+    $ok_list{$f} = $fp;
+  }
+
+  return(%ok_list);
 }
 
 ############################################################ Manual
@@ -1174,9 +1262,18 @@ The script will work with the following tools (lookup their help page for more d
 
 =item B<DEVA_filter>
 
-=item B<DEVA_sci>
+=item B<DEVA_sci> (and B<DETUtil>)
 
 =back
+
+=head1 GNUPLOT FONT NOTE
+
+It is posible that during DET curve generations, there is a warning message from gnuplot (check the I<outdir>S</_logs/scoreDB.log> file) and plots font might look unscaled to the picture size, this is likely due to gnuplot being unable to find expected fonts (such as S<Arial.ttf>).
+If this happens, it is recommended to extend one's S<GDFONTPATH> with the location on your system of needed fonts.
+
+=head1 NFS NOTE
+
+When running S<DEVA_cli> on an NFS located database file (some files generated in the S<--outdir> for example), performance loss might happen, this is due to the I<journal> file for SQLite that is stored to the same directory as the original database file and write all the data to be committed to the main database when a SQLite transaction is complete. For optimal speed, it is recommended to try to avoid using NFS located database file in favor a copy on the local disk. 
 
 =head1 BUGS
 
@@ -1198,11 +1295,12 @@ THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO 
 
 sub set_usage {
   my $pv = join(", ", @ok_scales);
+  my $pl = join(", ", sort(keys %ok_profiles));
 
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile | --dividedSys [join.sql] --sycsv csvfile[:tablename] --syscsv csvfile[:tablename] [--syscsv csvfile[:tablename] [...]]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile[:tablename] [csvfile[:tablename] [...]]]
+$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile | --dividedSys [join.sql] --sycsv csvfile[:tablename][\%columnname:constraint[...]] --syscsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[:tablename][...] [...]]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[:tablename][...] [...]]]
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1228,6 +1326,7 @@ Where:
   --SysDBfile  Specify the System SQLite database file
   --MetadataDBfile  Specify the metadata SQLite database file
   --iFilterDBfile  Specify the filtering SQLite database file
+  --profile    Specify the profile to use (possible values: $pl)
 Filter (Step 3) specific options:
   --FilterCMDfile  Specify the SQLite command file
   --AdditionalFilterDB  Load additional SQLite database 'file' for the filtering step (loaded as 'name')
@@ -1248,6 +1347,8 @@ DETCurve generation (Step 4) specific options:
 
 *1: default values can be obtained from \"$deva_sci\" 's help
 *2: default number of lines if no value is set can be obtained from \"$sqlite_cfg_helper\" 's help
+
+WARNING: There can be only one 'PRIMARY KEY' per table, and this column is automatically selected for REF and SYS, and is an autoincremental integer for all others. If you want to insure that all data are unique in a column, use a 'UNIQUE' constraint.
 
 EOF
 ;
