@@ -106,6 +106,8 @@ my $Decisioncolumn = 'Decision';
 my $Scorecolumn = 'Score';
 #
 my $TrialsDB = 'TrialsDB';
+my $ThreshDB = 'ThresholdTable';
+my $Threshcolumn = 'Threshold';
 
 my $bDETf = "DET";
 
@@ -124,12 +126,12 @@ my ($xm, $xM, $ym, $yM, $xscale, $yscale)
   = (0.1, 95, 0.1, 95, $ok_scales[0], $ok_scales[0]);
 
 my $blockavg = 0;
-my $blockavg_text = "BlockAverage";
-
 my $GetTrialsDB = 0;
+my $decThr = undef;
+my $pbid_dt_sql = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:  B D  G     M    R TU  XY  b     h   lm o  rstuv xy   #
+# Used:  B D  G     M    R TU  XY  b d   h   lm op rstuv xy   #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -157,6 +159,8 @@ GetOptions
    'BlockAverage'       => \$blockavg,
    'taskName=s'         => \$taskName,
    'GetTrialsDB'        => \$GetTrialsDB,
+   'decisionThreshold=i' => \$decThr,
+   'perBlockDecisionThreshold=s' => \$pbid_dt_sql,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -204,6 +208,15 @@ MMisc::error_quit("Invalid value for \'usedXscale\' ($xscale) (possible values: 
 MMisc::error_quit("Invalid value for \'UsedYscale\' ($yscale) (possible values: " . join(", ", @ok_scales) . ")")
   if (! grep(m%^$yscale$%, @ok_scales));
 
+my $g_thr = 0;
+if ((! MMisc::is_blank($pbid_dt_sql)) && (defined $decThr)) {
+  MMisc::warn_print("\'--perBlockDecisionThreshold\' can not be used in conjunction with \'--decisionThreshold\', only using \'--decisionThreshold\'");
+  $pbid_dt_sql = "";
+}
+MMisc::error_quit("\'--perBlockDecisionThreshold\' can not be used in conjunction with \'--BlockAverage\', use \'--decisionThreshold\' instead\n\n$usage")
+  if (($pbid_dt_sql) && ($blockavg));
+$g_thr = 1 if ((! MMisc::is_blank($pbid_dt_sql)) || (defined $decThr));
+
 MMisc::error_quit("No ScoreDBfile information provided\n\n$usage") 
   if (scalar @ARGV != 1);
 MMisc::error_quit("No \'referenceDBfile\' provided\n\n$usage")
@@ -223,7 +236,6 @@ MMisc::error_quit($err)
   if (MMisc::is_blank($sqlitecmd));
 
 my $cmdlines = "";
-
 # Attach the REF and SYS databases
 MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$refDBfile\" AS $refDBname");
 MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$sysDBfile\" AS $sysDBname");
@@ -245,6 +257,7 @@ my $tmp=<<EOF
 DROP TABLE IF EXISTS main.$refDBtable;
 DROP TABLE IF EXISTS main.$sysDBtable;
 DROP TABLE IF EXISTS main.$TrialsDB;
+DROP TABLE IF EXISTS main.$ThreshDB;
 
 CREATE TABLE $refDBtable AS SELECT $tablename.$TrialIDcolumn,$Targcolumn FROM $used_resDBname.$tablename INNER JOIN $refDBname.$refDBtable WHERE $tablename.$TrialIDcolumn = $refDBtable.$TrialIDcolumn;
 
@@ -259,6 +272,20 @@ CREATE TABLE $TrialsDB AS SELECT $tablename.$TrialIDcolumn,$BlockIDcolumn,$Decis
 EOF
   if ($GetTrialsDB);
 
+if (! MMisc::is_blank($pbid_dt_sql)) {
+  my $err = MMisc::check_file_r($pbid_dt_sql);
+  MMisc::error_quit("Problem with \'--perBlockDetectionThreshold\' file ($pbid_dt_sql) : $err")
+    if (! MMisc::is_blank($err));
+
+  $tmp .= "CREATE TABLE $ThreshDB ($BlockIDcolumn TEXT PRIMARY KEY, $Threshcolumn REAL);\n";
+
+  my $sc = MMisc::slurp_file($pbid_dt_sql);
+  MMisc::error_quit("Problem with \'--perBlockDetectionThreshold\' file ($pbid_dt_sql) : empty file ?")
+    if ((! defined $sc) || (MMisc::is_blank($sc)));
+
+  $tmp .= $sc;
+}
+
 MtSQLite::commandAdd(\$cmdlines, $tmp);
 
 my ($err, $log, $stdout, $stderr) = 
@@ -272,15 +299,28 @@ my %sys = ();
 
 my $tot1 = scalar(keys %ref) + scalar(keys %sys);
 
+my %bid_thr = ();
+&confirm_table(\%bid_thr, $dbfile, $ThreshDB, $BlockIDcolumn, $Threshcolumn) if (! MMisc::is_blank($pbid_dt_sql));
+
 #print MMisc::get_sorted_MemDump(\%ref);
 #print MMisc::get_sorted_MemDump(\%sys);
 
 my ($mapped, $unmapped_sys, $unmapped_ref) = (0, 0, 0);
 
-my %bid_trials = ();
+############################################################
+# Awaiting on updated 'Trials' package
+my $__awaiting = 1;
+if (($__awaiting) && (! MMisc::is_blank($pbid_dt_sql))) {
+  print MMisc::get_sorted_MemDump(\%bid_thr) . "\n";
+}
+############################################################
+############################################################
+############################################################
 
+my %bid_trials = ();
 my @at = ();
 ##
+my $blockavg_text = "$devadetname Average";
 foreach my $key (keys %sys) {
 
   my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
@@ -300,7 +340,17 @@ foreach my $key (keys %sys) {
     $unmapped_sys++;
   }
 
-  $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg);
+  if ($g_thr) {
+    if ($__awaiting) {
+      $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg);
+      print " [Without DECISION ADD] ";
+    } else {
+      $bid_trials{$ubid}->addTrialWithoutDecision($bid, $sys{$key}{$Scorecolumn}, $istarg);
+    }
+  } else {
+    $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg);
+  }
+
   push(@at, [$key, $bid, $sys{$key}{$Scorecolumn},
              $decision, ($istarg == 1) ? 'TARG' : 'NonTARG']) if ($GetTrialsDB);
 }
@@ -322,7 +372,7 @@ foreach my $key (keys %ref) {
 # mapped: already done
 }
 
-foreach my $key (keys %bid_trials) {
+foreach my $key (sort keys %bid_trials) {
   print "[***** $key]\n";
   print $bid_trials{$key}->dumpCountSummary();
 }
@@ -431,51 +481,12 @@ sub joinResDBfiles {
 sub confirm_table {
   my ($rh, $dbfile, $tablename, @columns) = @_;
   
-  my ($err, $dbh) = MtSQLite::get_dbh($dbfile);
-  MMisc::error_quit($err)
-    if (! MMisc::is_blank($err));
-
-  my $cmd = "SELECT " . join(",", @columns) . " FROM $tablename";
-  my ($err, $sth) = MtSQLite::get_command_sth($dbh, $cmd);
-  MMisc::error_quit("Problem doing a SELECT on \'$tablename\': $err")
-   if (! MMisc::is_blank($err));
-
-  my $err = MtSQLite::execute_sth($sth);
-  MMisc::error_quit("Problem processing SELECT on \'$tablename\': $err")
-    if (! MMisc::is_blank($err));
-
-  my $doit = 1;
-  while ($doit) {
-    my ($err, @data) = MtSQLite::sth_fetchrow_array($sth);
-    MMisc::error_quit("Problem obtaining row: $err")
-      if (! MMisc::is_blank($err));
-    if (scalar @data == 0) {
-      $doit = 0;
-      next;
-    }
-
-    my $mk = $data[0]; # _must be_ the TrialID key
-    for (my $i = 1; $i < scalar @columns; $i++) {
-      my $c = $columns[$i];
-      my $v = $data[$i];
-      MMisc::error_quit("In DB ($dbfile)'s table ($tablename), $mk / $c = $v was already found and its previous value was different : " . $$rh{$mk}{$c})
-        if ((MMisc::safe_exists($rh, $mk, $c)) && ($$rh{$mk}{$c} ne $v));
-      $$rh{$mk}{$c} = $v;
-#      print "# $mk / $c / $v\n";
-    }
-
-  }
-
-  my $err = MtSQLite::sth_finish($sth);
-  MMisc::error_quit("Problem while completing statement: $err")
-    if (! MMisc::is_blank($err));
-
-  print "* Extracted from $tablename ". scalar(keys %$rh) . "x datum\n";
-  
-  MtSQLite::release_dbh($dbh);
+  my ($err, $count) = MtSQLite::select_helper__to_hash($dbfile, $rh, $tablename, "", @columns);
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
+  print "* Extracted from $tablename ${count}x datum\n";
 }
 
-##########
+####################
 
 sub def_bid_trials {
   my ($bid) = @_;
@@ -492,6 +503,19 @@ sub def_bid_trials {
   }
   MMisc::error_quit("Problem with BlockID ($bid)'s Trial ($trialn)")
     if (! defined $bid_trials{$bid});
+
+  my $thr = undef;
+  $thr = $decThr if (defined $decThr);
+  if (! MMisc::is_blank($pbid_dt_sql)) {
+    MMisc::error_quit("Could not find BlockID ($bid) in Decision Mapping Table")
+      if (! MMisc::safe_exists(\%bid_thr, $bid, $Threshcolumn));
+    $thr = $bid_thr{$bid}{$Threshcolumn};
+  }
+  if ($__awaiting) {
+    print "[BID:$bid/THR:$thr] ";
+  } else {
+    $bid_trials{$bid}->setTrialActualDecisionThreshold($thr) if (defined $thr);
+  }
 }
 
 #####
