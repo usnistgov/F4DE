@@ -98,6 +98,9 @@ my $sysDBname = 'systemDB';
 my @resDBfiles = ();
 my $resDBname = 'resultsDB';
 #
+my $mdDBfile = '';
+my $mdDBname = "metadataDB";
+
 my $tablename = 'resultsTable';
 my $TrialIDcolumn = 'TrialID';
 my $BlockIDcolumn = 'BlockID';
@@ -131,7 +134,7 @@ my $decThr = undef;
 my $pbid_dt_sql = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:  B D  G     M    R TU  XY  b d   h   lm op rstuv xy   #
+# Used:  B D  G    LM    R TU  XY  b d   h   lm op rstuv xy   #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -161,6 +164,7 @@ GetOptions
    'GetTrialsDB'        => \$GetTrialsDB,
    'decisionThreshold=i' => \$decThr,
    'perBlockDecisionThreshold=s' => \$pbid_dt_sql,
+   'LoadMetadataDB=s'   => \$mdDBfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -226,6 +230,7 @@ MMisc::error_quit("No \'systemDBfile\' provided\n\n$usage")
 MMisc::error_quit("No \'referenceDBfile\' provided\n\n$usage")
   if (scalar @resDBfiles == 0);
 &check_DBs_r($refDBfile, $sysDBfile, @resDBfiles);
+&check_DBs_r($mdDBfile) if (! MMisc::is_blank($mdDBfile));
 MMisc::error_quit("Unrecognized \'mode\' [$mode], authorized values are: " . join(" ", @ok_modes))
   if (! grep(m%^$mode$%, @ok_modes));
 
@@ -250,6 +255,9 @@ for (my $i = 0; $i < scalar @resDBfiles; $i++) {
   push @resDBnames, $lresDBname;
 }
 $used_resDBname = &joinResDBfiles(\$cmdlines, $mode, @resDBnames);
+
+MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$mdDBfile\" AS $mdDBname")
+  if (! MMisc::is_blank($mdDBfile));
 
 # Create the Final table
 
@@ -570,7 +578,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--GetTrialsDB] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--DETfile filebase] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--usedXscale set] [--UsedYscale set] [--BlockAverage] ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--LoadMetadataDB file] [--GetTrialsDB] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--DETfile filebase] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--usedXscale set] [--UsedYscale set] [--BlockAverage] [--decisionThreshold score | --perBlockDecisionThreshold sql_file] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
@@ -579,9 +587,11 @@ NOTE: will create ScoreDBfile
 Where:
   --help     This help message
   --version  Version information
-  --referenceDBfile  The Reference SQLite file (must contains the 'Reference' table, whose columns are: $TrialIDcolumn, $Targcolumn)
-  --systemDBfile     The System SQLite file (must contains the 'System' table, whose columns are: $TrialIDcolumn, $Decisioncolumn, $Scorecolumn)
+  --referenceDBfile  The Reference SQLite file, loaded as \'$refDBname\' (must contains the 'Reference' table, whose columns are: $TrialIDcolumn, $Targcolumn)
+  --systemDBfile     The System SQLite file, loaded as \'$sysDBname\' (must contains the 'System' table, whose columns are: $TrialIDcolumn, $Decisioncolumn, $Scorecolumn)
+
   --ResultDBfile     The Filter tool resulting DB (must contain the \'$tablename\' table, with the following columns: $TrialIDcolumn, $BlockIDcolumn)
+  --LoadMetadataDB   Load the metadata SQLite file, loaded as \'$mdDBname\'
   --GetTrialsDB      Add a table to the scoring database containing each individual Trial component (table name: $TrialsDB)
   --metricPackage    Package to load for metric uses (default: $metric)
   --MetricParameters Metric Package parameters
@@ -594,6 +604,13 @@ Where:
   --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (default: $ym and $yM)
   --usedXscale --UsedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (default: $xscale and $yscale) 
   --BlockAverage    Combine all Trial in one DET instead of splitting them per BlockID
+  --decisionThreshold  When adding a Trial, do not use the System's Decision but base the decision on a given threshold
+  --perBlockDecisionThreshold  Specify the SQL command file expected to insert into the \'$ThreshDB\' table (with two columns: $BlockIDcolumn $Threshcolumn) to select a Threshold per BlockID. 
+
+
+Note: an example of the possible content of a \'--perBlockDecisionThreshold\' sql file can be:
+INSERT OR ABORT INTO $ThreshDB ( $BlockIDcolumn, $Threshcolumn ) SELECT threshold.EventID,threshold.DetectionThreshold FROM metadataDB.threshold;
+
 EOF
 ;
 
