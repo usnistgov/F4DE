@@ -162,7 +162,7 @@ GetOptions
    'BlockAverage'       => \$blockavg,
    'taskName=s'         => \$taskName,
    'GetTrialsDB'        => \$GetTrialsDB,
-   'decisionThreshold=i' => \$decThr,
+   'decisionThreshold=f' => \$decThr,
    'perBlockDecisionThreshold=s' => \$pbid_dt_sql,
    'LoadMetadataDB=s'   => \$mdDBfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
