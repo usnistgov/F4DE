@@ -143,8 +143,11 @@ my $dividedSys = undef;
 my $blockIDname = undef;
 my $profile = undef;
 
+my $decThr = undef;
+my $pbid_dt_sql = undef;
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: ABCD FG    LMN P RSTUVWXYZabcd fghi  lm opqrstuvwxyz  #
+# Used: ABCD FG  J LMN P RSTUVWXYZabcd fghij lm opqrstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -187,8 +190,10 @@ GetOptions
    'quickConfig:i'   => \$quickConfig,
    'NULLfields'      => \$nullmode,
    'dividedSys:s'    => \$dividedSys,
-   'PrintedBlockID=s' => \$blockIDname, 
+   'PrintedBlock=s'  => \$blockIDname, 
    'profile=s'       => \$profile,
+   'judgementThreshold=f' => \$decThr,
+   'JudgementThresholdPerBlock=s' => \$pbid_dt_sql,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -384,9 +389,9 @@ if ($filter) {
   
   &check_file_r($refDBfile);
   &check_file_r($sysDBfile);
-  $mdDBfile = &check_file_r($mdDBfile, 1);
+  my $_mdDBfile = &check_file_r($mdDBfile, 1);
 
-  &run_filter("$logdir/${resDBb}.log", $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile, @addDBs);
+  &run_filter("$logdir/${resDBb}.log", $refDBfile, $sysDBfile, $_mdDBfile, $filtercmdfile, $resDBfile, @addDBs);
 }
 
 if ($score) {
@@ -394,12 +399,13 @@ if ($score) {
 
   &check_file_r($refDBfile);
   &check_file_r($sysDBfile);
-  $resDBfile = &check_file_r($resDBfile, 0);
+  &check_file_r($resDBfile, 0);
   for (my $i = 0; $i < scalar @addResDBfiles; $i++) {
     &check_file_r($addResDBfiles[$i]);
   }
+  my $_mdDBfile = &check_file_r($mdDBfile, 1);
 
-  &run_scorer("$logdir/${finalDBb}.log", $refDBfile, $sysDBfile, $finalDBfile, $resDBfile, @addResDBfiles);
+  &run_scorer("$logdir/${finalDBb}.log", $refDBfile, $sysDBfile, $_mdDBfile, $finalDBfile, $resDBfile, @addResDBfiles);
 }
 
 MMisc::ok_quit("Done");
@@ -470,6 +476,11 @@ sub db_create {
 sub check_file_r {
   my ($file, $lenient) = @_;
 
+  if (MMisc::is_blank($file)) { # no file given
+    return("") if ($lenient); 
+    MMisc::error_quit("Problem with file check (no file given)");
+  }
+
   my $err = MMisc::check_file_r($file);
   if (! MMisc::is_blank($err)) {
     if ($lenient) {
@@ -513,11 +524,12 @@ sub run_filter {
 ##########
 
 sub run_scorer {
-  my ($log, $refDBfile, $sysDBfile, $finalDBfile, @xres) = @_;
+  my ($log, $refDBfile, $sysDBfile, $mdDBfile, $finalDBfile, @xres) = @_;
 
   my $tool = &path_tool($deva_sci, "../../../DEVA/tools/DEVA_sci");
 
   my $cmdp = "-r $refDBfile -s $sysDBfile";
+  $cmdp .= " -L ${mdDBfile}" if (! MMisc::is_blank($mdDBfile));
   for (my $i = 0; $i < scalar @xres; $i++) {
     $cmdp .= " -R " . $xres[$i];
   }
@@ -539,6 +551,8 @@ sub run_scorer {
   $cmdp .= " -U $yscale" if (defined $yscale);
   $cmdp .= " -B" if ($blockavg);
   $cmdp .= " -G" if ($GetTrialsDB);
+  $cmdp .= " -d $decThr" if (defined $decThr);
+  $cmdp .= " -p $pbid_dt_sql" if (defined $pbid_dt_sql);
   $cmdp .= " $finalDBfile";
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdp);
@@ -1300,7 +1314,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile | --dividedSys [join.sql] --sycsv csvfile[:tablename][\%columnname:constraint[...]] --syscsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[:tablename][...] [...]]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[:tablename][...] [...]]]
+$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile | --dividedSys [join.sql] --sycsv csvfile[:tablename][\%columnname:constraint[...]] --syscsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[:tablename][...] [...]]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--PrintedBlock text] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [--judgementThreshold score | --JudgementThresholdPerBlock sql_file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[:tablename][...] [...]]] 
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1329,6 +1343,7 @@ Where:
   --profile    Specify the profile to use (possible values: $pl)
 Filter (Step 3) specific options:
   --FilterCMDfile  Specify the SQLite command file
+  --PrintedBlock   Specify the \'BlockID\' values used if not \'SELECT\'-ed
   --AdditionalFilterDB  Load additional SQLite database 'file' for the filtering step (loaded as 'name')
 DETCurve generation (Step 4) specific options:
   --GetTrialsDB   Add a table to the scoring database containing each individual Trial component
@@ -1343,7 +1358,8 @@ DETCurve generation (Step 4) specific options:
   --zusedXscale --ZusedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (*1)
   --BlockAverage    Combine all Trial in one DET instead of splitting them per BlockID
   --additionalResDBfile  Additional Filter results database files to give the scorer (will do an AND on the TrialIDs)
-
+  --judgementThreshold   When adding a Trial, do not use the System's Decision but base the decision on a given threshold
+  --JudgementThresholdPerBlock  Specify the SQL command file expected to insert into the \'ThresholdTable\' table a \'Threshold\' per \'BlockID\'. 
 
 *1: default values can be obtained from \"$deva_sci\" 's help
 *2: default number of lines if no value is set can be obtained from \"$sqlite_cfg_helper\" 's help
