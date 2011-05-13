@@ -605,7 +605,7 @@ Where:
   --usedXscale --UsedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (default: $xscale and $yscale) 
   --BlockAverage    Combine all Trial in one DET instead of splitting them per BlockID
   --decisionThreshold  When adding a Trial, do not use the System's Decision but base the decision on a given threshold
-  --perBlockDecisionThreshold  Specify the SQL command file expected to insert into the \'$ThreshDB\' table (with two columns: $BlockIDcolumn $Threshcolumn) to select a Threshold per BlockID. 
+  --perBlockDecisionThreshold  Specify the SQL command file expected to insert into the \'$ThreshDB\' table (with two columns: $BlockIDcolumn $Threshcolumn) a Threshold per BlockID. 
 
 
 Note: an example of the possible content of a \'--perBlockDecisionThreshold\' sql file can be:
