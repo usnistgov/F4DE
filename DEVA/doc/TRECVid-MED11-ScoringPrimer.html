@@ -1,0 +1,194 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
+<title>TRECVID MED Scoring Primer</title>
+<style type="text/css">
+  body { counter-reset: chapter; }
+  h2:before { content: counter(chapter) ". "; counter-increment: chapter;  /* Add 1 to chapter */ }
+  h2 { counter-reset: section subsection; /* Set section to 0 */ }
+  h3:before { content: counter(chapter) "." counter(section) " "; counter-increment: section; }
+  h3 { counter-reset: subsection; }
+  h4:before { content: counter(chapter) "." counter(section) "." counter(subsection) " "; counter-increment: subsection; }
+  a {text-decoration:none}
+  pre { border-style: solid; border-width: 1px; margin-left: 5px; padding: 2px 2px 2px 2px; background-color: #DDDDDD; }
+</style>
+</head>
+<body>
+
+
+<div style="text-align: center;"><big><big><big>TRECVID MED11 Scoring Primer</big></big></big><br>
+</div>
+<div style="text-align: center;"><small>Last modified: May 16th, 2011</small><br>
+</div>
+ <br>
+
+
+<h2>Description</h2>
+This document provides a high-level overview of how to use the F4DE
+tools for the <a href="http://www.nist.gov/itl/iad/mig/med11.cfm">TRECVID
+MED11 Evaluation</a>.
+The Multimedia Event Detection (MED) evaluation track is part of the
+TRECVID Evaluation. The multi-year goal of MED is to assemble core
+detection technologies into a system that can quickly and accurately
+search a multimedia collection for user-defined events. See the web
+site for specific details about the evaluation.
+<p>There are three sections in this document: <a href="#executable">executable
+script synopsis</a>, <a href="#format">file format</a>, and <a
+ href="#cliuse">using the tool to score a MED submission</a>.
+The examples below assume the F4DE package has been
+installed and is working properly according to the README.&nbsp; This
+includes defining the $F4DE_BASE environment variable and
+$F4DE_BASE/bin is in your path
+variable.&nbsp;
+The variable DIST used below is the path to the F4DE
+source directory and is not part of the F4DE installation instructions.<br>
+
+
+
+<a name="executable">
+<h2>Executable Script Synopsis</h2>
+</a>
+
+<b>DEVA_cli</b> is the <i>Detection EVAluation command line
+interface</i> software that is used for scoring the MED evaluation.
+The software uses <a href="http://www.sqlite.org">SQLite</a> to manage
+the data tables and then uses SQLite compatible queries to select
+data to score. The software reads one reference <i>Comma Separated
+Value</i> (CSV) file, at least one system CSV file, and optionally multiple
+metadata CSV files.
+
+<a name="format">
+<h2>File Formats:</h2>
+</a>The TRECVID MED tools use <i>Comma Separated Values</i> (CSV)
+files to
+generate SQL tables that will be used by the scoring tool. CSV files
+are flat files where commas are used to
+separate values. and double quotes are used to enclose values. The
+following is a valid CSV row that contains three columns:
+<br>
+</p>
+<p>&nbsp;<code></code><code>&nbsp;&nbsp;&nbsp; "1","John","Doe"</code><br>
+</p>
+<p>The DEVA tools require the first row of a CSV file to contain the
+column's
+header. For the previous example, it would be:
+<br>
+</p>
+<p><code>&nbsp;&nbsp;&nbsp; "ID","FirstName","LastName"</code>
+</p>
+<p>The scoring tool make requires one <b>reference</b>
+CSV file and one <span style="font-weight: bold;">system</span> CSV
+file.&nbsp; The tool optionally accepts multiple CSV files that provide
+<b>metadata</b> about the test trials.&nbsp; The metadata files can be
+used to conditionally score the system.&nbsp; The DEVA tools will use
+the CSV files to build SQlite database tables. <br>
+</p>
+<p>Each column header will be used as its
+SQL equivalent column name for the table.&nbsp; The header and field
+order of the reference and system files is rigidly defined.<br>
+</p>
+<ul>
+  <li>The <b>reference</b> CSV file must contain two columns: <i>TrialID</i>
+and <i>Targ</i>, where <i>TrialID</i> must be a primary key and <i>Targ</i>
+values must be a either <i>y</i> or <i>n</i>.
+  </li>
+  <li>The <b>system</b> CSV file will contain three columns: <i>TrialID</i>,
+    <i>Score,</i> and <i>Decision</i>, where <i>TrialID</i> must be a
+primary key, <i>Score</i> a numerical value and <i>Targ</i> values
+must be a either <i>"y"</i> or "<i>n"</i>.</li>
+</ul>
+
+For the purpose of MED11, and to follow the details of the evaluation
+plan put on the <a
+href="http://www.nist.gov/itl/iad/mig/med11.cfm">MED11</a> website,
+the <b>system</b> CSV file will be generated from two <i>divided
+system files</i> that will be <i>joined</i> into the final database.
+<ul>
+  <li>A <b>detection</b> CSV file must contain two columns:
+  <i>TrialID</i> and <i>Score</i>, where <i>TrialID</i> must be a
+  primary key and <i>Score</i> must be a value contained within 0.0
+  and 1.0</li>
+  <li>A <b>threshold</b> CSV file must contain three columns:
+  <i>EventID</i>, <i>DetectionThreshold</i> and <i>DetectionTPT</i>,
+  where <i>EventID</i> must be a primary key and <i>DetectionThreshold</i> must be a value contained within 0.0
+  and 1.0, while <i>DetectionTPT</i> is an unbounded value (see
+  EvalPlan for details)</li>
+</ul>
+
+For the optional metadata database files, the CSV file names will be
+used as SQL table name. The program leaves the content of the database
+to be free-form.
+
+Although, one of the metadata table must be named <b>TrialIndex</b>
+and must contain a <i>TrialID</i> primary key column that match the value present in the <b>reference</b> or <b>system</b>
+CSV, as well as a <i>EventID</i> and <i>ClipID</i>.
+
+<br>
+<a name="cliuse">
+<h2>Using the DEVA_cli tool to Score a MED submission</h2>
+</a>
+<p><i>For further information about the DEVA_cli tool (available as
+part of
+the F4DE), please refer to its manual:
+<code>DEVA_cli --man</code></i></p>
+
+The following is an example of scoring a <i>SITE</i> submission for the <i>TASK</i>, where a site
+submited two CSV file named "TASK_SITE_Threshold_1.csv" and "TASK_SITE_Detection_1.csv",
+which follows the rules set for the system CSV files and contains all the
+<i>TrialID</i>s present in the <i>TASK_TrialIndex.csv</i> file for the events processed.<br>
+</doc>
+<pre>
+% mkdir SITE_1-Results
+% DEVA_cli\
+--profile MED11\
+--outdir TASK_SITE_1-Results\
+--refcsv TASK_Ref.csv\
+--dividedSys\
+--syscsv TASK_SITE_Thresold_1.csv:threshold\
+--syscsv TASK_SITE_Detection_1.csv:detection\
+Task_TrialIndex.csv:TrialIndex
+</pre>
+where:<br>
+<ul>
+  <li>The "SITE_1-Results" directory is created before
+running this command.</li>
+  <li>the <code>--profile MED11</code> insure that a lot of
+  preconfigured entries are set (metric, filter, join, ...)</li>
+  <li>the <code>:</code> notation following CSV file defintion (example: <code>--syscsv
+  TASK_SITE_Thresold_1.csv:threshold</code>) enable
+  a simple table naming making it simpler to insure the use of
+  predefined table name during SQL commands
+  </li>
+</ul>
+
+<div style="margin-left: 40px;"><u>Note:</u> For sites only
+participating in some of the
+three events, the SQL filter will insure that only the <i>TrialID</i>s
+listed in the system CSV will be used.&nbsp; A submission checker will
+be released soon the verifies that all <span
+ style="font-style: italic;">TrialIDs </span>for an event are present
+in the system file.<br>
+</div>
+<br>
+
+The script will run through the four steps of the DEVA_cli scorer and
+place in the "<i>SITE-1_Results</i>" directory&nbsp; a file named
+<i>scoreDB.scores.txt</i> that contains a scoring report which
+includes:
+<ul>
+  <li> the number of <i>y</i> <i>Targ</i> <b>Reference</b> entries (<code>#Ref</code>)
+  </li>
+  <li> the number of <b>System</b> entries (<code>#Sys</code>) </li>
+  <li> the number of correct detections of <i>y</i> <i>Targ</i> <b>Reference</b>
+by the <b>System</b> (<code>#CorDet</code>) </li>
+  <li> the number of false alarms: <i>y</i> <b>System</b> <i>Decision</i>
+for a <i>n</i> <i>Targ</i> <b>Reference</b> (<code>#FA</code>) </li>
+  <li> the number of missed detections of a <i>y</i> <i>Targ</i> <b>Reference</b>
+by the <b>System</b> (<code>#Miss</code>)
+  </li>
+</ul>
+Note that the correct detection of a <i>n</i> <i>Targ</i>
+<b>Reference</b> is not counted.
+</body>
+</html>
