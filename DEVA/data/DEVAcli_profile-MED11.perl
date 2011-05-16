@@ -24,9 +24,13 @@ MMisc::error_quit("When using \'MED11\' profile, \'dividedSys\' must be used")
 MMisc::error_quit("For the \'MED11\' profile, two \'syscsv\' must be used")
   if (scalar @syscsvs != 2);
 
-## Join function
+## 'dividedSys' Join SQL commands
 $dividedSys = "$profiles_path/DEVAcli_dividedSys_MED11.sql"
   if (MMisc::is_blank($dividedSys));
+
+# 'FilterCMDfile' SQL commands
+$filtercmdfile = "$profiles_path/DEVAcli_filter-MED11.sql"
+  if (MMisc::is_blank($fitercmdfile));
 
 { # avoid injecting new variable into the main scope
   my $err = MMisc::check_file_r($dividedSys);
