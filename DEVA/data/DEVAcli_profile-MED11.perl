@@ -35,6 +35,10 @@ $dividedSys = "$profiles_path/DEVAcli_dividedSys_MED11.sql"
 $filtercmdfile = "$profiles_path/DEVAcli_filter-MED11.sql"
   if (MMisc::is_blank($filtercmdfile));
 
+# 'JudgementThresholdPerBlock' SQL commands
+$pbid_dt_sql = "$profiles_path/DEVAcli_scithr-MED11.sql"
+  if (MMisc::is_blank($pbid_dt_sql));
+
 { # avoid injecting new variable into the main scope
   my $err = MMisc::check_file_r($dividedSys);
   MMisc::error_quit("Problem with \'dividedSys\' SQL join file ($dividedSys) : $err")
