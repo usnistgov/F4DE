@@ -239,7 +239,7 @@ $versionid
 
 $0 [--help | --version] --referenceDBfile file --systemDBfile file [--metadataDBfile file] [--additionalDB file:name [--additionalDB file:name [...]]] [--filterCMD \"SQLite COMMAND;\" | --FilterCMDfile SQLite_commands_file] [--BlockIDname name] resultsDBfile 
 
-Will apply provided "INSERT / SELECT" filter from provided databases and willgenerate in the results database a new table named \'$tablename\' that only contain the \'$TrialIDcolumn\' and \'$BlockIDcolumn\' that will be given to the scoring interface.
+Will apply provided "INSERT / SELECT" filter from provided databases and will generate in the results database a new table named \'$tablename\' that only contain the \'$TrialIDcolumn\' and \'$BlockIDcolumn\' that will be given to the scoring interface.
 
 Note that filter must be written in the form of a "INSERT ... SELECT" statement such as:
 
