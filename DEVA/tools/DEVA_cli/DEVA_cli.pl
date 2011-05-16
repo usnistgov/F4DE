@@ -147,7 +147,7 @@ my $decThr = undef;
 my $pbid_dt_sql = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: ABCD FG  J LMN P RSTUVWXYZabcd fghij lm opqrstuvwxyz  #
+# Used: ABCD FG  J  MN P RSTUVWXYZabcd f hij lm opqrstuvwxyz  #
 
 my %opt = ();
 GetOptions
@@ -686,13 +686,18 @@ DEVA_cli - Detection EVAluation Scorer Command Line Interface
 B<DEVA_cli> 
   S<[B<--help> | B<--man> | B<--version>]>
   S<B<--outdir> I<dir>>
+  S<[B<--profile> I<name>]>
   S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--DETScoreSkip>]>
-  S<[B<--refcsv> I<csvfile>] [B<--syscsv> I<csvfile>]>
+  S<[B<--refcsv> I<csvfile>]>
+  S<[B<--syscsv> I<csvfile>>
+  S< | B<--dividedSys> [I<join.sql>] B<--sycsv> I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]]>
+  S<   B<--syscsv> I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]] [B<--syscsv> I<csvfile>[...] [...]]]> 
   S<[B<--quickConfig> [I<linecount>]] [B<--NULLfields>]>
   S<[B<--wREFcfg> I<file>] [B<--WSYScfg> I<file>] [B<--VMDcfg> I<file>]>
   S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>]>
   S<[B<--MetadataDBfile> I<file>] [B<--iFilterDBfile> I<file>]>
   S<[B<--FilterCMDfile> I<SQLite_commands_file>]> 
+  S<[B<--PrintedBlock> I<text>]>
   S<[B<--AdditionalFilterDB> I<file:name> [B<--AdditionalFilterDB> I<file:name> [...]]]>
   S<[B<--GetTrialsDB>]>
   S<[B<--usedMetric> I<package>]>
@@ -703,7 +708,8 @@ B<DEVA_cli>
   S<[B<--zusedXscale> I<set>] [B<--ZusedYscale> I<set>]>
   S<[B<--BlockAverage>]>
   S<[B<--additionalResDBfile> I<file> [B<--additionalResDBfile> I<file> [...]]]>
-  S<[I<csvfile> [I<csvfile> [I<...>]]>
+  S<[B<--judgementThreshold> I<score> | B<--JudgementThresholdPerBlock> I<sql_file>]>
+  S<[I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]] [I<csvfile>[...] [...]]]>
 
 
 =head1 DESCRIPTION
@@ -714,7 +720,8 @@ binary detection system using a variety of evaluation metrics.  The tool set rea
 separated value (CSV) input data files and then uses a SQLite database backend to
 select what to score. 
 
-The wrapper performs four steps to complete thes scoring process.  The USAGE section describes the process with an example.
+The wrapper performs four steps to complete this scoring process.
+The USAGE section describes the process with an example.
 
 =over  
 
@@ -724,14 +731,16 @@ Required arguments:
  S<B<--outdir> I<dir>>
 
 Optional arguments:
+ S<[B<--profile> I<name>]>
  S<[B<--quickConfig> [I<linecount>]]>
  S<[B<--NULLfields>]>
  S<[B<--refcsv> I<csvfile>]>
- S<[B<--syscsv> I<csvfile>]>
+ S<[B<--syscsv> I<csvfile>>
+ S< | B<--dividedSys> [I<join.sql>] B<--sycsv> I<csvfile>[...] B<--sycsv> I<csvfile>[...] [B<--sycsv> I<csvfile>[...] [...]]]>
  S<[B<--wREFcfg> I<file>]>
  S<[B<--WSYScfg> I<file>]>
  S<[B<--VMDcfg> I<file>]>
- S<[I<csvfile> [I<csvfile> [I<...>]]]>
+ S<[I<csvfile>[...] [I<csvfile>[...] [...]]]>
 
 Bypass step:
  S<[B<--configSkip>]>
@@ -742,7 +751,9 @@ Required arguments:
  S<B<--outdir> I<dir>>
 
 Optional arguments:
+ S<[B<--profile> I<name>]>
  S<[B<--NULLfields>]>
+ S<[B<--dividedSys> [I<join.sql>]]>
  S<[B<--wREFcfg> I<file>]>
  S<[B<--WSYScfg> I<file>]>
  S<[B<--VMDcfg> I<file>]>
@@ -759,12 +770,15 @@ Required arguments:
  S<B<--outdir> I<dir>>
 
 Optional arguments:
+ S<[B<--profile> I<name>]>
  S<[B<--RefDBfile> I<file>]>
  S<[B<--SysDBfile> I<file>]>
  S<[B<--MetadataDBfile> I<file>]>
  S<[B<--iFilterDBfile> I<file>]>
  S<[B<--FilterCMDfile> I<SQLite_commands_file>]>
+ S<[B<--PrintedBlock> I<text>]>
  S<[B<--AdditionalFilterDB> I<file:name> [B<--AdditionalFilterDB> I<file:name> [...]]]>
+ 
 
 Bypass step: 
  S<[B<--filterSkip>]>
@@ -775,6 +789,7 @@ Required arguments:
  S<B<--outdir> I<dir>>
 
 Optional arguments:
+ S<[B<--profile> I<name>]>
  S<[B<--RefDBfile> I<file>]>
  S<[B<--SysDBfile> I<file>]>
  S<[B<--iFilterDBfile> I<file>]>
@@ -793,6 +808,7 @@ Optional arguments:
  S<[B<--ZusedYscale> I<set>]>
  S<[B<--additionalResDBfile> I<file> [B<--additionalResDBfile> I<file> [...]]]>
  S<[B<--BlockAverage>]>
+ S<[B<--judgementThreshold> I<score> | B<--JudgementThresholdPerBlock> I<sql_file>]>
 
 Bypass step: 
  S<[B<--DETScoreSkip>]>
@@ -803,7 +819,7 @@ The DEVA tool set uses the notion of a 'detection trial' as the
 fundmental building block for the tool.  A detection trial is a test
 probe of a detection system in which a system is given a particular
 piece of data and the system provides a numeric estimate expressing
-the confidence that the peice of data is a member of the target class.  A
+the confidence that the piece of data is a member of the target class.  A
 trial can be a 'target trial' in which the piece of data IS an
 instance of the class or a 'non-target trial' in which the piece of
 data IS NOT a member of the class.  The tool does not interact with
@@ -815,12 +831,11 @@ evaluation tool:
 
 =over
 
-1. There are two modes of operation, simple and
-wizard mode. 
+1. There are two modes of operation: simple and wizard mode. 
 
-2. The tool set uses SQLite data bases to store the
-input data and SQL queries to condition the scoring based on supplied
-metadata.  See the SQL FILTERS section to understand how to use SQL filters.
+2. The tool set uses SQLite data bases to store the input data and SQL
+queries to condition the scoring based on supplied metadata.  See the
+SQL FILTERS section to understand how to use SQL filters.
 
 3. Commandline-selectable evaluation metrics and parameters.  See the
 METRICS section for how to select and provide parameters for the
@@ -829,30 +844,30 @@ metrics.
 =back
 
 The two modes of operations make it possible for a casual user to use
-the scoring tools quickely without understanding the intricacies of
+the scoring tools quickly without understanding the intricacies of
 the tool while providing richer functionality for the more advanced
 user.  In simple mode, a user provides CSV-formatted system and
 reference files and a simple SQL query, the tool then performs the
 full scoring pipeline.  In wizard mode, a user re-uses previous
-computations to speed execution by skipping steps that are often repetative.  
+computations to speed execution by skipping steps that are often repetitive.  
 
 The SQLite provides both an efficient data store and a mechanism to
-performed conditioned scoring by filtering the system output based on
+perform conditioned scoring by filtering the system output based on
 additional factors.  The filter operation is performed by an SQL query
 that selects both the target and non-target trials to score.  See the SQL FILTERS section below.
 
 Commandline-selectable evaluation metrics permit the same tool to be
 used for a variety of evaluations. The metrics are implemented as
-source code modules provided with the tool set.  The metrics set
+source code modules provided with the tool set.  The metrics set can be
 expanded only through additional coding.
 
 =head1 INPUT FILES
 
 =head2 CSV files
 
-To generate the mutliple tables for the SQLite database, we rely on I<Comma Separated Values> (CSV) to contain the data to be processed.
-The CSV file names will be used as SQL table name, and must have as a first row the column headers that will be used as the SQL table column name.
-To avoid issues in processing the data, it is recommended that each column content be quoted and comma separated. For example, a table whose SQL table name is expected to be "Employee" will be represented as the "Employee.csv" file and contain a first row: S<"ID","FirstName","LastName"> and an examplar entry could be: S<"1","John","Doe">
+To generate the multiple tables for the SQLite database, we rely on I<Comma Separated Values> (CSV) to contain the data to be processed.
+The CSV file names will be used as SQL table name, and must have as a first row the column headers that will be used as the SQL table column names.
+To avoid issues in processing the data, it is recommended that each column content be quoted and comma separated. For example, a table whose SQL table name is expected to be "Employee" will be represented as the "Employee.csv" file and contain a first row: S<"ID","FirstName","LastName"> and an exemplar entry could be: S<"1","John","Doe">
 
 The program leave the content of the database free for most I<metadata> content. One of the table that is part of that database should contain a I<TrialID> column that match the one present in the I<reference> or I<system> CSV.
 
@@ -864,6 +879,15 @@ Examples of CSV files can be found in the F4DE source in:
  F<common/test/common/ref.csv>
  F<common/test/common/sys.csv>
  F<common/test/common/md.csv>
+
+When possible (and detailed in the usage), an extended command line definition for CSV files can be specified and allow to define more details for the file' content:
+
+S<[I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]]>
+
+Here in addition to specify the CSV file name, the default SQL table name can be overridden by I<tablename>.
+Also in the definition, SQLite I<Constraints> can be applied to given columns within the table.
+For example: S<expid.detection.csv:detection%Score:'CHECK(ScoreE<gt>=0.0 AND Score E<lt>=1.0)'%EventID:UNIQUE>
+specifies that for the S<expid.detection.csv> CSV file, force its SQLite table name to S<detection> (the default would be have been to use S<expid_detection> following the I<entry remaining rule> defined in the next section) and will enforce that values within its S<Score> column can only be added if they are between 0 and 1. Also, the table's S<EventID> must be I<unique>.
 
 =head2 Configuration files
 
@@ -886,18 +910,21 @@ Therefore, f I<location> if of the form S<filename.suffix1.suffix>, the default 
 
 Note that the I<path> is the exact same as specified on the command line for the corresponding CSV file (if the specified CSV file is S<../test.csv>, the I<location> will be S<../test.csv> too) it is therefore important to run the tools from the same location when creating the configuration file and its database creation.
 
-=item S<column: columnUsedName;columnType>
+=item S<column: columnUsedName;columnType:columnConstraint>
 
 Specify a column seen in the CSV file, each column seen has to be detailed this way and the order in the configuration file as to match to column order in the CSV file. If a CSV file has I<X> columns, the configuration file must have I<X> S<column:> definitions.
 
 S<column*:> specify that the column is the table's primary key. A given table can only have one primary key.
 
-S<columnUsedName> specify the column name as it can be accessed from its I<tablename> within I<SQLite>. If a column has a name to which the I<entry renaming rule> applis, S<column:> gets redifined as S<column: columnName=columnUsedName;columnType>, where S<columnName> is the original column name. For example if the original column name is
+S<columnUsedName> specify the column name as it can be accessed from its I<tablename> within I<SQLite>. If a column has a name to which the I<entry renaming rule> applies, S<column:> gets redefined as S<column: columnName=columnUsedName;columnType>, where S<columnName> is the original column name. For example if the original column name is
  S<name.has;to:fixed> (of I<TEXT> S<columnType>)
 , the S<column:> definition will read
  S<column: name.has;to:fixed=name_has_to_fixed;TEXT>
 
 S<columnType> is one of S<INT>, S<REAL> or S<TEXT>.
+
+S<columnConstraint> is optional and specify a SQLite constraint (S<CHECK>, S<UNIQUE>, ...).
+Warning: S<PRIMARY KEY> should not be used as a column constraint, as it is defined using the S<column*:> syntax.
 
 =back
 
@@ -909,27 +936,26 @@ Examples of configuration files can be found in the F4DE source in:
 
 =head1 SQL FILTERS
 
-Step 3 use a user provided SQLite select command file.
+Step 3 relies on a user provided SQLite S<INSERT> command file, designed to fill a S<resultsTable> table containing both a S<TrialID> and a S<BlockID> columns.
+
 The filter file contains a SQLite set of commands. It is left to the user to create and store all temporary tables in the non permanent I<temp> internal database (automatically deleted when the database connection is closed).
 
 For this step, the reference database is loaded as I<referenceDB> and contains a table named I<Reference>, the system database is loaded as I<systemDB> and contains a table named I<System>.
 If provided, the metadata database is loaded as I<metadataDB> and contain the table list specified during the metadata configuration file.
 
-Users should not output anything but the final select that must contain only the following data in the expected order: I<TrialID> and I<BlockID>.
 If no I<BlockID> is provided, a default value will be inserted in its stead.
-Both columns will then be made to populate I<outdir/filterDB.db>'s I<resultsTable> table.
 
 An example of such select can be:
 
- SELECT system.TrialID FROM system INNER JOIN md WHERE system.TrialID=md.TrialID;
+S<INSERT OR ABORT INTO ResultsTable ( TrialID ) SELECT System.TrialID FROM System INNER JOIN Reference WHERE System.TrialID==Reference.TrialID;>
 
-which will "select the list of TrialID from the system table and the metadata table where both TrialID match". Note that this will use the default I<BlockID>.
+which will "insert or abort the selected list of TrialID from the system table and the system table where both TrialID match". Note that this will use the default I<BlockID>.
 
 A more complex example given a I<color> column in the metadata database that will be used as the I<BlockID>:
 
- SELECT system.TrialID,color FROM system INNER JOIN md WHERE system.TrialID=md.TrialID AND Decision>"1.2";
+S<INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID ) SELECT system.TrialID,color FROM system INNER JOIN md WHERE system.TrialID=md.TrialID AND DecisionE<gt>"1.2";>
 
-which will "select the list of TrialIDs and corresponding color from the system table and the metadata table where both TrialID match and the system's decision is more than 1.2". This will use the I<color> entry as the I<BlockID>.
+which will "insert or abort the selected list of TrialIDs and corresponding color from the system table and the metadata table where both TrialID match and the system's decision is more than 1.2". This will use the I<color> entry as the I<BlockID>.
 
 Examples of SQL filter files can be found in the F4DE source in:
  F<DEVA/test/common/filter1.sql>
@@ -953,7 +979,7 @@ I<gnuplot> (S<http://www.gnuplot.info/>) is also required (at least version 4.2)
 
 =item B<GLOBAL ENVIRONMENT VARIABLE>
 
-Once you have installed the software, setting the enviroment variable B<F4DE_BASE> to the installation location, and extending your B<PATH> environment variable to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
+Once you have installed the software, setting the environment variable B<F4DE_BASE> to the installation location, and extending your B<PATH> environment variable to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
 
 =back
 
@@ -995,8 +1021,19 @@ This process read each CSV file (I<refcsv>, I<syscsv> and metadata I<csvfile(s)>
 
 Skip the Trial Scoring step (including DETCurve processing).
 
-This step rely on the S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<<outdir/filterDB.sql> files to extract into S<outdir/scoreDB.sql> a I<ref> and I<sys> table that only contains the I<TrialID>s left post-filtering.
+This step rely on the S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<outdir/filterDB.sql> files to extract into S<outdir/scoreDB.sql> a I<ref> and I<sys> table that only contains the I<TrialID>s left post-filtering.
 This step also generate a few files starting with S<outdir/scoreDB.det> that are the results of the DETCurve generation process.
+
+=item B<--dividedSys> [I<join.sql>] 
+
+Divided system files are a mean to separate reporting requirement of systems within multiple files.
+When using B<--dividedSys> at least two B<--syscsv> must be provided, and a SQLite join command must be available that will S<INSERT> the content in the I<System> table's I<TrialID>, I<Score> and I<Decision> columns.
+The only case where a I<join.sql> type file is not required if if a B<--profile> is used that sets it.
+
+For example if the system reports both a I<decision> (with a I<TrialID> and I<Score> columns) and I<threshold> (with an I<EventID> and I<DetectionThreshold> columns) tables, given a I<metadata> database with a I<TrialIndex> with at least a I<TrialID> and I<EventID> columns, the I<join> file can contain:
+
+S<INSERT OR ABORT INTO System ( TrialID, Score, Decision ) SELECT detection.TrialID, Score, 'y' FROM detection INNER JOIN TrialIndex, threshold WHERE (detection.TrialID == TrialIndex.TrialID AND TrialIndex.EventID==threshold.EventID AND Score E<gt> threshold.DetectionThreshold);>
+S<INSERT OR ABORT INTO System ( TrialID, Score, Decision ) SELECT detection.TrialID, Score, 'n' FROM detection INNER JOIN TrialIndex, threshold WHERE (detection.TrialID == TrialIndex.TrialID AND TrialIndex.EventID==threshold.EventID AND Score E<lt>= threshold.DetectionThreshold);>
 
 =item B<--FilterCMDfile> I<SQLite_commands_file>
 
@@ -1018,6 +1055,14 @@ Display the usage page for this program. Also display some default values and in
 
 Specify the filtering SQLite database file
 
+=item B<--JudgementThresholdPerBlock> I<sql_file>
+
+During DET Curve generation, when adding a Trial, do not use the System's Decision but base the decision on a given threshold per BlockID. This option specifies the SQL command file expected to insert into the ThresholdTable table (with two columns: BlockID Threshold) a Threshold per BlockID.
+
+=item B<--judgementThreshold> I<score>
+
+During DET Curve generation, when adding a Trial, do not use the System's Decision but base the decision on this given threshold I<score>
+
 =item B<--listParameters>
 
 List Metric and Trial package authorized parameters
@@ -1038,9 +1083,17 @@ Empty columns will be inserted as the NULL value to allow proper JOIN (the defau
 
 Specify the directory in which all files relevant to this call to B<DEVA_cli> will be placed (or looked for).
 
+=item B<--PrintedBlock> I<text>
+
+During Step 3 (filtering), specify the B<BlockID> value used if the column is not provided during the I<SELECT> step
+
+=item B<--profile> I<name>
+
+Using a profile enable to used pre-configured values for options, such as B<--usedMetric>, B<--UsedMetricParameters>, B<--TrialsParameters>, B<--taskName>, B<--blockName>, B<--PrintedBlock>, B<--dividedSys>, as well as confirm that some options are used, such as B<--dividedSys> (and enforce only a certain number of system files are provided). Profiles also can specify more complex rules such as configuration type checks and constraints
+
 =item B<--quickConfig> [I<linecount>]
 
-Specify the number of lines to be read in Step 1 to decide on file content for config helper step (wihtout quickConfig, process all lines)
+Specify the number of lines to be read in Step 1 to decide on file content for config helper step (without quickConfig, process all lines)
 
 =item B<--RefDBfile> I<file>
 
@@ -1072,7 +1125,7 @@ Specify the parameters given during the Metric creation process.
 
 =item B<--usedMetric> I<package>
 
-Specify the Metric package to use for scoring data (must be in your perl serch path -- or part of F4DE).
+Specify the Metric package to use for scoring data (must be in your perl search path -- or part of F4DE).
 
 =item B<--VMDcfg> I<file>
 
@@ -1088,7 +1141,7 @@ Specify the System configuration file
 
 =item B<--wREFcfg> I<file>
 
-Specify the Refefence configuration file
+Specify the Reference configuration file
 
 =item B<--Xmax> I<val>
 
@@ -1135,7 +1188,7 @@ The I<sys.csv> must contain a I<TrialID>, I<Score> and I<Decision> columns.
 
 The metadata CSV(s) should contain the information that should be important to be I<SELECT>ed during the I<filtering> step (3rd step of this process) as well as at least one table with a I<TrialID> and optionally a I<BlockID> column , both of which are expected during the I<filtering> step (if I<BlockID> is not provided, a default value will be used).
 
-Please note that it is the user's responsiblity to provide properly formatted CSV files with the expected columns (especially for the Reference and System CSV files).
+Please note that it is the user's responsibility to provide properly formatted CSV files with the expected columns (especially for the Reference and System CSV files).
 
 This process will create the I<outdir/referenceDB.cfg>, I<outdir/systemDB.cfg> and I<outdir/metadataDB.cfg> files. Note that the location of the CSV files is embedded within the config file. 
 
@@ -1208,7 +1261,7 @@ is a Comma Separated Value dump of the previous data's table.
 
 =item
 
-Files starting with I<outidr/scoreDB.det> are used by and for the graphic representation of the curve points:
+Files starting with I<outdir/scoreDB.det> are used by and for the graphic representation of the curve points:
 
 =item
 
@@ -1314,7 +1367,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile | --dividedSys [join.sql] --sycsv csvfile[:tablename][\%columnname:constraint[...]] --syscsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[:tablename][...] [...]]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--PrintedBlock text] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [--judgementThreshold score | --JudgementThresholdPerBlock sql_file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[:tablename][...] [...]]] 
+$0 [--help | --man | --version] --outdir dir [--profile name] [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile | --dividedSys [join.sql] --sycsv csvfile[:tablename][\%columnname:constraint[...]] --syscsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[...] [...]]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--PrintedBlock text] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [--judgementThreshold score | --JudgementThresholdPerBlock sql_file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1325,6 +1378,7 @@ Where:
   --help     This help message
   --version  Version information
   --outdir   Specify the directory where are all the steps are being processed
+  --profile    Specify the profile to use (possible values: $pl)
   --configSkip    Bypass csv config helper step
   --CreateDBSkip  Bypasss Databases creation step
   --filterSkip    Bypasss Filter tool step
@@ -1334,13 +1388,13 @@ Where:
   --VMDcfg     Specify the metadata configuration file
   --refcsv     Specify the Reference csv file
   --syscsv     Specify the System csv file
+  --dividedSys   Enable multiple files to be used as input system CSVs; a mean to \"join\" all divided systems tables into the expected System table must be provided. Unless a \'profile\' is specified that provide a \"join\" SQL file, the file must be specified.
   --quickConfig    Specify the number of lines to be read in Step 1 to decide on file content for config helper step (wihtout quickConfig, process all lines) (*2)
   --NULLfields   Empty columns will be inserted as the NULL value (the default is to insert them as the empty value of the defined type, ie '' for TEXTs). This behavior only apply to metadata CSV files.
   --RefDBfile  Specify the Reference SQLite database file
   --SysDBfile  Specify the System SQLite database file
   --MetadataDBfile  Specify the metadata SQLite database file
   --iFilterDBfile  Specify the filtering SQLite database file
-  --profile    Specify the profile to use (possible values: $pl)
 Filter (Step 3) specific options:
   --FilterCMDfile  Specify the SQLite command file
   --PrintedBlock   Specify the \'BlockID\' values used if not \'SELECT\'-ed
