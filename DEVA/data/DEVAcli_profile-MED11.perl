@@ -11,10 +11,13 @@
     push @usedmetparams, $v . $tmp_up{$v};
   }
 }
+
 $taskName = 'MED'
   if (MMisc::is_blank($taskName));
+
 $devadetname = 'EventID'
   if (MMisc::is_blank($devadetname));
+
 $blockIDname = 'EventID'
   if (MMisc::is_blank($blockIDname));
 
@@ -30,7 +33,7 @@ $dividedSys = "$profiles_path/DEVAcli_dividedSys_MED11.sql"
 
 # 'FilterCMDfile' SQL commands
 $filtercmdfile = "$profiles_path/DEVAcli_filter-MED11.sql"
-  if (MMisc::is_blank($fitercmdfile));
+  if (MMisc::is_blank($filtercmdfile));
 
 { # avoid injecting new variable into the main scope
   my $err = MMisc::check_file_r($dividedSys);
