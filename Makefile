@@ -183,19 +183,28 @@ DEVATOOLS=tools/DEVA_{cli/DEVA_cli,filter/DEVA_filter,sci/DEVA_sci}.pl
 DEVATOOLS_MAN=tools/DEVA_cli/DEVA_cli.pl
 
 DEVAinstall:
+	@make DEVAinstall_common
 	@make DEVAinstall_man
+	@echo ""
+	@echo ""
 
-DEVAinstall_noman:
+DEVAinstall_common:
 	@echo ""
 	@echo "********** Installing DEVA tools"
 	@make commoninstall
 	@echo "** Installing DEVA tools"
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${DEVADIR}/${DEVATOOLS}
+	@perl installer.pl ${F4DE_BASE} lib/data ${DEVADIR}/data/*.sql
+	@perl installer.pl ${F4DE_BASE} lib/data ${DEVADIR}/data/*.perl
 
 DEVAinstall_man:
-	@make DEVAinstall_noman
 	@perl installer.pl ${F4DE_BASE} man/man1 ${DEVADIR}/man/*.1
 
+DEVAinstall_noman:
+	@make DEVAinstall_common
+	@echo "** NOT installing man file"
+	@echo ""
+	@echo ""
 
 ##########
 
