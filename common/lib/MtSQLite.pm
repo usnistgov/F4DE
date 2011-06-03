@@ -363,8 +363,14 @@ sub sqliteCommands {
     MMisc::write_syscall_smart_logfile($lf, "$sqlitecmd $dbfile < $tf");
 
 #  print "* Log file for $sqlitecmdb call: $of\n";
-  return("There was a problem running the sqlite commands, see: $of")
-    if ((! $ok) || ($rc != 0));
+  if ((! $ok) || ($rc != 0)) {
+    my $logc = MMisc::slurp_file($of);
+    return
+      ("There was a problem running the sqlite commands\n"
+       . "----- The run/error log (located: $of) is:\n$logc\n\n"
+       . "----- The command runs (located: $tf) were:\n$cmdlist\n"
+      );
+  }
 
   return("", $of, $so, $se);
 }
