@@ -139,7 +139,7 @@ my $blockavg = 0;
 my $GetTrialsDB = 0;
 my $quickConfig = undef;
 my $nullmode = 0;
-my $dividedSys = undef;
+my $derivedSys = undef;
 my $blockIDname = undef;
 my $profile = undef;
 
@@ -189,7 +189,7 @@ GetOptions
    'GetTrialsDB'     => \$GetTrialsDB,
    'quickConfig:i'   => \$quickConfig,
    'NULLfields'      => \$nullmode,
-   'dividedSys:s'    => \$dividedSys,
+   'derivedSys:s'    => \$derivedSys,
    'PrintedBlock=s'  => \$blockIDname, 
    'profile=s'       => \$profile,
    'judgementThreshold=f' => \$decThr,
@@ -284,10 +284,10 @@ my $finalDBfile = "$finalDBbase.db";
 
 if ($doCfg) {
   ## Pre-check(s)
-  MMisc::error_quit("\'dividedSys\' selected but less than 2 \'syscsv' files provided on the command line, aborting")
-    if ((scalar @syscsvs > 0) && (defined $dividedSys) && (scalar @syscsvs < 2));
+#  MMisc::error_quit("\'derivedSys\' selected but less than 2 \'syscsv' files provided on the command line, aborting")
+#    if ((scalar @syscsvs > 0) && (defined $derivedSys) && (scalar @syscsvs < 2));
   MMisc::error_quit("More than one \'syscsv\' provided on the command line, aborting")
-    if ((scalar @syscsvs > 0) && (! defined $dividedSys) && (scalar @syscsvs != 1));
+    if ((scalar @syscsvs > 0) && (! defined $derivedSys) && (scalar @syscsvs != 1));
   
   print "***** Generating config files\n";
   my $done = 0;
@@ -308,7 +308,7 @@ if ($doCfg) {
   }
   
   if (scalar @syscsvs > 0) {
-    if (! defined $dividedSys) {
+    if (! defined $derivedSys) {
       my $syscsv = $syscsvs[0];
       if (! MMisc::is_blank($syscsv)) {
         print "** SYS\n";
@@ -328,8 +328,8 @@ if ($doCfg) {
           if (scalar @Cfg_warn_sys_checks > 0);
         $done++;
       }
-    } else { # dividedSys mode
-      print "** Divided SYS\n";
+    } else { # derivedSys mode
+      print "** Derived SYS\n";
       my $tmp = &do_cfgfile
         ($sysDBcfg, 1, "$logdir/CfgGen_${sysDBb}.log", 
          "-c ${sysDBbase}_columninfo.txt -t ${sysDBbase}_tableinfo.txt", 
@@ -373,7 +373,7 @@ if ($createDBs) {
   if (MMisc::does_file_exists($sysDBcfg)) {
     print "** SYS\n";
     &db_create($sysDBcfg, 0, $sysDBfile, "$logdir/DBgen_${sysDBb}.log");
-    &dividedSys_Merge($sysDBfile, $mdDBfile);
+    &derivedSys_Derive($sysDBfile, $mdDBfile);
     
     $done++;
   }
@@ -610,8 +610,10 @@ sub run_tool {
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     MMisc::write_syscall_smart_logfile($lf, $tool, @cmds); 
-  MMisc::error_quit("There was a problem running the tool ($tool) command, see: $of")
-    if ((! $ok) || ($rc != 0));
+  if ((! $ok) || ($rc != 0)) {
+    my $lfc = MMisc::slurp_file($of);
+    MMisc::error_quit("There was a problem running the tool ($tool) command\n  Run log (located at: $of) content: $lfc\n\n");
+  }
 
   return($ok, $otxt, $so, $se, $rc, $of);
 }
@@ -629,13 +631,13 @@ sub __runDB_cmd {
 
 #####
 
-sub dividedSys_Merge {
+sub derivedSys_Derive {
   my ($dbfile, $mddb) = @_;
 
-  return() if (! defined $dividedSys);
+  return() if (! defined $derivedSys);
 
-  my $err = MMisc::check_file_r($dividedSys);
-  MMisc::error_quit("Problem with \'dividedSys\' file ($dividedSys) : $err")
+  my $err = MMisc::check_file_r($derivedSys);
+  MMisc::error_quit("Problem with \'derivedSys\' file ($derivedSys) : $err")
     if (! MMisc::is_blank($err));
 
   my $cmd = "";
@@ -644,7 +646,7 @@ sub dividedSys_Merge {
   $cmd .= "CREATE TABLE $sysTN (TrialID TEXT PRIMARY KEY, Score REAL, Decision TEXT CHECK(Decision==\"y\" OR Decision==\"n\"));\n";
   $cmd .= "ATTACH DATABASE \"$mddb\" AS $mdDBb;\n" if (MMisc::does_file_exists($mddb));
   
-  $cmd .= MMisc::slurp_file($dividedSys);
+  $cmd .= MMisc::slurp_file($derivedSys);
 
   &__runDB_cmd($dbfile, $cmd);
 }
@@ -690,7 +692,7 @@ B<DEVA_cli>
   S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--DETScoreSkip>]>
   S<[B<--refcsv> I<csvfile>]>
   S<[B<--syscsv> I<csvfile>>
-  S< | B<--dividedSys> [I<join.sql>] B<--sycsv> I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]]>
+  S< | B<--derivedSys> [I<join.sql>] B<--sycsv> I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]]>
   S<   B<--syscsv> I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]] [B<--syscsv> I<csvfile>[...] [...]]]> 
   S<[B<--quickConfig> [I<linecount>]] [B<--NULLfields>]>
   S<[B<--wREFcfg> I<file>] [B<--WSYScfg> I<file>] [B<--VMDcfg> I<file>]>
@@ -736,7 +738,7 @@ Optional arguments:
  S<[B<--NULLfields>]>
  S<[B<--refcsv> I<csvfile>]>
  S<[B<--syscsv> I<csvfile>>
- S< | B<--dividedSys> [I<join.sql>] B<--sycsv> I<csvfile>[...] B<--sycsv> I<csvfile>[...] [B<--sycsv> I<csvfile>[...] [...]]]>
+ S< | B<--derivedSys> [I<join.sql>] B<--sycsv> I<csvfile>[...] B<--sycsv> I<csvfile>[...] [B<--sycsv> I<csvfile>[...] [...]]]>
  S<[B<--wREFcfg> I<file>]>
  S<[B<--WSYScfg> I<file>]>
  S<[B<--VMDcfg> I<file>]>
@@ -753,7 +755,7 @@ Required arguments:
 Optional arguments:
  S<[B<--profile> I<name>]>
  S<[B<--NULLfields>]>
- S<[B<--dividedSys> [I<join.sql>]]>
+ S<[B<--derivedSys> [I<join.sql>]]>
  S<[B<--wREFcfg> I<file>]>
  S<[B<--WSYScfg> I<file>]>
  S<[B<--VMDcfg> I<file>]>
@@ -1024,10 +1026,10 @@ Skip the Trial Scoring step (including DETCurve processing).
 This step rely on the S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<outdir/filterDB.sql> files to extract into S<outdir/scoreDB.sql> a I<ref> and I<sys> table that only contains the I<TrialID>s left post-filtering.
 This step also generate a few files starting with S<outdir/scoreDB.det> that are the results of the DETCurve generation process.
 
-=item B<--dividedSys> [I<join.sql>] 
+=item B<--derivedSys> [I<join.sql>] 
 
-Divided system files are a mean to separate reporting requirement of systems within multiple files.
-When using B<--dividedSys> at least two B<--syscsv> must be provided, and a SQLite join command must be available that will S<INSERT> the content in the I<System> table's I<TrialID>, I<Score> and I<Decision> columns.
+Derived system files are a mean to separate reporting requirement of systems within multiple files.
+When using B<--derivedSys> at least two B<--syscsv> must be provided, and a SQLite join command must be available that will S<INSERT> the content in the I<System> table's I<TrialID>, I<Score> and I<Decision> columns.
 The only case where a I<join.sql> type file is not required if if a B<--profile> is used that sets it.
 
 For example if the system reports both a I<decision> (with a I<TrialID> and I<Score> columns) and I<threshold> (with an I<EventID> and I<DetectionThreshold> columns) tables, given a I<metadata> database with a I<TrialIndex> with at least a I<TrialID> and I<EventID> columns, the I<join> file can contain:
@@ -1089,7 +1091,7 @@ During Step 3 (filtering), specify the B<BlockID> value used if the column is no
 
 =item B<--profile> I<name>
 
-Using a profile enable to used pre-configured values for options, such as B<--usedMetric>, B<--UsedMetricParameters>, B<--TrialsParameters>, B<--taskName>, B<--blockName>, B<--PrintedBlock>, B<--dividedSys>, as well as confirm that some options are used, such as B<--dividedSys> (and enforce only a certain number of system files are provided). Profiles also can specify more complex rules such as configuration type checks and constraints
+Using a profile enable to used pre-configured values for options, such as B<--usedMetric>, B<--UsedMetricParameters>, B<--TrialsParameters>, B<--taskName>, B<--blockName>, B<--PrintedBlock>, B<--derivedSys>, as well as confirm that some options are used, such as B<--derivedSys> (and enforce only a certain number of system files are provided). Profiles also can specify more complex rules such as configuration type checks and constraints
 
 =item B<--quickConfig> [I<linecount>]
 
@@ -1367,7 +1369,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--profile name] [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile | --dividedSys [join.sql] --sycsv csvfile[:tablename][\%columnname:constraint[...]] --syscsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[...] [...]]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--PrintedBlock text] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [--judgementThreshold score | --JudgementThresholdPerBlock sql_file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
+$0 [--help | --man | --version] --outdir dir [--profile name] [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile | --derivedSys [join.sql] --sycsv csvfile[:tablename][\%columnname:constraint[...]] --syscsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[...] [...]]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--PrintedBlock text] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [--judgementThreshold score | --JudgementThresholdPerBlock sql_file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1388,7 +1390,7 @@ Where:
   --VMDcfg     Specify the metadata configuration file
   --refcsv     Specify the Reference csv file
   --syscsv     Specify the System csv file
-  --dividedSys   Enable multiple files to be used as input system CSVs; a mean to \"join\" all divided systems tables into the expected System table must be provided. Unless a \'profile\' is specified that provide a \"join\" SQL file, the file must be specified.
+  --derivedSys   Enable multiple files to be used as input system CSVs; a mean to \"join\" all systems tables into the expected System table must be provided. Unless a \'profile\' is specified that provide a \"join\" SQL file, the file must be specified.
   --quickConfig    Specify the number of lines to be read in Step 1 to decide on file content for config helper step (wihtout quickConfig, process all lines) (*2)
   --NULLfields   Empty columns will be inserted as the NULL value (the default is to insert them as the empty value of the defined type, ie '' for TEXTs). This behavior only apply to metadata CSV files.
   --RefDBfile  Specify the Reference SQLite database file
