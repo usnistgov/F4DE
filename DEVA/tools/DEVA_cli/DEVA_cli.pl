@@ -95,8 +95,10 @@ my ($sqlite_cfg_helper, $sqlite_tables_creator, $sqlite_load_csv,
   ( "SQLite_cfg_helper", "SQLite_tables_creator", "SQLite_load_csv", 
     "DEVA_filter", "DEVA_sci");
 
-my $profiles_path = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
-my %ok_profiles = &get_profiles_list($profiles_path, "DEVAcli_profile-", ".perl");
+my @profiles_beg_end = ("DEVAcli_profile-", ".perl");
+my @profiles_path = ('.', (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data");
+my %ok_profiles = ();
+&get_profiles_list(\%ok_profiles, \@profiles_path, @profiles_beg_end);
 
 my $usage = &set_usage();
 
@@ -141,60 +143,26 @@ my $quickConfig = undef;
 my $nullmode = 0;
 my $derivedSys = undef;
 my $blockIDname = undef;
-my $profile = undef;
 
 my $decThr = undef;
 my $pbid_dt_sql = undef;
 
-# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used: ABCD FG  J  MN P RSTUVWXYZabcd f hij lm opqrstuvwxyz  #
+my $debug = 0;
+my $profile = undef;
+my $spn = 0;
+my $expectXds = 0;
+my $Cfg_errorquit_sys_checks_file    = undef;
+my $Cfg_warn_sys_checks_file         = undef;
+my $Cfg_errorquit_dersys_checks_file = undef;
+my $Cfg_warn_dersys_checks_file      = undef;
+my $sp_sys_constr = undef;
+my $sp_md_constr  = undef;
 
 my %opt = ();
-GetOptions
-  (
-   \%opt,
-   'help',
-   'version',
-   'man',
-   'outdir=s' => \$outdir,
-   'refcsv=s' => \$refcsv,
-   'syscsv=s' => \@syscsvs,
-   'configSkip' => sub { $doCfg = 0},
-   'CreateDBSkip' => sub { $createDBs = 0},
-   'filterSkip' => sub { $filter = 0},
-   'FilterCMDfile=s' => \$filtercmdfile,
-   'DETScoreSkip' => sub { $score = 0},
-   'RefDBfile=s' => \$wrefDBfile,
-   'SysDBfile=s' => \$wsysDBfile,
-   'MetadataDBfile=s' => \$wmdDBfile,
-   'additionalResDBfile=s' => \@addResDBfiles,
-   'usedMetric=s' => \$usedmetric,
-   'UsedMetricParameters=s' => \@usedmetparams,
-   'TrialsParameters=s' => \@trialsparams,
-   'listParameters' => \$listparams,
-   'wREFcfg=s'  => \$wrefCFfile,
-   'WSYScfg=s'  => \$wsysCFfile,
-   'VMDcfg=s'   => \$wmdCFfile,
-   'blockName=s'        => \$devadetname,
-   'xmin=f'             => \$xm,
-   'Xmax=f'             => \$xM,
-   'ymin=f'             => \$ym,
-   'Ymax=f'             => \$yM,
-   'zusedXscale=s'      => \$xscale,
-   'ZusedYscale=s'      => \$yscale,
-   'AdditionalFilterDB=s'  => \@addDBs,
-   'iFilterDBfile=s' => \$wresDBfile,
-   'BlockAverage'    => \$blockavg,
-   'taskName=s'      => \$taskName,
-   'GetTrialsDB'     => \$GetTrialsDB,
-   'quickConfig:i'   => \$quickConfig,
-   'NULLfields'      => \$nullmode,
-   'derivedSys:s'    => \$derivedSys,
-   'PrintedBlock=s'  => \$blockIDname, 
-   'profile=s'       => \$profile,
-   'judgementThreshold=f' => \$decThr,
-   'JudgementThresholdPerBlock=s' => \$pbid_dt_sql,
-  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+my @cc = ();
+
+&process_options();
+
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 if ($opt{'man'}) {
@@ -202,32 +170,6 @@ if ($opt{'man'}) {
   MMisc::error_quit("Could not run \'$mancmd\'") if ($r);
   MMisc::ok_quit($o);
 }
-
-my @csvlist = @ARGV;
-
-# new variables used for special checks
-my @Cfg_errorquit_sys_checks = ();
-my @Cfg_warn_sys_checks = ();
-my @Cfg_errorquit_divsys_checks = ();
-my @Cfg_warn_divsys_checks = ();
-# load profiles and run its internal variables checks
-if (defined $profile) {
-  MMisc::error_quit("A \'profile\' was selected when no profile are available, aborting")
-    if (scalar(keys %ok_profiles) == 0);
-  MMisc::error_quit("Unknown profile name ($profile), known name: " . join(" ", sort(keys %ok_profiles)))
-    if (! exists $ok_profiles{$profile});
-
-  my $specfile = $ok_profiles{$profile};
-  my $err = MMisc::check_file_r($specfile);
-  MMisc::error_quit("Problem with \'profile\' specfile ($specfile) : $err")
-    if (! MMisc::is_blank($err));
-  my $tmpstr = MMisc::slurp_file($specfile);
-  MMisc::error_quit("Problem loading \'profile\' specfile ($specfile)")
-    if (! defined $tmpstr);
-# the 'use strict' insure that variables set in the specfile must be already defined (otherwise their scope would not got beyond this 'if' statement)
-  eval $tmpstr; 
-}
-## run the regular options check now
 
 if ($listparams) {
   MMisc::error_quit("Specified \'metric\' does not seem to be using a valid name ($usedmetric), should start with \"Metric\"")
@@ -242,6 +184,34 @@ if ($listparams) {
     &run_tool("", $tool, $cmdp);
 
   MMisc::ok_quit($so);
+}
+
+if ($spn) {
+  MMisc::error_quit("No \'--profile\' name given, can not use \'--KsaveProfile\'")
+    if (MMisc::is_blank($profile));
+  &save_profile_and_quit($profile, @profiles_beg_end);
+}
+
+my @csvlist = @ARGV;
+
+## Check file locations
+&extend_file_location(\$derivedSys, "--derivedSys", @profiles_path);
+&extend_file_location(\$filtercmdfile, "--FilterCMDfile", @profiles_path);
+&extend_file_location(\$pbid_dt_sql, "--JudgementThresholdPerBlock", @profiles_path);
+
+# new variables used for special checks
+my @Cfg_errorquit_sys_checks = &load_spcfgfile($Cfg_errorquit_sys_checks_file, "--KqSys", @profiles_path);
+my @Cfg_warn_sys_checks = &load_spcfgfile($Cfg_warn_sys_checks_file, "--KwSys", @profiles_path);
+my @Cfg_errorquit_dersys_checks = &load_spcfgfile($Cfg_errorquit_dersys_checks_file, "--KQderivedSys", @profiles_path);
+my @Cfg_warn_dersys_checks = &load_spcfgfile($Cfg_warn_dersys_checks_file, "--KWderivedSys", @profiles_path);
+@syscsvs = &apply_constraints($sp_sys_constr, \@syscsvs, "--KSysConstraints", @profiles_path);
+@csvlist = &apply_constraints($sp_md_constr,  \@csvlist, "--KMDConstraints",  @profiles_path);
+
+if ($expectXds > 0) {
+  MMisc::error_quit("\'--KexactlyXderivedSys\' can only be used with \'--derivedSys\'")
+    if (! defined $derivedSys);
+  MMisc::error_quit("\'--KexactlyXderivedSys\' specify that $expectXds \'syscsv\' must be used, seeing: " . scalar @syscsvs)
+  if (scalar @syscsvs != $expectXds);
 }
 
 MMisc::error_quit("Invalid value for \'usedXscale\' ($xscale) (possible values: " . join(", ", @ok_scales) . ")")
@@ -334,10 +304,10 @@ if ($doCfg) {
         ($sysDBcfg, 1, "$logdir/CfgGen_${sysDBb}.log", 
          "-c ${sysDBbase}_columninfo.txt -t ${sysDBbase}_tableinfo.txt", 
          @syscsvs);
-      &check_isin($tmp, 1, @Cfg_errorquit_divsys_checks)
-        if (scalar @Cfg_errorquit_divsys_checks > 0);
-      &check_isin($tmp, 0, @Cfg_warn_divsys_checks)
-        if (scalar @Cfg_warn_divsys_checks > 0);
+      &check_isin($tmp, 1, @Cfg_errorquit_dersys_checks)
+        if (scalar @Cfg_errorquit_dersys_checks > 0);
+      &check_isin($tmp, 0, @Cfg_warn_dersys_checks)
+        if (scalar @Cfg_warn_dersys_checks > 0);
       $done++;
     }
   }
@@ -654,25 +624,239 @@ sub derivedSys_Derive {
 ##########
 
 sub get_profiles_list {
-  my ($dir, $beg, $end) = @_;
+  my ($rh, $rd, $b, $e) = @_;
+  foreach my $d (@{$rd}) { &get_profiles_list_core($rh, $d, $b, $e); }
+}
 
-  my %ok_list = ();
+##
+
+sub get_profiles_list_core {
+  my ($rh, $dir, $beg, $end) = @_;
+  
   opendir DIR, "$dir"
-    or return(%ok_list);
+    or return();
   my @fl = grep(m%^${beg}.+${end}$%, grep(! m%^\.\.?$%, readdir(DIR)));
   chomp @fl;
   closedir DIR;
-
-  return(%ok_list) if (scalar @fl == 0);
-
+  
+  return() if (scalar @fl == 0);
+  
   foreach my $f (@fl) {
     my $fp = "$dir/$f";
     $f =~ s%^$beg%%;
     $f =~ s%$end$%%;
-    $ok_list{$f} = $fp;
+    MMisc::warn_print("Profile \'$f\' already exists, previous location was \'" 
+                      . $$rh{$f} . "\', new (used) location is now \'$fp\'")
+      if (exists $$rh{$f}); # one definition max per profile please, warn the user
+    $$rh{$f} = $fp;
+  }
+}
+
+#####
+
+sub load_profile {
+  my ($confn) = @_;
+
+  MMisc::error_quit("Unknown profile ($confn), authorized values: " . join(" ", keys %ok_profiles))
+    if (! exists $ok_profiles{$confn});
+  my $conf = $ok_profiles{$confn};
+  
+  my $err = MMisc::check_file_r($conf);
+  MMisc::error_quit("Problem with \'useConfig\' file ($conf): $err")
+    if (! MMisc::is_blank($err));
+  
+  my $tmp = undef;
+  $tmp = MMisc::load_memory_object($conf);
+  MMisc::error_quit("Problem with configuration file data ($conf)")
+    if (! defined $tmp);
+  unshift @ARGV, @$tmp; # add to beginning of argument processing to allow for command line override
+}
+
+#####
+
+sub save_profile_and_quit {
+  my ($pname, $beg, $end) = @_;
+  my $outconf = "./${beg}${pname}${end}";
+  
+  MMisc::error_quit("Problem writing configuration file ($outconf)")
+    if (! MMisc::dump_memory_object
+        ($outconf, "", \@cc,
+         "# DEVA_cli Profile Configuration file\n\n",
+         undef, 0));
+  MMisc::ok_quit("Wrote \'KsaveProfile\' file ($outconf)");
+  
+}
+
+#####
+ 
+sub dprint { return if (! $debug); print @_;}
+
+sub _cc1 { dprint($_[0] . " ** "); push @cc, "--" . $_[0]; }
+sub _cc2 { dprint($_[0] . " | " . $_[1] . " ** "); push @cc, "--" . $_[0]; push @cc, $_[1]; } 
+
+##
+
+sub __sort_options {
+  my @p = ();
+  my @rest = ();
+  while (my $v = shift @ARGV) {
+    if ($v =~ m%^\-\-?Ks%) {
+      unshift @p, $v;
+      next;
+    }
+    if ($v =~ m%^\-\-?p%) {
+      push @p, ($v, shift @ARGV);
+      next;
+    }
+    push @rest, $v;
+  }
+  return(@p, @rest);
+}
+
+##  
+
+sub process_options {
+  ## Put 'KsaveProfile' then 'profile+arg' as the first options here to add all its values before the real processing of @ARGV
+  ## (so that command line overrides work)
+#  print "[*] " . join(" | ", @ARGV) . "\n";
+  @ARGV = &__sort_options();
+#  print "[*] " . join(" | ", @ARGV) . "\n";
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
+# Used: ABCD FG  JK MN P RSTUVWXYZabcd f hij lm opqrstuvwxyz  #
+
+# For letter 'K'
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
+# Used:                 Q     W       e           q s   w     #
+
+
+  GetOptions
+    (
+     \%opt,
+     'help',
+     'version',
+     'man',
+     'KsaveProfile' => \$spn,
+     'profile=s'    => sub {$profile = $_[1]; &load_profile($profile) if (! $spn)},
+     'outdir=s'     => sub {$outdir = $_[1]; &_cc2(@_);},
+     'refcsv=s'     => \$refcsv,
+     'syscsv=s'     => \@syscsvs,
+     'configSkip'   => sub {$doCfg = 0; &_cc1(@_);},
+     'CreateDBSkip' => sub {$createDBs = 0; &_cc1(@_);},
+     'filterSkip'   => sub {$filter = 0; &_cc1(@_);},
+     'FilterCMDfile=s' => sub {$filtercmdfile = $_[1]; &_cc2(@_);},
+     'DETScoreSkip' => sub {$score = 0; &_cc1(@_);},
+     'RefDBfile=s'  => sub {$wrefDBfile = $_[1]; &_cc2(@_);},
+     'SysDBfile=s'  => sub {$wsysDBfile = $_[1]; &_cc2(@_);},
+     'MetadataDBfile=s' => sub {$wmdDBfile = $_[1]; &_cc2(@_);},
+     'additionalResDBfile=s' => sub {push @addResDBfiles, $_[1]; ; &_cc2(@_);},
+     'usedMetric=s' => sub {$usedmetric = $_[1]; &_cc2(@_);},
+     'UsedMetricParameters=s' => sub {push @usedmetparams, $_[1]; &_cc2(@_);},
+     'TrialsParameters=s' => sub {push @trialsparams, $_[1]; &_cc2(@_);},
+     'listParameters' => \$listparams,
+     'wREFcfg=s'    => sub {$wrefCFfile = $_[1]; &_cc2(@_);},
+     'WSYScfg=s'    => sub {$wsysCFfile = $_[1]; &_cc2(@_);},
+     'VMDcfg=s'     => sub {$wmdCFfile = $_[1]; &_cc2(@_);},
+     'blockName=s'  => sub {$devadetname = $_[1]; &_cc2(@_);},
+     'xmin=f'       => sub {$xm = $_[1]; &_cc2(@_);},
+     'Xmax=f'       => sub {$xM = $_[1]; &_cc2(@_);},
+     'ymin=f'       => sub {$ym = $_[1]; &_cc2(@_);},
+     'Ymax=f'       => sub {$yM = $_[1]; &_cc2(@_);},
+     'zusedXscale=s' => sub {$xscale = $_[1]; &_cc2(@_);},
+     'ZusedYscale=s' => sub {$yscale = $_[1]; &_cc2(@_);},
+     'AdditionalFilterDB=s' => sub {push @addDBs, $_[1]; &_cc2(@_);},
+     'iFilterDBfile=s' =>  sub {$wresDBfile = $_[1]; &_cc2(@_);},
+     'BlockAverage' => sub {$blockavg = 1; &_cc1(@_);},
+     'taskName=s'   => sub {$taskName = $_[1]; &_cc2(@_);},
+     'GetTrialsDB'  => sub {$GetTrialsDB = $_[1]; &_cc2(@_);},
+     'quickConfig:i' => sub {$quickConfig = (defined $_[1]) ? $_[1] : 0; &_cc2(@_);},
+     'NULLfields'   => sub {$nullmode = 1; &_cc1(@_);},
+     'derivedSys:s' => sub {$derivedSys = $_[1]; &_cc2(@_);},
+     'PrintedBlock=s' => sub {$blockIDname = $_[1]; &_cc2(@_);}, 
+     'judgementThreshold=f' => sub {$decThr = $_[1]; &_cc2(@_);},
+     'JudgementThresholdPerBlock=s' => sub {$pbid_dt_sql = $_[1]; &_cc2(@_);},
+     # All 'K' options (but 'KsaveProfile') are below
+     'KexactlyXderivedSys=i' => sub {$expectXds = $_[1]; &_cc2(@_);},
+     'KQderivedSys=s' => sub {$Cfg_errorquit_dersys_checks_file = $_[1]; &_cc2(@_);},
+     'KWderivedSys=s' => sub {$Cfg_warn_dersys_checks_file = $_[1]; &_cc2(@_);},
+     'KqSys=s' => sub {$Cfg_errorquit_sys_checks_file = $_[1]; &_cc2(@_);},
+     'KwSys=s' => sub {$Cfg_warn_sys_checks_file = $_[1]; &_cc2(@_);},
+     'KSysConstraints=s' => sub {$sp_sys_constr = $_[1]; &_cc2(@_);},
+     'KMDConstraints=s' => sub {$sp_md_constr = $_[1]; &_cc2(@_);},
+    ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
+}
+
+#####
+
+sub note_print { print('-- Note: ', join(' ', @_), "\n"); } 
+
+sub extend_file_location {
+  my ($rf, $t, @pt) = @_;
+
+  return if (MMisc::is_blank($$rf));
+  return if (MMisc::does_file_exists($$rf));
+
+  foreach my $p (@pt) {
+    my $v = "$p/$$rf";
+    if (MMisc::does_file_exists($v)) {
+#      &note_print("Using \'$t\' file: $v");
+      $$rf = $v;
+      return();
+    }
   }
 
-  return(%ok_list);
+  MMisc::error_quit("Could not find \'$t\' file ($$rf) in any of the expected paths: " . join(" ", @pt));
+}
+
+##
+
+sub load_spcfgfile {
+  my ($fn, $t, @pf) = @_;
+
+  return() if (MMisc::is_blank($fn));
+  &extend_file_location(\$fn, $t, @pf);
+  my $tmp = MMisc::load_memory_object($fn);
+  MMisc::error_quit("Problem with \'$t\' configuration file's data ($fn)")
+    if (! defined $tmp);
+  MMisc::error_quit("Problem with \'$t\' configuration file's's data ($fn) : not an array ?")
+    if (ref($tmp) ne 'ARRAY');
+  return(@$tmp);
+}
+
+##
+
+sub __constraints_placement {
+  my ($t, $ra, %__constraints) = @_;
+  my @in = @$ra;
+  my @out = ();
+  foreach my $td (@in) {
+    foreach my $ck (keys %__constraints) {
+      if ($td =~ m%^([^\:]+?\:$ck)(\%.+)?$%) {
+        $td = "$1\%" . $__constraints{$ck};
+        delete $__constraints{$ck};
+      }
+    }
+    push @out, $td;
+  }
+  MMisc::error_quit("Problem with \'$t\', could not find/apply following rules : " . join(" ", keys %__constraints))
+      if (scalar(keys %__constraints) > 0);
+  return(@out);
+}
+
+##
+
+sub apply_constraints {
+  my ($fn, $ra, $t, @pf) = @_;
+
+  return(@$ra) if (MMisc::is_blank($fn));
+  &extend_file_location(\$fn, $t, @pf);
+  my $tmp = MMisc::load_memory_object($fn);
+  MMisc::error_quit("Problem with \'$t\' configuration file'ss data ($fn)")
+    if (! defined $tmp);
+  MMisc::error_quit("Problem with \'$t\' configuration file's data ($fn) : not a hash ?")
+    if (ref($tmp) ne 'HASH');
+
+  return(&__constraints_placement($t, $ra, %$tmp));
 }
 
 ############################################################ Manual
@@ -1369,7 +1553,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--profile name] [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile | --derivedSys [join.sql] --sycsv csvfile[:tablename][\%columnname:constraint[...]] --syscsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[...] [...]]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--PrintedBlock text] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [--judgementThreshold score | --JudgementThresholdPerBlock sql_file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
+$0 [--help | --man | --version] --outdir dir [--profile name [--KsaveProfile]] [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile [--KqSys file] [--KwSys file] | --derivedSys [join.sql] --sycsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[...] [...]] [--KexactlyXderivedSys number] [--KQderivedSys file] [--KWderivedSys file]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--PrintedBlock text] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [--judgementThreshold score | --JudgementThresholdPerBlock sql_file] [--KSysConstraints file] [--KMDConstraints file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1381,6 +1565,7 @@ Where:
   --version  Version information
   --outdir   Specify the directory where are all the steps are being processed
   --profile    Specify the profile to use (possible values: $pl)
+  --KsaveProfile   Designed to help save configuration files, will save command line specified options in the local directory using the profile name specified and quit
   --configSkip    Bypass csv config helper step
   --CreateDBSkip  Bypasss Databases creation step
   --filterSkip    Bypasss Filter tool step
@@ -1390,7 +1575,12 @@ Where:
   --VMDcfg     Specify the metadata configuration file
   --refcsv     Specify the Reference csv file
   --syscsv     Specify the System csv file
+  --KqSys      Specify a column check file for system CSV (will quit on error)
+  --KwSys      Specify a column check file for system CSV (will warn on error)
   --derivedSys   Enable multiple files to be used as input system CSVs; a mean to \"join\" all systems tables into the expected System table must be provided. Unless a \'profile\' is specified that provide a \"join\" SQL file, the file must be specified.
+  --KexactlyXderivedSys  Specify the exact number of derivedSys that must be provided
+  --KQderivedSys  Specify a column check file for derived system CSVs (will quit on error)
+  --KWderivedSys  Specify a column check file for derived system CSVs (will warn on error)
   --quickConfig    Specify the number of lines to be read in Step 1 to decide on file content for config helper step (wihtout quickConfig, process all lines) (*2)
   --NULLfields   Empty columns will be inserted as the NULL value (the default is to insert them as the empty value of the defined type, ie '' for TEXTs). This behavior only apply to metadata CSV files.
   --RefDBfile  Specify the Reference SQLite database file
@@ -1416,6 +1606,8 @@ DETCurve generation (Step 4) specific options:
   --additionalResDBfile  Additional Filter results database files to give the scorer (will do an AND on the TrialIDs)
   --judgementThreshold   When adding a Trial, do not use the System's Decision but base the decision on a given threshold
   --JudgementThresholdPerBlock  Specify the SQL command file expected to insert into the \'ThresholdTable\' table a \'Threshold\' per \'BlockID\'. 
+  --KSysConstraints  Specify a column constraint file for system CSVs (will quit on error)
+  --KMDConstraints   Specify a column constraint file for metadata CSVs (will quit on error)
 
 *1: default values can be obtained from \"$deva_sci\" 's help
 *2: default number of lines if no value is set can be obtained from \"$sqlite_cfg_helper\" 's help
