@@ -315,16 +315,6 @@ my %bid_thr = ();
 
 my ($mapped, $unmapped_sys, $unmapped_ref) = (0, 0, 0);
 
-############################################################
-# Awaiting on updated 'Trials' package
-my $__awaiting = 1;
-if (($__awaiting) && (! MMisc::is_blank($pbid_dt_sql))) {
-  print MMisc::get_sorted_MemDump(\%bid_thr) . "\n";
-}
-############################################################
-############################################################
-############################################################
-
 my %bid_trials = ();
 my @at = ();
 ##
@@ -336,7 +326,7 @@ foreach my $key (keys %sys) {
 
   my $ubid = ($blockavg) ? $blockavg_text : $bid;
 
-  &def_bid_trials($ubid);
+  &def_bid_trials($ubid, $bid);
 
   my $decision = ($sys{$key}{$Decisioncolumn} eq 'y') ? 'YES' : 'NO';
   my $istarg   = 0;
@@ -349,12 +339,7 @@ foreach my $key (keys %sys) {
   }
 
   if ($g_thr) {
-    if ($__awaiting) {
-      $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg);
-      print " [Without DECISION ADD] ";
-    } else {
       $bid_trials{$ubid}->addTrialWithoutDecision($bid, $sys{$key}{$Scorecolumn}, $istarg);
-    }
   } else {
     $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg);
   }
@@ -497,33 +482,29 @@ sub confirm_table {
 ####################
 
 sub def_bid_trials {
-  my ($bid) = @_;
+  my ($ubid, $abid) = @_;
 
   MMisc::error_quit("Empty BlockID are not authorized")
-    if (MMisc::is_blank($bid));
+    if (MMisc::is_blank($ubid));
 
-  return if (exists $bid_trials{$bid});
+  return if (exists $bid_trials{$ubid});
 
-  $bid_trials{$bid} = undef;
-  my $trialcmd = "\$bid_trials\{\$bid\} = new $trialn (\\\%trialsparams, \"$taskName\", \"$devadetname\", \"Trial\");";
+  $bid_trials{$ubid} = undef;
+  my $trialcmd = "\$bid_trials\{\$ubid\} = new $trialn (\\\%trialsparams, \"$taskName\", \"$devadetname\", \"Trial\");";
   unless (eval "$trialcmd; 1") {
-    MMisc::error_quit("Problem creating BlockID ($bid)'s Trial ($trialn) object (" . join(" ", $@) . ")");
+    MMisc::error_quit("Problem creating BlockID ($ubid)'s Trial ($trialn) object (" . join(" ", $@) . ")");
   }
-  MMisc::error_quit("Problem with BlockID ($bid)'s Trial ($trialn)")
-    if (! defined $bid_trials{$bid});
+  MMisc::error_quit("Problem with BlockID ($ubid)'s Trial ($trialn)")
+    if (! defined $bid_trials{$ubid});
 
   my $thr = undef;
   $thr = $decThr if (defined $decThr);
   if (! MMisc::is_blank($pbid_dt_sql)) {
-    MMisc::error_quit("Could not find BlockID ($bid) in Decision Mapping Table")
-      if (! MMisc::safe_exists(\%bid_thr, $bid, $Threshcolumn));
-    $thr = $bid_thr{$bid}{$Threshcolumn};
+    MMisc::error_quit("Could not find BlockID ($abid) in Decision Mapping Table")
+      if (! MMisc::safe_exists(\%bid_thr, $abid, $Threshcolumn));
+    $thr = $bid_thr{$abid}{$Threshcolumn};
   }
-  if ($__awaiting) {
-    print "[BID:$bid/THR:$thr] ";
-  } else {
-    $bid_trials{$bid}->setTrialActualDecisionThreshold($thr) if (defined $thr);
-  }
+  $bid_trials{$ubid}->setTrialActualDecisionThreshold($thr) if (defined $thr);
 }
 
 #####
