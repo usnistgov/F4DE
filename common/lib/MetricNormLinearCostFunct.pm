@@ -390,13 +390,147 @@ sub unitTest {
 
 =pod 
 
-=item B<randomCurveUnitTest()>
+=item B<errorBarUnitTest()>
 
-Build a random curve for a given set of Ptargs
+Build a random curve with error bars at specific locations
 
 =cut
 
-sub randomCurveUnitTest(){
+sub errorBarUnitTest{
+  my ($dir) = @_;
+
+  die "Error: errorBarUnitTest(\$dir) requires a defined $dir" if (! defined($dir));
+
+  use DETCurve;
+  use DETCurveSet;
+  use DETCurveGnuplotRenderer;
+  use Math::Random::OO::Uniform;
+
+  my @Ptargs = (0.01);
+  my @isolinecoef = ();
+
+  print "Build a random DET curve for Ptarg=(".join(",",@Ptargs).") Dir=/$dir/\n";
+  my $decisionScoreRand = Math::Random::OO::Uniform->new(0,1);
+  my $targetRand = Math::Random::OO::Uniform->new(0,1);
+  my $ds = new DETCurveSet("MetricNormLinearFunction Tests");
+      
+  my $Ptarg = 0.01;
+  my $numNTarg = 118450;
+  my $numTarg = 205;
+
+  print "  Working on Ptarg=$Ptarg\n";
+  my $trial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+  
+    for (my $epoch = 0; $epoch<1; $epoch ++){
+      print "    Epoch $epoch\n";
+      for (my $nt = 0; $nt<($numNTarg + $numTarg); $nt ++){
+        my $scr = $decisionScoreRand->next();
+        $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), ($targetRand->next() <= $Ptarg ? 1 : 0));
+      }
+    } 
+    my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 80 , 'Ptarg' => 0.001 ) }, $trial);
+    my $det1 = new DETCurve($trial, $met, "Ptarg = $Ptarg", \@isolinecoef, undef);
+
+    die "Error: Failed to add first det" if ("success" ne $ds->addDET("Ptarg = $Ptarg", $det1));
+  
+  
+  my ($med2011MI, $med2011FA) = (0.75, 0.06);
+  my ($med2012MI, $med2012FA) = (0.50, 0.04);
+  my ($med2013MI, $med2013FA) = (0.35, 0.028);
+  my ($med2014MI, $med2014FA) = (0.25, 0.02);
+  my ($med2015MI, $med2015FA) = (0.18, 0.0144);
+  
+  my $med2011Cost = $met->combCalc($med2011MI, $med2011FA);
+  my $med2012Cost = $met->combCalc($med2012MI, $med2012FA);
+  my $med2013Cost = $met->combCalc($med2013MI, $med2013FA);
+  my $med2014Cost = $met->combCalc($med2014MI, $med2014FA);
+  my $med2015Cost = $met->combCalc($med2015MI, $med2015FA);
+
+  my $med2011Ratio = $med2011MI /  $med2011FA;
+  my $med2012Ratio = $med2012MI /  $med2012FA;
+  my $med2013Ratio = $med2013MI /  $med2013FA;
+  my $med2014Ratio = $med2014MI /  $med2014FA;
+  my $med2015Ratio = $med2015MI /  $med2015FA;
+
+  ### So, where do I want a bar?
+  my $deltaMed2011FA = 1.64 * sqrt($med2011FA * (1-$med2011FA) /  $numNTarg);
+  my $deltaMed2012FA = 1.64 * sqrt($med2012FA * (1-$med2012FA) /  $numNTarg);
+  my $deltaMed2013FA = 1.64 * sqrt($med2013FA * (1-$med2013FA) /  $numNTarg);
+  my $deltaMed2014FA = 1.64 * sqrt($med2014FA * (1-$med2014FA) /  $numNTarg);
+  my $deltaMed2015FA = 1.64 * sqrt($med2015FA * (1-$med2015FA) /  $numNTarg);
+  
+  print "med2011FA=$med2011FA, deltaMed2011FA=$deltaMed2011FA\n";
+  print "med2012FA=$med2012FA, deltaMed2012FA=$deltaMed2012FA\n";
+  print "med2013FA=$med2013FA, deltaMed2013FA=$deltaMed2013FA\n";
+  print "med2014FA=$med2014FA, deltaMed2014FA=$deltaMed2014FA\n";
+  print "med2015FA=$med2015FA, deltaMed2015FA=$deltaMed2015FA\n";
+
+  my $deltaMed2011MI = 1.64 * sqrt($med2011MI * (1-$med2011MI) /  $numTarg);
+  my $deltaMed2012MI = 1.64 * sqrt($med2012MI * (1-$med2012MI) /  $numTarg);
+  my $deltaMed2013MI = 1.64 * sqrt($med2013MI * (1-$med2013MI) /  $numTarg);
+  my $deltaMed2014MI = 1.64 * sqrt($med2014MI * (1-$med2014MI) /  $numTarg);
+  my $deltaMed2015MI = 1.64 * sqrt($med2015MI * (1-$med2015MI) /  $numTarg);
+  
+  print "med2011MI=$med2011MI, deltaMed2011MI=$deltaMed2011MI\n";
+  print "med2012MI=$med2012MI, deltaMed2012MI=$deltaMed2012MI\n";
+  print "med2013MI=$med2013MI, deltaMed2013MI=$deltaMed2013MI\n";
+  print "med2014MI=$med2014MI, deltaMed2014MI=$deltaMed2014MI\n";
+  print "med2015MI=$med2015MI, deltaMed2015MI=$deltaMed2015MI\n";
+
+  
+  my $options = { 
+      ("Xmin" => 0.1,
+		   "Xmax" => 60,
+		   "Ymin" => 5,
+		   "title" => "4000 Hour Test Set NumTarg=$numTarg, NumNTarg=$numNTarg",
+		   "Ymax" => 95,
+		   "xScale" => "nd",
+		   "yScale" => "nd",
+		   "ColorScheme" => "color",
+       "DrawIsometriclines" => 1,
+       "createDETfiles" => 1,
+		   "DrawIsoratiolines" => 1,
+       "serialize" => 1,
+       "Isoratiolines" => [ (12.5) ],
+       "Isometriclines" => \@isolinecoef,
+       "PointSet" => [ { MMiss => $med2011MI,  MFA => $med2011FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2011"}, 
+                       { MMiss => $med2012MI,  MFA => $med2012FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2012"}, 
+                       { MMiss => $med2013MI,  MFA => $med2013FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2013"}, 
+                       { MMiss => $med2014MI,  MFA => $med2014FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2014"}, 
+                       { MMiss => $med2015MI,  MFA => $med2015FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2015"}, 
+                       
+                       { MMiss => $med2011MI,  MFA => $med2011FA-$deltaMed2011FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2011MI,  MFA => $med2011FA+$deltaMed2011FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2011MI-$deltaMed2011MI,  MFA => $med2011FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2011MI+$deltaMed2011MI,  MFA => $med2011FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       
+                       { MMiss => $med2012MI,  MFA => $med2012FA-$deltaMed2012FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2012MI,  MFA => $med2012FA+$deltaMed2012FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2012MI-$deltaMed2012MI,  MFA => $med2012FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2012MI+$deltaMed2012MI,  MFA => $med2012FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       
+                       { MMiss => $med2013MI,  MFA => $med2013FA-$deltaMed2013FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2013MI,  MFA => $med2013FA+$deltaMed2013FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2013MI-$deltaMed2013MI,  MFA => $med2013FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2013MI+$deltaMed2013MI,  MFA => $med2013FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       
+                       { MMiss => $med2014MI,  MFA => $med2014FA-$deltaMed2014FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2014MI,  MFA => $med2014FA+$deltaMed2014FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2014MI-$deltaMed2014MI,  MFA => $med2014FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2014MI+$deltaMed2014MI,  MFA => $med2014FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       
+                       { MMiss => $med2015MI,  MFA => $med2015FA-$deltaMed2015FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2015MI,  MFA => $med2015FA+$deltaMed2015FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2015MI-$deltaMed2015MI,  MFA => $med2015FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       { MMiss => $med2015MI+$deltaMed2015MI,  MFA => $med2015FA, pointSize => 1,  pointType => 6, color => "rgb \"#ff0000\""}, 
+                       ] 
+        )  };
+
+
+  print $ds->renderAsTxt("$dir/MNLCF.erroBarTest.det", 1, 1, $options, "");                                                                     
+}
+
+sub randomCurveUnitTest{
   my ($dir) = @_;
 
   die "Error: randomCurveUnitTest(\$dir) requires a defined $dir" if (! defined($dir));
