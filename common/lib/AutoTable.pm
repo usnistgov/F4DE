@@ -21,6 +21,7 @@ package AutoTable;
 
 use strict;
 
+use MMisc;
 use MErrorH;
 use PropList;
 use CSVHelper;
@@ -111,7 +112,6 @@ sub unitTest {
   my $makecall = shift @_;
   
   print "Testing AutoTable ..." if ($makecall);
-#<<<<<<< AutoTable.pm
   
   my $at = new AutoTable();
 #  $at->addData({value => "1x1", link => "/etc/hosts"},  "CCC|col1|A", "srow1|row1");
@@ -140,8 +140,11 @@ sub unitTest {
   $at->addData("1x1",  "CCC|col2|A", "srow2|row2");
   $at->addData("1x1",  "CCC|col2|B", "srow2|row2");
   $at->addData("1x2",  "CCC|col2|C", "srow2|row2");
-  
-  print "<html>\n";
+#  $at->addData("1x1",  "||", "srow2|row2");
+#  $at->addData("1x1",  "||", "srow2|row2");
+#  $at->addData("1x2",  "||", "srow2|row2"); 
+ 
+ print "<html>\n";
   print "Simple Table\n";
   print "<pre>\n";
   print($at->renderTxtTable(1));
@@ -343,7 +346,7 @@ sub renderHTMLTable(){
   #### make a 2D table of ids
   my @idlist = ();
   foreach (@rowIDs) {
-    push @idlist, [ split(/\|/, $_) ];
+    push @idlist, [ _safeSplit("|", $_) ];
   }
   for (my $row=0; $row<@rowIDs; $row++) {
     $out .= "<tr>\n";
@@ -504,7 +507,8 @@ sub renderTxtTable(){
   }
   #    print "ColIDs ".join(" ",@colIDs)."\n";
 #    print join(" ",@colIDs)."\n";
-  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, "Alpha",
+  my $rowSort = $self->{Properties}->getValue($key_SortRowKeyCsv);
+  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort,
 					  $self->{Properties}->getValue($key_KeepRowsInOutput));
 #    print join(" ",@rowIDs)."\n";
 #<<<<<<< AutoTable.pm
@@ -512,7 +516,7 @@ sub renderTxtTable(){
   foreach my $rowIDStr (@rowIDs) {
     ### Render the row header column 
     if ($k1c){
-      my @ids = split(/\|/, $rowIDStr);
+      my @ids = _safeSplit("|", $rowIDStr);
       my $print = 1;
       for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
 	$lastRowLabel[$rowLevel] = "" if (! defined($lastRowLabel[$rowLevel]));
@@ -571,6 +575,7 @@ sub renderTxtTable(){
     
     $out .= "\n";
   }   
+  
   $out;
 ###=======
 ###	$out .= $self->_leftJust("", $gap);
@@ -734,7 +739,7 @@ sub _addLab(){
     $ht->{SubID}{$id} = { thisIDNum => $ht->{SubIDCount} ++,
                           SubIDCount => 0,
                           SubID => {},
-			  labels => [ split(/\|/,$id) ], 
+			  labels => [ _safeSplit("|",$id) ], 
                           width => { charLen => 0 } };
   }
   
@@ -807,14 +812,14 @@ sub _getOrderedLabelIDs(){
   } else {
     MMisc::error_quit("Internal Error AutoTable: Sort order '$order' not defined");
   }  
-  
+
   my @keepIDs = ();
   my $filterIDs = 0;
   if (defined($IDsToKeep) && $IDsToKeep ne ""){
     $filterIDs = 1;
-    @keepIDs = split(/\|/, $IDsToKeep);
+    @keepIDs = _safeSplit("|", $IDsToKeep);
   }
-#  print "Checking\n";
+#  print "Checking $order\n";
   foreach my $sid (@sortedKeys) {
     if ($ht->{SubID}->{$sid}->{SubIDCount} > 0) {
       foreach my $labelID ($self->_getOrderedLabelIDs($ht->{SubID}->{$sid}), $order,  $IDsToKeep) {
@@ -839,9 +844,25 @@ sub _getOrderedLabelIDs(){
   @ids;
 }
 
+sub _safeSplit{
+  my ($matchStr, $text) = @_; 
+#  return split(/$matchStr/, $text);
+  my @arr = split(/(\|)/, $text);
+  ### If the final item is a /|/, then there is no final empty element.  MAKE ONE NOW.
+  push (@arr, "") if ($arr[$#arr] eq "|");
+  ### Remove the /|/ symbols
+  MMisc::filterArray(\@arr, "\\|");
+#  print "Call $matchStr $text    (".join(",",@arr).")\n";
+  ### Check to make sure there are NO empty elements.  If there are, then die
+  foreach (@arr){
+    die "Error: Column/row header \"$text\" contains empty items which is illegal." if ($_ eq "");
+  } 
+  @arr;
+}
+
 sub _getStrForLevel(){
   my ($self, $str, $lev) = @_;
-  my @a = split(/\|/, $str);    
+  my @a = _safeSplit("|", $str);    
   $a[$lev-1];
 }
 
