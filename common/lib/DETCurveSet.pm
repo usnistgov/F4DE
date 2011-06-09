@@ -144,8 +144,8 @@ sub unitTest(){
   die "Error: Filesystem safe name by id /".$ds->getFSKeyForID(0)."/ != /Name_1/" if ($ds->getFSKeyForID(0) ne "Name_1");
   die "Error: Filesystem safe name by id /".$ds->getFSKeyForID(1)."/ != /$exp/" if ($ds->getFSKeyForID(1) ne $exp);
   
-#  my $txt = $ds->renderAsTxt("foomerge", 1, 1, {(createDETfiles => 1)});
-#  print $txt;
+#  my $txt = $ds->renderAsTxt("foomerge", 1, 1, {(createDETfiles => 1)});  print $txt;
+#  my $txt = $ds->renderIsoRatioIntersection();   print $txt;
 
   print "OK\n";
 
@@ -302,9 +302,10 @@ sub _PN(){
 sub _buildAutoTable(){
   my ($self, $buildCurves, $includeCounts, $reportActual) = @_;
     
-  my $useAT = 0;
+  my $useAT = 1;
   
   my $at = ($useAT ? new AutoTable() : new SimpleAutoTable());
+	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove"} );
 
   for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
     my $det = $self->{DETList}[$d]->{DET};
@@ -320,34 +321,43 @@ sub _buildAutoTable(){
     }
     my ($BScombAvg, $BScombSSD, $BSmissAvg, $BSmissSSD, $BSfaAvg, $BSfaSSD) = 
       $metric->combBlockSetCalc(\%combData);
+    my $BSDecThresh = $trial->getTrialActualDecisionThreshold();
 
+    $at->addData($det->getLineTitle(),  ($useAT ? " |" : "" ) .                       "Title",   $key);
+#    $at->addData("|",  ($useAT ? " |" : "" ) .                       "sw5d",   $key);
     if ($includeCounts) {
-      my ($refSum, $refAvg, $refSSD) = $trial->getTotNumTarg();
+      my ($targSum, $targAvg, $targSSD) = $trial->getTotNumTarg();
+      my ($ntargSum, $ntargAvg, $ntargSSD) = $trial->getTotNumNonTarg();
       my ($sysSum, $sysAvg, $sysSSD) = $trial->getTotNumSys();
-      my ($corrSum, $corrAvg, $corrSSD) = $trial->getTotNumCorr();
+      my ($corrDetectSum, $corrDetectAvg, $corrDetectSSD) = $trial->getTotNumCorrDetect();
+      my ($corrNonDetectSum, $corrNonDetectAvg, $corrNonDetectSSD) = $trial->getTotNumCorrNonDetect();
       my ($faSum, $faAvg, $faSSD) = $trial->getTotNumFalseAlarm();
       my ($missSum, $missAvg, $missSSD) = $trial->getTotNumMiss();
-      $at->addData($refSum,  ($useAT ? "Inputs|" : "" ) .               "#Ref",   $key);
+      $at->addData($targSum,  ($useAT ? "Inputs|" : "" ) .               "#Targ",   $key);
+      $at->addData($ntargSum,  ($useAT ? "Inputs|" : "" ) .               "#NTarg",   $key);
       $at->addData($sysSum,  ($useAT ? "Inputs|" : "" ) .               "#Sys",   $key);
-      $at->addData($corrSum, ($useAT ? "Actual Decision Cost Analysis|" : "" ) . "#CorDet",   $key);
+      $at->addData($corrDetectSum, ($useAT ? "Actual Decision Cost Analysis|" : "" ) . "#CorDet",   $key);
+      $at->addData($corrNonDetectSum, ($useAT ? "Actual Decision Cost Analysis|" : "" ) . "#Cor!Det",   $key);
       $at->addData($faSum,   ($useAT ? "Actual Decision Cost Analysis|" : "" ) . "#FA",   $key);
       $at->addData($missSum, ($useAT ? "Actual Decision Cost Analysis|" : "" ) . "#Miss",   $key);
     }
     
     if ($reportActual){
       my $act = "Act. ";
+      my $act = "";
       $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     ($useAT ? "Actual Decision Cost Analysis|" : "" ) . $act . $metric->errFALab(),   $key);
       $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissAvg), ($useAT ? "Actual Decision Cost Analysis|" : "" ) . $act . $metric->errMissLab(), $key);
       $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    ($useAT ? "Actual Decision Cost Analysis|" : "" ) . $act . $metric->combLab(),    $key);
-  }    
+      $at->addData(&_PN($metric->combPrintFormat(), $BSDecThresh),    ($useAT ? "Actual Decision Cost Analysis|" : "" ) . $act . "Dec. Tresh",    $key);
+    }    
     if ($buildCurves) {
       my $opt = ($metric->combType() eq "maximizable" ? "Max " : "Min ");
       my $optFull = ($metric->combType() eq "maximizable" ? "Maximum" : "Minimum");
       my $comblab = $metric->combLab();
-      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $opt . $metric->errFALab(),   $key);
-      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombMMiss()),          ($useAT ? "$optFull $comblab Analysis|" : "" ) .    $opt . $metric->errMissLab(), $key);
-      $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) .  $opt . $metric->combLab(),    $key);
-      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Det. Score", $key);
+      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errFALab(),   $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombMMiss()),          ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errMissLab(), $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->combLab(),    $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
 
       if ($det->getDETPng() ne "") {
         $at->addData($det->getDETPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "DET Curve", $key);
@@ -711,17 +721,19 @@ sub renderIsoRatioIntersection
 {
 	my ($self) = @_;
 	
-	my $at = new SimpleAutoTable();
+	my $at = new AutoTable();
 	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove"} );
 
-	foreach my $det ( @{ $self->getDETList() } )
-	{
+  for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
+    my $det = $self->{DETList}[$d]->{DET};
+    my $key = $self->{DETList}[$d]->{KEY};
+ 
 		foreach my $cof ( sort {$a <=> $b} @{ $det->{ISOLINE_COEFFICIENTS} } )
 		{		
 			if(defined($det->{ISOPOINTS}{$cof}))
 			{
-				my $rowtitle = "$det->{LINETITLE}|$cof";
-				$at->addData($det->{LINETITLE},                                            "",                          $rowtitle);
+				my $rowtitle = "$key|$cof";
+				$at->addData($det->{LINETITLE},                                            "DET Title",                     $rowtitle);
 				$at->addData(sprintf("%.4f", $cof),                                        "Coef",                          $rowtitle);
 				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MFA}),   $det->getMetric()->errFALab(),   $rowtitle);
 				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS}), $det->getMetric()->errMissLab(), $rowtitle);
