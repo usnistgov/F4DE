@@ -169,13 +169,13 @@ Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: PersonRuns | ID: 0 | FS
       </object>
       <object name="CellToEar" id="2" framespan="3543:3778">
         <!-- Framespan was shifted by 40
-Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml -->
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3543:3778 | FILE FS: 41:5161 | GTF : 0 | Dec: 1.01 (true) | XML FILE: ../common/test1-same-sys.xml -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.01"/>
+          <data:fvalue value="1.01"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -205,13 +205,13 @@ Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS:
       </object>
       <object name="CellToEar" id="5" framespan="1703:5238">
         <!-- Framespan was shifted by 1500
-Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml -->
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 1703:5238 | FILE FS: 1501:6621 | GTF : 0 | Dec: 102 (true) | XML FILE: ../common/test2-same-sys.xml -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-100"/>
+          <data:fvalue value="102"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -241,13 +241,13 @@ Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS:
       </object>
       <object name="CellToEar" id="8" framespan="5203:8738">
         <!-- Framespan was shifted by 5000
-Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 5203:8738 | FILE FS: 5001:10121 | GTF : 0 | Dec: 102 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-100"/>
+          <data:fvalue value="102"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -277,13 +277,13 @@ Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 2 | FS:
       </object>
       <object name="CellToEar" id="11" framespan="13503:13738">
         <!-- Framespan was shifted by 10000
-Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 13503:13738 | FILE FS: 10001:15121 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 13503:13738 | FILE FS: 10001:15121 | GTF : 0 | Dec: 1.01 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.01"/>
+          <data:fvalue value="1.01"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -347,7 +347,7 @@ Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 4 | FS:
       </object>
       <object name="ObjectPut" id="1" framespan="978:1533">
         <!-- Framespan was shifted by 40
-Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml -->
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 978:1533 | FILE FS: 41:5161 | GTF : 0 | Dec: 1.45 (true) | XML FILE: ../common/test1-same-sys.xml -->
         <attribute name="BoundingBox">
           <data:bbox framespan="1156:1156" x="105" y="168" height="101" width="131"/>
           <data:bbox framespan="1157:1157" x="99" y="168" height="89" width="166"/>
@@ -362,7 +362,7 @@ Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS:
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.45"/>
+          <data:fvalue value="1.45"/>
         </attribute>
         <attribute name="Point">
           <data:point framespan="1164:1164" x="263" y="353"/>
@@ -382,7 +382,7 @@ Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS:
       </object>
       <object name="ObjectPut" id="3" framespan="10938:11493">
         <!-- Framespan was shifted by 10000
-Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 10938:11493 | FILE FS: 10001:15121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
+Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 10938:11493 | FILE FS: 10001:15121 | GTF : 0 | Dec: 1.45 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
         <attribute name="BoundingBox">
           <data:bbox framespan="11116:11116" x="105" y="168" height="101" width="131"/>
           <data:bbox framespan="11117:11117" x="99" y="168" height="89" width="166"/>
@@ -397,7 +397,7 @@ Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS:
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.45"/>
+          <data:fvalue value="1.45"/>
         </attribute>
         <attribute name="Point">
           <data:point framespan="11124:11124" x="263" y="353"/>

@@ -144,37 +144,37 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.45"/>
-        </attribute>
-        <attribute name="Point">
-          <data:point framespan="1124:1124" x="263" y="353"/>
-        </attribute>
-      </object>
-      <object name="ObjectGet" id="0" framespan="1493:3327">
-        <attribute name="BoundingBox">
-          <data:bbox framespan="3327:3327" x="126" y="337" height="101" width="138"/>
-        </attribute>
-        <attribute name="DetectionDecision">
-          <data:bvalue value="false"/>
-        </attribute>
-        <attribute name="DetectionScore">
-          <data:fvalue value="0.78"/>
-        </attribute>
-        <attribute name="Point"/>
-      </object>
-      <object name="CellToEar" id="0" framespan="3503:3738">
-        <attribute name="BoundingBox"/>
-        <attribute name="DetectionDecision">
-          <data:bvalue value="true"/>
-        </attribute>
-        <attribute name="DetectionScore">
-          <data:fvalue value="0.01"/>
-        </attribute>
-        <attribute name="Point"/>
-      </object>
-      <object name="CellToEar" id="1" framespan="3503:3739">
-        <attribute name="BoundingBox"/>
-        <attribute name="DetectionDecision">
+          <data:fvalue value="1.45"/>
+	 </attribute>
+	 <attribute name="Point">
+	   <data:point framespan="1124:1124" x="263" y="353"/>
+	 </attribute>
+       </object>
+       <object name="ObjectGet" id="0" framespan="1493:3327">
+	 <attribute name="BoundingBox">
+	   <data:bbox framespan="3327:3327" x="126" y="337" height="101" width="138"/>
+	 </attribute>
+	 <attribute name="DetectionDecision">
+	   <data:bvalue value="false"/>
+	 </attribute>
+	 <attribute name="DetectionScore">
+	   <data:fvalue value="0.78"/>
+	 </attribute>
+	 <attribute name="Point"/>
+       </object>
+       <object name="CellToEar" id="0" framespan="3503:3738">
+	 <attribute name="BoundingBox"/>
+	 <attribute name="DetectionDecision">
+	   <data:bvalue value="true"/>
+	 </attribute>
+	 <attribute name="DetectionScore">
+	   <data:fvalue value="1.01"/>
+	 </attribute>
+	 <attribute name="Point"/>
+       </object>
+       <object name="CellToEar" id="1" framespan="3503:3739">
+	 <attribute name="BoundingBox"/>
+	 <attribute name="DetectionDecision">
           <data:bvalue value="false"/>
         </attribute>
         <attribute name="DetectionScore">

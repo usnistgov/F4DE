@@ -155,7 +155,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-100"/>
+          <data:fvalue value="102"/>
         </attribute>
         <attribute name="Point"/>
       </object>

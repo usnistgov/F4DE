@@ -141,13 +141,13 @@
         <attribute name="Point"/>
       </object>
       <object name="CellToEar" id="0" framespan="3503:3738">
-        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3503:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3503:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: 1.01 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.01"/>
+          <data:fvalue value="1.01"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -207,13 +207,13 @@
         <attribute name="Point"/>
       </object>
       <object name="CellToEar" id="6" framespan="3503:3738">
-        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3503:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.01 (true) | XML FILE: ../common/test1-same-sys.xml -->
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 3503:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: 1.01 (true) | XML FILE: ../common/test1-same-sys.xml -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.01"/>
+          <data:fvalue value="1.01"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -240,13 +240,13 @@
         <attribute name="Point"/>
       </object>
       <object name="CellToEar" id="9" framespan="203:3738">
-        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: 102 (true) | XML FILE: ../common/test2-1md_1fa-sys.xml -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-100"/>
+          <data:fvalue value="102"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -273,13 +273,13 @@
         <attribute name="Point"/>
       </object>
       <object name="CellToEar" id="12" framespan="203:3738">
-        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: -100 (true) | XML FILE: ../common/test2-same-sys.xml -->
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: CellToEar | ID: 0 | FS: 203:3738 | FILE FS: 1:5121 | GTF : 0 | Dec: 102 (true) | XML FILE: ../common/test2-same-sys.xml -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-100"/>
+          <data:fvalue value="102"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -306,7 +306,7 @@
         <attribute name="Point"/>
       </object>
       <object name="ObjectPut" id="0" framespan="938:1493">
-        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 1.45 (true) | XML FILE: ../common/test1-1fa-sys.xml -->
         <attribute name="BoundingBox">
           <data:bbox framespan="1116:1116" x="105" y="168" height="101" width="131"/>
           <data:bbox framespan="1117:1117" x="99" y="168" height="89" width="166"/>
@@ -321,7 +321,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.45"/>
+          <data:fvalue value="1.45"/>
         </attribute>
         <attribute name="Point">
           <data:point framespan="1124:1124" x="263" y="353"/>
@@ -350,7 +350,7 @@
         </attribute>
       </object>
       <object name="ObjectPut" id="2" framespan="938:1493">
-        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 0.45 (true) | XML FILE: ../common/test1-same-sys.xml -->
+        <!-- Was originally: FILE: 20050519-1503-Excerpt.mpg | EVENT: ObjectPut | ID: 0 | FS: 938:1493 | FILE FS: 1:5121 | GTF : 0 | Dec: 1.45 (true) | XML FILE: ../common/test1-same-sys.xml -->
         <attribute name="BoundingBox">
           <data:bbox framespan="1116:1116" x="105" y="168" height="101" width="131"/>
           <data:bbox framespan="1117:1117" x="99" y="168" height="89" width="166"/>
@@ -365,7 +365,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.45"/>
+          <data:fvalue value="1.45"/>
         </attribute>
         <attribute name="Point">
           <data:point framespan="1124:1124" x="263" y="353"/>
