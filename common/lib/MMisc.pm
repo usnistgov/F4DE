@@ -1648,10 +1648,62 @@ sub unmarshal_matrix {
 }
 ############################################################
 
+###  Removes elements from an array that match the expression
+sub filterArray {
+  my ($array_ref, $expr) = @_;
+  
+  for (my $i; $i<@$array_ref; $i++){
+    if ($array_ref->[$i] =~ /$expr/){
+      splice (@$array_ref, $i, 1);
+      $i--;  ## The splice reduces the size of the array so redo this index
+    } 
+  }
+  $array_ref;
+}
+
+############################################################
+
+
 sub unitTest {
 	print "Test MMisc\n";
 	marshalTest();
+  filterArrayUnitTest();
 	return 1;
+}
+
+sub runFilterArrayCase{
+  my ($arr, $expr, $expected) = @_;
+  my $msg = "Input: arr=".join("-",@$arr)." expr=$expr expected=".join("-",@$expected);
+  filterArray($arr, $expr);
+  $msg .= "  Output: ".join("-",@$arr)."\n";
+  my $fail = 0;
+  if (@$arr != @$expected){
+    $fail = 1;
+  } else {
+    for (my $i; $i<@$arr; $i++){
+      $fail = 1 if ($arr->[$i] ne $expected->[$i]) 
+    }
+  } 
+  if ($fail) {
+    die "\nfilterArray Test Failed: $msg";
+  }
+}
+
+sub filterArrayUnitTest{
+  print " Testing filterArray ... ";
+  runFilterArrayCase([ () ], "b", [ () ]);
+  runFilterArrayCase([ ("b") ], "b", [ () ]);
+  runFilterArrayCase([ ("b", "b") ], "b", [ () ]);
+  runFilterArrayCase([ ("b", "c") ], "b", [ ("c") ]);
+  runFilterArrayCase([ ("c", "b") ], "b", [ ("c") ]);
+  runFilterArrayCase([ ("b", "c", "b") ], "b", [ ("c") ]);
+  runFilterArrayCase([ ("b", "c", "b", "c", "b", "c") ], "b", [ ("c", "c", "c") ]);
+  ### Regex stuff
+  runFilterArrayCase([ ("aba", "b", "c") ], "b", [ ("c") ]);
+  runFilterArrayCase([ ("aba", "b", "c") ], "^b\$", [ ("aba", "c") ]);
+  runFilterArrayCase([ ("aba", "b", "c") ], "ba\$", [ ("b", "c") ]);
+  runFilterArrayCase([ ("443", "|", "3") ], "\\|", [ ("443", "3") ]);
+	print "OK\n";
 }
 
 sub marshalTest {
