@@ -15,4 +15,5 @@ makecompcheckfiles makecheckfiles check:
 	@(cd ../../common/test/SQLite_tools; make $@)
 	@(${PERL} ${PRE_tests})	
 	@(cd DEVA_cli; make $@)
+	@(cd MTests; make $@)
 	@echo "***** All tests ran succesfully"
