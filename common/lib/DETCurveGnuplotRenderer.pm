@@ -49,6 +49,7 @@ sub new
        DETLineAttr => undef,
        lTitleNoBestComb => undef,
        lTitleNoPointInfo => 1,
+       lTitleAddIsoRatio => 0,
        serialize => 1,
        BuildPNG => 1,
        HD => 0,
@@ -205,6 +206,10 @@ sub _parseOptions{
   }
   if (exists($options->{lTitleNoPointInfo})){
     $self->{lTitleNoPointInfo} = $options->{lTitleNoPointInfo};
+    ### This needs validation
+  }
+  if (exists($options->{lTitleAddIsoRatio})){
+    $self->{lTitleAddIsoRatio} = $options->{lTitleAddIsoRatio};
     ### This needs validation
   }
   if (exists($options->{gnuplotPROG})){
@@ -688,6 +693,13 @@ sub ppndf
     return ($retval);
   }
 
+sub _gnuplotSafeString{
+  my ($str) = @_;
+  $str =~ s/[\'\"]/_/g;
+  $str;
+}
+
+
 sub write_gnuplot_threshold_header{
   my ($self, $FP, $title) = @_;
 
@@ -696,7 +708,7 @@ sub write_gnuplot_threshold_header{
   #  print $FP "set data style lines\n"; 
   # ^ obsoleted 
   print $FP "set style data lines\n";
-  print $FP "set title '$title'\n";
+  print $FP "set title '"._gnuplotSafeString($title)."'\n";
   print $FP "set xlabel 'Detection Score'\n";
   print $FP "set grid\n";
   print $FP "set size ratio 0.85\n";
@@ -733,7 +745,7 @@ sub write_gnuplot_DET_header{
   }
   print $FP "set size ratio $ratio\n";
   
-  print $FP "set title '$title'\n";
+  print $FP "set title '"._gnuplotSafeString($title)."'\n";
   print $FP "set grid\n";
   print $FP "set pointsize 3\n";
   my $ylab = (($self->{props}->getValue("MissUnit") eq "Prob" && $yScale eq "nd") ? " %" : "");
@@ -1126,6 +1138,7 @@ sub writeMultiDetGraph
       my $color = $self->{colorsRGB}->[ $d % scalar(@{ $self->{colorsRGB} }) ];
       my $nokey = "";
       my $thisPointSize = $self->{pointSize};
+      my $thisPointSizeDiv2 = $thisPointSize / 2;
       
       my $lineTitle = $detset->getDETForID($d)->{LINETITLE};
       if (exists($self->{DETLineAttr})){
@@ -1134,6 +1147,7 @@ sub writeMultiDetGraph
           ### Override the plotting style
           $lineTitle = $info->{label} if (exists($info->{label}));
           $thisPointSize = $info->{pointSize} if (exists($info->{pointSize}));
+          $thisPointSizeDiv2 = $thisPointSize / 2;
           $lineWidth = $info->{lineWidth} if (exists($info->{lineWidth}));
           $color = $info->{color}         if (exists($info->{color}));
           $nokey = $info->{nokey} if (exists($info->{nokey}));
@@ -1150,9 +1164,10 @@ sub writeMultiDetGraph
       }
 
       my ($actComb, $actCombSSD, $actMiss, $actMissSSD, $actFa, $actFaSSD) = $detset->getDETForID($d)->getMetric()->getActualDecisionPerformance();
-      if (!defined($actMiss) || !defined($actFa)) {
-        push @PLOTCOMS, "  -10000 title \"".$detset->getDETForID($d)->{LINETITLE}." Omitted - No Data\" with linespoints lc $color lw $lineWidth pt $closedPoint ps $thisPointSize";
-        
+      my ($sysSum, $sysAvg, $sysSSD) = $detset->getDETForID($d)->getTrials()->getTotNumSys();
+      if ($sysSum == 0) {
+        push @PLOTCOMS, "  -10000 title \""._gnuplotSafeString($detset->getDETForID($d)->{LINETITLE})." Omitted - No Data\" with linespoints lc $color lw $lineWidth pt $closedPoint ps $thisPointSize";
+
         ### Skip the rest BECAUSE There is NO DATA to plot
         next;
       }
@@ -1172,30 +1187,54 @@ sub writeMultiDetGraph
                                         $detset->getDETForID($d)->getBestCombMMiss(),
                                         $detset->getDETForID($d)->getBestCombMFA());
                         
-        my $ltitle = "";
-        #                       $ltitle .= $typeStr if (! (defined($options) && exists($options->{lTitleNoDETType})));
-        $ltitle .= " ".$lineTitle;
-        $ltitle .= " ".sprintf("$combType $combStr=%.3f", $comb) if (! $self->{lTitleNoBestComb});
-        $ltitle .= sprintf("=($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr) if (! $self->{lTitleNoPointInfo});
-                    
-        my $xcol = ($xScale eq "nd" ? "3" : "5");
-        my $ycol = ($yScale eq "nd" ? "2" : "4");
-        push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol notitle with lines lc $color lw $lineWidth";
-        $xcol = ($xScale eq "nd" ? "6" : "4");
-        $ycol = ($yScale eq "nd" ? "5" : "3");
-        push @PLOTCOMS, "  '$troot.dat.2' using $xcol:$ycol ${nokey}title '$ltitle' with linespoints lc $color pt $closedPoint lw $lineWidth ps $thisPointSize";
-        my $bestlab = $self->_getOffAxisLabel($miss, $fa, $color, $closedPoint, $thisPointSize, 0); 
-        push (@offAxisLabels, $bestlab) if ($bestlab ne "");
-
+        my $ltitle = $lineTitle;
+        my ($xcol, $ycol);
+                  
+        ### The curve
+        $xcol = ($xScale eq "nd" ? "3" : "5");
+        $ycol = ($yScale eq "nd" ? "2" : "4");
+        if ($self->{reportActual} || (!$self->{lTitleNoBestComb}) || $self->{lTitleAddIsoRatio}){
+          push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol notitle with lines lc $color lw $lineWidth";
+        } else { 
+          push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with lines lc $color lw $lineWidth";
+          $ltitle = "";
+        }
+        
+#        print "ReportAct=$self->{reportActual}, lTitleNoBestComb=$self->{lTitleNoBestComb} AddIsoRatio=$self->{lTitleAddIsoRatio}\n";  
+        ### Actual
         if ($self->{reportActual}){
           $xcol = ($xScale eq "nd" ? "11" : "9");
           $ycol = ($yScale eq "nd" ? "10" : "8");
-  
-          push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol ${nokey}title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $color pt $openPoint ps $thisPointSize";
+          
+          $ltitle  .= " Actual ".sprintf("$combStr=%.3f", $actComb);
+          push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with linespoints lc $color pt $openPoint ps $thisPointSize";
 
           my $lab = $self->_getOffAxisLabel($actMiss, $actFa, $color, $openPoint, $thisPointSize, 0); 
           push (@offAxisLabels, $lab) if ($lab ne "");
+          ## Clear out the title!
+          $ltitle = "";
         }
+        
+        ### The BEST point
+        if (! $self->{lTitleNoBestComb}){
+          $ltitle .= sprintf(" $combType $combStr=%.3f", $comb);
+          $ltitle .= sprintf("=($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr) if (! $self->{lTitleNoPointInfo});
+          $xcol = ($xScale eq "nd" ? "6" : "4");
+          $ycol = ($yScale eq "nd" ? "5" : "3");
+          push @PLOTCOMS, "  '$troot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $color pt $closedPoint lw $lineWidth ps $thisPointSize";
+        }
+        
+        ### If I want iso ratio points
+        if ($self->{lTitleAddIsoRatio}){
+          $ltitle .= " - " if ($ltitle ne "");
+          $ltitle .= "Iso Ratio Points";
+          $xcol = ($xScale eq "nd" ? "6" : "4");
+          $ycol = ($yScale eq "nd" ? "5" : "3");
+          push @PLOTCOMS, "  '$troot.dat.3' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $color pt $closedPoint lw $lineWidth ps $thisPointSizeDiv2";
+        }
+        my $bestlab = $self->_getOffAxisLabel($miss, $fa, $color, $closedPoint, $thisPointSize, 0); 
+        push (@offAxisLabels, $bestlab) if ($bestlab ne "");
+
       }
     }
         
@@ -1309,16 +1348,23 @@ sub writeGNUGraph{
   print DAT "$scr $comb $miss $fa ".ppndf($miss)." ".ppndf($fa)." $actComb $actMiss $actFa ".ppndf($actMiss)." ".ppndf($actFa)."\n";
   close DAT; 
   
-  ### Set the title
-  my $ltitle = "$self->{title}";
-  $ltitle .= sprintf(" $combType $combStr=%.3f", $comb)         
-    if (! $self->{lTitleNoBestComb});
-  $ltitle .= sprintf(" ($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr)
-    if (! $self->{lTitleNoPointInfo});
-         
+  ### The iso ratio points data file
+  # print Dumper($det->{ISOPOINTS});
+  open(DAT,"> $fileRoot.dat.3") ||
+    die("unable to open DET gnuplot file $fileRoot.dat.3"); 
+  print DAT "# The iso ratio points for the DET curve\n";
+  #     print DAT "# DET Type: $typeStr\n";
+  print DAT "# 1:ratio 2:DetectionScore 3:$missStr 4:$faStr 5:ppndf($missStr) 6:ppndf($faStr)\n";
+  foreach my $ratio(sort { $a <=> $b } keys %{$det->{ISOPOINTS}}){
+    print DAT "$ratio X ".$det->{ISOPOINTS}{$ratio}{INTERPOLATED_MMISS}." ".$det->{ISOPOINTS}{$ratio}{INTERPOLATED_MFA}.
+        " ".ppndf($det->{ISOPOINTS}{$ratio}{INTERPOLATED_MMISS})." ".ppndf($det->{ISOPOINTS}{$ratio}{INTERPOLATED_MFA})."\n";
+  }
+  close DAT; 
+
   ### use the properties
 #  my $color = $self->{colorsRGB}->[ $d % scalar(@{ $self->{colorsRGB} }) ];
   my $pointSize = $self->{pointSize};
+  my $pointSizeDiv2 = $pointSize / 2;
  
   my ($curveColor, $errCurveColor, $randomColor) = (2, 3, 1); 
   if ($self->{props}->getValue("ColorScheme") eq "grey"){
@@ -1329,30 +1375,71 @@ sub writeGNUGraph{
   if ($self->{props}->getValue("MissUnit") ne "Prob" || $self->{props}->getValue("FAUnit") ne "Prob"){
     push @PLOTCOMS, "  -x title 'Random Performance' with lines lc $randomColor";
   }  
-       
-  my $xcol = ($xScale eq "nd" ? "3" : "5");
-  my $ycol = ($yScale eq "nd" ? "2" : "4");
-  push @PLOTCOMS, "    '$fileRoot.dat.1' using $xcol:$ycol notitle with lines lc $curveColor";
-  $xcol = ($xScale eq "nd" ? "6" : "4");
-  $ycol = ($yScale eq "nd" ? "5" : "3");
-  push @PLOTCOMS, sprintf("    '$fileRoot.dat.2' using $xcol:$ycol title '$ltitle' with linespoints lc $curveColor pt 7 ps $pointSize");
-  my $bestlab = $self->_getOffAxisLabel($miss, $fa, 2, 7, $pointSize, 0); 
-  push (@offAxisLabels, $bestlab) if ($bestlab ne "");
+
+  ### Set the title
+  my $ltitle = $self->{title};
+  my ($xcol, $ycol);
+
+  ### This is ONLY the linetrace
+  $xcol = ($xScale eq "nd" ? "3" : "5");
+  $ycol = ($yScale eq "nd" ? "2" : "4");
+  if ($self->{reportActual} || (!$self->{lTitleNoBestComb}) || $self->{lTitleAddIsoRatio}){
+    push @PLOTCOMS, "    '$fileRoot.dat.1' using $xcol:$ycol notitle with lines lc $curveColor";
+  } else {  
+    push @PLOTCOMS, "    '$fileRoot.dat.1' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with lines lc $curveColor";
+    $ltitle = "";
+  }
+  
+  ### Actual for the DET
   if ($self->{reportActual}){
+    $ltitle  .= " Actual ".sprintf("$combStr=%.3f", $actComb);
+    my $bestlab = $self->_getOffAxisLabel($miss, $fa, 2, 7, $pointSize, 0); 
+    push (@offAxisLabels, $bestlab) if ($bestlab ne "");
     $xcol = ($xScale eq "nd" ? "11" : "9");
     $ycol = ($yScale eq "nd" ? "10" : "8");
-    push @PLOTCOMS, sprintf("   '$fileRoot.dat.2' using $xcol:$ycol title 'Actual ".sprintf("$combStr=%.3f", $actComb)."' with points lc $curveColor pt 6 ps $pointSize ");
+    push @PLOTCOMS, sprintf("   '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with linespoints lc $curveColor pt 6 ps $pointSize ");
     my $lab = $self->_getOffAxisLabel($actMiss, $actFa, 2, 6, $pointSize, 0); 
     push (@offAxisLabels, $lab) if ($lab ne "");
+    
+    ## Clear out the title!
+    $ltitle = "";
   }
+
+  ### The BEST point
+  if (! $self->{lTitleNoBestComb}){
+    $ltitle .= " ".sprintf("$combType $combStr=%.3f", $comb);
+    $ltitle .= sprintf(" ($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr) if (! $self->{lTitleNoPointInfo});
+    $xcol = ($xScale eq "nd" ? "6" : "4");
+    $ycol = ($yScale eq "nd" ? "5" : "3");
+    push @PLOTCOMS, sprintf("    '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $curveColor pt 7 ps $pointSize");
+    ## Clear out the title!
+    $ltitle = "";
+  }
+  
+  ### Error curves
   if ($withErrorCurve) {
+    $ltitle .= " - " if ($ltitle ne "");
+    $ltitle .= "+/- 2 Standard Error";
     $xcol = ($xScale eq "nd" ? "8" : "12");
     $ycol = ($yScale eq "nd" ? "7" : "13");
-    push @PLOTCOMS, sprintf("  '$fileRoot.dat.1' using $xcol:$ycol title '+/- 2 Standard Error' with lines lc $curveColor"); 
+    push @PLOTCOMS, sprintf("  '$fileRoot.dat.1' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with lines lc $curveColor"); 
     $xcol = ($xScale eq "nd" ? "10" : "14");
     $ycol = ($yScale eq "nd" ? "9" : "13");
     push @PLOTCOMS, "  '$fileRoot.dat.1' using $xcol:$ycol notitle with lines lc $curveColor";
+    ## Clear out the title!
+    $ltitle = "";
   }
+
+  
+  ### if the we want the ratio points 
+  if ($self->{lTitleAddIsoRatio}){
+    $ltitle .= " - " if ($ltitle ne "");
+    $ltitle .= "Iso Ratio Points";
+    $xcol = ($xScale eq "nd" ? "6" : "4");
+    $ycol = ($yScale eq "nd" ? "5" : "3");
+    push @PLOTCOMS, sprintf("    '$fileRoot.dat.3' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $curveColor pt 7 ps $pointSizeDiv2");  
+  }
+
   
   #    print "Writing DET to GNUPLOT file $fileRoot.*\n";
   open(PLT,"> $fileRoot.plt") ||
