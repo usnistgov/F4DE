@@ -58,8 +58,10 @@ sub new {
      "BlockID" => $blockId,
      "DecisionID" => $decisionId,
      "isSorted" => 1,
-     "trials" => {},          ### This gets built as you add trials
-     "trialParams" => $trialParams ### Hash table for passing info to the Trial* objects 
+     "trials" => {},                ### This gets built as you add trials
+     "trialParams" => $trialParams, ### Hash table for passing info to the Trial* objects 
+     "suppliedActDecThresh" => undef,  ### Contains the supplied Decision threshhold for the Actual Decisions :)
+     "computedActDecThreshRange" => undef,  ### Contains a hash table with the range for the decision threshold
     };
   
   bless $self;
@@ -83,18 +85,19 @@ sub unitTest {
   $trial->addTrial("she", 0.3, "NO", 1);
   $trial->addTrial("she", 0.2, "NO", 0);
   $trial->addTrial("second", 0.7, "YES", 1);
-  $trial->addTrial("second", 0.3, "YES", 0);
+  $trial->addTrial("second", 0.35, "YES", 0);
   $trial->addTrial("second", 0.2, "NO", 0);
   $trial->addTrial("second", 0.3, "NO", 1);
   
+  print " Tests for Trials with Decisions...\n";
   ### Test the contents
-  print " Copying structure...  ";
+  print "  Copying structure...  ";
   my $sorted = $trial->copy();
   print "OK\n";
-  print " Sorting structure...  ";
+  print "  Sorting structure...  ";
   $sorted->sortTrials();
   print "OK\n";
-  print " Checking contents...  ";
+  print "  Checking contents...  ";
   my @tmp = ($trial, $trial->copy(), $sorted);
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $tr = $tmp[$i];
@@ -122,9 +125,232 @@ sub unitTest {
         if (! $tr->getTrialParamValueExists("TOTAL_TRIALS"));
     MMisc::error_quit("pooledTotal trials not set")
         if ($tr->getTrialParamValue("TOTAL_TRIALS") != 78);
-    
-  }
+  } 
   print "OK\n";
+  #print $trial->dump();
+  print "  Computing Decision Score Theshold...  ";
+  $trial->computeDecisionScoreThreshold();
+  #print $trial->dump();
+  MMisc::error_quit("Incorrect computed decision threshold ".$trial->getTrialActualDecisionThreshold()." != 0.325") 
+    if (abs(0.325 - $trial->getTrialActualDecisionThreshold()) > 0.0001);
+  
+  
+  print "OK\n";
+
+  if (1){
+    my $rtn;
+    print "  Testing bad score handling\n";
+
+    print "    No Trials...  ";
+    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    MMisc::error_quit("Failed") if ($trial->_computeDecisionScoreThreshold() ne "pass") ;
+    MMisc::error_quit("Threshold defined for No Trials case") 
+      if (defined($trial->getTrialActualDecisionThreshold()));
+    print "OK\n";
+
+    print "    Overlapping yes/no in TARG, one trial for NONTarg...  ";
+    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial->addTrial("she", 0.7, "NO", 1);
+    $trial->addTrial("she", 0.3, "YES", 1);
+    $trial->addTrial("she", 0.3, "YES", 0);
+    $rtn = $trial->_computeDecisionScoreThreshold();
+    #print "\n".$rtn;
+    MMisc::error_quit("Failed") if ($rtn eq "pass") ;
+    print "OK\n";
+
+    print "    Overlapping yes/no in NONTARG, one trial for TARG...  ";
+    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial->addTrial("she", 0.7, "NO", 0);
+    $trial->addTrial("she", 0.3, "YES", 0);
+    $trial->addTrial("she", 0.3, "YES", 1);
+    $rtn = $trial->_computeDecisionScoreThreshold();
+    #print "\n".$rtn;
+    MMisc::error_quit("Failed") if ($rtn eq "pass") ;
+    print "OK\n";
+
+    print "    YES Decisions only Targ...  ";
+    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    ### YES Only
+    $trial->addTrial("YES Only Decision", 0.7, "YES", 1);
+    $trial->addTrial("YES Only Decision", 0.3, "YES", 1);
+    $trial->addTrial("YES Only Decision", 0.2, "YES", 1);
+    $trial->addTrial("YES Only Decision", 0.1, "YES", 1);
+    #print $trial->dump();
+    $rtn = $trial->_computeDecisionScoreThreshold();
+    #print "\nReturn: ".$rtn."\n";
+    MMisc::error_quit("Failed\n$rtn") if ($rtn ne "pass") ;
+    #print Dumper($trial->{computedActDecThreshRange});
+    MMisc::error_quit("Incorrect computed decision threshold ".$trial->getTrialActualDecisionThreshold()." != 0.1") 
+      if (abs(0.1 - $trial->getTrialActualDecisionThreshold()) > 0.0001);
+    print "OK\n";
+    
+    print "    NO Decisions only Targ...  ";
+    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    ### No Only
+    $trial->addTrial("No Only Decision", 0.7, "NO", 1);
+    $trial->addTrial("No Only Decision", 0.3, "NO", 1);
+    $trial->addTrial("No Only Decision", 0.2, "NO", 1);
+    $trial->addTrial("No Only Decision", 0.1, "NO", 1);
+    #print $trial->dump();
+    $rtn = $trial->_computeDecisionScoreThreshold();
+    #print "\nReturn: ".$rtn."\n";
+    #print Dumper($trial->{computedActDecThreshRange});
+    MMisc::error_quit("Failed\n$rtn") if ($rtn ne "pass") ;
+    MMisc::error_quit("Incorrect computed decision threshold ".$trial->getTrialActualDecisionThreshold()." != 0.7") 
+      if (abs(0.7 - $trial->getTrialActualDecisionThreshold()) > 0.0001);
+    print "OK\n";
+
+    print "    YES Decisions only NONTarg...  ";
+    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    ### YES Only
+    $trial->addTrial("YES Only Decision", 0.7, "YES", 0);
+    $trial->addTrial("YES Only Decision", 0.3, "YES", 0);
+    $trial->addTrial("YES Only Decision", 0.2, "YES", 0);
+    $trial->addTrial("YES Only Decision", 0.1, "YES", 0);
+    #print $trial->dump();
+    $rtn = $trial->_computeDecisionScoreThreshold();
+    #print "\n".$rtn;
+    MMisc::error_quit("Failed\n$rtn") if ($rtn ne "pass") ;
+    MMisc::error_quit("Incorrect computed decision threshold ".$trial->getTrialActualDecisionThreshold()." != 0.1") 
+      if (abs(0.1 - $trial->getTrialActualDecisionThreshold()) > 0.0001);
+    print "OK\n";
+    
+    print "    NO Decisions only NONTarg...  ";
+    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    ### No Only
+    $trial->addTrial("No Only Decision", 0.7, "NO", 0);
+    $trial->addTrial("No Only Decision", 0.3, "NO", 0);
+    $trial->addTrial("No Only Decision", 0.2, "NO", 0);
+    $trial->addTrial("No Only Decision", 0.1, "NO", 0);
+    #print $trial->dump();
+    $rtn = $trial->_computeDecisionScoreThreshold();
+    #print "\n".$rtn;
+    MMisc::error_quit("Failed\n$rtn") if ($rtn ne "pass") ;
+    MMisc::error_quit("Incorrect computed decision threshold ".$trial->getTrialActualDecisionThreshold()." != 0.7") 
+      if (abs(0.7 - $trial->getTrialActualDecisionThreshold()) > 0.0001);
+    print "OK\n";
+
+    print "    Overlapping yes/no within blocks...  ";
+    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    ### No Targ
+    $trial->addTrial("NoTarg", 0.7, "YES", 0);
+    $trial->addTrial("NoTarg", 0.3, "YES", 0);
+    $trial->addTrial("NoTarg", 0.2, "NO", 0);
+    $trial->addTrial("NoTarg", 0.1, "NO", 0);
+    ### No NonTarg
+    $trial->addTrial("NoNontarg", 0.7, "YES", 1);
+    $trial->addTrial("NoNontarg", 0.5, "YES", 1);
+    $trial->addTrial("NoNontarg", 0.4, "NO", 1);
+    $trial->addTrial("NoNontarg", 0.1, "NO", 1);
+    ### This the bad one - both yes/no defined  for both targ and nontarg 
+    $trial->addTrial("Both YES-NO for Both Targ/NonTarg", 0.7, "YES", 0);
+    $trial->addTrial("Both YES-NO for Both Targ/NonTarg", 0.3, "YES", 0);
+    $trial->addTrial("Both YES-NO for Both Targ/NonTarg", 0.2, "NO", 0);
+    $trial->addTrial("Both YES-NO for Both Targ/NonTarg", 0.1, "NO", 0);
+    $trial->addTrial("Both YES-NO for Both Targ/NonTarg", 0.7, "YES", 1);
+    $trial->addTrial("Both YES-NO for Both Targ/NonTarg", 0.5, "YES", 1);
+    $trial->addTrial("Both YES-NO for Both Targ/NonTarg", 0.4, "NO", 1);
+    $trial->addTrial("Both YES-NO for Both Targ/NonTarg", 0.1, "NO", 1);
+    ### This a bad one - both yes defined targ, no/yes defined for nontarg 
+    $trial->addTrial("No TARG NO", 0.7, "YES", 0);
+    $trial->addTrial("No TARG NO", 0.3, "YES", 0);
+    $trial->addTrial("No TARG NO", 0.2, "NO", 0);
+    $trial->addTrial("No TARG NO", 0.1, "NO", 0);
+    $trial->addTrial("No TARG NO", 0.7, "YES", 1);
+    $trial->addTrial("No TARG NO", 0.1, "YES", 1);
+    ### This a bad one - both yes defined targ, no/yes defined for nontarg 
+    $trial->addTrial("No TARG YES", 0.7, "YES", 0);
+    $trial->addTrial("No TARG YES", 0.3, "YES", 0);
+    $trial->addTrial("No TARG YES", 0.2, "NO", 0);
+    $trial->addTrial("No TARG YES", 0.1, "NO", 0);
+    $trial->addTrial("No TARG YES", 0.7, "NO", 1);
+    $trial->addTrial("No TARG YES", 0.1, "NO", 1);
+    ### This a bad one - both yes defined targ, no/yes defined for nontarg 
+    $trial->addTrial("No NONTARG NO", 0.7, "YES", 1);
+    $trial->addTrial("No NONTARG NO", 0.3, "YES", 1);
+    $trial->addTrial("No NONTARG NO", 0.2, "NO", 1);
+    $trial->addTrial("No NONTARG NO", 0.1, "NO", 1);
+    $trial->addTrial("No NONTARG NO", 0.7, "YES", 0);
+    $trial->addTrial("No NONTARG NO", 0.1, "YES", 0);
+    ### This a bad one - both yes defined targ, no/yes defined for nontarg 
+    $trial->addTrial("No NONTARG YES", 0.7, "YES", 1);
+    $trial->addTrial("No NONTARG YES", 0.3, "YES", 1);
+    $trial->addTrial("No NONTARG YES", 0.2, "NO", 1);
+    $trial->addTrial("No NONTARG YES", 0.1, "NO", 1);
+    $trial->addTrial("No NONTARG YES", 0.7, "NO", 0);
+    $trial->addTrial("No NONTARG YES", 0.1, "NO", 0);
+    #print $trial->dump();
+    $rtn = $trial->_computeDecisionScoreThreshold();
+    #print "\n".$rtn;
+    MMisc::error_quit("Failed") if ($rtn eq "pass") ;
+    print "OK\n";
+
+    print "    Overlapping yes/no across blocks...  ";
+    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial->addTrial("block1", 0.7, "YES", 0);
+    $trial->addTrial("block1", 0.3, "YES", 0);
+    $trial->addTrial("block1", 0.2, "NO", 0);
+    $trial->addTrial("block1", 0.1, "NO", 0);
+    $trial->addTrial("block1", 0.7, "YES", 1);
+    $trial->addTrial("block1", 0.3, "YES", 1);
+    $trial->addTrial("block1", 0.2, "NO", 1);
+    $trial->addTrial("block1", 0.1, "NO", 1);
+    $trial->addTrial("block2", 0.7, "YES", 0);
+    $trial->addTrial("block2", 0.5, "YES", 0);
+    $trial->addTrial("block2", 0.4, "NO", 0);
+    $trial->addTrial("block2", 0.1, "NO", 0);
+    $trial->addTrial("block2", 0.7, "YES", 1);
+    $trial->addTrial("block2", 0.5, "YES", 1);
+    $trial->addTrial("block2", 0.4, "NO", 1);
+    $trial->addTrial("block2", 0.1, "NO", 1);
+    #print $trial->dump();
+    $rtn = $trial->_computeDecisionScoreThreshold();
+    #print "\n".$rtn;
+    MMisc::error_quit("Failed") if ($rtn eq "pass") ;
+    print "OK\n";
+  }
+  exit;
+  
+  print " Tests for Trials without decisions...\n";
+  my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) },
+                              "Term Detection", "Term", "Occurrence");
+
+  ### Uncomment to test the catestrophic failure
+  ##  $trial->addTrialWithoutDecision("she", 0.7, 1);
+  
+  print "   Set the threshold...  ";
+  $trial->setTrialActualDecisionThreshold(2.0);
+  print "OK\n";
+
+  print "   Add items...  ";
+  # One NO Targ
+  $trial->addTrialWithoutDecision("she", 1.999999999, 1);
+  # Two YES Targ
+  $trial->addTrialWithoutDecision("she", 2.0, 1);
+  $trial->addTrialWithoutDecision("she", 2.3, 1);
+  # Three NO NonTarg
+  $trial->addTrialWithoutDecision("she", 0.1, 0);
+  $trial->addTrialWithoutDecision("she", 0.2, 0);
+  $trial->addTrialWithoutDecision("she", 0.4, 0);
+  # Four YES NonTarg
+  $trial->addTrialWithoutDecision("she", 3.1, 0);
+  $trial->addTrialWithoutDecision("she", 3.2, 0);
+  $trial->addTrialWithoutDecision("she", 3.4, 0);
+  $trial->addTrialWithoutDecision("she", 3.1, 0);
+  ### The only way to add an OMITTED targ is with the add Trial funct
+  $trial->addTrial("she", undef, "OMITTED", 1);
+  ### Uncomment the following line to set the catestropic failure
+  ### $trial->addTrialWithoutDecision("she", undef, 0);
+  
+  ### Test the counts
+  MMisc::error_quit("No Targ insert failed") if ($trial->{"trials"}{"she"}{"NO TARG"} != 1);
+  MMisc::error_quit("No NonTarg insert failed") if ($trial->{"trials"}{"she"}{"NO NONTARG"} != 3);
+  MMisc::error_quit("Yes Targ insert failed") if ($trial->{"trials"}{"she"}{"YES TARG"} != 2);
+  MMisc::error_quit("Yes NonTarg insert failed") if ($trial->{"trials"}{"she"}{"YES NONTARG"} != 4);
+
+  print "Ok\n";
+#  print $trial->dump();
+
   return 1;
 }
 
@@ -192,10 +418,22 @@ sub addTrial {
   
   $self->_initForBlock($block);
   
+  $self->{computedActDecThreshRange} = undef;  ### Resets on new add!!!
+  
   ## update the counts
   $self->{"isSorted"} = 0;
   if ($decision ne "OMITTED") {
     push(@{ $self->{"trials"}{$block}{$attr} }, $sysscore);
+    ### Track the YES Threshold
+    if ($decision eq "YES"){
+      $self->{"trials"}{$block}{"MIN YES $attr"} = $sysscore 
+        if ((!defined($self->{"trials"}{$block}{"MIN YES $attr"})) || 
+            ($sysscore < $self->{"trials"}{$block}{"MIN YES $attr"}));      
+    } else {
+      $self->{"trials"}{$block}{"MAX NO $attr"} = $sysscore 
+        if ((!defined($self->{"trials"}{$block}{"MAX NO $attr"})) || 
+            ($sysscore > $self->{"trials"}{$block}{"MAX NO $attr"}));      
+    }
   } else {
     MMisc::error_quit("Adding an OMITTED target trail with and defined decision score is illegal")
         if (defined($sysscore));
@@ -204,6 +442,26 @@ sub addTrial {
   }
   $self->{"trials"}{$block}{$decision." $attr"} ++;
 }
+
+####################################################################################################
+
+=item B<addTrial>(I<$blockID>, I<$sysScore>, I<$isTarg>)  
+
+Adds a trail which for which no "decision" is given.  The decision is set by applying the TrialActualDecisionThreshold that is set via B<setTrialActualDecisionThreshold>.  The threshold must be set and of type "supplied".  The rest of the arguments are as defined in B<addTrial>.
+
+=cut
+
+sub addTrialWithoutDecision {
+  my ($self, $block, $sysscore, $isTarg) = @_;
+  
+  MMisc::error_quit("The ActualDecisionThreshold is not defined but must be in order to add a trial to a Trials object without a decision")
+      if (! defined($self->getTrialActualDecisionThreshold()));
+  MMisc::error_quit("Score is not defined (and must be) for adding a trial to a Trials object without a decision")
+      if (! defined($sysscore));
+
+  $self->addTrial($block, $sysscore, ($sysscore >= $self->getTrialActualDecisionThreshold() ? "YES" : "NO"), $isTarg);
+}
+
 
 sub _initForBlock {
   my ($self, $block) = @_;
@@ -217,6 +475,10 @@ sub _initForBlock {
     $self->{"trials"}{$block}{"YES NONTARG"} = 0;
     $self->{"trials"}{$block}{"NO NONTARG"} = 0;
     $self->{"trials"}{$block}{"OMITTED TARG"} = 0;
+    $self->{"trials"}{$block}{"MIN YES TARG"} = undef;
+    $self->{"trials"}{$block}{"MIN YES NONTARG"} = undef;
+    $self->{"trials"}{$block}{"MAX NO TARG"} = undef;
+    $self->{"trials"}{$block}{"MAX NO NONTARG"} = undef;
   }
 }
 
@@ -262,6 +524,25 @@ sub setTrialParamValue {
   $self->{trialParams}->{$key} = $val;
 }
 
+sub setTrialActualDecisionThreshold {
+  my ($self, $val) = @_;
+  $self->{suppliedActDecThresh} = $val;
+}
+
+sub getTrialActualDecisionThreshold {
+  my ($self, $val) = @_;
+  if (defined($self->{suppliedActDecThresh})){
+    return $self->{suppliedActDecThresh};
+  } else { 
+    if (! defined($self->{computedActDecThreshRange})){
+      $self->computeDecisionScoreThreshold();
+    }
+    return $self->{computedActDecThreshRange}->{MinYes} if (! defined($self->{computedActDecThreshRange}->{MaxNo}));
+    return $self->{computedActDecThreshRange}->{MaxNo} if (! defined($self->{computedActDecThreshRange}->{MinYes}));
+    return ($self->{computedActDecThreshRange}->{MinYes} + $self->{computedActDecThreshRange}->{MaxNo}) / 2;
+  };
+}
+
 sub getTrialParamValueExists(){
   my ($self, $key) = @_;
   exists($self->{trialParams}->{$key});
@@ -273,52 +554,55 @@ sub getTrialParamValue(){
 }
 
 sub dump {
-  my($self, $OUT, $pre) = @_;
+  my($self, $pre) = @_;
   
   my($k1, $k2, $k3) = ("", "", "");
-  print $OUT "${pre}Dump of Trial_data  isSorted=".$self->{isSorted}."\n";
+  my $out = "";
+  
+   $out .= "${pre}Dump of Trial_data  isSorted=".$self->{isSorted}."\n";
   
   my @k1tmp = sort keys %$self;
   for (my $i1 = 0; $i1 < scalar @k1tmp; $i1++) {
     $k1 = $k1tmp[$i1];
     if ($k1 eq "trials") {
-      print $OUT "${pre}   $k1 -> $self->{$k1}\n";
+      $out .= "${pre}   $k1 -> $self->{$k1}\n";
       my @k2tmp = keys %{ $self->{$k1} };
       for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
         $k2 = $k2tmp[$i2];
-	print $OUT "${pre}      $k2 -> $self->{$k1}{$k2}\n";
+	      $out .= "${pre}      $k2 -> $self->{$k1}{$k2}\n";
 	
         my @k3tmp = sort keys %{ $self->{$k1}{$k2} };
         for (my $i3 = 0; $i3 < scalar @k3tmp; $i3++) {
           $k3 = $k3tmp[$i3];
-	  if ($k3 eq "TARG" || $k3 eq "NONTARG") {
-	    my(@a) = @{ $self->{$k1}{$k2}{$k3} };
-	    print $OUT "${pre}         $k3 (".scalar(@a).") -> (";
+	        if ($k3 eq "TARG" || $k3 eq "NONTARG") {
+	          my(@a) = @{ $self->{$k1}{$k2}{$k3} };
+	          $out .= "${pre}         $k3 (".scalar(@a).") -> (";
 	    
-	    if ($#a > 5) {
-	      foreach $_(0..2) {
-		print $OUT "$a[$_],";
-	      }
-	      
-	      print $OUT "...";
+      	    if ($#a > 5) {
+	            foreach $_(0..2) {
+		            $out .= "$a[$_],";
+	            }
+	            $out .= "...";
 
-	      foreach $_(($#a-2)..$#a) {
-		print $OUT ",$a[$_]";
-	      }
-	    } else {
-	      print $OUT join(",",@a);
-	    }
-	    
-	    print $OUT ")\n";
-	  } else {
-	    print $OUT "${pre}         $k3 -> $self->{$k1}{$k2}{$k3}\n";
-	  }
-	}
+	            foreach $_(($#a-2)..$#a) {
+		            $out .= ",$a[$_]";
+	            }
+	          } else {
+	            $out .= join(",",@a);
+	          }
+	         $out .= ")\n";
+	       } else {
+	         $out .= "${pre}         $k3 -> $self->{$k1}{$k2}{$k3}\n";
+	       }
+	     }
       }
+    } elsif ($k1 eq "computedActDecThreshRange") {
+       $out .= "${pre}   $k1 -> (MaxNo=$self->{$k1}{MaxNo}, MinYes=$self->{$k1}{MinYes})\n";
     } else {
-      print $OUT "${pre}   $k1 -> $self->{$k1}\n";
+       $out .= "${pre}   $k1 -> $self->{$k1}\n";
     }
   }   
+  $out;
 }
 
 sub copy {
@@ -427,6 +711,106 @@ sub sortTrials {
   $self->{"isSorted"} = 1;
 }
 
+sub computeDecisionScoreThreshold {
+  my ($self) = @_;
+
+  my $rtn = $self->_computeDecisionScoreThreshold();
+
+  if ("pass" ne $rtn){
+    MMisc::error_quit($rtn."Error: Compuatation of Decision Score Threshold Failed.  Aborting");
+  }
+}
+
+sub _computeDecisionScoreThreshold {
+  my ($self) = @_;
+  
+  my @ktmp = keys %{ $self->{"trials"} };
+  my $fail = "";
+    
+  ### Check within Targets and NonTargets
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
+    
+    my ($minYesTarg) = $self->{"trials"}{$block}{"MIN YES TARG"};
+    my ($minYesNonTarg) = $self->{"trials"}{$block}{"MIN YES NONTARG"};
+    my ($maxNoTarg) = $self->{"trials"}{$block}{"MAX NO TARG"};
+    my ($maxNoNonTarg) = $self->{"trials"}{$block}{"MAX NO NONTARG"};
+     
+    ### Check that YES/NO decisions don't overlap within TARG/NONTARG.  IF one of the variables is not defined, then the range is valid
+    if (defined($minYesTarg) && defined($maxNoTarg)){
+      if ($maxNoTarg > $minYesTarg){
+        $fail .= "Error: Inconsistent NO/YES decision boundary for Targets for block $block.   Scores for MaxNo=$maxNoTarg > MinYes=$minYesTarg\n";
+      }
+    }
+    if (defined($minYesNonTarg) && defined($maxNoNonTarg)){
+      if ($maxNoNonTarg > $minYesNonTarg){
+        $fail .= "Error: Inconsistent NO/YES decision boundary for NonTargets for block $block.   Scores for MaxNo=$maxNoNonTarg > MinYes=$minYesNonTarg\n";
+      }
+    }
+  }
+  return $fail if ($fail ne "");
+  
+  ### Check across both the targets/nontargets within block
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
+    
+    my ($minYesTarg) = $self->{"trials"}{$block}{"MIN YES TARG"};
+    my ($minYesNonTarg) = $self->{"trials"}{$block}{"MIN YES NONTARG"};
+    my ($maxNoTarg) = $self->{"trials"}{$block}{"MAX NO TARG"};
+    my ($maxNoNonTarg) = $self->{"trials"}{$block}{"MAX NO NONTARG"};
+
+    ### Find the ovarall min respecting undef
+    my $minYes = $minYesTarg;
+    if (defined($minYesNonTarg)){
+      $minYes = $minYesNonTarg if (!defined($minYes) || (defined($minYes) && ($minYes > $minYesNonTarg)));
+    }
+    my $maxNo = $maxNoTarg;
+    if (defined($maxNoNonTarg)){
+      $maxNo = $maxNoNonTarg if (!defined($maxNo) || (defined($maxNo) && ($maxNo < $maxNoNonTarg)));
+    }
+
+    ### No YESs
+    next if (!defined($minYes));
+    
+    ### No NOs
+    next if (!defined($maxNo));
+    
+    if ($maxNo > $minYes){
+      $fail .= "Error: Insconsistent NO/YES decision boundary for block $block.  Scores for MaxNo=$maxNo > MinYes=$minYes\n";
+    }
+  }
+  return $fail if ($fail ne "");
+
+  {
+    ### Check across all blocks
+    my $minYes = undef;
+    my $maxNo = undef;
+    for (my $i = 0; $i < scalar @ktmp; $i++) {
+      my $block = $ktmp[$i];
+    
+      my ($minYesTarg) = $self->{"trials"}{$block}{"MIN YES TARG"};
+      my ($minYesNonTarg) = $self->{"trials"}{$block}{"MIN YES NONTARG"};
+      my ($maxNoTarg) = $self->{"trials"}{$block}{"MAX NO TARG"};
+      my ($maxNoNonTarg) = $self->{"trials"}{$block}{"MAX NO NONTARG"};
+
+      ### Find the ovarall min respecting undef
+      $minYes = $minYesTarg    if (defined($minYesTarg)    && ((!defined($minYes) || (defined($minYes) && ($minYes > $minYesTarg)))));
+      $minYes = $minYesNonTarg if (defined($minYesNonTarg) && ((!defined($minYes) || (defined($minYes) && ($minYes > $minYesNonTarg)))));
+
+      $maxNo = $maxNoTarg    if (defined($maxNoTarg)       && ((!defined($maxNo)  || (defined($maxNo) &&  ($maxNo  < $maxNoTarg)))));
+      $maxNo = $maxNoNonTarg if (defined($maxNoNonTarg)    && ((!defined($maxNo)  || (defined($maxNo) &&  ($maxNo  < $maxNoNonTarg)))));
+    }
+    if (defined($maxNo) && defined($minYes) && ($maxNo > $minYes)){
+      $fail .= "Error: Insconsistent NO/YES decision boundary across blocks.  Scores for MaxNo=$maxNo > MinYes=$minYes\n";
+    }
+    return $fail if ($fail ne "");
+
+    $self->{computedActDecThreshRange} = { MaxNo => $maxNo, MinYes => $minYes };
+  }
+
+  return "pass";
+}
+
 sub getBlockIDs {
   my ($self, $block) = @_;
   keys %{ $self->{"trials"} };
@@ -497,9 +881,14 @@ sub getNumMiss {
   $self->getNumNoTarg($block) + $self->getNumOmittedTarg($block);
 }
 
-sub getNumCorr {
+sub getNumCorrDetect {
   my ($self, $block) = @_;
   $self->getNumYesTarg($block);
+}
+
+sub getNumCorrNonDetect {
+  my ($self, $block) = @_;
+  $self->getNumNoNonTarg($block);
 }
 
 sub getNumNonTarg {
@@ -533,6 +922,17 @@ sub getTotNumTarg {
   $self->_stater(\@data);
 }
 
+sub getTotNumNonTarg {
+  my ($self) = @_;
+  my @data = ();
+  my @ktmp = $self->getBlockIDs();
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
+    push @data, $self->getNumNonTarg($block);
+  }
+  $self->_stater(\@data);
+}
+
 sub getTotNumSys {
   my ($self) = @_;
   my @data = ();
@@ -544,13 +944,24 @@ sub getTotNumSys {
   $self->_stater(\@data);
 }
 
-sub getTotNumCorr {
+sub getTotNumCorrDetect {
   my ($self) = @_;
   my @data = ();
   my @ktmp = $self->getBlockIDs();
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
-    push @data, $self->getNumCorr($block);
+    push @data, $self->getNumCorrDetect($block);
+  }
+  $self->_stater(\@data);
+}
+
+sub getTotNumCorrNonDetect {
+  my ($self) = @_;
+  my @data = ();
+  my @ktmp = $self->getBlockIDs();
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    my $block = $ktmp[$i];
+    push @data, $self->getNumCorrNonDetect($block);
   }
   $self->_stater(\@data);
 }
@@ -645,50 +1056,120 @@ sub mergeTrials{
   
 }
 
+### This is a class method
+sub buildDEVAModeTestFiles{
+  my ($fileRoot) = "MTest";
+
+  use Math::Random::OO::Uniform;
+
+  my %BlockParams = ( "Block1" => { "ID" => "Blue" ,
+                                    "ScoreMeanShift" => 0.2 },
+                      "Block2" => { "ID" => "Red" ,
+                                    "ScoreMeanShift" => 0.4 },
+                      "Block3" => { "ID" => "Green" ,
+                                    "ScoreMeanShift" => 0.6 },
+                      "Block4" => { "ID" => "Purple" ,
+                                    "ScoreMeanShift" => -10.0 }
+                     );
+
+  print "Build DEVA Mode test files with root name /$fileRoot/\n";
+  my $decisionScoreRand = Math::Random::OO::Uniform->new(0,5);
+  my $targetRand = Math::Random::OO::Uniform->new(0,1);
+  my $blockedTrial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+
+  foreach my $block(keys %BlockParams){
+    print "   Block ".$BlockParams{$block}{ID}."\n";
+    for (my $nt = 0; $nt<100; $nt ++){
+      my $scr = $decisionScoreRand->next();
+      my $isTarg = ($targetRand->next() > 0.5);
+      $scr += $BlockParams{$block}{ScoreMeanShift} if($isTarg);
+        
+      $blockedTrial->addTrial($BlockParams{$block}{ID}, $scr, ($scr <= 0.5 ? "NO" : "YES" ), ($isTarg ? 1 : 0));
+    }
+  } 
+  $blockedTrial->exportForDEVA("$fileRoot.oneSys",1);
+  $blockedTrial->exportForDEVA("$fileRoot.divSys",0, 0.5);
+}
+
 sub exportForDEVA{
-  my ($self, $root) = @_;
+  my ($self, $root, $numSys, $thresh) = @_;
   my $trialNum = 1;
   my $tid;
   
+  $self->computeDecisionScoreThreshold();
   my @blockIDs = $self->getBlockIDs();
+  open (REF, ">$root.ref.csv") || MMisc::error_quit("Failed to open $root.ref.csv for reference file");
+  print REF "\"TrialID\",\"Targ\"\n";
+  if ($numSys == 1){
+    open (SYS, ">$root.sys.csv") || MMisc::error_quit("Failed to open $root.sys.csv for system file");
+    print SYS "\"TrialID\",\"Score\",\"Decision\"\n";
+  } else {
+    open (SYSDET, ">$root.sys.detect.csv") || MMisc::error_quit("Failed to open $root.sys.detect.csv for system file");
+    print SYSDET "\"TrialID\",\"Score\"\n";
+    open (SYSTHR, ">$root.sys.thresh.csv") || MMisc::error_quit("Failed to open $root.sys.thresh.csv for system file");
+    print SYSTHR "\"EventID\",\"DetectionThreshold\"\n";
+    for (my $block; $block < @blockIDs; $block++){
+      print SYSTHR "\"$blockIDs[$block]\",\"$thresh\"\n";
+    }  
+    open (SYSIND, ">$root.sys.index.csv") || MMisc::error_quit("Failed to open $root.sys.index.csv for system file");
+    print SYSIND "\"TrialID\",\"EventID\",\"ClipID\"\n";
+
+  } 
   if (@blockIDs > 1){
     open (MD, ">$root.metadata.csv") || MMisc::error_quit("Failed to open $root.metadata.csv for metadata");
-    print MD "TrialID,Block\n";
+    print MD "\"TrialID\",\"Block\"\n";
   }
-  open (REF, ">$root.ref.csv") || MMisc::error_quit("Failed to open $root.ref.csv for reference file");
-  print REF "TrialID,Targ\n";
-  open (SYS, ">$root.sys.csv") || MMisc::error_quit("Failed to open $root.sys.csv for system file");
-  print SYS "TrialID,Score,Decision\n";
-  
+    
   for (my $block; $block < @blockIDs; $block++){
     ### The TARGETS
     my $dec = $self->getTargScr($blockIDs[$block]);
     for (my $d = 0; $d < @$dec; $d++){
+      my $scr = $dec->[$d];
+      my $decision = "n";
+      $decision = "y" if (defined($self->{trials}{$blockIDs[$block]}{"MIN YES TARG"}) && $self->{trials}{$blockIDs[$block]}{"MIN YES TARG"} <= $scr);
       $tid = sprintf("TID-%07.f", $trialNum++);    
-      print REF "$tid,y\n";
-      print SYS "$tid,$dec->[$d],y\n";
+      print REF "\"$tid\",\"y\"\n";
+      if ($numSys == 1){
+        print SYS "\"$tid\",\"$scr\",\"$decision\"\n";
+      } else {
+        print SYSDET "\"$tid\",\"$scr\"\n";
+        print SYSIND "\"$tid\",\"$blockIDs[$block]\",\"CLIP-$tid\"\n";
+      }
       if (@blockIDs > 1){
-        print MD "$tid,$blockIDs[$block]\n";
+        print MD "\"$tid\",\"$blockIDs[$block]\"\n";
       }
     }
     ### The NONTARGETS
     my $dec = $self->getNonTargScr($blockIDs[$block]);
     for (my $d = 0; $d < @$dec; $d++){
+      my $scr = $dec->[$d];
+      my $decision = "n";
+      $decision = "y" if (defined($self->{trials}{$blockIDs[$block]}{"MIN YES NONTARG"}) && $self->{trials}{$blockIDs[$block]}{"MIN YES NONTARG"} <= $scr);
       $tid = sprintf("TID-%07.f", $trialNum++);    
-      print REF "$tid,n\n";
-      print SYS "$tid,$dec->[$d],y\n";
+      print REF "\"$tid\",\"n\"\n";
+      if ($numSys == 1){
+        print SYS "\"$tid\",\"$scr\",\"$decision\"\n";
+      } else {
+        print SYSDET "\"$tid\",\"$scr\"\n";
+        print SYSIND "\"$tid\",\"$blockIDs[$block]\",\"CLIP-$tid\"\n";
+      }
       if (@blockIDs > 1){
-        print MD "$tid,$blockIDs[$block]\n";
+        print MD "\"$tid\",\"$blockIDs[$block]\"\n";
       }
     }
   }
 
-  if (@blockIDs > 1){
-    close MD;
-  }
   open REF;
-  open SYS;
-  
+  if ($numSys == 1){
+    open SYS;
+    if (@blockIDs > 1){
+      close MD;
+    }
+  } else {
+    close SYSREF;
+    close SYSIND;
+    close SYSDET;
+  }
 }
 
 sub buildScoreDistributions{
