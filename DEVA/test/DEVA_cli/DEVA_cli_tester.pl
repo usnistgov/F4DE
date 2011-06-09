@@ -67,7 +67,7 @@ sub do_less_simple_test {
   MMisc::error_quit("Could not make temporary dir for testing ($tdir)")
     if (! MMisc::make_wdir($tdir));
   
-  my $command = "$tool -o $tdir $cadd $trial_metric_add";
+  my $command = "$tool -o $tdir $cadd $trial_metric_add ; cat $tdir/scoreDB.scores.txt";
 
   my $retval = &do_simple_test($testname, $subtype, $command, $res, $rev);
 
