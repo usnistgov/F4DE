@@ -37,7 +37,7 @@
 |-> Filename: 20050519-1503-Excerpt.mpg | Event: CellToEar | SYS elements: 3 | REF elements: 3 | Total Observations: 6 elements
    TYPE   R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
 ----------------------------------------------------------------------------------------------------------------------------
-  Mapped     0   203:3738   3536     0   203:3738   3536      -100       YES    203:3738      3536            0            0
+  Mapped     0   203:3738   3536     0   203:3738   3536       102       YES    203:3738      3536            0            0
   Mapped     1  2503:3739   1237     1  2503:3739   1237       101        NO   2503:3739      1237            0            0
   Mapped     2  3503:3739    237     2  3503:3739    237     -0.99        NO   3503:3739       237            0            0
  -- Summary: 3 Mapped (Pairs) / 0 Unmapped Sys  / 0 Unmapped Ref | Total Observations: 6 elements
@@ -50,7 +50,7 @@
 
             File               Event         TYPE      R.ID   R.range   Dur.r  S.ID   S.range   Dur.s  S.DetScr  S.DetDec  ISec.range  Dur.ISec  Beg.r-Beg.s  End.r-End.s  
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  20050519-1503-Excerpt.mpg   CellToEar        Mapped     0   203:3738   3536     0   203:3738   3536      -100       YES    203:3738      3536            0            0
+  20050519-1503-Excerpt.mpg   CellToEar        Mapped     0   203:3738   3536     0   203:3738   3536       102       YES    203:3738      3536            0            0
   20050519-1503-Excerpt.mpg   CellToEar        Mapped     1  2503:3739   1237     1  2503:3739   1237       101        NO   2503:3739      1237            0            0
   20050519-1503-Excerpt.mpg   CellToEar        Mapped     2  3503:3739    237     2  3503:3739    237     -0.99        NO   3503:3739       237            0            0
   20050519-1503-Excerpt.mpg   ObjectGet        Mapped     0  1100:3327   2228     0  1100:3327   2228        99        NO   1100:3327      2228            0            0
@@ -82,11 +82,12 @@ Constant parameters:
    CostMiss = 10
    Rtarget = 1.8
 
-                  |  #Ref  #Sys  #CorDet  #FA  #Miss  Act. RFA  Act. PMiss  Act. DCR  
-------------------+-----------------------------------------------------------------
-PersonRuns Event  |     0     1        0    1      0    3.6000          NA        NA
-CellToEar Event   |     3     3        1    0      2    0.0000      0.6667    0.6667
-ObjectGet Event   |     1     1        0    0      1    0.0000      1.0000    1.0000
+|                    |           Inputs            |                              Actual Decision Cost Analysis                               |
+|       Title        |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   RFA    |  PMiss   |   DCR    |  Dec. Tresh  |
+|--------------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+----------+--------------+
+|   PersonRuns Event |       0 |        1 |      1 |         0 |          0 |     1 |       0 |   3.6000 |       NA |       NA |     -10.0000 |
+|    CellToEar Event |       3 |        0 |      3 |         1 |          0 |     0 |       2 |   0.0000 |   0.6667 |   0.6667 |     101.5000 |
+|    ObjectGet Event |       1 |        0 |      1 |         0 |          0 |     0 |       1 |   0.0000 |   1.0000 |   1.0000 |      99.0000 |
 
 
 ***** Done *****

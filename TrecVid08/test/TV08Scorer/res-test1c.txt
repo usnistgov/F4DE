@@ -78,11 +78,12 @@ Constant parameters:
    CostMiss = 10
    Rtarget = 1.8
 
-                 |  #Ref  #Sys  #CorDet  #FA  #Miss  Act. RFA  Act. PMiss  Act. DCR  
------------------+-----------------------------------------------------------------
-CellToEar Event  |     3     2        0    0      3    0.0000      1.0000    1.0000
-ObjectPut Event  |     1     1        1    0      0    0.0000      0.0000    0.0000
-ObjectGet Event  |     1     1        0    0      1    0.0000      1.0000    1.0000
+|                   |           Inputs            |                              Actual Decision Cost Analysis                               |
+|       Title       |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   RFA    |  PMiss   |   DCR    |  Dec. Tresh  |
+|-------------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+----------+--------------+
+|   CellToEar Event |       3 |        0 |      2 |         0 |          0 |     0 |       3 |   0.0000 |   1.0000 |   1.0000 |       0.9900 |
+|   ObjectPut Event |       1 |        0 |      1 |         1 |          0 |     0 |       0 |   0.0000 |   0.0000 |   0.0000 |       0.4500 |
+|   ObjectGet Event |       1 |        0 |      1 |         0 |          0 |     0 |       1 |   0.0000 |   1.0000 |   1.0000 |       0.7800 |
 
 
 ***** Done *****
