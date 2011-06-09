@@ -2,7 +2,7 @@
 [[RETURN CODE]] 0
 [[STDOUT]]
 ../common/test1-1fa-sys.xml: validates
-  [min: 0 / Max: 0.715071225071225] [Range: 0.715071225071225]
+  [min: 0 / Max: 0.716381766381766] [Range: 0.716381766381766]
 ** XML re-Representation:
 <?xml version="1.0" encoding="UTF-8"?>
 <viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
@@ -57,7 +57,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.712279202279202"/>
+          <data:fvalue value="0.715128205128205"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -106,7 +106,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.713532763532764"/>
+          <data:fvalue value="0.716381766381766"/>
         </attribute>
         <attribute name="Point">
           <data:point framespan="1124:1124" x="263" y="353"/>
@@ -234,7 +234,7 @@
   </data>
 </viper>
 ../common/test2-1md_1fa-sys.xml: validates
-  [min: 0.427350427350427 / Max: 1] [Range: 0.572649572649573]
+  [min: 0.683760683760684 / Max: 1.002849002849] [Range: 0.319088319088319]
 ** XML re-Representation:
 <?xml version="1.0" encoding="UTF-8"?>
 <viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
@@ -299,7 +299,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.427350427350427"/>
+          <data:fvalue value="1.002849002849"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -488,7 +488,7 @@
   </data>
 </viper>
 ../common/test6-Xtra-sys.xml: validates
-  [min: 0.427350427350427 / Max: 1] [Range: 0.572649572649573]
+  [min: 0.683760683760684 / Max: 1.002849002849] [Range: 0.319088319088319]
 ** XML re-Representation:
 <?xml version="1.0" encoding="UTF-8"?>
 <viper xmlns="http://lamp.cfar.umd.edu/viper#" xmlns:data="http://lamp.cfar.umd.edu/viperdata#">
@@ -565,7 +565,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.427350427350427"/>
+          <data:fvalue value="1.002849002849"/>
         </attribute>
         <attribute name="Point"/>
         <attribute name="xtra_Tracking_Comment">
@@ -628,7 +628,7 @@
 </viper>
 All files processed (Validated: 5 | Total: 5)
 
-Global min: 0 / Global Max: 1 [Range: 1]
+Global min: 0 / Global Max: 1.002849002849 [Range: 1.002849002849]
 
 [[STDERR]]
 

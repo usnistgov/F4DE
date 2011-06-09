@@ -140,7 +140,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.01"/>
+          <data:fvalue value="1.01"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -189,7 +189,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.45"/>
+          <data:fvalue value="1.45"/>
         </attribute>
         <attribute name="Point">
           <data:point framespan="1124:1124" x="263" y="353"/>
@@ -538,7 +538,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.01"/>
+          <data:fvalue value="1.01"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -577,7 +577,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.45"/>
+          <data:fvalue value="1.45"/>
         </attribute>
         <attribute name="Point">
           <data:point framespan="1124:1124" x="263" y="353"/>
@@ -747,7 +747,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-100"/>
+          <data:fvalue value="102"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -923,7 +923,7 @@
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-100"/>
+          <data:fvalue value="102"/>
         </attribute>
         <attribute name="Point"/>
       </object>

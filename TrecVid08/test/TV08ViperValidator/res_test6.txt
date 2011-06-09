@@ -60,7 +60,7 @@ Framespan was shifted by -1117 -->
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.45"/>
+          <data:fvalue value="1.45"/>
         </attribute>
         <attribute name="Point">
           <data:point framespan="7:7" x="263" y="353"/>

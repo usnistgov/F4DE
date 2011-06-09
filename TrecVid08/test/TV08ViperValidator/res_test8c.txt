@@ -61,7 +61,7 @@ test1-1fa-sys.xml.memdump: validates
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.01"/>
+          <data:fvalue value="1.01"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -110,7 +110,7 @@ test1-1fa-sys.xml.memdump: validates
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="0.45"/>
+          <data:fvalue value="1.45"/>
         </attribute>
         <attribute name="Point">
           <data:point framespan="1124:1124" x="263" y="353"/>
