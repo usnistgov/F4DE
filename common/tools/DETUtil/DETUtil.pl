@@ -244,6 +244,7 @@ $options{serialize} = 0;
 $options{lTitleNoDETType} = 1 if ($lineTitleModification =~ /T/);
 $options{lTitleNoPointInfo} = 1 if ($lineTitleModification =~ /P/);
 $options{lTitleNoBestComb} = 1 if ($lineTitleModification =~ /M/);
+$options{lTitleAddIsoRatio} = 1 if ($lineTitleModification =~ /R/);
 
 $options{gnuplotPROG} = $gnuplotPROG;
 $options{createDETfiles} = 1;
@@ -372,7 +373,11 @@ foreach my $srlDef ( @ARGV )
   my %lineAttr = ();
 	if (defined($newLabel)){
     ### then we will control the plot style
- 	  $lineAttr{"label"} = $newLabel if ($newLabel ne "");
+    if ($newLabel ne ""){
+      # JGF decided to change the way this works....  the line attr still works, but it should be an alternative Way to do it
+      #   	  $lineAttr{"label"} = $newLabel;
+   	  $loadeddet->setLineTitle($newLabel);
+   	}
 	  if (defined ($pointSize) && $pointSize ne ""){
  	    die "Error: DET Line Attr control for pointSize [3] /$pointSize/ illegal." if ($pointSize !~ /^($numRegex)$/);
  	    $lineAttr{"pointSize"} = $pointSize;
@@ -410,7 +415,7 @@ foreach my $srlDef ( @ARGV )
 		                    \@listIsoratiolineCoef, $loadeddet->{GZIPPROG});
 		$det->{LAST_SERIALIZED_DET} = $loadeddet->{LAST_SERIALIZED_DET};
 
-		print "[Calling 'computePoint']\n";
+#		print "[Calling 'computePoint']\n";
 		$det->computePoints();
 	}
 	else
@@ -468,6 +473,10 @@ foreach my $srlDef ( @ARGV )
 	}
 }
 
+if ($sortBy) {
+    $ds->sort($sortBy);
+}
+
 if($IsoRatioStatisticFile ne "")
 {
   vprint ("[*] Performing 'renderIsoRatioIntersection'\n");
@@ -495,10 +504,6 @@ if($DrawIsometriclines)
 {
 	$options{Isometriclines} = \@listIsometriclineCoef;
 	$options{DrawIsometriclines} = 1;
-}
-
-if ($sortBy) {
-    $ds->sort($sortBy);
 }
 
 ## Reports
@@ -698,8 +703,9 @@ Modify the output line title by removing default information. F<TITLE> can inclu
   P -> removes the Maximum Value Point Coordinates
   T -> removes the DET Curve Type
   M -> removes the Maximum Value
+  R -> adds Iso Ratio Points
 
-=item B<-K>, B<--KeyLoc> left | right | center | top | bottom | outside | below | ((left|right|center) (top|bottom|center))
+=item B<-K>, B<--KeyLoc> left | right | center | top | bottom | outside | below | "((left|right|center) (top|bottom|center))"
 
 Place the key at one of the locations.
 
@@ -802,8 +808,6 @@ No known bugs.
 The default iso-cost ratio coefficients (-R option) and iso-metric coefficients (-Q option) are defined into the metric.
 
 The default font face can be changed by setting the environment variable GNUPLOT_DEFAULT_GDFONT to a ttf font like /Library/Fonts/Arial.
-
-In some cases, gnuplot will complain of missing fonts, if this happens, extend the GDFONTPATH environment variable with the directory location of the missing fonts.
 
 =head1 AUTHOR
 
