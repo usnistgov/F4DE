@@ -1,0 +1,34 @@
+[[COMMANDLINE]] ../../tools/DEVA_cli/DEVA_cli.pl -o res-test1.txt.dir -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.oneSys.ref.csv -s MTest.oneSys.sys.csv -F SQL_filter_1block.sql  ; cat res-test1.txt.dir/scoreDB.scores.txt
+[[RETURN CODE]] 0
+[[STDOUT]]
+***** Generating config files
+** REF
+** SYS
+-> 2 config file generated
+***** Creating initial DataBases (if not already present)
+** REF
+** SYS
+-> 2 DB file generated
+***** Running Filter
+[Warning] Issue with non mandatory file (res-test1.txt.dir/metadataDB.db): file does not exist
+***** Scoring
+[Warning] Issue with non mandatory file (res-test1.txt.dir/metadataDB.db): file does not exist
+Done
+Performance Summary Over and Ensemble of Subsets
+
+System Title: DET Set
+
+Constant parameters:
+   CostFA = 1
+   CostMiss = 1
+   Ptarg = 0.5
+
+Combined DET Plot: res-test1.txt.dir/scoreDB.det.png
+
+|                 |           Inputs            |                               Actual Decision Cost Analysis                                |            Minimum NormCost Analysis             |                                               DET Curve Graphs                                               |
+|      Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   PFA    |  PMiss   |  NormCost  |  Dec. Tresh  |   PFA    |  PMiss   |  NormCost  |  Dec. Thresh  |                     DET Curve                     |                     Threshold Curve                      |
+|-----------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+------------+--------------+----------+----------+------------+---------------+---------------------------------------------------+----------------------------------------------------------+
+|   Block BlockID |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.8725 |   0.2704 |     1.1430 |       0.5063 |   0.0098 |   0.9184 |     0.9282 |        4.8943 |   res-test1.txt.dir/scoreDB.det.Block_BlockID.png |   res-test1.txt.dir/scoreDB.det.Block_BlockID.thresh.png |
+
+[[STDERR]]
+
