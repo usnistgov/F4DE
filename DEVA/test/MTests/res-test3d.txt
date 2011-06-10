@@ -1,9 +1,9 @@
-[[COMMANDLINE]] ../../tools/DEVA_cli/DEVA_cli.pl -o res-test3d.txt.dir --BlockAverage --dividedSys SQL_DeriveSystem.sql -j 0.5 -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata  ; cat res-test3d.txt.dir/scoreDB.scores.txt
+[[COMMANDLINE]] ../../tools/DEVA_cli/DEVA_cli.pl -o res-test3d.txt.dir --BlockAverage --derivedSys SQL_DeriveSystem.sql -j 0.5 -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata  ; cat res-test3d.txt.dir/scoreDB.scores.txt
 [[RETURN CODE]] 0
 [[STDOUT]]
 ***** Generating config files
 ** REF
-** Divided SYS
+** Derived SYS
 ** Metadata
 -> 3 config file generated
 ***** Creating initial DataBases (if not already present)

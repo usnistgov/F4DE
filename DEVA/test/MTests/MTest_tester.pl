@@ -40,7 +40,7 @@ $testr += &do_less_simple_test($tn, "One system file, block differentiated, tria
 
 ### Test 2d
 $tn = "test2d";
-$com =  "--dividedSys SQL_DeriveSystem.sql -J SQL_thresholdTable.sql -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
+$com =  "--derivedSys SQL_DeriveSystem.sql -J SQL_thresholdTable.sql -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
 $testr += &do_less_simple_test($tn, "Derived system file, block differentiated, trial weighted", $com, "res-$tn.txt");
 
 ### Test 3
@@ -50,8 +50,8 @@ $testr += &do_less_simple_test($tn, "One system file, block differentiated, bloc
 
 ### Test 3d
 $tn = "test3d";
-#$com =  "--BlockAverage --dividedSys SQL_DeriveSystem.sql -J SQL_thresholdTable.sql -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
-$com =  "--BlockAverage --dividedSys SQL_DeriveSystem.sql -j 0.5 -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
+#$com =  "--BlockAverage --derivedSys SQL_DeriveSystem.sql -J SQL_thresholdTable.sql -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
+$com =  "--BlockAverage --derivedSys SQL_DeriveSystem.sql -j 0.5 -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
 $testr += &do_less_simple_test($tn, "Derived system file, block differentiated, block weighted", $com, "res-$tn.txt");
 
 #####
