@@ -80,7 +80,7 @@ sub get_dbh {
 
   my $dbh = DBI->connect
     ("dbi:SQLite:dbname=$dbfile", "", "",
-     { RaiseError => 1, PrintError => 0 , sqlite_unicode => 1, # just to be safe
+     { RaiseError => 0, PrintError => 0 , sqlite_unicode => 1, # just to be safe
        AutoCommit => 0, # speeds up things but we have to force commits
      }) or return("Can not connect to DB", undef);
 
@@ -129,6 +129,32 @@ sub get_column_names {
   $sth->finish();
 
   return("", @colsname);
+}
+
+#####
+
+sub get_tables_list {
+  my ($dbh) = @_;
+
+  my @tables = $dbh->tables()
+    or return("Problem obtaining tables names : " . $dbh->errstr());
+
+  return("", @tables);
+}
+
+#####
+
+sub get_table_schema {
+  my ($dbh, $tablename) = @_;
+
+  my $sth_text = "SELECT sql FROM sqlite_master WHERE type = \'table\' AND name = \'$tablename\';";
+  my $sth = $dbh->prepare($sth_text)
+    or return("Problem asking for table schema [$sth_text] " . $dbh->errstr());
+  $sth->execute()
+    or return("Problem executing request for table schema [$sth_text] " . $dbh->errstr());
+  my @r = $sth->fetchrow_array()
+    or return("Problem obtaining result for table schema [$sth_text] " . $dbh->errstr());
+  return("", $r[0]);
 }
 
 #####
@@ -196,13 +222,18 @@ sub insertCSV_handler {
   my ($err, %match) = MMisc::get_array1posinarray2(\@columnsname, \@itcn);
   return($err) if (! MMisc::is_blank($err));
 
+#  my ($err, @tl) = &get_tables_list($dbh);
+#  print "TABLES: " . join(" | ", @tl) . "\n";
+  my ($err, $schema) = &get_table_schema($dbh, $tablename);
+  return($err) if (! MMisc::is_blank($err));
   # process csv rows
   my $inserted = 0;
   my $ac = "(" . join(",", @columnsname) . ")";
   my $qm = "(";
   for (my $i = 0; $i < scalar @columnsname - 1; $i++) { $qm .= "?,"; }
   $qm .= "?)";
-  my $sth = $dbh->prepare("INSERT INTO $tablename $ac VALUES $qm");
+  my $sth_text = "INSERT INTO $tablename $ac VALUES $qm";
+  my $sth = $dbh->prepare($sth_text);
 
   while (my $line = <CSV>) {
     my @fields = $csvh->csvline2array($line);
@@ -214,9 +245,10 @@ sub insertCSV_handler {
         $fields[$i] = undef if ($fields[$i] eq '');
       }
     }
+    my $v_txt = join(" | ", @fields);
 
     $inserted += $sth->execute(@fields)
-      or return("Problem trying to execute SQL statement: " . $dbh->errstr(), 0);
+      or return("Problem trying to execute SQL statement [$sth_text] with values [$v_txt] for table [$tablename] with schema [$schema] : " . $dbh->errstr(), 0);
 
     my $err = $sth->errstr();
     return("Problem during CSV line insert (row: $inserted): $err", 0)
