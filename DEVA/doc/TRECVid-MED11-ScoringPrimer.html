@@ -133,38 +133,45 @@ part of
 the F4DE), please refer to its manual:
 <code>DEVA_cli --man</code></i></p>
 
-The following is an example of scoring a <i>SITE</i> submission for the <i>TASK</i>, where a site
-submited two CSV file named "TASK_SITE_Threshold_1.csv" and "TASK_SITE_Detection_1.csv",
+The following is an example of scoring a <i>team</i> named
+"testTEAM" with a submission for
+the <i>DEVT_20110615</i> task.
+This team, following the EVAL plan, provided an "AutoEAG" submission
+for the Full set named "RandomSys", and 
+submited two CSV file named
+<code>testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.detection.csv</code>
+and <code>testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.threshold.csv</code>,
 which follows the rules set for the system CSV files and contains all the
-<i>TrialID</i>s present in the <i>TASK_TrialIndex.csv</i> file for the events processed.<br>
+<i>TrialID</i>s present in the <i>DEVT_20110615_TrialIndex.csv</i>
+file for all the five events processed.<br>
 </doc>
 <pre>
-% mkdir SITE_1-Results
+% mkdir testTEAM-Results1
 % DEVA_cli\
 --profile MED11\
---outdir TASK_SITE_1-Results\
---refcsv TASK_Ref.csv\
---dividedSys\
---syscsv TASK_SITE_Thresold_1.csv:threshold\
---syscsv TASK_SITE_Detection_1.csv:detection\
-Task_TrialIndex.csv:TrialIndex
+--outdir testTEAM-Results1 \
+--refcsv DEVT_20110615_Ref.csv \
+--syscsv testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.detection.csv:detection \
+--syscsv testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.threshold.csv:threshold \
+DEVT_20110615_ClipMD.csv:ClipMD \
+DEVT_20110615_JudgementMD.csv:JudgementMD \
+DEVT_20110615_TrialIndex.csv:TrialIndex
 </pre>
 where:<br>
 <ul>
-  <li>The "SITE_1-Results" directory is created before
+  <li>The "testTEAM-Results1" directory is created before
 running this command.</li>
   <li>the <code>--profile MED11</code> insure that a lot of
   preconfigured entries are set (metric, filter, join, ...)</li>
-  <li>the <code>:</code> notation following CSV file defintion (example: <code>--syscsv
-  TASK_SITE_Thresold_1.csv:threshold</code>) enable
+  <li>the <code>:</code> notation following CSV file defintion (example: <code>DEVT_20110615_ClipMD.csv:ClipMD</code>) enable
   a simple table naming making it simpler to insure the use of
-  predefined table name during SQL commands
-  </li>
+  predefined table name during SQL commands</li>
+  <li>the <i>TrialIndex</i> table is required to do matching between
+  <i>TrialID</i>, <i>ClipID</i> and <i>EventID</i>
 </ul>
 
 <div style="margin-left: 40px;"><u>Note:</u> For sites only
-participating in some of the
-three events, the SQL filter will insure that only the <i>TrialID</i>s
+participating in some of the events, the SQL filter will insure that only the <i>TrialID</i>s
 listed in the system CSV will be used.&nbsp; A submission checker will
 be released soon the verifies that all <span
  style="font-style: italic;">TrialIDs </span>for an event are present
@@ -173,7 +180,7 @@ in the system file.<br>
 <br>
 
 The script will run through the four steps of the DEVA_cli scorer and
-place in the "<i>SITE-1_Results</i>" directory&nbsp; a file named
+place in the "<i>testTEAM_Results1</i>" directory a file named
 <i>scoreDB.scores.txt</i> that contains a scoring report which
 includes:
 <ul>
@@ -190,5 +197,35 @@ by the <b>System</b> (<code>#Miss</code>)
 </ul>
 Note that the correct detection of a <i>n</i> <i>Targ</i>
 <b>Reference</b> is not counted.
+
+<br>
+<a name="clifilter">
+<h2>Modifying the scoring filter</h2>
+</a>
+
+A more complex selection can be made using a modified <b>filter</b>,
+such as <code>DEVAcli_filter-MED11_primer.sql</code>:
+<pre>
+INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID ) SELECT system.TrialID,TrialIndex.EventID FROM TrialIndex INNER JOIN system,ClipMD WHERE system.TrialID==TrialIndex.TrialID AND TrialIndex.ClipID==ClipMD.ClipID AND ClipMD.DURATION<30;
+</pre>
+
+which restrict the selection by only using ClipIDs whose duration is
+less than 30 seconds.
+
+And can be run:
+<pre>
+% mkdir testTEAM-Results2
+% DEVA_cli\
+--profile MED11\
+--outdir testTEAM-Results2 \
+--refcsv DEVT_20110615_Ref.csv \
+--syscsv testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.detection.csv:detection \
+--syscsv testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.threshold.csv:threshold \
+DEVT_20110615_ClipMD.csv:ClipMD \
+DEVT_20110615_JudgementMD.csv:JudgementMD \
+DEVT_20110615_TrialIndex.csv:TrialIndex \
+--FilterCMDfile DEVAcli_filter-MED11_primer.sql
+</pre>
+
 </body>
 </html>
