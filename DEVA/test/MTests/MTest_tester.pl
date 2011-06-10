@@ -26,8 +26,6 @@ my $t0 = F4DE_TestCore::get_currenttime();
 
 my $com = "";
 
-#-s expid.detection.csv:detection -s expid.threshold.csv:threshold expid_TrialIndex.csv:TrialIndex -J expid_join.sql
-
 ### Test 1
 $tn = "test1";
 $com =  "-t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.oneSys.ref.csv -s MTest.oneSys.sys.csv -F SQL_filter_1block.sql";
@@ -43,6 +41,12 @@ $tn = "test2d";
 $com =  "--derivedSys SQL_DeriveSystem.sql -J SQL_thresholdTable.sql -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
 $testr += &do_less_simple_test($tn, "Derived system file, block differentiated, trial weighted", $com, "res-$tn.txt");
 
+### Test 2m
+$tn = "test2m";
+#./DEVA_cli.pl -p MED11 -s expid.threshold.csv:threshold -s expid.detection.csv:detection -o outdir -r expid_ref.csv expid_TrialIndex.csv:TrialIndex
+$com =  "-p MED11 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold MTest.derivSys.sys.index.csv:TrialIndex" ;
+$testr += &do_less_simple_test($tn, "MED11 Profile, Derived system file, block differentiated, trial weighted", $com, "res-$tn.txt");
+
 ### Test 3
 $tn = "test3";
 $com =  "--BlockAverage -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.oneSys.ref.csv -s MTest.oneSys.sys.csv -F SQL_filter_Nblock.sql MTest.oneSys.metadata.csv:metadata";
@@ -51,7 +55,7 @@ $testr += &do_less_simple_test($tn, "One system file, block differentiated, bloc
 ### Test 3d
 $tn = "test3d";
 #$com =  "--BlockAverage --derivedSys SQL_DeriveSystem.sql -J SQL_thresholdTable.sql -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
-$com =  "--BlockAverage --derivedSys SQL_DeriveSystem.sql -j 0.5 -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
+$com =  "--BlockAverage --derivedSys SQL_DeriveSystem.sql -j 0.65625 -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
 $testr += &do_less_simple_test($tn, "Derived system file, block differentiated, block weighted", $com, "res-$tn.txt");
 
 #####
