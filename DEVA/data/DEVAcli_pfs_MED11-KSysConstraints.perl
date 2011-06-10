@@ -2,5 +2,5 @@
 
 $VAR1 = 
   {
-   'detection' => 'Score:\'CHECK(Score>=0.0 AND Score <=1.0)\''
+   'detection' => 'Score:\'CHECK(Score>=0.0 AND Score<=1.0)\''
   };
