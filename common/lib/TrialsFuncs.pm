@@ -303,7 +303,7 @@ sub unitTest {
     $trial->addTrial("block2", 0.5, "YES", 1);
     $trial->addTrial("block2", 0.4, "NO", 1);
     $trial->addTrial("block2", 0.1, "NO", 1);
-    #print $trial->dump();
+    print $trial->dump();
     $rtn = $trial->_computeDecisionScoreThreshold();
     #print "\n".$rtn;
     MMisc::error_quit("Failed") if ($rtn eq "pass") ;
@@ -445,7 +445,7 @@ sub addTrial {
 
 ####################################################################################################
 
-=item B<addTrial>(I<$blockID>, I<$sysScore>, I<$isTarg>)  
+=item B<addTrialWithoutDecision>(I<$blockID>, I<$sysScore>, I<$isTarg>)  
 
 Adds a trail which for which no "decision" is given.  The decision is set by applying the TrialActualDecisionThreshold that is set via B<setTrialActualDecisionThreshold>.  The threshold must be set and of type "supplied".  The rest of the arguments are as defined in B<addTrial>.
 
