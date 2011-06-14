@@ -25,26 +25,26 @@
 
 
 <h2>Description</h2>
-This document provides a high-level overview of how to use the F4DE
-tools for the <a href="http://www.nist.gov/itl/iad/mig/med11.cfm">TRECVID
+This document provides a high-level overview of how to use the Detection EVAluation (DEVA) tools distributed 
+within the NIST Framework for Detection Evaluation (F4DE)
+toolkit for the <a href="http://www.nist.gov/itl/iad/mig/med11.cfm">TRECVID
 MED11 Evaluation</a>.
 The Multimedia Event Detection (MED) evaluation track is part of the
 TRECVID Evaluation. The multi-year goal of MED is to assemble core
 detection technologies into a system that can quickly and accurately
 search a multimedia collection for user-defined events. See the web
 site for specific details about the evaluation.
-<p>There are three sections in this document: <a href="#executable">executable
-script synopsis</a>, <a href="#format">file format</a>, and <a
- href="#cliuse">using the tool to score a MED11 submission</a>.
+<p>There are three sections in this document: <a href="#executable">Scoring
+script synopsis</a>, <a href="#format">CSV File format definition</a>, and <a
+ href="#cliuse">Example command lines to score a MED11 submission</a>.
 The examples below assume the F4DE package has been
 installed and is working properly according to the README.&nbsp; This
 includes defining the $F4DE_BASE environment variable and
 $F4DE_BASE/bin is in your path
-variable.&nbsp;
-The variable DIST used below is the path to the F4DE
+variable. The variable DIST used below is the path to the F4DE
 source directory and is not part of the F4DE installation instructions.<br>
 
-The examples below also assume that you have obtained and have access
+<p>  The examples below also assume that you have obtained and have access
 to the content the MED11 DRYRUN
 files (<a
 href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_DRYRUN_Files.tar.bz2">MED11_DRYRUN_Files.tar.bz2</a>),
@@ -53,75 +53,84 @@ as well as the MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/
 
 
 <a name="executable">
-<h2>Executable Script Synopsis</h2>
+<h2>Scoring Script Synopsis</h2>
 </a>
 
 <b>DEVA_cli</b> is the <i>Detection EVAluation command line
-interface</i> software that is used for scoring the MED evaluation.
+interface</i>.  NIST will use DEVA_cli to measure the performance of MED systems.  
 The software uses <a href="http://www.sqlite.org">SQLite</a> to manage
 the data tables and then uses SQLite compatible queries to select
-data to score. The software reads one reference <i>Comma Separated
-Value</i> (CSV) file, at least one system CSV file, and optionally multiple
-metadata CSV files.
+data to score. The input to the software is a set of <i>Comma Separated Value</i> (CSV) tables as defined in Section 3. 
 
-<a name="format">
-<h2>File Formats:</h2>
-</a>The TRECVID MED tools use <i>Comma Separated Values</i> (CSV)
-files to
-generate SQL tables that will be used by the scoring tool. CSV files
-are flat files where commas are used to
-separate values. and double quotes are used to enclose values. The
-following is a valid CSV row that contains three columns:
-<br>
-</p>
-<p>&nbsp;<code></code><code>&nbsp;&nbsp;&nbsp; "1","John","Doe"</code><br>
-</p>
-<p>The DEVA tools require the first row of a CSV file to contain the
-column's
-header. For the previous example, it would be:
-<br>
-</p>
-<p><code>&nbsp;&nbsp;&nbsp; "ID","FirstName","LastName"</code>
-</p>
-<p>The scoring tool make requires one <b>reference</b>
-CSV file and one <span style="font-weight: bold;">system</span> CSV
-file.&nbsp; The tool optionally accepts multiple CSV files that provide
-<b>metadata</b> about the test trials.&nbsp; The metadata files can be
-used to conditionally score the system.&nbsp; The DEVA tools will use
-the CSV files to build SQlite database tables. <br>
-</p>
-<p>Each column header will be used as its
-SQL equivalent column name for the table.&nbsp; The header and field
-order of the reference and system files is rigidly defined.<br>
-</p>
-<ul>
-  <li>The <b>reference</b> CSV file must contain two columns: <i>TrialID</i>
+<p> The MED evaluation tests a system's ability to detect if an event (as defined by an event kit) occurs within a video of the test collection.  An MED system computes the probability that the event occured for each event kit/test video combination, a decision threshold for the event optimizing the primary metric, and the total processing time for the detection of an event.  For the DEVA tools, each time a system computes an event/test video probability, it is called a <i>trial</i>.  Each trial is identified by a unique <b>TrialID</b>.  TrialIDs are grouped into a statistical sample block referred to as a which are identified by a <i>BlockID</i>.  For MED11, the EventIDs are used as BlockIDs. 
+
+<p>  DEVA_cli accepts a variety of input combinations, however, to perform the MED11 scoring with the standard setup, LDC will provide a set of data files and MED11 systems will generate a set of files.
+
+<UL>
+<LI> <b>Provided Data Files</b>: NIST/LDC will provide the following database files for use in scoring. 
+
+<UL>
+<LI> <bold> TrialIndex file: </bold> 
+infoXXX
+</li>
+
+<LI> <bold> Reference File: </bold> The <b>reference</b> CSV file defines which TrialIDs are target trials (the video contains an instance of the event) and which TrialIDs are non-target trials (the video does not contain an instance of the event).  The file must contain two columns: <i>TrialID</i>
 and <i>Targ</i>, where <i>TrialID</i> must be a primary key and <i>Targ</i>
-values must be a either <i>y</i> or <i>n</i>.
-  </li>
-  <li>The <b>system</b> CSV file will contain three columns: <i>TrialID</i>,
-    <i>Score,</i> and <i>Decision</i>, where <i>TrialID</i> must be a
-primary key, <i>Score</i> a numerical value and <i>Targ</i> values
-must be a either <i>"y"</i> or "<i>n"</i>.</li>
-</ul>
+values must be either <i>y</i> a target or <i>n</i> otherwise. 
+</li>
 
-For the purpose of MED11, and to follow the details of the evaluation
-plan put on the <a
-href="http://www.nist.gov/itl/iad/mig/med11.cfm">MED11</a> website,
-the <b>system</b> CSV file will be generated from two <i>divided
-system files</i> that will be <i>joined</i> into the final database.
+<LI> <bold> Event Database file: </bold> 
+infoXXX
+</li>
+
+<LI> <bold> Judgement Meta Data file: </bold> 
+infoXXX
+</li>
+<LI> <bold> Clip Meta Data file: </bold> 
+infoXXX
+</li>
+
+
+</UL>
+
+<li> <b> System Generated Output Files: </b> Per the evaluation plan, MED11 system will generate two CSV formatted files.  
 <ul>
-  <li>A <b>detection</b> CSV file must contain two columns:
+  <li> The <b>detection</b> CSV file contains the confidence score for each TrialID in the test.  The file must contain two columns with column headings:
   <i>TrialID</i> and <i>Score</i>, where <i>TrialID</i> must be a
   primary key and <i>Score</i> must be a value contained within 0.0
   and 1.0</li>
-  <li>A <b>threshold</b> CSV file must contain three columns:
+  <li> The <b>threshold</b> CSV file contains information about the processed event the Detection Threshold (as defined in Section XXX of the evaluation plan) and 
+  
+  The must contain three columns:
   <i>EventID</i>, <i>DetectionThreshold</i> and <i>DetectionTPT</i>,
   where <i>EventID</i> must be a primary key and <i>DetectionThreshold</i> must be a value contained within 0.0
   and 1.0, while <i>DetectionTPT</i> is an unbounded value (see
-  EvalPlan for details)</li>
+  EvalPlan for details).</li>
 </ul>
 
+
+</LI>
+</UL>
+
+
+<a name="format">
+<h2>CSV File Format Definition</h2>
+</a>DEVA_cli uses <i>Comma Separated Values</i> (CSV)
+files to
+generate SQL tables that will be used by the scoring tool. CSV files
+are ASCII text files where each line contains comma separate, double quote enclosed values.   The DEVA tools require the first row of a CSV file to contain the
+column's header.  The following is a valid CSV file that contains three columns and two rows of data:
+</p>
+<dir>
+<code>
+"ID","FirstName","LastName"<br>
+"1","John","Doe"</br>
+"2","Mary","Smith"
+</code>
+</dir>
+
+
+<b> NOT SURE WHERE THIS GOES ----------------
 For the optional metadata database files, the CSV file names will be
 used as SQL table name. The program leaves the content of the database
 to be free-form.
@@ -129,10 +138,11 @@ to be free-form.
 Although, one of the metadata table must be named <b>TrialIndex</b>
 and must contain a <i>TrialID</i> primary key column that match the value present in the <b>reference</b> or <b>system</b>
 CSV, as well as a <i>EventID</i> and <i>ClipID</i>.
+</b>
 
 <br>
 <a name="cliuse">
-<h2>Using the DEVA_cli tool to Score a MED11 submission</h2>
+<h2>Example command lines to score a MED11 submission</h2>
 </a>
 <p><i>For further information about the DEVA_cli tool (available as
 part of the F4DE), please refer to its manual:
