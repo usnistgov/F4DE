@@ -47,8 +47,8 @@ source directory and is not part of the F4DE installation instructions.<br>
 <p>  The examples below also assume that you have obtained and have access
 to the content the MED11 DRYRUN
 files (<a
-href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_DRYRUN_Files.tar.bz2">MED11_DRYRUN_Files.tar.bz2</a>),
-as well as the MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer_Files.tar.bz2">MED11_Primer_Files.tar.bz2</a>).
+href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer/MED11_DRYRUN_Files.tar.bz2">MED11_DRYRUN_Files.tar.bz2</a>),
+as well as the MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer/MED11_Primer_Files.tar.bz2">MED11_Primer_Files.tar.bz2</a>).
 
 
 
@@ -67,27 +67,68 @@ data to score. The input to the software is a set of <i>Comma Separated Value</i
 <p>  DEVA_cli accepts a variety of input combinations, however, to perform the MED11 scoring with the standard setup, LDC will provide a set of data files and MED11 systems will generate a set of files.
 
 <UL>
-<LI> <b>Provided Data Files</b>: NIST/LDC will provide the following database files for use in scoring. 
+<LI> <b>Provided Data Files</b>: NIST/LDC will provide the following
+  database files for use in scoring (all those files will be available
+  for DRYRUN but not for MED11TEST)
 
 <UL>
 <LI> <bold> TrialIndex file: </bold> 
-infoXXX
+the TrialID list (and its decomposition in its core components) - <i>TrialID</i>, <i>ClipID</i>, <i>EventID</i>
 </li>
 
-<LI> <bold> Reference File: </bold> The <b>reference</b> CSV file defines which TrialIDs are target trials (the video contains an instance of the event) and which TrialIDs are non-target trials (the video does not contain an instance of the event).  The file must contain two columns: <i>TrialID</i>
-and <i>Targ</i>, where <i>TrialID</i> must be a primary key and <i>Targ</i>
+<LI> <bold> Reference File: </bold> The <b>reference</b> CSV file
+defines which TrialIDs are target trials (the video contains an
+instance of the event) and which TrialIDs are non-target trials (the
+video does not contain an instance of the event).  The file must
+contain two columns: <i>TrialID</i> and <i>Targ</i>, where <i>TrialID</i> must be a primary key and <i>Targ</i>
 values must be either <i>y</i> a target or <i>n</i> otherwise. 
 </li>
 
 <LI> <bold> Event Database file: </bold> 
-infoXXX
+the event description metadata file.  Currently the file maps the
+<i>EventID</i> to <i>EventName</i>.
+<ul>
+  <li><i>EventID</i>: is the events ID
+  <li><i>EventName</i>: is the textual name of the event
+</ul>
 </li>
 
 <LI> <bold> Judgement Meta Data file: </bold> 
-infoXXX
+the ClipID's Event Metadata file (copied from the source database); Judgments for background clips are intentionally incomplete.   
+
+For each unique ClipID,
+<ul>
+  <li><i>EventID</i>: is the ID one of the MED-11 events or NULL indicating no event judgment was made.
+  <li><i>INSTANCE_TYPE</i>: positive denotes that this clip is a positive (true) instance of the specified event
+  <li><i>SYNOPSIS</i>: brief summary of the clip content  
+  <li><i>GENRE</i>: data scout judgment about the clip's genre
+  <li><i>TOPIC</i>: general topic category for this clip
+  <li><i>SCENE</i>: optional freeform description by data scout of the scene/setting for the clip
+  <LI><I>OBJECTS</I>: optional freeform description by the data scout of the objects/people shown in the clip
+  <LI><i>ACTIVITIES</i>: optional freeform description by the data scout of the activities shown in the clip
+  <li><i>INSTANCE_VARIETY</i>: subjective judgment by data scout about whether this clip is more unusual than other instances of this event      
+  <li><i>INSTANCE_COMPLEXITY</i>: subjective judgment by data scout about whether this clip is more difficult/complex than other instances of this event
+  <li><i>AUDIO_EVIDENCE</i>: does this clip contain audio evidence supporting the event
+  <li><i>TEXT_EVIDENCE</i>: does this clip contain text evidence supporting the event
+  <li><i>NON_ENG_SPEECH</i>: does this clip contain non-English speech
+  <li><i>NON_ENG_TEXT</i>: does this clip contain non-English text
+  <li><i>NARRATIVE_AUDIO</i>: does the clip include someone explaining or describing (some or all of) the event step-by-step as they perform it. Empty when the Event is NULL. May be empty for some non-NULL events.
+  <li><i>NARRATIVE_TEXT</i>: does the clip include text explaining or describing (some or all of) the event step-by-step as it is performed. Empty when the Event is NULL. May be empty for some non-NULL events.
+  <li><i>INSTANCE_COMMENT</i>: optional comment providing additional
+  information about why the clip was labeled as a negative
+  instance.
+</ul>
+  
 </li>
 <LI> <bold> Clip Meta Data file: </bold> 
-infoXXX
+general clip metadata including a unique ClipID, associated <i>MEDIA_FILE</i>, <i>CODEC</i>, <i>MD5SUM</i> and <i>DURATION</i>
+where:
+<ul>
+<li><i>ClipID</i>: unique numerical ID for this video/metadata entry (extracted from the RANDOM_MEDIA_FILE information)
+<li><i>MEDIA_FILE</i>: randomized, non-chronological filename for the media file corresponding to this entry.
+<li><i>MD5SUM</i>: MD5 checksum for the media file corresponding to this entry
+<li><i>DURATION</i>: duration in seconds for the media file corresponding to this entry.
+</ul>
 </li>
 
 
@@ -99,13 +140,11 @@ infoXXX
   <i>TrialID</i> and <i>Score</i>, where <i>TrialID</i> must be a
   primary key and <i>Score</i> must be a value contained within 0.0
   and 1.0</li>
-  <li> The <b>threshold</b> CSV file contains information about the processed event the Detection Threshold (as defined in Section XXX of the evaluation plan) and 
-  
-  The must contain three columns:
+  <li> The <b>threshold</b> CSV file contains information about the processed event the Detection Threshold (as defined in Section 2.2.2 of the evaluation plan). 
+It must contain three columns:
   <i>EventID</i>, <i>DetectionThreshold</i> and <i>DetectionTPT</i>,
   where <i>EventID</i> must be a primary key and <i>DetectionThreshold</i> must be a value contained within 0.0
-  and 1.0, while <i>DetectionTPT</i> is an unbounded value (see
-  EvalPlan for details).</li>
+  and 1.0, while <i>DetectionTPT</i> is an unbounded value (see EvalPlan for details).</li>
 </ul>
 
 
@@ -130,16 +169,6 @@ column's header.  The following is a valid CSV file that contains three columns 
 </dir>
 
 
-<b> NOT SURE WHERE THIS GOES ----------------
-For the optional metadata database files, the CSV file names will be
-used as SQL table name. The program leaves the content of the database
-to be free-form.
-
-Although, one of the metadata table must be named <b>TrialIndex</b>
-and must contain a <i>TrialID</i> primary key column that match the value present in the <b>reference</b> or <b>system</b>
-CSV, as well as a <i>EventID</i> and <i>ClipID</i>.
-</b>
-
 <br>
 <a name="cliuse">
 <h2>Example command lines to score a MED11 submission</h2>
@@ -147,11 +176,19 @@ CSV, as well as a <i>EventID</i> and <i>ClipID</i>.
 <p><i>For further information about the DEVA_cli tool (available as
 part of the F4DE), please refer to its manual:
 <code>DEVA_cli --man</code></i></p>
+For the optional metadata database files, the CSV file names will be
+used as SQL table name. The program leaves the content of the database
+to be free-form.
+
+Although, one of the metadata table must be named <b>TrialIndex</b>
+and must contain a <i>TrialID</i> primary key column that match the value present in the <b>reference</b> or <b>system</b>
+CSV, as well as a <i>EventID</i> and <i>ClipID</i>.
+
 
 The following is an example of how to score one system run using the default scoring setup using files formatted for submission to NIST.  
 
-<p>The MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer_Files.tar.bz2">MED11_Primer_Files.tar.bz2</a>) contain system-generated output files for a random system processing the Dry Run data set.  The files are <code>testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.detection.csv</code>
-and <code>testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.threshold.csv</code>.  The file names follow the prescribed structure of the EXP-ID described in Appendix B of the evaluation plan where:
+<p>The MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer/MED11_Primer_Files.tar.bz2">MED11_Primer_Files.tar.bz2</a>) contain system-generated output files for a random system processing the Dry Run data set.  The files are <code>testTEAM_MED11_DEVT_AutoEAG_MEDFull_RandomSys_1.detection.csv</code>
+and <code>testTEAM_MED11_DEVT_AutoEAG_MEDFull_RandomSys_1.threshold.csv</code>.  The file names follow the prescribed structure of the EXP-ID described in Appendix B of the evaluation plan where:
 
 <UL> <LI> The <i>TEAM</i> named "testTEAM",
   <LI> The processed <i>DATA</i> set is "DRYRUN", 
@@ -187,7 +224,10 @@ running this command) will contain all the output generated by the script.</li>
 </ul>
 
 The script will run through the four steps of the DEVA_cli scorer and
-place in the "<i>testTEAM_Results1</i>" directory.  There are many files generated by the script.  The most notable are:
+place in the "<i>testTEAM_Results1</i>" directory.
+Note that the correct detection of a <i>n</i> <i>Targ</i> <b>Reference</b> is not counted.
+
+There are many files generated by the script.  The most notable are:
 
 <UL> 
 
@@ -202,21 +242,26 @@ includes five sections for each EventID.
   </UL>
   <li> The "Actual Decision Cost Analysis" section shows the performance of the system using the Actual Decision Threshold supplied for the system </li>
   <UL>
-    <li> <code>#CorDet</code> the number correct target detections. </li>
-    <li> <code>#Cor!Det</code> the number of non-target TrialIDs. </li>
-    <li> <code>#FA</code> the number of XXX .</li>
-    <li> <code>#Miss</code> the number of XXX .</li>
-    <li> <code>#PFA</code> the number of XXX .</li>
-    <li> <code>#PMiss</code> the number of XXX .</li>
-    <li> <code>#NormCost</code> the number of XXX .</li>
-    <li> <code>#Dec. Thresh</code> the number of XXX .</li>
+    <li> <code>#CorDet</code> the number correct target detections</li>
+    <li> <code>#Cor!Det</code> the number of non-target TrialIDs</li>
+    <li> <code>#FA</code> the number of non-positive clips &gt; the Detection Threshold</li>
+    <li> <code>#Miss</code> the number of positive clips &lt;= the Detection Threshold</li>
+    <li> <code>#PFA</code> (Event, Decision Threshold) = #FA (Event,
+    Decision Threshold) / (#TotalClips - #Targets (Event))</li>
+    <li> <code>#PMiss</code> (Event, Decision Threshold) = #MD (Event,
+    Decision Threshold) / #Targets (Event)</li>
+    <li> <code>#NormCost</code>, the Normalized Detection Cost function is a weighted linear combination missed detection and false alarm probabilities.</li>
+    <li> <code>#Dec. Thresh</code>, the Decision Threshold for a given Event.</li>
   </UL>
-  <li> The "Minimum NormCost Analysis" section shows an analysis of the DET curve to find threshold that acheives the minimum NDC point. </li>
-  <UL>
-    <li> <code>#PFA</code> the number of XXX .</li>
-    <li> <code>#PMiss</code> the number of XXX .</li>
-    <li> <code>#NormCost</code> the number of XXX .</li>
-    <li> <code>#Dec. Thresh</code> the number of XXX .</li>
+  <li> The "Minimum NormCost Analysis" section shows an analysis of
+  the DET curve to find threshold that acheives the minimum NDC
+  point. All of the following use a definition similar to the above
+  one:
+  <ul>
+    <li> <code>#PFA</code>
+    <li> <code>#PMiss</code>
+    <li> <code>#NormCost</code>
+    <li> <code>#Dec. Thresh</code>
   </UL>
   <li> "DET Curve" shows the PNG filename of the DET curve that EventID. </li>
   <li> Threshold Curve shows the PNG filename that displays PMiss, PFA, and NDC as a function of Decision score for that EventID. </li>
@@ -233,33 +278,29 @@ includes five sections for each EventID.
 
 </ul>
 
-
-<b> XXXXXXXXXXX IS THIS NEEDED  ...............
-
-<u>Note:</u> the correct detection of a <i>n</i> <i>Targ</i> <b>Reference</b> is not counted.
 <br>
-<u>Note:</u> For sites only participating in some of the events, the default SQL filter will insure that only the <i>TrialID</i>s
+<a name="clifilter">
+<h3>Performing Selective TrialID Scoring</h3>
+</a>
+
+DEVA_cli accepts as an option </code>--FilterCMDfile SQLFile</code>
+which filters the TrialIDs included in the scoring run.
+
+For sites only participating in some of the events, the default SQL filter will insure that only the <i>TrialID</i>s
 listed in the system CSV will be used. <i>A submission checker will
-be released soon to other among things verifies that all <span
- style="font-style: italic;">TrialIDs </span> for an event are present
-in the system file.</i>
-<br>
-<u>Note:</u> The default filter's definition (located in the
+be released soon to other among things verifies that all <span style="font-style: italic;">TrialIDs </span> for an event are present
+in the system file.
+
+The default filter's definition (located in the
 <code>DEVAcli_filter-MED11.sql</code> file), is as follow:
 <pre>
 INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )
   SELECT system.TrialID,TrialIndex.EventID FROM TrialIndex INNER JOIN system
   WHERE system.TrialID==TrialIndex.TrialID;
 </pre>
-</b>
 
 
-<br>
-<a name="clifilter">
-<h3>Performing Selective TrialID Scoring</h3>
-</a>
-
-DEVA_cli accepts as an option </code>--FilterCMDfile SQLFile</code> which filters the TrialIDs included in the scoring run.  For example, an <b>SQL filter</b>, such as <code>DEVAcli_filter-MED11_primer.sql</code> found the the primer tar file, restricts the selection of TrialIDs to only those whose ClipIDs duration is less than 30 seconds. The SQL command is:
+An <b>SQL filter</b>, such as <code>DEVAcli_filter-MED11_primer.sql</code> found in the primer tar file, restricts the selection of TrialIDs to only those whose ClipIDs duration is less than 30 seconds. The SQL command is:
 
 <pre>
 INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )
