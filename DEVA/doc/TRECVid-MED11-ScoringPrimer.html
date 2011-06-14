@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
-<title>TRECVID MED Scoring Primer</title>
+<title>TRECVID MED11 Scoring Primer</title>
 <style type="text/css">
   body { counter-reset: chapter; }
   h2:before { content: counter(chapter) ". "; counter-increment: chapter;  /* Add 1 to chapter */ }
@@ -19,7 +19,7 @@
 
 <div style="text-align: center;"><big><big><big>TRECVID MED11 Scoring Primer</big></big></big><br>
 </div>
-<div style="text-align: center;"><small>Last modified: May 16th, 2011</small><br>
+<div style="text-align: center;"><small>Last modified: June 14th, 2011</small><br>
 </div>
  <br>
 
@@ -35,7 +35,7 @@ search a multimedia collection for user-defined events. See the web
 site for specific details about the evaluation.
 <p>There are three sections in this document: <a href="#executable">executable
 script synopsis</a>, <a href="#format">file format</a>, and <a
- href="#cliuse">using the tool to score a MED submission</a>.
+ href="#cliuse">using the tool to score a MED11 submission</a>.
 The examples below assume the F4DE package has been
 installed and is working properly according to the README.&nbsp; This
 includes defining the $F4DE_BASE environment variable and
@@ -43,6 +43,12 @@ $F4DE_BASE/bin is in your path
 variable.&nbsp;
 The variable DIST used below is the path to the F4DE
 source directory and is not part of the F4DE installation instructions.<br>
+
+The examples below also assume that you have obtained and have access
+to the content the MED11 DRYRUN
+files (<a
+href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_DRYRUN_Files.tar.bz2">MED11_DRYRUN_Files.tar.bz2</a>),
+as well as the MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer_Files.tar.bz2">MED11_Primer_Files.tar.bz2</a>).
 
 
 
@@ -126,16 +132,15 @@ CSV, as well as a <i>EventID</i> and <i>ClipID</i>.
 
 <br>
 <a name="cliuse">
-<h2>Using the DEVA_cli tool to Score a MED submission</h2>
+<h2>Using the DEVA_cli tool to Score a MED11 submission</h2>
 </a>
 <p><i>For further information about the DEVA_cli tool (available as
-part of
-the F4DE), please refer to its manual:
+part of the F4DE), please refer to its manual:
 <code>DEVA_cli --man</code></i></p>
 
 The following is an example of scoring a <i>team</i> named
 "testTEAM" with a submission for
-the <i>DEVT_20110615</i> task.
+the <i>DRYRUN</i> task.
 This team, following the EVAL plan, provided an "AutoEAG" submission
 for the Full set named "RandomSys", and 
 submited two CSV file named
@@ -150,12 +155,13 @@ file for all the five events processed.<br>
 % DEVA_cli\
 --profile MED11\
 --outdir testTEAM-Results1 \
---refcsv DEVT_20110615_Ref.csv \
---syscsv testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.detection.csv:detection \
---syscsv testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.threshold.csv:threshold \
-DEVT_20110615_ClipMD.csv:ClipMD \
-DEVT_20110615_JudgementMD.csv:JudgementMD \
-DEVT_20110615_TrialIndex.csv:TrialIndex
+--refcsv DRYRUN_Ref.csv \
+--syscsv testTEAM_MED11_DRYRUN_AutoEAG_RandomSys_1.detection.csv:detection \
+--syscsv testTEAM_MED11_DRYRUN_AutoEAG_RandomSys_1.threshold.csv:threshold \
+DRYRUN_ClipMD.csv:ClipMD \
+DRYRUN_JudgementMD.csv:JudgementMD \
+DRYRUN_TrialIndex.csv:TrialIndex \
+DRYRUN_EventDB.csv:EventDB
 </pre>
 where:<br>
 <ul>
@@ -163,21 +169,12 @@ where:<br>
 running this command.</li>
   <li>the <code>--profile MED11</code> insure that a lot of
   preconfigured entries are set (metric, filter, join, ...)</li>
-  <li>the <code>:</code> notation following CSV file defintion (example: <code>DEVT_20110615_ClipMD.csv:ClipMD</code>) enable
+  <li>the <code>:</code> notation following CSV file defintion (example: <code>DRYRUN_ClipMD.csv:ClipMD</code>) enable
   a simple table naming making it simpler to insure the use of
   predefined table name during SQL commands</li>
   <li>the <i>TrialIndex</i> table is required to do matching between
   <i>TrialID</i>, <i>ClipID</i> and <i>EventID</i>
 </ul>
-
-<div style="margin-left: 40px;"><u>Note:</u> For sites only
-participating in some of the events, the SQL filter will insure that only the <i>TrialID</i>s
-listed in the system CSV will be used.&nbsp; A submission checker will
-be released soon the verifies that all <span
- style="font-style: italic;">TrialIDs </span>for an event are present
-in the system file.<br>
-</div>
-<br>
 
 The script will run through the four steps of the DEVA_cli scorer and
 place in the "<i>testTEAM_Results1</i>" directory a file named
@@ -195,18 +192,34 @@ for a <i>n</i> <i>Targ</i> <b>Reference</b> (<code>#FA</code>) </li>
 by the <b>System</b> (<code>#Miss</code>)
   </li>
 </ul>
-Note that the correct detection of a <i>n</i> <i>Targ</i>
-<b>Reference</b> is not counted.
+
+<u>Note:</u> the correct detection of a <i>n</i> <i>Targ</i> <b>Reference</b> is not counted.
+<br>
+<u>Note:</u> For sites only participating in some of the events, the default SQL filter will insure that only the <i>TrialID</i>s
+listed in the system CSV will be used. <i>A submission checker will
+be released soon to other among things verifies that all <span
+ style="font-style: italic;">TrialIDs </span> for an event are present
+in the system file.</i>
+<br>
+<u>Note:</u> The default filter's definition (located in the
+<code>DEVAcli_filter-MED11.sql</code> file), is as follow:
+<pre>
+INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )
+  SELECT system.TrialID,TrialIndex.EventID FROM TrialIndex INNER JOIN system
+  WHERE system.TrialID==TrialIndex.TrialID;
+</pre>
 
 <br>
 <a name="clifilter">
-<h2>Modifying the scoring filter</h2>
+<h3>Performing a more complex scoring</h3>
 </a>
 
 A more complex selection can be made using a modified <b>filter</b>,
 such as <code>DEVAcli_filter-MED11_primer.sql</code>:
 <pre>
-INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID ) SELECT system.TrialID,TrialIndex.EventID FROM TrialIndex INNER JOIN system,ClipMD WHERE system.TrialID==TrialIndex.TrialID AND TrialIndex.ClipID==ClipMD.ClipID AND ClipMD.DURATION<30;
+INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )
+  SELECT system.TrialID,TrialIndex.EventID FROM TrialIndex INNER JOIN system,ClipMD
+  WHERE system.TrialID==TrialIndex.TrialID AND TrialIndex.ClipID==ClipMD.ClipID AND ClipMD.DURATION<30;
 </pre>
 
 which restrict the selection by only using ClipIDs whose duration is
@@ -218,12 +231,13 @@ And can be run:
 % DEVA_cli\
 --profile MED11\
 --outdir testTEAM-Results2 \
---refcsv DEVT_20110615_Ref.csv \
---syscsv testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.detection.csv:detection \
---syscsv testTEAM_MED11_DEVT_AutoEAG_RandomSys_1.threshold.csv:threshold \
-DEVT_20110615_ClipMD.csv:ClipMD \
-DEVT_20110615_JudgementMD.csv:JudgementMD \
-DEVT_20110615_TrialIndex.csv:TrialIndex \
+--refcsv DRYRUN_Ref.csv \
+--syscsv testTEAM_MED11_DRYRUN_AutoEAG_RandomSys_1.detection.csv:detection \
+--syscsv testTEAM_MED11_DRYRUN_AutoEAG_RandomSys_1.threshold.csv:threshold \
+DRYRUN_ClipMD.csv:ClipMD \
+DRYRUN_JudgementMD.csv:JudgementMD \
+DRYRUN_TrialIndex.csv:TrialIndex \
+DRYRUN_EventDB.csv:EventDB \
 --FilterCMDfile DEVAcli_filter-MED11_primer.sql
 </pre>
 
