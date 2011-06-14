@@ -199,21 +199,6 @@ my @csvlist = @ARGV;
 &extend_file_location(\$filtercmdfile, "--FilterCMDfile", @profiles_path);
 &extend_file_location(\$pbid_dt_sql, "--JudgementThresholdPerBlock", @profiles_path);
 
-# new variables used for special checks
-my @Cfg_errorquit_sys_checks = &load_spcfgfile($Cfg_errorquit_sys_checks_file, "--KqSys", @profiles_path);
-my @Cfg_warn_sys_checks = &load_spcfgfile($Cfg_warn_sys_checks_file, "--KwSys", @profiles_path);
-my @Cfg_errorquit_dersys_checks = &load_spcfgfile($Cfg_errorquit_dersys_checks_file, "--KQderivedSys", @profiles_path);
-my @Cfg_warn_dersys_checks = &load_spcfgfile($Cfg_warn_dersys_checks_file, "--KWderivedSys", @profiles_path);
-@syscsvs = &apply_constraints($sp_sys_constr, \@syscsvs, "--KSysConstraints", @profiles_path);
-@csvlist = &apply_constraints($sp_md_constr,  \@csvlist, "--KMDConstraints",  @profiles_path);
-
-if ($expectXds > 0) {
-  MMisc::error_quit("\'--KexactlyXderivedSys\' can only be used with \'--derivedSys\'")
-    if (! defined $derivedSys);
-  MMisc::error_quit("\'--KexactlyXderivedSys\' specify that $expectXds \'syscsv\' must be used, seeing: " . scalar @syscsvs)
-  if (scalar @syscsvs != $expectXds);
-}
-
 MMisc::error_quit("Invalid value for \'usedXscale\' ($xscale) (possible values: " . join(", ", @ok_scales) . ")")
   if ((defined $xscale) && (! grep(m%^$xscale$%, @ok_scales)));
 MMisc::error_quit("Invalid value for \'UsedYscale\' ($yscale) (possible values: " . join(", ", @ok_scales) . ")")
@@ -253,11 +238,23 @@ my $finalDBbase = "$outdir/$finalDBb";
 my $finalDBfile = "$finalDBbase.db";
 
 if ($doCfg) {
+  # new variables used for special checks
+  my @Cfg_errorquit_sys_checks = &load_spcfgfile($Cfg_errorquit_sys_checks_file, "--KqSys", @profiles_path);
+  my @Cfg_warn_sys_checks = &load_spcfgfile($Cfg_warn_sys_checks_file, "--KwSys", @profiles_path);
+  my @Cfg_errorquit_dersys_checks = &load_spcfgfile($Cfg_errorquit_dersys_checks_file, "--KQderivedSys", @profiles_path);
+  my @Cfg_warn_dersys_checks = &load_spcfgfile($Cfg_warn_dersys_checks_file, "--KWderivedSys", @profiles_path);
+  @syscsvs = &apply_constraints($sp_sys_constr, \@syscsvs, "--KSysConstraints", @profiles_path);
+  @csvlist = &apply_constraints($sp_md_constr,  \@csvlist, "--KMDConstraints",  @profiles_path);
+
   ## Pre-check(s)
-#  MMisc::error_quit("\'derivedSys\' selected but less than 2 \'syscsv' files provided on the command line, aborting")
-#    if ((scalar @syscsvs > 0) && (defined $derivedSys) && (scalar @syscsvs < 2));
+  if ($expectXds > 0) {
+    MMisc::error_quit("\'--KexactlyXderivedSys\' can only be used with \'--derivedSys\'")
+      if (! defined $derivedSys);
+    MMisc::error_quit("\'--KexactlyXderivedSys\' specify that $expectXds \'syscsv\' must be used, seeing: " . scalar @syscsvs)
+      if (scalar @syscsvs != $expectXds);
+  }
   MMisc::error_quit("More than one \'syscsv\' provided on the command line, aborting")
-    if ((scalar @syscsvs > 0) && (! defined $derivedSys) && (scalar @syscsvs != 1));
+    if ((scalar @syscsvs > 1) && (! defined $derivedSys));
   
   print "***** Generating config files\n";
   my $done = 0;
@@ -872,12 +869,14 @@ DEVA_cli - Detection EVAluation Scorer Command Line Interface
 B<DEVA_cli> 
   S<[B<--help> | B<--man> | B<--version>]>
   S<B<--outdir> I<dir>>
-  S<[B<--profile> I<name>]>
+  S<[B<--profile> I<name> [B<--KsaveProfile>]]>
   S<[B<--configSkip>] [B<--CreateDBSkip>] [B<--filterSkip>] [B<--DETScoreSkip>]>
   S<[B<--refcsv> I<csvfile>]>
-  S<[B<--syscsv> I<csvfile>>
-  S< | B<--derivedSys> [I<join.sql>] B<--sycsv> I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]]>
-  S<   B<--syscsv> I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]] [B<--syscsv> I<csvfile>[...] [...]]]> 
+  S<[B<--syscsv> I<csvfile>  [B<--KqSys> I<file>] [B<--KwSys> I<file>]>
+  S< | B<--derivedSys> I<join.sql> B<--syscsv> I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]]>
+  S<   [B<--syscsv> I<csvfile>[...] [...]]>
+  S<   [B<--KexactlyXderivedSys> I<number>] [B<--KQderivedSys> I<file>] [B<--KWderivedSys> I<file>] ]> 
+  S<[B<--KSysConstraints> I<file>] [B<--KMDConstraints> I<file>]>
   S<[B<--quickConfig> [I<linecount>]] [B<--NULLfields>]>
   S<[B<--wREFcfg> I<file>] [B<--WSYScfg> I<file>] [B<--VMDcfg> I<file>]>
   S<[B<--RefDBfile> I<file>] [B<--SysDBfile> I<file>]>
@@ -889,7 +888,8 @@ B<DEVA_cli>
   S<[B<--usedMetric> I<package>]>
   S<[B<--UsedMetricParameters> I<parameter=value> [B<--UsedMetricParameters> I<parameter=value> [...]]]>
   S<[B<--TrialsParameters> I<parameter=value> [B<--TrialsParameters> I<parameter=value> [...]]]>
-  S<[B<--listParameters>] [B<--blockName> I<name>] [B<--taskName> I<name>]>
+  S<[B<--listParameters>]>
+  S<[B<--blockName> I<name>] [B<--taskName> I<name>]>
   S<[B<--xmin> I<val>] [B<--Xmax> I<val>] [B<--ymin> I<val>] [B<--Ymax> I<val>]>
   S<[B<--zusedXscale> I<set>] [B<--ZusedYscale> I<set>]>
   S<[B<--BlockAverage>]>
@@ -917,12 +917,15 @@ Required arguments:
  S<B<--outdir> I<dir>>
 
 Optional arguments:
- S<[B<--profile> I<name>]>
+ S<[B<--profile> I<name> [B<--KsaveProfile>]]>
  S<[B<--quickConfig> [I<linecount>]]>
  S<[B<--NULLfields>]>
  S<[B<--refcsv> I<csvfile>]>
- S<[B<--syscsv> I<csvfile>>
- S< | B<--derivedSys> [I<join.sql>] B<--sycsv> I<csvfile>[...] B<--sycsv> I<csvfile>[...] [B<--sycsv> I<csvfile>[...] [...]]]>
+ S<[B<--syscsv> I<csvfile>  [B<--KqSys> I<file>] [B<--KwSys> I<file>]>
+ S< | B<--derivedSys> I<join.sql> B<--syscsv> I<csvfile>[I<:tablename>][I<%columnname:constraint>[...]]>
+ S<   [B<--syscsv> I<csvfile>[...] [...]]>
+ S<   [B<--KexactlyXderivedSys> I<number>] [B<--KQderivedSys> I<file>] [B<--KWderivedSys> I<file>] ]> 
+ S<[B<--KSysConstraints> I<file>] [B<--KMDConstraints> I<file>]>
  S<[B<--wREFcfg> I<file>]>
  S<[B<--WSYScfg> I<file>]>
  S<[B<--VMDcfg> I<file>]>
@@ -937,9 +940,9 @@ Required arguments:
  S<B<--outdir> I<dir>>
 
 Optional arguments:
- S<[B<--profile> I<name>]>
+ S<[B<--profile> I<name> [B<--KsaveProfile>]]>
  S<[B<--NULLfields>]>
- S<[B<--derivedSys> [I<join.sql>]]>
+ S<[B<--derivedSys> I<join.sql>]>
  S<[B<--wREFcfg> I<file>]>
  S<[B<--WSYScfg> I<file>]>
  S<[B<--VMDcfg> I<file>]>
@@ -956,7 +959,7 @@ Required arguments:
  S<B<--outdir> I<dir>>
 
 Optional arguments:
- S<[B<--profile> I<name>]>
+ S<[B<--profile> I<name> [B<--KsaveProfile>]]>
  S<[B<--RefDBfile> I<file>]>
  S<[B<--SysDBfile> I<file>]>
  S<[B<--MetadataDBfile> I<file>]>
@@ -975,7 +978,7 @@ Required arguments:
  S<B<--outdir> I<dir>>
 
 Optional arguments:
- S<[B<--profile> I<name>]>
+ S<[B<--profile> I<name> [B<--KsaveProfile>]]>
  S<[B<--RefDBfile> I<file>]>
  S<[B<--SysDBfile> I<file>]>
  S<[B<--iFilterDBfile> I<file>]>
@@ -1133,13 +1136,17 @@ If no I<BlockID> is provided, a default value will be inserted in its stead.
 
 An example of such select can be:
 
-S<INSERT OR ABORT INTO ResultsTable ( TrialID ) SELECT System.TrialID FROM System INNER JOIN Reference WHERE System.TrialID==Reference.TrialID;>
+S<INSERT OR ABORT INTO ResultsTable ( TrialID )>
+S<  SELECT System.TrialID FROM System INNER JOIN Reference>
+S<   WHERE System.TrialID==Reference.TrialID;>
 
 which will "insert or abort the selected list of TrialID from the system table and the system table where both TrialID match". Note that this will use the default I<BlockID>.
 
 A more complex example given a I<color> column in the metadata database that will be used as the I<BlockID>:
 
-S<INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID ) SELECT system.TrialID,color FROM system INNER JOIN md WHERE system.TrialID=md.TrialID AND DecisionE<gt>"1.2";>
+S<INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )>
+S<  SELECT system.TrialID,color FROM system INNER JOIN md>
+S<   WHERE system.TrialID=md.TrialID AND DecisionE<gt>"1.2";>
 
 which will "insert or abort the selected list of TrialIDs and corresponding color from the system table and the metadata table where both TrialID match and the system's decision is more than 1.2". This will use the I<color> entry as the I<BlockID>.
 
@@ -1210,16 +1217,22 @@ Skip the Trial Scoring step (including DETCurve processing).
 This step rely on the S<outdir/referenceDB.sql>, S<outdir/systemDB.sql> and S<outdir/filterDB.sql> files to extract into S<outdir/scoreDB.sql> a I<ref> and I<sys> table that only contains the I<TrialID>s left post-filtering.
 This step also generate a few files starting with S<outdir/scoreDB.det> that are the results of the DETCurve generation process.
 
-=item B<--derivedSys> [I<join.sql>] 
+=item B<--derivedSys> I<join.sql> 
 
-Derived system files are a mean to separate reporting requirement of systems within multiple files.
-When using B<--derivedSys> at least two B<--syscsv> must be provided, and a SQLite join command must be available that will S<INSERT> the content in the I<System> table's I<TrialID>, I<Score> and I<Decision> columns.
-The only case where a I<join.sql> type file is not required if if a B<--profile> is used that sets it.
+Derived system files are a mean to separate reporting requirement of systems within one or multiple files.
+When using B<--derivedSys> a SQLite join command must be available that will S<INSERT> the content in the I<System> table's I<TrialID>, I<Score> and I<Decision>.
 
 For example if the system reports both a I<decision> (with a I<TrialID> and I<Score> columns) and I<threshold> (with an I<EventID> and I<DetectionThreshold> columns) tables, given a I<metadata> database with a I<TrialIndex> with at least a I<TrialID> and I<EventID> columns, the I<join> file can contain:
 
-S<INSERT OR ABORT INTO System ( TrialID, Score, Decision ) SELECT detection.TrialID, Score, 'y' FROM detection INNER JOIN TrialIndex, threshold WHERE (detection.TrialID == TrialIndex.TrialID AND TrialIndex.EventID==threshold.EventID AND Score E<gt> threshold.DetectionThreshold);>
-S<INSERT OR ABORT INTO System ( TrialID, Score, Decision ) SELECT detection.TrialID, Score, 'n' FROM detection INNER JOIN TrialIndex, threshold WHERE (detection.TrialID == TrialIndex.TrialID AND TrialIndex.EventID==threshold.EventID AND Score E<lt>= threshold.DetectionThreshold);>
+S<INSERT OR ABORT INTO System ( TrialID, Score, Decision )>
+S<  SELECT detection.TrialID, Score, 'y' FROM detection INNER JOIN TrialIndex, threshold>
+S<   WHERE (detection.TrialID == TrialIndex.TrialID AND TrialIndex.EventID==threshold.EventID>
+S<          AND Score E<gt> threshold.DetectionThreshold);>
+
+S<INSERT OR ABORT INTO System ( TrialID, Score, Decision )>
+S<  SELECT detection.TrialID, Score, 'n' FROM detection INNER JOIN TrialIndex, threshold>
+S<   WHERE (detection.TrialID == TrialIndex.TrialID AND TrialIndex.EventID==threshold.EventID>
+S<          AND Score E<lt>= threshold.DetectionThreshold);>
 
 =item B<--FilterCMDfile> I<SQLite_commands_file>
 
@@ -1248,6 +1261,68 @@ During DET Curve generation, when adding a Trial, do not use the System's Decisi
 =item B<--judgementThreshold> I<score>
 
 During DET Curve generation, when adding a Trial, do not use the System's Decision but base the decision on this given threshold I<score>
+
+=item B<--KsaveProfile>
+
+This option will save in the local directory a I<profile> definition file with contains selected command line options (excluding CSV files) that can be used by the B<--profile> option.
+
+=item B<--KexactlyXderivedSys> I<number>
+
+Specify the exact number of I<derivedSys> CSV files that must be provided on the command line.
+
+=item B<--KqSys> I<file>
+
+Specify the perl array memory dump file that contains regular expression matching rules for columms seen in the system definition configuration file. Non conformance to the rules within the file will cause the program to exit in error.
+
+The array order is as follow:
+ #0: global error message for 
+ #1: REGEXP rule
+ #2: Error message to print if regexp can not be matched
+ Each following column are repeat of #1 and #2. 
+
+This option only work for non I<derivedSys> CSV files.
+
+=item B<--KwSys> I<file>
+
+Specify the perl array memory dump file that contains regular expression matching rules for columms seen in the system definition configuration file. Non conformance to the rules within the file will cause the program to print an warning message but will not cause the global program to quit in error.
+
+Columns definitions within the file follow the rules set for B<--KqSys>.
+
+This option only work for non I<derivedSys> CSV files.
+
+=item B<--KQderivedSys> I<file>
+
+Specify the perl array memory dump file that contains regular expression matching rules for columms seen in derived system definition configuration file. Non conformance to the rules within the file will cause the program exit in error.
+
+Columns definitions within the file follow the rules set for B<--KqSys>.
+
+This option only work for I<derivedSys> CSV files.
+
+=item B<--KWderivedSys> I<file>
+
+Specify the perl array memory dump file that contains regular expression matching rules for columms seen in derived system definition configuration file. Non conformance to the rules within the file will cause the program to print an warning message but will not cause the global program to quit in error.
+
+Columns definitions within the file follow the rules set for B<--KqSys>.
+
+This option only work for I<derivedSys> CSV files.
+
+=item B<--KSysConstraints> I<file>
+
+Specify the perl hash memory dump file that contains a column to constraint list for columms seen in the system configuation file
+If a column specified in the file can not be found, the program will exit in error.
+
+The hash order is as follow:
+ key   = column name
+ value = valid SQLite constraint to apply to the specified column.
+
+WARNING: There can be only one I<PRIMARY KEY> per table, and this column is automatically selected for REF and SYS, and is an autoincremental integer for all others. If you want to insure that all data are unique in a column, use a 'UNIQUE' constraint.
+
+=item B<--KMDConstraints> I<file>
+
+Specify the perl hash memory dump file that contains a column to constraint list for columms seen in the metadata configuation file
+If a column specified in the file can not be found, the program will exit in error.
+
+File rules definition follow the specificities detailed in B<--KSysConstraints>.
 
 =item B<--listParameters>
 
@@ -1553,7 +1628,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--profile name [--KsaveProfile]] [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile [--KqSys file] [--KwSys file] | --derivedSys [join.sql] --sycsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[...] [...]] [--KexactlyXderivedSys number] [--KQderivedSys file] [--KWderivedSys file]] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--PrintedBlock text] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [--judgementThreshold score | --JudgementThresholdPerBlock sql_file] [--KSysConstraints file] [--KMDConstraints file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
+$0 [--help | --man | --version] --outdir dir [--profile name [--KsaveProfile]] [--configSkip] [--CreateDBSkip] [--filterSkip] [--DETScoreSkip] [--refcsv csvfile] [--syscsv csvfile [--KqSys file] [--KwSys file] | --derivedSys join.sql --syscsv csvfile[:tablename][\%columnname:constraint[...]] [--syscsv csvfile[...] [...]] [--KexactlyXderivedSys number] [--KQderivedSys file] [--KWderivedSys file]] [--KSysConstraints file] [--KMDConstraints file] [--quickConfig [linecount]] [--NULLfields] [--wREFcfg file] [--WSYScfg file] [--VMDcfg file] [--RefDBfile file] [--SysDBfile file] [--MetadataDBfile file] [--iFilterDBfile file] [--FilterCMDfile SQLite_commands_file] [--PrintedBlock text] [--AdditionalFilterDB file:name [--AdditionalFilterDB file:name [...]]] [--GetTrialsDB] [--usedMetric package] [--UsedMetricParameters parameter=value [--UsedMetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--zusedXscale set] [--ZusedYscale set] [--BlockAverage] [--additionalResDBfile file [--additionalResDBfile file [...]]] [--judgementThreshold score | --JudgementThresholdPerBlock sql_file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
 
 Wrapper for all steps involved in a DEVA scoring step
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -1581,6 +1656,8 @@ Where:
   --KexactlyXderivedSys  Specify the exact number of derivedSys that must be provided
   --KQderivedSys  Specify a column check file for derived system CSVs (will quit on error)
   --KWderivedSys  Specify a column check file for derived system CSVs (will warn on error)
+  --KSysConstraints  Specify a column constraint file for system CSVs (will quit on error)
+  --KMDConstraints   Specify a column constraint file for metadata CSVs (will quit on error)
   --quickConfig    Specify the number of lines to be read in Step 1 to decide on file content for config helper step (wihtout quickConfig, process all lines) (*2)
   --NULLfields   Empty columns will be inserted as the NULL value (the default is to insert them as the empty value of the defined type, ie '' for TEXTs). This behavior only apply to metadata CSV files.
   --RefDBfile  Specify the Reference SQLite database file
@@ -1606,8 +1683,6 @@ DETCurve generation (Step 4) specific options:
   --additionalResDBfile  Additional Filter results database files to give the scorer (will do an AND on the TrialIDs)
   --judgementThreshold   When adding a Trial, do not use the System's Decision but base the decision on a given threshold
   --JudgementThresholdPerBlock  Specify the SQL command file expected to insert into the \'ThresholdTable\' table a \'Threshold\' per \'BlockID\'. 
-  --KSysConstraints  Specify a column constraint file for system CSVs (will quit on error)
-  --KMDConstraints   Specify a column constraint file for metadata CSVs (will quit on error)
 
 *1: default values can be obtained from \"$deva_sci\" 's help
 *2: default number of lines if no value is set can be obtained from \"$sqlite_cfg_helper\" 's help
