@@ -2068,7 +2068,7 @@ Constant parameters:
    CostMiss = 10
    Rtarget = 1.8
 
-|                   |           Inputs            |                              Actual Decision Cost Analysis                               |              Minimum DCR Analysis              |
+|                   |           Inputs            |                               Actual Decision DCR Analysis                               |              Minimum DCR Analysis              |
 |       Title       |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   RFA    |  PMiss   |   DCR    |  Dec. Tresh  |   RFA    |  PMiss   |   DCR    |  Dec. Thresh  |
 |-------------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+----------+--------------+----------+----------+----------+---------------+
 |   CellToEar Event |       0 |      200 |    200 |         0 |        140 |    60 |       0 |   2.4000 |       NA |       NA |      -0.0000 |       NA |       NA |       NA |           NaN |

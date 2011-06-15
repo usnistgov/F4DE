@@ -313,6 +313,7 @@ sub _buildAutoTable(){
         
     my $trial = $det->getTrials();
     my $metric = $det->getMetric();
+    my $comblab = $metric->combLab();
         
     my %combData = ();
     foreach my $block (sort $trial->getBlockIDs()) {
@@ -336,24 +337,23 @@ sub _buildAutoTable(){
       $at->addData($targSum,  ($useAT ? "Inputs|" : "" ) .               "#Targ",   $key);
       $at->addData($ntargSum,  ($useAT ? "Inputs|" : "" ) .               "#NTarg",   $key);
       $at->addData($sysSum,  ($useAT ? "Inputs|" : "" ) .               "#Sys",   $key);
-      $at->addData($corrDetectSum, ($useAT ? "Actual Decision Cost Analysis|" : "" ) . "#CorDet",   $key);
-      $at->addData($corrNonDetectSum, ($useAT ? "Actual Decision Cost Analysis|" : "" ) . "#Cor!Det",   $key);
-      $at->addData($faSum,   ($useAT ? "Actual Decision Cost Analysis|" : "" ) . "#FA",   $key);
-      $at->addData($missSum, ($useAT ? "Actual Decision Cost Analysis|" : "" ) . "#Miss",   $key);
+      $at->addData($corrDetectSum, ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . "#CorDet",   $key);
+      $at->addData($corrNonDetectSum, ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . "#Cor!Det",   $key);
+      $at->addData($faSum,   ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . "#FA",   $key);
+      $at->addData($missSum, ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . "#Miss",   $key);
     }
     
     if ($reportActual){
       my $act = "Act. ";
       my $act = "";
-      $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     ($useAT ? "Actual Decision Cost Analysis|" : "" ) . $act . $metric->errFALab(),   $key);
-      $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissAvg), ($useAT ? "Actual Decision Cost Analysis|" : "" ) . $act . $metric->errMissLab(), $key);
-      $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    ($useAT ? "Actual Decision Cost Analysis|" : "" ) . $act . $metric->combLab(),    $key);
-      $at->addData(&_PN($metric->combPrintFormat(), $BSDecThresh),    ($useAT ? "Actual Decision Cost Analysis|" : "" ) . $act . "Dec. Tresh",    $key);
+      $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . $act . $metric->errFALab(),   $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissAvg), ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . $act . $metric->errMissLab(), $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . $act . $comblab,    $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $BSDecThresh),    ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . $act . "Dec. Tresh",    $key);
     }    
     if ($buildCurves) {
       my $opt = ($metric->combType() eq "maximizable" ? "Max " : "Min ");
       my $optFull = ($metric->combType() eq "maximizable" ? "Maximum" : "Minimum");
-      my $comblab = $metric->combLab();
       $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errFALab(),   $key);
       $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombMMiss()),          ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errMissLab(), $key);
       $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->combLab(),    $key);

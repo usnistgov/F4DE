@@ -244,7 +244,7 @@ includes five sections for each EventID.   (There is a .csv version of file as w
     <li> <code>#NTarg</code>, the number of non-target TrialIDs. </li>
     <li> <code>#Sys</code>, the number of TrialIDs with system responses.  For MED11 this should equal #Targ + #NTarg. </li>
   </UL>
-  <li> The "Actual Decision Cost Analysis" section shows the performance of the system using the <i>DecisionThreshold</i> supplied for the system </li>
+  <li> The "Actual Decision NDC Analysis" section shows the performance of the system using the <i>DecisionThreshold</i> supplied for the system </li>
   <UL>
     <li> <code>#CorDet</code>, the number target trials correctly detected, (target clips &gt;= <i>DetectionThreshold</i>)</li>
     <li> <code>#Cor!Det</code>, the number of non-target trials correctly NOT detected, (non-target clips &lt; <i>DetectionThreshold</i>)</li>
@@ -252,7 +252,7 @@ includes five sections for each EventID.   (There is a .csv version of file as w
     <li> <code>#Miss</code>, the number of target trials mistakenly detected, (non-target clips &gt;= <i>DetectionThreshold</i>) </li>
     <li> <code>PFA</code>, #FA / #NTarg</li>
     <li> <code>PMiss</code>, #MD / #Targ</li>
-    <li> <code>NormCost</code>, the Normalized Detection Cost</li>
+    <li> <code>NDC</code>, the Normalized Detection Cost</li>
     <li> <code>Dec. Thresh</code>, the <i>DecisionThreshold</i></li>
   </UL>
   <li> The "Minimum NormCost Analysis" section shows an analysis of
@@ -261,7 +261,7 @@ includes five sections for each EventID.   (There is a .csv version of file as w
   <ul>
     <li> <code>PFA</code>
     <li> <code>PMiss</code>
-    <li> <code>NormCost</code>
+    <li> <code>NDC</code>
     <li> <code>Dec. Thresh</code>, the decision threshold where the minimum NDC occurs 
   </UL>
   <li> "DET Curve" shows the PNG filename of the DET curve that EventID. </li>

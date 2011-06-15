@@ -60,7 +60,7 @@ sub new
     bless ($self, $class);
 
     ### This implements a normalized cost
-    $self->setCombLab("NormCost");
+    $self->setCombLab("NDC");
 
     return $self;
   }

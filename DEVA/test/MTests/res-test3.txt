@@ -25,10 +25,10 @@ Constant parameters:
 
 Combined DET Plot: res-test3.txt.dir/scoreDB.det.png
 
-|                       |           Inputs            |                               Actual Decision Cost Analysis                                |            Minimum NormCost Analysis             |                                                     DET Curve Graphs                                                     |
-|         Title         |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   PFA    |  PMiss   |  NormCost  |  Dec. Tresh  |   PFA    |  PMiss   |  NormCost  |  Dec. Thresh  |                        DET Curve                        |                        Threshold Curve                         |
-|-----------------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+------------+--------------+----------+----------+------------+---------------+---------------------------------------------------------+----------------------------------------------------------------+
-|   Block Block Average |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.8730 |   0.2610 |     1.1340 |       0.5063 |   0.0093 |   0.9193 |     0.9286 |        4.8943 |   res-test3.txt.dir/scoreDB.det.Block_Block_Average.png |   res-test3.txt.dir/scoreDB.det.Block_Block_Average.thresh.png |
+|                       |           Inputs            |                               Actual Decision NDC Analysis                               |              Minimum NDC Analysis              |                                                     DET Curve Graphs                                                     |
+|         Title         |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   PFA    |  PMiss   |   NDC    |  Dec. Tresh  |   PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                        DET Curve                        |                        Threshold Curve                         |
+|-----------------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+----------+--------------+----------+----------+----------+---------------+---------------------------------------------------------+----------------------------------------------------------------+
+|   Block Block Average |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.8730 |   0.2610 |   1.1340 |       0.5063 |   0.0093 |   0.9193 |   0.9286 |        4.8943 |   res-test3.txt.dir/scoreDB.det.Block_Block_Average.png |   res-test3.txt.dir/scoreDB.det.Block_Block_Average.thresh.png |
 
 [[STDERR]]
 

@@ -88,7 +88,7 @@ Constant parameters:
    CostMiss = 10
    Rtarget = 1.8
 
-|                    |           Inputs            |                              Actual Decision Cost Analysis                               |
+|                    |           Inputs            |                               Actual Decision DCR Analysis                               |
 |       Title        |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   RFA    |  PMiss   |   DCR    |  Dec. Tresh  |
 |--------------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+----------+--------------+
 |   PersonRuns Event |       0 |        1 |      1 |         0 |          0 |     1 |       0 |   0.0479 |       NA |       NA |     -10.0000 |
