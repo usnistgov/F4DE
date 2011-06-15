@@ -1,6 +1,6 @@
 File:  README
-Date:  October 21, 2010
-F4DE Version: 2.2.1
+Date:  June 15, 2011
+F4DE Version: 2.3.0
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
@@ -65,6 +65,9 @@ evaluations and for specific NIST-coordinated evaluations listed below.
       TV08_BigXML_ValidatorHelper)
     - TV11SED-SubmissionChecker - A tool designed to help confirm submission
       archives before transmitting them to NIST. 
+
+  *  2011 TRECVID Multimedia Event Detection Evaluation. 
+    - DEVA_cli - The main evaluation script. 
 
 
 In addition to evaluation tools, the package contains the following related tools:
