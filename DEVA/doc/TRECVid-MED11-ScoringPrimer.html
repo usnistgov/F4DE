@@ -25,7 +25,7 @@
 
 
 <h2>Description</h2>
-This document provides a high-level overview of how to use the Detection EVAluation (DEVA) tools distributed 
+This document provides a high-level overview of how to use the Detection EVAluation (DEVA) tools  ributed 
 within the NIST Framework for Detection Evaluation (F4DE)
 toolkit for the <a href="http://www.nist.gov/itl/iad/mig/med11.cfm">TRECVID
 MED11 Evaluation</a>.
@@ -33,21 +33,22 @@ The Multimedia Event Detection (MED) evaluation track is part of the
 TRECVID Evaluation. The multi-year goal of MED is to assemble core
 detection technologies into a system that can quickly and accurately
 search a multimedia collection for user-defined events. See the web
-site for specific details about the evaluation.
+site for specific details about the evaluation.  The document assumes the reader is familiar with the <a href="http://www.nist.gov/itl/iad/mig/upload/MED11-Draft-EvalPlan-V01.pdf">MED11 Evaluation Plan</a>.
+
+
 <p>There are three sections in this document: <a href="#executable">Scoring
 script synopsis</a>, <a href="#format">CSV File format definition</a>, and <a
  href="#cliuse">Example command lines to score a MED11 submission</a>.
 The examples below assume the F4DE package has been
 installed and is working properly according to the README.&nbsp; This
 includes defining the $F4DE_BASE environment variable and
-$F4DE_BASE/bin is in your path
-variable. The variable DIST used below is the path to the F4DE
-source directory and is not part of the F4DE installation instructions.<br>
+including $F4DE_BASE/bin in your path
+variable.
 
 <p>  The examples below also assume that you have obtained and have access
 to the content the MED11 DRYRUN
 files (<a
-href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer/MED11_DRYRUN_Files.tar.bz2">MED11_DRYRUN_Files.tar.bz2</a>),
+href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer/MED11_DRYRUN_Files.tar.bz2">MED11_DRYRUN_Files.tar.bz2</a>)
 as well as the MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer/MED11_Primer_Files.tar.bz2">MED11_Primer_Files.tar.bz2</a>).
 
 
@@ -64,7 +65,7 @@ data to score. The input to the software is a set of <i>Comma Separated Value</i
 
 <p> The MED evaluation tests a system's ability to detect if an event (as defined by an event kit) occurs within a video of the test collection.  An MED system computes the probability that the event occured for each event kit/test video combination, a decision threshold for the event optimizing the primary metric, and the total processing time for the detection of an event.  For the DEVA tools, each time a system computes an event/test video probability, it is called a <i>trial</i>.  Each trial is identified by a unique <b>TrialID</b>.  TrialIDs are grouped into a statistical sample block referred to as a which are identified by a <i>BlockID</i>.  For MED11, the EventIDs are used as BlockIDs. 
 
-<p>  DEVA_cli accepts a variety of input combinations, however, to perform the MED11 scoring with the standard setup, LDC will provide a set of data files and MED11 systems will generate a set of files.
+<p>  DEVA_cli accepts a variety of input combinations, however, to perform the MED11 scoring with the standard setup, NIST/LDC will provide a set of data files and MED11 systems will generate a set of files.
 
 <UL>
 <LI> <b>Provided Data Files</b>: NIST/LDC will provide the following
@@ -72,28 +73,32 @@ data to score. The input to the software is a set of <i>Comma Separated Value</i
   for DRYRUN but not for MED11TEST)
 
 <UL>
-<LI> <bold> TrialIndex file: </bold> 
-the TrialID list (and its decomposition in its core components) - <i>TrialID</i>, <i>ClipID</i>, <i>EventID</i>
-</li>
+<LI> <b> TrialIndex file: </b> 
+The trial index file contains a list of TrialIDs.  Each line contains three columns:
+<ul> <li> <i>TrialID</i>: The ID assigned to the trial  
+<li> <i>ClipID</i>:  The clip ID to be used in the trial.  The ID is defined in Clip Metadata file below.
+<li> <i>EventID</i>: The ID of the event for which the system builds its event agent.  The ID is defined in the Event Database file below
+</UL>
 
-<LI> <bold> Reference File: </bold> The <b>reference</b> CSV file
+<LI> <b> Reference File: </b> The reference CSV file
 defines which TrialIDs are target trials (the video contains an
 instance of the event) and which TrialIDs are non-target trials (the
-video does not contain an instance of the event).  The file must
-contain two columns: <i>TrialID</i> and <i>Targ</i>, where <i>TrialID</i> must be a primary key and <i>Targ</i>
-values must be either <i>y</i> a target or <i>n</i> otherwise. 
-</li>
-
-<LI> <bold> Event Database file: </bold> 
-the event description metadata file.  Currently the file maps the
-<i>EventID</i> to <i>EventName</i>.
+video does not contain an instance of the event).  The file 
+contain two columns: 
 <ul>
-  <li><i>EventID</i>: is the events ID
+<li> <i>TrialID</i>:  <i>(as defined above)</i>
+<li> <i>Targ</i>: a two-valued column that must be either <i>y</i> a target or <i>n</i> otherwise. 
+</ul>
+
+<LI> <b> Event Database file: </b> 
+The event description metadata file maps the <i>EventID</i> to <i>EventName</i>.
+<ul>
+  <li><i>EventID</i>:   <i>(as defined above)</i>
   <li><i>EventName</i>: is the textual name of the event
 </ul>
 </li>
 
-<LI> <bold> Judgement Meta Data file: </bold> 
+<LI> <b> Judgement Meta Data file: </b> 
 the ClipID's Event Metadata file (copied from the source database); Judgments for background clips are intentionally incomplete.   
 
 For each unique ClipID,
@@ -120,7 +125,7 @@ For each unique ClipID,
 </ul>
   
 </li>
-<LI> <bold> Clip Meta Data file: </bold> 
+<LI> <b> Clip Meta Data file: </b> 
 general clip metadata including a unique ClipID, associated <i>MEDIA_FILE</i>, <i>CODEC</i>, <i>MD5SUM</i> and <i>DURATION</i>
 where:
 <ul>
@@ -136,15 +141,19 @@ where:
 
 <li> <b> System Generated Output Files: </b> Per the evaluation plan, MED11 system will generate two CSV formatted files.  
 <ul>
-  <li> The <b>detection</b> CSV file contains the confidence score for each TrialID in the test.  The file must contain two columns with column headings:
-  <i>TrialID</i> and <i>Score</i>, where <i>TrialID</i> must be a
-  primary key and <i>Score</i> must be a value contained within 0.0
-  and 1.0</li>
-  <li> The <b>threshold</b> CSV file contains information about the processed event the Detection Threshold (as defined in Section 2.2.2 of the evaluation plan). 
+  <li> <i> The detection file: </i> This file contains the confidence score for each TrialID in the test.  The file must contain two columns with column headings:
+  <ul>
+     <li><i>TrialID</i>:  <i>(as defined above)</i>
+     <li><i>Score</i>: a floating point value in the range [0.0:1.0]</li>
+  </ul>
+  
+  <li> <i>The threshold file</i>: This file contains information about the processed event.   
 It must contain three columns:
-  <i>EventID</i>, <i>DetectionThreshold</i> and <i>DetectionTPT</i>,
-  where <i>EventID</i> must be a primary key and <i>DetectionThreshold</i> must be a value contained within 0.0
-  and 1.0, while <i>DetectionTPT</i> is an unbounded value (see EvalPlan for details).</li>
+  <ul>
+  <li><i>EventID</i>:   <i>(as defined above)</i>
+  <li><i>DetectionThreshold</i>:  The detection threshold as defined in Section 2.2.2 of the evaluation plan. The value must be in the range [0.0:1.0]
+  <li><i>DetectionTPT</i>: The total processing time of the detection phase.  The value is unbounded value: see EvalPlan for details.</li>
+  </ul>
 </ul>
 
 
@@ -173,17 +182,10 @@ column's header.  The following is a valid CSV file that contains three columns 
 <a name="cliuse">
 <h2>Example command lines to score a MED11 submission</h2>
 </a>
-<p><i>For further information about the DEVA_cli tool (available as
+
+  <p><i>For further information about the DEVA_cli tool (available as
 part of the F4DE), please refer to its manual:
 <code>DEVA_cli --man</code></i></p>
-For the optional metadata database files, the CSV file names will be
-used as SQL table name. The program leaves the content of the database
-to be free-form.
-
-Although, one of the metadata table must be named <b>TrialIndex</b>
-and must contain a <i>TrialID</i> primary key column that match the value present in the <b>reference</b> or <b>system</b>
-CSV, as well as a <i>EventID</i> and <i>ClipID</i>.
-
 
 The following is an example of how to score one system run using the default scoring setup using files formatted for submission to NIST.  
 
@@ -198,7 +200,7 @@ and <code>testTEAM_MED11_DEVT_AutoEAG_MEDFull_RandomSys_1.threshold.csv</code>. 
   <LI> The <i>VERSION</i> number is "1". 
   </UL>
   
-In Using the MED11 DRYRUN
+Using the MED11 DRYRUN
 files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_DRYRUN_Files.tar.bz2">MED11_DRYRUN_Files.tar.bz2</a>), the following command will score the run:
 
 </doc>
@@ -210,9 +212,9 @@ files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_DRYRUN_Files.tar.bz2">
 --refcsv DRYRUN_Ref.csv \
 --syscsv testTEAM_MED11_DRYRUN_AutoEAG_MEDFull_RandomSys_1.detection.csv:detection \
 --syscsv testTEAM_MED11_DRYRUN_AutoEAG_MEDFull_RandomSys_1.threshold.csv:threshold \
+DRYRUN_TrialIndex.csv:TrialIndex \
 DRYRUN_ClipMD.csv:ClipMD \
 DRYRUN_JudgementMD.csv:JudgementMD \
-DRYRUN_TrialIndex.csv:TrialIndex \
 DRYRUN_EventDB.csv:EventDB
 </pre>
 where:<br>
@@ -221,47 +223,46 @@ where:<br>
 running this command) will contain all the output generated by the script.</li>
   <li>The <code>--profile MED11</code> argument provides preconfigured command line options (e.g., the metric, trial selection, join, ...) for the MED11 evaluation</li>
   <li>The CSV filenames use the <code>:</code> notation (example: <code>DRYRUN_ClipMD.csv:ClipMD</code>) to provide simple table names for use in the SQL statements.  </li>
+  
+<li> The DEVA_cli accepts metadata CSV files at the end of the command line.  The files can contain any metadata about the test material:  the structure of the content is up to the user.    However, the use of <code>--profile MED11</code> option requires one metadata file to be the <i>DRYRUN_TrialIndex.csv:TrialIndex</i>.  It is used to apply the <i>DetectionThreshold</i> in the threshold file to the <i>Scores</i> in the detection file. 
+
+
 </ul>
 
 The script will run through the four steps of the DEVA_cli scorer and
 place in the "<i>testTEAM_Results1</i>" directory.
-Note that the correct detection of a <i>n</i> <i>Targ</i> <b>Reference</b> is not counted.
-
 There are many files generated by the script.  The most notable are:
 
 <UL> 
 
 <LI> <i>testTEAM-Results1/scoreDB.scores.txt</i>, a text version of the scoring report which
-includes five sections for each EventID.   
+includes five sections for each EventID.   (There is a .csv version of file as well.)
 <ul>
   <li> The "Inputs" section:
   <UL>
-    <li> <code>#Targ</code> the number of target TrialIDs. </li>
-    <li> <code>#NTarg</code> the number of non-target TrialIDs. </li>
-    <li> <code>#Sys</code> the number of system TrialIDs with responses.  For MED11 this should equal #Targ + #NTarg. </li>
+    <li> <code>#Targ</code>, the number of target TrialIDs. </li>
+    <li> <code>#NTarg</code>, the number of non-target TrialIDs. </li>
+    <li> <code>#Sys</code>, the number of TrialIDs with system responses.  For MED11 this should equal #Targ + #NTarg. </li>
   </UL>
-  <li> The "Actual Decision Cost Analysis" section shows the performance of the system using the Actual Decision Threshold supplied for the system </li>
+  <li> The "Actual Decision Cost Analysis" section shows the performance of the system using the <i>DecisionThreshold</i> supplied for the system </li>
   <UL>
-    <li> <code>#CorDet</code> the number correct target detections</li>
-    <li> <code>#Cor!Det</code> the number of non-target TrialIDs</li>
-    <li> <code>#FA</code> the number of non-positive clips &gt; the Detection Threshold</li>
-    <li> <code>#Miss</code> the number of positive clips &lt;= the Detection Threshold</li>
-    <li> <code>#PFA</code> (Event, Decision Threshold) = #FA (Event,
-    Decision Threshold) / (#TotalClips - #Targets (Event))</li>
-    <li> <code>#PMiss</code> (Event, Decision Threshold) = #MD (Event,
-    Decision Threshold) / #Targets (Event)</li>
-    <li> <code>#NormCost</code>, the Normalized Detection Cost function is a weighted linear combination missed detection and false alarm probabilities.</li>
-    <li> <code>#Dec. Thresh</code>, the Decision Threshold for a given Event.</li>
+    <li> <code>#CorDet</code>, the number target trials correctly detected, (target clips &gt;= <i>DetectionThreshold</i>)</li>
+    <li> <code>#Cor!Det</code>, the number of non-target trials correctly NOT detected, (non-target clips &lt; <i>DetectionThreshold</i>)</li>
+    <li> <code>#FA</code>, the number of target trials falsely detected, (target clips &lt; the <i>DetectionThreshold</i>)
+    <li> <code>#Miss</code>, the number of target trials mistakenly detected, (non-target clips &gt;= <i>DetectionThreshold</i>) </li>
+    <li> <code>PFA</code>, #FA / #NTarg</li>
+    <li> <code>PMiss</code>, #MD / #Targ</li>
+    <li> <code>NormCost</code>, the Normalized Detection Cost</li>
+    <li> <code>Dec. Thresh</code>, the <i>DecisionThreshold</i></li>
   </UL>
   <li> The "Minimum NormCost Analysis" section shows an analysis of
-  the DET curve to find threshold that acheives the minimum NDC
-  point. All of the following use a definition similar to the above
-  one:
+  the DET curve to find threshold that achieves the minimum NDC
+  point. All of the following use definitions similar to the above.
   <ul>
-    <li> <code>#PFA</code>
-    <li> <code>#PMiss</code>
-    <li> <code>#NormCost</code>
-    <li> <code>#Dec. Thresh</code>
+    <li> <code>PFA</code>
+    <li> <code>PMiss</code>
+    <li> <code>NormCost</code>
+    <li> <code>Dec. Thresh</code>, the decision threshold where the minimum NDC occurs 
   </UL>
   <li> "DET Curve" shows the PNG filename of the DET curve that EventID. </li>
   <li> Threshold Curve shows the PNG filename that displays PMiss, PFA, and NDC as a function of Decision score for that EventID. </li>
@@ -270,7 +271,7 @@ includes five sections for each EventID.
 
 <LI> <i>testTEAM-Results1/scoreDB.det.png</i>, a single PNG file containing the DET line traces for all of the scored EventIDs. </LI>   
 
-<LI> <i>testTEAM-Results1/scoreDB.det.*.srl.gz</i>, serialized versions of each EventIDs DET curve.  These files can be used as input to  <code> DETUtil</code> to produce selective DET Curve plots.  For example to plot just E002 and E003, use following the command.  The produced png file will be 'focusSet.png'.
+<LI> <i>testTEAM-Results1/scoreDB.det.*.srl.gz</i>, serialized versions of each EventID's DET curve.  These files can be used as input to  <code> DETUtil</code> to produce selective DET Curve plots.  For example to plot just E002 and E003, use following the command.  The produced png file will be 'focusSet.png'.
 
 <pre>
 % DETUtil -T "Events E002 and E003" -o focusSet.png testTEAM-Results1/*E00[23]*srl.gz
@@ -288,11 +289,11 @@ which filters the TrialIDs included in the scoring run.
 
 For sites only participating in some of the events, the default SQL filter will insure that only the <i>TrialID</i>s
 listed in the system CSV will be used. <i>A submission checker will
-be released soon to other among things verifies that all <span style="font-style: italic;">TrialIDs </span> for an event are present
-in the system file.
+be released soon to other among things verifies that all TrialIDs  for an event are present
+in the system file.</i>
 
-The default filter's definition (located in the
-<code>DEVAcli_filter-MED11.sql</code> file), is as follow:
+The default filter's definition for the MED11 profile (located in the
+<code>DEVAcli_filter-MED11.sql</code> file) is as follow:
 <pre>
 INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )
   SELECT system.TrialID,TrialIndex.EventID FROM TrialIndex INNER JOIN system
