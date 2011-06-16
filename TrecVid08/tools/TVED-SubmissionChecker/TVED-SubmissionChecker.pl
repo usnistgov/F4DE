@@ -188,7 +188,7 @@ if ($xsdpath ne "") {
 
 if (defined $rtmpdir) {
   my $de = MMisc::check_dir_w($rtmpdir);
-  MMisc::error_quit("Problem with \'temdir\' ($rtmpdir): $de")
+  MMisc::error_quit("Problem with \'uncompress_dir\' ($rtmpdir): $de")
     if (! MMisc::is_blank($de));
   MMisc::error_quit("\'uncompress_dir\' can not be used at the same time as \'work_in_dir\'")
     if (defined $wid);
