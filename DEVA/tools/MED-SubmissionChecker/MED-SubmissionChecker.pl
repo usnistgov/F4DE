@@ -306,10 +306,11 @@ foreach my $sf (@ARGV) {
       vprint(2, "Checking Submission Directory ($sdir)");
       $wn_key = $sdir;
       my ($err) = &check_submission_dir("$tmpdir/$odir", $sdir, $team);
-      &valerr($sf, "While checking submission dir [$sdir] : " . $err)
-        if (! MMisc::is_blank($err));
-      $ok = 0;
-      next;
+      if (! MMisc::is_blank($err)) {
+        &valerr($sf, "While checking submission dir [$sdir] : " . $err);
+        $ok = 0;
+        next;
+      }
     }
   }
 
