@@ -347,12 +347,12 @@ dist_archive_pre_remove:
 	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRScorer/res-test1[ab].txt
 ## BarPlot
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/BarPlot/ /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/lib/BarPlot.pm
-## CSVUtil
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/CSVUtil/
 ## VidAT example
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${VIDAT_EX_DIR}
 ## CCD
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/CCD
+## R_tools
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/R_tools
 
 create_mans:
 # TrecVid08
