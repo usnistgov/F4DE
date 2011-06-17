@@ -92,10 +92,12 @@ INSTALLATION
 F4DE consists of a set of Perl scripts that can be run under a shell terminal.
 It has been confirmed to work under Linux, OS X and Cygwin.
 The only pre-requisites of the tool are:
-- a recent version of gnuplot (4.2 preferred, with png support)
-  to plot DETCurves for TV08Scorer.
+- a recent version of gnuplot (at least 4.2 with png support)
+  to do plots (for DETCurves among others)
 - a recent version of xmllint (part of libxml2) to validate XML files
   against their corresponding schema files.
+- a recent version of SQLite (at least 3.6.12) to use all the SQLite based 
+  tools (including DEVA)
 - some Perl modules (available on CPAN [http://www.cpan.org/]). Availability
   of those will be tested during step 1 ('make check') of the installation
   process.
