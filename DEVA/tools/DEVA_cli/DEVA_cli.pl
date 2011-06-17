@@ -551,7 +551,7 @@ sub check_isin {
 sub path_tool {
   my ($toolb, $relpath) = @_;
   my $tool = (exists $ENV{$f4b}) 
-    ? MMisc::cmd_which($toolb) 
+    ? $ENV{$f4b} . "/bin/$toolb"
     : "$relpath/${toolb}.pl";
   &check_tool($tool, $toolb);
   return($tool);
@@ -561,8 +561,13 @@ sub path_tool {
 
 sub check_tool {
   my ($tool, $toolb) = @_;
+  if (MMisc::is_blank($tool)) { # last chance, is it in PATH ?
+    $tool = MMisc::cmd_which($toolb);
+  }
+
   MMisc::error_quit("No location found for tool ($toolb)")
     if (MMisc::is_blank($tool));
+
   my $err = MMisc::check_file_x($tool);
   MMisc::error_quit("Problem with tool ($tool): $err")
     if (! MMisc::is_blank($err));
