@@ -18,6 +18,10 @@ install:
 makecompcheckfiles makecheckfiles check: \
 	${MTest_tester} ${DEVA_cli}
 	@(${PERL} ${MTest_tester} ${DEVA_cli} $@)
+	@make cleanresdir
+
+cleanresdir:
+	@rm -rf res-test*.txt.dir
 
 cleanresfiles:
 	@rm -f res*.txt
