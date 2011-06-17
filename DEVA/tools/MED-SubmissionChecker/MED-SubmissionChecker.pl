@@ -60,7 +60,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc") {
+foreach my $pn ("MMisc", "MtSQLite") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -91,6 +91,12 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 my @expected_ext = MMisc::get_unarchived_ext_list();
 
+my @data_search_path = ('.', (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data");
+
+my ($err, $sqlitecmd) = MtSQLite::get_sqlitecmd();
+MMisc::error_quit($err)
+  if (MMisc::is_blank($sqlitecmd));
+
 my $DEVAtool = (exists $ENV{$f4b})
   ? $ENV{$f4b} . "/bin/DEVA_cli"
   : "../DEVA_cli/DEVA_cli.pl";
@@ -105,7 +111,6 @@ my $usage = &set_usage();
 my $verb = 0;
 my $rtmpdir = undef;
 my $wid = undef;
-my $skipval = 0;
 my $qins = 0;
 my $specfile = "";
 my $pc_check = 0;
@@ -126,7 +131,6 @@ GetOptions
    'Verbose'        => \$verb,
    'uncompress_dir=s' => \$rtmpdir,
    'work_in_dir=s'  => \$wid,
-   'skip_validation' => \$skipval,
    'quit_if_non_scorable' => \$qins,
    'Specfile=s'     => \$specfile,
    'outdir=s'       => \$outdir,
@@ -192,6 +196,13 @@ my @expid_sysid_beg;
 my @expected_dir_output;
 my $expected_csv_per_expid = -1;
 my @expected_csv_names;
+my $db_check_sql = undef;
+my $medtype_fullcount = -1;
+my @db_eventidlist;
+my @db_missingTID;
+my @db_unknownTID;
+my @db_detectionTID;
+my @db_thresholdEID;
 
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
@@ -206,9 +217,18 @@ MMisc::error_quit("Missing data in \'Specfile\' ($specfile)")
     || (scalar @expid_EAG == 0)
     || (scalar @expid_sysid_beg == 0)
     || (scalar @expected_dir_output == 0)
-    || ($expected_csv_per_expid <= 0)
+    || ($expected_csv_per_expid < 0)
     || (scalar @expected_csv_names == 0)
+    || (! defined $db_check_sql)
+    || ($medtype_fullcount < 0)
+    || (scalar @db_eventidlist == 0)
+    || (scalar @db_missingTID == 0)
+    || (scalar @db_unknownTID == 0)
+    || (scalar @db_detectionTID == 0)
+    || (scalar @db_thresholdEID == 0)
   );
+&extend_file_location(\$db_check_sql, 'SQL DB check file', @data_search_path);
+
 
 my $doepmd = 0;
 
@@ -321,8 +341,6 @@ foreach my $sf (@ARGV) {
 }
 
 my @lin = ();
-push @lin, "the \'skip_validation\' option was used, therefore the CSV files were not checked for accuracy. Submitted archive files must have been CSV validated to be accepted."
-  if ($skipval);
 push @lin, "the \'work_in_dir\' option was used, please rerun the program against the final archive file to confirm it is a valid submission file." 
   if (defined $wid);
 
@@ -497,11 +515,11 @@ sub check_submission_dir {
   my ($bd, $dir, $team) = @_;
 
   vprint(3, "Checking name");
-  my ($lerr, my $data) = &check_name($dir, $team);
+  my ($lerr, $data, $medtype) = &check_name($dir, $team);
   return($lerr) if (! MMisc::is_blank($lerr));
 
   vprint(3, "Checking expected directory files");
-  return(&check_exp_dirfiles($bd, $dir, $data));
+  return(&check_exp_dirfiles($bd, $dir, $data, $medtype));
 }
 
 ##########
@@ -553,13 +571,13 @@ sub check_name {
   
   vprint(4, "<TEAM> = $lteam | <TAG> = $ltag | <DATA> = $ldata | <MEDTYPE> = $lmedtype | <EAG> = $leag | <SYSID> = $lsysid | <VERSION> = $lversion");
   
-  return("", $ldata);
+  return("", $ldata, $lmedtype);
 }
 
 ##########
 
 sub check_exp_dirfiles {
-  my ($bd, $exp, $data) = @_;
+  my ($bd, $exp, $data, $medtype) = @_;
 
   my ($derr, $rd, $rf, $ru) = MMisc::list_dirs_files("$bd/$exp");
   return($derr) if (! MMisc::is_blank($derr));
@@ -605,15 +623,15 @@ sub check_exp_dirfiles {
     vprint(5, "Matched \'$k\' CSV file: $fn");
   }
   
-  return(&run_DEVAcli($exp, %match));
+  return(&run_DEVAcli($exp, $data, $medtype, %match));
 }
 
 #####
 
 sub run_DEVAcli {
-  my ($exp, %match) = @_;
+  my ($exp, $data, $medtype, %match) = @_;
 
-  vprint(4, "Creating the Database (ie confirming content)");
+  vprint(4, "Creating the Database (ie validating System)");
 
   my $od = "$outdir/$exp";
   return("Problem creating output dir ($od)")
@@ -628,11 +646,13 @@ sub run_DEVAcli {
   push @cmd, "$trialindex:TrialIndex";
   push @cmd, '-f', '-D';
 
-  my $lf = "$od/run.log";
+  my $lf = "$od/DEVAcli_run.log";
   vprint(5, "Running tool ($DEVAtool), log: $lf");
   my ($err) = &run_tool($lf, $DEVAtool, @cmd);
 
-  return($err);
+  return($err) if (! MMisc::is_blank($err));
+
+  return(&check_TrialIDs($od, $exp, $data, $medtype));
 }
 
 #####
@@ -651,6 +671,120 @@ sub run_tool {
 
   return("", $ok, $otxt, $so, $se, $rc, $of);
 }
+
+#####
+
+sub check_TrialIDs {
+  my ($od, $expid, $data, $medtype) = @_;
+
+  vprint(4, "Checking Database's EventID and TrialID");
+
+  my $sysdb = "$od/systemDB.db";
+  my $err = MMisc::check_file_r($sysdb);
+  return("Problem with system DB ($sysdb) : $err")
+    if (! MMisc::is_blank($err));
+  my $mddb  = "$od/metadataDB.db";
+  my $err = MMisc::check_file_r($mddb);
+  return("Problem with metadata DB ($mddb) : $err")
+    if (! MMisc::is_blank($err));
+
+  my $dbf = "checkDB.db";
+  my $dbfile = "$od/$dbf";
+
+  my $cmd = "";
+  $cmd .= "ATTACH DATABASE \"$mddb\" AS metadataDB;\n";
+  $cmd .= "ATTACH DATABASE \"$sysdb\" AS systemDB;\n";
+
+  $cmd .= MMisc::slurp_file($db_check_sql);
+
+  my ($err, $log) = &__runDB_cmd($dbfile, $cmd);
+  return("Problem while checking the System Database's EventID and TrialID : $err\n\nLog file ($log) text:\n" . MMisc::slurp_file($log))
+    if (! MMisc::is_blank($err));
+  vprint(5, "Generated \'$dbf\' [log: $log]");
+
+  my @el = ();
+  my ($err, $tidc) = MtSQLite::select_helper__to_array($dbfile, \@el, $db_eventidlist[0], "", $db_eventidlist[1]);
+  return("Problem obtaining the EventID list : $err") if (! MMisc::is_blank($err));
+  vprint(5, "Found $tidc EventID : " . ajoin(" ", @el));
+  return("Found no recognized EventID") if ($tidc == 0);
+
+  if (($medtype_fullcount > 0) && ($medtype eq $expid_MEDtype[0]) && ($tidc < $medtype_fullcount)) {
+    my $txt = "EXPID ($expid) designs this submission as a \'$medtype\', but it contains $tidc EventIDs, when $medtype_fullcount are expected to consider it so";
+    return($txt) if ($data ne $expid_data[0]);
+    MMisc::warn_print("$txt. Since this is a $data submission, only this warning is shown. Otherwise, an error message would have been shown");
+  }
+
+  my $err = &id_check($dbfile, "Missing TrialID", $db_missingTID[0], $db_missingTID[1]);
+  return($err) if (! MMisc::is_blank($err));
+
+  my $err = &id_check($dbfile, "Unknown TrialID", $db_unknownTID[0], $db_unknownTID[1]);
+  return($err) if (! MMisc::is_blank($err));
+
+  my $err = &id_check($dbfile, "Unknown \'detection\' TrialID", $db_detectionTID[0], $db_detectionTID[1]);
+  return($err) if (! MMisc::is_blank($err));
+
+  my $err = &id_check($dbfile, "Unknown \'threshold\' EventID", $db_thresholdEID[0], $db_thresholdEID[1]);
+  return($err) if (! MMisc::is_blank($err));
+
+  return("");
+}
+
+#####
+
+sub id_check {
+  my ($dbfile, $txt, $tn, $cn) = @_;
+
+  my @lid = ();
+  my ($err, $tidc) = MtSQLite::select_helper__to_array($dbfile, \@lid, $tn, "", $cn);
+  return("Problem obtaining the $txt list : $err") if (! MMisc::is_blank($err));
+  vprint(5, "Found $tidc $txt");
+  return("$tidc $txt: " . ajoin(" ", @lid)) if ($tidc > 0);
+
+  return("");
+}
+
+#####
+
+sub ajoin {
+  my $sep = shift @_;
+
+  my @txt = "";
+  for (my $i = 0; $i < scalar @_; $i++) {
+    push @txt, join($sep, @{$_[$i]});
+  }
+  return(join($sep, @txt));
+}
+
+#####
+
+sub __runDB_cmd {
+  my ($dbfile, $cmd) = @_;
+  
+## SQLite usage
+  my ($err, $log, $stdout, $stderr) = 
+    MtSQLite::sqliteCommands($sqlitecmd, $dbfile, $cmd);
+  return($err, $log);
+}
+
+#####
+
+sub extend_file_location {
+  my ($rf, $t, @pt) = @_;
+
+  return if (MMisc::is_blank($$rf));
+  return if (MMisc::does_file_exists($$rf));
+
+  foreach my $p (@pt) {
+    my $v = "$p/$$rf";
+    if (MMisc::does_file_exists($v)) {
+#      &note_print("Using \'$t\' file: $v");
+      $$rf = $v;
+      return();
+    }
+  }
+
+  MMisc::error_quit("Could not find \'$t\' file ($$rf) in any of the expected paths: " . join(" ", @pt));
+}  
 
 ##########
 
@@ -714,7 +848,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version | --man] --Specfile perlEvalfile [--skip_validation] [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_if_non_scorable] last_parameter
+Usage: $0 [--help | --version | --man] --Specfile perlEvalfile --TrialIndex index.csv [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_if_non_scorable] last_parameter
 
 Will confirm that a submission file conforms to the 'Submission Instructions' (Appendix B) of the 'TRECVid Multimedia Event Detection Evaluation Plan'. The program needs a 'Specfile' to load some of its eval specific definitions.
 
@@ -726,7 +860,7 @@ Only in the '--work_in_dir' case does it become <TEAM>.
   --man           Print a more detailled manual page and exit (same as running: $mancmd)
   --version       Print version number and exit
   --Specfile      Specify the \'perlEvalfile\' that contains definitions specific to the evaluation run
-  --skip_validation  Bypass the CSV files validation process
+  --TrialIndex    Specify the location of the \'TrialIndex.csv\' file used
   --Verbose       Explain step by step what is being checked
   --uncompress_dir  Specify the directory in which the archive file will be uncompressed
   --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified (useful to confirm a submission before generating its archive)
