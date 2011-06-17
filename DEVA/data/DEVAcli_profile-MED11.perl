@@ -14,7 +14,7 @@ $VAR1 = [
           '--PrintedBlock',
           'EventID',
           '--derivedSys',
-          'DEVAcli_dividedSys_MED11.sql',
+          'DEVAcli_derivedSys_MED11.sql',
           '--FilterCMDfile',
           'DEVAcli_filter-MED11.sql',
           '--JudgementThresholdPerBlock',
