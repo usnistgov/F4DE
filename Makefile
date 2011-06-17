@@ -180,6 +180,7 @@ AVSS09install_noman:
 
 DEVADIR=DEVA
 DEVATOOLS=tools/DEVA_{cli/DEVA_cli,filter/DEVA_filter,sci/DEVA_sci}.pl
+MEDTOOLS=tools/MED-SumissionChecker/{MED-SubmissionChecker.pl,TV11MED-SubmissionChecker.sh}
 DEVATOOLS_MAN=tools/DEVA_cli/DEVA_cli.pl
 
 DEVAinstall:
@@ -194,6 +195,7 @@ DEVAinstall_common:
 	@make commoninstall
 	@echo "** Installing DEVA tools"
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${DEVADIR}/${DEVATOOLS}
+	@perl installer.pl -x -r ${F4DE_BASE} bin ${DEVADIR}/${MEDTOOLS}
 	@perl installer.pl ${F4DE_BASE} lib/data ${DEVADIR}/data/*.sql
 	@perl installer.pl ${F4DE_BASE} lib/data ${DEVADIR}/data/*.perl
 
