@@ -37,9 +37,11 @@ site for specific details about the evaluation.  The document assumes
 the reader is familiar with the MED11 Evaluation Plan.
 
 
-<p>There are three sections in this document: <a href="#executable">Scoring
-script synopsis</a>, <a href="#format">CSV File format definition</a>, and <a
- href="#cliuse">Example command lines to score a MED11 submission</a>.
+<p>There are four sections in this document: <a href="#executable">Scoring
+script synopsis</a>, <a href="#format">CSV File format definition</a>, an <a
+ href="#cliuse">Example command lines to score a MED11 submission</a>,
+and <a href="#subcheck">Using the Submission Checker</a>.
+
 The examples below assume the F4DE package has been
 installed and is working properly according to the README.&nbsp; This
 includes defining the $F4DE_BASE environment variable and
@@ -191,13 +193,13 @@ part of the F4DE), please refer to its manual:
 
 The following is an example of how to score one system run using the default scoring setup using files formatted for submission to NIST.  
 
-<p>The MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer/MED11_Primer_Files.tar.bz2">MED11_Primer_Files.tar.bz2</a>) contain system-generated output files for a random system processing the Dry Run data set.  The files are <code>testTEAM_MED11_DEVT_MEDFull_AutoEAG_p-RandomSys_1.detection.csv</code>
-and <code>testTEAM_MED11_DEVT_MEDFull_AutoEAG_p-RandomSys_1.threshold.csv</code>.  The file names follow the prescribed structure of the EXP-ID described in Appendix B of the evaluation plan where:
+<p>The MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer/MED11_Primer_Files.tar.bz2">MED11_Primer_Files.tar.bz2</a>) contain system-generated output files for a random system processing the Dry Run data set.  The files are <code>testTEAM_MED11_DEVT_MEDPart_AutoEAG_p-RandomSys_1.detection.csv</code>
+and <code>testTEAM_MED11_DEVT_MEDPart_AutoEAG_p-RandomSys_1.threshold.csv</code>.  The file names follow the prescribed structure of the EXP-ID described in Appendix B of the evaluation plan where:
 
 <UL> <LI> The <i>TEAM</i> named "testTEAM" (must not contain underscores),
   <LI> The processed <i>DATA</i> set is "DRYRUN", 
-  <LI> The type of <i>MEDTYPE</i> of system is "MEDFull",
-  <LI> The style of event agent generation <i> EAG</i> is automatice EAG "AutoEAG",
+  <LI> The type of <i>MEDTYPE</i> of system is "MEDPart",
+  <LI> The style of Event Agent Generation <i>EAG</i> is automatice EAG "AutoEAG",
   <LI> The <i>SYSID</i> is "p-RandomSys", a site-specified string
   (that does not contain underscores) designating the system used. It
   is to begin with p- for a primary system (i.e., your single best
@@ -215,8 +217,8 @@ files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_DRYRUN_Files.tar.bz2">
 --profile MED11\
 --outdir testTEAM-Results1 \
 --refcsv DRYRUN_Ref.csv \
---syscsv testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.detection.csv:detection \
---syscsv testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.threshold.csv:threshold \
+--syscsv testTEAM_MED11_DRYRUN_MEDPart_AutoEAG_p-RandomSys_1.detection.csv:detection \
+--syscsv testTEAM_MED11_DRYRUN_MEDPart_AutoEAG_p-RandomSys_1.threshold.csv:threshold \
 DRYRUN_TrialIndex.csv:TrialIndex \
 DRYRUN_ClipMD.csv:ClipMD \
 DRYRUN_JudgementMD.csv:JudgementMD \
@@ -322,14 +324,61 @@ To use the filter, execute the following commands:
 --profile MED11\
 --outdir testTEAM-Results2 \
 --refcsv DRYRUN_Ref.csv \
---syscsv testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.detection.csv:detection \
---syscsv testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.threshold.csv:threshold \
+--syscsv testTEAM_MED11_DRYRUN_MEDPart_AutoEAG_p-RandomSys_1.detection.csv:detection \
+--syscsv testTEAM_MED11_DRYRUN_MEDPart_AutoEAG_p-RandomSys_1.threshold.csv:threshold \
 DRYRUN_ClipMD.csv:ClipMD \
 DRYRUN_JudgementMD.csv:JudgementMD \
 DRYRUN_TrialIndex.csv:TrialIndex \
 DRYRUN_EventDB.csv:EventDB \
 --FilterCMDfile DEVAcli_filter-MED11_primer.sql
 </pre>
+
+<a name="subcheck">
+<h2>Using the Submission Checker</h2>
+</a>
+
+Before providing a TEAM submission (as detailed in the Eval Plan in
+Appendix B), it is required that submissions passs the Submission
+Checker in order to be accepted.
+
+In this example we will validate the <a
+href="ftp://jaguar.ncsl.nist.gov/outgoing/MED11_related/MED11_testTEAM_DRYRUN_2.tar.bz2">MED11_testTEAM_DRYRUN_2.tar.bz2</a>
+submission for the <i>testTEAM</i> TEAM and for the <i>DRYRUN</i> DATA
+mode.
+
+The content of the archive is as follow:
+<pre>
+output/
+output/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1/
+output/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.detection.csv
+output/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.threshold.csv
+output/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.txt
+</pre>
+
+This submission only contains one EXPID
+(testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1).
+<br>
+For testing purposes, the content of the
+<code>testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.txt</code>
+was left empty, but it must be present and contain information
+detailled in the EVAL Plan.
+<br>
+In order to run the Submission Checker, the <b>TrialIndex</b> CSV file
+must be available, as it is used to do generate the system database as
+well doing some <i>EventID</i> and <i>TrialID</i> checks.
+
+Running the submission checker is then done as follow:
+
+<pre>
+% TV11MED-SubmissionChecker --TrialIndex DRYRUN_TrialIndex.csv MED11_testTEAM_DRYRUN_2.tar.bz2
+</pre>
+
+In case of success, a 'ok' should appear next to the submission name
+(<code>MED11_testTEAM_DRYRUN_2.tar.bz2: ok</code>) and the program
+will exit with an OK exit status.
+<br>
+It is recommended to run the tool with the <code>--Verbose</code>
+option in order to see a step-by-step description of the steps performed.
 
 </body>
 </html>
