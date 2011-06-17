@@ -63,12 +63,13 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - Same tools as the 2008 TRECVID Surveillance Event Detection Evaluation
       (TV08Scorer, TV08ViperValidator, TV08MergeHelper, 
       TV08_BigXML_ValidatorHelper)
-    - TV11SED-SubmissionChecker - A tool designed to help confirm submission
+    - TV11SED-SubmissionChecker - A tool designed to help confirm SED11 submission
       archives before transmitting them to NIST. 
 
   *  2011 TRECVID Multimedia Event Detection Evaluation. 
     - DEVA_cli - The main evaluation script. 
-
+    - TV11MED-SubmissionChecker - A tool designed to help confirm MED11 submission 
+      archives before transmitting them to NIST
 
 In addition to evaluation tools, the package contains the following related tools:
 
@@ -82,7 +83,8 @@ In addition to evaluation tools, the package contains the following related tool
     - A suite of tools designed to help interface CSV files and SQLite databases.
       The tool suite requires SQLite.
 
-
+  * JobRunner (common/tools/JobRunner)
+    - A simple lock directory based queueing system.
 
 INSTALLATION
 ------------
