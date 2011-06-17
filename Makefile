@@ -180,7 +180,7 @@ AVSS09install_noman:
 
 DEVADIR=DEVA
 DEVATOOLS=tools/DEVA_{cli/DEVA_cli,filter/DEVA_filter,sci/DEVA_sci}.pl
-MEDTOOLS=tools/MED-SumissionChecker/{MED-SubmissionChecker.pl,TV11MED-SubmissionChecker.sh}
+MEDTOOLS=tools/MED-SubmissionChecker/{MED-SubmissionChecker.pl,TV11MED-SubmissionChecker.sh}
 DEVATOOLS_MAN=tools/DEVA_cli/DEVA_cli.pl
 
 DEVAinstall:
