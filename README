@@ -69,7 +69,8 @@ evaluations and for specific NIST-coordinated evaluations listed below.
   *  2011 TRECVID Multimedia Event Detection Evaluation. 
     - DEVA_cli - The main evaluation script. 
     - TV11MED-SubmissionChecker - A tool designed to help confirm MED11 submission 
-      archives before transmitting them to NIST
+      archives before transmitting them to NIST.
+    - Scoring Primer: DEVA/doc/TRECVid-MED11-ScoringPrimer.html
 
 In addition to evaluation tools, the package contains the following related tools:
 
@@ -174,7 +175,7 @@ want to "install" first the "ExtUtils::CBuilder" modules and then
 the modules listed in the 'prerequisites' section of the main 
 'installation' instructions.
 
-After this, you should be able to succefully complete "make check" 
+After this, you should be able to successfully complete "make check" 
 and use the tools.
 
 USAGE
