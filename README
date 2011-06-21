@@ -1,5 +1,5 @@
 File:  README
-Date:  June 15, 2011
+Date:  June 21, 2011
 F4DE Version: 2.3.0
 
 
@@ -111,13 +111,14 @@ The only pre-requisites of the tool are:
   of those will be tested during step 1 ('make check') of the installation
   process. Installation of those modules can be automated through the 'cpan'
   command. The list of those modules is as follow:
-Text::CSV
-Text::CSV_XS
-Math::Random::OO::Uniform
-Statistics::Descriptive
-Statistics::Descriptive::Discrete
-DBI
-DBD::SQLite
+    Text::CSV
+    Text::CSV_XS
+    Math::Random::OO::Uniform
+    Math::Random::OO::Normal
+    Statistics::Descriptive
+    Statistics::Descriptive::Discrete
+    DBI
+    DBD::SQLite
 
 
 ----- Actual Installation:
@@ -156,12 +157,12 @@ CYGWIN PRE-INSTALLATION NOTES
 ----------------------------
 
 The tools have been confirmed to work under windows when running cygwin 
-(tested under Cygwin 1.7.5-1). 
+(tested under Cygwin 1.7.5-1 and 1.7.9-1). 
 After downloading the latest "setup.exe" from http://www.cygwin.com/
 make sure to add the following when in the "Select Packages":
  - in "Archive", select "unzip"
  - in "Database", select "sqlite3"
- - in "Devel", select "make", "gcc" and "gcc4"
+ - in "Devel", select "gcc", "gcc4" and "make"
  - in "Libs", select "libxml2"
  - in "Math", select "gnuplot" 
  - in "Net", select "rsync" 
@@ -169,16 +170,9 @@ make sure to add the following when in the "Select Packages":
    and "perl-ExtUtils-PkgConfig"
 
 After installation, from shell, run 'cpan' from which you will
-want to "install" first the "ExtUtils::CBuilder" package and then 
-the following packages: 
- Text::CSV
- Text::CSV_XS
- Math::Random::OO::Uniform
- Math::Random::OO::Normal
- Statistics::Descriptive
- Statistics::Descriptive::Discrete
- DBI
- DBD::SQLite
+want to "install" first the "ExtUtils::CBuilder" modules and then 
+the modules listed in the 'prerequisites' section of the main 
+'installation' instructions.
 
 After this, you should be able to succefully complete "make check" 
 and use the tools.
