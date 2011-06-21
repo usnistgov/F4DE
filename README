@@ -89,19 +89,38 @@ In addition to evaluation tools, the package contains the following related tool
 INSTALLATION
 ------------
 
+----- Prerequisites:
+
 F4DE consists of a set of Perl scripts that can be run under a shell terminal.
 It has been confirmed to work under Linux, OS X and Cygwin.
+
 The only pre-requisites of the tool are:
+
 - a recent version of gnuplot (at least 4.2 with png support)
   to do plots (for DETCurves among others)
-- a recent version of xmllint (part of libxml2) to validate XML files
-  against their corresponding schema files.
+
+- a recent version of xmllint (at least 2.6.30) (part of libxml2) 
+  to validate XML files against their corresponding schema files.
+
 - a recent version of SQLite (at least 3.6.12) to use all the SQLite based 
   tools (including DEVA)
+
+- the 'rsync' tool available in your PATH (used in the installation process)
+
 - some Perl modules (available on CPAN [http://www.cpan.org/]). Availability
   of those will be tested during step 1 ('make check') of the installation
-  process.
-- the 'rsync' tool available in your PATH (used in the installation process)
+  process. Installation of those modules can be automated through the 'cpan'
+  command. The list of those modules is as follow:
+Text::CSV
+Text::CSV_XS
+Math::Random::OO::Uniform
+Statistics::Descriptive
+Statistics::Descriptive::Discrete
+DBI
+DBD::SQLite
+
+
+----- Actual Installation:
 
 Installation is a 4 step process:
 
