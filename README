@@ -84,8 +84,6 @@ In addition to evaluation tools, the package contains the following related tool
     - A suite of tools designed to help interface CSV files and SQLite databases.
       The tool suite requires SQLite.
 
-  * JobRunner (common/tools/JobRunner)
-    - A simple lock directory based queueing system.
 
 INSTALLATION
 ------------
