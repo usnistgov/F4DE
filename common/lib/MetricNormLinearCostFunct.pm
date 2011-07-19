@@ -587,6 +587,69 @@ sub randomCurveUnitTest{
   print $ds->renderAsTxt("$dir/MNLCF.randomTest.det", 1, 1, $options, "");                                                                     
 }
 
+sub blockAverageUnitTest{
+  my ($dir) = @_;
+
+  die "Error: blockAverageUnitTest(\$dir) requires a defined $dir" if (! defined($dir));
+
+  use DETCurve;
+  use DETCurveSet;
+  use DETCurveGnuplotRenderer;
+  use Math::Random::OO::Uniform;
+
+  my @isolinecoef = (.1, 1, 3);
+
+  print "Build a block averaged random DET curve for Dir=/$dir/\n";
+  my $decisionScoreRand = Math::Random::OO::Normal->new(0,1);
+  my $targetRand = Math::Random::OO::Uniform->new(0,1);
+  my $ds = new DETCurveSet("MetricNormLinearFunction Tests");
+      
+  print "  Building DETS\n";
+  my $trial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+
+  for (my $epoch = 0; $epoch<5; $epoch ++){
+    print "    Epoch $epoch\n";
+    my $epochTrial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+    for (my $nt = 0; $nt<1000; $nt ++){
+      # TArgets
+      my $scr = $decisionScoreRand->next() + (0.25 + $epoch * 0.02);
+      $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 1);
+      $epochTrial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 1);
+      # NonTargets
+      my $scr = $decisionScoreRand->next() - (0.25 + $epoch * 0.02);
+      $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
+      $epochTrial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
+    }
+    my $epochMet = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $trial);
+    my $epochDet = new DETCurve($epochTrial, $epochMet, "Epoch $epoch", \@isolinecoef, undef);
+    die "Error: Failed to add first det" if ("success" ne $ds->addDET("Epoch $epoch", $epochDet));
+  } 
+  my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $trial);
+  my $det1 = new DETCurve($trial, $met, "Block Averaged", \@isolinecoef, undef);
+
+print Dumper($det1->getPoints());
+
+  die "Error: Failed to add first det" if ("success" ne $ds->addDET("Block Averaged", $det1));
+
+  my $options = { 
+      ("Xmin" => 0.1,
+		   "Xmax" => 99.9,
+		   "Ymin" => .1,
+		   "Ymax" => 99.9,
+		   "xScale" => "nd",
+		   "yScale" => "nd",
+		   "ColorScheme" => "color",
+       "DrawIsometriclines" => 1,
+       "createDETfiles" => 1,
+		   "DrawIsoratiolines" => 1,
+       "serialize" => 1,
+       "Isoratiolines" => [ (100.0, 10.0, 1.0) ],
+       "Isometriclines" => \@isolinecoef,
+       "PointSet" => [] ) };
+
+  print $ds->renderAsTxt("$dir/BA.randomTest.det", 1, 1, $options, "");                                                                     
+}
+
 =pod 
 
 =item B<MEDSettingsUnitTest()>
