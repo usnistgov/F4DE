@@ -562,3 +562,5 @@ my %__eval =
    $expected_data[0] => \%__dev,
    $expected_data[1] => \%__eval,
   );
+
+$check_minMax = 1;

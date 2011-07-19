@@ -60,7 +60,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "TrecVid08ViperFile", "TrecVid08HelperFunctions", "TrecVid08ECF", "TrecVid08EventList") {
+foreach my $pn ("MMisc", "TrecVid08ViperFile", "TrecVid08HelperFunctions", "TrecVid08ECF", "TrecVid08EventList", "CSVHelper") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -243,6 +243,7 @@ my @expected_input;
 my @expected_sysid_beg;
 my @expected_dir_output;
 my %expected_sffn;
+my $check_minMax = 0;
 
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
@@ -262,6 +263,10 @@ MMisc::error_quit("Missing data in \'Specfile\' ($specfile)")
   );
 
 my $doepmd = 0;
+
+my @needed_csv_keys = ("EventType", "DetectionDecision", "DetectionScore", "Framespan"); # order is important
+my %expEv_maxFalse = ();
+my %expEv_minTrue  = ();
 
 my $todo = scalar @ARGV;
 my $done = 0;
@@ -820,6 +825,54 @@ sub validate_xml {
   if (defined $memdump) {
     my $txt = &write_memdump_file($object, $exp, $xf, @events_processed);
     return("$xf: $txt", $sffn) if (! MMisc::is_blank($txt));
+  }
+
+  if ($check_minMax) {
+    vprint(5, "Confirming: max 'false' DetectionScore > min 'true' DetectionScore (per Event, and per Event/EXPID)");
+    my ($err, $csvtext) = TrecVid08HelperFunctions::ViperFile2CSVtxt($object, @needed_csv_keys);
+    return("Problem extracting data : $err", $sffn)
+      if (! MMisc::is_blank($err));
+
+    my @lines = split(m%\n%, $csvtext);
+
+    my $ch = new CSVHelper();
+    return("Internal error -- Problem creating the CSV object :" . $ch->get_errormsg(), $sffn)
+      if ($ch->error());
+
+    my (%EvTmin, %EvFmax, %evn);
+    for (my $i = 1; $i < scalar @lines; $i++) { # skip header
+      my ($eid, $dec, $scr, @xrest) = $ch->csvline2array($lines[$i]);
+      return("Internal error -- Problem extracting data from CSV : " . $ch->get_errormsg(), $sffn)
+        if ($ch->error());
+      return("Internal error -- Leftover data from CSV extraction", $sffn)
+        if (scalar @xrest > 1);
+#      print "[$i] $eid / $dec / $scr\n";
+      $evn{$eid}++;
+      $EvFmax{$eid} = $scr
+        if (($dec == 0) && ((! exists $EvFmax{$eid}) || ($EvFmax{$eid} < $scr)));
+      $EvTmin{$eid} = $scr
+        if (($dec == 1) && ((! exists $EvTmin{$eid}) || ($EvTmin{$eid} > $scr)));
+    }
+
+    my $errtxt = "";
+    foreach my $ev (keys %evn) {
+      $errtxt .= sprintf("For \'$ev\' : max 'false' > min 'true' [current values: %.03f > %.03f]. ", $EvFmax{$ev}, $EvTmin{$ev})
+        if ((exists $EvTmin{$ev}) && (exists $EvFmax{$ev}) && ($EvFmax{$ev} > $EvTmin{$ev}));
+      if (exists $EvFmax{$ev}) {
+        $expEv_maxFalse{$exp}{$ev} = $EvFmax{$ev}
+        if (((! MMisc::safe_exists(\%expEv_maxFalse, $exp, $ev)) || ($expEv_maxFalse{$exp}{$ev} < $EvFmax{$ev})));
+      }
+      if (exists $EvTmin{$ev}) {
+        $expEv_minTrue{$exp}{$ev} = $EvTmin{$ev}
+        if (((! MMisc::safe_exists(\%expEv_minTrue, $exp, $ev)) || ($expEv_minTrue{$exp}{$ev} > $EvTmin{$ev})));
+      }
+      $errtxt .= sprintf("For EXPID ($exp) \'$ev\' : max 'false' > min 'true' [%.03f > %.03f].  ", 
+                         $expEv_maxFalse{$exp}{$ev}, $expEv_minTrue{$exp}{$ev})
+        if ((MMisc::safe_exists(\%expEv_minTrue, $exp, $ev)) && (MMisc::safe_exists(\%expEv_maxFalse, $exp, $ev)) 
+            && ($expEv_maxFalse{$exp}{$ev} > $expEv_minTrue{$exp}{$ev}));
+    }
+    return($errtxt, $sffn)
+      if (! MMisc::is_blank($errtxt));
   }
 
   return("", $sffn)
