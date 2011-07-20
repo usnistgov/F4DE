@@ -564,3 +564,5 @@ my %__eval =
   );
 
 $check_minMax = 1;
+
+$default_fps = 25;
