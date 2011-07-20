@@ -244,6 +244,7 @@ my @expected_sysid_beg;
 my @expected_dir_output;
 my %expected_sffn;
 my $check_minMax = 0;
+my $default_fps = undef;
 
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
@@ -261,6 +262,9 @@ MMisc::error_quit("Missing data in \'Specfile\' ($specfile)")
     || (scalar @expected_dir_output == 0)
     || (scalar keys %expected_sffn == 0)
   );
+
+$fps = $default_fps
+  if ((defined $default_fps) && (! defined $fps));
 
 my $doepmd = 0;
 
