@@ -627,8 +627,6 @@ sub blockAverageUnitTest{
   my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $trial);
   my $det1 = new DETCurve($trial, $met, "Block Averaged", \@isolinecoef, undef);
 
-print Dumper($det1->getPoints());
-
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Block Averaged", $det1));
 
   my $options = { 
