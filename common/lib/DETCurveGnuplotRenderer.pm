@@ -1,6 +1,7 @@
 # F4DE
 # DETCurveGnuplotRenderer.pm
 # Author: Jon Fiscus, Jerome Ajot
+# Testers: George Doddington.
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
@@ -1318,15 +1319,15 @@ sub writeGNUGraph{
       if ($points->[$i][7]-1 <= 0) {
         push @a, "NA NA NA NA NA NA NA NA";
       } else {
-        push @a, (ppndf($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]-1))), 
-                  ppndf($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]-1))), 
-                  ppndf($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]-1))),
-                  ppndf($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]-1))),
-                  ($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]-1))),
-                  ($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]-1))),
-                  ($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]-1))),
-                  ($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]-1))),
-                  ($points->[$i][2] - 2*($points->[$i][6] / sqrt($points->[$i][7]-1))));
+        push @a, (ppndf($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]))), 
+                  ppndf($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]))), 
+                  ppndf($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]))),
+                  ppndf($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]))),
+                  ($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]))),
+                  ($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]))),
+                  ($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]))),
+                  ($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]))),
+                  ($points->[$i][2] - 2*($points->[$i][6] / sqrt($points->[$i][7]))));
       }
       push @a, "\n";
       print DAT join(" ",@a);
