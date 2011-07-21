@@ -716,7 +716,7 @@ sub computeDecisionScoreThreshold {
   my $rtn = $self->_computeDecisionScoreThreshold();
 
   if ("pass" ne $rtn){
-    MMisc::error_quit($rtn."Error: Compuatation of Decision Score Threshold Failed.  Aborting");
+    MMisc::error_quit($rtn."Error: Computation of Decision Score Threshold Failed.  Aborting");
   }
 }
 
