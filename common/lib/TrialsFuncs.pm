@@ -303,13 +303,12 @@ sub unitTest {
     $trial->addTrial("block2", 0.5, "YES", 1);
     $trial->addTrial("block2", 0.4, "NO", 1);
     $trial->addTrial("block2", 0.1, "NO", 1);
-    print $trial->dump();
+    #print $trial->dump();
     $rtn = $trial->_computeDecisionScoreThreshold();
     #print "\n".$rtn;
     MMisc::error_quit("Failed") if ($rtn eq "pass") ;
     print "OK\n";
   }
-  exit;
   
   print " Tests for Trials without decisions...\n";
   my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) },
