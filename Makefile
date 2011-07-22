@@ -302,15 +302,17 @@ cvsdist:
 	@make dist_head
 	@echo ""
 	@echo ""
-	@echo "***** REMEMBER to update the version number in the README file *****"
-	@echo ""
-	@echo ""
 	@echo "Building a CVS release:" `cat ${F4DE_VERSION}`
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`
 	@echo "CVS checkout in: /tmp/"`cat ${F4DE_VERSION}`
 	@cp ${F4DE_VERSION} /tmp
 	@(cd /tmp; cvs -z3 -q -d gaston:/home/sware/cvs checkout -d `cat ${F4DE_VERSION}` F4DE)
 	@make dist_common
+	@echo ""
+	@echo ""
+	@echo "***** Did you REMEMBER to update the version number and date in the README file ? *****"
+	@echo " do a full 'make check' from the new archive"
+	@echo "   and then do a 'make cvs-tag-current-distribution' here "
 
 localdist:
 	@make from_installdir
@@ -380,6 +382,6 @@ dist_clean:
 cvs-tag-current-distribution:
 	@make from_installdir
 	@make dist_head
-	@echo "Tagging the current CVS for distribution as '"`sed 's/\./dot/' ${F4DE_VERSION}`"'"
+	@echo "Tagging the current CVS for distribution as '"`sed 's/\./dot/g' ${F4DE_VERSION}`"'"
 	@(echo -n "Starting actual tag in "; for i in 10 9 8 7 6 5 4 3 2 1 0; do echo -n "$$i "; sleep 1; done; echo " -- Tagging")
-	@cvs tag `sed 's/\./dot/' ${F4DE_VERSION}`
+	@cvs tag `sed 's/\./dot/g' ${F4DE_VERSION}`
