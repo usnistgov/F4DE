@@ -56,7 +56,7 @@ sub __check_sqlite {
 
   my $cmd = "$sqlitecmd --version";
   my ($rc, $so, $se) = MMisc::do_system_call($cmd);
-  return("Problem obtaining SQLite ($sqlitecmd) version [using: $cmd]")
+  return("Problem obtaining SQLite ($sqlitecmd) version [using: $cmd] (FYI: version must be at least $sqliteminv)")
     if ($rc != 0);
   chomp($so);
 
