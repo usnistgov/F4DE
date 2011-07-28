@@ -2,9 +2,9 @@
 
 $VAR1 = [
           '--UsedMetricParameters',
-          'CostMiss=1',
+          'CostMiss=80',
           '--UsedMetricParameters',
-          'Ptarg=0.5',
+          'Ptarg=0.001',
           '--UsedMetricParameters',
           'CostFA=1',
           '--taskName',
