@@ -305,7 +305,8 @@ sub _buildAutoTable(){
   my $useAT = 1;
   
   my $at = ($useAT ? new AutoTable() : new SimpleAutoTable());
-	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove"} );
+	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove", 
+                              "SortRowKeyTxt" => "Alpha", "SortRowKeyCsv" => "Alpha" } );
 
   for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
     my $det = $self->{DETList}[$d]->{DET};
