@@ -89,10 +89,10 @@ Constant parameters:
 |                    |           Inputs            |                               Actual Decision DCR Analysis                               |
 |       Title        |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   RFA    |  PMiss   |   DCR    |  Dec. Tresh  |
 |--------------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+----------+--------------+
-|   PersonRuns Event |       0 |        1 |      1 |         0 |          0 |     1 |       0 |   3.6000 |       NA |       NA |     -10.0000 |
 |    CellToEar Event |       3 |        0 |      3 |         1 |          0 |     0 |       2 |   0.0000 |   0.6667 |   0.6667 |     101.5000 |
-|    ObjectPut Event |       1 |        0 |      0 |         0 |          0 |     0 |       1 |   0.0000 |   1.0000 |   1.0000 |           NA |
 |    ObjectGet Event |       1 |        0 |      1 |         0 |          0 |     0 |       1 |   0.0000 |   1.0000 |   1.0000 |      99.0000 |
+|    ObjectPut Event |       1 |        0 |      0 |         0 |          0 |     0 |       1 |   0.0000 |   1.0000 |   1.0000 |           NA |
+|   PersonRuns Event |       0 |        1 |      1 |         0 |          0 |     1 |       0 |   3.6000 |       NA |       NA |     -10.0000 |
 
 
 ***** STEP 6: reWrite of XML files
