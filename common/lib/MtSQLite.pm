@@ -63,8 +63,12 @@ sub __check_sqlite {
   my ($err, $bv) = MMisc::get_version_comp($sqliteminv, 4, 1000);
   return("Problem obtaining default version number") 
     if (! MMisc::is_blank($err));
+
+  $so =~ s%\s.+$%%; 
+  # discard extra entries add on such as ""3.7.7.1 2011-06-28 17:39:05 af0d91adf497f5f36ec3813f04235a6e195a605f""
+
   my ($err, $cv) = MMisc::get_version_comp($so, 4, 1000);
-  return("Problem obtaining comparable version number") 
+  return("Problem obtaining comparable version number : $err") 
     if (! MMisc::is_blank($err));
   
   return("Version of SQLite ($so) [at: $sqlitecmd] is not at least minimum required version ($sqliteminv)")
