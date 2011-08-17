@@ -300,6 +300,10 @@ sub blockWeightedUnitTest()
     push @points, [ (0.8,  0.833, 0.056,  -55.383, 0.289,    0.096,   95.927,   3) ];
     push @points, [ (0.9,  0.833, 0.000,    0.167, 0.289,    0.000,    0.289,   3) ];
     push @points, [ (1.0,  0.917, 0.000,    0.083, 0.144,    0.000,    0.144,   3) ];
+    print " Checking the number of points...";
+    die "Error: Number of computed DET points not correct.  Expected ".scalar(@points)." != ".scalar(@{ $blockdet->{POINTS} })."\n" 
+      if (@points != @{ $blockdet->{POINTS} });
+    print "  Ok\n";
     print " Checking points...";
     for (my $i=0; $i<@points; $i++) {
       die "Error: Det point isn't correct for point $i:\n   expected '".join(",",@{$points[$i]})."'\n".

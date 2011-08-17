@@ -19,6 +19,9 @@
 package DETCurveGnuplotRenderer;
 
 use strict;
+
+use MMisc;
+
 use TrialsFuncs;
 use MetricFuncs;
 use MetricTestStub;
@@ -26,6 +29,7 @@ use Data::Dumper;
 use DETCurveSet;
 use PropList;
 use DETCurve;
+
 
 my $bvc = "bmargin vertical center";
 my $bvh = "bmargin horizontal center";
@@ -47,6 +51,7 @@ sub new
        makePNG => 1,
        reportActual => 1,
        PointSet => undef,
+#       PerfBox => undef,
        DETLineAttr => undef,
        lTitleNoBestComb => undef,
        lTitleNoPointInfo => 1,
@@ -192,8 +197,14 @@ sub _parseOptions{
     $self->{PointSet} = $options->{PointSet};
     ### This needs validation
   }
+
+  if (exists($options->{PerfBox})){
+    $self->{PerfBox} = $options->{PerfBox};
+#    print MMisc::get_sorted_MemDump($self->{PerfBox}) . "\n";
+    ### This needs validation
+  }
   if (exists($options->{PointSetAreaDefinition})){
-    if (! $self->{props}->setValue("PointSetAreaDefinition", $options->{"PointSetAreaDefinition"})){
+    if (! $self->{props}->setValue("PointoSetAreaDefinition", $options->{"PointSetAreaDefinition"})){
       die "Error: DET option PointSetAreaDefinition illegal. ".$self->{props}->get_errormsg();
     }
   }  
@@ -399,7 +410,12 @@ sub renderUnitTest{
                                    { MMiss => .4,  MFA => .80, pointSize => 8,  pointType => 12, color => "rgb \"#ff0000\"", label => "Point2=12" }, 
                                    { MMiss => .2,  MFA => .05, pointSize => 4,  pointType => 4, color => "rgb \"#ff0000\"", label => "Point2=4" }, 
                                    { MMiss => .2,  MFA => .40, pointSize => 4, pointType => 6, color => "rgb \"#ff0000\"" }, 
-                                   ] ) };
+                                   ] ,
+                   "PerfBox" => [ { MMiss => 0.70, MFA => 0.20, color => "rgb \"#000000\""},  
+                                  { MMiss => 0.40, MFA => 0.10, color => "rgb \"#ff0000\"", title => "Inner Box"},  
+                                  { MMiss => 0.20, MFA => 0.80, color => "rgb \"#00ff00\""},  
+                                ]
+                                   ) };
   
   $options->{Xmin} = .00001;
   $options->{Xmax} = 99.9;
@@ -730,6 +746,7 @@ sub write_gnuplot_DET_header{
   print $FP "set noyzeroaxis\n";
   print $FP "### Using xScale = $xScale\n";
   print $FP "### Using yScale = $yScale\n";
+  print $FP "set style fill  transparent solid 0.10 noborder\n";
 
   if (defined($keyLoc)) {
     $keyLoc = $bvc if ($keyLoc eq "below");  ### Gnuplot changed
@@ -1441,7 +1458,37 @@ sub writeGNUGraph{
     push @PLOTCOMS, sprintf("    '$fileRoot.dat.3' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $curveColor pt 7 ps $pointSizeDiv2");  
   }
 
-  
+  ### Make the boxes
+  if (exists($self->{PerfBox})){
+#    print MMisc::get_sorted_MemDump($self->{PerfBox}) . "\n";
+    ### Build the data file
+    my $boxDef = $self->{PerfBox};
+    open(DAT,"> $fileRoot.dat.4") ||
+      die("unable to open DET gnuplot file $fileRoot.dat.4"); 
+    print DAT "# The driver file for the performance boxes.  This file contains ".scalar(@$boxDef)." quartets of coordinates for each box.\n";
+    #     print DAT "# DET Type: $typeStr\n";
+    print DAT "# [ ppndf($missStr) ppndf($faStr) $missStr $faStr ]+\n";
+    foreach my $box(@$boxDef){   print DAT ppndf($box->{MMiss})." ".ppndf(0.0).        " ".$box->{MMiss}." ".(0.0).      " ";   }
+    print DAT "\n";
+    foreach my $box(@$boxDef){   print DAT ppndf($box->{MMiss})." ".ppndf($box->{MFA})." ".$box->{MMiss}." ".$box->{MFA}." ";   }
+    print DAT "\n";
+    foreach my $box(@$boxDef){   print DAT ppndf(0.0).          " ".ppndf($box->{MFA})." ".(0.0)        ." ".$box->{MFA}." ";   }
+    print DAT "\n";
+    foreach my $box(@$boxDef){   print DAT ppndf(0.0).          " ".ppndf(1.0).        " ".(0.0)        ." ".(1.0)      ." ";   }
+    print DAT "\n";
+    close DAT; 
+    ### Make the plot commands  
+    my $nbox = 0;
+    foreach my $box(@$boxDef){
+      $xcol = ($xScale eq "nd" ? "2" : "4") + ($nbox*4);
+      $ycol = ($yScale eq "nd" ? "1" : "3") + ($nbox*4);
+      my $title = "notitle";
+      $title = "title \"$box->{title}\"" if (exists($box->{title}));
+      push @PLOTCOMS, sprintf("   '$fileRoot.dat.4' using $xcol:$ycol $title with filledcurves lt $box->{color}");
+      $nbox++;
+    }
+  }
+
   #    print "Writing DET to GNUPLOT file $fileRoot.*\n";
   open(PLT,"> $fileRoot.plt") ||
     die("unable to open DET gnuplot file $fileRoot.plt");
@@ -1538,7 +1585,7 @@ sub buildPNG
     $H = $h + ($aa/2) + ($numTitle*$sp);
   }
 
-  my $newTermCommand = "set terminal png $font size " . sprintf("%d,%d", $W ,$H) . " crop";
+  my $newTermCommand = "set terminal png truecolor $font size " . sprintf("%d,%d", $W ,$H) . " crop";
 
   my $pngf = "$fileRoot.png";
   system("cat $fileRoot.plt | perl -pe \'s%$bvc%$sedv%\' | perl -pe \'\$_ = \"$newTermCommand\n\" if (\$_ =~ /set terminal/)\' | tee $fileRoot\_png.plt | $gnuplot > $pngf");
