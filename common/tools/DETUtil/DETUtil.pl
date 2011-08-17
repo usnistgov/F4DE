@@ -252,7 +252,7 @@ $options{createDETfiles} = 1;
 $options{HD} = $HD;
 $options{AutoAdapt} = $AutoAdapt;
 
-foreach my $directive(@plotControls){
+foreach my $directive (@plotControls){
   my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
   my $intRegex = '\d*';
 
@@ -280,6 +280,18 @@ foreach my $directive(@plotControls){
     $ht{color}         = $6 if ($6 ne "");
     $ht{justification} = $8 if ($8 ne "");
     push @{ $options{PointSet} }, \%ht;
+  } elsif ($directive =~ /PerfBox=(.*)$/){
+    my $perfBox = $1;
+    my $colorRegex = 'rgb "#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
+    my $fullExp = "^([^:]*):($numRegex):($numRegex):(($colorRegex)|)\$";
+    die "Error: PerfBox definition /$perfBox/ does not match the pattern /$fullExp/" 
+      if ($perfBox !~ /$fullExp/);
+    my %ht = ();
+    $ht{title}         = $1 if ($1 ne "");
+    $ht{MFA}           = $2 if ($2 ne "");
+    $ht{MMiss}         = $3 if ($3 ne "");
+    $ht{color}         = $4 if ($4 ne "");
+    push @{ $options{PerfBox} }, \%ht;
   } else {
     print "Warning: Unknown plot directive /$directive/\n";
   }
@@ -731,7 +743,11 @@ The B<plotControl> options provides access to fine control the the DET curve dis
 /PointSize=\d+/     -> Overrides to default point size to the specified integer.
 
 /ExtraPoint=text:FA:MISS:pointSize:pointType:color:justification/
-                    -> Places a point at localtion FA,MISS with the label /text/ with the specified point type, color, size, and label justification.  All colons and the FA and MISS values are required.  Point type is an integer. Point color is /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors.  Point size is a floating point number.  Justification is either /right|left|center/.
+                    -> Places a point at location FA,MISS with the label /text/ with the specified point type, color, size, and label justification.  All colons and the FA and MISS values are required.  Point type is an integer. Point color is /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors.  Point size is a floating point number.  Justification is either /right|left|center/.
+
+/PerfBox=text:FA:MISS:color/
+                    -> Places a transparent box at from the origin to location FA,MISS with the title /text/ with the specified color.  All colons and the FA and MISS values are required.  Color is /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors. 
+
 
 /PointSetAreaDefinition=(Area|Radius)/     -> The value of C<pointSize> is display as either area of  the point or the width.  Def. is radius.
 
