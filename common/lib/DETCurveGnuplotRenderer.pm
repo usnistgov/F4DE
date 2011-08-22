@@ -1208,6 +1208,23 @@ sub writeMultiDetGraph
                         
         my $ltitle = $lineTitle;
         my ($xcol, $ycol);
+    
+        ### Add the PERF Box BEFORE the First DET Curve
+        if (exists($self->{PerfBox}) && $d == 0){
+          ### Make the plot commands  
+          my $boxDef = $self->{PerfBox};
+          my $nbox = 0;
+          foreach my $box (@$boxDef){
+            my $xcol = ($xScale eq "nd" ? "2" : "4") + ($nbox*4);
+            my $ycol = ($yScale eq "nd" ? "1" : "3") + ($nbox*4);
+            my $title = "notitle";
+            $title = "title \"$box->{title}\"" if (exists($box->{title}));
+            push @PLOTCOMS, sprintf("   '$troot.dat.4' using $xcol:$ycol $title with filledcurves lt $box->{color}");
+            $nbox++;
+          }
+        }
+       
+
                   
         ### The curve
         $xcol = ($xScale eq "nd" ? "3" : "5");
@@ -1256,37 +1273,6 @@ sub writeMultiDetGraph
 
       }
 
-      if (exists($self->{PerfBox})){
-        my $boxDef = $self->{PerfBox};
-
-        ### Build the data file
-        my $boxDef = $self->{PerfBox};
-        open(DAT,"> $troot.dat.4") ||
-          die("unable to open DET gnuplot file $troot.dat.4"); 
-        print DAT "# The driver file for the performance boxes.  This file contains ".scalar(@$boxDef)." quartets of coordinates for each box.\n";
-        #     print DAT "# DET Type: $typeStr\n";
-        print DAT "# [ ppndf($missStr) ppndf($faStr) $missStr $faStr ]+\n";
-        foreach my $box(@$boxDef){   print DAT ppndf($box->{MMiss})." ".ppndf(0.0).        " ".$box->{MMiss}." ".(0.0).      " ";   }
-        print DAT "\n";
-        foreach my $box(@$boxDef){   print DAT ppndf($box->{MMiss})." ".ppndf($box->{MFA})." ".$box->{MMiss}." ".$box->{MFA}." ";   }
-        print DAT "\n";
-        foreach my $box(@$boxDef){   print DAT ppndf(0.0).          " ".ppndf($box->{MFA})." ".(0.0)        ." ".$box->{MFA}." ";   }
-        print DAT "\n";
-        foreach my $box(@$boxDef){   print DAT ppndf(0.0).          " ".ppndf(1.0).        " ".(0.0)        ." ".(1.0)      ." ";   }
-        print DAT "\n";
-        close DAT; 
-
-        ### Make the plot commands  
-        my $nbox = 0;
-        foreach my $box (@$boxDef){
-          my $xcol = ($xScale eq "nd" ? "2" : "4") + ($nbox*4);
-          my $ycol = ($yScale eq "nd" ? "1" : "3") + ($nbox*4);
-          my $title = "notitle";
-          $title = "title \"$box->{title}\"" if (exists($box->{title}));
-          push @PLOTCOMS, sprintf("   '$troot.dat.4' using $xcol:$ycol $title with filledcurves lt $box->{color}");
-          $nbox++;
-        }
-      }
     }
         
     ### open  the jointPlot
