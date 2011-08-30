@@ -411,9 +411,9 @@ sub renderUnitTest{
                                    { MMiss => .2,  MFA => .05, pointSize => 4,  pointType => 4, color => "rgb \"#ff0000\"", label => "Point2=4" }, 
                                    { MMiss => .2,  MFA => .40, pointSize => 4, pointType => 6, color => "rgb \"#ff0000\"" }, 
                                    ] ,
-                   "PerfBox" => [ { MMiss => 0.70, MFA => 0.20, color => "rgb \"#000000\""},  
-                                  { MMiss => 0.40, MFA => 0.10, color => "rgb \"#ff0000\"", title => "Inner Box"},  
-                                  { MMiss => 0.20, MFA => 0.80, color => "rgb \"#00ff00\""},  
+                   "PerfBox" => [ { MMiss => 0.70, MFA => 0.20, color => "rgb \"#000000\"", title => "Inner Box 1"},  
+                                  { MMiss => 0.40, MFA => 0.10, color => "rgb \"#ff0000\"", title => "Inner Box 2"},  
+                                  { MMiss => 0.20, MFA => 0.80, color => "rgb \"#00ff00\"", title => "Inner Box 3"},  
                                 ]
                                    ) };
   
@@ -425,8 +425,23 @@ sub renderUnitTest{
   $options->{yScale} = "nd";
   $options->{title} = "ND vs. ND";
 
+  $options->{KeyLoc} = "bottom";
+  $options->{HD} = 0;
+  $options->{AutoAdapt} = 0;
   my $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/g1.nd.nd",  $ds);
+
+  $options->{KeyLoc} = "bottom";
+  $options->{HD} = 1;
+  $options->{AutoAdapt} = 0;
+  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/g1HD.nd.nd",  $ds);
+
+  $options->{KeyLoc} = "below";
+  $options->{HD} = 1;
+  $options->{AutoAdapt} = 1;
+  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/g1HDa.nd.nd",  $ds);
   
   $options->{Xmin} = .0001;
   $options->{Xmax} = 1;
@@ -435,68 +450,126 @@ sub renderUnitTest{
   $options->{xScale} = "log";
   $options->{yScale} = "log";
   $options->{title} = "LOG vs. LOG";
+
+  $options->{KeyLoc} = "bottom";
+  $options->{HD} = 0;
+  $options->{AutoAdapt} = 0;
   $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/g1.log.log",  $ds);
+
+  $options->{KeyLoc} = "bottom";
+  $options->{HD} = 1;
+  $options->{AutoAdapt} = 0;
+  $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/g1HD.log.log",  $ds);
+
+  $options->{KeyLoc} = "below";
+  $options->{HD} = 1;
+  $options->{AutoAdapt} = 1;
+  $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/g1HDa.log.log",  $ds);
 
   $options->{xScale} = "linear";
   $options->{yScale} = "linear";
   $options->{title} = "LIN vs. LIN";
-  $options->{KeyLoc} = "bottom";
   $options->{reportActual} = 0;
   $options->{PointSize} = 4;
   $options->{ColorScheme} = "color";
+
+  $options->{KeyLoc} = "bottom";
+  $options->{HD} = 0;
+  $options->{AutoAdapt} = 0;
   $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/g1.lin.lin",  $ds);
+
+  $options->{KeyLoc} = "bottom";
+  $options->{HD} = 1;
+  $options->{AutoAdapt} = 0;
+  $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/g1HD.lin.lin",  $ds);
+
+  $options->{KeyLoc} = "below";
+  $options->{HD} = 1;
+  $options->{AutoAdapt} = 1;
+  $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/g1HDa.lin.lin",  $ds);
 
   $options->{xScale} = "log";
   $options->{yScale} = "nd";
   $options->{Ymax} = "99.9";
   $options->{Ymin} = "5";
   $options->{title} = "ND vs. LOG";
-  $options->{KeyLoc} = "bottom";
   $options->{reportActual} = 0;
   $options->{PointSize} = 4;
   $options->{ColorScheme} = "color";
+
+  $options->{KeyLoc} = "bottom";
+  $options->{HD} = 0;
+  $options->{AutoAdapt} = 0;
   $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/g1.nd.log",  $ds);
   
-  open (HTML, ">$dir/index.html") || die("Error making multi-det HTML file");
+  $options->{KeyLoc} = "bottom";
+  $options->{HD} = 1;
+  $options->{AutoAdapt} = 0;
+  $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/g1HD.nd.log",  $ds);
+
+  $options->{KeyLoc} = "below";
+  $options->{HD} = 1;
+  $options->{AutoAdapt} = 1;
+  $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/g1HDa.nd.log",  $ds);
+
+  &__renderUnitTest_HTML($dir, "");
+  &__renderUnitTest_HTML($dir, "HD");
+  &__renderUnitTest_HTML($dir, "HDa");
+
+  print "OK\n";  
+  return 1;
+}
+
+sub __renderUnitTest_HTML {
+  my ($dir, $m) = @_;
+
+  my $f = "$dir/index$m.html";
+  open (HTML, ">$f") || die("Error making multi-det HTML file ($f)");
   print HTML "<HTML>\n";
   print HTML "<BODY>\n";
   print HTML " <TABLE border=1>\n";
   print HTML "  <TR>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.log.log.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.nd.log.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.png\"></TD>\n";
   print HTML "  </TR>\n";
   
   print HTML "  <TR>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_1.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_1.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_1.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.nd.log.Name_1.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.Name_1.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.Name_1.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.Name_1.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.Name_1.png\"></TD>\n";
   print HTML "  </TR>\n";
 
   print HTML "  <TR>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_1.thresh.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_1.thresh.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_1.thresh.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.nd.log.Name_1.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.Name_1.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.Name_1.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.Name_1.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.Name_1.thresh.png\"></TD>\n";
   print HTML "  </TR>\n";
 
   print HTML "  <TR>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_2.thresh.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_2.thresh.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_2.thresh.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.nd.log.Name_2.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.Name_2.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.Name_2.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.Name_2.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.Name_2.thresh.png\"></TD>\n";
   print HTML "  </TR>\n";
 
   print HTML "  <TR>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.nd.nd.Name_3.thresh.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.log.log.Name_3.thresh.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.lin.lin.Name_3.thresh.png\"></TD>\n";
-  print HTML "   <TD width=33%> <IMG src=\"g1.nd.log.Name_3.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.Name_3.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.Name_3.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.Name_3.thresh.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.Name_3.thresh.png\"></TD>\n";
   print HTML "  </TR>\n";
 
   print HTML " </TABLE>\n";
@@ -504,11 +577,7 @@ sub renderUnitTest{
   print HTML "</HTML>\n";
   
   close (HTML);
-  
-  print "OK\n";  
-  return 1;
 }
-
 
 sub offGraphLabelUnitTest(){
   print " Checking off Graph Label tests...";
@@ -1177,7 +1246,6 @@ sub writeMultiDetGraph
              if ($info->{pointTypeSet} eq "diamond")   { $openPoint = 12; $closedPoint = 13; }
           }
           
-          
         }
       }
 
@@ -1607,7 +1675,34 @@ sub buildPNG
   my $newTermCommand = "set terminal png truecolor $font size " . sprintf("%d,%d", $W ,$H) . " crop";
 
   my $pngf = "$fileRoot.png";
-  system("cat $fileRoot.plt | perl -pe \'s%$bvc%$sedv%\' | perl -pe \'\$_ = \"$newTermCommand\n\" if (\$_ =~ /set terminal/)\' | tee $fileRoot\_png.plt | $gnuplot > $pngf");
+
+  my $ipf = "$fileRoot.plt";
+  open IFILE, "<$ipf"
+    or MMisc::error_quit("Problem using input plot file ($ipf) : $!");
+  my $ipfc = "";
+  while (my $line = <IFILE>) {
+    $line =~ s%$bvc%$sedv%;
+    $line =~ s%^set terminal.+$%$newTermCommand%;
+    if (($hd) && ($line =~ m%with\s+lines\s+lt\s+(\d+)(\s*\,)*%)) {
+      my $v = sprintf("%d", (2*$1)+1);
+      $line =~ s%(with\s+lines\s+lt\s+\d+)(\s*\,)?%$1 lw $v $2%;
+    }
+    if (($hd) && ($line =~ m%with\s+linespoints\s+lc\s+\d+\s+pt\s+\d+\s+ps\s+(\d+)%)) {
+      my $v = sprintf("%d", (1.5*$1)+1);
+      $line =~ s%(with\s+linespoints\s+lc\s+\d+\s+pt\s+\d+\s+ps\s+\d+)%$1 lw $v%;
+    }    
+    $ipfc .= $line;
+  }
+
+  my $opf = "$fileRoot\_png.plt";
+  open OFILE, ">$opf"
+    or MMisc::error_quit("Problem opening output plot file ($opf) : $!");
+  print OFILE $ipfc;
+  close OFILE;
+#  print "[$opf] $ipfc";
+
+
+  system("cat $opf | $gnuplot > $pngf");
   
   if ($aa) {
     my $cmd = "identify $pngf";
