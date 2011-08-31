@@ -19,3 +19,6 @@ $db_check_sql = "TV11MED-SubmissionChecker_conf-DBcheck.sql";
 @db_unknownTID  = ("unknownTrialID", "TrialID");
 @db_detectionTID = ("detectionTrialID", "TrialID");
 @db_thresholdEID = ("thresholdEventID", "EventID");
+
+$max_expid = 4;
+$max_expid_error = 0;
