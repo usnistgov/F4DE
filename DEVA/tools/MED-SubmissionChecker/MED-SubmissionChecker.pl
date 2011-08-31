@@ -203,6 +203,8 @@ my @db_missingTID;
 my @db_unknownTID;
 my @db_detectionTID;
 my @db_thresholdEID;
+my $max_expid = 0;
+my $max_expid_error = 1;
 
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
@@ -322,6 +324,14 @@ foreach my $sf (@ARGV) {
       $ok = 0;
       next;
     }
+    if (($max_expid) && (scalar @$rd > $max_expid)) {
+        if ($max_expid_error) {
+          &valerr($sf, "Found more than the $max_expid authorized directory/EXPID (found: " . scalar @$rd . ")");
+          $ok = 0;
+          next;
+        }
+        MMisc::warn_print("Found more than the $max_expid authorized directory/EXPID (found: " . scalar @$rd . "). Currently, only this warning is shown. In the future, an error message might appear in this case.");
+    }
     foreach my $sdir (sort @$rd) {
       vprint(2, "Checking Submission Directory ($sdir)");
       $wn_key = $sdir;
@@ -344,13 +354,12 @@ my @lin = ();
 push @lin, "the \'work_in_dir\' option was used, please rerun the program against the final archive file to confirm it is a valid submission file." 
   if (defined $wid);
 
-MMisc::ok_quit
-  (
-   "\n\n==========\nAll submission processed (OK: $done / Total: $todo)\n" 
-   . ((scalar @lin == 0) ? "" :
-      ($done ? "\nIMPORTANT NOTES:\n - " . join("\n - ", @lin) . "\n" : "")
-   )
-  );
+print "\n\n==========\nAll submission processed (OK: $done / Total: $todo)\n" 
+  . ((scalar @lin == 0) ? "" : ($done ? "\nIMPORTANT NOTES:\n - " . join("\n - ", @lin) . "\n" : "")) . "\n";
+
+MMisc::error_quit("Not all submission processed succesfully")
+  if ($done != $todo);
+MMisc::ok_quit();
 
 ########## END
 
