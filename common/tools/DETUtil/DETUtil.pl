@@ -823,7 +823,7 @@ No known bugs.
 
 The default iso-cost ratio coefficients (-R option) and iso-metric coefficients (-Q option) are defined into the metric.
 
-The default font face can be changed by setting the environment variable GNUPLOT_DEFAULT_GDFONT to a ttf font like /Library/Fonts/Arial.
+The default font face can be changed by setting the environment variable GDFONTPATH to a ttf font like /Library/Fonts/Arial.
 
 =head1 AUTHOR
 
