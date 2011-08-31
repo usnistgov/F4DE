@@ -391,13 +391,12 @@ push @lin, "the \'dryrun_mode\' option was used, therefore the \'Events_Processe
 push @lin, "the \'work_in_dir\' option was used, please rerun the program against the final archive file to confirm it is a valid submission file." 
   if (defined $wid);
 
-MMisc::ok_quit
-  (
-   "\n\n==========\nAll submission processed (OK: $done / Total: $todo)\n" 
-   . ((scalar @lin == 0) ? "" :
-      ($done ? "\nIMPORTANT NOTES:\n - " . join("\n - ", @lin) . "\n" : "")
-   )
-  );
+print "\n\n==========\nAll submission processed (OK: $done / Total: $todo)\n" 
+  . ((scalar @lin == 0) ? "" : ($done ? "\nIMPORTANT NOTES:\n - " . join("\n - ", @lin) . "\n" : "")) . "\n";
+
+MMisc::error_quit("Not all submission processed succesfully")
+  if ($done != $todo);
+MMisc::ok_quit();
 
 ########## END
 
