@@ -44,6 +44,7 @@ my $key_htmlRowHeadBGColor = "html.rowhead.bgcolor";
 my $key_htmlCellBGColor = "html.cell.bgcolor";
 my $key_htmlCellJust = "html.cell.justification";
 
+my @ok_specials = ("HTML", "CSV", "TEXT");
 
 sub new {
   my ($class) = shift @_;
@@ -54,6 +55,7 @@ sub new {
   {
     hasData => 0,
     data => { },
+    special => { },
     rowLabOrder => 
     {
       ThisIDNum    => 0,
@@ -131,7 +133,7 @@ sub unitTest {
   $at->addData("1x1",  "CCC|col1|A", "srow2|row1");
   $at->addData("1x1",  "CCC|col1|B", "srow2|row1");
   $at->addData("1x2",  "CCC|col1|C", "srow2|row1");
-  $at->addData("1x1",  "CCC|col2|A", "srow2|row1");
+  $at->addData("1x1",  "CCC|col2|A", "srow2|row1", "url={http://www.nist.gov/}");
   $at->addData("1x1",  "CCC|col2|B", "srow2|row1");
   $at->addData("1x2",  "CCC|col2|C", "srow2|row1");
   $at->addData("1x1",  "CCC|col1|A", "srow2|row2");
@@ -257,7 +259,34 @@ sub _buildHeir(){
   $self->_buildLabelHeir("col", $gap);
   $self->_buildLabelHeir("row", $gap);
 }
-## snowbird209.63.19.148
+
+
+sub __HTML_proc_sp {
+  my ($str) = @_;
+
+  my (@h1, @h2);
+
+  print "#####[$str]#####\n";
+  if ($str =~ s%url\=\{([^\}]+?)\}%%) {
+    push @h1, "<a href=\"$1\">";
+    unshift @h2, "</a>";
+  }
+
+  return(join("", @h1), join("", @h2));
+}
+
+sub __process_special {
+  my ($mode, $str) = @_;
+  MMisc::error_quit("Unknown special mode ($mode)")
+      if (! grep(m%^$mode$%, @ok_specials));
+
+  return(&__HTML_proc_sp($str))
+    if ($mode eq $ok_specials[0]);
+
+  # only HTML for now
+  return("", "");
+}
+
 
 sub renderHTMLTable(){
   my ($self) = @_;
@@ -387,9 +416,13 @@ sub renderHTMLTable(){
       }
     }
     for (my $node=0; $node<@nodeSet; $node++) {
-      my $str = (defined($self->{data}{$rowIDs[$row]."-".$nodeSet[$node]{subs}[0]}) ? 
-		 $self->{data}{$rowIDs[$row]."-".$nodeSet[$node]{subs}[0]} : "&nbsp;");
-      $out .= "  <td $cellJust $cellBGColor> ".$str." </td>".
+      my $lid = $rowIDs[$row]."-".$nodeSet[$node]{subs}[0];
+      my $str = defined($self->{data}{$lid}) ? $self->{data}{$lid} : "&nbsp;";
+      my ($h1, $h2) = ("", "");
+      print "[$lid]\n";
+      ($h1, $h2) = &__process_special($ok_specials[0], $self->{special}{$lid}) 
+        if (exists $self->{special}{$lid});
+      $out .= "  <td $cellJust $cellBGColor> $h1".$str."$h2 </td>".
 	"  <!-- $rowIDs[$row] $nodeSet[$node]{subs}[0]  --> \n";
     }
     $out .= "</tr>\n";
@@ -867,16 +900,21 @@ sub _getStrForLevel(){
 }
 
 sub addData{
-  my ($self,$val, $colid, $rowid) = @_;
+  my ($self, $val, $colid, $rowid, $special) = @_;
   
   $self->_addLab("col", $colid, $val);
   $self->_addLab("row", $rowid, $val);
   
-  if (defined($self->{data}{$colid."-".$rowid})) {
-    print "Warning Datam for '$rowid $colid' has multiple instances.\n"; 
+  my $lid = $rowid."-".$colid;
+  if (defined($self->{data}{$lid})) {
+    print "Warning Datum for '$rowid $colid' has multiple instances.\n"; 
     return 1;
   }
-  $self->{data}{$rowid."-".$colid} = $val;
+  $self->{data}{$lid} = $val;
+  if (defined $special) {
+    $self->{special}{$lid} = $special;
+    print "[#####] {$lid} $special\n";
+  }
   $self->{hasData}++;
   
   return(1);    
