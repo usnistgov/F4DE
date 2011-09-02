@@ -124,14 +124,14 @@ The only pre-requisites of the tool are:
 
 Installation is a 4 step process:
 
-  1. At minimum, run 'make mincheck' to make sure all required libraries
-     and executables are available on the system.
-      We recommend running 'make check' to run a full check to confirm
-     that all software checks pass [*]. Each individual tool can be tested
-     independently from the other, type 'make' in the base F4DE directory
-     to see the option list.
+  1. Run 'make' to get a list of the "check" options available and at minimum
+     run the appropriate check for your tool set (ie, if you intend to use DEVA,
+     run 'make DEVAcheck') to make sure all required libraries and executables
+     are available on the system.
       Please note that each tool's individual test can take from a few
      seconds to a few minutes to complete. 
+      We recommend running 'make check' to run a full check to confirm
+     that all software checks pass [*]. 
       IMPORTANT: The 'F4DE_BASE' environment variable must not be set
      for this step to complete. Checks are designed to be run before and
      independently from any installation and might not work if the 
