@@ -51,7 +51,7 @@ sub new
        LAST_GNU_THRESHPLOT_PNG => "",
        LAST_SERIALIZED_DET => "",
        MESSAGES => "",
-       ISOLINE_COEFFICIENTS => $listIsolineCoef,
+       ISOLINE_COEFFICIENTS => [ sort {$a <=> $b} @$listIsolineCoef],
        ISOLINE_COEFFICIENTS_INDEX => 0,         
        ISOPOINTS => {},
        GZIPPROG => (defined($gzipPROG) ? $gzipPROG : "gzip"),
