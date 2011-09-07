@@ -540,11 +540,11 @@ sub randomCurveUnitTest{
   use DETCurveGnuplotRenderer;
   use Math::Random::OO::Uniform;
 
-  my @Ptargs = (0.5, 0.01);
-  my @isolinecoef = (.1, 1, 3);
+  my @Ptargs = (0.5);
+  my @isoRatioCoeff = (.1, 1, 3);
 
   print "Build a random DET curve for Ptarg=(".join(",",@Ptargs).") Dir=/$dir/\n";
-  my $decisionScoreRand = Math::Random::OO::Uniform->new(0,1);
+  my $decisionScoreRand = Math::Random::OO::Normal->new(0,1);
   my $targetRand = Math::Random::OO::Uniform->new(0,1);
   my $ds = new DETCurveSet("MetricNormLinearFunction Tests");
       
@@ -552,18 +552,21 @@ sub randomCurveUnitTest{
     print "  Working on Ptarg=$Ptarg\n";
     my $trial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
   
-    for (my $epoch = 0; $epoch<5; $epoch ++){
+    for (my $epoch = 0; $epoch<20; $epoch ++){
       print "    Epoch $epoch\n";
       for (my $nt = 0; $nt<10000; $nt ++){
         my $scr = $decisionScoreRand->next();
-        $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), ($targetRand->next() <= $Ptarg ? 1 : 0));
+        my $targ = ($targetRand->next() <= $Ptarg ? 1 : 0);
+        $scr += ($targ ? 0.2 : -0.2);
+        
+        $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), $targ);
       }
     } 
     my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $trial);
 
 #    $trial->exportForDEVA("DEVA.rand");
 #    die "Stop";
-    my $det1 = new DETCurve($trial, $met, "Ptarg = $Ptarg", \@isolinecoef, undef);
+    my $det1 = new DETCurve($trial, $met, "Ptarg = $Ptarg", [(2, 5, 10)], undef);
 
     die "Error: Failed to add first det" if ("success" ne $ds->addDET("Ptarg = $Ptarg", $det1));
   
@@ -577,14 +580,17 @@ sub randomCurveUnitTest{
 		   "yScale" => "nd",
 		   "ColorScheme" => "color",
        "DrawIsometriclines" => 1,
+       "DrawIsoratiolines" => 1,
        "createDETfiles" => 1,
-		   "DrawIsoratiolines" => 1,
        "serialize" => 1,
-       "Isoratiolines" => [ (100.0, 10.0, 1.0) ],
-       "Isometriclines" => \@isolinecoef,
+       "DETShowPoint_Ratios" => 1,
+       "Isoratiolines" =>  [ (2, 5, 10) ],
+       "Isometriclines" => [ (0.4, 0.6, 1.0) ], 
        "PointSet" => [] ) };
-
+       
+#  DB::enable_profile("$dir/MNLCF.randomTest.profile");
   print $ds->renderAsTxt("$dir/MNLCF.randomTest.det", 1, 1, $options, "");                                                                     
+#  DB::finish_profile();
 }
 
 sub blockAverageUnitTest{
@@ -607,7 +613,7 @@ sub blockAverageUnitTest{
   print "  Building DETS\n";
   my $trial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
 
-  for (my $epoch = 0; $epoch<5; $epoch ++){
+  for (my $epoch = 0; $epoch<10; $epoch ++){
     print "    Epoch $epoch\n";
     my $epochTrial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
     for (my $nt = 0; $nt<1000; $nt ++){
@@ -644,7 +650,6 @@ sub blockAverageUnitTest{
        "Isoratiolines" => [ (100.0, 10.0, 1.0) ],
        "Isometriclines" => \@isolinecoef,
        "PointSet" => [] ) };
-
   print $ds->renderAsTxt("$dir/BA.randomTest.det", 1, 1, $options, "");                                                                     
 }
 
@@ -710,11 +715,12 @@ sub MEDSettingsUnitTest(){
   $seed =~ s/\..*$//;
   print "SEED $seed\n";
 
-#2011  foreach my $threshPair ("A:-0.87:0.6:$seed:$seed"){
+#2011
+  foreach my $threshPair ("A:-0.87:0.6:$seed:$seed"){
 #2012  foreach my $threshPair ("A:-1.87:0.0"){
 #2013  foreach my $threshPair ("A:-2.2:-0.3"){
 #2014 foreach my $threshPair ("A:-2.6:-0.5"){
- foreach my $threshPair ("A:-3.1:-0.9"){
+# foreach my $threshPair ("A:-3.1:-0.9"){
     my ($sys, $offset, $thresh, $seed1, $seed2) = split(/:/,$threshPair);
     print "  Working on System $sys, offset=$offset, threshold=$thresh seed1=$seed1, seed2=$seed2\n";
 #    $decisionScoreRand->seed(($seed1));
@@ -731,7 +737,7 @@ sub MEDSettingsUnitTest(){
     } 
   } 
 
-  $randTrial->buildScoreDistributions("foo");
+#  $randTrial->buildScoreDistributions("foo");
   
   my @isolinecoef = ( );
 
