@@ -545,7 +545,8 @@ sub doDETwork {
          gnuplotPROG => MMisc::cmd_which("gnuplot"),
          createDETfiles => 1,
          serialize => 1,
-         BuildPNG => 1),
+         BuildPNG => 1,
+         DETShowPoint_Actual => 1),
       },
       "$bDETf.scores.csv")
     );
