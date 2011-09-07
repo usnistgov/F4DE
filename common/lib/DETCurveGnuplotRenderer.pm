@@ -50,7 +50,6 @@ sub new
        title => "DET Plot",
        gnuplotPROG => undef,
        makePNG => 1,
-       DETShowPoint_Actual => 1,
        PointSet => undef,
 #       PerfBox => undef,
        DETLineAttr => undef,
@@ -1871,8 +1870,7 @@ sub buildPNG
   close FILE;
   #MMisc::error_quit("[$fileRoot]");
   
-#  my $font = ($hd) ? "font arial 20" : "medium";
-  my $font = ($hd) ? "font arial 20" : "font Verdana 11";
+  my $font = ($hd) ? "font arial 20" : "medium";
 
   ## Use this with gnuplot 3.X
   #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
