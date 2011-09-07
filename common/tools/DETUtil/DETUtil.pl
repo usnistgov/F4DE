@@ -85,7 +85,7 @@ my @editFilters = ();
 my $keepFiles = 0;
 my $title = undef;
 my $scale = undef;
-my $lineTitleModification = "";
+my $lineTitleModification = undef;
 my $keyLoc = undef;
 my $keySpacing = undef;
 my @KeyLocDefs = ( "left", "right", "center", "top", "bottom", "outside", "below", "((left|right|center)\\s+(top|bottom|center))" );
@@ -100,7 +100,6 @@ my $confidenceIsoThreshold = 0.95;
 my $gzipPROG = "gzip";
 my $gnuplotPROG = "gnuplot";
 my $axisScales = undef;
-my $omitActual = 0;
 my $docsv = 0;
 my @plotControls = ();
 my $dumpFile = 0;
@@ -122,7 +121,7 @@ my $restSet = "";
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: ABCDEFGHIJKL  OPQRST V   Za cde ghi klm op rst v x   #
+# Used: ABCDEFGHIJKL   PQRST V   Za cde ghi klm op rst v x   #
 
 GetOptions
   (
@@ -150,7 +149,6 @@ GetOptions
    'Z|ZipPROG=s'                 => \$gzipPROG,
    'G|GnuplotPROG=s'             => \$gnuplotPROG,
    'A|AxisScale=s'               => \$axisScales,
-   'O|OmitActualCalc'            => \$omitActual, 
    'p|plotControls=s'            => \@plotControls,
    'F|ForceRecompute'            => \$forceRecompute,
    'x|txtTable'                  => \$doTxtTable,  
@@ -241,11 +239,23 @@ my %options = ();
 $options{title} = $title if (defined $title);
 $options{serialize} = 0;
 
-$options{lTitleNoDETType} = 1 if ($lineTitleModification =~ /T/);
-$options{lTitleNoPointInfo} = 1 if ($lineTitleModification =~ /P/);
-$options{lTitleNoBestComb} = 1 if ($lineTitleModification =~ /M/);
-$options{lTitleAddIsoRatio} = 1 if ($lineTitleModification =~ /R/);
-
+### Parse the line title argument
+my %parseHT = ();
+$options{DETShowPoint_SupportValues} = [()];
+foreach my $code(split("", defined($lineTitleModification) ? $lineTitleModification : "ABCT")){
+  if ($code eq "A"){   $options{DETShowPoint_Actual} = 1; }
+  elsif ($code eq "B"){   $options{DETShowPoint_Best} = 1; }
+  elsif ($code eq "R"){   $options{DETShowPoint_Ratios} = 1; }
+  elsif ($code eq "t"){   $options{lTitleNoDETType} = 1;}
+  elsif ($code =~ /^([TFMC])$/){
+    die "Error: --lineTitle code $code used twice" if (exists($parseHT{$code}));
+    push (@{ $options{DETShowPoint_SupportValues} }, $code);
+    $parseHT{$code} = 1;
+  } else {
+    die "Error: --lineTitle code $code unrecognized"
+  }
+}
+  
 $options{gnuplotPROG} = $gnuplotPROG;
 $options{createDETfiles} = 1;
 
@@ -326,11 +336,6 @@ if(defined($keyLoc))
   my $expr = "^(".join("|",@KeyLocDefs).")\$";
 	die "Error: Invalid key location '$keyLoc' !~ $expr" if ($keyLoc !~ /$expr/);
 	$options{KeyLoc} = $keyLoc;
-}
-
-if($omitActual)
-{
-	$options{ReportActual} = 0;
 }
 
 my $ds = new DETCurveSet($title);
@@ -418,9 +423,18 @@ foreach my $srlDef ( @ARGV )
 	@listIsometriclineCoef = $loadeddet->getMetric()->isoCombCoeffForDETCurve() 
 		if(scalar(@listIsometriclineCoef) == 0);  
 	
-	my $det;
+	my $det = $loadeddet;
 	
-	if( $DrawIsoratiolines || ($IsoRatioStatisticFile ne "") || $forceRecompute)
+  #### Check top see if a RECOMPUTE is really needed
+  if ($DrawIsoratiolines || ($IsoRatioStatisticFile ne "")){
+    ### Loop thre the needed coefficients.  If the are missing, force a recompute
+    foreach my $coeff(@listIsoratiolineCoef){
+      if (!defined($loadeddet->getIsolinePointsCombValue($coeff))){
+        $forceRecompute = 1;
+      }
+    }
+  }
+	if($forceRecompute)
 	{
 		$det = new DETCurve($loadeddet->getTrials(), $loadeddet->getMetric(),
 		                    $loadeddet->getLineTitle(),
@@ -429,10 +443,6 @@ foreach my $srlDef ( @ARGV )
 
 #		print "[Calling 'computePoint']\n";
 		$det->computePoints();
-	}
-	else
-	{
-		$det = $loadeddet;
 	}
   
 	my $keep = 0;
@@ -506,9 +516,14 @@ if($DetCompare)
 	$options{Isopoints} = $list_isopoints if( $DrawIsopoints );
 }
 
-if($DrawIsoratiolines)
+
+if(@listIsoratiolineCoef)
 {
 	$options{Isoratiolines} = \@listIsoratiolineCoef;
+}
+
+if($DrawIsoratiolines)
+{
 	$options{DrawIsoratiolines} = 1;
 }
 
@@ -517,6 +532,8 @@ if($DrawIsometriclines)
 	$options{Isometriclines} = \@listIsometriclineCoef;
 	$options{DrawIsometriclines} = 1;
 }
+
+#print Dumper(\%options); exit;
 
 ## Reports
 my $temp = "";
@@ -620,7 +637,7 @@ displayKey -> A boolean value for whether or not the SRL will be displayed in th
 
 =head1 OPTIONS
 
-=head2 Requiredd file arguments:
+=head2 Required file arguments:
 
 =over
 
@@ -701,21 +718,42 @@ Draw the iso-metric specific lines.
 
 Set the coefficient for the iso-metric lines. Coeficients can be specified, or the default values defined by the application are used (c.f.: NOTES Section).
 
-=item B<-O>, B<--OmitActualCalc>
-
-Omit outputting actual Miss/FA/Costs.
-
 =item B<-T>, B<--Title> F<TITLE>
 
 Use  F<TITLE> for the title of the plot.   
 
 =item B<-l>, B<--lineTitle> F<TITLE>
 
-Modify the output line title by removing default information. F<TITLE> can include any number of these characters.
-  P -> removes the Maximum Value Point Coordinates
-  T -> removes the DET Curve Type
-  M -> removes the Maximum Value
-  R -> adds Iso Ratio Points
+Modify the points added to the DET curve lines.  F<TITLE> can include any number of these characters.
+
+=over 4
+
+=item 
+
+Modifiers to control the type of calculated point to include:
+
+    A -> Include the "Actual" point (used to be -O)
+    B -> Include the "Best" combined value
+    R -> Include the Iso Ratio points
+
+=item 
+
+Modifiers to control the supporting measurements for EACH plotted point.  The order of these is reflected in the DET plots.
+
+    T -> Include the decision score threshold for the point
+    F -> Include the false alarm (x-axis value) for the point
+    M -> Include the missed detection (y-axis value) for the point
+    C -> Include the combined measure for the point
+
+=item 
+
+Modifiers for reporting the type of curve (pooled vs. averaged)
+
+    t -> removes the DET curve type
+
+=back
+    
+The default value is /ABCT/.
 
 =item B<-K>, B<--KeyLoc> left | right | center | top | bottom | outside | below | "((left|right|center) (top|bottom|center))"
 
