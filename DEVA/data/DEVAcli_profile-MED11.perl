@@ -26,5 +26,13 @@ $VAR1 = [
           '--KSysConstraints',
           'DEVAcli_pfs_MED11-KSysConstraints.perl',
           '--KMDConstraints',
-          'DEVAcli_pfs_MED11-KMDConstraints.perl'
+          'DEVAcli_pfs_MED11-KMDConstraints.perl',
+          '--xmin',
+          .1,
+          '--Xmax',
+          60,
+          '--ymin',
+          5,
+          '--Ymax',
+          95
         ];
