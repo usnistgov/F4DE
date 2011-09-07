@@ -687,13 +687,60 @@ sub IntersectionParameter
     return ($t, $xt, $yt);
   }
 
+sub getIsolinePoints
+  {
+    my ($self) = @_;
+    $self->{ISOPOINTS};
+  }
+
+sub getIsolinePointsMFAValue
+  {
+    my ($self, $coeff) = @_;
+    if (exists($self->{ISOPOINTS}{$coeff})){
+      $self->{ISOPOINTS}{$coeff}{INTERPOLATED_MFA};
+    } else {
+      undef;
+    }
+  }
+  
+sub getIsolinePointsMMissValue
+  {
+    my ($self, $coeff) = @_;
+    if (exists($self->{ISOPOINTS}{$coeff})){
+      $self->{ISOPOINTS}{$coeff}{INTERPOLATED_MMISS};
+    } else {
+      undef;
+    }
+  }
+  
+sub getIsolinePointsCombValue
+  {
+    my ($self, $coeff) = @_;
+    if (exists($self->{ISOPOINTS}{$coeff})){
+      $self->{ISOPOINTS}{$coeff}{INTERPOLATED_COMB};
+    } else {
+      undef;
+    }
+  }
+  
+sub getIsolinePointsDetectionScoreValue
+  {
+    my ($self, $coeff) = @_;
+    if (exists($self->{ISOPOINTS}{$coeff})){
+      $self->{ISOPOINTS}{$coeff}{INTERPOLATED_DETECTSCORE};
+    } else {
+      undef;
+    }
+  }
+  
 sub AddIsolineInformation
   {
-    my ($self, $blocks, $paramt, $isolinecoef, $estMFa, $estMMiss) = @_;
+    my ($self, $blocks, $paramt, $isolinecoef, $estMFa, $estMMiss, $detectScore) = @_;
         
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_MFA} = $estMFa;
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_MMISS} = $estMMiss;
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_COMB} = $self->{METRIC}->combCalc($estMMiss, $estMFa);
+    $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_DETECTSCORE} = $detectScore;
         
     foreach my $b ( keys %{ $blocks } ) {
       # Add info of previous in the block id
@@ -804,7 +851,7 @@ sub Compute_blocked_DET_points
 
       foreach my $setelt ( @listparams ) {
         my ($paramt, $isolinecoef, $estMFa, $estMMiss) = @{ $setelt };                  
-        $self->AddIsolineInformation(\%blocks, $paramt, $isolinecoef, $estMFa, $estMMiss) if( defined ( $paramt ) );
+        $self->AddIsolineInformation(\%blocks, $paramt, $isolinecoef, $estMFa, $estMMiss, $minScore) if( defined ( $paramt ) );
       }
                 
       push(@Outputs, [ ( $minScore, $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks ) ] );
