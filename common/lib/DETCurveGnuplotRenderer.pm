@@ -41,21 +41,25 @@ sub new
     my $self = { 
       ### The Graphics Context.  This contains ALL the options
        props => _initProps(),
+       
        DrawIsoratiolines => 0,
        DrawIsometriclines => 0,
-       Isoratiolines => undef,
-       Isometriclines => undef,
+       Isoratiolines => undef,  ### Coefficients
+       Isometriclines => undef, ### Coefficients
        Isopoints => undef,
        title => "DET Plot",
        gnuplotPROG => undef,
        makePNG => 1,
-       reportActual => 1,
+       DETShowPoint_Actual => 1,
        PointSet => undef,
 #       PerfBox => undef,
        DETLineAttr => undef,
-       lTitleNoBestComb => undef,
-       lTitleNoPointInfo => 1,
-       lTitleAddIsoRatio => 0,
+       # Control the values on the DET Lines
+       DETShowPoint_Actual => 0,
+       DETShowPoint_Best => 0,
+       DETShowPoint_Ratios => 0,
+       DETShowPoint_SupportValues => [ ('C', 'M', 'F', 'T')],
+       
        serialize => 1,
        BuildPNG => 1,
        HD => 0,
@@ -212,18 +216,6 @@ sub _parseOptions{
     $self->{DETLineAttr} = $options->{DETLineAttr};
     ### This needs validation
   }
-  if (exists($options->{lTitleNoBestComb})){
-    $self->{lTitleNoBestComb} = $options->{lTitleNoBestComb};
-    ### This needs validation
-  }
-  if (exists($options->{lTitleNoPointInfo})){
-    $self->{lTitleNoPointInfo} = $options->{lTitleNoPointInfo};
-    ### This needs validation
-  }
-  if (exists($options->{lTitleAddIsoRatio})){
-    $self->{lTitleAddIsoRatio} = $options->{lTitleAddIsoRatio};
-    ### This needs validation
-  }
   if (exists($options->{gnuplotPROG})){
     $self->{gnuplotPROG} = $options->{gnuplotPROG};
     ### This needs validation
@@ -252,7 +244,15 @@ sub _parseOptions{
       die "Error: DET option KeySpacing illegal. ".$self->{props}->get_errormsg();
     }
   }
-            
+  
+  ### Controls the point statistics plotted on the DET Curve
+  $self->{DETShowPoint_Actual} = $options->{DETShowPoint_Actual} if (exists($options->{DETShowPoint_Actual}));
+  $self->{DETShowPoint_Best}   = $options->{DETShowPoint_Best}   if (exists($options->{DETShowPoint_Best}));
+  $self->{DETShowPoint_Ratios} = $options->{DETShowPoint_Ratios} if (exists($options->{DETShowPoint_Ratios}));
+  
+  ### Applies to values reported for the ALL points, order is followed 
+  $self->{DETShowPoint_SupportValues} = $options->{DETShowPoint_SupportValues} if (exists($options->{DETShowPoint_SupportValues}));
+          
   $self->{Isoratiolines} = $options->{Isoratiolines} if (exists($options->{Isoratiolines}));
   $self->{DrawIsoratiolines} = $options->{DrawIsoratiolines} if (exists($options->{DrawIsoratiolines}));
   $self->{Isometriclines} = $options->{Isometriclines} if (exists($options->{Isometriclines}));
@@ -261,7 +261,6 @@ sub _parseOptions{
 
   $self->{makePNG} = $options->{BuildPNG} if (exists($options->{BuildPNG}));
   $self->{gnuplotPROG} = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
-  $self->{reportActual} = $options->{ReportActual} if (exists($options->{ReportActual}));
   $self->{pointSize} = $options->{PointSize} if (exists($options->{PointSize}));
 
   if (exists($options->{ColorScheme})){
@@ -472,7 +471,7 @@ sub renderUnitTest{
   $options->{xScale} = "linear";
   $options->{yScale} = "linear";
   $options->{title} = "LIN vs. LIN";
-  $options->{reportActual} = 0;
+  $options->{DETShowPoint_Actual} = 0;
   $options->{PointSize} = 4;
   $options->{ColorScheme} = "color";
 
@@ -499,7 +498,7 @@ sub renderUnitTest{
   $options->{Ymax} = "99.9";
   $options->{Ymin} = "5";
   $options->{title} = "ND vs. LOG";
-  $options->{reportActual} = 0;
+  $options->{DETShowPoint_Actual} = 0;
   $options->{PointSize} = 4;
   $options->{ColorScheme} = "color";
 
@@ -629,6 +628,170 @@ sub offGraphLabelUnitTest(){
   print "  Ok\n";
 }
 
+sub lineTitleControlUnitTest{
+  my ($dir) = @_;
+
+  print "Test DETCurveGnuplotRenderer...Dir=$dir...";
+  my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
+  my $trial = new TrialsFuncs({ ("TOTALTRIALS" => 40) }, 
+                              "Term Detection", "Term", "Occurrence");
+    
+  $trial->addTrial("she", 0.10, "NO", 0);
+  $trial->addTrial("she", 0.15, "NO", 0);
+  $trial->addTrial("she", 0.20, "NO", 0);
+  $trial->addTrial("she", 0.25, "NO", 0);
+  $trial->addTrial("she", 0.30, "NO", 1);
+  $trial->addTrial("she", 0.35, "NO", 0);
+  $trial->addTrial("she", 0.40, "NO", 0);
+  $trial->addTrial("she", 0.45, "NO", 1);
+  $trial->addTrial("she", 0.50, "NO", 0);
+  $trial->addTrial("she", 0.55, "YES", 1);
+  $trial->addTrial("she", 0.60, "YES", 1);
+  $trial->addTrial("she", 0.65, "YES", 0);
+  $trial->addTrial("she", 0.70, "YES", 1);
+  $trial->addTrial("she", 0.75, "YES", 1);
+  $trial->addTrial("she", 0.80, "YES", 1);
+  $trial->addTrial("she", 0.85, "YES", 1);
+  $trial->addTrial("she", 0.90, "YES", 1);
+  $trial->addTrial("she", 0.95, "YES", 1);
+  $trial->addTrial("she", 1.0, "YES", 1);
+
+  my $trial2 = new TrialsFuncs({ ("TOTALTRIALS" => 40) },
+                               "Term Detection", "Term", "Occurrence");
+    
+  $trial2->addTrial("she", 0.10, "NO", 0);
+  $trial2->addTrial("she", 0.15, "NO", 0);
+  $trial2->addTrial("she", 0.20, "NO", 0);
+  $trial2->addTrial("she", 0.25, "NO", 0);
+  $trial2->addTrial("she", 0.30, "NO", 1);
+  $trial2->addTrial("she", 0.35, "NO", 1);
+  $trial2->addTrial("she", 0.40, "NO", 0);
+  $trial2->addTrial("she", 0.45, "NO", 1);
+  $trial2->addTrial("she", 0.50, "NO", 0);
+  $trial2->addTrial("she", 0.55, "YES", 1);
+  $trial2->addTrial("she", 0.60, "YES", 1);
+  $trial2->addTrial("she", 0.65, "YES", 0);
+  $trial2->addTrial("she", 0.70, "YES", 0);
+  $trial2->addTrial("she", 0.75, "YES", 1);
+  $trial2->addTrial("she", 0.80, "YES", 0);
+  $trial2->addTrial("she", 0.85, "YES", 1);
+  $trial2->addTrial("she", 0.90, "YES", 1);
+  $trial2->addTrial("she", 0.95, "YES", 1);
+  $trial2->addTrial("she", 1.0, "YES", 1);
+
+ 
+  my $det1 = new DETCurve($trial, 
+                          new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
+                          "Event 1", \@isolinecoef, undef);
+  my $det2 = new DETCurve($trial2, 
+                          new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial2),
+                          "Event 2", \@isolinecoef, undef);
+  my $ds = new DETCurveSet("title");
+  die "Error: Failed to add first det" if ("success" ne $ds->addDET("Name 1", $det1));
+  die "Error: Failed to add second det" if ("success" ne $ds->addDET("Name 2", $det2));
+
+  system "rm -rf $dir";
+  system "mkdir -p $dir";
+  my $options = {};
+  
+  my $f = "$dir/LC.index.html";
+  open (HTML, ">$f") || die("Error making multi-det HTML file ($f)");
+  print HTML "<HTML>\n";
+  print HTML "<BODY>\n";
+  print HTML " <TABLE border=1>\n";
+
+  ########################################################
+  $options = { "Isoratiolines" =>  [ ( 20, 40, 80 ) ]};
+  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/LC.default",  $ds);
+  print HTML "  <TR>\n";
+  print HTML "   <TD colspan=2>Default settings<br><pre>".Dumper($options)."</pre><\TD>\n";
+  print HTML "  <\TR>\n";
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.default.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.default.Name_1.png\"></TD>\n";
+  print HTML "  </TR>\n";
+
+  ########################################################
+  $options = { "Isoratiolines" =>  [ ( 20, 40, 80 ) ],
+                "DETShowPoint_Actual" => 1,
+                "DETShowPoint_Best" => 1,
+                "DETShowPoint_Ratios" => 1};
+  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/LC.all",  $ds);
+  print HTML "  <TR>\n";
+  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre><\TD>\n";
+  print HTML "  <\TR>\n";
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.all.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.all.Name_1.png\"></TD>\n";
+  print HTML "  </TR>\n";
+  
+  ########################################################
+  $options = { "Isoratiolines" =>  [ ( 20, 40, 80 ) ],
+                "DETShowPoint_Actual" => 1};
+  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/LC.act",  $ds);
+  print HTML "  <TR>\n";
+  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre><\TD>\n";
+  print HTML "  <\TR>\n";
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.act.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.act.Name_1.png\"></TD>\n";
+  print HTML "  </TR>\n";
+    
+  
+  ########################################################
+  $options = { "Isoratiolines" =>  [ ( 20, 40, 80 ) ],
+                "DETShowPoint_Best" => 1};
+  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/LC.best",  $ds);
+  print HTML "  <TR>\n";
+  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre><\TD>\n";
+  print HTML "  <\TR>\n";
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.best.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.best.Name_1.png\"></TD>\n";
+  print HTML "  </TR>\n";
+
+  ########################################################
+  $options = { "Isoratiolines" =>  [ ( 20, 40, 80 ) ],
+                "DETShowPoint_Ratios" => 1};
+  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/LC.rat",  $ds);
+  print HTML "  <TR>\n";
+  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre><\TD>\n";
+  print HTML "  <\TR>\n";
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.rat.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.rat.Name_1.png\"></TD>\n";
+  print HTML "  </TR>\n";
+
+  ########################################################
+  $options = { "Isoratiolines" =>  [ ( 20, 40, 80 ) ],
+                "DETShowPoint_SupportValues" => [('C', 'T')],
+                "DETShowPoint_Actual" => 1,
+                "DETShowPoint_Best" => 1,
+                "DETShowPoint_Ratios" => 1};
+  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend->writeMultiDetGraph("$dir/LC.sel",  $ds);
+  print HTML "  <TR>\n";
+  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre><\TD>\n";
+  print HTML "  <\TR>\n";
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.sel.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"$dir/LC.sel.Name_1.png\"></TD>\n";
+  print HTML "  </TR>\n";
+    
+  
+  print HTML " </TABLE>\n";
+  print HTML "</BODY>\n";
+  print HTML "</HTML>\n";
+  close HTML;
+}
+
+
+######################  Beginning of the code #################
 sub IntersectionIsolineParameter
   {
     my ($self, $x1, $y1, $x2, $y2) = @_;
@@ -1105,6 +1268,47 @@ sub _getIsoMetricLineLabel
 	return "set label $indexl \"$qstr\" at graph $gxval, graph $gyval $just nopoint textcolor $color";
 }
 
+sub _getLineTitleString
+{
+	my ($self, $type, $ratio, $det, $offAxisArr, $offAxisColor, $offAxisClosedPoint, $offAxisPointSize, $offAxisQStr) = @_;
+  
+  my ($metStr, $comb, $fa, $miss, $thr) = ();
+  my $title = "";
+
+  my ($missStr, $faStr, $combStr) = ( $det->{METRIC}->errMissLab(), $det->{METRIC}->errFALab(), 
+                                      $det->{METRIC}->combLab());
+  if ($type eq "Actual"){
+     my ($MeanActComb, $SampleStdDevActComb, $MeanMiss, $SampleStdDevMiss, $MeanFA, $SampleStdDevFA) =
+            $det->getMetric()->getActualDecisionPerformance();
+     ($metStr, $comb, $fa, $miss, $thr) = ("Actual", $MeanActComb, $MeanFA, $MeanMiss,
+                                           $det->getTrials()->getTrialActualDecisionThreshold());
+  } elsif ($type eq "Best"){
+     ($metStr, $comb, $fa, $miss, $thr) = ($det->{METRIC}->combType() eq "minimizable" ? "Min" : "Max", 
+                                           $det->getBestCombComb(),
+                                           $det->getBestCombMMiss(),
+                                           $det->getBestCombMFA(),
+                                           $det->getBestCombDetectionScore());
+  } elsif ($type eq "ErrorRatio"){
+    ($metStr, $comb, $fa, $miss, $thr) = ("IsoRatio=$ratio", 
+                                          $det->getIsolinePointsCombValue($ratio), 
+                                          $det->getIsolinePointsMFAValue($ratio),
+                                          $det->getIsolinePointsMMissValue($ratio),
+                                          $det->getIsolinePointsDetectionScoreValue($ratio));
+  }
+
+  my $lab = $self->_getOffAxisLabel($miss, $fa, $offAxisColor, $offAxisClosedPoint, $offAxisPointSize, $offAxisQStr); 
+  push (@$offAxisArr, $lab) if ($lab ne "");
+
+  $title = "$metStr ";
+  foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
+    $title .= sprintf(" $faStr=%.3f", $fa) if ($supVal eq "F");
+    $title .= sprintf(" $missStr=%.3f", $miss) if ($supVal eq "M");
+    $title .= sprintf(" Thr=%.3f", $thr) if ($supVal eq "T");
+    $title .= sprintf(" $combStr=%.3f", $comb) if ($supVal eq "C");
+  }
+  $title;        
+}
+
 ### Options for graphs:
 ### title  -> the plot title
 ### serialize -> write the serialized DET Curves
@@ -1112,9 +1316,8 @@ sub _getIsoMetricLineLabel
 ### Xmax -> Set the maximum X coordinate
 ### Ymin -> Set the minimum Y coordinate
 ### Ymax -> Set the maximum Y coordinate
-### lTitleNoPointInfo  -> do not write the Max Point Info if the element exisst
-### lTitleNoDETType    -> do not write the DET Type if the element exists
-### lTitleNoBestComb   -> do not write the Max Value if the element exists
+### lTitleNoDETType    -> write the DET Type if the element exists
+### DETShowPoint_Best  -> write the Max Value if the element exists
 ### KeyLoc -> set the key location.  Values can be left | right | top | bottom | outside | below 
 ### Isolines -> Draw the isolines coefs
 
@@ -1258,8 +1461,6 @@ sub writeMultiDetGraph
         next;
       }
     
-
-#      my $troot = sprintf("%s.sub%02d",$fileRoot,$d);
        my $troot = sprintf("%s.%s",$fileRoot, $detset->getFSKeyForID($d));
        
        #########  Since this is recursive, the title gets appended with the sub-title the set it back
@@ -1268,12 +1469,7 @@ sub writeMultiDetGraph
        my $ret = $self->writeGNUGraph($troot, $detset->getDETForID($d));
        $self->{title} = $saveTitle;
        
-       if ($ret) {
-         my ($scr, $comb, $miss, $fa) = ($detset->getDETForID($d)->getBestCombDetectionScore(),
-                                          $detset->getDETForID($d)->getBestCombComb(),
-                                        $detset->getDETForID($d)->getBestCombMMiss(),
-                                        $detset->getDETForID($d)->getBestCombMFA());
-                        
+       if ($ret) {                        
         my $ltitle = $lineTitle;
         my ($xcol, $ycol);
     
@@ -1291,53 +1487,58 @@ sub writeMultiDetGraph
             $nbox++;
           }
         }
-       
-
-                  
+                         
         ### The curve
         $xcol = ($xScale eq "nd" ? "3" : "5");
         $ycol = ($yScale eq "nd" ? "2" : "4");
-        if ($self->{reportActual} || (!$self->{lTitleNoBestComb}) || $self->{lTitleAddIsoRatio}){
+        if ($self->{DETShowPoint_Actual} || ($self->{DETShowPoint_Best}) || $self->{DETShowPoint_Ratios}){
+          ### PLOT the Curve with NO TITLE because it will be used for the 1st point 
           push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol notitle with lines lc $color lw $lineWidth";
         } else { 
           push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with lines lc $color lw $lineWidth";
           $ltitle = "";
         }
         
-#        print "ReportAct=$self->{reportActual}, lTitleNoBestComb=$self->{lTitleNoBestComb} AddIsoRatio=$self->{lTitleAddIsoRatio}\n";  
         ### Actual
-        if ($self->{reportActual}){
+        if ($self->{DETShowPoint_Actual}){
           $xcol = ($xScale eq "nd" ? "11" : "9");
           $ycol = ($yScale eq "nd" ? "10" : "8");
           
-          $ltitle  .= " Actual ".sprintf("$combStr=%.3f", $actComb);
+          $ltitle .= " - " if ($ltitle ne "");
+          $ltitle .= $self->_getLineTitleString("Actual", 0, $detset->getDETForID($d), 
+                                                \@offAxisLabels, $color, $openPoint, $thisPointSize, 0); 
           push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with linespoints lc $color pt $openPoint ps $thisPointSize";
-
-          my $lab = $self->_getOffAxisLabel($actMiss, $actFa, $color, $openPoint, $thisPointSize, 0); 
-          push (@offAxisLabels, $lab) if ($lab ne "");
           ## Clear out the title!
           $ltitle = "";
         }
         
         ### The BEST point
-        if (! $self->{lTitleNoBestComb}){
-          $ltitle .= sprintf(" $combType $combStr=%.3f", $comb);
-          $ltitle .= sprintf("=($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr) if (! $self->{lTitleNoPointInfo});
+        if ($self->{DETShowPoint_Best}){
           $xcol = ($xScale eq "nd" ? "6" : "4");
           $ycol = ($yScale eq "nd" ? "5" : "3");
+
+          $ltitle .= " - " if ($ltitle ne "");
+          $ltitle .= $self->_getLineTitleString("Best", 0, $detset->getDETForID($d),
+                                                \@offAxisLabels, $color, $closedPoint, $thisPointSize, 0); 
           push @PLOTCOMS, "  '$troot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $color pt $closedPoint lw $lineWidth ps $thisPointSize";
+
+          ## Clear out the title!
+          $ltitle = "";
         }
         
         ### If I want iso ratio points
-        if ($self->{lTitleAddIsoRatio}){
-          $ltitle .= " - " if ($ltitle ne "");
-          $ltitle .= "Iso Ratio Points";
+        if ($self->{DETShowPoint_Ratios}){
           $xcol = ($xScale eq "nd" ? "6" : "4");
           $ycol = ($yScale eq "nd" ? "5" : "3");
-          push @PLOTCOMS, "  '$troot.dat.3' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $color pt $closedPoint lw $lineWidth ps $thisPointSizeDiv2";
+          foreach my $ratio(@{ $self->{Isoratiolines} }){    
+            $ltitle .= " - " if ($ltitle ne "");
+            $ltitle .= $self->_getLineTitleString("ErrorRatio", $ratio, $detset->getDETForID($d),
+                                                  \@offAxisLabels, $color, $closedPoint, $thisPointSize, 0); 
+            push @PLOTCOMS, "  '$troot.dat.3' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $color pt $closedPoint lw $lineWidth ps $thisPointSizeDiv2";
+            ## Clear out the title!
+            $ltitle = "";
+          }
         }
-        my $bestlab = $self->_getOffAxisLabel($miss, $fa, $color, $closedPoint, $thisPointSize, 0); 
-        push (@offAxisLabels, $bestlab) if ($bestlab ne "");
 
       }
 
@@ -1455,17 +1656,19 @@ sub writeGNUGraph{
   
   ### The iso ratio points data file
   # print Dumper($det->{ISOPOINTS});
-  open(DAT,"> $fileRoot.dat.3") ||
-    die("unable to open DET gnuplot file $fileRoot.dat.3"); 
-  print DAT "# The iso ratio points for the DET curve\n";
-  #     print DAT "# DET Type: $typeStr\n";
-  print DAT "# 1:ratio 2:DetectionScore 3:$missStr 4:$faStr 5:ppndf($missStr) 6:ppndf($faStr)\n";
-  foreach my $ratio(sort { $a <=> $b } keys %{$det->{ISOPOINTS}}){
-    print DAT "$ratio X ".$det->{ISOPOINTS}{$ratio}{INTERPOLATED_MMISS}." ".$det->{ISOPOINTS}{$ratio}{INTERPOLATED_MFA}.
-        " ".ppndf($det->{ISOPOINTS}{$ratio}{INTERPOLATED_MMISS})." ".ppndf($det->{ISOPOINTS}{$ratio}{INTERPOLATED_MFA})."\n";
-  }
-  close DAT; 
-
+  if (defined($self->{Isoratiolines})){
+    open(DAT,"> $fileRoot.dat.3") ||
+      die("unable to open DET gnuplot file $fileRoot.dat.3"); 
+    print DAT "# The iso ratio points for the DET curve\n";
+    #     print DAT "# DET Type: $typeStr\n";
+    print DAT "# 1:ratio 2:DetectionScore 3:$missStr 4:$faStr 5:ppndf($missStr) 6:ppndf($faStr)\n";
+    foreach my $ratio(sort { $a <=> $b } @{ $self->{Isoratiolines}}){
+      print DAT "$ratio ".$det->{ISOPOINTS}{$ratio}{INTERPOLATED_DETECTSCORE}." ".$det->{ISOPOINTS}{$ratio}{INTERPOLATED_MMISS}." ".$det->{ISOPOINTS}{$ratio}{INTERPOLATED_MFA}.
+          " ".ppndf($det->{ISOPOINTS}{$ratio}{INTERPOLATED_MMISS})." ".ppndf($det->{ISOPOINTS}{$ratio}{INTERPOLATED_MFA})."\n";
+    }
+    close DAT; 
+  } 
+  
   ### use the properties
 #  my $color = $self->{colorsRGB}->[ $d % scalar(@{ $self->{colorsRGB} }) ];
   my $pointSize = $self->{pointSize};
@@ -1488,7 +1691,7 @@ sub writeGNUGraph{
   ### This is ONLY the linetrace
   $xcol = ($xScale eq "nd" ? "3" : "5");
   $ycol = ($yScale eq "nd" ? "2" : "4");
-  if ($self->{reportActual} || (!$self->{lTitleNoBestComb}) || $self->{lTitleAddIsoRatio}){
+  if ($self->{DETShowPoint_Actual} || ($self->{DETShowPoint_Best}) || $self->{DETShowPoint_Ratios}){
     push @PLOTCOMS, "    '$fileRoot.dat.1' using $xcol:$ycol notitle with lines lc $curveColor";
   } else {  
     push @PLOTCOMS, "    '$fileRoot.dat.1' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with lines lc $curveColor";
@@ -1496,26 +1699,37 @@ sub writeGNUGraph{
   }
   
   ### Actual for the DET
-  if ($self->{reportActual}){
-    $ltitle  .= " Actual ".sprintf("$combStr=%.3f", $actComb);
-    my $bestlab = $self->_getOffAxisLabel($miss, $fa, 2, 7, $pointSize, 0); 
-    push (@offAxisLabels, $bestlab) if ($bestlab ne "");
+  if ($self->{DETShowPoint_Actual}){
+    $ltitle .= " - " if ($ltitle ne "");
+    $ltitle .= $self->_getLineTitleString("Actual", 0, $det, 
+                                          \@offAxisLabels, $curveColor, 6, $pointSize, 0); 
+
     $xcol = ($xScale eq "nd" ? "11" : "9");
     $ycol = ($yScale eq "nd" ? "10" : "8");
     push @PLOTCOMS, sprintf("   '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with linespoints lc $curveColor pt 6 ps $pointSize ");
-    my $lab = $self->_getOffAxisLabel($actMiss, $actFa, 2, 6, $pointSize, 0); 
-    push (@offAxisLabels, $lab) if ($lab ne "");
+
+#    $ltitle  .= " Actual ".sprintf("$combStr=%.3f", $actComb);
+#    my $bestlab = $self->_getOffAxisLabel($miss, $fa, 2, 7, $pointSize, 0); 
+#    push (@offAxisLabels, $bestlab) if ($bestlab ne "");
+#    $xcol = ($xScale eq "nd" ? "11" : "9");
+#    $ycol = ($yScale eq "nd" ? "10" : "8");
+#    push @PLOTCOMS, sprintf("   '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with linespoints lc $curveColor pt 6 ps $pointSize ");
+#    my $lab = $self->_getOffAxisLabel($actMiss, $actFa, 2, 6, $pointSize, 0); 
+#    push (@offAxisLabels, $lab) if ($lab ne "");
     
     ## Clear out the title!
     $ltitle = "";
   }
 
   ### The BEST point
-  if (! $self->{lTitleNoBestComb}){
-    $ltitle .= " ".sprintf("$combType $combStr=%.3f", $comb);
-    $ltitle .= sprintf(" ($faStr=%.6f, $missStr=%.4f, scr=%.3f)", $fa, $miss, $scr) if (! $self->{lTitleNoPointInfo});
+  if ($self->{DETShowPoint_Best}){
     $xcol = ($xScale eq "nd" ? "6" : "4");
     $ycol = ($yScale eq "nd" ? "5" : "3");
+
+    $ltitle .= " - " if ($ltitle ne "");
+    $ltitle .= $self->_getLineTitleString("Best", 0, $det, 
+                                          \@offAxisLabels, $curveColor, 7, $pointSize, 0); 
+
     push @PLOTCOMS, sprintf("    '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $curveColor pt 7 ps $pointSize");
     ## Clear out the title!
     $ltitle = "";
@@ -1537,12 +1751,17 @@ sub writeGNUGraph{
 
   
   ### if the we want the ratio points 
-  if ($self->{lTitleAddIsoRatio}){
-    $ltitle .= " - " if ($ltitle ne "");
-    $ltitle .= "Iso Ratio Points";
+  if ($self->{DETShowPoint_Ratios}){
     $xcol = ($xScale eq "nd" ? "6" : "4");
     $ycol = ($yScale eq "nd" ? "5" : "3");
-    push @PLOTCOMS, sprintf("    '$fileRoot.dat.3' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $curveColor pt 7 ps $pointSizeDiv2");  
+    foreach my $ratio(@{ $self->{Isoratiolines} }){    
+      $ltitle .= " - " if ($ltitle ne "");
+      $ltitle .= $self->_getLineTitleString("ErrorRatio", $ratio, $det,
+                                                  \@offAxisLabels, $curveColor, 7, $pointSize, 0); 
+      push @PLOTCOMS, sprintf("    '$fileRoot.dat.3' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $curveColor pt 7 ps $pointSizeDiv2");  
+      ## Clear out the title!
+      $ltitle = "";
+    }
   }
 
   ### Make the boxes
@@ -1603,7 +1822,7 @@ sub writeGNUGraph{
     print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines lt 2, \\\n";
     print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines lt 3, \\\n";
     print THRESHPLT "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines lt 4";
-    if ($self->{reportActual}){
+    if ($self->{DETShowPoint_Actual}){
       print THRESHPLT ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines lt 5";
     }
     if (defined($det->getBestCombComb())) {
@@ -1652,7 +1871,8 @@ sub buildPNG
   close FILE;
   #MMisc::error_quit("[$fileRoot]");
   
-  my $font = ($hd) ? "font arial 20" : "medium";
+#  my $font = ($hd) ? "font arial 20" : "medium";
+  my $font = ($hd) ? "font arial 20" : "font Verdana 11";
 
   ## Use this with gnuplot 3.X
   #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
