@@ -379,7 +379,7 @@ sub renderAsTxt(){
   }
   
   my $reportActual = 1;
-  $reportActual = $DETOptions->{ReportActual} if (exists($DETOptions->{ReportActual}));
+  $reportActual = $DETOptions->{DETShowPoint_Actual} if (exists($DETOptions->{DETShowPoint_Actual}));
 
   ### Build the combined and separate DET PNGs
   my $multiInfo = {()};
@@ -425,7 +425,7 @@ sub renderCSV {
   }
   
   my $reportActual = 1;
-  $reportActual = $DETOptions->{ReportActual} if (exists($DETOptions->{ReportActual}));
+  $reportActual = $DETOptions->{DETShowPoint_Actual} if (exists($DETOptions->{DETShowPoint_Actual}));
 
   my $multiInfo = {()};
   if ($DETOptions->{createDETfiles}) {
