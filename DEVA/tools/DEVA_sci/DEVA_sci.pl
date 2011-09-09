@@ -133,8 +133,11 @@ my $GetTrialsDB = 0;
 my $decThr = undef;
 my $pbid_dt_sql = "";
 
+my @isolinecoef = ();
+my @dilc = ( 5, 10, 20, 40, 80, 160 );
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:  B D  G    LM    R TU  XY  b d   h   lm op rstuv xy   #
+# Used:  B D  G    LM    R TU  XY  b d   hi  lm op rstuv xy   #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -165,6 +168,7 @@ GetOptions
    'decisionThreshold=f' => \$decThr,
    'perBlockDecisionThreshold=s' => \$pbid_dt_sql,
    'LoadMetadataDB=s'   => \$mdDBfile,
+   'isolinecoef=s'      => \@isolinecoef,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -227,12 +231,21 @@ MMisc::error_quit("No \'referenceDBfile\' provided\n\n$usage")
   if (MMisc::is_blank($refDBfile));
 MMisc::error_quit("No \'systemDBfile\' provided\n\n$usage")
   if (MMisc::is_blank($sysDBfile));
-MMisc::error_quit("No \'referenceDBfile\' provided\n\n$usage")
+MMisc::error_quit("No \'ResultDBfile\' provided\n\n$usage")
   if (scalar @resDBfiles == 0);
 &check_DBs_r($refDBfile, $sysDBfile, @resDBfiles);
 &check_DBs_r($mdDBfile) if (! MMisc::is_blank($mdDBfile));
 MMisc::error_quit("Unrecognized \'mode\' [$mode], authorized values are: " . join(" ", @ok_modes))
   if (! grep(m%^$mode$%, @ok_modes));
+
+@isolinecoef = split(/,/,join(',',@isolinecoef));
+if (scalar @isolinecoef == 0) {
+  @isolinecoef = @dilc;
+}
+foreach my $v (@isolinecoef) {
+ MMisc::error_quit("Problem with \'--isolinecoef\' value ($v), does not appear to be a number ?")
+   if (! ($v =~ m%^\d+(\.\d+)?$%));
+}
 
 my ($dbfile) = @ARGV;
 
@@ -513,7 +526,6 @@ sub doDETwork {
   my %bid_trials = @_;
 
   my $detSet = new DETCurveSet("DET Set");
-  my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
 
   foreach my $bid (keys %bid_trials) {
     my $usedtrial = $bid_trials{$bid};
@@ -556,11 +568,12 @@ sub doDETwork {
 
 sub set_usage {
   my $pv = join(", ", @ok_scales);
+  my $dilcs = join(",", @dilc);
 
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--LoadMetadataDB file] [--GetTrialsDB] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--DETfile filebase] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--usedXscale set] [--UsedYscale set] [--BlockAverage] [--decisionThreshold score | --perBlockDecisionThreshold sql_file] ScoreDBfile
+$0 [--help | --version] --referenceDBfile file --systemDBfile file --ResultDBfile resultsDBfile [--ResultDBfile resultsDBfile [...]] [--LoadMetadataDB file] [--GetTrialsDB] [--metricPackage package] [[--MetricParameters parameter=value] [--MetricParameters parameter=value [...]]] [--TrialsParameters parameter=value [--TrialsParameters parameter=value [...]]] [--listParameters] [--DETfile filebase] [--blockName name] [--taskName name] [--xmin val] [--Xmax val] [--ymin val] [--Ymax val] [--usedXscale set] [--UsedYscale set] [--isolinecoef value[,value[...]]] [--BlockAverage] [--decisionThreshold score | --perBlockDecisionThreshold sql_file] ScoreDBfile
 
 Will load Trials information and create DETcurves
 
@@ -571,7 +584,6 @@ Where:
   --version  Version information
   --referenceDBfile  The Reference SQLite file, loaded as \'$refDBname\' (must contains the 'Reference' table, whose columns are: $TrialIDcolumn, $Targcolumn)
   --systemDBfile     The System SQLite file, loaded as \'$sysDBname\' (must contains the 'System' table, whose columns are: $TrialIDcolumn, $Decisioncolumn, $Scorecolumn)
-
   --ResultDBfile     The Filter tool resulting DB (must contain the \'$tablename\' table, with the following columns: $TrialIDcolumn, $BlockIDcolumn)
   --LoadMetadataDB   Load the metadata SQLite file, loaded as \'$mdDBname\'
   --GetTrialsDB      Add a table to the scoring database containing each individual Trial component (table name: $TrialsDB)
@@ -584,7 +596,8 @@ Where:
   --taskName         Specify the name of the task (default: $taskName)
   --xmin --Xmax      Specify the min and max value of the X axis (PFA) of the DET curve (default: $xm and $xM)
   --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (default: $ym and $yM)
-  --usedXscale --UsedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (default: $xscale and $yscale) 
+  --usedXscale --UsedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (default: $xscale and $yscale)
+  --isolinecoef      Specify the iso-line to plot (default: $dilcs)
   --BlockAverage    Combine all Trial in one DET instead of splitting them per BlockID
   --decisionThreshold  When adding a Trial, do not use the System's Decision but base the decision on a given threshold
   --perBlockDecisionThreshold  Specify the SQL command file expected to insert into the \'$ThreshDB\' table (with two columns: $BlockIDcolumn $Threshcolumn) a Threshold per BlockID. 
