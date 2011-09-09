@@ -620,9 +620,9 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--quickConfig [linecount]] [--NULLfields] [--VMDcfg file] [--MetadataDBfile file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
+$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--quickConfig [linecount]] [--NULLfields] [--VMDcfg file] [--MDBfile file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
 
-Wrapper for all steps involved in a DEVA scoring step
+Wrapper designed to help using one or muliptle CSV files and insert them as tables in a SQLite DB file 
 Arguments left on the command line are csvfile used to create the metadataDB
 
 NOTE: will create _logs directory in outdir
