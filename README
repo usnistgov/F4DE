@@ -95,7 +95,7 @@ It has been confirmed to work under Linux, OS X and Cygwin.
 
 The only pre-requisites of the tool are:
 
-- a recent version of gnuplot (at least 4.2 with png support)
+- a recent version of gnuplot (at least 4.4 with png support)
   to do plots (for DETCurves among others)
 
 - a recent version of xmllint (at least 2.6.30) (part of libxml2) 
