@@ -1943,7 +1943,7 @@ sub buildPNG
 ####################
 my $gnuplotcmdb = "gnuplot";
 my $gnuplotcmd = "";
-my $gnuplotminv = "4.2";
+my $gnuplotminv = "4.4";
 
 sub get_gnuplotcmd { 
   return("", $gnuplotcmd, "")
