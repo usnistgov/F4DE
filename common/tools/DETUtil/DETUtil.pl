@@ -724,7 +724,7 @@ Use  F<TITLE> for the title of the plot.
 
 =item B<-l>, B<--lineTitle> F<TITLE>
 
-Modify the points added to the DET curve lines.  F<TITLE> can include any number of these characters.
+The DET curve lines includes specialized measurement points.  This option modifies the reported measurements.  F<TITLE> can include any number of these characters.
 
 =over 4
 
