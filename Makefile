@@ -241,42 +241,42 @@ commoncheck:
 	@echo "***** Running \"Common checks\" ..."
 	@(cd ${CM_DIR}/test; make check)
 	@echo ""
-	@echo "***** All \"Common checks\" ran succesfully"
+	@echo "***** All \"Common checks\" ran successfully"
 	@echo ""
 
 TV08check:
 	@echo "***** Running TrecVid08 checks ..."
 	@(cd ${TV08DIR}/test; make check)
 	@echo ""
-	@echo "***** All TrecVid08 checks ran succesfully"
+	@echo "***** All TrecVid08 checks ran successfully"
 	@echo ""
 
 CLEAR07check:
 	@echo "***** Running CLEAR07 checks ..."
 	@(cd ${CL07DIR}/test; make check)
 	@echo ""
-	@echo "***** All CLEAR07 checks ran succesfully"
+	@echo "***** All CLEAR07 checks ran successfully"
 	@echo ""
 
 AVSS09check:
 	@echo "***** Running AVSS09 checks ..."
 	@(cd ${AV09DIR}/test; make check)
 	@echo ""
-	@echo "***** All AVSS09 checks ran succesfully"
+	@echo "***** All AVSS09 checks ran successfully"
 	@echo ""
 
 SQLitetoolscheck:
 	@echo "***** Running SQLite_tools checks ..."
 	@(cd ${CM_DIR}/test/SQLite_tools; make check)
 	@echo ""
-	@echo "***** All SQLite_tools checks ran succesfully"
+	@echo "***** All SQLite_tools checks ran successfully"
 	@echo ""
 
 DEVAcheck:
 	@echo "***** Running DEVA checks ..."
 	@(cd ${DEVADIR}/test; make check)
 	@echo ""
-	@echo "***** All DEVA checks ran succesfully"
+	@echo "***** All DEVA checks ran successfully"
 	@echo ""
 
 check_common:
