@@ -1067,7 +1067,7 @@ The program leave the content of the database free for most I<metadata> content.
 
 The I<reference> CSV file must contain two columns: I<TrialID> and I<Targ>, where I<TrialID> must be a primary key and I<Targ> values must be a either I<y> or I<n>.
 
-The I<system> CSV file must contain three columns: I<TrialID>, I<Score> and I<Decision>, where I<TrialID> must be a primary key, I<Score> a numerical value and I<Targ> values must be a either I<y> or I<n>.
+The I<system> CSV file must contain three columns: I<TrialID>, I<Score> and I<Decision>, where I<TrialID> must be a primary key, I<Score> a numerical value and I<Decision> values must be a either I<y> or I<n>.
 
 Examples of CSV files can be found in the F4DE source in:
  F<common/test/common/ref.csv>
