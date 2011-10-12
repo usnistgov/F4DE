@@ -184,6 +184,7 @@ DEVAinstall_common:
 	@echo ""
 	@echo "********** Installing DEVA tools"
 	@make commoninstall
+	@make SQLitetoolsinstall
 	@echo "** Installing DEVA tools"
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${DEVADIR}/${DEVATOOLS}
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${DEVADIR}/${MEDTOOLS}
