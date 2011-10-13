@@ -1284,8 +1284,8 @@ sub _getLineTitleString
   } elsif ($type eq "Best"){
      ($metStr, $comb, $fa, $miss, $thr) = ($det->{METRIC}->combType() eq "minimizable" ? "Min" : "Max", 
                                            $det->getBestCombComb(),
-                                           $det->getBestCombMMiss(),
                                            $det->getBestCombMFA(),
+                                           $det->getBestCombMMiss(),
                                            $det->getBestCombDetectionScore());
   } elsif ($type eq "ErrorRatio"){
     ($metStr, $comb, $fa, $miss, $thr) = ("IsoRatio=$ratio", 
