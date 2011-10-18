@@ -46,6 +46,7 @@ from_installdir:
 ########## Install
 
 install:
+	@make commoninstall
 	@make TV08install
 	@make CLEAR07install
 	@make AVSS09install
@@ -56,6 +57,7 @@ install:
 #####
 
 install_noman:
+	@make commoninstall_noman
 	@make TV08install_noman
 	@make CLEAR07install
 	@make AVSS09install_noman
@@ -67,32 +69,46 @@ install_noman:
 
 CM_DIR=common
 COMMONTOOLS=tools/{DETEdit/DETEdit.pl,DETMerge/DETMerge.pl,DETUtil/DETUtil.pl}
+COMMONTOOLS_MAN=tools/DETUtil/DETUtil.pl
 VIDATDIR=${CM_DIR}/tools/VidAT
 SQLITETOOLSDIR=${CM_DIR}/tools/SQLite_tools
 
 commoninstall:
+	@make commoninstall_common
+	@make commoninstall_man
+
+commoninstall_common:
 	@make from_installdir
 	@make install_head
 	@echo "** Installing common files"
 	@perl installer.pl ${F4DE_BASE} lib ${CM_DIR}/lib/*.pm
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${CM_DIR}/${COMMONTOOLS}
 
+commoninstall_man:
+	@perl installer.pl ${F4DE_BASE} man/man1 ${CM_DIR}/man/*.1
+
+commoninstall_noman:
+	@make commoninstall_common
+	@echo "** NOT installing man files"
+	@echo ""
+	@echo ""
+
 VidATinstall:
 	@echo "** Installing VidAT"
-	@make commoninstall
+	@make commoninstall_common
 	@perl installer.pl ${F4DE_BASE} lib ${VIDATDIR}/*.pm
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${VIDATDIR}/*.pl
 
 SQLitetoolsinstall:
 	@echo "** Installing SQLite_tools"
-	@make commoninstall
+	@make commoninstall_common
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${SQLITETOOLSDIR}/*.pl
 
 #####
 
 TV08DIR=TrecVid08
-TV08TOOLS_MAN=tools/{TVED-SubmissionChecker/TVED-SubmissionChecker.pl,TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
 TV08TOOLS=tools/{TVED-SubmissionChecker/{TVED-SubmissionChecker.pl,TV{08,09,1{0,1}S}ED-SubmissionChecker.sh},TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
+TV08TOOLS_MAN=tools/{TVED-SubmissionChecker/TVED-SubmissionChecker.pl,TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
 
 TV08install:
 	@make TV08install_common
@@ -103,7 +119,7 @@ TV08install:
 TV08install_common:
 	@echo ""
 	@echo "********** Installing TrecVid08 tools"
-	@make commoninstall
+	@make commoninstall_common
 	@echo "** Installing TrecVid08 files"
 	@perl installer.pl ${F4DE_BASE} lib ${TV08DIR}/lib/*.pm
 	@perl installer.pl ${F4DE_BASE} lib/data ${TV08DIR}/data/*.xsd
@@ -112,6 +128,7 @@ TV08install_common:
 
 TV08install_man:
 	@perl installer.pl ${F4DE_BASE} man/man1 ${TV08DIR}/man/*.1
+	@make commoninstall_man
 
 TV08install_noman:
 	@make TV08install_common
@@ -127,7 +144,7 @@ CL07TOOLS=tools/{CLEARDTScorer/CLEARDTScorer.pl,CLEARDTViperValidator/CLEARDTVip
 CLEAR07install:
 	@echo ""
 	@echo "********** Installing CLEAR07 tools"
-	@make commoninstall
+	@make commoninstall_common
 	@echo "** Installing CLEAR07 files"
 	@perl installer.pl ${F4DE_BASE} lib ${CL07DIR}/lib/*.pm
 	@perl installer.pl ${F4DE_BASE} lib/data ${CL07DIR}/data/*.xsd
@@ -183,7 +200,7 @@ DEVAinstall:
 DEVAinstall_common:
 	@echo ""
 	@echo "********** Installing DEVA tools"
-	@make commoninstall
+	@make commoninstall_common
 	@make SQLitetoolsinstall
 	@echo "** Installing DEVA tools"
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${DEVADIR}/${DEVATOOLS}
@@ -193,6 +210,7 @@ DEVAinstall_common:
 
 DEVAinstall_man:
 	@perl installer.pl ${F4DE_BASE} man/man1 ${DEVADIR}/man/*.1
+	@make commoninstall_man
 
 DEVAinstall_noman:
 	@make DEVAinstall_common
@@ -349,6 +367,9 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/R_tools
 
 create_mans:
+# common
+	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/man
+	@for i in ${COMMONTOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/man/$$g.1; done
 # TrecVid08
 	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/man
 	@for i in ${TV08TOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/man/$$g.1; done
