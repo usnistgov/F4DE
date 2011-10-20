@@ -363,24 +363,32 @@ foreach my $srlDef ( @ARGV )
   my $intRegex = '\d*';
   my $colorRegex = 'rgb "#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
 
-  my ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey);
+  ### Parse the global srlDef as the default
+  my ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$srlDef);
 
+  ### If this is set to non-blank, it will get applied
+  my ($newSrlDef) = "";
   if ($firstSet ne "" && $firstSetCounter < $firstSetSize) {
     print "first set: $firstSet\n";
-    ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$srlDef);
-    ($newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$firstSet);
+    $newSrlDef = $firstSet;
     $firstSetCounter++;
   } elsif ($firstSet ne "" && $secondSet ne "" && $secondSetCounter < $secondSetSize) {
     print "second set: $secondSet\n";
-    ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$srlDef);
-    ($newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$secondSet);
+    $newSrlDef = $secondSet;
     $secondSetCounter++;
   } elsif ($firstSet ne "" && $restSet ne "") {
     print "rest set: $restSet\n";
-    ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$srlDef);
-    ($newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$restSet);
-  } else {
-    ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$srlDef);
+    $newSrlDef = $restSet;
+  }
+
+  if ($newSrlDef ne ""){
+    my ($_newLabel, $_pointSize, $_pointTypeSet, $_color, $_lineWidth, $_nokey) = split(/:/,$newSrlDef);
+    $newLabel = $_newLabel if ($_newLabel ne "");
+    $pointSize = $_pointSize if ($_pointSize ne "");
+    $pointTypeSet = $_pointTypeSet if ($_pointTypeSet ne "");
+    $color = $_color if ($_color ne "");
+    $lineWidth = $_lineWidth if ($_lineWidth ne "");
+    $nokey = $_nokey if ($_nokey ne "");
   }
   
   vprint("[*] Loading SRL file ($srl)\n"); 
