@@ -466,7 +466,10 @@ sub readFromFile
     my $binary = 0;
     my @arr = undef;
  
-    if ( ( $file =~ /.+\.gz$/ ) && ( -e $file ) && ( -f $file ) && ( -r $file ) ) {
+    my $err = MMisc::check_file_r($file);
+    MMisc::error_quit("Unable to read srl file ($file): $err") if (! MMisc::is_blank($err));
+ 
+    if ( ( $file =~ /.+\.gz$/ ) ) {
       $str = MMisc::file_gunzip($file)
     } else {
       $str = MMisc::slurp_file($file, "text")
