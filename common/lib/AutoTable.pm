@@ -116,6 +116,11 @@ sub unitTest {
   print "Testing AutoTable ..." if ($makecall);
   
   my $at = new AutoTable();
+  print "Testing behavior on an empty table\n";
+  die "Error: Empty table not rendered correctly for TXT" if ($at->renderTxtTable() !~ /Warning: Empty table./);
+  die "Error: Empty table not rendered correctly for HTML" if ($at->renderHTMLTable() !~ /Warning: Empty table./);
+  die "Error: Empty table not rendered correctly for CSV" if ($at->renderCSV() !~ /Warning: Empty table./);
+
 #  $at->addData({value => "1x1", link => "/etc/hosts"},  "CCC|col1|A", "srow1|row1");
 #  $at->addData({value => "1x1", link => "/etc/hosts", linkText => "foo"},  "CCC|col1|A", "srow1|row1");
   $at->addData("1x1",  "CCC|col1|A", "srow1|row1");
@@ -151,7 +156,7 @@ sub unitTest {
   print "<pre>\n";
   print($at->renderTxtTable(1));
   print($at->renderCSV(2));
-  print "<\pre>\n";
+  print "</pre>\n";
   print($at->renderHTMLTable());
   
 ##=======
@@ -291,7 +296,10 @@ sub __process_special {
 sub renderHTMLTable(){
   my ($self) = @_;
   my $out = "";
-  
+
+  ### Make sure there is data.   If there isn't report nothing exists
+  my @_da = keys %{ $self->{data} };
+  return "Warning: Empty table.  Nothing to produce.\n" if (@_da == 0);
   
   ##########
   my $keyCol = $self->{Properties}->getValue($key_KeyColumnHTML);
@@ -435,6 +443,10 @@ sub renderTxtTable(){
 #<<<<<<< AutoTable.pm
   my ($self, $gap) = @_;
   
+  ### Make sure there is data.   If there isn't report nothing exists
+  my @_da = keys %{ $self->{data} };
+  return "Warning: Empty table.  Nothing to produce.\n" if (@_da == 0);
+
   $gap = 1 if (!defined($gap));
   
   my $keyCol = $self->{Properties}->getValue($key_KeyColumnTxt);
@@ -1029,6 +1041,10 @@ sub loadCSV {
 sub renderCSV {
   my ($self) = @_;
   
+  ### Make sure there is data.   If there isn't report nothing exists
+  my @_da = keys %{ $self->{data} };
+  return "Warning: Empty table.  Nothing to produce.\n" if (@_da == 0);
+
   my $out = "";
   
   my $keyCol = $self->{Properties}->getValue($key_KeyColumnCsv);
