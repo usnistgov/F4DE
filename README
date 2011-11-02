@@ -125,9 +125,9 @@ The only pre-requisites of the tool are:
 Installation is a 4 step process:
 
   1. Run 'make' to get a list of the "check" options available and at minimum
-     run the appropriate check for your tool set (ie, if you intend to use DEVA,
-     run 'make DEVAcheck') to make sure all required libraries and executables
-     are available on the system.
+     run 'make mincheck' followed by the appropriate check for your tool set
+     (ie, if you intend to use DEVA, run 'make DEVAcheck') to make sure all 
+     required libraries and executables are available on the system.
       Please note that each tool's individual test can take from a few
      seconds to a few minutes to complete. 
       We recommend running 'make check' to run a full check to confirm
