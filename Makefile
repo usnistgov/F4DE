@@ -25,7 +25,7 @@ all:
 	@echo "  AVSS09check     only run checks for the AVSS09 subsection"
 	@echo "  SQLitetoolscheck  only run checks for the SQLite_tools subsection"
 	@echo "  DEVAcheck       only run checks for the DEVA subsection"
-	@echo "NOTE: for each tool specific check it is highly recommended to run first 'make mincheck' to insure that the minimum requirements are met"
+	@echo "NOTE: for each tool specific check it is first required to run first 'make mincheck' to insure that the minimum requirements are met"
 	@echo ""
 	@echo "[install section -- requires the F4DE_BASE environment variable set]"
 	@echo "  install         to install all the softwares"
@@ -35,7 +35,7 @@ all:
 	@echo "  VidATinstall    only install the VidAT tools set"
 	@echo "  SQLitetoolsinstall  only install the SQLite tools set"
 	@echo "  DEVAinstall     only install the DEVA subsection"
-	@echo "NOTE: before installing a tool subset, it is highly recommended to run both 'make mincheck' and the check related to this tool to confirm that your system has all the required components to run the tool"
+	@echo "NOTE: before installing a tool subset, run both 'make mincheck' and the check related to this tool to confirm that your system has all the required components to run the tool"
 	@echo ""
 
 from_installdir:
