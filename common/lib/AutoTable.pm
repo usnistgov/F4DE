@@ -294,7 +294,7 @@ sub __process_special {
 
 
 sub renderHTMLTable(){
-  my ($self) = @_;
+  my ($self, $tha) = @_;
   my $out = "";
 
   ### Make sure there is data.   If there isn't report nothing exists
@@ -347,7 +347,7 @@ sub renderHTMLTable(){
   
   my @nodeSet;
   die "Internal Error: No levels defined" if ($levels < 1);
-  $out .= "<table border=1>\n";
+  $out .= "<table border=1 $tha>\n";
   for (my $level=0; $level < $levels; $level++){
     $out .= "<tr>\n";
     ### Render the row data 
@@ -911,6 +911,17 @@ sub _getStrForLevel(){
   $a[$lev-1];
 }
 
+sub setSpecial {
+  my ($self, $colid, $rowid, $special) = @_;
+
+  my $lid = $rowid."-".$colid;
+  MMisc::error_quit("Datum for '$rowid $colid' does not exist, can not set \'special\'")
+      if (! defined($self->{data}{$lid}));
+
+  $self->{special}{$lid} = $special;
+  return(1);
+}
+
 sub addData{
   my ($self, $val, $colid, $rowid, $special) = @_;
   
@@ -925,7 +936,7 @@ sub addData{
   $self->{data}{$lid} = $val;
   if (defined $special) {
     $self->{special}{$lid} = $special;
-    print "[#####] {$lid} $special\n";
+#    print "[#####] {$lid} $special\n";
   }
   $self->{hasData}++;
   
