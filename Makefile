@@ -220,6 +220,10 @@ DEVAinstall_noman:
 
 ##########
 
+KWSEVALDIR=KWSEval
+
+##########
+
 check_f4debase_set:
 	@echo "** Checking that the F4DE_BASE environment variable is set"
 	@test ${F4DE_BASE}
@@ -365,6 +369,8 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/CCD
 ## R_tools
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/R_tools
+## KWSEval
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}
 
 create_mans:
 # common
