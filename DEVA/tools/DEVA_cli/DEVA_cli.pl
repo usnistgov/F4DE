@@ -32,7 +32,7 @@ if ($version =~ m/b$/) {
   $version = "$version (CVS: $cvs_version)";
 }
 
-my $versionid = "DEVA Command Line Interfce Version: $version";
+my $versionid = "DEVA Command Line Interface Version: $version";
 
 ##########
 # Check we have every module (perl wise)
