@@ -1559,7 +1559,8 @@ sub filecopy {
   copy($if, $of)
     or return("Problem copying file [$if] -> [$of] : $!");
   
-  my $err = &check_file_r($of);
+  $err = "";
+  $err = &check_file_r($of);
   return("Problem with copy output file ($of) : $err")
       if (! &is_blank($err));
 
