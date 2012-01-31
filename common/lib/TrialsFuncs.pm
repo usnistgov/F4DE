@@ -136,20 +136,23 @@ sub unitTest {
   
   
   print "OK\n";
+  $trial = undef;
 
   if (1){
     my $rtn;
     print "  Testing bad score handling\n";
 
     print "    No Trials...  ";
-    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial = undef;
+    $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
     MMisc::error_quit("Failed") if ($trial->_computeDecisionScoreThreshold() ne "pass") ;
     MMisc::error_quit("Threshold defined for No Trials case") 
       if (defined($trial->getTrialActualDecisionThreshold()));
     print "OK\n";
 
     print "    Overlapping yes/no in TARG, one trial for NONTarg...  ";
-    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial = undef;
+    $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
     $trial->addTrial("she", 0.7, "NO", 1);
     $trial->addTrial("she", 0.3, "YES", 1);
     $trial->addTrial("she", 0.3, "YES", 0);
@@ -159,7 +162,8 @@ sub unitTest {
     print "OK\n";
 
     print "    Overlapping yes/no in NONTARG, one trial for TARG...  ";
-    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial = undef;
+    $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
     $trial->addTrial("she", 0.7, "NO", 0);
     $trial->addTrial("she", 0.3, "YES", 0);
     $trial->addTrial("she", 0.3, "YES", 1);
@@ -169,7 +173,8 @@ sub unitTest {
     print "OK\n";
 
     print "    YES Decisions only Targ...  ";
-    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial = undef;
+    $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
     ### YES Only
     $trial->addTrial("YES Only Decision", 0.7, "YES", 1);
     $trial->addTrial("YES Only Decision", 0.3, "YES", 1);
@@ -185,7 +190,8 @@ sub unitTest {
     print "OK\n";
     
     print "    NO Decisions only Targ...  ";
-    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial = undef;
+    $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
     ### No Only
     $trial->addTrial("No Only Decision", 0.7, "NO", 1);
     $trial->addTrial("No Only Decision", 0.3, "NO", 1);
@@ -201,7 +207,8 @@ sub unitTest {
     print "OK\n";
 
     print "    YES Decisions only NONTarg...  ";
-    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial = undef;
+    $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
     ### YES Only
     $trial->addTrial("YES Only Decision", 0.7, "YES", 0);
     $trial->addTrial("YES Only Decision", 0.3, "YES", 0);
@@ -216,7 +223,8 @@ sub unitTest {
     print "OK\n";
     
     print "    NO Decisions only NONTarg...  ";
-    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial = undef;
+    $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
     ### No Only
     $trial->addTrial("No Only Decision", 0.7, "NO", 0);
     $trial->addTrial("No Only Decision", 0.3, "NO", 0);
@@ -231,7 +239,8 @@ sub unitTest {
     print "OK\n";
 
     print "    Overlapping yes/no within blocks...  ";
-    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial = undef;
+    $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
     ### No Targ
     $trial->addTrial("NoTarg", 0.7, "YES", 0);
     $trial->addTrial("NoTarg", 0.3, "YES", 0);
@@ -286,7 +295,8 @@ sub unitTest {
     print "OK\n";
 
     print "    Overlapping yes/no across blocks...  ";
-    my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+    $trial = undef;
+    $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
     $trial->addTrial("block1", 0.7, "YES", 0);
     $trial->addTrial("block1", 0.3, "YES", 0);
     $trial->addTrial("block1", 0.2, "NO", 0);
@@ -311,8 +321,9 @@ sub unitTest {
   }
   
   print " Tests for Trials without decisions...\n";
-  my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) },
-                              "Term Detection", "Term", "Occurrence");
+  $trial = undef;
+  $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) },
+                           "Term Detection", "Term", "Occurrence");
 
   ### Uncomment to test the catestrophic failure
   ##  $trial->addTrialWithoutDecision("she", 0.7, 1);
@@ -365,7 +376,7 @@ sub isCompatible(){
 #    return 0 if ($self->getTrialParamValue($k) ne $tr2->getTrialParamValue($k));
   }
 
-  my @tmp = $tr2->getTrialParamKeys();
+  @tmp = $tr2->getTrialParamKeys();
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $k = $tmp[$i];
     return 0 if (! $self->getTrialParamValueExists($k));
@@ -1139,7 +1150,7 @@ sub exportForDEVA{
       }
     }
     ### The NONTARGETS
-    my $dec = $self->getNonTargScr($blockIDs[$block]);
+    $dec = $self->getNonTargScr($blockIDs[$block]);
     for (my $d = 0; $d < @$dec; $d++){
       my $scr = $dec->[$d];
       my $decision = "n";
@@ -1187,7 +1198,7 @@ sub buildScoreDistributions{
       $targStat->add_data($dec->[$d]);
     }
     ### The NONTARGETS
-    my $dec = $self->getNonTargScr($blockIDs[$block]);
+    $dec = $self->getNonTargScr($blockIDs[$block]);
     for (my $d = 0; $d < @$dec; $d++){
       $nontargStat->add_data($dec->[$d]);
     }
