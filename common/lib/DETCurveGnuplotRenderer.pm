@@ -432,13 +432,13 @@ sub renderUnitTest{
   $options->{KeyLoc} = "bottom";
   $options->{HD} = 1;
   $options->{AutoAdapt} = 0;
-  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/g1HD.nd.nd",  $ds);
 
   $options->{KeyLoc} = "below";
   $options->{HD} = 1;
   $options->{AutoAdapt} = 1;
-  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/g1HDa.nd.nd",  $ds);
   
   $options->{Xmin} = .0001;
@@ -704,8 +704,8 @@ sub lineTitleControlUnitTest{
   my $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/LC.default",  $ds);
   print HTML "  <TR>\n";
-  print HTML "   <TD colspan=2>Default settings<br><pre>".Dumper($options)."</pre><\TD>\n";
-  print HTML "  <\TR>\n";
+  print HTML "   <TD colspan=2>Default settings<br><pre>".Dumper($options)."</pre></TD>\n";
+  print HTML "  </TR>\n";
   print HTML "  <TR>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.default.png\"></TD>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.default.Name_1.png\"></TD>\n";
@@ -716,11 +716,11 @@ sub lineTitleControlUnitTest{
                 "DETShowPoint_Actual" => 1,
                 "DETShowPoint_Best" => 1,
                 "DETShowPoint_Ratios" => 1};
-  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/LC.all",  $ds);
   print HTML "  <TR>\n";
-  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre><\TD>\n";
-  print HTML "  <\TR>\n";
+  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre></TD>\n";
+  print HTML "  </TR>\n";
   print HTML "  <TR>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.all.png\"></TD>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.all.Name_1.png\"></TD>\n";
@@ -729,11 +729,11 @@ sub lineTitleControlUnitTest{
   ########################################################
   $options = { "Isoratiolines" =>  [ ( 20, 40, 80 ) ],
                 "DETShowPoint_Actual" => 1};
-  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/LC.act",  $ds);
   print HTML "  <TR>\n";
-  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre><\TD>\n";
-  print HTML "  <\TR>\n";
+  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre></TD>\n";
+  print HTML "  </TR>\n";
   print HTML "  <TR>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.act.png\"></TD>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.act.Name_1.png\"></TD>\n";
@@ -743,11 +743,11 @@ sub lineTitleControlUnitTest{
   ########################################################
   $options = { "Isoratiolines" =>  [ ( 20, 40, 80 ) ],
                 "DETShowPoint_Best" => 1};
-  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/LC.best",  $ds);
   print HTML "  <TR>\n";
-  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre><\TD>\n";
-  print HTML "  <\TR>\n";
+  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre></TD>\n";
+  print HTML "  </TR>\n";
   print HTML "  <TR>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.best.png\"></TD>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.best.Name_1.png\"></TD>\n";
@@ -756,11 +756,11 @@ sub lineTitleControlUnitTest{
   ########################################################
   $options = { "Isoratiolines" =>  [ ( 20, 40, 80 ) ],
                 "DETShowPoint_Ratios" => 1};
-  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/LC.rat",  $ds);
   print HTML "  <TR>\n";
-  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre><\TD>\n";
-  print HTML "  <\TR>\n";
+  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre></TD>\n";
+  print HTML "  </TR>\n";
   print HTML "  <TR>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.rat.png\"></TD>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.rat.Name_1.png\"></TD>\n";
@@ -772,11 +772,11 @@ sub lineTitleControlUnitTest{
                 "DETShowPoint_Actual" => 1,
                 "DETShowPoint_Best" => 1,
                 "DETShowPoint_Ratios" => 1};
-  my $dcRend = new DETCurveGnuplotRenderer($options);
+  $dcRend = new DETCurveGnuplotRenderer($options);
   $dcRend->writeMultiDetGraph("$dir/LC.sel",  $ds);
   print HTML "  <TR>\n";
-  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre><\TD>\n";
-  print HTML "  <\TR>\n";
+  print HTML "   <TD colspan=2><pre>".Dumper($options)."</pre></TD>\n";
+  print HTML "  </TR>\n";
   print HTML "  <TR>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.sel.png\"></TD>\n";
   print HTML "   <TD width=25%> <IMG src=\"$dir/LC.sel.Name_1.png\"></TD>\n";
@@ -1976,7 +1976,7 @@ sub __check_gnuplot {
   my ($err, $bv) = MMisc::get_version_comp($gnuplotminv, 5, 1000);
   return("Problem obtaining default version number ($err)") 
     if (! MMisc::is_blank($err));
-  my ($err, $cv) = MMisc::get_version_comp($so, 5, 1000);
+  ($err, my $cv) = MMisc::get_version_comp($so, 5, 1000);
   return("Problem obtaining comparable version number ($err) [$oso / $so]") 
     if (! MMisc::is_blank($err));
   
