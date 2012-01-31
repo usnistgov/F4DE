@@ -346,7 +346,7 @@ sub _buildAutoTable(){
     
     if ($reportActual){
       my $act = "Act. ";
-      my $act = "";
+      $act = "";
       $at->addData(&_PN($metric->errFAPrintFormat(), $BSfaAvg),     ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . $act . $metric->errFALab(),   $key);
       $at->addData(&_PN($metric->errMissPrintFormat(), $BSmissAvg), ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . $act . $metric->errMissLab(), $key);
       $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . $act . $comblab,    $key);
@@ -379,7 +379,8 @@ sub renderAsTxt(){
   }
   
   my $reportActual = 1;
-  $reportActual = $DETOptions->{DETShowPoint_Actual} if (exists($DETOptions->{DETShowPoint_Actual}));
+  $reportActual = $DETOptions->{DETShowPoint_Actual} 
+    if (exists($DETOptions->{DETShowPoint_Actual}));
 
   ### Build the combined and separate DET PNGs
   my $multiInfo = {()};

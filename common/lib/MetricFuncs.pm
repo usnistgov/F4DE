@@ -93,7 +93,7 @@ sub isCompatible(){
     return 0 if ($self->{PARAMS}->{$k} ne $met2->{PARAMS}->{$k});
   }
 
-  my @tmp = keys %{ $met2->{PARAMS} };
+  @tmp = keys %{ $met2->{PARAMS} };
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $k = $tmp[$i];
     return 0 if (! exists($self->{PARAMS}->{$k}));

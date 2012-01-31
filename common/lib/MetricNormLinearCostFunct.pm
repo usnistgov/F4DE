@@ -314,7 +314,7 @@ sub unitTest {
   $trial->addTrial("she", 1.0, "YES", 1);
 
 
-  my @isolinecoef = ( 31 );
+  @isolinecoef = ( 31 );
 
   use DETCurve;
   use DETCurveSet;
@@ -622,7 +622,7 @@ sub blockAverageUnitTest{
       $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 1);
       $epochTrial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 1);
       # NonTargets
-      my $scr = $decisionScoreRand->next() - (0.25 + $epoch * 0.02);
+      $scr = $decisionScoreRand->next() - (0.25 + $epoch * 0.02);
       $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
       $epochTrial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
     }
