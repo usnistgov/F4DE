@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/env perl -w
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 
 # KWSEval
@@ -29,7 +29,7 @@ use strict;
 ##########
 # Version
 
-# $I$
+# $Id$
 my $version     = "0.8b";
 
 if ($version =~ m/b$/) {
@@ -63,7 +63,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("RTTMList", "KWSecf", "TermList", "KWSList", "KWSTools", "Mapping", "MappedRecord",
+foreach my $pn ("MMisc", "RTTMList", "KWSecf", "TermList", "KWSList", "KWSTools", "Mapping", "MappedRecord",
                 "KWSAlignment", "CacheOccurrences", "KWSDETSet") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
@@ -137,7 +137,8 @@ sub checksumSystemV
     my($filename) = @_;
     my $stringf = "";
     
-    open(FILE, $filename) or die "cannot open file '$filename' for checksum";
+    open(FILE, $filename) 
+      or MMisc::error_quit("cannot open file '$filename' for checksum");
     
     while (<FILE>)
     {
@@ -358,7 +359,8 @@ else
 	# Use the list given on the command-line
 	foreach my $coefi ( split( /,/ , $OptionIsoline ) )
 	{
-		die "ERROR: The coefficient for the iso-line if not a proper floating-point." if( $coefi !~ /^\d+(\.\d+)?$/ );
+		MMisc::error_quit("The coefficient for the iso-line if not a proper floating-point")
+      if( $coefi !~ /^\d+(\.\d+)?$/ );
 		push( @tmplistiso1, $coefi );
 	}
 }
@@ -369,13 +371,17 @@ else
 $haveReports = $requestreportAlign || $requestreportOccur || $requestDETCurve || $requestCSV || $requestHtml || $requestconditionalreportOccur || $requestDETConditionalCurve || $resquestchecktrans || $requestConditionalHtml;
 
 #check if the options are valid to run
-die "ERROR: An RTTM file must be set." if($RTTMfile eq "");
-die "ERROR: A TermList file must be set." if($TERMfile eq "");
+MMisc::error_quit("An RTTM file must be set")
+  if($RTTMfile eq "");
+MMisc::error_quit("A TermList file must be set")
+  if($TERMfile eq "");
 
 if($haveReports)
 {
-    die "ERROR: An ECF file must be set." if($ECFfile eq "");
-    die "ERROR: An STDList file must be set." if($STDfile eq "");
+    MMisc::error_quit("An ECF file must be set")
+      if($ECFfile eq "");
+    MMisc::error_quit("An STDList file must be set")
+      if($STDfile eq "");
 }
 
 #loading the files
