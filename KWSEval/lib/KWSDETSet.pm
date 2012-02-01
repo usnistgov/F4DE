@@ -19,6 +19,7 @@ package KWSDETSet;
 
 use strict;
 use Data::Dumper;
+use MMisc;
 
 sub new {
     my ($class) = @_;
@@ -62,7 +63,8 @@ sub writeMultiDET(){
 
 sub serialize(){
     my ($self, $file) = @_;
-    open (FILE, ">$file") || die "Error: Unable to open file '$file' to serialize KWSDETSet to";
+    open (FILE, ">$file") 
+      or MMisc::error_quit("Unable to open file '$file' to serialize KWSDETSet to : $!");
     my $orig = $Data::Dumper::Indent; 
     $Data::Dumper::Indent = 0;
     print FILE Dumper($self); 
@@ -73,7 +75,8 @@ sub serialize(){
 sub readFromFile{
     my ($file) = @_;
     my $str = "";
-    open (FILE, "$file") || die "Failed to open $file for read";
+    open (FILE, "$file")
+      or MMisc::error_quit("Failed to open $file for read : $!");
     while (<FILE>) { $str .= $_ ; }
     close FILE;
     my $VAR1;

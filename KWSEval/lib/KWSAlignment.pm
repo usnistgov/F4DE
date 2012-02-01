@@ -15,6 +15,7 @@
 package KWSAlignment;
 
 use strict;
+
 use MappedRecord;
 use DETCurve;
 use KWSDETSet;
@@ -26,6 +27,8 @@ use encoding 'euc-cn';
 use encoding 'utf8';
 
 use Data::Dumper;
+
+use MMisc;
 
 sub new
 {
@@ -99,7 +102,8 @@ sub transcriptCheckReport
 {
     my ($self, $output, $thresh) = @_;
     
-    open(OUTPUT, ($output ne "") ? ">$output" : ">&STDOUT") or die "cannot open '$output'";
+    open(OUTPUT, ($output ne "") ? ">$output" : ">&STDOUT") 
+      or MMisc::error_quit("cannot open '$output' : $!");
     
     my $high_corr = 0;
     my $high_famiss = 0;
@@ -240,11 +244,13 @@ sub csvReport
     
     if($output ne "")
     {
-        open(OUTPUT, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", $output) or die "cannot open '$output'";
+        open(OUTPUT, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", $output) 
+          or MMisc::error_quit("cannot open '$output' : $!");
     }
     else
     {
-        open(OUTPUT, ">&STDOUT") or die "cannot display in STDOUT";
+        open(OUTPUT, ">&STDOUT") 
+          or MMisc::error_quit("cannot display in STDOUT");
     }
     
     print STDERR "Writing csv report to '$output'.\n" if ($output ne "");
@@ -320,11 +326,13 @@ sub ReportAlign
     
     if($output ne "")
     {
-        open(OUTPUT_LOCAL, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", $output) or die "cannot open '$output'";
+        open(OUTPUT_LOCAL, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", $output) 
+          or MMisc::error_quit("cannot open '$output' : $!");
     }
     else
     {
-        open(OUTPUT_LOCAL, ">&STDOUT") or die "cannot display in STDOUT";
+        open(OUTPUT_LOCAL, ">&STDOUT") 
+          or MMisc::error_quit("cannot display in STDOUT");
     }
     
     print STDERR "Writing alignment report to '$output'.\n" if ($output ne "");
@@ -535,7 +543,7 @@ sub GenerateOccurrenceReport
             }
             elsif ($stats{TOTAL}{$type}{NUMTRIALS} != $stats{$termid}{$type}{NUMTRIALS})
             {
-                die "Error: Internal error calculating the total number of trials";
+                MMisc::error_quit("Internal error calculating the total number of trials");
             }
         }
                         
@@ -868,11 +876,13 @@ sub ReportOccurrence
     
     if($output ne "")
     {
-        open(OUTPUT_LOCAL, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", $output) or die "cannot open '$output'";
+        open(OUTPUT_LOCAL, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", $output) 
+          or MMisc::error_quit("cannot open '$output' : $!");
     }
     else
     {
-        open(OUTPUT_LOCAL, ">&STDOUT") or die "cannot display in STDOUT";
+        open(OUTPUT_LOCAL, ">&STDOUT") 
+          or MMisc::error_quit("cannot display in STDOUT");
     }
     
     print STDERR "Writing occurrence report to '$output'.\n" if ($output ne "");
@@ -1207,11 +1217,13 @@ sub ReportConditionalOccurrence
     
     if($output ne "")
     {
-        open(OUTPUT_LOCAL, ">$output") or die "cannot open '$output'";
+        open(OUTPUT_LOCAL, ">$output") 
+          or MMisc::error_quit("cannot open '$output' : $!");
     }
     else
     {
-        open(OUTPUT_LOCAL, ">&STDOUT") or die "cannot display in STDOUT";
+        open(OUTPUT_LOCAL, ">&STDOUT") 
+          or MMisc::error_quit("cannot display in STDOUT");
     }
     
     print STDERR "Writing conditional occureence report to '$output'.\n" if ($output ne "");
@@ -1406,7 +1418,8 @@ sub ReportHTML
     print STDERR "Writing HTML report to '$output'.\n";
     
     system("mkdir -p $output");
-    open(OUTPUT_INDEX, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", "$output/index.html") or die "cannot open '$output/index.html'";
+    open(OUTPUT_INDEX, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", "$output/index.html") 
+      or MMisc::error_quit("cannot open '$output/index.html' : $!");
     
     my $display_bnews = ($stats->{TOTAL}{BNEWS}{NBR_TERMS} != 0);
     my $display_cts = ($stats->{TOTAL}{CTS}{NBR_TERMS} != 0);
@@ -1984,7 +1997,8 @@ sub ReportConditionalHTML
     print STDERR "Writing Conitional HTML report to '$output'.\n";
     
     system("mkdir -p $output");
-    open(OUTPUT_INDEX, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", "$output/index.html") or die "cannot open '$output/index.html'";
+    open(OUTPUT_INDEX, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", "$output/index.html") 
+      or MMisc::error_quit("cannot open '$output/index.html' : $!");
     
     my @all_TermSet;
     my @all_SourcetypeSet;

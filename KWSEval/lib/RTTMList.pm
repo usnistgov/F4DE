@@ -13,8 +13,10 @@
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 package RTTMList;
+
 use strict;
 use RTTMRecord;
+use MMisc;
  
 sub new
 {
@@ -34,23 +36,29 @@ sub new
 
 sub unitTest
 {
-    my $file1 = "test1.rttm";
-    
+    my ($file1) = @_;
+
+    my $err = MMisc::check_file_r($file1);
+    if (! MMisc::is_blank($err)) {
+      print "Issue with needed test file ($file1) : $err";
+      return(0);
+    }
+
     print "Test RTTMList\n";
       
-    print " Loading File...         ";
+    print " Loading File...          ";
     my $rttml = new RTTMList($file1);
     print "OK\n";
     
-    print " Finding terms (1)...    ";
+    print " Finding terms (1)...     ";
     my $out1 = $rttml->findTermOccurrences("Yates", 0.1);
     print "OK\n";
     
-    print " Finding terms (2)...    ";
+    print " Finding terms (2)...     ";
     my $out2 = $rttml->findTermOccurrences("of the", 0.0);
     print "OK\n";
     
-    print " Finding terms (3)...    ";
+    print " Finding terms (3)...     ";
     my $out3 = $rttml->findTermOccurrences("has been a", 0.5);
     print "OK\n";
     
@@ -65,7 +73,7 @@ sub unitTest
         return 0;
     }
     
-    print " Terms accuracy...       ";
+    print " Terms accuracy...        ";
     
     for(my $i=0; $i<@$out1; $i++)
     {
@@ -117,7 +125,7 @@ sub unitTest
     
     print "OK\n";
 
-    print " Threashold...           ";
+    print " Threshold...             ";
     
     for(my $i=0; $i<@$out2; $i++)
     {
@@ -145,7 +153,7 @@ sub unitTest
     
     print "OK\n";
     
-    print " Case sensitive...       ";
+    print " Case sensitive...        ";
     
     my $out4 = $rttml->findTermOccurrences("Jacques Chirac", 0.5);
     my $out5 = $rttml->findTermOccurrences("Jacques chirac", 0.5);
@@ -158,7 +166,7 @@ sub unitTest
     
     print "OK\n";
     
-    print " Space parsing...        ";
+    print " Space parsing...         ";
     
     my $out6 = $rttml->findTermOccurrences("    of       the   ", 0.0);
     
@@ -170,7 +178,7 @@ sub unitTest
     
     print "OK\n";
      
-    print " Adjacent terms (1)...   ";
+    print " Adjacent terms (1)...    ";
     my $out7 = $rttml->findTermOccurrences("word1 word2", 0.5);
     if( @$out7 != 3 )
     {
@@ -179,7 +187,7 @@ sub unitTest
     }
     print "OK\n";
      
-    print " Adjacent terms (2)...   ";
+    print " Adjacent terms (2)...    ";
     my $out8 = $rttml->findTermOccurrences("word1 word2 word3", 0.5);
     if( @$out8 != 2 )
     {
@@ -219,7 +227,7 @@ sub loadFile
     
     print STDERR "Loading RTTM file '$rttmFile'.\n";
     
-    open(RTTM, $rttmFile) or die "Unable to open for read RTTM file '$rttmFile'";
+    open(RTTM, $rttmFile) or MMisc::error_quit("Unable to open for read RTTM file '$rttmFile' : $!");
     
     while (<RTTM>)
     {

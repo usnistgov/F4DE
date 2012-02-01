@@ -14,6 +14,7 @@
 
 package KWSTrials;
 use strict;
+use MMisc;
  
 sub new
 {
@@ -68,18 +69,28 @@ sub unitTest
     print "OK\n";
     print " Checking contents...  ";
     foreach my $tr($trial, $trial->copy(), $sorted){
-	die "Error: Not enough blocks" if (scalar(keys(%{ $tr->{trials} })) != 2);
-	die "Error: Not enough 'NO TARG' for block 'second'" if ( $tr->{trials}{"second"}{"NO TARG"} != 1);
-	die "Error: Not enough 'YES TARG' for block 'second'" if ( $tr->{trials}{"second"}{"YES TARG"} != 1);
-	die "Error: Not enough 'NO TARG' for block 'second'" if ( $tr->{trials}{"second"}{"NO NONTARG"} != 1);
-	die "Error: Not enough 'YES TARG' for block 'second'" if ( $tr->{trials}{"second"}{"YES NONTARG"} != 1);
-	die "Error: Not enough TARGs for block 'second'" if (scalar(@{ $tr->{trials}{"second"}{"TARG"} }) != 2);
-	die "Error: Not enough NONTARGs for block 'second'" if (scalar(@{ $tr->{trials}{"second"}{"NONTARG"} }) != 2);
+	MMisc::error_quit("Not enough blocks")
+            if (scalar(keys(%{ $tr->{trials} })) != 2);
+	MMisc::error_quit("Not enough 'NO TARG' for block 'second'")
+            if ( $tr->{trials}{"second"}{"NO TARG"} != 1);
+	MMisc::error_quit("Not enough 'YES TARG' for block 'second'")
+            if ( $tr->{trials}{"second"}{"YES TARG"} != 1);
+	MMisc::error_quit("Not enough 'NO TARG' for block 'second'")
+            if ( $tr->{trials}{"second"}{"NO NONTARG"} != 1);
+	MMisc::error_quit("Not enough 'YES TARG' for block 'second'")
+            if ( $tr->{trials}{"second"}{"YES NONTARG"} != 1);
+	MMisc::error_quit("Not enough TARGs for block 'second'")
+            if (scalar(@{ $tr->{trials}{"second"}{"TARG"} }) != 2);
+	MMisc::error_quit("Not enough NONTARGs for block 'second'")
+            if (scalar(@{ $tr->{trials}{"second"}{"NONTARG"} }) != 2);
 	if ($tr->{isSorted}){
-	    die "Error: TARGs not sorted" if ($tr->{trials}{"second"}{"TARG"}[0] > $tr->{trials}{"second"}{"TARG"}[1]);
-	    die "Error: NONTARGs not sorted" if ($tr->{trials}{"second"}{"NONTARG"}[0] > $tr->{trials}{"second"}{"NONTARG"}[1]);
+	    MMisc::error_quit("TARGs not sorted")
+                if ($tr->{trials}{"second"}{"TARG"}[0] > $tr->{trials}{"second"}{"TARG"}[1]);
+	    MMisc::error_quit("NONTARGs not sorted")
+                if ($tr->{trials}{"second"}{"NONTARG"}[0] > $tr->{trials}{"second"}{"NONTARG"}[1]);
 	}
-	die "Error: pooledTotalTrials not set" if ($tr->{pooledTotalTrials} != 78);
+	MMisc::error_quit("pooledTotalTrials not set")
+            if ($tr->{pooledTotalTrials} != 78);
 
     }
     print "OK\n";
@@ -103,7 +114,8 @@ sub addTrial
 {
     my ($self, $block, $sysscore, $decision, $isTarg) = @_;
 
-    die "Error: Decision must be \"YES|NO|OMITED\" not '$decision'" if ($decision !~ /^(YES|NO|OMITTED)$/);
+    MMisc::error_quit("Decision must be \"YES|NO|OMITED\" not '$decision'")
+        if ($decision !~ /^(YES|NO|OMITTED)$/);
     my $attr = ($isTarg ? "TARG" : "NONTARG");
 
     if (! defined($self->{"trials"}{$block}{"title"}))

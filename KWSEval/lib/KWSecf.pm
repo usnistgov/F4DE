@@ -14,9 +14,12 @@
 
 package KWSecf;
 use strict;
+
 use KWSecf_excerpt;
 require File::Spec;
 use Data::Dumper;
+
+use MMisc;
  
 sub new
 {
@@ -58,9 +61,15 @@ sub new_empty
 
 sub unitTest
 {
+    my ($file1) = @_;
+
+    my $err = MMisc::check_file_r($file1);
+    if (! MMisc::is_blank($err)) {
+      print "Issue with needed test file ($file1) : $err";
+      return(0);
+    }
+
     print "Test ECF\n";
-    
-    my $file1 = "test1.ecf.xml";
     
     print " Loading File...          ";
     my $ecf = new KWSecf($file1);
@@ -160,7 +169,8 @@ sub loadFile
 
 	print STDERR "Loading ECF file '$ecff'.\n";
 
-    open(ECF, $ecff) or die "Unable to open for read ECF file '$ecff'";
+    open(ECF, $ecff) 
+      or MMisc::error_quit("Unable to open for read ECF file '$ecff' : $!");
     
     while (<ECF>)
     {
@@ -186,7 +196,7 @@ sub loadFile
     }
     else
     {
-        die "Invalid ECF file";
+        MMisc::error_quit("Invalid ECF file");
     }
     
     if($ecftag =~ /source_signal_duration="([0-9]*[\.[0-9]*]*[^"]*)"/)
@@ -195,7 +205,7 @@ sub loadFile
     }
     else
     {
-        die "ECF: 'source_signal_duration' option is missing in ecf tag";
+        MMisc::error_quit("ECF: 'source_signal_duration' option is missing in ecf tag");
     }
     
     if($ecftag =~ /version="(.*?[^"]*)"/)
@@ -204,7 +214,7 @@ sub loadFile
     }
     else
     {
-        die "ECF: 'version' option is missing in ecf tag";
+        MMisc::error_quit("ECF: 'version' option is missing in ecf tag");
     }
     
     my $excerpt;
@@ -226,7 +236,7 @@ sub loadFile
         }
         else
         {
-            die "ECF: 'audio_filename' option is missing in excerpt tag";
+            MMisc::error_quit("ECF: 'audio_filename' option is missing in excerpt tag");
         }
         
         my ($volume,$directories,$purged_filename) = File::Spec->splitpath($audio_filename);
@@ -242,7 +252,7 @@ sub loadFile
         }
         else
         {
-            die "ECF: 'channel' option is missing in excerpt tag";
+            MMisc::error_quit("ECF: 'channel' option is missing in excerpt tag");
         }
         
         if($excerpt =~ /tbeg="(.*?[^"]*)"/)
@@ -251,7 +261,7 @@ sub loadFile
         }
         else
         {
-            die "ECF: 'tbeg' option is missing in excerpt tag";
+            MMisc::error_quit("ECF: 'tbeg' option is missing in excerpt tag");
         }
         
         if($excerpt =~ /dur="(.*?[^"]*)"/)
@@ -260,7 +270,7 @@ sub loadFile
         }
         else
         {
-            die "ECF: 'dur' option is missing in excerpt tag";
+            MMisc::error_quit("ECF: 'dur' option is missing in excerpt tag");
         }
         
         if($excerpt =~ /language="(.*?[^"]*)"/)
@@ -269,7 +279,7 @@ sub loadFile
         }
         else
         {
-            die "ECF: 'language' option is missing in excerpt tag";
+            MMisc::error_quit("ECF: 'language' option is missing in excerpt tag");
         }
         
         if($excerpt =~ /source_type="(.*?[^"]*)"/)
@@ -278,7 +288,7 @@ sub loadFile
         }
         else
         {
-            die "ECF: 'source_type' option is missing in excerpt tag";
+            MMisc::error_quit("ECF: 'source_type' option is missing in excerpt tag");
         }
         
         $self->{EVAL_SIGN_DUR} += sprintf("%.4f", $dur) if(!$self->{FILECHANTIME}{$purged_filename});
@@ -304,7 +314,8 @@ sub SaveFile
 {
      my($self) = @_;
      
-     open(OUTPUTFILE, ">$self->{FILE}") or die "Cannot open to write '$self->{FILE}'";
+     open(OUTPUTFILE, ">$self->{FILE}") 
+       or MMisc::error_quit("Cannot open to write '$self->{FILE}' : $!");
      
      print OUTPUTFILE "<ecf source_signal_duration=\"$self->{SIGN_DUR}\" version=\"$self->{VER}\">\n";
      

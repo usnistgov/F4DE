@@ -15,6 +15,7 @@
 package TermList;
 use strict;
 use TermListRecord;
+use MMisc;
  
 sub new
 {
@@ -94,7 +95,8 @@ sub QueriesToTermSet
     
     foreach my $quer(@{ $arrayqueries })
     {
-        die "ERROR: $quer is not a valid attribute." if(!$attributes{$quer});
+        MMisc::error_quit("$quer is not a valid attribute.")
+            if (!$attributes{$quer});
     }
     
     my %hashterm;
@@ -175,7 +177,8 @@ sub loadFile
     
     print STDERR "Loading Term List file '$tlistf'.\n";
     
-    open(TERMLIST, $tlistf) or die "Unable to open for read TermList file '$tlistf'";
+    open(TERMLIST, $tlistf) 
+      or MMisc::error_quit("Unable to open for read TermList file '$tlistf' : $!");
     
     while (<TERMLIST>)
     {
@@ -201,7 +204,7 @@ sub loadFile
     }
     else
     {
-        die "Invalid TermList file";
+        MMisc::error_quit("Invalid TermList file");
     }
         
     if($termlisttag =~ /ecf_filename="(.*?[^"]*)"/)
@@ -210,7 +213,7 @@ sub loadFile
     }
     else
     {
-         die "TermList: 'ecf_filename' option is missing in termlist tag";
+         MMisc::error_quit("TermList: 'ecf_filename' option is missing in termlist tag");
     }
     
     if($termlisttag =~ /version="(.*?[^"]*)"/)
@@ -219,7 +222,7 @@ sub loadFile
     }
     else
     {
-         die "TermList: 'version_date' option is missing in termlist tag";
+         MMisc::error_quit("TermList: 'version_date' option is missing in termlist tag");
     }
     
     if($termlisttag =~ /language="(.*?[^"]*)"/)
@@ -228,7 +231,7 @@ sub loadFile
     }
     else
     {
-         die "TermList: 'language' option is missing in termlist tag";
+         MMisc::error_quit("TermList: 'language' option is missing in termlist tag");
     }
             
     while( $allterms =~ /(<term termid="(.*?[^"]*)"[^>]*><termtext>(.*?)<\/termtext>(.*?)<\/term>)/ )
@@ -240,7 +243,8 @@ sub loadFile
         
         $attrib{TERMID} = $2;
         
-        die "Term ID $attrib{TERMID} already exists" if(exists($self->{TERMS}{$attrib{TERMID}}));
+        MMisc::error_quit("Term ID $attrib{TERMID} already exists")
+            if (exists($self->{TERMS}{$attrib{TERMID}}));
         
         $attrib{TEXT} = $3;
         
@@ -259,7 +263,8 @@ sub loadFile
             $attrib{$2} = sprintf("%02d", $3) if($2 eq "Syllables");
             my $y = quotemeta($1);
             $allterminfo =~ s/$y//;
-            die "Error: Infinite Loop in 'TermList' parsing!" if( ($previouslengthy == length($allterminfo)) && (length($allterminfo) != 0) );
+            MMisc::error_quit("Infinite Loop in 'TermList' parsing!")
+                if ( ($previouslengthy == length($allterminfo)) && (length($allterminfo) != 0) );
         }
         
         $self->{TERMS}{$attrib{TERMID}} = new TermListRecord(\%attrib);
@@ -284,7 +289,8 @@ sub saveFile
 		$self->{TERMLIST_FILENAME} = $file
     }
 
-    open(OUTPUTFILE, ">$self->{TERMLIST_FILENAME}")  or die "cannot open file '$self->{TERMLIST_FILENAME}'";
+    open(OUTPUTFILE, ">$self->{TERMLIST_FILENAME}") 
+      or MMisc::error_quit("cannot open file '$self->{TERMLIST_FILENAME}' : $!");
 
     if($self->{LANGUAGE} eq "mandarin")
     {   

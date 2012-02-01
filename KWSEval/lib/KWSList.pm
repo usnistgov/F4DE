@@ -16,6 +16,7 @@ package KWSList;
 use strict;
 use KWSDetectedList;
 require File::Spec;
+use MMisc;
 
 sub new
 {
@@ -95,7 +96,8 @@ sub loadFile
     
     print STDERR "Loading KWS List file '$stdlistf'.\n";
     
-    open(STDLIST, $stdlistf) or die "Unable to open for read KWSList file '$stdlistf'";
+    open(STDLIST, $stdlistf) 
+      or MMisc::error_quit("Unable to open for read KWSList file '$stdlistf' : $!");
     
     while (<STDLIST>)
     {
@@ -121,7 +123,7 @@ sub loadFile
     }
     else
     {
-        die "Invalid KWSList file";
+        MMisc::error_quit("Invalid KWSList file");
     }
     
     if($stdlisttag =~ /termlist_filename="(.*?[^"]*)"/)
@@ -130,7 +132,7 @@ sub loadFile
     }
     else
     {
-        die "KWS: 'termlist_filename' option is missing in kwslist tag";
+        MMisc::error_quit("KWS: 'termlist_filename' option is missing in kwslist tag");
     }
     
     if($stdlisttag =~ /indexing_time="(.*?[^"]*)"/)
@@ -139,7 +141,7 @@ sub loadFile
     }
     else
     {
-        die "KWS: 'indexing_time' option is missing in kwslist tag";
+        MMisc::error_quit("KWS: 'indexing_time' option is missing in kwslist tag");
     }
     
     if($stdlisttag =~ /language="(.*?[^"]*)"/)
@@ -148,7 +150,7 @@ sub loadFile
     }
     else
     {
-        die "KWS: 'language' option is missing in kwslist tag";
+        MMisc::error_quit("KWS: 'language' option is missing in kwslist tag");
     }
     
     if($stdlisttag =~ /index_size="(.*?[^"]*)"/)
@@ -157,7 +159,7 @@ sub loadFile
     }
     else
     {
-        die "KWS: 'index_size' option is missing in kwslist tag";
+        MMisc::error_quit("KWS: 'index_size' option is missing in kwslist tag");
     }
     
     if($stdlisttag =~ /system_id="(.*?[^"]*)"/)
@@ -166,7 +168,7 @@ sub loadFile
     }
     else
     {
-        die "KWS: 'system_id' option is missing in kwslist tag";
+        MMisc::error_quit("KWS: 'system_id' option is missing in kwslist tag");
     }
     
     while( $detectedtermlist =~ /(<detected_termlist (.*?[^>]*)>(.*?)<\/detected_termlist>)/ )
@@ -185,7 +187,7 @@ sub loadFile
         }
         else
         {
-            die "KWS: 'termid' option is missing in detected_termlist tag";
+            MMisc::error_quit("KWS: 'termid' option is missing in detected_termlist tag");
         }
         
         if($detectedtag =~ /term_search_time="(.*?[^"]*)"/)
@@ -194,7 +196,7 @@ sub loadFile
         }
         else
         {
-            die "KWS: 'term_search_time' option is missing in detected_termlist tag";
+            MMisc::error_quit("KWS: 'term_search_time' option is missing in detected_termlist tag");
         }
         
         if($detectedtag =~ /oov_term_count="(.*?[^"]*)"/)
@@ -203,7 +205,7 @@ sub loadFile
         }
         else
         {
-            die "KWS: 'oov_term_search' option is missing in detected_termlist tag";
+            MMisc::error_quit("KWS: 'oov_term_search' option is missing in detected_termlist tag");
         }
 
         my $detectedterm = new KWSDetectedList($detectedtermid, $detectedsearchtime, $detectedoov);
@@ -234,7 +236,7 @@ sub loadFile
             }
             else
             {
-                die "KWS: 'file' option is missing in term tag";
+                MMisc::error_quit("KWS: 'file' option is missing in term tag");
             }
             
             if($termtag =~ /channel="(.*?[^"]*)"/)
@@ -243,7 +245,7 @@ sub loadFile
             }
             else
             {
-                die "KWS: 'channel' option is missing in term tag";
+                MMisc::error_quit("KWS: 'channel' option is missing in term tag");
             }
             
             if($termtag =~ /tbeg="(.*?[^"]*)"/)
@@ -252,7 +254,7 @@ sub loadFile
             }
             else
             {
-                die "KWS: 'tbeg' option is missing in term tag";
+                MMisc::error_quit("KWS: 'tbeg' option is missing in term tag");
             }
             
             if($termtag =~ /dur="(.*?[^"]*)"/)
@@ -261,7 +263,7 @@ sub loadFile
             }
             else
             {
-                die "KWS: 'dur' option is missing in term tag";
+                MMisc::error_quit("KWS: 'dur' option is missing in term tag");
             }
             
             if($termtag =~ /score="(.*?[^"]*)"/)
@@ -272,7 +274,7 @@ sub loadFile
             }
             else
             {
-                die "KWS: 'score' option is missing in term tag";
+                MMisc::error_quit("KWS: 'score' option is missing in term tag");
             }
             
             if($termtag =~ /decision="(.*?[^"]*)"/)
@@ -281,7 +283,7 @@ sub loadFile
             }
             else
             {
-                die "KWS: 'decision' option is missing in term tag";
+                MMisc::error_quit("KWS: 'decision' option is missing in term tag");
             }
             
             if($decision eq "YES")
@@ -310,7 +312,8 @@ sub saveFile
     
     print STDERR "Saving KWS List file '$self->{STDLIST_FILENAME}'.\n";
     
-    open(OUTPUTFILE, ">$self->{STDLIST_FILENAME}") or die "Cannot open to write '$self->{STDLIST_FILENAME}'";
+    open(OUTPUTFILE, ">$self->{STDLIST_FILENAME}") 
+      or MMisc::error_quit("Cannot open to write '$self->{STDLIST_FILENAME}' : $!");
      
     print OUTPUTFILE "<stdlist termlist_filename=\"$self->{TERMLIST_FILENAME}\" indexing_time=\"$self->{INDEXING_TIME}\" language=\"$self->{LANGUAGE}\" index_size=\"$self->{INDEX_SIZE}\" system_id=\"$self->{SYSTEM_ID}\">\n";
      

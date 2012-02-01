@@ -13,11 +13,15 @@
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 package CacheOccurrences;
+
 use strict;
+
 use KWSTermRecord;
 use TermListRecord;
 use TermList;
 use Data::Dumper;
+use MMisc;
+
 
 sub new
 {
@@ -39,7 +43,8 @@ sub saveFile
 
 	print STDERR "Writing cache file to '$self->{FILENAME}'.\n";
         
-    open(CACHE_FILE, ">$self->{FILENAME}") or die "cannot open cache file '$self->{FILENAME}'";
+    open(CACHE_FILE, ">$self->{FILENAME}") 
+      or MMisc::error_quit("cannot open cache file '$self->{FILENAME}' : $!");
 
     print CACHE_FILE "<rttm_cache_file system_V=\"$self->{SYSTEMVRTTM}\" find_threshold=\"$self->{THRESHOLD}\">\n";
     
@@ -73,7 +78,8 @@ sub loadFile
     
     print STDERR "Loading Cache file '$self->{FILENAME}'.\n";
     
-    open(CACHE_FILE, "<$self->{FILENAME}") or die "cannot open cache file '$self->{FILENAME}'";
+    open(CACHE_FILE, "<$self->{FILENAME}") 
+      or MMisc::error_quit("cannot open cache file '$self->{FILENAME}' : $!");
     
     while (<CACHE_FILE>)
     {
@@ -99,7 +105,7 @@ sub loadFile
     }
     else
     {
-        die "Invalid Cache file";
+        MMisc::error_quit("Invalid Cache file");
     }
     
     if($cachelisttag =~ /system_V="(.*?[^"]*)"/)
@@ -108,7 +114,7 @@ sub loadFile
     }
     else
     {
-        die "Cache: 'system_V' option is missing in rttm_cache_file tag";
+        MMisc::error_quit("Cache: 'system_V' option is missing in rttm_cache_file tag");
     }
     
     if($cachelisttag =~ /find_threshold="(.*?[^"]*)"/)
@@ -117,7 +123,7 @@ sub loadFile
     }
     else
     {
-        die "Cache: 'find_threshold' option is missing in rttm_cache_file tag";
+        MMisc::error_quit("Cache: 'find_threshold' option is missing in rttm_cache_file tag");
     }
     
     while( $termlist =~ /(<term termid="(.*?[^"]*)"[^>]*><termtext>(.*?)<\/termtext>(.*?)<\/term>)/ )
@@ -143,7 +149,7 @@ sub loadFile
             }
             else
             {
-                die "Cache: 'file' option is missing in occurrence tag";
+                MMisc::error_quit("Cache: 'file' option is missing in occurrence tag");
             }
             
             if($alloptions =~ /channel="(.*?[^"]*)"/)
@@ -152,7 +158,7 @@ sub loadFile
             }
             else
             {
-                die "Cache: 'channel' option is missing in occurrence tag";
+                MMisc::error_quit("Cache: 'channel' option is missing in occurrence tag");
             }
             
             if($alloptions =~ /begt="(.*?[^"]*)"/)
@@ -161,7 +167,7 @@ sub loadFile
             }
             else
             {
-                die "Cache: 'begt' option is missing in occurrence tag";
+                MMisc::error_quit("Cache: 'begt' option is missing in occurrence tag");
             }
             
             if($alloptions =~ /dur="(.*?[^"]*)"/)
@@ -170,7 +176,7 @@ sub loadFile
             }
             else
             {
-                die "Cache: 'dur' option is missing in occurrence tag";
+                MMisc::error_quit("Cache: 'dur' option is missing in occurrence tag");
             }
             
             push( @{ $self->{REFLIST}{$termid}{$termtext} }, new KWSTermRecord($file, $channel, $begt, $dur, undef, undef));
