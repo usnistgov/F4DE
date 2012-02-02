@@ -917,12 +917,12 @@ sub check_dir_r { return(&_check_file_dir_XXX('dir', 'r', $_[0])); }
 sub check_dir_w { return(&_check_file_dir_XXX('dir', 'w', $_[0])); }
 sub check_dir_x { return(&_check_file_dir_XXX('dir', 'x', $_[0])); }
 
-sub does_file_exists { return( &is_blank( &check_file_e($_[0]) ) ); }
+sub does_file_exist { return( &is_blank( &check_file_e($_[0]) ) ); }
 sub is_file_r { return( &is_blank( &check_file_r($_[0]) ) ); }
 sub is_file_w { return( &is_blank( &check_file_w($_[0]) ) ); }
 sub is_file_x { return( &is_blank( &check_file_x($_[0]) ) ); }
 
-sub does_dir_exists { return( &is_blank( &check_dir_e($_[0]) ) ); }
+sub does_dir_exist { return( &is_blank( &check_dir_e($_[0]) ) ); }
 sub is_dir_r { return( &is_blank( &check_dir_r($_[0]) ) ); }
 sub is_dir_w { return( &is_blank( &check_dir_w($_[0]) ) ); }
 sub is_dir_x { return( &is_blank( &check_dir_x($_[0]) ) ); }

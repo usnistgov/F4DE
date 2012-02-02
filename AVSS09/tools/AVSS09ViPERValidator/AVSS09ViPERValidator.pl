@@ -414,7 +414,7 @@ sub __write_autoselect_ttid_VF {
   my $df = "$dd/$sffn.xml";
   my $efn = AVSS09ViperFile::get_XML_filename($df);
   MMisc::error_quit("Output ViperFile ($efn) already exists, and overwrite not requested, stopping further processing")
-      if ((! $ovwrt) && (MMisc::does_file_exists($efn)));
+      if ((! $ovwrt) && (MMisc::does_file_exist($efn)));
 
   return(&__write_GTF_ttid_VF($vf, $rttid, $sffn, $efn))
     if ($isgtf);

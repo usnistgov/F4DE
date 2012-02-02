@@ -781,11 +781,11 @@ sub extend_file_location {
   my ($rf, $t, @pt) = @_;
 
   return if (MMisc::is_blank($$rf));
-  return if (MMisc::does_file_exists($$rf));
+  return if (MMisc::does_file_exist($$rf));
 
   foreach my $p (@pt) {
     my $v = "$p/$$rf";
-    if (MMisc::does_file_exists($v)) {
+    if (MMisc::does_file_exist($v)) {
 #      &note_print("Using \'$t\' file: $v");
       $$rf = $v;
       return();

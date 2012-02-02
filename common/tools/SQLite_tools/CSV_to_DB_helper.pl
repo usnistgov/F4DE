@@ -183,7 +183,7 @@ if ($createDBs) {
   print "***** Creating initial DataBases (if not already present)\n";
   my $done = 0;
   
-  if (MMisc::does_file_exists($mdDBcfg)) {
+  if (MMisc::does_file_exist($mdDBcfg)) {
     print "** In progress\n";
     &db_create($mdDBcfg, 1, $mdDBfile, "$logdir/DBgen_${mdDBb}.log");
     $done++;
@@ -226,7 +226,7 @@ sub do_cfgfile {
 sub db_create {
   my ($cfgfile, $nullok, $dbfile, $log) = @_;
 
-  if (MMisc::does_file_exists($dbfile)) {
+  if (MMisc::does_file_exist($dbfile)) {
     print " -> DB file already exists, not overwriting it\n";
     return();
   }
@@ -297,11 +297,11 @@ sub extend_file_location {
   my ($rf, $t, @pt) = @_;
 
   return if (MMisc::is_blank($$rf));
-  return if (MMisc::does_file_exists($$rf));
+  return if (MMisc::does_file_exist($$rf));
 
   foreach my $p (@pt) {
     my $v = "$p/$$rf";
-    if (MMisc::does_file_exists($v)) {
+    if (MMisc::does_file_exist($v)) {
       $$rf = $v;
       return();
     }

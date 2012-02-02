@@ -777,7 +777,7 @@ sub mota_comp_csv {
     my $lcid = $cid{$sffn};
 
     my $tf = "$bd/$sffn-MOTA_Components.csv";
-    if (! MMisc::does_file_exists($tf)) {
+    if (! MMisc::does_file_exist($tf)) {
       MMisc::warn_print("Could not find CAM $lcid MOTA Components CSV file ($tf), most likely no content");
       next;
     }

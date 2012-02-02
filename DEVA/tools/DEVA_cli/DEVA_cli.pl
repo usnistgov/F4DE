@@ -325,19 +325,19 @@ if ($createDBs) {
   print "***** Creating initial DataBases (if not already present)\n";
   my $done = 0;
   
-  if (MMisc::does_file_exists($mdDBcfg)) {
+  if (MMisc::does_file_exist($mdDBcfg)) {
     print "** Metadata\n";
     &db_create($mdDBcfg, 1, $mdDBfile, "$logdir/DBgen_${mdDBb}.log");
     $done++;
   }
 
-  if (MMisc::does_file_exists($refDBcfg)) {
+  if (MMisc::does_file_exist($refDBcfg)) {
     print "** REF\n";
     &db_create($refDBcfg, 0, $refDBfile, "$logdir/DBgen_${refDBb}.log");
     $done++;
   }
   
-  if (MMisc::does_file_exists($sysDBcfg)) {
+  if (MMisc::does_file_exist($sysDBcfg)) {
     print "** SYS\n";
     &db_create($sysDBcfg, 0, $sysDBfile, "$logdir/DBgen_${sysDBb}.log");
     &derivedSys_Derive($sysDBfile, $mdDBfile);
@@ -418,7 +418,7 @@ sub do_cfgfile {
 sub db_create {
   my ($cfgfile, $nullok, $dbfile, $log) = @_;
 
-  if (MMisc::does_file_exists($dbfile)) {
+  if (MMisc::does_file_exist($dbfile)) {
     print " -> DB file already exists, not overwriting it\n";
     return();
   }
@@ -616,7 +616,7 @@ sub derivedSys_Derive {
 
   $cmd .= "DROP TABLE IF EXISTS $sysTN;\n";
   $cmd .= "CREATE TABLE $sysTN (TrialID TEXT PRIMARY KEY, Score REAL, Decision TEXT CHECK(Decision==\"y\" OR Decision==\"n\"));\n";
-  $cmd .= "ATTACH DATABASE \"$mddb\" AS $mdDBb;\n" if (MMisc::does_file_exists($mddb));
+  $cmd .= "ATTACH DATABASE \"$mddb\" AS $mdDBb;\n" if (MMisc::does_file_exist($mddb));
   
   $cmd .= MMisc::slurp_file($derivedSys);
 
@@ -796,11 +796,11 @@ sub extend_file_location {
   my ($rf, $t, @pt) = @_;
 
   return if (MMisc::is_blank($$rf));
-  return if (MMisc::does_file_exists($$rf));
+  return if (MMisc::does_file_exist($$rf));
 
   foreach my $p (@pt) {
     my $v = "$p/$$rf";
-    if (MMisc::does_file_exists($v)) {
+    if (MMisc::does_file_exist($v)) {
 #      &note_print("Using \'$t\' file: $v");
       $$rf = $v;
       return();

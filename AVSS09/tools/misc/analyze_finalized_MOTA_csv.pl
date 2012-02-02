@@ -570,7 +570,7 @@ sub load_ECF_global_results {
       return();
     }
 
-    if (! MMisc::does_file_exists($nf)) {
+    if (! MMisc::does_file_exist($nf)) {
       MMisc::warn_print("Could not find $metric file");
       next;
     }
