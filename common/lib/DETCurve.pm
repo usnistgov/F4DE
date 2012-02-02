@@ -142,7 +142,7 @@ sub srlLoadTest {
 
     print "  Binary srl load test ... ";
     # Write the det to a file the old school way and read it back in.
-    my $tmp = "/tmp/serialize";
+    $tmp = "/tmp/serialize";
     $binaryDet->serialize($tmp);
     my $readBinaryDet = DETCurve::readFromFile("$tmp.gz", "gzip");
 
