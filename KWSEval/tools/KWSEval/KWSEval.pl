@@ -63,7 +63,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("MMisc", "RTTMList", "KWSecf", "TermList", "KWSList", "KWSTools", "Mapping", "MappedRecord",
+foreach my $pn ("MMisc", "RTTMList", "KWSecf", "TermList", "KWSList", "KWSTools", "KWSMappedRecord", 'BipartiteMatch',
                 "KWSAlignment", "CacheOccurrences", "KWSDETSet") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
@@ -481,7 +481,7 @@ foreach my $termsid(sort keys %{ $TERM->{TERMS} })
     
     if($haveReports)
     {
-        $mappings{$termsid} = new MappedRecord();
+        $mappings{$termsid} = new KWSMappedRecord();
         $mappings{$termsid}->{UNMAPPED_SYS} = [()];
         $mappings{$termsid}->{UNMAPPED_REF} = [()];
         $mappings{$termsid}->{MAPPED} = [()];
@@ -542,8 +542,9 @@ foreach my $termsid(sort keys %{ $TERM->{TERMS} })
         }
         
         #compute mapping
-        my $map = map_ref_to_sys(\%joint_values, \%fa_values, \%miss_values);
-        
+        my ($err, %Rmap) = BipartiteMatch::_map_ref_to_sys(\%joint_values, \%fa_values, \%miss_values, 0);
+        my $map = \%Rmap;
+
         while (my($ref_id, $sys_id) = each %$map)
         {
             push(@{ $mappings{$termsid}->{MAPPED} }, [ ($sys_occs{$sys_id}, $ref_occs{$ref_id}) ]);
