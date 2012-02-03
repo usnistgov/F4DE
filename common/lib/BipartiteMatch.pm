@@ -547,7 +547,7 @@ sub compute {
     $ref_ids{$ref_id}++;
   }
   my %sys_ids = ();
-  my @tmp = keys %sysObj;
+  @tmp = keys %sysObj;
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $sys_id = $tmp[$i];
     $sys_ids{$sys_id}++;
@@ -698,7 +698,7 @@ sub _map_ref_to_sys_clique_cohorts {
   }
   
   # Then the leftover sys
-  my @tmp = keys %td_sys;
+  @tmp = keys %td_sys;
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $sys_id = $tmp[$i];
     next if (! exists $td_sys{$sys_id});
@@ -731,7 +731,7 @@ sub _map_ref_to_sys_clique_cohorts {
     }
     my %tmp_md = ();
     for (my $j = 0; $j < scalar @rl; $j++) {
-      my $ref_id = @rl[$j];
+      my $ref_id = $rl[$j];
       $tmp_md{$ref_id} = $$rmd{$ref_id};
     }
     
@@ -785,7 +785,7 @@ sub _map_ref_to_sys_cohorts {
     }
   }
 
-  my @ktmp = keys %reversed_values;
+  @ktmp = keys %reversed_values;
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $sys_id = $ktmp[$i];
     return("No false alarm value for sys ID \'$sys_id\'", ())
@@ -800,7 +800,7 @@ sub _map_ref_to_sys_cohorts {
 
   # Group ref and sys IDs into "cohort sets" and map each set independently
   my %map = ();
-  my @ktmp = values %ref_info;
+  @ktmp = values %ref_info;
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $ref = $ktmp[$i];
     next if (exists $ref->{cohort});
