@@ -1,0 +1,525 @@
+<stdlist termlist_filename="test2.tlist.xml" indexing_time="74390.00" language="english" index_size="21235877" system_id="">
+<detected_termlist termid="TEST-01" term_search_time="24.3" oov_term_count="0">
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1211.630" dur="0.470" score="0.995379" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1221.380" dur="0.490" score="0.994927" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1370.960" dur="0.540" score="0.938093" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1378.550" dur="0.510" score="0.995338" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-02" term_search_time="24.3" oov_term_count="0">
+</detected_termlist>
+<detected_termlist termid="TEST-03" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1630.710" dur="0.370" score="0.966931" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="697.120" dur="0.260" score="0.970571" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1475.910" dur="0.310" score="0.624710" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1539.510" dur="0.330" score="0.387494" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="185.960" dur="0.390" score="0.994659" decision="YES"/>
+<term file="fsh_60493_exA" channel="2" tbeg="230.508" dur="0.262" score="0.902341" decision="YES"/>
+<term file="fsh_60885_exA" channel="2" tbeg="166.494" dur="0.364" score="0.959281" decision="YES"/>
+<term file="NIST_20050412-1303_exA" channel="1" tbeg="117.288" dur="0.360" score="0.916841" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-04" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1275.450" dur="0.230" score="0.995029" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="11.850" dur="0.490" score="0.994310" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="95.840" dur="0.360" score="0.934014" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="976.910" dur="0.320" score="0.979520" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1468.680" dur="0.330" score="0.995276" decision="YES"/>
+<term file="fsh_60398_exA" channel="1" tbeg="247.096" dur="0.232" score="0.904189" decision="YES"/>
+<term file="fsh_60648_exA" channel="2" tbeg="153.508" dur="0.252" score="0.624296" decision="YES"/>
+<term file="fsh_60650_exA" channel="1" tbeg="69.785" dur="0.268" score="0.348936" decision="YES"/>
+<term file="fsh_60682_exA" channel="1" tbeg="195.778" dur="0.234" score="0.937138" decision="YES"/>
+<term file="fsh_60720_exA" channel="1" tbeg="203.236" dur="0.264" score="0.939027" decision="YES"/>
+<term file="fsh_60720_exA" channel="2" tbeg="141.254" dur="0.270" score="0.732423" decision="YES"/>
+<term file="fsh_60784_exA" channel="1" tbeg="0.894" dur="0.216" score="0.944091" decision="YES"/>
+<term file="fsh_60784_exA" channel="1" tbeg="127.916" dur="0.216" score="0.777547" decision="YES"/>
+<term file="fsh_60784_exA" channel="1" tbeg="167.430" dur="0.397" score="0.823613" decision="YES"/>
+<term file="fsh_60784_exA" channel="2" tbeg="125.286" dur="0.312" score="0.770314" decision="YES"/>
+<term file="fsh_60797_exA" channel="1" tbeg="18.006" dur="0.296" score="0.886028" decision="YES"/>
+<term file="fsh_60797_exA" channel="1" tbeg="19.927" dur="0.315" score="0.880586" decision="YES"/>
+<term file="fsh_60797_exA" channel="1" tbeg="121.944" dur="0.256" score="0.911446" decision="YES"/>
+<term file="fsh_60797_exA" channel="1" tbeg="130.366" dur="0.208" score="0.909900" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="2.106" dur="0.418" score="0.868492" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="4.508" dur="0.278" score="0.548888" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="16.084" dur="0.302" score="0.949027" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="32.760" dur="0.262" score="0.460527" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="33.760" dur="0.500" score="0.767044" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="79.474" dur="0.318" score="0.898572" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="79.898" dur="0.234" score="0.875251" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="88.918" dur="0.288" score="0.745048" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="294.330" dur="0.300" score="0.892543" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="296.604" dur="0.300" score="0.931559" decision="YES"/>
+<term file="fsh_61039_exA" channel="2" tbeg="60.354" dur="0.296" score="0.879582" decision="YES"/>
+<term file="fsh_61039_exA" channel="2" tbeg="258.822" dur="0.423" score="0.564766" decision="YES"/>
+<term file="fsh_61148_exA" channel="1" tbeg="47.062" dur="0.390" score="0.787012" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="28.208" dur="0.296" score="0.865991" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="151.052" dur="0.394" score="0.857687" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="236.664" dur="0.274" score="0.847384" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-05" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1503.710" dur="0.430" score="0.995379" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1474.010" dur="0.240" score="0.681290" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1009.110" dur="0.420" score="0.995204" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="575.830" dur="0.380" score="0.995276" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1427.560" dur="0.440" score="0.514116" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="991.710" dur="0.370" score="0.995307" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1359.140" dur="0.230" score="0.962223" decision="YES"/>
+<term file="fsh_60262_exA" channel="2" tbeg="248.390" dur="0.408" score="0.704444" decision="YES"/>
+<term file="fsh_60398_exA" channel="1" tbeg="12.842" dur="0.484" score="0.907166" decision="YES"/>
+<term file="fsh_60571_exA" channel="1" tbeg="181.110" dur="0.486" score="0.946872" decision="YES"/>
+<term file="fsh_60650_exA" channel="1" tbeg="102.530" dur="0.370" score="0.827936" decision="YES"/>
+<term file="fsh_60797_exA" channel="2" tbeg="58.320" dur="0.234" score="0.942382" decision="YES"/>
+<term file="fsh_60817_exA" channel="2" tbeg="131.126" dur="0.548" score="0.952174" decision="YES"/>
+<term file="fsh_61039_exA" channel="1" tbeg="8.260" dur="0.204" score="0.929064" decision="YES"/>
+<term file="AMI_20041210-1052_exA" channel="1" tbeg="160.130" dur="0.250" score="0.948736" decision="YES"/>
+<term file="AMI_20041210-1052_exA" channel="1" tbeg="703.220" dur="0.300" score="0.960898" decision="YES"/>
+<term file="CMU_20050228-1615_exA" channel="1" tbeg="283.610" dur="0.240" score="0.588445" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-06" term_search_time="24.3" oov_term_count="0">
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="524.560" dur="0.440" score="0.995410" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="617.740" dur="0.340" score="0.984210" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="715.770" dur="0.380" score="0.994659" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="683.940" dur="0.580" score="0.889988" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="993.570" dur="0.670" score="0.985187" decision="YES"/>
+<term file="fsh_60549_exA" channel="1" tbeg="60.116" dur="0.360" score="0.804610" decision="YES"/>
+<term file="fsh_60817_exA" channel="1" tbeg="20.706" dur="0.414" score="0.878904" decision="YES"/>
+<term file="fsh_60817_exA" channel="1" tbeg="161.246" dur="0.468" score="0.961682" decision="YES"/>
+<term file="VT_20050304-1300_exA" channel="1" tbeg="182.930" dur="0.510" score="0.886033" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-07" term_search_time="24.3" oov_term_count="0">
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1788.710" dur="0.320" score="0.994310" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="518.880" dur="0.710" score="0.994793" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="524.800" dur="0.560" score="0.994968" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="621.460" dur="0.650" score="0.991841" decision="YES"/>
+<term file="NIST_20050412-1303_exA" channel="1" tbeg="692.638" dur="0.410" score="0.184142" decision="YES"/>
+<term file="NIST_20050412-1303_exA" channel="1" tbeg="694.458" dur="0.410" score="0.238543" decision="YES"/>
+<term file="NIST_20050412-1303_exA" channel="1" tbeg="717.648" dur="0.340" score="0.691180" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-08" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1679.750" dur="0.400" score="0.966498" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="674.590" dur="0.310" score="0.991245" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1496.270" dur="0.440" score="0.995276" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="437.610" dur="0.570" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="556.530" dur="0.330" score="0.490858" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-09" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="886.090" dur="0.240" score="0.995204" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="871.830" dur="0.290" score="0.553596" decision="YES"/>
+<term file="fsh_60493_exA" channel="1" tbeg="64.778" dur="0.172" score="0.899476" decision="YES"/>
+<term file="fsh_60493_exA" channel="1" tbeg="82.692" dur="0.194" score="0.920511" decision="YES"/>
+<term file="fsh_60650_exA" channel="1" tbeg="290.528" dur="0.450" score="0.776717" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="238.618" dur="0.224" score="0.678514" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-10" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1585.440" dur="0.310" score="0.976949" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1607.210" dur="0.570" score="0.528060" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="607.620" dur="0.290" score="0.994927" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1803.360" dur="0.370" score="0.843040" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="799.250" dur="0.340" score="0.474533" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="989.680" dur="0.100" score="0.324552" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1370.510" dur="0.220" score="0.328955" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="101.400" dur="0.180" score="0.393067" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="464.030" dur="0.430" score="0.994104" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="646.560" dur="0.280" score="0.889084" decision="YES"/>
+<term file="fsh_60262_exA" channel="1" tbeg="242.316" dur="0.592" score="0.923055" decision="YES"/>
+<term file="fsh_60386_exA" channel="2" tbeg="26.500" dur="0.470" score="0.863836" decision="YES"/>
+<term file="fsh_60441_exA" channel="1" tbeg="98.285" dur="0.243" score="0.517396" decision="YES"/>
+<term file="fsh_60477_exA" channel="2" tbeg="39.443" dur="0.337" score="0.849233" decision="YES"/>
+<term file="fsh_60477_exA" channel="2" tbeg="140.158" dur="0.415" score="0.928502" decision="YES"/>
+<term file="fsh_60549_exA" channel="1" tbeg="164.582" dur="0.473" score="0.830159" decision="YES"/>
+<term file="fsh_60568_exA" channel="1" tbeg="145.427" dur="0.385" score="0.790989" decision="YES"/>
+<term file="fsh_60571_exA" channel="1" tbeg="147.128" dur="0.394" score="0.830243" decision="YES"/>
+<term file="fsh_60593_exA" channel="2" tbeg="5.032" dur="0.698" score="0.955865" decision="YES"/>
+<term file="fsh_60593_exA" channel="2" tbeg="29.272" dur="0.426" score="0.896228" decision="YES"/>
+<term file="fsh_60593_exA" channel="2" tbeg="202.095" dur="0.562" score="0.923782" decision="YES"/>
+<term file="fsh_60593_exA" channel="2" tbeg="205.032" dur="0.460" score="0.932475" decision="YES"/>
+<term file="fsh_60648_exA" channel="1" tbeg="118.748" dur="0.334" score="0.882109" decision="YES"/>
+<term file="fsh_60648_exA" channel="1" tbeg="150.753" dur="0.327" score="0.830810" decision="YES"/>
+<term file="fsh_60720_exA" channel="1" tbeg="0.138" dur="0.290" score="0.953651" decision="YES"/>
+<term file="fsh_60720_exA" channel="1" tbeg="119.580" dur="0.412" score="0.940465" decision="YES"/>
+<term file="fsh_60720_exA" channel="1" tbeg="217.148" dur="0.519" score="0.966053" decision="YES"/>
+<term file="fsh_60720_exA" channel="1" tbeg="217.673" dur="0.535" score="0.964825" decision="YES"/>
+<term file="fsh_60720_exA" channel="1" tbeg="253.398" dur="0.488" score="0.976787" decision="YES"/>
+<term file="fsh_60720_exA" channel="2" tbeg="282.652" dur="0.263" score="0.946040" decision="YES"/>
+<term file="fsh_60784_exA" channel="1" tbeg="100.690" dur="0.292" score="0.834319" decision="YES"/>
+<term file="fsh_60784_exA" channel="1" tbeg="137.930" dur="0.368" score="0.973848" decision="YES"/>
+<term file="fsh_60862_exA" channel="2" tbeg="103.533" dur="0.153" score="0.532730" decision="YES"/>
+<term file="fsh_60862_exA" channel="2" tbeg="214.386" dur="0.306" score="0.783978" decision="YES"/>
+<term file="fsh_60874_exA" channel="1" tbeg="3.362" dur="0.390" score="0.890619" decision="YES"/>
+<term file="fsh_60874_exA" channel="1" tbeg="153.804" dur="0.349" score="0.845198" decision="YES"/>
+<term file="fsh_61148_exA" channel="1" tbeg="77.136" dur="0.472" score="0.973703" decision="YES"/>
+<term file="fsh_61148_exA" channel="1" tbeg="116.956" dur="0.382" score="0.956568" decision="YES"/>
+<term file="fsh_61148_exA" channel="1" tbeg="240.188" dur="0.488" score="0.954465" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="11.428" dur="0.506" score="0.945425" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="69.890" dur="0.583" score="0.909266" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="138.560" dur="0.604" score="0.960199" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="148.256" dur="0.562" score="0.831350" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="228.307" dur="0.610" score="0.870007" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="233.996" dur="0.750" score="0.886363" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="263.340" dur="0.680" score="0.854454" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="264.148" dur="0.426" score="0.843769" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="288.625" dur="0.442" score="0.750467" decision="YES"/>
+<term file="AMI_20041210-1052_exA" channel="1" tbeg="470.360" dur="0.260" score="0.512285" decision="YES"/>
+<term file="AMI_20041210-1052_exA" channel="1" tbeg="502.451" dur="0.230" score="0.532986" decision="YES"/>
+<term file="CMU_20050228-1615_exA" channel="1" tbeg="339.350" dur="0.280" score="0.352146" decision="YES"/>
+<term file="CMU_20050301-1415_exA" channel="1" tbeg="584.461" dur="0.250" score="0.414675" decision="YES"/>
+<term file="ICSI_20011113-1100_exA" channel="1" tbeg="2.340" dur="0.430" score="0.533558" decision="YES"/>
+<term file="ICSI_20011113-1100_exA" channel="1" tbeg="309.390" dur="0.300" score="0.213657" decision="YES"/>
+<term file="NIST_20050427-0939_exA" channel="1" tbeg="322.351" dur="0.410" score="0.862753" decision="YES"/>
+<term file="NIST_20050427-0939_exA" channel="1" tbeg="408.310" dur="0.270" score="0.906098" decision="YES"/>
+<term file="NIST_20050427-0939_exA" channel="1" tbeg="580.411" dur="0.260" score="0.459162" decision="YES"/>
+<term file="VT_20050304-1300_exA" channel="1" tbeg="63.440" dur="0.240" score="0.917468" decision="YES"/>
+<term file="VT_20050304-1300_exA" channel="1" tbeg="653.256" dur="0.220" score="0.725163" decision="YES"/>
+<term file="VT_20050318-1430_exA" channel="1" tbeg="111.030" dur="0.370" score="0.873145" decision="YES"/>
+<term file="VT_20050318-1430_exA" channel="1" tbeg="367.730" dur="0.500" score="0.247015" decision="YES"/>
+<term file="VT_20050318-1430_exA" channel="1" tbeg="629.360" dur="0.400" score="0.387070" decision="YES"/>
+<term file="VT_20050318-1430_exA" channel="1" tbeg="702.590" dur="0.530" score="0.85" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-11" term_search_time="24.3" oov_term_count="0">
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="28.630" dur="0.440" score="0.995410" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1274.820" dur="0.490" score="0.995276" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1286.260" dur="0.580" score="0.995379" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1294.230" dur="0.460" score="0.995410" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1302.050" dur="0.500" score="0.995379" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1307.820" dur="0.430" score="0.995307" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1314.610" dur="0.460" score="0.995379" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1325.760" dur="0.440" score="0.995410" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1338.050" dur="0.480" score="0.995410" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1399.520" dur="0.500" score="0.995410" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1483.920" dur="0.500" score="0.995410" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1526.460" dur="0.480" score="0.994310" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1539.710" dur="0.440" score="0.995307" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1595.940" dur="0.480" score="0.995132" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1640.370" dur="0.420" score="0.995379" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1653.170" dur="0.460" score="0.995410" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1664.220" dur="0.500" score="0.995379" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1731.140" dur="0.520" score="0.995379" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1743.110" dur="0.490" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="80.970" dur="0.590" score="0.995276" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1092.580" dur="0.750" score="0.995379" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-12" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1488.320" dur="0.570" score="0.995029" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="747.480" dur="0.730" score="0.993250" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="759.580" dur="0.970" score="0.992016" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="784.540" dur="0.880" score="0.839857" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="796.720" dur="0.690" score="0.995410" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="814.650" dur="0.880" score="0.966193" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="870.290" dur="0.720" score="0.995379" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="887.620" dur="0.760" score="0.993692" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="950.140" dur="0.610" score="0.995338" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1084.300" dur="0.810" score="0.934783" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="426.790" dur="0.690" score="0.995379" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-13" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="97.950" dur="0.700" score="0.995101" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="101.360" dur="0.810" score="0.995029" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="107.150" dur="0.600" score="0.995410" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="110.650" dur="0.540" score="0.995204" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="208.170" dur="0.630" score="0.995235" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="212.160" dur="0.660" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="189.340" dur="0.570" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="401.090" dur="0.550" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="407.580" dur="0.590" score="0.995379" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="452.460" dur="0.560" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="848.660" dur="0.630" score="0.994690" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-14" term_search_time="24.3" oov_term_count="0">
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="4.170" dur="0.410" score="0.995410" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="49.630" dur="0.460" score="0.995410" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="61.640" dur="0.430" score="0.995307" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="247.230" dur="0.290" score="0.995235" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="355.800" dur="0.340" score="0.991265" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="366.840" dur="0.380" score="0.995410" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="554.410" dur="0.240" score="0.994639" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="821.870" dur="0.320" score="0.995235" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1010.820" dur="0.360" score="0.676711" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1066.140" dur="0.290" score="0.995307" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1069.340" dur="0.340" score="0.995338" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1676.780" dur="0.380" score="0.995410" decision="YES"/>
+<term file="fsh_60732_exA" channel="2" tbeg="162.419" dur="0.897" score="0.855893" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-15" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="430.410" dur="0.570" score="0.995029" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="684.480" dur="0.560" score="0.985845" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1642.200" dur="0.610" score="0.955922" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="874.520" dur="0.490" score="0.995276" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="900.010" dur="0.510" score="0.995173" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="976.410" dur="0.450" score="0.995379" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1062.840" dur="0.450" score="0.995307" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="203.940" dur="0.680" score="0.995379" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="207.800" dur="0.620" score="0.995338" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1162.200" dur="0.610" score="0.414238" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="398.820" dur="0.430" score="0.995276" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-16" term_search_time="24.3" oov_term_count="0">
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="58.730" dur="0.740" score="0.995276" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="72.600" dur="0.750" score="0.995379" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="122.440" dur="0.630" score="0.528567" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="181.030" dur="0.450" score="0.916347" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="219.840" dur="0.610" score="0.972432" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="282.970" dur="0.630" score="0.674879" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="312.170" dur="0.500" score="0.479980" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="289.870" dur="0.620" score="0.946407" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-17" term_search_time="24.3" oov_term_count="0">
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="8.340" dur="1.360" score="0.995132" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="37.570" dur="1.340" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="46.430" dur="1.350" score="0.995379" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="390.920" dur="0.930" score="0.993764" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="578.980" dur="0.990" score="0.994865" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1089.150" dur="1.360" score="0.995338" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1235.700" dur="1.110" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1528.000" dur="1.310" score="0.995410" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-18" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="786.720" dur="0.310" score="0.400160" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1676.520" dur="0.460" score="0.995307" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="385.970" dur="0.310" score="0.825414" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="993.000" dur="0.640" score="0.994618" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1442.480" dur="0.350" score="0.994690" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1447.720" dur="0.260" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1530.630" dur="0.450" score="0.989795" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1534.590" dur="0.400" score="0.991841" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1549.670" dur="0.500" score="0.962659" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1611.380" dur="0.380" score="0.993117" decision="YES"/>
+<term file="fsh_60477_exA" channel="1" tbeg="250.420" dur="0.566" score="0.820282" decision="YES"/>
+<term file="fsh_60732_exA" channel="1" tbeg="113.072" dur="0.456" score="0.970587" decision="YES"/>
+<term file="fsh_60732_exA" channel="2" tbeg="109.602" dur="0.696" score="0.957957" decision="YES"/>
+<term file="fsh_60732_exA" channel="2" tbeg="162.043" dur="0.795" score="0.923617" decision="YES"/>
+<term file="fsh_60784_exA" channel="1" tbeg="1.880" dur="0.402" score="0.973435" decision="YES"/>
+<term file="fsh_60784_exA" channel="1" tbeg="23.496" dur="0.370" score="0.945739" decision="YES"/>
+<term file="fsh_60817_exA" channel="1" tbeg="45.586" dur="0.602" score="0.948057" decision="YES"/>
+<term file="fsh_60885_exA" channel="2" tbeg="220.764" dur="0.410" score="0.943581" decision="YES"/>
+<term file="fsh_60885_exA" channel="2" tbeg="223.958" dur="0.500" score="0.955416" decision="YES"/>
+<term file="fsh_61130_exA" channel="1" tbeg="44.518" dur="0.602" score="0.970462" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="28.826" dur="0.450" score="0.937769" decision="YES"/>
+<term file="fsh_61148_exA" channel="2" tbeg="231.614" dur="0.400" score="0.891066" decision="YES"/>
+<term file="AMI_20050204-1206_exA" channel="1" tbeg="60.429" dur="0.350" score="0.370314" decision="YES"/>
+<term file="AMI_20050204-1206_exA" channel="1" tbeg="67.329" dur="0.400" score="0.935092" decision="YES"/>
+<term file="AMI_20050204-1206_exA" channel="1" tbeg="348.439" dur="0.350" score="0.960061" decision="YES"/>
+<term file="AMI_20050204-1206_exA" channel="1" tbeg="513.389" dur="0.440" score="0.552635" decision="YES"/>
+<term file="AMI_20050204-1206_exA" channel="1" tbeg="647.339" dur="0.420" score="0.975012" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-19" term_search_time="24.3" oov_term_count="0">
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="478.560" dur="0.360" score="0.990268" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1131.190" dur="0.300" score="0.980209" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1297.440" dur="0.340" score="0.995410" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1726.290" dur="0.350" score="0.995101" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1258.490" dur="0.370" score="0.995338" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="553.470" dur="0.390" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="599.240" dur="0.230" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="604.750" dur="0.270" score="0.975797" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="711.900" dur="0.250" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1062.700" dur="0.400" score="0.408747" decision="YES"/>
+<term file="fsh_60650_exA" channel="1" tbeg="108.680" dur="0.430" score="0.953068" decision="YES"/>
+<term file="fsh_60650_exA" channel="2" tbeg="167.720" dur="0.316" score="0.937968" decision="YES"/>
+<term file="fsh_60650_exA" channel="2" tbeg="168.718" dur="0.256" score="0.937338" decision="YES"/>
+<term file="fsh_60720_exA" channel="2" tbeg="140.610" dur="0.438" score="0.863663" decision="YES"/>
+<term file="fsh_60720_exA" channel="2" tbeg="142.356" dur="0.324" score="0.931426" decision="YES"/>
+<term file="fsh_60862_exA" channel="2" tbeg="223.068" dur="0.254" score="0.956835" decision="YES"/>
+<term file="fsh_60862_exA" channel="2" tbeg="225.916" dur="0.264" score="0.968750" decision="YES"/>
+<term file="fsh_60862_exA" channel="2" tbeg="233.944" dur="0.502" score="0.946188" decision="YES"/>
+<term file="fsh_60862_exA" channel="2" tbeg="238.422" dur="0.372" score="0.946111" decision="YES"/>
+<term file="fsh_61130_exA" channel="2" tbeg="121.830" dur="0.364" score="0.909593" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-20" term_search_time="24.3" oov_term_count="0">
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="23.410" dur="0.710" score="0.995204" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="41.110" dur="0.670" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="116.660" dur="0.660" score="0.995379" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="131.560" dur="0.680" score="0.995276" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="869.080" dur="0.770" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1243.790" dur="0.800" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1252.170" dur="0.600" score="0.995410" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-21" term_search_time="24.3" oov_term_count="0">
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="136.730" dur="1.050" score="0.995379" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="347.680" dur="0.990" score="0.990268" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="396.210" dur="1.230" score="0.986977" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="431.890" dur="1.060" score="0.970413" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="562.130" dur="1.050" score="0.949982" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="857.600" dur="0.890" score="0.964799" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1346.470" dur="0.800" score="0.975155" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="144.980" dur="1.000" score="0.993250" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="400.080" dur="1.010" score="0.981947" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="505.520" dur="0.930" score="0.981793" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="534.440" dur="1.000" score="0.982153" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="547.090" dur="0.910" score="0.987645" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="578.410" dur="0.970" score="0.973813" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="920.420" dur="1.000" score="0.975677" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="943.350" dur="0.970" score="0.987234" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="949.400" dur="0.740" score="0.675780" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="978.260" dur="0.870" score="0.968257" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="980.570" dur="1.080" score="0.994844" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1019.170" dur="0.860" score="0.988797" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1074.310" dur="0.930" score="0.466515" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="192.630" dur="0.900" score="0.967693" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="243.280" dur="0.750" score="0.947337" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="260.240" dur="0.780" score="0.980004" decision="YES"/>
+<term file="fsh_60549_exA" channel="1" tbeg="6.558" dur="0.642" score="0.940199" decision="YES"/>
+<term file="fsh_60549_exA" channel="2" tbeg="9.312" dur="1.300" score="0.964648" decision="YES"/>
+<term file="fsh_60568_exA" channel="1" tbeg="43.370" dur="1.066" score="0.892963" decision="YES"/>
+<term file="fsh_60568_exA" channel="1" tbeg="101.044" dur="0.768" score="0.947283" decision="YES"/>
+<term file="fsh_60568_exA" channel="1" tbeg="160.050" dur="0.756" score="0.962483" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-22" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="31.710" dur="0.850" score="0.995338" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="273.790" dur="0.810" score="0.995410" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="488.670" dur="0.890" score="0.995338" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="717.460" dur="0.720" score="0.995338" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="996.410" dur="0.740" score="0.995410" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1669.830" dur="0.760" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="34.550" dur="0.950" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="382.530" dur="0.570" score="0.995338" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="395.570" dur="0.540" score="0.995235" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="486.130" dur="0.600" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="628.450" dur="0.510" score="0.995338" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="815.550" dur="0.410" score="0.995307" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="988.600" dur="0.570" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1692.910" dur="0.780" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1730.170" dur="0.760" score="0.993898" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1732.560" dur="0.680" score="0.775652" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="87.730" dur="0.580" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="234.890" dur="0.530" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="359.200" dur="0.780" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="747.840" dur="0.650" score="0.995338" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1317.380" dur="0.510" score="0.995307" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1529.810" dur="0.580" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1737.230" dur="0.430" score="0.995173" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-23" term_search_time="24.3" oov_term_count="0">
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="748.940" dur="0.560" score="0.983284" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="907.610" dur="0.570" score="0.995410" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1269.770" dur="0.620" score="0.691457" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="34.380" dur="0.630" score="0.995204" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="38.440" dur="0.580" score="0.968909" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="382.430" dur="0.380" score="0.995338" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="395.470" dur="0.340" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="486.030" dur="0.350" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="628.350" dur="0.370" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="812.210" dur="0.500" score="0.467981" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="988.360" dur="0.520" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1172.370" dur="0.430" score="0.980394" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1538.660" dur="0.420" score="0.765801" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1692.750" dur="0.510" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="87.580" dur="0.480" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="225.380" dur="0.450" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="359.060" dur="0.430" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="747.660" dur="0.540" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1317.240" dur="0.450" score="0.995307" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1474.540" dur="0.630" score="0.992499" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1529.610" dur="0.540" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1737.100" dur="0.390" score="0.995410" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-24" term_search_time="24.3" oov_term_count="0">
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1274.820" dur="0.800" score="0.995132" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1286.260" dur="0.850" score="0.994279" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1302.050" dur="0.790" score="0.995410" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1338.050" dur="0.870" score="0.995276" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1483.920" dur="0.880" score="0.987265" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1526.460" dur="0.910" score="0.994382" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1539.710" dur="0.760" score="0.995235" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1595.940" dur="0.880" score="0.995204" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1640.370" dur="0.820" score="0.995276" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1653.170" dur="0.820" score="0.995410" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1664.220" dur="0.820" score="0.995307" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1731.140" dur="0.850" score="0.994690" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1743.110" dur="0.800" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="80.970" dur="1.060" score="0.995071" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-25" term_search_time="24.3" oov_term_count="0">
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="566.610" dur="0.590" score="0.984549" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="979.210" dur="0.790" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="63.780" dur="0.390" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="173.510" dur="0.380" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="175.900" dur="0.420" score="0.993836" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="316.640" dur="0.360" score="0.992839" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="361.010" dur="0.410" score="0.995132" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="511.760" dur="0.520" score="0.995338" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="625.670" dur="0.390" score="0.958425" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="852.020" dur="0.480" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1219.090" dur="0.650" score="0.994721" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1376.830" dur="0.420" score="0.960239" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1491.750" dur="0.460" score="0.970516" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-26" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="425.920" dur="0.820" score="0.995379" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-27" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="41.120" dur="0.280" score="0.995410" decision="YES"/>
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="378.840" dur="0.330" score="0.995379" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="951.810" dur="0.290" score="0.995379" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1123.630" dur="0.360" score="0.995204" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="561.540" dur="0.480" score="0.986421" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1574.640" dur="0.650" score="0.990617" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="7.740" dur="0.320" score="0.971261" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="87.450" dur="0.390" score="0.993764" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="578.970" dur="0.350" score="0.995410" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1338.310" dur="0.240" score="0.990617" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="557.140" dur="0.440" score="0.993631" decision="YES"/>
+<term file="fsh_60398_exA" channel="2" tbeg="41.252" dur="0.433" score="0.859100" decision="YES"/>
+<term file="fsh_60416_exA" channel="2" tbeg="29.474" dur="0.302" score="0.948661" decision="YES"/>
+<term file="fsh_60571_exA" channel="2" tbeg="8.394" dur="0.402" score="0.841201" decision="YES"/>
+<term file="fsh_60627_exA" channel="2" tbeg="79.822" dur="0.312" score="0.920095" decision="YES"/>
+<term file="fsh_60682_exA" channel="1" tbeg="212.914" dur="0.296" score="0.936552" decision="YES"/>
+<term file="fsh_60732_exA" channel="2" tbeg="176.008" dur="0.396" score="0.898546" decision="YES"/>
+<term file="fsh_60732_exA" channel="2" tbeg="297.368" dur="0.284" score="0.944603" decision="YES"/>
+<term file="fsh_60797_exA" channel="1" tbeg="129.763" dur="0.261" score="0.812933" decision="YES"/>
+<term file="fsh_61039_exA" channel="2" tbeg="50.536" dur="0.386" score="0.956942" decision="YES"/>
+<term file="fsh_61039_exA" channel="2" tbeg="252.336" dur="1.102" score="0.917322" decision="YES"/>
+<term file="fsh_61130_exA" channel="1" tbeg="28.924" dur="0.346" score="0.956423" decision="YES"/>
+<term file="fsh_61130_exA" channel="1" tbeg="259.360" dur="0.386" score="0.861150" decision="YES"/>
+<term file="AMI_20050204-1206_exA" channel="1" tbeg="96.679" dur="0.390" score="0.907455" decision="YES"/>
+<term file="AMI_20050204-1206_exA" channel="1" tbeg="591.039" dur="0.290" score="0.444981" decision="YES"/>
+<term file="ICSI_20010531-1030_exA" channel="1" tbeg="472.090" dur="0.240" score="0.701797" decision="YES"/>
+<term file="NIST_20050427-0939_exA" channel="1" tbeg="504.930" dur="0.470" score="0.904398" decision="YES"/>
+<term file="VT_20050304-1300_exA" channel="1" tbeg="420.390" dur="0.390" score="0.507973" decision="YES"/>
+<term file="VT_20050304-1300_exA" channel="1" tbeg="524.456" dur="0.740" score="0.965567" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-28" term_search_time="24.3" oov_term_count="0">
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="4.170" dur="0.610" score="0.995379" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="49.630" dur="0.780" score="0.995338" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="61.640" dur="0.610" score="0.995379" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="247.230" dur="0.430" score="0.995379" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="355.800" dur="0.520" score="0.994865" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="366.840" dur="0.560" score="0.995307" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="554.410" dur="0.340" score="0.994742" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="821.870" dur="0.420" score="0.995410" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1010.820" dur="0.620" score="0.580498" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1066.140" dur="0.390" score="0.995307" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1069.340" dur="0.490" score="0.995204" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1676.780" dur="0.570" score="0.994865" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-29" term_search_time="24.3" oov_term_count="0">
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="257.740" dur="0.500" score="0.995379" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="538.670" dur="0.720" score="0.995101" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="740.210" dur="0.630" score="0.962512" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="886.970" dur="0.400" score="0.995276" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="972.510" dur="0.310" score="0.994824" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="982.610" dur="0.530" score="0.987357" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1010.250" dur="0.860" score="0.976713" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1061.460" dur="0.910" score="0.838139" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1277.410" dur="0.650" score="0.983058" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1310.480" dur="0.660" score="0.986843" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1623.010" dur="0.500" score="0.992767" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1635.320" dur="0.460" score="0.995379" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1656.170" dur="0.860" score="0.976229" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1659.610" dur="0.740" score="0.995071" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1668.340" dur="0.580" score="0.987326" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1684.500" dur="0.550" score="0.872140" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1694.760" dur="0.550" score="0.995307" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1696.030" dur="0.530" score="0.995338" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1714.110" dur="0.580" score="0.995276" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1715.430" dur="0.550" score="0.995379" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="1721.430" dur="0.660" score="0.995173" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TEST-30" term_search_time="24.3" oov_term_count="0">
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="8.240" dur="1.460" score="0.995132" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="37.460" dur="1.450" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="46.330" dur="1.450" score="0.995379" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="390.830" dur="1.020" score="0.993764" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="578.900" dur="1.070" score="0.994865" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1089.040" dur="1.470" score="0.995338" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1235.610" dur="1.200" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1527.910" dur="1.400" score="0.995410" decision="YES"/>
+</detected_termlist>
+</stdlist>
+

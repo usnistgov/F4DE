@@ -1,0 +1,27 @@
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test3.ecf.xml -r ../common/test3.rttm -s ../common/test3.stdlist.xml -t ../common/test3.tlist.xml -Y BN+CTS:BNEWS,CTS -Y MTG:CONFMTG -O -A
+[[RETURN CODE]] 0
+[[STDOUT]]
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Indexing Time:            74390.0000                                                                                                                                 |
+| Language:                    english                                                                                                                                 |
+| Index size (bytes):         21235877                                                                                                                                 |
+| System ID:              Test3 System ID                                                                                                                              |
+| Coefficient C:                0.1000                                                                                                                                 |
+| Coefficient V:                1.0000                                                                                                                                 |
+| Trials Per Second:            1.0000                                                                                                                                 |
+| Probability of a Term:        0.0001                                                                                                                                 |
+| Decision Score:         Inconsistent (Max NO: 0.7000, Min YES: 0.3875)                                                                                               |
++----------------------------------------------+-----------------------------------------------------------+-----------------------------------------------------------+
+|                                       Search |                                                    BN+CTS |                                                       MTG |
+|                                              |                         Occ.                  Nbr    TW   |                         Occ.                  Nbr    TW   |
+|    TermSet                             Time  |    Ref  Corr   FA  Miss Value  P(FA)  P(Mis) Trials Value |    Ref  Corr   FA  Miss Value  P(FA)  P(Mis) Trials Value |
++----------------------------------------------+-----------------------------------------------------------+-----------------------------------------------------------+
+|                           All Terms   113.20 |    20    15    12     5 0.690 0.00111 0.250   10861 0.173 |     1     1     0     0 1.000 0.00000 0.000     727 1.000 |
++----------------------------------------------+-----------------------------------------------------------+-----------------------------------------------------------+
+
+[[STDERR]]
+Loading RTTM file '../common/test3.rttm'.
+Loading Term List file '../common/test3.tlist.xml'.
+Loading ECF file '../common/test3.ecf.xml'.
+Loading KWS List file '../common/test3.stdlist.xml'.
+Processing Alignment.

@@ -1,0 +1,16 @@
+<ecf source_signal_duration="28575.908" version="">
+<excerpt audio_filename="audio/eval03/english/bnews/20010206_1830_1900_ABC_WNT_exA.sph" channel="1" tbeg="0.000" dur="16" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010217_1000_1030_VOA_ENG_exA.sph" channel="1" tbeg="0.000" dur="1500" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010220_2000_2100_PRI_TWD_exA.sph" channel="1" tbeg="0.000" dur="1816.458" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010221_1830_1900_NBC_NNW_exA.sph" channel="1" tbeg="0.000" dur="1799.933" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010225_0900_0930_CNN_HDL_exA.sph" channel="1" tbeg="0.000" dur="1755.744" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010228_2100_2200_MNB_NBW_exA.sph" channel="1" tbeg="0.000" dur="1739.014" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/NIST_20050412-1303_exA.sph" channel="1" tbeg="0.000" dur="727.018" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60650_exA.sph" channel="1" tbeg="0.000" dur="298.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60862_exA.sph" channel="2" tbeg="0.000" dur="298.630" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60885_exA.sph" channel="2" tbeg="0.000" dur="2.0" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61130_exA.sph" channel="2" tbeg="0.000" dur="3.0" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60650_exA.sph" channel="2" tbeg="0.000" dur="298.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60720_exA.sph" channel="2" tbeg="0.000" dur="296.400" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60493_exA.sph" channel="2" tbeg="0.000" dur="302.950" language="english" source_type="cts"/>
+</ecf>

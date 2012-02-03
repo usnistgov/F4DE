@@ -1,0 +1,36 @@
+<stdlist termlist_filename="test3.tlist.xml" indexing_time="74390.00" language="english" index_size="21235877" system_id="Test3 System ID">
+<detected_termlist termid="TERM-001" term_search_time="24.3" oov_term_count="0">
+<term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1630.710" dur="0.370" score="0.966931" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="697.120" dur="0.260" score="0.970571" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1475.910" dur="0.310" score="0.624710" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1539.510" dur="0.330" score="0.387494" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="185.960" dur="0.390" score="0.994659" decision="YES"/>
+<term file="fsh_60493_exA" channel="2" tbeg="230.508" dur="0.262" score="0.902341" decision="YES"/>
+<term file="fsh_60885_exA" channel="2" tbeg="166.494" dur="0.364" score="0.959281" decision="YES"/>
+<term file="NIST_20050412-1303_exA" channel="1" tbeg="117.288" dur="0.360" score="0.916841" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TERM-002" term_search_time="32.3" oov_term_count="0">
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="478.560" dur="0.360" score="0.990268" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1131.190" dur="0.300" score="0.980209" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1297.440" dur="0.340" score="0.995410" decision="YES"/>
+<term file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1726.290" dur="0.350" score="0.995101" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1258.490" dur="0.370" score="0.995338" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="553.470" dur="0.390" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="599.240" dur="0.230" score="0.995410" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="604.750" dur="0.270" score="0.975797" decision="YES"/>
+<term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="711.900" dur="0.250" score="0.995410" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1062.700" dur="0.400" score="0.408747" decision="YES"/>
+<term file="fsh_60650_exA" channel="1" tbeg="108.680" dur="0.430" score="0.953068" decision="YES"/>
+<term file="fsh_60650_exA" channel="2" tbeg="167.720" dur="0.316" score="0.937968" decision="YES"/>
+<term file="fsh_60650_exA" channel="2" tbeg="168.718" dur="0.256" score="0.937338" decision="YES"/>
+<term file="fsh_60720_exA" channel="2" tbeg="140.610" dur="0.438" score="0.863663" decision="YES"/>
+<term file="fsh_60720_exA" channel="2" tbeg="142.356" dur="0.324" score="0.931426" decision="YES"/>
+<term file="fsh_60862_exA" channel="2" tbeg="223.068" dur="0.254" score="0.956835" decision="YES"/>
+<term file="fsh_60862_exA" channel="2" tbeg="225.916" dur="0.264" score="0.968750" decision="YES"/>
+<term file="fsh_60862_exA" channel="2" tbeg="233.944" dur="0.502" score="0.946188" decision="YES"/>
+<term file="fsh_60862_exA" channel="2" tbeg="238.422" dur="0.372" score="0.946111" decision="YES"/>
+<term file="fsh_61130_exA" channel="2" tbeg="121.830" dur="0.364" score="0.909593" decision="YES"/>
+<term file="fsh_61130_exA" channel="2" tbeg="121.830" dur="0.440" score="0.700000" decision="NO"/>
+</detected_termlist>
+</stdlist>
+
