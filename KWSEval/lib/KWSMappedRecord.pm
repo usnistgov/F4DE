@@ -1,5 +1,5 @@
 # KWSEval
-# MappedRecord.pm
+# KWSMappedRecord.pm
 # Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by
@@ -12,7 +12,7 @@
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-package MappedRecord;
+package KWSMappedRecord;
 use strict;
 
 sub new
