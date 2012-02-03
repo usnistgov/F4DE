@@ -16,7 +16,7 @@ package KWSAlignment;
 
 use strict;
 
-use MappedRecord;
+use KWSMappedRecord;
 use DETCurve;
 use KWSDETSet;
 use KWSTrials;
