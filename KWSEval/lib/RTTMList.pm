@@ -40,7 +40,7 @@ sub unitTest
 
     my $err = MMisc::check_file_r($file1);
     if (! MMisc::is_blank($err)) {
-      print "Issue with needed test file ($file1) : $err";
+      print "Issue with needed test file ($file1) : $err\n";
       return(0);
     }
 
