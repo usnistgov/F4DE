@@ -51,6 +51,8 @@ $testr += &do_simple_test($tn, "(Caching: Generate Cache)", "$tool -e ../common/
 ##
 $tn = "test6b";
 $testr += &do_simple_test($tn, "(Caching: Cached Report)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -A -c $cachefile", "res_$tn.txt");
+unlink($cachefile) 
+  if (MMisc::does_file_exist($cachefile));
 
 #####
 
