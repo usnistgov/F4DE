@@ -47,7 +47,7 @@ sub get_tmpdir {
     if (-d $name);
 
   return($name)
-    if (&make_dir($name));
+    if (&make_wdir($name));
 
   # Directory does not exist and could not be created
   return(undef);
