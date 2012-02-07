@@ -68,7 +68,7 @@ MMisc::error_quit("Problem reading XML file ($xml): seems empty ?")
 # fix "Private" External DTDs
 #ex: <!DOCTYPE madcat SYSTEM "ftp://jaguar.ncsl.nist.gov/madcat/resources/madcat.v1.0.6.dtd">
 #ex: <!DOCTYPE mteval SYSTEM "ftp://jaguar.ncsl.nist.gov/mt/resources/mteval-xml-v1.6.dtd">
-if ($slurp =~ s%(doctype[^\>]+?system)[^\>]+?(\>)%$1 \"file://$ldtd\"$2%isg) {
+if ($slurp =~ s%(\<\!\s*doctype[^\>]+?system)[^\>]+?(\>)%$1 \"file://$ldtd\"$2%isg) {
   # replace all of them just in case some are commented
   MMisc::error_quit("Problem writing output xml ($lxml)")
       if (! MMisc::writeTo($lxml, undef, 0, 0, $slurp));
