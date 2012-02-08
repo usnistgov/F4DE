@@ -447,7 +447,7 @@ sub renderTxtTable(){
   my @_da = keys %{ $self->{data} };
   return "Warning: Empty table.  Nothing to produce.\n" if (@_da == 0);
 
-  $gap = 1 if (!defined($gap));
+  $gap = 1 if ((!defined($gap)) || ($gap < 1));
   
   my $keyCol = $self->{Properties}->getValue($key_KeyColumnTxt);
   if ($self->{Properties}->error()) {
