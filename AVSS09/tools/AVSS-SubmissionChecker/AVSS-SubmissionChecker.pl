@@ -213,17 +213,22 @@ my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
   if (! defined $tmpstr);
 eval $tmpstr;
+MMisc::error_quit("Problem during \'SpecFile\' use ($specfile) : " . join(" | ", $@))
+  if $@;
 
-MMisc::error_quit("Missing data in \'Specfile\' ($specfile)")
-  if (
-    (scalar @expected_year == 0)
-    || (scalar @expected_task == 0)
-    || (scalar @expected_data == 0)
-    || (scalar @expected_lang == 0)
-    || (scalar @expected_sysid_beg == 0)
-    || (scalar @expected_dir_output == 0)
-    || (scalar keys %expected_ecf_files == 0)
-  );
+sub __cfgcheck {
+  my ($t, $v) = @_;
+  MMisc::error_quit("Missing or improper datum [$t] in \'SpecFile\' ($specfile)")
+    if ($v);
+}
+
+&__cfgcheck("\@expected_year", (scalar @expected_year == 0));
+&__cfgcheck("\@expected_task", (scalar @expected_task == 0));
+&__cfgcheck("\@expected_data", (scalar @expected_data == 0));
+&__cfgcheck("\@expected_lang", (scalar @expected_lang == 0));
+&__cfgcheck("\@expected_sysid_beg", (scalar @expected_sysid_beg == 0));
+&__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0));
+&__cfgcheck("\%expected_ecf_files", (scalar keys %expected_ecf_files == 0));
 
 my $doepmd = 0;
 
