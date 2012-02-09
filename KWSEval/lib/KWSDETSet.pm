@@ -81,7 +81,10 @@ sub readFromFile{
     close FILE;
     my $VAR1;
     eval $str;
-    $VAR1;
+    MMisc::error_quit("Problem in \'KWSDETSet::readFromFile()\' eval-ing code: " . join(" | ", $@))
+        if $@;
+    
+    return($VAR1);
 }
 
 ### This is NOT an instance METHOD!!!!!!!!!!!!!!
