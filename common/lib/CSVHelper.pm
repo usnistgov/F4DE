@@ -278,6 +278,8 @@ sub loadCSV_tohash {
   return($self->_set_error_and_return("Do not have any code data to reload", %out))
     if (MMisc::is_blank($code));
   eval $code;
+  return($self->_set_error_and_return("Problem in \'CSVHelper::loadCSV_tohash\' eval-ing code : " . join(" | ", $@)))
+    if $@;
 
   return(%out);
 }

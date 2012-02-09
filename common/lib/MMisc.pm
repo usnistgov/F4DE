@@ -623,6 +623,9 @@ sub load_memory_object {
 
   my $VAR1;
   eval $str;
+  &error_quit("Problem in \'MMisc::load_memory_object()\' eval-ing code: " . join(" | ", $@))
+    if $@;
+
   return($VAR1);
 }
 

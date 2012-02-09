@@ -484,6 +484,8 @@ sub readFromFile
 
     my $VAR1;
     eval $str;
+    MMisc::error_quit("Problem in \'DETCurve.pm::readFromFile()\' eval-ing code : " . join(" | ", $@))
+        if $@;
 
     ### If it's a binary we're going to have to parse it.
     if ($binary) {
