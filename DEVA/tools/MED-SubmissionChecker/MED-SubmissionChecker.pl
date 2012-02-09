@@ -210,27 +210,32 @@ my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
   if (! defined $tmpstr);
 eval $tmpstr;
+MMisc::error_quit("Problem during \'SpecFile\' use ($specfile) : " . join(" | ", $@))
+  if $@;
 
-MMisc::error_quit("Missing data in \'Specfile\' ($specfile)")
-  if (
-       (scalar @expid_tag == 0)
-    || (scalar @expid_data == 0)
-    || (scalar @expid_MEDtype == 0)
-    || (scalar @expid_EAG == 0)
-    || (scalar @expid_sysid_beg == 0)
-    || (scalar @expected_dir_output == 0)
-    || ($expected_csv_per_expid < 0)
-    || (scalar @expected_csv_names == 0)
-    || (! defined $db_check_sql)
-    || ($medtype_fullcount < 0)
-    || (scalar @db_eventidlist == 0)
-    || (scalar @db_missingTID == 0)
-    || (scalar @db_unknownTID == 0)
-    || (scalar @db_detectionTID == 0)
-    || (scalar @db_thresholdEID == 0)
-  );
+sub __cfgcheck {
+  my ($t, $v) = @_;
+  MMisc::error_quit("Missing or improper datum [$t] in \'SpecFile\' ($specfile)")
+    if ($v);
+}
+
+&__cfgcheck("\@expid_tag", (scalar @expid_tag == 0));
+&__cfgcheck("\@expid_data", (scalar @expid_data == 0));
+&__cfgcheck("\@expid_MEDtype", (scalar @expid_MEDtype == 0));
+&__cfgcheck("\@expid_EAG", (scalar @expid_EAG == 0));
+&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0));
+&__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0));
+&__cfgcheck("\$expected_csv_per_expid", ($expected_csv_per_expid < 0));
+&__cfgcheck("\@expected_csv_names", (scalar @expected_csv_names == 0));
+&__cfgcheck("\$db_check_sql", (! defined $db_check_sql));
+&__cfgcheck("\$medtype_fullcount", ($medtype_fullcount < 0));
+&__cfgcheck("\@db_eventidlist", (scalar @db_eventidlist == 0));
+&__cfgcheck("\@db_missingTID", (scalar @db_missingTID == 0));
+&__cfgcheck("\@db_unknownTID", (scalar @db_unknownTID == 0));
+&__cfgcheck("\@db_detectionTID", (scalar @db_detectionTID == 0));
+&__cfgcheck("\@db_thresholdEID", (scalar @db_thresholdEID == 0));
+
 &extend_file_location(\$db_check_sql, 'SQL DB check file', @data_search_path);
-
 
 my $doepmd = 0;
 
