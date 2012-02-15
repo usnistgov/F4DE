@@ -64,18 +64,20 @@ MMisc::error_quit($usage) if (scalar @ARGV == 0);
 # Default values for variables
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                                  h j    o             #
+# Used:                                  h j    o  r          #
 
 my $outcsv = "";
 my @joincol = ();
+my $replace = 0;
 
 my %opt = ();
 GetOptions
   (
    \%opt,
    'help',
-   'outcsv=s' => \$outcsv,
+   'outcsv=s'  => \$outcsv,
    'joincol=s' => \@joincol,
+   'replace'   => \$replace,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if (($opt{'help'}) || (scalar @ARGV == 0));
 
@@ -106,7 +108,7 @@ sub add2all {
   if (scalar @jc > 0) {
     my $k = shift @jc;
     my $v = $$rlh[$$rcolm{$k}];
-    $txt .= "{$k}"; 
+    $txt .= "{\'$k\'=\'$v\'}"; 
     &add2all(\%{$$rall{$v}}, $rlh, $rcolm, $txt, @jc);
     return();
   }
@@ -114,8 +116,8 @@ sub add2all {
   # scalar @jc = 0
   foreach my $k (keys %{$rcolm}) {
     next if (exists $jch{$k});
-    MMisc::error_quit("\$all$txt" . "{$k} already present, will not overwrite")
-        if (exists $$rall{$k});
+    MMisc::error_quit("\$all$txt" . "{\'$k\'} already present, will not overwrite (unless \'--replace\' is selected)")
+        if ((exists $$rall{$k}) && (! $replace));
     my $v = $$rlh[$$rcolm{$k}];
     $$rall{$k} = $v;
   }
@@ -274,15 +276,16 @@ sub save_file {
 sub set_usage{
   my $tmp=<<EOF
 
-$0 [--help] --outcsv filename [--joincol name [--joincol name [...]]] infile.csv [infile.csv [...]]
+$0 [--help] --outcsv filename [--joincol name [--joincol name [...]]] [--replace] infile.csv [infile.csv [...]]
 
-Does a simple CSV join on primary key columns, will add columns from all files seen
-Warning: will stop in case of primary key collision
+Does a simple CSV join on primary key columns; and will add columns from all files seen
+Warning: will stop in case of primary key collision unless --replace is selected
 
 Where:
   --help        This help message
   --outcsv      filename to write the joined table to
   --joincol     primary key column name (used in in \'joincol\' order)
+  --replace     In case of primary key collision, replace previous value
 EOF
 ;
 
