@@ -141,7 +141,7 @@ sub load_file {
   my $sh = 1;
   my $line = <IFILE>;
   my @lh = $icsvh->csvline2array($line);
-  MMisc::error_quit("Problem with input CSV : " . $icsvh->get_errormsg() . "\n[Line $sh : $line]")
+  MMisc::error_quit("[File: $if] Problem with input CSV : " . $icsvh->get_errormsg() . "\n[Line $sh : $line]")
       if ($icsvh->error());
 
   # do column match
@@ -171,7 +171,7 @@ sub load_file {
   $icsvh->set_number_of_columns(scalar @lh);
   while (my $line = <IFILE>) {
     my @inh = $icsvh->csvline2array($line);
-    MMisc::error_quit("Problem with input CSV : " . $icsvh->get_errormsg() . "\n[Line $sh : $line]")
+    MMisc::error_quit("In file ($if), problem with input CSV : " . $icsvh->get_errormsg() . "\n[Line $sh : $line]")
         if ($icsvh->error());
 
     &add2all(\%all, \@inh, \%colm, "", @joincol);
