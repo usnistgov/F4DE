@@ -405,7 +405,19 @@ dist_clean:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`
 	@rm -f /tmp/.f4de_{distname,version,pwd}
 
-##########
+#################### Special ditributions
+
+OpH_D=F4DE-OpenHaRT_minrelease
+
+OpenHaRT_minrelease:
+	@mkdir -p ${OpH_D}/common/{lib,tools/{SQLite_tools,CSVUtil}}
+	@rsync -a ${F4DE_VERSION} ${OpH_D}/.
+	@rsync -a common/lib/{MMisc,MErrorH,CSVHelper,PropList,AutoTable,MtSQLite}.pm ${OpH_D}/common/lib/.
+	@rsync -a common/tools/SQLite_tools/*.pl ${OpH_D}/common/tools/SQLite_tools/.
+	@rsync -a common/tools/CSVUtil/*.pl ${OpH_D}/common/tools/CSVUtil/.
+
+
+##############################
 
 cvs-tag-current-distribution:
 	@make from_installdir
