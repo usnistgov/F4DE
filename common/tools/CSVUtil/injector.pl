@@ -9,10 +9,12 @@ use strict;
 ## First insure that we add the proper values to @INC
 my ($f4b, @f4bv);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../../common/lib");
+      : (dirname(abs_path($0)) . "/../../../common/lib");
 }
 use lib (@f4bv);
 
