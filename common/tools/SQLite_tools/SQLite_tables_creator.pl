@@ -92,7 +92,7 @@ my $usage = &set_usage();
 my $toolb = "SQLite_load_csv";
 my $tool = (exists $ENV{$f4b}) 
   ? $ENV{$f4b} . "/bin/$toolb"
-  : "../../../common/tools/SQLite_tools/${toolb}.pl";
+  : dirname(abs_path($0)) . "/../../../common/tools/SQLite_tools/${toolb}.pl";
 $tool = MMisc::cmd_which($toolb) 
   if (MMisc::is_blank($tool));
 my $loadcsv = 0;

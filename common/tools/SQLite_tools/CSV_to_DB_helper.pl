@@ -205,7 +205,7 @@ MMisc::ok_quit("Done");
 sub do_cfgfile {
   my ($cfgfile, $nullok, $log, $cmdadd, @csvfl) = @_;
 
-  my $tool = &path_tool($sqlite_cfg_helper, "../../../common/tools/SQLite_tools");
+  my $tool = &path_tool($sqlite_cfg_helper, dirname(abs_path($0)) . "/../../../common/tools/SQLite_tools");
 
   if (defined $quickConfig) {
     $cmdadd .= " -q";
@@ -237,9 +237,9 @@ sub db_create {
   MMisc::error_quit("Problem with config file ($cfgfile): $err")
     if (! MMisc::is_blank($err));
 
-  my $tool = &path_tool($sqlite_tables_creator, "../../../common/tools/SQLite_tools");
+  my $tool = &path_tool($sqlite_tables_creator, dirname(abs_path($0)) . "/../../../common/tools/SQLite_tools");
   my $tool2 = (exists $ENV{$f4b}) ? "" : 
-    &path_tool($sqlite_load_csv, "../../../common/tools/SQLite_tools");
+    &path_tool($sqlite_load_csv, dirname(abs_path($0)) . "../../../common/tools/SQLite_tools");
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, 
