@@ -39,10 +39,12 @@ my $versionid = "DEVA Command Line Interface Version: $version";
 
 my ($f4b, @f4bv);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../../common/lib");
+      : (dirname(abs_path($0)) . "/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -175,7 +177,7 @@ if ($listparams) {
   MMisc::error_quit("Specified \'metric\' does not seem to be using a valid name ($usedmetric), should start with \"Metric\"")
     if ((! MMisc::is_blank($usedmetric)) && (! ($usedmetric =~ m%^metric%i)));
 
-  my $tool = &path_tool($deva_sci, "../../../DEVA/tools/DEVA_sci");
+  my $tool = &path_tool($deva_sci, dirname(abs_path($0)) . "/../../../DEVA/tools/DEVA_sci");
 
   my $cmdp = "-l";
   $cmdp .= " -m $usedmetric" if (! MMisc::is_blank($usedmetric));
@@ -395,7 +397,7 @@ sub check_fn4 {
 sub do_cfgfile {
   my ($cfgfile, $nullok, $log, $cmdadd, @csvfl) = @_;
 
-  my $tool = &path_tool($sqlite_cfg_helper, "../../../common/tools/SQLite_tools");
+  my $tool = &path_tool($sqlite_cfg_helper, dirname(abs_path($0)) . "/../../../common/tools/SQLite_tools");
 
   if (defined $quickConfig) {
     $cmdadd .= " -q";
@@ -427,9 +429,9 @@ sub db_create {
   MMisc::error_quit("Problem with config file ($cfgfile): $err")
     if (! MMisc::is_blank($err));
 
-  my $tool = &path_tool($sqlite_tables_creator, "../../../common/tools/SQLite_tools");
+  my $tool = &path_tool($sqlite_tables_creator, dirname(abs_path($0)) . "/../../../common/tools/SQLite_tools");
   my $tool2 = (exists $ENV{$f4b}) ? "" : 
-    &path_tool($sqlite_load_csv, "../../../common/tools/SQLite_tools");
+    &path_tool($sqlite_load_csv, dirname(abs_path($0)) . "/../../../common/tools/SQLite_tools");
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, 
@@ -465,7 +467,7 @@ sub check_file_r {
 sub run_filter {
   my ($log, $refDBfile, $sysDBfile, $mdDBfile, $filtercmdfile, $resDBfile, @addDBs) = @_;
 
-  my $tool = &path_tool($deva_filter, "../../../DEVA/tools/DEVA_filter");
+  my $tool = &path_tool($deva_filter, dirname(abs_path($0)) . "/../../../DEVA/tools/DEVA_filter");
 
   my $addcmd = "";
   for (my $i = 0; $i < scalar @addDBs; $i++) {
