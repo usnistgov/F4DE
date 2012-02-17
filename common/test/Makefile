@@ -32,3 +32,12 @@ makecheckfiles:
 cleanresfiles:
 	@rm -rf rendtmp *png *srl.gz
 	@echo "***** All results files removed"
+
+OpenHaRT_minirelease_check:
+	@perl -I../lib -I../../../common/lib -I../../lib pre_tests.pl $@
+	@echo "* Running unit tests"
+	@(cd ../lib; perl -I. -e 'use PropList; PropList::unit_test(1);')
+	@(cd ../lib; perl -I. -e 'use MMisc; MMisc::unitTest();')
+	@echo ""
+	@(cd SQLite_tools; make check)
+	@echo "***** All tests ran succesfully"

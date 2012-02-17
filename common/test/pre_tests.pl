@@ -6,9 +6,13 @@ use MMisc;
 
 my $err = 0;
 
+my $mode = shift @ARGV;
+
+sub __not4ohc { ($mode ne "OpenHaRT_minirelease_check") ? $_[0] : '' }
+
 ##########
 print "** Checking for Perl Required Packages:\n";
-my $ms = 1;
+my $ms = 0;
 
 $ms = &_chkpkg
   (
@@ -16,12 +20,13 @@ $ms = &_chkpkg
    "Data::Dumper",
    "File::Copy",
    "File::Temp",
-   "Cwd", "Text::CSV",
+   "Cwd", 
+   "Text::CSV",
    "Time::HiRes", 
-   "Math::Random::OO::Uniform",
-   "Math::Random::OO::Normal",
-   "Statistics::Descriptive",
-   "Statistics::Descriptive::Discrete",
+   &__not4ohc("Math::Random::OO::Uniform"),
+   &__not4ohc("Math::Random::OO::Normal"),
+   &__not4ohc("Statistics::Descriptive"),
+   &__not4ohc("Statistics::Descriptive::Discrete"),
    "DBI",
    "DBD::SQLite"
   );
@@ -38,33 +43,33 @@ $ms = &_chkpkg
    # common/lib
    "AutoTable",
 #   "BarPlot",
-   "BipartiteMatch",
+   &__not4ohc("BipartiteMatch"),
    "CSVHelper",
-   "DETCurve",
-   "DETCurveGnuplotRenderer",
-   "DETCurveSet",
+   &__not4ohc("DETCurve"),
+   &__not4ohc("DETCurveGnuplotRenderer"),
+   &__not4ohc("DETCurveSet"),
    "F4DE_TestCore",
-   "Levenshtein",
+   &__not4ohc("Levenshtein"),
    "MErrorH",
    "MMisc",
-   "MetricFuncs",
-   "MetricNormLinearCostFunct",
-   "MetricTestStub",
-   "MetricTV08",
+   &__not4ohc("MetricFuncs"),
+   &__not4ohc("MetricNormLinearCostFunct"),
+   &__not4ohc("MetricTestStub"),
+   &__not4ohc("MetricTV08"),
 #   "MetricCCD10",
    "MtSQLite",
-   "MtXML",
+   &__not4ohc("MtXML"),
    "PropList",
-   "SimpleAutoTable",
-   "TextTools",
-   "TrialSummaryTable",
-   "TrialsFuncs",
-   "TrialsTestStub",
-   "TrialsTV08",
+   &__not4ohc("SimpleAutoTable"),
+   &__not4ohc("TextTools"),
+   &__not4ohc("TrialSummaryTable"),
+   &__not4ohc("TrialsFuncs"),
+   &__not4ohc("TrialsTestStub"),
+   &__not4ohc("TrialsTV08"),
 #   "TrialsCCD10",
-   "TrialsNormLinearCostFunct",
-   "ViperFramespan",
-   "xmllintHelper"
+   &__not4ohc("TrialsNormLinearCostFunct"),
+   &__not4ohc("ViperFramespan"),
+   &__not4ohc("xmllintHelper")
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the programs, please install the missing ones\n\n";
@@ -102,13 +107,14 @@ MMisc::ok_quit("\n** Pre-requisite testing done\n\n");
 sub _chkpkg {
   my @tocheck = @_;
 
-  my $ms = scalar @tocheck;
+  my $ms = 0;
   foreach my $i (@tocheck) {
+    next if (MMisc::is_blank($i));
     print "- $i : ";
     my $v = MMisc::check_package($i);
     my $t = $v ? "ok" : "**missing**";
     print "$t\n";
-    $ms -= $v;
+    $ms++ if (! $v);
   }
 
   return($ms);
