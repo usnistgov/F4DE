@@ -40,10 +40,12 @@ my $versionid = "TrecVid Event Detection Submission Checker Version: $version";
 ## First insure that we add the proper values to @INC
 my ($f4b, @f4bv);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib", "../../../common/lib");
+      : (dirname(abs_path($0)) . "/../../lib", dirname(abs_path($0)) . "/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -99,7 +101,7 @@ MMisc::error_quit($err)
 
 my $DEVAtool = (exists $ENV{$f4b})
   ? $ENV{$f4b} . "/bin/DEVA_cli"
-  : "../DEVA_cli/DEVA_cli.pl";
+  : dirname(abs_path($0)) . "/../DEVA_cli/DEVA_cli.pl";
 my $err = MMisc::check_file_x($DEVAtool);
 MMisc::error_quit("Problem with required tool ($DEVAtool) : $err")
   if (! MMisc::is_blank($err));
