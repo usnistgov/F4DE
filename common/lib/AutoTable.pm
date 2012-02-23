@@ -977,7 +977,9 @@ sub _centerJust(){
 ##########
 
 sub loadCSV {
-  my ($self, $file) = @_;
+  my $self = shift @_;
+  my $file = shift @_;
+  my ($qc, $sc) = MMisc::iuav(\@_, undef, undef);
   
   return($self->_set_error_and_return("Can not load a CSV to a AutoTable which already has data", 0))
     if ($self->{hasData});
@@ -988,7 +990,7 @@ sub loadCSV {
   close FILE;
   chomp @filec;
   
-  my $csvh = new CSVHelper();
+  my $csvh = new CSVHelper($qc, $sc);
   return($self->_set_error_and_return("Problem creating CSV handler", 0))
     if (! defined $csvh);
   return($self->_set_error_and_return("Problem with CSV handler: " . $csvh->get_errormsg(), 0))
