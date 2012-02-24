@@ -278,10 +278,17 @@ sub __HTML_proc_sp {
 
   my (@h1, @h2);
 
-#  print "#####[$str]#####\n";
   if ($str =~ s%url\=\{([^\}]+?)\}%%) {
     push @h1, "<a href=\"$1\">";
     unshift @h2, "</a>";
+  }
+
+  if ($str =~ s%before\=\{([^\}]+?)\}%%) {
+    push @h1, "$1";
+  }
+
+  if ($str =~ s%after\=\{([^\}]+?)\}%%) {
+    unshift @h2, "$1";
   }
 
   return(join("", @h1), join("", @h2));
