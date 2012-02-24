@@ -258,6 +258,13 @@ sub unitTest {
   
 }
 
+sub __getLID {
+  # arg 0: Row ID
+  # arg 1: Col ID
+  return($_[0] . "-" . $_[1]);
+}
+
+
 sub _buildHeir(){
   my ($self, $gap) = @_;
   
@@ -424,7 +431,7 @@ sub renderHTMLTable(){
       }
     }
     for (my $node=0; $node<@nodeSet; $node++) {
-      my $lid = $rowIDs[$row]."-".$nodeSet[$node]{subs}[0];
+      my $lid = &__getLID($rowIDs[$row], $nodeSet[$node]{subs}[0]);
       my $str = defined($self->{data}{$lid}) ? $self->{data}{$lid} : "&nbsp;";
       my ($h1, $h2) = ("", "");
 #      print "[$lid]\n";
@@ -615,7 +622,7 @@ sub renderTxtTable(){
     }
     $out .= "|";
     for (my $node=0; $node<@nodeSet; $node++) {
-      $out .= " " . $self->_rightJust($self->{data}{$rowIDStr."-".$nodeSet[$node]{subs}[0]}, $nodeSet[$node]{width} - 2) . " |";
+      $out .= " " . $self->_rightJust($self->{data}{&__getLID($rowIDStr, $nodeSet[$node]{subs}[0])}, $nodeSet[$node]{width} - 2) . " |";
     }
     
     $out .= "\n";
@@ -630,7 +637,7 @@ sub renderTxtTable(){
 ###      $out .= "|";
 ###    }
 ###    for (my $node=0; $node<@nodeSet; $node++) {
-###      $out .= " " . $self->_rightJust($self->{data}{$rowIDStr."-".$nodeSet[$node]{subs}[0]}, $nodeSet[$node]{width} - 2) . " |";
+###      $out .= " " . $self->_rightJust($self->{data}{&__getLID($rowIDStr, $nodeSet[$node]{subs}[0])}, $nodeSet[$node]{width} - 2) . " |";
 ###    }
 ###    
 ###    $out .= "\n";
@@ -914,7 +921,7 @@ sub _getStrForLevel(){
 sub setSpecial {
   my ($self, $colid, $rowid, $special) = @_;
 
-  my $lid = $rowid."-".$colid;
+  my $lid = &__getLID($rowid, $colid);
   MMisc::error_quit("Datum for '$rowid $colid' does not exist, can not set \'special\'")
       if (! defined($self->{data}{$lid}));
 
@@ -928,7 +935,7 @@ sub addData{
   $self->_addLab("col", $colid, $val);
   $self->_addLab("row", $rowid, $val);
   
-  my $lid = $rowid."-".$colid;
+  my $lid = &__getLID($rowid, $colid);
   if (defined($self->{data}{$lid})) {
     print "Warning Datum for '$rowid $colid' has multiple instances.\n"; 
     return 1;
@@ -976,45 +983,92 @@ sub _centerJust(){
 
 ##########
 
-sub loadCSV {
+sub __loadCSVcore {
   my $self = shift @_;
-  my $file = shift @_;
-  my ($qc, $sc) = MMisc::iuav(\@_, undef, undef);
+  my $file = shift @_; # CSV file to load
+  my $sp_file = shift @_; # Special CSV to load
+  my ($qc, $sc, $sp_qc, $sp_sc) = MMisc::iuav(\@_, undef, undef, undef, undef);
+  # Quote character (quote_char) and Separator character (sep_char)
+  # if not modifying a value make sure to set to 'undef' so that defaults are used
+  # refer to Text::CSV's perldoc for more details
   
   return($self->_set_error_and_return("Can not load a CSV to a AutoTable which already has data", 0))
     if ($self->{hasData});
   
+  my $withSpecial = (MMisc::is_blank($sp_file)) ? 0 : 1;
+
   open FILE, "<$file"
     or return($self->_set_error_and_return("Could not open CSV file ($file): $!\n", 0));
   my @filec = <FILE>;
   close FILE;
   chomp @filec;
   
+  my @sp_filec = ();
+  if ($withSpecial) {
+    open FILE, "<$sp_file"
+      or return($self->_set_error_and_return("Could not open Special CSV file ($sp_file): $!\n", 0));
+    @sp_filec = <FILE>;
+    close FILE;
+    chomp @sp_filec;
+    return($self->_set_error_and_return("Not the same number of lines between CSV file and Special CSV file (" . scalar @filec . " vs " . scalar @sp_filec . ")", 0))
+      if (scalar @filec != scalar @sp_filec);
+  } 
+
   my $csvh = new CSVHelper($qc, $sc);
   return($self->_set_error_and_return("Problem creating CSV handler", 0))
     if (! defined $csvh);
   return($self->_set_error_and_return("Problem with CSV handler: " . $csvh->get_errormsg(), 0))
     if ($csvh->error());
+
+  my $sp_csvh = undef;
+  if ($withSpecial) {
+    $sp_csvh = new CSVHelper($sp_qc, $sp_sc);
+    return($self->_set_error_and_return("Problem creating Special CSV handler", 0))
+      if (! defined $sp_csvh);
+    return($self->_set_error_and_return("Problem with Special CSV handler: " . $sp_csvh->get_errormsg(), 0))
+      if ($sp_csvh->error());
+  }
   
   my %csv = ();
+  my %sp_csv = ();
   my %elt1 = ();
+  my @order = ();
   my $inc = 0;
-  foreach my $line (@filec) {
-    next if ($line =~ m%^\s*$%);
+  for (my $i = 0; $i < scalar @filec; $i++) {
+    my $line = $filec[$i];
+    my $sp_line = ($withSpecial) ? $sp_filec[$i] : "";
+#  foreach my $line (@filec) {
+#    next if ($line =~ m%^\s*$%);
     
     my $key = sprintf("File: $file | Line: %012d", $inc);
     my @cols = $csvh->csvline2array($line);
     return($self->_set_error_and_return("Problem with CSV line: " . $csvh->get_errormsg(), 0))
       if ($csvh->error());
-    
+#    print "[*] [" . join("]||[", @cols) . "]\n";
+
+    my @sp_cols = ();
+    if ($withSpecial) {
+      @sp_cols = $sp_csvh->csvline2array($sp_line);
+      return($self->_set_error_and_return("Problem with Special CSV line: " . $sp_csvh->get_errormsg(), 0))
+        if ($sp_csvh->error());
+      return($self->_set_error_and_return("Problem with Special CSV line: no the same number of columns between main CSV and Special CSV (" . scalar @cols . " vs " . scalar @sp_cols . ")", 0))
+        if (scalar @cols  != scalar @sp_cols);
+    }
+
+
     if ($inc > 0) {
       $elt1{$cols[0]}++;
     } else {
       $csvh->set_number_of_columns(scalar @cols);
+      $sp_csvh->set_number_of_columns(scalar @cols) if ($withSpecial);
     }
     
+    push @order, $key;
     push @{$csv{$key}}, @cols;
-    
+    if ($withSpecial) {
+      push @{$sp_csv{$key}}, @sp_cols;
+    }
+
     $inc++;
   }
   
@@ -1025,8 +1079,11 @@ sub loadCSV {
   $self->setProperties({ "$key_KeyColumnCsv" => "Remove", "$key_KeyColumnTxt" => "Remove"}) if (! $cu1cak);
   
   my @colIDs = ();
-  foreach my $key (sort keys %csv) {
+#  foreach my $key (sort keys %csv) {
+  for (my $i = 0; $i < scalar @order; $i++) {
+    my $key = $order[$i];
     my @a = @{$csv{$key}};
+    my @sp_a = ($withSpecial) ? @{$sp_csv{$key}} : ();
     
     if (scalar @colIDs == 0) {
       @colIDs = @a;
@@ -1043,23 +1100,63 @@ sub loadCSV {
     
     for (my $i = 0; $i < scalar @a; $i++) {
       $self->addData($a[$i], $colIDs[$i], $ID);
+      $self->setSpecial($colIDs[$i], $ID, $sp_a[$i]) if (! MMisc::is_blank($sp_a[$i]));
     }
   }
   
   return(1);
 }
 
+#####
+
+sub loadCSV {
+  # arg 0: self
+  # arg 1: CSV file to load
+  # arg 2: Text::CSV's quote_char
+  # arg 3: Text::CSV's sep_char
+  my $self = shift @_;
+  my $file = shift @_;
+  my ($qc, $sc) = MMisc::iuav(\@_, undef, undef);
+  return($self->__loadCSVcore($file, undef, $qc, $sc));
+}
+
+#####
+
+sub loadCSVandSpecial {
+  # arg 0: self
+  # arg 1: CSV file to load
+  # arg 2: Special CSV file to load
+  # arg 3: Text::CSV's quote_char
+  # arg 4: Text::CSV's sep_char
+  # arg 5: Text::CSV's quote_char for Special
+  # arg 6: Text::CSV's sep_char for Special
+  my $self = shift @_;
+  my $file = shift @_;
+  my $sp_file = shift @_;
+  my ($qc, $sc, $sp_qc, $sp_sc) = MMisc::iuav(\@_, undef, undef, undef, undef, undef);
+  return($self->_set_error_and_return("No Special CSV file specified ?", 0))
+    if (MMisc::is_blank($sp_file));
+  return($self->__loadCSVcore($file, $sp_file, $qc, $sc, $sp_qc, $sp_sc));
+}
+
 ##########
 
-sub renderCSV {
-  my ($self) = @_;
+sub __renderCSVcore {
+  my $self = shift @_;
+  my ($withSpecial, $qc, $sc) = MMisc::iuav(\@_, undef, undef, undef);
+  # $qc: Text::CSV's quote_char
+  # $sc: Text::CSV's sep_char
   
   ### Make sure there is data.   If there isn't report nothing exists
   my @_da = keys %{ $self->{data} };
-  return "Warning: Empty table.  Nothing to produce.\n" if (@_da == 0);
+  if (scalar @_da == 0) {
+    $self->_set_errormsg("Warning: Empty table.  Nothing to produce.");
+    return(undef);
+  }
 
   my $out = "";
-  
+  my $sp_out = "";
+
   my $keyCol = $self->{Properties}->getValue($key_KeyColumnCsv);
   if ($self->{Properties}->error()) {
     $self->_set_errormsg("Unable to get the $key_KeyColumnCsv property.  Message is ".$self->{Properties}->get_errormsg());
@@ -1075,11 +1172,17 @@ sub renderCSV {
   my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort, $self->{Properties}->getValue($key_KeepRowsInOutput));
   my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded", $self->{Properties}->getValue($key_KeepColumnsInOutput));
   
-  my $csvh = new CSVHelper();
+  my $csvh = new CSVHelper($qc, $sc);
   return($self->_set_error_and_return("Problem creating CSV handler", 0))
     if (! defined $csvh);
   return($self->_set_error_and_return("Problem with CSV handler: " . $csvh->get_errormsg(), 0))
     if ($csvh->error());
+
+  my $sp_csvh = new CSVHelper($qc, $sc);
+  return($self->_set_error_and_return("Problem creating CSV handler", 0))
+    if (! defined $sp_csvh);
+  return($self->_set_error_and_return("Problem with CSV handler: " . $sp_csvh->get_errormsg(), 0))
+    if ($sp_csvh->error());
   
   ### Header output
   my @line = ();
@@ -1090,30 +1193,58 @@ sub renderCSV {
     if ($csvh->error());
   $out .= "$txt\n";
   $csvh->set_number_of_columns(scalar @line);
-  
+  if ($withSpecial) {
+    $sp_csvh->set_number_of_columns(scalar @line);
+    $sp_out .= "$txt\n";
+  }
+
   # line per line
   foreach my $rowIDStr (@rowIDs) {
     my @line = ();
+    my @sp_line = ();
     push @line, $rowIDStr if ($k1c);
+    push @sp_line, $rowIDStr if ($k1c);
     foreach my $colIDStr (@colIDs) {
-      push @line, $self->{data}{$rowIDStr."-".$colIDStr};
+      my $lid = &__getLID($rowIDStr, $colIDStr);
+      push @line, $self->{data}{$lid};
+      if ($withSpecial) {
+        if (exists $self->{special}{$lid}) {
+          push @sp_line, $self->{special}{$lid};
+        } else {
+          push @sp_line, "";
+        }
+      }
     }
     my $txt = $csvh->array2csvline(@line);
     return($self->_set_error_and_return("Problem with CSV array: " . $csvh->get_errormsg(), 0))
       if ($csvh->error());
     $out .= "$txt\n";
+    if ($withSpecial) {
+      my $txt = $sp_csvh->array2csvline(@sp_line);
+      return($self->_set_error_and_return("Problem with CSV array: " . $sp_csvh->get_errormsg(), 0))
+        if ($sp_csvh->error());
+      $sp_out .= "$txt\n";
+    }
   }
   
-  return($out);
+  return($out) if (! $withSpecial);
+  return($out, $sp_out);
 }
+
+#####
+
+sub renderCSV { return($_[0]->__renderCSVcore(0, $_[1], $_[2])); }
+
+sub renderCSVandSpecial { return($_[0]->__renderCSVcore(1, $_[1], $_[2])); }
+
 
 ################## Access functions #########################################
 
 sub getData{
   my ($self, $rowid, $colid) = @_;
   
-  if (defined($self->{data}{$rowid."-".$colid})) {
-    return $self->{data}{$rowid."-".$colid};
+  if (defined($self->{data}{&__getLID($rowid, $colid)})) {
+    return $self->{data}{&__getLID($rowid, $colid)};
   }
   return("oiops");    
 }
