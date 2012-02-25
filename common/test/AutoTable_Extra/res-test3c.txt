@@ -1,0 +1,377 @@
+[[COMMANDLINE]] ./sp_load.pl ../common/md.csv ../common/md_sp.csv name,color
+[[RETURN CODE]] 0
+[[STDOUT]]
+######################################## []
+ (The default is not to show the 'MasterKey' column, here we will show it for the CSV file)
+
+##########
+[**] Text
+| TrialID |    name     | year | color  |
+|---------+-------------+------+--------+
+|       1 |        jack | 1959 |   blue |
+|       8 |        jack | 2005 |    red |
+|      10 |        jack | 2010 | yellow |
+|       5 |        jack | 1986 | purple |
+|       6 |        jack | 1999 |  green |
+|       7 |        jack | 2000 |  black |
+|       9 |        jack | 2010 | orange |
+|      11 |        mary | 1973 |   blue |
+|      12 |        mary | 1974 | purple |
+|      15 |        mary | 1995 |   pink |
+|      14 |        mary | 1986 |  black |
+|      16 |     stephen | 1999 |    red |
+|      17 |     stephen | 2000 |  white |
+|      20 |     stephen | 2001 |   blue |
+|      19 |     stephen | 2000 |   pink |
+|      28 |        alex | 2006 |  white |
+|      22 |        alex | 2000 | orange |
+|      29 |        alex | 2007 |    red |
+|      24 |        alex | 2002 | purple |
+|      26 |        alex | 2004 |   blue |
+|      30 |        alex | 2008 | yellow |
+|      34 |       karin | 1985 |  white |
+|      40 |       karin | 2010 |   blue |
+|      35 |       karin | 1990 |  black |
+|      36 |       karin | 1995 | orange |
+|      37 |       karin | 2000 | yellow |
+|      38 |       karin | 2005 |  green |
+|      39 |       karin | 2010 | purple |
+|      41 |       akane | 1990 |    red |
+|      42 |       akane | 1991 |  white |
+|      43 |       akane | 1992 |   blue |
+|      44 |       chang | 1995 |  black |
+|      45 |       chang | 2007 |    red |
+|      46 |       chang | 2008 | purple |
+|      47 | christopher | 1995 |        |
+|      48 | christopher | 2000 |   blue |
+|      49 |      robert | 2005 |  green |
+|      50 |   christina | 2006 | yellow |
+
+##########
+[**] CSV
+"MasterKey","TrialID","name","year","color"
+"jack_____blue","1","jack","1959","blue"
+"jack_____red","8","jack","2005","red"
+"jack_____yellow","10","jack","2010","yellow"
+"jack_____purple","5","jack","1986","purple"
+"jack_____green","6","jack","1999","green"
+"jack_____black","7","jack","2000","black"
+"jack_____orange","9","jack","2010","orange"
+"mary_____blue","11","mary","1973","blue"
+"mary_____purple","12","mary","1974","purple"
+"mary_____pink","15","mary","1995","pink"
+"mary_____black","14","mary","1986","black"
+"stephen_____red","16","stephen","1999","red"
+"stephen_____white","17","stephen","2000","white"
+"stephen_____blue","20","stephen","2001","blue"
+"stephen_____pink","19","stephen","2000","pink"
+"alex_____white","28","alex","2006","white"
+"alex_____orange","22","alex","2000","orange"
+"alex_____red","29","alex","2007","red"
+"alex_____purple","24","alex","2002","purple"
+"alex_____blue","26","alex","2004","blue"
+"alex_____yellow","30","alex","2008","yellow"
+"karin_____white","34","karin","1985","white"
+"karin_____blue","40","karin","2010","blue"
+"karin_____black","35","karin","1990","black"
+"karin_____orange","36","karin","1995","orange"
+"karin_____yellow","37","karin","2000","yellow"
+"karin_____green","38","karin","2005","green"
+"karin_____purple","39","karin","2010","purple"
+"akane_____red","41","akane","1990","red"
+"akane_____white","42","akane","1991","white"
+"akane_____blue","43","akane","1992","blue"
+"chang_____black","44","chang","1995","black"
+"chang_____red","45","chang","2007","red"
+"chang_____purple","46","chang","2008","purple"
+"christopher_____","47","christopher","1995",""
+"christopher_____blue","48","christopher","2000","blue"
+"robert_____green","49","robert","2005","green"
+"christina_____yellow","50","christina","2006","yellow"
+
+
+
+[**] SpecialCSV
+"MasterKey","TrialID","name","year","color"
+"jack_____blue","before={<b>} after={</b>}","","",""
+"jack_____red","","","",""
+"jack_____yellow","","","",""
+"jack_____purple","","","",""
+"jack_____green","","","",""
+"jack_____black","","","",""
+"jack_____orange","","","",""
+"mary_____blue","","url={http://nist.gov}","",""
+"mary_____purple","","","",""
+"mary_____pink","","","",""
+"mary_____black","","","",""
+"stephen_____red","","","",""
+"stephen_____white","","","",""
+"stephen_____blue","","","",""
+"stephen_____pink","","","",""
+"alex_____white","","","before={<font color=""red"">} after={</font>}",""
+"alex_____orange","","","",""
+"alex_____red","","","",""
+"alex_____purple","","","",""
+"alex_____blue","","","",""
+"alex_____yellow","","","",""
+"karin_____white","","","","url={""file.png""}"
+"karin_____blue","","before={<font color=""blue"">} after={</font>} before={<IMG SRC=""file.png"" height=80 width=80/>}","",""
+"karin_____black","","","",""
+"karin_____orange","","","",""
+"karin_____yellow","","","",""
+"karin_____green","","","",""
+"karin_____purple","","","",""
+"akane_____red","","","",""
+"akane_____white","","","",""
+"akane_____blue","","","",""
+"chang_____black","","","",""
+"chang_____red","","","",""
+"chang_____purple","","","before={<IMG SRC=""file.png"" height=80 width=80/>} url={""file.png""}",""
+"christopher_____","","","",""
+"christopher_____blue","","","",""
+"robert_____green","","","",""
+"christina_____yellow","","","",""
+
+
+##########
+[**] HTML
+<table border=1 >
+<tr>
+  <th > TrialID  </th>
+  <th > name  </th>
+  <th > year  </th>
+  <th > color  </th>
+</tr>
+<tr>
+  <td  align="right" > 43 </td>  <!-- akane_____blue TrialID  --> 
+  <td  align="right" > akane </td>  <!-- akane_____blue name  --> 
+  <td  align="right" > 1992 </td>  <!-- akane_____blue year  --> 
+  <td  align="right" > blue </td>  <!-- akane_____blue color  --> 
+</tr>
+<tr>
+  <td  align="right" > 41 </td>  <!-- akane_____red TrialID  --> 
+  <td  align="right" > akane </td>  <!-- akane_____red name  --> 
+  <td  align="right" > 1990 </td>  <!-- akane_____red year  --> 
+  <td  align="right" > red </td>  <!-- akane_____red color  --> 
+</tr>
+<tr>
+  <td  align="right" > 42 </td>  <!-- akane_____white TrialID  --> 
+  <td  align="right" > akane </td>  <!-- akane_____white name  --> 
+  <td  align="right" > 1991 </td>  <!-- akane_____white year  --> 
+  <td  align="right" > white </td>  <!-- akane_____white color  --> 
+</tr>
+<tr>
+  <td  align="right" > 26 </td>  <!-- alex_____blue TrialID  --> 
+  <td  align="right" > alex </td>  <!-- alex_____blue name  --> 
+  <td  align="right" > 2004 </td>  <!-- alex_____blue year  --> 
+  <td  align="right" > blue </td>  <!-- alex_____blue color  --> 
+</tr>
+<tr>
+  <td  align="right" > 22 </td>  <!-- alex_____orange TrialID  --> 
+  <td  align="right" > alex </td>  <!-- alex_____orange name  --> 
+  <td  align="right" > 2000 </td>  <!-- alex_____orange year  --> 
+  <td  align="right" > orange </td>  <!-- alex_____orange color  --> 
+</tr>
+<tr>
+  <td  align="right" > 24 </td>  <!-- alex_____purple TrialID  --> 
+  <td  align="right" > alex </td>  <!-- alex_____purple name  --> 
+  <td  align="right" > 2002 </td>  <!-- alex_____purple year  --> 
+  <td  align="right" > purple </td>  <!-- alex_____purple color  --> 
+</tr>
+<tr>
+  <td  align="right" > 29 </td>  <!-- alex_____red TrialID  --> 
+  <td  align="right" > alex </td>  <!-- alex_____red name  --> 
+  <td  align="right" > 2007 </td>  <!-- alex_____red year  --> 
+  <td  align="right" > red </td>  <!-- alex_____red color  --> 
+</tr>
+<tr>
+  <td  align="right" > 28 </td>  <!-- alex_____white TrialID  --> 
+  <td  align="right" > alex </td>  <!-- alex_____white name  --> 
+  <td  align="right" > <font color="red">2006</font> </td>  <!-- alex_____white year  --> 
+  <td  align="right" > white </td>  <!-- alex_____white color  --> 
+</tr>
+<tr>
+  <td  align="right" > 30 </td>  <!-- alex_____yellow TrialID  --> 
+  <td  align="right" > alex </td>  <!-- alex_____yellow name  --> 
+  <td  align="right" > 2008 </td>  <!-- alex_____yellow year  --> 
+  <td  align="right" > yellow </td>  <!-- alex_____yellow color  --> 
+</tr>
+<tr>
+  <td  align="right" > 44 </td>  <!-- chang_____black TrialID  --> 
+  <td  align="right" > chang </td>  <!-- chang_____black name  --> 
+  <td  align="right" > 1995 </td>  <!-- chang_____black year  --> 
+  <td  align="right" > black </td>  <!-- chang_____black color  --> 
+</tr>
+<tr>
+  <td  align="right" > 46 </td>  <!-- chang_____purple TrialID  --> 
+  <td  align="right" > chang </td>  <!-- chang_____purple name  --> 
+  <td  align="right" > <IMG SRC="file.png" height=80 width=80/><a href=""file.png"">2008</a> </td>  <!-- chang_____purple year  --> 
+  <td  align="right" > purple </td>  <!-- chang_____purple color  --> 
+</tr>
+<tr>
+  <td  align="right" > 45 </td>  <!-- chang_____red TrialID  --> 
+  <td  align="right" > chang </td>  <!-- chang_____red name  --> 
+  <td  align="right" > 2007 </td>  <!-- chang_____red year  --> 
+  <td  align="right" > red </td>  <!-- chang_____red color  --> 
+</tr>
+<tr>
+  <td  align="right" > 50 </td>  <!-- christina_____yellow TrialID  --> 
+  <td  align="right" > christina </td>  <!-- christina_____yellow name  --> 
+  <td  align="right" > 2006 </td>  <!-- christina_____yellow year  --> 
+  <td  align="right" > yellow </td>  <!-- christina_____yellow color  --> 
+</tr>
+<tr>
+  <td  align="right" > 47 </td>  <!-- christopher_____ TrialID  --> 
+  <td  align="right" > christopher </td>  <!-- christopher_____ name  --> 
+  <td  align="right" > 1995 </td>  <!-- christopher_____ year  --> 
+  <td  align="right" >  </td>  <!-- christopher_____ color  --> 
+</tr>
+<tr>
+  <td  align="right" > 48 </td>  <!-- christopher_____blue TrialID  --> 
+  <td  align="right" > christopher </td>  <!-- christopher_____blue name  --> 
+  <td  align="right" > 2000 </td>  <!-- christopher_____blue year  --> 
+  <td  align="right" > blue </td>  <!-- christopher_____blue color  --> 
+</tr>
+<tr>
+  <td  align="right" > 7 </td>  <!-- jack_____black TrialID  --> 
+  <td  align="right" > jack </td>  <!-- jack_____black name  --> 
+  <td  align="right" > 2000 </td>  <!-- jack_____black year  --> 
+  <td  align="right" > black </td>  <!-- jack_____black color  --> 
+</tr>
+<tr>
+  <td  align="right" > <b>1</b> </td>  <!-- jack_____blue TrialID  --> 
+  <td  align="right" > jack </td>  <!-- jack_____blue name  --> 
+  <td  align="right" > 1959 </td>  <!-- jack_____blue year  --> 
+  <td  align="right" > blue </td>  <!-- jack_____blue color  --> 
+</tr>
+<tr>
+  <td  align="right" > 6 </td>  <!-- jack_____green TrialID  --> 
+  <td  align="right" > jack </td>  <!-- jack_____green name  --> 
+  <td  align="right" > 1999 </td>  <!-- jack_____green year  --> 
+  <td  align="right" > green </td>  <!-- jack_____green color  --> 
+</tr>
+<tr>
+  <td  align="right" > 9 </td>  <!-- jack_____orange TrialID  --> 
+  <td  align="right" > jack </td>  <!-- jack_____orange name  --> 
+  <td  align="right" > 2010 </td>  <!-- jack_____orange year  --> 
+  <td  align="right" > orange </td>  <!-- jack_____orange color  --> 
+</tr>
+<tr>
+  <td  align="right" > 5 </td>  <!-- jack_____purple TrialID  --> 
+  <td  align="right" > jack </td>  <!-- jack_____purple name  --> 
+  <td  align="right" > 1986 </td>  <!-- jack_____purple year  --> 
+  <td  align="right" > purple </td>  <!-- jack_____purple color  --> 
+</tr>
+<tr>
+  <td  align="right" > 8 </td>  <!-- jack_____red TrialID  --> 
+  <td  align="right" > jack </td>  <!-- jack_____red name  --> 
+  <td  align="right" > 2005 </td>  <!-- jack_____red year  --> 
+  <td  align="right" > red </td>  <!-- jack_____red color  --> 
+</tr>
+<tr>
+  <td  align="right" > 10 </td>  <!-- jack_____yellow TrialID  --> 
+  <td  align="right" > jack </td>  <!-- jack_____yellow name  --> 
+  <td  align="right" > 2010 </td>  <!-- jack_____yellow year  --> 
+  <td  align="right" > yellow </td>  <!-- jack_____yellow color  --> 
+</tr>
+<tr>
+  <td  align="right" > 35 </td>  <!-- karin_____black TrialID  --> 
+  <td  align="right" > karin </td>  <!-- karin_____black name  --> 
+  <td  align="right" > 1990 </td>  <!-- karin_____black year  --> 
+  <td  align="right" > black </td>  <!-- karin_____black color  --> 
+</tr>
+<tr>
+  <td  align="right" > 40 </td>  <!-- karin_____blue TrialID  --> 
+  <td  align="right" > <font color="blue">karin</font> </td>  <!-- karin_____blue name  --> 
+  <td  align="right" > 2010 </td>  <!-- karin_____blue year  --> 
+  <td  align="right" > blue </td>  <!-- karin_____blue color  --> 
+</tr>
+<tr>
+  <td  align="right" > 38 </td>  <!-- karin_____green TrialID  --> 
+  <td  align="right" > karin </td>  <!-- karin_____green name  --> 
+  <td  align="right" > 2005 </td>  <!-- karin_____green year  --> 
+  <td  align="right" > green </td>  <!-- karin_____green color  --> 
+</tr>
+<tr>
+  <td  align="right" > 36 </td>  <!-- karin_____orange TrialID  --> 
+  <td  align="right" > karin </td>  <!-- karin_____orange name  --> 
+  <td  align="right" > 1995 </td>  <!-- karin_____orange year  --> 
+  <td  align="right" > orange </td>  <!-- karin_____orange color  --> 
+</tr>
+<tr>
+  <td  align="right" > 39 </td>  <!-- karin_____purple TrialID  --> 
+  <td  align="right" > karin </td>  <!-- karin_____purple name  --> 
+  <td  align="right" > 2010 </td>  <!-- karin_____purple year  --> 
+  <td  align="right" > purple </td>  <!-- karin_____purple color  --> 
+</tr>
+<tr>
+  <td  align="right" > 34 </td>  <!-- karin_____white TrialID  --> 
+  <td  align="right" > karin </td>  <!-- karin_____white name  --> 
+  <td  align="right" > 1985 </td>  <!-- karin_____white year  --> 
+  <td  align="right" > <a href=""file.png"">white</a> </td>  <!-- karin_____white color  --> 
+</tr>
+<tr>
+  <td  align="right" > 37 </td>  <!-- karin_____yellow TrialID  --> 
+  <td  align="right" > karin </td>  <!-- karin_____yellow name  --> 
+  <td  align="right" > 2000 </td>  <!-- karin_____yellow year  --> 
+  <td  align="right" > yellow </td>  <!-- karin_____yellow color  --> 
+</tr>
+<tr>
+  <td  align="right" > 14 </td>  <!-- mary_____black TrialID  --> 
+  <td  align="right" > mary </td>  <!-- mary_____black name  --> 
+  <td  align="right" > 1986 </td>  <!-- mary_____black year  --> 
+  <td  align="right" > black </td>  <!-- mary_____black color  --> 
+</tr>
+<tr>
+  <td  align="right" > 11 </td>  <!-- mary_____blue TrialID  --> 
+  <td  align="right" > <a href="http://nist.gov">mary</a> </td>  <!-- mary_____blue name  --> 
+  <td  align="right" > 1973 </td>  <!-- mary_____blue year  --> 
+  <td  align="right" > blue </td>  <!-- mary_____blue color  --> 
+</tr>
+<tr>
+  <td  align="right" > 15 </td>  <!-- mary_____pink TrialID  --> 
+  <td  align="right" > mary </td>  <!-- mary_____pink name  --> 
+  <td  align="right" > 1995 </td>  <!-- mary_____pink year  --> 
+  <td  align="right" > pink </td>  <!-- mary_____pink color  --> 
+</tr>
+<tr>
+  <td  align="right" > 12 </td>  <!-- mary_____purple TrialID  --> 
+  <td  align="right" > mary </td>  <!-- mary_____purple name  --> 
+  <td  align="right" > 1974 </td>  <!-- mary_____purple year  --> 
+  <td  align="right" > purple </td>  <!-- mary_____purple color  --> 
+</tr>
+<tr>
+  <td  align="right" > 49 </td>  <!-- robert_____green TrialID  --> 
+  <td  align="right" > robert </td>  <!-- robert_____green name  --> 
+  <td  align="right" > 2005 </td>  <!-- robert_____green year  --> 
+  <td  align="right" > green </td>  <!-- robert_____green color  --> 
+</tr>
+<tr>
+  <td  align="right" > 20 </td>  <!-- stephen_____blue TrialID  --> 
+  <td  align="right" > stephen </td>  <!-- stephen_____blue name  --> 
+  <td  align="right" > 2001 </td>  <!-- stephen_____blue year  --> 
+  <td  align="right" > blue </td>  <!-- stephen_____blue color  --> 
+</tr>
+<tr>
+  <td  align="right" > 19 </td>  <!-- stephen_____pink TrialID  --> 
+  <td  align="right" > stephen </td>  <!-- stephen_____pink name  --> 
+  <td  align="right" > 2000 </td>  <!-- stephen_____pink year  --> 
+  <td  align="right" > pink </td>  <!-- stephen_____pink color  --> 
+</tr>
+<tr>
+  <td  align="right" > 16 </td>  <!-- stephen_____red TrialID  --> 
+  <td  align="right" > stephen </td>  <!-- stephen_____red name  --> 
+  <td  align="right" > 1999 </td>  <!-- stephen_____red year  --> 
+  <td  align="right" > red </td>  <!-- stephen_____red color  --> 
+</tr>
+<tr>
+  <td  align="right" > 17 </td>  <!-- stephen_____white TrialID  --> 
+  <td  align="right" > stephen </td>  <!-- stephen_____white name  --> 
+  <td  align="right" > 2000 </td>  <!-- stephen_____white year  --> 
+  <td  align="right" > white </td>  <!-- stephen_____white color  --> 
+</tr>
+</table>
+Done
+
+[[STDERR]]
+

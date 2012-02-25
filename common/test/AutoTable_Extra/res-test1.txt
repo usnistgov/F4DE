@@ -1,0 +1,411 @@
+[[COMMANDLINE]] perl -I../../../common/lib -e 'use AutoTable; AutoTable::unitTest();'
+[[RETURN CODE]] 0
+[[STDOUT]]
+Testing behavior on an empty table
+<html>
+Simple Table
+<pre>
+           |                CCC                |
+           |      col1       |      col2       |
+           |  A  |  B  |  C  |  A  |  B  |  C  |
+-----------+-----+-----+-----+-----+-----+-----+
+srow1 row1 | 1x1 | 1x1 | 1x2 | 1x1 | 1x1 | 1x2 |
+      row2 | 1x1 | 1x1 | 1x2 | 1x1 | 1x1 | 1x2 |
+srow2 row1 | 1x1 | 1x1 | 1x2 | 1x1 | 1x1 | 1x2 |
+      row2 | 1x1 | 1x1 | 1x2 | 1x1 | 1x1 | 1x2 |
+2MasterKey2,2CCC|col1|A2,2CCC|col1|B2,2CCC|col1|C2,2CCC|col22|A2,2CCC|col22|B2,2CCC|col22|C2
+2srow1|row12,21x12,21x12,21x222,21x12,21x12,21x222
+2srow1|row222,21x12,21x12,21x222,21x12,21x12,21x222
+2srow22|row12,21x12,21x12,21x222,21x12,21x12,21x222
+2srow22|row222,21x12,21x12,21x222,21x12,21x12,21x222
+</pre>
+<table border=1 >
+<tr>
+  <th rowspan=3 colspan=2> &nbsp; </th>
+  <th colspan=6 > CCC  </th>
+</tr>
+<tr>
+  <th colspan=3 > col1  </th>
+  <th colspan=3 > col2  </th>
+</tr>
+<tr>
+  <th > A  </th>
+  <th > B  </th>
+  <th > C  </th>
+  <th > A  </th>
+  <th > B  </th>
+  <th > C  </th>
+</tr>
+<tr>
+  <th rowspan=2 > srow1 </th>
+  <th > row1 </th>
+  <td  align="right" > 1x1 </td>  <!-- srow1|row1 CCC|col1|A  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row1 CCC|col1|B  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow1|row1 CCC|col1|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row1 CCC|col2|A  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row1 CCC|col2|B  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow1|row1 CCC|col2|C  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th > row2 </th>
+  <td  align="right" > 1x1 </td>  <!-- srow1|row2 CCC|col1|A  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row2 CCC|col1|B  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow1|row2 CCC|col1|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row2 CCC|col2|A  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row2 CCC|col2|B  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow1|row2 CCC|col2|C  --> 
+</tr>
+<tr>
+  <th rowspan=2 > srow2 </th>
+  <th > row1 </th>
+  <td  align="right" > 1x1 </td>  <!-- srow2|row1 CCC|col1|A  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row1 CCC|col1|B  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow2|row1 CCC|col1|C  --> 
+  <td  align="right" > <a href="http://www.nist.gov/">1x1</a> </td>  <!-- srow2|row1 CCC|col2|A  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row1 CCC|col2|B  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow2|row1 CCC|col2|C  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th > row2 </th>
+  <td  align="right" > 1x1 </td>  <!-- srow2|row2 CCC|col1|A  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row2 CCC|col1|B  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow2|row2 CCC|col1|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row2 CCC|col2|A  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row2 CCC|col2|B  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow2|row2 CCC|col2|C  --> 
+</tr>
+</table>
+Complex Table
+<pre>
+                            |                 PartA                  |                                   PartB                                   |  abcdefghijabcdefghijabcdefghijabcdefghij  |
+                            |  012345678901234567890123456789012345  |  Aletsmakethisbiggg  |              B               |      ThisIsBig      |                     A                      |
+                            |       col1        |        col2        |   col3   |   col4    |  col3  |        col4         |        col4         |        col1         |         col2         |
+----------------------------+-------------------+--------------------+----------+-----------+--------+---------------------+---------------------+---------------------+----------------------+
+Sub  PartZ   ObjectPut      |                   |                    |        3 |         4 |        |                     |                     |                   1 |                    2 |
+     PartYY  PeopleSplitUp  |                   |                    |        7 |           |        |                   8 |                     |                   5 |                    6 |
+     PartZ   PersonRuns     |                 9 |                 10 |          |           |     11 |                  12 |                     |                     |                      |
+     PartYY  Pointing       |                13 |                 12 |          |           |     15 |   16454433333333334 |   16454433333333334 |                     |                      |
+Bus  PartYY  PeopleSplitUp  |                   |                    |        7 |           |        |                   8 |                     |                   5 |                    6 |
+             Pointing       |                13 |                 12 |          |           |     15 |   16454433333333334 |   16454433333333334 |                     |                      |
+"MasterKey","abcdefghijabcdefghijabcdefghijabcdefghij|A|col1","abcdefghijabcdefghijabcdefghijabcdefghij|A|col2","PartA|012345678901234567890123456789012345|col1","PartA|012345678901234567890123456789012345|col2","PartB|Aletsmakethisbiggg|col3","PartB|Aletsmakethisbiggg|col4","PartB|B|col4","PartB|B|col3","PartB|ThisIsBig|col4"
+"Sub|PartZ|ObjectPut","1","2",,,"3","4",,,
+"Sub|PartYY|PeopleSplitUp","5","6",,,"7",,"8",,
+"Sub|PartZ|PersonRuns",,,"9","10",,,"12","11",
+"Sub|PartYY|Pointing",,,"13","12",,,"16454433333333334","15","16454433333333334"
+"Bus|PartYY|PeopleSplitUp","5","6",,,"7",,"8",,
+"Bus|PartYY|Pointing",,,"13","12",,,"16454433333333334","15","16454433333333334"
+</pre>
+<table border=1 >
+<tr>
+  <th rowspan=3 colspan=3> &nbsp; </th>
+  <th colspan=2 > PartA  </th>
+  <th colspan=5 > PartB  </th>
+  <th colspan=2 > abcdefghijabcdefghijabcdefghijabcdefghij  </th>
+</tr>
+<tr>
+  <th colspan=2 > 012345678901234567890123456789012345  </th>
+  <th colspan=2 > Aletsmakethisbiggg  </th>
+  <th colspan=2 > B  </th>
+  <th > ThisIsBig  </th>
+  <th colspan=2 > A  </th>
+</tr>
+<tr>
+  <th > col1  </th>
+  <th > col2  </th>
+  <th > col3  </th>
+  <th > col4  </th>
+  <th > col3  </th>
+  <th > col4  </th>
+  <th > col4  </th>
+  <th > col1  </th>
+  <th > col2  </th>
+</tr>
+<tr>
+  <th rowspan=2 > Bus </th>
+  <th rowspan=2 > PartYY </th>
+  <th > PeopleSplitUp </th>
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > 7 </td>  <!-- Bus|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col3  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|PeopleSplitUp PartB|B|col3  --> 
+  <td  align="right" > 8 </td>  <!-- Bus|PartYY|PeopleSplitUp PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|PeopleSplitUp PartB|ThisIsBig|col4  --> 
+  <td  align="right" > 5 </td>  <!-- Bus|PartYY|PeopleSplitUp abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
+  <td  align="right" > 6 </td>  <!-- Bus|PartYY|PeopleSplitUp abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <!-- <th> &nbsp; </th> -->
+  <th > Pointing </th>
+  <td  align="right" > 13 </td>  <!-- Bus|PartYY|Pointing PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > 12 </td>  <!-- Bus|PartYY|Pointing PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|Pointing PartB|Aletsmakethisbiggg|col3  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|Pointing PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 15 </td>  <!-- Bus|PartYY|Pointing PartB|B|col3  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Bus|PartYY|Pointing PartB|B|col4  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Bus|PartYY|Pointing PartB|ThisIsBig|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|Pointing abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|Pointing abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
+</tr>
+<tr>
+  <th rowspan=4 > Sub </th>
+  <th rowspan=2 > PartYY </th>
+  <th > PeopleSplitUp </th>
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > 7 </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col3  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|B|col3  --> 
+  <td  align="right" > 8 </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|ThisIsBig|col4  --> 
+  <td  align="right" > 5 </td>  <!-- Sub|PartYY|PeopleSplitUp abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
+  <td  align="right" > 6 </td>  <!-- Sub|PartYY|PeopleSplitUp abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <!-- <th> &nbsp; </th> -->
+  <th > Pointing </th>
+  <td  align="right" > 13 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > 12 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing PartB|Aletsmakethisbiggg|col3  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 15 </td>  <!-- Sub|PartYY|Pointing PartB|B|col3  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|B|col4  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|ThisIsBig|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th rowspan=2 > PartZ </th>
+  <th > ObjectPut </th>
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > 3 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col3  --> 
+  <td  align="right" > 4 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col3  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|ThisIsBig|col4  --> 
+  <td  align="right" > 1 </td>  <!-- Sub|PartZ|ObjectPut abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
+  <td  align="right" > 2 </td>  <!-- Sub|PartZ|ObjectPut abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <!-- <th> &nbsp; </th> -->
+  <th > PersonRuns </th>
+  <td  align="right" > 9 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > 10 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col3  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 11 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col3  --> 
+  <td  align="right" > 12 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|ThisIsBig|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
+</tr>
+</table>
+Complex table = keepColumns .*PartA.*|PartB.*col4
+<pre>
+                            |                 PartA                  |                              PartB                               |
+                            |  012345678901234567890123456789012345  |  Aletsmakethisbiggg  |          B          |      ThisIsBig      |
+                            |       col1        |        col2        |         col4         |        col4         |        col4         |
+----------------------------+-------------------+--------------------+----------------------+---------------------+---------------------+
+Sub  PartZ   ObjectPut      |                   |                    |                    4 |                     |                     |
+     PartYY  PeopleSplitUp  |                   |                    |                      |                   8 |                     |
+     PartZ   PersonRuns     |                 9 |                 10 |                      |                  12 |                     |
+     PartYY  Pointing       |                13 |                 12 |                      |   16454433333333334 |   16454433333333334 |
+Bus  PartYY  PeopleSplitUp  |                   |                    |                      |                   8 |                     |
+             Pointing       |                13 |                 12 |                      |   16454433333333334 |   16454433333333334 |
+"MasterKey","PartA|012345678901234567890123456789012345|col1","PartA|012345678901234567890123456789012345|col2","PartB|Aletsmakethisbiggg|col4","PartB|B|col4","PartB|ThisIsBig|col4"
+"Sub|PartZ|ObjectPut",,,"4",,
+"Sub|PartYY|PeopleSplitUp",,,,"8",
+"Sub|PartZ|PersonRuns","9","10",,"12",
+"Sub|PartYY|Pointing","13","12",,"16454433333333334","16454433333333334"
+"Bus|PartYY|PeopleSplitUp",,,,"8",
+"Bus|PartYY|Pointing","13","12",,"16454433333333334","16454433333333334"
+</pre>
+<table border=1 >
+<tr>
+  <th rowspan=3 colspan=3> &nbsp; </th>
+  <th colspan=2 > PartA  </th>
+  <th colspan=3 > PartB  </th>
+</tr>
+<tr>
+  <th colspan=2 > 012345678901234567890123456789012345  </th>
+  <th > Aletsmakethisbiggg  </th>
+  <th > B  </th>
+  <th > ThisIsBig  </th>
+</tr>
+<tr>
+  <th > col1  </th>
+  <th > col2  </th>
+  <th > col4  </th>
+  <th > col4  </th>
+  <th > col4  </th>
+</tr>
+<tr>
+  <th rowspan=2 > Bus </th>
+  <th rowspan=2 > PartYY </th>
+  <th > PeopleSplitUp </th>
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 8 </td>  <!-- Bus|PartYY|PeopleSplitUp PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|PeopleSplitUp PartB|ThisIsBig|col4  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <!-- <th> &nbsp; </th> -->
+  <th > Pointing </th>
+  <td  align="right" > 13 </td>  <!-- Bus|PartYY|Pointing PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > 12 </td>  <!-- Bus|PartYY|Pointing PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|Pointing PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Bus|PartYY|Pointing PartB|B|col4  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Bus|PartYY|Pointing PartB|ThisIsBig|col4  --> 
+</tr>
+<tr>
+  <th rowspan=4 > Sub </th>
+  <th rowspan=2 > PartYY </th>
+  <th > PeopleSplitUp </th>
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 8 </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|ThisIsBig|col4  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <!-- <th> &nbsp; </th> -->
+  <th > Pointing </th>
+  <td  align="right" > 13 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > 12 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|B|col4  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|ThisIsBig|col4  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th rowspan=2 > PartZ </th>
+  <th > ObjectPut </th>
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > 4 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|ThisIsBig|col4  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <!-- <th> &nbsp; </th> -->
+  <th > PersonRuns </th>
+  <td  align="right" > 9 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > 10 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 12 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|ThisIsBig|col4  --> 
+</tr>
+</table>
+Complex table = keepRows *PartZ.*, HTML props
+<pre>
+                        |                 PartA                  |                              PartB                               |
+                        |  012345678901234567890123456789012345  |  Aletsmakethisbiggg  |          B          |      ThisIsBig      |
+                        |       col1        |        col2        |         col4         |        col4         |        col4         |
+------------------------+-------------------+--------------------+----------------------+---------------------+---------------------+
+Sub  PartZ  ObjectPut   |                   |                    |                    4 |                     |                     |
+            PersonRuns  |                 9 |                 10 |                      |                  12 |                     |
+"MasterKey","PartA|012345678901234567890123456789012345|col1","PartA|012345678901234567890123456789012345|col2","PartB|Aletsmakethisbiggg|col4","PartB|B|col4","PartB|ThisIsBig|col4"
+"Sub|PartZ|ObjectPut",,,"4",,
+"Sub|PartZ|PersonRuns","9","10",,"12",
+</pre>
+<table border=1 >
+<tr>
+  <th rowspan=3 colspan=3> &nbsp; </th>
+  <th colspan=2  bgcolor="pink"> PartA  </th>
+  <th colspan=3  bgcolor="pink"> PartB  </th>
+</tr>
+<tr>
+  <th colspan=2  bgcolor="pink"> 012345678901234567890123456789012345  </th>
+  <th  bgcolor="pink"> Aletsmakethisbiggg  </th>
+  <th  bgcolor="pink"> B  </th>
+  <th  bgcolor="pink"> ThisIsBig  </th>
+</tr>
+<tr>
+  <th  bgcolor="pink"> col1  </th>
+  <th  bgcolor="pink"> col2  </th>
+  <th  bgcolor="pink"> col4  </th>
+  <th  bgcolor="pink"> col4  </th>
+  <th  bgcolor="pink"> col4  </th>
+</tr>
+<tr>
+  <th rowspan=2  bgcolor="orange"> Sub </th>
+  <th rowspan=2  bgcolor="orange"> PartZ </th>
+  <th  bgcolor="orange"> ObjectPut </th>
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="center"  bgcolor="read"> 4 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col4  --> 
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|ThisIsBig|col4  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <!-- <th> &nbsp; </th> -->
+  <th  bgcolor="orange"> PersonRuns </th>
+  <td  align="center"  bgcolor="read"> 9 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="center"  bgcolor="read"> 10 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="center"  bgcolor="read"> 12 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col4  --> 
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|ThisIsBig|col4  --> 
+</tr>
+</table>
+Complex table = remnove key column
+<pre>
+|                 PartA                  |                              PartB                               |
+|  012345678901234567890123456789012345  |  Aletsmakethisbiggg  |          B          |      ThisIsBig      |
+|       col1        |        col2        |         col4         |        col4         |        col4         |
+|-------------------+--------------------+----------------------+---------------------+---------------------+
+|                   |                    |                    4 |                     |                     |
+|                 9 |                 10 |                      |                  12 |                     |
+"PartA|012345678901234567890123456789012345|col1","PartA|012345678901234567890123456789012345|col2","PartB|Aletsmakethisbiggg|col4","PartB|B|col4","PartB|ThisIsBig|col4"
+,,"4",,
+"9","10",,"12",
+</pre>
+<table border=1 >
+<tr>
+  <th colspan=2  bgcolor="pink"> PartA  </th>
+  <th colspan=3  bgcolor="pink"> PartB  </th>
+</tr>
+<tr>
+  <th colspan=2  bgcolor="pink"> 012345678901234567890123456789012345  </th>
+  <th  bgcolor="pink"> Aletsmakethisbiggg  </th>
+  <th  bgcolor="pink"> B  </th>
+  <th  bgcolor="pink"> ThisIsBig  </th>
+</tr>
+<tr>
+  <th  bgcolor="pink"> col1  </th>
+  <th  bgcolor="pink"> col2  </th>
+  <th  bgcolor="pink"> col4  </th>
+  <th  bgcolor="pink"> col4  </th>
+  <th  bgcolor="pink"> col4  </th>
+</tr>
+<tr>
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="center"  bgcolor="read"> 4 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col4  --> 
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|ThisIsBig|col4  --> 
+</tr>
+<tr>
+  <td  align="center"  bgcolor="read"> 9 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="center"  bgcolor="read"> 10 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="center"  bgcolor="read"> 12 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col4  --> 
+  <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|ThisIsBig|col4  --> 
+</tr>
+</table>
+</html>
+ OK
+
+[[STDERR]]
+

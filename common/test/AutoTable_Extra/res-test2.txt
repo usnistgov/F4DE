@@ -1,0 +1,173 @@
+[[COMMANDLINE]] ./tsv_load.pl ../common/md.tsv
+[[RETURN CODE]] 0
+[[STDOUT]]
+ (The default is not to show the 'MasterKey' column, here we will show it for the CSV file)
+
+
+[**] Text
+| TrialID |    name     | year | color  |
+|---------+-------------+------+--------+
+|       1 |        jack | 1959 |   blue |
+|       2 |        jack | 1965 |    red |
+|       3 |        jack | 1973 | yellow |
+|       4 |        jack | 1976 |    red |
+|       5 |        jack | 1986 | purple |
+|       6 |        jack | 1999 |  green |
+|       7 |        jack | 2000 |  black |
+|       8 |        jack | 2005 |    red |
+|       9 |        jack | 2010 | orange |
+|      10 |        jack | 2010 | yellow |
+|      11 |        mary | 1973 |   blue |
+|      12 |        mary | 1974 | purple |
+|      13 |        mary | 1985 |   pink |
+|      14 |        mary | 1986 |  black |
+|      15 |        mary | 1995 |   pink |
+|      16 |     stephen | 1999 |    red |
+|      17 |     stephen | 2000 |  white |
+|      18 |     stephen | 2000 |   blue |
+|      19 |     stephen | 2000 |   pink |
+|      20 |     stephen | 2001 |   blue |
+|      21 |        alex | 1999 |  white |
+|      22 |        alex | 2000 | orange |
+|      23 |        alex | 2001 |    red |
+|      24 |        alex | 2002 | purple |
+|      25 |        alex | 2003 |  white |
+|      26 |        alex | 2004 |   blue |
+|      27 |        alex | 2005 |  white |
+|      28 |        alex | 2006 |  white |
+|      29 |        alex | 2007 |    red |
+|      30 |        alex | 2008 | yellow |
+|      31 |       karin | 1970 |  white |
+|      32 |       karin | 1975 |   blue |
+|      33 |       karin | 1980 |  white |
+|      34 |       karin | 1985 |  white |
+|      35 |       karin | 1990 |  black |
+|      36 |       karin | 1995 | orange |
+|      37 |       karin | 2000 | yellow |
+|      38 |       karin | 2005 |  green |
+|      39 |       karin | 2010 | purple |
+|      40 |       karin | 2010 |   blue |
+|      41 |       akane | 1990 |    red |
+|      42 |       akane | 1991 |  white |
+|      43 |       akane | 1992 |   blue |
+|      44 |       chang | 1995 |  black |
+|      45 |       chang | 2007 |    red |
+|      46 |       chang | 2008 | purple |
+|      47 | christopher | 1995 |        |
+|      48 | christopher | 2000 |   blue |
+|      49 |      robert | 2005 |  green |
+|      50 |   christina | 2006 | yellow |
+
+
+[**] CSV
+"MasterKey","TrialID","name","year","color"
+"File: ../common/md.tsv | Line: 000000000001","1","jack","1959","blue"
+"File: ../common/md.tsv | Line: 000000000002","2","jack","1965","red"
+"File: ../common/md.tsv | Line: 000000000003","3","jack","1973","yellow"
+"File: ../common/md.tsv | Line: 000000000004","4","jack","1976","red"
+"File: ../common/md.tsv | Line: 000000000005","5","jack","1986","purple"
+"File: ../common/md.tsv | Line: 000000000006","6","jack","1999","green"
+"File: ../common/md.tsv | Line: 000000000007","7","jack","2000","black"
+"File: ../common/md.tsv | Line: 000000000008","8","jack","2005","red"
+"File: ../common/md.tsv | Line: 000000000009","9","jack","2010","orange"
+"File: ../common/md.tsv | Line: 000000000010","10","jack","2010","yellow"
+"File: ../common/md.tsv | Line: 000000000011","11","mary","1973","blue"
+"File: ../common/md.tsv | Line: 000000000012","12","mary","1974","purple"
+"File: ../common/md.tsv | Line: 000000000013","13","mary","1985","pink"
+"File: ../common/md.tsv | Line: 000000000014","14","mary","1986","black"
+"File: ../common/md.tsv | Line: 000000000015","15","mary","1995","pink"
+"File: ../common/md.tsv | Line: 000000000016","16","stephen","1999","red"
+"File: ../common/md.tsv | Line: 000000000017","17","stephen","2000","white"
+"File: ../common/md.tsv | Line: 000000000018","18","stephen","2000","blue"
+"File: ../common/md.tsv | Line: 000000000019","19","stephen","2000","pink"
+"File: ../common/md.tsv | Line: 000000000020","20","stephen","2001","blue"
+"File: ../common/md.tsv | Line: 000000000021","21","alex","1999","white"
+"File: ../common/md.tsv | Line: 000000000022","22","alex","2000","orange"
+"File: ../common/md.tsv | Line: 000000000023","23","alex","2001","red"
+"File: ../common/md.tsv | Line: 000000000024","24","alex","2002","purple"
+"File: ../common/md.tsv | Line: 000000000025","25","alex","2003","white"
+"File: ../common/md.tsv | Line: 000000000026","26","alex","2004","blue"
+"File: ../common/md.tsv | Line: 000000000027","27","alex","2005","white"
+"File: ../common/md.tsv | Line: 000000000028","28","alex","2006","white"
+"File: ../common/md.tsv | Line: 000000000029","29","alex","2007","red"
+"File: ../common/md.tsv | Line: 000000000030","30","alex","2008","yellow"
+"File: ../common/md.tsv | Line: 000000000031","31","karin","1970","white"
+"File: ../common/md.tsv | Line: 000000000032","32","karin","1975","blue"
+"File: ../common/md.tsv | Line: 000000000033","33","karin","1980","white"
+"File: ../common/md.tsv | Line: 000000000034","34","karin","1985","white"
+"File: ../common/md.tsv | Line: 000000000035","35","karin","1990","black"
+"File: ../common/md.tsv | Line: 000000000036","36","karin","1995","orange"
+"File: ../common/md.tsv | Line: 000000000037","37","karin","2000","yellow"
+"File: ../common/md.tsv | Line: 000000000038","38","karin","2005","green"
+"File: ../common/md.tsv | Line: 000000000039","39","karin","2010","purple"
+"File: ../common/md.tsv | Line: 000000000040","40","karin","2010","blue"
+"File: ../common/md.tsv | Line: 000000000041","41","akane","1990","red"
+"File: ../common/md.tsv | Line: 000000000042","42","akane","1991","white"
+"File: ../common/md.tsv | Line: 000000000043","43","akane","1992","blue"
+"File: ../common/md.tsv | Line: 000000000044","44","chang","1995","black"
+"File: ../common/md.tsv | Line: 000000000045","45","chang","2007","red"
+"File: ../common/md.tsv | Line: 000000000046","46","chang","2008","purple"
+"File: ../common/md.tsv | Line: 000000000047","47","christopher","1995",""
+"File: ../common/md.tsv | Line: 000000000048","48","christopher","2000","blue"
+"File: ../common/md.tsv | Line: 000000000049","49","robert","2005","green"
+"File: ../common/md.tsv | Line: 000000000050","50","christina","2006","yellow"
+
+
+
+[**] SpecialCSV
+"MasterKey","TrialID","name","year","color"
+"File: ../common/md.tsv | Line: 000000000001","","","",""
+"File: ../common/md.tsv | Line: 000000000002","","","",""
+"File: ../common/md.tsv | Line: 000000000003","","","",""
+"File: ../common/md.tsv | Line: 000000000004","","","",""
+"File: ../common/md.tsv | Line: 000000000005","","","",""
+"File: ../common/md.tsv | Line: 000000000006","","","",""
+"File: ../common/md.tsv | Line: 000000000007","","","",""
+"File: ../common/md.tsv | Line: 000000000008","","","",""
+"File: ../common/md.tsv | Line: 000000000009","","","",""
+"File: ../common/md.tsv | Line: 000000000010","","","",""
+"File: ../common/md.tsv | Line: 000000000011","","","",""
+"File: ../common/md.tsv | Line: 000000000012","","","",""
+"File: ../common/md.tsv | Line: 000000000013","","","",""
+"File: ../common/md.tsv | Line: 000000000014","","","",""
+"File: ../common/md.tsv | Line: 000000000015","","","",""
+"File: ../common/md.tsv | Line: 000000000016","","","",""
+"File: ../common/md.tsv | Line: 000000000017","","","",""
+"File: ../common/md.tsv | Line: 000000000018","","","",""
+"File: ../common/md.tsv | Line: 000000000019","","","",""
+"File: ../common/md.tsv | Line: 000000000020","","","",""
+"File: ../common/md.tsv | Line: 000000000021","","","",""
+"File: ../common/md.tsv | Line: 000000000022","","","",""
+"File: ../common/md.tsv | Line: 000000000023","","","",""
+"File: ../common/md.tsv | Line: 000000000024","","","",""
+"File: ../common/md.tsv | Line: 000000000025","","","",""
+"File: ../common/md.tsv | Line: 000000000026","","","",""
+"File: ../common/md.tsv | Line: 000000000027","","","",""
+"File: ../common/md.tsv | Line: 000000000028","","","",""
+"File: ../common/md.tsv | Line: 000000000029","","","",""
+"File: ../common/md.tsv | Line: 000000000030","","","",""
+"File: ../common/md.tsv | Line: 000000000031","","","",""
+"File: ../common/md.tsv | Line: 000000000032","","","",""
+"File: ../common/md.tsv | Line: 000000000033","","","",""
+"File: ../common/md.tsv | Line: 000000000034","","","",""
+"File: ../common/md.tsv | Line: 000000000035","","","",""
+"File: ../common/md.tsv | Line: 000000000036","","","",""
+"File: ../common/md.tsv | Line: 000000000037","","","",""
+"File: ../common/md.tsv | Line: 000000000038","","","",""
+"File: ../common/md.tsv | Line: 000000000039","","","",""
+"File: ../common/md.tsv | Line: 000000000040","","","",""
+"File: ../common/md.tsv | Line: 000000000041","","","",""
+"File: ../common/md.tsv | Line: 000000000042","","","",""
+"File: ../common/md.tsv | Line: 000000000043","","","",""
+"File: ../common/md.tsv | Line: 000000000044","","","",""
+"File: ../common/md.tsv | Line: 000000000045","","","",""
+"File: ../common/md.tsv | Line: 000000000046","","","",""
+"File: ../common/md.tsv | Line: 000000000047","","","",""
+"File: ../common/md.tsv | Line: 000000000048","","","",""
+"File: ../common/md.tsv | Line: 000000000049","","","",""
+"File: ../common/md.tsv | Line: 000000000050","","","",""
+
+Done
+
+[[STDERR]]
+
