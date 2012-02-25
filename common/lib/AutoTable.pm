@@ -117,9 +117,12 @@ sub unitTest {
   
   my $at = new AutoTable();
   print "Testing behavior on an empty table\n";
-  die "Error: Empty table not rendered correctly for TXT" if ($at->renderTxtTable() !~ /Warning: Empty table./);
-  die "Error: Empty table not rendered correctly for HTML" if ($at->renderHTMLTable() !~ /Warning: Empty table./);
-  die "Error: Empty table not rendered correctly for CSV" if ($at->renderCSV() !~ /Warning: Empty table./);
+  MMisc::error_quit("Empty table not rendered correctly for TXT")
+      if ($at->renderTxtTable() !~ /Warning: Empty table./);
+  MMisc::error_quit("Empty table not rendered correctly for HTML")
+      if ($at->renderHTMLTable() !~ /Warning: Empty table./);
+  MMisc::error_quit("Empty table not rendered correctly for CSV")
+      if ($at->renderCSV() !~ /Warning: Empty table./);
 
 #  $at->addData({value => "1x1", link => "/etc/hosts"},  "CCC|col1|A", "srow1|row1");
 #  $at->addData({value => "1x1", link => "/etc/hosts", linkText => "foo"},  "CCC|col1|A", "srow1|row1");
@@ -278,17 +281,17 @@ sub __HTML_proc_sp {
 
   my (@h1, @h2);
 
-  if ($str =~ s%url\=\{([^\}]+?)\}%%) {
-    push @h1, "<a href=\"$1\">";
-    unshift @h2, "</a>";
-  }
-
   if ($str =~ s%before\=\{([^\}]+?)\}%%) {
     push @h1, "$1";
   }
 
   if ($str =~ s%after\=\{([^\}]+?)\}%%) {
     unshift @h2, "$1";
+  }
+
+  if ($str =~ s%url\=\{([^\}]+?)\}%%) {
+    push @h1, "<a href=\"$1\">";
+    unshift @h2, "</a>";
   }
 
   return(join("", @h1), join("", @h2));
@@ -309,6 +312,7 @@ sub __process_special {
 
 sub renderHTMLTable(){
   my ($self, $tha) = @_;
+  # 'tha' = "table header adds" = HTML code added after <table
   my $out = "";
 
   ### Make sure there is data.   If there isn't report nothing exists
@@ -360,7 +364,7 @@ sub renderHTMLTable(){
   my $levels = $self->{render}{colLabelLevels};
   
   my @nodeSet;
-  die "Internal Error: No levels defined" if ($levels < 1);
+  MMisc::error_quit("Internal Error: No levels defined") if ($levels < 1);
   $out .= "<table border=1 $tha>\n";
   for (my $level=0; $level < $levels; $level++){
     $out .= "<tr>\n";
@@ -485,7 +489,7 @@ sub renderTxtTable(){
   my @IDs = $self->{render}{colIDs};
   my $levels = $self->{render}{colLabelLevels};
   my @nodeSet;
-  die "Internal Error: No levels defined" if ($levels < 1);
+  MMisc::error_quit("Internal Error: No levels defined") if ($levels < 1);
   for (my $level=0; $level < $levels; $level++){
     ### Render the row data
     if ($k1c){
@@ -519,7 +523,7 @@ sub renderTxtTable(){
 ##  my @IDs = $self->{render}{colIDs};
 ##  my $levels = $self->{render}{colLabelLevels};
 ##  my @nodeSet;
-##  die "Internal Error: No levels defined" if ($levels < 1);
+##  MMisc::error_quit("Internal Error: No levels defined") if ($levels < 1);
 ##  for (my $level=0; $level < $levels; $level++){
 ##    ### Render the row data
 ##    for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
@@ -669,8 +673,8 @@ sub _buildLabelHeir(){
   
   my $levels = scalar( @{ $labHT->{SubID}{$IDs[0]}{labels} } );
   foreach my $id(@IDs){
-    die "[AutoTable] Error: Inconsistent number of $colVrow sublevels for id '$id' not $levels\n"
-      if ($levels != scalar( @{ $labHT->{SubID}{$id}{labels} } ));
+    MMisc::error_quit("[AutoTable] Inconsistent number of $colVrow sublevels for id '$id' not $levels\n")
+        if ($levels != scalar( @{ $labHT->{SubID}{$id}{labels} } ));
   } 
 #    print Dumper($self);
 #    print "Num of levels $levels \n";
@@ -755,7 +759,7 @@ sub _buildTree(){
       }
       
     }
-    die "Internal Error on recursion " if ($minWidth > $thisWidth);
+    MMisc::error_quit("Internal Error on recursion") if ($minWidth > $thisWidth);
     print $pre."Returning $thisWidth\n" if ($Vb);
     (\%tree, $thisWidth);    
   }  else {
@@ -783,7 +787,7 @@ sub _buildTree(){
 	$thisWidth += $thisNode;
 	## No need to add 1 for the separator  ###		$thisWidth += 1 if ($node != 0);  # Plus 1 for |
       }	    
-      die $pre."Internal Error: ($minWidth < $thisWidth)" if ($minWidth < $thisWidth);
+      MMisc::error_quit($pre."Internal Error: ($minWidth < $thisWidth)") if ($minWidth < $thisWidth);
     }
     (\%tree, $thisWidth);
   }
@@ -914,7 +918,7 @@ sub _safeSplit{
 #  print "Call $matchStr $text    (".join(",",@arr).")\n";
   ### Check to make sure there are NO empty elements.  If there are, then die
   foreach (@arr){
-    die "Error: Column/row header \"$text\" contains empty items which is illegal." if ($_ eq "");
+    MMisc::error_quit("Column/row header \"$text\" contains empty items which is illegal") if ($_ eq "");
   } 
   @arr;
 }
@@ -936,26 +940,46 @@ sub setSpecial {
   return(1);
 }
 
-sub addData{
-  my ($self, $val, $colid, $rowid, $special) = @_;
+##########
+
+sub addData__core {
+  my ($self, $val, $colid, $rowid, $special, $unique) = @_;
   
   $self->_addLab("col", $colid, $val);
   $self->_addLab("row", $rowid, $val);
   
   my $lid = &__getLID($rowid, $colid);
   if (defined($self->{data}{$lid})) {
-    print "Warning Datum for '$rowid $colid' has multiple instances.\n"; 
-    return 1;
+    if ($unique) {
+      print "Warning Datum for '$rowid $colid' has multiple instances (not replacing)\n"; 
+      return 1;
+    }
+    $unique = -1; # replacement (no add)
   }
   $self->{data}{$lid} = $val;
-  if (defined $special) {
+  if (! MMisc::is_blank($special)) {
     $self->{special}{$lid} = $special;
-#    print "[#####] {$lid} $special\n";
   }
-  $self->{hasData}++;
+  $self->{hasData}++ if ($unique != -1); 
   
-  return(1);    
+  return(1);
 }
+
+#####
+
+sub addData {
+  my ($self, $val, $colid, $rowid, $special) = @_;
+  return($self->addData__core($val, $colid, $rowid, $special, 1));
+}
+
+#####
+
+sub setData {
+  my ($self, $val, $colid, $rowid, $special) = @_;
+  return($self->addData__core($val, $colid, $rowid, $special, 0));
+}
+
+##########
 
 sub dump(){
   my ($self) = @_;
@@ -990,18 +1014,59 @@ sub _centerJust(){
 
 ##########
 
+sub create_MasterKey {
+  # arg 0: self
+  # args : column components in order
+  my $self = shift @_;
+  return(join("_____", @_));
+}
+
+#####
+
+sub __check_zero_array_ref {
+  return("", undef) if (! defined $_[0]);
+  return("Not a REF to ARRAY", undef)
+    if (ref($_[0]) ne 'ARRAY');
+  return("", undef)
+    if (scalar @{$_[0]} == 0);
+  return("", $_[0]);
+}
+
+##
+
 sub __loadCSVcore {
   my $self = shift @_;
   my $file = shift @_; # CSV file to load
   my $sp_file = shift @_; # Special CSV to load
-  my ($qc, $sc, $sp_qc, $sp_sc) = MMisc::iuav(\@_, undef, undef, undef, undef);
-  # Quote character (quote_char) and Separator character (sep_char)
+  my ($rmkc, $rk, $rr, $qc, $sc, $sp_qc, $sp_sc) = MMisc::iuav(\@_, undef, undef, undef, undef, undef, undef, undef);
+  ## $rmkc: ref to @ "master key columns" (if not given, use builtin)
+  # $rk : ref to @ "to keep headers"
+  # $rr : ref to @ "to remove headers"
+  # will not stop for columns not found
+  ## 'qc' & 'sc': Quote character (quote_char) and Separator character (sep_char)
   # if not modifying a value make sure to set to 'undef' so that defaults are used
   # refer to Text::CSV's perldoc for more details
-  
+
   return($self->_set_error_and_return("Can not load a CSV to a AutoTable which already has data", 0))
     if ($self->{hasData});
   
+  my $err;
+
+  ($err, $rmkc) = &__check_zero_array_ref($rmkc);
+  return($self->_set_error_and_return("Issue with AutoTable's reference to master key columns: $err", 0))
+    if (! MMisc::is_blank($err));
+
+  ($err, $rk) = &__check_zero_array_ref($rk);
+  return($self->_set_error_and_return("Issue with AutoTable's reference to keep header: $err", 0))
+    if (! MMisc::is_blank($err));
+
+  ($err, $rr) = &__check_zero_array_ref($rr);
+  return($self->_set_error_and_return("Issue with AutoTable's reference to \"to remove headers\": $err", 0))
+    if (! MMisc::is_blank($err));
+
+  return($self->_set_error_and_return("Can not both remove and keep headers at the same time", 0))
+    if ((defined $rk) && (defined $rr));
+
   my $withSpecial = (MMisc::is_blank($sp_file)) ? 0 : 1;
 
   open FILE, "<$file"
@@ -1020,6 +1085,9 @@ sub __loadCSVcore {
     return($self->_set_error_and_return("Not the same number of lines between CSV file and Special CSV file (" . scalar @filec . " vs " . scalar @sp_filec . ")", 0))
       if (scalar @filec != scalar @sp_filec);
   } 
+
+  return($self->_set_error_and_return("Not content in CSV file or header only ? (\# lines: " . scalar @filec . ")", 0))
+    if (scalar @filec < 2);
 
   my $csvh = new CSVHelper($qc, $sc);
   return($self->_set_error_and_return("Problem creating CSV handler", 0))
@@ -1044,14 +1112,11 @@ sub __loadCSVcore {
   for (my $i = 0; $i < scalar @filec; $i++) {
     my $line = $filec[$i];
     my $sp_line = ($withSpecial) ? $sp_filec[$i] : "";
-#  foreach my $line (@filec) {
-#    next if ($line =~ m%^\s*$%);
     
     my $key = sprintf("File: $file | Line: %012d", $inc);
     my @cols = $csvh->csvline2array($line);
     return($self->_set_error_and_return("Problem with CSV line: " . $csvh->get_errormsg(), 0))
       if ($csvh->error());
-#    print "[*] [" . join("]||[", @cols) . "]\n";
 
     my @sp_cols = ();
     if ($withSpecial) {
@@ -1079,35 +1144,50 @@ sub __loadCSVcore {
     $inc++;
   }
   
-  my $cu1cak = 1; # Can use 1st column as (master) key
-  foreach my $key (keys %elt1) {
-    $cu1cak = 0 if ($elt1{$key} > 1);
+  $self->setProperties({ "$key_KeyColumnCsv" => "Remove", "$key_KeyColumnTxt" => "Remove", "$key_KeyColumnHTML" => "Remove"});
+
+  my @colIDs = @{$csv{$order[0]}};
+
+  my %match = MMisc::array1d_to_ordering_hash(\@colIDs);
+  if (defined $rmkc) {
+    my @nf = ();
+    for (my $i = 0; $i < scalar @$rmkc; $i++) {
+      push(@nf, $$rmkc[$i]) if (! exists $match{$$rmkc[$i]});
+    }
+    return($self->_set_error_and_return("Can not load a CSV to a AutoTable: missing required MasterKey columns:" . join(", ", @nf), 0))
+      if (scalar @nf > 0);
   }
-  $self->setProperties({ "$key_KeyColumnCsv" => "Remove", "$key_KeyColumnTxt" => "Remove"}) if (! $cu1cak);
-  
-  my @colIDs = ();
-#  foreach my $key (sort keys %csv) {
-  for (my $i = 0; $i < scalar @order; $i++) {
+
+  my %rem = ();
+  if (defined $rr) {
+    for (my $i = 0; $i < scalar @$rr; $i++) {
+      $rem{$$rr[$i]}++;
+    }
+  }
+  if (defined $rk) {
+    my %t = MMisc::array1d_to_count_hash($rk);
+    for (my $i = 0; $i < scalar @colIDs; $i++) {
+      $rem{$colIDs[$i]}++ if (! exists $t{$colIDs[$i]});
+    }
+  }
+
+  for (my $i = 1; $i < scalar @order; $i++) {
     my $key = $order[$i];
     my @a = @{$csv{$key}};
     my @sp_a = ($withSpecial) ? @{$sp_csv{$key}} : ();
-    
-    if (scalar @colIDs == 0) {
-      @colIDs = @a;
-      my $discard = shift @colIDs if ($cu1cak);
-      next;
+    my $ID = $key;
+    if (defined $rmkc) {
+      my @t = ();
+      for (my $k = 0; $k < scalar @$rmkc; $k++) {
+        push @t, $a[$match{$$rmkc[$k]}];
+      }
+      $ID = $self->create_MasterKey(@t);
     }
     
-    my $ID = "";
-    if ($cu1cak) {
-      $ID = shift @a;
-    } else {
-      $ID = $key;
-    }
-    
-    for (my $i = 0; $i < scalar @a; $i++) {
-      $self->addData($a[$i], $colIDs[$i], $ID);
-      $self->setSpecial($colIDs[$i], $ID, $sp_a[$i]) if (! MMisc::is_blank($sp_a[$i]));
+    for (my $j = 0; $j < scalar @a; $j++) {
+      next if (exists $rem{$colIDs[$j]});
+      $self->setData($a[$j], $colIDs[$j], $ID);
+      $self->setSpecial($colIDs[$j], $ID, $sp_a[$j]) if (! MMisc::is_blank($sp_a[$j]));
     }
   }
   
@@ -1119,12 +1199,25 @@ sub __loadCSVcore {
 sub loadCSV {
   # arg 0: self
   # arg 1: CSV file to load
-  # arg 2: Text::CSV's quote_char
-  # arg 3: Text::CSV's sep_char
+  # arg 2: reference to header columns used to make table's line masterkey
+  #   useful to do manipulations later, can create line key using $self->create_MasterKey(@columns)
+  #   warning: duplicate data will be replaced
+  #   if 'undef' is used a default unique key per line will be used
+  #   will fail if any column is not found in the CSV file
+  # arg 3: header columns to keep (remove all else)
+  # arg 4: header columns to remove (keep all else)
+  # arg 5 Text::CSV's quote_char
+  # arg 6: Text::CSV's sep_char (use 'undef' is not changed, will cause issues otherwise)
+  ## arg 2 to 6 are optional
+  ## WARNING: for args 2 to 6 , use 'undef' instead of <empty> if not using functionality (will cause issues otherwise)
+  # ex: do not use loadCSV($f, , , , , "\t")
+  #     but use loadCSV($f1, undef, undef, undef, undef, "\t")
+  #     to load a Tab separated file
+
   my $self = shift @_;
   my $file = shift @_;
-  my ($qc, $sc) = MMisc::iuav(\@_, undef, undef);
-  return($self->__loadCSVcore($file, undef, $qc, $sc));
+  my ($rmkc, $rk, $rr, $qc, $sc) = MMisc::iuav(\@_, undef, undef, undef, undef, undef);
+  return($self->__loadCSVcore($file, undef, $rmkc, $rk, $rr, $qc, $sc));
 }
 
 #####
@@ -1133,17 +1226,22 @@ sub loadCSVandSpecial {
   # arg 0: self
   # arg 1: CSV file to load
   # arg 2: Special CSV file to load
-  # arg 3: Text::CSV's quote_char
-  # arg 4: Text::CSV's sep_char
-  # arg 5: Text::CSV's quote_char for Special
-  # arg 6: Text::CSV's sep_char for Special
+  # arg 3: reference to header columns used to make table's line masterkey (see 'loadCSV' for notes)
+  # arg 4: header columns to keep (remove all else) (see 'loadCSV' for notes)
+  # arg 5: header columns to remove (keep all else) (see 'loadCSV' for notes)
+  # arg 6: Text::CSV's quote_char
+  # arg 7: Text::CSV's sep_char
+  # arg 8: Text::CSV's quote_char for Special
+  # arg 9: Text::CSV's sep_char for Special
+  ## WARNING: args 3 to 9 are optional and follow the warning detailed in 'loadCSV'
+
   my $self = shift @_;
   my $file = shift @_;
   my $sp_file = shift @_;
-  my ($qc, $sc, $sp_qc, $sp_sc) = MMisc::iuav(\@_, undef, undef, undef, undef, undef);
+  my ($rmkc, $rk, $rr, $qc, $sc, $sp_qc, $sp_sc) = MMisc::iuav(\@_, undef, undef, undef, undef, undef, undef, undef);
   return($self->_set_error_and_return("No Special CSV file specified ?", 0))
     if (MMisc::is_blank($sp_file));
-  return($self->__loadCSVcore($file, $sp_file, $qc, $sc, $sp_qc, $sp_sc));
+  return($self->__loadCSVcore($file, $sp_file, $rmkc, $rk, $rr, $qc, $sc, $sp_qc, $sp_sc));
 }
 
 ##########
@@ -1156,10 +1254,7 @@ sub __renderCSVcore {
   
   ### Make sure there is data.   If there isn't report nothing exists
   my @_da = keys %{ $self->{data} };
-  if (scalar @_da == 0) {
-    $self->_set_errormsg("Warning: Empty table.  Nothing to produce.");
-    return(undef);
-  }
+  return "Warning: Empty table.  Nothing to produce.\n" if (@_da == 0);
 
   my $out = "";
   my $sp_out = "";
