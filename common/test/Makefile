@@ -19,6 +19,7 @@ check:
 	@(cd ../lib; perl -I. -e 'use PropList; PropList::unit_test(1);')
 	@(cd ../lib; perl -I. -e 'use SimpleAutoTable; SimpleAutoTable::unitTest(1);')
 	@(cd ../lib; perl -I. -e 'use MMisc; MMisc::unitTest();')
+	@(cd AutoTable_Extra; make check)
 	@echo ""
 	@echo "***** All tests ran succesfully"
 
@@ -39,5 +40,6 @@ OpenHaRT_minirelease_check:
 	@(cd ../lib; perl -I. -e 'use PropList; PropList::unit_test(1);')
 	@(cd ../lib; perl -I. -e 'use MMisc; MMisc::unitTest();')
 	@echo ""
+	@(cd AutoTable_Extra; make check)
 	@(cd SQLite_tools; make check)
 	@echo "***** All tests ran succesfully"
