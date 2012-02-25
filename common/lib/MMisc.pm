@@ -496,6 +496,57 @@ sub lcfirst_array_values {
 
 ##########
 
+sub arrays_unique_union {
+  # arg 0: 1 keep first / otherwise keep last
+  # args : reference to arrays
+  my %tmp = ();
+  my $inc = 0;
+  
+  my $v;
+  for (my $i = 1; $i < scalar @_; $i++) {
+    &error_quit("Using \'MMisc::arrays_unique_union\', argument \#$i: Not a reference to array")
+      if (! ref($_[$i]));
+    for (my $j = 0; $j < scalar @{$_[$i]}; $j++) {
+      $v = ${$_[$i]}[$j];
+      next if ((exists $tmp{$v}) && ($_[0]));
+      $tmp{$v} = $inc++;
+    }
+  }
+
+  return(sort {$tmp{$a} <=> $tmp{$b}} keys %tmp);
+}
+
+#####
+
+sub arrays_intersection {
+  # arg 0: 1 keep first / otherwise keep last
+  # args 1 and 2 : reference to arrays to intersect (only two)
+
+  &error_quit("Using \'MMisc::arrays_intersection\', not enough arguments (need: keep first + two reference to array)")
+    if (scalar @_ != 3);
+
+  for (my $i = 1; $i < scalar @_; $i++) {
+    &error_quit("Using \'MMisc::arrays_intersection\', argument \#$i: Not a reference to array")
+      if (! ref($_[$i]));
+  }
+
+  my %tmp = ();
+  my $v;
+  for (my $i = 0; $i < scalar @{$_[0]}; $i++) {
+    $v = ${$_[0]}[$i];
+    next if ((exists $tmp{$v}) && ($_[0]));
+    $tmp{$v} = $i;
+  }
+  for (my $i = 0; $i < scalar @{$_[1]}; $i++) {
+    $v = ${$_[1]}[$i];
+    delete $tmp{$v};
+  }
+
+  return(sort {$tmp{$a} <=> $tmp{$b}} keys %tmp);
+}
+
+##########
+
 sub get_decimal_length {
   my $v = &iuv($_[0], '');
 
