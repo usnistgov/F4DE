@@ -28,23 +28,37 @@ use CSVHelper;
 
 use Data::Dumper;
 
+## Text
+my $key_KeyColumnTxt   = "KeyColumnTxt";
+my $key_SortRowKeyTxt   = "SortRowKeyTxt";
+my $key_SortColKeyTxt   = "SortColKeyTxt";
 
-my $key_KeyColumnTxt = "KeyColumnTxt";
-my $key_KeyColumnCsv = "KeyColumnCsv";
-my $key_KeyColumnHTML = "KeyColumnHTML";
-my $key_SortRowKeyTxt = "SortRowKeyTxt";
-my $key_SortRowKeyCsv = "SortRowKeyCsv";
-my $key_SortColKeyTxt = "SortColKeyTxt";
-my $key_SortColKeyCsv = "SortColKeyCsv";
-my $key_KeepColumnsInOutput = "KeepColumnsInOutput";
-my $key_KeepRowsInOutput = "KeepRowsInOutput";
+## CSV
+my $key_KeyColumnCsv   = "KeyColumnCsv";
+my $key_SortRowKeyCsv   = "SortRowKeyCsv";
+my $key_SortColKeyCsv   = "SortColKeyCsv";
 
+## HTML
+my $key_KeyColumnHTML  = "KeyColumnHTML";
+my $key_SortRowKeyHTML  = "SortRowKeyHTML";
+my $key_SortColKeyHTML  = "SortColKeyHTML";
 my $key_htmlColHeadBGColor = "html.colhead.bgcolor";
 my $key_htmlRowHeadBGColor = "html.rowhead.bgcolor";
-my $key_htmlCellBGColor = "html.cell.bgcolor";
-my $key_htmlCellJust = "html.cell.justification";
+my $key_htmlCellBGColor    = "html.cell.bgcolor";
+my $key_htmlCellJust       = "html.cell.justification";
 
-my @ok_specials = ("HTML", "CSV", "TEXT");
+## LaTeX
+my $key_KeyColumnLaTeX = "KeyColumnLaTeX";
+my $key_SortRowKeyLaTeX = "SortRowKeyLaTeX";
+my $key_SortColKeyLaTeX = "SortColKeyLaTeX";
+
+##
+my $key_KeepColumnsInOutput = "KeepColumnsInOutput";
+my $key_KeepRowsInOutput    = "KeepRowsInOutput";
+
+my @ok_specials = ("HTML", "CSV", "TEXT", "LaTeX");
+
+#####
 
 sub new {
   my ($class) = shift @_;
@@ -75,22 +89,35 @@ sub new {
   };
   
   bless $self;
-  
-  $self->{Properties}->addProp($key_KeyColumnCsv, "Keep", ("Keep", "Remove"));
-  $self->{Properties}->addProp($key_KeyColumnTxt, "Keep", ("Keep", "Remove"));
-  $self->{Properties}->addProp($key_KeyColumnHTML, "Keep", ("Keep", "Remove"));
-  $self->{Properties}->addProp($key_SortRowKeyTxt, "AsAdded", ("AsAdded", "Num", "Alpha"));
-  $self->{Properties}->addProp($key_SortRowKeyCsv, "AsAdded", ("AsAdded", "Num", "Alpha"));
-  $self->{Properties}->addProp($key_SortColKeyTxt, "AsAdded", ("AsAdded", "Num", "Alpha"));
-  $self->{Properties}->addProp($key_SortColKeyCsv, "AsAdded", ("AsAdded", "Num", "Alpha"));
-  $self->{Properties}->addProp($key_KeepColumnsInOutput, "", ());
-  $self->{Properties}->addProp($key_KeepRowsInOutput, "", ());
-  
+
+  ## Text
+  $self->{Properties}->addProp($key_KeyColumnTxt,   "Keep", ("Keep", "Remove"));
+  $self->{Properties}->addProp($key_SortRowKeyTxt,   "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_SortColKeyTxt,   "AsAdded", ("AsAdded", "Num", "Alpha"));
+
+  ## CSV
+  $self->{Properties}->addProp($key_KeyColumnCsv,   "Keep", ("Keep", "Remove"));
+  $self->{Properties}->addProp($key_SortRowKeyCsv,   "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_SortColKeyCsv,   "AsAdded", ("AsAdded", "Num", "Alpha"));
+
+  ## HTML
+  $self->{Properties}->addProp($key_KeyColumnHTML,  "Keep", ("Keep", "Remove"));
+  $self->{Properties}->addProp($key_SortRowKeyHTML,  "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_SortColKeyHTML,  "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->{Properties}->addProp($key_htmlColHeadBGColor, "", ());
   $self->{Properties}->addProp($key_htmlRowHeadBGColor, "", ());
   $self->{Properties}->addProp($key_htmlCellBGColor, "", ());
   $self->{Properties}->addProp($key_htmlCellJust, "right", ("left", "center", "right"));
-  
+
+  ## LaTeX
+  $self->{Properties}->addProp($key_KeyColumnLaTeX, "Keep", ("Keep", "Remove"));
+  $self->{Properties}->addProp($key_SortRowKeyLaTeX, "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_SortColKeyLaTeX, "AsAdded", ("AsAdded", "Num", "Alpha"));
+
+  ##
+  $self->{Properties}->addProp($key_KeepColumnsInOutput, "", ());
+  $self->{Properties}->addProp($key_KeepRowsInOutput, "", ());
+    
   $self->_set_errormsg($self->{Properties}->get_errormsg());
   
   return($self);
@@ -110,8 +137,22 @@ sub setProperties(){
 
 ##########
 
+sub __UT_showAllModes {
+  my ($txt, $sg) = @_;
+
+  print "<hr><h1>$txt</h1>\n";
+  print "<h2>Text Rendering</h2>\n" . "<pre>\n" . $sg->renderTxtTable(2) . "</pre>\n";
+  print "<h2>CSV Rendering</h2>\n" . "<pre>\n" . $sg->renderCSV() . "</pre>\n";
+  print "<h2>LaTeX Rendering</h2>\n" . "<pre>\n" . $sg->renderLaTeXTable() . "</pre>\n";
+  print "<h2>HTML Rendering</h2>\n" . $sg->renderHTMLTable() . "\n";
+}
+
+##
+
 sub unitTest {
   my $makecall = shift @_;
+
+  print "<html>\n<head><title>AutoTable UnitTest</title></head><body>";
   
   print "Testing AutoTable ..." if ($makecall);
   
@@ -123,6 +164,8 @@ sub unitTest {
       if ($at->renderHTMLTable() !~ /Warning: Empty table./);
   MMisc::error_quit("Empty table not rendered correctly for CSV")
       if ($at->renderCSV() !~ /Warning: Empty table./);
+  MMisc::error_quit("Empty table not rendered correctly for LaTeX")
+      if ($at->renderLaTeXTable() !~ /Warning: Empty table./);
 
 #  $at->addData({value => "1x1", link => "/etc/hosts"},  "CCC|col1|A", "srow1|row1");
 #  $at->addData({value => "1x1", link => "/etc/hosts", linkText => "foo"},  "CCC|col1|A", "srow1|row1");
@@ -154,13 +197,7 @@ sub unitTest {
 #  $at->addData("1x1",  "||", "srow2|row2");
 #  $at->addData("1x2",  "||", "srow2|row2"); 
  
- print "<html>\n";
-  print "Simple Table\n";
-  print "<pre>\n";
-  print($at->renderTxtTable(1));
-  print($at->renderCSV(2));
-  print "</pre>\n";
-  print($at->renderHTMLTable());
+  & __UT_showAllModes("Simple Table", $at);
   
 ##=======
 ##  
@@ -203,13 +240,8 @@ sub unitTest {
   ### Get the order of column
 #<<<<<<< AutoTable.pm
   
-  print "Complex Table\n";
-  print "<pre>\n";
-  print($sg->renderTxtTable(2));
-  print($sg->renderCSV());
-  print "</pre>\n";
-  print($sg->renderHTMLTable());
-  
+  & __UT_showAllModes("Complex Table", $sg);
+
 ##=======
 ##  
 ###  my $colLabTree = $sg->_buildLabelHeir("col", "Alpha");
@@ -220,44 +252,31 @@ sub unitTest {
 ##  }
 ##  
 ##>>>>>>> 1.3
+
   $sg->setProperties({ $key_KeepColumnsInOutput => ".*PartA.*|PartB.*col4" });
-  print "Complex table = keepColumns .*PartA.*|PartB.*col4\n";
-  print "<pre>\n";
-  print($sg->renderTxtTable(2));
-  print($sg->renderCSV());
-  print "</pre>\n";
-  print($sg->renderHTMLTable());
+  & __UT_showAllModes("Complex Table = keepColumns .*PartA.*|PartB.*col4", $sg);
   
   $sg->setProperties({ $key_KeepRowsInOutput => ".*PartZ.*" });
   $sg->setProperties({ $key_htmlColHeadBGColor => "pink" });
   $sg->setProperties({ $key_htmlRowHeadBGColor => "orange" });
   $sg->setProperties({ $key_htmlCellBGColor => "read" });
   $sg->setProperties({ $key_htmlCellJust => "center" });
-  print "Complex table = keepRows *PartZ.*, HTML props\n";
-  print "<pre>\n";
-  print($sg->renderTxtTable(2));
-#<<<<<<< AutoTable.pm
-  print($sg->renderCSV());
-  print "</pre>\n";
-  print($sg->renderHTMLTable());
+  & __UT_showAllModes("Complex Table = keepRows *PartZ.*, HTML props", $sg);
   
   $sg->setProperties({ $key_KeyColumnHTML => "Remove" });
   $sg->setProperties({ $key_KeyColumnTxt => "Remove" });
   $sg->setProperties({ $key_KeyColumnCsv => "Remove" });
-  print "Complex table = remnove key column\n";
-  print "<pre>\n";
-  print($sg->renderTxtTable(2));
-  print($sg->renderCSV());
-  print "</pre>\n";
-  print($sg->renderHTMLTable());
+  & __UT_showAllModes("Complex Table = remove key column", $sg);
   
-  print "</html>\n";
+  print "<hr>OK EXIT\n";
+
+  print "</body></html>\n";
 ##=======
 ##  
-##  print($sg->renderCSV(2));
+##  print($sg->renderCSV());
 ##  
 ##>>>>>>> 1.3
-  MMisc::ok_quit(" OK");
+  MMisc::ok_exit();
   
 }
 
@@ -393,7 +412,8 @@ sub renderHTMLTable(){
   }
   
   #### NOW: @nodeSet is the formatting informatlion for the columns!!!
-  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, "Alpha",
+  my $rowSort = $self->{Properties}->getValue($key_SortRowKeyHTML);
+  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort,
 					  $self->{Properties}->getValue($key_KeepRowsInOutput));
   #print join(" ",@rowIDs)."\n";
   #### compute the rowspans for each 
@@ -570,7 +590,7 @@ sub renderTxtTable(){
   }
   #    print "ColIDs ".join(" ",@colIDs)."\n";
 #    print join(" ",@colIDs)."\n";
-  my $rowSort = $self->{Properties}->getValue($key_SortRowKeyCsv);
+  my $rowSort = $self->{Properties}->getValue($key_SortRowKeyTxt);
   my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort,
 					  $self->{Properties}->getValue($key_KeepRowsInOutput));
 #    print join(" ",@rowIDs)."\n";
@@ -656,6 +676,191 @@ sub renderTxtTable(){
 ###  $out;
 ###>>>>>>> 1.3
 }
+
+##########
+
+sub __latex_escape {
+  my ($txt) = @_;
+
+  my $out = "";
+  while ($txt =~ s%^(.*?)([\\\{\}\&\#\%\_\^\~\$])%%) {
+    $out .= "$1\\$2";
+  }
+  $out .= $txt;
+
+  return($out);
+}
+
+sub __latexit {
+  my ($text, $ncols, $nrows, $x, $y, $rs) = @_;
+
+  if ($$rs{$x}{$y} > 0) {
+    return("") if ($ncols < 2);
+    $nrows = 1;
+  }
+  
+  for (my $px = $x; $px < $x + $ncols; $px++) {
+    for (my $py = $y; $py < $y + $nrows; $py++) {
+      $$rs{$px}{$py}++;
+    }
+  }
+
+  my $out = "";
+
+  # columns before lines
+  $out .= "\\multicolumn\{$ncols\}\{\|c\|\}\{" if ($ncols > 1);
+  $out .= "\\multirow\{$nrows\}\{*\}\{" if ($nrows > 1);
+  $out .= &__latex_escape($text);
+  $out .= "\}" if ($nrows > 1);
+  $out .= "\}" if ($ncols > 1);
+
+  return($out);
+}
+
+##
+
+sub renderLaTeXTable(){
+  my ($self) = @_;
+  my $out = "";
+
+  ### Make sure there is data.   If there isn't report nothing exists
+  my @_da = keys %{ $self->{data} };
+  return "Warning: Empty table.  Nothing to produce.\n" if (@_da == 0);
+  
+  ##########
+  my $keyCol = $self->{Properties}->getValue($key_KeyColumnLaTeX);
+  if ($self->{Properties}->error()) {
+    $self->_set_errormsg("Unable to get the $key_KeyColumnHTML property.  Message is ".$self->{Properties}->get_errormsg());
+    return(undef);
+  }
+  my $k1c = ($keyCol eq "Keep") ? 1 : 0;
+  
+  $self->_buildHeir(1);
+  
+#    print Dumper($self);
+  my @IDs = $self->{render}{colIDs};
+  my $levels = $self->{render}{colLabelLevels};
+  
+  my @nodeSet;
+  my $headers = "";
+  my $ncols = 0;
+  MMisc::error_quit("Internal Error: No levels defined") if ($levels < 1);
+  my %skip = ();
+  my ($x, $y) = (0, 0);
+  for (my $level=0; $level < $levels; $level++){
+    my @line = ();
+    ### Render the row data 
+    my $numRowHead = scalar(@{ $self->{render}{rowLabelWidth} });
+    push @line, &__latexit(" ", $numRowHead, $levels, $x, $y, \%skip); $x += $numRowHead;
+    $ncols += $numRowHead;
+
+    ### Render the col data
+    my $tree = $self->{render}{colLabelHeir}; 
+    @nodeSet = @{ $tree->{nodes} };
+    my $searchLevel = $level;
+    while ($searchLevel > 0){
+      my @stack = @nodeSet;
+      @nodeSet = ();
+      foreach my $nd(@stack){ 
+	push @nodeSet, @{ $nd->{nodes} };
+      }
+      $searchLevel --;
+    }
+    
+    for (my $node=0; $node < @nodeSet; $node ++){
+      my $ncol = scalar( @{ $nodeSet[$node]{subs} });
+      push @line, &__latexit($nodeSet[$node]{id}, $ncol, 1); $x += $ncol;
+      $ncols += $ncol;
+    }
+    $headers .= join(" & ", @line) . "\\\\" . "\n"; $y++; $x = 0;
+    if (MMisc::is_blank($out)) {
+      $out .= "\%\% add to document header: \\usepackage\{multirow\}\n";
+      $out .= "\\begin{tabular}{";
+      for (my $i = 0; $i < $ncols; $i++) { $out .= '|c'; }
+      $out .= "|}\n";
+      $out .= "\\hline\n";
+    }
+  }
+  $out .= $headers;
+  $out .= "\\hline\n";
+  
+  #### NOW: @nodeSet is the formatting informatlion for the columns!!!
+  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, "Alpha",
+					  $self->{Properties}->getValue($key_KeepRowsInOutput));
+  #print join(" ",@rowIDs)."\n";
+  #### compute the rowspans for each 
+  my @lastRowLabel = ();
+  #### make a 2D table of ids
+  my @idlist = ();
+  foreach (@rowIDs) {
+    push @idlist, [ _safeSplit("|", $_) ];
+  }
+  for (my $row=0; $row<@rowIDs; $row++) {
+    my @line = ();
+    
+    if ($k1c){
+      my @ids = @{ $idlist[$row] };
+      for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
+	$lastRowLabel[$rowLevel] = "" if (! defined($lastRowLabel[$rowLevel]));
+	
+	my $print = 1;
+	if ($lastRowLabel[$rowLevel] eq $ids[$rowLevel]){
+	  $print = 0;
+	} else {
+	  ### if we print a level, then print all levels below
+	  for (my $trl=$rowLevel+1; $trl < @{ $self->{render}{rowLabelWidth} }; $trl++){
+	    $lastRowLabel[$trl] = "";
+	  }
+	}
+	if ($print){
+	  ### look forward to see when to stop
+	  my $span = 0;
+	  my $stop = 0;
+	  for (my $larow=$row; $larow<@rowIDs && $stop == 0; $larow++){
+	    ### is this value the same
+	    $stop = 1 if ($ids[$rowLevel] ne $idlist[$larow][$rowLevel]);
+	    ### do any of the left label values change
+	    for (my $leftlev=0; $leftlev < $rowLevel; $leftlev ++){
+	      $stop = 1 if ($ids[$leftlev] ne $idlist[$larow][$leftlev]);
+	    }
+	    $span ++ if (! $stop);
+	  }
+          push @line, &__latexit($ids[$rowLevel], 1, $span, $x, $y, \%skip); $x++;
+	} else {
+          push @line, &__latexit($ids[$rowLevel], 1, 1, $x, $y, \%skip); $x++;
+	}
+	
+	$lastRowLabel[$rowLevel] = $ids[$rowLevel];
+      }
+    }
+    for (my $node=0; $node<@nodeSet; $node++) {
+      my $lid = &__getLID($rowIDs[$row], $nodeSet[$node]{subs}[0]);
+      my $str = defined($self->{data}{$lid}) ? $self->{data}{$lid} : "&nbsp;";
+      my ($h1, $h2) = ("", "");
+#      print "[$lid]\n";
+      ($h1, $h2) = &__process_special($ok_specials[0], $self->{special}{$lid}) 
+        if (exists $self->{special}{$lid});
+      push @line, &__latexit($str, 1, 1, $x, $y, \%skip); $x++;
+    }
+    $out .= join(" & ", @line) . '\\\\' . "\n"; $y++; $x = 0;
+  }   
+  $out .= "\\hline\n";
+  $out .= "\\end\{tabular\}\n";
+
+#  print "[$x][$y]\n";
+#  foreach my $x (sort {$a <=> $b} keys %skip) {
+#    foreach my $y (sort {$a <=> $b} keys %{$skip{$x}}) {
+#      my $v = $skip{$x}{$y};
+#      $v = ($v > 0) ? $v : 0;
+#      print "$v ";
+#    }
+#    print "\n";
+#  }
+
+  return($out);
+}
+
+##########
 
 sub _buildLabelHeir(){
   my ($self, $colVrow, $gap) = @_;
@@ -1271,8 +1476,14 @@ sub __renderCSVcore {
     $self->_set_errormsg("Unable to to return get the $key_SortRowKeyCsv property.  Message is ".$self->{Properties}->get_errormsg());
     return(undef);
   }
+  my $colSort = $self->{Properties}->getValue($key_SortColKeyCsv);
+  if ($self->{Properties}->error()) {
+    $self->_set_errormsg("Unable to to return get the $key_SortColKeyCsv property.  Message is ".$self->{Properties}->get_errormsg());
+    return(undef);
+  }
+
   my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort, $self->{Properties}->getValue($key_KeepRowsInOutput));
-  my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded", $self->{Properties}->getValue($key_KeepColumnsInOutput));
+  my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, $colSort, $self->{Properties}->getValue($key_KeepColumnsInOutput));
   
   my $csvh = new CSVHelper($qc, $sc);
   return($self->_set_error_and_return("Problem creating CSV handler", 0))
