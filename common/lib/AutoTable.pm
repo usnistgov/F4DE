@@ -233,14 +233,31 @@ sub unitTest {
     $sg->addData("15",                "PartB|B|col3", "Bus|PartYY|Pointing");
     $sg->addData("16454433333333334", "PartB|B|col4", "Bus|PartYY|Pointing");
     $sg->addData("16454433333333334", "PartB|ThisIsBig|col4", "Bus|PartYY|Pointing");
-    
-    $sg->{Properties}->setValue($key_SortColKeyTxt, "Alpha");
-    $sg->{Properties}->setValue($key_SortRowKeyTxt, "Alpha");
-  }
+      }
   ### Get the order of column
 #<<<<<<< AutoTable.pm
   
-  & __UT_showAllModes("Complex Table", $sg);
+  & __UT_showAllModes("Complex Table (sorted: As Added)", $sg);
+
+  $sg->{Properties}->setValue($key_SortColKeyTxt, "Num");
+  $sg->{Properties}->setValue($key_SortRowKeyTxt, "Num");
+  $sg->{Properties}->setValue($key_SortColKeyCsv, "Num");
+  $sg->{Properties}->setValue($key_SortRowKeyCsv, "Num");
+  $sg->{Properties}->setValue($key_SortColKeyHTML, "Num");
+  $sg->{Properties}->setValue($key_SortRowKeyHTML, "Num");
+  $sg->{Properties}->setValue($key_SortColKeyLaTeX, "Num");
+  $sg->{Properties}->setValue($key_SortRowKeyLaTeX, "Num");
+  & __UT_showAllModes("Complex Table (sorted: Num)", $sg);
+
+  $sg->{Properties}->setValue($key_SortColKeyTxt, "Alpha");
+  $sg->{Properties}->setValue($key_SortRowKeyTxt, "Alpha");
+  $sg->{Properties}->setValue($key_SortColKeyCsv, "Alpha");
+  $sg->{Properties}->setValue($key_SortRowKeyCsv, "Alpha");
+  $sg->{Properties}->setValue($key_SortColKeyHTML, "Alpha");
+  $sg->{Properties}->setValue($key_SortRowKeyHTML, "Alpha");
+  $sg->{Properties}->setValue($key_SortColKeyLaTeX, "Alpha");
+  $sg->{Properties}->setValue($key_SortRowKeyLaTeX, "Alpha");
+  & __UT_showAllModes("Complex Table (sorted: Alpha)", $sg);
 
 ##=======
 ##  
@@ -266,6 +283,7 @@ sub unitTest {
   $sg->setProperties({ $key_KeyColumnHTML => "Remove" });
   $sg->setProperties({ $key_KeyColumnTxt => "Remove" });
   $sg->setProperties({ $key_KeyColumnCsv => "Remove" });
+  $sg->setProperties({ $key_KeyColumnLaTeX => "Remove" });
   & __UT_showAllModes("Complex Table = remove key column", $sg);
   
   print "<hr>OK EXIT\n";
@@ -679,6 +697,41 @@ sub renderTxtTable(){
 
 ##########
 
+sub __docline {
+  my ($rh, $y) = @_;
+
+  my @line = ();
+  my @order = sort {$a <=> $b} keys %$rh;
+  my $c = 0;
+  foreach my $x (sort {$a <=> $b} keys %$rh) {
+    my $v = $$rh{$x}{$y};
+    $v = (defined $v) ? $v : 1;
+#    print "($x,$y) = $v\n";
+    push @line, $v;
+    $c += $v;
+  }
+#  print "[" . join("|", @line) . "]\n";
+  return("\\hline\n") if (($c == 0) || ($c == scalar @order));
+  
+  my $out = "";
+  my ($b, $e) = (0, 0);
+  for (my $i = 0; $i < scalar @line; $i++) {
+    if ($line[$i] > 0) {
+      $b = 1 + $i if ($b == 0);
+      $e = 1 + $i;
+    } else {
+      next if ($b == 0);
+      $out .= "\\cline\{$b\-$e\}";
+      $b = $e = 0;
+    }
+  }
+  $out .= "\\cline\{$b\-$e\}" if ($b > 0);
+
+  return($out);
+}
+
+#####
+
 sub __latex_escape {
   my ($txt) = @_;
 
@@ -691,8 +744,10 @@ sub __latex_escape {
   return($out);
 }
 
+#####
+
 sub __latexit {
-  my ($text, $ncols, $nrows, $x, $y, $rs) = @_;
+  my ($text, $ncols, $nrows, $x, $y, $rs, $rc) = @_;
 
   if ($$rs{$x}{$y} > 0) {
     return("") if ($ncols < 2);
@@ -702,6 +757,7 @@ sub __latexit {
   for (my $px = $x; $px < $x + $ncols; $px++) {
     for (my $py = $y; $py < $y + $nrows; $py++) {
       $$rs{$px}{$py}++;
+      $$rc{$px}{$py} = ($nrows > 1) ? 0 : 1;
     }
   }
 
@@ -747,12 +803,16 @@ sub renderLaTeXTable(){
   MMisc::error_quit("Internal Error: No levels defined") if ($levels < 1);
   my %skip = ();
   my ($x, $y) = (0, 0);
+  my %cline = ();
   for (my $level=0; $level < $levels; $level++){
     my @line = ();
+    my $docline = &__docline(\%cline, $y);
     ### Render the row data 
     my $numRowHead = scalar(@{ $self->{render}{rowLabelWidth} });
-    push @line, &__latexit(" ", $numRowHead, $levels, $x, $y, \%skip); $x += $numRowHead;
-    $ncols += $numRowHead;
+    if ($k1c) {
+      push @line, &__latexit(" ", $numRowHead, $levels, $x, $y, \%skip, \%cline); $x += $numRowHead;
+      $ncols += $numRowHead;
+    }
 
     ### Render the col data
     my $tree = $self->{render}{colLabelHeir}; 
@@ -769,23 +829,24 @@ sub renderLaTeXTable(){
     
     for (my $node=0; $node < @nodeSet; $node ++){
       my $ncol = scalar( @{ $nodeSet[$node]{subs} });
-      push @line, &__latexit($nodeSet[$node]{id}, $ncol, 1); $x += $ncol;
+      push @line, &__latexit($nodeSet[$node]{id}, $ncol, 1, $x, $y, \%skip, \%cline); $x += $ncol;
       $ncols += $ncol;
     }
-    $headers .= join(" & ", @line) . "\\\\" . "\n"; $y++; $x = 0;
+    $headers .= $docline . join(" & ", @line) . "\\\\" . "\n"; $y++; $x = 0;
     if (MMisc::is_blank($out)) {
       $out .= "\%\% add to document header: \\usepackage\{multirow\}\n";
       $out .= "\\begin{tabular}{";
       for (my $i = 0; $i < $ncols; $i++) { $out .= '|c'; }
       $out .= "|}\n";
-      $out .= "\\hline\n";
+#      $out .= "\\hline\n";
     }
   }
   $out .= $headers;
-  $out .= "\\hline\n";
+#  $out .= "\\hline\n";
   
   #### NOW: @nodeSet is the formatting informatlion for the columns!!!
-  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, "Alpha",
+  my $rowSort = $self->{Properties}->getValue($key_SortRowKeyLaTeX);
+  my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort,
 					  $self->{Properties}->getValue($key_KeepRowsInOutput));
   #print join(" ",@rowIDs)."\n";
   #### compute the rowspans for each 
@@ -797,8 +858,9 @@ sub renderLaTeXTable(){
   }
   for (my $row=0; $row<@rowIDs; $row++) {
     my @line = ();
+    my $docline = &__docline(\%cline, $y);
     
-    if ($k1c){
+    if ($k1c) {
       my @ids = @{ $idlist[$row] };
       for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
 	$lastRowLabel[$rowLevel] = "" if (! defined($lastRowLabel[$rowLevel]));
@@ -825,9 +887,9 @@ sub renderLaTeXTable(){
 	    }
 	    $span ++ if (! $stop);
 	  }
-          push @line, &__latexit($ids[$rowLevel], 1, $span, $x, $y, \%skip); $x++;
+          push @line, &__latexit($ids[$rowLevel], 1, $span, $x, $y, \%skip, \%cline); $x++;
 	} else {
-          push @line, &__latexit($ids[$rowLevel], 1, 1, $x, $y, \%skip); $x++;
+          push @line, &__latexit($ids[$rowLevel], 1, 1, $x, $y, \%skip, \%cline); $x++;
 	}
 	
 	$lastRowLabel[$rowLevel] = $ids[$rowLevel];
@@ -840,14 +902,13 @@ sub renderLaTeXTable(){
 #      print "[$lid]\n";
       ($h1, $h2) = &__process_special($ok_specials[0], $self->{special}{$lid}) 
         if (exists $self->{special}{$lid});
-      push @line, &__latexit($str, 1, 1, $x, $y, \%skip); $x++;
+      push @line, &__latexit($str, 1, 1, $x, $y, \%skip, \%cline); $x++;
     }
-    $out .= join(" & ", @line) . '\\\\' . "\n"; $y++; $x = 0;
-  }   
+    $out .= $docline . join(" & ", @line) . '\\\\' . "\n"; $y++; $x = 0;
+  }
   $out .= "\\hline\n";
   $out .= "\\end\{tabular\}\n";
 
-#  print "[$x][$y]\n";
 #  foreach my $x (sort {$a <=> $b} keys %skip) {
 #    foreach my $y (sort {$a <=> $b} keys %{$skip{$x}}) {
 #      my $v = $skip{$x}{$y};
