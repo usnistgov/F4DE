@@ -1,24 +1,45 @@
 [[COMMANDLINE]] perl -I../../../common/lib -e 'use AutoTable; AutoTable::unitTest();'
 [[RETURN CODE]] 0
 [[STDOUT]]
-Testing behavior on an empty table
 <html>
-Simple Table
+<head><title>AutoTable UnitTest</title></head><body>Testing behavior on an empty table
+<hr><h1>Simple Table</h1>
+<h2>Text Rendering</h2>
 <pre>
-           |                CCC                |
-           |      col1       |      col2       |
-           |  A  |  B  |  C  |  A  |  B  |  C  |
------------+-----+-----+-----+-----+-----+-----+
-srow1 row1 | 1x1 | 1x1 | 1x2 | 1x1 | 1x1 | 1x2 |
-      row2 | 1x1 | 1x1 | 1x2 | 1x1 | 1x1 | 1x2 |
-srow2 row1 | 1x1 | 1x1 | 1x2 | 1x1 | 1x1 | 1x2 |
-      row2 | 1x1 | 1x1 | 1x2 | 1x1 | 1x1 | 1x2 |
-2MasterKey2,2CCC|col1|A2,2CCC|col1|B2,2CCC|col1|C2,2CCC|col22|A2,2CCC|col22|B2,2CCC|col22|C2
-2srow1|row12,21x12,21x12,21x222,21x12,21x12,21x222
-2srow1|row222,21x12,21x12,21x222,21x12,21x12,21x222
-2srow22|row12,21x12,21x12,21x222,21x12,21x12,21x222
-2srow22|row222,21x12,21x12,21x222,21x12,21x12,21x222
+             |                      CCC                      |
+             |         col1          |         col2          |
+             |   A   |   B   |   C   |   A   |   B   |   C   |
+-------------+-------+-------+-------+-------+-------+-------+
+srow1  row1  |   1x1 |   1x1 |   1x2 |   1x1 |   1x1 |   1x2 |
+       row2  |   1x1 |   1x1 |   1x2 |   1x1 |   1x1 |   1x2 |
+srow2  row1  |   1x1 |   1x1 |   1x2 |   1x1 |   1x1 |   1x2 |
+       row2  |   1x1 |   1x1 |   1x2 |   1x1 |   1x1 |   1x2 |
 </pre>
+<h2>CSV Rendering</h2>
+<pre>
+"MasterKey","CCC|col1|A","CCC|col1|B","CCC|col1|C","CCC|col2|A","CCC|col2|B","CCC|col2|C"
+"srow1|row1","1x1","1x1","1x2","1x1","1x1","1x2"
+"srow1|row2","1x1","1x1","1x2","1x1","1x1","1x2"
+"srow2|row1","1x1","1x1","1x2","1x1","1x1","1x2"
+"srow2|row2","1x1","1x1","1x2","1x1","1x1","1x2"
+</pre>
+<h2>LaTeX Rendering</h2>
+<pre>
+%% add to document header: \usepackage{multirow}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{2}{|c|}{\multirow{3}{*}{ }} & \multicolumn{6}{|c|}{CCC}\\
+\multicolumn{2}{|c|}{ } & \multicolumn{3}{|c|}{col1} & \multicolumn{3}{|c|}{col2}\\
+\multicolumn{2}{|c|}{ } & A & B & C & A & B & C\\
+\hline
+\multirow{2}{*}{srow1} & row1 & 1x1 & 1x1 & 1x2 & 1x1 & 1x1 & 1x2\\
+ & row2 & 1x1 & 1x1 & 1x2 & 1x1 & 1x1 & 1x2\\
+\multirow{2}{*}{srow2} & row1 & 1x1 & 1x1 & 1x2 & 1x1 & 1x1 & 1x2\\
+ & row2 & 1x1 & 1x1 & 1x2 & 1x1 & 1x1 & 1x2\\
+\hline
+\end{tabular}
+</pre>
+<h2>HTML Rendering</h2>
 <table border=1 >
 <tr>
   <th rowspan=3 colspan=2> &nbsp; </th>
@@ -77,18 +98,23 @@ srow2 row1 | 1x1 | 1x1 | 1x2 | 1x1 | 1x1 | 1x2 |
   <td  align="right" > 1x2 </td>  <!-- srow2|row2 CCC|col2|C  --> 
 </tr>
 </table>
-Complex Table
+
+<hr><h1>Complex Table</h1>
+<h2>Text Rendering</h2>
 <pre>
                             |                 PartA                  |                                   PartB                                   |  abcdefghijabcdefghijabcdefghijabcdefghij  |
                             |  012345678901234567890123456789012345  |  Aletsmakethisbiggg  |              B               |      ThisIsBig      |                     A                      |
                             |       col1        |        col2        |   col3   |   col4    |  col3  |        col4         |        col4         |        col1         |         col2         |
 ----------------------------+-------------------+--------------------+----------+-----------+--------+---------------------+---------------------+---------------------+----------------------+
-Sub  PartZ   ObjectPut      |                   |                    |        3 |         4 |        |                     |                     |                   1 |                    2 |
-     PartYY  PeopleSplitUp  |                   |                    |        7 |           |        |                   8 |                     |                   5 |                    6 |
-     PartZ   PersonRuns     |                 9 |                 10 |          |           |     11 |                  12 |                     |                     |                      |
-     PartYY  Pointing       |                13 |                 12 |          |           |     15 |   16454433333333334 |   16454433333333334 |                     |                      |
 Bus  PartYY  PeopleSplitUp  |                   |                    |        7 |           |        |                   8 |                     |                   5 |                    6 |
              Pointing       |                13 |                 12 |          |           |     15 |   16454433333333334 |   16454433333333334 |                     |                      |
+Sub  PartYY  PeopleSplitUp  |                   |                    |        7 |           |        |                   8 |                     |                   5 |                    6 |
+             Pointing       |                13 |                 12 |          |           |     15 |   16454433333333334 |   16454433333333334 |                     |                      |
+     PartZ   ObjectPut      |                   |                    |        3 |         4 |        |                     |                     |                   1 |                    2 |
+             PersonRuns     |                 9 |                 10 |          |           |     11 |                  12 |                     |                     |                      |
+</pre>
+<h2>CSV Rendering</h2>
+<pre>
 "MasterKey","abcdefghijabcdefghijabcdefghijabcdefghij|A|col1","abcdefghijabcdefghijabcdefghijabcdefghij|A|col2","PartA|012345678901234567890123456789012345|col1","PartA|012345678901234567890123456789012345|col2","PartB|Aletsmakethisbiggg|col3","PartB|Aletsmakethisbiggg|col4","PartB|B|col4","PartB|B|col3","PartB|ThisIsBig|col4"
 "Sub|PartZ|ObjectPut","1","2",,,"3","4",,,
 "Sub|PartYY|PeopleSplitUp","5","6",,,"7",,"8",,
@@ -97,6 +123,25 @@ Bus  PartYY  PeopleSplitUp  |                   |                    |        7 
 "Bus|PartYY|PeopleSplitUp","5","6",,,"7",,"8",,
 "Bus|PartYY|Pointing",,,"13","12",,,"16454433333333334","15","16454433333333334"
 </pre>
+<h2>LaTeX Rendering</h2>
+<pre>
+%% add to document header: \usepackage{multirow}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{3}{|c|}{\multirow{3}{*}{ }} & \multicolumn{2}{|c|}{PartA} & \multicolumn{5}{|c|}{PartB} & \multicolumn{2}{|c|}{abcdefghijabcdefghijabcdefghijabcdefghij}\\
+\multicolumn{3}{|c|}{ } & \multicolumn{2}{|c|}{012345678901234567890123456789012345} & \multicolumn{2}{|c|}{Aletsmakethisbiggg} & \multicolumn{2}{|c|}{B} & ThisIsBig & \multicolumn{2}{|c|}{A}\\
+\multicolumn{3}{|c|}{ } & col1 & col2 & col3 & col4 & col3 & col4 & col4 & col1 & col2\\
+\hline
+\multirow{2}{*}{Bus} & \multirow{2}{*}{PartYY} & PeopleSplitUp & \&nbsp; & \&nbsp; & 7 & \&nbsp; & \&nbsp; & 8 & \&nbsp; & 5 & 6\\
+ &  & Pointing & 13 & 12 & \&nbsp; & \&nbsp; & 15 & 16454433333333334 & 16454433333333334 & \&nbsp; & \&nbsp;\\
+\multirow{4}{*}{Sub} & \multirow{2}{*}{PartYY} & PeopleSplitUp & \&nbsp; & \&nbsp; & 7 & \&nbsp; & \&nbsp; & 8 & \&nbsp; & 5 & 6\\
+ &  & Pointing & 13 & 12 & \&nbsp; & \&nbsp; & 15 & 16454433333333334 & 16454433333333334 & \&nbsp; & \&nbsp;\\
+ & \multirow{2}{*}{PartZ} & ObjectPut & \&nbsp; & \&nbsp; & 3 & 4 & \&nbsp; & \&nbsp; & \&nbsp; & 1 & 2\\
+ &  & PersonRuns & 9 & 10 & \&nbsp; & \&nbsp; & 11 & 12 & \&nbsp; & \&nbsp; & \&nbsp;\\
+\hline
+\end{tabular}
+</pre>
+<h2>HTML Rendering</h2>
 <table border=1 >
 <tr>
   <th rowspan=3 colspan=3> &nbsp; </th>
@@ -121,6 +166,62 @@ Bus  PartYY  PeopleSplitUp  |                   |                    |        7 
   <th > col4  </th>
   <th > col1  </th>
   <th > col2  </th>
+</tr>
+<tr>
+  <th rowspan=4 > Sub </th>
+  <th > PartZ </th>
+  <th > ObjectPut </th>
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > 3 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col3  --> 
+  <td  align="right" > 4 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col3  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|ThisIsBig|col4  --> 
+  <td  align="right" > 1 </td>  <!-- Sub|PartZ|ObjectPut abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
+  <td  align="right" > 2 </td>  <!-- Sub|PartZ|ObjectPut abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th > PartYY </th>
+  <th > PeopleSplitUp </th>
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > 7 </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col3  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|B|col3  --> 
+  <td  align="right" > 8 </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|ThisIsBig|col4  --> 
+  <td  align="right" > 5 </td>  <!-- Sub|PartYY|PeopleSplitUp abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
+  <td  align="right" > 6 </td>  <!-- Sub|PartYY|PeopleSplitUp abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th > PartZ </th>
+  <th > PersonRuns </th>
+  <td  align="right" > 9 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > 10 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col3  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 11 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col3  --> 
+  <td  align="right" > 12 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|ThisIsBig|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th > PartYY </th>
+  <th > Pointing </th>
+  <td  align="right" > 13 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > 12 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing PartB|Aletsmakethisbiggg|col3  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 15 </td>  <!-- Sub|PartYY|Pointing PartB|B|col3  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|B|col4  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|ThisIsBig|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
 </tr>
 <tr>
   <th rowspan=2 > Bus </th>
@@ -150,75 +251,24 @@ Bus  PartYY  PeopleSplitUp  |                   |                    |        7 
   <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|Pointing abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
   <td  align="right" > &nbsp; </td>  <!-- Bus|PartYY|Pointing abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
 </tr>
-<tr>
-  <th rowspan=4 > Sub </th>
-  <th rowspan=2 > PartYY </th>
-  <th > PeopleSplitUp </th>
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col1  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col2  --> 
-  <td  align="right" > 7 </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col3  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|B|col3  --> 
-  <td  align="right" > 8 </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|B|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|ThisIsBig|col4  --> 
-  <td  align="right" > 5 </td>  <!-- Sub|PartYY|PeopleSplitUp abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
-  <td  align="right" > 6 </td>  <!-- Sub|PartYY|PeopleSplitUp abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
-</tr>
-<tr>
-  <!-- <th> &nbsp; </th> -->
-  <!-- <th> &nbsp; </th> -->
-  <th > Pointing </th>
-  <td  align="right" > 13 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col1  --> 
-  <td  align="right" > 12 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col2  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing PartB|Aletsmakethisbiggg|col3  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing PartB|Aletsmakethisbiggg|col4  --> 
-  <td  align="right" > 15 </td>  <!-- Sub|PartYY|Pointing PartB|B|col3  --> 
-  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|B|col4  --> 
-  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|ThisIsBig|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
-</tr>
-<tr>
-  <!-- <th> &nbsp; </th> -->
-  <th rowspan=2 > PartZ </th>
-  <th > ObjectPut </th>
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col1  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col2  --> 
-  <td  align="right" > 3 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col3  --> 
-  <td  align="right" > 4 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col3  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|ThisIsBig|col4  --> 
-  <td  align="right" > 1 </td>  <!-- Sub|PartZ|ObjectPut abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
-  <td  align="right" > 2 </td>  <!-- Sub|PartZ|ObjectPut abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
-</tr>
-<tr>
-  <!-- <th> &nbsp; </th> -->
-  <!-- <th> &nbsp; </th> -->
-  <th > PersonRuns </th>
-  <td  align="right" > 9 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col1  --> 
-  <td  align="right" > 10 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col2  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col3  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col4  --> 
-  <td  align="right" > 11 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col3  --> 
-  <td  align="right" > 12 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|ThisIsBig|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns abcdefghijabcdefghijabcdefghijabcdefghij|A|col1  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns abcdefghijabcdefghijabcdefghijabcdefghij|A|col2  --> 
-</tr>
 </table>
-Complex table = keepColumns .*PartA.*|PartB.*col4
+
+<hr><h1>Complex Table = keepColumns .*PartA.*|PartB.*col4</h1>
+<h2>Text Rendering</h2>
 <pre>
                             |                 PartA                  |                              PartB                               |
                             |  012345678901234567890123456789012345  |  Aletsmakethisbiggg  |          B          |      ThisIsBig      |
                             |       col1        |        col2        |         col4         |        col4         |        col4         |
 ----------------------------+-------------------+--------------------+----------------------+---------------------+---------------------+
-Sub  PartZ   ObjectPut      |                   |                    |                    4 |                     |                     |
-     PartYY  PeopleSplitUp  |                   |                    |                      |                   8 |                     |
-     PartZ   PersonRuns     |                 9 |                 10 |                      |                  12 |                     |
-     PartYY  Pointing       |                13 |                 12 |                      |   16454433333333334 |   16454433333333334 |
 Bus  PartYY  PeopleSplitUp  |                   |                    |                      |                   8 |                     |
              Pointing       |                13 |                 12 |                      |   16454433333333334 |   16454433333333334 |
+Sub  PartYY  PeopleSplitUp  |                   |                    |                      |                   8 |                     |
+             Pointing       |                13 |                 12 |                      |   16454433333333334 |   16454433333333334 |
+     PartZ   ObjectPut      |                   |                    |                    4 |                     |                     |
+             PersonRuns     |                 9 |                 10 |                      |                  12 |                     |
+</pre>
+<h2>CSV Rendering</h2>
+<pre>
 "MasterKey","PartA|012345678901234567890123456789012345|col1","PartA|012345678901234567890123456789012345|col2","PartB|Aletsmakethisbiggg|col4","PartB|B|col4","PartB|ThisIsBig|col4"
 "Sub|PartZ|ObjectPut",,,"4",,
 "Sub|PartYY|PeopleSplitUp",,,,"8",
@@ -227,6 +277,25 @@ Bus  PartYY  PeopleSplitUp  |                   |                    |          
 "Bus|PartYY|PeopleSplitUp",,,,"8",
 "Bus|PartYY|Pointing","13","12",,"16454433333333334","16454433333333334"
 </pre>
+<h2>LaTeX Rendering</h2>
+<pre>
+%% add to document header: \usepackage{multirow}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{3}{|c|}{\multirow{3}{*}{ }} & \multicolumn{2}{|c|}{PartA} & \multicolumn{3}{|c|}{PartB}\\
+\multicolumn{3}{|c|}{ } & \multicolumn{2}{|c|}{012345678901234567890123456789012345} & Aletsmakethisbiggg & B & ThisIsBig\\
+\multicolumn{3}{|c|}{ } & col1 & col2 & col4 & col4 & col4\\
+\hline
+\multirow{2}{*}{Bus} & \multirow{2}{*}{PartYY} & PeopleSplitUp & \&nbsp; & \&nbsp; & \&nbsp; & 8 & \&nbsp;\\
+ &  & Pointing & 13 & 12 & \&nbsp; & 16454433333333334 & 16454433333333334\\
+\multirow{4}{*}{Sub} & \multirow{2}{*}{PartYY} & PeopleSplitUp & \&nbsp; & \&nbsp; & \&nbsp; & 8 & \&nbsp;\\
+ &  & Pointing & 13 & 12 & \&nbsp; & 16454433333333334 & 16454433333333334\\
+ & \multirow{2}{*}{PartZ} & ObjectPut & \&nbsp; & \&nbsp; & 4 & \&nbsp; & \&nbsp;\\
+ &  & PersonRuns & 9 & 10 & \&nbsp; & 12 & \&nbsp;\\
+\hline
+\end{tabular}
+</pre>
+<h2>HTML Rendering</h2>
 <table border=1 >
 <tr>
   <th rowspan=3 colspan=3> &nbsp; </th>
@@ -245,6 +314,46 @@ Bus  PartYY  PeopleSplitUp  |                   |                    |          
   <th > col4  </th>
   <th > col4  </th>
   <th > col4  </th>
+</tr>
+<tr>
+  <th rowspan=4 > Sub </th>
+  <th > PartZ </th>
+  <th > ObjectPut </th>
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > 4 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|ThisIsBig|col4  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th > PartYY </th>
+  <th > PeopleSplitUp </th>
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 8 </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|ThisIsBig|col4  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th > PartZ </th>
+  <th > PersonRuns </th>
+  <td  align="right" > 9 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > 10 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 12 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col4  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|ThisIsBig|col4  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th > PartYY </th>
+  <th > Pointing </th>
+  <td  align="right" > 13 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col1  --> 
+  <td  align="right" > 12 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col2  --> 
+  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing PartB|Aletsmakethisbiggg|col4  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|B|col4  --> 
+  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|ThisIsBig|col4  --> 
 </tr>
 <tr>
   <th rowspan=2 > Bus </th>
@@ -266,48 +375,10 @@ Bus  PartYY  PeopleSplitUp  |                   |                    |          
   <td  align="right" > 16454433333333334 </td>  <!-- Bus|PartYY|Pointing PartB|B|col4  --> 
   <td  align="right" > 16454433333333334 </td>  <!-- Bus|PartYY|Pointing PartB|ThisIsBig|col4  --> 
 </tr>
-<tr>
-  <th rowspan=4 > Sub </th>
-  <th rowspan=2 > PartYY </th>
-  <th > PeopleSplitUp </th>
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col1  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartA|012345678901234567890123456789012345|col2  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|Aletsmakethisbiggg|col4  --> 
-  <td  align="right" > 8 </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|B|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|PeopleSplitUp PartB|ThisIsBig|col4  --> 
-</tr>
-<tr>
-  <!-- <th> &nbsp; </th> -->
-  <!-- <th> &nbsp; </th> -->
-  <th > Pointing </th>
-  <td  align="right" > 13 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col1  --> 
-  <td  align="right" > 12 </td>  <!-- Sub|PartYY|Pointing PartA|012345678901234567890123456789012345|col2  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartYY|Pointing PartB|Aletsmakethisbiggg|col4  --> 
-  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|B|col4  --> 
-  <td  align="right" > 16454433333333334 </td>  <!-- Sub|PartYY|Pointing PartB|ThisIsBig|col4  --> 
-</tr>
-<tr>
-  <!-- <th> &nbsp; </th> -->
-  <th rowspan=2 > PartZ </th>
-  <th > ObjectPut </th>
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col1  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartA|012345678901234567890123456789012345|col2  --> 
-  <td  align="right" > 4 </td>  <!-- Sub|PartZ|ObjectPut PartB|Aletsmakethisbiggg|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|B|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|ObjectPut PartB|ThisIsBig|col4  --> 
-</tr>
-<tr>
-  <!-- <th> &nbsp; </th> -->
-  <!-- <th> &nbsp; </th> -->
-  <th > PersonRuns </th>
-  <td  align="right" > 9 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col1  --> 
-  <td  align="right" > 10 </td>  <!-- Sub|PartZ|PersonRuns PartA|012345678901234567890123456789012345|col2  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|Aletsmakethisbiggg|col4  --> 
-  <td  align="right" > 12 </td>  <!-- Sub|PartZ|PersonRuns PartB|B|col4  --> 
-  <td  align="right" > &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|ThisIsBig|col4  --> 
-</tr>
 </table>
-Complex table = keepRows *PartZ.*, HTML props
+
+<hr><h1>Complex Table = keepRows *PartZ.*, HTML props</h1>
+<h2>Text Rendering</h2>
 <pre>
                         |                 PartA                  |                              PartB                               |
                         |  012345678901234567890123456789012345  |  Aletsmakethisbiggg  |          B          |      ThisIsBig      |
@@ -315,10 +386,28 @@ Complex table = keepRows *PartZ.*, HTML props
 ------------------------+-------------------+--------------------+----------------------+---------------------+---------------------+
 Sub  PartZ  ObjectPut   |                   |                    |                    4 |                     |                     |
             PersonRuns  |                 9 |                 10 |                      |                  12 |                     |
+</pre>
+<h2>CSV Rendering</h2>
+<pre>
 "MasterKey","PartA|012345678901234567890123456789012345|col1","PartA|012345678901234567890123456789012345|col2","PartB|Aletsmakethisbiggg|col4","PartB|B|col4","PartB|ThisIsBig|col4"
 "Sub|PartZ|ObjectPut",,,"4",,
 "Sub|PartZ|PersonRuns","9","10",,"12",
 </pre>
+<h2>LaTeX Rendering</h2>
+<pre>
+%% add to document header: \usepackage{multirow}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{3}{|c|}{\multirow{3}{*}{ }} & \multicolumn{2}{|c|}{PartA} & \multicolumn{3}{|c|}{PartB}\\
+\multicolumn{3}{|c|}{ } & \multicolumn{2}{|c|}{012345678901234567890123456789012345} & Aletsmakethisbiggg & B & ThisIsBig\\
+\multicolumn{3}{|c|}{ } & col1 & col2 & col4 & col4 & col4\\
+\hline
+\multirow{2}{*}{Sub} & \multirow{2}{*}{PartZ} & ObjectPut & \&nbsp; & \&nbsp; & 4 & \&nbsp; & \&nbsp;\\
+ &  & PersonRuns & 9 & 10 & \&nbsp; & 12 & \&nbsp;\\
+\hline
+\end{tabular}
+</pre>
+<h2>HTML Rendering</h2>
 <table border=1 >
 <tr>
   <th rowspan=3 colspan=3> &nbsp; </th>
@@ -359,7 +448,9 @@ Sub  PartZ  ObjectPut   |                   |                    |              
   <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|ThisIsBig|col4  --> 
 </tr>
 </table>
-Complex table = remnove key column
+
+<hr><h1>Complex Table = remove key column</h1>
+<h2>Text Rendering</h2>
 <pre>
 |                 PartA                  |                              PartB                               |
 |  012345678901234567890123456789012345  |  Aletsmakethisbiggg  |          B          |      ThisIsBig      |
@@ -367,10 +458,28 @@ Complex table = remnove key column
 |-------------------+--------------------+----------------------+---------------------+---------------------+
 |                   |                    |                    4 |                     |                     |
 |                 9 |                 10 |                      |                  12 |                     |
+</pre>
+<h2>CSV Rendering</h2>
+<pre>
 "PartA|012345678901234567890123456789012345|col1","PartA|012345678901234567890123456789012345|col2","PartB|Aletsmakethisbiggg|col4","PartB|B|col4","PartB|ThisIsBig|col4"
 ,,"4",,
 "9","10",,"12",
 </pre>
+<h2>LaTeX Rendering</h2>
+<pre>
+%% add to document header: \usepackage{multirow}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{3}{|c|}{\multirow{3}{*}{ }} & \multicolumn{2}{|c|}{PartA} & \multicolumn{3}{|c|}{PartB}\\
+\multicolumn{3}{|c|}{ } & \multicolumn{2}{|c|}{012345678901234567890123456789012345} & Aletsmakethisbiggg & B & ThisIsBig\\
+\multicolumn{3}{|c|}{ } & col1 & col2 & col4 & col4 & col4\\
+\hline
+\multirow{2}{*}{Sub} & \multirow{2}{*}{PartZ} & ObjectPut & \&nbsp; & \&nbsp; & 4 & \&nbsp; & \&nbsp;\\
+ &  & PersonRuns & 9 & 10 & \&nbsp; & 12 & \&nbsp;\\
+\hline
+\end{tabular}
+</pre>
+<h2>HTML Rendering</h2>
 <table border=1 >
 <tr>
   <th colspan=2  bgcolor="pink"> PartA  </th>
@@ -404,8 +513,9 @@ Complex table = remnove key column
   <td  align="center"  bgcolor="read"> &nbsp; </td>  <!-- Sub|PartZ|PersonRuns PartB|ThisIsBig|col4  --> 
 </tr>
 </table>
-</html>
- OK
+
+<hr>OK EXIT
+</body></html>
 
 [[STDERR]]
 
