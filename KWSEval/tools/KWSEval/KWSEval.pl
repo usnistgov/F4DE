@@ -42,12 +42,16 @@ my $versionid = "KWSEval Version: $version";
 ##########
 # Check we have every module (perl wise)
 
-my ($f4b, @f4bv);
+my ($f4b, @f4bv, $f4d);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
+  $f4d = dirname(abs_path($0));
+
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib", "../../../common/lib");
+      : ("$f4d/../../lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -87,6 +91,11 @@ if (! $have_everything) {
 }
 
 Getopt::Long::Configure(qw( auto_abbrev no_ignore_case ));
+
+my $usage = &set_usage();
+MMisc::ok_quit($usage) if (scalar @ARGV == 0);
+
+####################
 
 my $ECFfile = "";
 my $RTTMfile = "";
@@ -157,79 +166,7 @@ sub checksumSystemV
     return(unpack("%32b*", $stringf));
 }
 
-sub usage
-{
-	print "KWSEval.pl -e ecffile -r rttmfile -s stdfile -t termfile [ OPTIONS ]\n";
-	print "\n";
-	print "Required file arguments:\n";
-	print "  -e, --ecffile            Path to the ECF file.\n";
-	print "  -r, --rttmfile           Path to the RTTM file.\n";
-	print "  -s, --stdfile            Path to the STDList file.\n";
-	print "  -t, --termfile           Path to the TermList file.\n";
-	print "\n";
-	print "Find options:\n";
-	print "  -F, --Find-threshold <thresh>\n";
-	print "                           The <thresh> value represents the maximum time gap in\n";
-	print "                           seconds between two words in order to consider the two words\n";
-	print "                           to be part of a term when searching the RTTM file for reference\n";
-	print "                           term occurrences. (default: 0.5).\n";
-	print "  -S, --Similarity-threshold <thresh>\n";
-	print "                           The <thresh> value represents the maximum time distance\n";
-	print "                           between the temporal extent of the reference term and the\n";
-	print "                           mid point of system's detected term for the two to be\n";
-	print "                           considered a pair of potentially aligned terms. (default: 0.5).\n";
-	print "\n";
-	print "Filter options:\n";
-	print "  -E, --ECF-filtering      System and reference terms must be in the ECF segments.\n";
-	print "                           (default: off).\n";
-	print "  -T, --Term [<set_name>:]<termid>[,<termid>[, ...]]\n";
-	print "                           Only the <termid> or the list of <termid> (separated by ',')\n";
-	print "                           will be displayed in the Conditional Occurrence Report and Con-\n";
-	print "                           ditional DET Curve. An name can be given to the set by specify-\n";
-	print "                           ing <set_name> (<termid> can be a regular expression).\n";
-	print "  -Y, --YSourcetype [<set_name>:]<type>[,<type>[, ...]]\n";
-	print "                           Only the <type> or the list of <type> (separated by ',') will\n";
-	print "                           be displayed in the Conditional Occurrence Report and Condi-\n";
-	print "                           tional DET Curve. An name can be given to the set by specifying\n";
-	print "                           <set_name> (<type> can be a regular expression).\n";
-	print "  -N, --Namefile <file/channel>[,<file/channel>[, ...]]\n";
-	print "                           Only the <file> and <channel> or the list of <file> and <chan-\n";
-	print "                           nel> (separated by ',') will be displayed in the Occurrence\n";
-	print "                           Report and DET Curve (<file> and <channel> can be regular\n";
-	print "                           expressions).\n";
-	print "  -q, --query <name_attribute>\n";
-	print "                           Populate the Conditional Reports with set of terms identified by\n";
-	print "                           <name_attribute> in the the term list's 'terminfo' tags.\n";
-	print "  -w, --words-oov          Generate a Conditional Report sorted by terms that are \n";
-	print "                           Out-Of-Vocabulary (OOV) for the system.\n";
-	print "\n";
-	print "Report options:\n";
-	print "  -a, --align-report [<file>] Output the Alignment Report.\n";
-	print "  -o, --occurrence-report [<file>] Output the Occurrence Report.\n";
-	print "  -O, --Occurrence-conditionalreport [<file>] Output the Conditional Occurrence Report.\n";
-	print "  -d, --det-curve <file>    Output the DET Curve.\n";
-	print "  -i, --iso-lines [<coef>[,<coef>[, ...]]]\n";
-	print "                            Include the iso line information inside the serialized det curve.\n";
-	print "                            Every <coef> can be specified, or it uses those by default.\n";
-	print "                            The <coef> is the ratio Pmiss/Pfa.\n";
-	print "  -D, --DET-conditional-curve <file> Output the Conditional DET Curve.\n";
-	print "  -P, --Pooled-DETs        Produce term occurrence DET Curves instead of 'Term Weighted' DETs.\n";
-	print "  -C, --CSV [<file>]       Output the CSV Report.\n";
-	print "  -H, --HTML <folder>      Output the Occurrence HTML Report.\n";
-	print "  -Q, --QHTML <folder>     Output the Conditional Occurrence HTML Report.\n";
-	print "  -A, --All-display        Add an additional column in the Occurrence report containing\n";
-	print "                           the overall statistics for every terms (default: off).\n";
-	print "  -k, --koefcorrect <value> Value for correct (C).\n";
-	print "  -K, --Koefincorrect <value> Value for incorrect (V).\n";
-	print "  -n, --number-trials-per-sec <value>  The number of trials per second. (default: 1)\n";
-	print "  -p, --prob-of-term <value>  The probability of a term. (default: 0.0001)\n";
-	print "  -I, --ID-System <name>   Overwrites the name of the STD system.\n";
-	print "\n";
-	print "Other options:\n";
-	print "  -c, --cache-find <file>  Use the caching file for finding occurrences. If the file\n";
-	print "                           does not exist, it creates the cache during the search.\n";
-	print "\n";
-}
+
 
 my @arrayparseterm;
 my $numberFiltersTermArray = 0;
@@ -288,12 +225,12 @@ GetOptions
     'number-trials-per-sec=f'             => \$trialsPerSec,
     'prob-of-term=f'                      => \$probOfTerm,
     'Pooled-DETs'                         => \$PooledTermDETs,
-    'version'                             => sub { print "STDEval version: $version\n"; exit },
-    'help'                                => sub { usage (); exit },
+    'version'                             => sub { MMisc::ok_quit($versionid); },
+    'help'                                => sub { MMisc::ok_quit($usage); },
     'x=f'                                 => \$threshchecktrans,
     'words-oov'                           => \$requestwordsoov,
     'ID-System=s'                         => \$IDSystem,
-);
+) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
 #checking transcript
 $resquestchecktrans = 1 if($threshchecktrans != -1.0);
@@ -691,4 +628,83 @@ if($haveReports)
     $stdAlign->csvReport($outputCSV) if($requestCSV);
 }
 
-exit 0;
+MMisc::ok_exit();
+
+############################################################
+
+sub set_usage {
+  my $tmp = "";
+
+	$tmp .= "KWSEval.pl -e ecffile -r rttmfile -s stdfile -t termfile [ OPTIONS ]\n";
+	$tmp .= "\n";
+	$tmp .= "Required file arguments:\n";
+	$tmp .= "  -e, --ecffile            Path to the ECF file.\n";
+	$tmp .= "  -r, --rttmfile           Path to the RTTM file.\n";
+	$tmp .= "  -s, --stdfile            Path to the STDList file.\n";
+	$tmp .= "  -t, --termfile           Path to the TermList file.\n";
+	$tmp .= "\n";
+	$tmp .= "Find options:\n";
+	$tmp .= "  -F, --Find-threshold <thresh>\n";
+	$tmp .= "                           The <thresh> value represents the maximum time gap in\n";
+	$tmp .= "                           seconds between two words in order to consider the two words\n";
+	$tmp .= "                           to be part of a term when searching the RTTM file for reference\n";
+	$tmp .= "                           term occurrences. (default: 0.5).\n";
+	$tmp .= "  -S, --Similarity-threshold <thresh>\n";
+	$tmp .= "                           The <thresh> value represents the maximum time distance\n";
+	$tmp .= "                           between the temporal extent of the reference term and the\n";
+	$tmp .= "                           mid point of system's detected term for the two to be\n";
+	$tmp .= "                           considered a pair of potentially aligned terms. (default: 0.5).\n";
+	$tmp .= "\n";
+	$tmp .= "Filter options:\n";
+	$tmp .= "  -E, --ECF-filtering      System and reference terms must be in the ECF segments.\n";
+	$tmp .= "                           (default: off).\n";
+	$tmp .= "  -T, --Term [<set_name>:]<termid>[,<termid>[, ...]]\n";
+	$tmp .= "                           Only the <termid> or the list of <termid> (separated by ',')\n";
+	$tmp .= "                           will be displayed in the Conditional Occurrence Report and Con-\n";
+	$tmp .= "                           ditional DET Curve. An name can be given to the set by specify-\n";
+	$tmp .= "                           ing <set_name> (<termid> can be a regular expression).\n";
+	$tmp .= "  -Y, --YSourcetype [<set_name>:]<type>[,<type>[, ...]]\n";
+	$tmp .= "                           Only the <type> or the list of <type> (separated by ',') will\n";
+	$tmp .= "                           be displayed in the Conditional Occurrence Report and Condi-\n";
+	$tmp .= "                           tional DET Curve. An name can be given to the set by specifying\n";
+	$tmp .= "                           <set_name> (<type> can be a regular expression).\n";
+	$tmp .= "  -N, --Namefile <file/channel>[,<file/channel>[, ...]]\n";
+	$tmp .= "                           Only the <file> and <channel> or the list of <file> and <chan-\n";
+	$tmp .= "                           nel> (separated by ',') will be displayed in the Occurrence\n";
+	$tmp .= "                           Report and DET Curve (<file> and <channel> can be regular\n";
+	$tmp .= "                           expressions).\n";
+	$tmp .= "  -q, --query <name_attribute>\n";
+	$tmp .= "                           Populate the Conditional Reports with set of terms identified by\n";
+	$tmp .= "                           <name_attribute> in the the term list's 'terminfo' tags.\n";
+	$tmp .= "  -w, --words-oov          Generate a Conditional Report sorted by terms that are \n";
+	$tmp .= "                           Out-Of-Vocabulary (OOV) for the system.\n";
+	$tmp .= "\n";
+	$tmp .= "Report options:\n";
+	$tmp .= "  -a, --align-report [<file>] Output the Alignment Report.\n";
+	$tmp .= "  -o, --occurrence-report [<file>] Output the Occurrence Report.\n";
+	$tmp .= "  -O, --Occurrence-conditionalreport [<file>] Output the Conditional Occurrence Report.\n";
+	$tmp .= "  -d, --det-curve <file>    Output the DET Curve.\n";
+	$tmp .= "  -i, --iso-lines [<coef>[,<coef>[, ...]]]\n";
+	$tmp .= "                            Include the iso line information inside the serialized det curve.\n";
+	$tmp .= "                            Every <coef> can be specified, or it uses those by default.\n";
+	$tmp .= "                            The <coef> is the ratio Pmiss/Pfa.\n";
+	$tmp .= "  -D, --DET-conditional-curve <file> Output the Conditional DET Curve.\n";
+	$tmp .= "  -P, --Pooled-DETs        Produce term occurrence DET Curves instead of 'Term Weighted' DETs.\n";
+	$tmp .= "  -C, --CSV [<file>]       Output the CSV Report.\n";
+	$tmp .= "  -H, --HTML <folder>      Output the Occurrence HTML Report.\n";
+	$tmp .= "  -Q, --QHTML <folder>     Output the Conditional Occurrence HTML Report.\n";
+	$tmp .= "  -A, --All-display        Add an additional column in the Occurrence report containing\n";
+	$tmp .= "                           the overall statistics for every terms (default: off).\n";
+	$tmp .= "  -k, --koefcorrect <value> Value for correct (C).\n";
+	$tmp .= "  -K, --Koefincorrect <value> Value for incorrect (V).\n";
+	$tmp .= "  -n, --number-trials-per-sec <value>  The number of trials per second. (default: 1)\n";
+	$tmp .= "  -p, --prob-of-term <value>  The probability of a term. (default: 0.0001)\n";
+	$tmp .= "  -I, --ID-System <name>   Overwrites the name of the STD system.\n";
+	$tmp .= "\n";
+	$tmp .= "Other options:\n";
+	$tmp .= "  -c, --cache-find <file>  Use the caching file for finding occurrences. If the file\n";
+	$tmp .= "                           does not exist, it creates the cache during the search.\n";
+	$tmp .= "\n";
+
+  return($tmp);
+}
