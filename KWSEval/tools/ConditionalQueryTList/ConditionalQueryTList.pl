@@ -203,7 +203,7 @@ MMisc::ok_exit();
 
 sub set_usage {
   my $tmp = "";
-  $tmp .= "ConditionalQueryTList.pl -t termfile -q query -q query\n";
+  $tmp .= "$0 -t termfile -q query -q query\n";
   $tmp .= "\n";
   $tmp .= "Required file arguments:\n";
   $tmp .= "  -t, --termfile           Path to the Term file.\n";
