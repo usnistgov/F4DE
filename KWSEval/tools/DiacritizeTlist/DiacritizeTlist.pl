@@ -94,9 +94,9 @@ GetOptions
    'rttmfile=s'                          => \$RTTMfile,
    'output-file=s'                       => \$Outfile,
    'find-threshhold'                     => \$findTermThreshold,
-   'version',                            => MMisc::ok_quit($versionid),
-   'help'                                => MMisc::ok_quit($usage),
-  );
+   'version',                            => sub { MMisc::ok_quit($versionid) },
+   'help'                                => sub { MMisc::ok_quit($usage) },
+  )  or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
 MMisc::error_quit("An RTTM file must be set\n\n$usage\n") if($RTTMfile eq "");
 MMisc::error_quit("An Term file must be set\n\n") if($Termfile eq "");
