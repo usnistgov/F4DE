@@ -972,7 +972,7 @@ sub _weighted_bipartite_graph_matching {
   # subtract the column minimas
   for ($l = 0; $l < $nmax; $l++) {
     $col_min[$l] = $no_match_cost;
-    next if ($l > $ncols);
+    next if ($l >= $ncols);
     $col = $cols[$l];
     my @k3tmp = keys %hcost;
     for (my $i3 = 0; $i3 < scalar @k3tmp; $i3++) {
