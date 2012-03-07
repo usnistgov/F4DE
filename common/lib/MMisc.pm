@@ -1566,6 +1566,34 @@ sub safe_exists {
   return(&safe_exists($$ra{$k}, @ks));
 }
 
+######
+
+sub push_tohash {
+  # eq to: push @{$$rh{$d0}{$d[0]}...{$d[x]}}, $v
+  my ($rh, $v, $d0, @d) = @_;
+
+  if (scalar @d == 0) {
+    push @{$$rh{$d0}}, $v;
+    return(1);
+  }
+
+  return(&push_tohash(\%{$$rh{$d0}}, $v, @d));
+}
+
+#####
+
+sub inc_tohash {
+  # eq to: $$rh{$d0}{$d[0]}...{$d[x]}}++
+  my ($rh, $v, $d0, @d) = @_;
+
+  if (scalar @d == 0) {
+    $$rh{$d0}++;
+    return(1);
+  }
+
+  return(&push_toinc(\%{$$rh{$d0}}, @d));
+}
+
 #####
 
 sub fast_join {
