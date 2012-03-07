@@ -248,37 +248,15 @@ sub loadCSV_tohash {
     return(%out) if ($self->{errorv});
 
     if ($doa) {
-#      my $bt = "push \@\{\$out";
-#      for (my $i = 0; $i < scalar @_; $i++) {
-#        my $h = $_[$i];
-#        $bt .= "{\'" . $array[$pos{$h}] . "\'}";
-#      }
-#      
-#      for (my $i = 0; $i < scalar @headers; $i++) {
-#        my $h = $headers[$i];
-#        next if (exists $nd{$h});
-#        
-#        my $v = $array[$i];
-#        $code .= $bt . "{\'$h\'}}, \'$v\';\n";
-#       }
-
-     my @d = ();
-     for (my $i = 0; $i < scalar @_; $i++) { push @d, $array[$pos{$_[$i]}]; }
-     for (my $i = 0; $i < scalar @headers; $i++) {
-       my $h = $headers[$i];
-       next if (exists $nd{$h});
-       my $v = $array[$i];
-       MMisc::push_tohash(\%out, $v, @d, $h);
-     }
-
+      my @d = ();
+      for (my $i = 0; $i < scalar @_; $i++) { push @d, $array[$pos{$_[$i]}]; }
+      for (my $i = 0; $i < scalar @headers; $i++) {
+        my $h = $headers[$i];
+        next if (exists $nd{$h});
+        my $v = $array[$i];
+        MMisc::push_tohash(\%out, $v, @d, $h);
+      }
     } else { # increment value
-#      my $bt = "\$out";
-#      for (my $i = 0; $i < scalar @_; $i++) {
-#        my $h = $_[$i];
-#        $bt .= "{\'" . $array[$pos{$h}] . "\'}";
-#      }
-#      $code .= $bt . "++;\n";
-
       my @d = ();
       for (my $i = 0; $i < scalar @_; $i++) { push @d, $array[$pos{$_[$i]}]; }
       MMisc::inc_tohash(\%out, @d);
@@ -287,14 +265,7 @@ sub loadCSV_tohash {
     $cont++;
   }
   close CSV;
-
-#  print "** Code:\n$code\n";
-#  return($self->_set_error_and_return("Do not have any code data to reload", %out))
-#    if (MMisc::is_blank($code));
-#  eval $code;
-#  return($self->_set_error_and_return("Problem in \'CSVHelper::loadCSV_tohash\' eval-ing code : " . join(" | ", $@)))
-#    if $@;
-
+  
   return(%out);
 }
 
