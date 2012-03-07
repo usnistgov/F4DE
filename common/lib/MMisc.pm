@@ -1582,9 +1582,23 @@ sub push_tohash {
 
 #####
 
+sub set_tohash {
+  # eq to: $$rh{$d0}{$d[0]}...{$d[x]} = $v
+  my ($rh, $v, $d0, @d) = @_;
+
+  if (scalar @d == 0) {
+    $$rh{$d0} = $v;
+    return(1);
+  }
+
+  return(&set_tohash(\%{$$rh{$d0}}, $v, @d));
+}
+
+#####
+
 sub inc_tohash {
   # eq to: $$rh{$d0}{$d[0]}...{$d[x]}}++
-  my ($rh, $v, $d0, @d) = @_;
+  my ($rh, $d0, @d) = @_;
 
   if (scalar @d == 0) {
     $$rh{$d0}++;
