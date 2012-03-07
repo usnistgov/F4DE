@@ -1595,7 +1595,7 @@ sub get_version_comp {
   my $ret = 0;
   for (my $i = 0; $i < $comps; $i++) {
     my $x = 1; for (my $j = 1 + $i; $j < $comps; $j++) { $x *= $mul; } 
-    $ret += ($c[$i] * $x);
+    $ret += ((defined $c[$i] ? $c[$i] : 0) * $x);
   }
 
   return("", $ret);
