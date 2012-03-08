@@ -300,27 +300,32 @@ sub blockWeightedUnitTest()
     push @points, [ (0.8,  0.833, 0.056,  -55.383, 0.289,    0.096,   95.927,   3) ];
     push @points, [ (0.9,  0.833, 0.000,    0.167, 0.289,    0.000,    0.289,   3) ];
     push @points, [ (1.0,  0.917, 0.000,    0.083, 0.144,    0.000,    0.144,   3) ];
-    print " Checking the number of points...";
-    die "Error: Number of computed DET points not correct.  Expected ".scalar(@points)." != ".scalar(@{ $blockdet->{POINTS} })."\n" 
-      if (@points != @{ $blockdet->{POINTS} });
-    print "  Ok\n";
-    print " Checking points...";
-    for (my $i=0; $i<@points; $i++) {
-      die "Error: Det point isn't correct for point $i:\n   expected '".join(",",@{$points[$i]})."'\n".
-        "        got '".join(",",@{ $blockdet->{POINTS}[$i]})."'"
-          if ($points[$i][0] != $blockdet->{POINTS}[$i][0] ||
-              thisabs($points[$i][1] - sprintf("%.3f",$blockdet->{POINTS}[$i][1])) > 0.001 ||
-              thisabs($points[$i][2] - sprintf("%.3f",$blockdet->{POINTS}[$i][2])) > 0.001 ||
-              thisabs($points[$i][3] - sprintf("%.3f",$blockdet->{POINTS}[$i][3])) > 0.001 ||
-              thisabs($points[$i][4] - sprintf("%.3f",$blockdet->{POINTS}[$i][4])) > 0.001 ||
-              thisabs($points[$i][5] - sprintf("%.3f",$blockdet->{POINTS}[$i][5])) > 0.001 ||
-              thisabs($points[$i][6] - sprintf("%.3f",$blockdet->{POINTS}[$i][6])) > 0.001 ||
-              thisabs($points[$i][7] - sprintf("%.3f",$blockdet->{POINTS}[$i][7])) > 0.001);
-    }
-    #$blockdet->writeGNUGraph("fooblock");
-    
-    print "  OK\n";
+
+    my $ret = $blockdet->testGeneratedPoints(\@points, "  ");
+    die $ret if ($ret ne "ok");
   }
+
+### This method compares a "100% correct" 2-dim table of point to the calculated points
+sub testGeneratedPoints{
+  my ($self, $points, $pre) = @_;
+  my ($compPoints) = $self->getPoints();
+
+  print "${pre}Checking the number of points...";
+  return "\nError: Number of computed DET points not correct.  Expected ".scalar(@$points)." != ".scalar(@$compPoints)."\n" 
+    if (@$points != @$compPoints);
+  print "  Ok\n";
+  print "${pre}Checking points...";
+  for (my $i=0; $i<@$points; $i++) {
+    my $msg = "\nError: Det isn't correct for point $i value %d:\n   expected '".join(",",@{$points->[$i]})."'\n".
+      "        got '".join(",",@{$compPoints->[$i]})."'";
+    for (my $value=0; $value < 8; $value++){
+      return sprintf($msg, $value) if (thisabs($points->[$i][$value] - sprintf("%.3f",$compPoints->[$i][$value])) > 0.00);
+    }
+  }    
+  print "  Ok\n";
+  return "ok";
+}
+
 
 # Old serialize
 #sub serialize2
