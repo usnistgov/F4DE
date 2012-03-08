@@ -665,4 +665,36 @@ sub combCalc(){
   }
 }
 
+####################################################################################################
+=pod
+
+=item B<testActualDecisionPerformance>(I<$expArr, I<$printPrefix>)
+
+Compares the expected actual decision performance to the computed
+version C<@$expArr>.  C<$printPrefix> is prepended to any printouts.
+
+=cut
+
+sub testActualDecisionPerformance{
+  my ($self, $act, $pre) = @_;
+  my (@compAct) = $self->getActualDecisionPerformance();
+
+  print "${pre}Checking calculation of the Actual Decision Performance points...";
+  return "\nError: Number of Actual point valuesnot correct.  Expected ".scalar(@$act)." != ".scalar(@compAct)."\n" 
+    if (@$act != @compAct);
+  print "  Ok\n";
+  print "${pre}  Checking points...";
+  for (my $value=0; $value < @$act; $value++){
+    if (! defined($act->[$value])){
+      return "\nError: Actual point $value computed to not be undefined but should be" if (defined($compAct[$value]));
+    } else {
+      return "\nError: Actual point $value expected $act->[$value] but was ".sprintf("%.4f",$compAct[$value])
+	if (abs($act->[$value] - sprintf("%.5f",$compAct[$value])) > 0.00001);
+    }
+  }    
+  print "  Ok\n";
+  return "ok";
+}
+
+
 1;

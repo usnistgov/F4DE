@@ -343,10 +343,14 @@ sub unitTest {
   die "\nError: FA for Cost=0.8425, Pmiss=0.1 was = $ret NOT $exp\n" if (abs($ret - $exp) > 0.0001);
   $exp = 1.0; $ret = $met->FAForGivenComb(9.9, 0.0); 
   die "\nError: FA for Cost=1.0, Pmiss=0.0 was = $ret NOT $exp\n" if (abs($ret - $exp) > 0.0001);
+
+  my $ret = $met->testActualDecisionPerformance([ ('0.17425', undef, '0.1', undef, '0.00750', undef) ], "  ");
+  die $ret if ($ret ne "ok");
   
   if (defined($dir)){
     my $det1 = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef);
     my $DNdet = new DETCurve($DNtrial, $DNmet, "Do Nothing", \@isolinecoef, undef);
+  
 
     my $ds = new DETCurveSet("MetricNormLinearFunction Tests");
     die "Error: Failed to add first det" if ("success" ne $ds->addDET("Targetted Point", $det1));
