@@ -14,6 +14,7 @@ check:
 	@(cd ../lib; perl -I. -e 'use DETCurveGnuplotRenderer; DETCurveGnuplotRenderer::unitTest();')
 	@(cd ../lib; perl -I. -e 'use TrialsFuncs; TrialsFuncs::unitTest();')
 	@(cd ../lib; perl -I. -e 'use MetricNormLinearCostFunct; MetricNormLinearCostFunct::unitTest();')
+	@(cd ../lib; perl -I. -e 'use MetricLinearCostFunct; MetricLinearCostFunct::unitTest();')
 	@(cd ../lib; perl -I. -e 'use ViperFramespan; ViperFramespan::unit_test(0, 1);')
 	@(cd ../lib; perl -I. -e 'use BipartiteMatch; BipartiteMatch::unit_test(1);')
 	@(cd ../lib; perl -I. -e 'use PropList; PropList::unit_test(1);')
