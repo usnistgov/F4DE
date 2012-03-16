@@ -57,7 +57,7 @@ my $key_SortColKeyLaTeX = "SortColKeyLaTeX";
 my $key_KeepColumnsInOutput = "KeepColumnsInOutput";
 my $key_KeepRowsInOutput    = "KeepRowsInOutput";
 
-my @ok_specials = ("HTML", "CSV", "TEXT", "LaTeX");
+my @ok_specials = ("HTML", "CSV", "TEXT", "LaTeX"); # order is important
 
 #####
 
@@ -317,27 +317,47 @@ sub _buildHeir(){
   $self->_buildLabelHeir("row", $gap);
 }
 
+########################################
 
 sub __HTML_proc_sp {
   my ($str) = @_;
 
   my (@h1, @h2);
 
-  if ($str =~ s%before\=\{([^\}]+?)\}%%) {
+  while ($str =~ s%before\=\{([^\}]+?)\}%%) {
     push @h1, "$1";
   }
 
-  if ($str =~ s%after\=\{([^\}]+?)\}%%) {
+  while ($str =~ s%after\=\{([^\}]+?)\}%%) {
     unshift @h2, "$1";
   }
 
-  if ($str =~ s%url\=\{([^\}]+?)\}%%) {
+  while ($str =~ s%url\=\{([^\}]+?)\}%%) {
     push @h1, "<a href=\"$1\">";
     unshift @h2, "</a>";
   }
 
   return(join("", @h1), join("", @h2));
 }
+
+#####
+
+sub __LaTeX_proc_sp {
+  my ($str) = @_;
+
+  my (@h1, @h2);
+
+  while ($str =~ s%latexCommand\=\#([^\#]+?)\#%%) {
+    push @h1, "$1";
+  }
+
+  return("\{ " . join(" ", @h1), "\}")
+    if (scalar @h1 > 0);
+  
+  return("", "");
+}
+
+#####
 
 sub __process_special {
   my ($mode, $str) = @_;
@@ -347,10 +367,15 @@ sub __process_special {
   return(&__HTML_proc_sp($str))
     if ($mode eq $ok_specials[0]);
 
-  # only HTML for now
+ return(&__LaTeX_proc_sp($str))
+    if ($mode eq $ok_specials[3]);
+
+
+  # only HTML and LaTeX for now
   return("", "");
 }
 
+########################################
 
 sub renderHTMLTable(){
   my ($self, $tha) = @_;
@@ -914,9 +939,9 @@ sub renderLaTeXTable(){
       my $str = defined($self->{data}{$lid}) ? $self->{data}{$lid} : "&nbsp;";
       my ($h1, $h2) = ("", "");
 #      print "[$lid]\n";
-      ($h1, $h2) = &__process_special($ok_specials[0], $self->{special}{$lid}) 
+      ($h1, $h2) = &__process_special($ok_specials[3], $self->{special}{$lid}) 
         if (exists $self->{special}{$lid});
-      push @line, &__latexit($str, 1, 1, $x, $y, \%skip, \%cline); $x++;
+      push @line, &__latexit("$h1$str$h2", 1, 1, $x, $y, \%skip, \%cline); $x++;
     }
     $out .= $docline . join(" & ", @line) . '\\\\' . "\n"; $y++; $x = 0;
   }
