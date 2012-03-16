@@ -117,18 +117,18 @@
 
 [**] SpecialCSV
 "MasterKey","TrialID","name","year","color"
-"1","before={<b>} after={</b>}","","",""
-"2","","","",""
-"3","","","",""
-"4","","","",""
-"5","","","",""
-"6","","","",""
-"7","","","",""
-"8","","","",""
-"9","","","",""
+"1","before={<b>} after={</b>} latexContent=#\em#","","",""
+"2","","latexContent=#\sffamily#","",""
+"3","","","latexContent=#\ttfamily#",""
+"4","","","","latexContent=#\upshape#"
+"5","latexContent=#\itshape#","","",""
+"6","","latexContent=#\slshape#","",""
+"7","","","latexContent=#\scshape#",""
+"8","","","","latexContent=#\bfseries#"
+"9","latexContent=#\mdseries#","","",""
 "10","","","",""
 "11","","url={http://nist.gov}","",""
-"12","","","",""
+"12","latexCommand=#uppercase#","","",""
 "13","","","",""
 "14","","","",""
 "15","","","",""
@@ -138,15 +138,15 @@
 "19","","","",""
 "20","","","",""
 "21","","","before={<font color=""red"">} after={</font>}",""
-"22","","","",""
-"23","","","",""
-"24","","","",""
-"25","","","",""
-"26","","","",""
-"27","","","",""
-"28","","","",""
-"29","","","",""
-"30","","","",""
+"22","latexContent=#\tiny#","","",""
+"23","","latexContent=#\scriptsize#","",""
+"24","","","latexContent=#\footnotesize#",""
+"25","","","","latexContent=#\small#"
+"26","latexContent=#\normalsize#","","",""
+"27","","latexContent=#\large#","",""
+"28","","","latexContent=#\Large#",""
+"29","","","","latexContent=#\huge#"
+"30","latexContent=#\Huge#","","",""
 "31","","","","url={""file.png""}"
 "32","","","",""
 "33","","","",""
@@ -479,6 +479,115 @@
   <td  align="right" > yellow </td>  <!-- 50 color  --> 
 </tr>
 </table>
+
+##########
+[**] LaTeX
+%% add to document header: \usepackage{multirow}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+  & TrialID & name & year & color\\
+\hline
+1 & {\em 1} & jack & 1959 & blue\\
+\hline
+2 & 2 & {\sffamily jack} & 1965 & red\\
+\hline
+3 & 3 & jack & {\ttfamily 1973} & yellow\\
+\hline
+4 & 4 & jack & 1976 & {\upshape red}\\
+\hline
+5 & {\itshape 5} & jack & 1986 & purple\\
+\hline
+6 & 6 & {\slshape jack} & 1999 & green\\
+\hline
+7 & 7 & jack & {\scshape 2000} & black\\
+\hline
+8 & 8 & jack & 2005 & {\bfseries red}\\
+\hline
+9 & {\mdseries 9} & jack & 2010 & orange\\
+\hline
+10 & 10 & jack & 2010 & yellow\\
+\hline
+11 & 11 & mary & 1973 & blue\\
+\hline
+12 & \uppercase{12} & mary & 1974 & purple\\
+\hline
+13 & 13 & mary & 1985 & pink\\
+\hline
+14 & 14 & mary & 1986 & black\\
+\hline
+15 & 15 & mary & 1995 & pink\\
+\hline
+16 & 16 & stephen & 1999 & red\\
+\hline
+17 & 17 & stephen & 2000 & white\\
+\hline
+18 & 18 & stephen & 2000 & blue\\
+\hline
+19 & 19 & stephen & 2000 & pink\\
+\hline
+20 & 20 & stephen & 2001 & blue\\
+\hline
+21 & 21 & alex & 1999 & white\\
+\hline
+22 & {\tiny 22} & alex & 2000 & orange\\
+\hline
+23 & 23 & {\scriptsize alex} & 2001 & red\\
+\hline
+24 & 24 & alex & {\footnotesize 2002} & purple\\
+\hline
+25 & 25 & alex & 2003 & {\small white}\\
+\hline
+26 & {\normalsize 26} & alex & 2004 & blue\\
+\hline
+27 & 27 & {\large alex} & 2005 & white\\
+\hline
+28 & 28 & alex & {\Large 2006} & white\\
+\hline
+29 & 29 & alex & 2007 & {\huge red}\\
+\hline
+30 & {\Huge 30} & alex & 2008 & yellow\\
+\hline
+31 & 31 & karin & 1970 & white\\
+\hline
+32 & 32 & karin & 1975 & blue\\
+\hline
+33 & 33 & karin & 1980 & white\\
+\hline
+34 & 34 & karin & 1985 & white\\
+\hline
+35 & 35 & karin & 1990 & black\\
+\hline
+36 & 36 & karin & 1995 & orange\\
+\hline
+37 & 37 & karin & 2000 & yellow\\
+\hline
+38 & 38 & karin & 2005 & green\\
+\hline
+39 & 39 & karin & 2010 & purple\\
+\hline
+40 & 40 & karin & 2010 & blue\\
+\hline
+41 & 41 & akane & 1990 & red\\
+\hline
+42 & 42 & akane & 1991 & white\\
+\hline
+43 & 43 & akane & 1992 & blue\\
+\hline
+44 & 44 & chang & 1995 & black\\
+\hline
+45 & 45 & chang & 2007 & red\\
+\hline
+46 & 46 & chang & 2008 & purple\\
+\hline
+47 & 47 & christopher & 1995 & \\
+\hline
+48 & 48 & christopher & 2000 & blue\\
+\hline
+49 & 49 & robert & 2005 & green\\
+\hline
+50 & 50 & christina & 2006 & yellow\\
+\hline
+\end{tabular}
 Done
 
 [[STDERR]]

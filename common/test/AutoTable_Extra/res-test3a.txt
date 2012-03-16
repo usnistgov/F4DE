@@ -117,18 +117,18 @@
 
 [**] SpecialCSV
 "MasterKey","TrialID","name","year","color"
-"File: ../common/md.csv | Line: 000000000001","before={<b>} after={</b>}","","",""
-"File: ../common/md.csv | Line: 000000000002","","","",""
-"File: ../common/md.csv | Line: 000000000003","","","",""
-"File: ../common/md.csv | Line: 000000000004","","","",""
-"File: ../common/md.csv | Line: 000000000005","","","",""
-"File: ../common/md.csv | Line: 000000000006","","","",""
-"File: ../common/md.csv | Line: 000000000007","","","",""
-"File: ../common/md.csv | Line: 000000000008","","","",""
-"File: ../common/md.csv | Line: 000000000009","","","",""
+"File: ../common/md.csv | Line: 000000000001","before={<b>} after={</b>} latexContent=#\em#","","",""
+"File: ../common/md.csv | Line: 000000000002","","latexContent=#\sffamily#","",""
+"File: ../common/md.csv | Line: 000000000003","","","latexContent=#\ttfamily#",""
+"File: ../common/md.csv | Line: 000000000004","","","","latexContent=#\upshape#"
+"File: ../common/md.csv | Line: 000000000005","latexContent=#\itshape#","","",""
+"File: ../common/md.csv | Line: 000000000006","","latexContent=#\slshape#","",""
+"File: ../common/md.csv | Line: 000000000007","","","latexContent=#\scshape#",""
+"File: ../common/md.csv | Line: 000000000008","","","","latexContent=#\bfseries#"
+"File: ../common/md.csv | Line: 000000000009","latexContent=#\mdseries#","","",""
 "File: ../common/md.csv | Line: 000000000010","","","",""
 "File: ../common/md.csv | Line: 000000000011","","url={http://nist.gov}","",""
-"File: ../common/md.csv | Line: 000000000012","","","",""
+"File: ../common/md.csv | Line: 000000000012","latexCommand=#uppercase#","","",""
 "File: ../common/md.csv | Line: 000000000013","","","",""
 "File: ../common/md.csv | Line: 000000000014","","","",""
 "File: ../common/md.csv | Line: 000000000015","","","",""
@@ -138,15 +138,15 @@
 "File: ../common/md.csv | Line: 000000000019","","","",""
 "File: ../common/md.csv | Line: 000000000020","","","",""
 "File: ../common/md.csv | Line: 000000000021","","","before={<font color=""red"">} after={</font>}",""
-"File: ../common/md.csv | Line: 000000000022","","","",""
-"File: ../common/md.csv | Line: 000000000023","","","",""
-"File: ../common/md.csv | Line: 000000000024","","","",""
-"File: ../common/md.csv | Line: 000000000025","","","",""
-"File: ../common/md.csv | Line: 000000000026","","","",""
-"File: ../common/md.csv | Line: 000000000027","","","",""
-"File: ../common/md.csv | Line: 000000000028","","","",""
-"File: ../common/md.csv | Line: 000000000029","","","",""
-"File: ../common/md.csv | Line: 000000000030","","","",""
+"File: ../common/md.csv | Line: 000000000022","latexContent=#\tiny#","","",""
+"File: ../common/md.csv | Line: 000000000023","","latexContent=#\scriptsize#","",""
+"File: ../common/md.csv | Line: 000000000024","","","latexContent=#\footnotesize#",""
+"File: ../common/md.csv | Line: 000000000025","","","","latexContent=#\small#"
+"File: ../common/md.csv | Line: 000000000026","latexContent=#\normalsize#","","",""
+"File: ../common/md.csv | Line: 000000000027","","latexContent=#\large#","",""
+"File: ../common/md.csv | Line: 000000000028","","","latexContent=#\Large#",""
+"File: ../common/md.csv | Line: 000000000029","","","","latexContent=#\huge#"
+"File: ../common/md.csv | Line: 000000000030","latexContent=#\Huge#","","",""
 "File: ../common/md.csv | Line: 000000000031","","","","url={""file.png""}"
 "File: ../common/md.csv | Line: 000000000032","","","",""
 "File: ../common/md.csv | Line: 000000000033","","","",""
@@ -479,6 +479,66 @@
   <td  align="right" > yellow </td>  <!-- File: ../common/md.csv | Line: 000000000050 color  --> 
 </tr>
 </table>
+
+##########
+[**] LaTeX
+%% add to document header: \usepackage{multirow}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+\multicolumn{2}{|c|}{ } & TrialID & name & year & color\\
+\hline
+\multirow{50}{*}{File: ../common/md.csv } &  Line: 000000000001 & {\em 1} & jack & 1959 & blue\\
+\cline{2-6} &  Line: 000000000002 & 2 & {\sffamily jack} & 1965 & red\\
+\cline{2-6} &  Line: 000000000003 & 3 & jack & {\ttfamily 1973} & yellow\\
+\cline{2-6} &  Line: 000000000004 & 4 & jack & 1976 & {\upshape red}\\
+\cline{2-6} &  Line: 000000000005 & {\itshape 5} & jack & 1986 & purple\\
+\cline{2-6} &  Line: 000000000006 & 6 & {\slshape jack} & 1999 & green\\
+\cline{2-6} &  Line: 000000000007 & 7 & jack & {\scshape 2000} & black\\
+\cline{2-6} &  Line: 000000000008 & 8 & jack & 2005 & {\bfseries red}\\
+\cline{2-6} &  Line: 000000000009 & {\mdseries 9} & jack & 2010 & orange\\
+\cline{2-6} &  Line: 000000000010 & 10 & jack & 2010 & yellow\\
+\cline{2-6} &  Line: 000000000011 & 11 & mary & 1973 & blue\\
+\cline{2-6} &  Line: 000000000012 & \uppercase{12} & mary & 1974 & purple\\
+\cline{2-6} &  Line: 000000000013 & 13 & mary & 1985 & pink\\
+\cline{2-6} &  Line: 000000000014 & 14 & mary & 1986 & black\\
+\cline{2-6} &  Line: 000000000015 & 15 & mary & 1995 & pink\\
+\cline{2-6} &  Line: 000000000016 & 16 & stephen & 1999 & red\\
+\cline{2-6} &  Line: 000000000017 & 17 & stephen & 2000 & white\\
+\cline{2-6} &  Line: 000000000018 & 18 & stephen & 2000 & blue\\
+\cline{2-6} &  Line: 000000000019 & 19 & stephen & 2000 & pink\\
+\cline{2-6} &  Line: 000000000020 & 20 & stephen & 2001 & blue\\
+\cline{2-6} &  Line: 000000000021 & 21 & alex & 1999 & white\\
+\cline{2-6} &  Line: 000000000022 & {\tiny 22} & alex & 2000 & orange\\
+\cline{2-6} &  Line: 000000000023 & 23 & {\scriptsize alex} & 2001 & red\\
+\cline{2-6} &  Line: 000000000024 & 24 & alex & {\footnotesize 2002} & purple\\
+\cline{2-6} &  Line: 000000000025 & 25 & alex & 2003 & {\small white}\\
+\cline{2-6} &  Line: 000000000026 & {\normalsize 26} & alex & 2004 & blue\\
+\cline{2-6} &  Line: 000000000027 & 27 & {\large alex} & 2005 & white\\
+\cline{2-6} &  Line: 000000000028 & 28 & alex & {\Large 2006} & white\\
+\cline{2-6} &  Line: 000000000029 & 29 & alex & 2007 & {\huge red}\\
+\cline{2-6} &  Line: 000000000030 & {\Huge 30} & alex & 2008 & yellow\\
+\cline{2-6} &  Line: 000000000031 & 31 & karin & 1970 & white\\
+\cline{2-6} &  Line: 000000000032 & 32 & karin & 1975 & blue\\
+\cline{2-6} &  Line: 000000000033 & 33 & karin & 1980 & white\\
+\cline{2-6} &  Line: 000000000034 & 34 & karin & 1985 & white\\
+\cline{2-6} &  Line: 000000000035 & 35 & karin & 1990 & black\\
+\cline{2-6} &  Line: 000000000036 & 36 & karin & 1995 & orange\\
+\cline{2-6} &  Line: 000000000037 & 37 & karin & 2000 & yellow\\
+\cline{2-6} &  Line: 000000000038 & 38 & karin & 2005 & green\\
+\cline{2-6} &  Line: 000000000039 & 39 & karin & 2010 & purple\\
+\cline{2-6} &  Line: 000000000040 & 40 & karin & 2010 & blue\\
+\cline{2-6} &  Line: 000000000041 & 41 & akane & 1990 & red\\
+\cline{2-6} &  Line: 000000000042 & 42 & akane & 1991 & white\\
+\cline{2-6} &  Line: 000000000043 & 43 & akane & 1992 & blue\\
+\cline{2-6} &  Line: 000000000044 & 44 & chang & 1995 & black\\
+\cline{2-6} &  Line: 000000000045 & 45 & chang & 2007 & red\\
+\cline{2-6} &  Line: 000000000046 & 46 & chang & 2008 & purple\\
+\cline{2-6} &  Line: 000000000047 & 47 & christopher & 1995 & \\
+\cline{2-6} &  Line: 000000000048 & 48 & christopher & 2000 & blue\\
+\cline{2-6} &  Line: 000000000049 & 49 & robert & 2005 & green\\
+\cline{2-6} &  Line: 000000000050 & 50 & christina & 2006 & yellow\\
+\hline
+\end{tabular}
 Done
 
 [[STDERR]]

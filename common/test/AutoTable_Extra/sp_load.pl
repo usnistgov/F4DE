@@ -39,4 +39,5 @@ sub doit {
   print "\n##########\n[**] CSV\n$csv\n";
   print "\n\n[**] SpecialCSV\n$sp\n";
   print "\n##########\n[**] HTML\n" . $at->renderHTMLTable(); &__aterr($at);
+  print "\n##########\n[**] LaTeX\n" . $at->renderLaTeXTable(); &__aterr($at);
 }

@@ -117,18 +117,18 @@
 
 [**] SpecialCSV
 "MasterKey","TrialID","color"
-"File: ../common/md.csv | Line: 000000000001","before={<b>} after={</b>}",""
+"File: ../common/md.csv | Line: 000000000001","before={<b>} after={</b>} latexContent=#\em#",""
 "File: ../common/md.csv | Line: 000000000002","",""
 "File: ../common/md.csv | Line: 000000000003","",""
-"File: ../common/md.csv | Line: 000000000004","",""
-"File: ../common/md.csv | Line: 000000000005","",""
+"File: ../common/md.csv | Line: 000000000004","","latexContent=#\upshape#"
+"File: ../common/md.csv | Line: 000000000005","latexContent=#\itshape#",""
 "File: ../common/md.csv | Line: 000000000006","",""
 "File: ../common/md.csv | Line: 000000000007","",""
-"File: ../common/md.csv | Line: 000000000008","",""
-"File: ../common/md.csv | Line: 000000000009","",""
+"File: ../common/md.csv | Line: 000000000008","","latexContent=#\bfseries#"
+"File: ../common/md.csv | Line: 000000000009","latexContent=#\mdseries#",""
 "File: ../common/md.csv | Line: 000000000010","",""
 "File: ../common/md.csv | Line: 000000000011","",""
-"File: ../common/md.csv | Line: 000000000012","",""
+"File: ../common/md.csv | Line: 000000000012","latexCommand=#uppercase#",""
 "File: ../common/md.csv | Line: 000000000013","",""
 "File: ../common/md.csv | Line: 000000000014","",""
 "File: ../common/md.csv | Line: 000000000015","",""
@@ -138,15 +138,15 @@
 "File: ../common/md.csv | Line: 000000000019","",""
 "File: ../common/md.csv | Line: 000000000020","",""
 "File: ../common/md.csv | Line: 000000000021","",""
-"File: ../common/md.csv | Line: 000000000022","",""
+"File: ../common/md.csv | Line: 000000000022","latexContent=#\tiny#",""
 "File: ../common/md.csv | Line: 000000000023","",""
 "File: ../common/md.csv | Line: 000000000024","",""
-"File: ../common/md.csv | Line: 000000000025","",""
-"File: ../common/md.csv | Line: 000000000026","",""
+"File: ../common/md.csv | Line: 000000000025","","latexContent=#\small#"
+"File: ../common/md.csv | Line: 000000000026","latexContent=#\normalsize#",""
 "File: ../common/md.csv | Line: 000000000027","",""
 "File: ../common/md.csv | Line: 000000000028","",""
-"File: ../common/md.csv | Line: 000000000029","",""
-"File: ../common/md.csv | Line: 000000000030","",""
+"File: ../common/md.csv | Line: 000000000029","","latexContent=#\huge#"
+"File: ../common/md.csv | Line: 000000000030","latexContent=#\Huge#",""
 "File: ../common/md.csv | Line: 000000000031","","url={""file.png""}"
 "File: ../common/md.csv | Line: 000000000032","",""
 "File: ../common/md.csv | Line: 000000000033","",""
@@ -377,6 +377,66 @@
   <td  align="right" > yellow </td>  <!-- File: ../common/md.csv | Line: 000000000050 color  --> 
 </tr>
 </table>
+
+##########
+[**] LaTeX
+%% add to document header: \usepackage{multirow}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{2}{|c|}{ } & TrialID & color\\
+\hline
+\multirow{50}{*}{File: ../common/md.csv } &  Line: 000000000001 & {\em 1} & blue\\
+\cline{2-4} &  Line: 000000000002 & 2 & red\\
+\cline{2-4} &  Line: 000000000003 & 3 & yellow\\
+\cline{2-4} &  Line: 000000000004 & 4 & {\upshape red}\\
+\cline{2-4} &  Line: 000000000005 & {\itshape 5} & purple\\
+\cline{2-4} &  Line: 000000000006 & 6 & green\\
+\cline{2-4} &  Line: 000000000007 & 7 & black\\
+\cline{2-4} &  Line: 000000000008 & 8 & {\bfseries red}\\
+\cline{2-4} &  Line: 000000000009 & {\mdseries 9} & orange\\
+\cline{2-4} &  Line: 000000000010 & 10 & yellow\\
+\cline{2-4} &  Line: 000000000011 & 11 & blue\\
+\cline{2-4} &  Line: 000000000012 & \uppercase{12} & purple\\
+\cline{2-4} &  Line: 000000000013 & 13 & pink\\
+\cline{2-4} &  Line: 000000000014 & 14 & black\\
+\cline{2-4} &  Line: 000000000015 & 15 & pink\\
+\cline{2-4} &  Line: 000000000016 & 16 & red\\
+\cline{2-4} &  Line: 000000000017 & 17 & white\\
+\cline{2-4} &  Line: 000000000018 & 18 & blue\\
+\cline{2-4} &  Line: 000000000019 & 19 & pink\\
+\cline{2-4} &  Line: 000000000020 & 20 & blue\\
+\cline{2-4} &  Line: 000000000021 & 21 & white\\
+\cline{2-4} &  Line: 000000000022 & {\tiny 22} & orange\\
+\cline{2-4} &  Line: 000000000023 & 23 & red\\
+\cline{2-4} &  Line: 000000000024 & 24 & purple\\
+\cline{2-4} &  Line: 000000000025 & 25 & {\small white}\\
+\cline{2-4} &  Line: 000000000026 & {\normalsize 26} & blue\\
+\cline{2-4} &  Line: 000000000027 & 27 & white\\
+\cline{2-4} &  Line: 000000000028 & 28 & white\\
+\cline{2-4} &  Line: 000000000029 & 29 & {\huge red}\\
+\cline{2-4} &  Line: 000000000030 & {\Huge 30} & yellow\\
+\cline{2-4} &  Line: 000000000031 & 31 & white\\
+\cline{2-4} &  Line: 000000000032 & 32 & blue\\
+\cline{2-4} &  Line: 000000000033 & 33 & white\\
+\cline{2-4} &  Line: 000000000034 & 34 & white\\
+\cline{2-4} &  Line: 000000000035 & 35 & black\\
+\cline{2-4} &  Line: 000000000036 & 36 & orange\\
+\cline{2-4} &  Line: 000000000037 & 37 & yellow\\
+\cline{2-4} &  Line: 000000000038 & 38 & green\\
+\cline{2-4} &  Line: 000000000039 & 39 & purple\\
+\cline{2-4} &  Line: 000000000040 & 40 & blue\\
+\cline{2-4} &  Line: 000000000041 & 41 & red\\
+\cline{2-4} &  Line: 000000000042 & 42 & white\\
+\cline{2-4} &  Line: 000000000043 & 43 & blue\\
+\cline{2-4} &  Line: 000000000044 & 44 & black\\
+\cline{2-4} &  Line: 000000000045 & 45 & red\\
+\cline{2-4} &  Line: 000000000046 & 46 & purple\\
+\cline{2-4} &  Line: 000000000047 & 47 & \\
+\cline{2-4} &  Line: 000000000048 & 48 & blue\\
+\cline{2-4} &  Line: 000000000049 & 49 & green\\
+\cline{2-4} &  Line: 000000000050 & 50 & yellow\\
+\hline
+\end{tabular}
 Done
 
 [[STDERR]]

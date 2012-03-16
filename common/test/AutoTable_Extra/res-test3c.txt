@@ -93,27 +93,27 @@
 
 [**] SpecialCSV
 "MasterKey","TrialID","name","year","color"
-"jack_____blue","before={<b>} after={</b>}","","",""
-"jack_____red","","","",""
-"jack_____yellow","","","",""
-"jack_____purple","","","",""
-"jack_____green","","","",""
-"jack_____black","","","",""
-"jack_____orange","","","",""
+"jack_____blue","before={<b>} after={</b>} latexContent=#\em#","","",""
+"jack_____red","","latexContent=#\sffamily#","","latexContent=#\bfseries#"
+"jack_____yellow","","","latexContent=#\ttfamily#",""
+"jack_____purple","latexContent=#\itshape#","","",""
+"jack_____green","","latexContent=#\slshape#","",""
+"jack_____black","","","latexContent=#\scshape#",""
+"jack_____orange","latexContent=#\mdseries#","","",""
 "mary_____blue","","url={http://nist.gov}","",""
-"mary_____purple","","","",""
+"mary_____purple","latexCommand=#uppercase#","","",""
 "mary_____pink","","","",""
 "mary_____black","","","",""
 "stephen_____red","","","",""
 "stephen_____white","","","",""
 "stephen_____blue","","","",""
 "stephen_____pink","","","",""
-"alex_____white","","","before={<font color=""red"">} after={</font>}",""
-"alex_____orange","","","",""
-"alex_____red","","","",""
-"alex_____purple","","","",""
-"alex_____blue","","","",""
-"alex_____yellow","","","",""
+"alex_____white","","latexContent=#\large#","latexContent=#\Large#","latexContent=#\small#"
+"alex_____orange","latexContent=#\tiny#","","",""
+"alex_____red","","latexContent=#\scriptsize#","","latexContent=#\huge#"
+"alex_____purple","","","latexContent=#\footnotesize#",""
+"alex_____blue","latexContent=#\normalsize#","","",""
+"alex_____yellow","latexContent=#\Huge#","","",""
 "karin_____white","","","","url={""file.png""}"
 "karin_____blue","","before={<font color=""blue"">} after={</font>} before={<IMG SRC=""file.png"" height=80 width=80/>}","",""
 "karin_____black","","","",""
@@ -235,7 +235,7 @@
 <tr>
   <td  align="right" > 28 </td>  <!-- alex_____white TrialID  --> 
   <td  align="right" > alex </td>  <!-- alex_____white name  --> 
-  <td  align="right" > <font color="red">2006</font> </td>  <!-- alex_____white year  --> 
+  <td  align="right" > 2006 </td>  <!-- alex_____white year  --> 
   <td  align="right" > white </td>  <!-- alex_____white color  --> 
 </tr>
 <tr>
@@ -371,6 +371,91 @@
   <td  align="right" > yellow </td>  <!-- christina_____yellow color  --> 
 </tr>
 </table>
+
+##########
+[**] LaTeX
+%% add to document header: \usepackage{multirow}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+  & TrialID & name & year & color\\
+\hline
+jack\_\_\_\_\_blue & {\em 1} & jack & 1959 & blue\\
+\hline
+jack\_\_\_\_\_red & 8 & {\sffamily jack} & 2005 & {\bfseries red}\\
+\hline
+jack\_\_\_\_\_yellow & 10 & jack & {\ttfamily 2010} & yellow\\
+\hline
+jack\_\_\_\_\_purple & {\itshape 5} & jack & 1986 & purple\\
+\hline
+jack\_\_\_\_\_green & 6 & {\slshape jack} & 1999 & green\\
+\hline
+jack\_\_\_\_\_black & 7 & jack & {\scshape 2000} & black\\
+\hline
+jack\_\_\_\_\_orange & {\mdseries 9} & jack & 2010 & orange\\
+\hline
+mary\_\_\_\_\_blue & 11 & mary & 1973 & blue\\
+\hline
+mary\_\_\_\_\_purple & \uppercase{12} & mary & 1974 & purple\\
+\hline
+mary\_\_\_\_\_pink & 15 & mary & 1995 & pink\\
+\hline
+mary\_\_\_\_\_black & 14 & mary & 1986 & black\\
+\hline
+stephen\_\_\_\_\_red & 16 & stephen & 1999 & red\\
+\hline
+stephen\_\_\_\_\_white & 17 & stephen & 2000 & white\\
+\hline
+stephen\_\_\_\_\_blue & 20 & stephen & 2001 & blue\\
+\hline
+stephen\_\_\_\_\_pink & 19 & stephen & 2000 & pink\\
+\hline
+alex\_\_\_\_\_white & 28 & {\large alex} & {\Large 2006} & {\small white}\\
+\hline
+alex\_\_\_\_\_orange & {\tiny 22} & alex & 2000 & orange\\
+\hline
+alex\_\_\_\_\_red & 29 & {\scriptsize alex} & 2007 & {\huge red}\\
+\hline
+alex\_\_\_\_\_purple & 24 & alex & {\footnotesize 2002} & purple\\
+\hline
+alex\_\_\_\_\_blue & {\normalsize 26} & alex & 2004 & blue\\
+\hline
+alex\_\_\_\_\_yellow & {\Huge 30} & alex & 2008 & yellow\\
+\hline
+karin\_\_\_\_\_white & 34 & karin & 1985 & white\\
+\hline
+karin\_\_\_\_\_blue & 40 & karin & 2010 & blue\\
+\hline
+karin\_\_\_\_\_black & 35 & karin & 1990 & black\\
+\hline
+karin\_\_\_\_\_orange & 36 & karin & 1995 & orange\\
+\hline
+karin\_\_\_\_\_yellow & 37 & karin & 2000 & yellow\\
+\hline
+karin\_\_\_\_\_green & 38 & karin & 2005 & green\\
+\hline
+karin\_\_\_\_\_purple & 39 & karin & 2010 & purple\\
+\hline
+akane\_\_\_\_\_red & 41 & akane & 1990 & red\\
+\hline
+akane\_\_\_\_\_white & 42 & akane & 1991 & white\\
+\hline
+akane\_\_\_\_\_blue & 43 & akane & 1992 & blue\\
+\hline
+chang\_\_\_\_\_black & 44 & chang & 1995 & black\\
+\hline
+chang\_\_\_\_\_red & 45 & chang & 2007 & red\\
+\hline
+chang\_\_\_\_\_purple & 46 & chang & 2008 & purple\\
+\hline
+christopher\_\_\_\_\_ & 47 & christopher & 1995 & \\
+\hline
+christopher\_\_\_\_\_blue & 48 & christopher & 2000 & blue\\
+\hline
+robert\_\_\_\_\_green & 49 & robert & 2005 & green\\
+\hline
+christina\_\_\_\_\_yellow & 50 & christina & 2006 & yellow\\
+\hline
+\end{tabular}
 Done
 
 [[STDERR]]
