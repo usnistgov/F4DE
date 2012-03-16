@@ -276,7 +276,7 @@
 </tr>
 <tr>
   <td  align="right" > 40 </td>  <!-- karin_____blue TrialID  --> 
-  <td  align="right" > <font color="blue">karin</font> </td>  <!-- karin_____blue name  --> 
+  <td  align="right" > <font color="blue"><IMG SRC="file.png" height=80 width=80/>karin</font> </td>  <!-- karin_____blue name  --> 
   <td  align="right" > 2010 </td>  <!-- karin_____blue year  --> 
   <td  align="right" > blue </td>  <!-- karin_____blue color  --> 
 </tr>

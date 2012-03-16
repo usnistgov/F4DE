@@ -373,7 +373,7 @@
   <td  align="right" > purple </td>  <!-- File: ../common/md.csv | Line: 000000000039 color  --> 
 </tr>
 <tr>
-  <td  align="right" > <font color="blue">karin</font> </td>  <!-- File: ../common/md.csv | Line: 000000000040 name  --> 
+  <td  align="right" > <font color="blue"><IMG SRC="file.png" height=80 width=80/>karin</font> </td>  <!-- File: ../common/md.csv | Line: 000000000040 name  --> 
   <td  align="right" > 2010 </td>  <!-- File: ../common/md.csv | Line: 000000000040 year  --> 
   <td  align="right" > blue </td>  <!-- File: ../common/md.csv | Line: 000000000040 color  --> 
 </tr>

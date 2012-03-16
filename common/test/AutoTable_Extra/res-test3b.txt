@@ -414,7 +414,7 @@
 </tr>
 <tr>
   <td  align="right" > 40 </td>  <!-- 40 TrialID  --> 
-  <td  align="right" > <font color="blue">karin</font> </td>  <!-- 40 name  --> 
+  <td  align="right" > <font color="blue"><IMG SRC="file.png" height=80 width=80/>karin</font> </td>  <!-- 40 name  --> 
   <td  align="right" > 2010 </td>  <!-- 40 year  --> 
   <td  align="right" > blue </td>  <!-- 40 color  --> 
 </tr>
