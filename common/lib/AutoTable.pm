@@ -45,6 +45,7 @@ my $key_SortColKeyHTML  = "SortColKeyHTML";
 my $key_htmlColHeadBGColor = "html.colhead.bgcolor";
 my $key_htmlRowHeadBGColor = "html.rowhead.bgcolor";
 my $key_htmlCellBGColor    = "html.cell.bgcolor";
+my $key_htmlAltLineCellBGColor    = "html.cell.altlinebgcolor";
 my $key_htmlCellJust       = "html.cell.justification";
 
 ## LaTeX
@@ -107,6 +108,7 @@ sub new {
   $self->{Properties}->addProp($key_htmlColHeadBGColor, "", ());
   $self->{Properties}->addProp($key_htmlRowHeadBGColor, "", ());
   $self->{Properties}->addProp($key_htmlCellBGColor, "", ());
+  $self->{Properties}->addProp($key_htmlAltLineCellBGColor, "", ());
   $self->{Properties}->addProp($key_htmlCellJust, "right", ("left", "center", "right"));
 
   ## LaTeX
@@ -237,6 +239,9 @@ sub unitTest {
   ### Get the order of column
 #<<<<<<< AutoTable.pm
   
+  $sg->{Properties}->setValue($key_htmlCellBGColor, "\#DDDDDD");
+  $sg->{Properties}->setValue($key_htmlAltLineCellBGColor, "\#AAAAAA");
+
   & __UT_showAllModes("Complex Table (sorted: As Added)", $sg);
 
   $sg->{Properties}->setValue($key_SortColKeyTxt, "Num");
@@ -276,7 +281,7 @@ sub unitTest {
   $sg->setProperties({ $key_KeepRowsInOutput => ".*PartZ.*" });
   $sg->setProperties({ $key_htmlColHeadBGColor => "pink" });
   $sg->setProperties({ $key_htmlRowHeadBGColor => "orange" });
-  $sg->setProperties({ $key_htmlCellBGColor => "read" });
+  $sg->setProperties({ $key_htmlCellBGColor => "red" });
   $sg->setProperties({ $key_htmlCellJust => "center" });
   & __UT_showAllModes("Complex Table = keepRows *PartZ.*, HTML props", $sg);
   
@@ -386,6 +391,14 @@ sub renderHTMLTable(){
     return(undef);
   }
   $cellBGColor = " bgcolor=\"$cellBGColor\""if ($cellBGColor ne "");
+  ###
+  my $cellAltLineBGColor = $self->{Properties}->getValue($key_htmlAltLineCellBGColor);
+  if ($self->{Properties}->error()) {
+    $self->_set_errormsg("Unable to get the $key_htmlAltLineCellBGColor property.  Message is ".$self->{Properties}->get_errormsg());
+    return(undef);
+  }
+  $cellAltLineBGColor = " bgcolor=\"$cellAltLineBGColor\""if ($cellAltLineBGColor ne "");
+  $cellAltLineBGColor = $cellAltLineBGColor if (($cellAltLineBGColor eq "") && ($cellBGColor ne ""));
   ####
   my $cellJust = $self->{Properties}->getValue($key_htmlCellJust);
   if ($self->{Properties}->error()) {
@@ -486,7 +499,8 @@ sub renderHTMLTable(){
 #      print "[$lid]\n";
       ($h1, $h2) = &__process_special($ok_specials[0], $self->{special}{$lid}) 
         if (exists $self->{special}{$lid});
-      $out .= "  <td $cellJust $cellBGColor> $h1".$str."$h2 </td>".
+      my $BGColor = ($row % 2 == 0) ? $cellBGColor : $cellAltLineBGColor;
+      $out .= "  <td $cellJust $BGColor> $h1".$str."$h2 </td>".
 	"  <!-- $rowIDs[$row] $nodeSet[$node]{subs}[0]  --> \n";
     }
     $out .= "</tr>\n";
