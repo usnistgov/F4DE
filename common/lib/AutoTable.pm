@@ -345,16 +345,30 @@ sub __HTML_proc_sp {
 sub __LaTeX_proc_sp {
   my ($str) = @_;
 
-  my (@h1, @h2);
+  my (@h1, @h2, @h3);
 
   while ($str =~ s%latexCommand\=\#([^\#]+?)\#%%) {
-    push @h1, "$1";
+    push @h1, "\\$1\{";
+    push @h2, "\}";
   }
 
-  return("\{ " . join(" ", @h1), "\}")
-    if (scalar @h1 > 0);
-  
-  return("", "");
+  while ($str =~ s%latexContent\=\#([^\#]+?)\#%%) {
+    push @h3, "$1";
+  }
+
+  my ($pre, $post) = ("", "");
+
+  if (scalar @h1 > 0) {
+    $pre  = $pre . join("", @h1);
+    $post = join("", @h2). $post;
+  }
+
+  if (scalar @h3 > 0) {
+    $pre = $pre . ((scalar @h1 == 0) ? "\{" : "") . join(" ", @h3) . " ";
+    $post = ((scalar @h1 == 0) ? "\}" : "") . $post;
+  }
+
+  return($pre, $post);
 }
 
 #####
@@ -786,7 +800,7 @@ sub __latex_escape {
 #####
 
 sub __latexit {
-  my ($text, $ncols, $nrows, $x, $y, $rs, $rc) = @_;
+  my ($pre, $text, $post, $ncols, $nrows, $x, $y, $rs, $rc) = @_;
 
   if ($$rs{$x}{$y} > 0) {
     return("") if ($ncols < 2);
@@ -805,7 +819,9 @@ sub __latexit {
   # columns before lines
   $out .= "\\multicolumn\{$ncols\}\{\|c\|\}\{" if ($ncols > 1);
   $out .= "\\multirow\{$nrows\}\{*\}\{" if ($nrows > 1);
+  $out .= $pre;
   $out .= &__latex_escape($text);
+  $out .= $post;
   $out .= "\}" if ($nrows > 1);
   $out .= "\}" if ($ncols > 1);
 
@@ -849,7 +865,7 @@ sub renderLaTeXTable(){
     ### Render the row data 
     my $numRowHead = scalar(@{ $self->{render}{rowLabelWidth} });
     if ($k1c) {
-      push @line, &__latexit(" ", $numRowHead, $levels, $x, $y, \%skip, \%cline); $x += $numRowHead;
+      push @line, &__latexit("", " ", "", $numRowHead, $levels, $x, $y, \%skip, \%cline); $x += $numRowHead;
       $ncols += $numRowHead;
     }
 
@@ -868,7 +884,7 @@ sub renderLaTeXTable(){
     
     for (my $node=0; $node < @nodeSet; $node ++){
       my $ncol = scalar( @{ $nodeSet[$node]{subs} });
-      push @line, &__latexit($nodeSet[$node]{id}, $ncol, 1, $x, $y, \%skip, \%cline); $x += $ncol;
+      push @line, &__latexit("", $nodeSet[$node]{id}, "", $ncol, 1, $x, $y, \%skip, \%cline); $x += $ncol;
       $ncols += $ncol;
     }
     $headers .= $docline . join(" & ", @line) . "\\\\" . "\n"; $y++; $x = 0;
@@ -926,9 +942,9 @@ sub renderLaTeXTable(){
 	    }
 	    $span ++ if (! $stop);
 	  }
-          push @line, &__latexit($ids[$rowLevel], 1, $span, $x, $y, \%skip, \%cline); $x++;
+          push @line, &__latexit("", $ids[$rowLevel], "", 1, $span, $x, $y, \%skip, \%cline); $x++;
 	} else {
-          push @line, &__latexit($ids[$rowLevel], 1, 1, $x, $y, \%skip, \%cline); $x++;
+          push @line, &__latexit("", $ids[$rowLevel], "", 1, 1, $x, $y, \%skip, \%cline); $x++;
 	}
 	
 	$lastRowLabel[$rowLevel] = $ids[$rowLevel];
@@ -941,7 +957,7 @@ sub renderLaTeXTable(){
 #      print "[$lid]\n";
       ($h1, $h2) = &__process_special($ok_specials[3], $self->{special}{$lid}) 
         if (exists $self->{special}{$lid});
-      push @line, &__latexit("$h1$str$h2", 1, 1, $x, $y, \%skip, \%cline); $x++;
+      push @line, &__latexit($h1, $str, $h2, 1, 1, $x, $y, \%skip, \%cline); $x++;
     }
     $out .= $docline . join(" & ", @line) . '\\\\' . "\n"; $y++; $x = 0;
   }
