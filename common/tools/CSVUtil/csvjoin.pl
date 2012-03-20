@@ -83,7 +83,7 @@ GetOptions
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if (($opt{'help'}) || (scalar @ARGV == 0));
 
-MMisc::error_quit($usage) 
+MMisc::error_quit("Need at least two \'infile.csv\'\n\n$usage") 
   if (scalar @ARGV < 2);
 MMisc::error_quit("No \'outcsv\' provided\n\n$usage")
   if (MMisc::is_blank($outcsv));
@@ -105,30 +105,72 @@ MMisc::ok_quit("Done");
 ##########
 
 sub add2all {
-  my ($rall, $rlh, $rcolm, $txt, @jc) = @_;
-
+  my ($rall, $rlh, $rcolm, $txt, $radd, $rremove, @jc) = @_;
+  
   if (scalar @jc > 0) {
     my $k = shift @jc;
     my $v = $$rlh[$$rcolm{$k}];
     $txt .= "{\'$k\'=\'$v\'}"; 
-    &add2all(\%{$$rall{$v}}, $rlh, $rcolm, $txt, @jc);
+    &add2all(\%{$$rall{$v}}, $rlh, $rcolm, $txt, $radd, $rremove, @jc);
     return();
   }
-
+  
   # scalar @jc = 0
   foreach my $k (keys %{$rcolm}) {
     next if (exists $jch{$k});
+    next if (MMisc::safe_exists($rremove, $k));
     MMisc::error_quit("\$all$txt" . "{\'$k\'} already present, will not overwrite (unless \'--replace\' is selected)")
         if ((exists $$rall{$k}) && (! $replace));
     my $v = $$rlh[$$rcolm{$k}];
     $$rall{$k} = $v;
   }
+  
+  foreach my $k (keys %{$radd}) {
+#    print "[$k]\n";
+    next if (exists $jch{$k});
+    next if (MMisc::safe_exists($rremove, $k));
+    MMisc::error_quit("\$all$txt" . "{\'$k\'} already present, will not overwrite (unless \'--replace\' is selected)")
+        if ((exists $$rall{$k}) && (! $replace));
+    my $v = $$radd{$k};
+    $$rall{$k} = $v;
+#    print "[$txt]{$k} = $v\n";
+  }
 }
 
-## 
+##
 
 sub load_file {
-  my ($if) = @_;
+  my ($xcsvfile) = @_;
+
+  # extract all separators
+  my @splits = split (m%(\:\:|\+\+)%, $xcsvfile);
+  # file is always first
+  my $if = shift @splits;
+  my %toremove = ();
+  my %toadd = ();
+  while (scalar @splits > 0) {
+    my $mode = shift @splits;
+    my $content = shift @splits;
+    MMisc::error_quit("Empty \'infile.csv\' operator value") 
+        if (MMisc::is_blank($content));
+
+    if ($mode eq '::') {
+      $toremove{$content}++;
+      next;
+    }
+
+    if ($mode eq '++') {
+      my ($c, @rest) = split(m%\=%, $content);
+      MMisc::error_quit("Problem with \'infile.csv\' \'++\' operator, must be of the form: colname=colvalue, got: $content")
+          if (@rest != 1);
+      my $v = $rest[0];
+      $toadd{$c} = $v;
+#      print "[$c]++[$v]\n";
+      next;
+    }
+
+    MMisc::error_quit("Invalid \'infile.csv\' operator ($mode)");
+  }
 
   my $err = MMisc::check_file_r($if);
   MMisc::error_quit("Problem with input file ($if) : $err")
@@ -165,6 +207,12 @@ sub load_file {
   for (my $i = 0; $i < scalar @lh; $i++) {
     my $v = $lh[$i];
     next if (exists $header{$v});
+    next if ($toremove{$v});
+    $header{$v} = scalar(keys %header);
+  }
+  foreach my $v (keys %toadd) {
+    next if (exists $header{$v});
+    next if ($toremove{$v});
     $header{$v} = scalar(keys %header);
   }
 
@@ -176,7 +224,7 @@ sub load_file {
     MMisc::error_quit("In file ($if), problem with input CSV : " . $icsvh->get_errormsg() . "\n[Line $sh : $line]")
         if ($icsvh->error());
 
-    &add2all(\%all, \@inh, \%colm, "", @joincol);
+    &add2all(\%all, \@inh, \%colm, "", \%toadd, \%toremove, @joincol);
 
     $sh++;
   }
@@ -278,7 +326,7 @@ sub save_file {
 sub set_usage{
   my $tmp=<<EOF
 
-$0 [--help] --outcsv filename [--joincol name [--joincol name [...]]] [--replace] infile.csv [infile.csv [...]]
+$0 [--help] --outcsv filename [--joincol name [--joincol name [...]]] [--replace] infile.csv[++colname=colvalue[++...]][::colname[::...]] [infile.csv[...] [...]]
 
 Does a simple CSV join on primary key columns; and will add columns from all files seen
 Warning: will stop in case of primary key collision unless --replace is selected
@@ -288,6 +336,11 @@ Where:
   --outcsv      filename to write the joined table to
   --joincol     primary key column name (used in in \'joincol\' order)
   --replace     In case of primary key collision, replace previous value
+
+Options can be specified for infile.csv:
+  ++colname=colvalue will add extra columns to the loaded file
+  ::colname  remove specified columns from loaded file
+
 EOF
 ;
 
