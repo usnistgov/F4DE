@@ -68,7 +68,7 @@ sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
 foreach my $pn ("MMisc", "RTTMList", "KWSecf", "TermList", "KWSList", "KWSTools", "KWSMappedRecord", 'BipartiteMatch',
-                "KWSAlignment", "CacheOccurrences", "KWSDETSet") {
+                "KWSAlignment", "CacheOccurrences", "DETCurveSet", "DETCurve", "MetricTWV", "TrialsTWV") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -528,7 +528,7 @@ if($haveReports)
         my $allresults_DET;
         my %results_Occ;
         my %results_DET;
-        my $dset = new KWSDETSet();
+        my $dset = new DETCurveSet();
         
         foreach my $titleTerm(sort keys %filterTermArray)
         {
@@ -573,18 +573,18 @@ if($haveReports)
     if($requestDETCurve || $requestreportOccur || $requestHtml)
     {
         my $allresults_Occ = $stdAlign->GenerateOccurrenceReport(\@{ $filterTermArray{''} }, \@arrayparsefile, \@{ $filterTypeArray{''} }, $trialsPerSec, $probOfTerm, $KoefV, $KoefC);
-        my $dset = new KWSDETSet();
+        my $dset = new DETCurveSet();
         
         if ($displayall && $requestDETCurve)
         {
-            my $det = $stdAlign->GenerateDETReport(\@{ $filterTermArray{''} }, \@arrayparsefile, \@{ $filterTypeArray{''} }, $stdAlign->{STD}->{SYSTEM_ID}." : ALL Data", $KoefV, $KoefC, $trialsPerSec, $probOfTerm, $PooledTermDETs);
+
+            my $det = $stdAlign->GenerateDETReport(\@{ $filterTermArray{''} }, \@arrayparsefile, \@{ $filterTypeArray{''} }, $stdAlign->{STD}->{SYSTEM_ID}." : ALL Data", $KoefV, $KoefC, $trialsPerSec, $probOfTerm, $PooledTermDETs, \@listIsolineCoef);
 
             if (! $det->successful())
             {
                 print STDERR "Warning: Failed to produce DET plot for ALL data\n";
             }
-
-            $dset->addDET($det, "ALL");
+            $dset->addDET("ALL", $det);
         }
         
         if ($requestDETCurve)
@@ -606,7 +606,7 @@ if($haveReports)
                     print STDERR "Warning: Failed to produce DET plot for $stype subset data\n";
                 }
                 
-                $dset->addDET($det, $stype);
+                $dset->addDET($stype, $det);
             }
         }
         
@@ -614,7 +614,19 @@ if($haveReports)
 
         if ($requestDETCurve)
         {
-            $dset->writeMultiDET($outputreportDETCurve);
+  #            $dset->writeMultiDET($outputreportDETCurve);
+           my $options = { ("Xmin" => .0001,
+       		   "Xmax" => 40,
+       		   "Ymin" => 5,
+       		   "Ymax" => 98,
+       		   "DETShowPoint_Actual" => 1,
+       		   "DETShowPoint_Best" => 1,
+       		   "xScale" => "nd",
+       		   "yScale" => "nd",
+       		   "ColorScheme" => "color",
+              "createDETfiles" => 1,
+              "serialize" => 1 ) };
+            print $dset->renderAsTxt($outputreportDETCurve, 1, 1, $options, "");                                                                     
         }
     
         # html
