@@ -1332,6 +1332,25 @@ sub _centerJust(){
   $self->_nChrStr($left, " ") . $str . $self->_nChrStr($right, " ");
 }
 
+sub loadGridFromSTDIN{
+  my ($renderer) = @_;
+ 
+  my $at = new AutoTable();
+  while (<STDIN>){
+    chomp;
+    my @a = split;
+    $at->addData($a[0], $a[1], $a[2]);
+  }
+  if ($renderer eq "Txt") {
+    print($at->renderTxtTable(1));
+  } elsif ($renderer eq "HTML") {
+    print($at->renderHTMLTable(1));
+  } elsif ($renderer eq "LaTeX") {
+    print($at->renderLaTeXTable(1)); 
+  } else {
+    die "Error: I need a Renderer for now '$renderer'\n";
+  }
+}
 
 ##########
 
@@ -1670,12 +1689,12 @@ sub renderCSVandSpecial { return($_[0]->__renderCSVcore(1, $_[1], $_[2])); }
 ################## Access functions #########################################
 
 sub getData{
-  my ($self, $rowid, $colid) = @_;
+  my ($self, $colid, $rowid) = @_;
   
   if (defined($self->{data}{&__getLID($rowid, $colid)})) {
     return $self->{data}{&__getLID($rowid, $colid)};
   }
-  return("oiops");    
+  return(undef);    
 }
 
 sub getColIDs{
