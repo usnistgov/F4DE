@@ -1,6 +1,6 @@
 File:  README
-Date:  November 3, 2011
-F4DE Version: 2.3.4
+Date:  March 21, 2012
+F4DE Version: 2.4
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
@@ -59,6 +59,12 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - TV10SED-SubmissionChecker - A tool designed to help confirm submission
       archives before transmitting them to NIST.
 
+  *  2011 TRECVID Multimedia Event Detection Evaluation. 
+    - DEVA_cli - The main evaluation script. 
+    - TV11MED-SubmissionChecker - A tool designed to help confirm MED11 submission 
+      archives before transmitting them to NIST.
+    - Scoring Primer: DEVA/doc/TRECVid-MED11-ScoringPrimer.html
+
   *  2011 TRECVID Surveillance Event Detection Evaluation. 
     - Same tools as the 2008 TRECVID Surveillance Event Detection Evaluation
       (TV08Scorer, TV08ViperValidator, TV08MergeHelper, 
@@ -66,11 +72,17 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - TV11SED-SubmissionChecker - A tool designed to help confirm SED11 submission
       archives before transmitting them to NIST. 
 
-  *  2011 TRECVID Multimedia Event Detection Evaluation. 
+  *  2012 TRECVID Multimedia Event Detection Evaluation. 
     - DEVA_cli - The main evaluation script. 
-    - TV11MED-SubmissionChecker - A tool designed to help confirm MED11 submission 
-      archives before transmitting them to NIST.
-    - Scoring Primer: DEVA/doc/TRECVid-MED11-ScoringPrimer.html
+
+  *  2012 TRECVID Surveillance Event Detection Evaluation. 
+    - Same tools as the 2008 TRECVID Surveillance Event Detection Evaluation
+      (TV08Scorer, TV08ViperValidator, TV08MergeHelper, 
+      TV08_BigXML_ValidatorHelper)
+
+  *  KWS Evaluation.
+    - KWSEval - The main evaluation script.
+  
 
 In addition to evaluation tools, the package contains the following related tools:
 

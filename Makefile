@@ -25,6 +25,7 @@ all:
 	@echo "  AVSS09check     only run checks for the AVSS09 subsection"
 	@echo "  SQLitetoolscheck  only run checks for the SQLite_tools subsection"
 	@echo "  DEVAcheck       only run checks for the DEVA subsection"
+	@echo "  KWSEvalcheck    only run checks for the KWSEval subsection"
 	@echo "NOTE: for each tool specific check it is first required to run first 'make mincheck' to insure that the minimum requirements are met"
 	@echo ""
 	@echo "[install section -- requires the F4DE_BASE environment variable set]"
@@ -35,6 +36,7 @@ all:
 	@echo "  VidATinstall    only install the VidAT tools set"
 	@echo "  SQLitetoolsinstall  only install the SQLite tools set"
 	@echo "  DEVAinstall     only install the DEVA subsection"
+	@echo "  KWSEvalinstall  only install the KWSEval subsection"
 	@echo "NOTE: before installing a tool subset, run both 'make mincheck' and the check related to this tool to confirm that your system has all the required components to run the tool"
 	@echo ""
 
@@ -53,6 +55,7 @@ install:
 	@make VidATinstall
 	@make SQLitetoolsinstall
 	@make DEVAinstall
+	@make KWSEvalinstall
 
 #####
 
@@ -64,6 +67,7 @@ install_noman:
 	@make VidATinstall
 	@make SQLitetoolsinstall
 	@make DEVAinstall_noman
+	@make KWSEvalinstall
 
 #####
 
@@ -221,6 +225,20 @@ DEVAinstall_noman:
 ##########
 
 KWSEVALDIR=KWSEval
+KWSEVALTOOLS=tools/KWSEval/KWSEval.pl
+
+KWSEvalinstall:
+	@make KWSEvalinstall_common
+	@echo ""
+	@echo ""
+
+KWSEvalinstall_common:
+	@echo ""
+	@echo "********** Installing KWSEval tools"
+	@make commoninstall_common
+	@perl installer.pl -x -r ${F4DE_BASE} bin ${KWSEVALDIR}/${KWSEVALTOOLS}
+	@perl installer.pl ${F4DE_BASE} lib ${KWSEVALDIR}/*.pm
+
 
 ##########
 
@@ -255,6 +273,7 @@ check:
 #	@make SQLitetoolscheck
 # SQLitetoolscheck is done as part of DEVAcheck
 	@make DEVAcheck
+	@make KWSEvalcheck
 	@echo ""
 	@echo "***** All check tests successful"
 	@echo ""
@@ -299,6 +318,13 @@ DEVAcheck:
 	@(cd ${DEVADIR}/test; make check)
 	@echo ""
 	@echo "***** All DEVA checks ran successfully"
+	@echo ""
+
+KWSEvalcheck:
+	@echo "***** Running KWSEval checks ..."
+	@(cd ${KWSEVALDIR}/test; make check)
+	@echo ""
+	@echo "***** All KWSEval checks ran successfully"
 	@echo ""
 
 check_common:
@@ -369,8 +395,6 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/CCD
 ## R_tools
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/R_tools
-## KWSEval
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}
 
 create_mans:
 # common
