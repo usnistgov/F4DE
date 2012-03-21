@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/DEVA_cli/DEVA_cli.pl -o res-test3d.txt.dir --BlockAverage --derivedSys SQL_DeriveSystem.sql -j 0.65625 -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata  ; cat res-test3d.txt.dir/scoreDB.scores.txt
+[[COMMANDLINE]] ../../tools/DEVA_cli/DEVA_cli.pl -o res-test3d.txt.dir --blockName Color --BlockAverage --derivedSys SQL_DeriveSystem.sql -j 0.65625 -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata  ; cat res-test3d.txt.dir/scoreDB.scores.txt
 [[RETURN CODE]] 0
 [[STDOUT]]
 ***** Generating config files
@@ -25,10 +25,10 @@ Constant parameters:
 
 Combined DET Plot: res-test3d.txt.dir/scoreDB.det.png
 
-|                       |           Inputs            |                               Actual Decision NDC Analysis                               |              Minimum NDC Analysis              |                                                      DET Curve Graphs                                                      |
-|         Title         |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   PFA    |  PMiss   |   NDC    |  Dec. Tresh  |   PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                        DET Curve                         |                         Threshold Curve                         |
-|-----------------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+----------+--------------+----------+----------+----------+---------------+----------------------------------------------------------+-----------------------------------------------------------------+
-|   Block Block Average |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.8730 |   0.2610 |   1.1340 |       0.6562 |   0.0093 |   0.9193 |   0.9286 |        0.9309 |   res-test3d.txt.dir/scoreDB.det.Block_Block_Average.png |   res-test3d.txt.dir/scoreDB.det.Block_Block_Average.thresh.png |
+|                       |                 Inputs                 |                               Actual Decision NDC Analysis                               |              Minimum NDC Analysis              |                                                      DET Curve Graphs                                                      |
+|         Title         |  #Color  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   PFA    |  PMiss   |   NDC    |  Dec. Tresh  |   PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                        DET Curve                         |                         Threshold Curve                         |
+|-----------------------+----------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+----------+--------------+----------+----------+----------+---------------+----------------------------------------------------------+-----------------------------------------------------------------+
+|   Color Color Average |        4 |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.8730 |   0.2610 |   1.1340 |       0.6562 |   0.0093 |   0.9193 |   0.9286 |        0.9309 |   res-test3d.txt.dir/scoreDB.det.Color_Color_Average.png |   res-test3d.txt.dir/scoreDB.det.Color_Color_Average.thresh.png |
 
 [[STDERR]]
 
