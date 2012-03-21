@@ -18,9 +18,11 @@ use strict;
 
 use KWSMappedRecord;
 use DETCurve;
-use KWSDETSet;
-use KWSTrials;
+#use KWSDETSet;
+#use KWSTrials;
 use KWSTools;
+use MetricTWV;
+use TrialsTWV;
 require File::Spec;
 use Encode;
 use encoding 'euc-cn';
@@ -666,6 +668,7 @@ sub GenerateOccurrenceReport
         {
             $stats{TOTAL}{$type}{VALUE} = sprintf("%.4f", ($self->{V}*$stats{TOTAL}{$type}{CORR} - $self->{C}*$stats{TOTAL}{$type}{FA})/($self->{V}*$stats{TOTAL}{$type}{REF}) );
             $stats{TOTAL}{$type}{PMISS} = sprintf("%.4f", 1 - ($stats{TOTAL}{$type}{CORR} / $stats{TOTAL}{$type}{REF}));
+#            print "OCC Weight $type $stats{TOTAL}{$type}{VALUE} = sprintf(%.4f, ($self->{V}*$stats{TOTAL}{$type}{CORR} - $self->{C}*$stats{TOTAL}{$type}{FA})/($self->{V}*$stats{TOTAL}{$type}{REF}) );\n";
         }
         else
         {
@@ -685,6 +688,7 @@ sub GenerateOccurrenceReport
         if( ($stats{TOTAL}{$type}{NBR_TERMS} != 0) && ($stats{MEAN}{ALL}{NBR_TERMS} != 0) )
 		{
 			$stats{MEAN}{$type}{TERMWEIGHTEDVALUE} = 1 - ( ($stats{MEAN}{$type}{PMISS}/$stats{TOTAL}{$type}{NBR_TERMS}) + ( ($self->{C}/$self->{V})*((1/$stats{COEFF}{PROBOFTERM}) - 1) * $stats{MEAN}{$type}{PFA} / $stats{MEAN}{ALL}{NBR_TERMS} ) );
+#  print "Term weight $type	$stats{MEAN}{$type}{TERMWEIGHTEDVALUE} = 1 - ( ($stats{MEAN}{$type}{PMISS}/$stats{TOTAL}{$type}{NBR_TERMS}) + ( ($self->{C}/$self->{V})*((1/$stats{COEFF}{PROBOFTERM}) - 1) * $stats{MEAN}{$type}{PFA} / $stats{MEAN}{ALL}{NBR_TERMS} ) );\n";
 		}
 			
         foreach my $align("REF","CORR","FA","MISS","VALUE","PMISS","PFA")#,"TERMWEIGHTEDVALUE")
@@ -2298,12 +2302,12 @@ sub ReportConditionalHTML
 
 sub GenerateDETReport
 {
-    my ($self, $filter_termsIDs, $filter_filechannels, $filter_types, $lineTitle, $KoefC, $KoefV, $trialsPerSec, $probOfTerm, $pooledTermDETs, $listIsolineCoef) = @_;
+    my ($self, $filter_termsIDs, $filter_filechannels, $filter_types, $lineTitle, $KoefV, $KoefC, $trialsPerSec, $probOfTerm, $pooledTermDETs, $listIsolineCoef) = @_;
 
     my $sysMinScore = 9e99;
 
-    my $trial = new KWSTrials("Term Detection", "Term", "Occurrence");
-    
+#    my $trial = new TrialsTWV("Term Detection", "Term", "Occurrence");
+
     my %filechantype;
 
     my $signalDuration = 0.0;
@@ -2320,10 +2324,15 @@ sub GenerateDETReport
             $signalDuration += $self->{ECF}->{EXCERPT}[$i]->{DUR};
         }
     }
-    
+
+    my $trial = new TrialsTWV({ ("TotDur" => $signalDuration, "TrialsPerSecond" => $trialsPerSec, 
+                                 'IncludeBlocksWithNoTargets' => 0) });
+    my $met = new MetricTWV({ ('Cost' => $KoefC, 'Value' => $KoefV, 'Ptarg' => $probOfTerm) }, $trial);
+
     foreach my $termid(sort keys %{ $self->{MAPPINGS} } )
     {
         next if(!EltInList($filter_termsIDs, $termid));
+        my $trialsAdded = 0;
             
         for(my $i=0; $i<@{ $self->{MAPPINGS}->{$termid}{MAPPED} }; $i++)
         {
@@ -2337,13 +2346,13 @@ sub GenerateDETReport
             next if(!EltInList($filter_types, $type));
             
             $trial->addTrial($termid, $self->{MAPPINGS}->{$termid}{MAPPED}[$i][0]->{SCORE}, $self->{MAPPINGS}->{$termid}{MAPPED}[$i][0]->{DECISION}, 1);
+            $trialsAdded ++;
 
             if ($self->{MAPPINGS}->{$termid}{MAPPED}[$i][0]->{SCORE} < $sysMinScore)
             {
                 $sysMinScore = $self->{MAPPINGS}->{$termid}{MAPPED}[$i][0]->{SCORE} 
             }	    
         }
-        
         for(my $i=0; $i<@{ $self->{MAPPINGS}->{$termid}{UNMAPPED_SYS} }; $i++)
         {
             my $file = $self->{MAPPINGS}->{$termid}{UNMAPPED_SYS}[$i]->{FILE};
@@ -2356,6 +2365,7 @@ sub GenerateDETReport
             next if(!EltInList($filter_types, $type));
             
             $trial->addTrial($termid, $self->{MAPPINGS}->{$termid}{UNMAPPED_SYS}[$i]->{SCORE}, $self->{MAPPINGS}->{$termid}{UNMAPPED_SYS}[$i]->{DECISION}, 0);
+            $trialsAdded ++;
 
             if ($self->{MAPPINGS}->{$termid}{UNMAPPED_SYS}[$i]->{SCORE} < $sysMinScore)
             {
@@ -2374,13 +2384,20 @@ sub GenerateDETReport
             
             next if(!EltInList($filter_types, $type));
             
-            $trial->addTrial($termid, $sysMinScore, "OMITTED", 1);
+            $trial->addTrial($termid, undef, "OMITTED", 1);
+            $trialsAdded ++;
         }      
+        if ($trialsAdded == 0){
+          ### This term made it through the checks but there were not trials (either miss or FA) so add the 
+          ### and empty block to the trials structure
+          Misc::error_quit("Failed to add an empty block") unless($trial->addEmptyBlock($termid));
+        }
     }
     
-    $trial->setPooledTotalTrials(sprintf("%.0f",$trialsPerSec * $signalDuration));
+#    $trial->setPooledTotalTrials(sprintf("%.0f",$trialsPerSec * $signalDuration));
     
-    return(new DETCurve($trial, $pooledTermDETs ? "pooled" : "blocked", undef, $lineTitle, $KoefC, $KoefV, $probOfTerm, $listIsolineCoef));
+#    return(new DETCurve($trial, $met, $pooledTermDETs ? "pooled" : "blocked", undef, $lineTitle, $KoefC, $KoefV, $probOfTerm, $listIsolineCoef));
+    return(new DETCurve($trial, $met, $lineTitle, $listIsolineCoef, MMisc::cmd_which("gzip"), 0));
 }
 
 sub MergeDETs
