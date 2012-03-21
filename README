@@ -134,6 +134,9 @@ The only pre-requisites of the tool are:
 
 ----- Actual Installation:
 
+Note: Most of the F4DE tools are made so that they can be run from the directory 
+they are uncompressed from, and therefore installation is optional.
+
 Installation is a 4 step process:
 
   1. Run 'make' to get a list of the "check" options available and at minimum
