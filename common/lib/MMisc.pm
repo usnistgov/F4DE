@@ -21,6 +21,7 @@ package MMisc;
 # $Id$
 
 use strict;
+##use Carp;
 
 use File::Temp qw(tempfile tempdir);
 use File::Copy;
@@ -882,6 +883,7 @@ sub warn_print {
 ##########
 
 sub error_exit {
+#  $Carp::Verbose = 1;  carp(1);
   exit(1);
 }
 
@@ -1460,6 +1462,16 @@ sub ls_ok {
   return(1);
 }
 
+#### 
+
+sub randomize {
+  my @d = ();
+  while (@_) {                                                                                                                                                                                                                            
+    push @d, splice(@_, rand @_, 1);                                                                                                                                                                                                
+  }     
+  return @d;
+}
+
 ####################
 
 sub get_currenttime { return([gettimeofday()]); }
@@ -1749,7 +1761,7 @@ sub unmarshal_matrix {
 sub filterArray {
   my ($array_ref, $expr) = @_;
   
-  for (my $i; $i<@$array_ref; $i++){
+  for (my $i=0; $i<@$array_ref; $i++){
     if ($array_ref->[$i] =~ /$expr/){
       splice (@$array_ref, $i, 1);
       $i--;  ## The splice reduces the size of the array so redo this index
