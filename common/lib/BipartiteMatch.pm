@@ -977,7 +977,7 @@ sub _weighted_bipartite_graph_matching {
     my @k3tmp = keys %hcost;
     for (my $i3 = 0; $i3 < scalar @k3tmp; $i3++) {
       $row = $k3tmp[$i3];
-      next if (! defined $hcost{$row}{$col});
+      next if ((! MMisc::safe_exists(\%hcost, $row, $col)) || (! defined $hcost{$row}{$col}));
       my $val = $hcost{$row}{$col};
       $col_min[$l] = $val if ($val < $col_min[$l]);
     }
