@@ -24,6 +24,7 @@ use MetricFuncs;
 use MetricTestStub;
 use MetricTV08;
 use MetricNormLinearCostFunct;
+use MetricTWV;
 
 use Data::Dumper;
 use DETCurveSet;
@@ -57,6 +58,7 @@ sub new
        GZIPPROG => (defined($gzipPROG) ? $gzipPROG : "gzip"),
        EVALSTRUCT => (defined($evalstruct)) ? 1 : 0,
        POINT_COMPUTATION_ATTEMPTED => 0,
+       FIXED_MFA_VLAUES => undef,
       };
         
     bless $self;
@@ -291,18 +293,39 @@ sub blockWeightedUnitTest()
     push @points, [ (0.2,  0.500, 0.556, -555.000, 0.500,    0.255,  254.235,   3) ];
     push @points, [ (0.3,  0.500, 0.500, -499.450, 0.500,    0.167,  166.401,   3) ];
     push @points, [ (0.4,  0.583, 0.500, -499.533, 0.382,    0.167,  166.525,   3) ];
-    push @points, [ (0.41,  0.583, 0.444, -443.983, 0.382,    0.096,   96.288,   3) ];
-    push @points, [ (0.5, 0.667, 0.403, -402.404, 0.382,    0.087,   86.407,   3) ];
-    push @points, [ (0.51,  0.667, 0.347, -346.854, 0.382,    0.024,   24.344,   3) ];
-    push @points, [ (0.6, 0.667, 0.250, -249.642, 0.382,    0.083,   83.076,   3) ];
-    push @points, [ (0.61,  0.667, 0.194, -194.092, 0.382,    0.048,   48.397,   3) ];
-    push @points, [ (0.7, 0.667, 0.097,  -96.879, 0.382,    0.087,   86.568,   3) ];
+    push @points, [ (0.41, 0.583, 0.444, -443.983, 0.382,    0.096,   96.288,   3) ];
+    push @points, [ (0.5,  0.667, 0.403, -402.404, 0.382,    0.087,   86.407,   3) ];
+    push @points, [ (0.51, 0.667, 0.347, -346.854, 0.382,    0.024,   24.344,   3) ];
+    push @points, [ (0.6,  0.667, 0.250, -249.642, 0.382,    0.083,   83.076,   3) ];
+    push @points, [ (0.61, 0.667, 0.194, -194.092, 0.382,    0.048,   48.397,   3) ];
+    push @points, [ (0.7,  0.667, 0.097,  -96.879, 0.382,    0.087,   86.568,   3) ];
     push @points, [ (0.8,  0.833, 0.056,  -55.383, 0.289,    0.096,   95.927,   3) ];
     push @points, [ (0.9,  0.833, 0.000,    0.167, 0.289,    0.000,    0.289,   3) ];
     push @points, [ (1.0,  0.917, 0.000,    0.083, 0.144,    0.000,    0.144,   3) ];
 
     my $ret = $blockdet->testGeneratedPoints(\@points, "  ");
     die $ret if ($ret ne "ok");
+    
+    print " Checking MMiss for fixed MFA...";
+    my $MMissPnts = $blockdet->computeMMissForFixedMFA([(.03, .08, .5, .6, .7, .9)]);
+    die "Error: Computation of MMiss for fixed MFA failed for id 1" if (abs($MMissPnts->[0]{InterpMMiss} - 0.8333) >= 0.0001);
+    die "Error: Computation of MMiss for fixed MFA failed for id 2" if (abs($MMissPnts->[1]{InterpMMiss} - 0.7355) >= 0.0001);
+    die "Error: Computation of MMiss for fixed MFA failed for id 3" if (abs($MMissPnts->[2]{InterpMMiss} - 0.5416) >= 0.0001);
+    die "Error: Computation of MMiss for fixed MFA failed for id 4" if (abs($MMissPnts->[3]{InterpMMiss} - 0.5000) >= 0.0001);
+    die "Error: Computation of MMiss for fixed MFA failed for id 5" if (abs($MMissPnts->[4]{InterpMMiss} - 0.4272) >= 0.0001);
+    die "Error: Computation of MMiss for fixed MFA failed for id 6" if (abs($MMissPnts->[5]{InterpMMiss} - 0.2636) >= 0.0001);
+    ##
+    die "Error: Computation of Score for fixed MFA failed for id 1" if (abs($MMissPnts->[0]{InterpScore} - 0.8460) >= 0.0001);
+    die "Error: Computation of Score for fixed MFA failed for id 2" if (abs($MMissPnts->[1]{InterpScore} - 0.7413) >= 0.0001);
+    die "Error: Computation of Score for fixed MFA failed for id 3" if (abs($MMissPnts->[2]{InterpScore} - 0.3500) >= 0.0001);
+    die "Error: Computation of Score for fixed MFA failed for id 4" if (abs($MMissPnts->[3]{InterpScore} - 0.1200) >= 0.0001);
+    die "Error: Computation of Score for fixed MFA failed for id 5" if (abs($MMissPnts->[4]{InterpScore} - 0.1000) >= 0.0001);
+    die "Error: Computation of Score for fixed MFA failed for id 6" if (abs($MMissPnts->[5]{InterpScore} - 0.1000) >= 0.0001);
+    print "  OK\n";
+    
+    print " Checking Area...";
+    $blockdet->computeArea();
+    print "  OK\n";
   }
 
 ### This method compares a "100% correct" 2-dim table of point to the calculated points
@@ -797,10 +820,11 @@ sub Compute_blocked_DET_points
     my $previousAvgMfa = 0;
     my $findMaxComb = ($self->{METRIC}->combType() eq "maximizable" ? 1 : 0);
 
+
     ### Reduce the block set to only ones with targets and setup the DS!
     foreach $block ($trial->getBlockIDs()) {
-      next if ($trial->getNumTarg($block) <= 0);
-        
+      next if (! $trial->isBlockEvaluated($block));
+
       $numBlocks++;
       $blocks{$block} = { TARGi => 0, NONTARGi => 0, MFA => undef, MMISS => undef, COMB => undef, PREVMFA => undef, PREVMMISS => undef,
                           TARGNScr => $trial->getNumTargScr($block), NONTARGNScr =>  $trial->getNumNonTargScr($block)};
@@ -817,7 +841,8 @@ sub Compute_blocked_DET_points
           if (!defined($maxScore) || $maxScore < $trial->getNonTargDecScr($block,$blocks{$block}{NONTARGNScr} - 1));
       }
     }
-    
+
+    # print Dumper(\%blocks);    
     $self->{MINSCORE} = $minScore;
     $self->{MAXSCORE} = $maxScore;
     
@@ -954,11 +979,128 @@ sub computeBlockWeighted
         $blocks->{$b}{MFA}   = $NFalse; #$self->{METRIC}->errFABlockCalc  ($NFalse, $b);
       }
     }
+#    foreach $b (keys %$blocks) {
+#        my $NMiss = $blocks->{$b}{TARGi} + $trial->getNumOmittedTarg($b);
+#        my $NFalse = $blocks->{$b}{NONTARGNScr} - $blocks->{$b}{NONTARGi};                                                                                                                                   
+#        print "($b, $NMiss, $NFalse)"
+#    }
+#    print "\n";
 
     my ($combAvg, $combSSD, $missAvg, $missSSD, $faAvg, $faSSD) = $self->{METRIC}->combBlockSetCalc($blocks);
         
     ($missAvg, $faAvg, $combAvg, $missSSD, $faSSD, $combSSD);
   }
+
+sub interpolateYDim{
+  my ($x1, $y1, $x2, $y2, $newX) = @_;
+#  print "Interpolate: ($x1,$y1) ($x2,$y2) = newX=$newX\n";
+  my ($newY) = ($x2-$x1 == 0) ? (($y2+$y1)/2) : ($y2 + ( ($y1-$y2) * (($x2-$newX) / ($x2-$x1))));  
+#  print ("  newY=$newY\n");
+  return $newY;
+
+### unit tests
+#  die if (abs(interpolateYDim(1,1,3,3,2.5) - 2.5) >= 0.0001);
+#  die if (abs(interpolateYDim(3,3,1,1,2.5) - 2.5) >= 0.0001);
+#  die if (abs(interpolateYDim(1,2,4,5,2.5) - 3.5) >= 0.0001);
+  ## extrapolation
+#  die if (abs(interpolateYDim(1,2,4,5,7.5) - 8.5) >= 0.0001);
+  ## horizontal line
+#  die if (abs(interpolateYDim(1,2,2,2,7.5) - 2) >= 0.0001);
+  ## vertical line
+#  die if (abs(interpolateYDim(1,2,1,8,1) - 5) >= 0.0001);
+
+}
+
+sub computeMMissForFixedMFA{
+  my ($self, $MFAPoints) = @_;
+  
+  $self->computePoints();
+  my @computedMMiss = ();
+
+  ## Sort the target FA points to be in ascending order
+  my @sortedMFA = sort {$a<=>$b} @$MFAPoints;
+  
+  ### Loop through all the computed points, 
+  my $points = $self->getPoints();
+
+  ### Iterate through the range on REVERSE ORDER to match the sortedMFA
+  my $lastMFA = 0.0;
+  my $lastMMiss = 1.0;
+  my $lastThresh = $points->[@$points - 1][0];
+  for (my $ind=@$points - 1; $ind >= 0 && @sortedMFA > 0; $ind--){
+    if ($lastMFA <= $sortedMFA[0] && $sortedMFA[0] <= $points->[$ind][2]){
+      #print "Found line for $sortedMFA[0] @ $ind\n";
+      if ($ind-1 >= 0 && ($sortedMFA[0] == $points->[$ind-1][2])){
+        ### Look ahead for constant MFAs and use the last index
+        $lastMFA = $points->[$ind][2];
+        $lastMMiss = $points->[$ind][1];
+        $lastThresh = $points->[$ind][0];
+        while ($ind-1 >= 0 && ($sortedMFA[0] == $points->[$ind-1][2])){
+          $ind --;
+          #print "   shifting index for mulitiple MFAs\n";
+        }
+      }
+      push @computedMMiss, { MFA => $sortedMFA[0],
+                             InterpMMiss => 
+                                 interpolateYDim($lastMFA, $lastMMiss, $points->[$ind][2], $points->[$ind][1], $sortedMFA[0]),
+                             InterpScore => 
+                                 interpolateYDim($lastMFA, $lastThresh, $points->[$ind][2], $points->[$ind][0], $sortedMFA[0]) };
+      shift(@sortedMFA);
+    }
+    $lastMFA = $points->[$ind][2];
+    $lastMMiss = $points->[$ind][1];
+    $lastThresh = $points->[$ind][0];
+  }
+
+  ### Interpolate the last point...     Remember there is NO 0% miss, 100%FA point
+  while (@sortedMFA > 0){
+      push @computedMMiss, { MFA => $sortedMFA[0],
+                             InterpMMiss => 
+                                 interpolateYDim($lastMFA, $lastMMiss, 0, 1, $sortedMFA[0]),
+                             InterpScore => $lastThresh};
+      shift(@sortedMFA);
+  }
+
+  $self->{FIXED_MFA_VALUES} = \@computedMMiss;
+}
+
+sub _area{
+  my ($x1, $y1, $x2, $y2) = @_;
+  my $width = ($x2-$x1);
+  $width *= -1 if ($width < 0);
+  my $area = $width * ($y1+$y2)/2;
+  # print "Area ($x1, $y1) -> ($x2, $y2) = $area\n";
+  return($area);
+}
+
+##
+##        *
+##        |     *
+##        |     |      *
+##        |     |      |
+##        ---------------
+## thr    max          min
+## index  max          min  
+sub computeArea{
+  my ($self) = @_;
+  
+  $self->computePoints();
+  
+  ### Loop through all the computed points, 
+  my $points = $self->getPoints();
+
+  my $area = 0;
+  ### Interpolate the first point...  Remember there is NO 0% miss, 100%FA point
+  $area += _area(1.0, 0, $points->[0][2], $points->[0][1]);
+  ### Iterate throught the range
+  for (my $ind=0; $ind< @$points - 1; $ind++){
+    $area += _area($points->[$ind][2], $points->[$ind][1], $points->[$ind+1][2], $points->[$ind+1][1]);
+  }
+  ### Interpolate the last point...  Remember there is NO 0% miss, 100%FA point
+  $area += _area($points->[$#$points][2], $points->[$#$points][1], 0, 1.0);
+
+  #  print "Total Area = $area\n";
+}
 
 sub ppndf
   {
