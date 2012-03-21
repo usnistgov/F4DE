@@ -98,7 +98,6 @@ sub do_less_simple_test {
     if (! MMisc::make_wdir($tdir));
   
   my $command = "$tool -o $tdir $cadd $trial_metric_add ; cat $tdir/scoreDB.scores.txt";
-  print "$command\n";
   my $retval = &do_simple_test($testname, $subtype, $command, $res, $rev);
 
   if ($mode eq $mmk) {
