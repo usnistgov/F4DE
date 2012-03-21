@@ -319,7 +319,12 @@ sub unitTest {
   use DETCurve;
   use DETCurveSet;
   use DETCurveGnuplotRenderer;
-  my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial),
+
+  #  my $t = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 80, 'Ptarg' => 0.001 ) }, $trial);
+  #  print " nom ".$t->combCalc(0.75, 0.06)."\n";
+  #  print " nom ".$t->combCalc(0.5, 0.04)."\n";
+
+  my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial);
   my $DNmet = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $DNtrial);
 
   ##############################################################################################
@@ -344,7 +349,7 @@ sub unitTest {
   $exp = 1.0; $ret = $met->FAForGivenComb(9.9, 0.0); 
   die "\nError: FA for Cost=1.0, Pmiss=0.0 was = $ret NOT $exp\n" if (abs($ret - $exp) > 0.0001);
 
-  my $ret = $met->testActualDecisionPerformance([ ('0.17425', undef, '0.1', undef, '0.00750', undef) ], "  ");
+  $ret = $met->testActualDecisionPerformance([ ('0.17425', undef, '0.1', undef, '0.00750', undef) ], "  ");
   die $ret if ($ret ne "ok");
   
   if (defined($dir)){
