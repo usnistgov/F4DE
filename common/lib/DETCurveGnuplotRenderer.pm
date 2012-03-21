@@ -1102,7 +1102,7 @@ sub _drawIsoratiolines{
     printf ISODAT "\n";
   }
   close( ISODAT );
-  push @$PLOTCOMS, "  '$troot' title 'Iso-cost ratio lines' with lines lt $color";
+  push @$PLOTCOMS, "  '$troot' title 'Iso-cost ratio line(s)' with lines lt $color";
 }
 
 sub _drawIsometriclines{
@@ -1425,7 +1425,7 @@ sub writeMultiDetGraph
       my $closedPoint = $self->{pointTypes}->[ $d % scalar(@{ $self->{pointTypes} }) ]->[1];
       my $lineWidth = $self->{lineWidths}->[ $d % scalar(@{ $self->{lineWidths} }) ];
       my $color = $self->{colorsRGB}->[ $d % scalar(@{ $self->{colorsRGB} }) ];
-      my $nokey = "";
+      my $displayKey = "true";
       my $thisPointSize = $self->{pointSize};
       my $thisPointSizeDiv2 = $thisPointSize / 2;
       
@@ -1439,7 +1439,7 @@ sub writeMultiDetGraph
           $thisPointSizeDiv2 = $thisPointSize / 2;
           $lineWidth = $info->{lineWidth} if (exists($info->{lineWidth}));
           $color = $info->{color}         if (exists($info->{color}));
-          $nokey = $info->{nokey} if (exists($info->{nokey}));
+          $displayKey = $info->{displayKey} if (exists($info->{displayKey}));
           if (exists($info->{pointTypeSet})){
              if ($info->{pointTypeSet} eq "square")    { $openPoint = 4;  $closedPoint = 5; } 
              if ($info->{pointTypeSet} eq "circle")    { $openPoint = 6;  $closedPoint = 7; } 
@@ -1447,7 +1447,6 @@ sub writeMultiDetGraph
              if ($info->{pointTypeSet} eq "utriangle") { $openPoint = 10; $closedPoint = 11; }
              if ($info->{pointTypeSet} eq "diamond")   { $openPoint = 12; $closedPoint = 13; }
           }
-          
         }
       }
 
@@ -1494,7 +1493,9 @@ sub writeMultiDetGraph
           ### PLOT the Curve with NO TITLE because it will be used for the 1st point 
           push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol notitle with lines lc $color lw $lineWidth";
         } else { 
-          push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with lines lc $color lw $lineWidth";
+          my $title = "title '"._gnuplotSafeString($ltitle)."'";
+          $title = "notitle" if ($displayKey eq "false");
+          push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol $title with lines lc $color lw $lineWidth";
           $ltitle = "";
         }
         
@@ -1505,8 +1506,9 @@ sub writeMultiDetGraph
           
           $ltitle .= " - " if ($ltitle ne "");
           $ltitle .= $self->_getLineTitleString("Actual", 0, $detset->getDETForID($d), 
-                                                \@offAxisLabels, $color, $openPoint, $thisPointSize, 0); 
-          push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with linespoints lc $color pt $openPoint ps $thisPointSize";
+                                                \@offAxisLabels, $color, $closedPoint, $thisPointSize, 0); 
+          my $title = ($displayKey eq "false") ? "notitle" : "title '"._gnuplotSafeString($ltitle)."'";
+          push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol $title with linespoints lc $color pt $closedPoint ps $thisPointSize";
           ## Clear out the title!
           $ltitle = "";
         }
@@ -1518,8 +1520,9 @@ sub writeMultiDetGraph
 
           $ltitle .= " - " if ($ltitle ne "");
           $ltitle .= $self->_getLineTitleString("Best", 0, $detset->getDETForID($d),
-                                                \@offAxisLabels, $color, $closedPoint, $thisPointSize, 0); 
-          push @PLOTCOMS, "  '$troot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $color pt $closedPoint lw $lineWidth ps $thisPointSize";
+                                                \@offAxisLabels, $color, $openPoint, $thisPointSize, 0); 
+          my $title = ($displayKey eq "false") ? "notitle" : "title '"._gnuplotSafeString($ltitle)."'";
+          push @PLOTCOMS, "  '$troot.dat.2' using $xcol:$ycol $title with points lc $color pt $openPoint lw $lineWidth ps $thisPointSize";
 
           ## Clear out the title!
           $ltitle = "";
@@ -1533,7 +1536,8 @@ sub writeMultiDetGraph
             $ltitle .= " - " if ($ltitle ne "");
             $ltitle .= $self->_getLineTitleString("ErrorRatio", $ratio, $detset->getDETForID($d),
                                                   \@offAxisLabels, $color, $closedPoint, $thisPointSize, 0); 
-            push @PLOTCOMS, "  '$troot.dat.3' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $color pt $closedPoint lw $lineWidth ps $thisPointSizeDiv2";
+            my $title = ($displayKey eq "false") ? "notitle" : "title '"._gnuplotSafeString($ltitle)."'";
+            push @PLOTCOMS, "  '$troot.dat.3' using $xcol:$ycol $title with points lc $color pt $closedPoint lw $lineWidth ps $thisPointSizeDiv2";
             ## Clear out the title!
             $ltitle = "";
           }
@@ -1623,15 +1627,15 @@ sub writeGNUGraph{
       if ($points->[$i][7]-1 <= 0) {
         push @a, "NA NA NA NA NA NA NA NA";
       } else {
-        push @a, (ppndf($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]))), 
-                  ppndf($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]))), 
-                  ppndf($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]))),
-                  ppndf($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]))),
-                  ($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]))),
-                  ($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]))),
-                  ($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]))),
-                  ($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]))),
-                  ($points->[$i][2] - 2*($points->[$i][6] / sqrt($points->[$i][7]))));
+        push @a, ((defined($points->[$i][4]) ? ppndf($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]))) : "NA"), 
+                  (defined($points->[$i][5]) ? ppndf($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]))) : "NA"), 
+                  (defined($points->[$i][5]) ? ppndf($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]))) : "NA"),
+                  (defined($points->[$i][5]) ? ppndf($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]))) : "NA"),
+                  (defined($points->[$i][4]) ? ($points->[$i][1] - 2*($points->[$i][4] / sqrt($points->[$i][7]))) : "NA"),
+                  (defined($points->[$i][5]) ? ($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]))) : "NA"),
+                  (defined($points->[$i][4]) ? ($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]))) : "NA"),
+                  (defined($points->[$i][5]) ? ($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]))) : "NA"),
+                  (defined($points->[$i][6]) ? ($points->[$i][2] - 2*($points->[$i][6] / sqrt($points->[$i][7]))) : "NA"));
       }
       push @a, "\n";
       print DAT join(" ",@a);
@@ -1779,9 +1783,10 @@ sub writeGNUGraph{
     print DAT "\n";
     foreach my $box(@$boxDef){   print DAT ppndf(0.0).          " ".ppndf($box->{MFA})." ".(0.0)        ." ".$box->{MFA}." ";   }
     print DAT "\n";
-    foreach my $box(@$boxDef){   print DAT ppndf(0.0).          " ".ppndf(1.0).        " ".(0.0)        ." ".(1.0)      ." ";   }
+    foreach my $box(@$boxDef){   print DAT ppndf(0.0).          " ".ppndf(0.0).        " ".(0.0)        ." ".(0.0)      ." ";   }
     print DAT "\n";
     close DAT; 
+    
     ### Make the plot commands  
     my $nbox = 0;
     foreach my $box(@$boxDef){
