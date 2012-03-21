@@ -328,7 +328,7 @@ my %bid_thr = ();
 #print MMisc::get_sorted_MemDump(\%ref);
 #print MMisc::get_sorted_MemDump(\%sys);
 
-my ($mapped, $unmapped_sys, $unmapped_ref) = (0, 0, 0);
+my ($mapped, $unmapped_sys, $unmapped_ref_targ, $unmapped_ref_nontarg) = (0, 0, 0, 0);
 
 my %bid_trials = ();
 my @at = ();
@@ -373,9 +373,11 @@ foreach my $key (keys %ref) {
       &def_bid_trials($ubid);
       $bid_trials{$ubid}->addTrial($bid, undef, "OMITTED", 1);
       push(@at, [$key, $bid, $sys{$key}{$Scorecolumn}, 'OMITTED', 'TARG']) if ($GetTrialsDB);
+      $unmapped_ref_targ++;
+    } else {
+      $unmapped_ref_nontarg++;
     }
-    $unmapped_ref++;
-  }
+  } 
   
 # mapped: already done
 }
@@ -385,14 +387,15 @@ foreach my $key (sort keys %bid_trials) {
   print $bid_trials{$key}->dumpCountSummary();
 }
 
-print "Mapped      : $mapped\n";
-print "UnMapped REF: $unmapped_ref\n";
+print "Mapped              : $mapped\n";
+print "UnMapped REF Targ   : $unmapped_ref_targ\n";
+print "UnMapped REF NonTarg: $unmapped_ref_nontarg\n";
 print "UnMapped SYS: $unmapped_sys\n";
 
-my $tot2 = 2*$mapped + $unmapped_ref + $unmapped_sys;
+my $tot2 = 2*$mapped + $unmapped_ref_targ + $unmapped_ref_nontarg + $unmapped_sys;
 print "Check:\n";
-print "-- Total number of entries in REF + SYS    = $tot1\n";
-print "-- 2x mapped + Unmapped REF + Unmapped SYS = $tot2\n";
+print "-- Total number of entries in REF + SYS                                = $tot1\n";
+print "-- 2x mapped + Unmapped REF Targ + Unmapped Ref NonTarg + Unmapped SYS = $tot2\n";
 MMisc::error_quit("Problem at check point") if ($tot1 != $tot2);
 
 &add_array2TrialsDB($dbfile, \@at) if (($GetTrialsDB) && (scalar @at > 0));
