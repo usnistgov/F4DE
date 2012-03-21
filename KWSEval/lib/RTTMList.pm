@@ -15,6 +15,7 @@
 package RTTMList;
 
 use strict;
+use Data::Dumper;
 use RTTMRecord;
 use MMisc;
  
@@ -62,8 +63,25 @@ sub unitTest
     my $out3 = $rttml->findTermOccurrences("has been a", 0.5);
     print "OK\n";
     
+    print " Finding terms (9)...     ";
+    my $out9 = $rttml->findTermOccurrences("r", 0.5);
+    print "OK\n";
+    
+    print " Finding terms (10)...     ";
+    my $out10 = $rttml->findTermOccurrences("uh", 0.5);
+    print "OK\n";
+    
+    print " Finding terms (11)...     ";
+    my $out11 = $rttml->findTermOccurrences("two after", 0.5);
+    print "OK\n";
+    
+    print " Finding terms (12)...     ";
+    my $out12 = $rttml->findTermOccurrences("s.", 0.5);
+    print "OK\n";
+    
     print " Number of occurrences... ";
-    if( (@$out1 == 2) and (@$out2 == 49) and (@$out3 == 3) )
+    if( (@$out1 == 2) and (@$out2 == 49) and (@$out3 == 3) and (@$out9 == 0) and (@$out10 == 0) and (@$out11 == 1) 
+        and (@$out12 == 11) )
     {
         print "OK\n";
     }
@@ -293,10 +311,13 @@ sub findTermOccurrences
                     
                     #if($pattern2 eq $pattern1)
                     
+                    next if ($spkrs{$spkrname}[$i]->{STYPE} eq "frag");
+                    next if ($spkrs{$spkrname}[$i]->{STYPE} eq "fp");
+                    
                     my $pattern1 = $terms[$termpos];
                    	my $pattern2 = $spkrs{$spkrname}[$i]->{TOKEN};
                     
-                    if($pattern2 =~ /^$pattern1$/i)
+                    if($pattern2 =~ /^\Q$pattern1\E$/i)
                     {
                         my $contsearch = 1;            
                         push(@tmpList, $spkrs{$spkrname}[$i]);
