@@ -489,6 +489,7 @@ Returns an array of global miss/fa/comb statistics based on the actual decisions
 
     my @tmp = $self->{TRIALS}->getBlockIDs();
     for (my $i = 0; $i < scalar @tmp; $i++) {
+      next if (! $self->{TRIALS}->isBlockEvaluated($tmp[$i]));
       my $b = $tmp[$i];
       $blocks{$b}{MFA} = $self->{TRIALS}->getNumFalseAlarm($b);
       $blocks{$b}{MMISS} = $self->{TRIALS}->getNumMiss($b);
@@ -592,7 +593,6 @@ the CODE DIES as this should never happen.
     
     #    my $combAvg = $self->combErrCalc($missAvg, $faAvg);
     #    ($combAvg, undef, $missAvg, $missSSD, $faAvg, $faSSD);
-
     my @ktmp = keys %$data;
     for (my $ik = 0; $ik < scalar @ktmp; $ik++) {
       my $block = $ktmp[$ik];
@@ -612,7 +612,9 @@ the CODE DIES as this should never happen.
         $faSum += $fa;
         $faSumSqr += $fa * $fa;
         $faN ++;
-      }        
+      }     
+      
+#      print "   ($block, $miss, $fa)\n";
       ### Try to calculate the SSD of the combined metric IFF the miss and fa errors are allways defined.  If they
       ### are not for one block, then punt!
       if (defined($fa) && defined($miss)) {
@@ -626,7 +628,9 @@ the CODE DIES as this should never happen.
         $combSum = undef;
       }
     }
-    
+#    print "miss=".($missSum/$missN).",$missSum,$missSumSqr,$missN ";
+#    print "FA=".(($faN > 0) ? sprintf("%.7f",$faSum/$faN) : "NaN").",$faSum,$faSumSqr,$faN ";
+#    print "comb=".(($combN > 0 && defined($combSum)) ? ($combSum/$combN) : "NaN").",".(defined($combSum)?$combSum:"NaN").",$combSumSqr,$combN\n";
     my ($faBSet, $faBSetSSD) = (undef, undef); 
     $faBSet = $faSum / $faN if ($faN > 0);
     $faBSetSSD = MMisc::safe_sqrt((($faN * $faSumSqr) - ($faSum * $faSum)) / ($faN * ($faN - 1))) if ($faN > 1);
@@ -644,6 +648,20 @@ the CODE DIES as this should never happen.
     ($combBSet, $combBSetSSD, $missBSet, $missBSetSSD, $faBSet, $faBSetSSD);
   }
 
+####################################################################################################
+=pod
+
+=item B<computeCurveArea>(I<$missErr, I<$faErr>)
+
+Calculates the area for the curve.  The type can be ABOVE the curve (for a Pmiss, PFA curve) or BELOW the curve (for am ROC curve).  
+The measure is always called AreaUnderTheCurve: the type determines how the MMFA value is used. The value returned has a range from 
+0 to 1.
+
+=cut
+
+sub computeCurveArea(){
+
+}
 
 ####################################################################################################
 =pod

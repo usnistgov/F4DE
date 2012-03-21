@@ -52,4 +52,9 @@ sub new {
   return $self;
 }
 
+sub isBlockEvaluated{
+  my ($self, $block) = @_;
+  return ($self->getNumTarg($block) > 0 || $self->getNumFalseAlarm($block) > 0);
+}
+
 1;
