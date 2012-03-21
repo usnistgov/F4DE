@@ -109,7 +109,7 @@ foreach my $row(@rowIDs){
     }
 }
 
-$bp->horizontal("TRUE");
+$bp->setHorizontal("TRUE");
 $bp->makePlot($root);
 
 exit 0;
