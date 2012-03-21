@@ -111,9 +111,9 @@ sub unitTest(){
   my $det3 = new DETCurve($emptyTrial, 
                           new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial),
                           "DETEmpty", \@isolinecoef, undef);
-                          
-  $det3->successful();
   
+  $det3->successful();
+                          
   print " Added DETs... ";
   my $ds = new DETCurveSet("title");
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Name 1", $det1));
@@ -288,6 +288,12 @@ sub getDETList(){
   return \@arr;
 }
 
+sub hasDETs(){
+    my ($self) = @_;
+    my @keys = keys %{ $self->{DETS} };
+    scalar @keys;
+}
+
 sub _PN(){
   my ($fmt, $value) = @_;
   if (! defined($value)) {
@@ -300,13 +306,16 @@ sub _PN(){
 }
 
 sub _buildAutoTable(){
-  my ($self, $buildCurves, $includeCounts, $reportActual) = @_;
+  my ($self, $buildCurves, $includeCounts, $reportActual, $includeIsoRatios, $includeFixedMFA) = @_;
     
   my $useAT = 1;
   
   my $at = ($useAT ? new AutoTable() : new SimpleAutoTable());
 	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove", 
                               "SortRowKeyTxt" => "Alpha", "SortRowKeyCsv" => "Alpha" } );
+
+  ## Variable params get added to the report
+  my $variableParams = $self->_findVariableParams();
 
   for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
     my $det = $self->{DETList}[$d]->{DET};
@@ -315,9 +324,10 @@ sub _buildAutoTable(){
     my $trial = $det->getTrials();
     my $metric = $det->getMetric();
     my $comblab = $metric->combLab();
-        
+
     my %combData = ();
     foreach my $block (sort $trial->getBlockIDs()) {
+      next if (! $trial->isBlockEvaluated($block));
       $combData{$block}{MMISS} = $trial->getNumMiss($block);     
       $combData{$block}{MFA} = $trial->getNumFalseAlarm($block); 
     }
@@ -326,6 +336,17 @@ sub _buildAutoTable(){
     my $BSDecThresh = $trial->getTrialActualDecisionThreshold();
 
     $at->addData($det->getLineTitle(),  ($useAT ? " |" : "" ) .                       "Title",   $key);
+
+    ## if There are variable params, add them
+    foreach my $pmter ($trial->getTrialParamKeys()) {
+      next unless (exists($variableParams->{$pmter}));
+      $at->addData($trial->getTrialParamValue($pmter),  ($useAT ? "Parameters|$pmter" : "$pmter" ),   $key);
+    }
+    foreach my $pmter ($metric->getParamKeys()) {
+      next unless (exists($variableParams->{$pmter}));
+      $at->addData($metric->getParamValue($pmter),  ($useAT ? "Parameters|$pmter" : "$pmter" ),   $key);
+    }
+
 #    $at->addData("|",  ($useAT ? " |" : "" ) .                       "sw5d",   $key);
     if ($includeCounts) {
       my ($targSum, $targAvg, $targSSD) = $trial->getTotNumTarg();
@@ -334,8 +355,10 @@ sub _buildAutoTable(){
       my ($corrDetectSum, $corrDetectAvg, $corrDetectSSD) = $trial->getTotNumCorrDetect();
       my ($corrNonDetectSum, $corrNonDetectAvg, $corrNonDetectSSD) = $trial->getTotNumCorrNonDetect();
       my ($faSum, $faAvg, $faSSD) = $trial->getTotNumFalseAlarm();
-      my ($missSum, $missAvg, $missSSD) = $trial->getTotNumMiss();
-      $at->addData($targSum,  ($useAT ? "Inputs|" : "" ) .               "#Targ",   $key);
+      my ($missSum, $missAvg, $missSSD) = $trial->getTotNumMiss();  
+      my ($numBlocks) = $trial->getNumEvaluatedBlocks();
+      $at->addData($numBlocks,  ($useAT ? "Inputs|" : "" ) . "#".$trial->getBlockID,   $key) if (scalar(keys %combData) > 1);
+      $at->addData($targSum,  ($useAT ? "Inputs|" : "" ) .                  "#Targ",   $key);
       $at->addData($ntargSum,  ($useAT ? "Inputs|" : "" ) .               "#NTarg",   $key);
       $at->addData($sysSum,  ($useAT ? "Inputs|" : "" ) .               "#Sys",   $key);
       $at->addData($corrDetectSum, ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . "#CorDet",   $key);
@@ -367,10 +390,66 @@ sub _buildAutoTable(){
         $at->addData($det->getThreshPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "Threshold Curve", $key);
       }
     }
+    if ($includeIsoRatios){
+   		foreach my $cof ( sort {$a <=> $b} @{ $det->{ISOLINE_COEFFICIENTS} } ) {		
+  			if(defined($det->{ISOPOINTS}{$cof}))	{
+  				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_DETECTSCORE}),   
+  				  ($useAT ? "Iso Ratios|" : "" ) . sprintf("%.4f-Dec. Thresh", $cof),   $key);
+  				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MFA}),   
+  				  ($useAT ? "Iso Ratios|" : "" ) . sprintf("%.4f-%s", $cof, $det->getMetric()->errFALab()),   $key);
+	   			$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS}), 
+	   			  ($useAT ? "Iso Ratios|" : "" ) . sprintf("%.4f-%s", $cof, $det->getMetric()->errMissLab()), $key);
+		  		$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_COMB}),  
+		  		  ($useAT ? "Iso Ratios|" : "" ) . sprintf("%.4f-%s", $cof, $det->getMetric()->combLab()),    $key);
+			  }
+		  }  
+    }
+  
+    if ($includeFixedMFA && defined($det->{FIXED_MFA_VALUES})){
+      my $MFAFixedResults = $det->{FIXED_MFA_VALUES};
+      for (my $i=0; $i<@$MFAFixedResults; $i++){
+        my $MFA = $MFAFixedResults->[$i]->{MFA};
+        my $MMISS = $MFAFixedResults->[$i]->{InterpMMiss};
+        my $THR = $MFAFixedResults->[$i]->{InterpScore};
+				$at->addData(sprintf("%.4f", $MFA),    
+  				  ($useAT ? "FixedFA|" : "" ) . sprintf("%.4f-".$det->getMetric()->errFALab(), $MFA),   $key);
+  			$at->addData(sprintf("%.4f", $MMISS),    
+     		  ($useAT ? "FixedFA|" : "" ) . sprintf("%.4f-".$det->getMetric()->errMissLab(), $MFA),   $key);
+  			$at->addData(sprintf("%.4f", $THR),    
+     		  ($useAT ? "FixedFA|" : "" ) . sprintf("%.4f-Dec. Thresh", $MFA),   $key);
+			 
+		  }  
+    }
   }
   $at;
 }
 
+sub _findVariableParams(){
+  my ($self) = @_;
+  
+  ### Some parameters are variable based on the inputs.  Find them 
+  my %vals = ();
+  my %variableParams = ();
+  foreach my $det(@{ $self->getDETList() }){
+    my $tr = $det->getTrials();
+    foreach my $key ($tr->getTrialParamKeys()) {
+      $vals{$key}{$tr->getTrialParamValue($key)} = 1;
+    }
+    my $met = $det->getMetric();
+    foreach my $key ($met->getParamKeys()) {
+      $vals{$key}{$met->getParamValue($key)} = 1;
+    }
+  }
+  foreach my $key(keys %vals){
+    my @skey = keys %{ $vals{$key}};
+    if (@skey != 1){
+      $variableParams{$key} = 1;
+    }
+  }
+
+  return (\%variableParams);  
+}
+  
 sub renderAsTxt(){
   my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $csvfn) = @_;
     
@@ -388,8 +467,10 @@ sub renderAsTxt(){
     my $dcRend = new DETCurveGnuplotRenderer($DETOptions);
     $multiInfo = $dcRend->writeMultiDetGraph($fileRoot,  $self);
   }
-    
-  my $at = $self->_buildAutoTable($buildCurves, $includeCounts, $reportActual);
+
+  my $variableParams = $self->_findVariableParams();
+  
+  my $at = $self->_buildAutoTable($buildCurves, $includeCounts, $reportActual, $DETOptions->{DETShowPoint_Ratios});
     
   my $trial = $self->{DETList}[0]->{DET}->getTrials();
   my $metric = $self->{DETList}[0]->{DET}->getMetric();
@@ -399,11 +480,13 @@ sub renderAsTxt(){
   $info .= "System Title: ".(defined($self->{Title}) ? $self->{Title} : 'N/A')."\n\n"; 
   $info .= "Constant parameters:\n";
   foreach my $key ($trial->getTrialParamKeys()) {
-    next if ($key =~ m%^__%); # Skip hidden keys
+    next if ($key =~ m%^__%); # Skip hidden keys  
+    next if (exists($variableParams->{$key}));
     $info .= "   $key = ".$trial->getTrialParamValue($key)."\n";
   }
   foreach my $key ($metric->getParamKeys()) {
     next if ($key =~ m%^__%); # Skip hidden keys
+    next if (exists($variableParams->{$key}));
     $info .= "   $key = ".$metric->getParamValue($key)."\n";
   }
   $info .= "\n";
@@ -419,7 +502,7 @@ sub renderAsTxt(){
 }
 
 sub renderCSV {
-    my ($self, $fileRoot, $includeCounts, $DETOptions) = @_;
+    my ($self, $fileRoot, $includeCounts, $DETOptions, $fixedMFAValues) = @_;
 
   if (@{ $self->{DETList} } == 0) {
     return "Error: No DETs provided to produce a report from";
@@ -434,7 +517,7 @@ sub renderCSV {
       $multiInfo = $dcRend->writeMultiDetGraph($fileRoot, $self);
   }
 
-  my $at = $self->_buildAutoTable(1, $includeCounts, $reportActual);
+  my $at = $self->_buildAutoTable(1, $includeCounts, $reportActual, $DETOptions->{DETShowPoint_Ratios}, 1);
     
   return($at->renderCSV());
 }       
@@ -744,6 +827,32 @@ sub renderIsoRatioIntersection
 		}
 	}
 	
+	return $at->renderTxtTable(2);
+}
+
+sub renderPerfForFixedMFA
+{
+	my ($self, $MFAFixedValues) = @_;
+	
+	my $at = new AutoTable();
+	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove"} );
+
+  for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
+    my $det = $self->{DETList}[$d]->{DET};
+    my $key = $self->{DETList}[$d]->{KEY};
+ 
+    ### Compute the fixed points
+    if (@$MFAFixedValues > 0){
+      my $MFAFixedValuesResults = $det->{FIXED_MFA_VLAUES};
+      for (my $i=0; $i<@$MFAFixedValues; $i++){
+        my $rowtitle = "$key|$i";
+        $at->addData($det->{LINETITLE},                                        "DET Title",                     $rowtitle);
+  			$at->addData(sprintf("%.4f", $MFAFixedValuesResults->[$i]->{MFA}),   $det->getMetric()->errFALab(),   $rowtitle);
+    		$at->addData(sprintf("%.4f", $MFAFixedValuesResults->[$i]->{InterpMMiss}), $det->getMetric()->errMissLab(), $rowtitle);
+      }
+    } 
+  } 
+
 	return $at->renderTxtTable(2);
 }
 
