@@ -31,6 +31,11 @@ $tn = "test1";
 $com =  "-t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.oneSys.ref.csv -s MTest.oneSys.sys.csv -F SQL_filter_1block.sql";
 $testr += &do_less_simple_test($tn, "One system file, trial weighted", $com, "res-$tn.txt");
 
+### Test 1 Omitted Sys
+$tn = "test1o";
+$com =  "-t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.oneSys.ref.csv -s MTest.oneSys.omittedTrials.sys.csv -F SQL_filter_1block.omitted.sql";
+$testr += &do_less_simple_test($tn, "One system file, trial weighted, omitted system trials", $com, "res-$tn.txt");
+
 ### Test 2
 $tn = "test2";
 $com =  "-t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.oneSys.ref.csv -s MTest.oneSys.sys.csv -F SQL_filter_Nblock.sql MTest.oneSys.metadata.csv:metadata";
@@ -55,7 +60,7 @@ $testr += &do_less_simple_test($tn, "One system file, block differentiated, bloc
 ### Test 3d
 $tn = "test3d";
 #$com =  "--BlockAverage --derivedSys SQL_DeriveSystem.sql -J SQL_thresholdTable.sql -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
-$com =  "--BlockAverage --derivedSys SQL_DeriveSystem.sql -j 0.65625 -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
+$com =  "--blockName Color --BlockAverage --derivedSys SQL_DeriveSystem.sql -j 0.65625 -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold -F SQL_filter_Nblock.sql  MTest.derivSys.metadata.csv:metadata" ;
 $testr += &do_less_simple_test($tn, "Derived system file, block differentiated, block weighted", $com, "res-$tn.txt");
 
 #####
@@ -93,13 +98,13 @@ sub do_less_simple_test {
     if (! MMisc::make_wdir($tdir));
   
   my $command = "$tool -o $tdir $cadd $trial_metric_add ; cat $tdir/scoreDB.scores.txt";
-
+  print "$command\n";
   my $retval = &do_simple_test($testname, $subtype, $command, $res, $rev);
 
   if ($mode eq $mmk) {
     print "  (keeping: $tdir)\n";
   } else {
-#   `rm -rf $tdir`;
+    `rm -rf $tdir`;
   }
 
   return($retval);
