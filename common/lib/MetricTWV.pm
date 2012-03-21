@@ -1,0 +1,503 @@
+# F4DE
+# MetricTWV.pm
+# Author: Jon Fiscus
+# Additions: Martial Michel
+# 
+# This software was developed at the National Institute of Standards and Technology by
+# employees of the Federal Government in the course of their official duties.  Pursuant to
+# Title 17 Section 105 of the United States Code this software is not subject to copyright
+# protection within the United States and is in the public domain. F4DE is
+# an experimental system.  NIST assumes no responsibility whatsoever for its use by any party.
+# 
+# THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
+# OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
+# OR FITNESS FOR A PARTICULAR PURPOSE.
+
+package MetricTWV;
+
+use MetricFuncs;
+@ISA = qw(MetricFuncs);
+
+use strict;
+
+use Data::Dumper;
+use MMisc;
+
+my @metric_params = ("Cost", "Value", "Ptarg");
+
+use TrialsTWV;
+my @trials_params = TrialsTWV::getParamsList();
+
+sub getParamsList { return(@metric_params); }
+sub getTrialsParamsList { return(@trials_params); }
+
+=pod
+=head1 NAME
+
+TrecVid08/lib/MetricTWV - Compiled 2-class detection metrics for TRECViD '08 Event Detection
+
+=head1 SYNOPSIS
+
+This object computes Type I (False alarms) and Type II (Missed detection) errors for a 2-class
+detection problem with a combined error metric.  The object implements a standard interface for
+this class of evaluation.  All methods in this class are required.
+
+=head1 DESCRIPTION
+
+=head2 METHODS
+
+=over 4
+
+####################################################################################################
+=item B<new>(I<$%HashOfConstants>, I<$TrialsObject>)  
+
+Returns a new metrics object.  On failure to validate the arguements, returns NULL.  For this object, the costants hash
+must contain 'CostMiss', 'CostFA', and 'RateFA'.   The Trials object must also contain the constant 'TOTALDURATION' which 
+is the duration of the test material.  Note that 'RateFA' and 'TOTALDURATION' must be in the same units, (seconds, hours, etc.)
+
+On error, the object returns a string indication the error.  The calling program should implement the following to check 
+whether or not the object was created.
+
+    my $met = new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001, 'IncludeBlocksWithNoTargets' => 1  ) }, $emptyTrial);
+    if (ref($met) ne "MetricTestStub"){
+        die "Error: Unable to create a MetricTestStub object with message '$met'\n";
+    }
+
+=cut
+
+sub new
+  {
+    my ($class, $parameters, $trial) = @_;
+
+    my $self = MetricFuncs->new($parameters, $trial);
+
+    #######  customizations
+    foreach my $p (@metric_params) {
+      MMisc::error_quit("parameter \'$p\' not defined")
+          if (! exists($self->{PARAMS}->{$p}));
+      MMisc::error_quit("parameter \'$p\' must > 0")
+          if ($self->{PARAMS}->{$p} <= 0);
+    }
+    foreach my $p (@trials_params) {
+      MMisc::error_quit("Trials parameter \'$p\' does not exist")
+          if (! exists($self->{TRIALPARAMS}->{$p}));
+      if ($p eq "IncludeBlocksWithNoTargets"){
+        MMisc::error_quit("Trials parameter \'$p\' must 0 or 1") if ($self->{TRIALPARAMS}->{$p} !~ /^[01]$/);
+      } else {
+        MMisc::error_quit("Trials parameter \'$p\' must be > 0")
+          if ($self->{TRIALPARAMS}->{$p} <= 0);
+      }
+    }
+ 
+    $self->{PARAMS}->{BETA} = 
+      ($self->{PARAMS}->{Cost} / $self->{PARAMS}->{Value}) * ((1 /  $self->{PARAMS}->{Ptarg}) - 1);
+              
+    bless($self, $class);
+
+    $self->setCombLab("TWV");
+    $self->setCombTypToMaximizable();
+
+    return $self;
+  }
+
+####################################################################################################
+=pod
+
+=item B<trialParamMerge>(I<$Param>, I<$baseValue>, I<$valueToMerge>, I<$mergeType>)
+
+When Trial structures are merged, the parameters in the Trial structure need to be merged appropriately
+based on whether or not the C<mergeType> is /pooled/ or /blocked/.  One way to think of a C<pooled> merge
+is to concatenate the data into a single list.  One way to think of a C<blocked> merge is keep the individual 
+Trial structures as blocks in the new structures. 
+
+This code is executed parameter, by C<$Param> from the data structure.  Since the interpretation of how to
+merge a parameter,  the specifics of the merge are encoded in the Metric object.
+
+C<baseValue> is the existing value in the trial structure.  If this is the first merge, (i.e., the 
+trial structure is empty), then this value must be C<undef>.  C<valueToMerge> is the value to merge.
+
+=cut
+
+sub trialParamMerge(){
+  my ($self, $param, $mergedValue, $toMergeValue, $mergeType) = @_;
+
+  my @td_names = ("TotDur");
+  if (grep(m%^$param$%, @td_names)){
+    if ($mergeType eq "pooled"){
+      ### if pooled, totalduration added
+      return (defined($mergedValue) ? $mergedValue : 0) + $toMergeValue;
+    } elsif ($mergeType eq "blocked") {
+      ### if blocked, the totalduration MUST be constant 
+      return undef if (!defined($mergedValue) && !defined($toMergeValue));
+      die "Error: Trial Merge of incompatable /$param/.  New value undefined" if (!defined($toMergeValue));
+      return $toMergeValue if (!defined($mergedValue));
+      die "Error: Trial Merge only supported for equal /$param/ ($mergedValue != $toMergeValue)" 
+        if ($mergedValue != $toMergeValue);
+      return $mergedValue;
+    } else {
+      die "Error: Unknown merge type /$mergeType/\n";
+    }
+  }
+
+  die "Error: Trial parameter merge for /$param/ Failed.  $param not defined in the metric";
+}
+
+=pod
+
+=item B<unitTest(I<$dir>)>
+
+Run the unit test for the object.  It build a trial structure and test the metric.  If I<$dir> is defined, then a DET Curve 
+will be generated.
+
+=cut
+
+sub unitTest {
+  my ($dir) = @_;
+
+  print "Test MetricTWV...".(defined($dir) ? " Dir=/$dir/" : "(Skipping DET Curve Generation)")."\n";
+
+  my $trial = new TrialsTWV({ ("TotDur" => 20, "TrialsPerSecond" => 2.00, "IncludeBlocksWithNoTargets" => 1) });
+  my $met = new MetricTWV({ ('Cost' => 0.1, 'Value' => 1, 'Ptarg' => 0.0001 ) }, $trial);
+
+  ##############################################################################################
+  print "  Testing Calculations .. ";
+  my ($exp, $val, $ret, $pm, $pf );
+  
+  foreach my $a([ (0.3600312, 0.328, 0.000312) ], 
+                [ (0.59802, 0.202, 0.00020) ], 
+                [ (-998.9, 0.0, 1) ], 
+                [ (0,  1, 0) ]){    
+    ($val, $pm, $pf) = ($a->[0], $a->[1], $a->[2]);
+
+    $ret = $met->combCalc($pm, $pf); 
+    die "\nError: Value for Pmiss=$pm, Pfa=$pf was = $ret NOT $val\n " if (abs($ret - $val) > 0.00001);
+
+    $ret = $met->MISSForGivenComb($val, $pf); 
+    die "\nError: Pmiss for Value=$val, Pfa=$pf was = $ret NOT $pm\n " if (abs($ret - $pm) > 0.00001);
+
+    $ret = $met->FAForGivenComb($val, $pm); 
+    die "\nError: Pmiss for Value=$val, Pmiss=$pm was = $ret NOT $pf\n " if (abs($ret - $pf) > 0.00001);
+  }
+  print "ok\n";
+ 
+  my $options = { ("Xmin" => .1,
+		   "Xmax" => 95,
+		   "Ymin" => .1,
+		   "Ymax" => 95,
+		   "xScale" => "nd",
+		   "yScale" => "nd",
+		   "ColorScheme" => "color",
+       "DrawIsometriclines" => 1,
+       "createDETfiles" => 1,
+		   "DrawIsoratiolines" => 1,
+       "serialize" => 1,
+       "Isometriclines" => [ (0.1745) ],
+       "Isoratiolines" => [ (13.333) ],
+       "PointSet" => [ { MMiss => .8,  MFA => .06, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "test"} ] ) };
+
+ 
+  
+  print "  Testing a DET Curve Calculations ..\n";
+  $trial->addTrial("she", 0.1, "NO", 0);
+  $trial->addTrial("she", 0.2, "NO", 0);
+  $trial->addTrial("she", 0.3, "NO", 1);
+  $trial->addTrial("she", 0.4, "NO", 0);
+  $trial->addTrial("she", 0.5, "NO", 0);
+  $trial->addTrial("she", 0.6, "YES", 0);
+  $trial->addTrial("she", 0.7, "YES", 1);
+  $trial->addTrial("she", 0.8, "YES", 0);
+  $trial->addTrial("she", 0.9, "YES", 1);
+  $trial->addTrial("she", 1.0, "YES", 1);
+
+  $trial->addTrial("he", 0.41, "NO", 1);
+  $trial->addTrial("he", 0.51, "YES", 0);
+  $trial->addTrial("he", 0.61, "YES", 0);
+  $trial->addTrial("he", 0.7, "YES", 1);
+  $trial->addTrial("he", undef, "OMITTED", 1);
+  $trial->addTrial("he", undef, "OMITTED", 1);
+
+  $trial->addTrial("notskip", 0.41, "NO", 0);
+  $trial->addTrial("notskip", 0.51, "YES", 0);
+  $trial->addTrial("notskip", 0.61, "YES", 0);
+  $trial->addTrial("notskip", 0.7, "YES", 0);
+  $trial->addTrial("notskip", undef, "OMITTED", 1);
+  $trial->addTrial("notskip", undef, "OMITTED", 1);
+
+  use DETCurve;
+  use DETCurveSet;
+  use DETCurveGnuplotRenderer;
+ 
+  my $det1 = new DETCurve($trial, $met, "Initial test, all blocks with targ", [ (1) ], undef);
+  ## This was built from DETtesting-v2 with MissingTarg=0, MissingNonTarg=0
+  #    
+  #               Thr    Pmiss  Pfa    TWval     SSDPmiss, SSDPfa, SSDValue, #blocks
+  my @pointsAllWithTarg =  [ (0.1,  0.500, 0.611, -610.550, 0.500,    0.347,  346.550,   3) ];
+  push @pointsAllWithTarg, [ (0.2,  0.500, 0.556, -555.000, 0.500,    0.255,  254.235,   3) ];
+  push @pointsAllWithTarg, [ (0.3,  0.500, 0.500, -499.450, 0.500,    0.167,  166.401,   3) ];
+  push @pointsAllWithTarg, [ (0.4,  0.583, 0.500, -499.533, 0.382,    0.167,  166.525,   3) ];
+  push @pointsAllWithTarg, [ (0.41, 0.583, 0.444, -443.983, 0.382,    0.096,   96.288,   3) ];
+  push @pointsAllWithTarg, [ (0.5,  0.667, 0.403, -402.404, 0.382,    0.087,   86.407,   3) ];
+  push @pointsAllWithTarg, [ (0.51, 0.667, 0.347, -346.854, 0.382,    0.024,   24.344,   3) ];
+  push @pointsAllWithTarg, [ (0.6,  0.667, 0.250, -249.642, 0.382,    0.083,   83.076,   3) ];
+  push @pointsAllWithTarg, [ (0.61, 0.667, 0.194, -194.092, 0.382,    0.048,   48.397,   3) ];
+  push @pointsAllWithTarg, [ (0.7,  0.667, 0.097,  -96.879, 0.382,    0.087,   86.568,   3) ];
+  push @pointsAllWithTarg, [ (0.8,  0.833, 0.056,  -55.383, 0.289,    0.096,   95.927,   3) ];
+  push @pointsAllWithTarg, [ (0.9,  0.833, 0.000,    0.167, 0.289,    0.000,    0.289,   3) ];
+  push @pointsAllWithTarg, [ (1.0,  0.917, 0.000,    0.083, 0.144,    0.000,    0.144,   3) ];
+  $ret = $det1->testGeneratedPoints(\@pointsAllWithTarg, "  ");
+  die $ret if ($ret ne "ok");
+
+  if (defined($dir)){
+    my $ds = new DETCurveSet("MetricTWV Tests");
+    die "Error: Failed to add first det" if ("success" ne $ds->addDET("2 Blocks no targ", $det1));
+    print $ds->renderAsTxt("$dir/TWV.unitTest.test2.det", 1, 1, $options, "");                                                                     
+  }   
+  $det1 = undef;  ### Make sure it's empty!!!
+    
+  ### This block should still be taken into account
+  $trial->addTrial("skip", 0.41, "NO", 0);
+  $trial->addTrial("skip", 0.51, "YES", 0);
+  $trial->addTrial("skip", 0.61, "YES", 0);
+  $trial->addTrial("skip", 0.7, "YES", 0);
+
+  ### This block has no trials but still should be part of the false alarnm computations
+  die "Error: Failed to add an empty block\n" unless($trial->addEmptyBlock("empty1"));
+  print "    Testing to make sure a warning is generated\n";
+  die "Error: Failed to NOT add an existing empty block\n" if ($trial->addEmptyBlock("empty1"));
+
+  my $det2 = new DETCurve($trial, $met, "2 blocks no targs", [ (1) ], undef);
+  ## This was built from DETtesting-v2 with MissingTarg=0, MissingNonTarg=0
+  #    
+  #               Thr    Pmiss  Pfa    TWval     SSDPmiss, SSDPfa, SSDValue, #blocks
+  my @pointsNotAllWithTarg =  [ (0.1,  0.500, 0.447, -446.122, 0.500,    0.362,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.2,  0.500, 0.413, -412.792, 0.500,    0.301,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.3,  0.500, 0.380, -379.462, 0.500,    0.247,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.4,  0.583, 0.380, -379.545, 0.382,    0.247,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.41, 0.583, 0.347, -346.215, 0.382,    0.206,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.5,  0.667, 0.302, -301.303, 0.382,    0.185,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.51, 0.667, 0.268, -267.973, 0.382,    0.152,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.6,  0.667, 0.190, -189.648, 0.382,    0.123,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.61, 0.667, 0.157, -156.318, 0.382,    0.094,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.7,  0.667, 0.078,  -77.992, 0.382,    0.075,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.8,  0.833, 0.033,  -33.163, 0.289,    0.075,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (0.9,  0.833, 0.0,      0.167, 0.289,    0.000,  undef,    5) ];
+  push @pointsNotAllWithTarg, [ (1.0,  0.917, 0.0,      0.083, 0.144,    0.000,  undef,    5) ];
+
+  $ret = $det2->testGeneratedPoints(\@pointsNotAllWithTarg, "  ");
+  die $ret if ($ret ne "ok");
+
+  if (defined($dir)){
+    my $ds = new DETCurveSet("MetricTWV Tests");
+    die "Error: Failed to add second det" if ("success" ne $ds->addDET("2 Blocks no targ", $det2));
+    print $ds->renderAsTxt("$dir/TWV.unitTest.test2.det", 1, 1, $options, "");                                                                     
+  }   
+
+  print "    Checking to see of Excluding blocks without targets works...";
+  $trial->setTrialParamValue("IncludeBlocksWithNoTargets", 0);
+  my $met2 = new MetricTWV({ ('Cost' => 0.1, 'Value' => 1, 'Ptarg' => 0.0001 ) }, $trial);
+  print "OK\n";
+
+  my $det3 = new DETCurve($trial, $met2, "Exclude Blocks without Targ", [ (1) ], undef);
+  $ret = $det3->testGeneratedPoints(\@pointsAllWithTarg, "  ");
+  die $ret if ($ret ne "ok");
+  print "OK\n";
+  
+  if (defined($dir)){
+    my $ds = new DETCurveSet("MetricTWV Tests");
+    die "Error: Failed to add third det" if ("success" ne $ds->addDET("2 blocks not targ but ignored", $det3));
+    print $ds->renderAsTxt("$dir/TWV.unitTest.test3.det", 1, 1, $options, "");                                                                     
+  }   
+
+}
+
+####################################################################################################
+
+=pod
+
+=item B<isoCombCoeffForDETCurve>()
+
+Returns an array of coefficients to define what iso lines to draw on a DET Curve for the defined 
+combiner metric. These are the defaults for the Metric, but can be overridden by DETUtil and the actual scoring
+application.
+
+=cut
+
+  sub isoCombCoeffForDETCurve(){ (0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0 ) }
+
+
+####################################################################################################
+=pod
+
+=item B<isoCostRatioCoeffForDETCurve>()
+
+Returns an array of coefficients to define what iso lines to draw on a DET Curve.  For instance, if the
+combined metric model is:
+
+  Combined = C_m * Miss + C_f * FA
+  
+Then the coefficients represent various values of C_m / C_f.  
+
+These are the defaults for the Metric, but can be overridden by DETUtil and the actual scoring
+application.
+
+=cut
+
+  sub isoCostRatioCoeffForDETCurve(){ (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 100, 200, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 400000, 600000, 800000, 900000, 950000, 980000) }
+
+
+
+####################################################################################################
+=pod
+
+=item B<errMissBlockCalc>(I<$nMiss>, I<$block>)
+
+Calculates the miss error statistic for block '$block' if the number of misses is '$nMiss'.  This functions uses the 
+reference to the trials data structure to find the denominator.   If the denominator is 0, then the statistic is undefined
+and it returns C<undef>.
+
+=cut
+sub errMissBlockCalc(){
+  my ($self, $nMiss, $block) = @_;
+  my $NTarg =  $self->{TRIALS}->getNumTarg($block);
+  
+  ($NTarg > 0) ? $nMiss / $NTarg : undef;
+}
+
+####################################################################################################
+=pod
+
+=item B<errFABlockCalc>(I<$nFA>, I<$block>)
+
+Calculates the false alarm error statistic for block '$block' if the number of false alarms is '$nFA'.  This functions uses the 
+reference to the trials data structure to find the denominator.   If the denominator is 0, then the statistic is undefined
+and it returns C<undef>.
+
+=cut
+sub errFABlockCalc(){
+  my ($self, $nFa, $block) = @_;
+
+  ### The denominator is already checked so no need to return undef.  TotalDuration is in seconds!!!!
+  #print "$nFa / ($self->{TRIALPARAMS}->{TOTALTRIALS} - ".$self->{TRIALS}->getNumTarg($block).");\n";
+  
+#  my $NTarg =  $self->{TRIALS}->getNumTarg($block);
+#  return (($NTarg > 0) ? ($nFa / ($self->{TRIALPARAMS}->{TotTrials} - $self->{TRIALS}->getNumTarg($block))) : undef);
+  return ($nFa / ($self->{TRIALPARAMS}->{TotTrials} - $self->{TRIALS}->getNumTarg($block)));
+}
+
+
+####################################################################################################
+=pod
+
+=item B<combCalcWeightedMiss>()
+
+Returns the wieghted MISS value for the combined calculation 
+
+=cut
+sub combCalcWeightedMiss(){
+  my ($self, $missErr) = @_;
+  if (defined($missErr)) {
+    $missErr;
+   } else {
+     undef;
+  }
+}
+
+####################################################################################################
+=pod
+
+=item B<combCalcWeightedFA>()
+
+Returns the wieghted FA value for the combined calculation 
+
+=cut
+sub combCalcWeightedFA(){
+  my ($self, $faErr) = @_;
+  if (defined($faErr)) {
+    $self->{PARAMS}->{BETA} * $faErr;
+  } else {
+    undef;
+  }
+}
+
+
+####################################################################################################
+=pod
+
+=item B<MISSForGivenComb>(I<$comb, I<$faErr>)
+
+Calculates the value of the Miss statistic for a given combined measure and the FA value.  This is 
+a permutation of the combined formula to solve for the Miss value. This method uses the constants 
+defined during object creation.  If either C<$comb> or 
+C<$faErr> is undefined, then the combined calculation returns C<undef>,
+
+   v = 1 - ( pm + beta * pf))
+   v = 1 -   pm - beta * pf)
+  pm = 1 - v - beta * pf)
+ 
+=cut
+
+  sub MISSForGivenComb(){
+    my ($self, $comb, $faErr) = @_;
+    if (defined($comb) && defined($faErr)) {
+       1 - $comb - ($self->{PARAMS}->{BETA} * $faErr);
+##      1 - ($comb + $self->{PARAMS}->{BETA} * $faErr);
+    } else {
+      undef;
+    }
+  }
+
+####################################################################################################
+=pod
+
+=item B<FAForGivenComb>(I<$comb, I<$missErr>)
+
+Calculates the value of the Fa statistic for a given combined measure and the Miss value.  This is 
+a permutation of the combined formula to solve for the Fa value. This method uses the constants 
+defined during object creation.  If either C<$comb> or 
+C<$missErr> is undefined, then the combined calculation returns C<undef>,
+
+   v      = 1 - ( pm + beta * pf))
+   v      = 1 -   pm - beta * pf)
+  pm      = 1 - v - beta * pf)
+beta * pf = 1 - v - pm
+       pf = (1 - v - pm) / beta
+
+=cut
+
+  sub FAForGivenComb(){
+    my ($self, $comb, $missErr) = @_;
+    if (defined($comb) && defined($missErr)) {
+      (1 - $comb - $missErr)/$self->{PARAMS}->{BETA};
+    } else {
+      undef;
+    }
+  }
+
+####################################################################################################
+=pod
+
+=item B<combCalc>(I<$missErr, I<$faErr>)
+
+Calculates the combined error metric as a combination of the miss error statistic and the false 
+alarm error statistic.  This method uses the constants defined during object creation.  If either C<$missErr> or 
+C<$faErr> is undefined, then the combined calculation returns C<undef>,
+
+=cut
+
+sub combCalc(){
+  my ($self, $missErr, $faErr) = @_;
+  if (defined($missErr) && defined($faErr)) {
+    my $comb = 1 - ($self->combCalcWeightedMiss($missErr) + $self->combCalcWeightedFA($faErr));
+    return $comb;
+  } else {
+    undef;
+  }
+}
+
+
+
+#POD# =back 4
+#POD# 
+
+
+1;
