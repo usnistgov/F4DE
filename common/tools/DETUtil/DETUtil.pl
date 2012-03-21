@@ -109,6 +109,7 @@ my $dumptarg = "";
 my $HD = 0;
 my $AutoAdapt = 0;
 my $verbose = 0;
+my @perfAtFixedDefs = ();
 
 # Variables for Brad's hacks.
 my $sortBy = undef;
@@ -121,7 +122,7 @@ my $restSet = "";
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: ABCDEFGHIJKL   PQRST V   Za cde ghi klm op rst v x   #
+# Used: ABCDEFGHIJKL   PQRST V   Za cde ghi klm op rst v x z #
 
 GetOptions
   (
@@ -168,6 +169,7 @@ GetOptions
    'E|restSet=s'                 => \$restSet,
    'J|firstSetSize=i'            => \$firstSetSize,
    'L|secondSetSize=i'           => \$secondSetSize,
+   'z|perf-at-fixed=s'           => \@perfAtFixedDefs,
   );
 
 ## Docs
@@ -263,7 +265,7 @@ $options{HD} = $HD;
 $options{AutoAdapt} = $AutoAdapt;
 
 foreach my $directive (@plotControls){
-  my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
+  my $numRegex = '\d+|\d+\.\d*|\d*\.\d+|\d*\.\d+e-\d\d';
   my $intRegex = '\d*';
 
   &vprint("[*] Processing directive \'$directive\'\n");
@@ -277,7 +279,7 @@ foreach my $directive (@plotControls){
     $options{KeySpacing} = $1;
   } elsif ($directive =~ /ExtraPoint=(.*)$/){
     my $pointDef = $1;
-    my $colorRegex = 'rgb "#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
+    my $colorRegex = 'rgb[ _]"#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
     my $fullExp = "^([^:]*):($numRegex):($numRegex):($intRegex):($intRegex):(($colorRegex)|):(left|right|center|)\$";
     die "Error: Point definition /$pointDef/ does not match the pattern /$fullExp/" 
       if ($pointDef !~ /$fullExp/);
@@ -355,6 +357,23 @@ sub attrValueStringToHT{
 my $firstSetCounter = 0;
 my $secondSetCounter = 0;
 
+### Process the option to cumpute performance at fixed points
+my @MFAFixedValues = ();
+my $MFAFixedValuesReport = "";
+if (@perfAtFixedDefs > 0){
+  foreach (@perfAtFixedDefs){
+    die "Error in value for -perf-at-fixed /$_/, unknown dimension." if ($_ !~ /^FA:(\S+):(\S+)/);
+    $MFAFixedValuesReport = $1;
+    my $valstr = $2;
+    foreach my $val(split(/,/,$valstr)){ 
+      die "Error in value for -perf-at-fixed /$_/, illegal value /$val/. not a number." if ($val !~ /^(\d+|\d+\.\d*|\d*\.\d+)$/);
+      push @MFAFixedValues, $val;
+    }
+  }
+  print "FA Fixed values: ".join(",",@MFAFixedValues).".  Report to $MFAFixedValuesReport\n";
+}
+
+
 foreach my $srlDef ( @ARGV )
 {
   ### The SRL files can now include various plotting attributes.  
@@ -362,9 +381,10 @@ foreach my $srlDef ( @ARGV )
   my $numRegex = '\d+|\d+\.\d*|\d*\.\d+';
   my $intRegex = '\d*';
   my $colorRegex = 'rgb "#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
+  my $MFAFixedValuesResults = undef;
 
   ### Parse the global srlDef as the default
-  my ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $nokey) = split(/:/,$srlDef);
+  my ($srl, $newLabel, $pointSize, $pointTypeSet, $color, $lineWidth, $displayKey) = split(/:/,$srlDef);
 
   ### If this is set to non-blank, it will get applied
   my ($newSrlDef) = "";
@@ -382,14 +402,16 @@ foreach my $srlDef ( @ARGV )
   }
 
   if ($newSrlDef ne ""){
-    my ($_newLabel, $_pointSize, $_pointTypeSet, $_color, $_lineWidth, $_nokey) = split(/:/,$newSrlDef);
+    my ($_newLabel, $_pointSize, $_pointTypeSet, $_color, $_lineWidth, $_displayKey) = split(/:/,$newSrlDef);
     $newLabel = $_newLabel if ($_newLabel ne "");
     $pointSize = $_pointSize if ($_pointSize ne "");
     $pointTypeSet = $_pointTypeSet if ($_pointTypeSet ne "");
     $color = $_color if ($_color ne "");
     $lineWidth = $_lineWidth if ($_lineWidth ne "");
-    $nokey = $_nokey if ($_nokey ne "");
+    $displayKey = $_displayKey if ($_displayKey ne "");
   }
+  
+  $color =~ s/rgb_/rgb /;
   
   vprint("[*] Loading SRL file ($srl)\n"); 
 
@@ -408,7 +430,7 @@ foreach my $srlDef ( @ARGV )
  	    $lineAttr{"pointSize"} = $pointSize;
  	  }
  	  if (defined ($pointTypeSet) && $pointTypeSet ne ""){
- 	    die "Error: DET Line Attr control for pointTypeSet [4] /$pointTypeSet/ illegal." if ($pointTypeSet !~ /^(square|circle|triangle|utriangle|diamond)$/);
+  	    die "Error: DET Line Attr control for pointTypeSet [4] /$pointTypeSet/ illegal." if ($pointTypeSet !~ /^(square|circle|triangle|utriangle|diamond)$/);
  	    $lineAttr{"pointTypeSet"} = $pointTypeSet;
  	  }
  	  if (defined ($color) && $color ne ""){
@@ -419,9 +441,9 @@ foreach my $srlDef ( @ARGV )
  	    die "Error: DET Line Attr control for LineWidth [6] /$lineWidth/ illegal." if ($lineWidth !~ /^($numRegex)$/);
  	    $lineAttr{"lineWidth"} = $lineWidth;
  	  }
-      if (defined ($nokey) && $nokey ne "") {
-        die "Error: DET Line Attr control for nokey [7] /$nokey/ illegal." if ($nokey !~ /^(true|false)$/);
-        $lineAttr{"nokey"} = ($nokey eq "true") ? "no" : "";
+      if (defined ($displayKey) && $displayKey ne "") {
+        die "Error: DET Line Attr control for displayKey [7] /$displayKey/ illegal." if ($displayKey !~ /^(true|false)$/);
+        $lineAttr{"displayKey"} = $displayKey;
       }
 	} 
 	
@@ -452,6 +474,10 @@ foreach my $srlDef ( @ARGV )
 #		print "[Calling 'computePoint']\n";
 		$det->computePoints();
 	}
+    
+  if (@MFAFixedValues > 0){
+     $det->computeMMissForFixedMFA(\@MFAFixedValues);
+  }
   
 	my $keep = 0;
 	$keep = 1 if (@selectFilters == 0);
@@ -512,6 +538,13 @@ if($IsoRatioStatisticFile ne "")
   vprint ("[*] Performing 'renderIsoRatioIntersection'\n");
 	open(FILESTATS, ">", $IsoRatioStatisticFile) or die "$!";
 	print FILESTATS $ds->renderIsoRatioIntersection();
+	close(FILESTATS)
+}
+
+if ($MFAFixedValuesReport ne ""){
+  vprint ("[*] Performing 'Fixed MFA Values Report'\n");
+	open(FILESTATS, ">", $MFAFixedValuesReport) or die "$!";
+	print FILESTATS $ds->renderPerfForFixedMFA(\@MFAFixedValues);
 	close(FILESTATS)
 }
 
@@ -639,7 +672,7 @@ color -> The RGB color formatted as /rgb "#hhhhhh"/ where the /h/ characters are
 
 lineWidth -> A floating point number for the line width.
 
-displayKey -> A boolean value for whether or not the SRL will be displayed in the key. Must be formatted as /(true|false)/.
+displayKey -> A boolean value for whether or not the SRL will be displayed in the key. Must be formatted as /(true|false)/ where /true/, the default, means the key is printed.
 
 =back
 
