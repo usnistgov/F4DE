@@ -389,9 +389,29 @@ sub isCompatible(){
 
 ####################################################################################################
 
+#=item B<addEmptyBlock>(I<$blockID>)  
+#
+#Adds a block structure for a block that has no target or false alarm trials.
+#
+#=cut 
+
+sub addEmptyBlock{
+  my ($self, $block) = @_;
+
+  if (! defined($self->{"trials"}{$block}{"title"})) {
+    $self->_initForBlock($block);
+    return 1
+  } else {
+    MMisc::warn_print("Attempt to add an empty block failed because block exists.");
+    return 0;
+  }
+}
+
+####################################################################################################
+
 =item B<addTrial>(I<$blockID>, I<$sysScore>, I<$decision>, I<$isTarg>)  
 
-Addes a trail, which is a decision made by a system on a specific input, to the trials object.  
+Adds a trail, which is a decision made by a system on a specific input, to the trials object.  
 The variables are as follows:
 
 I<$blockID> is the statistical sampling block ID for the trial.  This trial structure is designed to handle 
@@ -608,6 +628,13 @@ sub dump {
       }
     } elsif ($k1 eq "computedActDecThreshRange") {
        $out .= "${pre}   $k1 -> (MaxNo=$self->{$k1}{MaxNo}, MinYes=$self->{$k1}{MinYes})\n";
+    } elsif ($k1 eq "trialParams") {
+       $out .= "${pre}   $k1 -> (MaxNo=$self->{$k1}{MaxNo}, MinYes=$self->{$k1}{MinYes})\n";
+       my @k2tmp = keys %{ $self->{$k1} };
+       for (my $i2 = 0; $i2 < scalar @k2tmp; $i2++) {
+          $k2 = $k2tmp[$i2];
+	        $out .= "${pre}      $k2 -> $self->{$k1}{$k2}\n";
+	     }
     } else {
        $out .= "${pre}   $k1 -> $self->{$k1}\n";
     }
@@ -740,6 +767,7 @@ sub _computeDecisionScoreThreshold {
   ### Check within Targets and NonTargets
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
+    next if (! $self->isBlockEvaluated($block));
     
     my ($minYesTarg) = $self->{"trials"}{$block}{"MIN YES TARG"};
     my ($minYesNonTarg) = $self->{"trials"}{$block}{"MIN YES NONTARG"};
@@ -819,6 +847,27 @@ sub _computeDecisionScoreThreshold {
   }
 
   return "pass";
+}
+
+sub isBlockEvaluated{
+  my ($self, $block) = @_;
+  return ($self->getNumTarg($block) > 0);
+}
+  
+sub getNumBlocks {
+  my ($self) = @_;
+  my @a = keys %{ $self->{"trials"} };
+  return(scalar(@a));
+}
+
+sub getNumEvaluatedBlocks {
+  my ($self) = @_;
+  my $num = 0;
+  my @ktmp = keys %{ $self->{"trials"} };
+  for (my $i = 0; $i < scalar @ktmp; $i++) {
+    $num ++ if ($self->isBlockEvaluated($ktmp[$i])); 
+  }
+  return($num);
 }
 
 sub getBlockIDs {
@@ -927,6 +976,7 @@ sub getTotNumTarg {
   my @ktmp = $self->getBlockIDs();
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
+    next if (! $self->isBlockEvaluated($block));
     push @data, $self->getNumTarg($block);
   }
   $self->_stater(\@data);
@@ -938,6 +988,7 @@ sub getTotNumNonTarg {
   my @ktmp = $self->getBlockIDs();
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
+    next if (! $self->isBlockEvaluated($block));
     push @data, $self->getNumNonTarg($block);
   }
   $self->_stater(\@data);
@@ -949,6 +1000,7 @@ sub getTotNumSys {
   my @ktmp = $self->getBlockIDs();
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
+    next if (! $self->isBlockEvaluated($block));
     push @data, $self->getNumSys($block);
   }
   $self->_stater(\@data);
@@ -960,6 +1012,7 @@ sub getTotNumCorrDetect {
   my @ktmp = $self->getBlockIDs();
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
+    next if (! $self->isBlockEvaluated($block));
     push @data, $self->getNumCorrDetect($block);
   }
   $self->_stater(\@data);
@@ -971,6 +1024,7 @@ sub getTotNumCorrNonDetect {
   my @ktmp = $self->getBlockIDs();
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
+    next if (! $self->isBlockEvaluated($block));
     push @data, $self->getNumCorrNonDetect($block);
   }
   $self->_stater(\@data);
@@ -982,6 +1036,7 @@ sub getTotNumFalseAlarm {
   my @ktmp = $self->getBlockIDs();
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
+    next if (! $self->isBlockEvaluated($block));
     push @data, $self->getNumFalseAlarm($block);
   }
   $self->_stater(\@data);
@@ -993,6 +1048,7 @@ sub getTotNumMiss {
   my @ktmp = $self->getBlockIDs();
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
+    next if (! $self->isBlockEvaluated($block));
     push @data, $self->getNumMiss($block);
   }
   $self->_stater(\@data);
