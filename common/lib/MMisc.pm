@@ -1777,6 +1777,7 @@ sub unitTest {
 	print "Test MMisc\n";
 	marshalTest();
   filterArrayUnitTest();
+  interpolateYDimUnitTest();
 	return 1;
 }
 
@@ -1847,5 +1848,30 @@ sub marshalTest {
 	}
 	print "OK\n";
 }
+
+### based on points (x1, y1) and (x2, y2), compute the line function and the Y value for $newX
+sub interpolateYDim{
+  my ($x1, $y1, $x2, $y2, $newX) = @_;
+#  print "Interpolate: ($x1,$y1) ($x2,$y2) = newX=$newX\n";
+  my ($newY) = ($x2-$x1 == 0) ? (($y2+$y1)/2) : ($y2 + ( ($y1-$y2) * (($x2-$newX) / ($x2-$x1))));  
+#  print ("  newY=$newY\n");
+  return $newY;
+}
+
+sub interpolateYDimUnitTest(){
+### unit tests
+  print " Testing interpolateYDim...";
+  die if (abs(interpolateYDim(1,1,3,3,2.5) - 2.5) >= 0.0001);
+  die if (abs(interpolateYDim(3,3,1,1,2.5) - 2.5) >= 0.0001);
+  die if (abs(interpolateYDim(1,2,4,5,2.5) - 3.5) >= 0.0001);
+  ## extrapolation
+  die if (abs(interpolateYDim(1,2,4,5,7.5) - 8.5) >= 0.0001);
+  ## horizontal line
+  die if (abs(interpolateYDim(1,2,2,2,7.5) - 2) >= 0.0001);
+  ## vertical line
+  die if (abs(interpolateYDim(1,2,1,8,1) - 5) >= 0.0001);
+  print "OK\n"
+}
+
 
 1;
