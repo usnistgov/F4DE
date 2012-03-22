@@ -18,8 +18,6 @@ use strict;
 
 use KWSMappedRecord;
 use DETCurve;
-#use KWSDETSet;
-#use KWSTrials;
 use KWSTools;
 use MetricTWV;
 use TrialsTWV;
