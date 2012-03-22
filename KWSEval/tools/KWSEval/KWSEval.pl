@@ -578,7 +578,9 @@ if($haveReports)
         if ($displayall && $requestDETCurve)
         {
 
-            my $det = $stdAlign->GenerateDETReport(\@{ $filterTermArray{''} }, \@arrayparsefile, \@{ $filterTypeArray{''} }, $stdAlign->{STD}->{SYSTEM_ID}." : ALL Data", $KoefV, $KoefC, $trialsPerSec, $probOfTerm, $PooledTermDETs, \@listIsolineCoef);
+            my $det = $stdAlign->GenerateDETReport(\@{ $filterTermArray{''} }, \@arrayparsefile, \@{ $filterTypeArray{''} }, 
+              ($stdAlign->{STD}->{SYSTEM_ID} eq "" ? "" : $stdAlign->{STD}->{SYSTEM_ID}." : ") . "ALL Data", 
+              $KoefV, $KoefC, $trialsPerSec, $probOfTerm, $PooledTermDETs, \@listIsolineCoef);
 
             if (! $det->successful())
             {
@@ -599,7 +601,9 @@ if($haveReports)
 
             foreach my $stype(keys %occFiltTypeArr)
             {
-                my $det = $stdAlign->GenerateDETReport(\@{ $filterTermArray{''} }, \@arrayparsefile, \@{ $occFiltTypeArr{$stype} }, "$stdAlign->{STD}->{SYSTEM_ID}: $stype Subset", $KoefV, $KoefC, $trialsPerSec, $probOfTerm, $PooledTermDETs, \@listIsolineCoef);
+                my $det = $stdAlign->GenerateDETReport(\@{ $filterTermArray{''} }, \@arrayparsefile, \@{ $occFiltTypeArr{$stype} }, 
+                    ($stdAlign->{STD}->{SYSTEM_ID} eq "" ? "" : $stdAlign->{STD}->{SYSTEM_ID}." : ") . "$stype Subset", 
+                    $KoefV, $KoefC, $trialsPerSec, $probOfTerm, $PooledTermDETs, \@listIsolineCoef);
 
                 if (! $det->successful())
                 {
@@ -609,7 +613,7 @@ if($haveReports)
                 $dset->addDET($stype, $det);
             }
         }
-        
+
         $stdAlign->ReportOccurrence($outputreportOccur, $displayall, $allresults_Occ, $dset) if($requestreportOccur); 
 
         if ($requestDETCurve)
