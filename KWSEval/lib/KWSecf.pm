@@ -241,7 +241,7 @@ sub loadFile
         
         my ($volume,$directories,$purged_filename) = File::Spec->splitpath($audio_filename);
         
-        if($purged_filename =~ /(.*?)\.sph$/)
+        if($purged_filename =~ /(.*?)\.(sph|wav)$/)
         {
             $purged_filename = $1;
         }
@@ -294,6 +294,7 @@ sub loadFile
         $self->{EVAL_SIGN_DUR} += sprintf("%.4f", $dur) if(!$self->{FILECHANTIME}{$purged_filename});
         
         push(@{ $self->{EXCERPT} }, new KWSecf_excerpt($audio_filename, $channel, $tbeg, $dur, $language, $source_type) );
+        ### Track the source types for the reports
         push(@{ $self->{FILECHANTIME}{$purged_filename}{$channel} }, [ ($tbeg, $tbeg + $dur) ]);
         
         $self->{FILE_EVAL_SIGN_DUR}{$purged_filename} = 0 if(!$self->{FILE_EVAL_SIGN_DUR}{$purged_filename});

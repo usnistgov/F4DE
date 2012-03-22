@@ -29,8 +29,10 @@ sub new
     $self->{SOURCE_TYPE} = shift;    
     $self->{FILE} = "";
     
-    if($self->{AUDIO_FILENAME} =~ /.*\/(.*?[^\/]*)\.sph$/)
+    if($self->{AUDIO_FILENAME} =~ /.*\/(.*?[^\/]*)\.([^\.]+)$/)
     {
+        $self->{FILE} = $1;
+    } elsif($self->{AUDIO_FILENAME} =~ /(.*)\.([^\.]+)$/) {
         $self->{FILE} = $1;
     }
     
