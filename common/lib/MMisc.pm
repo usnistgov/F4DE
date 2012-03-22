@@ -23,7 +23,7 @@ package MMisc;
 use strict;
 ##use Carp;
 
-use File::Temp qw(tempfile tempdir);
+use File::Temp qw(tmpnam tempfile tempdir);
 use File::Copy;
 use Data::Dumper;
 use Cwd qw(cwd abs_path);
@@ -57,7 +57,8 @@ sub get_tmpdir {
 #####
 
 sub get_tmpfilename {
-  my (undef, $name) = tempfile( OPEN => 0 );
+#  my (undef, $name) = tempfile( OPEN => 0 );
+  my $name = tmpnam();
 
   return($name);
 }
