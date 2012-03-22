@@ -207,6 +207,7 @@ MMisc::ok_exit();
 sub set_usage {
   my $tmp = "";
   $tmp .= "$0 -e ecffile -r rttmfile -o outputfile\n";
+  $tmp .= "Desc: This script applies the NOSCORE regions in a RTTM file to the ECF file to make a scoring ECF file.\n";
   $tmp .= "\n";
   $tmp .= "Required file arguments:\n";
   $tmp .= "  -e, --ecffile            Path to the ECF file.\n";

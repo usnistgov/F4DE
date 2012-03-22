@@ -147,6 +147,7 @@ MMisc::ok_exit();
 sub set_usage {
   my $tmp = "";
   $tmp .= "$0 -e ecffile -r rttmfile -o outputfile\n";
+  $tmp .= "Desc: Thios program generates an STDList file based on searching the reference file.\n";
   $tmp .= "\n";
   $tmp .= "Required file arguments:\n";
   $tmp .= "  -t, --termfile           Path to the Term file.\n";
