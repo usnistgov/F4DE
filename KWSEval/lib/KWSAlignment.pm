@@ -472,7 +472,6 @@ sub GenerateOccurrenceReport
     {
         $filechantype{$self->{ECF}->{EXCERPT}[$i]->{FILE}}{$self->{ECF}->{EXCERPT}[$i]->{CHANNEL}} = uc($self->{ECF}->{EXCERPT}[$i]->{SOURCE_TYPE});
     }
-    
     foreach my $level("TOTAL","MEAN")
     {
         foreach my $type("BNEWS", "CTS", "CONFMTG", "ALL")
@@ -2393,10 +2392,7 @@ sub GenerateDETReport
           Misc::error_quit("Failed to add an empty block") unless($trial->addEmptyBlock($termid));
         }
     }
-    
-#    $trial->setPooledTotalTrials(sprintf("%.0f",$trialsPerSec * $signalDuration));
-    
-#    return(new DETCurve($trial, $met, $pooledTermDETs ? "pooled" : "blocked", undef, $lineTitle, $KoefC, $KoefV, $probOfTerm, $listIsolineCoef));
+
     return(new DETCurve($trial, $met, $lineTitle, $listIsolineCoef, MMisc::cmd_which("gzip"), 0));
 }
 
