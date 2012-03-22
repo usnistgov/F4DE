@@ -225,7 +225,7 @@ DEVAinstall_noman:
 ##########
 
 KWSEVALDIR=KWSEval
-KWSEVALTOOLS=tools/KWSEval/KWSEval.pl
+KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl}
 
 KWSEvalinstall:
 	@make KWSEvalinstall_common
