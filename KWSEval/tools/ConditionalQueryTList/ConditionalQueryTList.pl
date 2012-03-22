@@ -204,6 +204,7 @@ MMisc::ok_exit();
 sub set_usage {
   my $tmp = "";
   $tmp .= "$0 -t termfile -q query -q query\n";
+  $tmp .= "Desc: This script reads a termfile and reports the values for the -q <ATTRNAME> and the terms matching the value.\n";
   $tmp .= "\n";
   $tmp .= "Required file arguments:\n";
   $tmp .= "  -t, --termfile           Path to the Term file.\n";
