@@ -64,7 +64,7 @@ foreach my $pn ("KWSecf", "TermList", "KWSList", "MMisc") {
 }
 
 # usualy part of the Perl Core
-foreach my $pn ("Getopt::Long", "File::Spec", "Data::Dumper") {
+foreach my $pn ("Getopt::Long", "File::Spec", "Data::Dumper", "MMisc") {
   unless (eval "use $pn; 1") {
     &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
     $have_everything = 0;
@@ -118,7 +118,10 @@ foreach my $termid (sort keys %{ $STD->{TERMS} })
 	if(exists($TERM->{TERMS}{$termid}))
 	{
 		delete $ListTerms{$termid};
-	
+
+    ### No need to check if there are no occurrences for the term
+    next if (! defined($STD->{TERMS}{$termid}->{TERMS}));
+    
 		for(my $i=0; $i<@{ $STD->{TERMS}{$termid}->{TERMS} }; $i++)
 		{
 			if(0 == $ECF->FilteringTime($STD->{TERMS}{$termid}->{TERMS}[$i]->{FILE}, 
