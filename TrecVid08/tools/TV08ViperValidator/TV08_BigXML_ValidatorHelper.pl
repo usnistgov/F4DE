@@ -37,12 +37,16 @@ my $versionid = "TrecVid08 Big XML Files Validator Helper Version: $version";
 ##########
 # Check we have every module (perl wise)
 
-my ($f4b, @f4bv);
+my ($f4b, @f4bv, $f4d);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
+  $f4d = dirname(abs_path($0));
+
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib", "../../../common/lib");
+      : ("$f4d/../../lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -89,7 +93,6 @@ my $mancmd = "perldoc -F $0";
 my $spc = 200; # Fine tuned on BigTest (on my laptop)
 # 50=11s 100=9.97s 150=9.5s 200=9.3s 250=9.3s 300=9.55s 500=10.3s
 my $chunks = 16034;
-my $usage = &set_usage();
 
 my $mrgtool = "";
 my $valtool = "";
@@ -97,13 +100,14 @@ if (exists $ENV{$f4b}) {
   $valtool = $ENV{$f4b} . "/bin/TV08ViperValidator";
   $mrgtool = $ENV{$f4b} . "/bin/TV08MergeHelper";
 } else {
-  $valtool = "../TV08ViperValidator/TV08ViperValidator.pl";
-  $mrgtool = "../TV08MergeHelper/TV08MergeHelper.pl";
+  $valtool = dirname(abs_path($0)) . "/../TV08ViperValidator/TV08ViperValidator.pl";
+  $mrgtool = dirname(abs_path($0)) . "/../TV08MergeHelper/TV08MergeHelper.pl";
 }
+my $usage = &set_usage();
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../data");
 my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision informations set
 my $writedir = undef;
 my $fps = undef;

@@ -38,12 +38,16 @@ my $versionid = "TrecVid Event Detection Submission Checker Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv);
+my ($f4b, @f4bv, $f4d);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
+  $f4d = dirname(abs_path($0));
+
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib", "../../../common/lib");
+      : ("$f4d/../../lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -106,7 +110,7 @@ my $md_add = TrecVid08HelperFunctions::get_MemDump_Suffix();
 
 my $BigXMLtool = (exists $ENV{$f4b})
   ? $ENV{$f4b} . "/bin/TV08_BigXML_ValidatorHelper"
-  : "../TV08ViperValidator/TV08_BigXML_ValidatorHelper.pl";
+  : dirname(abs_path($0)) . "/../TV08ViperValidator/TV08_BigXML_ValidatorHelper.pl";
 
 my $xmllint_env = "F4DE_XMLLINT";
 my $mancmd = "perldoc -F $0";
@@ -114,7 +118,7 @@ my $usage = &set_usage();
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../data");
 my $fps = undef;
 my $ecffile = "";
 my $verb = 0;
