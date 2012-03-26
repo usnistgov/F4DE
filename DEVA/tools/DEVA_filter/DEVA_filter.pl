@@ -37,14 +37,16 @@ my $versionid = "DEVA Filter Version: $version";
 ##########
 # Check we have every module (perl wise)
 
-my ($f4b, @f4bv);
+my ($f4b, @f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
+  $f4d = dirname(abs_path($0));
+
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : (dirname(abs_path($0)) . "/../../../common/lib");
+      : ("$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 

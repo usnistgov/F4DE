@@ -37,12 +37,16 @@ my $versionid = "Inner Join Select Tool Version: $version";
 ##########
 # Check we have every module (perl wise)
 
-my ($f4b, @f4bv);
+my ($f4b, @f4bv, $f4d);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
+  $f4d = dirname(abs_path($0));
+
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../../common/lib");
+      : ("$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -90,7 +94,7 @@ my $wrkdir = "";
 my $rescsv = "";
 
 my $tooln = "DEVA_cli";
-my $tool = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/bin/$tooln" : "../DEVA_cli/$tooln.pl";
+my $tool = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/bin/$tooln" : (dirname(abs_path($0)) . "/../DEVA_cli/$tooln.pl");
 
 my @keys = 
   (

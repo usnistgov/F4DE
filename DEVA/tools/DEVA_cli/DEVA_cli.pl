@@ -37,14 +37,18 @@ my $versionid = "DEVA Command Line Interface Version: $version";
 ##########
 # Check we have every module (perl wise)
 
-my ($f4b, @f4bv);
+my ($f4b, @f4bv, $f4d);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
+  $f4d = dirname(abs_path($0));
+
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : (dirname(abs_path($0)) . "/../../../common/lib");
+      : ("$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -98,7 +102,7 @@ my ($sqlite_cfg_helper, $sqlite_tables_creator, $sqlite_load_csv,
     "DEVA_filter", "DEVA_sci");
 
 my @profiles_beg_end = ("DEVAcli_profile-", ".perl");
-my @profiles_path = ('.', (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data");
+my @profiles_path = ('.', (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../data"));
 my %ok_profiles = ();
 &get_profiles_list(\%ok_profiles, \@profiles_path, @profiles_beg_end);
 
