@@ -38,12 +38,16 @@ my $versionid = "Big XML Files Validator Helper Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv);
+my ($f4b, @f4bv, $f4d);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
+  $f4d = dirname(abs_path($0));
+
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib", "../../../CLEAR07/lib", "../../../common/lib");
+      : ("$f4d/../../lib", "$f4d/../../../CLEAR07/lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -97,8 +101,8 @@ if (exists $ENV{$f4b}) {
   $valtool = $ENV{$f4b} . "/bin/AVSS09ViperValidator";
   $mrgtool = $ENV{$f4b} . "/bin/AVSS09Merger";
 } else {
-  $valtool = "../AVSS09ViperValidator/AVSS09ViperValidator.pl";
-  $mrgtool = "../AVSS09Merger/AVSS09Merger.pl";
+  $valtool = dirname(abs_path($0)) . "/../AVSS09ViperValidator/AVSS09ViperValidator.pl";
+  $mrgtool = dirname(abs_path($0)) . "/../AVSS09Merger/AVSS09Merger.pl";
 }
 my $usage = &set_usage();
 

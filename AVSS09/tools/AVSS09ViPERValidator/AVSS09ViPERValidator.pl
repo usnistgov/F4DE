@@ -37,12 +37,16 @@ my $versionid = "AVSS09 ViPER XML Validator Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv);
+my ($f4b, @f4bv, $f4d);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
+  $f4d = dirname(abs_path($0));
+
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib", "../../../CLEAR07/lib", "../../../common/lib");
+      : ("$f4d/../../lib", "$f4d/../../../CLEAR07/lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -96,13 +100,13 @@ my $usage = &set_usage();
 # Default values for variables
 my $isgtf = 0;
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../../CLEAR07/data";
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../../CLEAR07/data");
 my $show = 0;
 my $forceFilename = "";
 my $writeback = -1;
 my $MemDump = undef;
 my $skipScoringSequenceMemDump = 0;
-my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
+my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../data");
 my $ecf_file = "";
 my $ttid = "";
 my $tttdir = 0;

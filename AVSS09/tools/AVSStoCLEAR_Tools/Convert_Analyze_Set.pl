@@ -37,12 +37,16 @@ my $versionid = "AVSS ViPER Files to CLEAR ViPER Files converter and analyzer: $
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv);
+my ($f4b, @f4bv, $f4d);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
+  $f4d = dirname(abs_path($0));
+
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../lib", "../../../CLEAR07/lib", "../../../common/lib");
+      : ("$f4d/../../lib", "$f4d/../../../CLEAR07/lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -133,7 +137,7 @@ MMisc::error_quit("output_dir problem: $err")
 
 my @fl = MMisc::get_files_list($in);
 MMisc::error_quit("No files in input_dir\n")
-  if (! defined @fl);
+  if (scalar @fl == 0);
 
 my $avcl = new AVSStoCLEAR();
 my @keys = ();

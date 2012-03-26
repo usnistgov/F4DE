@@ -38,12 +38,16 @@ my $versionid = "AVSS Checker Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv);
+my ($f4b, @f4bv, $f4d);
 BEGIN {
+  use Cwd 'abs_path';
+  use File::Basename 'dirname';
+  $f4d = dirname(abs_path($0));
+
   $f4b = "F4DE_BASE";
   push @f4bv, (exists $ENV{$f4b}) 
     ? ($ENV{$f4b} . "/lib") 
-      : ("../../../AVSS09/lib", "../../../CLEAR07/lib", "../../../common/lib");
+      : ("$f4d/../../../AVSS09/lib", "$f4d/../../../CLEAR07/lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -96,8 +100,8 @@ my $mancmd = "perldoc -F $0";
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../../CLEAR07/data";
-my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : "../../data";
+my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../../CLEAR07/data");
+my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../data");
 my $verb = 0;
 my $rtmpdir = undef;
 my $wid = undef;
@@ -106,7 +110,7 @@ my $memdump = "/tmp";
 my $ecfdir = "";
 my $qoe = 0;
 my $specfile = "";
-my $valtool = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/bin/AVSS09ViPERValidator") : "../AVSS09ViPERValidator/AVSS09ViPERValidator.pl";
+my $valtool = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/bin/AVSS09ViPERValidator") : (dirname(abs_path($0)) . "/../AVSS09ViPERValidator/AVSS09ViPERValidator.pl");
 my $frameTol = 0;
 my $logdir = ".";
 my $usage = &set_usage();
