@@ -31,6 +31,8 @@ sub new
     $self->{STYPE} = shift;
     $self->{SPKR} = shift;
     $self->{CONF} = shift;
+    #ref to next record
+    $self->{NEXT} = undef;
     
     bless $self;
     return $self;

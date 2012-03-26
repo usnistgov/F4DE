@@ -1,3 +1,7 @@
+
+
+
+
 # KWSEval
 # RTTMList.pm
 # Author: Jerome Ajot
@@ -28,6 +32,7 @@ sub new
     $self->{FILE} = $rttmfile;
     $self->{DATA} = {};
     $self->{NOSCORE} = {};
+    $self->{TERMLKUP} = {};
 	
     bless $self;
     $self->loadFile($rttmfile) if (defined($rttmfile));
@@ -257,21 +262,52 @@ sub loadFile
         # Remove unwanted space at the begining and at the end of the line
         s/^\s*//;
         s/\s*$//;
-        
+
         # if the line is empty then ignore
         next if ($_ =~ /^$/);
         
         my ($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf) = split(/\s+/,$_,9);
-        
+        {
         if(uc($type) eq "LEXEME")
         {
             push (@{ $self->{DATA}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf) );
-        }
-        
-        if(uc($type) eq "NOSCORE")
+        }  
+        elsif(uc($type) eq "NOSCORE")
         {
             push (@{ $self->{NOSCORE}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, undef, undef) );
         }
+	}
+    }
+
+    foreach my $file(sort keys %{ $self->{DATA} })
+    {
+      foreach my $chan(sort keys %{ $self->{DATA}{$file} })
+      {
+	my %spkrs = ();
+
+	foreach my $rttmrecord (@{ $self->{DATA}{$file}{$chan} })
+	{
+	  push (@{ $spkrs{$rttmrecord->{SPKR}} }, $rttmrecord);
+	}
+
+	foreach my $spkrname (sort keys %spkrs)
+	{
+	  for (my $i=0; $i<@{ $spkrs{$spkrname} }; $i++)
+	  {
+	    #Link speaker records
+	    if ($i<@{ $spkrs{$spkrname} }-1)
+	    {
+	      $spkrs{$spkrname}[$i]->{NEXT} = $spkrs{$spkrname}[$i+1];
+	    }
+
+	    next if ($spkrs{$spkrname}[$i]->{STYPE} eq "frag");
+	    next if ($spkrs{$spkrname}[$i]->{STYPE} eq "fp");
+
+	    #Add records to term lookup table
+	    push (@{ $self->{TERMLKUP}{lc $spkrs{$spkrname}[$i]->{TOKEN}} },  $spkrs{$spkrname}[$i]);
+	  }
+	}
+      }
     }
 
     close RTTM;
@@ -284,80 +320,59 @@ sub findTermOccurrences
     my @outList = ();
     $term =~ s/^\s*//;
     $term =~ s/\s*$//;
+    $term = lc $term;
     my @terms = split(/\s+/, $term);
-    
-    foreach my $file(sort keys  %{ $self->{DATA} })
+    #print Dumper (\@terms);
+    #Currently no order to returned matches
+    foreach my $record (@{ $self->{TERMLKUP}{$terms[0]} })
     {
-        foreach my $chan(sort keys  %{ $self->{DATA}{$file} })
-        {
-            my %spkrs = ();
-            
-            foreach my $rttmrecord (@{ $self->{DATA}{$file}{$chan} })
-            {
-                push (@{ $spkrs{$rttmrecord->{SPKR}} }, $rttmrecord);
-            }
-            
-            # for each speakers
-            foreach my $spkrname (sort keys  %spkrs)
-            {
-                my @tmpList = ();
-                my $termpos = 0;
-                 
-                # for each token
-                for (my $i=0; $i<@{ $spkrs{$spkrname} }; $i++)
-                {
-                    #my $pattern1 = lc($terms[$termpos]);
-                    #my $pattern2 = lc($spkrs{$spkrname}[$i]->{TOKEN});
-                    
-                    #if($pattern2 eq $pattern1)
-                    
-                    next if ($spkrs{$spkrname}[$i]->{STYPE} eq "frag");
-                    next if ($spkrs{$spkrname}[$i]->{STYPE} eq "fp");
-                    
-                    my $pattern1 = $terms[$termpos];
-                   	my $pattern2 = $spkrs{$spkrname}[$i]->{TOKEN};
-                    
-                    if($pattern2 =~ /^\Q$pattern1\E$/i)
-                    {
-                        my $contsearch = 1;            
-                        push(@tmpList, $spkrs{$spkrname}[$i]);
-                        
-                        if($termpos != 0)
-                        {
-                            if( sprintf("%.4f",($spkrs{$spkrname}[$i]->{BT} - $spkrs{$spkrname}[$i-1]->{ET})) > $threshold)
-                            {
-                                $contsearch = 0;   
-                            }
-                        }
-                        
-                        if($contsearch)
-                        {
-                            $termpos++;
-                        
-                            if($termpos == @terms)
-                            {
-                                push(@outList, [ @tmpList ]);
-                                @tmpList = ();              
-                                $termpos = 0;
-                            }
-                        }
-                        else
-                        {
-                            @tmpList = ();              
-                            $termpos = 0;
-                        }
-                    }
-                    else
-                    {
-                        $i-- if($termpos != 0);
-                        @tmpList = ();
-                        $termpos = 0;
-                    }
-                }
-            }
-        }
+      my @tmpList = ();
+      push (@tmpList, $record);
+      my $termpos = 1;
+      my $currecord = $record;
+      my $hoprecord = $record;
+      while ($termpos < @terms)
+      {
+	if (defined $hoprecord->{NEXT} &&
+	    sprintf("%.4f", ($hoprecord->{NEXT}{BT} - $hoprecord->{ET})) <= $threshold)
+	{
+	  
+	  if ($hoprecord->{NEXT}{STYPE} eq "frag" ||
+	      $hoprecord->{NEXT}{STYPE} eq "fp")
+	  {
+	    $hoprecord = $hoprecord->{NEXT};
+	    next;
+	  }
+
+	  my $pattern1 = $terms[$termpos];
+	  my $pattern2 = $hoprecord->{NEXT}{TOKEN};
+
+	  if ($pattern2 =~ /^\Q$pattern1\E$/i)
+	  {
+	    $currecord = $hoprecord->{NEXT};
+	    $hoprecord = $currecord;
+	    push (@tmpList, $currecord);
+	  }
+	  else
+	  {
+	    #Next record wasn't a match
+	    @tmpList = ();
+	    last;
+	  }
+	}
+	else
+	{
+	  #Reached the end of records for that speaker or threshold not met
+	  @tmpList = ();
+	  last;
+	}
+
+	$termpos++;
+      }
+
+      push (@outList, [ @tmpList ]) if (@tmpList > 0); 
     }
-        
+
     return(\@outList); 
 }
 
