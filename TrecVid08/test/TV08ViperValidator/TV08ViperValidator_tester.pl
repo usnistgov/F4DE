@@ -67,7 +67,7 @@ $testr += &do_simple_test($tn, "(ChangeType REF -> SYS w/ randomseed + find_valu
 
 ##
 $tn = "test8a";
-$testr += &do_simple_test($tn, "(MemDump)", "$validator ../common/test1-1fa-sys.xml ../common/test2-1md_1fa-sys.xml -w -W text -p", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(MemDump)", "$validator ../common/test1-1fa-sys.xml ../common/test2-1md_1fa-sys.xml -w -W text -p -T ../../data", "res_$tn.txt");
 
 $tn = "test8b";
 $testr += &do_simple_test($tn, "(MemDump Load)", "$validator ../common/test1-1fa-sys.xml.memdump ../common/test2-1md_1fa-sys.xml.memdump -w -p", "res_$tn.txt");
