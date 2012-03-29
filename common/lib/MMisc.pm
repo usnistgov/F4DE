@@ -878,7 +878,7 @@ sub cmd_which {
 ####################
 
 sub warn_print {
-  print('[Warning] ', join(' ', @_), "\n");
+  print '[Warning] ' . join(' ', @_) . "\n";
 }
 
 ##########
@@ -891,7 +891,7 @@ sub error_exit {
 #####
 
 sub error_quit {
-  print('[ERROR] ', join(' ', @_), "\n");
+  print '[ERROR] ' . join(' ', @_) . "\n";
   &error_exit();
 }
 
@@ -904,7 +904,7 @@ sub ok_exit {
 #####
 
 sub ok_quit {
-  print(join(' ', @_), "\n");
+  print join(' ', @_) . "\n";
   &ok_exit();
 }
 
@@ -1674,6 +1674,18 @@ sub filecopy {
       if (! &is_blank($err));
 
   return("");
+}
+
+##########
+
+sub is_email {
+  return("No email provided")
+    if (MMisc::is_blank($_[0]));
+
+  return("") 
+    if ($_[0] =~ m%^[\w\.\-\_]+\@[\w\.\-\_]+\.[a-z]{2,}+$%i);
+
+  return("Invalid email address");
 }
 
 ############################################################
