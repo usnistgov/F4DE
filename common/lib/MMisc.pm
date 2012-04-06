@@ -1300,6 +1300,8 @@ sub get_file_full_path {
 
 sub iuav { # Initialize Undefined Array of Values
   my ($ra, @rest) = @_;
+  # 0: reference to array
+  # 1+: replacement values
 
   my @out = ();
   for (my $i = 0; $i < scalar @rest; $i++) {
@@ -1686,6 +1688,26 @@ sub is_email {
     if ($_[0] =~ m%^[\w\.\-\_]+\@[\w\.\-\_]+\.[a-z]{2,}$%i);
 
   return("Invalid email address");
+}
+
+##########
+
+# % perl -e 'use MMisc; @a=qw(1 2 3 4 5 6 7); print join(" ", MMisc::shiftX(3,\@a)) . "|" . join(" ", @a) . "\n";'
+# 1 2 3|4 5 6 7
+sub shiftX {
+  # 0: number of items
+  # 1: reference to array to shift elements from
+  return(splice(@{$_[1]}, 0, $_[0]));
+}
+
+##
+
+# % perl -e 'use MMisc; @a=qw(1 2 3 4 5 6 7); print join(" ", MMisc::popX(3,\@a)) . "|" . join(" ", @a) . "\n";'
+# 5 6 7|1 2 3 4
+sub popX {
+  # 0: number of items
+  # 1: reference to array to shift elements from
+  return(splice(@{$_[1]}, -$_[0]));
 }
 
 ############################################################
