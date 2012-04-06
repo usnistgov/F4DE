@@ -1683,7 +1683,7 @@ sub is_email {
     if (MMisc::is_blank($_[0]));
 
   return("") 
-    if ($_[0] =~ m%^[\w\.\-\_]+\@[\w\.\-\_]+\.[a-z]{2,}+$%i);
+    if ($_[0] =~ m%^[\w\.\-\_]+\@[\w\.\-\_]+\.[a-z]{2,}$%i);
 
   return("Invalid email address");
 }
