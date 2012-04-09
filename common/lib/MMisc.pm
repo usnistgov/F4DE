@@ -57,10 +57,7 @@ sub get_tmpdir {
 #####
 
 sub get_tmpfilename {
-#  my (undef, $name) = tempfile( OPEN => 0 );
-  my $name = tmpnam();
-
-  return($name);
+  return(tmpnam());
 }
 
 #####
