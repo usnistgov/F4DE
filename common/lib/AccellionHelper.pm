@@ -102,7 +102,7 @@ sub unset_IncludeSubDirs { $_[0]->__binopt_false([1,2], [$modes[0]], 'IncludeSub
 ## The subject of the email message
 # Only one line of text is allowed
 # Default message is : UploadSummary
-sub set_EmailSubject   { $_[0]->__set_option([1,2], [$modes[0]], 'EmailSubject', $_[1]); }
+sub set_EmailSubject   { $_[0]->__set_with_constraint([1,2], [$modes[0]], 'EmailSubject', $_[1], (($_[1] =~ tr%\n%%) == 0), "must be contained within one line of text"); }
 sub unset_EmailSubject { $_[0]->__unset_option([1,2], [$modes[0]], 'EmailSubject'); }
 
 ########## upload (v1,v2)
@@ -111,7 +111,7 @@ sub unset_EmailSubject { $_[0]->__unset_option([1,2], [$modes[0]], 'EmailSubject
 ## Path to a file contianing e-Mail body template  
 # The template may contain placeholders marked with a $
 # Each place holder will be substituted with the value from the Substitions file
-sub set_EmailTemplate   { $_[0]->__set_option([1,2], [$modes[0]], 'EmailTemplate', $_[1]); }
+sub set_EmailTemplate   { $_[0]->__set_file_r([1,2], [$modes[0]], 'EmailTemplate', $_[1]); }
 sub unset_EmailTemplate { $_[0]->__unset_option([1,2], [$modes[0]], 'EmailTemplate'); }
 
 ########## upload (v1,v2)
@@ -121,7 +121,7 @@ sub unset_EmailTemplate { $_[0]->__unset_option([1,2], [$modes[0]], 'EmailTempla
 # Each line of the file must contain one 'placeholder = value' pair
 # (v2) First line of the file must be [EmailSubs]
 # $Date and $Time are substituted with the current date and time if not specified in this file
-sub set_TemplateSubstituitions   { $_[0]->__set_option([1,2], [$modes[0]], 'TemplateSubstituitions', $_[1]); }
+sub set_TemplateSubstituitions   { $_[0]->__set_file_r([1,2], [$modes[0]], 'TemplateSubstituitions', $_[1]); }
 sub unset_TemplateSubstituitions { $_[0]->__unset_option([1,2], [$modes[0]], 'TemplateSubstituitions'); }
 
 ########## upload (v1,v2)
@@ -311,7 +311,7 @@ sub unset_ZipBeforeSending { $_[0]->__binopt_false([2], [$modes[0]], 'ZipBeforeS
 ########## upload (v2)
 # set_EncryptBeforeSending()
 # unset_EncryptBeforeSending()
-## The files are encrypted before sending. While downloading, the Appliance will decrypt it on the fly using the key in the link
+## The file(s) are encrypted before sending. While downloading, the Appliance will decrypt it on the fly using the key in the link
 # (Default : false) Set to true to encrypt files before being sent
 sub set_EncryptBeforeSending   { $_[0]->__binopt_true([2], [$modes[0]], 'EncryptBeforeSending'); }
 sub unset_EncryptBeforeSending { $_[0]->__binopt_false([2], [$modes[0]], 'EncryptBeforeSending'); }
@@ -351,13 +351,28 @@ sub set_PostUploadTaskScript {
 
 
 ########################################
-## upload
-
+########## upload (v1,v2)
+# upload(PathOrDir, ArrayOfEmails)
+## Upload file or directory to specified email addresses
 sub upload {
-  my ($self, $path, @mailto) = @_;
+  my ($self, $bpath, @mailto) = @_;
 
   return(0) if (! $self->__set_mail([1,2], [$modes[0]], 'MailTo', @mailto));
-  $self->__set_path([1,2], [$modes[0]], 'Path', $path);
+
+  my $path = MMisc::get_file_full_path($bpath);
+  if (MMisc::does_file_exist($path)) {
+    my $err = MMisc::check_file_r($path);
+    return($_[0]->_set_error_and_return("Issue with File to \'upload\' ($path): $err", 0))
+      if (! MMisc::is_blank($err));
+  } elsif (MMisc::does_dir_exist($path)) {
+    my $err = MMisc::check_dir_r($path);
+    return($_[0]->_set_error_and_return("Issue with Directory to \'upload\' ($path): $err", 0))
+      if (! MMisc::is_blank($err));
+  } else {
+    return($_[0]->_set_error_and_return("Issue with file/dir to \'upload\' ($path): not a file or directory ?", 0));
+  }
+  return(0)
+    if (! $self->__set_path([1,2], [$modes[0]], 'Path', $path));
 
   my $post = "";
   if (($self->{toolv} == 2) && (scalar(keys %{$self->{$post_modes[0]}}) > 0)) {
@@ -369,6 +384,61 @@ sub upload {
 
   return($self->runtool($cfgfile));
 }
+
+
+########## upload (v1,v2)
+# upload_with_email(PathOrDir, EmailSubject, EmailBodyFile, ArrayOfEmails)
+## extension to the 'upload' function to add e-mail subject and body
+sub upload_with_email {
+  my ($self, $path, $subj, $emailfile, @mailto) = @_;
+
+  return(0)
+    if (! $self->set_EmailSubject($subj));
+
+  return(0)
+    if (! $self->set_EmailTemplate($emailfile));
+
+  return($self->upload($path, @mailto));
+}
+
+
+########## upload (v1,v2)
+# preferred_upload(PathOrDir, EmailSubject, EmailBodyFile, ArrayOfEmails)
+## extension to the 'upload' function to add e-mail subject and body with default upload options so that:
+# (v1,v2) get a return receipt when the file is downloaded
+# (v1,v2) download is allowed only to the direct recipients of the e-mail
+# (v1,v2) the link will remain valid for 14 days
+# (v1,v2) copy of the e-mail is to be sent to the owner of the AAA account
+# (v2) encrypt before sending
+sub preferred_upload {
+  my ($self, $path, $subj, $emailfile, @mailto) = @_;
+
+  # get a return receipt
+  return(0)
+    if (! $self->set_ReturnReceipt());
+  
+  # must a validated user to download
+  return(0)
+    if (! $self->set_RecipientAuthentication('vr'));
+
+  # set link validity to 2 weeks
+  return(0) 
+    if (! $self->set_LinkValidity(14)); 
+
+  # copy user of this upload
+  return(0)
+    if (! $self->set_EmailCopyToOwner());
+  
+  ##### v2 only
+  if ($self->{toolv} == 2) { 
+    # encrypt before sending
+    return(0)
+      if (! $self->set_EncryptBeforeSending());
+  }
+
+  return($self->upload_with_email($path, $subj, $emailfile, @mailto));
+}
+
 
 ################################################################################
 #################### DOWNLOAD options
@@ -515,12 +585,14 @@ sub set_PostEmailDownloadTaskScript {
 }
 
 ########################################
-## download
-
+########## download (v1,v2)
+# download(PathToDownload)
+## Download all content into given path
 sub download {
   my ($self, $path) = @_;
 
-  $self->__set_path([1,2], [$modes[1]], 'Path', $path);
+  return(0)
+    if (! $self->__set_dir_w([1,2], [$modes[1]], 'Path', $path));
 
   my $post = "";
   if ($self->{toolv} == 2) {
@@ -537,6 +609,8 @@ sub download {
   return($self->runtool($cfgfile));
 }
 
+
+################################################################################
 ########################################
 
 sub reset {
@@ -646,13 +720,33 @@ sub __set_value {
   return(1);
 }
 
+##
+
 sub __set_mail {
   my ($self, $versions, $mode, $option, @emails) = @_;
   return(0) if ($self->check_bad_emails(@emails));
   return($self->__set_value($versions, $mode, $option, join(",", @emails)));
 }
 
+##
+
+sub __set_file_r { 
+  my $t = MMisc::get_file_full_path($_[4]);
+  return($_[0]->__set_with_constraint($_[1], $_[2], $_[3], $t, (MMisc::is_file_r($t)), MMisc::check_file_r($t)));
+}
+
+##
+
+sub __set_dir_w { 
+  my $t = MMisc::get_file_full_path($_[4]);
+  return($_[0]->__set_with_constraint($_[1], $_[2], $_[3], $t, (MMisc::is_dir_w($t)), MMisc::check_dir_w($t)));
+}
+
+##
+
 sub __set_path { return($_[0]->__set_value($_[1], $_[2], $_[3], MMisc::get_file_full_path($_[4]))); }
+
+##
 
 sub __set_mcq {
   my ($self, $versions, $mode, $option, $value, $rpossibles) = @_;
@@ -661,6 +755,8 @@ sub __set_mcq {
     if (! exists $h{$value});
   return($_[0]->__set_value($_[1], $_[2], $_[3], $_[4]));
 }  
+
+##
 
 sub __set_with_constraint {
   my ($self, $versions, $mode, $option, $value, $constraintmet, $errtxt) = @_;
@@ -691,7 +787,7 @@ sub __set_PostScript {
     if (! $self->__set_mcq($rv, $rm, 'Type', $type, ['exe', 'shell', 'python']));
   # Name
   return(0) 
-    if (! $self->__set_path($rv, $rm, 'Name', $name));
+    if (! $self->__set_file_r($rv, $rm, 'Name', $name));
   # Call
   if ($type eq 'python') {
     return($self->_set_error_and_return("\'Call\' must be set if \'Type\' is set to \"python\"", 0))
