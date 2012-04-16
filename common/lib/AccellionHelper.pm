@@ -40,7 +40,7 @@ my @post_modes = ('PostSendScript', 'PostDownloadScript', 'PostEmailDownloadScri
 # new(AgentLocation)
 # will check tool major version for compatibility
 sub new {
-  my ($class, $tool, $upload_basecfg, $download_basecfg) = @_;
+  my ($class, $tool) = @_;
 
   my $errorh = new MErrorH('AccellionHelper');
   my $err = MMisc::check_file_x($tool);
@@ -62,7 +62,8 @@ sub new {
      $post_modes[2] => {},
      errorh    => $errorh,
      errorv    => $errorv,      # Cache information
-     donotrun  => 0,
+     dbg_donotrun    => 0,
+     dbg_showlogpath => 0, 
     };
  
   bless $self;
@@ -82,8 +83,10 @@ sub get_tool_major_version { return($_[0]->{toolv}); }
 
 ##########
 
-sub debug_set_toolv    { $_[0]->{toolv} = $_[1]; }
-sub debug_set_donotrun { $_[0]->{donotrun} = $_[1]; }
+sub debug_set_toolv        { $_[0]->{toolv} = $_[1]; }
+sub debug_set_donotrun     { $_[0]->{dbg_donotrun} = $_[1]; }
+sub debug_set_showlogpath  { $_[0]->{dbg_showlogpath} = $_[1]; }
+
 
 ############################################################
 #################### UPLOAD options
@@ -96,6 +99,7 @@ sub debug_set_donotrun { $_[0]->{donotrun} = $_[1]; }
 sub set_IncludeSubDirs   { $_[0]->__binopt_true([1,2], [$modes[0]], 'IncludeSubDirs'); }
 sub unset_IncludeSubDirs { $_[0]->__binopt_false([1,2], [$modes[0]], 'IncludeSubDirs'); }
 
+
 ########## upload (v1,v2)
 # set_EmailSubject(subjectText)
 # unset_EmailSubject()
@@ -105,6 +109,7 @@ sub unset_IncludeSubDirs { $_[0]->__binopt_false([1,2], [$modes[0]], 'IncludeSub
 sub set_EmailSubject   { $_[0]->__set_with_constraint([1,2], [$modes[0]], 'EmailSubject', $_[1], (($_[1] =~ tr%\n%%) == 0), "must be contained within one line of text"); }
 sub unset_EmailSubject { $_[0]->__unset_option([1,2], [$modes[0]], 'EmailSubject'); }
 
+
 ########## upload (v1,v2)
 # set_EmailTemplate(TemplateFile)
 # unset_EmailTemplate()
@@ -113,6 +118,7 @@ sub unset_EmailSubject { $_[0]->__unset_option([1,2], [$modes[0]], 'EmailSubject
 # Each place holder will be substituted with the value from the Substitions file
 sub set_EmailTemplate   { $_[0]->__set_file_r([1,2], [$modes[0]], 'EmailTemplate', $_[1]); }
 sub unset_EmailTemplate { $_[0]->__unset_option([1,2], [$modes[0]], 'EmailTemplate'); }
+
 
 ########## upload (v1,v2)
 # set_TemplateSubstituitions(TemplateSubstitutionFile)
@@ -124,12 +130,14 @@ sub unset_EmailTemplate { $_[0]->__unset_option([1,2], [$modes[0]], 'EmailTempla
 sub set_TemplateSubstituitions   { $_[0]->__set_file_r([1,2], [$modes[0]], 'TemplateSubstituitions', $_[1]); }
 sub unset_TemplateSubstituitions { $_[0]->__unset_option([1,2], [$modes[0]], 'TemplateSubstituitions'); }
 
+
 ########## upload (v1,v2)
 # set_ReturnReceipt()
 # unset_ReturnReceipt()
 ## To request an intimation e-mail being sent to the AAA account owner whenever a file is downloaded by a recipient. 
 sub set_ReturnReceipt   { $_[0]->__binopt_true([1,2], [$modes[0]], 'ReturnReceipt'); }
 sub unset_ReturnReceipt { $_[0]->__binopt_false([1,2], [$modes[0]], 'ReturnReceipt'); }
+
 
 ########## upload (v1,v2)
 # set_RecipientAuthentication(AuthenticationScheme)
@@ -143,6 +151,7 @@ sub unset_ReturnReceipt { $_[0]->__binopt_false([1,2], [$modes[0]], 'ReturnRecei
 sub set_RecipientAuthentication   { $_[0]->__set_mcq([1,2], [$modes[0]], 'RecipientAuthentication', $_[1], ['na', 'vr', 'vi', 'ck']); }
 sub unset_RecipientAuthentication { $_[0]->__unset_option([1,2], [$modes[0]], 'RecipientAuthentication'); }
 
+
 ########## upload (v1,v2)
 # set_LinkValidity(numberOfDays)
 # unset_LinkValidity()
@@ -152,6 +161,7 @@ sub unset_RecipientAuthentication { $_[0]->__unset_option([1,2], [$modes[0]], 'R
 sub set_LinkValidity   { $_[0]->__set_with_constraint([1,2], [$modes[0]], 'LinkValidity', $_[1], ((MMisc::is_integer($_[1])) && ($_[1] > 0)), 'must be integer and over 0'); }
 sub unset_LinkValidity { $_[0]->__unset_option([1,2], [$modes[0]], 'LinkValidity'); }
 
+
 ########## upload (v1,v2)
 # set_EmailCopyToOwner()
 # unset_EmailCopyToOwner()
@@ -159,6 +169,7 @@ sub unset_LinkValidity { $_[0]->__unset_option([1,2], [$modes[0]], 'LinkValidity
 # Default : as set on Courier Manager
 sub set_EmailCopyToOwner   { $_[0]->__binopt_true([1,2], [$modes[0]], 'EmailCopyToOwner'); }
 sub unset_EmailCopyToOwner { $_[0]->__binopt_false([1,2], [$modes[0]], 'EmailCopyToOwner'); }
+
 
 ########## upload (v1,v2)
 # set_RenameSuffix(suffixString)
@@ -168,12 +179,14 @@ sub unset_EmailCopyToOwner { $_[0]->__binopt_false([1,2], [$modes[0]], 'EmailCop
 sub set_RenameSuffix   { $_[0]->__set_option([1,2], [$modes[0]], 'RenameSuffix', $_[1]); }
 sub unset_RenameSuffix { $_[0]->__unset_option([1,2], [$modes[0]], 'RenameSuffix'); }
 
+
 ########## upload (v1)
 # set_LocationLabel(labelString)
 # unset_set_LocationLabel()
 ## LocationLabel : Label assigned to a sender agent
 sub set_LocationLabel   { $_[0]->__set_option([1], [$modes[0], $modes[1]], 'LocationLabel', $_[1]); }
 sub unset_LocationLabel { $_[0]->__unset_option([1], [$modes[0], $modes[1]], 'LocationLabel'); }
+
 
 ########## upload (v2)
 # set_MailCc(arrayOfAddresses)
@@ -182,12 +195,14 @@ sub unset_LocationLabel { $_[0]->__unset_option([1], [$modes[0], $modes[1]], 'Lo
 sub set_MailCc   { my $self = shift @_; $self->__set_mail([2], [$modes[0]], 'MailCc', @_); }
 sub unset_MailCc { $_[0]->__unset_option([2], [$modes[0]], 'MailCc'); }
 
+
 ########## upload (v2)
 # set_MailBcc(emailAddresses)
 # unset_MailBcc()
 ## List of recipients to send a blind copy of the email with links to the uploaded files ( comma separated )
 sub set_MailBcc   { my $self = shift @_; $self->__set_mail([2], [$modes[0]], 'MailBcc', @_); }
 sub unset_MailBcc { $_[0]->__unset_option([2], [$modes[0]], 'MailBcc'); }
+
 
 ########## upload (v2)
 # set_HTMLMessageBody()
@@ -196,12 +211,14 @@ sub unset_MailBcc { $_[0]->__unset_option([2], [$modes[0]], 'MailBcc'); }
 sub set_HTMLMessageBody   { $_[0]->__binopt_true([2], [$modes[0]], 'HTMLMessageBody'); }
 sub unset_HTMLMessageBody { $_[0]->__binopt_false([2], [$modes[0]], 'HTMLMessageBody'); }
 
+
 ########## upload (v2)
 # set_ReturnReceiptAddresses(emailAddresses)
 # unset_ReturnReceiptAddresses(emailAddresses)
 ## list of e-mail id's to get the download intimation e-mail in addition to the account owner ( comma separated )
 sub set_ReturnReceiptAddresses   { my $self = shift @_; $self->__set_mail([2], [$modes[0]], 'ReturnReceiptAddresses', @_); }
 sub unset_ReturnReceiptAddresses { $_[0]->__unset_option([2], [$modes[0], $modes[1]], 'ReturnReceiptAddresses'); }
+
 
 ########## upload (v2)
 # set_EnableResume()
@@ -213,6 +230,7 @@ sub unset_ReturnReceiptAddresses { $_[0]->__unset_option([2], [$modes[0], $modes
 sub set_EnableResume   { $_[0]->__binopt_true([2], [$modes[0], $modes[1]], 'EnableResume'); }
 sub unset_EnableResume { $_[0]->__binopt_false([2], [$modes[0], $modes[1]], 'EnableResume'); }
 
+
 ########## upload (v2)
 # set_SendNewOrChanged()
 # unset_SendNewOrChanged()
@@ -223,6 +241,7 @@ sub unset_EnableResume { $_[0]->__binopt_false([2], [$modes[0], $modes[1]], 'Ena
 sub set_SendNewOrChanged   { $_[0]->__binopt_true([2], [$modes[0]], 'SendNewOrChanged'); }
 sub unset_SendNewOrChanged { $_[0]->__binopt_false([2], [$modes[0]], 'SendNewOrChanged'); }
 
+
 ########## upload (v2)
 # set_SendNewerThan("YYYY-MM-DD-HH-mm-SS")
 # unset_SendNewerThan()
@@ -232,6 +251,7 @@ sub unset_SendNewOrChanged { $_[0]->__binopt_false([2], [$modes[0]], 'SendNewOrC
 sub set_SendNewerThan   { $_[0]->__set_with_constraint([2], [$modes[0]], 'SendNewerThan', $_[1], ($_[1] =~ m%^\d{4}\-\d{2}\-\d{2}\-\d{2}\-\d{2}\-\d{2}$%), 'possible values must be of the form: YYYY-MM-DD-HH-mm-SS'); }
 sub unset_SendNewerThan { $_[0]->__unset_option([2], [$modes[0]], 'SendNewerThan'); }
 
+
 ########## upload (v2)
 # set_SendOnlyToAccellion()
 # unset_SendOnlyToAccellion()
@@ -240,12 +260,14 @@ sub unset_SendNewerThan { $_[0]->__unset_option([2], [$modes[0]], 'SendNewerThan
 sub set_SendOnlyToAccellion   { $_[0]->__binopt_true([2], [$modes[0]], 'SendOnlyToAccellion'); }
 sub unset_SendOnlyToAccellion { $_[0]->__binopt_false([2], [$modes[0]], 'SendOnlyToAccellion'); }
 
+
 ########## upload (v2)
 # set_ContinuousRun()
 # unset_ContinuousRun()
 ## To scan a folder every 5 seconds, and send the detected files according to the rest of the parameters (default: false)
 sub set_ContinuousRun   { $_[0]->__binopt_true([2], [$modes[0], $modes[1]], 'ContinuousRun'); }
 sub unset_ContinuousRun { $_[0]->__binopt_false([2], [$modes[0], $modes[1]], 'ContinuousRun'); }
+
 
 ########## upload (v2)
 # set_ScanFrequency(inSeconds)
@@ -255,6 +277,7 @@ sub unset_ContinuousRun { $_[0]->__binopt_false([2], [$modes[0], $modes[1]], 'Co
 # default: 5 seconds; values must be > 1
 sub set_ScanFrequency   { $_[0]->__set_with_constraint([2], [$modes[0]], 'ScanFrequency', $_[1], ((MMisc::is_integer($_[1])) && ($_[1] > 0)), 'must be integer and over 0'); }
 sub unset_ScanFrequency { $_[0]->__unset_option([2], [$modes[0]], 'ScanFrequency'); }
+
 
 ########## upload (v2)
 # set_PostSendProcess(mode)
@@ -267,6 +290,7 @@ sub unset_ScanFrequency { $_[0]->__unset_option([2], [$modes[0]], 'ScanFrequency
 sub set_PostSendProcess   { $_[0]->__set_mcq([2], [$modes[0]], 'PostSendProcess', $_[1], ['0', '1', '2', '3']); }
 sub unset_PostSendProcess { $_[0]->__unset_option([2], [$modes[0]], 'PostSendProcess'); }
 
+
 ########## upload (v2)
 # set_GetRecipientFromPath(AAARegularExpression)
 # unset_GetRecipientFromPath()
@@ -277,6 +301,7 @@ sub unset_PostSendProcess { $_[0]->__unset_option([2], [$modes[0]], 'PostSendPro
 # Default is Blank
 sub set_GetRecipientFromPath   { $_[0]->__set_option([2], [$modes[0]], 'GetRecipientFromPath', $_[1]); }
 sub unset_GetRecipientFromPath { $_[0]->__unset_option([2], [$modes[0]], 'GetRecipientFromPath'); }
+
 
 ########## upload (v2)
 # set_ExcludeFilter(AAARegularExpression)
@@ -289,6 +314,7 @@ sub unset_GetRecipientFromPath { $_[0]->__unset_option([2], [$modes[0]], 'GetRec
 sub set_ExcludeFilter   { $_[0]->__set_option([2], [$modes[0]], 'ExcludeFilter', $_[1]); }
 sub unset_ExcludeFilter { $_[0]->__unset_option([2], [$modes[0]], 'ExcludeFilter'); }
 
+
 ########## upload (v2)
 # set_IncludeFilter(AAARegularExpression)
 # unset_IncludeFilter()
@@ -300,6 +326,7 @@ sub unset_ExcludeFilter { $_[0]->__unset_option([2], [$modes[0]], 'ExcludeFilter
 sub set_IncludeFilter   { $_[0]->__set_option([2], [$modes[0]], 'IncludeFilter', $_[1]); }
 sub unset_IncludeFilter { $_[0]->__unset_option([2], [$modes[0]], 'IncludeFilter'); }
 
+
 ########## upload (v2)
 # set_ZipBeforeSending()
 # unset_ZipBeforeSending()
@@ -307,6 +334,7 @@ sub unset_IncludeFilter { $_[0]->__unset_option([2], [$modes[0]], 'IncludeFilter
 # (Default : false) Set to true to create a single zip of the files/folder before being sent
 sub set_ZipBeforeSending   { $_[0]->__binopt_true([2], [$modes[0]], 'ZipBeforeSending'); }
 sub unset_ZipBeforeSending { $_[0]->__binopt_false([2], [$modes[0]], 'ZipBeforeSending'); }
+
 
 ########## upload (v2)
 # set_EncryptBeforeSending()
@@ -318,6 +346,7 @@ sub unset_ZipBeforeSending { $_[0]->__binopt_false([2], [$modes[0]], 'ZipBeforeS
 # so it is recommended to only use this option if the file is send to a user via an email link
 sub set_EncryptBeforeSending   { $_[0]->__binopt_true([2], [$modes[0]], 'EncryptBeforeSending'); }
 sub unset_EncryptBeforeSending { $_[0]->__binopt_false([2], [$modes[0]], 'EncryptBeforeSending'); }
+
 
 ########## upload (v2)
 # set_PostUploadTaskScript(Type, Name, Call, RunCondition, WaitForResult, FailureMode, ArrayOfParameters)
@@ -346,7 +375,6 @@ sub unset_EncryptBeforeSending { $_[0]->__binopt_false([2], [$modes[0]], 'Encryp
 #   A few special values are - $FILE_PATH$, $FILE_LIST$, $Result$, $SenderId$, $MailTo$, $MailCc$, $MailBcc$,
 #     $EMAIL_PATH$, $BODY_PATH$, $ATT_DIR$,
 #   Default:None
-
 sub set_PostUploadTaskScript {
   my $self = shift @_;
   return($self->__set_PostScript([2], [$post_modes[0]], @_));
@@ -392,14 +420,19 @@ sub upload {
 ########## upload (v1,v2)
 # upload_with_email(PathOrDir, EmailSubject, EmailBodyFile, ArrayOfEmails)
 ## extension to the 'upload' function to add e-mail subject and body
+# EmailSubject and/or EmailBodyFile can be empty to bypass their use
 sub upload_with_email {
   my ($self, $path, $subj, $emailfile, @mailto) = @_;
 
-  return(0)
-    if (! $self->set_EmailSubject($subj));
+  if (! MMisc::is_blank($subj)) {
+    return(0)
+      if (! $self->set_EmailSubject($subj));
+  }
 
-  return(0)
-    if (! $self->set_EmailTemplate($emailfile));
+  if (! MMisc::is_blank($emailfile)) {
+    return(0)
+      if (! $self->set_EmailTemplate($emailfile));
+  }
 
   return($self->upload($path, @mailto));
 }
@@ -412,6 +445,7 @@ sub upload_with_email {
 # (v1,v2) download is allowed only to the direct recipients of the e-mail
 # (v1,v2) the link will remain valid for 14 days
 # (v1,v2) copy of the e-mail is to be sent to the owner of the AAA account
+# (v2) send only new or changed files as compared to files sent earlier
 sub preferred_upload {
   my ($self, $path, $subj, $emailfile, @mailto) = @_;
 
@@ -431,7 +465,47 @@ sub preferred_upload {
   return(0)
     if (! $self->set_EmailCopyToOwner());
   
+  if ($self->{toolv} == 2) {
+    return(0)
+      if (! $self->set_SendNewOrChanged());
+  }
+
   return($self->upload_with_email($path, $subj, $emailfile, @mailto));
+}
+
+
+########## upload (v1)
+# preferred_upload_withLabel(PathOrDir, EmailSubject, EmailBodyFile, Label, ArrayOfEmails)
+## extension to the 'preferred_upload' function to add a Label
+sub preferred_upload_withLabel {
+  my ($self, $path, $subj, $emailfile, $label, @mailto) = @_;
+
+  return(0)
+    if (! $self->set_LocationLabel($label));
+
+  return($self->preferred_upload($path, $subj, $emailfile, @mailto));
+}
+
+
+########## upload (v2)
+# continuous_preferred_upload(DirToUploadFrom, EmailSubject, EmailBodyFile, CheckInterval, ArrayOfEmails)
+## extension to preferred_upload to continuously upload files from given directory
+# Warning: tool will not exit from this mode
+sub continuous_preferred_upload {
+  my ($self, $tdir, $subj, $emailfile, $checki, @mailto) = @_;
+  
+  return(0)
+    if (! $self->set_ContinuousRun());
+
+  my $dir = MMisc::get_file_full_path($tdir);
+  my $err = MMisc::check_dir_r($dir);
+  return($self->_set_error_and_return("\'continuous_upload\' can only be used with directories ($dir): $err", 0))
+    if (! MMisc::is_blank($err));
+
+  return(0)
+    if (! $self->set_ScanFrequency($checki));
+
+  return($self->preferred_upload($tdir, $subj, $emailfile, @mailto));
 }
 
 
@@ -446,6 +520,7 @@ sub preferred_upload {
 # sub set_LocationLabel   { # defined in 'upload' section
 # sub unset_LocationLabel { # defined in 'upload' section
 
+
 ########## download (v1)
 # set_Filter(AAAwildcard)
 # unset_Filter()
@@ -456,6 +531,7 @@ sub preferred_upload {
 sub set_Filter   { $_[0]->__set_option([1], [$modes[1]], 'Filter', $_[1]); }
 sub unset_Filter { $_[0]->__unset_option([1], [$modes[1]], 'Filter'); }
 
+
 ########## download (v1)
 # set_CreateLocationDirectory()
 # unset_CreateLocationDirectory()
@@ -464,6 +540,7 @@ sub unset_Filter { $_[0]->__unset_option([1], [$modes[1]], 'Filter'); }
 # If set to false, subdirectory will not be created. Eg : Files from sender1 will be downloaded to C:\Downloadfolder , etc
 sub set_CreateLocationDirectory   { $_[0]->__binopt_true([1], [$modes[1]], 'CreateLocationDirectory'); }
 sub unset_CreateLocationDirectory { $_[0]->__binopt_false([1], [$modes[1]], 'CreateLocationDirectory'); }
+
 
 ########## download (v1)
 # set_CreateFullPath()
@@ -476,6 +553,7 @@ sub unset_CreateLocationDirectory { $_[0]->__binopt_false([1], [$modes[1]], 'Cre
 sub set_CreateFullPath   { $_[0]->__binopt_true([1], [$modes[1]], 'CreateFullPath'); }
 sub unset_CreateFullPath { $_[0]->__binopt_false([1], [$modes[1]], 'CreateFullPath'); }
 
+
 ########## download (v2)
 # set_ContinuousRun()
 # unset_ContinuousRun()
@@ -483,6 +561,7 @@ sub unset_CreateFullPath { $_[0]->__binopt_false([1], [$modes[1]], 'CreateFullPa
 # Default is false
 # sub set_ContinuousRun   { # defined in 'upload' section
 # sub unset_ContinuousRun { # defined in 'upload' section
+
 
 ########## download (v2)
 # set_DownloadAgain()
@@ -492,6 +571,7 @@ sub unset_CreateFullPath { $_[0]->__binopt_false([1], [$modes[1]], 'CreateFullPa
 sub set_DownloadAgain   { $_[0]->__binopt_true([2], [$modes[1]], 'DownloadAgain'); }
 sub unset_DownloadAgain { $_[0]->__binopt_false([2], [$modes[1]], 'DownloadAgain'); }
 
+
 ########## download (v2)
 # set_DownloadMailBody()
 # unset_DownloadMailBody()
@@ -499,14 +579,16 @@ sub unset_DownloadAgain { $_[0]->__binopt_false([2], [$modes[1]], 'DownloadAgain
 sub set_DownloadMailBody   { $_[0]->__binopt_true([2], [$modes[1]], 'DownloadMailBody'); }
 sub unset_DownloadMailBody { $_[0]->__binopt_false([2], [$modes[1]], 'DownloadMailBody'); }
 
+
 ########## download (v2)
 # set_EnableResume()
 # unset_EnableResume()
 ## To decide if the current task should be compared with earlier unfinished tasks and to restart a 'same' old unfinished task
 # (Default : false) Set to true so that the task may be completed by restarting an earlier unfinished try for the same task
-# Note: to resume a task, the earlier try should also have set this parameter to 1. 
+# Note: to resume a task, the earlier try should also have set this parameter to true. 
 # sub set_EnableResume   { # defined in 'upload' section
 # sub unset_EnableResume { # defined in 'upload' section
+
 
 ########## download (v2)
 # set_ScanFrequency(inSeconds)
@@ -516,6 +598,7 @@ sub unset_DownloadMailBody { $_[0]->__binopt_false([2], [$modes[1]], 'DownloadMa
 # sub set_ScanFrequency   { # defined in 'upload' section
 # sub unset_ScanFrequency { # defined in 'upload' section
 
+
 ########## download (v2)
 # set_SenderEmail(emailAdress)
 # unset_SenderEmail()
@@ -523,6 +606,7 @@ sub unset_DownloadMailBody { $_[0]->__binopt_false([2], [$modes[1]], 'DownloadMa
 # Default is blank - i.e. download irrespective of the sender
 sub set_SenderEmail   { $_[0]->__set_mail([2], [$modes[1]], 'SenderEmail', $_[1]); }
 sub unset_SenderEmail { $_[0]->__unset_option([2], [$modes[1]], 'SenderEmail'); }
+
 
 ########## download (v2)
 # set_EmailAge(numberDays)
@@ -533,12 +617,14 @@ sub unset_SenderEmail { $_[0]->__unset_option([2], [$modes[1]], 'SenderEmail'); 
 sub set_EmailAge   { $_[0]->__set_with_constraint([2], [$modes[1]], 'EmailAge', $_[1], ((MMisc::is_integer($_[1])) && ($_[1] >= 1)), 'possible values >= 0'); }
 sub unset_EmailAge { $_[0]->__unset_option([2], [$modes[1]], 'EmailAge'); }
 
+
 ########## download (v2)
 # set_UnzipAfterDownloading()
 # unset_UnzipAfterDownloading()
 ## Unzip any downloaded zip files (default: false)
 sub set_UnzipAfterDownloading   { $_[0]->__binopt_true([2], [$modes[1]], 'UnzipAfterDownloading'); }
 sub unset_UnzipAfterDownloading { $_[0]->__binopt_false([2], [$modes[1]], 'UnzipAfterDownloading'); }
+
 
 ########## download (v2)
 # set_PostDownloadTaskScript(Type, Name, Call, RunCondition, WaitForResult, FailureMode, ArrayOfParameters)
@@ -568,20 +654,19 @@ sub unset_UnzipAfterDownloading { $_[0]->__binopt_false([2], [$modes[1]], 'Unzip
 #   A few special values are - $FILE_PATH$, $FILE_LIST$, $Result$, $SenderId$, $MailTo$, $MailCc$, $MailBcc$,
 #     $EMAIL_PATH$, $BODY_PATH$, $ATT_DIR$,
 #   Default:None
-
 sub set_PostDownloadTaskScript {
   my $self = shift @_;
   return($self->__set_PostScript([2], [$post_modes[1]], @_));
 }
-
 sub set_PostEmailDownloadTaskScript {
   my $self = shift @_;
   return($self->__set_PostScript([2], [$post_modes[2]], @_));
 }
 
+
 ########################################
 ########## download (v1,v2)
-# download(PathToDownload)
+# download(PathToDownloadTo)
 ## Download all content into given path
 sub download {
   my ($self, $path) = @_;
@@ -606,6 +691,109 @@ sub download {
 }
 
 
+########## download (v1)
+# download_withLabel(PathToDownloadTo, Label)
+## Download only content matching "Label" into given path
+sub download_withLabel {
+  my ($self, $path, $label) = @_;
+
+  return(0)
+    if (! $self->set_LocationLabel($label));
+
+  return($self->download($path));
+}
+
+
+########## preferred_download (v1,v2)
+# preferred_download(PathToDownloadTo)
+## Set default download options 
+# (v2) To download the e-mail text along with the files
+sub preferred_download {
+  my ($self, $path) = @_;
+
+  # nothing to set for v1, call 'download' as is
+  return($self->download($path))
+    if ($self->{toolv} == 1);
+
+  # obtain the email body with the file
+  return(0)
+    if (! $self->set_DownloadMailBody());
+
+  return($self->download($path));
+}
+
+
+########## download (v2)
+# preferred_download_fromEmail(PathToDownloadTo, Email)
+## Extension to preferred download function; download only from specific email address
+sub preferred_download_fromEmail {
+  my ($self, $path, $email) = @_;
+
+  return(0)
+    if (! $self->set_SenderEmail($email));
+
+
+  return($self->preferred_download($path));
+}
+
+
+########## download (v2)
+# preferred_download_newSince(PathToDownloadTo, numberDays)
+## Extension to preferred download function; download only files newer than numberDays
+sub preferred_download_newSince {
+  my ($self, $path, $since) = @_;
+
+  return(0)
+    if (! $self->set_EmailAge($since));
+
+  return($self->preferred_download($path));
+}
+
+
+########## download (v2)
+# preferred_download_fromEmail_newSince(PathToDownloadTo, Email, numberDays)
+## Extension to preferred download function; download only files from Email newer than numberDays
+sub preferred_download_fromEmail_newSince {
+  my ($self, $path, $email, $since) = @_;
+
+  return(0)
+    if (! $self->set_EmailAge($since));
+
+  return($self->preferred_download_newSince($path, $since));
+}
+
+
+########## download (v2)
+# continuous_preferred_download(PathToDownloadTo, CheckInterval)
+## Download all content from any source continously (checking every CheckInterval seconds)
+# Warning: tool will not exit from this mode
+sub continuous_preferred_download {
+  my ($self, $path, $checki) = @_;
+
+  return(0)
+    if (! $self->set_ContinuousRun());
+
+  return(0)
+    if (! $self->set_ScanFrequency($checki));
+
+  return($self->preferred_download($path));
+}
+
+
+########## download (v2)
+# continuous_preferred_download_fromEmail(PathToDownloadTo, Email, CheckInterval)
+## Download all content from selected source continously (checking every CheckInterval seconds)
+# Warning: tool will not exit from this mode
+sub continuous_preferred_download_fromEmail {
+  my ($self, $path, $email, $checki) = @_;
+
+  return(0)
+    if (! $self->set_SenderEmail($email));
+
+  return($self->continuous_preferred_download($path, $checki));
+}
+
+
 ################################################################################
 ########################################
 
@@ -613,6 +801,7 @@ sub reset {
   for (my $i = 0; $i < scalar @modes; $i++) { $_[0]->{$modes[$i]} = {}; }
   for (my $i = 0; $i < scalar @post_modes; $i++) { $_[0]->{$post_modes[$i]} = {}; }
 }
+
 
 ############################################################
 ####################
@@ -659,11 +848,15 @@ sub runtool {
   #0: self
   #1: cfg file
 
-  if ($_[0]->{donotrun} == 1) {
+  if ($_[0]->{dbg_donotrun} == 1) {
     MMisc::warn_print("\"DO NOT RUN\" requested, config file location: " . $_[1] . "\n");
     return(1);
   }
- 
+
+  if ($_[0]->{dbg_showlogpath} == 1) {
+    print "[Log file will be found at: " . $_[1] . ".log]\n";
+  }
+
   my @cmd = ($_[0]->{tool}, '-t', $_[1]);
   
   my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) 
