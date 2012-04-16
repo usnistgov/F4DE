@@ -313,6 +313,9 @@ sub unset_ZipBeforeSending { $_[0]->__binopt_false([2], [$modes[0]], 'ZipBeforeS
 # unset_EncryptBeforeSending()
 ## The file(s) are encrypted before sending. While downloading, the Appliance will decrypt it on the fly using the key in the link
 # (Default : false) Set to true to encrypt files before being sent
+## Warning: when sending a file between "agents", this behavior might happen: 
+# "this Encrypted files cannot be downloaded as the decryption key is not stored on the appliance"
+# so it is recommended to only use this option if the file is send to a user via an email link
 sub set_EncryptBeforeSending   { $_[0]->__binopt_true([2], [$modes[0]], 'EncryptBeforeSending'); }
 sub unset_EncryptBeforeSending { $_[0]->__binopt_false([2], [$modes[0]], 'EncryptBeforeSending'); }
 
@@ -409,7 +412,6 @@ sub upload_with_email {
 # (v1,v2) download is allowed only to the direct recipients of the e-mail
 # (v1,v2) the link will remain valid for 14 days
 # (v1,v2) copy of the e-mail is to be sent to the owner of the AAA account
-# (v2) encrypt before sending
 sub preferred_upload {
   my ($self, $path, $subj, $emailfile, @mailto) = @_;
 
@@ -429,13 +431,6 @@ sub preferred_upload {
   return(0)
     if (! $self->set_EmailCopyToOwner());
   
-  ##### v2 only
-  if ($self->{toolv} == 2) { 
-    # encrypt before sending
-    return(0)
-      if (! $self->set_EncryptBeforeSending());
-  }
-
   return($self->upload_with_email($path, $subj, $emailfile, @mailto));
 }
 
@@ -605,6 +600,7 @@ sub download {
 
   my $cfgfile = $self->obtain_configfile($modes[1], "", $post);
   return(0) if ($self->error());
+#  print "[$cfgfile]\n";
 
   return($self->runtool($cfgfile));
 }
@@ -826,9 +822,9 @@ sub __get_tool_major_version {
   my @cmd = ($tool, '--help');
   
   my ($retcode, $stdout, $stderr) = MMisc::do_system_call(@cmd);
-  if ($stdout =~ m%LOCATIONLABEL%) {
-    return(1);
-  }
+
+  return(1) if ($stdout =~ m%LOCATIONLABEL%);
+  return(2) if ($stdout =~ m%AAAgent\sVersion\s\=\s2\.%);
 
   return(0);
 }
