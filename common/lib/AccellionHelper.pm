@@ -275,8 +275,8 @@ sub unset_ContinuousRun { $_[0]->__binopt_false([2], [$modes[0], $modes[1]], 'Co
 ## To set the time interval after which the AAA looks for new files to upload
 # Valid only in Continuous Scan mode
 # default: 5 seconds; values must be > 1
-sub set_ScanFrequency   { $_[0]->__set_with_constraint([2], [$modes[0]], 'ScanFrequency', $_[1], ((MMisc::is_integer($_[1])) && ($_[1] > 0)), 'must be integer and over 0'); }
-sub unset_ScanFrequency { $_[0]->__unset_option([2], [$modes[0]], 'ScanFrequency'); }
+sub set_ScanFrequency   { $_[0]->__set_with_constraint([2], [$modes[0], $modes[1]], 'ScanFrequency', $_[1], ((MMisc::is_integer($_[1])) && ($_[1] > 1)), 'must be integer and over 1'); }
+sub unset_ScanFrequency { $_[0]->__unset_option([2], [$modes[0], $modes[1]], 'ScanFrequency'); }
 
 
 ########## upload (v2)
