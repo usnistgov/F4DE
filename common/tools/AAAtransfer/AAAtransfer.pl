@@ -94,9 +94,10 @@ MMisc::ok_quit($usage) if (scalar @ARGV == 0);
 
 my $upload = 0;
 my $download = 0;
+my $path = "";
+
 my $tool = "";
 my @email = ();
-my $path = "";
 my $subject = "";
 my $body = "";
 my $tversion = 0;
@@ -108,10 +109,9 @@ GetOptions
   (
    \%opt,
    'help',
-   'upload'     => \$upload,
-   'download'   => \$download,
+   'upload=s'   => sub {$upload = 1; $path = $_[1];},
+   'download=s' => sub {$download = 1; $path = $_[1];},
    'agent=s'    => \$tool,
-   'path=s'     => \$path,
    'email=s'    => \@email,
    'subject=s'  => \$subject,
    'body=s'     => \$body,
@@ -121,10 +121,16 @@ GetOptions
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 
+MMisc::error_quit("Leftover arguments on the command line: " . join(" ", @ARGV))
+  if (scalar @ARGV > 0);
+
 MMisc::error_quit("\'--upload\' and \'--download\' can not be used at the same time\n\n$usage")
   if ($upload && $download);
 
-MMisc::error_quit("Can only download from one sender\n\n$usage")
+MMisc::error_quit("No \'--tool\' specified, aborting")
+  if (MMisc::is_blank($tool));
+
+MMisc::error_quit("Can only download from one sender at a time per agent\n\n$usage")
   if ($download && (scalar @email > 1));
 
 ####################
@@ -209,8 +215,8 @@ sub vprint { return() if ($verb == 0); print join("", @_); }
 sub set_usage {
     my $tmp=<<EOF
 
-$0 [--help] [--verbose] --agent toolLocation [--toolVersion] --upload --email address [--email address [...]] --path FileOrDir [--subject "email subject"] [--body emailBodyContentFile] [--continous IntervalInSeconds]
-$0 [--help] [--verbose] --agent toolLocation [--toolVersion] --download [--email address] --path DownloadToDir [--continous IntervalInSeconds]
+$0 [--help] [--verbose] --agent toolLocation [--toolVersion] --upload FileOrDir --email address [--email address [...]] [--subject "email subject"] [--body emailBodyContentFile] [--continous IntervalInSeconds]
+$0 [--help] [--verbose] --agent toolLocation [--toolVersion] --download DownloadToDir [--email address] [--continous IntervalInSeconds]
 
 Using AAA agent:
 - 'Upload' file or directory content to given email address
@@ -224,15 +230,13 @@ Where:
   --agent        Location of the agent tool (or calling script)
   --toolVersion  Major version number of the agent tool 
 
---upload         Upload mode
+--upload         File or Directory to upload from
   --email        Upload to specified recipient
-  --path         File or Directory to upload from
   --subject      Email subject
   --body         File containing email body
 
---download       Download mode
+--download       Directory to download to
   --email        Only download from specified sender
-  --path         Directory to download to
 
 --continuous     Using this mode, the tool will keep going until manually stopped (Ctrl+C)
 
