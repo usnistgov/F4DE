@@ -840,6 +840,142 @@ sub write_syscall_smart_logfile {
   return(&write_syscall_logfile($ofile, @_));
 }
 
+##########
+# vprint(Yes, ToPrint)
+## Print "ToPrint" only if "Yes" is true
+sub vprint {
+  my $yes = shift @_;
+  return() if (! $yes);
+  print join("", @_);
+}
+
+##########
+# miniJobRunner(verbose, rerunIfBad, baseLockDirectory, baseJobID, commandtorun)
+#### bare component of the full JobRunner tool, designed to simply run a JobID
+# if it was not run in the past or currently in progress
+## input: (verbose, rerunIfBad, baseLockDirectory, baseJobID, commandtorun)
+# verbose=0,1,2: print run status information
+# rerunIfBad=0,1: rerun a job if it was in the past but failed to succesfully complete
+# baseLockDirectory=path: location of base lock directory
+# baseJobID=string: name given by user to job, is used to create uniqueness
+# commandtorun=array: command to run (full path recommended)
+## return: (errstring, wasJobRun, ...)
+# errstring=string: if non blank, contains an error message from miniJobRunner
+# wasJobRun=0,1: only set to 1 if the job was run
+# "..." are the usual return values from 'write_syscall_logfile'; will only be present if 'wasJobRun' is true(=1)
+sub miniJobRunner {
+  my ($verb, $redobad, $blockdir, $toprint, @cmd) = @_;
+
+  my $err = "";
+  # clean up jobid
+  my $name = $toprint;
+  $name =~ s%^\s+%%;
+  $name =~ s%\s+$%%;
+  $name =~ s%[^a-z0-9-_]%_%ig;
+  return("No \'jobid\' specified, aborting", 0)
+    if (&is_blank($name));
+
+  # check lock dir
+  $blockdir =~ s%\/$%%; # remove trailing /
+  $blockdir = &get_file_full_path($blockdir);
+  return("No \'lockdir\' specified, aborting", 0)
+    if (&is_blank($blockdir));
+  $err = &check_dir_w($blockdir);
+  return("Problem with \'lockdir\' : $err", 0)
+    if (! &is_blank($err));
+  my $lockdir = "$blockdir/$name";
+  return("The lockdir directory ($lockdir) must not exist", 0)
+    if (&does_dir_exists($lockdir));
+
+  # check for badly formed lockdir
+  my @dir_end = ("done", "skip", "bad", "inprogress");
+  my $ds_sep  = "_____";
+  my @all = ();
+  foreach my $end (@dir_end) {
+    my $tmp = "${ds_sep}$end";
+    return("Requested lockdir can not end in \'$tmp\' ($lockdir)", 0)
+      if ($lockdir =~ m%$tmp$%i);
+    push @all, "$lockdir$tmp";
+  }
+  my ($dsDone, $dsSkip, $dsBad, $dsRun) = @all;
+
+  my $blogfile = "logfile";
+  my $toprint2 = (! &is_blank($toprint)) ? "$toprint -- " : ""; 
+  
+  # check for multiple state lock directory
+  my @mulcheck = ();
+  foreach my $tmpld (@all) {
+    push(@mulcheck, $tmpld) if (&does_dir_exists($tmpld));
+  }
+  return("Can not run program, lockdir already exists in multiple states:\n - " . join("\n - ", @mulcheck), 0)
+    if (scalar @mulcheck > 1);
+  
+  ## Skip ?
+  if (&does_dir_exists($dsSkip)) {
+    &vprint($verb, "[miniJobRunner] ${toprint2}Skip requested");
+    return("", 0);
+  }
+
+  ## Previously bad ?
+  if (&does_dir_exists($dsBad)) {
+      if (! $redobad) {
+        &vprint($verb, "[miniJobRunner] ${toprint2}Previous bad run present, skipping");
+        return("", 0);
+      }
+      
+      &vprint($verb, "[miniJobRunner] ${toprint2}Deleting previous run lockdir [$dsBad]");
+      `rm -rf $dsBad`;
+      return("Problem deleting \'bad\' lockdir [$dsBad], still present ?", 0)
+        if (&does_dir_exists($dsBad));
+    }
+
+  ## Previously done ?
+  if (&does_dir_exists($dsDone)) {
+    my $flf = "$dsDone/$blogfile";
+    if (&does_file_exists($flf)) {
+      vprint($verb, "[miniJobRunner] ${toprint2}Previously succesfully completed");
+      return("", 0);
+    } else {
+      vprint($verb, "[miniJobRunner] ${toprint2}Previously succesfully completed, but logfile absent => considering as new run, Deleting previous run lockdir [$dsDone]");
+      `rm -rf $dsDone`;
+      return("Problem deleting lockdir [$dsDone], still present ?", 0)
+        if (&does_dir_exists($dsDone));
+    }
+  }
+
+  ## Already in progress ?
+  if (&does_dir_exists($dsRun)) {
+    &vprint($verb, "[miniJobRunner] ${toprint2}Job already in progress, Skipping");
+    return("", 0);
+  }
+
+  # Actual run
+  &vprint($verb, "[miniJobRunner] ${toprint2}In progress\n");
+  &vprint(($verb > 1), "[miniJobRunner] ${toprint2}Creating \"In Progress\" lock dir");
+  return("Could not create writable dir ($dsRun)", 0)
+    if (! &make_wdir($dsRun));
+  my $flf = "$dsRun/$blogfile";
+
+  my ($rv, $tx, $so, $se, $retcode, $flogfile)
+    = &write_syscall_logfile($flf, @cmd);
+  vprint(($verb > 1), "[miniJobRunner] ${toprint2}Final Logfile different from expected one: $flogfile")
+    if ($flogfile ne $flf);
+
+  if ($retcode == 0) {
+    return("Could not rename [$dsRun] to [$dsDone]: $!", 1, $rv, $tx, $so, $se, $retcode, $flogfile)
+      if (! rename($dsRun, $dsDone));
+    $flogfile =~ s%$dsRun%$dsDone%;
+    vprint($verb, "[miniJobRunner] ${toprint2}Job succesfully completed");
+    return("", 1, $rv, $tx, $so, $se, $retcode, $flogfile);
+  }
+
+  ## If we are here, it means it was a BAD run
+  return("Could not rename [$dsRun] to [$dsBad]: $!", 1, $rv, $tx, $so, $se, $retcode, $flogfile)
+    if (! rename($dsRun, $dsBad));
+  $flogfile =~ s%$dsRun%$dsBad%;
+  return("Error during run, see logfile ($flogfile)", 1, $rv, $tx, $so, $se, $retcode, $flogfile);
+}
+
 #####
 
 sub get_txt_last_Xlines {
