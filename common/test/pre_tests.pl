@@ -11,6 +11,20 @@ my $mode = shift @ARGV;
 sub __not4ohc { ($mode ne "OpenHaRT_minirelease_check") ? $_[0] : '' }
 
 ##########
+print "** Checking that the temporary location can be used:\n";
+my $tmp = MMisc::get_tmpfilename();
+print "  - obtained temp file name: \"$tmp\"\n";
+print "  - trying to create it: ";
+if (open FILE, ">$tmp") {
+  close FILE;
+  print "ok\n";
+} else {
+  $err++;
+  print " ERROR during file creation : $!\n";
+}
+print "\n";
+
+##########
 print "** Checking for Perl Required Packages:\n";
 my $ms = 0;
 
