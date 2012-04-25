@@ -29,6 +29,7 @@ use Data::Dumper;
 use Cwd qw(cwd abs_path);
 use Time::HiRes qw(gettimeofday tv_interval);
 use List::Util qw(reduce);
+use File::Find;
 
 my $version     = '0.1b';
 
@@ -976,7 +977,68 @@ sub miniJobRunner {
   return("Error during run, see logfile ($flogfile)", 1, $rv, $tx, $so, $se, $retcode, $flogfile);
 }
 
-#####
+##########
+# file_sha256digest(FileName)
+## return(errstring, hexdigest)
+# ie an error message if any as well as the hex digest of the given file
+# (adapted from 'shasum' 's 'sumfile')
+sub file_sha256digest {
+  my ($file) = @_;
+
+  my $err = &check_file_r($file);
+  return("Problem with input file ($file): $err")
+    if (! &is_blank($err));
+
+  ## Try to use Digest::SHA.  If not installed, use the slower
+  ## but functionally equivalent Digest::SHA::PurePerl instead.
+  my $MOD_PREFER = "Digest::SHA";
+  my $MOD_SECOND = "Digest::SHA::PurePerl";
+
+  my $module = $MOD_PREFER;
+  eval "require $module";
+  if ($@) {
+    $module = $MOD_SECOND;
+    eval "require $module";
+    return("Unable to find $MOD_PREFER or $MOD_SECOND") if $@;
+  }
+
+  my $digest = eval { $module->new(256)->addfile($file, 'b') };
+  if ($@) { return("Problem reading file ($file): $!"); }
+  return("", $digest->hexdigest);
+}
+
+##########
+
+sub __find_pre {
+  my $v = &get_file_full_path($_[0]);
+  return(MMisc::check_dir_r($v), $v);
+ }
+ 
+sub find_all {
+  my ($err, $v) = &__find_pre($_[0]);
+  return("Problem with dir ($v): $err") if (! MMisc::is_blank($err));
+  my @out = ();
+  find({ wanted => sub { push @out, $_; }, no_chdir => 1 }, $v);
+  return("", @out);
+}
+
+sub find_all_files {
+  my ($err, $v) = &__find_pre($_[0]);
+  return("Problem with dir ($v): $err") if (! MMisc::is_blank($err));
+  my @out = ();
+  find({ wanted => sub { if (-f $_) {push @out, $_;} }, no_chdir => 1 }, $v);
+  return("", @out);
+}
+
+sub find_all_dirs {
+  my ($err, $v) = &__find_pre($_[0]);
+  return("Problem with dir ($v): $err") if (! MMisc::is_blank($err));
+  my @out = ();
+  find({ wanted => sub { if (-d $_) {push @out, $_;} }, no_chdir => 1 }, $v);
+  return("", @out);
+}
+
+##########
 
 sub get_txt_last_Xlines {
   my ($txt, $X) = &iuav(\@_, '', 0);
@@ -1611,6 +1673,7 @@ sub randomize {
 ####################
 
 sub get_currenttime { return([gettimeofday()]); }
+sub get_scalar_currenttime { return(scalar gettimeofday()); }
 
 #####
 
