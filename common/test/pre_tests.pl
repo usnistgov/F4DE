@@ -44,6 +44,8 @@ $ms = &_chkpkg
    "DBI",
    "DBD::SQLite",
    "File::Find",
+   "File::Monitor",
+   "File::Monitor::Object"
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the program (and some F4DE package will most likely fail this step), install the missing packages and re-run the checks\n\n";
