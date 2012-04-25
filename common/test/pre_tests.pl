@@ -42,7 +42,8 @@ $ms = &_chkpkg
    &__not4ohc("Statistics::Descriptive"),
    &__not4ohc("Statistics::Descriptive::Discrete"),
    "DBI",
-   "DBD::SQLite"
+   "DBD::SQLite",
+   "File::Find",
   );
 if ($ms > 0) {
   print "  ** ERROR: Not all packages found, you will not be able to run the program (and some F4DE package will most likely fail this step), install the missing packages and re-run the checks\n\n";
@@ -86,17 +87,25 @@ $ms = &_chkpkg
    &__not4ohc("xmllintHelper")
   );
 if ($ms > 0) {
-  print "  ** ERROR: Not all packages found, you will not be able to run the programs, please install the missing ones\n\n";
+  print "  ** ERROR: Not all packages found, you will not be able to run the programs, please install the missing ones\n";
   $err++;
 } else {
-  print "  Found all packages\n\n";
+  print "  Found all packages\n";
 }
 
 ##########
-print "** Recommended Perl Packages:\n";
+print "\n** Recommended Perl Packages:\n";
 $ms = &_chkpkg("Text::CSV_XS");
 if ($ms > 0) {
   print "  ** WARNING: The optional yet recommended \"Text::CSV_XS\" package is not available in your perl installation. It can greatly improve the speed of CSV handling.\n";
+}
+
+##########
+print "\n** Package with acceptable variation:\n";
+$ms = &_chkpkg("Digest::SHA", "Digest::SHA::PurePerl");
+if ($ms > 1) {
+  print "  ** ERROR: At least of the two package must be present, or you will not be able to run some programs\n\n";
+  $err++;
 }
 
 ##########
