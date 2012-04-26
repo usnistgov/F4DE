@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+0#!/usr/bin/env perl
 
 # DiacritizeTlist
 # DiacritizeTlist.pl
@@ -104,7 +104,7 @@ MMisc::error_quit("An Output file must be set") if($Outfile eq "");
 
 my $RTTM = new RTTMList($RTTMfile);
 my $TERM = new TermList($Termfile);
-my $TERMOUT = new_empty TermList($Outfile, $TERM->{ECF_FILENAME}, $TERM->{VERSION}, $TERM->{LANGUAGE});
+my $TERMOUT = new_empty TermList($Outfile, $TERM->{ECF_FILENAME}, $TERM->{VERSION}, $TERM->{LANGUAGE}, $TERM->getEncoding(), $TERM->getCompareNormalize());
 
 ### Loop through the RTTM file, building a mapping table for undiactrized lexemes
 my %base2diaLUT = ();

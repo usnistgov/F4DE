@@ -1,7 +1,3 @@
-
-
-
-
 # KWSEval
 # RTTMList.pm
 # Author: Jerome Ajot
@@ -18,16 +14,26 @@
 
 package RTTMList;
 
+use TranscriptHolder;
+@ISA = qw(TranscriptHolder);
+
 use strict;
 use Data::Dumper;
 use RTTMRecord;
 use MMisc;
- 
+use Encode;
+use encoding 'euc-cn';
+use encoding 'utf8';
+
 sub new
 {
     my $class = shift;
     my $rttmfile = shift;
-    my $self = {};
+    my $language = shift;
+    my $normalizationType = shift;
+    my $encoding = shift;
+
+    my $self = TranscriptHolder->new();
 
     $self->{FILE} = $rttmfile;
     $self->{DATA} = {};
@@ -35,189 +41,101 @@ sub new
     $self->{TERMLKUP} = {};
 	
     bless $self;
+    die "Failed: new RTTM failed: \n   ".$self->errormsg()
+      if (! $self->setCompareNormalize($normalizationType));
+    die "Failed: new RTTM failed: \n   ".$self->errormsg()
+      if (! $self->setEncoding($encoding));
+    die "Failed: new RTTM failed: \n   ".$self->errormsg()
+      if (! $self->setLanguage($language));
+    
     $self->loadFile($rttmfile) if (defined($rttmfile));
     
     return $self;
 }
 
+sub unitTestFind
+{
+  my ($rttm, $text, $exp, $thresh) = (@_);
+
+  print " Finding terms ($text, thresh=$thresh)...     ";
+  my $out = $rttm->findTermOccurrences($text, $thresh);
+  if (@$out != $exp) { 
+    print "Failed: ".scalar(@$out)." != $exp\n"; 
+    for(my $i=0; $i<@$out; $i++) {
+        print "   num $i ";
+        foreach my $rttm(@{ $out->[$i] }) {
+            print $rttm->{TOKEN}.":".$rttm->{BT}." ";
+        }
+        print "\n";
+     }
+  }
+  print "OK\n";
+  return(1);
+}
+
+
 sub unitTest
 {
-    my ($file1) = @_;
+    my ($file1, $file2) = @_;
 
     my $err = MMisc::check_file_r($file1);
     if (! MMisc::is_blank($err)) {
       print "Issue with needed test file ($file1) : $err\n";
       return(0);
     }
+    $err = MMisc::check_file_r($file2);
+    if (! MMisc::is_blank($err)) {
+      print "Issue with needed test file ($file2) : $err\n";
+      return(0);
+    }
 
     print "Test RTTMList\n";
       
-    print " Loading File...          ";
-    my $rttml = new RTTMList($file1);
-    print "OK\n";
-    
-    print " Finding terms (1)...     ";
-    my $out1 = $rttml->findTermOccurrences("Yates", 0.1);
-    print "OK\n";
-    
-    print " Finding terms (2)...     ";
-    my $out2 = $rttml->findTermOccurrences("of the", 0.0);
-    print "OK\n";
-    
-    print " Finding terms (3)...     ";
-    my $out3 = $rttml->findTermOccurrences("has been a", 0.5);
-    print "OK\n";
-    
-    print " Finding terms (9)...     ";
-    my $out9 = $rttml->findTermOccurrences("r", 0.5);
-    print "OK\n";
-    
-    print " Finding terms (10)...     ";
-    my $out10 = $rttml->findTermOccurrences("uh", 0.5);
-    print "OK\n";
-    
-    print " Finding terms (11)...     ";
-    my $out11 = $rttml->findTermOccurrences("two after", 0.5);
-    print "OK\n";
-    
-    print " Finding terms (12)...     ";
-    my $out12 = $rttml->findTermOccurrences("s.", 0.5);
-    print "OK\n";
-    
-    print " Number of occurrences... ";
-    if( (@$out1 == 2) and (@$out2 == 49) and (@$out3 == 3) and (@$out9 == 0) and (@$out10 == 0) and (@$out11 == 1) 
-        and (@$out12 == 11) )
-    {
-        print "OK\n";
-    }
-    else
-    {
-        print "FAILED\n";
-        return 0;
-    }
-    
-    print " Terms accuracy...        ";
-    
-    for(my $i=0; $i<@$out1; $i++)
-    {
-        foreach my $rttm(@{ $out1->[$i] })
-        {
-            if($rttm->{TOKEN} ne "Yates")
-            {
-                print "FAILED\n";
-                return 0;
-            }
-        }
-    }
-    
-    for(my $i=0; $i<@$out2; $i++)
-    {
-        if(@{ $out2->[$i] }[0]->{TOKEN} ne "of")
-        {
-            print "FAILED\n";
-            return 0;
-        }
-        
-        if(@{ $out2->[$i] }[1]->{TOKEN} ne "the")
-        {
-            print "FAILED\n";
-            return 0;
-        }
-    }
-    
-    for(my $i=0; $i<@$out3; $i++)
-    {
-        if(@{ $out3->[$i] }[0]->{TOKEN} ne "has")
-        {
-            print "FAILED\n";
-            return 0;
-        }
-        
-        if(@{ $out3->[$i] }[1]->{TOKEN} ne "been")
-        {
-            print "FAILED\n";
-            return 0;
-        }
-        
-        if(@{ $out3->[$i] }[2]->{TOKEN} ne "a")
-        {
-            print "FAILED\n";
-            return 0;
-        }
-    }
-    
+    print " Loading English File (lowerecase normalization)...          ";
+    my $rttm_eng_norm = new RTTMList($file1,"english","lowercase", "");
     print "OK\n";
 
-    print " Threshold...             ";
-    
-    for(my $i=0; $i<@$out2; $i++)
-    {
-        if( sprintf("%.4f", (@{ $out2->[$i] }[1]->{BT} - @{ $out2->[$i] }[0]->{ET})) > 0.0 )
-        {
-            print "FAILED\n";
-            return 0;
-        }
-    }
-    
-    for(my $i=0; $i<@$out3; $i++)
-    {
-        if( sprintf("%.4f", (@{ $out3->[$i] }[1]->{BT} - @{ $out3->[$i] }[0]->{ET})) > 0.5 )
-        {
-            print "FAILED\n";
-            return 0;
-        }
-        
-        if( sprintf("%.4f", (@{ $out3->[$i] }[2]->{BT} - @{ $out3->[$i] }[1]->{ET})) > 0.5 )
-        {
-            print "FAILED\n";
-            return 0;
-        }
-    }
-    
+    return 0 unless(unitTestFind($rttm_eng_norm, "Yates",        2,  0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "of the",       53, 0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "of the",       49, 0.01));
+    return 0 unless(unitTestFind($rttm_eng_norm, "has been a",   3,  0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "r",            0,  0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "uh",           0,  0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "two after",    1,  0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "s.",           11, 0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "karachi used", 1,  0.1));
+    print " Case insenstivity\n";
+    return 0 unless(unitTestFind($rttm_eng_norm, "Jacques Chirac", 2,  0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "jacques chirac", 2,  0.1));
+
+    print " Loading English File (no normalization)...          ";
+    my $rttm_eng_nonorm = new RTTMList($file1,"english","","");
     print "OK\n";
-    
-    print " Case sensitive...        ";
-    
-    my $out4 = $rttml->findTermOccurrences("Jacques Chirac", 0.5);
-    my $out5 = $rttml->findTermOccurrences("Jacques chirac", 0.5);
-    
-    if(@$out4 != @$out5)
-    {
-        print "FAILED\n";
-        return 0;
-    }
-    
-    print "OK\n";
-    
-    print " Space parsing...         ";
-    
-    my $out6 = $rttml->findTermOccurrences("    of       the   ", 0.0);
-    
-    if( @$out2 != @$out6 )
-    {
-        print "FAILED\n";
-        return 0;
-    }
-    
-    print "OK\n";
+
+    return 0 unless(unitTestFind($rttm_eng_nonorm, "Yates",        2, 0.1));
+    return 0 unless(unitTestFind($rttm_eng_nonorm, "yates",        0, 0.1));
+    return 0 unless(unitTestFind($rttm_eng_nonorm, "s.",           0, 0.1));
+    return 0 unless(unitTestFind($rttm_eng_nonorm, "karachi used", 0, 0.1));
+
+    print "Space parsing...         \n";
+    return 0 unless(unitTestFind($rttm_eng_norm, "   of the",       53, 0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "   of    the",    53, 0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "of    the  ",     53, 0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "   of    the   ", 53, 0.1));
      
-    print " Adjacent terms (1)...    ";
-    my $out7 = $rttml->findTermOccurrences("word1 word2", 0.5);
-    if( @$out7 != 3 )
-    {
-        print "FAILED\n";
-        return 0;
-    }
+    print " Adjacent terms...    \n";
+    return 0 unless(unitTestFind($rttm_eng_norm, "word1 word2",       3, 0.5));
+    return 0 unless(unitTestFind($rttm_eng_norm, "word1 word2 word3", 2, 0.5));
+
+    print "Loading Cantonese File (no normalization)...          ";
+    my $rttm_cant = new RTTMList($file2,"cantonese","","UTF-8");
     print "OK\n";
-     
-    print " Adjacent terms (2)...    ";
-    my $out8 = $rttml->findTermOccurrences("word1 word2 word3", 0.5);
-    if( @$out8 != 2 )
-    {
-        print "FAILED\n";
-        return 0;
-    }
-    print "OK\n";
+
+    return 0 unless(unitTestFind($rttm_cant, $rttm_cant->{DATA}{"file"}{1}[0]->{TOKEN}, 2, 0.5));
+    return 0 unless(unitTestFind($rttm_cant, 
+                                 $rttm_cant->{DATA}{"file"}{1}[14]->{TOKEN} . " " .
+                                 $rttm_cant->{DATA}{"file"}{1}[15]->{TOKEN}, 
+                                 2, 0.5));
 
 
     return 1;
@@ -227,10 +145,11 @@ sub toString
 {
     my ($self) = @_;
     my ($key, $tok);
-
-    print "Dump of RTTM File\n";
-    print "   File: " . $self->{FILE} . "\n";
-    print "   Records:\n";
+    my $str = "";
+    
+    $str .= "Dump of RTTM File\n";
+    $str .= "   File: " . $self->{FILE} . "\n";
+    $str .=  "   Records:\n";
     
     foreach my $file(sort keys  %{ $self->{DATA} })
     {
@@ -238,19 +157,23 @@ sub toString
         {
             for (my $i=0; $i<@{ $self->{DATA}{$file}{$chan} }; $i++)
             {
-                print "   ".$self->{DATA}{$file}{$chan}[$i]->toString()."\n";
+                $str .= "   ".$self->{DATA}{$file}{$chan}[$i]->toString()."\n";
             }
         }
     }
+    return $str;
 }
 
 sub loadFile
 {
     my ($self, $rttmFile) = @_;
     
-    print STDERR "Loading RTTM file '$rttmFile'.\n";
+    print STDERR "Loading RTTM file '$rttmFile' encoding /$self->{ENCODING}/.\n";
     
     open(RTTM, $rttmFile) or MMisc::error_quit("Unable to open for read RTTM file '$rttmFile' : $!");
+    if ($self->{ENCODING} eq "UTF-8"){
+      binmode(RTTM, $self->getPerlEncodingString());
+    }
     
     while (<RTTM>)
     {
@@ -304,12 +227,13 @@ sub loadFile
 	    next if ($spkrs{$spkrname}[$i]->{STYPE} eq "fp");
 
 	    #Add records to term lookup table
-	    push (@{ $self->{TERMLKUP}{lc $spkrs{$spkrname}[$i]->{TOKEN}} },  $spkrs{$spkrname}[$i]);
+	    my $tok = $spkrs{$spkrname}[$i]->{TOKEN};
+	    $tok = lc($tok) if ($self->{COMPARENORMALIZE} eq "lowercase");
+	    push (@{ $self->{TERMLKUP}{ $tok }},  $spkrs{$spkrname}[$i]);
 	  }
 	}
       }
     }
-
     close RTTM;
 }
 
@@ -320,7 +244,7 @@ sub findTermOccurrences
     my @outList = ();
     $term =~ s/^\s*//;
     $term =~ s/\s*$//;
-    $term = lc $term;
+    $term = lc $term if ($self->{COMPARENORMALIZE} eq "lowercase");
     my @terms = split(/\s+/, $term);
     #print Dumper (\@terms);
     #Currently no order to returned matches

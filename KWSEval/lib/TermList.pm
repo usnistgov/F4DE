@@ -13,6 +13,10 @@
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 package TermList;
+
+use TranscriptHolder;
+@ISA = qw(TranscriptHolder);
+
 use strict;
 use TermListRecord;
 use MMisc;
@@ -21,12 +25,12 @@ sub new
 {
     my $class = shift;
     my $termlistfile = shift;
-    my $self = {};
+
+    my $self = TranscriptHolder->new();
 
     $self->{TERMLIST_FILENAME} = $termlistfile;
     $self->{ECF_FILENAME} = "";
     $self->{VERSION} = "";
-    $self->{LANGUAGE} = "";
     $self->{TERMS} = {};
 	
     bless $self;
@@ -44,11 +48,19 @@ sub new_empty
     $self->{TERMLIST_FILENAME} = $termlistfile;
     $self->{ECF_FILENAME} = shift;
     $self->{VERSION} = shift;
-    $self->{LANGUAGE} = shift;
+    die "Failed: New TermList failed: \n   ".$self->errormsg() if (! $self->setLanguage(shift));
+    die "Failed: New TermList failed: \n   ".$self->errormsg() if (! $self->setEncoding(shift));
+    die "Failed: New TermList failed: \n   ".$self->errormsg() if (! $self->setCompareNormalize(shift));
     $self->{TERMS} = {};
 	
     bless $self;    
     return $self;
+}
+
+sub unitTest
+{
+  print "TList Unit Test\n";
+  print "OK\n";
 }
 
 sub union_intersection
@@ -179,6 +191,9 @@ sub loadFile
     
     open(TERMLIST, $tlistf) 
       or MMisc::error_quit("Unable to open for read TermList file '$tlistf' : $!");
+    if ($self->{ENCODING} eq "UTF-8"){
+      binmode(TERMLIST, $self->getPerlEncodingString());
+    }
     
     while (<TERMLIST>)
     {
@@ -227,11 +242,31 @@ sub loadFile
     
     if($termlisttag =~ /language="(.*?[^"]*)"/)
     {
-       $self->{LANGUAGE} = $1;
+       die "Error: new TermList failed: \n   ".$self->errormsg()  if (! $self->setLanguage($1));
     }
     else
     {
          MMisc::error_quit("TermList: 'language' option is missing in termlist tag");
+    }
+            
+    if($termlisttag =~ /encoding="(.*?[^"]*)"/)
+    {
+      die "Error: new TermList failed: \n   ".$self->errormsg() if (! $self->setEncoding($1));
+    }
+    else
+    {
+      ### Default encoding
+       $self->setEncoding("UTF-8");
+    }
+    
+    if($termlisttag =~ /compareNormalize="(.*?[^"]*)"/)
+    {
+      die "Error: new TermList failed: \n   ".$self->errormsg() if (! $self->setCompareNormalize($1));
+      }
+    
+    ### Decode the data if it is UTF-8
+    if ($self->{ENCODING} eq "UFT-8"){
+      $tlistfilestring = decode_utf8( $tlistfilestring  );
     }
             
     while( $allterms =~ /(<term termid="(.*?[^"]*)"[^>]*><termtext>(.*?)<\/termtext>(.*?)<\/term>)/ )
@@ -291,17 +326,13 @@ sub saveFile
 
     open(OUTPUTFILE, ">$self->{TERMLIST_FILENAME}") 
       or MMisc::error_quit("cannot open file '$self->{TERMLIST_FILENAME}' : $!");
-
-    if($self->{LANGUAGE} eq "mandarin")
-    {   
-        print OUTPUTFILE "<?xml version=\"1.0\" encoding=\"GB2312\"?>\n";
-    }
-    else
-    {
-        print OUTPUTFILE "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    }
+#    if ($self->{ENCODING} eq "UTF-8"){
+#      binmode OUTPUTFILE, $self->getPerlEncodingString();
+#    }
+ 
+#    print OUTPUTFILE "<?xml version=\"1.0\" encoding=\"$self->{ENCODING}\"?>\n";
     
-    print OUTPUTFILE "<termlist ecf_filename=\"$self->{ECF_FILENAME}\" language=\"$self->{LANGUAGE}\" version=\"$self->{VERSION}\">\n";
+    print OUTPUTFILE "<termlist ecf_filename=\"$self->{ECF_FILENAME}\" language=\"$self->{LANGUAGE}\" encoding=\"$self->{ENCODING}\" compareNormalize=\"$self->{COMPARENORMALIZE}\" version=\"$self->{VERSION}\">\n";
     
     foreach my $termid(sort keys %{ $self->{TERMS} })
     {
