@@ -21,14 +21,16 @@ package MMisc;
 # $Id$
 
 use strict;
+use POSIX;
 ##use Carp;
 
-use File::Temp qw(tmpnam tempfile tempdir);
+use File::Temp qw(tempfile tempdir);
 use File::Copy;
 use Data::Dumper;
 use Cwd qw(cwd abs_path);
 use Time::HiRes qw(gettimeofday tv_interval);
 use List::Util qw(reduce);
+use Statistics::Distributions;
 use File::Find;
 
 my $version     = '0.1b';
@@ -2009,6 +2011,7 @@ sub unitTest {
 	marshalTest();
   filterArrayUnitTest();
   interpolateYDimUnitTest();
+  compareDataUnitTest();
 	return 1;
 }
 
@@ -2104,5 +2107,108 @@ sub interpolateYDimUnitTest(){
   print "OK\n"
 }
 
+sub compareData{
+  my ($a1, $a2, $includePaired) = @_;
+
+  my ($sum1, $sum2, $sum1x2, $sumSqr1, $sumSqr2, $diff, $sumSqrDiff) = (0, 0, 0, 0, 0, 0, 0);
+
+  my %ht = ();
+  die "Error: compareData needs data in array1" if (@$a1 <= 1);
+  die "Error: compareData needs data in array2" if (@$a2 <= 1);
+
+  $ht{N1} = @$a1;
+  $ht{N2} = @$a2;
+  ##### Non-Paired Measures
+  for (my $n=0; $n<$ht{N1}; $n++){
+    $sum1 += $a1->[$n];
+    $sumSqr1 += $a1->[$n] * $a1->[$n];
+  }
+  for (my $n=0; $n<$ht{N2}; $n++){
+    $sum2    += $a2->[$n];
+    $sumSqr2 += $a2->[$n] * $a2->[$n];
+  }
+  $ht{mean1} = $sum1 / $ht{N1};
+  $ht{mean2} = $sum2 / $ht{N2};
+  $ht{var1} = ($ht{N1} <= 1 ? undef : (($ht{N1} * $sumSqr1) - ($sum1 * $sum1)) / ($ht{N1} * ($ht{N1} - 1)));
+  $ht{var2} = ($ht{N2} <= 1 ? undef : (($ht{N2} * $sumSqr2) - ($sum2 * $sum2)) / ($ht{N2} * ($ht{N2} - 1)));
+  $ht{stddev1} = (defined($ht{var1}) ? MMisc::safe_sqrt($ht{var1}) : undef);
+  $ht{stddev2} = (defined($ht{var2}) ? MMisc::safe_sqrt($ht{var2}) : undef);
+ 
+  ### Unpaired T Test Equal Variances - Assumes normal distribution
+  my $s = 0;
+  for (my $n=0; $n<$ht{N1}; $n++){    $s += ($a1->[$n] - $ht{mean1}) * ($a1->[$n] - $ht{mean1});    }
+  for (my $n=0; $n<$ht{N2}; $n++){    $s += ($a2->[$n] - $ht{mean2}) * ($a2->[$n] - $ht{mean2});    }
+  print "$s\n";
+  my %hth = ();
+  $hth{df} = ($ht{N1} + $ht{N2} - 2);
+  $hth{pooledSampleVar} = ($s / $hth{df});
+  $hth{pooledSampleStddev} = MMisc::safe_sqrt($s / $hth{pooledSampleVar});
+  $hth{testStat} = ($ht{mean1} - $ht{mean2}) / MMisc::safe_sqrt($hth{pooledSampleVar}  * (1/$ht{N1} + 1/$ht{N2}));
+  $hth{POneTail} = Statistics::Distributions::tprob($hth{df}, $hth{testStat} * ($hth{testStat} < 0 ? -1 : 1));
+  $hth{PTwoTail} = $hth{POneTail} * 2;
+  $ht{stats}{unpaired}{TTest}{equalVariance} = \%hth;
+  ### End of computation
+
+  ### Unpaired T Test UNEqual Variances
+  my %uht = ();
+  $uht{df} = floor(((($ht{var1}/$ht{N1}) + ($ht{var2} / $ht{N2}) * ($ht{var1}/$ht{N1}) + ($ht{var2} / $ht{N2}))) /
+                   ( ((($ht{var1}/$ht{N1}) *($ht{var1}/$ht{N1})) / ($ht{N1} - 1)) + ((($ht{var2}/$ht{N2}) *($ht{var2}/$ht{N2})) / ($ht{N2} - 1))));
+  $uht{testStat} = ($ht{mean1} - $ht{mean2}) / MMisc::safe_sqrt(($ht{var1}/$ht{N1}) + ($ht{var2} / $ht{N2}));
+  $uht{POneTail} = Statistics::Distributions::tprob($uht{df}, $uht{testStat} * ($uht{testStat} < 0 ? -1 : 1));
+  $uht{PTwoTail} = $uht{POneTail} * 2;
+  $ht{stats}{unpaired}{TTest}{unequalVariance} = \%uht;
+  ### End of computation
+
+  
+  
+  die "Error: compareData(): Paired test requested but lengths non-equal" if ($ht{N1} != $ht{N2} && $includePaired);
+  if ($includePaired){
+    die "Error: Correllation Coeff requires at least 2 values" if ($ht{N1} <= 1);
+    ### Paired Tests
+    $ht{stats}{paired}{N} = $ht{N1};
+    my $N = $ht{stats}{paired}{N};
+    
+    for (my $n=0; $n<$N; $n++){
+      $diff += $a1->[$n] - $a2->[$n];
+      $sumSqrDiff += ($a1->[$n] - $a2->[$n]) * ($a1->[$n] - $a2->[$n]);
+      $sum1x2  += $a1->[$n] * $a2->[$n];
+    } 
+    $ht{stats}{paired}{meanDiff} = $diff / $N;
+    $ht{stats}{paired}{varDiff} = ($N <= 1 ? undef : (($N * $sumSqrDiff) - ($diff * $diff)) / ($N * ($N - 1)));
+    $ht{stats}{paired}{stddevDiff} = ($N <= 1 ? undef : MMisc::safe_sqrt($ht{stats}{paired}{varDiff}));
+
+    $ht{stats}{paired}{r} = ($N * $sum1x2 - $sum1*$sum2) /
+                      MMisc::safe_sqrt(($N * $sumSqr1 - ($sum1 * $sum1)) * ($N * $sumSqr2 - ($sum2 * $sum2)));
+
+    #### Paired TTest test case Based on http://www.statsdirect.com/help/parametric_methods/ptt.htm
+    my %xht = ();
+    $xht{df} = $N - 1;
+    $xht{testStat} = $ht{stats}{paired}{meanDiff} / MMisc::safe_sqrt($ht{stats}{paired}{stddevDiff} * $ht{stats}{paired}{stddevDiff} / $N);
+    $xht{POneTail} = Statistics::Distributions::tprob($xht{df}, $xht{testStat} * ($xht{testStat} < 0 ? -1 : 1));
+    $xht{PTwoTail} = 2 * $xht{POneTail};
+    $ht{stats}{paired}{pairedTTest} = \%xht;
+    ### End of computation
+  }
+  
+  return (\%ht);
+}
+
+sub compareDataUnitTest{
+	print " Testing compareData...";  
+  #my ($r, $avg1, $avg2, $avgDiff, $stddev1, $stddev2, $stddevDiff) = 
+  my $ht = compareData([ (60, 61, 62, 63, 65) ], [ (3.1, 3.6, 3.8, 4, 4.1) ], 1);
+  #print Dumper($ht);
+  die "Error: compareDataUnitTest failed to calculate R"        if (abs($ht->{stats}{paired}{r}            - 0.911872) > 0.0001);
+  die "Error: compareDataUnitTest failed to calculate StdDev1"  if (abs($ht->{stddev1}      - 1.923538) > 0.0001);
+  die "Error: compareDataUnitTest failed to calculate Avg1"     if (abs($ht->{mean1}        - 62.20000) > 0.0001);
+  die "Error: compareDataUnitTest failed to calculate StdDev2"  if (abs($ht->{stddev2}      - 0.396232) > 0.0001);
+  die "Error: compareDataUnitTest failed to calculate Avg2"     if (abs($ht->{mean2}        - 3.720000) > 0.0001);
+  die "Error: compareDataUnitTest failed to calculate AvgDiff"  if (abs($ht->{stats}{paired}{meanDiff}     - 58.48000) > 0.0001);
+  die "Error: compareDataUnitTest failed to calculate StdDevDiff" if (abs($ht->{stats}{paired}{stddevDiff} - 1.570668) > 0.0001);
+  print "OK\n";
+  #print Dumper(compareData([ (134, 146, 104, 119, 124, 161, 107, 83, 113, 129, 97, 123) ], [ (70, 118, 101, 85, 107, 132, 94) ], 0));
+
+#  print Dumper(compareData([ (312, 242, 340, 388, 296, 254, 391, 402, 290) ], [ (300, 201, 232, 312, 220, 256, 328, 330, 231) ], 1));
+}
 
 1;
