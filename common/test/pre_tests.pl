@@ -41,6 +41,7 @@ $ms = &_chkpkg
    &__not4ohc("Math::Random::OO::Normal"),
    &__not4ohc("Statistics::Descriptive"),
    &__not4ohc("Statistics::Descriptive::Discrete"),
+   &__not4ohc("Statistics::Distributions"),
    "DBI",
    "DBD::SQLite",
    "File::Find",
