@@ -34,6 +34,8 @@ sub new
         $self->{FILE} = $1;
     } elsif($self->{AUDIO_FILENAME} =~ /(.*)\.([^\.]+)$/) {
         $self->{FILE} = $1;
+    } else {
+        $self->{FILE} = $self->{AUDIO_FILENAME};
     }
     
     bless $self;
