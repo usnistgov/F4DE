@@ -127,6 +127,15 @@ sub clear {
   return(1);
 }
 
+##########
+
+sub set_error_and_return {
+  my $self = shift @_;
+  my $errormsg = shift @_;
+
+  $self->set_errormsg($errormsg);
+  return(@_);
+}
 
 ############################################################
 
