@@ -24,14 +24,21 @@ use strict;
 use POSIX;
 ##use Carp;
 
+##### Warning: only use packages that are part of the 'Core Modules'
+# see: http://perldoc.perl.org/index-modules-A.html
+use Cwd qw(cwd abs_path);
+use Data::Dumper;
+use File::Find;
 use File::Temp qw(tempfile tempdir);
 use File::Copy;
-use Data::Dumper;
-use Cwd qw(cwd abs_path);
-use Time::HiRes qw(gettimeofday tv_interval);
 use List::Util qw(reduce);
-use Statistics::Distributions;
-use File::Find;
+use Time::HiRes qw(gettimeofday tv_interval);
+
+##### For non 'Core Modules' you will need to load them from within the specific function
+my $DigestSHA_module = undef;
+my $StatisticsDistributions_module = undef;
+
+
 
 my $version     = '0.1b';
 
@@ -993,18 +1000,17 @@ sub file_sha256digest {
 
   ## Try to use Digest::SHA.  If not installed, use the slower
   ## but functionally equivalent Digest::SHA::PurePerl instead.
-  my $MOD_PREFER = "Digest::SHA";
-  my $MOD_SECOND = "Digest::SHA::PurePerl";
-
-  my $module = $MOD_PREFER;
-  eval "require $module";
-  if ($@) {
-    $module = $MOD_SECOND;
-    eval "require $module";
-    return("Unable to find $MOD_PREFER or $MOD_SECOND") if $@;
+  if (! defined $DigestSHA_module) {
+    if (&check_package("Digest::SHA")) {
+      $DigestSHA_module = "Digest::SHA";
+    } elsif (&check_package("Digest::SHA::PurePerl")) {
+      $DigestSHA_module = "Digest::SHA::PurePerl";
+    } else {
+      return("Unable to find Digest::SHA or Digest::SHA::PurePerl");
+    }
   }
 
-  my $digest = eval { $module->new(256)->addfile($file, 'b') };
+  my $digest = eval { $DigestSHA_module->new(256)->addfile($file, 'b') };
   if ($@) { return("Problem reading file ($file): $!"); }
   return("", $digest->hexdigest);
 }
@@ -2109,6 +2115,13 @@ sub interpolateYDimUnitTest(){
 
 sub compareData{
   my ($a1, $a2, $includePaired) = @_;
+
+  ## Try to use Statistics::Distributions
+  if (! defined $StatisticsDistributions_module) {
+    &error_quit("Can not use the Statistics::Distributions module")
+      if (! &check_package("Statistics::Distributions"));
+    $StatisticsDistributions_module = "Statistics::Distributions";
+  }
 
   my ($sum1, $sum2, $sum1x2, $sumSqr1, $sumSqr2, $diff, $sumSqrDiff) = (0, 0, 0, 0, 0, 0, 0);
 
