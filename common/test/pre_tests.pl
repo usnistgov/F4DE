@@ -41,7 +41,7 @@ $ms = &_chkpkg
    &__not4ohc("Math::Random::OO::Normal"),
    &__not4ohc("Statistics::Descriptive"),
    &__not4ohc("Statistics::Descriptive::Discrete"),
-   &__not4ohc("Statistics::Distributions"),
+   "Statistics::Distributions",
    "DBI",
    "DBD::SQLite",
    "File::Find",
@@ -123,8 +123,9 @@ if (! defined $rsync) {
 
 
 ####################
+print "\n\n";
 
-MMisc::error_quit("\nSome issues, fix before attempting to run make check again\n") if ($err);
+MMisc::error_quit("Some issues, fix before attempting to run make check again\n") if ($err);
 
 MMisc::ok_quit("\n** Pre-requisite testing done\n\n");
 
