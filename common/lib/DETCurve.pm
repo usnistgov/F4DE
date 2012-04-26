@@ -774,11 +774,13 @@ sub AddIsolineInformation
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_MMISS} = $estMMiss;
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_COMB} = $self->{METRIC}->combCalc($estMMiss, $estMFa);
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_DETECTSCORE} = $detectScore;
-        
+
     foreach my $b ( keys %{ $blocks } ) {
       # Add info of previous in the block id
-      $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MFA} = (1-$paramt)*($blocks->{$b}{PREVMFA}) + $paramt*($blocks->{$b}{MFA});
-      $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MMISS} = (1-$paramt)*($blocks->{$b}{PREVMMISS}) + $paramt*($blocks->{$b}{MMISS});
+      $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MFA} = (1-$paramt)*($self->getMetric()->errFABlockCalc($blocks->{$b}{PREVMFA}, $b)) +
+                                                              $paramt*($self->getMetric()->errFABlockCalc($blocks->{$b}{MFA}, $b));
+      $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MMISS} = (1-$paramt)*($self->getMetric()->errMissBlockCalc($blocks->{$b}{PREVMMISS}, $b)) + 
+                                                                $paramt*($self->getMetric()->errMissBlockCalc($blocks->{$b}{MMISS}, $b));
       # Value function
       $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{COMB} = $self->{METRIC}->combCalc($self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MMISS},
                                                                                      $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MFA});
@@ -991,26 +993,6 @@ sub computeBlockWeighted
     ($missAvg, $faAvg, $combAvg, $missSSD, $faSSD, $combSSD);
   }
 
-sub interpolateYDim{
-  my ($x1, $y1, $x2, $y2, $newX) = @_;
-#  print "Interpolate: ($x1,$y1) ($x2,$y2) = newX=$newX\n";
-  my ($newY) = ($x2-$x1 == 0) ? (($y2+$y1)/2) : ($y2 + ( ($y1-$y2) * (($x2-$newX) / ($x2-$x1))));  
-#  print ("  newY=$newY\n");
-  return $newY;
-
-### unit tests
-#  die if (abs(interpolateYDim(1,1,3,3,2.5) - 2.5) >= 0.0001);
-#  die if (abs(interpolateYDim(3,3,1,1,2.5) - 2.5) >= 0.0001);
-#  die if (abs(interpolateYDim(1,2,4,5,2.5) - 3.5) >= 0.0001);
-  ## extrapolation
-#  die if (abs(interpolateYDim(1,2,4,5,7.5) - 8.5) >= 0.0001);
-  ## horizontal line
-#  die if (abs(interpolateYDim(1,2,2,2,7.5) - 2) >= 0.0001);
-  ## vertical line
-#  die if (abs(interpolateYDim(1,2,1,8,1) - 5) >= 0.0001);
-
-}
-
 sub computeMMissForFixedMFA{
   my ($self, $MFAPoints) = @_;
   
@@ -1042,9 +1024,9 @@ sub computeMMissForFixedMFA{
       }
       push @computedMMiss, { MFA => $sortedMFA[0],
                              InterpMMiss => 
-                                 interpolateYDim($lastMFA, $lastMMiss, $points->[$ind][2], $points->[$ind][1], $sortedMFA[0]),
+                                 MMisc::interpolateYDim($lastMFA, $lastMMiss, $points->[$ind][2], $points->[$ind][1], $sortedMFA[0]),
                              InterpScore => 
-                                 interpolateYDim($lastMFA, $lastThresh, $points->[$ind][2], $points->[$ind][0], $sortedMFA[0]) };
+                                 MMisc::interpolateYDim($lastMFA, $lastThresh, $points->[$ind][2], $points->[$ind][0], $sortedMFA[0]) };
       shift(@sortedMFA);
     }
     $lastMFA = $points->[$ind][2];
@@ -1056,7 +1038,7 @@ sub computeMMissForFixedMFA{
   while (@sortedMFA > 0){
       push @computedMMiss, { MFA => $sortedMFA[0],
                              InterpMMiss => 
-                                 interpolateYDim($lastMFA, $lastMMiss, 0, 1, $sortedMFA[0]),
+                                 MMisc::interpolateYDim($lastMFA, $lastMMiss, 0, 1, $sortedMFA[0]),
                              InterpScore => $lastThresh};
       shift(@sortedMFA);
   }
