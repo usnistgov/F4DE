@@ -244,7 +244,7 @@ sub csvReport
     
     if($output ne "")
     {
-        open(OUTPUT, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", $output) 
+        open(OUTPUT, ">:encoding(".$self->{TERM}->getPerlEncodingString().")", $output) 
           or MMisc::error_quit("cannot open '$output' : $!");
     }
     else
@@ -264,12 +264,14 @@ sub csvReport
     {
        $filechantype{$self->{ECF}->{EXCERPT}[$i]->{FILE}}{$self->{ECF}->{EXCERPT}[$i]->{CHANNEL}} = $self->{ECF}->{EXCERPT}[$i]->{SOURCE_TYPE};
     }
-    
     foreach my $termid(sort keys %{ $self->{MAPPINGS} } )
     {
         my $term = $self->{TERM}->{TERMS}{$termid}->{TEXT};
-        $term = decode("gb2312", $self->{TERM}->{TERMS}{$termid}->{TEXT}) if($self->{STD}->{LANGUAGE} eq "mandarin");
-        $term = decode("utf8", $self->{TERM}->{TERMS}{$termid}->{TEXT}) if($self->{STD}->{LANGUAGE} eq "arabic");
+#        if ($self->{TERM}->getEncoding() ne ""){
+#           $term = decode($self->{TERM}->getPerlEncodingString(), $self->{TERM}->{TERMS}{$termid}->{TEXT});
+#        }
+#        $term = decode("gb2312", $self->{TERM}->{TERMS}{$termid}->{TEXT}) if($self->{STD}->{LANGUAGE} eq "mandarin");
+#        $term = decode("utf8", $self->{TERM}->{TERMS}{$termid}->{TEXT}) if($self->{STD}->{LANGUAGE} eq "arabic");
         my $status = "CORR";
                 
         for(my $i=0; $i<@{ $self->{MAPPINGS}->{$termid}{MAPPED} }; $i++)
@@ -326,7 +328,7 @@ sub ReportAlign
     
     if($output ne "")
     {
-        open(OUTPUT_LOCAL, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", $output) 
+        open(OUTPUT_LOCAL, ">:encoding(".$self->{TERM}->getPerlEncodingString().")", $output) 
           or MMisc::error_quit("cannot open '$output' : $!");
     }
     else
@@ -379,8 +381,11 @@ sub ReportAlign
     foreach my $termid(sort keys %termfilechanmap )
     {
         my $termtext = $self->{TERM}->{TERMS}{$termid}->{TEXT};
-        $termtext = decode("gb2312", $self->{TERM}->{TERMS}{$termid}->{TEXT}) if($self->{STD}->{LANGUAGE} eq "mandarin");
-        $termtext = decode("utf8", $self->{TERM}->{TERMS}{$termid}->{TEXT}) if($self->{STD}->{LANGUAGE} eq "arabic");
+#        if ($self->{TERM}->getEncoding() ne ""){
+#          $termtext = decode($self->{TERM}->getPerlEncodingString(), $self->{TERM}->{TERMS}{$termid}->{TEXT});
+#        }
+#        $termtext = decode("gb2312", $self->{TERM}->{TERMS}{$termid}->{TEXT}) if($self->{STD}->{LANGUAGE} eq "mandarin");
+#        $termtext = decode("utf8", $self->{TERM}->{TERMS}{$termid}->{TEXT}) if($self->{STD}->{LANGUAGE} eq "arabic");
         
         print OUTPUT_LOCAL "TERM: (ID: $termid) $termtext\n";
         
@@ -519,7 +524,7 @@ sub GenerateOccurrenceReport
             
                 my $excerptType = $filechantype{$self->{ECF}->{EXCERPT}[$i]->{FILE}}{$self->{ECF}->{EXCERPT}[$i]->{CHANNEL}};
 
-				#print STDERR " $type $excerptType\n";
+			#	print STDERR " here $type $excerptType\n";
 
                 if ($type eq "ALL" || $type eq $excerptType)
                 {                	    
@@ -607,6 +612,7 @@ sub GenerateOccurrenceReport
             
             my $type = $filechantype{$file}{$channel};
             
+            #print " $type = $file $channel $filechantype{$file}{$channel}\n";
             next if(!EltInList($filter_types, $type));
             
             $stats{$termid}{$type}{REF} += 1;
@@ -709,7 +715,7 @@ sub GenerateOccurrenceReport
     {
         $stats{MEAN}{SEARCH_TIME} = -1000.0;
     }
-    
+
     return(\%stats);
 }
 
@@ -877,7 +883,7 @@ sub ReportOccurrence
     
     if($output ne "")
     {
-        open(OUTPUT_LOCAL, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", $output) 
+        open(OUTPUT_LOCAL, ">:encoding(".$self->{TERM}->getPerlEncodingString().")", $output) 
           or MMisc::error_quit("cannot open '$output' : $!");
     }
     else
@@ -885,7 +891,7 @@ sub ReportOccurrence
         open(OUTPUT_LOCAL, ">&STDOUT") 
           or MMisc::error_quit("cannot display in STDOUT");
     }
-    
+
     print STDERR "Writing occurrence report to '$output'.\n" if ($output ne "");
     
     my $display_bnews = ($stats->{TOTAL}{BNEWS}{NBR_TERMS} != 0);
@@ -912,6 +918,8 @@ sub ReportOccurrence
     
     foreach my $p("Indexing Time:|".sprintf("%.4f",$self->{STD}->{INDEXING_TIME}),
 		  "Language:|".sprintf("%12s", $self->{STD}->{LANGUAGE}),
+		  "Encoding:|".sprintf("%12s", $self->{TERM}->{ENCODING}),
+		  "CompareNorm:|".sprintf("%12s", $self->{TERM}->{COMPARENORMALIZE}),
 		  "Index size (bytes):|".sprintf("%12s", $self->{STD}->{INDEX_SIZE}),
 		  "System ID:|".sprintf("%12s", $self->{STD}->{SYSTEM_ID}),
 		  "Coefficient C:|".sprintf("%.4f",$stats->{COEFF}{KOEFC}),
@@ -989,9 +997,10 @@ sub ReportOccurrence
         my $termtext = $stats->{$termid}{TEXT};
         my $lengthtoapply = $maxtextlen;
         
-        if($self->{STD}->{LANGUAGE} eq "mandarin")
+#        $termtext = decode($self->{TERM}->getPerlEncodingString(), $stats->{$termid}{TEXT}) if ($self->{TERM}->getEncoding() ne "");
+
+         if($self->{STD}->{LANGUAGE} eq "mandarin")
         {
-            $termtext = decode("gb2312", $stats->{$termid}{TEXT});
             my @ary = split(//, $termtext);
             
             for(my $i=0; $i<@ary; $i++)
@@ -999,12 +1008,7 @@ sub ReportOccurrence
                 $lengthtoapply-- if($ary[$i] !~ /[a-zA-Z \.\-\']/);                
             }
         }
-        
-        if($self->{STD}->{LANGUAGE} eq "arabic")
-        {
-           $termtext = decode("utf8", $stats->{$termid}{TEXT});
-        }
-        
+                
         my $display_text = sprintf("%"."$lengthtoapply"."s", $termtext);
         $display_text = substr($display_text, 0, $maxtextlen-3) . "..." if(length($display_text) > $maxtextlen);   
         
@@ -1266,6 +1270,8 @@ sub ReportConditionalOccurrence
     
     foreach my $p("Indexing Time:|".sprintf("%.4f",$self->{STD}->{INDEXING_TIME}),
 		  "Language:|".sprintf("%12s", $self->{STD}->{LANGUAGE}),
+		  "Encoding:|".sprintf("%12s", $self->{TERM}->{ENCODING}),
+		  "CompareNorm:|".sprintf("%12s", $self->{TERM}->{COMPARENORMALIZE}),
 		  "Index size (bytes):|".sprintf("%12s", $self->{STD}->{INDEX_SIZE}),
 		  "System ID:|".sprintf("%12s", $self->{STD}->{SYSTEM_ID}),
 		  "Coefficient C:|".sprintf("%.4f",$stats->{COEFF}{KOEFC}),
@@ -1419,7 +1425,7 @@ sub ReportHTML
     print STDERR "Writing HTML report to '$output'.\n";
     
     system("mkdir -p $output");
-    open(OUTPUT_INDEX, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", "$output/index.html") 
+    open(OUTPUT_INDEX, ">:encoding(".$self->{TERM}->getPerlEncodingString().")", "$output/index.html") 
       or MMisc::error_quit("cannot open '$output/index.html' : $!");
     
     my $display_bnews = ($stats->{TOTAL}{BNEWS}{NBR_TERMS} != 0);
@@ -1429,19 +1435,13 @@ sub ReportHTML
     my %datahiddenreport;
     $datahiddenreport{GLOBAL} = "";
     
-    if($self->{STD}->{LANGUAGE} eq "mandarin")
-    {
-        print OUTPUT_INDEX "<?xml version=\"1.0\" encoding=\"GB2312\"?>\n";
-    }
-    else
-    {
-        print OUTPUT_INDEX "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    }
+    print OUTPUT_INDEX "<?xml version=\"1.0\" encoding=\"$self->{TERM}->{ENCODING}\"?>\n";
     
     print OUTPUT_INDEX "<html>\n";
     print OUTPUT_INDEX "<head>\n";
-    print OUTPUT_INDEX "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=gb2312\" />\n" if($self->{STD}->{LANGUAGE} eq "mandarin");
-    print OUTPUT_INDEX "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n" if($self->{STD}->{LANGUAGE} ne "mandarin");
+    if ($self->{TERM}->getEncoding() ne ""){  
+      print OUTPUT_INDEX "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=".$self->{TERM}->getEncoding()."\" />\n";
+    }
     print OUTPUT_INDEX "<title>$self->{STD}->{SYSTEM_ID}</title>\n";    
     print OUTPUT_INDEX "</head>\n";
     print OUTPUT_INDEX "<body leftmargin=0 topmargin=0 marginwidth=0 marginheight=0>\n";
@@ -1458,7 +1458,15 @@ sub ReportHTML
     print OUTPUT_INDEX "<tr><td>Language: </td><td>$self->{STD}->{LANGUAGE}</td></tr>\n";
     
     $datahiddenreport{GLOBAL} .= "<language>$self->{STD}->{LANGUAGE}</language>";
-    
+
+    print OUTPUT_INDEX "<tr><td>Encoding: </td><td>$self->{TERM}->{ENCODING}</td></tr>\n";
+            
+    $datahiddenreport{GLOBAL} .= "<encoding>$self->{TERM}->{ENCODING}</encoding>";
+        
+    print OUTPUT_INDEX "<tr><td>CompareNorm: </td><td>$self->{TERM}->{COMPARENORMALIZE}</td></tr>\n";
+            
+    $datahiddenreport{GLOBAL} .= "<compareNorm>$self->{TERM}->{COMPARENORMALIZE}</compareorm>";
+        
     print OUTPUT_INDEX "<tr><td>Index size: </td><td>$self->{STD}->{INDEX_SIZE}</td></tr>\n";
     
     $datahiddenreport{GLOBAL} .= "<index_size>$self->{STD}->{INDEX_SIZE}</index_size>";
@@ -1559,8 +1567,11 @@ sub ReportHTML
         print OUTPUT_INDEX "<tr>\n";
         
         my $termtext = $stats->{$termid}{TEXT};
-        $termtext = decode("gb2312", $stats->{$termid}{TEXT}) if($self->{STD}->{LANGUAGE} eq "mandarin");
-        $termtext = decode("utf8", $stats->{$termid}{TEXT}) if($self->{STD}->{LANGUAGE} eq "arabic");
+#        if ($self->{TERM}->getEncoding() ne ""){
+#           $termtext = decode($self->{TERM}->getPerlEncodingString(), $stats->{$termid}{TEXT});
+#        }        
+#        $termtext = decode("gb2312", $stats->{$termid}{TEXT}) if($self->{STD}->{LANGUAGE} eq "mandarin");
+#        $termtext = decode("utf8", $stats->{$termid}{TEXT}) if($self->{STD}->{LANGUAGE} eq "arabic");
         
         print OUTPUT_INDEX "<td bgcolor=#DADADA><font face=\"Verdana, Arial, Helvetica, sans-serif\">$termid</font></td>\n";
         print OUTPUT_INDEX "<td bgcolor=#DADADA align=right><font face=\"Verdana, Arial, Helvetica, sans-serif\">$termtext</font></td>\n";
@@ -1998,7 +2009,7 @@ sub ReportConditionalHTML
     print STDERR "Writing Conitional HTML report to '$output'.\n";
     
     system("mkdir -p $output");
-    open(OUTPUT_INDEX, ($self->{STD}->{LANGUAGE} eq "mandarin") ? ">:encoding(gb2312)" : ">:encoding(utf8)", "$output/index.html") 
+    open(OUTPUT_INDEX, ">:encoding(".$self->{TERM}->getPerlEncodingString().")", "$output/index.html") 
       or MMisc::error_quit("cannot open '$output/index.html' : $!");
     
     my @all_TermSet;
@@ -2006,7 +2017,7 @@ sub ReportConditionalHTML
     
     my $nbrTermSet = 0;
     my $nbrSourcetypeSet = 0;
-    
+
     foreach my $termset(sort keys %{ $stats })
     {
         next if($termset eq "TOTAL" || $termset eq "MEAN" || $termset eq "COEFF");
@@ -2024,19 +2035,15 @@ sub ReportConditionalHTML
     my %datahiddenreport;
     $datahiddenreport{GLOBAL} = "";
     
-    if($self->{STD}->{LANGUAGE} eq "mandarin")
-    {
-        print OUTPUT_INDEX "<?xml version=\"1.0\" encoding=\"GB2312\"?>\n";
-    }
-    else
-    {
-        print OUTPUT_INDEX "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    }
+    print OUTPUT_INDEX "<?xml version=\"1.0\" encoding=\"$self->{TERM}->{ENCODING}\"?>\n";
     
     print OUTPUT_INDEX "<html>\n";
     print OUTPUT_INDEX "<head>\n";
-    print OUTPUT_INDEX "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=gb2312\" />\n" if($self->{STD}->{LANGUAGE} eq "mandarin");
-    print OUTPUT_INDEX "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n" if($self->{STD}->{LANGUAGE} ne "mandarin");
+    if ($self->{TERM}->getEncoding() ne ""){  
+      print OUTPUT_INDEX "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=".$self->{TERM}->getEncoding()."\" />\n";
+    }
+#    print OUTPUT_INDEX "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=gb2312\" />\n" if($self->{STD}->{LANGUAGE} eq "mandarin");
+#    print OUTPUT_INDEX "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n" if($self->{STD}->{LANGUAGE} ne "mandarin");
     print OUTPUT_INDEX "<title>$self->{STD}->{SYSTEM_ID}</title>\n";    
     print OUTPUT_INDEX "</head>\n";
     print OUTPUT_INDEX "<body leftmargin=0 topmargin=0 marginwidth=0 marginheight=0>\n";
@@ -2054,6 +2061,14 @@ sub ReportConditionalHTML
     
     $datahiddenreport{GLOBAL} .= "<language>$self->{STD}->{LANGUAGE}</language>";
     
+    print OUTPUT_INDEX "<tr><td>Encoding: </td><td> $self->{TERM}->{ENCODING}</td></tr>\n";
+    
+    $datahiddenreport{GLOBAL} .= "<encoding>$self->{STD}->{ENCODING}</encoding>";
+    
+    print OUTPUT_INDEX "<tr><td>CompareNorm: </td><td>$self->{TERM}->{COMPARENORMALIZE}</td></tr>\n";
+            
+    $datahiddenreport{GLOBAL} .= "<compareNorm>$self->{TERM}->{COMPARENORMALIZE}</compareorm>";
+        
     print OUTPUT_INDEX "<tr><td>Index size: </td><td> $self->{STD}->{INDEX_SIZE}</td></tr>\n";
     
     $datahiddenreport{GLOBAL} .= "<index_size>$self->{STD}->{INDEX_SIZE}</index_size>";

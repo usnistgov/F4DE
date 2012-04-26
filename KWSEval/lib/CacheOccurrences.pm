@@ -14,6 +14,9 @@
 
 package CacheOccurrences;
 
+use TranscriptHolder;
+@ISA = qw(TranscriptHolder);
+
 use strict;
 
 use KWSTermRecord;
@@ -26,12 +29,17 @@ use MMisc;
 sub new
 {
     my $class = shift;
-    my $self = {};
+
+    my $self = TranscriptHolder->new();
 
     $self->{FILENAME} = shift;
     $self->{SYSTEMVRTTM} = shift;
     $self->{THRESHOLD} = shift;
     $self->{REFLIST} = shift;
+    die "Error: New CacheOccurrences failed: \n   ".$self->errormsg()
+      if (! $self->setEncoding(shift));
+    die "Error: New CacheOccurrences failed: \n   ".$self->errormsg()
+      if (! $self->setCompareNormalize(shift));
 	
     bless $self;    
     return $self;
@@ -45,8 +53,11 @@ sub saveFile
         
     open(CACHE_FILE, ">$self->{FILENAME}") 
       or MMisc::error_quit("cannot open cache file '$self->{FILENAME}' : $!");
+    if ($self->{ENCODING} eq "UTF-8"){
+      binmode CACHE_FILE, $self->getPerlEncodingString();
+    }
 
-    print CACHE_FILE "<rttm_cache_file system_V=\"$self->{SYSTEMVRTTM}\" find_threshold=\"$self->{THRESHOLD}\">\n";
+    print CACHE_FILE "<rttm_cache_file system_V=\"$self->{SYSTEMVRTTM}\" find_threshold=\"$self->{THRESHOLD}\" encoding=\"$self->{ENCODING}\">\n";
     
     foreach my $termid(sort keys %{ $self->{REFLIST} })
     {
@@ -125,7 +136,19 @@ sub loadFile
     {
         MMisc::error_quit("Cache: 'find_threshold' option is missing in rttm_cache_file tag");
     }
+
+    if($cachelisttag =~ /encoding="(.*?[^"]*)"/)
+    {
+       $self->{ENCODING} = $1;
+    } else {
+       $self->{ENCODING} = "UTF-8";
+    }
     
+        ### Decode the data if it is UTF-8
+    if ($self->{ENCODING} eq "UFT-8"){
+      $termlist = decode_utf8( $termlist  );
+    }
+
     while( $termlist =~ /(<term termid="(.*?[^"]*)"[^>]*><termtext>(.*?)<\/termtext>(.*?)<\/term>)/ )
     {
         my $allterm = $1;
@@ -186,7 +209,7 @@ sub loadFile
                 
         $termlist =~ s/$allterm//;
     }
-    
+
     close(CACHE_FILE);
 }
 
