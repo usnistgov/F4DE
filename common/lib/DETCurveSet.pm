@@ -192,6 +192,79 @@ sub sortTest {
     print "OK\n";
 }
 
+sub compareUnitTest(){
+  my $dir = "/tmp";
+  use DETCurve;
+  use DETCurveSet;
+  use DETCurveGnuplotRenderer;
+  use Math::Random::OO::Uniform;
+
+  my @isolinecoef = (40, 5, 1, 0.5);
+
+  print "Build a block averaged random DET curve for Dir=/$dir/\n";
+  my $decisionScoreRand = Math::Random::OO::Normal->new(0,1);     $decisionScoreRand->seed(0030201);
+  my $NTdecisionScoreRand = Math::Random::OO::Normal->new(0,2);   $NTdecisionScoreRand->seed(543031);
+  my $targetRand = Math::Random::OO::Uniform->new(0,1);           $targetRand->seed(939021);
+  my $ds = new DETCurveSet("Compare Unit Tests");
+      
+  print "  Building DETS\n";
+  my $trial1 = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+  my $trial2 = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+
+  for (my $epoch = 0; $epoch<10; $epoch ++){
+    print "    Epoch $epoch\n";
+    for (my $nt = 0; $nt<160; $nt ++){
+      ##### Trials 1
+      # TArgets
+      my $scr = $decisionScoreRand->next() + (0.25 + $epoch * 0.02);
+      $trial1->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 1);
+      # NonTargets
+      $scr = $decisionScoreRand->next() - (0.25 + $epoch * 0.02);
+      $trial1->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
+      ##### Trials 2
+      # TArgets
+      my $scr = $decisionScoreRand->next() + (0.50 + $epoch * 0.02);
+      $trial2->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 1);
+      # NonTargets
+      $scr = $NTdecisionScoreRand->next() - (0.50 + $epoch * 0.02);
+      $trial2->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
+    }
+  } 
+  my $met1 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $trial1);
+  my $det1 = new DETCurve($trial1, $met1, "Det curv 1", \@isolinecoef, undef);
+  $det1-> successful();
+  
+  my $met2 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $trial2);
+  my $det2 = new DETCurve($trial2, $met2, "Det curv 2", \@isolinecoef, undef);
+  $det2-> successful();
+  
+  die "Error: Failed to add first det" if ("success" ne $ds->addDET("Good system", $det1));
+  die "Error: Failed to add first det" if ("success" ne $ds->addDET("Bad system", $det2));
+
+	my ($str, $conclusion, $list_isopoints) = $ds->renderDETCompare(0.95);
+	print $str;
+	print $conclusion;
+
+  my $options = { 
+      ("Xmin" => 0.1,
+		   "Xmax" => 99.9,
+		   "Ymin" => .1,
+		   "Ymax" => 99.9,
+		   "xScale" => "nd",
+		   "yScale" => "nd",
+		   "ColorScheme" => "color",
+       "DrawIsometriclines" => 1,
+       "createDETfiles" => 1,
+		   "DrawIsoratiolines" => 1,
+       "serialize" => 1,
+       "Isoratiolines" => \@isolinecoef,
+       "Isometriclines" => \@isolinecoef,
+       "Isopoints" => $list_isopoints, 
+       "PointSet" => [] ) };
+  print $ds->renderAsTxt("$dir/Compare.dets", 1, 1, $options, "");       
+
+}
+
 ##########
 
 sub addDET(){
@@ -668,23 +741,27 @@ sub renderDETCompare
 	{
 		next if(!defined($det1->{ISOPOINTS}{$cof}));
 		next if(!defined($det2->{ISOPOINTS}{$cof}));
-	
+
 		$statsCompare{$cof}{COMPARE}{PLUS} = 0;
 		$statsCompare{$cof}{COMPARE}{MINUS} = 0;
 		$statsCompare{$cof}{COMPARE}{ZERO} = 0;
-		$statsCompare{$cof}{DET1}{MFA} = $det1->{ISOPOINTS}{$cof}{INTERPOLATED_MFA};
-		$statsCompare{$cof}{DET1}{MMISS} = $det1->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS};
-		$statsCompare{$cof}{DET2}{MFA} = $det2->{ISOPOINTS}{$cof}{INTERPOLATED_MFA};
-		$statsCompare{$cof}{DET2}{MMISS} = $det2->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS};
+		$statsCompare{$cof}{DET1}{MFA} = $det1->getIsolinePointsMFAValue($cof);
+		$statsCompare{$cof}{DET1}{MMISS} = $det1->getIsolinePointsMMissValue($cof);
+		$statsCompare{$cof}{DET1}{COMB}  = $det1->getIsolinePointsCombValue($cof);
+		$statsCompare{$cof}{DET2}{MFA} = $det2->getIsolinePointsMFAValue($cof);
+		$statsCompare{$cof}{DET2}{MMISS} = $det2->getIsolinePointsMMissValue($cof);
+		$statsCompare{$cof}{DET2}{COMB}  = $det2->getIsolinePointsCombValue($cof);
 		
 		my @tmpblkkey1 = keys %{ $det1->{ISOPOINTS}{$cof}{BLOCKS} };
 		my @tmpblkkey2 = keys %{ $det2->{ISOPOINTS}{$cof}{BLOCKS} };
 		
 		my @com_blocks = intersection( @tmpblkkey1, @tmpblkkey2 );
 	
-		foreach my $b ( @com_blocks )
+	  my (@det1Comb) = ();
+	  my (@det2Comb) = ();
+		foreach my $blk ( @com_blocks )
 		{
-			my $diffdet12 = sprintf("%.4f", $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} - $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} );
+			my $diffdet12 = sprintf("%.4f", $det1->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} - $det2->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} );
 		
 			push( @{ $statsCompare{$cof}{COMPARE}{DIFF}{ARRAY} }, $diffdet12);
 		
@@ -692,22 +769,26 @@ sub renderDETCompare
 			{
 				$statsCompare{$cof}{COMPARE}{ZERO}++;
 			}
-			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} > $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} )
+			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} > $det2->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} )
 			{
 				$statsCompare{$cof}{COMPARE}{PLUS}++;
 			}
-			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} < $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} )
+			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} < $det2->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} )
 			{
 				$statsCompare{$cof}{COMPARE}{MINUS}++;
 			}			
+			push @det1Comb, $det1->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB};
+			push @det2Comb, $det2->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB};
 		}
 				
 		$statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS} = max( 0, binomial( 0.5, $statsCompare{$cof}{COMPARE}{PLUS}+$statsCompare{$cof}{COMPARE}{MINUS}+$statsCompare{$cof}{COMPARE}{ZERO}, $statsCompare{$cof}{COMPARE}{PLUS}+sprintf( "%.0f", $statsCompare{$cof}{COMPARE}{ZERO}/2)) );
 		
 		push(@listIsoCoef, $cof);	
+		$statsCompare{$cof}{CORREALTION}{COMB} = MMisc::correlationCoeff(\@det1Comb, \@det2Comb);
+		print Dumper($statsCompare{$cof}{CORREALTION}{COMB} );
 	}
 	
-	my $at = new SimpleAutoTable();
+	my $at = new AutoTable();
 	
 	my %compare2;
 	my @list_isopoints;
@@ -746,6 +827,10 @@ sub renderDETCompare
 		             "DET1|".$det1->{METRIC}->errMissLab(), 
 		             sprintf("%.4f", $cof) );
 		             
+		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET1}{COMB}),
+		             "DET1|".$det1->{METRIC}->combLab(), 
+		             sprintf("%.4f", $cof) );
+		             
 		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET2}{MFA}),
 		             "DET2|".$det2->{METRIC}->errFALab(), 
 		             sprintf("%.4f", $cof) );
@@ -753,27 +838,67 @@ sub renderDETCompare
 		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET2}{MMISS}),
 		             "DET2|".$det1->{METRIC}->errMissLab(), 
 		             sprintf("%.4f", $cof) );
+
+		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET2}{COMB}),
+		             "DET2|".$det1->{METRIC}->combLab(), 
+		             sprintf("%.4f", $cof) );
+		             
+		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{PLUS} + $statsCompare{$cof}{COMPARE}{MINUS} + $statsCompare{$cof}{COMPARE}{ZERO}),
+		             "Signs|N", 
+		             sprintf("%.4f", $cof) );
 		             
 		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{PLUS}),
-		             "+", 
+		             "Signs|+", 
 		             sprintf("%.4f", $cof) );
 		             
 		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{MINUS}),
-		             "-", 
+		             "Signs|-", 
 		             sprintf("%.4f", $cof) );
 		             
 		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{ZERO}),
-		             "0", 
+		             "Signs|0", 
 		             sprintf("%.4f", $cof) );
 	
 		$at->addData(sprintf("%.5f", $statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS}),
-		             "Sign Test", 
+		             "Sign Test|P", 
 		             sprintf("%.4f", $cof) );
 		             
 		$at->addData($bestDET,
-		             "Comparison", 
+		             "Sign Test|Comparison", 
+		             sprintf("%.4f", $cof) );
+		
+		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{PariedTTest}{twoTailP}),
+		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|P(2 tail)", 
+		             sprintf("%.4f", $cof) );
+		
+		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{r}),
+		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|R", 
+		             sprintf("%.4f", $cof) );
+		
+		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{stddev1}),
+		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DET1 StDev", 
 		             sprintf("%.4f", $cof) );
 		             
+		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{stddev2}),
+		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DET2 StDev", 
+		             sprintf("%.4f", $cof) );
+		             
+#		$at->addData($statsCompare{$cof}{CORREALTION}{COMB}{det1Avg},
+#		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DET1 Avg", 
+#		             sprintf("%.4f", $cof) );
+#
+#		$at->addData($statsCompare{$cof}{CORREALTION}{COMB}{det2Avg},
+#		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DET2 Avg", 
+#		             sprintf("%.4f", $cof) );
+
+		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{meanDiff}),
+		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DiffAvg", 
+		             sprintf("%.4f", $cof) );
+
+		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{stddevDiff}),
+		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DiffStddev", 
+		             sprintf("%.4f", $cof) );
+
 		push(@list_isopoints,
 		     [( $statsCompare{$cof}{DET1}{MFA}, 
 		        $statsCompare{$cof}{DET1}{MMISS},
