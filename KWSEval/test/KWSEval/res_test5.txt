@@ -125,8 +125,8 @@ TERM: (ID: TERM-002) year old
 
 
 [[STDERR]]
-Loading RTTM file '../common/test3.rttm'.
 Loading Term List file '../common/test3.tlist.xml'.
+Loading RTTM file '../common/test3.rttm' encoding /UTF-8/.
 Loading ECF file '../common/test3.scoring.ecf.xml'.
 Loading KWS List file '../common/test3.stdlist.xml'.
 Processing Alignment.

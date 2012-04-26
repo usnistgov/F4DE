@@ -4,6 +4,8 @@
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Indexing Time:            74390.0000                                                                                                                                                                                                 |
 | Language:                    english                                                                                                                                                                                                 |
+| Encoding:                      UTF-8                                                                                                                                                                                                 |
+| CompareNorm:               lowercase                                                                                                                                                                                                 |
 | Index size (bytes):         21235877                                                                                                                                                                                                 |
 | System ID:                                                                                                                                                                                                                           |
 | Coefficient C:                0.1000                                                                                                                                                                                                 |
@@ -56,8 +58,8 @@
 +----------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+
 
 [[STDERR]]
-Loading RTTM file '../common/test2.rttm'.
 Loading Term List file '../common/test2.tlist.xml'.
+Loading RTTM file '../common/test2.rttm' encoding /UTF-8/.
 Loading ECF file '../common/test2.ecf.xml'.
 Loading KWS List file '../common/test2.stdlist.xml'.
 Cache file found - Using 'test6.cache' for RTTM occurrences.

@@ -4,6 +4,8 @@
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Indexing Time:            74390.0000                                                                                                                                                                                                 |
 | Language:                    english                                                                                                                                                                                                 |
+| Encoding:                      UTF-8                                                                                                                                                                                                 |
+| CompareNorm:               lowercase                                                                                                                                                                                                 |
 | Index size (bytes):         21235877                                                                                                                                                                                                 |
 | System ID:              Test3 System ID                                                                                                                                                                                              |
 | Coefficient C:                0.1000                                                                                                                                                                                                 |
@@ -28,8 +30,8 @@
 +----------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+
 
 [[STDERR]]
-Loading RTTM file '../common/test3.rttm'.
 Loading Term List file '../common/test3.tlist.xml'.
+Loading RTTM file '../common/test3.rttm' encoding /UTF-8/.
 Loading ECF file '../common/test3.ecf.xml'.
 Loading KWS List file '../common/test3.stdlist.xml'.
 Processing Alignment.
