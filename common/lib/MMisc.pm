@@ -35,6 +35,7 @@ use List::Util qw(reduce);
 use Time::HiRes qw(gettimeofday tv_interval);
 
 ##### For non 'Core Modules' you will need to load them from within the specific function
+# (recommended to set a variable to avoid having to reload it)
 my $DigestSHA_module = undef;
 my $StatisticsDistributions_module = undef;
 
