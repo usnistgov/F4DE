@@ -68,13 +68,17 @@ sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
 foreach my $pn ("MMisc", "RTTMList", "KWSecf", "TermList", "KWSList", "KWSTools", "KWSMappedRecord", 'BipartiteMatch',
-                "KWSAlignment", "CacheOccurrences", "DETCurveSet", "DETCurve", "MetricTWV", "TrialsTWV") {
+                "KWSAlignment", "CacheOccurrences", "DETCurveSet", "DETCurve", "MetricTWV", "TrialsTWV",
+                "Encode") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
   }
 }
+
+use encoding 'euc-cn';
+use encoding 'utf8';
 
 # usualy part of the Perl Core
 foreach my $pn ("Getopt::Long", "Data::Dumper") {
@@ -232,6 +236,12 @@ GetOptions
     'ID-System=s'                         => \$IDSystem,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
+### Override the cache file option --- this is a JGF HACK to get some code out
+#if ($RTTMOcurencesCacheFile ne ""){
+#  print "Warning: Cache File Disabled for now.  No cache file will be generated\n";
+#  $RTTMOcurencesCacheFile = "";
+#}
+
 #checking transcript
 $resquestchecktrans = 1 if($threshchecktrans != -1.0);
 
@@ -323,9 +333,10 @@ if($haveReports)
 
 #loading the files
 my $ECF;
-my $RTTM = new RTTMList($RTTMfile);
 my $STD;
 my $TERM = new TermList($TERMfile);
+my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(),
+                        $TERM->getEncoding());
 
 if($haveReports)
 {
@@ -369,7 +380,7 @@ if($flagRTTMOcurencesCacheFile eq "r")
 	print STDERR "Cache file found - Using '$RTTMOcurencesCacheFile' for RTTM occurrences.\n";
 	
     my $checksum = 0;
-    my $cachingOcc = new CacheOccurrences($RTTMOcurencesCacheFile, $checksum, $thresholdFind, $RefList);
+    my $cachingOcc = new CacheOccurrences($RTTMOcurencesCacheFile, $checksum, $thresholdFind, $RefList, $TERM->getEncoding(), $TERM->getCompareNormalize());
     $cachingOcc->loadFile($TERM);
     
     if($cachingOcc->{SYSTEMVRTTM} != checksumSystemV($RTTMfile))
@@ -401,7 +412,8 @@ foreach my $termsid(sort keys %{ $TERM->{TERMS} })
     {
         #find occurrences for ref
         my $roccurrences = $RTTM->findTermOccurrences($terms, $thresholdFind);
-        
+        #print "Found ".scalar(@$roccurrences)." occurrences of ".$terms." ID $termsid in the RTTM\n";
+    
         for(my $i=0; $i<@$roccurrences; $i++)
         {
             my $file = @{ $roccurrences->[$i] }[0]->{FILE};
@@ -503,7 +515,7 @@ foreach my $termsid(sort keys %{ $TERM->{TERMS} })
 
 if($flagRTTMOcurencesCacheFile eq "w")
 {
-    my $cachingOcc = new CacheOccurrences($RTTMOcurencesCacheFile, checksumSystemV($RTTMfile), $thresholdFind, $RefList);
+    my $cachingOcc = new CacheOccurrences($RTTMOcurencesCacheFile, checksumSystemV($RTTMfile), $thresholdFind, $RefList, $TERM->getEncoding(), $TERM->getCompareNormalize());
     $cachingOcc->saveFile($TERM);
 }
 
@@ -559,7 +571,19 @@ if($haveReports)
 
         if($requestDETConditionalCurve)
         {
-            $dset->writeMultiDET($outputreportDETConditionalCurve);
+#            $dset->writeMultiDET($outputreportDETConditionalCurve);
+           my $options = { ("Xmin" => .0001,
+       		   "Xmax" => 40,
+       		   "Ymin" => 5,
+       		   "Ymax" => 98,
+       		   "DETShowPoint_Actual" => 1,
+       		   "DETShowPoint_Best" => 1,
+       		   "xScale" => "nd",
+       		   "yScale" => "nd",
+       		   "ColorScheme" => "color",
+              "createDETfiles" => 1,
+              "serialize" => 1 ) };
+           my $txt = $dset->renderAsTxt($outputreportDETConditionalCurve, 1, 1, $options, "");                                                                     
         }
         
         # html
@@ -630,7 +654,7 @@ if($haveReports)
        		   "ColorScheme" => "color",
               "createDETfiles" => 1,
               "serialize" => 1 ) };
-            print $dset->renderAsTxt($outputreportDETCurve, 1, 1, $options, "");                                                                     
+           my $txt = $dset->renderAsTxt($outputreportDETCurve, 1, 1, $options, "");                                                                     
         }
     
         # html
