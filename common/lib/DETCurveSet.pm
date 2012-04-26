@@ -784,7 +784,7 @@ sub renderDETCompare
 		$statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS} = max( 0, binomial( 0.5, $statsCompare{$cof}{COMPARE}{PLUS}+$statsCompare{$cof}{COMPARE}{MINUS}+$statsCompare{$cof}{COMPARE}{ZERO}, $statsCompare{$cof}{COMPARE}{PLUS}+sprintf( "%.0f", $statsCompare{$cof}{COMPARE}{ZERO}/2)) );
 		
 		push(@listIsoCoef, $cof);	
-		$statsCompare{$cof}{CORREALTION}{COMB} = MMisc::correlationCoeff(\@det1Comb, \@det2Comb);
+		$statsCompare{$cof}{CORREALTION}{COMB} = MMisc::compareData(\@det1Comb, \@det2Comb);
 		print Dumper($statsCompare{$cof}{CORREALTION}{COMB} );
 	}
 	
