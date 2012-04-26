@@ -15,6 +15,9 @@
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 use strict;
+use Encode;
+use encoding 'euc-cn';
+use encoding 'utf8';
 
 ##########
 # Version
@@ -88,6 +91,8 @@ my $Termfile = "";
 my $RTTMfile = "";
 my $Outfile = "";
 my $thresholdFind = 0.5;
+my $missPct = 0.2;
+my $faPct = 0.05;
 
 GetOptions
 (
@@ -95,6 +100,8 @@ GetOptions
     'rttmfile=s'                          => \$RTTMfile,
     'output-file=s'                       => \$Outfile,
     'Find-threshold=f'                    => \$thresholdFind,
+    'missPct=f'                           => \$missPct,
+    'fAPct=f'                             => \$faPct,
     'version',                            => sub { MMisc::ok_quit($versionid) },
     'help'                                => sub { MMisc::ok_quit($usage) },
 )  or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
@@ -103,21 +110,35 @@ MMisc::error_quit("An RTTM file must be set\n\n$usage\n") if($RTTMfile eq "");
 MMisc::error_quit("An Term file must be set\n\n$usage\n") if($Termfile eq "");
 MMisc::error_quit("An Output file must be set\n\n$usage\n") if($Outfile eq "");
 
-my $RTTM = new RTTMList($RTTMfile);
+print "Generate a random system with Pmiss=$missPct and PFa=$faPct\n";
+
 my $TERM = new TermList($Termfile);
+my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(), $TERM->getEncoding());
 my $STDOUT = new_empty KWSList($Outfile);
 
 $STDOUT->{LANGUAGE} = $TERM->{LANGUAGE};
+$STDOUT->{ENCODING} = $TERM->{ENCODING};
 $STDOUT->{TERMLIST_FILENAME} = $Termfile;
 
-foreach my $termsid(sort keys %{ $TERM->{TERMS} })
+### Build the FA term for this term
+my @termidList = sort keys %{ $TERM->{TERMS} };
+my %FATermIDList = ();
+for (my $f=0; $f<@termidList; $f++){
+  $FATermIDList{$termidList[$f]} = $termidList[($f+1)%(@termidList)];
+}
+
+for (my $termNum = 0; $termNum < @termidList; $termNum++)
 {
+    my $termsid = $termidList[$termNum];
     my $terms = $TERM->{TERMS}{$termsid}->{TEXT};
     my $occurrences = $RTTM->findTermOccurrences($terms, $thresholdFind);
+    #print "Found ".scalar(@$occurrences)." occurrences of ".$terms." ID $termsid in the RTTM\n";
     
-    my $detectedterm = new KWSDetectedList($termsid, 0, 0);
-    
-    for(my $i=0; $i<@$occurrences; $i++)
+    my $detectedterm = new KWSDetectedList($termsid, $termNum * .1 + 1, (($termNum+1) % 7 == 0) ? 1 : 0);
+   
+    ### The true occurrences 
+    my $misses = sprintf("%.0f", @$occurrences * $missPct);
+    for(my $i=0; $i<@$occurrences - $misses; $i++)
     {
         my $file = @{ $occurrences->[$i] }[0]->{FILE};
         my $chan = @{ $occurrences->[$i] }[0]->{CHAN};
@@ -126,14 +147,31 @@ foreach my $termsid(sort keys %{ $TERM->{TERMS} })
         my $et = @{ $occurrences->[$i] }[$numberoftoken-1]->{ET};
         my $dur = sprintf("%.4f", $et - $bt);
         my $rttm = \@{ $occurrences->[$i] };
-	my $score = 0.0;
-	for (my $t=0; $t<$numberoftoken; $t++){
-	    $score += @{ $occurrences->[$i] }[$t]->{CONF};
-	}
-	$score /= $numberoftoken;
-                
-        push( @{ $detectedterm->{TERMS} }, new KWSTermRecord($file, $chan, $bt, $dur, $score, "YES"));
+      	my $score = $i / (@$occurrences - $misses );
+        my $dec = ($score > 0.5 ? "YES" : "NO");              
+        push( @{ $detectedterm->{TERMS} }, new KWSTermRecord($file, $chan, $bt, $dur, $score, $dec));
     }
+
+    ### Add Some False Alarms
+    $terms = $TERM->{TERMS}{$FATermIDList{$termsid}}->{TEXT};
+    $occurrences = $RTTM->findTermOccurrences($terms, $thresholdFind);
+    
+    ### The true occurrences 
+    my $fas = sprintf("%.0f", @$occurrences * $faPct);
+    for(my $i=0; $i<$fas; $i++)
+    {
+        my $file = @{ $occurrences->[$i] }[0]->{FILE};
+        my $chan = @{ $occurrences->[$i] }[0]->{CHAN};
+        my $bt = @{ $occurrences->[$i] }[0]->{BT};
+        my $numberoftoken = @{ $occurrences->[$i] };
+        my $et = @{ $occurrences->[$i] }[$numberoftoken-1]->{ET};
+        my $dur = sprintf("%.4f", $et - $bt);
+        my $rttm = \@{ $occurrences->[$i] };
+      	my $score = $i / ($fas);
+        my $dec = ($score > 0.5 ? "YES" : "NO");              
+        push( @{ $detectedterm->{TERMS} }, new KWSTermRecord($file, $chan, $bt, $dur, $score, $dec));
+    }
+    
     
     $STDOUT->{TERMS}{$termsid} = $detectedterm;
 }
@@ -154,6 +192,8 @@ sub set_usage {
   $tmp .= "  -r, --rttmfile           Path to the RTTM file.\n";
   $tmp .= "  -o, --output-file        Path to the Output file.\n";
   $tmp .= "  -F, --Find-threshold     Threshold.\n";
+  $tmp .= "  -m, --missPct <float>    Percentage of Missed Detections\n";
+  $tmp .= "  -f, --faPct <float>      Percentage of False Alarms\n";
   $tmp .= "\n";
   
   return($tmp);
