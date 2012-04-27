@@ -225,7 +225,7 @@ DEVAinstall_noman:
 ##########
 
 KWSEVALDIR=KWSEval
-KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl}
+KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,TListAddNGram/TListAddNGram.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl}
 
 KWSEvalinstall:
 	@make KWSEvalinstall_common
@@ -237,7 +237,7 @@ KWSEvalinstall_common:
 	@echo "********** Installing KWSEval tools"
 	@make commoninstall_common
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${KWSEVALDIR}/${KWSEVALTOOLS}
-	@perl installer.pl ${F4DE_BASE} lib ${KWSEVALDIR}/*.pm
+	@perl installer.pl ${F4DE_BASE} lib ${KWSEVALDIR}/lib/*.pm
 
 
 ##########
@@ -395,6 +395,8 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/CCD
 ## R_tools
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/R_tools
+## KWSEval
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/BabelTransParse
 
 create_mans:
 # common
