@@ -228,7 +228,7 @@ foreach my $trans(sort keys %$db){
       } else {
         ;
       }
-      $dur = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}) / @toks);
+      $dur = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}) / (@toks + 1));
       $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt} + ($dur * $t));
 
       print RTTM "$type $outTransName 1 $bt $dur $token $stype spkr_$spkr 0.5\n";

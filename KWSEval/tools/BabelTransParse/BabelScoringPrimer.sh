@@ -1,31 +1,49 @@
 #!/bin/sh
 
 #### This script assumes F4DE 2.4.0 or greater is installed and $F4DE_BASE is set
-if [ "$F4DE_BASE" = "" ] ; then
-    echo "Error: Set the environment variable \$F4DE_BASE per the F4DE install instructions"
-    exit 1
+
+KWSEVAL=KWSEVAL
+TLISTADDNGRAM=TListAddNGram
+KWSLISTGEN=KWSListGenerator
+KWSVALIDATE=ValidateKWSList
+mode=DIST
+if [ $mode ne DEV ] ; then
+    if [ "$F4DE_BASE" = "" ] ; then
+	echo "Error: Set the environment variable \$F4DE_BASE per the F4DE install instructions"
+	exit 1
+    fi
+    BABELPARSE="perl -I $F4DE_BASE/common/lib -I $F4DE_BASE/KWSEval/libb ./BabelTransParse.pl"
+else
+    BASE=../../../
+    KWEVAL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSEval/KWSEval.pl"
+    TLISTADDNGRAM="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/TListAddNGram/TListAddNGram.pl"
+    BABELPARSE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib ./BabelTransParse.pl"
+    KWSLISTGEN="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSListGenerator/KWSListGenerator.pl"
+    KWSVALIDATE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/ValidateKWSList/ValidateKWSList.pl"
 fi
 
 
-for langID in 101 104 105 english ; do
+
+#for langID in 101 104 105 english ; do
+for langID in 101 english ; do
     if [ $langID = "101" ] ; then
 	BABELDATA=Lang101
 	language=cantonese
 	norm=""
 	encoding=UTF-8
-	files="*"
+	files="*.txt"
     elif [ $langID = "104" ] ; then
 	BABELDATA=Lang104
 	language=pashto
 	norm=""
 	encoding=UTF-8
-	files="*"
+	files="*.txt"
     elif [ $langID = "105" ] ; then
 	BABELDATA=Lang105
 	language=turkish
 	norm=""
 	encoding=UTF-8
-	files="*"
+	files="*.txt"
     elif [ $langID = "english" ] ; then
 	BABELDATA=LangEng
 	language=english
@@ -43,26 +61,31 @@ for langID in 101 104 105 english ; do
     mkdir -p $OUTDIR
 
     echo "Parsing the Babel transcript files"
-    perl -I $F4DE_BASE/lib ./BabelTransParse.pl -language $language \
+    $BABELPARSE \
+	-language $language \
 	-encoding UTF-8 \
 	-compareNormalize "$norm" \
 	-Verbose \
 	-root $OUTROOT.source $BABELDATA/$files
     echo ""
-exit
 
-    echo "Generate two random systems (This command is a code testing tool and therefore not installed in the BIN directory)";
-    perl -I $F4DE_BASE/lib $F4DE_BASE/KWSEval/tools/KWSListGenerator/KWSListGenerator.pl -t $OUTROOT.source.tlist.xml -r $OUTROOT.source.rttm -o $OUTROOT.sys1.stdlist.xml -m 0.2 -f 0.2
-    perl -I $F4DE_BASE/lib $F4DE_BASE/KWSEval/tools/KWSListGenerator/KWSListGenerator.pl -t $OUTROOT.source.tlist.xml -r $OUTROOT.source.rttm -o $OUTROOT.sys2.stdlist.xml -m 0.1 -f 0.1
+    echo "Generate two random systems";
+    $KWSLISTGEN -t $OUTROOT.source.tlist.xml -r $OUTROOT.source.rttm -o $OUTROOT.sys1.stdlist.xml -m 0.2 -f 0.2
+    $KWSLISTGEN -t $OUTROOT.source.tlist.xml -r $OUTROOT.source.rttm -o $OUTROOT.sys2.stdlist.xml -m 0.1 -f 0.1
+    echo ""
+
+    echo "Validating random systems"
+    $KWSVALIDATE -t Lang101-Demo/cantonese.source.tlist.xml -e Lang101-Demo/cantonese.source.ecf.xml -s Lang101-Demo/cantonese.sys1.stdlist.xml
+    $KWSVALIDATE -t Lang101-Demo/cantonese.source.tlist.xml -e Lang101-Demo/cantonese.source.ecf.xml -s Lang101-Demo/cantonese.sys2.stdlist.xml
     echo ""
 
     echo "Add N-Gram annotations to the Term list file"
-    perl -I $F4DE_BASE/lib $F4DE_BASE/KWSEval/tools/TListAddNGram/TListAddNGram.pl -t $OUTROOT.source.tlist.xml -o $OUTROOT.source.tlist.annot.xml
+    $TLISTADDNGRAM -t $OUTROOT.source.tlist.xml -o $OUTROOT.source.tlist.annot.xml
     echo ""
 
     for sys in sys1 sys2 ; do
 	echo "Compute reports for $sys"
-	KWSEval \
+	$KWSEVAL \
 	    -I "Demo system $sys" \
 	    -e $OUTROOT.source.ecf.xml \
 	    -r $OUTROOT.source.rttm \
