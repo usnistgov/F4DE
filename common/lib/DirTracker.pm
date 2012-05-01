@@ -63,8 +63,13 @@ sub new {
      files     => undef,
      files2sha => undef, ## {file} = "sha"
      sha2files => undef, ## {sha}{file}
+     # added & deleted: valid only until next 'scan'
      added     => undef,
      deleted   => undef,
+     # file monitor
+     files_monitor => undef,
+     fm_changes  => undef, # {filename}{change_type} = (old_value, new_value)
+     # error handler
      errorh    => $errorh,
      errorv    => $errorv,      # Cache information
     };
@@ -74,10 +79,12 @@ sub new {
 }
 
 ##########
-# init()
+# init(FollowFiles)
 ## must be called to initialize the directory listing, and before any other function can be called
+# FollowFiles = 0 (no) or 1 (yes) (default is 0)
 sub init {
-  my ($self) = @_;
+  my $self = shift @_;
+  my $follow = MMisc::iuv(\@_, 0);
 
   return($self->_set_error_and_return("Init was already run once, can not run it again", 0))
     if ($self->{initdone} != 0);
@@ -96,12 +103,18 @@ sub init {
   $monitor->scan;
   $self->{monitor} = $monitor;
 
+  # Follow files ?
+  if ($follow) {
+    $self->{files_monitor} = File::Monitor->new();
+  }
+
   # Now that the watch is set, we obtain the entire files list and obtain its SHA256
   my ($err, @contained_files) = MMisc::find_all_files($dir);
   return($self->_set_error_and_return("Problem finding file list for dir ($dir): $err", 0))
     if (! MMisc::is_blank($err));
   my $now = MMisc::get_scalar_currenttime();
   foreach my $file (@contained_files) {
+    $self->{files_monitor}->watch($file) if (defined $self->{files_monitor}); # add each file if followed
     my ($err, $sha256) = MMisc::file_sha256digest($file);
     return($self->_set_error_and_return("Problem obtaining SHA256 digest from file ($file): $err", 0))
       if (! MMisc::is_blank($err));
@@ -109,7 +122,10 @@ sub init {
     $self->{files2sha}{$file} = $sha256;
     $self->{sha2files}{$sha256}{$file}++;
   }
-
+  
+  # initialize the scan for followed files
+  $self->{files_monitor}->scan if (defined $self->{files_monitor});
+  
   $self->{initdone} = 1;
   return(1);
 }
@@ -126,7 +142,6 @@ sub scan {
 
   my @out = ();
   my @changes = $self->{monitor}->scan;
-  return(@out) if (scalar @changes == 0);
 
   foreach my $change (@changes) {
 
@@ -145,6 +160,7 @@ sub scan {
       # maintain added versus deleted list
       $self->{added}{$file} = $now;
       delete $self->{deleted}{$file};
+      $self->{files_monitor}->watch($file) if (defined $self->{files_monitor}); # add each new file if followed
     }
 
     foreach my $file ($change->files_deleted) { # process deleted files
@@ -161,6 +177,8 @@ sub scan {
     }
     
   }
+
+  $_[0]->__files_scan();
 
   return(@out);
 }
@@ -212,11 +230,44 @@ sub files   { $_[0]->__get_adf('files'); }
 # [+] all added files
 # [-] all deleted files
 sub humanreadable_scan {
-  return("[*] " . join("\n[*] ", $_[0]->scan()) 
-         . "\n[+] " . join("\n[+] ", $_[0]->added()) 
-         . "\n[-] " . join("\n[-] ", $_[0]->deleted())
-        . "\n");
+  my @scan = $_[0]->scan();
+  my $txt 
+    = "[*] " . join("\n[*] ", @scan) 
+      . "\n[+] " . join("\n[+] ", $_[0]->added()) 
+      . "\n[-] " . join("\n[-] ", $_[0]->deleted())
+      . "\n";
+
+  if (defined $_[0]->{fm_changes}) { # file monitor active
+    foreach my $file (keys %{$_[0]->{fm_changes}}) {
+      foreach my $mode (keys %{$_[0]->{fm_changes}{$file}}) {
+        my ($old, $new) = @{$_[0]->{fm_changes}{$file}{$mode}};
+        $txt .= "[@] $file (\'$mode\' change from \'$old\' to \'$new\')\n";
+      }
+    }
+  }
+  
+  return($txt);
 }
+
+##########
+sub __files_scan {
+  return() if (! defined $_[0]->{files_monitor});
+  
+  # per file modification tracking
+  my @changes = $_[0]->{files_monitor}->scan;
+
+  # reset list of changes since last time
+  $_[0]->{fm_changes} = undef;
+  foreach my $change (@changes) {
+    if ($change->is_mtime) { @{$_[0]->{fm_changes}{$change->name}{'mtime'}} = ($change->old_mtime, $change->new_mtime); }
+    if ($change->is_ctime) { @{$_[0]->{fm_changes}{$change->name}{'ctime'}} = ($change->old_ctime, $change->new_ctime); }
+    if ($change->is_uid)   { @{$_[0]->{fm_changes}{$change->name}{'uid'}} = ($change->old_uid, $change->new_uid); }
+    if ($change->is_gid)   { @{$_[0]->{fm_changes}{$change->name}{'gid'}} = ($change->old_gid, $change->new_gid); }
+    if ($change->is_mode)  { @{$_[0]->{fm_changes}{$change->name}{'mode'}} = ($change->old_mode, $change->new_mode); }
+    if ($change->is_size)  { @{$_[0]->{fm_changes}{$change->name}{'size'}} = ($change->old_size, $change->new_size); }
+  }
+}
+
 
 ############################################################
 
