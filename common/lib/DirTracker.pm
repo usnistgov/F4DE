@@ -58,20 +58,22 @@ sub new {
   my $self =
     {
      dir       => $v,
-     initdone  => 0, ## set post init
+     init_scandate => undef, # a modified file is a file whose scandate differs from the 'init' scan date
      monitor   => undef,
-     files     => undef,
-     files2sha => undef, ## {file} = "sha"
+     files     => undef, # {file} = scandate
+     files2sha => undef, ## {file} = sha
      sha2files => undef, ## {sha}{file}
      # added & deleted: valid only until next 'scan'
-     added     => undef,
-     deleted   => undef,
+     added     => undef, # {file} = scandate
+     deleted   => undef, # {file} = scandate
      # file monitor
      files_monitor => undef,
      fm_changes  => undef, # {filename}{change_type} = (old_value, new_value)
      # error handler
      errorh    => $errorh,
      errorv    => $errorv,      # Cache information
+     # fake SHA counter
+     fakeshac  => 0,
     };
  
   bless $self;
@@ -87,7 +89,7 @@ sub init {
   my $follow = MMisc::iuv(\@_, 0);
 
   return($self->_set_error_and_return("Init was already run once, can not run it again", 0))
-    if ($self->{initdone} != 0);
+    if (defined $self->{init_scandate});
 
   my $dir = $self->{dir};
 
@@ -115,9 +117,7 @@ sub init {
   my $now = MMisc::get_scalar_currenttime();
   foreach my $file (@contained_files) {
     $self->{files_monitor}->watch($file) if (defined $self->{files_monitor}); # add each file if followed
-    my ($err, $sha256) = MMisc::file_sha256digest($file);
-    return($self->_set_error_and_return("Problem obtaining SHA256 digest from file ($file): $err", 0))
-      if (! MMisc::is_blank($err));
+    my $sha256 = $self->__file_sha256digest($file);
     $self->{files}{$file} = $now;
     $self->{files2sha}{$file} = $sha256;
     $self->{sha2files}{$sha256}{$file}++;
@@ -126,7 +126,7 @@ sub init {
   # initialize the scan for followed files
   $self->{files_monitor}->scan if (defined $self->{files_monitor});
   
-  $self->{initdone} = 1;
+  $self->{init_scandate} = $now;
   return(1);
 }
 
@@ -135,50 +135,57 @@ sub init {
 ## return the list of new (never present previously) files added since last scan
 # (rely on SHA256digest to process file copies)
 sub scan {
-  my ($self) = @_;
-
-  return($self->_set_error_and_return("Init was never run", ))
-    if ($self->{initdone} == 0);
+  return($_[0]->_set_error_and_return("Init was never run", ))
+    if (! defined $_[0]->{init_scandate});
 
   my @out = ();
-  my @changes = $self->{monitor}->scan;
+  my @changes = $_[0]->{monitor}->scan;
 
-  foreach my $change (@changes) {
+  my @fm_changes = undef;
+  if (defined $_[0]->{files_monitor}) {
+    for (my $i = 0; $i < scalar @changes; $i++) {
+      foreach my $file ($changes[$i]->files_created) { # quick add of new files before scan
+        $_[0]->{files_monitor}->watch($file);
+      }
+      foreach my $file ($changes[$i]->files_deleted) { # removal too
+        $_[0]->{files_monitor}->unwatch($file);
+      }
+    }
+    @fm_changes = $_[0]->{files_monitor}->scan;
+  }
 
-    my $now = MMisc::get_scalar_currenttime();
+  my $now = MMisc::get_scalar_currenttime();
+ for (my $i = 0; $i < scalar @changes; $i++) {
 
-    foreach my $file ($change->files_created) { # process added files
-      my ($err, $sha256) = MMisc::file_sha256digest($file);
-      return($self->_set_error_and_return("Problem obtaining SHA256 digest from file ($file): $err", ))
-        if (! MMisc::is_blank($err));
-      $self->{files}{$file} = $now;
-      $self->{files2sha}{$file} = $sha256;
-      if (! exists $self->{sha2files}{$sha256}) { # a "true" new file
+    foreach my $file ($changes[$i]->files_created) { # process added files
+      my $sha256 = $_[0]->__file_sha256digest($file);
+      $_[0]->{files}{$file} = $now;
+      $_[0]->{files2sha}{$file} = $sha256;
+      if (! exists $_[0]->{sha2files}{$sha256}) { # a "true" new file
         push @out, $file;
       }
-      $self->{sha2files}{$sha256}{$file}++;
+      $_[0]->{sha2files}{$sha256}{$file}++;
       # maintain added versus deleted list
-      $self->{added}{$file} = $now;
-      delete $self->{deleted}{$file};
-      $self->{files_monitor}->watch($file) if (defined $self->{files_monitor}); # add each new file if followed
+      $_[0]->{added}{$file} = $now;
+      delete $_[0]->{deleted}{$file};
     }
 
-    foreach my $file ($change->files_deleted) { # process deleted files
-      return($self->_set_error_and_return("No SHA256 digest for file ($file) present", ))
-        if (! exists $self->{files2sha}{$file});
-      my $sha256 = $self->{files2sha}{$file};
-      delete $self->{file2sha}{$file};
-      delete $self->{sha2files}{$sha256}{$file};
-      delete $self->{sha2files}{$sha256} if (scalar(keys %{$self->{sha2files}{$sha256}} == 0)); # prune if empty
+    foreach my $file ($changes[$i]->files_deleted) { # process deleted files
+      return($_[0]->_set_error_and_return("No SHA256 digest for file ($file) present", ))
+        if (! exists $_[0]->{files2sha}{$file});
+      my $sha256 = $_[0]->{files2sha}{$file};
+      delete $_[0]->{file2sha}{$file};
+      delete $_[0]->{sha2files}{$sha256}{$file};
+      delete $_[0]->{sha2files}{$sha256} if (scalar(keys %{$_[0]->{sha2files}{$sha256}} == 0)); # prune if empty
       # maintain added versus deleted list
-      $self->{deleted}{$file} = $now;
-      delete $self->{added}{$file};
-      delete $self->{files}{$file};
+      $_[0]->{deleted}{$file} = $now;
+      delete $_[0]->{added}{$file};
+      delete $_[0]->{files}{$file};
     }
     
   }
 
-  $_[0]->__files_scan();
+  $_[0]->__files_scan($now, @fm_changes);
 
   return(@out);
 }
@@ -187,27 +194,23 @@ sub scan {
 # sha256digest(FileName)
 ## return the SHA 256 digest of given file or undef in case of problem
 sub sha256digest {
-  my ($self, $file) = @_;
+  return($_[0]->_set_error_and_return("Init was never run", ))
+    if (! defined $_[0]->{init_scandate});
 
-  return($self->_set_error_and_return("Init was never run", ))
-    if ($self->{initdone} == 0);
-
-  return($self->_set_error_and_return("Do not have an SHA256 digest for file ($file)", undef))
-    if (! exists $self->{files2sha}{$file});
+  return($_[0]->_set_error_and_return("Do not have an SHA256 digest for file (" . $_[1] . ")", undef))
+    if (! exists $_[0]->{files2sha}{$_[1]});
   
-  return($self->{files2sha}{$file});
+  return($_[0]->{files2sha}{$_[1]});
 }
 
 #####
 sub __get_adf {
-  my ($self, $mode) = @_;
-
-  return($self->_set_error_and_return("Init was never run", ))
-    if ($self->{initdone} == 0);
+  return($_[0]->_set_error_and_return("Init was never run", ))
+    if (! defined $_[0]->{init_scandate});
 
   my @out = ();
-  return(@out) if (! defined $self->{$mode});
-  foreach my $file (sort {$self->{$mode}{$a} <=> $self->{$mode}{$b}} keys %{$self->{$mode}}) {
+  return(@out) if (! defined $_[0]->{$_[1]});
+  foreach my $file (sort {$_[0]->{$_[1]}{$a} <=> $_[0]->{$_[1]}{$b}} keys %{$_[0]->{$_[1]}}) {
     push @out, $file;
   }
 
@@ -217,31 +220,48 @@ sub __get_adf {
 #####
 # added()
 # deleted() 
+# modified()
 # files()
-## return list of all (added/deleted/) files (in order of 'scan')
+## return list of all (added/deleted/modified/) files (in order of 'scan')
 sub added   { $_[0]->__get_adf('added'); }
 sub deleted { $_[0]->__get_adf('deleted'); }
 sub files   { $_[0]->__get_adf('files'); }
+sub modified {
+  return($_[0]->_set_error_and_return("Init was never run", ))
+    if (! defined $_[0]->{init_scandate});
+
+  my @out = ();
+  return(@out) if (! defined $_[0]->{files});
+  my %tmp = ();
+  foreach my $file (keys %{$_[0]->{files}}) {
+    next if ($_[0]->{files}{$file} == $_[0]->{init_scandate});
+    $tmp{$file} = $_[0]->{files}{$file};
+  }
+
+  foreach my $file (sort {$tmp{$a} <=> $tmp{$b}} keys %tmp) {
+    push @out, $file;
+  }
+
+ return(@out);
+}
 
 #####
-# sub humanreadable_scan()
-## return a string with the following information (one file per line)
-# [*] new TRUE files
-# [+] all added files
-# [-] all deleted files
+# sub humanreadable_scan(showSHA256)
+## return a string with the human readable / computer parsable information on changes since last scan
 sub humanreadable_scan {
   my @scan = $_[0]->scan();
-  my $txt 
-    = "[*] " . join("\n[*] ", @scan) 
-      . "\n[+] " . join("\n[+] ", $_[0]->added()) 
-      . "\n[-] " . join("\n[-] ", $_[0]->deleted())
-      . "\n";
+ 
+  my $txt = "";
+  $txt .= $_[0]->__phre("trueNew", $_[1], @scan);
+  $txt .= $_[0]->__phre("added", $_[1], $_[0]->added());
+  $txt .= $_[0]->__phre("deleted", $_[1], $_[0]->deleted());
+  $txt .= $_[0]->__phre("modified", $_[1], $_[0]->modified());
 
   if (defined $_[0]->{fm_changes}) { # file monitor active
     foreach my $file (keys %{$_[0]->{fm_changes}}) {
       foreach my $mode (keys %{$_[0]->{fm_changes}{$file}}) {
         my ($old, $new) = @{$_[0]->{fm_changes}{$file}{$mode}};
-        $txt .= "[@] $file (\'$mode\' change from \'$old\' to \'$new\')\n";
+        $txt .= "[$mode] $file (was:$old) (now:$new)\n";
       }
     }
   }
@@ -249,25 +269,60 @@ sub humanreadable_scan {
   return($txt);
 }
 
+sub __phre {
+  my ($self, $h, $s) = MMisc::shiftX(3, \@_);
+
+  return("") if (scalar @_ == 0);
+  my $ret = "";
+  for (my $i = 0; $i < scalar @_; $i++) {
+    $ret .= "[$h] " . $_[$i];
+    $ret .= ($s) ? " [SHA256=" . $self->sha256digest($_[$i]) . "]" : "";
+    $ret .= "\n";
+  }
+
+  return($ret);
+}
+
 ##########
+# __files_scan($now, @changes)
 sub __files_scan {
   return() if (! defined $_[0]->{files_monitor});
-  
-  # per file modification tracking
-  my @changes = $_[0]->{files_monitor}->scan;
 
   # reset list of changes since last time
   $_[0]->{fm_changes} = undef;
-  foreach my $change (@changes) {
-    if ($change->is_mtime) { @{$_[0]->{fm_changes}{$change->name}{'mtime'}} = ($change->old_mtime, $change->new_mtime); }
-    if ($change->is_ctime) { @{$_[0]->{fm_changes}{$change->name}{'ctime'}} = ($change->old_ctime, $change->new_ctime); }
-    if ($change->is_uid)   { @{$_[0]->{fm_changes}{$change->name}{'uid'}} = ($change->old_uid, $change->new_uid); }
-    if ($change->is_gid)   { @{$_[0]->{fm_changes}{$change->name}{'gid'}} = ($change->old_gid, $change->new_gid); }
-    if ($change->is_mode)  { @{$_[0]->{fm_changes}{$change->name}{'mode'}} = ($change->old_mode, $change->new_mode); }
-    if ($change->is_size)  { @{$_[0]->{fm_changes}{$change->name}{'size'}} = ($change->old_size, $change->new_size); }
+  for (my $i = 2; $i < scalar @_; $i++) {
+    next if (exists $_[0]->{deleted}{$_[$i]->name});
+    if ($_[$i]->is_mtime) { @{$_[0]->{fm_changes}{$_[$i]->name}{'mtime'}} = ($_[$i]->old_mtime, $_[$i]->new_mtime); }
+    if ($_[$i]->is_ctime) { @{$_[0]->{fm_changes}{$_[$i]->name}{'ctime'}} = ($_[$i]->old_ctime, $_[$i]->new_ctime); }
+    if ($_[$i]->is_uid)   { @{$_[0]->{fm_changes}{$_[$i]->name}{'uid'}}   = ($_[$i]->old_uid,   $_[$i]->new_uid);   }
+    if ($_[$i]->is_gid)   { @{$_[0]->{fm_changes}{$_[$i]->name}{'gid'}}   = ($_[$i]->old_gid,   $_[$i]->new_gid);   }
+    if ($_[$i]->is_mode)  { @{$_[0]->{fm_changes}{$_[$i]->name}{'mode'}}  = (MMisc::mode2perms($_[$i]->old_mode),  MMisc::mode2perms($_[$i]->new_mode));  }
+    if ($_[$i]->is_size)  { @{$_[0]->{fm_changes}{$_[$i]->name}{'size'}}  = ($_[$i]->old_size,  $_[$i]->new_size);  }
+    
+    # if mtime, ctime or size has changed, chances are the sha256 has too, so 
+    if (($_[$i]->is_mtime) || ($_[$i]->is_ctime) || ($_[$i]->is_size)) {
+      my $osha = $_[0]->{files2sha}{$_[$i]->name};
+      my $sha256 = $_[0]->__file_sha256digest($_[$i]->name);
+      $_[0]->{files}{$_[$i]->name} = $_[1];
+      $_[0]->{files2sha}{$_[$i]->name} = $sha256;
+      delete $_[0]->{sha2files}{$sha256}{$_[$i]->name};
+      $_[0]->{sha2files}{$sha256}{$_[$i]->name}++;
+    }
+
   }
 }
 
+##########
+# (self, filename)
+sub __file_sha256digest {
+  my ($err, $sha256) = MMisc::file_sha256digest($_[1]);
+  if (! MMisc::is_blank($err)) {
+    MMisc::warn_print("Problem obtaining SHA256 digest for entity ($err) , will return unique non sha value");
+    return(sprintf("XXX_Not_an_SHA_value_ZZZ:%06d", ++$_[0]->{fakeshac}));
+  }
+  
+  return($sha256);
+}
 
 ############################################################
 
