@@ -1915,6 +1915,27 @@ sub popX {
   return(splice(@{$_[1]}, -$_[0]));
 }
 
+
+##########
+sub mode2perms {
+  my ($mode) = @_;
+
+ # thanks: http://bytes.com/topic/perl/answers/50411-access-mode-int-string
+  my @rwx = qw(--- --x -w- -wx r-- r-x rw- rwx);
+  my $perms = $rwx[$mode & 7];
+  $mode >>= 3;
+  $perms = $rwx[$mode & 7] . $perms;
+  $mode >>= 3;
+  $perms = $rwx[$mode & 7] . $perms;
+  substr($perms, 2, 1) =~ tr/-x/Ss/ if -u _;
+  substr($perms, 5, 1) =~ tr/-x/Ss/ if -g _;
+  substr($perms, 8, 1) =~ tr/-x/Tt/ if -k _;
+
+  return($perms);
+}
+
+
+
 ############################################################
 
 sub marshal_matrix { 
