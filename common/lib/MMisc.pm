@@ -462,6 +462,45 @@ sub get_array1posinarray2 {
 }
 
 ##########
+# % perl -e 'use MMisc; print join(" *** ", MMisc::get_regexp_array1posinarray2(["m%af%i", "m%cr%i"], ["after", "before", "Crust"]));'
+# *** m%cr%i *** 2 *** m%af%i *** 0
+# <=> "" error message, match for 'm%cr%i' is '2' (ie 'Crust') and match for 'm%af%i' is '0' (ie 'after') 
+sub get_regexp_array1posinarray2 {
+  my ($ra1, $ra2) = @_;
+
+  my @a1 = &make_array_of_unique_values($ra1);
+  return("Array1 does not contain unique values")
+    if (scalar @a1 != scalar @$ra1);
+
+  my @a2 = &make_array_of_unique_values($ra2);
+  return("Array2 does not contain unique values")
+    if (scalar @a2 != scalar @$ra2);
+
+  my %h2 = &array1d_to_ordering_hash(\@a2);
+
+  my %match = ();
+  my @bad = ();
+  my @keys = keys %h2;
+  for (my $i = 0; $i < scalar @a1; $i++) {
+    my $v = $a1[$i];
+    my $regexp = "grep {$v} \@keys";
+    my @found = eval $regexp;
+    if (scalar @found == 1) {
+      $match{$a1[$i]} = $h2{$found[0]};
+    } else {
+      return("Found multiple possible match to $v (" . scalar @found . "): " . join(" | ", @found))
+        if (scalar @found > 1);
+      push @bad, $a1[$i];
+    }
+  }
+
+  return("Some values not in array comp: " . join(" ", @bad))
+    if (scalar @bad > 0);
+  
+  return("", %match);
+}
+
+##########
 
 sub _uc_lc_array_values {
   my ($mode, $ra) = @_; 
