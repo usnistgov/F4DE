@@ -1,0 +1,35 @@
+<stdlist termlist_filename="test5.tlist.xml" indexing_time="0.00" language="english" index_size="27" system_id="">
+<detected_termlist termid="TERM-01" term_search_time="24.3" oov_term_count="0">
+<term file="FILE01" channel="1" tbeg="0.000" dur="1.000" score="0.912" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="5.000" dur="1.000" score="0.648" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="10.000" dur="1.000" score="0.746" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="15.000" dur="1.000" score="0.823" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="20.000" dur="1.000" score="0.723" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="25.000" dur="1.000" score="0.423" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="30.000" dur="1.000" score="0.345" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="35.000" dur="1.000" score="0.785" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="40.000" dur="1.000" score="0.568" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="45.000" dur="1.000" score="0.567" decision="YES"/>
+<term file="FILE02" channel="2" tbeg="90.000" dur="1.000" score="0.546" decision="YES"/>
+<term file="FILE02" channel="2" tbeg="95.000" dur="1.000" score="0.393" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TERM-02" term_search_time="24.3" oov_term_count="0">
+<term file="FILE01" channel="1" tbeg="1.000" dur="1.000" score="0.952" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="6.000" dur="1.000" score="0.964" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="11.000" dur="1.000" score="0.835" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="16.000" dur="1.000" score="0.734" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="21.000" dur="1.000" score="0.467" decision="YES"/>
+<term file="FILE02" channel="2" tbeg="86.000" dur="1.000" score="0.724" decision="YES"/>
+<term file="FILE02" channel="2" tbeg="91.000" dur="1.000" score="0.732" decision="YES"/>
+<term file="FILE02" channel="2" tbeg="96.000" dur="1.000" score="0.834" decision="YES"/>
+</detected_termlist>
+<detected_termlist termid="TERM-03" term_search_time="24.3" oov_term_count="0">
+<term file="FILE01" channel="1" tbeg="2.000" dur="2.000" score="0.994" decision="YES"/>
+<term file="FILE01" channel="1" tbeg="7.000" dur="2.000" score="0.901" decision="YES"/>
+<term file="FILE02" channel="2" tbeg="57.000" dur="2.000" score="0.845" decision="YES"/>
+<term file="FILE02" channel="2" tbeg="62.000" dur="2.000" score="0.452" decision="YES"/>
+<term file="FILE02" channel="2" tbeg="67.000" dur="2.000" score="0.345" decision="YES"/>
+<term file="FILE02" channel="2" tbeg="72.000" dur="2.000" score="0.623" decision="YES"/>
+<term file="FILE02" channel="2" tbeg="77.000" dur="2.000" score="0.734" decision="YES"/>
+</detected_termlist>
+</stdlist>
