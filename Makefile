@@ -379,6 +379,8 @@ dist_head:
 	@fgrep F4DE ${F4DE_VERSION} > /dev/null
 
 dist_archive_pre_remove:
+# Main
+	@rm -f /tmp/`cat ${F4DE_VERSION}`/HOWTO_Release.txt
 ## CLEAR07
 # Sys files
 	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/common/BN_{TDT,TR}/*.rdf
