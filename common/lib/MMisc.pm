@@ -1864,7 +1864,7 @@ sub inc_tohash {
     return(1);
   }
 
-  return(&push_toinc(\%{$$rh{$d0}}, @d));
+  return(&inc_tohash(\%{$$rh{$d0}}, @d));
 }
 
 #####
