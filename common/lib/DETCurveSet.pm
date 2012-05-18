@@ -1,7 +1,8 @@
 # F4DE
 # DETCurveSet.pm
 # Author: Jon Fiscus
-# 
+# Additions: David Joy
+#
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
 # Title 17 Section 105 of the United States Code this software is not subject to copyright
@@ -192,79 +193,6 @@ sub sortTest {
     print "OK\n";
 }
 
-sub compareUnitTest(){
-  my $dir = "/tmp";
-  use DETCurve;
-  use DETCurveSet;
-  use DETCurveGnuplotRenderer;
-  use Math::Random::OO::Uniform;
-
-  my @isolinecoef = (40, 5, 1, 0.5);
-
-  print "Build a block averaged random DET curve for Dir=/$dir/\n";
-  my $decisionScoreRand = Math::Random::OO::Normal->new(0,1);     $decisionScoreRand->seed(0030201);
-  my $NTdecisionScoreRand = Math::Random::OO::Normal->new(0,2);   $NTdecisionScoreRand->seed(543031);
-  my $targetRand = Math::Random::OO::Uniform->new(0,1);           $targetRand->seed(939021);
-  my $ds = new DETCurveSet("Compare Unit Tests");
-      
-  print "  Building DETS\n";
-  my $trial1 = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
-  my $trial2 = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
-
-  for (my $epoch = 0; $epoch<10; $epoch ++){
-    print "    Epoch $epoch\n";
-    for (my $nt = 0; $nt<160; $nt ++){
-      ##### Trials 1
-      # TArgets
-      my $scr = $decisionScoreRand->next() + (0.25 + $epoch * 0.02);
-      $trial1->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 1);
-      # NonTargets
-      $scr = $decisionScoreRand->next() - (0.25 + $epoch * 0.02);
-      $trial1->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
-      ##### Trials 2
-      # TArgets
-      my $scr = $decisionScoreRand->next() + (0.50 + $epoch * 0.02);
-      $trial2->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 1);
-      # NonTargets
-      $scr = $NTdecisionScoreRand->next() - (0.50 + $epoch * 0.02);
-      $trial2->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
-    }
-  } 
-  my $met1 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $trial1);
-  my $det1 = new DETCurve($trial1, $met1, "Det curv 1", \@isolinecoef, undef);
-  $det1-> successful();
-  
-  my $met2 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 1 , 'Ptarg' => 0.1 ) }, $trial2);
-  my $det2 = new DETCurve($trial2, $met2, "Det curv 2", \@isolinecoef, undef);
-  $det2-> successful();
-  
-  die "Error: Failed to add first det" if ("success" ne $ds->addDET("Good system", $det1));
-  die "Error: Failed to add first det" if ("success" ne $ds->addDET("Bad system", $det2));
-
-	my ($str, $conclusion, $list_isopoints) = $ds->renderDETCompare(0.95);
-	print $str;
-	print $conclusion;
-
-  my $options = { 
-      ("Xmin" => 0.1,
-		   "Xmax" => 99.9,
-		   "Ymin" => .1,
-		   "Ymax" => 99.9,
-		   "xScale" => "nd",
-		   "yScale" => "nd",
-		   "ColorScheme" => "color",
-       "DrawIsometriclines" => 1,
-       "createDETfiles" => 1,
-		   "DrawIsoratiolines" => 1,
-       "serialize" => 1,
-       "Isoratiolines" => \@isolinecoef,
-       "Isometriclines" => \@isolinecoef,
-       "Isopoints" => $list_isopoints, 
-       "PointSet" => [] ) };
-  print $ds->renderAsTxt("$dir/Compare.dets", 1, 1, $options, "");       
-
-}
-
 ##########
 
 sub addDET(){
@@ -401,7 +329,7 @@ sub _buildAutoTable(){
     my %combData = ();
     foreach my $block (sort $trial->getBlockIDs()) {
       next if (! $trial->isBlockEvaluated($block));
-      $combData{$block}{MMISS} = $trial->getNumMiss($block);     
+      $combData{$block}{MMISS} = $trial->getNumMiss($block);
       $combData{$block}{MFA} = $trial->getNumFalseAlarm($block); 
     }
     my ($BScombAvg, $BScombSSD, $BSmissAvg, $BSmissSSD, $BSfaAvg, $BSfaSSD) = 
@@ -457,10 +385,16 @@ sub _buildAutoTable(){
       $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
 
       if ($det->getDETPng() ne "") {
-        $at->addData($det->getDETPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "DET Curve", $key);
+	my $detpng = $det->getDETPng();
+	$detpng =~ s/^[^\/]*\///;
+	my $deturl = "url={" . $detpng . "}";
+        $at->addData($detpng, ($useAT ? "DET Curve Graphs|" : "" ) . "DET Curve", $key, $deturl);
       }
       if ($det->getThreshPng() ne "") {
-        $at->addData($det->getThreshPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "Threshold Curve", $key);
+	my $threshpng = $det->getThreshPng();
+	$threshpng =~ s/^[^\/]*\///;
+	my $threshdeturl = "url={" . $threshpng . "}";
+        $at->addData($threshpng, ($useAT ? "DET Curve Graphs|" : "" ) . "Threshold Curve", $key, $threshdeturl);
       }
     }
     if ($includeIsoRatios){
@@ -494,7 +428,169 @@ sub _buildAutoTable(){
 		  }  
     }
   }
+
+  $at->{Properties}->{KEYS}{"KeyColumnHTML"} = "Remove";
+  $at->{Properties}->{KEYS}{"KeyColumnTxt"} = "Remove";
+  $at->{Properties}->{KEYS}{"KeyColumnCsv"} = "Remove";
+  $at->{Properties}->{KEYS}{"KeyColumnLaTeX"} = "Remove";
+
   $at;
+}
+
+sub _buildBlockedAutoTable()
+{
+ 
+  my ($self, $includeCorrNonDetect) = @_;
+  my $at = new AutoTable();
+  my %totals = ();
+  my %means = ();
+  my %combs = ();
+
+  if (not defined $self->{DETList}) {
+    print "Empty DETList\n";
+    die;
+  }
+
+  for (my $i=0; $i<@{ $self->{DETList} }; $i++) {
+    my $det = $self->{DETList}[$i]->{DET};
+    my $key = $self->{DETList}[$i]->{KEY};
+
+    my $trial = $det->getTrials();
+    my $metric = $det->getMetric();
+    my $comblab = $metric->combLab();
+
+    my $blockID = $trial->{"BlockID"};
+    
+    foreach my $block (sort $trial->getBlockIDs()) {
+      foreach my $metaKey (sort keys %{ $trial->{"metaData"}{$block} }) {
+	$at->setData($trial->{"metaData"}{$block}{$metaKey}, "MetaData|" . $metaKey, $blockID . "|" . $block);
+      }
+      next if (! $trial->isBlockEvaluated($block));
+
+      $at->addData($trial->getNumTarg($block), $key . "|#Targ", $blockID . "|" . $block);
+      $at->addData($trial->getNumYesTarg($block), $key . "|#Corr", $blockID . "|" . $block);
+      $at->addData($trial->getNumNoNonTarg($block), $key . "|#Corr!Det", $blockID . "|" . $block) if ($includeCorrNonDetect == 1);
+      my $nFA = $trial->getNumYesNonTarg($block);
+      $at->addData($nFA, $key . "|#FA", $blockID . "|" . $block);
+      my $nMiss = $trial->getNumMiss($block);
+      $at->addData($nMiss, $key . "|#Miss", $blockID . "|" . $block);
+      my $comb = &_PN($metric->combPrintFormat(), $metric->combBlockCalc($nMiss, $nFA, $block));
+      $at->addData($comb, $key . "|" . $comblab, $blockID . "|" . $block);
+      my $nPFA = &_PN($metric->errFAPrintFormat(), $metric->errFABlockCalc($nFA, $block));
+      $nPFA = ($nPFA ne "NA") ? $nPFA : 0;
+      $at->addData($nPFA, $key . "|PFA", $blockID . "|" . $block);
+      my $nPMISS = &_PN($metric->errMissPrintFormat(), $metric->errMissBlockCalc($nMiss, $block));
+      $at->addData($nPMISS, $key . "|PMISS", $blockID . "|" . $block);
+    }
+
+    my ($targSum, $targAvg, $targSSD) = $trial->getTotNumTarg();
+    my ($ntargSum, $ntargAvg, $ntargSSD) = $trial->getTotNumNonTarg();
+    my ($sysSum, $sysAvg, $sysSSD) = $trial->getTotNumSys();
+    my ($corrDetectSum, $corrDetectAvg, $corrDetectSSD) = $trial->getTotNumCorrDetect();
+    my ($corrNonDetectSum, $corrNonDetectAvg, $corrNonDetectSSD) = $trial->getTotNumCorrNonDetect();
+    my ($faSum, $faAvg, $faSSD) = $trial->getTotNumFalseAlarm();
+    my ($missSum, $missAvg, $missSSD) = $trial->getTotNumMiss();  
+#    my ($numBlocks) = $trial->getNumEvaluatedBlocks();
+
+    #Totals
+    $totals{$key}{"|#Targ"} = $targSum;
+    $totals{$key}{"|#Corr"} = $corrDetectSum;
+    $totals{$key}{"|#Corr!Det"} = $corrNonDetectSum if ($includeCorrNonDetect == 1);
+    $totals{$key}{"|#FA"} = $faSum;
+    $totals{$key}{"|#Miss"} = $missSum;
+
+    my %combData = ();
+    foreach my $block (sort $trial->getBlockIDs()) {
+      next if (! $trial->isBlockEvaluated($block));
+      $combData{$block}{MMISS} = $trial->getNumMiss($block);
+      $combData{$block}{MFA} = $trial->getNumFalseAlarm($block); 
+    }
+    my ($BScombAvg, $BScombSSD, $BSmissAvg, $BSmissSSD, $BSfaAvg, $BSfaSSD) = 
+      $metric->combBlockSetCalc(\%combData);
+
+    #Means
+    my $nBlocks = $trial->getNumBlocks();
+    $means{$key}{"|#Targ"} = sprintf ("%.0f", $targAvg);
+    $means{$key}{"|#Corr"} = sprintf ("%.0f", $corrDetectAvg);
+    $means{$key}{"|#Corr!Det"} = sprintf ("%.0f", $corrNonDetectAvg) if ($includeCorrNonDetect == 1);
+    $means{$key}{"|#FA"} = sprintf ("%.0f", $faAvg);
+    $means{$key}{"|#Miss"} = sprintf ("%.0f", $missAvg);
+    $means{$key}{"|PFA"} = &_PN($metric->errFAPrintFormat(), $BSfaAvg);
+    $means{$key}{"|PMISS"} = &_PN($metric->errMissPrintFormat(), $BSmissAvg);
+
+    #Combs
+    $combs{$key}{"|" . $comblab} = &_PN($metric->combPrintFormat(), $BScombAvg);
+  }
+
+  for (my $i=0; $i<@{ $self->{DETList} }; $i++) {
+    my $det = $self->{DETList}[$i]->{DET};
+    my $key = $self->{DETList}[$i]->{KEY};
+
+    my $metric = $det->getMetric();
+    my $comblab = $metric->combLab();
+
+    foreach my $tcol (keys %{ $totals{$key} }) {
+      $at->addData($totals{$key}{$tcol}, $key . $tcol, "Summary|Totals");
+    }
+    foreach my $mcol (keys %{ $means{$key} }) {
+      $at->addData($means{$key}{$mcol}, $key . $mcol, "Summary|Means");
+    }
+    foreach my $ccol (keys %{ $combs{$key} }) {
+      $at->addData($combs{$key}{$ccol}, $key . $ccol, "Summary|" . $comblab);
+    }
+  }
+
+  return $at;
+}
+
+sub _buildHeaderTable 
+{
+  my ($self, $combinedDETpng) = @_;
+
+  my $at = new AutoTable();
+  my $trial = $self->{DETList}[0]->{DET}->getTrials();
+  my $metric = $self->{DETList}[0]->{DET}->getMetric();
+  my $variableParams = $self->_findVariableParams();  
+  my $col = "Performance Summary Over and Ensemble of Subsets";
+
+  my $rowid = 0;
+  $at->addData("System Title", $col . "|Key", $rowid);
+  $at->addData((defined($self->{Title}) ? $self->{Title} : 'NA'), $col . "|Value", $rowid);
+  $rowid++;
+  $at->addData("Decision ID", $col . "|Key", $rowid);
+  $at->addData($trial->{"DecisionID"}, $col . "|Value", $rowid);
+  $rowid++;
+  #Constant Params
+  foreach my $ckey ($trial->getTrialParamKeys()) {
+    next if ($ckey =~ m%^_%); #Skip hidden keys
+    next if (exists($variableParams->{$ckey}));
+    $at->addData($ckey, $col . "|Key", $rowid);
+    $at->addData($trial->getTrialParamValue($ckey), $col . "|Value", $rowid);
+    $rowid++;
+  }
+  #Variable Params
+  foreach my $vkey ($metric->getParamKeys()) {
+    next if ($vkey =~ m%^_%); #Skip hidden keys
+    next if (exists($variableParams->{$vkey}));
+    $at->addData($vkey, $col . "|Key", $rowid);
+    $at->addData($metric->getParamValue($vkey), $col . "|Value", $rowid);
+    $rowid++;
+  }
+
+  if ($combinedDETpng) {
+    $combinedDETpng =~ s/^[^\/]*\///;
+    my $deturl = "url={" . $combinedDETpng . "}";
+    $at->addData("Combined DET Plot", $col . "|Key", $rowid);
+    $at->addData($combinedDETpng, $col . "|Value", $rowid, $deturl);
+    $rowid++;
+  }
+
+  $at->{Properties}->{KEYS}{"KeyColumnHTML"} = "Remove";
+  $at->{Properties}->{KEYS}{"html.cell.justification"} = "left";
+  $at->{Properties}->{KEYS}{"KeyColumnTxt"} = "Remove";
+  $at->{Properties}->{KEYS}{"KeyColumnCsv"} = "Remove";
+  $at->{Properties}->{KEYS}{"KeyColumnLaTeX"} = "Remove";
+  return $at;
 }
 
 sub _findVariableParams(){
@@ -522,10 +618,17 @@ sub _findVariableParams(){
 
   return (\%variableParams);  
 }
-  
+
+#Temporary backwards compatability sub
 sub renderAsTxt(){
   my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $csvfn) = @_;
-    
+  $self->renderReport($csvfn, $buildCurves, $includeCounts, $DETOptions, "CSV") if (defined $csvfn);
+  return $self->renderReport($fileRoot, $buildCurves, $includeCounts, $DETOptions, "TXT");
+}
+
+sub renderReport(){
+  my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $renderType) = @_;
+  #renderType = ("TXT" | "HTML" | "CSV"), default is "TXT"
   if (@{ $self->{DETList} } == 0) {
     return "Error: No DETs provided to produce a report from";
   }
@@ -548,30 +651,17 @@ sub renderAsTxt(){
   my $trial = $self->{DETList}[0]->{DET}->getTrials();
   my $metric = $self->{DETList}[0]->{DET}->getMetric();
 
-  ### Add all the parameters:
-  my $info = "Performance Summary Over and Ensemble of Subsets\n\n";
-  $info .= "System Title: ".(defined($self->{Title}) ? $self->{Title} : 'N/A')."\n\n"; 
-  $info .= "Constant parameters:\n";
-  foreach my $key ($trial->getTrialParamKeys()) {
-    next if ($key =~ m%^__%); # Skip hidden keys  
-    next if (exists($variableParams->{$key}));
-    $info .= "   $key = ".$trial->getTrialParamValue($key)."\n";
-  }
-  foreach my $key ($metric->getParamKeys()) {
-    next if ($key =~ m%^__%); # Skip hidden keys
-    next if (exists($variableParams->{$key}));
-    $info .= "   $key = ".$metric->getParamValue($key)."\n";
-  }
-  $info .= "\n";
-  if ($buildCurves) {
-    if (exists($multiInfo->{COMBINED_DET_PNG})) {
-      $info .= "Combined DET Plot: $multiInfo->{COMBINED_DET_PNG}\n\n";
-    }
-  }
+  my $hat = $self->_buildHeaderTable($multiInfo->{COMBINED_DET_PNG});
 
-  MMisc::writeTo($csvfn, "", 1, 0, $at->renderCSV()) if (! MMisc::is_blank($csvfn));
-
-  return($info . $at->renderTxtTable(2));
+  if ($renderType eq "HTML") {
+    return($hat->renderHTMLTable("") . "<br><br>" . $at->renderHTMLTable(""));
+  }
+  elsif ($renderType eq "CSV") {
+    return($at->renderCSV());
+  }
+  else {
+    return($hat->renderTxtTable(2) . "\n\n" . $at->renderTxtTable(2));
+  }
 }
 
 sub renderCSV {
@@ -593,7 +683,25 @@ sub renderCSV {
   my $at = $self->_buildAutoTable(1, $includeCounts, $reportActual, $DETOptions->{DETShowPoint_Ratios}, 1);
     
   return($at->renderCSV());
-}       
+}     
+
+sub renderBlockedReport {
+  my ($self, $renderType, $includeCorrNonDetect) = @_;
+  #renderType = ("TEXT" | "HTML" | "CSV"), default is "TEXT"
+
+  my $hat = $self->_buildHeaderTable();
+  my $at = $self->_buildBlockedAutoTable($includeCorrNonDetect);
+
+  if ($renderType eq "HTML") {
+    return($hat->renderHTMLTable("") . "<br><br>" . $at->renderHTMLTable(""));
+  }
+  elsif ($renderType eq "CSV") {
+    return($at->renderCSV());
+  }
+  else {
+    return($hat->renderTxtTable(2) . "\n\n" . $at->renderTxtTable(2));
+  }
+}
 
 #####
 
@@ -741,27 +849,23 @@ sub renderDETCompare
 	{
 		next if(!defined($det1->{ISOPOINTS}{$cof}));
 		next if(!defined($det2->{ISOPOINTS}{$cof}));
-
+	
 		$statsCompare{$cof}{COMPARE}{PLUS} = 0;
 		$statsCompare{$cof}{COMPARE}{MINUS} = 0;
 		$statsCompare{$cof}{COMPARE}{ZERO} = 0;
-		$statsCompare{$cof}{DET1}{MFA} = $det1->getIsolinePointsMFAValue($cof);
-		$statsCompare{$cof}{DET1}{MMISS} = $det1->getIsolinePointsMMissValue($cof);
-		$statsCompare{$cof}{DET1}{COMB}  = $det1->getIsolinePointsCombValue($cof);
-		$statsCompare{$cof}{DET2}{MFA} = $det2->getIsolinePointsMFAValue($cof);
-		$statsCompare{$cof}{DET2}{MMISS} = $det2->getIsolinePointsMMissValue($cof);
-		$statsCompare{$cof}{DET2}{COMB}  = $det2->getIsolinePointsCombValue($cof);
+		$statsCompare{$cof}{DET1}{MFA} = $det1->{ISOPOINTS}{$cof}{INTERPOLATED_MFA};
+		$statsCompare{$cof}{DET1}{MMISS} = $det1->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS};
+		$statsCompare{$cof}{DET2}{MFA} = $det2->{ISOPOINTS}{$cof}{INTERPOLATED_MFA};
+		$statsCompare{$cof}{DET2}{MMISS} = $det2->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS};
 		
 		my @tmpblkkey1 = keys %{ $det1->{ISOPOINTS}{$cof}{BLOCKS} };
 		my @tmpblkkey2 = keys %{ $det2->{ISOPOINTS}{$cof}{BLOCKS} };
 		
 		my @com_blocks = intersection( @tmpblkkey1, @tmpblkkey2 );
 	
-	  my (@det1Comb) = ();
-	  my (@det2Comb) = ();
-		foreach my $blk ( @com_blocks )
+		foreach my $b ( @com_blocks )
 		{
-			my $diffdet12 = sprintf("%.4f", $det1->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} - $det2->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} );
+			my $diffdet12 = sprintf("%.4f", $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} - $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} );
 		
 			push( @{ $statsCompare{$cof}{COMPARE}{DIFF}{ARRAY} }, $diffdet12);
 		
@@ -769,26 +873,22 @@ sub renderDETCompare
 			{
 				$statsCompare{$cof}{COMPARE}{ZERO}++;
 			}
-			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} > $det2->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} )
+			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} > $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} )
 			{
 				$statsCompare{$cof}{COMPARE}{PLUS}++;
 			}
-			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} < $det2->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB} )
+			elsif( $det1->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} < $det2->{ISOPOINTS}{$cof}{BLOCKS}{$b}{COMB} )
 			{
 				$statsCompare{$cof}{COMPARE}{MINUS}++;
 			}			
-			push @det1Comb, $det1->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB};
-			push @det2Comb, $det2->{ISOPOINTS}{$cof}{BLOCKS}{$blk}{COMB};
 		}
 				
 		$statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS} = max( 0, binomial( 0.5, $statsCompare{$cof}{COMPARE}{PLUS}+$statsCompare{$cof}{COMPARE}{MINUS}+$statsCompare{$cof}{COMPARE}{ZERO}, $statsCompare{$cof}{COMPARE}{PLUS}+sprintf( "%.0f", $statsCompare{$cof}{COMPARE}{ZERO}/2)) );
 		
 		push(@listIsoCoef, $cof);	
-		$statsCompare{$cof}{CORREALTION}{COMB} = MMisc::compareData(\@det1Comb, \@det2Comb);
-		print Dumper($statsCompare{$cof}{CORREALTION}{COMB} );
 	}
 	
-	my $at = new AutoTable();
+	my $at = new SimpleAutoTable();
 	
 	my %compare2;
 	my @list_isopoints;
@@ -827,10 +927,6 @@ sub renderDETCompare
 		             "DET1|".$det1->{METRIC}->errMissLab(), 
 		             sprintf("%.4f", $cof) );
 		             
-		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET1}{COMB}),
-		             "DET1|".$det1->{METRIC}->combLab(), 
-		             sprintf("%.4f", $cof) );
-		             
 		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET2}{MFA}),
 		             "DET2|".$det2->{METRIC}->errFALab(), 
 		             sprintf("%.4f", $cof) );
@@ -838,67 +934,27 @@ sub renderDETCompare
 		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET2}{MMISS}),
 		             "DET2|".$det1->{METRIC}->errMissLab(), 
 		             sprintf("%.4f", $cof) );
-
-		$at->addData(sprintf("%.4f", $statsCompare{$cof}{DET2}{COMB}),
-		             "DET2|".$det1->{METRIC}->combLab(), 
-		             sprintf("%.4f", $cof) );
-		             
-		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{PLUS} + $statsCompare{$cof}{COMPARE}{MINUS} + $statsCompare{$cof}{COMPARE}{ZERO}),
-		             "Signs|N", 
-		             sprintf("%.4f", $cof) );
 		             
 		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{PLUS}),
-		             "Signs|+", 
+		             "+", 
 		             sprintf("%.4f", $cof) );
 		             
 		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{MINUS}),
-		             "Signs|-", 
+		             "-", 
 		             sprintf("%.4f", $cof) );
 		             
 		$at->addData(sprintf("%d", $statsCompare{$cof}{COMPARE}{ZERO}),
-		             "Signs|0", 
+		             "0", 
 		             sprintf("%.4f", $cof) );
 	
 		$at->addData(sprintf("%.5f", $statsCompare{$cof}{COMPARE}{BINOMIAL_WITH_ZEROS}),
-		             "Sign Test|P", 
+		             "Sign Test", 
 		             sprintf("%.4f", $cof) );
 		             
 		$at->addData($bestDET,
-		             "Sign Test|Comparison", 
-		             sprintf("%.4f", $cof) );
-		
-		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{PariedTTest}{twoTailP}),
-		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|P(2 tail)", 
-		             sprintf("%.4f", $cof) );
-		
-		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{r}),
-		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|R", 
-		             sprintf("%.4f", $cof) );
-		
-		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{stddev1}),
-		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DET1 StDev", 
+		             "Comparison", 
 		             sprintf("%.4f", $cof) );
 		             
-		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{stddev2}),
-		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DET2 StDev", 
-		             sprintf("%.4f", $cof) );
-		             
-#		$at->addData($statsCompare{$cof}{CORREALTION}{COMB}{det1Avg},
-#		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DET1 Avg", 
-#		             sprintf("%.4f", $cof) );
-#
-#		$at->addData($statsCompare{$cof}{CORREALTION}{COMB}{det2Avg},
-#		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DET2 Avg", 
-#		             sprintf("%.4f", $cof) );
-
-		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{meanDiff}),
-		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DiffAvg", 
-		             sprintf("%.4f", $cof) );
-
-		$at->addData(sprintf("%.4f",$statsCompare{$cof}{CORREALTION}{COMB}{stddevDiff}),
-		             "Paired T-test :  ".$det1->{METRIC}->combLab() . "|DiffStddev", 
-		             sprintf("%.4f", $cof) );
-
 		push(@list_isopoints,
 		     [( $statsCompare{$cof}{DET1}{MFA}, 
 		        $statsCompare{$cof}{DET1}{MMISS},
