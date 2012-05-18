@@ -1,0 +1,54 @@
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.stdlist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -Y MTG:CONFMTG -O -B -y TXT -f -
+[[RETURN CODE]] 0
+[[STDOUT]]
+Conditional Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |              100 |
+|      IncludeBlocksWithNoTargets |                0 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |              100 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+|          |                  Inputs                  |                                Actual Decision TWV Analysis                                 |
+|  Title   |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    TWV     |  Dec. Tresh  |
+|----------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+------------+--------------+
+|   BN+CTS |          3 |      35 |       10 |     45 |        17 |          0 |    10 |      18 |   0.03715 |    0.533 |   -36.6813 |      -0.3275 |
+Conditional Block Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |              100 |
+|      IncludeBlocksWithNoTargets |                0 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |              100 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+                  |  MetaData  |                                 BN+CTS                                  |
+                  |    Text    |  #Targ  |  #Corr  |  #FA  |  #Miss  |    TWV     |    PFA    |  PMISS   |
+------------------+------------+---------+---------+-------+---------+------------+-----------+----------+
+Keyword  TERM-01  |        yes |      15 |      10 |     2 |       5 |   -22.8604 |   0.02353 |    0.333 |
+         TERM-02  |       sure |      15 |       5 |     3 |      10 |   -34.9573 |   0.03529 |    0.667 |
+         TERM-03  |    why not |       5 |       2 |     5 |       3 |   -52.2263 |   0.05263 |    0.600 |
+Summary  Totals   |            |      35 |      17 |    10 |      18 |            |           |          |
+         Means    |            |      12 |       6 |     3 |       6 |            |   0.03715 |    0.533 |
+         TWV      |            |         |         |       |         |   -36.6813 |           |          |
+
+[[STDERR]]
+Loading ECF file '../common/test6.ecf.xml'.
+Loading KWS List file '../common/test6.stdlist.xml'.
+Loading Term List file '../common/test6.tlist.xml'.
+Loading RTTM file '../common/test6.rttm' encoding /UTF-8/.
