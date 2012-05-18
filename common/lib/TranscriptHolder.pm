@@ -119,5 +119,11 @@ sub getPerlEncodingString
   return ($self->{ENCODING});
 }
 
+sub normalizeTerm 
+{
+  my ($self, $term) = @_;
+  $term = lc $term if ($self->{COMPARENORMALIZE} eq "lowercase");
+  return $term;
+}
 
 1;
