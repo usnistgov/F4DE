@@ -59,6 +59,7 @@ sub new {
     {
      dir       => $v,
      init_scandate => undef, # a modified file is a file whose scandate differs from the 'init' scan date
+     last_scandate => undef, # date of the last scan
      monitor   => undef,
      files     => undef, # {file} = scandate
      files2sha => undef, ## {file} = sha
@@ -186,6 +187,7 @@ sub scan {
   }
 
   $_[0]->__files_scan($now, @fm_changes);
+  $_[0]->{last_scandate} = $now;
 
   return(@out);
 }
@@ -194,7 +196,7 @@ sub scan {
 # sha256digest(FileName)
 ## return the SHA 256 digest of given file or undef in case of problem
 sub sha256digest {
-  return($_[0]->_set_error_and_return("Init was never run", ))
+  return($_[0]->_set_error_and_return("Init was never run", undef))
     if (! defined $_[0]->{init_scandate});
 
   return($_[0]->_set_error_and_return("Do not have an SHA256 digest for file (" . $_[1] . ")", undef))
@@ -205,12 +207,16 @@ sub sha256digest {
 
 #####
 sub __get_adf {
+  # 0: self
+  # 1: self entry (ex: 'added')
+  # 2: scandate: keep entries added since scandate value (undef for all)
   return($_[0]->_set_error_and_return("Init was never run", ))
     if (! defined $_[0]->{init_scandate});
 
   my @out = ();
   return(@out) if (! defined $_[0]->{$_[1]});
   foreach my $file (sort {$_[0]->{$_[1]}{$a} <=> $_[0]->{$_[1]}{$b}} keys %{$_[0]->{$_[1]}}) {
+    next if ((defined $_[2]) && ($_[0]->{$_[1]}{$file} < $_[2]));
     push @out, $file;
   }
 
@@ -223,10 +229,35 @@ sub __get_adf {
 # modified()
 # files()
 ## return list of all (added/deleted/modified/) files (in order of 'scan')
-sub added   { $_[0]->__get_adf('added'); }
-sub deleted { $_[0]->__get_adf('deleted'); }
-sub files   { $_[0]->__get_adf('files'); }
-sub modified {
+sub added    { $_[0]->__get_adf('added'); }
+sub deleted  { $_[0]->__get_adf('deleted'); }
+sub files    { $_[0]->__get_adf('files'); }
+sub modified { $_[0]->__get_modified(); }
+
+#####
+# just_added()
+# just_deleted() 
+# just_modified()
+# just_files()
+## return list of all (added/deleted/modified/) files that were XXX in the last scan
+sub just_added    { $_[0]->__get_adf('added', $_[0]->{last_scandate}); }
+sub just_deleted  { $_[0]->__get_adf('deleted', $_[0]->{last_scandate}); }
+sub just_files    { $_[0]->__get_adf('files', $_[0]->{last_scandate}); }
+sub just_modified { $_[0]->__get_modified($_[0]->{last_scandate}); }
+
+#####
+# added_since(scandate)
+# added_deleted(scandate) 
+# added_modified(scandate)
+# added_files(scandate)
+## return list of all (added/deleted/modified/) files that were XXX since the asked scandate (in order of 'scan') 
+sub added_since    { $_[0]->__get_adf('added', $_[1]); }
+sub deleted_since  { $_[0]->__get_adf('deleted', $_[1]); }
+sub files_since    { $_[0]->__get_adf('files', $_[1]); }
+sub modified_since { $_[0]->__get_modified($_[1]); }
+
+#####
+sub __get_modified {
   return($_[0]->_set_error_and_return("Init was never run", ))
     if (! defined $_[0]->{init_scandate});
 
@@ -235,6 +266,7 @@ sub modified {
   my %tmp = ();
   foreach my $file (keys %{$_[0]->{files}}) {
     next if ($_[0]->{files}{$file} == $_[0]->{init_scandate});
+    next if ((defined $_[1]) && ($_[0]->{files}{$file} < $_[1]));
     $tmp{$file} = $_[0]->{files}{$file};
   }
 
