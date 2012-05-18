@@ -1,7 +1,8 @@
 # KWSEval
 # RTTMList.pm
-# Author: Jerome Ajot
-# 
+# Original Author: Jerome Ajot
+# Additions: David Joy 
+#
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
 # Title 17 Section 105 of the United States Code this software is not subject to copyright
@@ -20,6 +21,7 @@ use TranscriptHolder;
 use strict;
 use Data::Dumper;
 use RTTMRecord;
+use RTTMSegment;
 use MMisc;
 use Encode;
 use encoding 'euc-cn';
@@ -36,7 +38,9 @@ sub new
     my $self = TranscriptHolder->new();
 
     $self->{FILE} = $rttmfile;
-    $self->{DATA} = {};
+    $self->{LEXEMES} = {};
+    $self->{SPEAKERS} = {};
+    $self->{LEXBYSPKR} = {};
     $self->{NOSCORE} = {};
     $self->{TERMLKUP} = {};
 	
@@ -58,7 +62,7 @@ sub unitTestFind
   my ($rttm, $text, $exp, $thresh) = (@_);
 
   print " Finding terms ($text, thresh=$thresh)...     ";
-  my $out = $rttm->findTermOccurrences($text, $thresh);
+  my $out = findTermHashToArray($rttm->findTermOccurrences($text, $thresh));
   if (@$out != $exp) { 
     print "Failed: ".scalar(@$out)." != $exp\n"; 
     for(my $i=0; $i<@$out; $i++) {
@@ -110,7 +114,6 @@ sub unitTest
 
     print " Loading English File (no normalization)...          ";
     my $rttm_eng_nonorm = new RTTMList($file1,"english","","");
-    print "OK\n";
 
     return 0 unless(unitTestFind($rttm_eng_nonorm, "Yates",        2, 0.1));
     return 0 unless(unitTestFind($rttm_eng_nonorm, "yates",        0, 0.1));
@@ -129,16 +132,132 @@ sub unitTest
 
     print "Loading Cantonese File (no normalization)...          ";
     my $rttm_cant = new RTTMList($file2,"cantonese","","UTF-8");
-    print "OK\n";
 
-    return 0 unless(unitTestFind($rttm_cant, $rttm_cant->{DATA}{"file"}{1}[0]->{TOKEN}, 2, 0.5));
+    return 0 unless(unitTestFind($rttm_cant, $rttm_cant->{LEXEMES}{"file"}{1}[0]->{TOKEN}, 2, 0.5));
     return 0 unless(unitTestFind($rttm_cant, 
-                                 $rttm_cant->{DATA}{"file"}{1}[14]->{TOKEN} . " " .
-                                 $rttm_cant->{DATA}{"file"}{1}[15]->{TOKEN}, 
+                                 $rttm_cant->{LEXEMES}{"file"}{1}[14]->{TOKEN} . " " .
+                                 $rttm_cant->{LEXEMES}{"file"}{1}[15]->{TOKEN}, 
                                  2, 0.5));
 
+    #segmetsFromTimeframe tests
+    print " Segmenting (1)...        ";
+    my $segments1 = $rttm_eng_nonorm->segmentsFromTimeframe("20031209_193946_PBS_ENG", 1, 33.575, 62.375);
+    print "OK\n";
 
+    print " Segmenting (2)...        ";
+    my $segments2 = $rttm_eng_nonorm->segmentsFromTimeframe("20031218_004126_PBS_ENG", 1, 101.439, 13.818);
+    print "OK\n";
+
+    print " Number of segments (1)...";
+    if (@{ $segments1 } != 9) {
+      print "FAILED\n";
+      return 0;
+    }
+    print "OK\n";
+
+    print " Number of segments (2)...";
+    if (@{ $segments2 } != 1) {
+      print "FAILED\n";
+      return 0;
+    }
+    print "OK\n";
+
+    print " #Records per seg (1)...  ";
+    my $reccount;
+    foreach my $spkr (keys %{ @{ $segments1 }[1]->{SPKRRECS} }) {
+      foreach my $tok (keys %{ @{ $segments1 }[1]->{SPKRRECS}{$spkr} }) {
+	$reccount+=scalar(@{ @{ $segments1 }[1]->{SPKRRECS}{$spkr}{$tok} });
+      }
+    }
+    if ($reccount != 38) {
+      print "FAILED\n";
+      return 0;
+    }
+    print "OK\n";
+
+    $reccount = 0;
+    print " #Records per seg (2)...  ";
+    foreach my $spkr (keys %{ @{ $segments2 }[0]->{SPKRRECS} }) {
+      foreach my $tok (keys %{ @{ $segments2 }[0]->{SPKRRECS}{$spkr} }) {
+	$reccount+=scalar(@{ @{ $segments2 }[0]->{SPKRRECS}{$spkr}{$tok} });
+      }
+    }
+    if ($reccount != 31) {
+      print "FAILED\n";
+      return 0;
+    }
+    print "OK\n";
+
+    print " Continuity of segs ...   ";
+    for(my $i=0; $i<@{ $segments1 }-1; $i++) {
+      if (@{ $segments1 }[$i]->{ET} != @{ $segments1 }[$i+1]->{BT}) {
+	print "FAILED\n";
+	return 0;
+      }
+    }
+    print "OK\n";
+ 
+    #RTTMSegment.pm tests
+    print " Find terms in seg (1)... ";
+    if ($segments1->[3]->hasTerm("president", 0.5)) {
+      print "OK\n";
+    }
+    else {
+      print "FAILED\n";
+      return 0;
+    }
+
+    print " Find terms in seg (2)... ";
+    if ($segments1->[3]->hasTerm("PrEsIdEnT", 0.5)) {
+      print "OK\n";
+    }
+    else {
+      print "FAILED\n";
+      return 0;
+    }
+
+    print " Find terms in seg (3)... ";
+    if (!$segments1->[0]->hasTerm("john tkacik is", 0.5)) {
+      print "OK\n";
+    }
+    else {
+      print "FAILED\n";
+      return 0;
+    }
+
+    print " Find terms in seg (4)... ";
+    if ($segments2->[0]->hasTerm("legislation", 0.5)) {
+      print "OK\n";
+    }
+    else {
+      print "FAILED\n";
+      return 0;
+    }
+
+    print " Find terms in seg (5)... ";
+    if ($segments1->[3]->hasTerm("this statement", 0.5)) {
+      print "OK\n";
+    }
+    else {
+      print "FAILED\n";
+      return 0;
+    }
+
+    print "All Tests OK\n";
     return 1;
+}
+
+sub findTermHashToArray
+{
+  my $results = shift;
+  
+  my @outlist = ();
+  foreach my $file (keys %{ $results }) {
+    foreach my $chan (keys %{ $results->{$file} }) {
+      push (@outlist, @{ $results->{$file}{$chan} });
+    }
+  }
+  return \@outlist;
 }
 
 sub toString
@@ -191,49 +310,41 @@ sub loadFile
         
         my ($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf) = split(/\s+/,$_,9);
         {
-        if(uc($type) eq "LEXEME")
-        {
-            push (@{ $self->{DATA}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf) );
-        }  
-        elsif(uc($type) eq "NOSCORE")
-        {
-            push (@{ $self->{NOSCORE}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, undef, undef) );
-        }
-	}
-    }
-
-    foreach my $file(sort keys %{ $self->{DATA} })
-    {
-      foreach my $chan(sort keys %{ $self->{DATA}{$file} })
-      {
-	my %spkrs = ();
-
-	foreach my $rttmrecord (@{ $self->{DATA}{$file}{$chan} })
-	{
-	  push (@{ $spkrs{$rttmrecord->{SPKR}} }, $rttmrecord);
-	}
-
-	foreach my $spkrname (sort keys %spkrs)
-	{
-	  for (my $i=0; $i<@{ $spkrs{$spkrname} }; $i++)
-	  {
-	    #Link speaker records
-	    if ($i<@{ $spkrs{$spkrname} }-1)
-	    {
-	      $spkrs{$spkrname}[$i]->{NEXT} = $spkrs{$spkrname}[$i+1];
+	  if(uc($type) eq "LEXEME") {
+	    my $record = new RTTMRecord($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf);
+            push (@{ $self->{LEXEMES}{$file}{$chan} }, $record);
+	    #Add record to lexeme by speaker table
+	    push (@{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }, $record);
+	    if ($stype ne "frag" && $stype ne "fp") {
+	      #Add record to term lookup table
+	      my $tok = $record->{TOKEN};
+	      $tok = $self->normalizeTerm($tok);
+	      push(@{ $self->{TERMLKUP}{$tok} }, $record);
 	    }
-
-	    next if ($spkrs{$spkrname}[$i]->{STYPE} eq "frag");
-	    next if ($spkrs{$spkrname}[$i]->{STYPE} eq "fp");
-
-	    #Add records to term lookup table
-	    my $tok = $spkrs{$spkrname}[$i]->{TOKEN};
-	    $tok = lc($tok) if ($self->{COMPARENORMALIZE} eq "lowercase");
-	    push (@{ $self->{TERMLKUP}{ $tok }},  $spkrs{$spkrname}[$i]);
+	  }
+	  elsif(uc($type) eq "SPEAKER") {
+	    push (@{ $self->{SPEAKERS}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, $spkr, $conf) );
+	  }
+	  elsif(uc($type) eq "NOSCORE") {
+            push (@{ $self->{NOSCORE}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, undef, undef) );
 	  }
 	}
+    }
+
+    foreach my $file(sort keys %{ $self->{LEXBYSPKR} }) {
+      foreach my $chan(sort keys %{ $self->{LEXBYSPKR}{$file} }) {
+	foreach my $spkr(sort keys %{ $self->{LEXBYSPKR}{$file}{$chan} }) {
+	  my @sortedrecs = sort {$a->{BT} <=> $b->{BT}} @{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }; #Order Lexemes by begin time
+	  for (my $i=0; $i<@sortedrecs; $i++) {
+	    if ($i<@sortedrecs-1) {
+	      #Link speaker records
+	      $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i]->{NEXT} = $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i+1];
+	    }
+	  }
+	} 	   
       }
     }
+
     close RTTM;
 }
 
@@ -241,10 +352,10 @@ sub findTermOccurrences
 {
     my ($self, $term, $threshold) = @_;
     
-    my @outList = ();
+    my %outHash = ();
     $term =~ s/^\s*//;
     $term =~ s/\s*$//;
-    $term = lc $term if ($self->{COMPARENORMALIZE} eq "lowercase");
+    $term = $self->normalizeTerm($term);
     my @terms = split(/\s+/, $term);
     #print Dumper (\@terms);
     #Currently no order to returned matches
@@ -294,10 +405,151 @@ sub findTermOccurrences
 	$termpos++;
       }
 
-      push (@outList, [ @tmpList ]) if (@tmpList > 0); 
+      #push (@outList, [ @tmpList ]) if (@tmpList > 0); 
+      push (@{ $outHash{$tmpList[0]->{FILE}}{$tmpList[0]->{CHAN}} }, [ @tmpList ]) if (@tmpList > 0);
     }
 
-    return(\@outList); 
+    return(\%outHash); 
+}
+
+sub segmentsFromTimeframe
+{
+  my ($self, $file, $chan, $bt, $dur, $ecfexcerpt) = @_;
+  #ecfexcerpt is optional, if included sets the source type of each segment based on the ecfexcerpt
+
+  my @outlist = ();
+  my $et = sprintf("%.4f", $bt + $dur);
+  my $lastsegET = $bt;
+  return \@outlist if (not defined $self->{SPEAKERS}{$file}{$chan});
+  foreach my $speaker (sort {$a->{BT} <=> $b->{BT}} @{ $self->{SPEAKERS}{$file}{$chan} })
+  {
+    my $spkrBT = $speaker->{BT};
+    my $spkrET = $speaker->{ET};
+    next if ($spkrBT < $bt || $spkrET > $et); #Speaker segment is outside of the timeframe
+    my %spkrrecs = ();
+    my $lastsegDUR = sprintf("%.4f", $spkrBT - $lastsegET);
+    if ($lastsegDUR > 0)
+    {
+      my $newseg = new RTTMSegment('NONSPEECH', $file, $chan, $lastsegET, $lastsegDUR, undef);
+      $newseg->{ECFSRCTYPE} = $ecfexcerpt->{SOURCE_TYPE} if (defined $ecfexcerpt);
+      push (@outlist, $newseg);
+    }
+    next if (not defined $self->{LEXBYSPKR}{$file}{$chan}{$speaker->{SPKR}});
+    foreach my $lex (sort {$a->{BT} <=> $b->{BT};} @{ $self->{LEXBYSPKR}{$file}{$chan}{$speaker->{SPKR}} })
+    {
+      if ($lex->{BT} >= $spkrBT && $lex->{ET} <= $spkrET)
+      {
+	#LOWERCASING
+	push (@{ $spkrrecs{$speaker->{SPKR}}{lc $lex->{TOKEN}} }, $lex);
+      }
+    }
+    if (scalar(@outlist) > 0 && $outlist[-1]->{ET} > $speaker->{BT})
+    {
+      #MERGE SEGMENTS
+      #Segments are merged if they overlap, overlapping segments merge speakers and lexemes
+      $outlist[-1]->{DUR} = sprintf("%.4f", $speaker->{ET} - $outlist[-1]->{BT});
+      $outlist[-1]->{ET} = $speaker->{ET};
+      if (defined $spkrrecs{$speaker->{SPKR}} && keys %{ $spkrrecs{$speaker->{SPKR}} } > 0) {
+	foreach my $tok (keys %{ $spkrrecs{$speaker->{SPKR}} }) {
+	  push (@{ $outlist[-1]->{SPKRRECS}{$speaker->{SPKR}}{$tok} }, @{ $spkrrecs{$speaker->{SPKR}}{$tok} });
+	}
+      }
+    }
+    else
+    {
+      my $newseg = new RTTMSegment('SPEECH', $file, $chan, $spkrBT, $speaker->{DUR}, \%spkrrecs);
+      $newseg->{ECFSRCTYPE} = $ecfexcerpt->{SOURCE_TYPE} if (defined $ecfexcerpt);
+      push (@outlist, $newseg);
+    }
+    $lastsegET = $speaker->{ET};
+  }
+  #Set last NONSPEECH segment if needed
+  if ($lastsegET < $et)
+  {
+    my $newseg = new RTTMSegment('NONSPEECH', $file, $chan, $lastsegET, sprintf("%.4f", $et - $lastsegET), undef);
+    $newseg->{ECFSRCTYPE} = $ecfexcerpt->{SOURCE_TYPE} if (defined $ecfexcerpt);
+    push (@outlist, $newseg)
+  }
+
+  return (\@outlist);
+}
+
+sub getAllSegments()
+{
+  my ($self, $ecf) = @_; #ecf optional, if defined each segment will be given a Source_Type if it fits into an ecfexcerpt.
+  
+  my @outlist = ();
+  foreach my $file (sort keys %{ $self->{SPEAKERS} })
+  {
+    foreach my $chan (sort keys %{ $self->{SPEAKERS}{$file} })
+    {
+      my @ecfexcerpts = ();
+      if (defined $ecf)
+      {
+	foreach my $ecfe (@{ $ecf->{EXCERPT} })
+	{
+	  if ($ecfe->{FILE} eq $file && $ecfe->{CHANNEL} eq $chan)
+	  {
+	    push (@ecfexcerpts, $ecfe);
+	  }
+	}
+      }
+      my @speakers = sort {$a->{BT} <=> $b->{BT}} @{ $self->{SPEAKERS}{$file}{$chan} };
+      my $lastsegET = $speakers[0]->{BT} if (defined $speakers[0]);
+      foreach my $speaker (@speakers)
+      {
+	my $spkrBT = $speaker->{BT};
+	my $spkrET = $speaker->{ET};
+	my %spkrrecs = ();
+	my $lastsegDUR = sprintf("%.4f", $spkrBT - $lastsegET);
+	if ($lastsegDUR > 0)
+	{
+	  push (@outlist, new RTTMSegment('NONSPEECH', $file, $chan, $lastsegET, $lastsegDUR, undef));
+	}
+	next if (not defined $self->{LEXBYSPKR}{$file}{$chan}{$speaker->{SPKR}});
+	foreach my $lex (sort {$a->{BT} <=> $b->{BT};} @{ $self->{LEXBYSPKR}{$file}{$chan}{$speaker->{SPKR}} })
+	{
+	  if ($lex->{BT} >= $spkrBT && $lex->{ET} <= $spkrET)
+	  {
+	    #LOWERCASING
+	    push (@{ $spkrrecs{$speaker->{SPKR}}{lc $lex->{TOKEN}} }, $lex);
+	  }
+	}
+	if (scalar(@outlist) > 0 && $outlist[-1]->{ET} > $speaker->{BT}
+	  && $speaker->{FILE} eq $outlist[-1]->{FILE} && $speaker->{CHAN} eq $outlist[-1]->{CHAN})
+	{
+	  #MERGE SEGMENTS
+	  #Segments are merged if they overlap, overlapping segments merge speakers and lexemes
+	  $outlist[-1]->{DUR} = sprintf("%.4f", $speaker->{ET} - $outlist[-1]->{BT});
+	  $outlist[-1]->{ET} = $speaker->{ET};
+
+	  if (defined $spkrrecs{$speaker->{SPKR}} && keys %{ $spkrrecs{$speaker->{SPKR}} } > 0)
+	  {
+	    foreach my $tok (keys %{ $spkrrecs{$speaker->{SPKR}} }) {
+	      push (@{ $outlist[-1]->{SPKRRECS}{$speaker->{SPKR}}{$tok} }, @{ $spkrrecs{$speaker->{SPKR}}{$tok} });
+	    }
+	  }
+	}
+	else
+	{
+	  my $newseg = new RTTMSegment('SPEECH', $file, $chan, $spkrBT, $speaker->{DUR}, \%spkrrecs);
+	  foreach my $ecfe (@ecfexcerpts)
+	  {
+	    if ($newseg->{BT} >= $ecfe->{TBEG} && $newseg->{ET} <= $ecfe->{TEND})
+	    {
+              #Set the segment's Source Type if it belongs in an ecf_excerpt
+	      $newseg->{ECFSRCTYPE} = $ecfe->{SOURCE_TYPE};
+	      last;
+	    }
+	  }
+	  push (@outlist, $newseg);
+	}
+	$lastsegET = $speaker->{ET};
+      }
+    }
+  }
+
+  return (\@outlist);
 }
 
 1;

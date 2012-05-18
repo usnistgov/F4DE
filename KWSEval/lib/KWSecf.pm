@@ -59,6 +59,47 @@ sub new_empty
     return $self;
 }
 
+sub calcTotalDur
+{
+  my ($self, $srctypes, $filechans) = @_;
+  #only include excerpts included in @$srctypes and @$filechans
+  my %excerpts = ();
+ EXBUILDER: foreach my $excerpt (@{ $self->{EXCERPT} }) {
+    #Filter source type
+    if ($srctypes) { 
+      for (my $i; $i < @{ $srctypes }; $i++) {
+	my $srctype = $excerpt->{SOURCE_TYPE};
+	last if ($srctype =~ /^@{ $srctypes }[$i]$/i);
+	next EXBUILDER if ($i == scalar(@{ $srctypes }) -1);
+      }
+    }
+    #Filter filechan
+    if ($filechans) {
+      for (my $i; $i < @{ $filechans }; $i++) {
+	my $filechan = $excerpt->{FILE} . "/" . $excerpt->{CHANNEL};
+	last if ($filechan =~ /^@{ $filechans }[$i]$/i);
+	next EXBUILDER if ($i == scalar(@{ $filechans }) -1);
+      }
+    }
+    push (@{ $excerpts{$excerpt->{FILE}} }, $excerpt);
+  }
+
+  my $TotDur = 0.0;
+  foreach my $file (keys %excerpts) {
+    #Sort excerpts by begin time
+    my @sortedExs = sort {$a->{TBEG} <=> $b->{TBEG} || $a->{TEND} <=> $b->{TEND}} @{ $excerpts{$file} };
+    for (my $i; $i < @sortedExs; $i++) {
+      my $TEND = $sortedExs[$i]->{TEND};
+      for (my $j = $i+1; $j < @sortedExs; $j++) {
+	$TEND = $sortedExs[$j]->{TBEG} if ($sortedExs[$j]->{TBEG} < $TEND);
+      }
+      my $dur = ($TEND - $sortedExs[$i]->{TBEG});
+      $TotDur += $dur;
+    }
+  }
+  return $TotDur;
+}
+
 sub unitTest
 {
     my ($file1) = @_;
@@ -142,7 +183,20 @@ sub unitTest
         print "FAILED!\n";
         return 0;
     }
-        
+
+    print " Calculating total duration(1)... ";
+    if (abs($ecf->calcTotalDur - 7997.148) <= .0005) { print "OK\n"; }
+    else { print "FAILED!\n"; return 0; }
+
+    print " Calculating total duration(2)... ";
+    if (abs($ecf->calcTotalDur(["bnews"]) - 3570.363) <= .0005) { print "OK\n"; }
+    else { print "FAILED!\n"; return 0; }
+
+    print " Calculating total duration(3)... ";
+    if (abs($ecf->calcTotalDur([], ["^.*_ARB_.*\/[12]", "ar_4489_exA\/[12]"]) - 3870.853) <= .0005) { print "OK\n"; }
+    else { print "FAILED!\n"; return 0; }
+
+    print "All tests OK\n";
     return 1;
 }
 
@@ -292,7 +346,7 @@ sub loadFile
         }
         
         $self->{EVAL_SIGN_DUR} += sprintf("%.4f", $dur) if(!$self->{FILECHANTIME}{$purged_filename});
-        
+
         push(@{ $self->{EXCERPT} }, new KWSecf_excerpt($audio_filename, $channel, $tbeg, $dur, $language, $source_type) );
         ### Track the source types for the reports
         push(@{ $self->{FILECHANTIME}{$purged_filename}{$channel} }, [ ($tbeg, $tbeg + $dur) ]);
