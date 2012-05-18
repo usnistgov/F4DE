@@ -28,7 +28,7 @@ sub new {
   my $class = shift @_;
   my $trialsParams = shift @_;
   my ($taskId, $blockId, $decisionId) = 
-    MMisc::iuav(\@_, "KWS Detection", "Key Word", "Occurence");
+    MMisc::iuav(\@_, "Keyword Detection", "Keyword", "Occurrence");
 
   MMisc::error_quit("new TrialsTWV called without a \$trialsParams value") 
     if (! defined($trialsParams));

@@ -1039,7 +1039,7 @@ sub _weighted_bipartite_graph_matching {
                 $parent_row[$l] = $k;
                 $unchosen_row[$t++] = $row_mate[$l];
               } else {
-                $slack[$l] = $del;
+                $slack[$l] =$del;
                 $slack_row[$l] = $k;
               }
             }
@@ -1191,6 +1191,39 @@ sub get_errormsg {
 sub error {
   my ($self) = @_;
   return($self->{errormsg}->error());
+}
+
+##########
+
+sub dump_computation_results {
+  my ($self, $refdumper, $sysdumper) = @_;
+
+  if (!$self->is_computed()) { print "Matches have no been computed yet!\n"; return 0; }
+
+  my @mapped = $self->get_mapped_objects();
+  print "\t:Mapped:\t" . scalar(@mapped) . "\n";
+  foreach my $m (@mapped) {
+    my ($sys, $ref) = @{ $m };
+    &{ $refdumper }($ref);
+    &{ $sysdumper }($sys);
+    print "\n";
+  }
+  print "\n";
+  my @unmappedref = $self->get_unmapped_ref_objects();
+  print "\t:Unmapped Ref:\t" . scalar(@unmappedref) . "\n";
+  foreach my $ref (@unmappedref) {
+    &{ $refdumper }($ref);
+    print "\n";
+  }
+  print "\n";
+  my @unmappedsys = $self->get_unmapped_sys_objects(); 
+  print "\t:Unmapped Sys:\t" . scalar(@unmappedsys) . "\n";
+  foreach my $sys (@unmappedsys) {
+    &{ $sysdumper }($sys);
+    print "\n";
+  }
+  print "\n";
+  return 1;
 }
 
 ################################################################################

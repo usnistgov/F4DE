@@ -59,6 +59,7 @@ sub new {
      "DecisionID" => $decisionId,
      "isSorted" => 1,
      "trials" => {},                ### This gets built as you add trials
+     "metaData" => {},              ### MetaData for each block
      "trialParams" => $trialParams, ### Hash table for passing info to the Trial* objects 
      "suppliedActDecThresh" => undef,  ### Contains the supplied Decision threshhold for the Actual Decisions :)
      "computedActDecThreshRange" => undef,  ### Contains a hash table with the range for the decision threshold
@@ -440,14 +441,14 @@ I<$isTarg> is a boolean indicating if the trial is an instance of the target or 
 =cut
 
 sub addTrial {
-  my ($self, $block, $sysscore, $decision, $isTarg) = @_;
+  my ($self, $block, $sysscore, $decision, $isTarg, $metaData) = @_;
   
   MMisc::error_quit("Decision must be \"YES|NO|OMITTED\" not '$decision'")
       if ($decision !~ /^(YES|NO|OMITTED)$/);
   my $attr = ($isTarg ? "TARG" : "NONTARG");
   
   $self->_initForBlock($block);
-  
+  $self->addBlockMetaData($block, $metaData);
   $self->{computedActDecThreshRange} = undef;  ### Resets on new add!!!
   
   ## update the counts
@@ -492,6 +493,11 @@ sub addTrialWithoutDecision {
   $self->addTrial($block, $sysscore, ($sysscore >= $self->getTrialActualDecisionThreshold() ? "YES" : "NO"), $isTarg);
 }
 
+sub addBlockMetaData {
+  my ($self, $block, $metaData) = @_;
+
+  $self->{"metaData"}{$block} = $metaData if (defined $metaData);
+}
 
 sub _initForBlock {
   my ($self, $block) = @_;
