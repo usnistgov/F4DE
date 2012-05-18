@@ -1,5 +1,150 @@
-<termlist ecf_filename="test5.ecf.xml" version="01" language="english">
-<term termid="TERM-01"><termtext>yes</termtext></term>
-<term termid="TERM-02"><termtext>sure</termtext></term>
-<term termid="TERM-03"><termtext>why not</termtext></term>
+<termlist ecf_filename="test5.ecf.xml" version="01" language="english" compareNormalize="lowercase">
+<term termid="TERM-01">
+    <termtext>yes</termtext>
+    <terminfo>
+    <attr>
+      <name>Char. Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    <attr>
+      <name>Characters</name>
+      <value>3</value>
+    </attr>
+    <attr>
+      <name>Duration Quantile</name>
+      <value>0 - 33.3</value>
+    </attr>
+    <attr>
+      <name>NGram</name>
+      <value>1-grams</value>
+    </attr>
+    <attr>
+      <name>Occ. AllSources</name>
+      <value>1</value>
+    </attr>
+    <attr>
+      <name>Occ. Avg Mean</name>
+      <value>0.1904</value>
+    </attr>
+    <attr>
+      <name>Syllables</name>
+      <value>01</value>
+    </attr>
+    <attr>
+      <name>Syllables Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    </terminfo>
+</term>
+<term termid="TERM-02">
+    <termtext>sure</termtext>
+    <terminfo>
+    <attr>
+      <name>Char. Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    <attr>
+      <name>Characters</name>
+      <value>4</value>
+    </attr>
+    <attr>
+      <name>Duration Quantile</name>
+      <value>0 - 33.3</value>
+    </attr>
+    <attr>
+      <name>NGram</name>
+      <value>1-grams</value>
+    </attr>
+    <attr>
+      <name>Occ. AllSources</name>
+      <value>1</value>
+    </attr>
+    <attr>
+      <name>Occ. Avg Mean</name>
+      <value>0.1624</value>
+    </attr>
+    <attr>
+      <name>Syllables</name>
+      <value>01</value>
+    </attr>
+    <attr>
+      <name>Syllables Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    </terminfo>
+</term>
+<term termid="TERM-03">
+    <termtext>why not</termtext>
+    <terminfo>
+    <attr>
+      <name>Char. Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    <attr>
+      <name>Characters</name>
+      <value>7</value>
+    </attr>
+    <attr>
+      <name>Duration Quantile</name>
+      <value>0 - 33.3</value>
+    </attr>
+    <attr>
+      <name>NGram</name>
+      <value>1-grams</value>
+    </attr>
+    <attr>
+      <name>Occ. AllSources</name>
+      <value>1</value>
+    </attr>
+    <attr>
+      <name>Occ. Avg Mean</name>
+      <value>0.0124</value>
+    </attr>
+    <attr>
+      <name>Syllables</name>
+      <value>02</value>
+    </attr>
+    <attr>
+      <name>Syllables Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    </terminfo>
+</term>
+<term termid="TERM-04">
+    <termtext>hello</termtext>
+    <terminfo>
+    <attr>
+      <name>Char. Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    <attr>
+      <name>Characters</name>
+      <value>5</value>
+    </attr>
+    <attr>
+      <name>Duration Quantile</name>
+      <value>0 - 33.3</value>
+    </attr>
+    <attr>
+      <name>NGram</name>
+      <value>1-grams</value>
+    </attr>
+    <attr>
+      <name>Occ. AllSources</name>
+      <value>1</value>
+    </attr>
+    <attr>
+      <name>Occ. Avg Mean</name>
+      <value>0.1008</value>
+    </attr>
+    <attr>
+      <name>Syllables</name>
+      <value>02</value>
+    </attr>
+    <attr>
+      <name>Syllables Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+  </terminfo>
+</term>
 </termlist>

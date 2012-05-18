@@ -4,7 +4,7 @@
 # KWSEval
 # 
 # Original Authors: Jerome Ajot, Jon Fiscus
-# Additions: Martial Michel
+# Additions: Martial Michel, David Joy
 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
@@ -55,6 +55,8 @@ BEGIN {
 }
 use lib (@f4bv);
 
+#foreach my $f4dedir (@f4bv) { print $f4dedir . "\n"; }
+
 sub eo2pe {
   my $oe = join(" ", @_);
   return( ($oe !~ m%^Can\'t\s+locate%) ? "\n----- Original Error:\n $oe\n-----" : "");
@@ -68,17 +70,13 @@ sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
 foreach my $pn ("MMisc", "RTTMList", "KWSecf", "TermList", "KWSList", "KWSTools", "KWSMappedRecord", 'BipartiteMatch',
-                "KWSAlignment", "CacheOccurrences", "DETCurveSet", "DETCurve", "MetricTWV", "TrialsTWV",
-                "Encode") {
+                "KWSAlignment", "KWSSegAlign", "CacheOccurrences", "DETCurveSet", "DETCurve", "MetricTWV", "TrialsTWV") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
   }
 }
-
-use encoding 'euc-cn';
-use encoding 'utf8';
 
 # usualy part of the Perl Core
 foreach my $pn ("Getopt::Long", "Data::Dumper") {
@@ -88,7 +86,7 @@ foreach my $pn ("Getopt::Long", "Data::Dumper") {
   }
 }
 
-# Something missing ? Abort
+# something missing ? Abort
 if (! $have_everything) {
   print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
   exit(1);
@@ -108,8 +106,8 @@ my $TERMfile = "";
 
 my $thresholdFind = 0.5;
 my $thresholdAlign = 0.5;
-my $epsilonTime = 1e-8; #this weights time congruence in the joint mapping table
-my $epsilonScore = 1e-6; #this weights score congruence in the joint mapping table
+#my $epsilonTime = 1e-8; #this weights time congruence in the joint mapping table
+#my $epsilonScore = 1e-6; #this weights score congruence in the joint mapping table
 
 my $KoefV = 1;
 my $KoefC = sprintf("%.4f", $KoefV/10);
@@ -119,29 +117,23 @@ my $probOfTerm = 0.0001;
 
 my @isoPMISS = (0.0001, 0.001, 0.004, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40, 60, 80, 90, 95, 98);
 my @isoPFA = (0.0001);
-#my @isoPFA = (0.0001, 0.001, 0.004, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 40);
 
 my $displayall = 0;
 
-my $requestreportAlign = 0;
-my $requestreportOccur = 0;
-my $requestconditionalreportOccur = 0;
+my $segmentbased = 0;
+my $requestSumReport = 0;
+my $requestBlockSumReport = 0;
+my $requestCondSumReport = 0;
+my $requestCondBlockSumReport = 0;
 my $requestDETCurve = 0;
 my $requestDETConditionalCurve = 0;
 my $PooledTermDETs = 0;
-my $requestCSV = 0;
+my $cleanDETsFolder = 0;
+my $requestalignCSV = 0;
+my $includeNoTargBlocks = 0;
 
-my $outputreportAlign = "-1";
-my $outputreportOccur = "-1";
-my $outputconditionalreportOccur = "-1";
-my $outputreportDETCurve = "";
-my $outputreportDETConditionalCurve = "";
-my $outputCSV = "-1";
-
-my $RTTMOcurencesCacheFile = "";
-my $flagRTTMOcurencesCacheFile = "";
-
-my $filterecf = 0;
+my $alignmentCSV = undef;
+my $reportOutType = "TXT";
 
 my $haveReports = 0;
 
@@ -183,14 +175,8 @@ my @arrayparsetype;
 my $numberFiltersTypeArray = 0;
 my %filterTypeArray;
 
-my $htmlfolder = "";
-my $requestHtml = 0;
-
-my $conditionalhtmlfolder = "";
-my $requestConditionalHtml = 0;
-
-my $threshchecktrans = -1.0;
-my $resquestchecktrans = 0;
+my $reportPath = ".";
+my $fileRoot = "";
 
 my $requestwordsoov = 0;
 my $IDSystem = "";
@@ -208,22 +194,23 @@ GetOptions
     'termfile=s'                          => \$TERMfile,
     'Find-threshold=f'                    => \$thresholdFind,
     'Similarity-threshold=f'              => \$thresholdAlign,
-    'All-display'                         => \$displayall,
-    'align-report:s'                      => \$outputreportAlign,
-    'occurrence-report:s'                 => \$outputreportOccur,
-    'Occurrence-conditionalreport:s'      => \$outputconditionalreportOccur,
+    'path=s'                              => \$reportPath,
+    'file-root=s'                         => \$fileRoot,
+    'osummary-report'                     => \$requestSumReport,
+    'block-summary-report'                => \$requestBlockSumReport,
+    'Osummary-conditional-report'         => \$requestCondSumReport,
+    'Block-summary-conditional-report'    => \$requestCondBlockSumReport,
     'Term=s@'                             => \@arrayparseterm,
     'query=s@'                            => \@Queries,
     'Namefile=s@'                         => \@arraycmdline,
     'YSourcetype=s@'                      => \@arrayparsetype,
-    'ECF-filtering'                       => \$filterecf,
-    'det-curve=s'                         => \$outputreportDETCurve,
+    "gsegment-based-alignment"            => \$segmentbased,
     'iso-lines:s'                         => \$OptionIsoline,
-    'DET-conditional-curve=s'             => \$outputreportDETConditionalCurve,
-    'cache-find=s'                        => \$RTTMOcurencesCacheFile,
-    'CSV:s'                               => \$outputCSV,
-    'HTML=s'                              => \$htmlfolder,
-    'QHTML=s'                             => \$conditionalhtmlfolder,
+    'det-curve'                           => \$requestDETCurve,
+    'DET-conditional-curve'               => \$requestDETConditionalCurve,
+    'Clean-DETs-folder'                   => \$cleanDETsFolder,
+    'csv-of-alignment=s'                  => \$alignmentCSV,
+    'ytype-of-report-output=s'            => \$reportOutType,
     'koefcorrect=f'                       => \$KoefC,
     'Koefincorrect=f'                     => \$KoefV,
     'number-trials-per-sec=f'             => \$trialsPerSec,
@@ -231,81 +218,48 @@ GetOptions
     'Pooled-DETs'                         => \$PooledTermDETs,
     'version'                             => sub { MMisc::ok_quit($versionid); },
     'help'                                => sub { MMisc::ok_quit($usage); },
-    'x=f'                                 => \$threshchecktrans,
     'words-oov'                           => \$requestwordsoov,
+    'include-blocks-w-notargs'            => \$includeNoTargBlocks,
     'ID-System=s'                         => \$IDSystem,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
-### Override the cache file option --- this is a JGF HACK to get some code out
-#if ($RTTMOcurencesCacheFile ne ""){
-#  print "Warning: Cache File Disabled for now.  No cache file will be generated\n";
-#  $RTTMOcurencesCacheFile = "";
-#}
-
-#checking transcript
-$resquestchecktrans = 1 if($threshchecktrans != -1.0);
-
 #parsing TermIDs
 $numberFiltersTermArray = @arrayparseterm;
-
-for(my $i=0; $i<$numberFiltersTermArray; $i++)
-{
+for(my $i=0; $i<$numberFiltersTermArray; $i++) {
     my @tmp = split(/:/, join(':', $arrayparseterm[$i]));
     @{ $filterTermArray{$tmp[0]} } = split(/,/, join(',', $tmp[(@tmp==1)?0:1]));
 }
 
 #parsing Filenames and channels
 my @tmpfile = split(/,/, join(',', @arraycmdline));
-
-for(my $j=0; $j<@tmpfile; $j++)
-{
-    push(@arrayparsefile, [ split("\/", $tmpfile[$j]) ]);
+for(my $i=0; $i<@tmpfile; $i++) {
+    push(@arrayparsefile, [ split("\/", $tmpfile[$i]) ]);
 }
 
 #parsing Sourcetypes
 $numberFiltersTypeArray = @arrayparsetype;
-
-for(my $i=0; $i<$numberFiltersTypeArray; $i++)
-{
+for(my $i=0; $i<$numberFiltersTypeArray; $i++) {
     my @tmp = split(/:/, join(':', $arrayparsetype[$i]));
     @{ $filterTypeArray{$tmp[0]} } = split(/,/, join(',', $tmp[(@tmp==1)?0:1]));
 }
 
-if($numberFiltersTypeArray == 0)
-{
-    $numberFiltersTypeArray = 1;
-    $filterTypeArray{''} = [()];
-}
-
-$requestreportAlign = 1 if($outputreportAlign ne "-1");
-$requestreportOccur = 1 if($outputreportOccur ne "-1");
-$requestconditionalreportOccur = 1 if($outputconditionalreportOccur ne "-1");
-$requestDETCurve = 1 if($outputreportDETCurve ne "");
-$requestDETConditionalCurve = 1 if($outputreportDETConditionalCurve ne "");
-$requestCSV = 1 if($outputCSV ne "-1");
-$requestHtml = 1 if($htmlfolder ne "");
-$requestConditionalHtml = 1 if($conditionalhtmlfolder ne "");
+$requestalignCSV = 1 if(defined $alignmentCSV);
 
 # Isoline Option
 my @tmplistiso1 = ();
 my @tmplistiso2 = ();
 
-if( $OptionIsoline eq "" )
-{
+if( $OptionIsoline eq "" ) {
 	# Create the default list of coefficients
-	foreach my $PFAi ( @isoPFA )
-	{
-		foreach my $PMISSi ( @isoPMISS )
-		{
+	foreach my $PFAi ( @isoPFA ) {
+		foreach my $PMISSi ( @isoPMISS ) {
 			push( @tmplistiso1, $PMISSi/$PFAi );
 		}
 	}
 }
-else
-{
+else {
 	# Use the list given on the command-line
-	foreach my $coefi ( split( /,/ , $OptionIsoline ) )
-	{
+	foreach my $coefi ( split( /,/ , $OptionIsoline ) ) {
 		MMisc::error_quit("The coefficient for the iso-line if not a proper floating-point")
       if( $coefi !~ /^\d+(\.\d+)?$/ );
 		push( @tmplistiso1, $coefi );
@@ -315,8 +269,13 @@ else
 @tmplistiso2 = KWSTools::unique(@tmplistiso1);
 @listIsolineCoef = sort {$a <=> $b} @tmplistiso2;
 
-$haveReports = $requestreportAlign || $requestreportOccur || $requestDETCurve || $requestCSV || $requestHtml || $requestconditionalreportOccur || $requestDETConditionalCurve || $resquestchecktrans || $requestConditionalHtml;
+$haveReports = $requestSumReport || $requestBlockSumReport || $requestCondSumReport || $requestCondBlockSumReport || $requestalignCSV || $requestDETConditionalCurve;
+$reportOutType = "TXT" if ($reportOutType ne "CSV" && $reportOutType ne "HTML");
+$reportPath .= "/";
+MMisc::error_quit("Report path doesn't exist, create it first")
+  if (not -d $reportPath);
 
+###Error breakouts before loading
 #check if the options are valid to run
 MMisc::error_quit("An RTTM file must be set")
   if($RTTMfile eq "");
@@ -331,342 +290,154 @@ if($haveReports)
       if($STDfile eq "");
 }
 
-#loading the files
+my $groupBySrcType = 0; $groupBySrcType = 1 if (keys %filterTypeArray > 0);
+my $groupByTerm = 0; $groupByTerm = 1 if (keys %filterTermArray > 0);
+my $groupByAttr = 0; $groupByAttr = 1 if (@Queries > 0);
+if ($groupBySrcType + $groupByTerm + $groupByAttr + $requestwordsoov > 1) {
+  MMisc::error_quit("Cannot specify more than one condition (-Y, -q, -T) for the conditional report");
+} #Perhaps a more descriptive error
+
+###loading the files
 my $ECF;
 my $STD;
-my $TERM = new TermList($TERMfile);
-my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(),
-                        $TERM->getEncoding());
 
-if($haveReports)
-{
+if($haveReports) {
     $ECF = new KWSecf($ECFfile);
     $STD = new KWSList($STDfile);
     $STD->SetSystemID($IDSystem) if($IDSystem ne "");
 }
-
-#Queries for Termlist
-if(@Queries)
-{
-    $TERM->QueriesToTermSet(\@Queries, \%filterTermArray);
-}
-
-if( ($requestconditionalreportOccur || $requestConditionalHtml) && $requestwordsoov)
-{
-    my @arraytermsoov = ();
-    my @arraytermsiv = ();
-    $STD->listOOV(\@arraytermsoov);
-    $STD->listIV(\@arraytermsiv);
-    @{ $filterTermArray{'Out-of-Vocabulary'} } = @arraytermsoov;
-    @{ $filterTermArray{'In-Vocabulary'} } = @arraytermsiv;
-}
+my $TERM = new TermList($TERMfile);
+my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(), $TERM->getEncoding());
 
 # clean the filter for terms
 $numberFiltersTermArray = keys %filterTermArray;
 
-if($numberFiltersTermArray == 0)
+####Alignments
+my @alignResults;
+my ($dset, $qdset);
+my @filters = ();
+my $groupBySubroutine = undef;
+$alignmentCSV = $reportPath . $alignmentCSV if (defined $alignmentCSV);
+
+if ($segmentbased != 0)
 {
-    $numberFiltersTermArray = 1;
-    $filterTermArray{''} = [()];
+###Segment based Alignment
+  my $segAlignment = new KWSSegAlign($RTTM, $STD, $ECF, $TERM);
+  $segAlignment->setFilterData(\%filterTypeArray, \%filterTermArray, \@arraycmdline, \@Queries);
+
+#Setup segment filters
+  push (@filters, \&KWSSegAlign::filterByFileChan) if (@arraycmdline > 0);
+
+  $groupBySubroutine = \&KWSSegAlign::groupByECFSourceType if ($groupBySrcType == 1);
+  $groupBySubroutine = \&KWSSegAlign::groupByTerms if ($groupByTerm == 1);
+  $groupBySubroutine = \&KWSSegAlign::groupByAttributes if ($groupByAttr == 1);
+  $groupBySubroutine = \&KWSSegAlign::groupByOOV if ($requestwordsoov == 1);
+
+  #Align
+  @alignResults = @{ $segAlignment->alignSegments($alignmentCSV, \@filters, $groupBySubroutine, $thresholdFind, $KoefC, $KoefV, $probOfTerm, \@listIsolineCoef, $PooledTermDETs, $includeNoTargBlocks) };
+}
+else
+{
+###Occurence based Alignment
+  my $alignment = new KWSAlignment($RTTM, $STD, $ECF, $TERM);
+  $alignment->setFilterData(\%filterTypeArray, \%filterTermArray, \@arraycmdline, \@Queries);
+
+#Setup filters
+  push (@filters, \&KWSAlignment::filterByFileChan) if (@arraycmdline > 0);
+
+  $groupBySubroutine = \&KWSAlignment::groupByECFSourceType if ($groupBySrcType == 1);
+  $groupBySubroutine = \&KWSAlignment::groupByTerms if ($groupByTerm == 1);
+  $groupBySubroutine = \&KWSAlignment::groupByAttributes if ($groupByAttr == 1);
+  $groupBySubroutine = \&KWSAlignment::groupByOOV if ($requestwordsoov == 1);
+
+  #Align
+  @alignResults = @{ $alignment->alignTerms($alignmentCSV, \@filters, $groupBySubroutine, $thresholdFind, $thresholdAlign, $KoefC, $KoefV, \@listIsolineCoef, $trialsPerSec, $probOfTerm, $PooledTermDETs, $includeNoTargBlocks) };
 }
 
-my $RefList = {};
-my $HypList = {};
+#Set dets
+my $detoptions = { ("Xmin" => .0001,
+                    "Xmax" => 40,
+                    "Ymin" => 5,
+                    "Ymax" => 98,
+                    "DETShowPoint_Actual" => 1,
+                    "DETShowPoint_Best" => 1,
+                    "xScale" => "nd",
+                    "yScare" => "nd",
+                    "ColorScheme" => "color",
+                    "createDETfiles" => 1,
+                    "serialize" => 1 ) };
 
-$flagRTTMOcurencesCacheFile = ((-e $RTTMOcurencesCacheFile) ? "r" : "w") if($RTTMOcurencesCacheFile ne "");
+$dset = $alignResults[0];
+$qdset = $alignResults[1];
 
-if($flagRTTMOcurencesCacheFile eq "r")
-{
-	print STDERR "Cache file found - Using '$RTTMOcurencesCacheFile' for RTTM occurrences.\n";
-	
-    my $checksum = 0;
-    my $cachingOcc = new CacheOccurrences($RTTMOcurencesCacheFile, $checksum, $thresholdFind, $RefList, $TERM->getEncoding(), $TERM->getCompareNormalize());
-    $cachingOcc->loadFile($TERM);
-    
-    if($cachingOcc->{SYSTEMVRTTM} != checksumSystemV($RTTMfile))
-    {
-        print STDERR "WARNING: RTTM Checksum missmatch: ignoring cache information!\n";
-        $flagRTTMOcurencesCacheFile = "";
-    }
-    
-    if($cachingOcc->{THRESHOLD} != $thresholdFind)
-    {
-        print STDERR "WARNING: Threshold in caching ($cachingOcc->{THRESHOLD}) missmatch the current threshold ($thresholdFind): ignoring cache information!\n";
-        $flagRTTMOcurencesCacheFile = "";
-    }
-}
-elsif($flagRTTMOcurencesCacheFile eq "w")
-{
-	print STDERR "Cache file not found - Will generate the cache file '$RTTMOcurencesCacheFile'.\n";
+##Render reports
+my $detsPath = "dets/";
+if ($requestDETCurve || $requestDETConditionalCurve) {
+  if ((not mkdir ($reportPath . $detsPath)) && $cleanDETsFolder == 1) {
+    MMisc::error_quit($reportPath . $detsPath ." already exists, cleaning it may lead to unwanted results"); }
 }
 
-print STDERR "Processing Alignment.\n";
+my $file;
+#Render summary reports
+if ($requestSumReport) {
+  if ($fileRoot eq "") { $file = $reportPath . "sum." . lc $reportOutType; }
+  elsif ($fileRoot eq "-") { $file = "-"; }
+  else { $file = $reportPath . $fileRoot . ".sum." . lc $reportOutType; }
 
-my %mappings;
+  print "Summary Report: " . $file . "\n";
+  open (SUMREPORT, ">$file");
+  print SUMREPORT $dset->renderReport($reportPath . "dets/sum", $requestDETCurve, 1, $detoptions, $reportOutType);
+  close (SUMREPORT);
+}
+if ($requestBlockSumReport) {
+  if ($fileRoot eq "") { $file = $reportPath . "bsum." . lc $reportOutType; }
+  elsif ($fileRoot eq "-") { $file = "-"; }
+  else { $file = $reportPath . $fileRoot . ".bsum." . lc $reportOutType; }
 
-foreach my $termsid(sort keys %{ $TERM->{TERMS} })
-{
-    my $terms = $TERM->{TERMS}{$termsid}->{TEXT};
-
-    if($flagRTTMOcurencesCacheFile ne "r")
-    {
-        #find occurrences for ref
-        my $roccurrences = $RTTM->findTermOccurrences($terms, $thresholdFind);
-        #print "Found ".scalar(@$roccurrences)." occurrences of ".$terms." ID $termsid in the RTTM\n";
-    
-        for(my $i=0; $i<@$roccurrences; $i++)
-        {
-            my $file = @{ $roccurrences->[$i] }[0]->{FILE};
-            my $chan = @{ $roccurrences->[$i] }[0]->{CHAN};
-            my $bt = @{ $roccurrences->[$i] }[0]->{BT};
-            my $numberoftoken = @{ $roccurrences->[$i] };
-            my $et = @{ $roccurrences->[$i] }[$numberoftoken-1]->{ET};
-            my $dur = sprintf("%.4f", $et - $bt);
-            #my $rttm = \@{ $roccurrences->[$i] };
-                        
-            push( @{ $RefList->{$termsid}{$terms} }, new KWSTermRecord($file, $chan, $bt, $dur, undef, undef));
-        }
-    }
-    
-    if($haveReports)
-    {
-        $mappings{$termsid} = new KWSMappedRecord();
-        $mappings{$termsid}->{UNMAPPED_SYS} = [()];
-        $mappings{$termsid}->{UNMAPPED_REF} = [()];
-        $mappings{$termsid}->{MAPPED} = [()];
-        
-        my %ref_occs;
-        my %miss_values;
-        
-        if($RefList->{$termsid}{$terms})
-        {
-            #terms in the Ref
-            for(my $i=0; $i<@{ $RefList->{$termsid}{$terms} }; $i++)
-            {
-                next if $filterecf and not $ECF->FilteringTime($RefList->{$termsid}{$terms}[$i]->{FILE}, $RefList->{$termsid}{$terms}[$i]->{CHAN}, $RefList->{$termsid}{$terms}[$i]->{BT}, $RefList->{$termsid}{$terms}[$i]->{ET});
-                $ref_occs{$i+1} = $RefList->{$termsid}{$terms}[$i];
-                $miss_values{$i+1} = 0;
-           }
-        }
-        
-        #find occurrences for sys
-        $HypList->{$termsid}{$terms} = $STD->{TERMS}{$termsid};
-        
-        my %sys_occs;
-        my %fa_values;
-        
-        if($HypList->{$termsid}{$terms}->{TERMS})
-        {
-            #terms in the Hyp      
-            for(my $j=0; $j<@{ $HypList->{$termsid}{$terms}->{TERMS} }; $j++)
-            {
-                next if $filterecf and not $ECF->FilteringTime($HypList->{$termsid}{$terms}->{TERMS}[$j]->{FILE}, $HypList->{$termsid}{$terms}->{TERMS}[$j]->{CHAN}, $HypList->{$termsid}{$terms}->{TERMS}[$j]->{BT}, $HypList->{$termsid}{$terms}->{TERMS}[$j]->{ET});
-                $sys_occs{$j+1} = $HypList->{$termsid}{$terms}->{TERMS}[$j];
-                $fa_values{$j+1} = -1;
-            }
-        }
-        
-        # compute joint values
-        my %joint_values;
-        
-        while (my($ref_id, $ref_occ) = each %ref_occs)
-        {
-            while (my($sys_id, $sys_occ) = each %sys_occs)
-            {
-                next if ( $sys_occ->{FILE} ne $ref_occ->{FILE} or
-                          $sys_occ->{CHAN} ne $ref_occ->{CHAN} or
-                          $sys_occ->{MID} > $ref_occ->{ET}+$thresholdAlign or
-                          $sys_occ->{MID} < $ref_occ->{BT}-$thresholdAlign );
-        
-                my $time_congruence = (min($ref_occ->{ET}, $sys_occ->{ET}) - max($ref_occ->{BT}, $sys_occ->{BT}))/max(0.00001,$ref_occ->{DUR});
-                my $score_congruence = 0;
-                
-                if($STD->{DIFF_SCORE} != 0)
-                {
-                    $score_congruence = ($sys_occ->{SCORE} - $STD->{MIN_SCORE}) / ($STD->{DIFF_SCORE});
-                }
-                                
-                $joint_values{$ref_id}{$sys_id} = 1 + $epsilonTime * $time_congruence + $epsilonScore * $score_congruence;
-            }
-        }
-        
-        #compute mapping
-        my ($err, %Rmap) = BipartiteMatch::_map_ref_to_sys(\%joint_values, \%fa_values, \%miss_values, 0);
-        my $map = \%Rmap;
-
-        while (my($ref_id, $sys_id) = each %$map)
-        {
-            push(@{ $mappings{$termsid}->{MAPPED} }, [ ($sys_occs{$sys_id}, $ref_occs{$ref_id}) ]);
-            delete $ref_occs{$ref_id};
-            delete $sys_occs{$sys_id};
-        }
-            
-        foreach my $ref_occ (values %ref_occs)
-        {
-            push(@{ $mappings{$termsid}->{UNMAPPED_REF} }, $ref_occ);
-        }
-        
-        foreach my $sys_occ (values %sys_occs)
-        {
-            push(@{ $mappings{$termsid}->{UNMAPPED_SYS} }, $sys_occ);
-        }
-    }
+  print "Block Summary Report: " . $file . "\n";
+  open (BSUMREPORT, ">$file");
+  print BSUMREPORT $dset->renderBlockedReport($reportOutType, $segmentbased); #shows Corr!Det if segment based
+  close (BSUMREPORT);
 }
 
-if($flagRTTMOcurencesCacheFile eq "w")
-{
-    my $cachingOcc = new CacheOccurrences($RTTMOcurencesCacheFile, checksumSystemV($RTTMfile), $thresholdFind, $RefList, $TERM->getEncoding(), $TERM->getCompareNormalize());
-    $cachingOcc->saveFile($TERM);
+#Render conditional summary reports
+if ($requestCondSumReport) {
+  if ($fileRoot eq "") { $file = $reportPath . "cond.sum." . lc $reportOutType; }
+  elsif ($fileRoot eq "-") { $file = "-"; }
+  else { $file = $reportPath . $fileRoot . ".cond.sum." . lc $reportOutType; }
+
+  print "Conditional Summary Report: " . $file . "\n";
+  open (QSUMREPORT, ">$file");
+  print QSUMREPORT $qdset->renderReport($reportPath . "dets/cond.sum", $requestDETConditionalCurve, 1, $detoptions, $reportOutType);
+  close (QSUMREPORT);
+}
+if ($requestCondBlockSumReport) {
+  if ($fileRoot eq "") { $file = $reportPath . "cond.bsum." . lc $reportOutType; }
+  elsif ($fileRoot eq "-") { $file = "-"; }
+  else { $file = $reportPath . $fileRoot . ".cond.bsum." . lc $reportOutType; }
+
+  print "Conditional Block Summary Report: " . $file . "\n";
+  open (QBSUMREPORT, ">$file");
+  print QBSUMREPORT $qdset->renderBlockedReport($reportOutType, $segmentbased); #shows Corr!Det if segment based
+  close (QBSUMREPORT);
 }
 
-# STD Alignment structure for reports
-if($haveReports)
-{
-    my $stdAlign = new KWSAlignment($STD, $TERM, $ECF, \%mappings, $KoefC, $KoefV);
-    
-    # Align report
-    $stdAlign->ReportAlign($outputreportAlign) if($requestreportAlign);
-    
-    #Check Transcript
-    if($resquestchecktrans)
-    {
-        $stdAlign->transcriptCheckReport("", $threshchecktrans);
-    }
-    
-    # Conditional Occurrence Report
-    if($requestconditionalreportOccur || $requestDETConditionalCurve || $requestConditionalHtml)
-    {
-        my $allresults_Occ;
-        my $allresults_DET;
-        my %results_Occ;
-        my %results_DET;
-        my $dset = new DETCurveSet();
-        
-        foreach my $titleTerm(sort keys %filterTermArray)
-        {
-            foreach my $titleType(sort keys %filterTypeArray)
-            {                    
-                $results_Occ{$titleTerm}{$titleType} = $stdAlign->GenerateOccurrenceReport(\@{ $filterTermArray{$titleTerm} }, \@arrayparsefile, \@{ $filterTypeArray{$titleType} }, $trialsPerSec, $probOfTerm, $KoefV, $KoefC);
-                
-                my $lineTitle = "Terms:".($titleTerm eq "" ? "All" : $titleTerm)." Sources:".($titleType eq "" ? "All" : $titleType);
-                
-                if($requestDETConditionalCurve)
-                {
-                    $results_DET{$titleTerm}{$titleType} = $stdAlign->GenerateDETReport(\@{ $filterTermArray{$titleTerm} }, \@arrayparsefile, \@{ $filterTypeArray{$titleType} }, $lineTitle, $KoefV, $KoefC, $trialsPerSec, $probOfTerm, $PooledTermDETs);
+###
 
-                    if (! $results_DET{$titleTerm}{$titleType}->successful())
-                    {
-                        print STDERR "Warning: Failed to produce DET plot for Termset '$titleTerm' and '$titleType'\n";
-                    }
-                    else
-                    {
-                        $dset->addDET($results_DET{$titleTerm}{$titleType}, "$titleTerm $titleType");
-                    }
-                }
-            }
-        }
-        
-        $allresults_Occ = $stdAlign->CopyConditionalOccurrenceReports(\%results_Occ);
-        $stdAlign->ReportConditionalOccurrence($outputconditionalreportOccur, $allresults_Occ, $dset) if($requestconditionalreportOccur);   
-
-        if($requestDETConditionalCurve)
-        {
-#            $dset->writeMultiDET($outputreportDETConditionalCurve);
-           my $options = { ("Xmin" => .0001,
-       		   "Xmax" => 40,
-       		   "Ymin" => 5,
-       		   "Ymax" => 98,
-       		   "DETShowPoint_Actual" => 1,
-       		   "DETShowPoint_Best" => 1,
-       		   "xScale" => "nd",
-       		   "yScale" => "nd",
-       		   "ColorScheme" => "color",
-              "createDETfiles" => 1,
-              "serialize" => 1 ) };
-           my $txt = $dset->renderAsTxt($outputreportDETConditionalCurve, 1, 1, $options, "");                                                                     
-        }
-        
-        # html
-        if($requestConditionalHtml)
-        {
-            $stdAlign->ReportConditionalHTML($conditionalhtmlfolder, $allresults_Occ, $dset);
-        }
-    }
-    
-    # Occurrence Report
-    if($requestDETCurve || $requestreportOccur || $requestHtml)
-    {
-        my $allresults_Occ = $stdAlign->GenerateOccurrenceReport(\@{ $filterTermArray{''} }, \@arrayparsefile, \@{ $filterTypeArray{''} }, $trialsPerSec, $probOfTerm, $KoefV, $KoefC);
-        my $dset = new DETCurveSet();
-        
-        if ($displayall && $requestDETCurve)
-        {
-
-            my $det = $stdAlign->GenerateDETReport(\@{ $filterTermArray{''} }, \@arrayparsefile, \@{ $filterTypeArray{''} }, 
-              ($stdAlign->{STD}->{SYSTEM_ID} eq "" ? "" : $stdAlign->{STD}->{SYSTEM_ID}." : ") . "ALL Data", 
-              $KoefV, $KoefC, $trialsPerSec, $probOfTerm, $PooledTermDETs, \@listIsolineCoef);
-
-            if (! $det->successful())
-            {
-                print STDERR "Warning: Failed to produce DET plot for ALL data\n";
-            }
-            $dset->addDET("ALL", $det);
-        }
-        
-        if ($requestDETCurve)
-        {
-            ###Compute a DET Curve for each source type present
-            my %occFiltTypeArr = ();
-
-            for (my $i=0; $i<@{ $stdAlign->{ECF}->{EXCERPT} }; $i++)
-            {
-                $occFiltTypeArr{uc($stdAlign->{ECF}->{EXCERPT}[$i]->{SOURCE_TYPE})} = [ ( uc($stdAlign->{ECF}->{EXCERPT}[$i]->{SOURCE_TYPE}) )];
-            }
-
-            foreach my $stype(keys %occFiltTypeArr)
-            {
-                my $det = $stdAlign->GenerateDETReport(\@{ $filterTermArray{''} }, \@arrayparsefile, \@{ $occFiltTypeArr{$stype} }, 
-                    ($stdAlign->{STD}->{SYSTEM_ID} eq "" ? "" : $stdAlign->{STD}->{SYSTEM_ID}." : ") . "$stype Subset", 
-                    $KoefV, $KoefC, $trialsPerSec, $probOfTerm, $PooledTermDETs, \@listIsolineCoef);
-
-                if (! $det->successful())
-                {
-                    print STDERR "Warning: Failed to produce DET plot for $stype subset data\n";
-                }
-                
-                $dset->addDET($stype, $det);
-            }
-        }
-
-        $stdAlign->ReportOccurrence($outputreportOccur, $displayall, $allresults_Occ, $dset) if($requestreportOccur); 
-
-        if ($requestDETCurve)
-        {
-  #            $dset->writeMultiDET($outputreportDETCurve);
-           my $options = { ("Xmin" => .0001,
-       		   "Xmax" => 40,
-       		   "Ymin" => 5,
-       		   "Ymax" => 98,
-       		   "DETShowPoint_Actual" => 1,
-       		   "DETShowPoint_Best" => 1,
-       		   "xScale" => "nd",
-       		   "yScale" => "nd",
-       		   "ColorScheme" => "color",
-              "createDETfiles" => 1,
-              "serialize" => 1 ) };
-           my $txt = $dset->renderAsTxt($outputreportDETCurve, 1, 1, $options, "");                                                                     
-        }
-    
-        # html
-        if($requestHtml)
-        {
-            $stdAlign->ReportHTML($htmlfolder, $displayall, $allresults_Occ, $dset);
-        }
-    }
-    
-    # csv
-    $stdAlign->csvReport($outputCSV) if($requestCSV);
+##Clean DETS folder
+if ($cleanDETsFolder) {
+  my $dir2clean = $reportPath . $detsPath;
+  opendir (DIR, $dir2clean) or MMisc::error_quit("Cannot locate DETs directory to clean.");
+#  print "About to remove ..\n";
+  my @files2rm = ();
+  while (my $file = readdir(DIR)) {
+    next if ($file =~ /^\.{1,2}/ || $file =~ /\.png$/i || $file =~ /\.srl\.gz$/i);
+    push (@files2rm, $dir2clean . $file);
+#    print $dir2clean . $file . "\n";
+  }
+  unlink @files2rm;
 }
+##
 
 MMisc::ok_exit();
 
@@ -696,8 +467,6 @@ sub set_usage {
 	$tmp .= "                           considered a pair of potentially aligned terms. (default: 0.5).\n";
 	$tmp .= "\n";
 	$tmp .= "Filter options:\n";
-	$tmp .= "  -E, --ECF-filtering      System and reference terms must be in the ECF segments.\n";
-	$tmp .= "                           (default: off).\n";
 	$tmp .= "  -T, --Term [<set_name>:]<termid>[,<termid>[, ...]]\n";
 	$tmp .= "                           Only the <termid> or the list of <termid> (separated by ',')\n";
 	$tmp .= "                           will be displayed in the Conditional Occurrence Report and Con-\n";
@@ -719,31 +488,35 @@ sub set_usage {
 	$tmp .= "  -w, --words-oov          Generate a Conditional Report sorted by terms that are \n";
 	$tmp .= "                           Out-Of-Vocabulary (OOV) for the system.\n";
 	$tmp .= "\n";
+  $tmp .= "Alignment options:\n";
+  $tmp .= "  -g, --gsegment-based-alignment\n";
+  $tmp .= "                           Produces a segment alignment rather than occurence based alignment\n";
+  $tmp .= "                           (default: off)\n";
 	$tmp .= "Report options:\n";
-	$tmp .= "  -a, --align-report [<file>] Output the Alignment Report.\n";
-	$tmp .= "  -o, --occurrence-report [<file>] Output the Occurrence Report.\n";
-	$tmp .= "  -O, --Occurrence-conditionalreport [<file>] Output the Conditional Occurrence Report.\n";
-	$tmp .= "  -d, --det-curve <file>    Output the DET Curve.\n";
+  $tmp .= "  -path <path>             Output directory for generated reports.\n";
+  $tmp .= "  -f  --file-root          File root for the generated reports.\n";
+	$tmp .= "  -o, --osummary-report                    Output the Summary Report.\n";
+  $tmp .= "  -b, --block-summary-report               Output the Block Summary Report.\n";
+	$tmp .= "  -O, --Osummary-conditional-report        Output the Conditional Occurrence Report.\n";
+  $tmp .= "  -B, --Block-summary-conditional-report   Output the Conditional Block Summary Report.\n";
 	$tmp .= "  -i, --iso-lines [<coef>[,<coef>[, ...]]]\n";
 	$tmp .= "                            Include the iso line information inside the serialized det curve.\n";
 	$tmp .= "                            Every <coef> can be specified, or it uses those by default.\n";
 	$tmp .= "                            The <coef> is the ratio Pmiss/Pfa.\n";
-	$tmp .= "  -D, --DET-conditional-curve <file> Output the Conditional DET Curve.\n";
+	$tmp .= "  -d, --det-curve                          Output the DET Curve.\n";
+	$tmp .= "  -D, --DET-conditional-curve              Output the Conditional DET Curve.\n";
 	$tmp .= "  -P, --Pooled-DETs        Produce term occurrence DET Curves instead of 'Term Weighted' DETs.\n";
-	$tmp .= "  -C, --CSV [<file>]       Output the CSV Report.\n";
-	$tmp .= "  -H, --HTML <folder>      Output the Occurrence HTML Report.\n";
-	$tmp .= "  -Q, --QHTML <folder>     Output the Conditional Occurrence HTML Report.\n";
-	$tmp .= "  -A, --All-display        Add an additional column in the Occurrence report containing\n";
-	$tmp .= "                           the overall statistics for every terms (default: off).\n";
-	$tmp .= "  -k, --koefcorrect <value> Value for correct (C).\n";
-	$tmp .= "  -K, --Koefincorrect <value> Value for incorrect (V).\n";
+  $tmp .= "  -C, --Clean-DETs-folder  Removes all non-png files from the generated dets folder.\n";
+  $tmp .= "  -c, --csv-of-alignment <file> Output the alignment CSV.";
+  $tmp .= "  -y, --ytype-of-report-output   Output type of the reports. (TXT|CSV|HTML) (Default is Text)\n";
+	$tmp .= "  -k, --koefcorrect <value>     Value for correct (C).\n";
+	$tmp .= "  -K, --Koefincorrect <value>   Value for incorrect (V).\n";
 	$tmp .= "  -n, --number-trials-per-sec <value>  The number of trials per second. (default: 1)\n";
 	$tmp .= "  -p, --prob-of-term <value>  The probability of a term. (default: 0.0001)\n";
+  $tmp .= "  -inc, --include-blocks-w-notargs  Include blocks with no targets in block reports.\n";
 	$tmp .= "  -I, --ID-System <name>   Overwrites the name of the STD system.\n";
 	$tmp .= "\n";
 	$tmp .= "Other options:\n";
-	$tmp .= "  -c, --cache-find <file>  Use the caching file for finding occurrences. If the file\n";
-	$tmp .= "                           does not exist, it creates the cache during the search.\n";
 	$tmp .= "\n";
 
   return($tmp);

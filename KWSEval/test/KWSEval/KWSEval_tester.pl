@@ -6,6 +6,7 @@ use F4DE_TestCore;
 use MMisc;
 
 my ($tool, $mode, @rest) = @ARGV;
+#$mode = "makecheckfiles";
 MMisc::error_quit("ERROR: Tool ($tool) empty or not an executable\n")
   if ((MMisc::is_blank($tool)) || (! MMisc::is_file_x($tool)));
 $tool .= " " . join(" ", @rest)
@@ -21,38 +22,16 @@ my $tn = ""; # Test name
 my $t0 = F4DE_TestCore::get_currenttime();
 
 ##
-$tn = "test1";
-$testr += &do_simple_test($tn, "(DataCalculation: Alignments)", "$tool -e ../common/test3.ecf.xml -r ../common/test3.rttm -s ../common/test3.stdlist.xml -t ../common/test3.tlist.xml -a", "res_$tn.txt");
+$tn = "test7";
+$testr += &do_simple_test($tn, "(DataCalculation: Occurence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -f -", "res_$tn.txt");
 
 ##
-$tn = "test2";
-$testr += &do_simple_test($tn, "(DataCalculation: Occurrences)", "$tool -e ../common/test3.ecf.xml -r ../common/test3.rttm -s ../common/test3.stdlist.xml -t ../common/test3.tlist.xml -o -A", "res_$tn.txt");
+$tn = "test8";
+$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrences)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.stdlist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -Y MTG:CONFMTG -O -B -y TXT -f -", "res_$tn.txt");
 
 ##
-$tn = "test3";
-$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrences)", "$tool -e ../common/test3.ecf.xml -r ../common/test3.rttm -s ../common/test3.stdlist.xml -t ../common/test3.tlist.xml -Y BN+CTS:BNEWS,CTS -Y MTG:CONFMTG -O -A", "res_$tn.txt");
-
-##
-$tn = "test4";
-$testr += &do_simple_test($tn, "(DataCalculation: Alignments with ECF Filtering)", "$tool -e ../common/test3.ecf.xml -r ../common/test3.rttm -s ../common/test3.stdlist.xml -t ../common/test3.tlist.xml -a -E", "res_$tn.txt");
-
-##
-$tn = "test5";
-$testr += &do_simple_test($tn, "(DataCalculation: Alignments with Scoring ECF Filtering)", "$tool -e ../common/test3.scoring.ecf.xml -r ../common/test3.rttm -s ../common/test3.stdlist.xml -t ../common/test3.tlist.xml -a -E", "res_$tn.txt");
-
-##
-$tn = "test6";
-my $cachefile = "$tn.cache";
-unlink($cachefile) 
-  if (MMisc::does_file_exist($cachefile));
-$tn .= "a";
-$testr += &do_simple_test($tn, "(Caching: Generate Cache)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -A -c $cachefile", "res_$tn.txt");
-
-##
-$tn = "test6b";
-$testr += &do_simple_test($tn, "(Caching: Cached Report)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -A -c $cachefile", "res_$tn.txt");
-unlink($cachefile) 
-  if (MMisc::does_file_exist($cachefile));
+$tn = "test9";
+$testr += &do_simple_test($tn, "(DataCalculation: Segment Occurence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -g -f -", "res_$tn.txt");
 
 #####
 

@@ -13,7 +13,7 @@
 <term file="FILE02" channel="2" tbeg="90.000" dur="1.000" score="0.546" decision="YES"/>
 <term file="FILE02" channel="2" tbeg="95.000" dur="1.000" score="0.393" decision="YES"/>
 </detected_termlist>
-<detected_termlist termid="TERM-02" term_search_time="24.3" oov_term_count="0">
+<detected_termlist termid="TERM-02" term_search_time="24.3" oov_term_count="1">
 <term file="FILE01" channel="1" tbeg="1.000" dur="1.000" score="0.952" decision="YES"/>
 <term file="FILE01" channel="1" tbeg="6.000" dur="1.000" score="0.964" decision="YES"/>
 <term file="FILE01" channel="1" tbeg="11.000" dur="1.000" score="0.835" decision="YES"/>
@@ -32,4 +32,6 @@
 <term file="FILE02" channel="2" tbeg="72.000" dur="2.000" score="0.623" decision="YES"/>
 <term file="FILE02" channel="2" tbeg="77.000" dur="2.000" score="0.734" decision="YES"/>
 </detected_termlist>
+<detected_termlist termid="TERM-04" term_search_time="24.3" oov_term_count="0">
+<term file="FILE02" channel="2" tbeg="80.000" dur="1.000" score="0.694" decision="YES"/>
 </stdlist>

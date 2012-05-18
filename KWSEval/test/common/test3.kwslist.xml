@@ -2,8 +2,8 @@
 <detected_termlist termid="TERM-001" term_search_time="24.3" oov_term_count="0">
 <term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1630.710" dur="0.370" score="0.966931" decision="YES"/>
 <term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="697.120" dur="0.260" score="0.970571" decision="YES"/>
-<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1475.910" dur="0.310" score="0.624710" decision="YES"/>
-<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1539.510" dur="0.330" score="0.387494" decision="YES"/>
+<term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1475.910" dur="0.310" score="0.824710" decision="YES"/>
+<term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1539.510" dur="0.330" score="0.887494" decision="YES"/>
 <term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="185.960" dur="0.390" score="0.994659" decision="YES"/>
 <term file="fsh_60493_exA" channel="2" tbeg="230.508" dur="0.262" score="0.902341" decision="YES"/>
 <term file="fsh_60885_exA" channel="2" tbeg="166.494" dur="0.364" score="0.959281" decision="YES"/>
@@ -19,7 +19,7 @@
 <term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="599.240" dur="0.230" score="0.995410" decision="YES"/>
 <term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="604.750" dur="0.270" score="0.975797" decision="YES"/>
 <term file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="711.900" dur="0.250" score="0.995410" decision="YES"/>
-<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1062.700" dur="0.400" score="0.408747" decision="YES"/>
+<term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1062.700" dur="0.400" score="0.808747" decision="YES"/>
 <term file="fsh_60650_exA" channel="1" tbeg="108.680" dur="0.430" score="0.953068" decision="YES"/>
 <term file="fsh_60650_exA" channel="2" tbeg="167.720" dur="0.316" score="0.937968" decision="YES"/>
 <term file="fsh_60650_exA" channel="2" tbeg="168.718" dur="0.256" score="0.937338" decision="YES"/>
