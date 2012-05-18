@@ -75,24 +75,25 @@ Total       |             1              1            3              1          
 Computed using:  Rtarget = 1.8 | CostMiss = 10 | CostFA = 1
  (only printing seen events)
 
-Performance Summary Over and Ensemble of Subsets
+|  Performance Summary Over and Ensemble of Subsets  |
+|          Key          |           Value            |
+|-----------------------+----------------------------+
+|          System Title |                            |
+|           Decision ID |                Observation |
+|         TOTALDURATION |                       1000 |
+|                  BETA |         0.0555555555555556 |
+|                CostFA |                          1 |
+|              CostMiss |                         10 |
+|               Rtarget |                        1.8 |
 
-System Title: 
 
-Constant parameters:
-   TOTALDURATION = 1000
-   BETA = 0.0555555555555556
-   CostFA = 1
-   CostMiss = 10
-   Rtarget = 1.8
-
-|                    |           Inputs            |                               Actual Decision DCR Analysis                               |
-|       Title        |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   RFA    |  PMiss   |   DCR    |  Dec. Tresh  |
-|--------------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+----------+--------------+
-|    CellToEar Event |       3 |        0 |      3 |         1 |          0 |     0 |       2 |   0.0000 |   0.6667 |   0.6667 |     101.5000 |
-|    ObjectGet Event |       1 |        0 |      1 |         0 |          0 |     0 |       1 |   0.0000 |   1.0000 |   1.0000 |      99.0000 |
-|    ObjectPut Event |       1 |        0 |      0 |         0 |          0 |     0 |       1 |   0.0000 |   1.0000 |   1.0000 |           NA |
-|   PersonRuns Event |       0 |        1 |      1 |         0 |          0 |     1 |       0 |   3.6000 |       NA |       NA |     -10.0000 |
+|                    |           Inputs            |                               Actual Decision DCR Analysis                                |
+|       Title        |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    RFA    |  PMiss   |   DCR    |  Dec. Tresh  |
+|--------------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
+|    CellToEar Event |       3 |        0 |      3 |         1 |          0 |     0 |       2 |   0.00000 |    0.667 |   0.6667 |     101.5000 |
+|    ObjectGet Event |       1 |        0 |      1 |         0 |          0 |     0 |       1 |   0.00000 |    1.000 |   1.0000 |      99.0000 |
+|    ObjectPut Event |       1 |        0 |      0 |         0 |          0 |     0 |       1 |   0.00000 |    1.000 |   1.0000 |           NA |
+|   PersonRuns Event |       0 |        1 |      1 |         0 |          0 |     1 |       0 |   3.60000 |       NA |       NA |     -10.0000 |
 
 
 ***** STEP 6: reWrite of XML files

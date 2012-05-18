@@ -14,21 +14,21 @@
 ***** Scoring
 [Warning] Issue with non mandatory file (res-test1o.txt.dir/metadataDB.db): file does not exist
 Done
-Performance Summary Over and Ensemble of Subsets
+|  Performance Summary Over and Ensemble of Subsets  |
+|           Key            |          Value          |
+|--------------------------+-------------------------+
+|             System Title |                 DET Set |
+|              Decision ID |                   Trial |
+|                   CostFA |                       1 |
+|                 CostMiss |                       1 |
+|                    Ptarg |                     0.5 |
+|        Combined DET Plot |         scoreDB.det.png |
 
-System Title: DET Set
 
-Constant parameters:
-   CostFA = 1
-   CostMiss = 1
-   Ptarg = 0.5
-
-Combined DET Plot: res-test1o.txt.dir/scoreDB.det.png
-
-|                 |           Inputs            |                               Actual Decision NDC Analysis                               |              Minimum NDC Analysis              |                                                DET Curve Graphs                                                |
-|      Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |   PFA    |  PMiss   |   NDC    |  Dec. Tresh  |   PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                     DET Curve                      |                      Threshold Curve                      |
-|-----------------+---------+----------+--------+-----------+------------+-------+---------+----------+----------+----------+--------------+----------+----------+----------+---------------+----------------------------------------------------+-----------------------------------------------------------+
-|   Block BlockID |     196 |      178 |    321 |       143 |          0 |   178 |      53 |   1.0000 |   0.2704 |   1.2704 |       0.5247 |   0.0000 |   0.9286 |   0.9286 |        4.9809 |   res-test1o.txt.dir/scoreDB.det.Block_BlockID.png |   res-test1o.txt.dir/scoreDB.det.Block_BlockID.thresh.png |
+|                 |           Inputs            |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                             DET Curve Graphs                             |
+|      Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |            DET Curve            |            Threshold Curve             |
+|-----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+---------------------------------+----------------------------------------+
+|   Block BlockID |     196 |      178 |    321 |       143 |          0 |   178 |      53 |   1.00000 |    0.270 |   1.2704 |       0.5247 |   0.00000 |    0.929 |   0.9286 |         4.981 |   scoreDB.det.Block_BlockID.png |   scoreDB.det.Block_BlockID.thresh.png |
 
 [[STDERR]]
 
