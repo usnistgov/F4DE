@@ -177,6 +177,10 @@ open (RTTM, ">$root.rttm") || die "Failed to open $root.rttm";
 binmode(RTTM, "utf8") if ($encoding eq "UTF-8");
 print "   Building file $root.rttm\n";
 
+open (STM, ">$root.stm") || die "Failed to open $root.stm";
+binmode(STM, "utf8") if ($encoding eq "UTF-8");
+print "   Building file $root.stm\n";
+
 open (TLIST, ">$root.tlist.xml") || die "Failed to open $root.tlist.xml";
 binmode TLIST, "utf8" if ($encoding eq "UTF-8");
 print "   Building file $root.tlist.xml\n";
@@ -198,10 +202,12 @@ foreach my $trans(sort keys %$db){
 #    print "$seg $db->{$trans}{transcript}[$seg]{bt} $db->{$trans}{transcript}[$seg]{et}\n";
     my $dur = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}));
     my $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt});
+    my $et = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{et});
     print RTTM "SPEAKER $outTransName 1 $bt $dur <NA> <NA> spkr_$spkr <NA>\n";
     my @toks = split(/\s+/,$db->{$trans}{transcript}[$seg]{text});
     my $lastToken = undef;
     my $lastLastToken = undef;
+    my $stmText = "";
     for (my $t = 0; $t < @toks; $t++){
       my $token = $toks[$t];
       my($type,$stype) = ("LEXEME", "lex");
@@ -232,6 +238,8 @@ foreach my $trans(sort keys %$db){
       $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt} + ($dur * $t));
 
       print RTTM "$type $outTransName 1 $bt $dur $token $stype spkr_$spkr 0.5\n";
+      $stmText .= " ".$token if ($type eq "LEXEME");
+      
       if ($stype eq "lex"){
         $unigram->{$token} ++;
       }
@@ -243,8 +251,8 @@ foreach my $trans(sort keys %$db){
       }
       $lastLastToken = ($stype eq "lex" ? $lastToken : undef);
       $lastToken = ($stype eq "lex" ? $token : undef);
-        
     }
+    print STM "$outTransName 1 spkr_$spkr $bt $et$stmText\n";
   }
 }
 
@@ -286,6 +294,7 @@ print ECF "</ecf>\n";
 
 close ECF;
 close RTTM;
+close STM;
 close TLIST;
 
 

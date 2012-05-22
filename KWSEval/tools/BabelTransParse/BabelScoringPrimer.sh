@@ -6,8 +6,9 @@ KWSEVAL=KWSEVAL
 TLISTADDNGRAM=TListAddNGram
 KWSLISTGEN=KWSListGenerator
 KWSVALIDATE=ValidateKWSList
-mode=DIST
-if [ $mode ne DEV ] ; then
+DETUTIL=DETUtil
+mode=DEV
+if [ ! "$mode" = DEV ] ; then
     if [ "$F4DE_BASE" = "" ] ; then
 	echo "Error: Set the environment variable \$F4DE_BASE per the F4DE install instructions"
 	exit 1
@@ -15,17 +16,21 @@ if [ $mode ne DEV ] ; then
     BABELPARSE="perl -I $F4DE_BASE/common/lib -I $F4DE_BASE/KWSEval/libb ./BabelTransParse.pl"
 else
     BASE=../../../
-    KWEVAL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSEval/KWSEval.pl"
+    KWSEVAL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSEval/KWSEval.pl"
     TLISTADDNGRAM="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/TListAddNGram/TListAddNGram.pl"
     BABELPARSE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib ./BabelTransParse.pl"
     KWSLISTGEN="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSListGenerator/KWSListGenerator.pl"
     KWSVALIDATE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/ValidateKWSList/ValidateKWSList.pl"
+    DETUTIL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/common/tools/DETUtil/DETUtil.pl"
 fi
 
 
-
 #for langID in 101 104 105 english ; do
-for langID in 101 english ; do
+#for langID in 105-Dist-dev 104-Dist-dev; do
+#for langID in 104-Dist-dev 104-Dist-eval 104-Dist-training; do
+#for langID in 106-Dist-dev 106-Dist-eval 106-Dist-training ; do
+#for langID in 106-Dist-scr-train 106-Dist-scr-eval  106-Dist-scr-dev ; do
+for langID in 106-Dist-scr-dev 106-Dist-scr-train 106-Dist-dev 106-Dist-training ; do
     if [ $langID = "101" ] ; then
 	BABELDATA=Lang101
 	language=cantonese
@@ -38,9 +43,81 @@ for langID in 101 english ; do
 	norm=""
 	encoding=UTF-8
 	files="*.txt"
+    elif [ $langID = "104-Dist-training" ] ; then
+	BABELDATA=BABEL_BP_104_conversational_training
+	language=pashto
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+    elif [ $langID = "104-Dist-eval" ] ; then
+	BABELDATA=BABEL_BP_104_conversational_eval
+	language=pashto
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+    elif [ $langID = "104-Dist-dev" ] ; then
+	BABELDATA=BABEL_BP_104_conversational_dev
+	language=pashto
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
     elif [ $langID = "105" ] ; then
 	BABELDATA=Lang105
 	language=turkish
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+    elif [ $langID = "105-Dist-training" ] ; then
+	BABELDATA=BABEL_BP_105_conversational_training
+	language=turkish
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+    elif [ $langID = "105-Dist-eval" ] ; then
+	BABELDATA=BABEL_BP_105_conversational_eval
+	language=turkish
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+    elif [ $langID = "105-Dist-dev" ] ; then
+	BABELDATA=BABEL_BP_105_conversational_dev
+	language=turkish
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+    elif [ $langID = "106-Dist-training" ] ; then
+	BABELDATA=BABEL_BP_106_conversational_training
+	 language=tagalog
+	 norm=""
+	 encoding=UTF-8
+	 files="*.txt"
+     elif [ $langID = "106-Dist-eval" ] ; then
+	 BABELDATA=BABEL_BP_106_conversational_eval
+	 language=tagalog
+	 norm=""
+	 encoding=UTF-8
+	 files="*.txt"
+     elif [ $langID = "106-Dist-dev" ] ; then
+	 BABELDATA=BABEL_BP_106_conversational_dev
+	language=tagalog
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+     elif [ $langID = "106-Dist-scr-train" ] ; then
+	BABELDATA=BABEL_BP_106_scripted_training
+	language=tagalog
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+     elif [ $langID = "106-Dist-scr-dev" ] ; then
+	BABELDATA=BABEL_BP_106_scripted_dev
+	language=tagalog
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+     elif [ $langID = "106-Dist-scr-eval" ] ; then
+	BABELDATA=BABEL_BP_106_scripted_eval
+	language=tagalog
 	norm=""
 	encoding=UTF-8
 	files="*.txt"
@@ -105,7 +182,7 @@ for langID in 101 english ; do
 done
 
 echo "Building a combined DET Curve"
-DETUtil -o $OUTROOT.ensemble.det.png $OUTROOT.sys?.det.CTS.srl.gz
+$DETUTIL -o $OUTROOT.ensemble.det.png $OUTROOT.sys?.det.CTS.srl.gz
 
 exit;
 
