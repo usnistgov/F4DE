@@ -121,11 +121,11 @@ MMisc::error_quit("Problem with \'cmd\' ($cmd): $err") if (! MMisc::is_blank($er
 
 #####
 my $dt = new DirTracker($id);
-MMisc::error_quit("Problem with DirTracker: " . $dt->errormsg()) if ($dt->error());
+MMisc::error_quit("Problem with DirTracker: " . $dt->get_errormsg()) if ($dt->error());
 my $now = MMisc::get_currenttime();
 MMisc::vprint(($verb > 0), "!! Performing initial scan of ($id)\n"); 
 $dt->init(1);
-MMisc::error_quit("Problem with DirTracker initialization: " . $dt->errormsg()) if ($dt->error());
+MMisc::error_quit("Problem with DirTracker initialization: " . $dt->get_errormsg()) if ($dt->error());
 
 my $doit = 1;
 my %tocheck = ();
@@ -136,7 +136,7 @@ while ($doit) {
   MMisc::vprint(($verb > 0), "[" . sprintf("%.02f", MMisc::get_elapsedtime($now)) . "] Iteration: $doit\n");
 
   my @newfiles = $dt->scan();
-  MMisc::error_quit("Problem with DirTracker scan: " . $dt->errormsg()) if ($dt->error());
+  MMisc::error_quit("Problem with DirTracker scan: " . $dt->get_errormsg()) if ($dt->error());
   MMisc::vprint(($verb > 0), "!! Performing updated scan of ($id)\n"); 
   
   if ($verb > 1) {
