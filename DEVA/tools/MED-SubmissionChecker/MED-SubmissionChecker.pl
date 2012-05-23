@@ -110,6 +110,7 @@ MMisc::error_quit("Problem with required tool ($DEVAtool) : $err")
 
 my $mancmd = "perldoc -F $0";
 my $usage = &set_usage();
+MMisc::error_quit("Usage:\n$usage\n") if (scalar @ARGV == 0);
 
 # Default values for variables
 my $verb = 0;
@@ -192,16 +193,21 @@ if (defined $wid) {
 ########################################
 
 # Expected values
+my $expid_count = 7;
 my @expid_tag;
 my @expid_data;
+my @expid_task;
 my @expid_MEDtype;
+my @expid_traintype;
 my @expid_EAG;
 my @expid_sysid_beg;
+
 my @expected_dir_output;
 my $expected_csv_per_expid = -1;
 my @expected_csv_names;
 my $db_check_sql = undef;
-my $medtype_fullcount = -1;
+my $medtype_fullcount = -1; # setting to a value, this value will be used / 0: use the 'perTask' entry instead
+my %medtype_fullcount_perTask;
 my @db_eventidlist;
 my @db_missingTID;
 my @db_unknownTID;
@@ -218,28 +224,36 @@ MMisc::error_quit("Problem during \'SpecFile\' use ($specfile) : " . join(" | ",
   if $@;
 
 sub __cfgcheck {
-  my ($t, $v) = @_;
+  my ($t, $v, $c) = @_;
+  return if (! $c);
   MMisc::error_quit("Missing or improper datum [$t] in \'SpecFile\' ($specfile)")
     if ($v);
 }
 
-&__cfgcheck("\@expid_tag", (scalar @expid_tag == 0));
-&__cfgcheck("\@expid_data", (scalar @expid_data == 0));
-&__cfgcheck("\@expid_MEDtype", (scalar @expid_MEDtype == 0));
-&__cfgcheck("\@expid_EAG", (scalar @expid_EAG == 0));
-&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0));
-&__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0));
-&__cfgcheck("\$expected_csv_per_expid", ($expected_csv_per_expid < 0));
-&__cfgcheck("\@expected_csv_names", (scalar @expected_csv_names == 0));
-&__cfgcheck("\$db_check_sql", (! defined $db_check_sql));
-&__cfgcheck("\$medtype_fullcount", ($medtype_fullcount < 0));
-&__cfgcheck("\@db_eventidlist", (scalar @db_eventidlist == 0));
-&__cfgcheck("\@db_missingTID", (scalar @db_missingTID == 0));
-&__cfgcheck("\@db_unknownTID", (scalar @db_unknownTID == 0));
-&__cfgcheck("\@db_detectionTID", (scalar @db_detectionTID == 0));
-&__cfgcheck("\@db_thresholdEID", (scalar @db_thresholdEID == 0));
+# EXPID side
+&__cfgcheck("\@expid_tag", (scalar @expid_tag == 0), 0);
+&__cfgcheck("\@expid_data", (scalar @expid_data == 0), 0);
+&__cfgcheck("\@expid_task", (scalar @expid_task == 0), ($expid_count == 9));
+&__cfgcheck("\@expid_MEDtype", (scalar @expid_MEDtype == 0), 0);
+&__cfgcheck("\@expid_traintype", (scalar @expid_traintype == 0), ($expid_count == 9));
+&__cfgcheck("\@expid_EAG", (scalar @expid_EAG == 0), 0);
+&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0), 0);
+
+&__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0), 0);
+&__cfgcheck("\$expected_csv_per_expid", ($expected_csv_per_expid < 0), 0);
+&__cfgcheck("\@expected_csv_names", (scalar @expected_csv_names == 0), 0);
+&__cfgcheck("\$db_check_sql", (! defined $db_check_sql), 0);
+&__cfgcheck("\$medtype_fullcount", ($medtype_fullcount < 0), 0);
+&__cfgcheck("\%medtype_fullcount_perTask", (scalar(keys %medtype_fullcount_perTask) == 0), ($medtype_fullcount == 0));
+&__cfgcheck("\@db_eventidlist", (scalar @db_eventidlist == 0), 0);
+&__cfgcheck("\@db_missingTID", (scalar @db_missingTID == 0), 0);
+&__cfgcheck("\@db_unknownTID", (scalar @db_unknownTID == 0), 0);
+&__cfgcheck("\@db_detectionTID", (scalar @db_detectionTID == 0), 0);
+&__cfgcheck("\@db_thresholdEID", (scalar @db_thresholdEID == 0), 0);
 
 &extend_file_location(\$db_check_sql, 'SQL DB check file', @data_search_path);
+
+my $medyear = $expid_tag[0];
 
 my $doepmd = 0;
 
@@ -383,7 +397,7 @@ sub valok {
 sub valerr {
   my ($fname, $txt) = @_;
   &valok($fname, "[ERROR] $txt");
-  &valok($fname, "[ERROR] ** Please refer to the \'Submission Instructions\' (Appendix B) of the \'TRECVid Event Detection Evaluation Plan\' for more information");
+  &valok($fname, "[ERROR] ** Please refer to the \'Submission Instructions\', in the Appendices of the \'TRECVid Event Detection Evaluation Plan\' for more information");
 
   MMisc::error_quit("\'quit_if_non_scorable\' selected, quitting")
     if ($qins);
@@ -451,7 +465,7 @@ sub check_archive_extension {
 sub check_archive_name {
   my $file = MMisc::iuv(shift @_, "");
 
-  my $et = "Archive name not of the form \'MED11_<TEAM>_<DATA>_<SUB-NUM>\' : ";
+  my $et = "Archive name not of the form \'${medyear}_<TEAM>_<DATA>_<SUB-NUM>\' : ";
 
   my ($ltag, $lteam, $ldata, $lsubnum, @left) = split(m%\_%, $file);
   
@@ -460,7 +474,7 @@ sub check_archive_name {
 
   my $err = "";
 
-  $err .= &cmp_exp("MED11", $ltag, @expid_tag);
+  $err .= &cmp_exp($medyear, $ltag, @expid_tag);
   $err .= &cmp_exp("<DATA>",  $ldata, @expid_data);
   
   $err .= " (<SUB-NUM> ($lsubnum) not of the expected form: integer value starting at 1)"
@@ -533,19 +547,29 @@ sub check_submission_dir {
   my ($bd, $dir, $team) = @_;
 
   vprint(3, "Checking name");
-  my ($lerr, $data, $medtype) = &check_name($dir, $team);
+  my ($lerr, $data, $medtype, $task) = &check_name($dir, $team);
   return($lerr) if (! MMisc::is_blank($lerr));
 
   vprint(3, "Checking expected directory files");
-  return(&check_exp_dirfiles($bd, $dir, $data, $medtype));
+  return(&check_exp_dirfiles($bd, $dir, $data, $medtype, $task));
 }
 
 ##########
 
 sub check_name {
+  return(&check_name_med11(@_))
+    if ($expid_count == 7);
+  return(&check_name_med12p(@_))
+    if ($expid_count == 9);
+  MMisc::error_quit("Unknown EXPID name handler for \'$medyear\'");
+}
+
+#####
+
+sub check_name_med11 {
   my ($name, $team, $data) = @_;
 
-  my $et = "\'EXP-ID\' not of the form \'<TEAM>_MED11_<DATA>_<MEDTYPE>_<EAG>_<SYSID>_<VERSION>\' : ";
+  my $et = "\'EXP-ID\' not of the form \'<TEAM>_${medyear}_<DATA>_<MEDTYPE>_<EAG>_<SYSID>_<VERSION>\' : ";
   
   my ($lteam, $ltag, $ldata, $lmedtype, $leag, $lsysid, $lversion,
       @left) = split(m%\_%, $name);
@@ -558,13 +582,13 @@ sub check_name {
   
   my $err = "";
   
-  $err .= " <TEAM> ($lteam) is different from submission file <TEAM> ($team)."
+  $err .= " <TEAM> ($lteam) is different from submission file <TEAM> ($team). "
     if ($team ne $lteam);
 
-  $err .= " <DATA> ($ldata) is different ftom submission file <DATA> ($data)."
+  $err .= " <DATA> ($ldata) is different ftom submission file <DATA> ($data). "
     if ((! MMisc::is_blank($data)) && ($data ne $ldata));
   
-  $err .= &cmp_exp("_MED11_", $ltag, @expid_tag);
+  $err .= &cmp_exp($medyear, $ltag, @expid_tag);
   $err .= &cmp_exp("<DATA>",  $ldata, @expid_data);
   $err .= &cmp_exp("<MEDTYPE>", $lmedtype, @expid_MEDtype);
   $err .= &cmp_exp("<EAG>", $leag, @expid_EAG);
@@ -575,9 +599,13 @@ sub check_name {
     if (! grep(m%^$b$%, @expid_sysid_beg));
   
   if ($b eq $expid_sysid_beg[0]) {
-    $err .= "<SYSID> ($lsysid) can only have one primary \'EXP-ID\'"
-      if (($pc_check) && (exists $pc_check_h{$team}));
-    $pc_check_h{$team}++;
+    if ($pc_check) {
+      if (exists $pc_check_h{$team}) {
+        $err .= "<SYSID> ($lsysid) can only have one primary \'EXP-ID\' (was: " . $pc_check_h{$team} . "). ";
+      } else {
+        $pc_check_h{$team} = $name;
+      }
+    }
   }
 
   $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
@@ -592,10 +620,69 @@ sub check_name {
   return("", $ldata, $lmedtype);
 }
 
+#####
+
+sub check_name_med12p {
+  my ($name, $team, $data) = @_;
+
+  my $et = "\'EXP-ID\' not of the form \'<TEAM>_${medyear}_<DATA>_<TASK>_<MEDTYPE>_<TRAINTYPE>_<EAG>_<SYSID>_<VERSION>\' : ";
+  
+  my ($lteam, $ltag, $ldata, $ltask, $lmedtype, $ltraintype, $leag, $lsysid, $lversion,
+      @left) = split(m%\_%, $name);
+  
+  return($et . " leftover entries: " . join(" ", @left) . ". ", "")
+    if (scalar @left > 0);
+  
+  return($et ." missing parameters ($name). ", "")
+    if (MMisc::any_blank($lteam, $ltag, $ldata, $lmedtype, $ltraintype, $leag, $lsysid, $lversion));
+  
+  my $err = "";
+  
+  $err .= " <TEAM> ($lteam) is different from submission file <TEAM> ($team)."
+    if ($team ne $lteam);
+
+  $err .= " <DATA> ($ldata) is different ftom submission file <DATA> ($data)."
+    if ((! MMisc::is_blank($data)) && ($data ne $ldata));
+  
+  $err .= &cmp_exp($medyear, $ltag, @expid_tag);
+  $err .= &cmp_exp("<DATA>",  $ldata, @expid_data);
+  $err .= &cmp_exp("<TASK>",  $ltask, @expid_task);
+  $err .= &cmp_exp("<MEDTYPE>", $lmedtype, @expid_MEDtype);
+  $err .= &cmp_exp("<TRAINTYPE>",  $ltraintype, @expid_traintype);
+  $err .= &cmp_exp("<EAG>", $leag, @expid_EAG);
+
+  my $b = substr($lsysid, 0, 2);
+  $err .= "<SYSID> ($lsysid) does not start by expected value (" 
+    . join(" ", @expid_sysid_beg) . "). "
+    if (! grep(m%^$b$%, @expid_sysid_beg));
+  
+  if ($b eq $expid_sysid_beg[0]) {
+    $err .= "<SYSID> ($lsysid) can only have one primary \'EXP-ID\'"
+      if (($pc_check) && (exists $pc_check_h{$team}));
+    $pc_check_h{$team}++;
+  }
+
+  # if PS and p- then must be EKFull
+  if (($ltask eq $expid_task[0]) && ($b eq $expid_sysid_beg[0]) && ($ltraintype ne $expid_traintype[0])) {
+    $err .= "If <TASK> is \'" . $expid_task[0] . "\' and <SYSID> is a primary submission, then <TRAINTYPE> must be \'" . $expid_traintype[0] . "\' (but is: $ltraintype). ";
+  }
+
+  $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
+    if ( ($lversion !~ m%^\d+$%) || ($lversion =~ m%^0%) || ($lversion > 19) );
+  # More than 19 submissions would make anybody suspicious ;)
+  
+  return($et . $err, "")
+    if (! MMisc::is_blank($err));
+  
+  vprint(4, "<TEAM> = $lteam | <TAG> = $ltag | <DATA> = $ldata | <TASK> = $ltask | <MEDTYPE> = $lmedtype | <TRAINTYPE> = $ltraintype | <EAG> = $leag | <SYSID> = $lsysid | <VERSION> = $lversion");
+  
+  return("", $ldata, $lmedtype, $ltask);
+}
+
 ##########
 
 sub check_exp_dirfiles {
-  my ($bd, $exp, $data, $medtype) = @_;
+  my ($bd, $exp, $data, $medtype, $task) = @_;
 
   my ($derr, $rd, $rf, $ru) = MMisc::list_dirs_files("$bd/$exp");
   return($derr) if (! MMisc::is_blank($derr));
@@ -641,13 +728,13 @@ sub check_exp_dirfiles {
     vprint(5, "Matched \'$k\' CSV file: $fn");
   }
   
-  return(&run_DEVAcli($exp, $data, $medtype, %match));
+  return(&run_DEVAcli($exp, $data, $medtype, $task, %match));
 }
 
 #####
 
 sub run_DEVAcli {
-  my ($exp, $data, $medtype, %match) = @_;
+  my ($exp, $data, $medtype, $task, %match) = @_;
 
   vprint(4, "Creating the Database (ie validating System)");
 
@@ -657,7 +744,7 @@ sub run_DEVAcli {
   vprint(5, "Output dir: $od");
     
   my @cmd = ();
-  push @cmd, '-p', 'MED11', '-o', "$od";
+  push @cmd, '-p', $medyear, '-o', "$od";
   foreach my $k (keys %match) {
     push @cmd , '-s', $match{$k} . ":$k";
   }
@@ -670,7 +757,7 @@ sub run_DEVAcli {
 
   return($err) if (! MMisc::is_blank($err));
 
-  return(&check_TrialIDs($od, $exp, $data, $medtype));
+  return(&check_TrialIDs($od, $exp, $data, $medtype, $task));
 }
 
 #####
@@ -693,7 +780,7 @@ sub run_tool {
 #####
 
 sub check_TrialIDs {
-  my ($od, $expid, $data, $medtype) = @_;
+  my ($od, $expid, $data, $medtype, $task) = @_;
 
   vprint(4, "Checking Database's EventID and TrialID");
 
@@ -726,10 +813,13 @@ sub check_TrialIDs {
   vprint(5, "Found $tidc EventID : " . ajoin(" ", @el));
   return("Found no recognized EventID") if ($tidc == 0);
 
-  if (($medtype_fullcount > 0) && ($medtype eq $expid_MEDtype[0]) && ($tidc < $medtype_fullcount)) {
-    my $txt = "EXPID ($expid) designs this submission as a \'$medtype\', but it contains $tidc EventIDs, when $medtype_fullcount are expected to consider it so";
-    return($txt) if ($data ne $expid_data[0]);
-    MMisc::warn_print("$txt. Since this is a $data submission, only this warning is shown. Otherwise, an error message would have been shown");
+  if ($medtype_fullcount != -1) {
+    my $mtfc = ($medtype_fullcount == 0) ? $medtype_fullcount_perTask{$task} : $medtype_fullcount;
+    if (($medtype eq $expid_MEDtype[0]) && ($tidc < $mtfc)) {
+      my $txt = "EXPID ($expid) designs this submission as a \'$medtype\', but it contains $tidc EventIDs, when $mtfc are expected to consider it so";
+      return($txt) if ($data ne $expid_data[0]);
+      MMisc::warn_print("$txt. Since this is a $data submission, only this warning is shown. Otherwise, an error message would have been shown");
+    }
   }
 
   my $err = &id_check($dbfile, "Missing TrialID", $db_missingTID[0], $db_missingTID[1]);
@@ -868,7 +958,7 @@ $versionid
 
 Usage: $0 [--help | --version | --man] --Specfile perlEvalfile --TrialIndex index.csv [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--quit_if_non_scorable] last_parameter
 
-Will confirm that a submission file conforms to the 'Submission Instructions' (Appendix B) of the 'TRECVid Multimedia Event Detection Evaluation Plan'. The program needs a 'Specfile' to load some of its eval specific definitions.
+Will confirm that a submission file conforms to the 'Submission Instructions', in the Appendices of the 'TRECVid Multimedia Event Detection Evaluation Plan'. The program needs a 'Specfile' to load some of its eval specific definitions.
 
 'last_parameter' is usually the archive file(s) to process (of the form MED11_<TEAM>_<DATA>_<SUB-NUM>.extension, example: MED11_testTEAM_DRYRUN_1.tar.bz2)
 Only in the '--work_in_dir' case does it become <TEAM>.
