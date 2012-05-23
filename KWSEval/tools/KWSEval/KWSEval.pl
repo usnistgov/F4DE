@@ -23,6 +23,9 @@
 # Test: perl KWSEval.pl -e ../test_suite/test2.ecf.xml -r ../test_suite/test2.rttm -s ../test_suite/test2.stdlist.xml -t ../test_suite/test2.tlist.xml -o -A
 
 use strict;
+use Encode;
+use encoding 'euc-cn';
+use encoding 'utf8';
 
 # Note: Designed for UNIX style environments (ie use cygwin under Windows).
 
@@ -307,7 +310,7 @@ if($haveReports) {
     $STD->SetSystemID($IDSystem) if($IDSystem ne "");
 }
 my $TERM = new TermList($TERMfile);
-my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(), $TERM->getEncoding());
+my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(), $TERM->getEncoding());  
 
 # clean the filter for terms
 $numberFiltersTermArray = keys %filterTermArray;
