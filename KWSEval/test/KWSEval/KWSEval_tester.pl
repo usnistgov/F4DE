@@ -33,6 +33,10 @@ $testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrences)", "$t
 $tn = "test9";
 $testr += &do_simple_test($tn, "(DataCalculation: Segment Occurence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -g -f -", "res_$tn.txt");
 
+##
+$tn = "test10";
+$testr += &do_simple_test($tn, "(DataCalculation: Occurence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -f -", "res_$tn.txt");
+
 #####
 
 my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
