@@ -130,7 +130,12 @@ sub get_column_names {
     push @colsname, $sth->{NAME}->[$i];
   }
 
-  $sth->finish();
+  my $err = &sth_finish($sth);
+  return($err) if (! MMisc::is_blank($err));
+
+  $err = $dbh->errstr();
+  return("DB handler: $err")
+    if (! MMisc::is_blank($err));
 
   return("", @colsname);
 }
@@ -326,14 +331,14 @@ sub dumpCSV {
 #    print "\r $inc     ";
   }
   close CSV;
-  my $err = $sth->errstr();
-  return("Problem with Statement handler: $err")
-    if (! MMisc::is_blank($err));
-  $sth->finish();
-  my $err = $dbh->errstr();
+ 
+  my $err = &sth_finish($sth);
+  return($err) if (! MMisc::is_blank($err));
+  
+  $err = $dbh->errstr();
   return("DB handler: $err")
     if (! MMisc::is_blank($err));
-  
+
   return("", $inc);
 }
 
@@ -475,6 +480,7 @@ sub sth_finish {
     if (! MMisc::is_blank($err));
 
   $sth->finish();
+  undef $sth;
 
   return("");
 }
@@ -552,6 +558,10 @@ sub __select_helper {
 
   my $err = &sth_finish($sth);
   return("Problem while completing statement: $err")
+    if (! MMisc::is_blank($err));
+
+  $err = $dbh->errstr();
+  return("DB handler: $err")
     if (! MMisc::is_blank($err));
 
   &release_dbh($dbh);
