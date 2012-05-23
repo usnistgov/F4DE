@@ -22,10 +22,8 @@ use strict;
 use Data::Dumper;
 use RTTMRecord;
 use RTTMSegment;
+use TermList;
 use MMisc;
-use Encode;
-use encoding 'euc-cn';
-use encoding 'utf8';
 
 sub new
 {
@@ -53,7 +51,7 @@ sub new
       if (! $self->setLanguage($language));
     
     $self->loadFile($rttmfile) if (defined($rttmfile));
-    
+
     return $self;
 }
 
@@ -72,6 +70,7 @@ sub unitTestFind
         }
         print "\n";
      }
+    return(0);
   }
   print "OK\n";
   return(1);
@@ -80,7 +79,7 @@ sub unitTestFind
 
 sub unitTest
 {
-    my ($file1, $file2) = @_;
+    my ($file1, $file2, $file2tlist) = @_;
 
     my $err = MMisc::check_file_r($file1);
     if (! MMisc::is_blank($err)) {
@@ -112,7 +111,7 @@ sub unitTest
     return 0 unless(unitTestFind($rttm_eng_norm, "Jacques Chirac", 2,  0.1));
     return 0 unless(unitTestFind($rttm_eng_norm, "jacques chirac", 2,  0.1));
 
-    print " Loading English File (no normalization)...          ";
+    print " Loading English File (no normalization)...          \n";
     my $rttm_eng_nonorm = new RTTMList($file1,"english","","");
 
     return 0 unless(unitTestFind($rttm_eng_nonorm, "Yates",        2, 0.1));
@@ -129,10 +128,13 @@ sub unitTest
     print " Adjacent terms...    \n";
     return 0 unless(unitTestFind($rttm_eng_norm, "word1 word2",       3, 0.5));
     return 0 unless(unitTestFind($rttm_eng_norm, "word1 word2 word3", 2, 0.5));
+    
+    my $tlist = new TermList($file2tlist);
+    print "Loading Cantonese File (no normalization)...          \n";
+    my $rttm_cant = new RTTMList($file2, $tlist->getLanguage(), $tlist->getCompareNormalize(), $tlist->getEncoding());
 
-    print "Loading Cantonese File (no normalization)...          ";
-    my $rttm_cant = new RTTMList($file2,"cantonese","","UTF-8");
-
+    return 0 unless(unitTestFind($rttm_cant, $tlist->{TERMS}{"TEST-00"}{TEXT}, 4, 0.5));
+    return 0 unless(unitTestFind($rttm_cant, $tlist->{TERMS}{"TEST-07"}{TEXT}, 1, 0.5));
     return 0 unless(unitTestFind($rttm_cant, $rttm_cant->{LEXEMES}{"file"}{1}[0]->{TOKEN}, 2, 0.5));
     return 0 unless(unitTestFind($rttm_cant, 
                                  $rttm_cant->{LEXEMES}{"file"}{1}[14]->{TOKEN} . " " .
@@ -408,7 +410,6 @@ sub findTermOccurrences
       #push (@outList, [ @tmpList ]) if (@tmpList > 0); 
       push (@{ $outHash{$tmpList[0]->{FILE}}{$tmpList[0]->{CHAN}} }, [ @tmpList ]) if (@tmpList > 0);
     }
-
     return(\%outHash); 
 }
 

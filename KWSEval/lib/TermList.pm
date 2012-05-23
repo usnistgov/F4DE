@@ -20,7 +20,7 @@ use TranscriptHolder;
 use strict;
 use TermListRecord;
 use MMisc;
- 
+
 sub new
 {
     my $class = shift;
@@ -202,7 +202,7 @@ sub loadFile
     }
     
     close(TERMLIST);
-    
+
     #clean unwanted spaces
     $tlistfilestring =~ s/\s+/ /g;
     $tlistfilestring =~ s/> </></g;
