@@ -11,8 +11,10 @@ $expid_count = 9;
 $expected_csv_per_expid = 2;
 @expected_csv_names = ( 'detection', 'threshold' );
 $medtype_fullcount = 0;
-$medtype_fullcount_perTask{$expid_task[0]} = 20;
-$medtype_fullcount_perTask{$expid_task[1]} = 5;
+$medtype_fullcount_perTask{$expid_data[0]}{$expid_task[0]} = 10;
+$medtype_fullcount_perTask{$expid_data[0]}{$expid_task[1]} = -1; # not a valid case
+$medtype_fullcount_perTask{$expid_data[1]}{$expid_task[0]} = 20;
+$medtype_fullcount_perTask{$expid_data[1]}{$expid_task[1]} = 5;
 
 $pc_check = 1;
 
