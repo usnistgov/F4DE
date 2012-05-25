@@ -662,11 +662,6 @@ sub check_name_med12p {
     $pc_check_h{$team}++;
   }
 
-  # if PS and p- then must be EKFull
-  if (($ltask eq $expid_task[0]) && ($b eq $expid_sysid_beg[0]) && ($ltraintype ne $expid_traintype[0])) {
-    $err .= "If <TASK> is \'" . $expid_task[0] . "\' and <SYSID> is a primary submission, then <TRAINTYPE> must be \'" . $expid_traintype[0] . "\' (but is: $ltraintype). ";
-  }
-
   $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
     if ( ($lversion !~ m%^\d+$%) || ($lversion =~ m%^0%) || ($lversion > 19) );
   # More than 19 submissions would make anybody suspicious ;)
@@ -810,11 +805,19 @@ sub check_TrialIDs {
   my @el = ();
   my ($err, $tidc) = MtSQLite::select_helper__to_array($dbfile, \@el, $db_eventidlist[0], "", $db_eventidlist[1]);
   return("Problem obtaining the EventID list : $err") if (! MMisc::is_blank($err));
-  vprint(5, "Found $tidc EventID : " . ajoin(" ", @el));
+  my @fel = (); for (my $i = 0; $i < scalar @el; $i++) { push @fel, @{$el[$i]}; }
+  vprint(5, "Found $tidc EventID : " . join(" ", sort @fel));
   return("Found no recognized EventID") if ($tidc == 0);
 
   if ($medtype_fullcount != -1) {
-    my $mtfc = ($medtype_fullcount == 0) ? $medtype_fullcount_perTask{$task} : $medtype_fullcount;
+    my $mtfc = $medtype_fullcount;
+    if ($medtype_fullcount == 0) {
+      return("We do not have a valid definition for the expected number of events for <DATA>=$data and <TASK>=$task. ")
+        if (! MMisc::safe_exists(\%medtype_fullcount_perTask, $data, $task));
+      $mtfc = $medtype_fullcount_perTask{$data}{$task};
+      return("For <DATA>=$data there can NOT be a <TASK>=$task")
+        if ($mtfc == -1);
+    }
     if (($medtype eq $expid_MEDtype[0]) && ($tidc < $mtfc)) {
       my $txt = "EXPID ($expid) designs this submission as a \'$medtype\', but it contains $tidc EventIDs, when $mtfc are expected to consider it so";
       return($txt) if ($data ne $expid_data[0]);
@@ -960,7 +963,7 @@ Usage: $0 [--help | --version | --man] --Specfile perlEvalfile --TrialIndex inde
 
 Will confirm that a submission file conforms to the 'Submission Instructions', in the Appendices of the 'TRECVid Multimedia Event Detection Evaluation Plan'. The program needs a 'Specfile' to load some of its eval specific definitions.
 
-'last_parameter' is usually the archive file(s) to process (of the form MED11_<TEAM>_<DATA>_<SUB-NUM>.extension, example: MED11_testTEAM_DRYRUN_1.tar.bz2)
+'last_parameter' is usually the archive file(s) to process (of the form <TAG>_<TEAM>_<DATA>_<SUB-NUM>.extension, such as MED11_testTEAM_DRYRUN_1.tar.bz2 or MED12_testTEAM_MED12DRYRUN_1.tar.bz2)
 Only in the '--work_in_dir' case does it become <TEAM>.
 
  Where:
