@@ -131,7 +131,7 @@ for (my $termNum = 0; $termNum < @termidList; $termNum++)
 {
     my $termsid = $termidList[$termNum];
     my $terms = $TERM->{TERMS}{$termsid}->{TEXT};
-    my $occurrences = $RTTM->findTermOccurrences($terms, $thresholdFind);
+    my $occurrences = RTTMList::findTermHashToArray($RTTM->findTermOccurrences($terms, $thresholdFind));
     #print "Found ".scalar(@$occurrences)." occurrences of ".$terms." ID $termsid in the RTTM\n";
     
     my $detectedterm = new KWSDetectedList($termsid, $termNum * .1 + 1, (($termNum+1) % 7 == 0) ? 1 : 0);
@@ -154,7 +154,7 @@ for (my $termNum = 0; $termNum < @termidList; $termNum++)
 
     ### Add Some False Alarms
     $terms = $TERM->{TERMS}{$FATermIDList{$termsid}}->{TEXT};
-    $occurrences = $RTTM->findTermOccurrences($terms, $thresholdFind);
+    $occurrences = RTTMList::findTermHashToArray($RTTM->findTermOccurrences($terms, $thresholdFind));
     
     ### The true occurrences 
     my $fas = sprintf("%.0f", @$occurrences * $faPct);
@@ -185,7 +185,7 @@ MMisc::ok_exit();
 sub set_usage {
   my $tmp = "";
   $tmp .= "$0 -e ecffile -r rttmfile -o outputfile\n";
-  $tmp .= "Desc: Thios program generates an STDList file based on searching the reference file.\n";
+  $tmp .= "Desc: This program generates an STDList file based on searching the reference file.\n";
   $tmp .= "\n";
   $tmp .= "Required file arguments:\n";
   $tmp .= "  -t, --termfile           Path to the Term file.\n";
