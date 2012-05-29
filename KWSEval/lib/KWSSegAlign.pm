@@ -62,6 +62,7 @@ sub alignSegments
 {
   my ($self, $csvreportfile, $segmentFilters, $groupFilter, $threshhold, $KoefC, $KoefV, $probofterm, $listIsolineCoef, $pooled, $includeBlocksWNoTarg) = @_;
   open (CSVREPORT, ">$csvreportfile") if (defined $csvreportfile);
+  binmode(CSVREPORT, $self->{RTTMLIST}->getPerlEncodingString()) if (defined $csvreportfile && $self->{RTTMLIST}->{ENCODING} ne "");
 
   $includeBlocksWNoTarg = 0 if ($includeBlocksWNoTarg != 1);
 

@@ -77,6 +77,7 @@ sub alignTerms
   $includeBlocksWNoTarg = 0 if ($includeBlocksWNoTarg != 1);
 
   open (CSVREPORT, ">$csvreportfile") if (defined $csvreportfile);
+  binmode(CSVREPORT, $self->{RTTMLIST}->getPerlEncodingString()) if (defined $csvreportfile && $self->{RTTMLIST}->{ENCODING} ne "");
   print CSVREPORT "file,channel,termid,term,ref_bt,ref_et,sys_bt,sys_et,sys_score,sys_decision,alignment\n" if (defined $csvreportfile);
 
   my %qtrials = (); #Conditional trials

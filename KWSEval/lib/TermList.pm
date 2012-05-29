@@ -191,7 +191,7 @@ sub loadFile
     
     open(TERMLIST, $tlistf) 
       or MMisc::error_quit("Unable to open for read TermList file '$tlistf' : $!");
-    if ($self->{ENCODING} eq "UTF-8"){
+    if ($self->{ENCODING} ne ""){
       binmode(TERMLIST, $self->getPerlEncodingString());
     }
     

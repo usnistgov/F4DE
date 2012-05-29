@@ -292,7 +292,7 @@ sub loadFile
     print STDERR "Loading RTTM file '$rttmFile' encoding /$self->{ENCODING}/.\n";
     
     open(RTTM, $rttmFile) or MMisc::error_quit("Unable to open for read RTTM file '$rttmFile' : $!");
-    if ($self->{ENCODING} eq "UTF-8"){
+    if ($self->{ENCODING} ne ""){
       binmode(RTTM, $self->getPerlEncodingString());
     }
     
