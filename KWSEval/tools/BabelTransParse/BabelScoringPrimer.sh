@@ -13,7 +13,7 @@ if [ ! "$mode" = DEV ] ; then
 	echo "Error: Set the environment variable \$F4DE_BASE per the F4DE install instructions"
 	exit 1
     fi
-    BABELPARSE="perl -I $F4DE_BASE/common/lib -I $F4DE_BASE/KWSEval/libb ./BabelTransParse.pl"
+    BABELPARSE="perl -I $F4DE_BASE/common/lib -I $F4DE_BASE/KWSEval/lib ./BabelTransParse.pl"
 else
     BASE=../../../
     KWSEVAL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSEval/KWSEval.pl"
@@ -25,13 +25,20 @@ else
 fi
 
 
-#for langID in 101 104 105 english ; do
+for langID in 101 104 105 106 english ; do
 #for langID in 105-Dist-dev 104-Dist-dev; do
 #for langID in 104-Dist-dev 104-Dist-eval 104-Dist-training; do
 #for langID in 106-Dist-dev 106-Dist-eval 106-Dist-training ; do
 #for langID in 106-Dist-scr-train 106-Dist-scr-eval  106-Dist-scr-dev ; do
-for langID in 106-Dist-scr-dev 106-Dist-scr-train 106-Dist-dev 106-Dist-training ; do
-    if [ $langID = "101" ] ; then
+#for langID in 106-Dist-scr-dev 106-Dist-scr-train 106-Dist-dev 106-Dist-training ; do
+#for langID in Babel_Lang_101 ; do
+    if [ $langID = "Babel_Lang_101" ] ; then
+	BABELDATA=Babel_Lang_101
+	language=cantonese
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+    elif [ $langID = "101" ] ; then
 	BABELDATA=Lang101
 	language=cantonese
 	norm=""
@@ -82,6 +89,12 @@ for langID in 106-Dist-scr-dev 106-Dist-scr-train 106-Dist-dev 106-Dist-training
     elif [ $langID = "105-Dist-dev" ] ; then
 	BABELDATA=BABEL_BP_105_conversational_dev
 	language=turkish
+	norm=""
+	encoding=UTF-8
+	files="*.txt"
+    elif [ $langID = "106" ] ; then
+	BABELDATA=Lang106
+	language=tagalog
 	norm=""
 	encoding=UTF-8
 	files="*.txt"
@@ -152,38 +165,38 @@ for langID in 106-Dist-scr-dev 106-Dist-scr-train 106-Dist-dev 106-Dist-training
     echo ""
 
     echo "Validating random systems"
-    $KWSVALIDATE -t Lang101-Demo/cantonese.source.tlist.xml -e Lang101-Demo/cantonese.source.ecf.xml -s Lang101-Demo/cantonese.sys1.stdlist.xml
-    $KWSVALIDATE -t Lang101-Demo/cantonese.source.tlist.xml -e Lang101-Demo/cantonese.source.ecf.xml -s Lang101-Demo/cantonese.sys2.stdlist.xml
+    $KWSVALIDATE -t $BABELDATA-Demo/$language.source.tlist.xml -e $BABELDATA-Demo/$language.source.ecf.xml -s $BABELDATA-Demo/$language.sys1.stdlist.xml
+    $KWSVALIDATE -t $BABELDATA-Demo/$language.source.tlist.xml -e $BABELDATA-Demo/$language.source.ecf.xml -s $BABELDATA-Demo/$language.sys2.stdlist.xml
     echo ""
 
     echo "Add N-Gram annotations to the Term list file"
     $TLISTADDNGRAM -t $OUTROOT.source.tlist.xml -o $OUTROOT.source.tlist.annot.xml
     echo ""
-
     for sys in sys1 sys2 ; do
 	echo "Compute reports for $sys"
+	mkdir $OUTROOT.$sys
 	$KWSEVAL \
 	    -I "Demo system $sys" \
 	    -e $OUTROOT.source.ecf.xml \
 	    -r $OUTROOT.source.rttm \
 	    -t $OUTROOT.source.tlist.annot.xml \
 	    -s $OUTROOT.$sys.stdlist.xml \
-	    -C $OUTROOT.$sys.csv \
-	    -o $OUTROOT.$sys.report.txt \
-	    -H $OUTROOT.$sys.report.html \
-	    -d $OUTROOT.$sys.det 
-### These options will be in the next release
-#	    -O $OUTROOT.$sys.conditional.report.txt \
-#	    -Q $OUTROOT.$sys.conditional.report.html \
-#	    -D $OUTROOT.$sys.conditional.det \
-#	    -q "NGram Order" 
+	    -c \
+	    -o \
+	    -b \
+	    -f $OUTROOT.$sys/$sys \
+	    -d \
+	    -O \
+	    -B \
+	    -D \
+	    -q "NGram Order" \
+	    -y TXT \
+	    -y HTML \
 	echo ""
     done
 done
 
 echo "Building a combined DET Curve"
-$DETUTIL -o $OUTROOT.ensemble.det.png $OUTROOT.sys?.det.CTS.srl.gz
+$DETUTIL -o $OUTROOT.ensemble.det.png $OUTROOT.sys?/sys?.dets/sum.Occurence.srl.gz
 
 exit;
-
-
