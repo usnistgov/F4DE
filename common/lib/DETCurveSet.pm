@@ -384,17 +384,21 @@ sub _buildAutoTable(){
       $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->combLab(),    $key);
       $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
 
-      if ($det->getDETPng() ne "") {
-	my $detpng = $det->getDETPng();
-	$detpng =~ s/^[^\/]*\///;
+      my $detpng = $det->getDETPng();
+      if ($detpng ne "") {
+	if ($detpng =~ m:([^/]+)/([^/]+)$:) {
+	  $detpng = $1 . "/" . $2;
+	}
 	my $deturl = "url={" . $detpng . "}";
-        $at->addData($detpng, ($useAT ? "DET Curve Graphs|" : "" ) . "DET Curve", $key, $deturl);
+        $at->addData($det->getDETPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "DET Curve", $key, $deturl);
       }
-      if ($det->getThreshPng() ne "") {
-	my $threshpng = $det->getThreshPng();
-	$threshpng =~ s/^[^\/]*\///;
+      my $threshpng = $det->getThreshPng();
+      if ($threshpng ne "") {
+	if ($threshpng =~ m/([^\/]+)\/([^\/]+)$/) {
+	  $threshpng = $1 . "/" . $2;
+	}
 	my $threshdeturl = "url={" . $threshpng . "}";
-        $at->addData($threshpng, ($useAT ? "DET Curve Graphs|" : "" ) . "Threshold Curve", $key, $threshdeturl);
+        $at->addData($det->getThreshPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "Threshold Curve", $key, $threshdeturl);
       }
     }
     if ($includeIsoRatios){
@@ -577,9 +581,12 @@ sub _buildHeaderTable
     $rowid++;
   }
 
+  my $deturl = "";
   if ($combinedDETpng) {
-    $combinedDETpng =~ s/^[^\/]*\///;
-    my $deturl = "url={" . $combinedDETpng . "}";
+    if ($combinedDETpng =~ m:([^/]+)/([^/]+)$:) {
+      $deturl = $1 . "/" . $2;
+    }
+    my $deturl = "url={" . $deturl . "}";
     $at->addData("Combined DET Plot", $col . "|Key", $rowid);
     $at->addData($combinedDETpng, $col . "|Value", $rowid, $deturl);
     $rowid++;
