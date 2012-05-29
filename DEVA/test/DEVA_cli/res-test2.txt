@@ -14,23 +14,23 @@
 ***** Running Filter
 ***** Scoring
 Done
-|            Performance Summary Over and Ensemble of Subsets            |
-|         Key         |                      Value                       |
-|---------------------+--------------------------------------------------+
-|        System Title |                                          DET Set |
-|         Decision ID |                                            Trial |
-|         TOTALTRIALS |                                               10 |
-|                BETA |                                            999.9 |
-|              ValueC |                                              0.1 |
-|          ProbOfTerm |                                           0.0001 |
-|              ValueV |                                                1 |
-|   Combined DET Plot |   tmp/DEVA_cli_tester-Temp_test2/scoreDB.det.png |
+|            Performance Summary Over and Ensemble of Subsets             |
+|         Key         |                       Value                       |
+|---------------------+---------------------------------------------------+
+|        System Title |                                           DET Set |
+|         Decision ID |                                             Trial |
+|         TOTALTRIALS |                                                10 |
+|                BETA |                                             999.9 |
+|              ValueC |                                               0.1 |
+|          ProbOfTerm |                                            0.0001 |
+|              ValueV |                                                 1 |
+|   Combined DET Plot |   /tmp/DEVA_cli_tester-Temp_test2/scoreDB.det.png |
 
 
-|                 |           Inputs            |                                Actual Decision Value Analysis                                |               Maximum Value Analysis               |                                                            DET Curve Graphs                                                            |
-|      Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    Value    |  Dec. Tresh  |    PFA    |  PMiss   |    Value    |  Dec. Thresh  |                           DET Curve                            |                            Threshold Curve                            |
-|-----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+-------------+--------------+-----------+----------+-------------+---------------+----------------------------------------------------------------+-----------------------------------------------------------------------+
-|   Block BlockID |       5 |        4 |      9 |         2 |          1 |     3 |       3 |   0.60000 |    0.600 |   -599.5400 |       2.3000 |   0.20000 |    1.000 |   -199.9800 |         4.800 |   tmp/DEVA_cli_tester-Temp_test2/scoreDB.det.Block_BlockID.png |   tmp/DEVA_cli_tester-Temp_test2/scoreDB.det.Block_BlockID.thresh.png |
+|                 |           Inputs            |                                Actual Decision Value Analysis                                |               Maximum Value Analysis               |                                                             DET Curve Graphs                                                             |
+|      Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    Value    |  Dec. Tresh  |    PFA    |  PMiss   |    Value    |  Dec. Thresh  |                            DET Curve                            |                            Threshold Curve                             |
+|-----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+-------------+--------------+-----------+----------+-------------+---------------+-----------------------------------------------------------------+------------------------------------------------------------------------+
+|   Block BlockID |       5 |        4 |      9 |         2 |          1 |     3 |       3 |   0.60000 |    0.600 |   -599.5400 |       2.3000 |   0.20000 |    1.000 |   -199.9800 |         4.800 |   /tmp/DEVA_cli_tester-Temp_test2/scoreDB.det.Block_BlockID.png |   /tmp/DEVA_cli_tester-Temp_test2/scoreDB.det.Block_BlockID.thresh.png |
 
 [[STDERR]]
 
