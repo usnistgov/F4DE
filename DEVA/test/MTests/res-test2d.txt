@@ -14,24 +14,24 @@
 ***** Running Filter
 ***** Scoring
 Done
-|  Performance Summary Over and Ensemble of Subsets  |
-|           Key            |          Value          |
-|--------------------------+-------------------------+
-|             System Title |                 DET Set |
-|              Decision ID |                   Trial |
-|                   CostFA |                       1 |
-|                 CostMiss |                       1 |
-|                    Ptarg |                     0.5 |
-|        Combined DET Plot |         scoreDB.det.png |
+|      Performance Summary Over and Ensemble of Subsets      |
+|         Key         |                Value                 |
+|---------------------+--------------------------------------+
+|        System Title |                              DET Set |
+|         Decision ID |                                Trial |
+|              CostFA |                                    1 |
+|            CostMiss |                                    1 |
+|               Ptarg |                                  0.5 |
+|   Combined DET Plot |   res-test2d.txt.dir/scoreDB.det.png |
 
 
-|                |           Inputs            |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                            DET Curve Graphs                            |
-|     Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |           DET Curve            |            Threshold Curve            |
-|----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+--------------------------------+---------------------------------------+
-|     Block Blue |      41 |       59 |    100 |        40 |          8 |    51 |       1 |   0.86441 |    0.024 |   0.8888 |       0.6562 |   0.52542 |    0.220 |   0.7449 |         0.738 |     scoreDB.det.Block_Blue.png |     scoreDB.det.Block_Blue.thresh.png |
-|    Block Green |      53 |       47 |    100 |        53 |          6 |    41 |       0 |   0.87234 |    0.000 |   0.8723 |       0.6562 |   0.72340 |    0.057 |   0.7800 |         0.698 |    scoreDB.det.Block_Green.png |    scoreDB.det.Block_Green.thresh.png |
-|   Block Purple |      51 |       49 |    100 |         0 |          6 |    43 |      51 |   0.87755 |    1.000 |   1.8776 |       0.6562 |   1.00000 |    0.000 |   1.0000 |         0.006 |   scoreDB.det.Block_Purple.png |   scoreDB.det.Block_Purple.thresh.png |
-|      Block Red |      51 |       49 |    100 |        50 |          6 |    43 |       1 |   0.87755 |    0.020 |   0.8972 |       0.6562 |   0.63265 |    0.196 |   0.8287 |         0.745 |      scoreDB.det.Block_Red.png |      scoreDB.det.Block_Red.thresh.png |
+|                |           Inputs            |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                                               DET Curve Graphs                                               |
+|     Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                     DET Curve                     |                     Threshold Curve                      |
+|----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+---------------------------------------------------+----------------------------------------------------------+
+|     Block Blue |      41 |       59 |    100 |        40 |          8 |    51 |       1 |   0.86441 |    0.024 |   0.8888 |       0.6562 |   0.52542 |    0.220 |   0.7449 |         0.738 |     res-test2d.txt.dir/scoreDB.det.Block_Blue.png |     res-test2d.txt.dir/scoreDB.det.Block_Blue.thresh.png |
+|    Block Green |      53 |       47 |    100 |        53 |          6 |    41 |       0 |   0.87234 |    0.000 |   0.8723 |       0.6562 |   0.72340 |    0.057 |   0.7800 |         0.698 |    res-test2d.txt.dir/scoreDB.det.Block_Green.png |    res-test2d.txt.dir/scoreDB.det.Block_Green.thresh.png |
+|   Block Purple |      51 |       49 |    100 |         0 |          6 |    43 |      51 |   0.87755 |    1.000 |   1.8776 |       0.6562 |   1.00000 |    0.000 |   1.0000 |         0.006 |   res-test2d.txt.dir/scoreDB.det.Block_Purple.png |   res-test2d.txt.dir/scoreDB.det.Block_Purple.thresh.png |
+|      Block Red |      51 |       49 |    100 |        50 |          6 |    43 |       1 |   0.87755 |    0.020 |   0.8972 |       0.6562 |   0.63265 |    0.196 |   0.8287 |         0.745 |      res-test2d.txt.dir/scoreDB.det.Block_Red.png |      res-test2d.txt.dir/scoreDB.det.Block_Red.thresh.png |
 
 [[STDERR]]
 

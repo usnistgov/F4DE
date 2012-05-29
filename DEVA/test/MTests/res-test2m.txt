@@ -14,24 +14,24 @@
 ***** Running Filter
 ***** Scoring
 Done
-|  Performance Summary Over and Ensemble of Subsets  |
-|           Key            |          Value          |
-|--------------------------+-------------------------+
-|             System Title |                 DET Set |
-|              Decision ID |                   Trial |
-|                   CostFA |                       1 |
-|                 CostMiss |                      80 |
-|                    Ptarg |                   0.001 |
-|        Combined DET Plot |         scoreDB.det.png |
+|      Performance Summary Over and Ensemble of Subsets      |
+|         Key         |                Value                 |
+|---------------------+--------------------------------------+
+|        System Title |                              DET Set |
+|         Decision ID |                                Trial |
+|              CostFA |                                    1 |
+|            CostMiss |                                   80 |
+|               Ptarg |                                0.001 |
+|   Combined DET Plot |   res-test2m.txt.dir/scoreDB.det.png |
 
 
-|                  |           Inputs            |                                Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                              DET Curve Graphs                              |
-|      Title       |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |            DET Curve             |             Threshold Curve             |
-|------------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+-----------+--------------+-----------+----------+----------+---------------+----------------------------------+-----------------------------------------+
-|     EventID Blue |      41 |       59 |    100 |        40 |          8 |    51 |       1 |   0.86441 |    0.024 |   10.8187 |       0.6562 |   0.00000 |    0.951 |   0.9512 |         0.940 |     scoreDB.det.EventID_Blue.png |     scoreDB.det.EventID_Blue.thresh.png |
-|    EventID Green |      53 |       47 |    100 |        53 |          6 |    41 |       0 |   0.87234 |    0.000 |   10.8934 |       0.6562 |   0.00000 |    0.868 |   0.8679 |         0.937 |    scoreDB.det.EventID_Green.png |    scoreDB.det.EventID_Green.thresh.png |
-|   EventID Purple |      51 |       49 |    100 |         0 |          6 |    43 |      51 |   0.87755 |    1.000 |   11.9584 |       0.6562 |   0.02041 |    1.000 |   1.2548 |         0.925 |   scoreDB.det.EventID_Purple.png |   scoreDB.det.EventID_Purple.thresh.png |
-|      EventID Red |      51 |       49 |    100 |        50 |          6 |    43 |       1 |   0.87755 |    0.020 |   10.9780 |       0.6562 |   0.00000 |    0.902 |   0.9020 |         0.936 |      scoreDB.det.EventID_Red.png |      scoreDB.det.EventID_Red.thresh.png |
+|                  |           Inputs            |                                Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                                                 DET Curve Graphs                                                 |
+|      Title       |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                      DET Curve                      |                      Threshold Curve                       |
+|------------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+-----------+--------------+-----------+----------+----------+---------------+-----------------------------------------------------+------------------------------------------------------------+
+|     EventID Blue |      41 |       59 |    100 |        40 |          8 |    51 |       1 |   0.86441 |    0.024 |   10.8187 |       0.6562 |   0.00000 |    0.951 |   0.9512 |         0.940 |     res-test2m.txt.dir/scoreDB.det.EventID_Blue.png |     res-test2m.txt.dir/scoreDB.det.EventID_Blue.thresh.png |
+|    EventID Green |      53 |       47 |    100 |        53 |          6 |    41 |       0 |   0.87234 |    0.000 |   10.8934 |       0.6562 |   0.00000 |    0.868 |   0.8679 |         0.937 |    res-test2m.txt.dir/scoreDB.det.EventID_Green.png |    res-test2m.txt.dir/scoreDB.det.EventID_Green.thresh.png |
+|   EventID Purple |      51 |       49 |    100 |         0 |          6 |    43 |      51 |   0.87755 |    1.000 |   11.9584 |       0.6562 |   0.02041 |    1.000 |   1.2548 |         0.925 |   res-test2m.txt.dir/scoreDB.det.EventID_Purple.png |   res-test2m.txt.dir/scoreDB.det.EventID_Purple.thresh.png |
+|      EventID Red |      51 |       49 |    100 |        50 |          6 |    43 |       1 |   0.87755 |    0.020 |   10.9780 |       0.6562 |   0.00000 |    0.902 |   0.9020 |         0.936 |      res-test2m.txt.dir/scoreDB.det.EventID_Red.png |      res-test2m.txt.dir/scoreDB.det.EventID_Red.thresh.png |
 
 [[STDERR]]
 

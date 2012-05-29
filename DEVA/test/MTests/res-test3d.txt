@@ -14,21 +14,21 @@
 ***** Running Filter
 ***** Scoring
 Done
-|  Performance Summary Over and Ensemble of Subsets  |
-|           Key            |          Value          |
-|--------------------------+-------------------------+
-|             System Title |                 DET Set |
-|              Decision ID |                   Trial |
-|                   CostFA |                       1 |
-|                 CostMiss |                       1 |
-|                    Ptarg |                     0.5 |
-|        Combined DET Plot |         scoreDB.det.png |
+|      Performance Summary Over and Ensemble of Subsets      |
+|         Key         |                Value                 |
+|---------------------+--------------------------------------+
+|        System Title |                              DET Set |
+|         Decision ID |                                Trial |
+|              CostFA |                                    1 |
+|            CostMiss |                                    1 |
+|               Ptarg |                                  0.5 |
+|   Combined DET Plot |   res-test3d.txt.dir/scoreDB.det.png |
 
 
-|                       |                 Inputs                 |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                                   DET Curve Graphs                                   |
-|         Title         |  #Color  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |               DET Curve               |               Threshold Curve                |
-|-----------------------+----------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+---------------------------------------+----------------------------------------------+
-|   Color Color Average |        4 |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87296 |    0.261 |   1.1340 |       0.6562 |   0.00934 |    0.919 |   0.9286 |         0.931 |   scoreDB.det.Color_Color_Average.png |   scoreDB.det.Color_Color_Average.thresh.png |
+|                       |                 Inputs                 |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                                                      DET Curve Graphs                                                      |
+|         Title         |  #Color  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                        DET Curve                         |                         Threshold Curve                         |
+|-----------------------+----------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+----------------------------------------------------------+-----------------------------------------------------------------+
+|   Color Color Average |        4 |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87296 |    0.261 |   1.1340 |       0.6562 |   0.00934 |    0.919 |   0.9286 |         0.931 |   res-test3d.txt.dir/scoreDB.det.Color_Color_Average.png |   res-test3d.txt.dir/scoreDB.det.Color_Color_Average.thresh.png |
 
 [[STDERR]]
 
