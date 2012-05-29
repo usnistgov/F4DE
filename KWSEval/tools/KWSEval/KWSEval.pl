@@ -135,8 +135,7 @@ my $cleanDETsFolder = 0;
 my $requestalignCSV = 0;
 my $includeNoTargBlocks = 0;
 
-my $alignmentCSV = undef;
-my $reportOutType = "TXT";
+my $reportOutTypes = [ "TXT" ];
 
 my $haveReports = 0;
 
@@ -165,8 +164,6 @@ sub checksumSystemV
     return(unpack("%32b*", $stringf));
 }
 
-
-
 my @arrayparseterm;
 my $numberFiltersTermArray = 0;
 my %filterTermArray;
@@ -178,7 +175,6 @@ my @arrayparsetype;
 my $numberFiltersTypeArray = 0;
 my %filterTypeArray;
 
-my $reportPath = ".";
 my $fileRoot = "";
 
 my $requestwordsoov = 0;
@@ -197,7 +193,6 @@ GetOptions
     'termfile=s'                          => \$TERMfile,
     'Find-threshold=f'                    => \$thresholdFind,
     'Similarity-threshold=f'              => \$thresholdAlign,
-    'path=s'                              => \$reportPath,
     'file-root=s'                         => \$fileRoot,
     'osummary-report'                     => \$requestSumReport,
     'block-summary-report'                => \$requestBlockSumReport,
@@ -212,8 +207,8 @@ GetOptions
     'det-curve'                           => \$requestDETCurve,
     'DET-conditional-curve'               => \$requestDETConditionalCurve,
     'Clean-DETs-folder'                   => \$cleanDETsFolder,
-    'csv-of-alignment=s'                  => \$alignmentCSV,
-    'ytype-of-report-output=s'            => \$reportOutType,
+    'csv-of-alignment'                    => \$requestalignCSV,
+    'ytypes-of-report-output=s@'          => \$reportOutTypes,
     'koefcorrect=f'                       => \$KoefC,
     'Koefincorrect=f'                     => \$KoefV,
     'number-trials-per-sec=f'             => \$trialsPerSec,
@@ -246,7 +241,7 @@ for(my $i=0; $i<$numberFiltersTypeArray; $i++) {
     @{ $filterTypeArray{$tmp[0]} } = split(/,/, join(',', $tmp[(@tmp==1)?0:1]));
 }
 
-$requestalignCSV = 1 if(defined $alignmentCSV);
+$requestalignCSV = 1 if(defined $requestalignCSV);
 
 # Isoline Option
 my @tmplistiso1 = ();
@@ -273,11 +268,11 @@ else {
 @listIsolineCoef = sort {$a <=> $b} @tmplistiso2;
 
 $haveReports = $requestSumReport || $requestBlockSumReport || $requestCondSumReport || $requestCondBlockSumReport || $requestalignCSV || $requestDETConditionalCurve;
-$reportOutType = "TXT" if ($reportOutType ne "CSV" && $reportOutType ne "HTML");
-$reportPath .= "/";
-MMisc::error_quit("Report path doesn't exist, create it first")
-  if (not -d $reportPath);
-
+MMisc::error_quit("Must include a file root") if ($fileRoot eq "");
+mkdir $fileRoot;
+MMisc::error_quit("File root could not be created")
+  if (not -d $fileRoot);
+if ($fileRoot =~ m:/[^/]+$:) { $fileRoot .= "."; } #if the fileroot has a prepend string add a '.'
 ###Error breakouts before loading
 #check if the options are valid to run
 MMisc::error_quit("An RTTM file must be set")
@@ -320,8 +315,11 @@ my @alignResults;
 my ($dset, $qdset);
 my @filters = ();
 my $groupBySubroutine = undef;
-$alignmentCSV = $reportPath . $alignmentCSV if (defined $alignmentCSV);
-
+my $alignmentCSV = "";
+if ($requestalignCSV == 1) {
+  if ($fileRoot ne "-") { $alignmentCSV = $fileRoot . "alignment.csv"; }
+  else { $alignmentCSV = "alignment.csv"; }
+}
 if ($segmentbased != 0)
 {
 ###Segment based Alignment
@@ -374,62 +372,84 @@ $dset = $alignResults[0];
 $qdset = $alignResults[1];
 
 ##Render reports
-my $detsPath = "dets/";
+my $detsPath = "";
+if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/"; }
+else { $detsPath = "dets/"; }
 if ($requestDETCurve || $requestDETConditionalCurve) {
-  if ((not mkdir ($reportPath . $detsPath)) && $cleanDETsFolder == 1) {
-    MMisc::error_quit($reportPath . $detsPath ." already exists, cleaning it may lead to unwanted results"); }
+  if ((not mkdir ($detsPath)) && $cleanDETsFolder == 1) {
+    MMisc::error_quit($detsPath ." already exists, cleaning it may lead to unwanted results"); }
 }
 
 my $file;
+foreach my $reportOutType (@{ $reportOutTypes }) {
+  next if (! $reportOutType =~ /(TXT|CSV|HTML)/i);
 #Render summary reports
-if ($requestSumReport) {
-  if ($fileRoot eq "") { $file = $reportPath . "sum." . lc $reportOutType; }
-  elsif ($fileRoot eq "-") { $file = "-"; }
-  else { $file = $reportPath . $fileRoot . ".sum." . lc $reportOutType; }
+  if ($requestSumReport) {
+    if ($fileRoot eq "-") { $file = "-"; }
+    else { $file = $fileRoot . "sum." . lc $reportOutType; }
 
-  print "Summary Report: " . $file . "\n";
-  open (SUMREPORT, ">$file");
-  print SUMREPORT $dset->renderReport($reportPath . "dets/sum", $requestDETCurve, 1, $detoptions, $reportOutType);
-  close (SUMREPORT);
-}
-if ($requestBlockSumReport) {
-  if ($fileRoot eq "") { $file = $reportPath . "bsum." . lc $reportOutType; }
-  elsif ($fileRoot eq "-") { $file = "-"; }
-  else { $file = $reportPath . $fileRoot . ".bsum." . lc $reportOutType; }
-
-  print "Block Summary Report: " . $file . "\n";
-  open (BSUMREPORT, ">$file");
-  print BSUMREPORT $dset->renderBlockedReport($reportOutType, $segmentbased); #shows Corr!Det if segment based
-  close (BSUMREPORT);
-}
-
+    print "Summary Report: " . $file . "\n";
+    open (SUMREPORT, ">$file");
+    #set binmode
+    if ($RTTM->{ENCODING} ne ""){
+      binmode(SUMREPORT, $RTTM->getPerlEncodingString());
+    }
+    my $detsPath = "";
+    if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/sum" }
+    else { $detsPath = "dets/sum"; }
+    print SUMREPORT $dset->renderReport($detsPath, $requestDETCurve, 1, $detoptions, $reportOutType);
+    close (SUMREPORT);
+  }
+  if ($requestBlockSumReport) {
+    if ($fileRoot eq "-") { $file = "-"; }
+    else { $file = $fileRoot . "bsum." . lc $reportOutType; }
+    
+    print "Block Summary Report: " . $file . "\n";
+    open (BSUMREPORT, ">$file");
+    #set binmode
+    if ($RTTM->{ENCODING} ne ""){
+      binmode(BSUMREPORT, $RTTM->getPerlEncodingString());
+    }
+    print BSUMREPORT $dset->renderBlockedReport($reportOutType, $segmentbased); #shows Corr!Det if segment based
+    close (BSUMREPORT);
+  }
+  
 #Render conditional summary reports
-if ($requestCondSumReport) {
-  if ($fileRoot eq "") { $file = $reportPath . "cond.sum." . lc $reportOutType; }
-  elsif ($fileRoot eq "-") { $file = "-"; }
-  else { $file = $reportPath . $fileRoot . ".cond.sum." . lc $reportOutType; }
-
-  print "Conditional Summary Report: " . $file . "\n";
-  open (QSUMREPORT, ">$file");
-  print QSUMREPORT $qdset->renderReport($reportPath . "dets/cond.sum", $requestDETConditionalCurve, 1, $detoptions, $reportOutType);
-  close (QSUMREPORT);
+  if ($requestCondSumReport) {
+    if ($fileRoot eq "-") { $file = "-"; }
+    else { $file = $fileRoot . "cond.sum." . lc $reportOutType; }
+    
+    print "Conditional Summary Report: " . $file . "\n";
+    open (QSUMREPORT, ">$file");
+    #set binmode
+    if ($RTTM->{ENCODING} ne ""){
+      binmode(QSUMREPORT, $RTTM->getPerlEncodingString());
+    }
+    my $detsPath = "";
+    if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/cond.sum" }
+    else { $detsPath = "dets/cond.sum"; }
+    print QSUMREPORT $qdset->renderReport($detsPath, $requestDETConditionalCurve, 1, $detoptions, $reportOutType);
+    close (QSUMREPORT);
+  }
+  if ($requestCondBlockSumReport) {
+    if ($fileRoot eq "-") { $file = "-"; }
+    else { $file = $fileRoot . "cond.bsum." . lc $reportOutType; }
+    
+    print "Conditional Block Summary Report: " . $file . "\n";
+    open (QBSUMREPORT, ">$file");
+    #set binmode
+    if ($RTTM->{ENCODING} ne ""){
+      binmode(QBSUMREPORT, $RTTM->getPerlEncodingString());
+    }
+    print QBSUMREPORT $qdset->renderBlockedReport($reportOutType, $segmentbased); #shows Corr!Det if segment based
+    close (QBSUMREPORT);
+  }
 }
-if ($requestCondBlockSumReport) {
-  if ($fileRoot eq "") { $file = $reportPath . "cond.bsum." . lc $reportOutType; }
-  elsif ($fileRoot eq "-") { $file = "-"; }
-  else { $file = $reportPath . $fileRoot . ".cond.bsum." . lc $reportOutType; }
-
-  print "Conditional Block Summary Report: " . $file . "\n";
-  open (QBSUMREPORT, ">$file");
-  print QBSUMREPORT $qdset->renderBlockedReport($reportOutType, $segmentbased); #shows Corr!Det if segment based
-  close (QBSUMREPORT);
-}
-
 ###
 
 ##Clean DETS folder
 if ($cleanDETsFolder) {
-  my $dir2clean = $reportPath . $detsPath;
+  my $dir2clean = $fileRoot . $detsPath;
   opendir (DIR, $dir2clean) or MMisc::error_quit("Cannot locate DETs directory to clean.");
 #  print "About to remove ..\n";
   my @files2rm = ();
@@ -449,7 +469,7 @@ MMisc::ok_exit();
 sub set_usage {
   my $tmp = "";
 
-	$tmp .= "KWSEval.pl -e ecffile -r rttmfile -s stdfile -t termfile [ OPTIONS ]\n";
+	$tmp .= "KWSEval.pl -e ecffile -r rttmfile -s stdfile -t termfile -f fileroot [ OPTIONS ]\n";
 	$tmp .= "\n";
 	$tmp .= "Required file arguments:\n";
 	$tmp .= "  -e, --ecffile            Path to the ECF file.\n";
@@ -510,8 +530,8 @@ sub set_usage {
 	$tmp .= "  -D, --DET-conditional-curve              Output the Conditional DET Curve.\n";
 	$tmp .= "  -P, --Pooled-DETs        Produce term occurrence DET Curves instead of 'Term Weighted' DETs.\n";
   $tmp .= "  -C, --Clean-DETs-folder  Removes all non-png files from the generated dets folder.\n";
-  $tmp .= "  -c, --csv-of-alignment <file> Output the alignment CSV.";
-  $tmp .= "  -y, --ytype-of-report-output   Output type of the reports. (TXT|CSV|HTML) (Default is Text)\n";
+  $tmp .= "  -c, --csv-of-alignment         Output the alignment CSV.";
+  $tmp .= "  -y, --ytype-of-report-output   Output types of the reports. (TXT,CSV,HTML) (Default is Text)\n";
 	$tmp .= "  -k, --koefcorrect <value>     Value for correct (C).\n";
 	$tmp .= "  -K, --Koefincorrect <value>   Value for incorrect (V).\n";
 	$tmp .= "  -n, --number-trials-per-sec <value>  The number of trials per second. (default: 1)\n";
