@@ -499,7 +499,7 @@ sub run_filter {
 sub run_scorer {
   my ($log, $refDBfile, $sysDBfile, $mdDBfile, $finalDBfile, @xres) = @_;
 
-  my $tool = &path_tool($deva_sci, "../../../DEVA/tools/DEVA_sci");
+  my $tool = &path_tool($deva_sci, dirname(abs_path($0)) . "/../../../DEVA/tools/DEVA_sci");
 
   my $cmdp = "-r $refDBfile -s $sysDBfile";
   $cmdp .= " -L ${mdDBfile}" if (! MMisc::is_blank($mdDBfile));
