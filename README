@@ -1,6 +1,6 @@
 File:  README
-Date:  April 27, 2012
-F4DE Version: 2.4.0
+Date:  May 30, 2012
+F4DE Version: 2.4.1
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
@@ -76,6 +76,12 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - KWSEval - The main KeyWord Search evaluation program derived from
       STDEval.
     - UTF-8 code set support.
+
+  *  2012 TRECVID Multimedia Event Detection Evaluation. 
+    - DEVA_cli - The main evaluation script. 
+    - TV12MED-SubmissionChecker - A tool designed to help confirm MED12 submission 
+      archives before transmitting them to NIST.
+    - Scoring Primer: DEVA/doc/TRECVid-MED12-ScoringPrimer.html
 
 
 In addition to evaluation tools, the package contains the following related tools:
