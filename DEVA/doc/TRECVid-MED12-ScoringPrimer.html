@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
-<title>TRECVID MED11 Scoring Primer</title>
+<title>TRECVID MED12 Scoring Primer</title>
 <style type="text/css">
   body { counter-reset: chapter; }
   h2:before { content: counter(chapter) ". "; counter-increment: chapter;  /* Add 1 to chapter */ }
@@ -17,9 +17,9 @@
 <body>
 
 
-<div style="text-align: center;"><big><big><big>TRECVID MED11 Scoring Primer</big></big></big><br>
+<div style="text-align: center;"><big><big><big>TRECVID MED12 Scoring Primer</big></big></big><br>
 </div>
-<div style="text-align: center;"><small>Last modified: June 21st, 2011</small><br>
+<div style="text-align: center;"><small>Last modified: May 30th, 2012</small><br>
 </div>
  <br>
 
@@ -27,8 +27,8 @@
 <h2>Description</h2>
 This document provides a high-level overview of how to use the Detection EVAluation (DEVA) tools distributed 
 within the NIST Framework for Detection Evaluation (F4DE)
-toolkit for the <a href="http://www.nist.gov/itl/iad/mig/med11.cfm">TRECVID
-MED11 Evaluation</a>.
+toolkit for the <a href="http://www.nist.gov/itl/iad/mig/med12.cfm">TRECVID
+MED12 Evaluation</a>.
 The Multimedia Event Detection (MED) evaluation track is part of the
 TRECVID Evaluation. The multi-year goal of MED is to assemble core
 detection technologies into a system that can quickly and accurately
@@ -38,9 +38,9 @@ the reader is familiar with the MED11 Evaluation Plan.
 
 
 <p>There are four sections in this document: <a href="#executable">Scoring
-script synopsis</a>, <a href="#format">CSV File format definition</a>, an <a
- href="#cliuse">Example command lines to score a MED11 submission</a>,
-and <a href="#subcheck">Using the Submission Checker</a>.
+script synopsis</a>, <a href="#format">CSV File format definition</a>,
+<a href="#subcheck">Using the Submission Checker</a> and an <a
+ href="#cliuse">Example command lines to score a MED12 submission</a>.
 
 The examples below assume the F4DE package has been
 installed and is working properly according to the README.&nbsp; This
@@ -49,11 +49,15 @@ including $F4DE_BASE/bin in your path
 variable.
 
 <p>  The examples below also assume that you have obtained and have access
-to the content the MED11 DRYRUN
-files (<a
-href="ftp://jaguar.ncsl.nist.gov/outgoing/MED11_related/MED11_DRYRUN_Files.tar.bz2">MED11_DRYRUN_Files.tar.bz2</a>)
-as well as the MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/outgoing/MED11_related/MED11_Primer_Files.tar.bz2">MED11_Primer_Files.tar.bz2</a>).
-
+to the content the MED12 DRYRUN
+files:
+<ul>
+  <li>A test submission: <a
+  href="ftp://jaguar.ncsl.nist.gov/outgoing/MED12_testTEAM_MED12DRYRUN_1.tar.bz2">MED12_testTEAM_MED12DRYRUN_1.tar.bz2</a>
+  <li>DRYRUN CSV files: <a
+  href="ftp://jaguar.ncsl.nist.gov/outgoing/MED12_DRYRUN_Files.tar.bz2">MED12_DRYRUN_Files.tar.bz2</a>
+  <li>Extra Primer files: <a href="ftp://jaguar.ncsl.nist.gov/outgoing/MED12_Primer_Files.tar.bz2">MED12_Primer_Files.tar.bz2</a>
+</ul>
 
 
 <a name="executable">
@@ -74,21 +78,25 @@ threshold for the event optimizing the primary metric, and the total
 processing time for the detection of an event.  For the DEVA tools,
 each time a system computes an event/test video probability, it is
 called a <i>trial</i>.  A unqiue <b>TrialID</b> identifies each trial.
-TrialIDs are grouped into a statistical sample block referred to as <i>BlockID</i>.  For MED11, the EventIDs are used as BlockIDs. 
+TrialIDs are grouped into a statistical sample block referred to as <i>BlockID</i>.  For MED12, the EventIDs are used as BlockIDs. 
 
 <p>  DEVA_cli accepts a variety of input combinations, however, to perform the MED11 scoring with the standard setup, NIST/LDC will provide a set of data files and MED11 systems will generate a set of files.
 
 <UL>
 <LI> <b>Provided Data Files</b>: NIST/LDC will provide the following
   database files for use in scoring (all those files will be available
-  for DRYRUN but not for MED11TEST)
+  for MED12DRYRUN --the Reference and Judgement CSV provided in the <a
+  href="ftp://jaguar.ncsl.nist.gov/outgoing/MED12_DRYRUN_Files.tar.bz2">MED12_DRYRUN_Files.tar.bz2</a>
+  file have random
+  content-- but not for MED12TEST)
 
 <UL>
 <LI> <b> TrialIndex file: </b> 
 The trial index file contains a list of TrialIDs.  Each line contains three columns:
-<ul> <li> <i>TrialID</i>: The ID assigned to the trial  
-<li> <i>ClipID</i>:  The clip ID to be used in the trial.  The ID is defined in Clip Metadata file below.
-<li> <i>EventID</i>: The ID of the event for which the system builds its event agent.  The ID is defined in the Event Database file below
+<ul>
+  <li> <i>TrialID</i>: The ID assigned to the trial 
+  <li> <i>ClipID</i>:  The clip ID to be used in the trial.  The ID is defined in Clip Metadata file below.
+  <li> <i>EventID</i>: The ID of the event for which the system builds its event agent.  The ID is defined in the Event Database file below
 </UL>
 
 <LI> <b> Reference File: </b> The reference CSV file
@@ -112,8 +120,8 @@ The event description metadata file maps the <i>EventID</i> to <i>EventName</i>.
 <LI> <b> Judgement Meta Data file: </b> 
 the ClipID's Event Metadata file (copied from the source database); Judgments for background clips are intentionally incomplete.   
 
-For each unique ClipID,
 <ul>
+  <li><i>ClipID</i>: The clip ID to be used in the trial.  The ID is defined in Clip Metadata file below.
   <li><i>EventID</i>: is the ID of one of the MED-11 events or NULL indicating no event judgment was made
   <li><i>INSTANCE_TYPE</i>: positive denotes that this clip is a positive (true) instance of the specified event
   <li><i>SYNOPSIS</i>: brief summary of the clip content  
@@ -124,15 +132,22 @@ For each unique ClipID,
   <LI><i>ACTIVITIES</i>: optional freeform description by the data scout of the activities shown in the clip
   <li><i>INSTANCE_VARIETY</i>: subjective judgment by data scout about whether this clip is more unusual than other instances of this event      
   <li><i>INSTANCE_COMPLEXITY</i>: subjective judgment by data scout about whether this clip is more difficult/complex than other instances of this event
+  <li><i>VISUAL_EVIDENCE</i>: does this clip contain video evidence supporting the event
   <li><i>AUDIO_EVIDENCE</i>: does this clip contain audio evidence supporting the event
   <li><i>TEXT_EVIDENCE</i>: does this clip contain text evidence supporting the event
   <li><i>NON_ENG_SPEECH</i>: does this clip contain non-English speech
   <li><i>NON_ENG_TEXT</i>: does this clip contain non-English text
   <li><i>NARRATIVE_AUDIO</i>: does the clip include someone explaining or describing (some or all of) the event step-by-step as they perform it. Empty when the Event is NULL. May be empty for some non-NULL events.
   <li><i>NARRATIVE_TEXT</i>: does the clip include text explaining or describing (some or all of) the event step-by-step as it is performed. Empty when the Event is NULL. May be empty for some non-NULL events.
-  <li><i>INSTANCE_COMMENT</i>: optional comment providing additional
-  information about why the clip was labeled as a negative
-  instance.
+  <li><i>INSTANCE_COMMENT</i>: optional comment providing additional information about why the clip was labeled as a negative instance.
+<li><i>PEOPLE</i>: optional description of the people appearing in the video.
+<li><i>OTHER_VISUAL</i>: optional description of any other visual evidence in the video.
+<li><i>SPEECH</i>: optional description of the speech evidence in the video.
+<li><i>NOISE</i>: optional description of the (non-speech) noise evidence in the video.
+<li><i>OTHER_AUDIO</i>: optional description of any other audio evidence in the video.
+<li><i>EDITED_TEXT</i>: optional description of text evidence edited into the video.
+<li><i>EMBEDDED_TEXT</i>: optional description of text evidence naturally occurring in the video.
+<li><i>OTHER_TEXT</i>: optional description of any other textual evidence in the video.
 </ul>
   
 </li>
@@ -140,17 +155,24 @@ For each unique ClipID,
 general clip metadata including a unique ClipID, associated <i>MEDIA_FILE</i>, <i>CODEC</i>, <i>MD5SUM</i> and <i>DURATION</i>
 where:
 <ul>
-<li><i>ClipID</i>: unique numerical ID for this video/metadata entry (extracted from the RANDOM_MEDIA_FILE information)
-<li><i>MEDIA_FILE</i>: randomized, non-chronological filename for the media file corresponding to this entry.
-<li><i>MD5SUM</i>: MD5 checksum for the media file corresponding to this entry
-<li><i>DURATION</i>: duration in seconds for the media file corresponding to this entry.
+  <li><i>ClipID</i>: unique numerical ID for this video/metadata entry (extracted from the RANDOM_MEDIA_FILE information)
+  <li><i>MEDIA_FILE</i>: randomized, non-chronological filename for the media file corresponding to this entry.
+  <li><i>CODEC</i>: codec of the media file corresponding to this entry.
+  <li><i>MD5SUM</i>: MD5 checksum for the media file corresponding to this entry
+  <li><i>DURATION</i>: duration in seconds for the media file corresponding to this entry.
 </ul>
 </li>
 
-
 </UL>
 
-<li> <b> System Generated Output Files: </b> Per the evaluation plan, MED11 system will generate two CSV formatted files.  
+
+
+<li> <b> System Generated Output Files: </b> Per the evaluation plan,
+MED12 systems will generate two CSV formatted files. The testTEAM
+submssion ( <a
+  href="ftp://jaguar.ncsl.nist.gov/outgoing/MED12_testTEAM_MED12DRYRUN_1.tar.bz2">MED12_testTEAM_MED12DRYRUN_1.tar.bz2</a>)
+contains an MED12DRYRUN example of such files.
+
 <ul>
   <li> <i> The detection file: </i> This file contains the confidence score for each TrialID in the test.  The file must contain two columns with column headings:
   <ul>
@@ -159,12 +181,16 @@ where:
   </ul>
   
   <li> <i>The threshold file</i>: This file contains information about the processed event.   
-It must contain three columns:
+It must contain four columns:
   <ul>
   <li><i>EventID</i>:   <i>(as defined above)</i>
-  <li><i>DetectionThreshold</i>:  The detection threshold as defined in Section 2.2.2 of the evaluation plan. The value must be in the range [0.0:1.0]
+  <li><i>DetectionThreshold</i>:  The detection threshold as defined in Section 3.5.2 of the evaluation plan. The value must be in the range [0.0:1.0]
   <li><i>DetectionTPT</i>: The total processing time of the detection
-    phase.  The value is unbounded value: see the EvalPlan for details.</li>
+    phase.  The value is unbounded value: see the EvalPlan for
+    details.</li>
+    <li><i>EAGTPT</i>: A value indicating the number of hours used
+    during the event agent generation phase for the event. The value is unbounded value: see the EvalPlan for
+    details.
   </ul>
 </ul>
 
@@ -190,67 +216,127 @@ column's header.  The following is a valid CSV file that contains three columns 
 </dir>
 
 
+<a name="subcheck">
+<h2>Using the Submission Checker</h2>
+</a>
+
+Before providing a TEAM submission (as detailed in the Eval Plan in
+Appendix A), it is required that submissions pass the Submission
+Checker in order to be accepted.
+
+In this example we will validate the <a
+  href="ftp://jaguar.ncsl.nist.gov/outgoing/MED12_testTEAM_MED12DRYRUN_1.tar.bz2">MED12_testTEAM_MED12DRYRUN_1.tar.bz2</a>
+submission for the <i>testTEAM</i> TEAM and for the <i>MED12DRYRUN</i> DATA.
+
+The content of the archive is as follow:
+<pre>
+output/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1.detection.csv
+output/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1.threshold.csv
+output/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1.txt
+</pre>
+
+This submission only contains one EXPID
+(testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1).
+The file names follow the prescribed structure of the EXPID described
+in Appendix A of the evaluation plan so that:
+
+<pre>
+EXPID ::= &lt;TEAM&gt;_MED12_&lt;DATA&gt;_&lt;TASK&gt;_&lt;MEDTYPE&gt;_&lt;TRAINTYPE&gt;_&lt;EAG&gt;_&lt;SYSID&gt;_&lt;VERSION&gt;
+</pre>
+
+  where:
+<UL>
+  <LI> <i>TEAM</i> is named "testTEAM" (must not contain underscores),
+  <LI> <i>DATA</i> is "MED12DRYRUN",
+  <li> <i>TASK</i> is "PS",
+  <LI> <i>MEDTYPE</i> is "MEDFull",
+  <li> <i>TRAINTYPE</i> is "EKFull",
+  <LI> <i>EAG</i> is "AutoEAG",
+  <LI> <i>SYSID</i> is "p-RandomSys"; a site-specified string
+  (that does not contain underscores) designating the system used. It
+  is to begin with p- for a primary system (i.e., your single best
+  system) or with c- for any contrastive systems.
+  <u>Note: there can be only one primary system in a given submission and only one submission per TEAM</u>
+  <LI> The <i>VERSION</i> number is "1". 
+</UL>
+
+<br>
+For testing purposes, the content of the
+<code>testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1.txt</code>
+was left empty, but it must be present and contain information
+detailled in the EVAL Plan.
+<br>
+In order to run the Submission Checker, the <b>TrialIndex</b> CSV file
+must be available (for MED12DRYRUN it can be found in  <a
+  href="ftp://jaguar.ncsl.nist.gov/outgoing/MED12_DRYRUN_Files.tar.bz2">MED12_DRYRUN_Files.tar.bz2</a>), as it is used to do generate the system database as
+well as doing some <i>EventID</i> and <i>TrialID</i> checks.
+
+
+Running the submission checker is then done as follow:
+
+<pre>
+% TV12MED-SubmissionChecker --TrialIndex MED12_DRYRUN_Files/MED12DRYRUN_20120307_TrialIndex.csv MED12_testTEAM_MED12DRYRUN_1.tar.bz2
+</pre>
+
+In case of success, the 'ok' string should appear next to the submission name
+(<code>MED12_testTEAM_MED12DRYRUN_1.tar.bz2: ok</code>) and the program
+will exit with an OK exit status.
+<br>
+It is recommended to run the tool with the <code>--Verbose</code>
+option in order to see a step-by-step description of the steps performed.
+
+
 <br>
 <a name="cliuse">
-<h2>Example command lines to score a MED11 submission</h2>
+<h2>Example command lines to score a MED12 submission</h2>
 </a>
 
   <p><i>For further information about the DEVA_cli tool (available as
 part of the F4DE), please refer to its manual:
 <code>DEVA_cli --man</code></i></p>
 
-The following is an example of how to score one system run using the default scoring setup using files formatted for submission to NIST.  
+The following is an example of how to score the testTEAM MED12DRYRUN system run using the default scoring setup using files formatted for submission to NIST.  
 
-<p>The MED11 Primer files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_Primer/MED11_Primer_Files.tar.bz2">MED11_Primer_Files.tar.bz2</a>) contain system-generated output files for a random system processing the Dry Run data set.  The files are <code>testTEAM_MED11_DEVT_MEDPart_AutoEAG_p-RandomSys_1.detection.csv</code>
-and <code>testTEAM_MED11_DEVT_MEDPart_AutoEAG_p-RandomSys_1.threshold.csv</code>.  The file names follow the prescribed structure of the EXP-ID described in Appendix B of the evaluation plan where:
-
-<UL> <LI> The <i>TEAM</i> named "testTEAM" (must not contain underscores),
-  <LI> The processed <i>DATA</i> set is "DRYRUN", 
-  <LI> The type of <i>MEDTYPE</i> of system is "MEDPart",
-  <LI> The style of Event Agent Generation <i>EAG</i> is automatic EAG "AutoEAG",
-  <LI> The <i>SYSID</i> is "p-RandomSys", a site-specified string
-  (that does not contain underscores) designating the system used. It
-  is to begin with p- for a primary system (i.e., your single best
-  system) or with c- for any contrastive systems. Note: there can be only one primary system in a given submission and only one submission per TEAM
-  <LI> The <i>VERSION</i> number is "1". 
-  </UL>
+<p>The MED12 testTEAM submission file (<a
+  href="ftp://jaguar.ncsl.nist.gov/outgoing/MED12_testTEAM_MED12DRYRUN_1.tar.bz2">MED12_testTEAM_MED12DRYRUN_1.tar.bz2</a>) contain system-generated output files for a random system processing the MED12DRYRUN data set.  The files are <code>testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1.detection.csv</code>
+and <code>testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1.threshold.csv</code>.  
   
-Using the MED11 DRYRUN
-files (<a href="ftp://jaguar.ncsl.nist.gov/incoming/MED11_DRYRUN_Files.tar.bz2">MED11_DRYRUN_Files.tar.bz2</a>), the following command will score the run:
+Using the MED12 DRYRUN files (<a
+  href="ftp://jaguar.ncsl.nist.gov/outgoing/MED12_DRYRUN_Files.tar.bz2">MED12_DRYRUN_Files.tar.bz2</a>), the following command will score the run:
 
 </doc>
 <pre>
-% mkdir testTEAM-Results1
+% mkdir testTEAM-MED12DRYRUN-Results_1
 % DEVA_cli \
---profile MED11 \
---outdir testTEAM-Results1 \
---refcsv DRYRUN_Ref.csv \
---syscsv testTEAM_MED11_DRYRUN_MEDPart_AutoEAG_p-RandomSys_1.detection.csv:detection \
---syscsv testTEAM_MED11_DRYRUN_MEDPart_AutoEAG_p-RandomSys_1.threshold.csv:threshold \
-DRYRUN_TrialIndex.csv:TrialIndex \
-DRYRUN_ClipMD.csv:ClipMD \
-DRYRUN_JudgementMD.csv:JudgementMD \
-DRYRUN_EventDB.csv:EventDB
+--profile MED12 \
+--outdir testTEAM-MED12DRYRUN-Results_1 \
+--refcsv MED12_DRYRUN_Files/MED12DRYRUN_20120307_RandomREF.csv \
+--syscsv MED12_testTEAM_MED12DRYRUN_1/output/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1.detection.csv:detection \
+--syscsv MED12_testTEAM_MED12DRYRUN_1/output/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1.threshold.csv:threshold \
+MED12_DRYRUN_Files/MED12DRYRUN_20120307_TrialIndex.csv:TrialIndex \
+MED12_DRYRUN_Files/MED12DRYRUN_20120307_ClipMD.csv:ClipMD \
+MED12_DRYRUN_Files/MED12DRYRUN_20120307_RandomJudgement.csv:JudgementMD \
+MED12_DRYRUN_Files/MED12DRYRUN_20120307_EventDB.csv:EventDB
 </pre>
 where:<br>
 <ul>
-  <li>The "testTEAM-Results1" directory (which must exist before
-running this command) will contain all the output generated by the script.</li>
-  <li>The <code>--profile MED11</code> argument provides preconfigured command line options (e.g., the metric, trial selection, join, ...) for the MED11 evaluation</li>
-  <li>The CSV filenames use the <code>:</code> notation (example: <code>DRYRUN_ClipMD.csv:ClipMD</code>) to provide simple table names for use in the SQL statements.  </li>
+  <li>The "testTEAM-MED12DRYRUN-Results_1" directory (which must exist
+  before running this command) will contain all the output generated by the script.</li>
+  <li>The <code>--profile MED12</code> argument provides preconfigured command line options (e.g., the metric, trial selection, join, ...) for the MED12 evaluation</li>
+  <li>The CSV filenames use the <code>:</code> notation (example: <code>MED12_DRYRUN_Files/MED12DRYRUN_20120307_ClipMD.csv:ClipMD</code>) to provide simple table names for use in the SQL statements.  </li>
   
-<li>DEVA_cli accepts metadata CSV files at the end of the command line.  The files can contain any metadata about the test material:  the structure of the content is up to the user.    However, the use of <code>--profile MED11</code> option requires one metadata file to be the <i>DRYRUN_TrialIndex.csv:TrialIndex</i>.  It is used to apply the <i>DetectionThreshold</i> in the threshold file to the <i>Scores</i> in the detection file. 
+<li>DEVA_cli accepts metadata CSV files at the end of the command line.  The files can contain any metadata about the test material:  the structure of the content is up to the user.    However, the use of <code>--profile MED12</code> option requires one metadata file to be the <i>MED12_DRYRUN_Files/MED12DRYRUN_20120307_TrialIndex.csv:TrialIndex</i>.  It is used to apply the <i>DetectionThreshold</i> in the threshold file to the <i>Scores</i> in the detection file. 
 
 
 </ul>
 
 The script will run through the four steps of the DEVA_cli scorer and
-place result, database and logs in the "<i>testTEAM_Results1</i>" directory.
+place result, database and logs in the "<i>testTEAM-MED12DRYRUN-Results_1</i>" directory.
 There are many files generated by the script.  The most notable are:
 
 <UL> 
 
-<LI> <i><a href="ftp://jaguar.ncsl.nist.gov/outgoing/MED11_related/testTEAM-Results1/scoreDB.scores.txt">testTEAM-Results1/scoreDB.scores.txt</a></i>, a text version of the scoring report which
+<LI> <i><a href="ftp://jaguar.ncsl.nist.gov/outgoing/scoreDB.scores.txt">testTEAM-MED12DRYRUN-Results_1/scoreDB.scores.txt</a></i>, a text version of the scoring report which
 includes five sections for each EventID.   (There is a .csv version of file as well.)
 <ul>
   <li> The "Inputs" section:
@@ -284,15 +370,15 @@ includes five sections for each EventID.   (There is a .csv version of file as w
 
 </ul>
 
-<LI> <i><a href="ftp://jaguar.ncsl.nist.gov/outgoing/MED11_related/testTEAM-Results1/scoreDB.det.png">testTEAM-Results1/scoreDB.det.png</a></i>, a single PNG file containing the DET line traces for all of the scored EventIDs. </LI>   
+<LI> <i><a href="ftp://jaguar.ncsl.nist.gov/outgoing/scoreDB.det.png">testTEAM-MED12DRYRUN-Results_1/scoreDB.det.png</a></i>, a single PNG file containing the DET line traces for all of the scored EventIDs. </LI>   
 
-<LI> <i>testTEAM-Results1/scoreDB.det.*.srl.gz</i>, serialized
+<LI> <i>testTEAM-MED12DRYRUN-Results_1/scoreDB.det.*.srl.gz</i>, serialized
 versions of each EventID's DET curve.  These files can be used as
 input to  <code> DETUtil</code> to produce selective DET Curve plots.
-For example to plot just the E002 and E003 Events, the following
+For example to plot just the E008 and E011 Events, the following
 command will produce a PNG file named 'focusSet.png': 
 <pre>
-% DETUtil -T "Events E002 and E003" -o focusSet.png testTEAM-Results1/*E002*srl.gz testTEAM-Results1/*E003*srl.gz
+% DETUtil -T "Events E008 and E011" -o focusSet.png testTEAM-MED12DRYRUN-Results_1/*E008*srl.gz testTEAM-MED12DRYRUN-Results_1/*E011*srl.gz
 </pre>
 
 </ul>
@@ -306,12 +392,11 @@ DEVA_cli accepts as an option <code>--FilterCMDfile SQLFile</code>
 which filters the TrialIDs included in the scoring run.
 
 For sites only participating in some of the events, the default SQL filter will insure that only the <i>TrialID</i>s
-listed in the system CSV will be used. <i>A submission checker will
-be released soon to other among things verifies that all TrialIDs  for an event are present
+listed in their system CSV will be used. <i>The submission checker checks that all TrialIDs for an event are present
 in the system file.</i>
 
-The default filter's definition for the MED11 profile (located in the
-<code>DEVAcli_filter-MED11.sql</code> file) is as follow:
+The default filter's definition for the MED12 profile (located in the
+<code>DEVAcli_filter-MED12.sql</code> file) is as follow:
 <pre>
 INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )
   SELECT system.TrialID,TrialIndex.EventID FROM TrialIndex INNER JOIN system
@@ -319,77 +404,30 @@ INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )
 </pre>
 
 
-An <b>SQL filter</b>, such as <code>DEVAcli_filter-MED11_primer.sql</code> found in the primer tar file, restricts the selection of TrialIDs to only those whose ClipIDs duration is less than 30 seconds. The SQL command is:
+An <b>SQL filter</b>, such as <code>DEVAcli_filter-MED12-30s_or_less_Clips.sql</code> found in the <a href="ftp://jaguar.ncsl.nist.gov/outgoing/MED12_Primer_Files.tar.bz2">MED12_Primer_Files.tar.bz2</a> file, restricts the selection of TrialIDs to only those whose ClipIDs duration is less than 30 seconds. The SQL command is:
 
 <pre>
 INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )
   SELECT system.TrialID,TrialIndex.EventID FROM TrialIndex INNER JOIN system,ClipMD
-  WHERE system.TrialID==TrialIndex.TrialID AND TrialIndex.ClipID==ClipMD.ClipID AND ClipMD.DURATION<30;
+  WHERE system.TrialID==TrialIndex.TrialID AND TrialIndex.ClipID==ClipMD.ClipID AND ClipMD.DURATION<=30;
 </pre>
 
 To use the filter, execute the following commands: 
 
 <pre>
-% mkdir testTEAM-Results2
+% mkdir testTEAM-MED12DRYRUN-Results_2
 % DEVA_cli \
---profile MED11 \
---outdir testTEAM-Results2 \
---refcsv DRYRUN_Ref.csv \
---syscsv testTEAM_MED11_DRYRUN_MEDPart_AutoEAG_p-RandomSys_1.detection.csv:detection \
---syscsv testTEAM_MED11_DRYRUN_MEDPart_AutoEAG_p-RandomSys_1.threshold.csv:threshold \
-DRYRUN_ClipMD.csv:ClipMD \
-DRYRUN_JudgementMD.csv:JudgementMD \
-DRYRUN_TrialIndex.csv:TrialIndex \
-DRYRUN_EventDB.csv:EventDB \
---FilterCMDfile DEVAcli_filter-MED11_primer.sql
+--profile MED12 \
+--outdir testTEAM-MED12DRYRUN-Results_2 \
+--refcsv MED12_DRYRUN_Files/MED12DRYRUN_20120307_RandomREF.csv \
+--syscsv MED12_testTEAM_MED12DRYRUN_1/output/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1.detection.csv:detection \
+--syscsv MED12_testTEAM_MED12DRYRUN_1/output/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1/testTEAM_MED12_MED12DRYRUN_PS_MEDFull_EKFull_AutoEAG_p-testMetric_1.threshold.csv:threshold \
+MED12_DRYRUN_Files/MED12DRYRUN_20120307_TrialIndex.csv:TrialIndex \
+MED12_DRYRUN_Files/MED12DRYRUN_20120307_ClipMD.csv:ClipMD \
+MED12_DRYRUN_Files/MED12DRYRUN_20120307_RandomJudgement.csv:JudgementMD \
+MED12_DRYRUN_Files/MED12DRYRUN_20120307_EventDB.csv:EventDB \
+--FilterCMDfile MED12_Primer_Files/DEVAcli_filter-MED12-30s_or_less_Clips.sql
 </pre>
-
-<a name="subcheck">
-<h2>Using the Submission Checker</h2>
-</a>
-
-Before providing a TEAM submission (as detailed in the Eval Plan in
-Appendix B), it is required that submissions pass the Submission
-Checker in order to be accepted.
-
-In this example we will validate the <a
-href="ftp://jaguar.ncsl.nist.gov/outgoing/MED11_related/MED11_testTEAM_DRYRUN_2.tar.bz2">MED11_testTEAM_DRYRUN_2.tar.bz2</a>
-submission for the <i>testTEAM</i> TEAM and for the <i>DRYRUN</i> DATA
-mode.
-
-The content of the archive is as follow:
-<pre>
-output/
-output/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1/
-output/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.detection.csv
-output/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.threshold.csv
-output/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1/testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.txt
-</pre>
-
-This submission only contains one EXPID
-(testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1).
-<br>
-For testing purposes, the content of the
-<code>testTEAM_MED11_DRYRUN_MEDFull_AutoEAG_p-RandomSys_1.txt</code>
-was left empty, but it must be present and contain information
-detailled in the EVAL Plan.
-<br>
-In order to run the Submission Checker, the <b>TrialIndex</b> CSV file
-must be available, as it is used to do generate the system database as
-well as doing some <i>EventID</i> and <i>TrialID</i> checks.
-
-Running the submission checker is then done as follow:
-
-<pre>
-% TV11MED-SubmissionChecker --TrialIndex DRYRUN_TrialIndex.csv MED11_testTEAM_DRYRUN_2.tar.bz2
-</pre>
-
-In case of success, the 'ok' string should appear next to the submission name
-(<code>MED11_testTEAM_DRYRUN_2.tar.bz2: ok</code>) and the program
-will exit with an OK exit status.
-<br>
-It is recommended to run the tool with the <code>--Verbose</code>
-option in order to see a step-by-step description of the steps performed.
 
 </body>
 </html>
