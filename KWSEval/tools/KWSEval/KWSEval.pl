@@ -269,9 +269,7 @@ else {
 
 $haveReports = $requestSumReport || $requestBlockSumReport || $requestCondSumReport || $requestCondBlockSumReport || $requestalignCSV || $requestDETConditionalCurve;
 MMisc::error_quit("Must include a file root") if ($fileRoot eq "");
-mkdir $fileRoot;
-MMisc::error_quit("File root could not be created")
-  if (not -d $fileRoot);
+
 if ($fileRoot =~ m:/[^/]+$:) { $fileRoot .= "."; } #if the fileroot has a prepend string add a '.'
 ###Error breakouts before loading
 #check if the options are valid to run

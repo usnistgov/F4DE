@@ -27,11 +27,11 @@ $testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../com
 
 ##
 $tn = "test8";
-$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrences)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.stdlist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -Y MTG:CONFMTG -O -B -y TXT -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.stdlist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -Y MTG:CONFMTG -O -B -y TXT -f -", "res_$tn.txt");
 
 ##
 $tn = "test9";
-$testr += &do_simple_test($tn, "(DataCalculation: Segment Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -g -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Segment)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -g -f -", "res_$tn.txt");
 
 ##
 $tn = "test10";

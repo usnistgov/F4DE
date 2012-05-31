@@ -33,6 +33,7 @@ use MetricTestStub;
 use MetricTV08;
 use MetricNormLinearCostFunct;
 use MetricTWV;
+use MetricDiscreteTWV;
 
 use Data::Dumper;
 use DETCurveSet;

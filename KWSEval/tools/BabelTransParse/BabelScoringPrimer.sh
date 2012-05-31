@@ -171,10 +171,10 @@ for langID in 101 104 105 106 english ; do
 
     echo "Add N-Gram annotations to the Term list file"
     $TLISTADDNGRAM -t $OUTROOT.source.tlist.xml -o $OUTROOT.source.tlist.annot.xml
-    echo ""
     for sys in sys1 sys2 ; do
-	echo "Compute reports for $sys"
-	mkdir $OUTROOT.$sys
+	echo ""
+	echo "Compute occurrence reports for $sys"
+	mkdir $OUTROOT.$sys.Occurrence
 	$KWSEVAL \
 	    -I "Demo system $sys" \
 	    -e $OUTROOT.source.ecf.xml \
@@ -184,7 +184,7 @@ for langID in 101 104 105 106 english ; do
 	    -c \
 	    -o \
 	    -b \
-	    -f $OUTROOT.$sys/$sys \
+	    -f $OUTROOT.$sys.Occurrence/$sys \
 	    -d \
 	    -O \
 	    -B \
@@ -193,10 +193,32 @@ for langID in 101 104 105 106 english ; do
 	    -y TXT \
 	    -y HTML \
 	echo ""
+	echo ""
+	echo "Compute segment reports for $sys"
+	mkdir $OUTROOT.$sys.Segment
+	$KWSEVAL \
+	    -I "Demo system $sys" \
+	    -e $OUTROOT.source.ecf.xml \
+	    -r $OUTROOT.source.rttm \
+	    -t $OUTROOT.source.tlist.annot.xml \
+	    -s $OUTROOT.$sys.stdlist.xml \
+	    -c \
+	    -o \
+	    -b \
+	    -f $OUTROOT.$sys.Segment/$sys \
+	    -d \
+	    -O \
+	    -B \
+	    -D \
+	    -g \
+	    -q "NGram Order" \
+	    -y TXT \
+	    -y HTML \
+	echo ""
     done
 
-    echo "Building a combined DET Curve"
-    $DETUTIL -o $OUTROOT.ensemble.det.png $OUTROOT.sys?/sys?.dets/sum.Occurrence.srl.gz
+    echo "Building combined DET Curves"
+    $DETUTIL -o $OUTROOT.ensemble.det.png $OUTROOT.sys?.Occurrence/sys?.dets/sum.Occurrence.srl.gz
+    $DETUTIL -o $OUTROOT.ensemble.det.png $OUTROOT.sys?.Segment/sys?.dets/sum.Occurrence.srl.gz
 done
-
 exit 0;
