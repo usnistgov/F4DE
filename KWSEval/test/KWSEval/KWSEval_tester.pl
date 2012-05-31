@@ -23,7 +23,7 @@ my $t0 = F4DE_TestCore::get_currenttime();
 
 ##
 $tn = "test7";
-$testr += &do_simple_test($tn, "(DataCalculation: Occurence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -f -", "res_$tn.txt");
 
 ##
 $tn = "test8";
@@ -31,11 +31,11 @@ $testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrences)", "$t
 
 ##
 $tn = "test9";
-$testr += &do_simple_test($tn, "(DataCalculation: Segment Occurence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -g -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Segment Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -g -f -", "res_$tn.txt");
 
 ##
 $tn = "test10";
-$testr += &do_simple_test($tn, "(DataCalculation: Occurence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.stdlist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -f -", "res_$tn.txt");
 
 #####
 
