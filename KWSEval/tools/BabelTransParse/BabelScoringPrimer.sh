@@ -194,9 +194,9 @@ for langID in 101 104 105 106 english ; do
 	    -y HTML \
 	echo ""
     done
+
+    echo "Building a combined DET Curve"
+    $DETUTIL -o $OUTROOT.ensemble.det.png $OUTROOT.sys?/sys?.dets/sum.Occurrence.srl.gz
 done
 
-echo "Building a combined DET Curve"
-$DETUTIL -o $OUTROOT.ensemble.det.png $OUTROOT.sys?/sys?.dets/sum.Occurence.srl.gz
-
-exit;
+exit 0;
