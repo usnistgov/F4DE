@@ -162,9 +162,10 @@ for (my $termNum = 0; $termNum < @termidList; $termNum++)
     {
         my $file = @{ $occurrences->[$i] }[0]->{FILE};
         my $chan = @{ $occurrences->[$i] }[0]->{CHAN};
-        my $bt = @{ $occurrences->[$i] }[0]->{BT};
         my $numberoftoken = @{ $occurrences->[$i] };
-        my $et = @{ $occurrences->[$i] }[$numberoftoken-1]->{ET};
+        my $bt = 0.0;
+        my $et = $bt + 0.1;
+
         my $dur = sprintf("%.4f", $et - $bt);
         my $rttm = \@{ $occurrences->[$i] };
       	my $score = $i / ($fas);

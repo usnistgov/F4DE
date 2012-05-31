@@ -162,7 +162,7 @@ sub alignTerms
 	    if (defined $csvreportfile);
 	  
 	  #Add miss to trial
-	  $trials->addTrial($trialBlock, -1, "NO", 1, \%blockMetaData);
+	  $trials->addTrial($trialBlock, undef, "OMITTED", 1, \%blockMetaData);
 	  
 	  #Add miss to conditional trial
 	  next if (not defined $groupFilter);
@@ -170,7 +170,7 @@ sub alignTerms
 	    my $grpTotDur = $totdur;
 	    $grpTotDur = $self->{ECF}->calcTotalDur($self->{SRCTYPEGROUPS}->{$group}, $self->{FILECHANS}) if ($groupFilter eq \&KWSAlignment::groupByECFSourceType);
 	    $qtrials{$group} = new TrialsTWV({ ("TotDur" => $grpTotDur, "TrialsPerSecond" => $trialsPerSec, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg) }) if (not defined $qtrials{$group});
-	    $qtrials{$group}->addTrial($termid, -1, "NO", 1, \%blockMetaData);
+	    $qtrials{$group}->addTrial($termid, undef, "OMITTED", 1, \%blockMetaData);
 	  }
 	}
 	#FA & Corr!Det
@@ -488,19 +488,22 @@ sub unitTest
 
   print "Checking trial counts(1)...\t";
   if ($trials->{"trials"}->{"TERM-01"}{"YES TARG"} ==  10 &&
-    $trials->{"trials"}->{"TERM-01"}{"NO TARG"} == 5 &&
+    $trials->{"trials"}->{"TERM-01"}{"NO TARG"} == 0 &&
+    $trials->{"trials"}->{"TERM-01"}{"OMITTED TARG"} == 5 &&
     $trials->{"trials"}->{"TERM-01"}{"YES NONTARG"} == 2 &&
     $trials->{"trials"}->{"TERM-01"}{"NO NONTARG"} == 0) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
   print "Checking trial counts(2)...\t";
   if ($trials->{"trials"}->{"TERM-02"}{"YES TARG"} ==  5 &&
-    $trials->{"trials"}->{"TERM-02"}{"NO TARG"} == 10 &&
+    $trials->{"trials"}->{"TERM-02"}{"NO TARG"} == 0 &&
+    $trials->{"trials"}->{"TERM-02"}{"OMITTED TARG"} == 10 &&
     $trials->{"trials"}->{"TERM-02"}{"YES NONTARG"} == 3 &&
     $trials->{"trials"}->{"TERM-02"}{"NO NONTARG"} == 0) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
   print "Checking trial counts(3)...\t";
   if ($trials->{"trials"}->{"TERM-03"}{"YES TARG"} ==  2 &&
-    $trials->{"trials"}->{"TERM-03"}{"NO TARG"} == 3 &&
+    $trials->{"trials"}->{"TERM-03"}{"NO TARG"} == 0 &&
+    $trials->{"trials"}->{"TERM-03"}{"OMITTED TARG"} == 3 &&
     $trials->{"trials"}->{"TERM-03"}{"YES NONTARG"} == 5 &&
     $trials->{"trials"}->{"TERM-03"}{"NO NONTARG"} == 0) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
@@ -519,10 +522,11 @@ sub unitTest
 
   my $pdetset = $presults[0];
   my $ptrials = $pdetset->{DETList}[0]->{DET}->getTrials();
-  
+    
   print "Checking pooled trial counts(1)...\t";
   if ($ptrials->{"trials"}->{"Pooled"}{"YES TARG"} == 17 &&
-      $ptrials->{"trials"}->{"Pooled"}{"NO TARG"} == 18 &&
+      $ptrials->{"trials"}->{"Pooled"}{"NO TARG"} == 0 &&
+      $ptrials->{"trials"}->{"Pooled"}{"OMITTED TARG"} == 18 &&
       $ptrials->{"trials"}->{"Pooled"}{"YES NONTARG"} == 10 &&
       $ptrials->{"trials"}->{"Pooled"}{"NO NONTARG"} == 0) { print "OK\n" }
   else { print "FAILED\n"; return 0 }

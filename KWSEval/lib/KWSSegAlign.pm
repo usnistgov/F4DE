@@ -152,14 +152,14 @@ sub alignSegments
 	}
       }
       elsif ($istarget) {
-	$trials->addTrial($trialBlock, -1, "NO", $istarget, \%blockMetaData);
+	$trials->addTrial($trialBlock, undef, "OMITTED", $istarget, \%blockMetaData);
 
 	next if (not defined $groupFilter);
 	foreach my $group (@{ &{ $groupFilter }($self, $segment, $term) }) {
 	  my $totTrials = scalar(@fsegments);
 	  $totTrials = $grouptcounts{$group} if (defined $grouptcounts{$group});
 	  $qtrials{$group} = new TrialsDiscreteTWV({ ( "TotTrials" => $totTrials, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg ) }) if (not defined $qtrials{$group});
-	  $qtrials{$group}->addTrial($term->{TERMID}, -1, "NO", $istarget, \%blockMetaData);
+	  $qtrials{$group}->addTrial($term->{TERMID}, undef, "OMITTED", $istarget, \%blockMetaData);
 	}
       }
     }
@@ -349,19 +349,22 @@ sub unitTest
 
   print "Checking trial counts(1)...\t";
   if ($trials->{"trials"}->{"TERM-01"}{"YES TARG"} ==  10 &&
-    $trials->{"trials"}->{"TERM-01"}{"NO TARG"} == 5 &&
+    $trials->{"trials"}->{"TERM-01"}{"NO TARG"} == 0 &&
+    $trials->{"trials"}->{"TERM-01"}{"OMITTED TARG"} == 5 &&
     $trials->{"trials"}->{"TERM-01"}{"YES NONTARG"} == 2 &&
     $trials->{"trials"}->{"TERM-01"}{"NO NONTARG"} == 0) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
   print "Checking trial counts(2)...\t";
   if ($trials->{"trials"}->{"TERM-02"}{"YES TARG"} ==  5 &&
-    $trials->{"trials"}->{"TERM-02"}{"NO TARG"} == 10 &&
+    $trials->{"trials"}->{"TERM-02"}{"NO TARG"} == 0 &&
+    $trials->{"trials"}->{"TERM-02"}{"OMITTED TARG"} == 10 &&
     $trials->{"trials"}->{"TERM-02"}{"YES NONTARG"} == 3 &&
     $trials->{"trials"}->{"TERM-02"}{"NO NONTARG"} == 0) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
   print "Checking trial counts(3)...\t";
   if ($trials->{"trials"}->{"TERM-03"}{"YES TARG"} ==  2 &&
-    $trials->{"trials"}->{"TERM-03"}{"NO TARG"} == 3 &&
+    $trials->{"trials"}->{"TERM-03"}{"NO TARG"} == 0 &&
+    $trials->{"trials"}->{"TERM-03"}{"OMITTED TARG"} == 3 &&
     $trials->{"trials"}->{"TERM-03"}{"YES NONTARG"} == 5 &&
     $trials->{"trials"}->{"TERM-03"}{"NO NONTARG"} == 0) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
@@ -383,7 +386,8 @@ sub unitTest
   
   print "Checking pooled trial counts(1)...\t";
   if ($ptrials->{"trials"}->{"Pooled"}{"YES TARG"} == 17 &&
-      $ptrials->{"trials"}->{"Pooled"}{"NO TARG"} == 18 &&
+      $ptrials->{"trials"}->{"Pooled"}{"NO TARG"} == 0 &&
+      $ptrials->{"trials"}->{"Pooled"}{"OMITTED TARG"} == 18 &&
       $ptrials->{"trials"}->{"Pooled"}{"YES NONTARG"} == 10 &&
       $ptrials->{"trials"}->{"Pooled"}{"NO NONTARG"} == 0) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
