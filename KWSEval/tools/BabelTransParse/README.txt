@@ -25,7 +25,7 @@ Step 2: Generation of two random system output files.
 
 Step 3: Validation of the of the system output files.
 
-Step 4: Scoring the randomn systems
+Step 4: Scoring the random systems
 
 Step 5: Building a two-system composite DET Curve.
  
