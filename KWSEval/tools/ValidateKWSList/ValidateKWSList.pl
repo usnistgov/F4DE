@@ -201,7 +201,7 @@ exit($errors + $warnings);
 
 sub set_usage {
 
-  my $usage = "$0 -t termfile -e ecfile -s stdlist [ -o perged_stdlist ]\n";
+  my $usage = "$0 -t termfile -e ecfile -s stdlist [ -o purged_stdlist ]\n";
   $usage .= "\n";
   $usage .= "Required file arguments:\n";
   $usage .= "  -t, --termfile           Path to the TermList file.\n";
