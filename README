@@ -1,5 +1,5 @@
 File:  README
-Date:  May 30, 2012
+Date:  June 1, 2012
 F4DE Version: 2.4.1
 
 
@@ -73,8 +73,7 @@ evaluations and for specific NIST-coordinated evaluations listed below.
       archives before transmitting them to NIST. 
 
   *  KWS Evaluation.
-    - KWSEval - The main KeyWord Search evaluation program derived from
-      STDEval.
+    - KWSEval - The main KeyWord Search evaluation program derived from STDEval.
     - UTF-8 code set support.
 
   *  2012 TRECVID Multimedia Event Detection Evaluation. 
