@@ -175,8 +175,8 @@ sub alignSegments
   }
 
   my $metric = new MetricDiscreteTWV({ ('Cost' =>$KoefC, 'Value' => $KoefV, 'Ptarg' => $probofterm ) }, $trials);
-  my $detcurve = new DETCurve($trials, $metric, "Occurrence", $listIsolineCoef, undef);
-  $detset->addDET("Occurrence", $detcurve);
+  my $detcurve = new DETCurve($trials, $metric, $trials->{"DecisionID"}, $listIsolineCoef, undef);
+  $detset->addDET($trials->{"DecisionID"}, $detcurve);
   #Build DETCurve(Set) for conditional occurence report
   foreach my $qtrialname (sort keys %qtrials) {
     my $metric = new MetricDiscreteTWV({ ('Cost' =>$KoefC, 'Value' => $KoefV, 'Ptarg' => $probofterm ) }, $qtrials{$qtrialname});

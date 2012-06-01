@@ -219,6 +219,6 @@ for langID in 101 104 105 106 english ; do
 
     echo "Building combined DET Curves"
     $DETUTIL -o $OUTROOT.Occurrence.ensemble.det.png $OUTROOT.sys?.Occurrence/sys?.dets/sum.Occurrence.srl.gz
-    $DETUTIL -o $OUTROOT.Segment.ensemble.det.png $OUTROOT.sys?.Segment/sys?.dets/sum.Occurrence.srl.gz
+    $DETUTIL -o $OUTROOT.Segment.ensemble.det.png $OUTROOT.sys?.Segment/sys?.dets/sum.Segment.srl.gz
 done
 exit 0;

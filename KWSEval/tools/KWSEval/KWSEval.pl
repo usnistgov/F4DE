@@ -99,8 +99,7 @@ foreach my $pn ("Getopt::Long", "Data::Dumper") {
 
 # something missing ? Abort
 if (! $have_everything) {
-  print "\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n";
-  exit(1);
+  MMisc::error_quit("\n$warn_msg\nERROR: Some Perl Modules are missing, aborting\n");
 }
 
 Getopt::Long::Configure(qw( auto_abbrev no_ignore_case ));
