@@ -15,10 +15,10 @@ Summary Report: -
 |                              Cost |         0.1000 |
 
 
-|              |                  Inputs                  |                               Actual Decision TWV Analysis                                |
-|    Title     |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   TWV    |  Dec. Tresh  |
-|--------------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
-|   Occurrence |         30 |     389 |       66 |    405 |       339 |          0 |    66 |      50 |   0.00011 |    0.105 |   0.7853 |       0.1841 |
+|           |                  Inputs                  |                               Actual Decision TWV Analysis                                |
+|   Title   |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   TWV    |  Dec. Tresh  |
+|-----------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
+|   Segment |         30 |     389 |       66 |    405 |       339 |          0 |    66 |      50 |   0.00011 |    0.105 |   0.7853 |       0.1841 |
 Block Summary Report: -
 |  Performance Summary Over and Ensemble of Subsets  |
 |                Key                |     Value      |
@@ -33,7 +33,7 @@ Block Summary Report: -
 |                              Cost |         0.1000 |
 
 
-                  |        MetaData         |                                      Occurrence                                      |
+                  |        MetaData         |                                       Segment                                        |
                   |          Text           |  #Targ  |  #Corr  |  #Corr!Det  |  #FA  |  #Miss  |    TWV    |    PFA    |  PMISS   |
 ------------------+-------------------------+---------+---------+-------------+-------+---------+-----------+-----------+----------+
 Keyword  TEST-01  |                 vatican |       4 |       3 |           0 |     0 |       1 |    0.7500 |   0.00000 |    0.250 |
