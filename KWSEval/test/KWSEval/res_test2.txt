@@ -1,37 +1,54 @@
-[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test3.ecf.xml -r ../common/test3.rttm -s ../common/test3.stdlist.xml -t ../common/test3.tlist.xml -o -A
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.stdlist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -Y MTG:CONFMTG -O -B -y TXT -f -
 [[RETURN CODE]] 0
 [[STDOUT]]
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Indexing Time:            74390.0000                                                                                                                                                                                                 |
-| Language:                    english                                                                                                                                                                                                 |
-| Encoding:                      UTF-8                                                                                                                                                                                                 |
-| CompareNorm:               lowercase                                                                                                                                                                                                 |
-| Index size (bytes):         21235877                                                                                                                                                                                                 |
-| System ID:              Test3 System ID                                                                                                                                                                                              |
-| Coefficient C:                0.1000                                                                                                                                                                                                 |
-| Coefficient V:                1.0000                                                                                                                                                                                                 |
-| Trials Per Second:            1.0000                                                                                                                                                                                                 |
-| Probability of a Term:        0.0001                                                                                                                                                                                                 |
-| Decision Score:         Inconsistent (Max NO: 0.7000, Min YES: 0.3875)                                                                                                                                                               |
-+----------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+
-|                                       Search |                    BNEWS                    |                     CTS                     |                   CONFMTG                   |                     ALL                     |
-|                                              |                         Occ.                |                         Occ.                |                         Occ.                |                         Occ.                |
-|    TermID                     Text     Time  |    Ref  Corr   FA  Miss Value  P(FA)  P(Mis)|    Ref  Corr   FA  Miss Value  P(FA)  P(Mis)|    Ref  Corr   FA  Miss Value  P(FA)  P(Mis)|    Ref  Corr   FA  Miss Value  P(FA)  P(Mis)|
-+----------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+
-| TERM-001                      visit    24.30 |     5     3     2     2 0.560 0.00019 0.400 |     1     1     1     0 0.900 0.00337 0.000 |     1     1     0     0 1.000 0.00000 0.000 |     7     5     3     2 0.671 0.00026 0.286 |
-| TERM-002                   year old    32.30 |     8     6     4     2 0.700 0.00038 0.250 |     6     5     5     1 0.750 0.01712 0.167 |     0     0     0     0   N/A    N/A    N/A |    14    11     9     3 0.721 0.00078 0.214 |
-+----------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+
-| Totals, Actual Occ. Weighted Value     56.60 |    13     9     6     4 0.646 0.00057 0.308 |     7     6     6     1 0.771 0.02062 0.143 |     1     1     0     0 1.000 0.00000 0.000 |    21    16    12     5 0.705 0.00104 0.238 |
-| Means (N/A excl.)                      28.30 |     6     4     3     2 0.630 0.00028 0.325 |     3     3     3     0 0.825 0.01025 0.083 |     1     1     0     0 1.000 0.00000 0.000 |    10     8     6     2 0.696 0.00052 0.250 |
-+----------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+
-|                                              |  Number of Trials                10562      |  Number of Trials                  298      |  Number of Trials                  727      |  Number of Trials                11588      |
-|                                              |  Total Speech Time (sec.)        10562.2    |  Total Speech Time (sec.)          298.4    |  Total Speech Time (sec.)          727.0    |  Total Speech Time (sec.)        11587.7    |
-|                                              |  A. T-Weighted Value (N/A excl.)     0.391  |  A. T-Weighted Value (N/A excl.)    -9.327  |  A. T-Weighted Value (N/A excl.)     1.000  |  A. T-Weighted Value (N/A excl.)     0.232  |
-+----------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+---------------------------------------------+
+Conditional Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |              100 |
+|      IncludeBlocksWithNoTargets |                0 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |              100 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+|          |                  Inputs                  |                                Actual Decision TWV Analysis                                 |
+|  Title   |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    TWV     |  Dec. Tresh  |
+|----------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+------------+--------------+
+|   BN+CTS |          3 |      35 |       10 |     27 |        17 |          0 |    10 |      18 |   0.03715 |    0.533 |   -36.6813 |       0.3450 |
+Conditional Block Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |              100 |
+|      IncludeBlocksWithNoTargets |                0 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |              100 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+                  |  MetaData  |                                 BN+CTS                                  |
+                  |    Text    |  #Targ  |  #Corr  |  #FA  |  #Miss  |    TWV     |    PFA    |  PMISS   |
+------------------+------------+---------+---------+-------+---------+------------+-----------+----------+
+Keyword  TERM-01  |        yes |      15 |      10 |     2 |       5 |   -22.8604 |   0.02353 |    0.333 |
+         TERM-02  |       sure |      15 |       5 |     3 |      10 |   -34.9573 |   0.03529 |    0.667 |
+         TERM-03  |    why not |       5 |       2 |     5 |       3 |   -52.2263 |   0.05263 |    0.600 |
+Summary  Totals   |            |      35 |      17 |    10 |      18 |            |           |          |
+         Means    |            |      12 |       6 |     3 |       6 |            |   0.03715 |    0.533 |
+         TWV      |            |         |         |       |         |   -36.6813 |           |          |
 
 [[STDERR]]
-Loading Term List file '../common/test3.tlist.xml'.
-Loading RTTM file '../common/test3.rttm' encoding /UTF-8/.
-Loading ECF file '../common/test3.ecf.xml'.
-Loading KWS List file '../common/test3.stdlist.xml'.
-Processing Alignment.
+Loading ECF file '../common/test6.ecf.xml'.
+Loading KWS List file '../common/test6.stdlist.xml'.
+Loading Term List file '../common/test6.tlist.xml'.
+Loading RTTM file '../common/test6.rttm' encoding /UTF-8/.
