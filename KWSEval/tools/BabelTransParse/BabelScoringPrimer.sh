@@ -7,22 +7,19 @@ TLISTADDNGRAM=TListAddNGram
 KWSLISTGEN=KWSListGenerator
 KWSVALIDATE=ValidateKWSList
 DETUTIL=DETUtil
-mode=DEV
-if [ ! "$mode" = DEV ] ; then
-    if [ "$F4DE_BASE" = "" ] ; then
-	echo "Error: Set the environment variable \$F4DE_BASE per the F4DE install instructions"
-	exit 1
-    fi
-    BABELPARSE="perl -I $F4DE_BASE/common/lib -I $F4DE_BASE/KWSEval/lib ./BabelTransParse.pl"
-else
+
+if [ "$F4DE_BASE" = "" ] ; then
     BASE=../../../
-    KWSEVAL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSEval/KWSEval.pl"
-    TLISTADDNGRAM="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/TListAddNGram/TListAddNGram.pl"
-    BABELPARSE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib ./BabelTransParse.pl"
-    KWSLISTGEN="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSListGenerator/KWSListGenerator.pl"
-    KWSVALIDATE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/ValidateKWSList/ValidateKWSList.pl"
-    DETUTIL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/common/tools/DETUtil/DETUtil.pl"
+else
+    BASE="$F4DE_BASE";
 fi
+
+KWSEVAL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSEval/KWSEval.pl"
+TLISTADDNGRAM="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/TListAddNGram/TListAddNGram.pl"
+BABELPARSE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib ./BabelTransParse.pl"
+KWSLISTGEN="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSListGenerator/KWSListGenerator.pl"
+KWSVALIDATE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/ValidateKWSList/ValidateKWSList.pl"
+DETUTIL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/common/tools/DETUtil/DETUtil.pl"
 
 
 for langID in 101 104 105 106 english ; do
