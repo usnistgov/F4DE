@@ -248,10 +248,11 @@ sub check_skip {
 
 sub check_files {
   my ($testname, $subtype, $warn_msg, @lstests) = @_;
-  
+  # if any file is 'undef' we will skip
+
   for (my $i = 0; $i < scalar @lstests; $i++) {
     my $lsa = $lstests[$i];
-    next if (MMisc::ls_ok($lsa));
+    next if (defined($lsa) && MMisc::ls_ok($lsa));
 
     &print_name($testname, $subtype);
     print "Skipped [" . 
