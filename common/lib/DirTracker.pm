@@ -192,7 +192,8 @@ sub scan {
     
   }
 
-  $_[0]->__files_scan($now, @fm_changes);
+  my @tout = $_[0]->__files_scan($now, @fm_changes);
+  push @out, @tout if (scalar @tout > 0);
   $_[0]->{last_scandate} = $now;
 
   return(@out);
@@ -326,6 +327,8 @@ sub __phre {
 sub __files_scan {
   return() if (! defined $_[0]->{files_monitor});
 
+  my @out = ();
+
   # reset list of changes since last time
   $_[0]->{fm_changes} = undef;
   for (my $i = 2; $i < scalar @_; $i++) {
@@ -339,15 +342,20 @@ sub __files_scan {
     
     # if mtime, ctime or size has changed, chances are the sha256 has too, so 
     if (($_[$i]->is_mtime) || ($_[$i]->is_ctime) || ($_[$i]->is_size)) {
+      $_[0]->{files}{$_[$i]->name} = $_[1]; # file was modified
       my $osha = $_[0]->{files2sha}{$_[$i]->name};
       my $sha256 = $_[0]->__file_sha256digest($_[$i]->name);
-      $_[0]->{files}{$_[$i]->name} = $_[1];
-      $_[0]->{files2sha}{$_[$i]->name} = $sha256;
-      delete $_[0]->{sha2files}{$sha256}{$_[$i]->name};
-      $_[0]->{sha2files}{$sha256}{$_[$i]->name}++;
+      if ($sha256 ne $osha) { # file's SHA256 was modified
+        $_[0]->{files2sha}{$_[$i]->name} = $sha256; # modify file's SHA entry
+        delete $_[0]->{sha2files}{$osha}{$_[$i]->name}; # delete old sha to file entry
+        # if there was no entry for this new SHA256, we have a true new candidate
+        push @out, $_[$i]->name if (! exists $_[0]->{sha2files}{$sha256});
+        $_[0]->{sha2files}{$sha256}{$_[$i]->name}++; # create a new one
+      }
     }
-
   }
+
+  return(@out);
 }
 
 ##########
