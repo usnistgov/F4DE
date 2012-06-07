@@ -50,7 +50,7 @@ GetOptions
 
 #Check required options
 MMisc::error_quit("in-term-list required.") if ($inTlist eq "");
-MMisc::error_quit("specify at least one annot-files or annot-scripts.") if (@annotFiles + @annotScripts < 1);
+MMisc::error_quit("out-file-name required.") if ($outfilename eq "");
 
 #Load TermList
 $TermList = new TermList($inTlist);
@@ -91,7 +91,7 @@ foreach my $termid (keys %{ $TermList->{TERMS} }) {
 }
 
 #Dump TermList
-$TermList->{TERMLIST_FILENAME} = $outfilename if ($outfilename ne "");
+$TermList->{TERMLIST_FILENAME} = $outfilename;
 $TermList->saveFile();
 
 MMisc::ok_quit();
