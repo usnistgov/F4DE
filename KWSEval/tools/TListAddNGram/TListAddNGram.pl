@@ -87,7 +87,6 @@ sub usage
     print "\n";
 }
 
-
 my $Termfile = "";
 my $Outfile = "";
 
@@ -102,7 +101,11 @@ GetOptions
 die "ERROR: An Term file must be set." if($Termfile eq "");
 die "ERROR: An Output file must be set." if($Outfile eq "");
 
-my $TERM = new TermList($Termfile);
+#
+my $TERM = new TermList();
+$TERM->{ENCODING} = "UTF-8";
+$TERM->loadFile($Termfile);
+#
 
 foreach my $term(sort keys %{ $TERM->{TERMS} }){
     
@@ -112,6 +115,4 @@ foreach my $term(sort keys %{ $TERM->{TERMS} }){
         
     $TERM->{TERMS}{$term}->setAttrValue("NGram Order", "$o-grams")
 }
-
 $TERM->saveFile($Outfile);
-

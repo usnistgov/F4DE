@@ -104,11 +104,15 @@ my $encoding = "ASCII";
 my $root = undef;
 my $lang = undef;
 my $norm = "";
+my $fileOfTF = "";
+my $transPath = ".";
 
 GetOptions
 ( 
- 'language=s'                              => \$lang,
+ 'language=s'                          => \$lang,
  'root=s'                              => \$root,
+ 'file-of-transfiles=s'                => \$fileOfTF,
+ 'trans-path=s'                        => \$transPath,
  'encoding=s'                          => \$encoding,
  'compareNormalize=s'                  => \$norm,
  'Verbose'                             => \$verbose,
@@ -118,15 +122,27 @@ GetOptions
 
 ### Check the encoding parameter
 MMisc::error_quit("Character encoding /$encoding/ must be either [ASCII|UTF-8]") 
-  if( $encoding !~ /^(ASCII|UTF-8)$/ );                                                  
+  if( $encoding !~ /^(ASCII|UTF-8)$/ );
 MMisc::error_quit("Root name required\n") if(! defined($root));
 MMisc::error_quit("Language required\n") if(! defined($lang));
 
 my $db = ();
 
 my $totalDuration = 0;
+my @tfiles = @ARGV;
+$transPath .= "/" if ($transPath =~ m:^[^/]+$:);
+if ($fileOfTF ne "") {
+  open (FILEOFTF, $fileOfTF) or MMisc::error_quit("Cannot open file '$fileOfTF'.");
+  while (<FILEOFTF>) {
+    s/^\s+//;
+    s/\s+$//;
+    $_ .= ".txt" if ($_ !~ m:.txt$:i);
+    push (@tfiles, $transPath . $_)
+  }
+  close FILEOFTF;
+}
 print "Processing Babel files\n";
-foreach my $trans(@ARGV){
+foreach my $trans(@tfiles){
   print "   $trans\n";
   my ($trans_bt, $trans_et) = (999999999, -1);
   ### Extract meaning from the name
