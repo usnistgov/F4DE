@@ -101,12 +101,12 @@ for (my $t=0; $t<@aterms; $t++) {
 
 #Output file
 $outfilename = $language . ".tlist.xml" if ($outfilename eq "");
-$TermList->{LANGUAGE} = $language;
-$TermList->{COMPARENORMALIZE} = $normalization if ($normalization ne "");
+$TermList->setLanguage($language);
+$TermList->setCompareNormalize($normalization) if ($normalization ne "");
 my $version = 1; #??
 $TermList->{VERSION} = $version;
 $encoding = "UTF-8" if ($encoding =~ m/utf-?8/i);
-$TermList->{ENCODING} = $encoding;
+$TermList->setEncoding($encoding);
 $TermList->saveFile($outfilename);
 
 MMisc::ok_quit();
