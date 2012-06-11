@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:element name="stdlist">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="detected_termlist" minOccurs="0" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="term" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:attribute name="file" type="xsd:string" use="required" />
+                  <xsd:attribute name="channel" type="xsd:integer" use="required" />
+                  <xsd:attribute name="tbeg" type="xsd:decimal" use="required" />
+                  <xsd:attribute name="dur" type="xsd:decimal" use="required" />
+                  <xsd:attribute name="score" type="xsd:float" use="required" />
+                  <xsd:attribute name="decision" use="required">
+                    <xsd:simpleType>
+                      <xsd:restriction base="xsd:string">
+                        <xsd:enumeration value="YES" />
+                        <xsd:enumeration value="NO" />
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:attribute>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="termid" type="xsd:string" use="required" />
+            <xsd:attribute name="term_search_time" type="xsd:decimal" use="required" />
+            
+            <xsd:attribute name="oov_term_count" use="required">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:pattern value="NA|[0-9]+"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:attribute>  
+            
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+      <xsd:attribute name="termlist_filename" type="xsd:string" use="required" />
+      <xsd:attribute name="indexing_time" type="xsd:decimal" use="required" />
+      <xsd:attribute name="index_size" type="xsd:decimal" use="required" />
+      <xsd:attribute name="system_id" type="xsd:string" use="required" />
+      <xsd:attribute name="language" use="required">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="arabic" />
+            <xsd:enumeration value="english" />
+            <xsd:enumeration value="mandarin" />
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:attribute>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>

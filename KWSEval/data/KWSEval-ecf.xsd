@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:element name="ecf">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="excerpt" minOccurs="0" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:attribute name="audio_filename" type="xsd:string" use="required" />
+            <xsd:attribute name="channel" type="xsd:integer" use="required" />
+            <xsd:attribute name="tbeg" type="xsd:decimal" use="required" />
+            <xsd:attribute name="dur" type="xsd:decimal" use="required" />
+            <xsd:attribute name="language" use="required">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="arabic" />
+                  <xsd:enumeration value="english" />
+                  <xsd:enumeration value="mandarin" />
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:attribute>
+            <xsd:attribute name="source_type" use="required">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="bnews" />
+                  <xsd:enumeration value="cts" />
+                  <xsd:enumeration value="confmtg" />
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:attribute>
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+      <xsd:attribute name="source_signal_duration" type="xsd:string" use="required" />
+      <xsd:attribute name="version" type="xsd:string" use="required" />
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
+

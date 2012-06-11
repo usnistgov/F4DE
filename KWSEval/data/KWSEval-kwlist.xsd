@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:element name="termlist">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="term" minOccurs="0" maxOccurs="unbounded">
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="termtext" type="xsd:string" minOccurs="1" maxOccurs="unbounded" />
+              <xsd:element name="attr" minOccurs="0" maxOccurs="unbounded">
+                <xsd:complexType>
+                  <xsd:sequence>
+                    <xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
+                    <xsd:element name="value" type="xsd:string" minOccurs="1" maxOccurs="1" />
+                  </xsd:sequence>
+                </xsd:complexType>
+              </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="termid" type="xsd:string" use="required" />
+          </xsd:complexType>
+        </xsd:element>
+      </xsd:sequence>
+      <xsd:attribute name="ecf_filename" type="xsd:string" use="required" />
+      <xsd:attribute name="version" type="xsd:string" use="required" />
+      <xsd:attribute name="language" use="required">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="arabic" />
+            <xsd:enumeration value="english" />
+            <xsd:enumeration value="mandarin" />
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:attribute>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
