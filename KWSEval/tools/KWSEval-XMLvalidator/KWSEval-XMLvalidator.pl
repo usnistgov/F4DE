@@ -108,6 +108,7 @@ MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 my $xmllint = "";
 my $xsdpath = "";
 my $issome = -1;
+my $writeback = -1;
 
 my %opt = ();
 GetOptions
@@ -120,6 +121,7 @@ GetOptions
    'ecf'      => sub {$issome = 0;},
    'stdlist'  => sub {$issome = 1;},
    'termlist' => sub {$issome = 2;},
+   'write:s'         => \$writeback,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -127,6 +129,17 @@ MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
 MMisc::error_quit("Did not specify validation type, must be either \'--ecf\', \'--stdlist\' or \'--termlist\'")
   if ($issome == -1);
+
+if (($writeback != -1) && ($writeback ne "")) {
+  # Check the directory
+  MMisc::error_quit("Provided \'write\' option directory ($writeback) does not exist")
+    if (! -e $writeback);
+  MMisc::error_quit("Provided \'write\' option ($writeback) is not a directoru")
+    if (! -d $writeback);
+  MMisc::error_quit("Provided \'write\' option directory ($writeback) is not writable")
+    if (! -w $writeback);
+  $writeback .= "/" if ($writeback !~ m%\/$%); # Add a trailing slash
+}
 
 # Process defaults
 my $dummy = &get_xmlh();
@@ -145,6 +158,16 @@ while ($tmp = shift @ARGV) {
   }
 
   print "$tmp: ok\n";
+  if ($writeback != -1) {
+    my $fname = "";
+    
+    if ($writeback ne "") {
+      my ($err, $td, $tf, $te) = MMisc::split_dir_file_ext($tmp);
+      $fname = MMisc::concat_dir_file_ext($writeback, $tf, $te);
+    }
+    MMisc::writeTo($fname, "", 1, 0, $so);
+  } 
+  
   $ndone++;
 }
 print "All files processed (Validated: $ndone | Total: $ntodo)\n\n";
@@ -186,9 +209,9 @@ sub set_usage {
 $versionid
 
 Usage:
-$0 [--help --version] [--xmllint location] [--Xsdpath dirlocation] --ecf ecf_file.xml [ecf_file.xml [...]]
-$0 [--help --version] [--xmllint location] [--Xsdpath dirlocation] --stdlist stdlist_file.xml [stdlist_file.xml [...]]
-$0 [--help --version] [--xmllint location] [--Xsdpath dirlocation] --termlist termlist_file.xml [termlist_file.xml [...]]
+$0 [--help --version] [--xmllint location] [--Xsdpath dirlocation] [--write [directory]] --ecf ecf_file.xml [ecf_file.xml [...]]
+$0 [--help --version] [--xmllint location] [--Xsdpath dirlocation] [--write [directory]] --stdlist stdlist_file.xml [stdlist_file.xml [...]]
+$0 [--help --version] [--xmllint location] [--Xsdpath dirlocation] [--write [directory]] --termlist termlist_file.xml [termlist_file.xml [...]]
 
 Will validate one of KWS Eval's ECF, TermList or STDList files.
 
@@ -197,7 +220,7 @@ Where:
   --version       Print version number and exit
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --Xsdpath       Path where the XSD files can be found
-
+  --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
 
 Note:
 - 'Xsdpath' files are: $xsdfiles
