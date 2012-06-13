@@ -72,7 +72,7 @@ install_noman:
 #####
 
 CM_DIR=common
-COMMONTOOLS=tools/{DETEdit/DETEdit.pl,DETMerge/DETMerge.pl,DETUtil/DETUtil.pl}
+COMMONTOOLS=tools/{DETEdit/DETEdit.pl,DETMerge/DETMerge.pl,DETUtil/DETUtil.pl,xmllintTools/xsdxmllint.pl}
 COMMONTOOLS_MAN=tools/DETUtil/DETUtil.pl
 VIDATDIR=${CM_DIR}/tools/VidAT
 SQLITETOOLSDIR=${CM_DIR}/tools/SQLite_tools
@@ -225,7 +225,7 @@ DEVAinstall_noman:
 ##########
 
 KWSEVALDIR=KWSEval
-KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,TListAddNGram/TListAddNGram.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl}
+KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,TListAddNGram/TListAddNGram.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl,KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl}
 
 KWSEvalinstall:
 	@make KWSEvalinstall_common
