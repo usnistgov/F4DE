@@ -22,15 +22,9 @@
       </xsd:sequence>
       <xsd:attribute name="ecf_filename" type="xsd:string" use="required" />
       <xsd:attribute name="version" type="xsd:string" use="required" />
-      <xsd:attribute name="language" use="required">
-        <xsd:simpleType>
-          <xsd:restriction base="xsd:string">
-            <xsd:enumeration value="arabic" />
-            <xsd:enumeration value="english" />
-            <xsd:enumeration value="mandarin" />
-          </xsd:restriction>
-        </xsd:simpleType>
-      </xsd:attribute>
+      <xsd:attribute name="language" type="xsd:string" use="required" />
+      <xsd:attribute name="encoding" type="xsd:string" use="required" />
+      <xsd:attribute name="compareNormalize" type="xsd:string" use="required" />
     </xsd:complexType>
   </xsd:element>
 </xsd:schema>
