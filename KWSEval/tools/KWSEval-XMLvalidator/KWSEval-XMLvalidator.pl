@@ -96,7 +96,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 # Options processing
 
 my $xmllint_env = "F4DE_XMLLINT";
-my @xsdfilesl = ('KWSEval-ecf.xsd', 'KWSEval-stdlist.xsd', 'KWSEval-termlist.xsd'); # order is important
+my @xsdfilesl = ('KWSEval-ecf.xsd', 'KWSEval-kwslist.xsd', 'KWSEval-termlist.xsd'); # order is important
 my $usage = &set_usage();
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
@@ -119,7 +119,7 @@ GetOptions
    'xmllint=s' => \$xmllint,
    'Xsdpath=s' => \$xsdpath,
    'ecf'      => sub {$issome = 0;},
-   'stdlist'  => sub {$issome = 1;},
+   'kwslist'  => sub {$issome = 1;},
    'termlist' => sub {$issome = 2;},
    'write:s'         => \$writeback,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -127,7 +127,7 @@ GetOptions
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
-MMisc::error_quit("Did not specify validation type, must be either \'--ecf\', \'--stdlist\' or \'--termlist\'")
+MMisc::error_quit("Did not specify validation type, must be either \'--ecf\', \'--kwslist\' or \'--termlist\'")
   if ($issome == -1);
 
 if (($writeback != -1) && ($writeback ne "")) {
@@ -210,10 +210,10 @@ $versionid
 
 Usage:
 $0 [--help --version] [--xmllint location] [--Xsdpath dirlocation] [--write [directory]] --ecf ecf_file.xml [ecf_file.xml [...]]
-$0 [--help --version] [--xmllint location] [--Xsdpath dirlocation] [--write [directory]] --stdlist stdlist_file.xml [stdlist_file.xml [...]]
+$0 [--help --version] [--xmllint location] [--Xsdpath dirlocation] [--write [directory]] --kwslist kwslist_file.xml [kwslist_file.xml [...]]
 $0 [--help --version] [--xmllint location] [--Xsdpath dirlocation] [--write [directory]] --termlist termlist_file.xml [termlist_file.xml [...]]
 
-Will validate one of KWS Eval's ECF, TermList or STDList files.
+Will validate one of KWS Eval's ECF, TermList or KWSlist files.
 
 Where:
   --help          Print this usage information and exit
