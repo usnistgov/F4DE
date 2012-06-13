@@ -181,7 +181,7 @@ MMisc::ok_exit();
 sub get_xmlh {
   my $xmlh = new xmllintHelper();
 
-  my $xmllint = MMisc::get_env_val($xmllint_env, "")
+  $xmllint = MMisc::get_env_val($xmllint_env, "")
     if (MMisc::is_blank($xmllint));
   MMisc::error_quit("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
     if (! $xmlh->set_xmllint($xmllint));
