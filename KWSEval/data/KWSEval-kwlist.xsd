@@ -24,7 +24,14 @@
       <xsd:attribute name="version" type="xsd:string" use="required" />
       <xsd:attribute name="language" type="xsd:string" use="required" />
       <xsd:attribute name="encoding" type="xsd:string" use="required" />
-      <xsd:attribute name="compareNormalize" type="xsd:string" use="required" />
+      <xsd:attribute name="compareNormalize" use="required">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="lowercase" />
+            <xsd:enumeration value="" />
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:attribute>
     </xsd:complexType>
   </xsd:element>
 </xsd:schema>
