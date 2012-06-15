@@ -23,7 +23,13 @@
       <xsd:attribute name="ecf_filename" type="xsd:string" use="required" />
       <xsd:attribute name="version" type="xsd:string" use="required" />
       <xsd:attribute name="language" type="xsd:string" use="required" />
-      <xsd:attribute name="encoding" type="xsd:string" use="required" />
+      <xsd:attribute name="encoding" use="required">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="UTF-8" />
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:attribute>
       <xsd:attribute name="compareNormalize" use="required">
         <xsd:simpleType>
           <xsd:restriction base="xsd:string">
