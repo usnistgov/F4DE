@@ -152,10 +152,13 @@ MMisc::error_quit("Problem with core tool ($tool):\n[stdout]$so\n[stderr]$se\n")
 
 print "** Running all checks (will print result after tool is completed)\n";
 ($rc, $so, $se) = &run_tool(@ARGV);
-MMisc::ok_quit($so)
-  if ($rc == 0);
 
-MMisc::error_quit("Problem running core tool ($tool):\n[stdout]$so\n[stderr]$se\n");
+print $so;
+print "\n[stderr]\n$se\n" if (! MMisc::is_blank($se));
+
+MMisc::ok_exit() if ($rc == 0);
+
+MMisc::error_exit();
 
 ########## END
 
