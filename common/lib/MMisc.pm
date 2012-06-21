@@ -1835,43 +1835,55 @@ sub safe_exists {
 ######
 
 sub push_tohash {
+  # with: ($rh, $v, $d0, @d) = @_
   # eq to: push @{$$rh{$d0}{$d[0]}...{$d[x]}}, $v
-  my ($rh, $v, $d0, @d) = @_;
+  my ($rh, $v, $d0) = splice(@_,0,3);
 
-  if (scalar @d == 0) {
+  if (scalar @_ == 0) {
     push @{$$rh{$d0}}, $v;
     return(1);
+  } elsif (scalar @_ > 2) {
+    my ($d1, $d2) = splice(@_,0,2);
+    return(&push_tohash(\%{$$rh{$d0}{$d1}{$d2}}, $v, @_));
   }
 
-  return(&push_tohash(\%{$$rh{$d0}}, $v, @d));
+  return(&push_tohash(\%{$$rh{$d0}}, $v, @_));
 }
 
 #####
 
 sub set_tohash {
+  # with: ($rh, $v, $d0, @d) = @_
   # eq to: $$rh{$d0}{$d[0]}...{$d[x]} = $v
-  my ($rh, $v, $d0, @d) = @_;
+  my ($rh, $v, $d0) = splice(@_,0,3);
 
-  if (scalar @d == 0) {
+  if (scalar @_ == 0) {
     $$rh{$d0} = $v;
     return(1);
+  } elsif (scalar @_ > 2) {
+    my ($d1, $d2) = splice(@_,0,2);
+    return(&set_tohash(\%{$$rh{$d0}{$d1}{$d2}}, $v, @_));
   }
 
-  return(&set_tohash(\%{$$rh{$d0}}, $v, @d));
+  return(&set_tohash(\%{$$rh{$d0}}, $v, @_));
 }
 
 #####
 
 sub inc_tohash {
+  # with: ($rh, $d0, @d) = @_
   # eq to: $$rh{$d0}{$d[0]}...{$d[x]}}++
-  my ($rh, $d0, @d) = @_;
+  my ($rh, $d0) = splice(@_,0,2);
 
-  if (scalar @d == 0) {
+  if (scalar @_ == 0) {
     $$rh{$d0}++;
     return(1);
+  } elsif (scalar @_ > 2) {
+    my ($d1, $d2) = splice(@_,0,2);
+    return(&inc_tohash(\%{$$rh{$d0}{$d1}{$d2}}, @_));
   }
 
-  return(&inc_tohash(\%{$$rh{$d0}}, @d));
+  return(&inc_tohash(\%{$$rh{$d0}}, @_));
 }
 
 #####
