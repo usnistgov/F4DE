@@ -127,61 +127,69 @@ my $ocsvh = new CSVHelper();
 
 ########## Read file
 print "** Reading input file\n";
+my $now = MMisc::get_currenttime();
 my $ish = 0;
 my $inlc = 0;
 my %colm = ();
 my %name = ();
 my %content = ();
-while (my $line = <IFILE>) {
-  print "  Line: $ish    \r";
-  my @inh = $icsvh->csvline2array($line);
+my @split = ();
+my $tmp;
+
+# Read first line (header)
+my $line = <IFILE>;
+my @inh = $icsvh->csvline2array($line);
+MMisc::error_quit("Problem with input CSV : " . $icsvh->get_errormsg() . "\n[Line $ish : $line]")
+  if ($icsvh->error());
+$ish++;
+
+&get_colm(@inh);
+$icsvh->set_number_of_columns(scalar @inh);
+foreach my $k (@sortCol) {
+  next if (exists $colm{$k});
+  MMisc::error_quit("Required \'sortColumns\' not found ($k)");
+}
+
+my @rest = ();
+while ($line = <IFILE>) {
+  print "  Line: $ish    \r" if (++$ish % 1000 == 0);
+  @inh = ();
+  @inh = $icsvh->csvline2array($line);
   MMisc::error_quit("Problem with input CSV : " . $icsvh->get_errormsg() . "\n[Line $ish : $line]")
       if ($icsvh->error());
-  $ish++;
 
-  my @out = ();
-  if ($ish == 1) { # Header
-    &get_colm(@inh);
-    $inlc = scalar @inh;
-    $icsvh->set_number_of_columns($inlc);
-    foreach my $k (@sortCol) {
-      next if (exists $colm{$k});
-      MMisc::error_quit("Required \'sortColumns\' not found ($k)");
-    }
-    next;
-  }
-
-  # regular read
   my $val = $inh[$colm{$sortCol[0]}];
 #  print "  [$val]  \r";
-  my @split = &get_split($val);
+  &get_split($val);
 #  print join("|", @split) . " = $val\n";
   MMisc::push_tohash(\%name, $val, @split)
     if (! exists $content{$val});
-  my @rest = ();
+  @rest = ();
   for (my $i = 1; $i < scalar @sortCol; $i++) { push @rest, $inh[$colm{$sortCol[$i]}]; }
   push @{$content{$val}}, \@rest;
+
+  $line = "";
 }
 close IFILE;
+my $elapsed = MMisc::get_elapsedtime($now);
+print "  (elapsed: $elapsed)   \n";
 
 ########## Write file
 print "** Writing output file\n";
-
+my $now = MMisc::get_currenttime();
+my $gosh = 0;
 my $osh = 0;
 $ocsvh->set_number_of_columns(scalar @sortCol);
 my $otxt = $ocsvh->array2csvline(@sortCol);
 $otxt .= "\n";
 MMisc::error_quit("Problem with output CSV [at header]: " . $ocsvh->get_errormsg())
   if ($ocsvh->error());
-print OFILE "$otxt";
 $osh++;
 
 sub write_file {
   my ($dim, $rh) = @_;
 
   if ($dim == 1) {
-    print "  Line: $osh  \r";
-    my $otxt = "";
     foreach my $key (sort keys %{$rh}) {
       foreach my $lname (sort @{$$rh{$key}}) {
         for (my $i = 0; $i < scalar @{$content{$lname}}; $i++) {
@@ -193,7 +201,13 @@ sub write_file {
         }
       }
     }
-    print OFILE "$otxt";
+    if ($osh > 1000) {
+      $gosh += $osh;
+      print "  Line: $gosh  \r";
+      print OFILE "$otxt";
+      $otxt = "";
+      $osh = 0;
+    }
     return();
   }
   
@@ -203,9 +217,13 @@ sub write_file {
 }
 
 &write_file($splitdim, \%name);
+print OFILE "$otxt";
+$gosh += $osh;
 close OFILE;
+my $elapsed = MMisc::get_elapsedtime($now);
+print "  (elapsed: $elapsed)   \n";
 
-MMisc::ok_quit("Done (processed $ish lines in / $osh lines out)\n");
+MMisc::ok_quit("Done (processed $ish lines in / $gosh lines out)\n");
 
 ####################
 
@@ -219,15 +237,11 @@ sub get_colm {
 #####
 
 sub get_split {
-  my @split = ();
   for (my $i = 0; $i < $splitdim; $i++) {
-    my $t = substr($_[0], $i * $splitsize, $splitsize);
-    push @split, ((!defined $t) || ($t eq "")) ? "\0" : $t;
+    $tmp = substr($_[0], $splitsize * $i, $splitsize);
+    $split[$i] =  ((! defined $tmp) || ($tmp eq '')) ? "\0" : $tmp;
   }
-
-  return(@split);
 }
-
 
 ####################
 
