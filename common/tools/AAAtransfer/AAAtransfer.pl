@@ -98,7 +98,7 @@ MMisc::ok_quit($usage) if (scalar @ARGV == 0);
 # Default values for variables
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                      V    abcd   h          stu       #
+# Used:                           abcde  h          stuv      #
 
 my $upload = 0;
 my $download = 0;
