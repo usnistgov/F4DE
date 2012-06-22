@@ -43,22 +43,34 @@ my $versionid = "DirTracker.pm Version: $version";
 
 ##########
 # new(DirToTrack)
+# new(DirToTrack, SaltTool)
 ## The prupose of this package is to be made aware of TRUE new files added any level of a directory
 # By TRUE, we mean files that when performing a 'scan' have a different SHA256digest than a file already processed previously,
 # so that if a file A exist and is copied to B into a different directory, B is not listed as a new file
 # Limitation: does not handle actual file changes, only addition and deletion
 ## the 'added' 'deleted' or 'files' functions do care if duplicates and will tell all instances
 ## warning: data is only valid from the most recent 'scan' function
+# 'SaltTool' is a tool to which each new file location (not directory) is provided and is expected to return a one liner string 
+# value on its standard out, which will be used as the beginning of the internal SHA256
 sub new {
 
-  my ($class, $dir) = @_;
+  my ($class, $dir, $salttool) = @_;
 
   my $errorh = new MErrorH('DirTracker');
   $errorh->set_errormsg("Can not be instanciated without a directory") 
     if (MMisc::is_blank($dir));
   my ($err, $v) = MMisc::__find_pre($dir);
-  $errorh->set_errormsg("Problem with directory ($dir): $err")
+  $errorh->set_errormsg("Problem with \'DirToTrack\' ($dir): $err")
     if (! MMisc::is_blank($err));
+
+  if (! MMisc::is_blank($salttool)) {
+    $err = MMisc::check_file_x($salttool);
+    $errorh->set_errormsg("Problem with \'SaltTool\' ($salttool): $err")
+      if (! MMisc::is_blank($err));
+  } else {
+    $salttool = undef;
+  }
+
   my $errorv = $errorh->error();
   
   my $self =
@@ -81,6 +93,8 @@ sub new {
      errorv    => $errorv,      # Cache information
      # fake SHA counter
      fakeshac  => 0,
+     # saltTool location
+     salttool => $salttool,
     };
  
   bless $self;
@@ -366,8 +380,19 @@ sub __file_sha256digest {
     MMisc::warn_print("Problem obtaining SHA256 digest for entity ($err) , will return unique non sha value");
     return(sprintf("XXX_Not_an_SHA_value_ZZZ:%06d", ++$_[0]->{fakeshac}));
   }
-  
-  return($sha256);
+
+  my $pre = "";
+  if (defined $_[0]->{salttool}) {
+    my @cmd = ($_[0]->{salttool}, $_[1]);
+    my ($rc, $so, $se) = MMisc::do_system_call(@cmd);
+    if ($rc != 0) {
+      MMisc::warn_print("\'SaltTool\' returned with bad status (for file: " . $_[1] . "), not us value returned");
+    } else {
+      $pre = $so;
+    }
+  }
+
+  return($pre . $sha256);
 }
 
 ############################################################
