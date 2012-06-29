@@ -296,7 +296,7 @@ sub unitTest
   my $path = shift;
 
   my $rttmfile = $path . "test5.rttm";
-  my $kwsfile = $path . "test5.stdlist.xml";
+  my $kwsfile = $path . "test5.kwslist.xml";
   my $ecffile = $path . "test5.ecf.xml";
   my $termlistfile = $path . "test5.tlist.xml";
 
