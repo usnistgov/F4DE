@@ -1,4 +1,4 @@
-<stdlist termlist_filename="test3.tlist.xml" indexing_time="74390.00" language="english" index_size="21235877" system_id="Test3 System ID">
+<kwslist termlist_filename="test3.tlist.xml" indexing_time="74390.00" language="english" index_size="21235877" system_id="Test3 System ID">
 <detected_termlist termid="TERM-001" term_search_time="24.3" oov_term_count="0">
 <term file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1630.710" dur="0.370" score="0.966931" decision="YES"/>
 <term file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="697.120" dur="0.260" score="0.970571" decision="YES"/>
@@ -32,5 +32,5 @@
 <term file="fsh_61130_exA" channel="2" tbeg="121.830" dur="0.364" score="0.909593" decision="YES"/>
 <term file="fsh_61130_exA" channel="2" tbeg="121.830" dur="0.440" score="0.700000" decision="NO"/>
 </detected_termlist>
-</stdlist>
+</kwslist>
 

@@ -1,4 +1,4 @@
-<stdlist termlist_filename="test2.tlist.xml" indexing_time="74390.00" language="english" index_size="21235877" system_id="">
+<kwslist termlist_filename="test2.tlist.xml" indexing_time="74390.00" language="english" index_size="21235877" system_id="">
 <detected_termlist termid="TEST-01" term_search_time="24.3" oov_term_count="0">
 <term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1211.630" dur="0.470" score="0.995379" decision="YES"/>
 <term file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1221.380" dur="0.490" score="0.994927" decision="YES"/>
@@ -521,5 +521,5 @@
 <term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1235.610" dur="1.200" score="0.995410" decision="YES"/>
 <term file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1527.910" dur="1.400" score="0.995410" decision="YES"/>
 </detected_termlist>
-</stdlist>
+</kwslist>
 
