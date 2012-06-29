@@ -1,6 +1,11 @@
+package KWSList;
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
+#
 # KWSEval
 # KWSList.pm
-# Author: Jerome Ajot
+#
+# Author(s): Martial Michel
+# Original Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
@@ -19,20 +24,38 @@
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
+#
+# $Id$
 
-package KWSList;
 use strict;
+
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "KWSList.pm Version: $version";
+
+##
+
 use KWSDetectedList;
+use xmllintHelper;
+
+use Cwd 'abs_path';
+use File::Basename 'dirname';
+
 require File::Spec;
 use MMisc;
 
 sub new
 {
     my $class = shift;
-    my $stdlistfile = shift;
+    my $kwslistfile = shift;
     my $self = {};
 
-    $self->{STDLIST_FILENAME} = $stdlistfile;
+    $self->{KWSLIST_FILENAME} = $kwslistfile;
     $self->{TERMLIST_FILENAME} = "";
     $self->{MIN_SCORE} = 9999.0;
     $self->{MAX_SCORE} = -9999.0;
@@ -46,7 +69,7 @@ sub new
     $self->{TERMS} = {};
 	
     bless $self;
-    $self->loadFile($stdlistfile) if (defined($stdlistfile));
+    $self->loadFile($kwslistfile) if (defined($kwslistfile));
     $self->{DIFF_SCORE} = $self->{MAX_SCORE} - $self->{MIN_SCORE};
     
     return $self;
@@ -55,10 +78,10 @@ sub new
 sub new_empty
 {
     my $class = shift;
-    my $stdlistfile = shift;
+    my $kwslistfile = shift;
     my $self = {};
 
-    $self->{STDLIST_FILENAME} = $stdlistfile;
+    $self->{KWSLIST_FILENAME} = $kwslistfile;
     $self->{TERMLIST_FILENAME} = "";
     $self->{MIN_SCORE} = 9999.0;
     $self->{MAX_SCORE} = -9999.0;
@@ -97,36 +120,55 @@ sub SetSystemID
     $self->{SYSTEM_ID} = $sysid;
 }
 
-sub loadFile
-{
-    my ($self, $stdlistf) = @_;
-    my $stdlistfilestring = "";
-    
-    print STDERR "Loading KWS List file '$stdlistf'.\n";
-    
-    open(STDLIST, $stdlistf) 
-      or MMisc::error_quit("Unable to open for read KWSList file '$stdlistf' : $!");
-    
-    while (<STDLIST>)
-    {
-    	chomp;
-    	$stdlistfilestring .= $_;
-    }
-    
-    close(STDLIST);
-    
+sub loadFile {
+  my $self = shift @_;
+  return($self->loadXMLFile(@_));
+}
+
+sub loadXMLFile {
+  my ($self, $kwslistf) = @_;
+
+  my $err = MMisc::check_file_r($kwslistf);
+  MMisc::error_quit("Problem with input file ($kwslistf): $err")
+      if (! MMisc::is_blank($err));
+
+  my $modfp = MMisc::find_Module_path('KWSList');
+  MMisc::error_quit("Could not obtain \'KWSList.pm\' location, aborting")
+      if (! defined $modfp);
+
+  my $f4b = 'F4DE_BASE';
+  my $xmllint_env = "F4DE_XMLLINT";
+  my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
+  my @xsdfilesl = ('KWSEval-kwslist.xsd');
+
+  print STDERR "Loading KWS List file '$kwslistf'.\n";
+
+  # First let us use xmllint on the file XML file
+  my $xmlh = new xmllintHelper();
+  my $xmllint = MMisc::get_env_val($xmllint_env, "");
+  MMisc::error_quit("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_xmllint($xmllint));
+  MMisc::error_quit("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xsdfilesl(@xsdfilesl));
+  MMisc::error_quit("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xsdpath($xsdpath));
+
+  my $kwslistfilestring = $xmlh->run_xmllint($kwslistf);
+  MMisc::error_quit("$kwslistf: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
+      if ($xmlh->error());
+
     #clean unwanted spaces
-    $stdlistfilestring =~ s/\s+/ /g;
-    $stdlistfilestring =~ s/> </></g;
-    $stdlistfilestring =~ s/^\s*//;
-    $stdlistfilestring =~ s/\s*$//;
+    $kwslistfilestring =~ s/\s+/ /g;
+    $kwslistfilestring =~ s/> </></g;
+    $kwslistfilestring =~ s/^\s*//;
+    $kwslistfilestring =~ s/\s*$//;
     
-    my $stdlisttag;
+    my $kwslisttag;
     my $detectedtermlist;
 
-    if($stdlistfilestring =~ /(<stdlist .*?[^>]*>)([[^<]*<.*[^>]*>]*)<\/stdlist>/)
+    if($kwslistfilestring =~ /(<kwslist .*?[^>]*>)([[^<]*<.*[^>]*>]*)<\/kwslist>/)
     {
-        $stdlisttag = $1;
+        $kwslisttag = $1;
         $detectedtermlist = $2;
     }
     else
@@ -134,7 +176,7 @@ sub loadFile
         MMisc::error_quit("Invalid KWSList file");
     }
     
-    if($stdlisttag =~ /termlist_filename="(.*?[^"]*)"/)
+    if($kwslisttag =~ /termlist_filename="(.*?[^"]*)"/)
     {
        $self->{TERMLIST_FILENAME} = $1;
     }
@@ -143,7 +185,7 @@ sub loadFile
         MMisc::error_quit("KWS: 'termlist_filename' option is missing in kwslist tag");
     }
     
-    if($stdlisttag =~ /indexing_time="(.*?[^"]*)"/)
+    if($kwslisttag =~ /indexing_time="(.*?[^"]*)"/)
     {
        $self->{INDEXING_TIME} = $1;
     }
@@ -152,7 +194,7 @@ sub loadFile
         MMisc::error_quit("KWS: 'indexing_time' option is missing in kwslist tag");
     }
     
-    if($stdlisttag =~ /language="(.*?[^"]*)"/)
+    if($kwslisttag =~ /language="(.*?[^"]*)"/)
     {
        $self->{LANGUAGE} = $1;
     }
@@ -161,7 +203,7 @@ sub loadFile
         MMisc::error_quit("KWS: 'language' option is missing in kwslist tag");
     }
     
-    if($stdlisttag =~ /index_size="(.*?[^"]*)"/)
+    if($kwslisttag =~ /index_size="(.*?[^"]*)"/)
     {
        $self->{INDEX_SIZE} = $1;
     }
@@ -170,7 +212,7 @@ sub loadFile
         MMisc::error_quit("KWS: 'index_size' option is missing in kwslist tag");
     }
     
-    if($stdlisttag =~ /system_id="(.*?[^"]*)"/)
+    if($kwslisttag =~ /system_id="(.*?[^"]*)"/)
     {
        $self->{SYSTEM_ID} = $1;
     }
@@ -318,12 +360,12 @@ sub saveFile
 {
     my($self) = @_;
     
-    print STDERR "Saving KWS List file '$self->{STDLIST_FILENAME}'.\n";
+    print STDERR "Saving KWS List file '$self->{KWSLIST_FILENAME}'.\n";
     
-    open(OUTPUTFILE, ">$self->{STDLIST_FILENAME}") 
-      or MMisc::error_quit("Cannot open to write '$self->{STDLIST_FILENAME}' : $!");
+    open(OUTPUTFILE, ">$self->{KWSLIST_FILENAME}") 
+      or MMisc::error_quit("Cannot open to write '$self->{KWSLIST_FILENAME}' : $!");
      
-    print OUTPUTFILE "<stdlist termlist_filename=\"$self->{TERMLIST_FILENAME}\" indexing_time=\"$self->{INDEXING_TIME}\" language=\"$self->{LANGUAGE}\" index_size=\"$self->{INDEX_SIZE}\" system_id=\"$self->{SYSTEM_ID}\">\n";
+    print OUTPUTFILE "<kwslist termlist_filename=\"$self->{TERMLIST_FILENAME}\" indexing_time=\"$self->{INDEXING_TIME}\" language=\"$self->{LANGUAGE}\" index_size=\"$self->{INDEX_SIZE}\" system_id=\"$self->{SYSTEM_ID}\">\n";
      
     foreach my $termsid(sort keys %{ $self->{TERMS} })
     {
@@ -339,7 +381,7 @@ sub saveFile
         print OUTPUTFILE "  </detected_termlist>\n";
     }
      
-    print OUTPUTFILE "</stdlist>\n";
+    print OUTPUTFILE "</kwslist>\n";
      
     close(OUTPUTFILE);
 }
