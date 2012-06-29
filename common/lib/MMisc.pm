@@ -1095,6 +1095,35 @@ sub find_all_dirs {
 
 ##########
 
+sub find_Module_location {
+  my $m = $_[0];
+  return(undef) if (! &check_package($m));
+
+  $m =~ s%::%\/%g;
+  $m =~ s/$/.pm/;
+  return(&get_file_full_path($INC{$m})) 
+    if ((require $m) && (exists $INC{$m}));
+
+  return(undef); # returns undef if it could not found
+}
+
+##
+
+sub find_Module_path {
+  my $m = $_[0];
+  my $v = &find_Module_location($m);
+  return(undef) if (! defined $v);
+
+  $m =~ s%::%\/%g;
+  $m =~ s/$/.pm/;
+  $v =~ s%$m$%%;
+  $v =~ s%\/$%%;
+  # Warning will return the base path in which A::B (ie A/B.pm) can be found
+  return($v);
+}
+
+##########
+
 sub get_txt_last_Xlines {
   my ($txt, $X) = &iuav(\@_, '', 0);
 
