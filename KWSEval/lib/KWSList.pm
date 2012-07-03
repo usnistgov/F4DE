@@ -46,56 +46,49 @@ use xmllintHelper;
 use Cwd 'abs_path';
 use File::Basename 'dirname';
 
-require File::Spec;
 use MMisc;
+use MtXML;
 
-sub new
-{
-    my $class = shift;
-    my $kwslistfile = shift;
-    my $self = {};
+sub __init {
+  my $self = shift;
+  my $kwslistfile = shift;
 
-    $self->{KWSLIST_FILENAME} = $kwslistfile;
-    $self->{TERMLIST_FILENAME} = "";
-    $self->{MIN_SCORE} = 9999.0;
-    $self->{MAX_SCORE} = -9999.0;
-    $self->{MIN_YES} = 9999.0;
-    $self->{MAX_NO} = -9999.0;
-    $self->{DIFF_SCORE} = 0.0;
-    $self->{INDEXING_TIME} = "";
-    $self->{LANGUAGE} = "";
-    $self->{INDEX_SIZE} = "";
-    $self->{SYSTEM_ID} = "";
-    $self->{TERMS} = {};
-	
-    bless $self;
-    $self->loadFile($kwslistfile) if (defined($kwslistfile));
-    $self->{DIFF_SCORE} = $self->{MAX_SCORE} - $self->{MIN_SCORE};
-    
-    return $self;
+  $self->{KWSLIST_FILENAME} = $kwslistfile;
+  $self->{TERMLIST_FILENAME} = "";
+  $self->{MIN_SCORE} = 9999.0;
+  $self->{MAX_SCORE} = -9999.0;
+  $self->{MIN_YES} = 9999.0;
+  $self->{MAX_NO} = -9999.0;
+  $self->{DIFF_SCORE} = 0.0;
+  $self->{INDEXING_TIME} = "";
+  $self->{LANGUAGE} = "";
+  $self->{INDEX_SIZE} = "";
+  $self->{SYSTEM_ID} = "";
+  $self->{TERMS} = {};
 }
 
-sub new_empty
-{
-    my $class = shift;
-    my $kwslistfile = shift;
-    my $self = {};
+sub new {
+  my $class = shift;
+  my $kwslistfile = shift;
+  my $self = {};
+    
+  bless $self;
+  $self->__init($kwslistfile);
+  $self->loadFile($kwslistfile) if (defined($kwslistfile));
+  $self->{DIFF_SCORE} = $self->{MAX_SCORE} - $self->{MIN_SCORE};
+  
+  return $self;
+}
 
-    $self->{KWSLIST_FILENAME} = $kwslistfile;
-    $self->{TERMLIST_FILENAME} = "";
-    $self->{MIN_SCORE} = 9999.0;
-    $self->{MAX_SCORE} = -9999.0;
-    $self->{MIN_YES} = 9999.0;
-    $self->{MAX_NO} = -9999.0;
-    $self->{DIFF_SCORE} = 0.0;
-    $self->{INDEXING_TIME} = "";
-    $self->{LANGUAGE} = "";
-    $self->{INDEX_SIZE} = "";
-    $self->{SYSTEM_ID} = "";
-    $self->{TERMS} = {};
-	
-    bless $self;    
-    return $self;
+sub new_empty {
+  my $class = shift;
+  my $kwslistfile = shift;
+  my $self = {};
+  
+  bless $self;    
+  $self->__init($kwslistfile);
+  
+  return $self;
 }
 
 sub toString
@@ -124,6 +117,8 @@ sub loadFile {
   my $self = shift @_;
   return($self->loadXMLFile(@_));
 }
+
+########################################
 
 sub loadXMLFile {
   my ($self, $kwslistf) = @_;
@@ -157,204 +152,162 @@ sub loadXMLFile {
   MMisc::error_quit("$kwslistf: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
       if ($xmlh->error());
 
-    #clean unwanted spaces
-    $kwslistfilestring =~ s/\s+/ /g;
-    $kwslistfilestring =~ s/> </></g;
-    $kwslistfilestring =~ s/^\s*//;
-    $kwslistfilestring =~ s/\s*$//;
-    
-    my $kwslisttag;
-    my $detectedtermlist;
+  ## Processing file content
 
-    if($kwslistfilestring =~ /(<kwslist .*?[^>]*>)([[^<]*<.*[^>]*>]*)<\/kwslist>/)
-    {
-        $kwslisttag = $1;
-        $detectedtermlist = $2;
-    }
-    else
-    {
-        MMisc::error_quit("Invalid KWSList file");
-    }
-    
-    if($kwslisttag =~ /termlist_filename="(.*?[^"]*)"/)
-    {
-       $self->{TERMLIST_FILENAME} = $1;
-    }
-    else
-    {
-        MMisc::error_quit("KWS: 'termlist_filename' option is missing in kwslist tag");
-    }
-    
-    if($kwslisttag =~ /indexing_time="(.*?[^"]*)"/)
-    {
-       $self->{INDEXING_TIME} = $1;
-    }
-    else
-    {
-        MMisc::error_quit("KWS: 'indexing_time' option is missing in kwslist tag");
-    }
-    
-    if($kwslisttag =~ /language="(.*?[^"]*)"/)
-    {
-       $self->{LANGUAGE} = $1;
-    }
-    else
-    {
-        MMisc::error_quit("KWS: 'language' option is missing in kwslist tag");
-    }
-    
-    if($kwslisttag =~ /index_size="(.*?[^"]*)"/)
-    {
-       $self->{INDEX_SIZE} = $1;
-    }
-    else
-    {
-        MMisc::error_quit("KWS: 'index_size' option is missing in kwslist tag");
-    }
-    
-    if($kwslisttag =~ /system_id="(.*?[^"]*)"/)
-    {
-       $self->{SYSTEM_ID} = $1;
-    }
-    else
-    {
-        MMisc::error_quit("KWS: 'system_id' option is missing in kwslist tag");
-    }
-    
-    while( $detectedtermlist =~ /(<detected_termlist (.*?[^>]*)>(.*?)<\/detected_termlist>)/ )
-    {
-        my $blockdetected = $1;
-        my $detectedtag = $2;
-        my $allterms = $3;
-        
-        my $detectedtermid;
-        my $detectedsearchtime;
-        my $detectedoov;
-        
-        if($detectedtag =~ /termid="(.*?[^"]*)"/)
-        {
-           $detectedtermid = $1;
-        }
-        else
-        {
-            MMisc::error_quit("KWS: 'termid' option is missing in detected_termlist tag");
-        }
-        
-        if($detectedtag =~ /term_search_time="(.*?[^"]*)"/)
-        {
-           $detectedsearchtime = $1;
-        }
-        else
-        {
-            MMisc::error_quit("KWS: 'term_search_time' option is missing in detected_termlist tag");
-        }
-        
-        if($detectedtag =~ /oov_term_count="(.*?[^"]*)"/)
-        {
-           $detectedoov = $1;
-        }
-        else
-        {
-            MMisc::error_quit("KWS: 'oov_term_search' option is missing in detected_termlist tag");
-        }
+  # Remove all XML comments
+  $kwslistfilestring =~ s%\<\!\-\-.+?\-\-\>%%sg;
 
-        my $detectedterm = new KWSDetectedList($detectedtermid, $detectedsearchtime, $detectedoov);
-                
-        while( $allterms =~ /(<term (.*?[^>]*)\/>)/ )
-        {
-            my $termtag = $1;
-            
-            my $file;
-            my $chan;
-            my $bt;
-            my $dur;
-            my $score;
-            my $decision;
-            
-            if($termtag =~ /file="(.*?[^"]*)"/)
-            {
-                $file = $1;
-               
-                my ($volume,$directories,$purged_filename) = File::Spec->splitpath($file);
-        
-                if($purged_filename =~ /(.*?)\.sph$/)
-                {
-                    $purged_filename = $1;
-                }
-                
-                $file = $purged_filename;
+  # Remove <?xml ...?> header
+  $kwslistfilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
+  
+  # At this point, all we ought to have left is the '<kwslist>' content
+  MMisc::error_quit("After initial cleanup, we found more than just \'kwslist\', aborting")
+      if (! ( ($kwslistfilestring =~ m%^\s*\<kwslist\s%is) && ($kwslistfilestring =~ m%\<\/kwslist\>\s*$%is) ) );
+  my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
+  # and if we extract it, the remaining string should be empty
+  my $string = MtXML::get_named_xml_section('kwslist', \$kwslistfilestring, $dem);
+  MMisc::error_quit("Could not extract '<kwslist>' datum, aborting")
+      if ($string eq $dem);
+  MMisc::error_quit("After removing '<kwslist>', found leftover content, aborting")
+      if (! MMisc::is_blank($kwslistfilestring));
+
+  # Order is important
+  my @kwslist_attrs = ('termlist_filename', 'indexing_time', 'language', 'index_size', 'system_id'); 
+  my @dtl_attrs = ('termid', 'term_search_time', 'oov_term_count');
+  my @term_attrs = ('file', 'channel', 'tbeg', 'dur', 'score', 'decision');
+
+  my ($err, $string, @results) = 
+    &kwslist_xml_processor($string, $dem, 'kwslist', \@kwslist_attrs, 'detected_termlist', \@dtl_attrs,'term', \@term_attrs);
+  MMisc::error_quit("Problem during XML internal processing: $err")
+      if (! MMisc::is_blank($err));
+  MMisc::error_quit("Leftover content post XML internal processing: $string")
+      if (! MMisc::is_blank($string));
+
+#  print MMisc::get_sorted_MemDump(\@results);
+  # @results is of the form:
+  # [ \%kwslist_attr, [ \%dtl_attr, [ \%term_attr, \%term_attr, ...], \%dtl_attr, [ \%term_attr ...], ...] ]
+
+  # Empty array element by element
+  
+  # kwslist
+  my $rkwslist_attr = shift @results;
+  MMisc::error_quit("Found unexpected data in extracted XML")
+      if (scalar @results > 1);
+  if (scalar @results == 1) { # contains at least one 'detected_termlist'
+    my $rtbd = shift @results;
+    MMisc::error_quit("Expected ARRAY in extracted data")
+        if (ref($rtbd) ne 'ARRAY');
+    while (scalar @$rtbd > 0) {
+      my $rdtl_attr = shift @$rtbd;
+      my $detectedtermid = &__get_attr($rdtl_attr, $dtl_attrs[0]);
+      my $detectedsearchtime = &__get_attr($rdtl_attr, $dtl_attrs[1]);
+      my $detectedoov = &__get_attr($rdtl_attr, $dtl_attrs[2]);
+      my $detectedterm = new KWSDetectedList($detectedtermid, $detectedsearchtime, $detectedoov);
+
+      if (scalar @$rtbd > 0) { # data left, if the first one is an array it is a 'term'
+        my $temp = $$rtbd[0];
+        if (ref($temp) eq 'ARRAY') {
+          for (my $i = 0; $i < scalar @$temp; $i++) {
+            my $rterm_attr = $$temp[$i];
+            my $file = &__get_attr($rterm_attr, $term_attrs[0]);
+            my $chan = &__get_attr($rterm_attr, $term_attrs[1]);
+            my $bt = &__get_attr($rterm_attr, $term_attrs[2]);
+            my $dur = &__get_attr($rterm_attr, $term_attrs[3]);
+            my $score = &__get_attr($rterm_attr, $term_attrs[4]);
+            my $decision = &__get_attr($rterm_attr, $term_attrs[5]);
+
+            my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($file);
+            if ($e eq 'sph') {
+              $file = $f;
+            } else {
+              $file = MMisc::concat_dir_file_ext('', $f, $e);
             }
-            else
-            {
-                MMisc::error_quit("KWS: 'file' option is missing in term tag");
-            }
-            
-            if($termtag =~ /channel="(.*?[^"]*)"/)
-            {
-               $chan = $1;
-            }
-            else
-            {
-                MMisc::error_quit("KWS: 'channel' option is missing in term tag");
-            }
-            
-            if($termtag =~ /tbeg="(.*?[^"]*)"/)
-            {
-               $bt = $1;
-            }
-            else
-            {
-                MMisc::error_quit("KWS: 'tbeg' option is missing in term tag");
-            }
-            
-            if($termtag =~ /dur="(.*?[^"]*)"/)
-            {
-               $dur = $1;
-            }
-            else
-            {
-                MMisc::error_quit("KWS: 'dur' option is missing in term tag");
-            }
-            
-            if($termtag =~ /score="(.*?[^"]*)"/)
-            {
-               $score = $1;
-               $self->{MIN_SCORE} = $score if($score < $self->{MIN_SCORE});
-               $self->{MAX_SCORE} = $score if($score > $self->{MAX_SCORE});
-            }
-            else
-            {
-                MMisc::error_quit("KWS: 'score' option is missing in term tag");
-            }
-            
-            if($termtag =~ /decision="(.*?[^"]*)"/)
-            {
-               $decision = $1;
-            }
-            else
-            {
-                MMisc::error_quit("KWS: 'decision' option is missing in term tag");
-            }
-            
-            if($decision eq "YES")
-            {
-                $self->{MIN_YES} = $score if($score < $self->{MIN_YES});
-            }
-            elsif($decision eq "NO")
-            {
-                $self->{MAX_NO} = $score if($score > $self->{MAX_NO});
-            }
+
+            $self->{MIN_SCORE} = $score if ($score < $self->{MIN_SCORE});
+            $self->{MAX_SCORE} = $score if ($score > $self->{MAX_SCORE});
+
+            $self->{MIN_YES} = $score if (($decision eq 'YES') && ($score < $self->{MIN_YES}));
+            $self->{MAX_NO} = $score if (($decision eq 'NO') && ($score > $self->{MAX_NO}));
             
             push (@{ $detectedterm->{TERMS} }, new KWSTermRecord($file, $chan, $bt, $dur, $score, $decision) ); 
-                        
-            $allterms =~ s/$termtag//;
-        }        
-        
-        $self->{TERMS}{$detectedtermid} = $detectedterm;
-
-        $detectedtermlist =~ s/$blockdetected//;
+          }
+          $self->{TERMS}{$detectedtermid} = $detectedterm;
+          shift @$rtbd; # remove processed element
+        }
+      }
     }
+  }
+
+  $self->{TERMLIST_FILENAME} = &__get_attr($rkwslist_attr, $kwslist_attrs[0]);
+  $self->{INDEXING_TIME} = &__get_attr($rkwslist_attr, $kwslist_attrs[1]);
+  $self->{LANGUAGE} = &__get_attr($rkwslist_attr, $kwslist_attrs[2]);
+  $self->{INDEX_SIZE} = &__get_attr($rkwslist_attr, $kwslist_attrs[3]);
+  $self->{SYSTEM_ID} = &__get_attr($rkwslist_attr, $kwslist_attrs[4]);
+
+#  print MMisc::get_sorted_MemDump(\$self);
+
+  return(1);
 }
+
+####################
+
+sub __get_attr {
+  my ($rh, $key) = @_;
+
+  MMisc::error_quit("Requested hash key does not exists ($key)")
+      if (! exists $$rh{$key});
+
+  return($$rh{$key});
+}
+
+#####
+
+sub kwslist_xml_processor {
+  my ($string, $dem, $here, $rattr, $exp) = MMisc::shiftX(5, \@_);
+
+  $string = MMisc::clean_begend_spaces($string);
+
+  my $section = MtXML::get_named_xml_section($here, \$string, $dem);
+  return("In \'$here\': Could not extract <$here> section", $string)
+    if ($section eq $dem);
+
+#  print "##########[$section]\n";
+  my ($err, %iattr) = MtXML::get_inline_xml_attributes($here, $section);
+  return("Problem extracting <$here> attributes: $err") 
+    if (! MMisc::is_blank($err));
+  foreach my $attr (@$rattr) {
+    return("Could not find <$here>'s $attr attribute")
+      if (! exists $iattr{$attr});
+  }
+  # Remove processed header and trailer
+  return("Could not clean \'$here\' tag")
+    if (! MtXML::remove_xml_tags($here, \$section));
+
+  # this was the last depth
+  if (MMisc::is_blank($exp)) {
+    return("In \'$here\': Leftover data post last depth", $section)
+      if (! MMisc::is_blank($section));
+    return("", $string, \%iattr);
+  }
+
+  my @results = ();
+  while (! MMisc::is_blank($section)) {
+    # First off, confirm the first section is the expected one
+    my $name = MtXML::get_next_xml_name(\$section, $dem);
+    return("In \'$here\', while checking for \'$exp\': Problem obtaining a valid XML name, aborting")
+      if ($name eq $dem);
+    return("In \'$here\': \'$exp\' section not present (instead: $name), aborting")
+      if ($name ne $exp);
+    ($err, $section, my @tmp_results) = &kwslist_xml_processor($section, $dem, $exp, @_);
+    return("In \'$here\', while processinging for \'$exp\': $err", $string)
+      if (! MMisc::is_blank($err));
+    push @results, @tmp_results;
+  }
+
+  return("", $string, \%iattr, [@results]);
+}
+
+############################################################
 
 sub saveFile
 {
