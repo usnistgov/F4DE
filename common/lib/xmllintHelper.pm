@@ -43,6 +43,7 @@ sub new {
      xmllint        => "",
      xsdpath        => "",
      xsdfilesl      => undef,
+     encoding       => '',
      errormsg       => $errormsg,
     };
 
@@ -257,6 +258,39 @@ sub _check_xsdfiles {
 
 ############################################################
 
+sub set_encoding {
+  my ($self, $encoding) = @_;
+
+  return(0) if ($self->error());
+
+  $self->{encoding} = $encoding;
+  return(1);
+}
+
+#####
+
+sub get_encoding {
+  my ($self) = @_;
+
+  my $encoding = $self->{encoding};
+
+  return($encoding);
+}
+
+#####
+
+sub is_encoding_set {
+  my ($self) = @_;
+
+  my $encoding = $self->get_encoding();
+
+  return(0) if (MMisc::is_blank($encoding));
+
+  return(1);
+}
+
+############################################################
+
 sub run_xmllint {
   my ($self, $file) = @_;
 
@@ -268,9 +302,14 @@ sub run_xmllint {
 
   $file =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
 
-  my ($retcode, $stdout, $stderr) = MMisc::do_system_call
-    ($xmllint, "--path", "\"$xsdpath\"", 
-     "--schema", $xsdpath . "/" . $xsdfilesl[0], $file);
+  my @cmd = ($xmllint, "--path", "\"$xsdpath\"", 
+             "--schema", $xsdpath . "/" . $xsdfilesl[0]);
+  if ($self->is_encoding_set()) {
+    push @cmd, '--encode', $self->get_encoding();
+  }
+  push @cmd, $file;
+
+  my ($retcode, $stdout, $stderr) = MMisc::do_system_call(@cmd);
 
   if ($retcode != 0) {
     $self->_set_errormsg("Problem validating file with \'xmllint\' ($stderr), aborting");
