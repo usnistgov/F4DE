@@ -4,8 +4,8 @@ package KWSList;
 # KWSEval
 # KWSList.pm
 #
-# Author(s): Martial Michel
 # Original Author: Jerome Ajot
+# Extensions: Martial Michel
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
@@ -41,12 +41,9 @@ my $versionid = "KWSList.pm Version: $version";
 ##
 
 use KWSDetectedList;
-use xmllintHelper;
-
-use Cwd 'abs_path';
-use File::Basename 'dirname';
 
 use MMisc;
+use xmllintHelper;
 use MtXML;
 
 sub __init {
