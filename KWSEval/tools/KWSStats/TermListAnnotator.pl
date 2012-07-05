@@ -63,11 +63,18 @@ foreach my $file (@annotFiles) {
 
   while (<AFILE>) {
     chomp;
-    my ($term, $attr, $val) = split(/,/, $_);
+    my @data = split(/,/,$_);
+    my ($term) = shift(@data);
     $term =~ s/^\s+//; $term =~ s/\s+$//;
-    $attr =~ s/^\s+//; $attr =~ s/\s+$//;
-    $val =~ s/^\s+//; $val =~ s/\s+$//;
-    $annotations{$term}{$attr} = $val;
+    while (@data > 0){
+      die "Error: Inconsistent attribute value pairs in '$_'"  if (@data < 2);
+      my $attr = shift(@data);
+      my $val = shift(@data);
+  
+      $attr =~ s/^\s+//; $attr =~ s/\s+$//;
+      $val =~ s/^\s+//; $val =~ s/\s+$//;
+      $annotations{$term}{$attr} = $val;
+    }
   }
   close AFILE;
 }
@@ -99,6 +106,7 @@ MMisc::ok_quit();
 sub charactersOfTerm 
 {
   my ($term) = @_;
+  $term =~ s/\s+//g;
   
   my @chars = split(//, $term);
   scalar(@chars);
