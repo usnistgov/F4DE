@@ -1,4 +1,4 @@
-<termlist ecf_filename="test5.ecf.xml" version="01" language="english" compareNormalize="lowercase">
+<termlist ecf_filename="test5.ecf.xml" version="01" language="english" compareNormalize="lowercase" encoding="UTF-8">
 <term termid="TERM-01">
     <termtext>yes</termtext>
     <terminfo>

@@ -1,4 +1,4 @@
-<termlist ecf_filename="Demo.cantonese.source.tlist.xml" version="20060511-0900" language="cantonese" encoding="UTF-8">
+<termlist ecf_filename="Demo.cantonese.source.tlist.xml" version="20060511-0900" language="cantonese" encoding="UTF-8" compareNormalize="">
 <term termid="TEST-00"><termtext>啊</termtext></term>
 <term termid="TEST-01"><termtext>系</termtext></term>
 <term termid="TEST-02"><termtext>你</termtext></term>

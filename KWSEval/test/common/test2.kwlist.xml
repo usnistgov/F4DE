@@ -1,4 +1,4 @@
-<termlist ecf_filename="test2.ecf.xml" version="20060511-0900" language="english" compareNormalize="lowercase">
+<termlist ecf_filename="test2.ecf.xml" version="20060511-0900" language="english" compareNormalize="lowercase" encoding="UTF-8">
 <term termid="TEST-01"><termtext>vatican</termtext></term>
 <term termid="TEST-02"><termtext>vignali</termtext></term>
 <term termid="TEST-03"><termtext>visit</termtext></term>
