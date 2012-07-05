@@ -7,11 +7,17 @@
           <xsd:complexType>
             <xsd:sequence>
               <xsd:element name="termtext" type="xsd:string" minOccurs="1" maxOccurs="unbounded" />
-              <xsd:element name="attr" minOccurs="0" maxOccurs="unbounded">
+              <xsd:element name="terminfo" minOccurs="0" maxOccurs="1">
                 <xsd:complexType>
                   <xsd:sequence>
-                    <xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
-                    <xsd:element name="value" type="xsd:string" minOccurs="1" maxOccurs="1" />
+                    <xsd:element name="attr" minOccurs="0" maxOccurs="unbounded">
+                      <xsd:complexType>
+                        <xsd:sequence>
+                          <xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
+                          <xsd:element name="value" type="xsd:string" minOccurs="1" maxOccurs="1" />
+                        </xsd:sequence>
+                      </xsd:complexType>
+                    </xsd:element>
                   </xsd:sequence>
                 </xsd:complexType>
               </xsd:element>
