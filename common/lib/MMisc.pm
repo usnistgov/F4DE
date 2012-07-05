@@ -170,42 +170,47 @@ sub all_blank {
 ##########
 
 sub clean_beg_spaces {
+  my $rstr = $_[0];
+
   my $cont = 1;
-  while ((length(${$_[0]}) > 1024) && ($cont)) {
-    my $txt = substr(${$_[0]}, 0, 1024, '');
+  while ((length($$rstr) > 1024) && ($cont)) {
+    my $txt = substr($$rstr, 0, 1024, '');
     $txt =~ s%^\s+%%s;
     if (length($txt) > 0) {
-      substr(${$_[0]}, 0, 0, $txt);
+      substr($$rstr, 0, 0, $txt);
       $cont = 0;
     }
   }
-  ${$_[0]} =~ s%^\s+%%s if ($cont == 1);
+  $$rstr =~ s%^\s+%%s if ($cont == 1);
 }
 
 #####
 
 sub clean_end_spaces {
+  my $rstr = $_[0];
+
   my $cont = 1;
-  while ((length(${$_[0]}) > 1024) && ($cont)) {
-    my $txt = substr(${$_[0]}, -1024, 1024, '');
+  while ((length($$rstr) > 1024) && ($cont)) {
+    my $txt = substr($$rstr, -1024, 1024, '');
     $txt =~ s%\s+$%%s;
     if (length($txt) > 0) {
-      ${$_[0]} .= $txt;
+      $$rstr .= $txt;
       $cont = 0;
     }
   }
-  ${$_[0]} =~ s%\s+$%%s if ($cont == 1);
+  $$rstr =~ s%\s+$%%s if ($cont == 1);
 }
 
 #####
-
 sub clean_begend_spaces {
-  return('') if (&is_blank($_[0]));
+  my $txt = $_[0];
 
-  &clean_beg_spaces(\$_[0]);
-  &clean_end_spaces(\$_[0]);
+  return('') if (&is_blank($txt));
 
-  return($_[0]);
+  &clean_beg_spaces(\$txt);
+  &clean_end_spaces(\$txt);
+
+  return($txt);
 }
 
 ##########
