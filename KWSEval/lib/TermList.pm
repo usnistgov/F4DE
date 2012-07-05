@@ -1,6 +1,11 @@
+package TermList;
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
+#
 # KWSEval
 # TermList.pm
-# Author: Jerome Ajot
+#
+# Original Author: Jerome Ajot
+# Extensions: Martial Michel
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
@@ -19,15 +24,30 @@
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
-
-package TermList;
+#
+# $Id$
 
 use TranscriptHolder;
 @ISA = qw(TranscriptHolder);
 
 use strict;
+
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "TermList.pm Version: $version";
+
+##
+
 use TermListRecord;
+
 use MMisc;
+use xmllintHelper;
+use MtXML;
 
 sub new
 {
@@ -190,26 +210,86 @@ sub toString
     }
 }
 
-sub loadFile
-{
-    my ($self, $tlistf) = @_;
-    my $tlistfilestring = "";
+####################
+
+sub loadFile {
+  my $self = shift @_;
+  return($self->loadXMLFile(@_));
+}
+
+#####
+
+sub loadXMLFile {
+  my ($self, $tlistf) = @_;
+
+  my $err = MMisc::check_file_r($tlistf);
+  MMisc::error_quit("Problem with input file ($tlistf): $err")
+      if (! MMisc::is_blank($err));
+
+  my $modfp = MMisc::find_Module_path('TermList');
+  MMisc::error_quit("Could not obtain \'TermList.pm\' location, aborting")
+      if (! defined $modfp);
+
+  my $f4b = 'F4DE_BASE';
+  my $xmllint_env = "F4DE_XMLLINT";
+  my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
+  my @xsdfilesl = ('KWSEval-termlist.xsd');
+
+  print STDERR "Loading Term List file '$tlistf'.\n";
+  
+  # First let us use xmllint on the file XML file
+  my $xmlh = new xmllintHelper();
+  my $xmllint = MMisc::get_env_val($xmllint_env, "");
+  MMisc::error_quit("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_xmllint($xmllint));
+  MMisc::error_quit("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xsdfilesl(@xsdfilesl));
+  MMisc::error_quit("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_xsdpath($xsdpath));
+  MMisc::error_quit("While trying to set xmllint \'encoding\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_encoding('UTF-8'));
+
+  my $tlistfilestring = $xmlh->run_xmllint($tlistf);
+  MMisc::error_quit("$tlistf: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
+      if ($xmlh->error());
+
+  ## Processing file content
+
+  # Remove all XML comments
+#  $tlistfilestring =~ s%\<\!\-\-.+?\-\-\>%%sg;
+
+  # Remove <?xml ...?> header
+#  $tlistfilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
+
+  # At this point, all we ought to have left is the '<termlist>' content
+#  MMisc::error_quit("After initial cleanup, we found more than just \'termlist\', aborting")
+#      if (! ( ($tlistfilestring =~ m%^\s*\<termlist\s%is) && ($tlistfilestring =~ m%\<\/termlist\>\s*$%is) ) );
+#  my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
+  # and if we extract it, the remaining string should be empty
+#  my $string = MtXML::get_named_xml_section('termlist', \$tlistfilestring, $dem);
+#  MMisc::error_quit("Could not extract '<termlist>' datum, aborting")
+#      if ($string eq $dem);
+#  MMisc::error_quit("After removing '<termlist>', found leftover content, aborting")
+#      if (! MMisc::is_blank($tlistfilestring));
+
+  
+
+  
+#    open(TERMLIST, $tlistf) 
+#      or MMisc::error_quit("Unable to open for read TermList file '$tlistf' : $!");
+#    if ($self->{ENCODING} ne ""){
+#      binmode(TERMLIST, $self->getPerlEncodingString());
+#    }
     
-    print STDERR "Loading Term List file '$tlistf'.\n";
+#    while (<TERMLIST>)
+#    {
+#        chomp;
+#        $tlistfilestring .= $_;
+#    }
     
-    open(TERMLIST, $tlistf) 
-      or MMisc::error_quit("Unable to open for read TermList file '$tlistf' : $!");
-    if ($self->{ENCODING} ne ""){
-      binmode(TERMLIST, $self->getPerlEncodingString());
-    }
-    
-    while (<TERMLIST>)
-    {
-        chomp;
-        $tlistfilestring .= $_;
-    }
-    
-    close(TERMLIST);
+#    close(TERMLIST);
+
+#  MMisc::writeTo('test', 'xml', 1, 0, $tlistfilestring);
 
     #clean unwanted spaces
     $tlistfilestring =~ s/\s+/ /g;
