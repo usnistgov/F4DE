@@ -10,7 +10,7 @@
               <xsd:element name="terminfo" minOccurs="0" maxOccurs="1">
                 <xsd:complexType>
                   <xsd:sequence>
-                    <xsd:element name="attr" minOccurs="0" maxOccurs="unbounded">
+                    <xsd:element name="attr" minOccurs="1" maxOccurs="unbounded">
                       <xsd:complexType>
                         <xsd:sequence>
                           <xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
