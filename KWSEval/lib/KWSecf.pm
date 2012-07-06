@@ -1,6 +1,11 @@
+package KWSecf;
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
+#
 # KWSEval
 # KWSecf.pm
-# Author: Jerome Ajot
+#
+# Original Author: Jerome Ajot
+# Extensions: Martial Michel
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
@@ -19,52 +24,65 @@
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
+#
+# $Id$
 
-package KWSecf;
 use strict;
 
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "KWSecf.pm Version: $version";
+
+##
+
 use KWSecf_excerpt;
+
 require File::Spec;
 use Data::Dumper;
 
 use MMisc;
- 
-sub new
-{
-    my $class = shift;
-    my $ecffile = shift;
-    my $self = {};
+use xmllintHelper;
+use MtXML;
 
-    $self->{FILE} = $ecffile;
-    $self->{SIGN_DUR} = 0.0;
-    $self->{EVAL_SIGN_DUR} = 0.0;
-    $self->{VER} = "";
-    $self->{EXCERPT} = ();
-    $self->{FILECHANTIME} = {};
-    $self->{FILE_EVAL_SIGN_DUR} = {};
-	
-    bless $self;
-    $self->loadFile($ecffile) if (defined($ecffile));
-    
-    return $self;
+sub __init {
+  my $self = shift;
+  my $ecffile = shift;
+
+  $self->{FILE} = $ecffile;
+  $self->{SIGN_DUR} = 0.0;
+  $self->{EVAL_SIGN_DUR} = 0.0;
+  $self->{VER} = "";
+  $self->{EXCERPT} = ();
+  $self->{FILECHANTIME} = {};
+  $self->{FILE_EVAL_SIGN_DUR} = {};
 }
 
-sub new_empty
-{
-    my $class = shift;
-    my $ecffile = shift;
-    my $self = {};
+sub new {
+  my $class = shift;
+  my $ecffile = shift;
+  my $self = {};
 
-    $self->{FILE} = $ecffile;
-    $self->{SIGN_DUR} = 0.0;
-    $self->{EVAL_SIGN_DUR} = 0.0;
-    $self->{VER} = "";
-    $self->{EXCERPT} = ();
-    $self->{FILECHANTIME} = {};
-    $self->{FILE_EVAL_SIGN_DUR} = {};
-	
-    bless $self;    
-    return $self;
+  bless $self;
+  $self->__init($ecffile);
+  $self->loadFile($ecffile) if (defined($ecffile));
+    
+  return $self;
+}
+
+sub new_empty {
+  my $class = shift;
+  my $ecffile = shift;
+  my $self = {};
+  
+  bless $self;
+  $self->__init($ecffile);
+
+  return $self;
 }
 
 sub calcTotalDur
@@ -224,154 +242,151 @@ sub toString
     }
 }
 
-sub loadFile
-{
-    my ($self, $ecff) = @_;
-    my $ecffilestring = "";
+########################################
 
-	print STDERR "Loading ECF file '$ecff'.\n";
-
-    open(ECF, $ecff) 
-      or MMisc::error_quit("Unable to open for read ECF file '$ecff' : $!");
-    
-    while (<ECF>)
-    {
-        chomp;
-        $ecffilestring .= $_;
-    }
-    
-    close(ECF);
-    
-    #clean unwanted spaces
-    $ecffilestring =~ s/\s+/ /g;
-    $ecffilestring =~ s/> </></g;
-    $ecffilestring =~ s/^\s*//;
-    $ecffilestring =~ s/\s*$//;
-    
-    my $ecftag;
-    my $allexcerpt;
-
-    if($ecffilestring =~ /(<ecf .*?[^>]*>)([[^<]*<.*[^>]*>]*)<\/ecf>/)
-    {
-        $ecftag = $1;
-        $allexcerpt = $2;
-    }
-    else
-    {
-        MMisc::error_quit("Invalid ECF file");
-    }
-    
-    if($ecftag =~ /source_signal_duration="([0-9]*[\.[0-9]*]*[^"]*)"/)
-    {
-       $self->{SIGN_DUR} = $1;
-    }
-    else
-    {
-        MMisc::error_quit("ECF: 'source_signal_duration' option is missing in ecf tag");
-    }
-    
-    if($ecftag =~ /version="(.*?[^"]*)"/)
-    {
-       $self->{VER} = $1;
-    }
-    else
-    {
-        MMisc::error_quit("ECF: 'version' option is missing in ecf tag");
-    }
-    
-    my $excerpt;
-    
-    while($allexcerpt =~ /(<excerpt .*?[^>]*\/>)/)
-    {
-        $excerpt = $1;
-        
-        my $audio_filename;
-        my $channel;
-        my $tbeg;
-        my $dur;
-        my $language;
-        my $source_type;
-        
-        if($excerpt =~ /audio_filename="(.*?[^"]*)"/)
-        {
-           $audio_filename = $1;
-        }
-        else
-        {
-            MMisc::error_quit("ECF: 'audio_filename' option is missing in excerpt tag");
-        }
-        
-        my ($volume,$directories,$purged_filename) = File::Spec->splitpath($audio_filename);
-        
-        if($purged_filename =~ /(.*?)\.(sph|wav)$/)
-        {
-            $purged_filename = $1;
-        }
-        
-        if($excerpt =~ /channel="(.*?[^"]*)"/)
-        {
-           $channel = $1;
-        }
-        else
-        {
-            MMisc::error_quit("ECF: 'channel' option is missing in excerpt tag");
-        }
-        
-        if($excerpt =~ /tbeg="(.*?[^"]*)"/)
-        {
-           $tbeg = $1;
-        }
-        else
-        {
-            MMisc::error_quit("ECF: 'tbeg' option is missing in excerpt tag");
-        }
-        
-        if($excerpt =~ /dur="(.*?[^"]*)"/)
-        {
-           $dur = $1;
-        }
-        else
-        {
-            MMisc::error_quit("ECF: 'dur' option is missing in excerpt tag");
-        }
-        
-        if($excerpt =~ /language="(.*?[^"]*)"/)
-        {
-           $language = $1;
-        }
-        else
-        {
-            MMisc::error_quit("ECF: 'language' option is missing in excerpt tag");
-        }
-        
-        if($excerpt =~ /source_type="(.*?[^"]*)"/)
-        {
-           $source_type = $1;
-        }
-        else
-        {
-            MMisc::error_quit("ECF: 'source_type' option is missing in excerpt tag");
-        }
-        
-        $self->{EVAL_SIGN_DUR} += sprintf("%.4f", $dur) if(!$self->{FILECHANTIME}{$purged_filename});
-
-        push(@{ $self->{EXCERPT} }, new KWSecf_excerpt($audio_filename, $channel, $tbeg, $dur, $language, $source_type) );
-        ### Track the source types for the reports
-        push(@{ $self->{FILECHANTIME}{$purged_filename}{$channel} }, [ ($tbeg, $tbeg + $dur) ]);
-        
-        $self->{FILE_EVAL_SIGN_DUR}{$purged_filename} = 0 if(!$self->{FILE_EVAL_SIGN_DUR}{$purged_filename});
-        $self->{FILE_EVAL_SIGN_DUR}{$purged_filename} += sprintf("%.4f", $dur);
-                
-        $allexcerpt =~ s/$excerpt//;
-    }
-    
-    foreach my $filename(keys %{ $self->{FILE_EVAL_SIGN_DUR} })
-    {
-        my @tmp = keys %{ $self->{FILECHANTIME}{$filename} };
-        my $nbrchannel = scalar(@tmp);
-        $self->{FILE_EVAL_SIGN_DUR}{$filename} = $self->{FILE_EVAL_SIGN_DUR}{$filename}/$nbrchannel;
-    }
+sub loadFile {
+  my $self = shift @_;
+  return($self->loadXMLFile(@_));
 }
+
+#####
+
+sub loadXMLFile {
+  my ($self, $ecff) = @_;
+  my $ecffilestring = "";
+  
+  my $err = MMisc::check_file_r($ecff);
+  MMisc::error_quit("Problem with input file ($ecff): $err")
+      if (! MMisc::is_blank($err));
+
+  my $modfp = MMisc::find_Module_path('KWSecf');
+  MMisc::error_quit("Could not obtain \'KWSecf.pm\' location, aborting")
+      if (! defined $modfp);
+
+  my $f4b = 'F4DE_BASE';
+  my $xmllint_env = "F4DE_XMLLINT";
+  my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
+  my @xsdfilesl = ('KWSEval-ecf.xsd');
+
+  print STDERR "Loading ECF file '$ecff'.\n";
+
+  # First let us use xmllint on the file XML file
+  my $xmlh = new xmllintHelper();
+  my $xmllint = MMisc::get_env_val($xmllint_env, "");
+  MMisc::error_quit("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_xmllint($xmllint));
+  MMisc::error_quit("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xsdfilesl(@xsdfilesl));
+  MMisc::error_quit("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xsdpath($xsdpath));
+
+  my $ecffilestring = $xmlh->run_xmllint($ecff);
+  MMisc::error_quit("$ecff: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
+      if ($xmlh->error());
+
+  ## Processing file content
+
+  # Remove all XML comments
+  $ecffilestring =~ s%\<\!\-\-.+?\-\-\>%%sg;
+
+  # Remove <?xml ...?> header
+  $ecffilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
+
+  # At this point, all we ought to have left is the '<ecf>' content
+  MMisc::error_quit("After initial cleanup, we found more than just \'ecf\', aborting")
+      if (! ( ($ecffilestring =~ m%^\s*\<ecf\s%is) && ($ecffilestring =~ m%\<\/ecf\>\s*$%is) ) );
+  my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
+
+  # order is important
+  my @ecf_attrs = ('source_signal_duration', 'version');
+  my @exc_attrs = ('audio_filename', 'channel', 'tbeg', 'dur', 'language', 'source_type');
+
+  my $here = 'ecf';
+  my ($err, $string, $section, %ecf_attr) = &element_extractor_check($dem, $ecffilestring, $here, \@ecf_attrs);
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
+  MMisc::error_quit("After removing '<$here>', found leftover content, aborting")
+      if (! MMisc::is_blank($string));
+
+  $self->{SIGN_DUR} = &__get_attr(\%ecf_attr, $ecf_attrs[0]);
+  $self->{VER} = &__get_attr(\%ecf_attr, $ecf_attrs[1]);
+
+  my $exp = 'excerpt';
+  while (! MMisc::is_blank($section)) {
+    # First off, confirm the first section is the expected one
+    my $name = MtXML::get_next_xml_name(\$section, $dem);
+    MMisc::error_quit("In \'$here\', while checking for \'$exp\': Problem obtaining a valid XML name, aborting")
+        if ($name eq $dem);
+    MMisc::error_quit("In \'$here\': \'$exp\' section not present (instead: $name), aborting")
+        if ($name ne $exp);
+    ($err, $section, my $dummy, my %exc_attr) = &element_extractor_check($dem, $section, $exp, \@exc_attrs);
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));
+    MMisc::error_quit("While processing <$here>'s <$exp>, found unexpected content: $dummy")
+        if (! MMisc::is_blank($dummy));
+
+    my $audio_filename = &__get_attr(\%exc_attr, $exc_attrs[0]);
+    my $channel = &__get_attr(\%exc_attr, $exc_attrs[1]);
+    my $tbeg = &__get_attr(\%exc_attr, $exc_attrs[2]);
+    my $dur = &__get_attr(\%exc_attr, $exc_attrs[3]);
+    my $language = &__get_attr(\%exc_attr, $exc_attrs[4]);
+    my $source_type = &__get_attr(\%exc_attr, $exc_attrs[5]);
+
+    my $purged_filename = "";
+    my ($errf, $d, $f, $e) = MMisc::split_dir_file_ext($audio_filename);
+    if (($e eq 'sph') || ($e eq 'wav')) {
+      $purged_filename = $f;
+    } else {
+      $purged_filename = MMisc::concat_dir_file_ext('', $f, $e);
+    }
+
+    $self->{EVAL_SIGN_DUR} += sprintf("%.4f", $dur) 
+      if (! $self->{FILECHANTIME}{$purged_filename});
+
+    push @{$self->{EXCERPT}}, new KWSecf_excerpt($audio_filename, $channel, $tbeg, $dur, $language, $source_type);
+
+    ### Track the source types for the reports
+    push @{$self->{FILECHANTIME}{$purged_filename}{$channel}}, [ ($tbeg, $tbeg + $dur) ];
+        
+    $self->{FILE_EVAL_SIGN_DUR}{$purged_filename} = 0 
+      if (! $self->{FILE_EVAL_SIGN_DUR}{$purged_filename});
+    $self->{FILE_EVAL_SIGN_DUR}{$purged_filename} += sprintf("%.4f", $dur);
+  }
+
+  foreach my $filename (keys %{$self->{FILE_EVAL_SIGN_DUR}}) {
+    my $nbrchannel = scalar(keys(%{$self->{FILECHANTIME}{$filename}}));
+    $self->{FILE_EVAL_SIGN_DUR}{$filename} = $self->{FILE_EVAL_SIGN_DUR}{$filename}/$nbrchannel;
+  }
+}
+
+#####
+
+sub __get_attr {
+  my ($rh, $key) = @_;
+
+  MMisc::error_quit("Requested hash key does not exists ($key)")
+      if (! exists $$rh{$key});
+
+  return($$rh{$key});
+}
+
+####
+
+sub element_extractor_check {
+  my ($dem, $string, $here, $rattr) = @_;
+
+  $string = MMisc::clean_begend_spaces($string);
+
+  (my $err, $string, my $section, my %iattr) = MtXML::element_extractor($dem, $string, $here);
+  return($err) if (! MMisc::is_blank($err));
+
+  foreach my $attr (@$rattr) {
+    return("Could not find <$here>'s $attr attribute")
+      if (! exists $iattr{$attr});
+  }
+
+  return("", $string, $section, %iattr);
+}
+
+##########
 
 sub SaveFile
 {
