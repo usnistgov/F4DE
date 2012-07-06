@@ -46,7 +46,7 @@ sub _find_next_tag_pos {
   my $cpos = $b + length($lf);
                                   
   # Then the first ">"
-  my $lf = ">";
+  $lf = ">";
   my $e = index($$rstr, $lf, $cpos);
   return(-1, -1) if ($e == -1);
 
@@ -60,18 +60,18 @@ sub _find_xml_tag_pos {
   my $rstr = shift @_;
   my $offset = MMisc::iuv(shift @_, 0);
 
-  my ($b, $pos) = &_find_next_tag_pos($rstr, $offset, $name);
+  my ($b, $bpos) = &_find_next_tag_pos($rstr, $offset, $name);
   return(-1, -1, -1, -1) if ($b == -1);
                                   
   # if the character before > is a "/", ie we have <name/> and are done
-  my $c = substr($$rstr, $pos - 1, 1);
-  return($b, $pos, -1, -1)
+  my $c = substr($$rstr, $bpos - 1, 1);
+  return($b, $bpos, -1, -1)
     if ($c eq "/");
 
   #Otherwise, we know we have to look for "</name>"
-  my $ib = $pos + 1;
+  my $ib = $bpos + 1;
   my $lf = "</$name>";
-  my $pos = index($$rstr, $lf, $pos);
+  my $pos = index($$rstr, $lf, $bpos);
   return(-1, -1, -1, -1) if ($pos == -1);
 
   my $e = $pos + length($lf) - 1;
@@ -242,14 +242,14 @@ sub get_next_xml_section {
 #####
 
 sub get_inline_xml_attributes {
-  my $name = shift @_;
+  my $sname = shift @_;
   my $str = shift @_;
 
-  my ($b, $e) = &_find_next_tag_pos(\$str, 0, $name);
+  my ($b, $e) = &_find_next_tag_pos(\$str, 0, $sname);
   return("Could not find tag", "") if ($b == -1);
 
-  my $l = length("<${name}");
-  my $txt = substr($str, $b + $l, $e - $b - $l);
+  my $bl = length("<${sname}");
+  my $txt = substr($str, $b + $bl, $e - $b - $bl);
   substr($txt, -1, 1, "")
     if (substr($txt, -1) eq "/");
 
