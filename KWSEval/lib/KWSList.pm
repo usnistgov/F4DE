@@ -264,21 +264,13 @@ sub kwslist_xml_processor {
 
   $string = MMisc::clean_begend_spaces($string);
 
-  my $section = MtXML::get_named_xml_section($here, \$string, $dem);
-  return("In \'$here\': Could not extract <$here> section", $string)
-    if ($section eq $dem);
+  (my $err, $string, my $section, my %iattr) = MtXML::element_extractor($dem, $string, $here);
+  return($err) if (! MMisc::is_blank($err));
 
-#  print "##########[$section]\n";
-  my ($err, %iattr) = MtXML::get_inline_xml_attributes($here, $section);
-  return("Problem extracting <$here> attributes: $err") 
-    if (! MMisc::is_blank($err));
   foreach my $attr (@$rattr) {
     return("Could not find <$here>'s $attr attribute")
       if (! exists $iattr{$attr});
   }
-  # Remove processed header and trailer
-  return("Could not clean \'$here\' tag")
-    if (! MtXML::remove_xml_tags($here, \$section));
 
   # this was the last depth
   if (MMisc::is_blank($exp)) {
