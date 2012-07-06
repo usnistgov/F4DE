@@ -337,7 +337,7 @@ sub element_extractor_check {
   $string = MMisc::clean_begend_spaces($string);
 
   (my $err, $string, my $section, my %iattr) = MtXML::element_extractor($dem, $string, $here);
-  return("$err $string") if (! MMisc::is_blank($err));
+  return($err) if (! MMisc::is_blank($err));
 
   foreach my $attr (@$rattr) {
     return("Could not find <$here>'s $attr attribute")
