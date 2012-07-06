@@ -22,7 +22,7 @@
           </xsd:complexType>
         </xsd:element>
       </xsd:sequence>
-      <xsd:attribute name="source_signal_duration" type="xsd:string" use="required" />
+      <xsd:attribute name="source_signal_duration" type="xsd:decimal" use="required" />
       <xsd:attribute name="version" type="xsd:string" use="required" />
     </xsd:complexType>
   </xsd:element>
