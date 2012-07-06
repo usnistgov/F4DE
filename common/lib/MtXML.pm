@@ -282,6 +282,28 @@ sub get_inline_xml_attributes {
   return("", %res);
 }
 
+########################################
+
+# MtXML::element_extractor(default_error_string, input_string, xml_section_name)
+#  return(error_string, output_string, named_section_without_headers, named_section_inlined_attributes)
+sub element_extractor {
+  my ($dem, $string, $here) = @_;
+  
+  my $section = &get_named_xml_section($here, \$string, $dem);
+  return("Looking for \'$here\': Could not extract section", $string)
+    if ($section eq $dem);
+
+  my ($err, %iattr) = &get_inline_xml_attributes($here, $section);
+  return("Problem extracting \'$here' attributes: $err", $string, $section) 
+    if (! MMisc::is_blank($err));
+
+  # Remove processed header and trailer
+  return("Could not clean \'$here\' tag", $string, $section)
+    if (! &remove_xml_tags($here, \$section));
+
+  return("", $string, $section, %iattr);
+}
+
 ############################################################
 
 1;
