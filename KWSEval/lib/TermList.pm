@@ -256,151 +256,141 @@ sub loadXMLFile {
   ## Processing file content
 
   # Remove all XML comments
-#  $tlistfilestring =~ s%\<\!\-\-.+?\-\-\>%%sg;
-
+  $tlistfilestring =~ s%\<\!\-\-.+?\-\-\>%%sg;
+  
   # Remove <?xml ...?> header
-#  $tlistfilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
-
+  $tlistfilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
+  
   # At this point, all we ought to have left is the '<termlist>' content
-#  MMisc::error_quit("After initial cleanup, we found more than just \'termlist\', aborting")
-#      if (! ( ($tlistfilestring =~ m%^\s*\<termlist\s%is) && ($tlistfilestring =~ m%\<\/termlist\>\s*$%is) ) );
-#  my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
+  MMisc::error_quit("After initial cleanup, we found more than just \'termlist\', aborting")
+      if (! ( ($tlistfilestring =~ m%^\s*\<termlist\s%is) && ($tlistfilestring =~ m%\<\/termlist\>\s*$%is) ) );
+  my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
   # and if we extract it, the remaining string should be empty
-#  my $string = MtXML::get_named_xml_section('termlist', \$tlistfilestring, $dem);
-#  MMisc::error_quit("Could not extract '<termlist>' datum, aborting")
-#      if ($string eq $dem);
-#  MMisc::error_quit("After removing '<termlist>', found leftover content, aborting")
-#      if (! MMisc::is_blank($tlistfilestring));
-
   
-
+  # for attributes, array order is important
+  my $here = 'termlist';
+  my @tlist_attrs = ( 'ecf_filename', 'language', 'encoding', 'compareNormalize', 'version' );
+  my ($err, $string, $section, %tlist_attr) = &element_extractor_check($dem, $tlistfilestring, $here, \@tlist_attrs);
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
+  MMisc::error_quit("After removing '<$here>', found leftover content, aborting")
+      if (! MMisc::is_blank($string));
   
-#    open(TERMLIST, $tlistf) 
-#      or MMisc::error_quit("Unable to open for read TermList file '$tlistf' : $!");
-#    if ($self->{ENCODING} ne ""){
-#      binmode(TERMLIST, $self->getPerlEncodingString());
-#    }
+  $self->{ECF_FILENAME} = &__get_attr(\%tlist_attr, $tlist_attrs[0]);
+  MMisc::error_quit("new TermList failed: " . $self->errormsg())
+      if (! $self->setLanguage(&__get_attr(\%tlist_attr, $tlist_attrs[1])));
+  MMisc::error_quit("new TermList failed: " . $self->errormsg())
+      if (! $self->setEncoding(&__get_attr(\%tlist_attr, $tlist_attrs[2])));
+  MMisc::error_quit("new TermList failed: " . $self->errormsg())
+      if (! $self->setCompareNormalize(&__get_attr(\%tlist_attr, $tlist_attrs[3])));
+  $self->{VERSION} = &__get_attr(\%tlist_attr, $tlist_attrs[4]);
+  
+  # UTF-8 data pre-processing
+  $section = decode_utf8($section)
+    if ($self->{ENCODING} eq 'UFT-8');
+  
+  # process all 'term'
+  my %attrib = ();
+  my $exp = 'term';
+  my @term_attrs = ('termid');
+  while (! MMisc::is_blank($section)) {
+    # First off, confirm the first section is the expected one
+    my $name = MtXML::get_next_xml_name(\$section, $dem);
+    MMisc::error_quit("In \'$here\', while checking for \'$exp\': Problem obtaining a valid XML name, aborting")
+        if ($name eq $dem);
+    MMisc::error_quit("In \'$here\': \'$exp\' section not present (instead: $name), aborting")
+        if ($name ne $exp);
+    ($err, $section, my $insection, my %term_attr) = &element_extractor_check($dem, $section, $exp, \@term_attrs);
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));
     
-#    while (<TERMLIST>)
-#    {
-#        chomp;
-#        $tlistfilestring .= $_;
-#    }
+    $attrib{TERMID} = &__get_attr(\%term_attr, $term_attrs[0]);
+    MMisc::error_quit("Term ID $attrib{TERMID} already exists")
+        if (exists($self->{TERMS}{$attrib{TERMID}}));
     
-#    close(TERMLIST);
-
-#  MMisc::writeTo('test', 'xml', 1, 0, $tlistfilestring);
-
-    #clean unwanted spaces
-    $tlistfilestring =~ s/\s+/ /g;
-    $tlistfilestring =~ s/> </></g;
-    $tlistfilestring =~ s/^\s*//;
-    $tlistfilestring =~ s/\s*$//;
+    ($err, my $termtext, my %ti_attr) = &process_term_content($insection, $dem);
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));
     
-    my $termlisttag;
-    my $allterms;
-
-    if($tlistfilestring =~ /(<termlist .*?[^>]*>)([[^<]*<.*[^>]*>]*)<\/termlist>/)
-    {
-        $termlisttag = $1;
-        $allterms = $2;
-    }
-    else
-    {
-        MMisc::error_quit("Invalid TermList file");
-    }
-        
-    if($termlisttag =~ /ecf_filename="(.*?[^"]*)"/)
-    {
-       $self->{ECF_FILENAME} = $1;
-    }
-    else
-    {
-         MMisc::error_quit("TermList: 'ecf_filename' option is missing in termlist tag");
+    $attrib{TEXT} = $termtext;
+    foreach my $name (keys %ti_attr) {
+      $attrib{$name} = ($name eq 'Syllables') ? sprintf("%02d", $ti_attr{$name}) : $ti_attr{$name};
     }
     
-    if($termlisttag =~ /version="(.*?[^"]*)"/)
-    {
-       $self->{VERSION} = $1;
-    }
-    else
-    {
-         MMisc::error_quit("TermList: 'version_date' option is missing in termlist tag");
-    }
-    
-    if($termlisttag =~ /language="(.*?[^"]*)"/)
-    {
-       die "Error: new TermList failed: \n   ".$self->errormsg()  if (! $self->setLanguage($1));
-    }
-    else
-    {
-         MMisc::error_quit("TermList: 'language' option is missing in termlist tag");
-    }
-            
-    if($termlisttag =~ /encoding="(.*?[^"]*)"/)
-    {
-      die "Error: new TermList failed: \n   ".$self->errormsg() if (! $self->setEncoding($1));
-    }
-    else
-    {
-      ### Default encoding
-       $self->setEncoding("UTF-8");
-    }
-    
-    if($termlisttag =~ /compareNormalize="(.*?[^"]*)"/)
-    {
-      die "Error: new TermList failed: \n   ".$self->errormsg() if (! $self->setCompareNormalize($1));
-      }
-    
-    ### Decode the data if it is UTF-8
-    if ($self->{ENCODING} eq "UFT-8"){
-      $tlistfilestring = decode_utf8( $tlistfilestring  );
-    }
-            
-    while( $allterms =~ /(<term termid="(.*?[^"]*)"[^>]*><termtext>(.*?)<\/termtext>(.*?)<\/term>)/ )
-    {
-        my $previouslength = length($allterms);
-        my $x = quotemeta($1);
-                
-        my %attrib;
-        
-        $attrib{TERMID} = $2;
-        
-        MMisc::error_quit("Term ID $attrib{TERMID} already exists")
-            if (exists($self->{TERMS}{$attrib{TERMID}}));
-        
-        $attrib{TEXT} = $3;
-        
-        my $tmp = $4;
-        my $allterminfo = "";
-        
-        if($tmp =~ /<terminfo>(.*?)<\/terminfo>/)
-        {
-            $allterminfo = $1;
-        }
-        
-        while( $allterminfo =~ /(<attr><name>(.*?)<\/name><value>(.*?)<\/value><\/attr>)/ )
-        {
-            my $previouslengthy = length($allterminfo);
-            $attrib{$2} = $3;
-            $attrib{$2} = sprintf("%02d", $3) if($2 eq "Syllables");
-            my $y = quotemeta($1);
-            $allterminfo =~ s/$y//;
-            MMisc::error_quit("Infinite Loop in 'TermList' parsing!")
-                if ( ($previouslengthy == length($allterminfo)) && (length($allterminfo) != 0) );
-        }
-        
-        $self->{TERMS}{$attrib{TERMID}} = new TermListRecord(\%attrib);
-        
-        $allterms =~ s/$x//;
-        
-        if( ($previouslength == length($allterms)) && (length($allterms) != 0) )
-        {
-            print STDERR "Error: Infinite Loop in 'TermList' parsing!\n";
-            exit(0);
-        }
-    }
+    $self->{TERMS}{$attrib{TERMID}} = new TermListRecord(\%attrib);
+  }
 }
+
+#####
+
+sub __get_attr {
+  my ($rh, $key) = @_;
+
+  MMisc::error_quit("Requested hash key does not exists ($key)")
+      if (! exists $$rh{$key});
+
+  return($$rh{$key});
+}
+
+####
+
+sub element_extractor_check {
+  my ($dem, $string, $here, $rattr) = @_;
+
+  $string = MMisc::clean_begend_spaces($string);
+
+  (my $err, $string, my $section, my %iattr) = MtXML::element_extractor($dem, $string, $here);
+  return("$err $string") if (! MMisc::is_blank($err));
+
+  foreach my $attr (@$rattr) {
+    return("Could not find <$here>'s $attr attribute")
+      if (! exists $iattr{$attr});
+  }
+
+  return("", $string, $section, %iattr);
+}
+
+##########
+
+sub process_term_content {
+  my ($string, $dem) = @_;
+
+  my @no_attrs = ();
+  # get 'termtext'
+  (my $err, $string, my $termtext, my %iattr1) = &element_extractor_check($dem, $string, 'termtext', \@no_attrs);
+  return($err) if (! MMisc::is_blank($err));
+
+  my %ti_attr = ();
+  # if $string is now empty, there was no terminfo
+  return("", $termtext, %ti_attr) if (MMisc::is_blank($string));
+
+  # if not empty, it _must_ be a 'terminfo'
+  ($err, $string, my $content, my %iattr2) = &element_extractor_check($dem, $string, 'terminfo', \@no_attrs);
+  return($err) if (! MMisc::is_blank($err));
+  # now it must be empty
+  return("After extracting the \'terminfo\', there was some unexpected leftover data, aborting: $string")
+    if (! MMisc::is_blank($string));
+
+  my $doit = 1;
+  while ($doit) {
+    # process 'attr'
+    ($err, $content, my $attr, my %iattr3) = &element_extractor_check($dem, $content, 'attr', \@no_attrs);
+    return("Processing <terminfo>: $err") if (! MMisc::is_blank($err));
+    
+    # from <attr>: <name> and <value>
+    ($err, $attr, my $name, my %iattr4) = &element_extractor_check($dem, $attr, 'name', \@no_attrs);
+    return("Processing <terminfo>'s <attr>: $err") if (! MMisc::is_blank($err));
+    ($err, $attr, my $value, my %iattr5) = &element_extractor_check($dem, $attr, 'value', \@no_attrs);
+    return("Processing <terminfo>'s <attr>: $err") if (! MMisc::is_blank($err));
+    return("After processing <terminfo>'s <attr>: leftover content found, aborting: $attr")
+      if (! MMisc::is_blank($attr));
+    
+    $ti_attr{$name} = $value;
+
+    $doit = 0 if (MMisc::is_blank($content));
+  }
+
+  return("", $termtext, %ti_attr);
+}
+
+############################################################
 
 sub saveFile
 {
