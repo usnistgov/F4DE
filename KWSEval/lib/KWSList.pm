@@ -71,7 +71,9 @@ sub new {
     
   bless $self;
   $self->__init($kwslistfile);
-  $self->loadFile($kwslistfile) if (defined($kwslistfile));
+  my $err = "";
+  $err = $self->loadFile($kwslistfile) if (defined($kwslistfile));
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
   $self->{DIFF_SCORE} = $self->{MAX_SCORE} - $self->{MIN_SCORE};
   
   return $self;
@@ -110,22 +112,24 @@ sub SetSystemID
     $self->{SYSTEM_ID} = $sysid;
 }
 
+########################################
+
 sub loadFile {
   my $self = shift @_;
   return($self->loadXMLFile(@_));
 }
 
-########################################
+#####
 
 sub loadXMLFile {
   my ($self, $kwslistf) = @_;
 
   my $err = MMisc::check_file_r($kwslistf);
-  MMisc::error_quit("Problem with input file ($kwslistf): $err")
+  return("Problem with input file ($kwslistf): $err")
       if (! MMisc::is_blank($err));
 
   my $modfp = MMisc::find_Module_path('KWSList');
-  MMisc::error_quit("Could not obtain \'KWSList.pm\' location, aborting")
+  return("Could not obtain \'KWSList.pm\' location, aborting")
       if (! defined $modfp);
 
   my $f4b = 'F4DE_BASE';
@@ -133,21 +137,21 @@ sub loadXMLFile {
   my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
   my @xsdfilesl = ('KWSEval-kwslist.xsd');
 
-  print STDERR "Loading KWS List file '$kwslistf'.\n";
+#  print STDERR "Loading KWS List file '$kwslistf'.\n";
 
   # First let us use xmllint on the file XML file
   my $xmlh = new xmllintHelper();
   my $xmllint = MMisc::get_env_val($xmllint_env, "");
-  MMisc::error_quit("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
-      if (! $xmlh->set_xmllint($xmllint));
-  MMisc::error_quit("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
+  return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xmllint($xmllint));
+  return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
     if (! $xmlh->set_xsdfilesl(@xsdfilesl));
-  MMisc::error_quit("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
+  return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
     if (! $xmlh->set_xsdpath($xsdpath));
-
+  
   my $kwslistfilestring = $xmlh->run_xmllint($kwslistf);
-  MMisc::error_quit("$kwslistf: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
-      if ($xmlh->error());
+  return("$kwslistf: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
+    if ($xmlh->error());
 
   ## Processing file content
 
@@ -158,16 +162,16 @@ sub loadXMLFile {
   $kwslistfilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
   
   # At this point, all we ought to have left is the '<kwslist>' content
-  MMisc::error_quit("After initial cleanup, we found more than just \'kwslist\', aborting")
-      if (! ( ($kwslistfilestring =~ m%^\s*\<kwslist\s%is) && ($kwslistfilestring =~ m%\<\/kwslist\>\s*$%is) ) );
+  return("After initial cleanup, we found more than just \'kwslist\', aborting")
+    if (! ( ($kwslistfilestring =~ m%^\s*\<kwslist\s%is) && ($kwslistfilestring =~ m%\<\/kwslist\>\s*$%is) ) );
   my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
   # and if we extract it, the remaining string should be empty
   my $string = MtXML::get_named_xml_section('kwslist', \$kwslistfilestring, $dem);
-  MMisc::error_quit("Could not extract '<kwslist>' datum, aborting")
-      if ($string eq $dem);
-  MMisc::error_quit("After removing '<kwslist>', found leftover content, aborting")
-      if (! MMisc::is_blank($kwslistfilestring));
-
+  return("Could not extract '<kwslist>' datum, aborting")
+    if ($string eq $dem);
+  return("After removing '<kwslist>', found leftover content, aborting")
+    if (! MMisc::is_blank($kwslistfilestring));
+  
   # Order is important
   my @kwslist_attrs = ('termlist_filename', 'indexing_time', 'language', 'index_size', 'system_id'); 
   my @dtl_attrs = ('termid', 'term_search_time', 'oov_term_count');
@@ -175,10 +179,10 @@ sub loadXMLFile {
 
   my ($err, $string, @results) = 
     &kwslist_xml_processor($string, $dem, 'kwslist', \@kwslist_attrs, 'detected_termlist', \@dtl_attrs,'term', \@term_attrs);
-  MMisc::error_quit("Problem during XML internal processing: $err")
-      if (! MMisc::is_blank($err));
-  MMisc::error_quit("Leftover content post XML internal processing: $string")
-      if (! MMisc::is_blank($string));
+  return("Problem during XML internal processing: $err")
+    if (! MMisc::is_blank($err));
+  return("Leftover content post XML internal processing: $string")
+    if (! MMisc::is_blank($string));
 
 #  print MMisc::get_sorted_MemDump(\@results);
   # @results is of the form:
@@ -188,12 +192,12 @@ sub loadXMLFile {
   
   # kwslist
   my $rkwslist_attr = shift @results;
-  MMisc::error_quit("Found unexpected data in extracted XML")
-      if (scalar @results > 1);
+  return("Found unexpected data in extracted XML")
+    if (scalar @results > 1);
   if (scalar @results == 1) { # contains at least one 'detected_termlist'
     my $rtbd = shift @results;
-    MMisc::error_quit("Expected ARRAY in extracted data")
-        if (ref($rtbd) ne 'ARRAY');
+    return("Expected ARRAY in extracted data")
+      if (ref($rtbd) ne 'ARRAY');
     while (scalar @$rtbd > 0) {
       my $rdtl_attr = shift @$rtbd;
       my $detectedtermid = &__get_attr($rdtl_attr, $dtl_attrs[0]);
@@ -243,7 +247,7 @@ sub loadXMLFile {
 
 #  print MMisc::get_sorted_MemDump(\$self);
 
-  return(1);
+  return("");
 }
 
 ####################
