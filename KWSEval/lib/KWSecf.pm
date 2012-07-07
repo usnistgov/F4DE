@@ -69,8 +69,10 @@ sub new {
 
   bless $self;
   $self->__init($ecffile);
-  $self->loadFile($ecffile) if (defined($ecffile));
-    
+  my $err = "";
+  $err = $self->loadFile($ecffile) if (defined($ecffile));
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
+  
   return $self;
 }
 
@@ -256,33 +258,33 @@ sub loadXMLFile {
   my $ecffilestring = "";
   
   my $err = MMisc::check_file_r($ecff);
-  MMisc::error_quit("Problem with input file ($ecff): $err")
-      if (! MMisc::is_blank($err));
+  return("Problem with input file ($ecff): $err")
+    if (! MMisc::is_blank($err));
 
   my $modfp = MMisc::find_Module_path('KWSecf');
-  MMisc::error_quit("Could not obtain \'KWSecf.pm\' location, aborting")
-      if (! defined $modfp);
+  return("Could not obtain \'KWSecf.pm\' location, aborting")
+    if (! defined $modfp);
 
   my $f4b = 'F4DE_BASE';
   my $xmllint_env = "F4DE_XMLLINT";
   my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
   my @xsdfilesl = ('KWSEval-ecf.xsd');
 
-  print STDERR "Loading ECF file '$ecff'.\n";
+#  print STDERR "Loading ECF file '$ecff'.\n";
 
   # First let us use xmllint on the file XML file
   my $xmlh = new xmllintHelper();
   my $xmllint = MMisc::get_env_val($xmllint_env, "");
-  MMisc::error_quit("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
-      if (! $xmlh->set_xmllint($xmllint));
-  MMisc::error_quit("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
+  return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xmllint($xmllint));
+  return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
     if (! $xmlh->set_xsdfilesl(@xsdfilesl));
-  MMisc::error_quit("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
+  return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
     if (! $xmlh->set_xsdpath($xsdpath));
 
   my $ecffilestring = $xmlh->run_xmllint($ecff);
-  MMisc::error_quit("$ecff: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
-      if ($xmlh->error());
+  return("$ecff: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
+    if ($xmlh->error());
 
   ## Processing file content
 
@@ -293,19 +295,19 @@ sub loadXMLFile {
   $ecffilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
 
   # At this point, all we ought to have left is the '<ecf>' content
-  MMisc::error_quit("After initial cleanup, we found more than just \'ecf\', aborting")
-      if (! ( ($ecffilestring =~ m%^\s*\<ecf\s%is) && ($ecffilestring =~ m%\<\/ecf\>\s*$%is) ) );
+  return("After initial cleanup, we found more than just \'ecf\', aborting")
+    if (! ( ($ecffilestring =~ m%^\s*\<ecf\s%is) && ($ecffilestring =~ m%\<\/ecf\>\s*$%is) ) );
   my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
-
+  
   # order is important
   my @ecf_attrs = ('source_signal_duration', 'version');
   my @exc_attrs = ('audio_filename', 'channel', 'tbeg', 'dur', 'language', 'source_type');
 
   my $here = 'ecf';
   my ($err, $string, $section, %ecf_attr) = &element_extractor_check($dem, $ecffilestring, $here, \@ecf_attrs);
-  MMisc::error_quit($err) if (! MMisc::is_blank($err));
-  MMisc::error_quit("After removing '<$here>', found leftover content, aborting")
-      if (! MMisc::is_blank($string));
+  return($err) if (! MMisc::is_blank($err));
+  return("After removing '<$here>', found leftover content, aborting")
+    if (! MMisc::is_blank($string));
 
   $self->{SIGN_DUR} = &__get_attr(\%ecf_attr, $ecf_attrs[0]);
   $self->{VER} = &__get_attr(\%ecf_attr, $ecf_attrs[1]);
@@ -314,14 +316,14 @@ sub loadXMLFile {
   while (! MMisc::is_blank($section)) {
     # First off, confirm the first section is the expected one
     my $name = MtXML::get_next_xml_name(\$section, $dem);
-    MMisc::error_quit("In \'$here\', while checking for \'$exp\': Problem obtaining a valid XML name, aborting")
-        if ($name eq $dem);
-    MMisc::error_quit("In \'$here\': \'$exp\' section not present (instead: $name), aborting")
-        if ($name ne $exp);
+    return("In \'$here\', while checking for \'$exp\': Problem obtaining a valid XML name, aborting")
+      if ($name eq $dem);
+    return("In \'$here\': \'$exp\' section not present (instead: $name), aborting")
+      if ($name ne $exp);
     ($err, $section, my $dummy, my %exc_attr) = &element_extractor_check($dem, $section, $exp, \@exc_attrs);
-    MMisc::error_quit($err) if (! MMisc::is_blank($err));
-    MMisc::error_quit("While processing <$here>'s <$exp>, found unexpected content: $dummy")
-        if (! MMisc::is_blank($dummy));
+    return($err) if (! MMisc::is_blank($err));
+    return("While processing <$here>'s <$exp>, found unexpected content: $dummy")
+      if (! MMisc::is_blank($dummy));
 
     my $audio_filename = &__get_attr(\%exc_attr, $exc_attrs[0]);
     my $channel = &__get_attr(\%exc_attr, $exc_attrs[1]);
@@ -355,6 +357,8 @@ sub loadXMLFile {
     my $nbrchannel = scalar(keys(%{$self->{FILECHANTIME}{$filename}}));
     $self->{FILE_EVAL_SIGN_DUR}{$filename} = $self->{FILE_EVAL_SIGN_DUR}{$filename}/$nbrchannel;
   }
+
+  return("");
 }
 
 #####
