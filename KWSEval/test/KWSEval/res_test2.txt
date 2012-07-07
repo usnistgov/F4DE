@@ -48,7 +48,4 @@ Summary  Totals   |            |      35 |      17 |    10 |      18 |          
          TWV      |            |         |         |       |         |   -36.6813 |           |          |
 
 [[STDERR]]
-Loading ECF file '../common/test6.ecf.xml'.
-Loading KWS List file '../common/test6.kwslist.xml'.
-Loading Term List file '../common/test6.tlist.xml'.
-Loading RTTM file '../common/test6.rttm' encoding /UTF-8/.
+
