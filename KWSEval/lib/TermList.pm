@@ -49,22 +49,24 @@ use MMisc;
 use xmllintHelper;
 use MtXML;
 
-sub new
-{
-    my $class = shift;
-    my $termlistfile = shift;
-
-    my $self = TranscriptHolder->new();
-
-    $self->{TERMLIST_FILENAME} = $termlistfile;
-    $self->{ECF_FILENAME} = "";
-    $self->{VERSION} = "";
-    $self->{TERMS} = {};
-	
-    bless $self;
-    $self->loadFile($termlistfile) if (defined($termlistfile));
-    
-    return $self;
+sub new {
+  my $class = shift;
+  my $termlistfile = shift;
+  
+  my $self = TranscriptHolder->new();
+  
+  $self->{TERMLIST_FILENAME} = $termlistfile;
+  $self->{ECF_FILENAME} = "";
+  $self->{VERSION} = "";
+  $self->{TERMS} = {};
+  
+  bless $self;
+  
+  my $err = "";
+  $self->loadFile($termlistfile) if (defined($termlistfile));
+  MMisc::error_quit($err) if (! MMisc::is_blank($err));
+  
+  return $self;
 }
 
 sub new_empty
@@ -223,35 +225,35 @@ sub loadXMLFile {
   my ($self, $tlistf) = @_;
 
   my $err = MMisc::check_file_r($tlistf);
-  MMisc::error_quit("Problem with input file ($tlistf): $err")
-      if (! MMisc::is_blank($err));
-
+  return("Problem with input file ($tlistf): $err")
+    if (! MMisc::is_blank($err));
+  
   my $modfp = MMisc::find_Module_path('TermList');
-  MMisc::error_quit("Could not obtain \'TermList.pm\' location, aborting")
-      if (! defined $modfp);
+  return("Could not obtain \'TermList.pm\' location, aborting")
+    if (! defined $modfp);
 
   my $f4b = 'F4DE_BASE';
   my $xmllint_env = "F4DE_XMLLINT";
   my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
   my @xsdfilesl = ('KWSEval-termlist.xsd');
 
-  print STDERR "Loading Term List file '$tlistf'.\n";
+#  print STDERR "Loading Term List file '$tlistf'.\n";
   
   # First let us use xmllint on the file XML file
   my $xmlh = new xmllintHelper();
   my $xmllint = MMisc::get_env_val($xmllint_env, "");
-  MMisc::error_quit("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
-      if (! $xmlh->set_xmllint($xmllint));
-  MMisc::error_quit("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
+  return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xmllint($xmllint));
+  return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
     if (! $xmlh->set_xsdfilesl(@xsdfilesl));
-  MMisc::error_quit("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
-      if (! $xmlh->set_xsdpath($xsdpath));
-  MMisc::error_quit("While trying to set xmllint \'encoding\' (" . $xmlh->get_errormsg() . ")")
-      if (! $xmlh->set_encoding('UTF-8'));
-
+  return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xsdpath($xsdpath));
+  return("While trying to set xmllint \'encoding\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_encoding('UTF-8'));
+  
   my $tlistfilestring = $xmlh->run_xmllint($tlistf);
-  MMisc::error_quit("$tlistf: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
-      if ($xmlh->error());
+  return("$tlistf: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
+    if ($xmlh->error());
 
   ## Processing file content
 
@@ -262,8 +264,8 @@ sub loadXMLFile {
   $tlistfilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
   
   # At this point, all we ought to have left is the '<termlist>' content
-  MMisc::error_quit("After initial cleanup, we found more than just \'termlist\', aborting")
-      if (! ( ($tlistfilestring =~ m%^\s*\<termlist\s%is) && ($tlistfilestring =~ m%\<\/termlist\>\s*$%is) ) );
+  return("After initial cleanup, we found more than just \'termlist\', aborting")
+    if (! ( ($tlistfilestring =~ m%^\s*\<termlist\s%is) && ($tlistfilestring =~ m%\<\/termlist\>\s*$%is) ) );
   my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
   # and if we extract it, the remaining string should be empty
   
@@ -271,17 +273,17 @@ sub loadXMLFile {
   my $here = 'termlist';
   my @tlist_attrs = ( 'ecf_filename', 'language', 'encoding', 'compareNormalize', 'version' );
   my ($err, $string, $section, %tlist_attr) = &element_extractor_check($dem, $tlistfilestring, $here, \@tlist_attrs);
-  MMisc::error_quit($err) if (! MMisc::is_blank($err));
-  MMisc::error_quit("After removing '<$here>', found leftover content, aborting")
-      if (! MMisc::is_blank($string));
+  return($err) if (! MMisc::is_blank($err));
+  return("After removing '<$here>', found leftover content, aborting")
+    if (! MMisc::is_blank($string));
   
   $self->{ECF_FILENAME} = &__get_attr(\%tlist_attr, $tlist_attrs[0]);
-  MMisc::error_quit("new TermList failed: " . $self->errormsg())
-      if (! $self->setLanguage(&__get_attr(\%tlist_attr, $tlist_attrs[1])));
-  MMisc::error_quit("new TermList failed: " . $self->errormsg())
-      if (! $self->setEncoding(&__get_attr(\%tlist_attr, $tlist_attrs[2])));
-  MMisc::error_quit("new TermList failed: " . $self->errormsg())
-      if (! $self->setCompareNormalize(&__get_attr(\%tlist_attr, $tlist_attrs[3])));
+  return("new TermList failed: " . $self->errormsg())
+    if (! $self->setLanguage(&__get_attr(\%tlist_attr, $tlist_attrs[1])));
+  return("new TermList failed: " . $self->errormsg())
+    if (! $self->setEncoding(&__get_attr(\%tlist_attr, $tlist_attrs[2])));
+  return("new TermList failed: " . $self->errormsg())
+    if (! $self->setCompareNormalize(&__get_attr(\%tlist_attr, $tlist_attrs[3])));
   $self->{VERSION} = &__get_attr(\%tlist_attr, $tlist_attrs[4]);
   
   # UTF-8 data pre-processing
@@ -295,19 +297,19 @@ sub loadXMLFile {
   while (! MMisc::is_blank($section)) {
     # First off, confirm the first section is the expected one
     my $name = MtXML::get_next_xml_name(\$section, $dem);
-    MMisc::error_quit("In \'$here\', while checking for \'$exp\': Problem obtaining a valid XML name, aborting")
-        if ($name eq $dem);
-    MMisc::error_quit("In \'$here\': \'$exp\' section not present (instead: $name), aborting")
-        if ($name ne $exp);
+    return("In \'$here\', while checking for \'$exp\': Problem obtaining a valid XML name, aborting")
+      if ($name eq $dem);
+    return("In \'$here\': \'$exp\' section not present (instead: $name), aborting")
+      if ($name ne $exp);
     ($err, $section, my $insection, my %term_attr) = &element_extractor_check($dem, $section, $exp, \@term_attrs);
-    MMisc::error_quit($err) if (! MMisc::is_blank($err));
+    return($err) if (! MMisc::is_blank($err));
     
     $attrib{TERMID} = &__get_attr(\%term_attr, $term_attrs[0]);
-    MMisc::error_quit("Term ID $attrib{TERMID} already exists")
-        if (exists($self->{TERMS}{$attrib{TERMID}}));
+    return("Term ID $attrib{TERMID} already exists")
+      if (exists($self->{TERMS}{$attrib{TERMID}}));
     
     ($err, my $termtext, my %ti_attr) = &process_term_content($insection, $dem);
-    MMisc::error_quit($err) if (! MMisc::is_blank($err));
+    return($err) if (! MMisc::is_blank($err));
     
     $attrib{TEXT} = $termtext;
     foreach my $name (keys %ti_attr) {
@@ -316,6 +318,8 @@ sub loadXMLFile {
     
     $self->{TERMS}{$attrib{TERMID}} = new TermListRecord(\%attrib);
   }
+
+  return("");
 }
 
 #####
