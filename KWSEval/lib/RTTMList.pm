@@ -293,69 +293,67 @@ sub toString
     return $str;
 }
 
-sub loadFile
-{
-    my ($self, $rttmFile) = @_;
+sub loadFile {
+  my ($self, $rttmFile) = @_;
+  
+#    print STDERR "Loading RTTM file '$rttmFile' encoding /$self->{ENCODING}/.\n";
+  
+  open(RTTM, $rttmFile) or MMisc::error_quit("Unable to open for read RTTM file '$rttmFile' : $!");
+  if ($self->{ENCODING} ne ""){
+    binmode(RTTM, $self->getPerlEncodingString());
+  }
+  
+  while (<RTTM>) {
+    chomp;
     
-    print STDERR "Loading RTTM file '$rttmFile' encoding /$self->{ENCODING}/.\n";
+    # Remove comments which start with ;;
+    s/;;.*$//;
     
-    open(RTTM, $rttmFile) or MMisc::error_quit("Unable to open for read RTTM file '$rttmFile' : $!");
-    if ($self->{ENCODING} ne ""){
-      binmode(RTTM, $self->getPerlEncodingString());
-    }
+    # Remove unwanted space at the begining and at the end of the line
+    s/^\s*//;
+    s/\s*$//;
     
-    while (<RTTM>)
+    # if the line is empty then ignore
+    next if ($_ =~ /^$/);
+    
+    my ($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf) = split(/\s+/,$_,9);
     {
-        chomp;
-        
-        # Remove comments which start with ;;
-        s/;;.*$//;
-        
-        # Remove unwanted space at the begining and at the end of the line
-        s/^\s*//;
-        s/\s*$//;
-
-        # if the line is empty then ignore
-        next if ($_ =~ /^$/);
-        
-        my ($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf) = split(/\s+/,$_,9);
-        {
-	  if(uc($type) eq "LEXEME") {
-	    my $record = new RTTMRecord($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf);
-            push (@{ $self->{LEXEMES}{$file}{$chan} }, $record);
-	    #Add record to lexeme by speaker table
-	    push (@{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }, $record);
-	    if ($stype ne "frag" && $stype ne "fp") {
-	      #Add record to term lookup table
-	      my $tok = $record->{TOKEN};
-	      $tok = $self->normalizeTerm($tok);
-	      push(@{ $self->{TERMLKUP}{$tok} }, $record);
-	    }
-	  }
-	  elsif(uc($type) eq "SPEAKER") {
-	    push (@{ $self->{SPEAKERS}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, $spkr, $conf) );
-	  }
-	  elsif(uc($type) eq "NOSCORE") {
-            push (@{ $self->{NOSCORE}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, undef, undef) );
-	  }
-	}
-    }
-
-    foreach my $file(sort keys %{ $self->{LEXBYSPKR} }) {
-      foreach my $chan(sort keys %{ $self->{LEXBYSPKR}{$file} }) {
-	foreach my $spkr(sort keys %{ $self->{LEXBYSPKR}{$file}{$chan} }) {
-	  my @sortedrecs = sort {$a->{BT} <=> $b->{BT}} @{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }; #Order Lexemes by begin time
-	  for (my $i=0; $i<@sortedrecs; $i++) {
-	    if ($i<@sortedrecs-1) {
-	      #Link speaker records
-	      $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i]->{NEXT} = $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i+1];
-	    }
-	  }
-	} 	   
+      if(uc($type) eq "LEXEME") {
+        my $record = new RTTMRecord($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf);
+        push (@{ $self->{LEXEMES}{$file}{$chan} }, $record);
+        #Add record to lexeme by speaker table
+        push (@{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }, $record);
+        if ($stype ne "frag" && $stype ne "fp") {
+          #Add record to term lookup table
+          my $tok = $record->{TOKEN};
+          $tok = $self->normalizeTerm($tok);
+          push(@{ $self->{TERMLKUP}{$tok} }, $record);
+        }
+      }
+      elsif(uc($type) eq "SPEAKER") {
+        push (@{ $self->{SPEAKERS}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, $spkr, $conf) );
+      }
+      elsif(uc($type) eq "NOSCORE") {
+        push (@{ $self->{NOSCORE}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, undef, undef) );
       }
     }
-
-    close RTTM;
+  }
+  
+  foreach my $file(sort keys %{ $self->{LEXBYSPKR} }) {
+    foreach my $chan(sort keys %{ $self->{LEXBYSPKR}{$file} }) {
+      foreach my $spkr(sort keys %{ $self->{LEXBYSPKR}{$file}{$chan} }) {
+        my @sortedrecs = sort {$a->{BT} <=> $b->{BT}} @{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }; #Order Lexemes by begin time
+        for (my $i=0; $i<@sortedrecs; $i++) {
+          if ($i<@sortedrecs-1) {
+            #Link speaker records
+            $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i]->{NEXT} = $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i+1];
+          }
+        }
+      } 	   
+    }
+  }
+  
+  close RTTM;
 }
 
 sub findTermOccurrences
