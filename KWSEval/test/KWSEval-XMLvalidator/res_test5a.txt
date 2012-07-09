@@ -1,0 +1,174 @@
+[[COMMANDLINE]] ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -e ../common/test1.ecf.xml ../common/test2.ecf.xml ../common/test3.ecf.xml ../common/test3.scoring.ecf.xml ../common/test5.ecf.xml ../common/test6.ecf.xml -w
+[[RETURN CODE]] 0
+[[STDOUT]]
+../common/test1.ecf.xml: validates
+<ecf source_signal_duration="7196.158" version="">
+<excerpt audio_filename="audio/eval03/arabicic/bnews/20010217_0000_0100_VOA_ARB_exA.sph" channel="1" tbeg="0.000" dur="1839.029" language="arabic" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/arabicic/bnews/20010223_1530_1600_NTV_ARB_exA.sph" channel="1" tbeg="0.000" dur="1731.334" language="arabic" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/arabicic/bnews/20010223_1530_1600_NTV_ARB_exA.sph" channel="2" tbeg="0.000" dur="731.334" language="arabic" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4489_exA.sph" channel="1" tbeg="0.000" dur="300.490" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4489_exA.sph" channel="2" tbeg="0.000" dur="300.490" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4758_exA.sph" channel="1" tbeg="0.000" dur="300.990" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4758_exA.sph" channel="2" tbeg="0.000" dur="300.990" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4758_exA.sph" channel="2" tbeg="400.000" dur="800.990" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4776_exA.sph" channel="1" tbeg="0.000" dur="302.640" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4776_exA.sph" channel="2" tbeg="0.000" dur="302.640" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4860_exA.sph" channel="1" tbeg="0.000" dur="304.190" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4860_exA.sph" channel="2" tbeg="0.000" dur="304.190" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4862_exA.sph" channel="1" tbeg="0.000" dur="299.120" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_4862_exA.sph" channel="2" tbeg="0.000" dur="299.120" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_5299_exA.sph" channel="1" tbeg="0.000" dur="300.170" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_5299_exA.sph" channel="2" tbeg="0.000" dur="300.170" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_5765_exA.sph" channel="1" tbeg="0.000" dur="297.340" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_5765_exA.sph" channel="2" tbeg="0.000" dur="297.340" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_5808_exA.sph" channel="1" tbeg="0.000" dur="303.320" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_5808_exA.sph" channel="2" tbeg="0.000" dur="303.320" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_5828_exA.sph" channel="1" tbeg="0.000" dur="301.460" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_5828_exA.sph" channel="2" tbeg="0.000" dur="301.460" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_7051_exA.sph" channel="1" tbeg="0.000" dur="304.780" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_7051_exA.sph" channel="2" tbeg="0.000" dur="304.780" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_7060_exA.sph" channel="1" tbeg="0.000" dur="306.490" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_7060_exA.sph" channel="2" tbeg="0.000" dur="306.490" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_7068_exA.sph" channel="1" tbeg="0.000" dur="304.805" language="arabic" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/arabicic/cts/ar_7068_exA.sph" channel="2" tbeg="0.000" dur="304.805" language="arabic" source_type="cts"/>
+</ecf>
+../common/test2.ecf.xml: validates
+<ecf source_signal_duration="28575.908" version="">
+<excerpt audio_filename="audio/eval03/english/bnews/20010206_1830_1900_ABC_WNT_exA.sph" channel="1" tbeg="0.000" dur="1685.221" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010217_1000_1030_VOA_ENG_exA.sph" channel="1" tbeg="0.000" dur="1765.864" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010220_2000_2100_PRI_TWD_exA.sph" channel="1" tbeg="0.000" dur="1816.458" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010221_1830_1900_NBC_NNW_exA.sph" channel="1" tbeg="0.000" dur="1799.933" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010225_0900_0930_CNN_HDL_exA.sph" channel="1" tbeg="0.000" dur="1755.744" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010228_2100_2200_MNB_NBW_exA.sph" channel="1" tbeg="0.000" dur="1739.014" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/AMI_20041210-1052_exA.sph" channel="1" tbeg="0.000" dur="730.802" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/AMI_20050204-1206_exA.sph" channel="1" tbeg="0.000" dur="714.385" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/CMU_20050228-1615_exA.sph" channel="1" tbeg="0.000" dur="721.500" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/CMU_20050301-1415_exA.sph" channel="1" tbeg="0.000" dur="718.479" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/ICSI_20010531-1030_exA.sph" channel="1" tbeg="0.000" dur="731.033" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/ICSI_20011113-1100_exA.sph" channel="1" tbeg="0.000" dur="719.650" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/NIST_20050412-1303_exA.sph" channel="1" tbeg="0.000" dur="727.018" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/NIST_20050427-0939_exA.sph" channel="1" tbeg="0.000" dur="715.650" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/VT_20050304-1300_exA.sph" channel="1" tbeg="0.000" dur="718.968" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/VT_20050318-1430_exA.sph" channel="1" tbeg="0.000" dur="724.619" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60262_exA.sph" channel="1" tbeg="0.000" dur="303.850" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60262_exA.sph" channel="2" tbeg="0.000" dur="303.850" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60354_exA.sph" channel="1" tbeg="0.000" dur="301.840" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60354_exA.sph" channel="2" tbeg="0.000" dur="301.840" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60386_exA.sph" channel="1" tbeg="0.000" dur="303.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60386_exA.sph" channel="2" tbeg="0.000" dur="303.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60398_exA.sph" channel="1" tbeg="0.000" dur="299.960" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60398_exA.sph" channel="2" tbeg="0.000" dur="299.960" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60416_exA.sph" channel="1" tbeg="0.000" dur="300.510" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60416_exA.sph" channel="2" tbeg="0.000" dur="300.510" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60441_exA.sph" channel="1" tbeg="0.000" dur="300.720" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60441_exA.sph" channel="2" tbeg="0.000" dur="300.720" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60463_exA.sph" channel="1" tbeg="0.000" dur="294.920" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60463_exA.sph" channel="2" tbeg="0.000" dur="294.920" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60477_exA.sph" channel="1" tbeg="0.000" dur="295.560" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60477_exA.sph" channel="2" tbeg="0.000" dur="295.560" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60493_exA.sph" channel="1" tbeg="0.000" dur="302.950" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60493_exA.sph" channel="2" tbeg="0.000" dur="302.950" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60549_exA.sph" channel="1" tbeg="0.000" dur="296.520" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60549_exA.sph" channel="2" tbeg="0.000" dur="296.520" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60568_exA.sph" channel="1" tbeg="0.000" dur="295.660" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60568_exA.sph" channel="2" tbeg="0.000" dur="295.660" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60571_exA.sph" channel="1" tbeg="0.000" dur="301.020" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60571_exA.sph" channel="2" tbeg="0.000" dur="301.020" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60593_exA.sph" channel="1" tbeg="0.000" dur="299.860" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60593_exA.sph" channel="2" tbeg="0.000" dur="299.860" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60613_exA.sph" channel="1" tbeg="0.000" dur="299.350" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60613_exA.sph" channel="2" tbeg="0.000" dur="299.350" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60627_exA.sph" channel="1" tbeg="0.000" dur="298.490" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60627_exA.sph" channel="2" tbeg="0.000" dur="298.490" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60648_exA.sph" channel="1" tbeg="0.000" dur="303.180" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60648_exA.sph" channel="2" tbeg="0.000" dur="303.180" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60650_exA.sph" channel="1" tbeg="0.000" dur="298.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60650_exA.sph" channel="2" tbeg="0.000" dur="298.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60668_exA.sph" channel="1" tbeg="0.000" dur="295.020" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60668_exA.sph" channel="2" tbeg="0.000" dur="295.020" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60682_exA.sph" channel="1" tbeg="0.000" dur="299.820" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60682_exA.sph" channel="2" tbeg="0.000" dur="299.820" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60720_exA.sph" channel="1" tbeg="0.000" dur="296.400" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60720_exA.sph" channel="2" tbeg="0.000" dur="296.400" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60732_exA.sph" channel="1" tbeg="0.000" dur="300.010" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60732_exA.sph" channel="2" tbeg="0.000" dur="300.010" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60784_exA.sph" channel="1" tbeg="0.000" dur="300.650" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60784_exA.sph" channel="2" tbeg="0.000" dur="300.650" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60797_exA.sph" channel="1" tbeg="0.000" dur="300.160" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60797_exA.sph" channel="2" tbeg="0.000" dur="300.160" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60817_exA.sph" channel="1" tbeg="0.000" dur="300.530" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60817_exA.sph" channel="2" tbeg="0.000" dur="300.530" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60818_exA.sph" channel="1" tbeg="0.000" dur="294.140" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60818_exA.sph" channel="2" tbeg="0.000" dur="294.140" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60844_exA.sph" channel="1" tbeg="0.000" dur="298.630" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60844_exA.sph" channel="2" tbeg="0.000" dur="298.630" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60862_exA.sph" channel="1" tbeg="0.000" dur="298.630" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60862_exA.sph" channel="2" tbeg="0.000" dur="298.630" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60874_exA.sph" channel="1" tbeg="0.000" dur="302.570" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60874_exA.sph" channel="2" tbeg="0.000" dur="302.570" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60885_exA.sph" channel="1" tbeg="0.000" dur="295.120" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60885_exA.sph" channel="2" tbeg="0.000" dur="295.120" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61039_exA.sph" channel="1" tbeg="0.000" dur="301.760" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61039_exA.sph" channel="2" tbeg="0.000" dur="301.760" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61113_exA.sph" channel="1" tbeg="0.000" dur="307.190" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61113_exA.sph" channel="2" tbeg="0.000" dur="307.190" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61130_exA.sph" channel="1" tbeg="0.000" dur="304.120" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61130_exA.sph" channel="2" tbeg="0.000" dur="304.120" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61148_exA.sph" channel="1" tbeg="0.000" dur="295.450" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61148_exA.sph" channel="2" tbeg="0.000" dur="295.450" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61192_exA.sph" channel="1" tbeg="0.000" dur="301.570" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61192_exA.sph" channel="2" tbeg="0.000" dur="301.570" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61225_exA.sph" channel="1" tbeg="0.000" dur="303.150" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61225_exA.sph" channel="2" tbeg="0.000" dur="303.150" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61228_exA.sph" channel="1" tbeg="0.000" dur="300.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61228_exA.sph" channel="2" tbeg="0.000" dur="300.420" language="english" source_type="cts"/>
+</ecf>
+../common/test3.ecf.xml: validates
+<ecf source_signal_duration="28575.908" version="">
+<excerpt audio_filename="audio/eval03/english/bnews/20010206_1830_1900_ABC_WNT_exA.sph" channel="1" tbeg="0.000" dur="1685.221" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010217_1000_1030_VOA_ENG_exA.sph" channel="1" tbeg="0.000" dur="1765.864" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010220_2000_2100_PRI_TWD_exA.sph" channel="1" tbeg="0.000" dur="1816.458" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010221_1830_1900_NBC_NNW_exA.sph" channel="1" tbeg="0.000" dur="1799.933" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010225_0900_0930_CNN_HDL_exA.sph" channel="1" tbeg="0.000" dur="1755.744" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010228_2100_2200_MNB_NBW_exA.sph" channel="1" tbeg="0.000" dur="1739.014" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/NIST_20050412-1303_exA.sph" channel="1" tbeg="0.000" dur="727.018" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60650_exA.sph" channel="1" tbeg="0.000" dur="298.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60862_exA.sph" channel="2" tbeg="0.000" dur="298.630" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60885_exA.sph" channel="2" tbeg="0.000" dur="295.120" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61130_exA.sph" channel="2" tbeg="0.000" dur="304.120" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60650_exA.sph" channel="2" tbeg="0.000" dur="298.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60720_exA.sph" channel="2" tbeg="0.000" dur="296.400" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60493_exA.sph" channel="2" tbeg="0.000" dur="302.950" language="english" source_type="cts"/>
+</ecf>
+../common/test3.scoring.ecf.xml: validates
+<ecf source_signal_duration="28575.908" version="">
+<excerpt audio_filename="audio/eval03/english/bnews/20010206_1830_1900_ABC_WNT_exA.sph" channel="1" tbeg="0.000" dur="16.000" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010217_1000_1030_VOA_ENG_exA.sph" channel="1" tbeg="0.000" dur="1500.000" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010220_2000_2100_PRI_TWD_exA.sph" channel="1" tbeg="0.000" dur="1816.458" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010221_1830_1900_NBC_NNW_exA.sph" channel="1" tbeg="0.000" dur="1799.933" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010225_0900_0930_CNN_HDL_exA.sph" channel="1" tbeg="0.000" dur="1755.744" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval03/english/bnews/20010228_2100_2200_MNB_NBW_exA.sph" channel="1" tbeg="0.000" dur="1739.014" language="english" source_type="bnews"/>
+<excerpt audio_filename="audio/eval05s/english/confmtg/NIST_20050412-1303_exA.sph" channel="1" tbeg="0.000" dur="727.018" language="english" source_type="confmtg"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60650_exA.sph" channel="1" tbeg="0.000" dur="298.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60862_exA.sph" channel="2" tbeg="0.000" dur="298.630" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60885_exA.sph" channel="2" tbeg="0.000" dur="2.000" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_61130_exA.sph" channel="2" tbeg="0.000" dur="3.000" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60650_exA.sph" channel="2" tbeg="0.000" dur="298.420" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60720_exA.sph" channel="2" tbeg="0.000" dur="296.400" language="english" source_type="cts"/>
+<excerpt audio_filename="audio/eval03/english/cts/fsh_60493_exA.sph" channel="2" tbeg="0.000" dur="302.950" language="english" source_type="cts"/>
+</ecf>
+../common/test5.ecf.xml: validates
+<ecf source_signal_duration="100.000" version="01">
+<excerpt audio_filename="FILE01.sph" channel="1" tbeg="0.000" dur="50.000" language="english" source_type="bnews"/>
+<excerpt audio_filename="FILE02.sph" channel="2" tbeg="50.000" dur="50.000" language="english" source_type="bnews"/>
+</ecf>
+../common/test6.ecf.xml: validates
+<ecf source_signal_duration="100.000" version="01">
+<excerpt audio_filename="FILE01.sph" channel="1" tbeg="0.000" dur="50.000" language="english" source_type="bnews"/>
+<excerpt audio_filename="FILE02.sph" channel="2" tbeg="50.000" dur="50.000" language="english" source_type="bnews"/>
+</ecf>
+All files processed (Validated: 6 | Total: 6)
+
+
+[[STDERR]]
+

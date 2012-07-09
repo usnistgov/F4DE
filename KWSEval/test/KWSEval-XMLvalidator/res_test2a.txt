@@ -1,0 +1,17 @@
+[[COMMANDLINE]] ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -k ../common/test5.kwslist.xml -w __test2a_1 -W && ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -k __test2a_1/test5.kwslist.xml.memdump -w __test2a_2 -W && diff -s __test2a_1/test5.kwslist.xml.memdump __test2a_2/test5.kwslist.xml.memdump
+[[RETURN CODE]] 0
+[[STDOUT]]
+../common/test5.kwslist.xml: validates
+Wrote: __test2a_1/test5.kwslist.xml
+Wrote: __test2a_1/test5.kwslist.xml.memdump
+All files processed (Validated: 1 | Total: 1)
+
+__test2a_1/test5.kwslist.xml.memdump: validates
+Wrote: __test2a_2/test5.kwslist.xml
+Wrote: __test2a_2/test5.kwslist.xml.memdump
+All files processed (Validated: 1 | Total: 1)
+
+Files __test2a_1/test5.kwslist.xml.memdump and __test2a_2/test5.kwslist.xml.memdump are identical
+
+[[STDERR]]
+

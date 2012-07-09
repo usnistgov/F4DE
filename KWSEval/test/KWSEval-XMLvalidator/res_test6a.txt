@@ -1,0 +1,17 @@
+[[COMMANDLINE]] ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -e ../common/test1.ecf.xml -w __test6a_1 -W && ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -e __test6a_1/test1.ecf.xml.memdump -w __test6a_2 -W && diff -s __test6a_1/test1.ecf.xml.memdump __test6a_2/test1.ecf.xml.memdump
+[[RETURN CODE]] 0
+[[STDOUT]]
+../common/test1.ecf.xml: validates
+Wrote: __test6a_1/test1.ecf.xml
+Wrote: __test6a_1/test1.ecf.xml.memdump
+All files processed (Validated: 1 | Total: 1)
+
+__test6a_1/test1.ecf.xml.memdump: validates
+Wrote: __test6a_2/test1.ecf.xml
+Wrote: __test6a_2/test1.ecf.xml.memdump
+All files processed (Validated: 1 | Total: 1)
+
+Files __test6a_1/test1.ecf.xml.memdump and __test6a_2/test1.ecf.xml.memdump are identical
+
+[[STDERR]]
+

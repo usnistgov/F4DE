@@ -13,5 +13,7 @@ check:
 	@(cd ../lib; perl -I. -I../../common/lib -e 'use KWSAlignment;exit(1) if (! KWSAlignment::unitTest("../test/common/"));')
 	@(cd ../lib; perl -I. -I../../common/lib -e 'use KWSSegAlign;exit(1) if (! KWSSegAlign::unitTest("../test/common/"));')
 	@(echo "")
+	@(cd KWSEval-XMLvalidator; make $@)
+	@(echo "")
 	@(cd KWSEval; make $@)
 	@echo "***** All tests ran succesfully"
