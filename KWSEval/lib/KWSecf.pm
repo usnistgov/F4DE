@@ -390,32 +390,40 @@ sub element_extractor_check {
   return("", $string, $section, %iattr);
 }
 
-##########
+##############################
 
-sub SaveFile
-{
-     my($self) = @_;
-     
-     open(OUTPUTFILE, ">$self->{FILE}") 
-       or MMisc::error_quit("Cannot open to write '$self->{FILE}' : $!");
-     
-     print OUTPUTFILE "<ecf source_signal_duration=\"$self->{SIGN_DUR}\" version=\"$self->{VER}\">\n";
-     
-     if($self->{EXCERPT})
-     {
-        for(my $i=0; $i<@{ $self->{EXCERPT} }; $i++)
-        {
-            my $tbegform = sprintf("%.3f", $self->{EXCERPT}[$i]->{TBEG});
-            my $tdurform = sprintf("%.3f", $self->{EXCERPT}[$i]->{DUR});
-            
-            print OUTPUTFILE "<excerpt audio_filename=\"$self->{EXCERPT}[$i]->{AUDIO_FILENAME}\" channel=\"$self->{EXCERPT}[$i]->{CHANNEL}\" tbeg=\"$tbegform\" dur=\"$tdurform\" language=\"$self->{EXCERPT}[$i]->{LANGUAGE}\" source_type=\"$self->{EXCERPT}[$i]->{SOURCE_TYPE}\"/>\n";
-        }
-     }
-     
-     print OUTPUTFILE "</ecf>\n";
-     
-     close(OUTPUTFILE);
+sub saveFile {
+  my ($self, $fn) = @_;
+  
+  my $to = MMisc::is_blank($fn) ? $self->{FILE} : $fn;
+  my $txt = $self->get_XMLrewrite();
+  return(MMisc::writeTo($to, "", 1, 0, $txt));
 }
+
+#####
+
+sub get_XMLrewrite {
+  my ($self) = @_;
+     
+  my $txt = "";
+
+  $txt .= "<ecf source_signal_duration=\"$self->{SIGN_DUR}\" version=\"$self->{VER}\">\n";
+     
+  if ($self->{EXCERPT}) {
+    for (my $i=0; $i < @{ $self->{EXCERPT} }; $i++) {
+      my $tbegform = sprintf("%.3f", $self->{EXCERPT}[$i]->{TBEG});
+      my $tdurform = sprintf("%.3f", $self->{EXCERPT}[$i]->{DUR});
+      
+      $txt .= "<excerpt audio_filename=\"$self->{EXCERPT}[$i]->{AUDIO_FILENAME}\" channel=\"$self->{EXCERPT}[$i]->{CHANNEL}\" tbeg=\"$tbegform\" dur=\"$tdurform\" language=\"$self->{EXCERPT}[$i]->{LANGUAGE}\" source_type=\"$self->{EXCERPT}[$i]->{SOURCE_TYPE}\"/>\n";
+    }
+  }
+    
+  $txt .= "</ecf>\n";
+     
+  return($txt);
+}
+
+####################
 
 sub FilteringTime
 {
