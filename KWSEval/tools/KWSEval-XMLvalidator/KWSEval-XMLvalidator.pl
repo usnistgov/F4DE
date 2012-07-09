@@ -95,17 +95,19 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 ########################################
 # Options processing
 
+my @ok_md = ("gzip", "text"); # Default is gzip / order is important
+
 my $usage = &set_usage();
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Default values for variables
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                               e  h  k        t vwx   #
+# Used:                       W       e  h  k        t vw    #
 
 my $issome = -1;
 my $writeback = -1;
-my $tool = "";
+my $MemDump = undef;
 
 my %opt = ();
 GetOptions
@@ -117,13 +119,11 @@ GetOptions
    'kwslist'   => sub {MMisc::error_quit("Can not specify more than one mode") if ($issome != -1); $issome = 1;},
    'termlist'  => sub {MMisc::error_quit("Can not specify more than one mode") if ($issome != -1); $issome = 2;},
    'write:s'   => \$writeback,
+   'WriteMemDump:s'  => \$MemDump,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
-
-MMisc::warn_print("\'write\' is not currently implemented")
-  if ($writeback != -1);
 
 MMisc::error_quit("Did not specify validation type, must be either \'--ecf\', \'--kwslist\' or \'--termlist\'")
   if ($issome == -1);
@@ -135,6 +135,26 @@ while (my $tmp = shift @ARGV) {
 
   my ($ok, $object) = &load_file($tmp);
   next if (! $ok);
+
+  if ($writeback != -1) {
+    my $fname = "";
+    
+    if ($writeback ne "") {
+      my ($err, $td, $tf, $te) = MMisc::split_dir_file_ext($tmp);
+      $fname = MMisc::concat_dir_file_ext($writeback, $tf, $te);
+      MMisc::error_quit("Could not rewrite file ($fname)")
+        if (! $object->saveFile($fname));
+    } else {
+      print $object->get_XMLrewrite();
+    }
+
+    if (defined $MemDump) {
+      (my $err, $fname) = $object->save_MemDump($fname, $MemDump, 1);
+      MMisc::error_quit("Problem writing the \'Memory Dump\' representation of the object: $err")
+        if (! MMisc::is_blank($err));
+    }
+
+  }
 
   $ndone++;
 }
@@ -213,13 +233,15 @@ sub _warn_add {
 
 ############################################################ Manual
 sub set_usage {
+  my $wmd = join(" ", @ok_md);
+
   my $tmp=<<EOF
 $versionid
 
 Usage:
-$0 [--help] [--version] [--write [directory]] --ecf ecf_file.xml [ecf_file.xml [...]]
-$0 [--help] [--version][--write [directory]] --kwslist kwslist_file.xml [kwslist_file.xml [...]]
-$0 [--help] [--version][--write [directory]] --termlist termlist_file.xml [termlist_file.xml [...]]
+$0 [--help] [--version] [--write [directory] [--WriteMemDump [mode]]] --ecf ecf_file.xml [ecf_file.xml [...]]
+$0 [--help] [--version] [--write [directory] [--WriteMemDump [mode]]] --kwslist kwslist_file.xml [kwslist_file.xml [...]]
+$0 [--help] [--version] [--write [directory] [--WriteMemDump [mode]]] --termlist termlist_file.xml [termlist_file.xml [...]]
 
 Will validate KWS Eval's ECF, TermList or KWSlist files
 
@@ -227,6 +249,7 @@ Where:
   --help          Print this usage information and exit
   --version       Print version number and exit
   --write         Once processed in memory, print a new XML dump of file read (or to the same filename within the command line provided directory if given)
+  --WriteMemDump  Write a memory representation of validated Files that can be used by the Scorer tools. Two modes possible: $wmd (1st default)
 
 EOF
     ;
