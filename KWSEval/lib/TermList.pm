@@ -396,44 +396,44 @@ sub process_term_content {
 
 ############################################################
 
-sub saveFile
-{
-    my ($self, $file) = @_;
-    
-    ### Write to a different file IF defined
-    if (defined($file))
-    {
-		$self->{TERMLIST_FILENAME} = $file
-    }
-
-    open(OUTPUTFILE, ">$self->{TERMLIST_FILENAME}") 
-      or MMisc::error_quit("cannot open file '$self->{TERMLIST_FILENAME}' : $!");
-#    if ($self->{ENCODING} eq "UTF-8"){
-#      binmode OUTPUTFILE, $self->getPerlEncodingString();
-#    }
- 
-#    print OUTPUTFILE "<?xml version=\"1.0\" encoding=\"$self->{ENCODING}\"?>\n";
-    
-    print OUTPUTFILE "<termlist ecf_filename=\"$self->{ECF_FILENAME}\" language=\"$self->{LANGUAGE}\" encoding=\"$self->{ENCODING}\" compareNormalize=\"$self->{COMPARENORMALIZE}\" version=\"$self->{VERSION}\">\n";
-    
-    foreach my $termid(sort keys %{ $self->{TERMS} })
-    {
-        print OUTPUTFILE "<term termid=\"$termid\">\n  <termtext>$self->{TERMS}{$termid}->{TEXT}</termtext>\n";
-        print OUTPUTFILE "  <terminfo>\n";
-        
-        foreach my $termattrname(sort keys %{ $self->{TERMS}{$termid} })
-        {
-            next if( ($termattrname eq "TERMID") || ($termattrname eq "TEXT") );
-            print OUTPUTFILE "    <attr>\n      <name>$termattrname</name>\n      <value>$self->{TERMS}{$termid}->{$termattrname}</value>\n    </attr>\n";
-        }
-        
-        print OUTPUTFILE "  </terminfo>\n</term>\n";
-    }
-    
-    print OUTPUTFILE "</termlist>\n";
-    
-    close OUTPUTFILE;
+sub saveFile {
+  my ($self, $fn) = @_;
+  
+  my $to = MMisc::is_blank($fn) ? $self->{TERMLIST_FILENAME} : $fn;
+  my $txt = $self->get_XMLrewrite();
+  return(MMisc::writeTo($to, "", 1, 0, $txt));
 }
+
+#####
+
+sub get_XMLrewrite {
+  my ($self) = @_;
+  
+  my $txt = "";
+    
+  $txt .= "<termlist ecf_filename=\"$self->{ECF_FILENAME}\" language=\"$self->{LANGUAGE}\" encoding=\"$self->{ENCODING}\" compareNormalize=\"$self->{COMPARENORMALIZE}\" version=\"$self->{VERSION}\">\n";
+  
+  foreach my $termid (sort keys %{ $self->{TERMS} }) {
+    $txt .= "  <term termid=\"$termid\">\n";
+    $txt .= "    <termtext>$self->{TERMS}{$termid}->{TEXT}</termtext>\n";
+    my $in = "";
+    foreach my $termattrname (sort keys %{ $self->{TERMS}{$termid} }) {
+      next if( ($termattrname eq "TERMID") || ($termattrname eq "TEXT") );
+      $in .= "      <attr>\n";
+      $in .= "        <name>$termattrname</name>\n";
+      $in .= "        <value>$self->{TERMS}{$termid}->{$termattrname}</value>\n";
+      $in .= "      </attr>\n";
+    }
+    $txt .= "    <terminfo>\n$in    </terminfo>\n" if (! MMisc::is_blank($in));
+    $txt .= "  </term>\n";
+  }
+  
+  $txt .= "</termlist>\n";
+  
+  return($txt);
+}
+
+############################################################
 
 1;
 
