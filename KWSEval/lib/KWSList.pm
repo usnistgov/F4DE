@@ -302,35 +302,38 @@ sub kwslist_xml_processor {
 
 ############################################################
 
-sub saveFile
-{
-    my($self) = @_;
-    
-    print STDERR "Saving KWS List file '$self->{KWSLIST_FILENAME}'.\n";
-    
-    open(OUTPUTFILE, ">$self->{KWSLIST_FILENAME}") 
-      or MMisc::error_quit("Cannot open to write '$self->{KWSLIST_FILENAME}' : $!");
-     
-    print OUTPUTFILE "<kwslist termlist_filename=\"$self->{TERMLIST_FILENAME}\" indexing_time=\"$self->{INDEXING_TIME}\" language=\"$self->{LANGUAGE}\" index_size=\"$self->{INDEX_SIZE}\" system_id=\"$self->{SYSTEM_ID}\">\n";
-     
-    foreach my $termsid(sort keys %{ $self->{TERMS} })
-    {
-        print OUTPUTFILE "  <detected_termlist termid=\"$termsid\" term_search_time=\"$self->{TERMS}{$termsid}->{SEARCH_TIME}\" oov_term_count=\"$self->{TERMS}{$termsid}->{OOV_TERM_COUNT}\">\n";
-        if($self->{TERMS}{$termsid}->{TERMS})
-        {
-            for(my $i=0; $i<@{ $self->{TERMS}{$termsid}->{TERMS} }; $i++)
-            {
-                print OUTPUTFILE "    <term file=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{FILE}\" channel=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{CHAN}\" tbeg=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{BT}\" dur=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{DUR}\" score=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{SCORE}\" decision=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{DECISION}\"/>\n";
-            }
-        }
-        
-        print OUTPUTFILE "  </detected_termlist>\n";
-    }
-     
-    print OUTPUTFILE "</kwslist>\n";
-     
-    close(OUTPUTFILE);
+sub saveFile {
+  my ($self, $fn) = @_;
+  
+  my $to = MMisc::is_blank($fn) ? $self->{KWSLIST_FILENAME} : $fn;
+  my $txt = $self->get_XMLrewrite();
+  return(MMisc::writeTo($to, "", 1, 0, $txt));
 }
+
+#####
+
+sub get_XMLrewrite {
+  my ($self) = @_;
+
+  my $txt = "";
+  
+  $txt .= "<kwslist termlist_filename=\"$self->{TERMLIST_FILENAME}\" indexing_time=\"$self->{INDEXING_TIME}\" language=\"$self->{LANGUAGE}\" index_size=\"$self->{INDEX_SIZE}\" system_id=\"$self->{SYSTEM_ID}\">\n";
+     
+  foreach my $termsid (sort keys %{ $self->{TERMS} }) {
+    $txt .= "  <detected_termlist termid=\"$termsid\" term_search_time=\"$self->{TERMS}{$termsid}->{SEARCH_TIME}\" oov_term_count=\"$self->{TERMS}{$termsid}->{OOV_TERM_COUNT}\">\n";
+    if ($self->{TERMS}{$termsid}->{TERMS}) {
+      for (my $i = 0; $i < @{ $self->{TERMS}{$termsid}->{TERMS} }; $i++) {
+        $txt .= "    <term file=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{FILE}\" channel=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{CHAN}\" tbeg=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{BT}\" dur=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{DUR}\" score=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{SCORE}\" decision=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{DECISION}\"/>\n";
+      }
+    }
+    $txt .= "  </detected_termlist>\n";
+  }
+  $txt .= "</kwslist>\n";
+  
+  return($txt);
+}
+
+#####
 
 sub listOOV
 {
