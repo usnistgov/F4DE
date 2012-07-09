@@ -62,6 +62,8 @@ sub __init {
   $self->{INDEX_SIZE} = "";
   $self->{SYSTEM_ID} = "";
   $self->{TERMS} = {};
+  # Added to avoid overwriting in file load
+  $self->{LoadedFile} = 0;
 }
 
 sub new {
@@ -84,7 +86,7 @@ sub new_empty {
   my $kwslistfile = shift;
   my $self = {};
   
-  bless $self;    
+  bless $self;
   $self->__init($kwslistfile);
   
   return $self;
@@ -237,6 +239,8 @@ sub loadXMLFile {
   $self->{SYSTEM_ID} = &__get_attr($rkwslist_attr, $kwslist_attrs[4]);
 
 #  print MMisc::get_sorted_MemDump(\$self);
+
+  $self->{LoadedFile} = 1;
 
   return("");
 }
@@ -405,6 +409,8 @@ sub load_MemDump_File {
   $self->_md_clone_value($object, 'SYSTEM_ID');
   $self->_md_clone_value($object, 'TERMS');
 
+  $self->{LoadedFile} = 1;
+
   return("");
 }
 
@@ -414,7 +420,7 @@ sub loadFile {
   my ($self, $kwslistf) = @_;
 
   return("Refusing to load a file on top of an already existing object")
-    if (! MMisc::is_blank($self->{KWSLIST_FILENAME}));
+    if ($self->{LoadedFile} != 0);
   
   my $err = MMisc::check_file_r($kwslistf);
   return("Problem with input file ($kwslistf): $err")
