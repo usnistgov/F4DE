@@ -119,6 +119,13 @@ sub SetSystemID
 sub loadXMLFile {
   my ($self, $kwslistf) = @_;
 
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
+
+  my $err = MMisc::check_file_r($kwslistf);
+  return("Problem with input file ($kwslistf): $err")
+    if (! MMisc::is_blank($err));
+
   my $modfp = MMisc::find_Module_path('KWSList');
   return("Could not obtain \'KWSList.pm\' location, aborting")
       if (! defined $modfp);
@@ -393,6 +400,13 @@ sub _md_clone_value {
 
 sub load_MemDump_File {
   my ($self, $file) = @_;
+
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
+
+  my $err = MMisc::check_file_r($file);
+  return("Problem with input file ($file): $err")
+    if (! MMisc::is_blank($err));
 
   my $object = MMisc::load_memory_object($file, $MemDump_FileHeader_gz);
 

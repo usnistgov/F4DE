@@ -251,6 +251,9 @@ sub toString
 sub loadXMLFile {
   my ($self, $ecff) = @_;
   my $ecffilestring = "";
+
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
   
   my $err = MMisc::check_file_r($ecff);
   return("Problem with input file ($ecff): $err")
@@ -486,6 +489,13 @@ sub _md_clone_value {
 sub load_MemDump_File {
   my ($self, $file) = @_;
 
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
+
+  my $err = MMisc::check_file_r($file);
+  return("Problem with input file ($file): $err")
+    if (! MMisc::is_blank($err));
+
   my $object = MMisc::load_memory_object($file, $MemDump_FileHeader_gz);
 
   $self->_md_clone_value($object, 'FILE');
@@ -507,7 +517,7 @@ sub loadFile {
   my ($self, $ecff) = @_;
 
   return("Refusing to load a file on top of an already existing object")
-    if (! MMisc::is_blank($self->{FILE}));
+    if ($self->{LoadedFile} != 0);
   
   my $err = MMisc::check_file_r($ecff);
   return("Problem with input file ($ecff): $err")
