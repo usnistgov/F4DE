@@ -60,6 +60,8 @@ sub __init {
   $self->{EXCERPT} = ();
   $self->{FILECHANTIME} = {};
   $self->{FILE_EVAL_SIGN_DUR} = {};
+  # Added to avoid overwriting in file load
+  $self->{LoadedFile} = 0;
 }
 
 sub new {
@@ -246,13 +248,6 @@ sub toString
 
 ########################################
 
-sub loadFile {
-  my $self = shift @_;
-  return($self->loadXMLFile(@_));
-}
-
-#####
-
 sub loadXMLFile {
   my ($self, $ecff) = @_;
   my $ecffilestring = "";
@@ -358,6 +353,8 @@ sub loadXMLFile {
     $self->{FILE_EVAL_SIGN_DUR}{$filename} = $self->{FILE_EVAL_SIGN_DUR}{$filename}/$nbrchannel;
   }
 
+  $self->{LoadedFile} = 1;
+
   return("");
 }
 
@@ -396,6 +393,9 @@ sub saveFile {
   my ($self, $fn) = @_;
   
   my $to = MMisc::is_blank($fn) ? $self->{FILE} : $fn;
+  # Re-adapt the file name to remove all ".memdump" (if any)
+  $to = &_rm_mds($to);
+
   my $txt = $self->get_XMLrewrite();
   return(MMisc::writeTo($to, "", 1, 0, $txt));
 }
@@ -421,6 +421,110 @@ sub get_XMLrewrite {
   $txt .= "</ecf>\n";
      
   return($txt);
+}
+
+########## 'save' / 'load' Memmory Dump functions
+
+my $MemDump_Suffix = ".memdump";
+
+sub get_MemDump_Suffix { return $MemDump_Suffix; }
+
+my $MemDump_FileHeader_cmp = "\#  KWSEval KWSecf MemDump";
+my $MemDump_FileHeader_gz_cmp = $MemDump_FileHeader_cmp . " (Gzip)";
+my $MemDump_FileHeader_add = "\n\n";
+
+my $MemDump_FileHeader = $MemDump_FileHeader_cmp . $MemDump_FileHeader_add;
+my $MemDump_FileHeader_gz = $MemDump_FileHeader_gz_cmp . $MemDump_FileHeader_add;
+
+#####
+
+sub _rm_mds {
+  my ($fname) = @_;
+
+  return($fname) if (MMisc::is_blank($fname));
+
+  # Remove them all
+  while ($fname =~ s%$MemDump_Suffix$%%) {1;}
+
+  return($fname);
+}
+
+#####
+
+sub save_MemDump {
+  my ($self, $fname, $mode, $printw) = @_;
+
+  $printw = MMisc::iuv($printw, 1);
+
+  # Re-adapt the file name to remove all ".memdump" (added later in this step)
+  $fname = &_rm_mds($fname);
+
+  my $tmp = MMisc::dump_memory_object
+    ($fname, $MemDump_Suffix, $self,
+     $MemDump_FileHeader,
+     ($mode eq "gzip") ? $MemDump_FileHeader_gz : undef,
+     $printw);
+
+  return("Problem during actual dump process", $fname)
+    if ($tmp != 1);
+
+  return("", $fname);
+}
+
+##########
+
+sub _md_clone_value {
+  my ($self, $other, $attr) = @_;
+
+  MMisc::error_quit("Attribute ($attr) not defined in MemDump object")
+      if (! exists $other->{$attr});
+  $self->{$attr} = $other->{$attr};
+}
+
+#####
+
+sub load_MemDump_File {
+  my ($self, $file) = @_;
+
+  my $object = MMisc::load_memory_object($file, $MemDump_FileHeader_gz);
+
+  $self->_md_clone_value($object, 'FILE');
+  $self->_md_clone_value($object, 'SIGN_DUR');
+  $self->_md_clone_value($object, 'EVAL_SIGN_DUR');
+  $self->_md_clone_value($object, 'VER');
+  $self->_md_clone_value($object, 'EXCERPT');
+  $self->_md_clone_value($object, 'FILECHANTIME');
+  $self->_md_clone_value($object, 'FILE_EVAL_SIGN_DUR');
+
+  $self->{LoadedFile} = 1;
+
+  return("");
+}
+
+#####
+
+sub loadFile {
+  my ($self, $ecff) = @_;
+
+  return("Refusing to load a file on top of an already existing object")
+    if (! MMisc::is_blank($self->{FILE}));
+  
+  my $err = MMisc::check_file_r($ecff);
+  return("Problem with input file ($ecff): $err")
+    if (! MMisc::is_blank($err));
+
+  open FILE, "<$ecff"
+    or return("Problem opening file ($$ecff) : $!");
+
+  my $header = <FILE>;
+  close FILE;
+  chomp $header;
+
+  return($self->load_MemDump_File($ecff))
+    if ( ($header eq $MemDump_FileHeader_cmp)
+         || ($header eq $MemDump_FileHeader_gz_cmp) );
+
+  return($self->loadXMLFile($ecff));
 }
 
 ####################
