@@ -114,19 +114,8 @@ sub SetSystemID
 
 ########################################
 
-sub loadFile {
-  my $self = shift @_;
-  return($self->loadXMLFile(@_));
-}
-
-#####
-
 sub loadXMLFile {
   my ($self, $kwslistf) = @_;
-
-  my $err = MMisc::check_file_r($kwslistf);
-  return("Problem with input file ($kwslistf): $err")
-      if (! MMisc::is_blank($err));
 
   my $modfp = MMisc::find_Module_path('KWSList');
   return("Could not obtain \'KWSList.pm\' location, aborting")
@@ -152,6 +141,8 @@ sub loadXMLFile {
   my $kwslistfilestring = $xmlh->run_xmllint($kwslistf);
   return("$kwslistf: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
     if ($xmlh->error());
+
+  $self->{KWSLIST_FILENAME} = $kwslistf;
 
   ## Processing file content
 
@@ -306,6 +297,9 @@ sub saveFile {
   my ($self, $fn) = @_;
   
   my $to = MMisc::is_blank($fn) ? $self->{KWSLIST_FILENAME} : $fn;
+  # Re-adapt the file name to remove all ".memdump" (if any)
+  $to = &_rm_mds($to);
+
   my $txt = $self->get_XMLrewrite();
   return(MMisc::writeTo($to, "", 1, 0, $txt));
 }
@@ -333,7 +327,114 @@ sub get_XMLrewrite {
   return($txt);
 }
 
+########## 'save' / 'load' Memmory Dump functions
+
+my $MemDump_Suffix = ".memdump";
+
+sub get_MemDump_Suffix { return $MemDump_Suffix; }
+
+my $MemDump_FileHeader_cmp = "\#  KWSEval KWSList MemDump";
+my $MemDump_FileHeader_gz_cmp = $MemDump_FileHeader_cmp . " (Gzip)";
+my $MemDump_FileHeader_add = "\n\n";
+
+my $MemDump_FileHeader = $MemDump_FileHeader_cmp . $MemDump_FileHeader_add;
+my $MemDump_FileHeader_gz = $MemDump_FileHeader_gz_cmp . $MemDump_FileHeader_add;
+
 #####
+
+sub _rm_mds {
+  my ($fname) = @_;
+
+  return($fname) if (MMisc::is_blank($fname));
+
+  # Remove them all
+  while ($fname =~ s%$MemDump_Suffix$%%) {1;}
+
+  return($fname);
+}
+
+#####
+
+sub save_MemDump {
+  my ($self, $fname, $mode, $printw) = @_;
+
+  $printw = MMisc::iuv($printw, 1);
+
+  # Re-adapt the file name to remove all ".memdump" (added later in this step)
+  $fname = &_rm_mds($fname);
+
+  my $tmp = MMisc::dump_memory_object
+    ($fname, $MemDump_Suffix, $self,
+     $MemDump_FileHeader,
+     ($mode eq "gzip") ? $MemDump_FileHeader_gz : undef,
+     $printw);
+
+  return("Problem during actual dump process", $fname)
+    if ($tmp != 1);
+
+  return("", $fname);
+}
+
+##########
+
+sub _md_clone_value {
+  my ($self, $other, $attr) = @_;
+
+  MMisc::error_quit("Attribute ($attr) not defined in MemDump object")
+      if (! exists $other->{$attr});
+  $self->{$attr} = $other->{$attr};
+}
+
+#####
+
+sub load_MemDump_File {
+  my ($self, $file) = @_;
+
+  my $object = MMisc::load_memory_object($file, $MemDump_FileHeader_gz);
+
+  $self->_md_clone_value($object, 'KWSLIST_FILENAME');
+  $self->_md_clone_value($object, 'TERMLIST_FILENAME');
+  $self->_md_clone_value($object, 'MIN_SCORE');
+  $self->_md_clone_value($object, 'MAX_SCORE');
+  $self->_md_clone_value($object, 'MIN_YES');
+  $self->_md_clone_value($object, 'MAX_NO');
+  $self->_md_clone_value($object, 'DIFF_SCORE');
+  $self->_md_clone_value($object, 'INDEXING_TIME');
+  $self->_md_clone_value($object, 'LANGUAGE');
+  $self->_md_clone_value($object, 'INDEX_SIZE');
+  $self->_md_clone_value($object, 'SYSTEM_ID');
+  $self->_md_clone_value($object, 'TERMS');
+
+  return("");
+}
+
+#####
+
+sub loadFile {
+  my ($self, $kwslistf) = @_;
+
+  return("Refusing to load a file on top of an already existing object")
+    if (! MMisc::is_blank($self->{KWSLIST_FILENAME}));
+  
+  my $err = MMisc::check_file_r($kwslistf);
+  return("Problem with input file ($kwslistf): $err")
+    if (! MMisc::is_blank($err));
+
+  open FILE, "<$kwslistf"
+    or return("Problem opening file ($$kwslistf) : $!");
+
+  my $header = <FILE>;
+  close FILE;
+  chomp $header;
+
+  return($self->load_MemDump_File($kwslistf))
+    if ( ($header eq $MemDump_FileHeader_cmp)
+         || ($header eq $MemDump_FileHeader_gz_cmp) );
+
+  return($self->loadXMLFile($kwslistf));
+}
+
+########################################
 
 sub listOOV
 {
