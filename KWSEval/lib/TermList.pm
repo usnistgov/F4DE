@@ -271,7 +271,7 @@ sub loadXMLFile {
   # for attributes, array order is important
   my $here = 'termlist';
   my @tlist_attrs = ( 'ecf_filename', 'language', 'encoding', 'compareNormalize', 'version' );
-  my ($err, $string, $section, %tlist_attr) = &element_extractor_check($dem, $tlistfilestring, $here, \@tlist_attrs);
+  ($err, my $string, my $section, my %tlist_attr) = &element_extractor_check($dem, $tlistfilestring, $here, \@tlist_attrs);
   return($err) if (! MMisc::is_blank($err));
   return("After removing '<$here>', found leftover content, aborting")
     if (! MMisc::is_blank($string));
