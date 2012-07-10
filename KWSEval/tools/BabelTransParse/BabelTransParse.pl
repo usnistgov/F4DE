@@ -209,7 +209,7 @@ open (TLIST, ">$root.tlist.xml") || die "Failed to open $root.tlist.xml";
 binmode TLIST, "utf8" if ($encoding eq "UTF-8");
 print "   Building file $root.tlist.xml\n";
 
-print ECF "<ecf source_signal_duration=\"$totalDuration\" version=\"ECF Built by BabelTransParse.pl\" language=\"$lang\" version=\"\">\n";
+print ECF "<ecf source_signal_duration=\"$totalDuration\" version=\"ECF Built by BabelTransParse.pl\">\n";
 foreach my $trans(sort keys %$db){
   my $outTransName = $trans;
   $outTransName =~ s:.*/::;

@@ -126,6 +126,7 @@ my $STDOUT = new_empty KWSList($Outfile);
 
 $STDOUT->{LANGUAGE} = $TERM->{LANGUAGE};
 $STDOUT->{ENCODING} = $TERM->{ENCODING};
+#$STDOUT->{INDEX_SIZE} = 0.0;
 $STDOUT->{TERMLIST_FILENAME} = $Termfile;
 
 ### Build the FA term for this term
