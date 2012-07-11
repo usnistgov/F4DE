@@ -250,7 +250,6 @@ sub toString
 
 sub loadXMLFile {
   my ($self, $ecff) = @_;
-  my $ecffilestring = "";
 
   return("Refusing to load a file on top of an already existing object")
     if ($self->{LoadedFile} != 0);
@@ -302,7 +301,7 @@ sub loadXMLFile {
   my @exc_attrs = ('audio_filename', 'channel', 'tbeg', 'dur', 'language', 'source_type');
 
   my $here = 'ecf';
-  my ($err, $string, $section, %ecf_attr) = &element_extractor_check($dem, $ecffilestring, $here, \@ecf_attrs);
+  ($err, my $string, my $section, my %ecf_attr) = &element_extractor_check($dem, $ecffilestring, $here, \@ecf_attrs);
   return($err) if (! MMisc::is_blank($err));
   return("After removing '<$here>', found leftover content, aborting")
     if (! MMisc::is_blank($string));
