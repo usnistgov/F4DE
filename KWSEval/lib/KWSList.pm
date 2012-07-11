@@ -57,9 +57,9 @@ sub __init {
   $self->{MIN_YES} = 9999.0;
   $self->{MAX_NO} = -9999.0;
   $self->{DIFF_SCORE} = 0.0;
-  $self->{INDEXING_TIME} = "";
+  $self->{INDEXING_TIME} = 0;
   $self->{LANGUAGE} = "";
-  $self->{INDEX_SIZE} = "";
+  $self->{INDEX_SIZE} = 0;
   $self->{SYSTEM_ID} = "";
   $self->{TERMS} = {};
   # Added to avoid overwriting in file load
