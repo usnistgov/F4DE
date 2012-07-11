@@ -346,7 +346,7 @@ sub loadFile {
         for (my $i=0; $i<@sortedrecs; $i++) {
           if ($i<@sortedrecs-1) {
             #Link speaker records
-            $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i]->{NEXT} = $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i+1];
+            $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i]->{NEXT} = $sortedrecs[$i+1];
           }
         }
       } 	   
