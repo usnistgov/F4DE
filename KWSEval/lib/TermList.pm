@@ -535,7 +535,7 @@ sub loadFile {
     if (! MMisc::is_blank($err));
 
   open FILE, "<$tlist"
-    or return("Problem opening file ($$tlist) : $!");
+    or return("Problem opening file ($tlist) : $!");
 
   my $header = <FILE>;
   close FILE;

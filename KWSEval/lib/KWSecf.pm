@@ -524,7 +524,7 @@ sub loadFile {
     if (! MMisc::is_blank($err));
 
   open FILE, "<$ecff"
-    or return("Problem opening file ($$ecff) : $!");
+    or return("Problem opening file ($ecff) : $!");
 
   my $header = <FILE>;
   close FILE;

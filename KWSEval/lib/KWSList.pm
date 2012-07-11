@@ -441,7 +441,7 @@ sub loadFile {
     if (! MMisc::is_blank($err));
 
   open FILE, "<$kwslistf"
-    or return("Problem opening file ($$kwslistf) : $!");
+    or return("Problem opening file ($kwslistf) : $!");
 
   my $header = <FILE>;
   close FILE;
