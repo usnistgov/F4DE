@@ -45,8 +45,10 @@ use Time::HiRes qw(gettimeofday tv_interval);
 # (recommended to set a variable to avoid having to reload it)
 my $DigestSHA_module = undef;
 my $StatisticsDistributions_module = undef;
+my $YAML_module = undef;
+my $DataDump_module = undef;
 
-
+##########
 
 my $version     = '0.1b';
 
@@ -652,22 +654,96 @@ sub are_float_equal {
 
 ##########
 
+sub __get_sorted_MemDump_YAML {
+  my ($obj, $indent) = @_;
+
+  ## Try to use YAML
+  if (! defined $YAML_module) {
+    &error_quit("Can not use the YAML module")
+      if (! &check_package("YAML"));
+    $YAML_module = "YAML";
+  }
+
+  # Save the default sort key
+  my $s_dso = $YAML::Sortkeys;
+  # Save the default indent
+  my $s_din = $YAML::Indent;
+
+  # sort
+  $YAML::Sortkeys = 1;
+  # request indent level
+  $YAML::Indent = $indent;
+
+  # Obtaing string
+  my $str = YAML::Dump($obj);
+
+  # Return original indent value
+  $YAML::Indent = $s_din;
+  # Return original sort keys values
+  $YAML::Sortkeys = $s_dso;
+
+  return($str);
+}
+
+##
+
+sub __get_sorted_MemDump_Dump {
+  my ($obj, $indent) = @_;
+
+  ## Warning: output might not be sorted
+
+  ## Try to use Data::Dump
+  if (! defined $DataDump_module) {
+    &error_quit("Can not use the Data::Dump module")
+      if (! &check_package("Data::Dump"));
+    $DataDump_module = "Data::Dump";
+  }
+
+  # Save the default indent
+  my $s_din = $Data::Dump::INDENT;
+
+  # Set requested indent level
+  my $tmp = "";
+  for (my $i = 0; $i < $indent; $i++) { $tmp .= ' '; }
+  $Data::Dump::INDENT = $tmp;
+
+  # Obtaing string
+  my $str = Data::Dump::dump($obj);
+
+  # Return orignal indent value
+  $Data::Dump::INDENT = $indent;
+
+  return($str);
+}
+
+##
+
 sub get_sorted_MemDump {
-  my ($obj, $indent) = ($_[0], &iuv($_[1], 2));
+  my ($obj, $indent, $method, $split) = 
+    ($_[0], &iuv($_[1], 2), &iuv($_[2], 'dumper'), &iuv($_[3], 0));
+
+  return(&__get_sorted_MemDump_YAML($obj, $indent))
+    if (lc($method) eq 'yaml');
+
+ return(&__get_sorted_MemDump_Dump($obj, $indent))
+    if (lc($method) eq 'dump');
+
+  MMisc::error_quit("Unknow \'get_sorted_MemDump\' Method ($method)")
+      if (lc($method) ne 'dumper');
 
   # Save the default sort key
   my $s_dso = $Data::Dumper::Sortkeys;
   # Save the default indent
   my $s_din = $Data::Dumper::Indent;
-  # Save the deault Purity
+  # Save the default Purity
   my $s_dpu = $Data::Dumper::Purity;
 
   # Force dumper to sort
   $Data::Dumper::Sortkeys = 1;
   # Force dumper to use requested indent level
   $Data::Dumper::Indent = $indent;
-  #  Purity controls how self referential objects are written
-  $Data::Dumper::Purity = 1;
+  # Purity controls how self referential objects are written
+  $Data::Dumper::Purity = ($split) ? 0 : 1;
 
   # Get the Dumper dump
   my $str = Dumper($obj);
@@ -683,14 +759,14 @@ sub get_sorted_MemDump {
 #####
 
 sub dump_memory_object {
-  my ($file, $ext, $obj, $txt_fileheader, $gzip_fileheader, $printfn) =
-    &iuav(\@_, '', '', undef, undef, undef, 1);
+  my ($file, $ext, $obj, $txt_fileheader, $gzip_fileheader, $printfn, $method, $split) =
+    &iuav(\@_, '', '', undef, undef, undef, 1, 'dumper', 0);
 
   return(0) if (! defined $obj);
   
   # The default is to write the basic text version
   my $fileheader = $txt_fileheader;
-  my $str = &get_sorted_MemDump($obj);
+  my $str = &get_sorted_MemDump($obj, undef, $method, $split);
 
   # But if we provide a gzip fileheader, try it
   if (defined $gzip_fileheader) {
@@ -703,10 +779,28 @@ sub dump_memory_object {
     # Otherwise, we will write the text version
   }
 
-  return( &writeTo($file, $ext, $printfn, 0, $str, '', '', $fileheader, '') );
+  my $headeradd = ($method ne 'dumper') ? "# MMisc::get_sorted_MemDump used method: [$method]\n\n" : "";
+  return( &writeTo($file, $ext, $printfn, 0, $str, '', '', $fileheader . $headeradd, '') );
 }
 
 #####
+
+sub __extract_method {
+  my ($str) = @_;
+
+  # Get only the first 4K to work with
+  my $sv = substr($str, 0, 4096);
+
+  # can we extract the method string identifier ?
+  if ($sv =~ s%\#\sMMisc\:\:get\_sorted\_MemDump\sused\smethod\:\s\[(\w+)\]\n\n%%) {
+    substr($str, 0, 4096, $sv); # fill removed header string
+    return($str, $1);
+  }
+
+  return($str, 'dumper');
+}
+
+##
 
 sub load_memory_object {
   my ($file, $gzhdsk) = &iuav(\@_, '', undef);
@@ -716,11 +810,13 @@ sub load_memory_object {
   my $str = &slurp_file($file, 'bin');
   return(undef) if (! defined $str);
 
+  ($str, my $method) = &__extract_method($str);
+
   if (defined $gzhdsk) {
     # It is possibly a gzip file => Remove the header ?
     my $tstr = &strip_header($gzhdsk, $str);
     if ($tstr ne $str) {
-      # If we could it means it is a gzip file: try to un-gzip
+      # If we could remove the header, it means it is a gzip file: try to un-gzip
       my $tmp = &mem_gunzip($tstr);
       return(undef) if (! defined $tmp);
       # it is un-gzipped -> work with it
@@ -728,12 +824,40 @@ sub load_memory_object {
     }
   }
 
+  return(&__load_Dump_memory_object($str))
+    if (lc($method) eq 'dump');
+
+  return(&__load_YAML_memory_object($str))
+    if (lc($method) eq 'yaml');
+
   my $VAR1;
   eval $str;
   &error_quit("Problem in \'MMisc::load_memory_object()\' eval-ing code: " . join(" | ", $@))
     if $@;
 
   return($VAR1);
+}
+
+##
+
+sub __load_YAML_memory_object {
+  ## Try to use YAML
+  if (! defined $YAML_module) {
+    &error_quit("Can not use the YAML module")
+      if (! &check_package("YAML"));
+    $YAML_module = "YAML";
+  }
+  return(YAML::Load($_[0]));
+ 
+}
+
+##
+
+sub __load_Dump_memory_object {
+  my $val = eval $_[0];
+  &error_quit("Problem in \'MMisc::load_memory_object()\' eval-ing code: " . join(" | ", $@))
+    if $@;
+  return($val);
 }
 
 ##########
