@@ -1,7 +1,12 @@
+package RTTMList;
+# -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
+#
 # KWSEval
 # RTTMList.pm
+#
 # Original Author: Jerome Ajot
 # Additions: David Joy 
+#            Martial Michel
 #
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
@@ -20,47 +25,61 @@
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST MAKES NO EXPRESS
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
-
-package RTTMList;
+#
+# $Id$
 
 use TranscriptHolder;
 @ISA = qw(TranscriptHolder);
 
 use strict;
-use Data::Dumper;
+
+my $version     = "0.1b";
+
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+
+my $versionid = "RTTMList.pm Version: $version";
+
+##
+
 use RTTMRecord;
 use RTTMSegment;
 use TermList;
+
 use MMisc;
 
-sub new
-{
-    my $class = shift;
-    my $rttmfile = shift;
-    my $language = shift;
-    my $normalizationType = shift;
-    my $encoding = shift;
+sub new {
+  my $class = shift;
+  my $rttmfile = shift;
+  my $language = shift;
+  my $normalizationType = shift;
+  my $encoding = shift;
+  
+  my $self = TranscriptHolder->new();
+  
+  $self->{FILE} = $rttmfile;
+  $self->{LEXEMES} = {};
+  $self->{SPEAKERS} = {};
+  $self->{LEXBYSPKR} = {};
+  $self->{NOSCORE} = {};
+  $self->{TERMLKUP} = {};
+  
+  # Added to avoid overwriting in file load
+  $self->{LoadedFile} = 0;
 
-    my $self = TranscriptHolder->new();
-
-    $self->{FILE} = $rttmfile;
-    $self->{LEXEMES} = {};
-    $self->{SPEAKERS} = {};
-    $self->{LEXBYSPKR} = {};
-    $self->{NOSCORE} = {};
-    $self->{TERMLKUP} = {};
-	
-    bless $self;
-    die "Failed: new RTTM failed: \n   ".$self->errormsg()
+  bless $self;
+  MMisc::error_quit("new RTTM failed: \n   " . $self->errormsg())
       if (! $self->setCompareNormalize($normalizationType));
-    die "Failed: new RTTM failed: \n   ".$self->errormsg()
+  MMisc::error_quit("new RTTM failed: \n   " . $self->errormsg())
       if (! $self->setEncoding($encoding));
-    die "Failed: new RTTM failed: \n   ".$self->errormsg()
+  MMisc::error_quit("new RTTM failed: \n   " . $self->errormsg())
       if (! $self->setLanguage($language));
     
-    $self->loadFile($rttmfile) if (defined($rttmfile));
+  $self->loadFile($rttmfile) if (defined($rttmfile));
 
-    return $self;
+  return($self);
 }
 
 sub unitTestFind
@@ -293,68 +312,219 @@ sub toString
     return $str;
 }
 
-sub loadFile {
-  my ($self, $rttmFile) = @_;
+##########
+
+sub __linkEntries {
+  my $self = shift @_;
+  my $undefit = MMisc::iuv(@_, 0);
   
-#    print STDERR "Loading RTTM file '$rttmFile' encoding /$self->{ENCODING}/.\n";
-  
-  open(RTTM, $rttmFile) or MMisc::error_quit("Unable to open for read RTTM file '$rttmFile' : $!");
-  if ($self->{ENCODING} ne ""){
-    binmode(RTTM, $self->getPerlEncodingString());
-  }
-  
-  while (<RTTM>) {
-    chomp;
-    
-    # Remove comments which start with ;;
-    s/;;.*$//;
-    
-    # Remove unwanted space at the begining and at the end of the line
-    s/^\s*//;
-    s/\s*$//;
-    
-    # if the line is empty then ignore
-    next if ($_ =~ /^$/);
-    
-    my ($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf) = split(/\s+/,$_,9);
-    {
-      if(uc($type) eq "LEXEME") {
-        my $record = new RTTMRecord($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf);
-        push (@{ $self->{LEXEMES}{$file}{$chan} }, $record);
-        #Add record to lexeme by speaker table
-        push (@{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }, $record);
-        if ($stype ne "frag" && $stype ne "fp") {
-          #Add record to term lookup table
-          my $tok = $record->{TOKEN};
-          $tok = $self->normalizeTerm($tok);
-          push(@{ $self->{TERMLKUP}{$tok} }, $record);
-        }
-      }
-      elsif(uc($type) eq "SPEAKER") {
-        push (@{ $self->{SPEAKERS}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, $spkr, $conf) );
-      }
-      elsif(uc($type) eq "NOSCORE") {
-        push (@{ $self->{NOSCORE}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, undef, undef) );
-      }
-    }
-  }
-  
-  foreach my $file(sort keys %{ $self->{LEXBYSPKR} }) {
-    foreach my $chan(sort keys %{ $self->{LEXBYSPKR}{$file} }) {
-      foreach my $spkr(sort keys %{ $self->{LEXBYSPKR}{$file}{$chan} }) {
-        my @sortedrecs = sort {$a->{BT} <=> $b->{BT}} @{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }; #Order Lexemes by begin time
-        for (my $i=0; $i<@sortedrecs; $i++) {
-          if ($i<@sortedrecs-1) {
+  foreach my $file (sort keys %{ $self->{LEXBYSPKR} }) {
+    foreach my $chan (sort keys %{ $self->{LEXBYSPKR}{$file} }) {
+      foreach my $spkr (sort keys %{ $self->{LEXBYSPKR}{$file}{$chan} }) {
+        my @sortedrecs = sort {$a->{BT} <=> $b->{BT}} @{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }; # Order Lexemes by begin time
+        for (my $i = 0; $i < @sortedrecs; $i++) {
+          if ($i < scalar(@sortedrecs) - 1) {
             #Link speaker records
-            $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i]->{NEXT} = $sortedrecs[$i+1];
+            $self->{LEXBYSPKR}{$file}{$chan}{$spkr}[$i]->{NEXT} 
+              = $undefit ? undef : $sortedrecs[$i+1];
           }
         }
-      } 	   
+      }
     }
   }
-  
-  close RTTM;
 }
+
+#####
+
+sub loadSSVFile {
+  my ($self, $rttmFile) = @_;
+
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
+
+  my $err = MMisc::check_file_r($rttmFile);
+  return("Problem with input file ($rttmFile): $err")
+    if (! MMisc::is_blank($err));
+
+  open(RTTM, $rttmFile) 
+    or MMisc::error_quit("Unable to open for read RTTM file '$rttmFile' : $!");
+  binmode(RTTM, $self->getPerlEncodingString())
+    if (! MMisc::is_blank($self->{ENCODING}));
+
+  my $linec = 0;
+  while (my $line = <RTTM>) {
+    $linec++;
+    chomp($line);
+    $line =~ s%\;\;.*$%%;
+    next if (MMisc::is_blank($line));
+    
+    $line =~ s%^\s+%%;
+    $line =~ s%\s+$%%;
+
+    my @rest = split(m/\s+/, $line); 
+    MMisc::error_quit("Problem with Line (#$linec): needed 9 arguments, found " . scalar @rest . " [$line]") 
+        if (scalar @rest != 9);
+    my ($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf) = @rest;
+
+    if (uc($type) eq "LEXEME") {
+      my $record = new RTTMRecord($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf);
+      push (@{ $self->{LEXEMES}{$file}{$chan} }, $record);
+      #Add record to lexeme by speaker table
+      push (@{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }, $record);
+      if ($stype ne "frag" && $stype ne "fp") {
+        #Add record to term lookup table
+        my $tok = $record->{TOKEN};
+        $tok = $self->normalizeTerm($tok);
+        push(@{ $self->{TERMLKUP}{$tok} }, $record);
+      }
+    } elsif (uc($type) eq "SPEAKER") {
+      push (@{ $self->{SPEAKERS}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, $spkr, $conf) );
+    } elsif (uc($type) eq "NOSCORE") {
+      push (@{ $self->{NOSCORE}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, undef, undef) );
+    } else {
+#      MMisc::error_quit("Unknow data type ($type)");
+      ## Ignoring a lot of type
+    }
+  }
+  close RTTM;
+
+  $self->__linkEntries();
+
+  $self->{LoadedFile} = 1;
+}
+
+########## 'save' / 'load' Memmory Dump functions
+
+my $MemDump_Suffix = ".memdump";
+
+sub get_MemDump_Suffix { return $MemDump_Suffix; }
+
+my $MemDump_FileHeader_cmp = "\#  KWSEval RTTMList MemDump";
+my $MemDump_FileHeader_gz_cmp = $MemDump_FileHeader_cmp . " (Gzip)";
+my $MemDump_FileHeader_add = "\n\n";
+
+my $MemDump_FileHeader = $MemDump_FileHeader_cmp . $MemDump_FileHeader_add;
+my $MemDump_FileHeader_gz = $MemDump_FileHeader_gz_cmp . $MemDump_FileHeader_add;
+
+#####
+
+sub _rm_mds {
+  my ($fname) = @_;
+
+  return($fname) if (MMisc::is_blank($fname));
+
+  # Remove them all
+  while ($fname =~ s%$MemDump_Suffix$%%) {1;}
+
+  return($fname);
+}
+
+#####
+
+sub save_MemDump {
+  my ($self, $fname, $mode, $printw) = @_;
+
+  $printw = MMisc::iuv($printw, 1);
+
+  # Re-adapt the file name to remove all ".memdump" (added later in this step)
+  $fname = &_rm_mds($fname);
+
+  # remove NEXT links to simplify saving
+  $self->__linkEntries(1);
+
+  my $tmp = MMisc::dump_memory_object
+    ($fname, $MemDump_Suffix, $self,
+     $MemDump_FileHeader,
+     ($mode eq "gzip") ? $MemDump_FileHeader_gz : undef,
+     $printw, 'yaml');
+
+  return("Problem during actual dump process", $fname)
+    if ($tmp != 1);
+
+  return("", $fname);
+}
+
+##########
+
+sub _md_clone_value {
+  my ($self, $other, $attr) = @_;
+
+  MMisc::error_quit("Attribute ($attr) not defined in MemDump object")
+      if (! exists $other->{$attr});
+  $self->{$attr} = $other->{$attr};
+}
+
+#####
+
+sub load_MemDump_File {
+  my ($self, $file) = @_;
+
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
+
+  my $err = MMisc::check_file_r($file);
+  return("Problem with input file ($file): $err")
+    if (! MMisc::is_blank($err));
+
+  my $object = MMisc::load_memory_object($file, $MemDump_FileHeader_gz);
+
+  my $v1 = $object->getCompareNormalize();
+  my $v2 = $self->getCompareNormalize();
+  return("Loaded object's CompareNormalize ($v1) different from requested ($v2)")
+    if ($v1 ne $v2);
+
+  $v1 = $object->getEncoding();
+  $v2 = $self->getEncoding();
+  return("Loaded object's Encoding ($v1) different from requested ($v2)")
+    if ($v1 ne $v2);
+
+  $v1 = $object->getLanguage();
+  $v2 = $self->getLanguage();
+  return("Loaded object's Language ($v1) different from requested ($v2)")
+    if ($v1 ne $v2);
+
+  $self->_md_clone_value($object, 'FILE');
+  $self->_md_clone_value($object, 'LEXEMES');
+  $self->_md_clone_value($object, 'SPEAKERS');
+  $self->_md_clone_value($object, 'LEXBYSPKR');
+  $self->_md_clone_value($object, 'NOSCORE');
+  $self->_md_clone_value($object, 'TERMLKUP');
+
+  # recreate NEXT links from stripped down version
+  $self->__linkEntries();
+
+  $self->{LoadedFile} = 1;
+
+  return("");
+}
+
+#####
+
+sub loadFile {
+  my ($self, $rttmFile) = @_;
+
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
+  
+  my $err = MMisc::check_file_r($rttmFile);
+  return("Problem with input file ($rttmFile): $err")
+    if (! MMisc::is_blank($err));
+
+  open FILE, "<$rttmFile"
+    or return("Problem opening file ($rttmFile) : $!");
+
+  my $header = <FILE>;
+  close FILE;
+  chomp $header;
+
+  return($self->load_MemDump_File($rttmFile))
+    if ( ($header eq $MemDump_FileHeader_cmp)
+         || ($header eq $MemDump_FileHeader_gz_cmp) );
+
+  return($self->loadSSVFile($rttmFile));
+}
+
+########################################
 
 sub findTermOccurrences
 {
