@@ -16,12 +16,18 @@ install:
 
 check: ${KWSEval_tester} ${KWSEval}
 	@(${PERL} ${KWSEval_tester} ${KWSEval} $@)
+	@make cleanup
 
 makecheckfiles: ${KWSEval_tester} ${KWSEval}
 	@(${PERL} ${KWSEval_tester} ${KWSEval} $@)
+	@make cleanup
 
 makecompcheckfiles: ${KWSEval_tester} ${KWSEval}
 	@(${PERL} ${KWSEval_tester} ${KWSEval} $@)
+	@make cleanup
 
 cleanresfiles:
 	@rm -f res_*.txt
+
+cleanup:
+	@rm -f alignment.csv
