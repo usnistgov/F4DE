@@ -211,11 +211,6 @@ if (defined $wid) {
    if (scalar @ARGV > 1);
 }
 
-if ($skipval) {
-  MMisc::error_quit("Can not use \'ecf\', \'WriteMemDump\' or \'bigXML\' when \'skip_validation\' is selected")
-    if ( (! MMisc::is_blank($ecffile)) || (defined $memdump) || ($use_bigxml) );
-}
-
 MMisc::error_quit("Can only use \'create_Events_Processed_file\' when \'WriteMemDump\' is used too")
   if (($gdoepmd) && (! defined $memdump));
 
@@ -228,18 +223,6 @@ if (defined $memdump) {
     if ($cont_md);
   MMisc::error_quit("\'bigXML\' can only be used if \'WriteMemDump\' is selected")
     if ($use_bigxml);
-}
-
-my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
-MMisc::error_quit("\'fps\' must set in order to use \'ecf\'")
-    if (($useECF) && (! defined $fps));
-
-## Loading of the ECF file
-if ($useECF) {
-  print "\n* Loading the ECF file\n\n";
-  my ($errmsg) = TrecVid08HelperFunctions::load_ECF($ecffile, $ecfobj, $xmllint, $xsdpath, $fps);
-  MMisc::error_quit("Problem loading the ECF file: $errmsg")
-    if (! MMisc::is_blank($errmsg));
 }
 
 ########################################
@@ -255,6 +238,7 @@ my @expected_dir_output;
 my %expected_sffn;
 my $check_minMax = 0;
 my $default_fps = undef;
+my @forceUseEcf_remove = ();
 
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
@@ -264,22 +248,65 @@ MMisc::error_quit("Problem during \'Specfile\' ($specfile) use : " . join(" | ",
   if $@;
 
 sub __cfgcheck {
-  my ($t, $v) = @_;
+  my ($t, $v, $c) = @_;
+  return if ($c == 0);
   MMisc::error_quit("Missing or improper datum [$t] in \'SpecFile\' ($specfile)")
     if ($v);
 }
 
-&__cfgcheck("\@expected_year", (scalar @expected_year == 0));
-&__cfgcheck("\@expected_task", (scalar @expected_task == 0));
-&__cfgcheck("\@expected_data", (scalar @expected_data == 0));
-&__cfgcheck("\@expected_lang", (scalar @expected_lang == 0));
-&__cfgcheck("\@expected_input", (scalar @expected_input == 0));
-&__cfgcheck("\@expected_sysid_beg", (scalar @expected_sysid_beg == 0));
-&__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0));
-&__cfgcheck("\%expected_sffn", (scalar keys %expected_sffn == 0));
+&__cfgcheck("\@expected_year", (scalar @expected_year == 0), 1);
+&__cfgcheck("\@expected_task", (scalar @expected_task == 0), 1);
+&__cfgcheck("\@expected_data", (scalar @expected_data == 0), 1);
+&__cfgcheck("\@expected_lang", (scalar @expected_lang == 0), 1);
+&__cfgcheck("\@expected_input", (scalar @expected_input == 0), 1);
+&__cfgcheck("\@expected_sysid_beg", (scalar @expected_sysid_beg == 0), 1);
+&__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0), 1);
+my $forceUseEcf = (scalar @forceUseEcf_remove > 0) ? 1 : 0;
+&__cfgcheck("\%expected_sffn", (scalar keys %expected_sffn == 0), ($forceUseEcf ? 0 : 1));
 
 $fps = $default_fps
   if ((defined $default_fps) && (! defined $fps));
+
+#####
+## Post config check
+MMisc::error_quit("An \'ECF\' file is required for this tool to work")
+  if (($forceUseEcf) && MMisc::is_blank($ecffile));
+
+my $useECF = (MMisc::is_blank($ecffile)) ? 0 : 1;
+MMisc::error_quit("\'fps\' must set in order to use \'ecf\'")
+    if (($useECF) && (! defined $fps));
+
+if ($skipval) {
+  MMisc::error_quit("Can not use \'ecf\', \'WriteMemDump\' or \'bigXML\' when \'skip_validation\' is selected")
+    if ( (! MMisc::is_blank($ecffile)) || (defined $memdump) || ($use_bigxml) );
+}
+
+## Loading of the ECF file
+if ($useECF) {
+  print "\n* Loading the ECF file\n\n";
+  my ($errmsg) = TrecVid08HelperFunctions::load_ECF($ecffile, $ecfobj, $xmllint, $xsdpath, $fps);
+  MMisc::error_quit("Problem loading the ECF file: $errmsg")
+    if (! MMisc::is_blank($errmsg));
+}
+
+#####
+## Fill 'expected_sffn' from ECFs
+if ($forceUseEcf) {
+  my @fl = $ecfobj->get_files_list();
+  my %expt = ();
+  foreach my $file (@fl) {
+    my $out = $file;
+    foreach my $rem (@forceUseEcf_remove) {
+      $out =~ s%$rem%%;
+    }
+    $expt{$out} = $file;
+  }
+  foreach my $k (@expected_data) {
+    $expected_sffn{$k} = \%expt;
+  }
+}
+
+##########
 
 my $doepmd = 0;
 
