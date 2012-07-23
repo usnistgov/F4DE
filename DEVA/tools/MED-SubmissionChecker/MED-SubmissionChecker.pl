@@ -231,31 +231,31 @@ MMisc::error_quit("Problem during \'SpecFile\' use ($specfile) : " . join(" | ",
 
 sub __cfgcheck {
   my ($t, $v, $c) = @_;
-  return if (! $c);
+  return if ($c == 0);
   MMisc::error_quit("Missing or improper datum [$t] in \'SpecFile\' ($specfile)")
     if ($v);
 }
 
 # EXPID side
-&__cfgcheck("\@expid_tag", (scalar @expid_tag == 0), 0);
-&__cfgcheck("\@expid_data", (scalar @expid_data == 0), 0);
+&__cfgcheck("\@expid_tag", (scalar @expid_tag == 0), 1);
+&__cfgcheck("\@expid_data", (scalar @expid_data == 0), 1);
 &__cfgcheck("\@expid_task", (scalar @expid_task == 0), ($expid_count == 9));
-&__cfgcheck("\@expid_MEDtype", (scalar @expid_MEDtype == 0), 0);
+&__cfgcheck("\@expid_MEDtype", (scalar @expid_MEDtype == 0), 1);
 &__cfgcheck("\@expid_traintype", (scalar @expid_traintype == 0), ($expid_count == 9));
-&__cfgcheck("\@expid_EAG", (scalar @expid_EAG == 0), 0);
-&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0), 0);
+&__cfgcheck("\@expid_EAG", (scalar @expid_EAG == 0), 1);
+&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0), 1);
 
-&__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0), 0);
-&__cfgcheck("\$expected_csv_per_expid", ($expected_csv_per_expid < 0), 0);
-&__cfgcheck("\@expected_csv_names", (scalar @expected_csv_names == 0), 0);
-&__cfgcheck("\$db_check_sql", (! defined $db_check_sql), 0);
-&__cfgcheck("\$medtype_fullcount", ($medtype_fullcount < 0), 0);
+&__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0), 1);
+&__cfgcheck("\$expected_csv_per_expid", ($expected_csv_per_expid < 0), 1);
+&__cfgcheck("\@expected_csv_names", (scalar @expected_csv_names == 0), 1);
+&__cfgcheck("\$db_check_sql", (! defined $db_check_sql), 1);
+&__cfgcheck("\$medtype_fullcount", ($medtype_fullcount < 0), 1);
 &__cfgcheck("\%medtype_fullcount_perTask", (scalar(keys %medtype_fullcount_perTask) == 0), ($medtype_fullcount == 0));
-&__cfgcheck("\@db_eventidlist", (scalar @db_eventidlist == 0), 0);
-&__cfgcheck("\@db_missingTID", (scalar @db_missingTID == 0), 0);
-&__cfgcheck("\@db_unknownTID", (scalar @db_unknownTID == 0), 0);
-&__cfgcheck("\@db_detectionTID", (scalar @db_detectionTID == 0), 0);
-&__cfgcheck("\@db_thresholdEID", (scalar @db_thresholdEID == 0), 0);
+&__cfgcheck("\@db_eventidlist", (scalar @db_eventidlist == 0), 1);
+&__cfgcheck("\@db_missingTID", (scalar @db_missingTID == 0), 1);
+&__cfgcheck("\@db_unknownTID", (scalar @db_unknownTID == 0), 1);
+&__cfgcheck("\@db_detectionTID", (scalar @db_detectionTID == 0), 1);
+&__cfgcheck("\@db_thresholdEID", (scalar @db_thresholdEID == 0), 1);
 
 &extend_file_location(\$db_check_sql, 'SQL DB check file', @data_search_path);
 
