@@ -248,7 +248,7 @@ for(my $i=0; $i<$numberFiltersTypeArray; $i++) {
     @{ $filterTypeArray{$tmp[0]} } = split(/,/, join(',', $tmp[(@tmp==1)?0:1]));
 }
 
-$requestalignCSV = 1 if(defined $requestalignCSV);
+$requestalignCSV = 1 if($requestalignCSV != 0);
 
 # Isoline Option
 my @tmplistiso1 = ();
