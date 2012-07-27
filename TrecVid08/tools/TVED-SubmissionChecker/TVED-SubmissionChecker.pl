@@ -239,6 +239,8 @@ my %expected_sffn;
 my $check_minMax = 0;
 my $default_fps = undef;
 my @forceUseEcf_remove = ();
+my $subname_params = 2;
+my $subname_param1 = "";
 
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
@@ -277,8 +279,10 @@ MMisc::error_quit("\'fps\' must set in order to use \'ecf\'")
     if (($useECF) && (! defined $fps));
 
 if ($skipval) {
-  MMisc::error_quit("Can not use \'ecf\', \'WriteMemDump\' or \'bigXML\' when \'skip_validation\' is selected")
-    if ( (! MMisc::is_blank($ecffile)) || (defined $memdump) || ($use_bigxml) );
+  MMisc::error_quit("Can not use \'WriteMemDump\' or \'bigXML\' when \'skip_validation\' is selected")
+    if ((defined $memdump) || ($use_bigxml) );
+  MMisc::error_quit("Can not use \'ecf\' when \'skip_validation\' is selected")
+    if ((! $forceUseEcf) && (! MMisc::is_blank($ecffile)));
 }
 
 ## Loading of the ECF file
@@ -330,6 +334,9 @@ foreach my $sf (@ARGV) {
   my $tmpdir = "";
   my $site = "";
   my $err = "";
+  my $p1task = "";
+  my $p1data = "";
+  my $subnum = "";
 
   if (! defined $wid) {
     vprint(1, "Checking \'$sf\'");
@@ -353,12 +360,11 @@ foreach my $sf (@ARGV) {
     }
     
     vprint(1, "Get the SITE and SUB-NUM information");
-    ($err, $site, my $subnum) = &check_archive_name($file);
+    ($err, $site, $subnum, $p1task, $p1data) = &check_archive_name($file);
     if (! MMisc::is_blank($err)) {
       &valerr($sf, $err);
       next;
     }
-    vprint(2, "<SITE> = $site | <SUB-NUM> = $subnum");
     
     vprint(1, "Uncompressing archive");
     ($err, $tmpdir) = &uncompress_archive($dir, $file, $ext, $rtmpdir);
@@ -367,14 +373,30 @@ foreach my $sf (@ARGV) {
       next;
     }
   } else {
-    $site = $sf;
+    my @split = split(m%\_%, $sf);
+    if ($subname_params == 5) {
+      MMisc::error_quit("We should have had 3x parameters: <SITE>_<TASK>_<DATA> ($sf)")
+        if (scalar @split != 3);
+      ($site, $p1task, $p1data) = @split;
+    } else {
+      MMisc::error_quit("We should have had only 1 parameter: <SITE> ($sf)")
+        if (scalar @split != 1);
+      ($site) = @split;
+    }
     $tmpdir = $wid;
     my $de = MMisc::check_dir_r($tmpdir);
     MMisc::error_quit("Problem with \'work_in_dir\' directory ($tmpdir): $de")
       if (! MMisc::is_blank($de));
     vprint(1, "\'work_in_dir\' path");
-    vprint(2, "<SITE> = $site");
   }
+
+  if ($subname_params == 5) {
+    vprint(2, "<SITE> = $site | <DATA> = $p1data | <TASK> = $p1task | <SUB-NUM> = $subnum");
+  } else {
+    vprint(2, "<SITE> = $site | <SUB-NUM> = $subnum");
+  }
+
+
   vprint(2, "Temporary directory: $tmpdir");
 
   vprint(1, "Check for the output directories");
@@ -407,7 +429,7 @@ foreach my $sf (@ARGV) {
     foreach my $sdir (sort @$rd) {
       vprint(2, "Checking Submission Directory ($sdir)");
       $wn_key = $sdir;
-      my @errs = &check_submission_dir("$tmpdir/$odir", $sdir, $site);
+      my @errs = &check_submission_dir("$tmpdir/$odir", $sdir, $site, $p1data, $p1task);
       if (scalar @errs > 0) {
         my $err = &format_list("While checking submission dir [$sdir]", "  ", @errs);
         &valerr($sf, $err);
@@ -520,19 +542,47 @@ sub check_archive_extension {
 
 sub check_archive_name {
   my $file = MMisc::iuv(shift @_, "");
+  
+  return(&check_archive_name5($file))
+    if ($subname_params == 5);
 
   my $et = "Archive name not of the form \'<SITE>_<SUB-NUM>\'";
 
   my ($lsite, $lsubnum, @left) = split(m%\_%, $file);
-  
+
   return($et . " (leftover entries: " . join(" ", @left) . ")")
     if (scalar @left > 0);
-
+  
   return($et . " (<SUB-NUM> ($lsubnum) not of the expected form: integer value starting at 1)")
     if ( ($lsubnum !~ m%^\d+$%) || ($lsubnum =~ m%^0%) );
 
   return("", $lsite, $lsubnum);
 }
+
+###
+
+sub check_archive_name5 {
+  my $file = MMisc::iuv(shift @_, "");
+  
+  my $et = "Archive name not of the form \'" . $subname_param1 . "_<SITE>_<TASK>_<DATA>_<SUB-NUM>\'";
+  my ($sn1, $lsite, $ltask, $ldata, $lsubnum, @left) = split(m%\_%, $file);
+  
+  return($et . " (leftover entries: " . join(" ", @left) . ")")
+    if (scalar @left > 0);
+
+  my $lerr = "";
+  $lerr .= &cmp_exp("First parameter", $sn1, $subname_param1);
+  $lerr .= &cmp_exp("<TASK>", $ltask, @expected_task);
+  $lerr .= &cmp_exp("<DATA>", $ldata, @expected_data);
+  $lerr .= ( ($lsubnum !~ m%^\d+$%) || ($lsubnum =~ m%^0%) ) 
+    ? " (<SUB-NUM> ($lsubnum) not of the expected form: integer value starting at 1)" : "";
+
+  return("$et $lerr")
+    if (! MMisc::is_blank($lerr));
+
+  return("", $lsite, $lsubnum, $ltask, $ldata);
+}
+
 
 ##########
 
@@ -592,10 +642,10 @@ sub check_for_output_dir {
 ##########
 
 sub check_submission_dir {
-  my ($bd, $dir, $site) = @_;
+  my ($bd, $dir, $site, $p1data, $p1task) = @_;
 
   vprint(3, "Checking name");
-  my ($lerr, my $data) = &check_name($dir, $site);
+  my ($lerr, my $data) = &check_name($dir, $site, $p1data, $p1task);
   return($lerr) if (! MMisc::is_blank($lerr));
 
   vprint(3, "Checking expected directory files");
@@ -610,7 +660,7 @@ sub check_submission_dir {
 ##########
 
 sub check_name {
-  my ($name, $site) = @_;
+  my ($name, $site, $p1data, $p1task) = @_;
 
   my $et = "\'EXP-ID\' not of the form \'<SITE>_<YEAR>_<TASK>_<DATA>_<LANG>_<INPUT>_<SYSID>_<VERSION>\' : ";
   
@@ -628,6 +678,12 @@ sub check_name {
   $err .= " <SITE> ($lsite) is different from submission file <SITE> ($site)."
     if ($site ne $lsite);
   
+  $err .= " <TASK> ($ltask) is different from submission file <TASK> ($p1task)."
+    if ((! MMisc::is_blank($p1task)) && ($ltask ne $p1task));
+
+  $err .= " <DATA> ($ldata) is different from submission file <DATA> ($p1data)."
+    if ((! MMisc::is_blank($p1data)) && ($ldata ne $p1data));
+
   $err .= &cmp_exp("<YEAR>", $lyear, @expected_year);
   $err .= &cmp_exp("<TASK>", $ltask, @expected_task);
   $err .= &cmp_exp("<DATA>", $ldata, @expected_data);
@@ -732,7 +788,9 @@ sub check_exp_dirfiles {
     return(\@ep, "Problem obtaining file list from ECF ($err)")
       if (! MMisc::is_blank($err));
     if (scalar @$rmiss > 0) {
-      my $tmp_txt = "Will not be able to perform soring (comparing ECF to common list); the following referred to files are present in the ECF but where not found in the submission: " . join(" ", sort @$rmiss);
+      my $tmp_txt = "Will not be able to perform soring (comparing ECF to common list"
+        . (($skipval && $forceUseEcf) ? " -- this is due to the use \'--skip_validation\', please rerun without this option before submitting)" : "")
+        . "); the following referred to files are present in the ECF but where not found in the submission: " . join(" ", sort @$rmiss);
       push @{$warnings{$wn_key}}, $tmp_txt;
       MMisc::error_quit($tmp_txt)
         if ($qins);
@@ -1213,7 +1271,7 @@ Usage: $0 [--help | --version | --man] --Specfile perlEvalfile [--xmllint locati
 Will confirm that a submission file conforms to the 'Submission Instructions' (Appendix B) of the 'TRECVid Event Detection Evaluation Plan'. The program needs a 'Specfile' to load some of its eval specific definitions.
 
 'last_parameter' is usually the archive file(s) to process (of the form <SITE>_<SUB-NUM>.extension, example: NIST_2.tgz)
-Only in the '--work_in_dir' case does it become <SITE>.
+Only in the '--work_in_dir' case does it become an expected value (<SITE> or <SITE>_<TASK>_<DATA>, depending on your evaluation, please refer to the eval plan for additional details).
 
  Where:
   --help          Print this usage information and exit
