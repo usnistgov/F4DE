@@ -1,6 +1,6 @@
 File:  README
-Date:  June 1, 2012
-F4DE Version: 2.4.1
+Date:  July 27, 2012
+F4DE Version: 2.4.2
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
@@ -82,6 +82,13 @@ evaluations and for specific NIST-coordinated evaluations listed below.
       archives before transmitting them to NIST.
     - Scoring Primer: DEVA/doc/TRECVid-MED12-ScoringPrimer.html
 
+  *  2012 TRECVID Surveillance Event Detection Evaluation. 
+    - Same tools as the 2008 TRECVID Surveillance Event Detection Evaluation
+      (TV08Scorer, TV08ViperValidator, TV08MergeHelper, 
+      TV08_BigXML_ValidatorHelper)
+    - TV12SED-SubmissionChecker - A tool designed to help confirm SED12 submission
+      archives before transmitting them to NIST. 
+
 
 In addition to evaluation tools, the package contains the following related tools:
 
@@ -133,6 +140,8 @@ The only pre-requisites of the tool are:
     File::Monitor
     File::Monitor::Object
     Digest::SHA
+    YAML
+    Data::Dump
 
 
 ----- Actual Installation:
