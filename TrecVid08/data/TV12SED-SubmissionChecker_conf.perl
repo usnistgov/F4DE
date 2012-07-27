@@ -4,6 +4,8 @@
 @expected_lang = ( "ENG" );
 @expected_input = ( "s-camera" );
 @expected_sysid_beg = ( "p-", "c-" );
+$subname_params = 5;
+$subname_param1 = "SED12";
 
 @expected_dir_output = ( "output" );
 
