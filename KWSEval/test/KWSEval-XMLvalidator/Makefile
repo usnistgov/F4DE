@@ -2,8 +2,8 @@
 
 KWSEval-XMLValidator_tester=KWSEval-XMLValidator_tester.pl
 
-KWSEval-XMLValidator_exec=KWSEval-XMLValidator.pl
-KWSEval-XMLValidator_reldir=../../tools/KWSEval-XMLValidator
+KWSEval-XMLValidator_exec=KWSEval-XMLvalidator.pl
+KWSEval-XMLValidator_reldir=../../tools/KWSEval-XMLvalidator
 KWSEval-XMLValidator=${KWSEval-XMLValidator_reldir}/${KWSEval-XMLValidator_exec}
 
 KWSEval_lib=../lib
