@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -t ../common/test4.cantonese.tlist.xml -w __test4c_1 -W && ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -t __test4c_1/test4.cantonese.tlist.xml.memdump -w __test4c_2 -W && diff -s __test4c_1/test4.cantonese.tlist.xml.memdump __test4c_2/test4.cantonese.tlist.xml.memdump
+[[COMMANDLINE]] ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -t ../common/test4.cantonese.tlist.xml -w __test4c_1 -W && ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -t __test4c_1/test4.cantonese.tlist.xml.memdump -w __test4c_2 -W && diff -s __test4c_1/test4.cantonese.tlist.xml.memdump __test4c_2/test4.cantonese.tlist.xml.memdump
 [[RETURN CODE]] 0
 [[STDOUT]]
 ../common/test4.cantonese.tlist.xml: validates

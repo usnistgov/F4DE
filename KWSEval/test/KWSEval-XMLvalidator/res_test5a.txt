@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -e ../common/test1.ecf.xml ../common/test2.ecf.xml ../common/test3.ecf.xml ../common/test3.scoring.ecf.xml ../common/test5.ecf.xml ../common/test6.ecf.xml -w
+[[COMMANDLINE]] ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -e ../common/test1.ecf.xml ../common/test2.ecf.xml ../common/test3.ecf.xml ../common/test3.scoring.ecf.xml ../common/test5.ecf.xml ../common/test6.ecf.xml -w
 [[RETURN CODE]] 0
 [[STDOUT]]
 ../common/test1.ecf.xml: validates

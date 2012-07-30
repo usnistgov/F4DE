@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -e ../common/test2.ecf.xml -w __test6b_1 -W && ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -e __test6b_1/test2.ecf.xml.memdump -w __test6b_2 -W && diff -s __test6b_1/test2.ecf.xml.memdump __test6b_2/test2.ecf.xml.memdump
+[[COMMANDLINE]] ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -e ../common/test2.ecf.xml -w __test6b_1 -W && ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -e __test6b_1/test2.ecf.xml.memdump -w __test6b_2 -W && diff -s __test6b_1/test2.ecf.xml.memdump __test6b_2/test2.ecf.xml.memdump
 [[RETURN CODE]] 0
 [[STDOUT]]
 ../common/test2.ecf.xml: validates

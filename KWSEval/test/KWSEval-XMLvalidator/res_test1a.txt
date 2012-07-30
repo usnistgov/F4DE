@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/KWSEval-XMLValidator/KWSEval-XMLValidator.pl -k ../common/test2.kwslist.xml ../common/test3.kwslist.xml ../common/test5.kwslist.xml ../common/test6.kwslist.xml -w
+[[COMMANDLINE]] ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -k ../common/test2.kwslist.xml ../common/test3.kwslist.xml ../common/test5.kwslist.xml ../common/test6.kwslist.xml -w
 [[RETURN CODE]] 0
 [[STDOUT]]
 ../common/test2.kwslist.xml: validates
