@@ -281,16 +281,15 @@ if ($fileRoot =~ m:/[^/]+$:) { $fileRoot .= "."; } #if the fileroot has a prepen
 ###Error breakouts before loading
 #check if the options are valid to run
 MMisc::error_quit("An RTTM file must be set")
-  if($RTTMfile eq "");
+  if (MMisc::is_blank($RTTMfile));
 MMisc::error_quit("A TermList file must be set")
-  if($TERMfile eq "");
+  if (MMisc::is_blank($TERMfile));
 
-if($haveReports)
-{
-    MMisc::error_quit("An ECF file must be set")
-      if($ECFfile eq "");
-    MMisc::error_quit("An STDList file must be set")
-      if($STDfile eq "");
+if($haveReports) {
+  MMisc::error_quit("An ECF file must be set")
+    if (MMisc::is_blank($ECFfile));
+  MMisc::error_quit("An STDList file must be set")
+    if (MMisc::is_blank($STDfile));
 }
 
 my $groupBySrcType = 0; $groupBySrcType = 1 if (keys %filterTypeArray > 0);
@@ -304,13 +303,29 @@ if ($groupBySrcType + $groupByTerm + $groupByAttr + $requestwordsoov > 1) {
 my $ECF;
 my $STD;
 
+my $err;
 if($haveReports) {
-    $ECF = new KWSecf($ECFfile);
-    $STD = new KWSList($STDfile);
-    $STD->SetSystemID($IDSystem) if($IDSystem ne "");
+  $err = MMisc::check_file_r($ECFfile);
+  MMisc::error_quit("Problem with ECF File ($ECFfile): $err")
+    if (! MMisc::is_blank($err));
+  $ECF = new KWSecf($ECFfile);
+
+  $err = MMisc::check_file_r($STDfile);
+  MMisc::error_quit("Problem with STD File ($STDfile): $err")
+    if (! MMisc::is_blank($err));
+  $STD = new KWSList($STDfile);
+  $STD->SetSystemID($IDSystem) if (! MMisc::is_blank($IDSystem));
 }
+$err = MMisc::check_file_r($TERMfile);
+MMisc::error_quit("Problem with TERM File ($TERMfile): $err")
+  if (! MMisc::is_blank($err));
 my $TERM = new TermList($TERMfile);
-my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(), $TERM->getEncoding());  
+
+$err = MMisc::check_file_r($RTTMfile);
+MMisc::error_quit("Problem with RTTM File ($RTTMfile): $err")
+  if (! MMisc::is_blank($err));
+my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), 
+                        $TERM->getCompareNormalize(), $TERM->getEncoding());  
 
 # clean the filter for terms
 $numberFiltersTermArray = keys %filterTermArray;
