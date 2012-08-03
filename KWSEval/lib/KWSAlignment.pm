@@ -95,12 +95,11 @@ sub alignTerms
   my $trials = new TrialsTWV({ ("TotDur" => $totdur, "TrialsPerSecond" => $trialsPerSec, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg) });
   my $detset = new DETCurveSet();
 
-  foreach my $termid (sort keys %{ $self->{KWSLIST}{TERMS} }) {
+  foreach my $termid (sort keys %{ $self->{TERMLIST}{TERMS} }) {
     my %refoccs = %{ $self->{RTTMLIST}->findTermOccurrences($self->{TERMLIST}->{TERMS}{$termid}{TEXT}, $fthreshold) };
     
     my $trialBlock = $termid;
     $trialBlock = "Pooled" if ($pooled);
-
     my %blockMetaData = ();
     $blockMetaData{"Text"} = $self->{TERMLIST}->{TERMS}{$termid}{TEXT} if (not $pooled);
 
@@ -166,7 +165,7 @@ sub alignTerms
 	    $termid . "," . 
 	    $self->{TERMLIST}->{TERMS}{$termid}{TEXT} . "," . 
 	    $refs{$refid}->[0]->{BT} . "," . 
-	    $refs{$refid}->[-1]->{ET} . ",MISS\n"
+	    $refs{$refid}->[-1]->{ET} . ",,,,,MISS\n"
 	    if (defined $csvreportfile);
 	  
 	  #Add miss to trial
@@ -190,7 +189,8 @@ sub alignTerms
 	    $syss{$sysid}->{FILE} . "," .
 	    $syss{$sysid}->{CHAN} . "," .
 	    $termid . "," .
-	    $self->{TERMLIST}->{TERMS}{$termid}{TEXT} . "," . 
+	    $self->{TERMLIST}->{TERMS}{$termid}{TEXT} . "," .
+	    ",," . 
 	    $syss{$sysid}->{BT} . "," . 
 	    $syss{$sysid}->{ET} . "," . 
 	    $syss{$sysid}->{SCORE} . "," . 
@@ -210,7 +210,6 @@ sub alignTerms
 	    $qtrials{$group}->addTrial($termid, $syss{$sysid}->{SCORE}, $syss{$sysid}->{DECISION}, 0, \%blockMetaData);
 	  }
 	}
-
       }
     }
     #Check for terms in file/chan combintations which weren't present in ref occurrences
@@ -249,6 +248,26 @@ sub alignTerms
       }
     }
 
+    #Add TermIDs as empty blocks if no data
+    if (not defined $trials->{"trials"}{$termid} and $includeBlocksWNoTarg == 1) {
+      $trials->addEmptyBlock($termid);
+      $trials->addBlockMetaData($termid, \%blockMetaData);
+      
+      
+      if (defined $groupFilter) {
+	my @possible_groups = (); #empty trials should be added to all groups
+	push (@possible_groups, keys %{ $self->{SRCTYPEGROUPS} });
+	push (@possible_groups, keys %{ $self->{TERMGROUPS} });
+	push (@possible_groups, @{ &{ $groupFilter }($self, undef, $self->{TERMLIST}->{TERMS}{$termid})}) if ($groupFilter eq \&KWSAlignment::groupByAttributes);
+	foreach my $group (@possible_groups) {
+	  my $grpTotDur = $totdur;
+	  $grpTotDur = $self->{ECF}->calcTotalDur($self->{SRCTYPEGROUPS}->{$group}, $self->{FILECHANS}) if ($groupFilter eq \&KWSAlignment::groupByECFSourceType);	    
+	  $qtrials{$group} = new TrialsTWV({ ("TotDur" => $grpTotDur, "TrialsPerSecond" => $trialsPerSec, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg) }) if (not defined $qtrials{$group});
+	  $qtrials{$group}->addEmptyBlock($termid);
+	  $qtrials{$group}->addBlockMetaData($termid, \%blockMetaData);
+	}
+      }
+    }
   } #End of termid loop
     
   #Build DETCurveSet
