@@ -316,10 +316,13 @@ sub check_submission {
 
   vprint(1, "Checking Submission");
 
+  my $err = MMisc::check_file_r($sf);
+  return($err) if (! MMisc::is_blank($err));
+
   vprint(2, "Checking file extension");
   my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($sf);
   return("File must end in \'$kwslist_ext\'")
-    if (! ($e =~ m%\$kwslist_ext$%i));
+    if (! ($sf =~ m%$kwslist_ext$%i));
 
   vprint(2, "Checking EXPID");
   my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion) = &check_name($f);
@@ -361,7 +364,7 @@ sub check_name {
   return($et . " leftover entries: " . join(" ", @left) . ". ", "")
     if (scalar @left > 0);
   
-  return($et ." missing parameters ($name). ", "")
+  return($et ." missing parameters. ", "")
     if (MMisc::any_blank($ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion));
   
   my $err = "";
@@ -398,7 +401,7 @@ sub check_name {
 sub copy_file_to {
   my ($if, $od) = @_;
 
-  my ($err, $d, $f, $e) = MMisc::split_file_dir($if);
+  my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($if);
   return($err) if (! MMisc::is_blank($err));
 
   my $of = MMisc::concat_dir_file_ext($od, $f, $e);
@@ -425,11 +428,13 @@ sub run_ValidateKWSList {
   ($err, my $lterm) = &copy_file_to($term, $od);
   return($err) if (! MMisc::is_blank($err));
 
+  my $of = "$od/$exp$kwslist_ext";
+
   my @cmd = ();
   push @cmd, '-e', $lecf;
   push @cmd, '-t', $lterm;
-  push @cmd, '-t', $file;
-  push @cmd, '-o', $od;
+  push @cmd, '-s', $file;
+  push @cmd, '-o', $of;
 
   my $lf = "$od/ValidateKWSList_run.log";
   vprint(4, "Running tool ($ValidateKWSList), log: $lf");
@@ -475,12 +480,14 @@ sub obtain_ecf_tlist {
 
   my @files = MMisc::get_files_list($dir);
 
-  foreach my $file (grep(m%$ecf_ext$%, @files)) {
-    my ($cid, $pid) = split_corpus_partition($file, $ecf_ext);
+  foreach my $file (grep(m%$ecf_ext$%i, @files)) {
+    my ($err, $cid, $pid) = split_corpus_partition($file, $ecf_ext);
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));
     $$recf{$cid}{$pid} = "$dir/$file";
   }
-  foreach my $file (grep(m%$tlist_ext$%, @files)) {
-    my ($cid, $pid) = split_corpus_partition($file, $tlist_ext);
+  foreach my $file (grep(m%$tlist_ext$%i, @files)) {
+    my ($err, $cid, $pid) = split_corpus_partition($file, $tlist_ext);
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));
     $$rtlist{$cid}{$pid} = "$dir/$file";
   }
 }
@@ -490,20 +497,22 @@ sub obtain_ecf_tlist {
 sub check_ecf_tlist_pairs {
   my ($recf, $rtlist) = @_;
 
+  vprint(1, "Checking found ECF & TLIST");
   my @tmp1 = keys %$recf;
   push @tmp1, keys %$rtlist;
-  foreach my $k1 (MMisc::make_array_of_unique_values(\@tmp1)) {
+  foreach my $k1 (sort (MMisc::make_array_of_unique_values(\@tmp1))) {
     MMisc::error_quit("Can not find any ECF with <CORPUSID>: $k1")
       if (! exists $$recf{$k1});
     MMisc::error_quit("Can not find any Termlist with <CORPUSID>: $k1")
       if (! exists $$rtlist{$k1});
     my @tmp2 = keys %{$$recf{$k1}};
     push @tmp2, keys %{$$rtlist{$k1}};
-    foreach my $k2 (MMisc::make_array_of_unique_values(\@tmp2)) {
+    foreach my $k2 (sort (MMisc::make_array_of_unique_values(\@tmp2))) {
       MMisc::error_quit("Can not find any ECF with <PARTITION>: $k2")
         if (! exists $$recf{$k1}{$k2});
       MMisc::error_quit("Can not find any Termlist with <PARTITION>: $k2")
         if (! exists $$rtlist{$k1}{$k2});
+      vprint(2, "Have <CORPUSID> = $k1 | <PARTITION> = $k2");
     }
   }
 }
@@ -526,7 +535,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] --Specfile perlEvalfile --TestFilesDir dir [--TestFilesDir dir [...]] [--kwslistValidator tool] [--Verbose] [--outdir dir] [--quit_if_non_scorable] EXPID.$kwslist_ext
+Usage: $0 [--help | --version] --Specfile perlEvalfile --TestFilesDir dir [--TestFilesDir dir [...]] [--kwslistValidator tool] [--Verbose] [--outdir dir] [--quit_if_non_scorable] EXPID$kwslist_ext
 
 Will confirm that a submission file conforms to the BABEL 'Submission Instructions'.
 
