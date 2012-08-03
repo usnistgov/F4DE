@@ -225,7 +225,7 @@ DEVAinstall_noman:
 ##########
 
 KWSEVALDIR=KWSEval
-KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,TListAddNGram/TListAddNGram.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl,KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl}
+KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,TListAddNGram/TListAddNGram.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl,KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl,KWSEval-SubmissionChecker/{KWSEval-SubmissionChecker.pl,KWS12-SubmissionChecker.sh}}
 
 KWSEvalinstall:
 	@make KWSEvalinstall_common
