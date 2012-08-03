@@ -328,8 +328,8 @@ sub check_submission {
   my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion) = &check_name($f);
   return($lerr) if (! MMisc::is_blank($lerr));
 
-  vprint(2, "Confirming existing \'TestDirFiles\'");
-  return("Can not validate; no usable file with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'TestDirFiles\'")
+  vprint(2, "Confirming having matching ECF & TLIST");
+  return("Can not validate; no usable ECF & TLIST files with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'TestDirFiles\'")
     if (! MMisc::safe_exists(\%ecfs, $lcorpus, $lpart));
 
   vprint(2, "Running Validation tool");
