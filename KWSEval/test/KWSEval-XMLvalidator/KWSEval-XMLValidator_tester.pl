@@ -25,12 +25,12 @@ $testr += &do_simple_test($tn, "(KWSList Validation)", "$validator -k ../common/
 ##
 $tn = "test2a";
 my $tf = "test5.kwslist.xml";
-$testr += &do_simple_test_dir($tn, "(KWSList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs2)", "$validator -k ../common/$tf -w __${tn}_1 -W && $validator -k __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(KWSList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -k ../common/$tf -w __${tn}_1 -W && $validator -k __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test2b";
 $tf = "test2.kwslist.xml";
-$testr += &do_simple_test_dir($tn, "(KWSList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs2)", "$validator -k ../common/$tf -w __${tn}_1 -W && $validator -k __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(KWSList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -k ../common/$tf -w __${tn}_1 -W && $validator -k __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 #####
 $tn = "test3";
@@ -39,17 +39,17 @@ $testr += &do_simple_test($tn, "(TermList Validation)", "$validator -t ../common
 ##
 $tn = "test4a";
 my $tf = "test2.tlist.xml";
-$testr += &do_simple_test_dir($tn, "(TermList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(TermList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test4b";
 my $tf = "test5.tlist.xml";
-$testr += &do_simple_test_dir($tn, "(TermList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(TermList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test4c";
 my $tf = "test4.cantonese.tlist.xml";
-$testr += &do_simple_test_dir($tn, "(TermList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(TermList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 #####
 $tn = "test5";
@@ -58,17 +58,17 @@ $testr += &do_simple_test($tn, "(ECF Validation)", "$validator -e ../common/test
 ##
 $tn = "test6a";
 my $tf = "test1.ecf.xml";
-$testr += &do_simple_test_dir($tn, "(ECF: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs2)", "$validator -e ../common/$tf -w __${tn}_1 -W && $validator -e __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(ECF: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -e ../common/$tf -w __${tn}_1 -W && $validator -e __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test6b";
 my $tf = "test2.ecf.xml";
-$testr += &do_simple_test_dir($tn, "(ECF: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs2)", "$validator -e ../common/$tf -w __${tn}_1 -W && $validator -e __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(ECF: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -e ../common/$tf -w __${tn}_1 -W && $validator -e __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test6c";
 my $tf = "test3.scoring.ecf.xml";
-$testr += &do_simple_test_dir($tn, "(ECF: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs2)", "$validator -e ../common/$tf -w __${tn}_1 -W && $validator -e __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(ECF: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -e ../common/$tf -w __${tn}_1 -W && $validator -e __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 
 #####
