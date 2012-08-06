@@ -65,6 +65,9 @@ sub new {
   $self->{LEXBYSPKR} = {};
   $self->{NOSCORE} = {};
   $self->{TERMLKUP} = {};
+
+  # For a quick file rewrite
+  $self->{CoreText} = "";
   
   # Added to avoid overwriting in file load
   $self->{LoadedFile} = 0;
@@ -352,6 +355,7 @@ sub loadSSVFile {
     if (! MMisc::is_blank($self->{ENCODING}));
 
   my $linec = 0;
+  my $core_text = "";
   while (my $line = <RTTM>) {
     $linec++;
     chomp($line);
@@ -382,15 +386,32 @@ sub loadSSVFile {
     } elsif (uc($type) eq "NOSCORE") {
       push (@{ $self->{NOSCORE}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, undef, undef) );
     } else {
-#      MMisc::error_quit("Unknow data type ($type)");
       ## Ignoring a lot of type
+      next;
     }
+
+    $core_text .= "$line\n";
   }
   close RTTM;
 
+  $self->{CoreText} = $core_text;
   $self->__linkEntries();
 
+  $self->{FILE} = $rttmFile;
   $self->{LoadedFile} = 1;
+}
+
+#####
+
+sub saveFile {
+  my ($self, $fn) = @_;
+  
+  my $to = MMisc::is_blank($fn) ? $self->{FILE} : $fn;
+  # Re-adapt the file name to remove all ".memdump" (if any)
+  $to = &_rm_mds($to);
+
+  my $txt = $self->{CoreText};
+  return(MMisc::writeTo($to, "", 1, 0, $txt));
 }
 
 ########## 'save' / 'load' Memmory Dump functions
