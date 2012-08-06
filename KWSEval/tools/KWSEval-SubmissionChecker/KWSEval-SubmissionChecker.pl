@@ -101,6 +101,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 my $ecf_ext = '.ecf.xml';
 my $tlist_ext = '.tlist.xml';
 my $kwslist_ext = ".kwslist.xml";
+my $atlist_ext = ".tlist.annot.xml";
 
 my $ValidateKWSList = (exists $ENV{$f4b})
   ? $ENV{$f4b} . "/bin/ValidateKWSList"
@@ -116,9 +117,10 @@ my $specfile = "";
 my $outdir = undef;
 my @testfilesdir = ();
 my $eteam = undef;
+my $scoringReady = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                   ST V           h  k     q  t v     #
+# Used:                   ST V           h  k     q st v     #
 
 my %opt = ();
 GetOptions
@@ -133,6 +135,7 @@ GetOptions
    'TestFilesDir=s' => \@testfilesdir,
    'team=s'         => \$eteam,
    'kwslistValidator=s' => \$ValidateKWSList,
+   'scoringReady'   => \$scoringReady,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -165,15 +168,16 @@ MMisc::error_quit("No \'TestFilesDir\' specified, aborting")
   if (scalar @testfilesdir == 0);
 my %ecfs = ();
 my %tlists = ();
+my %atlists = ();
 for (my $i = 0; $i < scalar @testfilesdir; $i++) {
   $err = MMisc::check_dir_r($testfilesdir[$i]);
   MMisc::error_quit("Problem with \'TestFilesDir\' (" . $testfilesdir[$i] . ") : $err")
     if (! MMisc::is_blank($err));
-  &obtain_ecf_tlist($testfilesdir[$i], \%ecfs, \%tlists);
+  &obtain_ecf_tlist($testfilesdir[$i], \%ecfs, \%tlists, \%atlists);
 }
 MMisc::error_quit("Did not find any ECF or TLIST files; will not be able to continue")
   if ((scalar (keys %ecfs) == 0) || (scalar (keys %tlists) == 0));
-&check_ecf_tlist_pairs(\%ecfs, \%tlists);
+&check_ecf_tlist_pairs(\%ecfs, \%tlists, \%atlists);
 
 ########################################
 
@@ -331,12 +335,15 @@ sub check_submission {
   vprint(2, "Confirming having matching ECF & TLIST");
   return("Can not validate; no usable ECF & TLIST files with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'TestDirFiles\'")
     if (! MMisc::safe_exists(\%ecfs, $lcorpus, $lpart));
+  return("Will not be able to score submission; missing \'$atlist_ext\' file matching <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'TestDirFiles\'")
+    if (($scoringReady) && (! MMisc::safe_exists(\%atlists, $lcorpus, $lpart)));
 
   vprint(2, "Running Validation tool");
   my $n_ecf = $ecfs{$lcorpus}{$lpart};
   my $n_tlist = $tlists{$lcorpus}{$lpart};
+  my $n_atlist = ($scoringReady) ? $atlists{$lcorpus}{$lpart} : "";
 
-  $err = &run_ValidateKWSList($f, $sf, $n_ecf, $n_tlist);
+  $err = &run_ValidateKWSList($f, $sf, $n_ecf, $n_tlist, $n_atlist);
   return($err);
 }
 
@@ -414,7 +421,7 @@ sub copy_file_to {
 ##
 
 sub run_ValidateKWSList {
-  my ($exp, $file, $ecf, $term) = @_;
+  my ($exp, $file, $ecf, $term, $atlist) = @_;
 
   vprint(3, "Creating the validation directory structure");
 
@@ -422,19 +429,19 @@ sub run_ValidateKWSList {
   return("Problem creating output dir ($od)")
     if (! MMisc::make_wdir($od));
   vprint(4, "Output dir: $od");
-    
-  my ($err, $lecf) = &copy_file_to($ecf, $od);
-  return($err) if (! MMisc::is_blank($err));
-  ($err, my $lterm) = &copy_file_to($term, $od);
-  return($err) if (! MMisc::is_blank($err));
-
+  
   my $of = "$od/$exp$kwslist_ext";
 
   my @cmd = ();
-  push @cmd, '-e', $lecf;
-  push @cmd, '-t', $lterm;
+  push @cmd, '-e', $ecf;
+  push @cmd, '-t', $term;
   push @cmd, '-s', $file;
-  push @cmd, '-o', $of;
+  if ($scoringReady) {
+    push @cmd, '-a', $atlist;
+    push @cmd, '-m', $od;
+  } else {
+    push @cmd, '-o', $of;
+  }
 
   my $lf = "$od/ValidateKWSList_run.log";
   vprint(4, "Running tool ($ValidateKWSList), log: $lf");
@@ -476,7 +483,7 @@ sub split_corpus_partition {
 #####
 
 sub obtain_ecf_tlist {
-  my ($dir, $recf, $rtlist) = @_;
+  my ($dir, $recf, $rtlist, $ratlist) = @_;
 
   my @files = MMisc::get_files_list($dir);
 
@@ -490,12 +497,17 @@ sub obtain_ecf_tlist {
     MMisc::error_quit($err) if (! MMisc::is_blank($err));
     $$rtlist{$cid}{$pid} = "$dir/$file";
   }
+  foreach my $file (grep(m%$atlist_ext$%i, @files)) {
+    my ($err, $cid, $pid) = split_corpus_partition($file, $atlist_ext);
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));
+    $$ratlist{$cid}{$pid} = "$dir/$file";
+  }
 }
 
 #####
 
 sub check_ecf_tlist_pairs {
-  my ($recf, $rtlist) = @_;
+  my ($recf, $rtlist, $ratlist) = @_;
 
   vprint(1, "Checking found ECF & TLIST");
   my @tmp1 = keys %$recf;
@@ -512,7 +524,8 @@ sub check_ecf_tlist_pairs {
         if (! exists $$recf{$k1}{$k2});
       MMisc::error_quit("Can not find any Termlist with <PARTITION>: $k2")
         if (! exists $$rtlist{$k1}{$k2});
-      vprint(2, "Have <CORPUSID> = $k1 | <PARTITION> = $k2");
+      my $tmp = (MMisc::safe_exists($ratlist, $k1, $k2)) ? " | \'$atlist_ext\' present" : "";
+      vprint(2, "Have <CORPUSID> = $k1 | <PARTITION> = $k2$tmp");
     }
   }
 }
@@ -535,7 +548,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] --Specfile perlEvalfile --TestFilesDir dir [--TestFilesDir dir [...]] [--kwslistValidator tool] [--Verbose] [--outdir dir] [--quit_if_non_scorable] EXPID$kwslist_ext
+Usage: $0 [--help | --version] --Specfile perlEvalfile --TestFilesDir dir [--TestFilesDir dir [...]] [--kwslistValidator tool] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID$kwslist_ext
 
 Will confirm that a submission file conforms to the BABEL 'Submission Instructions'.
 
@@ -549,6 +562,7 @@ The program needs a 'TestFilesDir' to load some of its eval specific definitions
   --kwslistValidator  Location of the \'ValidateKWSList\' tool (default: $ValidateKWSList)
   --Verbose       Explain step by step what is being checked
   --outdir        Output directory where validation is performed (if not provided, default is to use a temporary directory)
+  --scoringReady  When using this mode, a copy of the \"$ecf_ext\", \"$tlist_ext\" and \"$atlist_ext\" will be copied in \'--outdir\' for scoring; the tool will also quit if any of those files is missing
   --quit_if_non_scorable  If for any reason, any submission is non scorable, quit without continuing the check process, instead of adding information to a report printed at the end
 
 EOF
