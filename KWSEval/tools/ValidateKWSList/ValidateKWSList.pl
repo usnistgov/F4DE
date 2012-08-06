@@ -93,104 +93,120 @@ MMisc::ok_quit($usage) if (scalar @ARGV == 0);
 ####################
 
 my $TERMfile = "";
+my $ATLISTfile = "";
 my $ECFfile = "";
 my $KWSfile = "";
 my $outputfile = "";
+my $mddir = "";
 
 GetOptions
-(
-    'termfile=s' => \$TERMfile,
-    'ecffile=s'  => \$ECFfile,
-    'sysfile=s'  => \$KWSfile,
-    'output=s'   => \$outputfile,
-);
+  (
+   'termfile=s'   => \$TERMfile,
+   'annotfile=s'  => \$ATLISTfile,
+   'ecffile=s'    => \$ECFfile,
+   'sysfile=s'    => \$KWSfile,
+   'output=s'     => \$outputfile,
+   'memdumpDir=s' => \$mddir,
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
-MMisc::error_quit("$usage") if( ($TERMfile eq "") || ($ECFfile eq "") || ($KWSfile eq "") );
+MMisc::error_quit("$usage")
+  if (MMisc::any_blank($TERMfile, $ECFfile, $KWSfile));
+
+my $err = MMisc::check_file_r($TERMfile);
+MMisc::error_quit("Problem with \'--termfile\' file ($TERMfile): $err")
+  if (! MMisc::is_blank($err));
+$err = MMisc::check_file_r($ECFfile);
+MMisc::error_quit("Problem with \'--ecffile\' file ($ECFfile): $err")
+  if (! MMisc::is_blank($err));
+$err = MMisc::check_file_r($KWSfile);
+MMisc::error_quit("Problem with \'--kwsfile\' file ($KWSfile): $err")
+  if (! MMisc::is_blank($err));
+
+if (! MMisc::is_blank($ATLISTfile)) {
+  $err = MMisc::check_file_r($ATLISTfile);
+  MMisc::error_quit("Problem with \'--annotfile\' file ($ATLISTfile): $err")
+      if (! MMisc::is_blank($err));
+}
+
+if (! MMisc::is_blank($mddir)) {
+  $err = MMisc::check_dir_w($mddir);
+  MMisc::error_quit("Problem with \'--memdumpDir\' ($mddir): $err")
+      if (! MMisc::is_blank($err));
+}
 
 my $TERM = new TermList($TERMfile);
 my $ECF = new KWSecf($ECFfile);
 my $KWS = new KWSList($KWSfile);
+my $ATLIST = undef;
+if (! MMisc::is_blank($ATLISTfile)) {
+  $ATLIST = new TermList($ATLISTfile);
+}
+
+my %ListTerms;
+foreach my $termid (keys %{ $TERM->{TERMS} }) { $ListTerms{$termid} = 1; }
 
 my $errors = 0;
 my $warnings = 0;
-
-my %ListTerms;
-
-foreach my $termid (keys %{ $TERM->{TERMS} })
-{
-	$ListTerms{$termid} = 1;
-}
-
-foreach my $termid (sort keys %{ $KWS->{TERMS} })
-{
-	if(exists($TERM->{TERMS}{$termid}))
-	{
-		delete $ListTerms{$termid};
-
+foreach my $termid (sort keys %{ $KWS->{TERMS} }) {
+  if (exists($TERM->{TERMS}{$termid})) {
+    delete $ListTerms{$termid};
+    
     ### No need to check if there are no occurrences for the term
     next if (! defined($KWS->{TERMS}{$termid}->{TERMS}));
     
-		for(my $i=0; $i<@{ $KWS->{TERMS}{$termid}->{TERMS} }; $i++)
-		{
-			if(0 == $ECF->FilteringTime($KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}, 
-										$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN},
-										$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT},
-										$KWS->{TERMS}{$termid}->{TERMS}[$i]->{ET}) )
-			{
-				print "ERROR - KWS detected term ID '$termid' (File '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}', Channel '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}', Begin time '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}') not defined in the ECF.\n";
-				$errors++;
-				delete $KWS->{TERMS}{$termid}->{TERMS}[$i];
-			}
-		}
+    for (my $i=0; $i<@{ $KWS->{TERMS}{$termid}->{TERMS} }; $i++) {
+      if (0 == $ECF->FilteringTime
+          ($KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}, 
+           $KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN},
+           $KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT},
+           $KWS->{TERMS}{$termid}->{TERMS}[$i]->{ET}) ) {
+        print "ERROR - KWS detected term ID '$termid' (File '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}', Channel '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}', Begin time '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}') not defined in the ECF.\n";
+        $errors++;
+        delete $KWS->{TERMS}{$termid}->{TERMS}[$i];
+      }
+    }
 		
-		my %uniqueDetected = ();
-		
-		for(my $i=0; $i<@{ $KWS->{TERMS}{$termid}->{TERMS} }; $i++)
-		{
-			if(!exists( $uniqueDetected{"$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{SCORE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DECISION}"} ))
-			{
-				$uniqueDetected{"$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{SCORE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DECISION}"} = 1;
-			}
-			else
-			{
-				print "WARNING - KWS detected term ID '$termid' (File '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}', Channel '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}', Begin time '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{SCORE}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DECISION}') is a duplicate.\n";
-				$warnings++;
-				delete $KWS->{TERMS}{$termid}->{TERMS}[$i];
-			}
-		}
-	}
-	else
-	{
-		print "ERROR - ID '$termid' present in KWS file but not defined in the Term List.\n";
-		$errors++;
-		delete $KWS->{TERMS}{$termid};
-	}
+    my %uniqueDetected = ();
+    for (my $i=0; $i<@{ $KWS->{TERMS}{$termid}->{TERMS} }; $i++) {
+      if (! exists( $uniqueDetected{"$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{SCORE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DECISION}"} )) {
+        $uniqueDetected{"$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{SCORE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DECISION}"} = 1;
+      } else {
+        print "WARNING - KWS detected term ID '$termid' (File '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}', Channel '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}', Begin time '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{SCORE}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DECISION}') is a duplicate.\n";
+        $warnings++;
+        delete $KWS->{TERMS}{$termid}->{TERMS}[$i];
+      }
+    }
+  } else {
+    print "ERROR - ID '$termid' present in KWS file but not defined in the Term List.\n";
+    $errors++;
+    delete $KWS->{TERMS}{$termid};
+  }
 }
 
-foreach my $termid (sort keys %ListTerms)
-{
-	print "ERROR - ID '$termid' defined in the Term List but absent in KWS file.\n";
-	$errors++;
+foreach my $termid (sort keys %ListTerms) {
+  print "ERROR - ID '$termid' defined in the Term List but absent in KWS file.\n";
+  $errors++;
 }
 
-if($errors == 0 && $warnings == 0)
-{
-	print "'$KWSfile' validates!\n";
-}
-else
-{
-	print "'$KWSfile' does not validate due to $errors error(s) and $warnings warning(s)!\nCheck above for details!";
+if ($errors + $warnings > 0) {
+  print "'$KWSfile' does not validate due to $errors error(s) and $warnings warning(s)!\nCheck above for details!";
+} else {
+  print "'$KWSfile' validates!\n";
 }
 
-if($outputfile ne "")
-{
-	$KWS->{KWSLIST_FILENAME} = $outputfile;
-	$KWS->saveFile();
-	
-	if(keys( %ListTerms ) != 0)
-	{
-		print "The new KWS file '$outputfile' will not be proper because some terms have not been detected in the original KWS file!\n";
-	}
+if($outputfile ne "") {
+  $KWS->{KWSLIST_FILENAME} = $outputfile;
+  $KWS->saveFile();
+
+  print "The new KWS file '$outputfile' will not be proper because some terms have not been detected in the original KWS file!\n" 
+    if (keys( %ListTerms ) != 0);
+}
+
+if (! MMisc::is_blank($mddir)) {
+  &saveObject($mddir, $TERMfile, $TERM);
+  &saveObject($mddir, $ECFfile, $ECF);
+  &saveObject($mddir, $KWSfile, $KWS);
+  &saveObject($mddir, $ATLISTfile, $ATLIST);
 }
 
 MMisc::ok_exit() if ($errors + $warnings == 0);
@@ -199,17 +215,29 @@ exit($errors + $warnings);
 
 ############################################################
 
-sub set_usage {
+sub saveObject {
+  my ($od, $if, $object) = @_;
+  return() if (! defined $object);
+  
+  my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($if);
+  my $of = MMisc::concat_dir_file_ext($od, $f, $e);
+  
+  $object->saveFile($of);
+  $object->save_MemDump($of);
+}
 
-  my $usage = "$0 -t termfile -e ecfile -s sysfile [ -o purged_KWSlist ]\n";
+#####
+
+sub set_usage {
+  my $usage = "$0 --termfile termfile [--annotfile annotfile] --ecf ecfile --sysfile kwsfile [--output purged_KWSlist] [--memdumpDir dir]\n";
   $usage .= "\n";
   $usage .= "Required file arguments:\n";
-  $usage .= "  -t, --termfile           Path to the TermList file.\n";
-  $usage .= "  -e, --ecffile            Path to the ECF file.\n";
-  $usage .= "  -s, --sysfile            Path to the KWSList file.\n";
-  $usage .= "\n";
-  $usage .= "Output arguments:\n";
-  $usage .= "  -o, --output             Path to the output new purged KWS file.\n";
+  $usage .= "  --termfile        Path to the TermList file\n";
+  $usage .= "  --annotfile       Path to the Annotated TermList file (if any, only for checking and memdump)\n";
+  $usage .= "  --ecffile         Path to the ECF file\n";
+  $usage .= "  --sysfile         Path to the KWSList file\n";
+  $usage .= "  --output          Path to the output new purged KWS file\n";
+  $usage .= "  --memdumpDir      Path to the directory where to put all processed input files\n";
   $usage .= "\n";
   
   return($usage);
