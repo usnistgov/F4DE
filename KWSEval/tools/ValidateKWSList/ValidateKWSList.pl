@@ -63,7 +63,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("KWSecf", "TermList", "KWSList", "MMisc") {
+foreach my $pn ("KWSecf", "TermList", "KWSList", "RTTMList", "MMisc") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -72,7 +72,7 @@ foreach my $pn ("KWSecf", "TermList", "KWSList", "MMisc") {
 }
 
 # usualy part of the Perl Core
-foreach my $pn ("Getopt::Long", "File::Spec", "Data::Dumper", "MMisc") {
+foreach my $pn ("Getopt::Long") {
   unless (eval "use $pn; 1") {
     &_warn_add("\"$pn\" is not available on your Perl installation. ", "Please look it up on CPAN [http://search.cpan.org/]\n");
     $have_everything = 0;
@@ -96,6 +96,7 @@ my $TERMfile = "";
 my $ATLISTfile = "";
 my $ECFfile = "";
 my $KWSfile = "";
+my $RTTMfile = "";
 my $outputfile = "";
 my $mddir = "";
 
@@ -105,6 +106,7 @@ GetOptions
    'annotfile=s'  => \$ATLISTfile,
    'ecffile=s'    => \$ECFfile,
    'sysfile=s'    => \$KWSfile,
+   'rttmfile=s'   => \$RTTMfile,
    'output=s'     => \$outputfile,
    'memdumpDir=s' => \$mddir,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -127,6 +129,11 @@ if (! MMisc::is_blank($ATLISTfile)) {
   MMisc::error_quit("Problem with \'--annotfile\' file ($ATLISTfile): $err")
       if (! MMisc::is_blank($err));
 }
+if (! MMisc::is_blank($RTTMfile)) {
+  $err = MMisc::check_file_r($RTTMfile);
+  MMisc::error_quit("Problem with \'--annotfile\' file ($RTTMfile): $err")
+      if (! MMisc::is_blank($err));
+}
 
 if (! MMisc::is_blank($mddir)) {
   $err = MMisc::check_dir_w($mddir);
@@ -137,10 +144,11 @@ if (! MMisc::is_blank($mddir)) {
 my $TERM = new TermList($TERMfile);
 my $ECF = new KWSecf($ECFfile);
 my $KWS = new KWSList($KWSfile);
-my $ATLIST = undef;
-if (! MMisc::is_blank($ATLISTfile)) {
-  $ATLIST = new TermList($ATLISTfile);
-}
+my $ATLIST = (! MMisc::is_blank($ATLISTfile)) ? new TermList($ATLISTfile) : undef;
+my $RTTM = (! MMisc::is_blank($RTTMfile)) ? 
+  new RTTMList($RTTMfile, $TERM->getLanguage(), 
+               $TERM->getCompareNormalize(), $TERM->getEncoding()) 
+  : undef;
 
 my %ListTerms;
 foreach my $termid (keys %{ $TERM->{TERMS} }) { $ListTerms{$termid} = 1; }
@@ -207,6 +215,7 @@ if (! MMisc::is_blank($mddir)) {
   &saveObject($mddir, $ECFfile, $ECF);
   &saveObject($mddir, $KWSfile, $KWS);
   &saveObject($mddir, $ATLISTfile, $ATLIST);
+  &saveObject($mddir, $RTTMfile, $RTTM);
 }
 
 MMisc::ok_exit() if ($errors + $warnings == 0);
