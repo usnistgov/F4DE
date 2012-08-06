@@ -100,8 +100,11 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 my $ecf_ext = '.ecf.xml';
 my $tlist_ext = '.tlist.xml';
-my $kwslist_ext = ".kwslist.xml";
+
 my $atlist_ext = ".tlist.annot.xml";
+my $rttm_ext = ".rttm";
+
+my $kwslist_ext = ".kwslist.xml";
 
 my $ValidateKWSList = (exists $ENV{$f4b})
   ? $ENV{$f4b} . "/bin/ValidateKWSList"
@@ -169,15 +172,16 @@ MMisc::error_quit("No \'TestFilesDir\' specified, aborting")
 my %ecfs = ();
 my %tlists = ();
 my %atlists = ();
+my %rttms = ();
 for (my $i = 0; $i < scalar @testfilesdir; $i++) {
   $err = MMisc::check_dir_r($testfilesdir[$i]);
   MMisc::error_quit("Problem with \'TestFilesDir\' (" . $testfilesdir[$i] . ") : $err")
     if (! MMisc::is_blank($err));
-  &obtain_ecf_tlist($testfilesdir[$i], \%ecfs, \%tlists, \%atlists);
+  &obtain_ecf_tlist($testfilesdir[$i], \%ecfs, \%tlists, \%atlists, \%rttms);
 }
 MMisc::error_quit("Did not find any ECF or TLIST files; will not be able to continue")
   if ((scalar (keys %ecfs) == 0) || (scalar (keys %tlists) == 0));
-&check_ecf_tlist_pairs(\%ecfs, \%tlists, \%atlists);
+&check_ecf_tlist_pairs(\%ecfs, \%tlists, \%atlists, \%rttms);
 
 ########################################
 
@@ -324,26 +328,31 @@ sub check_submission {
   return($err) if (! MMisc::is_blank($err));
 
   vprint(2, "Checking file extension");
-  my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($sf);
+  # due to the use of . as a valid component of file names
+  # we can not use MMisc::split_dir_file_ext directly
+  my $f = $sf;
   return("File must end in \'$kwslist_ext\'")
-    if (! ($sf =~ m%$kwslist_ext$%i));
+    if (! ($f =~ s%$kwslist_ext$%%i));
+  $f =~ s%^.+/%%; # erase the directory part of the file
 
   vprint(2, "Checking EXPID");
   my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion) = &check_name($f);
   return($lerr) if (! MMisc::is_blank($lerr));
 
   vprint(2, "Confirming having matching ECF & TLIST");
-  return("Can not validate; no usable ECF & TLIST files with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'TestDirFiles\'")
-    if (! MMisc::safe_exists(\%ecfs, $lcorpus, $lpart));
-  return("Will not be able to score submission; missing \'$atlist_ext\' file matching <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'TestDirFiles\'")
-    if (($scoringReady) && (! MMisc::safe_exists(\%atlists, $lcorpus, $lpart)));
+  $err = "";
+  $err .= (! MMisc::safe_exists(\%ecfs, $lcorpus, $lpart)) ? "Can not validate; no usable ECF & TLIST files with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'TestDirFiles\'.  " : "";
+  $err .= (($scoringReady) && (! MMisc::safe_exists(\%atlists, $lcorpus, $lpart))) ? "Will not be able to score submission; missing \'$atlist_ext\' file matching <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'TestDirFiles\'.  " : "";
+  $err .= (($scoringReady) && (! MMisc::safe_exists(\%rttms, $lcorpus, $lpart))) ? "Will not be able to score submission; missing \'$rttm_ext\' file matching <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'TestDirFiles\'.  " : "";
+  return($err) if (! MMisc::is_blank($err));
 
   vprint(2, "Running Validation tool");
   my $n_ecf = $ecfs{$lcorpus}{$lpart};
   my $n_tlist = $tlists{$lcorpus}{$lpart};
   my $n_atlist = ($scoringReady) ? $atlists{$lcorpus}{$lpart} : "";
+  my $n_rttm = ($scoringReady) ? $rttms{$lcorpus}{$lpart} : "";
 
-  $err = &run_ValidateKWSList($f, $sf, $n_ecf, $n_tlist, $n_atlist);
+  $err = &run_ValidateKWSList($f, $sf, $n_ecf, $n_tlist, $n_atlist, $n_rttm);
   return($err);
 }
 
@@ -403,25 +412,10 @@ sub check_name {
   return("", $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion);
 }
 
-#####
-
-sub copy_file_to {
-  my ($if, $od) = @_;
-
-  my ($err, $d, $f, $e) = MMisc::split_dir_file_ext($if);
-  return($err) if (! MMisc::is_blank($err));
-
-  my $of = MMisc::concat_dir_file_ext($od, $f, $e);
-  $err = MMisc::filecopy($if, $of);
-  return($err) if (! MMisc::is_blank($err));
-
-  return("", $of);
-}
-
-##
+####
 
 sub run_ValidateKWSList {
-  my ($exp, $file, $ecf, $term, $atlist) = @_;
+  my ($exp, $file, $ecf, $term, $atlist, $rttm) = @_;
 
   vprint(3, "Creating the validation directory structure");
 
@@ -438,6 +432,7 @@ sub run_ValidateKWSList {
   push @cmd, '-s', $file;
   if ($scoringReady) {
     push @cmd, '-a', $atlist;
+    push @cmd, '-r', $rttm;
     push @cmd, '-m', $od;
   } else {
     push @cmd, '-o', $of;
@@ -482,32 +477,44 @@ sub split_corpus_partition {
 
 #####
 
+sub prune_list {
+  my $dir = shift @_;
+  my $ext = shift @_;
+  my $robj = shift @_;
+
+  my @list = grep(m%$ext$%i, @_);
+  my %rest = MMisc::array1d_to_ordering_hash(\@_);
+  for (my $i = 0; $i < scalar @list; $i++) {
+    my $file = $list[$i];
+    my ($err, $cid, $pid) = split_corpus_partition($file, $ext);
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));
+    my $here = "$dir/$file";
+    MMisc::warn_print("An \'$ext\' file already exist for <CORPUSID> = $cid | <PARTITION> = $pid (" . $$robj{$cid}{$pid} . "), being replaced by: $here")
+      if (MMisc::safe_exists($robj, $cid, $pid));
+    $$robj{$cid}{$pid} = $here;
+    delete $rest{$file};
+  }
+
+  return(sort {$rest{$a} <=> $rest{$b}} (keys %rest));
+}
+
+##
+
 sub obtain_ecf_tlist {
-  my ($dir, $recf, $rtlist, $ratlist) = @_;
+  my ($dir, $recf, $rtlist, $ratlist, $rrttm) = @_;
 
   my @files = MMisc::get_files_list($dir);
 
-  foreach my $file (grep(m%$ecf_ext$%i, @files)) {
-    my ($err, $cid, $pid) = split_corpus_partition($file, $ecf_ext);
-    MMisc::error_quit($err) if (! MMisc::is_blank($err));
-    $$recf{$cid}{$pid} = "$dir/$file";
-  }
-  foreach my $file (grep(m%$tlist_ext$%i, @files)) {
-    my ($err, $cid, $pid) = split_corpus_partition($file, $tlist_ext);
-    MMisc::error_quit($err) if (! MMisc::is_blank($err));
-    $$rtlist{$cid}{$pid} = "$dir/$file";
-  }
-  foreach my $file (grep(m%$atlist_ext$%i, @files)) {
-    my ($err, $cid, $pid) = split_corpus_partition($file, $atlist_ext);
-    MMisc::error_quit($err) if (! MMisc::is_blank($err));
-    $$ratlist{$cid}{$pid} = "$dir/$file";
-  }
+  @files = &prune_list($dir, $atlist_ext, $ratlist, @files);
+  @files = &prune_list($dir, $tlist_ext, $rtlist, @files);
+  @files = &prune_list($dir, $rttm_ext, $rrttm, @files);
+  @files = &prune_list($dir, $ecf_ext, $recf, @files);
 }
 
 #####
 
 sub check_ecf_tlist_pairs {
-  my ($recf, $rtlist, $ratlist) = @_;
+  my ($recf, $rtlist, $ratlist, $rrttm) = @_;
 
   vprint(1, "Checking found ECF & TLIST");
   my @tmp1 = keys %$recf;
@@ -524,7 +531,10 @@ sub check_ecf_tlist_pairs {
         if (! exists $$recf{$k1}{$k2});
       MMisc::error_quit("Can not find any Termlist with <PARTITION>: $k2")
         if (! exists $$rtlist{$k1}{$k2});
-      my $tmp = (MMisc::safe_exists($ratlist, $k1, $k2)) ? " | \'$atlist_ext\' present" : "";
+      my @a = ();
+      push (@a, $atlist_ext) if (MMisc::safe_exists($ratlist, $k1, $k2));
+      push (@a, $rttm_ext) if (MMisc::safe_exists($rrttm, $k1, $k2));
+      my $tmp = (scalar @a > 0) ? " | \'" . join("\' & \'", @a) . "\' found" : "";
       vprint(2, "Have <CORPUSID> = $k1 | <PARTITION> = $k2$tmp");
     }
   }
@@ -558,11 +568,11 @@ The program needs a 'TestFilesDir' to load some of its eval specific definitions
   --help          Print this usage information and exit
   --version       Print version number and exit
   --Specfile      Specify the \'perlEvalfile\' that contains definitions specific to the evaluation run
-  --TestFilesDir  Directory where the sidecar files are located.
+  --TestFilesDir  Directory where the sidecar files are located (multiple can be specified)
   --kwslistValidator  Location of the \'ValidateKWSList\' tool (default: $ValidateKWSList)
   --Verbose       Explain step by step what is being checked
   --outdir        Output directory where validation is performed (if not provided, default is to use a temporary directory)
-  --scoringReady  When using this mode, a copy of the \"$ecf_ext\", \"$tlist_ext\" and \"$atlist_ext\" will be copied in \'--outdir\' for scoring; the tool will also quit if any of those files is missing
+  --scoringReady  When using this mode, a copy of the \"$ecf_ext\", \"$tlist_ext\", \"$atlist_ext\" and \"$rttm_ext\" files will be copied in \'--outdir\' for scoring; the tool will also quit if any of those files is missing
   --quit_if_non_scorable  If for any reason, any submission is non scorable, quit without continuing the check process, instead of adding information to a report printed at the end
 
 EOF
