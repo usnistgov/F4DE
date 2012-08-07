@@ -1,8 +1,8 @@
 #!/usr/bin/env perl
 
 # ValidateKWSList
-# ValidateKWSList.pl
 # Authors: Jerome Ajot
+# Additions: Martial Michel
 # 
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
