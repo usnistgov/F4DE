@@ -290,8 +290,8 @@ sub sum_r {
 sub writeTo {
   my ($file, $addend, $printfn, $append, $txt,
       $filecomment, $stdoutcomment,
-      $fileheader, $filetrailer, $makexec)
-    = &iuav(\@_, '', '', 0, 0, '', '', '', '', '', 0);
+      $fileheader, $filetrailer, $makexec, $binmode)
+    = &iuav(\@_, '', '', 0, 0, '', '', '', '', '', 0, '');
 
   my $rv = 1;
 
@@ -318,7 +318,9 @@ sub writeTo {
     if (&is_blank($ofile)) {
       &warn_print("Could not create \'$tofile\' (will write to STDOUT): $!\n");
       $rv = 0;
-    }
+    } else {
+      binmode(FILE, $binmode) if (! MMisc::is_blank($binmode));
+    }        
   }
 
   if (! &is_blank($ofile)) {
