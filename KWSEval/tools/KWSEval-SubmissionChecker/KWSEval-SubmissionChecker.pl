@@ -165,9 +165,13 @@ if (defined $outdir) {
 $err = MMisc::check_file_x($ValidateKWSList);
 MMisc::error_quit("Problem with ValidateKWSList ($ValidateKWSList): $err")
   if (! MMisc::is_blank($err));
-
 MMisc::error_quit("No \'dbDir\' specified, aborting")
   if (scalar @dbDir == 0);
+my $tmp = scalar @dbDir;
+for (my $i = 0; $i < $tmp; $i++) {
+  my $v = shift @dbDir;
+  push @dbDir, split(m%\:%, $v);
+}
 my %ecfs = ();
 my %tlists = ();
 my %rttms = ();
@@ -559,7 +563,7 @@ The program needs a 'dbDir' to load some of its eval specific definitions; this 
   --help          Print this usage information and exit
   --version       Print version number and exit
   --Specfile      Specify the \'perlEvalfile\' that contains definitions specific to the evaluation run
-  --dbDir         Directory where the sidecar files are located (multiple can be specified)
+  --dbDir         Directory where the sidecar files are located. Multiple can be specified by separating them using a colon (\':\') or using the option multiple time
   --kwslistValidator  Location of the \'ValidateKWSList\' tool (default: $ValidateKWSList)
   --Verbose       Explain step by step what is being checked
   --outdir        Output directory where validation is performed (if not provided, default is to use a temporary directory)
