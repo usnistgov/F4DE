@@ -93,7 +93,6 @@ MMisc::ok_quit($usage) if (scalar @ARGV == 0);
 ####################
 
 my $TERMfile = "";
-my $ATLISTfile = "";
 my $ECFfile = "";
 my $KWSfile = "";
 my $RTTMfile = "";
@@ -103,7 +102,6 @@ my $mddir = "";
 GetOptions
   (
    'termfile=s'   => \$TERMfile,
-   'annotfile=s'  => \$ATLISTfile,
    'ecffile=s'    => \$ECFfile,
    'sysfile=s'    => \$KWSfile,
    'rttmfile=s'   => \$RTTMfile,
@@ -124,14 +122,9 @@ $err = MMisc::check_file_r($KWSfile);
 MMisc::error_quit("Problem with \'--kwsfile\' file ($KWSfile): $err")
   if (! MMisc::is_blank($err));
 
-if (! MMisc::is_blank($ATLISTfile)) {
-  $err = MMisc::check_file_r($ATLISTfile);
-  MMisc::error_quit("Problem with \'--annotfile\' file ($ATLISTfile): $err")
-      if (! MMisc::is_blank($err));
-}
 if (! MMisc::is_blank($RTTMfile)) {
   $err = MMisc::check_file_r($RTTMfile);
-  MMisc::error_quit("Problem with \'--annotfile\' file ($RTTMfile): $err")
+  MMisc::error_quit("Problem with \'--rttmfile\' file ($RTTMfile): $err")
       if (! MMisc::is_blank($err));
 }
 
@@ -144,7 +137,6 @@ if (! MMisc::is_blank($mddir)) {
 my $TERM = new TermList($TERMfile);
 my $ECF = new KWSecf($ECFfile);
 my $KWS = new KWSList($KWSfile);
-my $ATLIST = (! MMisc::is_blank($ATLISTfile)) ? new TermList($ATLISTfile) : undef;
 my $RTTM = (! MMisc::is_blank($RTTMfile)) ? 
   new RTTMList($RTTMfile, $TERM->getLanguage(), 
                $TERM->getCompareNormalize(), $TERM->getEncoding()) 
@@ -214,7 +206,6 @@ if (! MMisc::is_blank($mddir)) {
   &saveObject($mddir, $TERMfile, $TERM);
   &saveObject($mddir, $ECFfile, $ECF);
   &saveObject($mddir, $KWSfile, $KWS);
-  &saveObject($mddir, $ATLISTfile, $ATLIST);
   &saveObject($mddir, $RTTMfile, $RTTM);
 }
 
@@ -238,13 +229,13 @@ sub saveObject {
 #####
 
 sub set_usage {
-  my $usage = "$0 --termfile termfile [--annotfile annotfile] --ecf ecfile --sysfile kwsfile [--output purged_KWSlist] [--memdumpDir dir]\n";
+  my $usage = "$0 --termfile termfile --ecf ecfile --sysfile kwsfile [--rttmfile rttmfile] [--output purged_KWSlist] [--memdumpDir dir]\n";
   $usage .= "\n";
   $usage .= "Required file arguments:\n";
   $usage .= "  --termfile        Path to the TermList file\n";
-  $usage .= "  --annotfile       Path to the Annotated TermList file (if any, only for checking and memdump)\n";
   $usage .= "  --ecffile         Path to the ECF file\n";
   $usage .= "  --sysfile         Path to the KWSList file\n";
+  $usage .= "  --rttmfile        Path to the RTTM file\n";
   $usage .= "  --output          Path to the output new purged KWS file\n";
   $usage .= "  --memdumpDir      Path to the directory where to put all processed input files\n";
   $usage .= "\n";
