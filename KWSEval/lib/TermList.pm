@@ -403,9 +403,8 @@ sub saveFile {
   my $to = MMisc::is_blank($fn) ? $self->{TERMLIST_FILENAME} : $fn;
   # Re-adapt the file name to remove all ".memdump" (if any)
   $to = &_rm_mds($to);
-
   my $txt = $self->get_XMLrewrite();
-  return(MMisc::writeTo($to, "", 1, 0, $txt));
+  return(MMisc::writeTo($to, "", 1, 0, $txt, undef, undef, undef, undef, undef ,$self->getPerlEncodingString()));
 }
 
 #####

@@ -44,6 +44,7 @@ my $versionid = "RTTMList.pm Version: $version";
 
 ##
 
+use Data::Dumper;
 use RTTMRecord;
 use RTTMSegment;
 use TermList;
@@ -411,7 +412,7 @@ sub saveFile {
   $to = &_rm_mds($to);
 
   my $txt = $self->{CoreText};
-  return(MMisc::writeTo($to, "", 1, 0, $txt));
+  return(MMisc::writeTo($to, "", 1, 0, $txt,  undef, undef, undef, undef, undef ,$self->getPerlEncodingString()));
 }
 
 ########## 'save' / 'load' Memmory Dump functions
@@ -618,6 +619,9 @@ sub segmentsFromTimeframe
   my @outlist = ();
   my $et = sprintf("%.4f", $bt + $dur);
   my $lastsegET = $bt;
+  
+#  $Data::Dumper::MaxDepth = 1; print Dumper($self); die;
+
   return \@outlist if (not defined $self->{SPEAKERS}{$file}{$chan});
   foreach my $speaker (sort {$a->{BT} <=> $b->{BT}} @{ $self->{SPEAKERS}{$file}{$chan} })
   {
