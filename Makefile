@@ -399,7 +399,7 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/R_tools
 ## KWSEval
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/tools/BabelTransParse
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Server
 
 create_mans:
 # common
