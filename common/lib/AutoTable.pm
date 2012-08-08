@@ -1764,4 +1764,14 @@ sub _set_error_and_return {
 
 ############################################################
 
+### Add 1 to the value for the col/row
+sub increment{
+  my ($at, $col, $row) = @_;
+
+  my $x = $at->getData($col, $row);
+  $x = 0 if (! defined($x));
+  $x ++;
+  $at->setData($x, $col, $row);
+}
+
 1;
