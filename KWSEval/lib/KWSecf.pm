@@ -89,6 +89,12 @@ sub new_empty {
   return $self;
 }
 
+sub getFile
+{
+   my $self = shift;
+   return($self->{FILE});
+}
+
 sub calcTotalDur
 {
   my ($self, $srctypes, $filechans) = @_;
