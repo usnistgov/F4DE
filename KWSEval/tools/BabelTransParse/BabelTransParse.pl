@@ -143,7 +143,7 @@ if ($fileOfTF ne "") {
 }
 print "Processing Babel files\n";
 foreach my $trans(@tfiles){
-  print "   $trans\n";
+#  print "   $trans\n";
   my ($trans_bt, $trans_et) = (999999999, -1);
   ### Extract meaning from the name
   if ($trans =~ /(BABEL_(BP|OPT)_(\d{3})_(\d{5})_(\d{8})_(\d{6})_(inLine|outLine).txt)/){
@@ -186,7 +186,6 @@ foreach my $trans(@tfiles){
   close TRANS;
 #  MMisc::error_quit("End of file with a non-used transcript line") if (defined($text));
   print("End of file with a non-used transcript line") if (defined($text));
- 
 }
 #print Dumper($db);
 
@@ -200,6 +199,14 @@ print "   Building file $root.ecf.xml\n";
 open (RTTM, ">$root.rttm") || die "Failed to open $root.rttm";
 binmode(RTTM, "utf8") if ($encoding eq "UTF-8");
 print "   Building file $root.rttm\n";
+
+open (CHARRTTM, ">$root.charsplit.rttm") || die "Failed to open $root.charsplit.rttm";
+binmode(CHARRTTM, "utf8") if ($encoding eq "UTF-8");
+print "   Building file $root.charsplit.rttm\n";
+
+open (SYSRTTM, ">$root.sys.rttm") || die "Failed to open $root.sys.rttm";
+binmode(SYSRTTM, "utf8") if ($encoding eq "UTF-8");
+print "   Building file $root.sys.rttm\n";
 
 open (STM, ">$root.stm") || die "Failed to open $root.stm";
 binmode(STM, "utf8") if ($encoding eq "UTF-8");
@@ -227,17 +234,26 @@ foreach my $trans(sort keys %$db){
     my $dur = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}));
     my $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt});
     my $et = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{et});
-    print RTTM "SPEAKER $outTransName 1 $bt $dur <NA> <NA> spkr_$spkr <NA>\n";
+    print RTTM "SPEAKER $outTransName 1 $bt $dur <NA> <NA> spkr1 <NA>\n";
+    print CHARRTTM "SPEAKER $outTransName 1 $bt $dur <NA> <NA> spkr1 <NA>\n";
+    print SYSRTTM "SPEAKER $outTransName 1 $bt $dur <NA> <NA> spkr1 <NA>\n";
     my @toks = split(/\s+/,$db->{$trans}{transcript}[$seg]{text});
     my $lastToken = undef;
     my $lastLastToken = undef;
     my $stmText = "";
+    my $subToken = "";
+    my $lexCount = 0;
+    my $punct = '[\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]';
+    my $notpunct = '[^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]';
+    my $wrd = '[^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]+([_-][^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]+)*';
+    my $isNoScoreKWS = 0;
+    my $isNoScoreSTT = 0;
     for (my $t = 0; $t < @toks; $t++){
       my $token = $toks[$t];
       my($type,$stype) = ("LEXEME", "lex");
       if ($token eq "<hes>"){          $stype = "fp"; }
-      elsif ($token eq "(())"){        $stype = "un-lex"; }
-      elsif ($token eq "<foreign>"){   $stype = "for-lex"; }
+      elsif ($token eq "(())"){        $stype = "un-lex";    $isNoScoreSTT = 1; }
+      elsif ($token eq "<foreign>"){   $stype = "for-lex";   }
       elsif ($token eq "<female-to-male>"){   $type = "skip"; $spkr ++; }
       elsif ($token eq "<male-to-female>"){   $type = "skip"; $spkr ++; }
       elsif ($token eq "<breath>"){    $type = "NON-LEX";    $stype = "breath"; }
@@ -251,18 +267,54 @@ foreach my $trans(sort keys %$db){
       elsif ($token eq "<ring>"){      $type = "NON-SPEECH"; $stype = "noise"; }
       elsif ($token eq "<sta>"){       $type = "NON-SPEECH"; $stype = "noise"; }
       elsif ($token eq "<int>"){       $type = "NON-SPEECH"; $stype = "noise"; }
-      elsif ($token eq "<prompt>"){    $type = "NON-SPEECH"; $stype = "other"; }
-      elsif ($token eq "<overlap>"){   $type = "NON-SPEECH"; $stype = "other"; }
-      elsif ($token =~ /^</){
-        print "OOPS $token\n";
-      } else {
-        ;
+      elsif ($token eq "<prompt>"){    $type = "NON-SPEECH"; $stype = "other"; $isNoScoreSTT = 1; $isNoScoreKWS = 1; }
+      elsif ($token eq "<overlap>"){   $type = "NON-SPEECH"; $stype = "other"; $isNoScoreSTT = 1; $isNoScoreKWS = 1; }
+      elsif ($token =~ /^\*(${wrd})\*$/){   $token = $1;                 }  ## Mispronounced
+      elsif ($token =~ /^(${wrd}-)$/){      $stype = "frag";             }  ## Fragments
+#      elsif ($token =~ /^(${notpunct}+(_${notpunct}+)+)$/){      $stype = "frag";  }  ## Acronyms
+      elsif ($token =~ /^\~$/){        $type = "NON-SPEECH"; $stype = "other"  }  ## truncations
+      elsif ($token =~ /^$wrd$/){    ;                                       } ## Do nothing
+      else {
+        print "Illegal Token $token in $outTransName\n";
       }
+      next if ($type eq "skip");
       $dur = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}) / (@toks + 1));
       $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt} + ($dur * $t));
+ 
+      print RTTM "$type $outTransName 1 $bt $dur $token $stype spkr1 0.5\n";
+      if ($type eq "LEXEME" && $stype eq "lex"){
+        ### Subdivide the characters
+        my @cs = split("",  $token);
+        my $newDur = sprintf("%.3f",($dur / @cs));
+        for (my $c=0; $c<@cs; $c++){
+          my $thisBt = sprintf("%.3f",$bt + $newDur * $c);        
+          print CHARRTTM "$type $outTransName 1 $thisBt $newDur $cs[$c] $stype spkr1 0.5\n";         
+        }
+      } else {
+        print CHARRTTM "$type $outTransName 1 $bt $dur $token $stype spkr1 0.5\n";
+      }
+      $lexCount ++ if ($type eq "LEXEME" && $stype eq "lex");
+      if (($lexCount + 3) % 10 == 0){
+        ##  Don't make an output unless it's the 3rd word (+10). IE, 10% del
+        ;
+      } elsif (($lexCount + 5) % 10 == 0){
+        ##  make an output a sub on the 5th word (+10). IE, 10% sub
+        print SYSRTTM "$type $outTransName 1 $bt $dur $token$token $stype spkr1 0.5\n" ;
+      } elsif (($lexCount + 8) % 10 == 0){
+        ##  make an output an ins on the 8th word (+10). IE, 10% ins
+        my $dur2 = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}) / (@toks + 1) / 2.0);
+        my $btdur2 = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt} + ($dur * $t) + $dur2);
+        print SYSRTTM "$type $outTransName 1 $bt $dur2 $token $stype spkr1 0.5\n"; 
+        print SYSRTTM "$type $outTransName 1 $btdur2 $dur2 $token$token $stype spkr1 0.5\n";
+      } else {
+        print SYSRTTM "$type $outTransName 1 $bt $dur $token $stype spkr1 0.5\n" ;
+      }
 
-      print RTTM "$type $outTransName 1 $bt $dur $token $stype spkr_$spkr 0.5\n";
-      $stmText .= " ".$token if ($type eq "LEXEME");
+      ### Build the reference STM for STT scoring
+      if ($type eq "LEXEME"){
+        my $isOptDel = ($stype eq "fp" || $stype eq "frag");
+        $stmText .= " ".($isOptDel ? "(".$token.")" : $token) 
+      }
       
       if ($stype eq "lex"){
         $unigram->{$token} ++;
@@ -276,7 +328,16 @@ foreach my $trans(sort keys %$db){
       $lastLastToken = ($stype eq "lex" ? $lastToken : undef);
       $lastToken = ($stype eq "lex" ? $token : undef);
     }
-    print STM "$outTransName 1 spkr_$spkr $bt $et$stmText\n";
+    if ($isNoScoreKWS){
+      print RTTM "NOSCORE $outTransName 1 $bt $dur <NA> <NA> <NA> <NA>\n";
+      print CHARRTTM "NOSCORE $outTransName 1 $bt $dur <NA> <NA> <NA> <NA>\n";
+    }
+    if ($isNoScoreSTT){
+      print STM ";;$outTransName 1 spkr1 $bt $et $stmText\n";
+      print STM "$outTransName 1 spkr1 $bt $et IGNORE_TIME_SEGMENT_IN_SCORING\n";
+    } else {
+      print STM "$outTransName 1 spkr1 $bt $et $stmText\n";
+    }
   }
 }
 
@@ -318,6 +379,8 @@ print ECF "</ecf>\n";
 
 close ECF;
 close RTTM;
+close CHARRTTM;
+close SYSRTTM;
 close STM;
 close TLIST;
 
