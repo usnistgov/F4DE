@@ -240,6 +240,8 @@ KWSEvalinstall_common:
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${KWSEVALDIR}/${KWSEVALTOOLS}
 	@perl installer.pl -x -r ${F4DE_BASE} bin ${KWSEVALDIR}/${KWSEVALBABEL}
 	@perl installer.pl ${F4DE_BASE} lib ${KWSEVALDIR}/lib/*.pm
+	@perl installer.pl ${F4DE_BASE} lib/data ${KWSEVALDIR}/data/*.xsd
+	@perl installer.pl ${F4DE_BASE} lib/data ${KWSEVALDIR}/data/*.perl
 
 
 ##########
