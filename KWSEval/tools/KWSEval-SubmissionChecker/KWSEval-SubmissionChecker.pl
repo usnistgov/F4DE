@@ -342,7 +342,7 @@ sub check_submission {
   return($lerr) if (! MMisc::is_blank($lerr));
 
   vprint(2, "Confirming having matching ECF & TLIST");
-  return("Can not validate; no usable ECF & TLIST files with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'TestDirFiles\'")
+  return("Can not validate; no usable ECF & TLIST files with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'dbDir\'")
     if (! MMisc::safe_exists(\%ecfs, $lcorpus, $lpart));
 
   vprint(2, "Running Validation tool");
