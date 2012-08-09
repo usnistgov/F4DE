@@ -87,10 +87,10 @@ if ($inTlist ne "") {
 my $TermList = new TermList();
 my @aterms = keys %terms;
 for (my $t=0; $t<@aterms; $t++) {
-  my $termid = "TERM-" . sprintf("%03d", $t);
-  $TermList->{TERMS}{$termid} = new TermListRecord();
-  $TermList->{TERMS}{$termid}{TERMID} = $termid;
-  $TermList->{TERMS}{$termid}{TEXT} = $aterms[$t];
+  my $termid = "TERM-" . sprintf("%04d", $t);
+  $TermList->{TERMS}{$termid} = new TermListRecord({ TERMID => $termid, TEXT => $aterms[$t]});
+#  $TermList->{TERMS}{$termid}{TERMID} = $termid;
+#  $TermList->{TERMS}{$termid}{TEXT} = $aterms[$t];
   if ($preservedAnnots{$aterms[$t]}) {
     #Add preserved annotations
     foreach my $key (keys %{ $preservedAnnots{$aterms[$t]} }) {
