@@ -86,7 +86,10 @@ sub alignSegments
     }
     push (@fsegments, $segment);
   }
-  #Initialize trials
+  
+  MMisc::error_quit("Segment filter yielded no segments for inferred segmentation alignment.  Aborting.")  if(@segments <= 0);
+  
+    #Initialize trials
   my %qtrials = (); #Conditional trials
   my $qdetset = new DETCurveSet();
   #Generate trial group trial counts
