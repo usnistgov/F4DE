@@ -31,6 +31,7 @@ use TranscriptHolder;
 @ISA = qw(TranscriptHolder);
 
 use strict;
+use AutoTable;
 
 my $version     = "0.1b";
 
@@ -393,6 +394,30 @@ sub process_term_content {
   }
 
   return("", $termtext, %ti_attr);
+}
+
+
+############################################################
+
+sub saveFileCSV
+{
+    my ($self, $file) = @_;
+    
+    open(OUTPUTFILE, ">$file") 
+      or MMisc::error_quit("cannot open file '$file' : $!");
+    if ($self->{ENCODING} eq "UTF-8"){
+       binmode OUTPUTFILE, $self->getPerlEncodingString();
+    }
+ 
+    my $at = new AutoTable();
+
+    foreach my $termid(sort keys %{ $self->{TERMS} }) {
+      foreach my $termattrname(sort keys %{ $self->{TERMS}{$termid} }) {
+        $at->addData($self->{TERMS}{$termid}->{$termattrname},$termattrname,$termid);
+      }
+    }    
+    print OUTPUTFILE $at->renderCSV();    
+    close OUTPUTFILE;
 }
 
 ############################################################
