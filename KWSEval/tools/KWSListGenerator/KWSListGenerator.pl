@@ -101,6 +101,7 @@ my $Outfile = "";
 my $thresholdFind = 0.5;
 my $missPct = 0.2;
 my $faPct = 0.05;
+my $err;
 
 GetOptions
 (
@@ -120,8 +121,16 @@ MMisc::error_quit("An Output file must be set\n\n$usage\n") if($Outfile eq "");
 
 print "Generate a random system with Pmiss=$missPct and PFa=$faPct\n";
 
+$err = MMisc::check_file_r($Termfile);
+MMisc::error_quit("Problem with TERM File ($Termfile): $err")
+  if (! MMisc::is_blank($err));
 my $TERM = new TermList($Termfile);
+
+$err = MMisc::check_file_r($RTTMfile);
+MMisc::error_quit("Problem with RTTM File ($RTTMfile): $err")
+  if (! MMisc::is_blank($err));
 my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(), $TERM->getEncoding());
+
 my $STDOUT = new_empty KWSList($Outfile);
 
 $STDOUT->{LANGUAGE} = $TERM->{LANGUAGE};
@@ -167,6 +176,7 @@ for (my $termNum = 0; $termNum < @termidList; $termNum++)
     
     ### The true occurrences 
     my $fas = sprintf("%.0f", @$occurrences * $faPct);
+    $fas = @$occurrences if ($fas < @$occurrences);
     for(my $i=0; $i<$fas; $i++)
     {
         my $file = @{ $occurrences->[$i] }[0]->{FILE};
