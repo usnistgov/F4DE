@@ -22,6 +22,7 @@
 
 package TermListRecord;
 use strict;
+use Data::Dumper;
 
 sub new
 {
@@ -35,8 +36,9 @@ sub new
         $self->{$attributename} = $hashattr->{$attributename};
     }
 
-    #$self->{TERMID} = shift;
-    #$self->{TEXT} = shift;
+    ## Add the character separated term text
+    $self->{CHARSPLITTEXT} = join(" ", split("", $self->{TEXT}));
+    $self->{CHARSPLITTEXT} =~ s/\s+/ /g; 
     
     bless $self;
     return $self;
@@ -51,12 +53,61 @@ sub setAttrValue
     $self->{$attr} = $val;
 }
 
+sub getAttrValue
+{
+    my $self = shift;
+    my $attr = shift;
+
+    return (exists($self->{$attr}) ? $self->{$attr} : undef);
+}
+
+sub deleteAttr
+{
+    my $self = shift;
+    my $attr = shift;
+
+    if (exists($self->{$attr})){
+      delete($self->{$attr})
+    }
+}
+
+sub getAttrs
+{
+    my $self = shift;
+
+    return (keys %$self);
+}
+
 sub toString
 {
     my $self = shift;
     my $s = "TermListRecord: ".
     " TERMID=".$self->{TERMID}.
 	" TEXT=".$self->{TEXT};
+}
+
+sub toPerl
+{
+    my $self = shift;
+    my $save = $Data::Dumper::Indent;
+    $Data::Dumper::Indent = 0;
+    my $s = Dumper($self);
+    $Data::Dumper::Indent = $save;
+    return $s;
+}
+
+sub toStringFull
+{
+    my $self = shift;
+    my $s = "TermListRecord: ".
+    " TERMID=".$self->{TERMID}.
+	" TEXT=".$self->{TEXT};
+
+    foreach my $termattrname(sort keys %$self){
+      next if( ($termattrname eq "TERMID") || ($termattrname eq "TEXT") );
+      $s .= " $termattrname=".$self->{$termattrname};
+    }
+  return $s;
 }
 
 1;
