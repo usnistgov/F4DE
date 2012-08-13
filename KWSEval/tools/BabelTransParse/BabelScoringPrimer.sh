@@ -15,7 +15,7 @@ else
 fi
 
 KWSEVAL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSEval/KWSEval.pl"
-TLISTADDNGRAM="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/TListAddNGram/TListAddNGram.pl"
+TLISTADDNGRAM="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSStats/TermListAnnotator.pl"
 BABELPARSE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib ./BabelTransParse.pl"
 KWSLISTGEN="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSListGenerator/KWSListGenerator.pl"
 KWSVALIDATE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/ValidateKWSList/ValidateKWSList.pl"
@@ -167,7 +167,7 @@ for langID in 101 104 105 106 english ; do
     echo ""
 
     echo "Add N-Gram annotations to the Term list file"
-    $TLISTADDNGRAM -t $OUTROOT.source.tlist.xml -o $OUTROOT.source.tlist.annot.xml
+    $TLISTADDNGRAM -i $OUTROOT.source.tlist.xml -o $OUTROOT.source.tlist.annot.xml -n
     for sys in sys1 sys2 ; do
 	echo ""
 	echo "Compute occurrence reports for $sys"
