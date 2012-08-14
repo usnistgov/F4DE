@@ -1,0 +1,129 @@
+DATE: 2012/08/14
+
+
+This file contains instructions on how to install 'aaagent' so that it
+can be used with the "AAAtransfer" tool.
+
+
+
+--Note:
+---------
+
+- those steps have been confirmed to work on Ubuntu Linux (11.10) as
+well as Mac OS X (Snow Leopard & Lion)
+
+- lines starting by % are command lines
+
+- command lines with <TEXT> are to be adapted to your specific "TEXT" values
+
+
+
+--Prerequisite:
+-------------
+
+- you must have a valid "AAlicense.cfg"
+
+- make sure F4DE's "make check" complete succesfully
+
+- the Agent tool requires Python (confirmed to work using 2.7.3) with
+the following modules installed: zope2 pycrypto twisted pyasn1 pyxml pycurl
+(see Appendix for installation help)
+
+
+
+--Installation Steps:
+-----------------
+
+1) Uncompress the "AAA-Linux.tar.bz2" archive (a "AAA" directory will
+be created) into the directory where you want the tool tree structure
+to be available. The tool will be run from within this AAA directory,
+as the tool's databases will be created within the uncompressed
+directory structure. Once completed, go into the "AAA" directory
+
+% cd <DESTINATION_DIR>
+% tar xvfj <AAARCHIVE_DOWNLOAD_DIR>/AAA-Linux.tar.bz2
+% cd AAA
+
+
+2) Put the license file into the "aclagent/config" directory and make
+a symbolic link of 'config' to the 'AAA' base directory 
+
+% cp <AALICENSE_DOWNLOAD_DIR>/AAlicense.cfg aclagent/config
+% ln -s aclagent/config config
+
+3) Create the "aaagent" executable (copy paste the following command line):
+
+% echo 'cd '`pwd`';'`which python2.7`' aclagent/aaagent.py $*' > aaagent
+% chmod +x aaagent
+
+4) Confirm the executable is not complaining of missing modules and
+prompts you with its usage content (the first line should start with
+"Usage:" )
+
+% ./aaagent
+
+
+
+
+-- APPENDIX
+------------
+
+*** User directory Python 2.7.3 installation ***
+
+- Install pythonbrew (follow instructions at: https://github.com/utahta/pythonbrew ) 
+
+- then install python 2.7.3:
+
+Only for OSX 10.5 (Lepopard): use homebrew (see: see: http://mxcl.github.com/homebrew/ )  to install 'sqlite3' and 'curl' (and symlink the "curl-config" file from its Cellar to homebrew's bin)
+
+% pythonbrew install 2.7.3
+
+- follow the post instructions, set up your PATH and activate 2.7.3:
+
+% pythonbrew switch 2.7.3
+
+- (you might need to reload your shell for the next line to work)
+check that python2.7 is in the '.pythonbrew' directory using: 
+
+% which python2.7
+
+- install easy_install to make your life easier:
+
+% wget -q http://peak.telecommunity.com/dist/ez_setup.py
+
+OSX note: if you do not have wget, maybe it is time to install
+'homebrew' ( see: http://mxcl.github.com/homebrew/ ) or use curl:
+ % curl -kLO http://peak.telecommunity.com/dist/ez_setup.py
+
+- add ez_setup to your python 2.7 installation:
+
+% python2.7 ez_setup.py
+
+- install required components:
+
+% easy_install-2.7 zope2
+
+% easy_install-2.7 pycrypto
+
+% easy_install-2.7 twisted
+
+% easy_install-2.7 pyasn1
+
+% easy_install-2.7 pyxml
+
+% easy_install-2.7 pycurl
+
+- at this point, you should have the required components needed to use 'aaagent'
+
+
+
+*** Linux repository for system wide installation of Python ***
+
+On Ubuntu, you can add a repository for old Python versions:
+
+% sudo add-apt-repository ppa:fkrull/deadsnakes
+% sudo apt-get update
+% sudo apt-get install python2.7
+
+After this installation, please check the previous installation entry
+for easy_install module installation.
