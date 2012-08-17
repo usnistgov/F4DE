@@ -101,12 +101,14 @@ my $verb = 0;
 my $cmd = "";
 my $salttool = "";
 my @ignore = ();
+my $resumefile = "";
+my $doresume = 0;
 
 my $usage = &set_usage();
 MMisc::ok_quit($usage) if (scalar @ARGV == 0);
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                   S         cde  h             v      #
+# Used:                  RS         cd   hi        rs  v      #
 
 my %opt = ();
 GetOptions
@@ -119,8 +121,13 @@ GetOptions
    'command=s'  => \$cmd,
    'SaltTool=s' => \$salttool,
    'ignoreFile=s' => \@ignore,
+   'resumeFile=s' => \$resumefile,
+   'Resume' => \$doresume,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+
+MMisc::error_quit("\'Resume\' can only be used if \'resumeFile\' is used")
+  if (($doresume != 0) && (MMisc::is_blank($resumefile)));
 
 MMisc::error_quit("\'scaninterval\' value under minimum of ${tsmin}s")
   if ($tosleep < $tsmin);
@@ -135,12 +142,30 @@ MMisc::error_quit("Problem with \'cmd\' ($cmd): $err") if (! MMisc::is_blank($er
 my $dh = new DispatcherHelper();
 MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 
-$dh->set_dir($id);
-MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
+my $resumed = 0;
+if (! MMisc::is_blank($resumefile)) {
+  $dh->set_saveStateFile($resumefile);
+  MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
+
+  if ($doresume != 0) {
+    $resumed = $dh->load_saveStateFile();
+    MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
+  }
+}
+
+if ($resumed == 0) {
+  $dh->set_dir($id);
+  MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
+
+  if (! MMisc::is_blank($salttool)) {
+    $dh->set_salttool($salttool);
+    MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
+  }
+}
 
 $dh->set_scaninterval($tosleep);
 MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
-
+  
 $dh->set_command($cmd);
 MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 
@@ -152,13 +177,10 @@ foreach my $ie (@ignore) {
   MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 }
 
-if (! MMisc::is_blank($salttool)) {
-  $dh->set_salttool($salttool);
+if ($resumed == 0) {
+  $dh->init();
   MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 }
-
-$dh->init();
-MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 
 $dh->loop(); # we should never come out of here, unless an error occured
 MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
@@ -170,7 +192,7 @@ MMisc::ok_quit("Done");
 sub set_usage {
     my $tmp=<<EOF
 
-$0 [--help] [--verbose] [--scaninterval inseconds] [--SaltTool tool] [--ignoreFile string [--ignoreFile string [...]]] --dir dirtotrack --command commandtorun
+$0 [--help] [--verbose] [--scaninterval inseconds] [--SaltTool tool] [--ignoreFile string [--ignoreFile string [...]]] [--resumeFile [--Resume]] --dir dirtotrack --command commandtorun
 
 Will track for any new files (*) in \'dirtotrack\' (recursively) and start as a background process: \'commandtorun newfile\' (one new process per new file)
 
@@ -185,7 +207,9 @@ Where:
   --verbose       Be a little more verbose
   --scaninterval  Value in seconds in between recursive directory scans (min: ${tsmin}s, default: ${tosleep}s)
   --SaltTool      Location of a tool which will be given the filename of files for which the SHA256 need to be computed; the one liner standard out string value returned by tool will be used as an extra value prepended to the SHA256 to further differentiate files
-  --ignoreFile  If a new file found contain the provided string, do not run the command on it
+  --ignoreFile    If a new file found contain the provided string, do not run the command on it
+  --resumeFile    Store last iteration into a memory dump file that can be used at a later time to restart exactly as if nothing had happened
+  --Resume        if the \'resumeFile\' is present, try to load it and \"resume\" from it (\'dir\' and \'salttool\' are then ignored, but other values can be added. \'ignoreFile\' entries can be added to the one loaded from the resume file)
   --dir           Directory to track (will also track files in it sub directories)
   --command       Command to run
 EOF
