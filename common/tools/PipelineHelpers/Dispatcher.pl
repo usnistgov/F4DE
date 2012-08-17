@@ -68,7 +68,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("MMisc", "DirTracker") {
+foreach my $pn ("MMisc", "DispatcherHelper") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -95,7 +95,7 @@ Getopt::Long::Configure(qw( auto_abbrev no_ignore_case ));
 # Default values for variables
 
 my $id = undef;
-my $tsmin = 10;
+my $tsmin = 15;
 my $tosleep = 60;
 my $verb = 0;
 my $cmd = "";
@@ -131,111 +131,39 @@ MMisc::error_quit("Problem with \'dir\' ($id): $err") if (! MMisc::is_blank($err
 $err = MMisc::check_file_x($cmd);
 MMisc::error_quit("Problem with \'cmd\' ($cmd): $err") if (! MMisc::is_blank($err));
 
-#####
-my $dt = new DirTracker($id, $salttool);
-MMisc::error_quit("Problem with DirTracker: " . $dt->get_errormsg()) if ($dt->error());
-my $now = MMisc::get_currenttime();
-MMisc::vprint(($verb > 0), "!! Performing initial scan of ($id)\n"); 
-$dt->init(1);
-MMisc::error_quit("Problem with DirTracker initialization: " . $dt->get_errormsg()) if ($dt->error());
+##
+my $dh = new DispatcherHelper();
+MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 
-my $doit = 1;
-my %tocheck = ();
-my %tochecksoon = ();
-while ($doit) {
-  MMisc::vprint(($verb > 0), "  (sleeping ${tosleep}s)\n");
-  sleep($tosleep);
-  MMisc::vprint(($verb > 0), "[" . sprintf("%.02f", MMisc::get_elapsedtime($now)) . "] Iteration: $doit\n");
+$dh->set_dir($id);
+MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 
-  my @newfiles = $dt->scan();
-  MMisc::error_quit("Problem with DirTracker scan: " . $dt->get_errormsg()) if ($dt->error());
-  MMisc::vprint(($verb > 0), "!! Performing updated scan of ($id)\n"); 
-  
-  if ($verb > 1) {
-    foreach my $file ($dt->just_added()) { MMisc::vprint(($verb > 1), " (justAdded) $file\n"); }
-    foreach my $file ($dt->just_deleted()) { MMisc::vprint(($verb > 1), " (justDeleted) $file\n"); }
-    foreach my $file ($dt->just_modified()) { MMisc::vprint(($verb > 1), " (justModified) $file\n"); }
-  }
+$dh->set_scaninterval($tosleep);
+MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 
-  foreach my $file (@newfiles) {
-    MMisc::vprint(($verb > 0), "++ new file candidate: $file\n");
-    $err = MMisc::check_file_r($file);
-    if (! MMisc::is_blank($err)) {
-      MMisc::warn_print("Can not use file ($file): $err");
-      next;
-    }
+$dh->set_command($cmd);
+MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 
-    my $sha256 = $dt->sha256digest($file);
-    if ($dt->error()) {
-      MMisc::warn_print("Problem obtaining new file's SHA256 ($file), skipping");
-      $dt->clear_error();
-      next;
-    }
+$dh->set_verbosity_level($verb);
+MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 
-    MMisc::vprint(($verb > 1), "%% SHA256: $sha256\n");
-    $tochecksoon{$file} = $sha256;
-  }
-
-  foreach my $file (keys %tocheck) {
-    # check if file changed since last check
-    MMisc::vprint(($verb > 0), "== confirming file ($file) has not changed since last scan\n"); 
-    my $sha256 = $dt->sha256digest($file);
-    if ($dt->error()) {
-      MMisc::warn_print("Problem obtaining old file's SHA256 ($file), skipping");
-      $dt->clear_error();
-      delete $tocheck{$file};
-      next;
-    }
-
-    if ($sha256 ne $tocheck{$file}) {
-      MMisc::warn_print("File ($file) not finished copying/downloading, will check again next iteration");
-      MMisc::vprint(($verb > 1), "%% newSHA256: $sha256\n");
-      MMisc::vprint(($verb > 1), "%% oldSHA256: " . $tocheck{$file} . "\n");
-      $tocheck{$file} = $sha256;
-      next;
-    }
-
-    # same file, process it
-    &process_file($file);
-    delete $tocheck{$file}; # do not process it next time
-  }
-
-  # add new files to next check
-  foreach my $file (keys %tochecksoon) {
-    $tocheck{$file} = $tochecksoon{$file};
-    delete $tochecksoon{$file};
-  }
-
-  $doit++;
+foreach my $ie (@ignore) {
+  $dh->addto_ignore($ie);
+  MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 }
+
+if (! MMisc::is_blank($salttool)) {
+  $dh->set_salttool($salttool);
+  MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
+}
+
+$dh->init();
+MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
+
+$dh->loop(); # we should never come out of here, unless an error occured
+MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 
 MMisc::ok_quit("Done");
-
-####################
-
-sub process_file {
-  my ($file) = @_;
-
-  if (scalar @ignore > 0) {
-    my $file_part = $file;
-    $file_part =~ s%^.+/%%;
-    my $skipfile = 0;
-    for (my $i = 0; $i < scalar @ignore || $skipfile; $i++) {
-      my $v = $ignore[$i];
-      $skipfile = ($file_part =~ m%^v%) ? 1 : 0;
-    }
-    if ($skipfile) {
-      MMisc::vprint(($verb > 0), ">> Ignoring file ($file)\n");
-      return();
-    }
-  }
-
-  my $command = "$cmd $file";
-  MMisc::vprint(($verb > 0), ">> Background command: $command\n");
-
-  # run command in background, as far as WE are concerned we did our job
-  system("$command &");
-}
 
 ####################
 
