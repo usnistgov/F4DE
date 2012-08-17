@@ -56,19 +56,22 @@ sub new {
      tosleep      => 60, # scan interval (default is 60 seconds)
      cmd          => undef, # command to run
      salttool     => "",    # SHA256 salt tool 
-     ignore       => undef, # array of files to ignore
+     ignore       => undef, # hash of filenames chunk to ignore (2nd dim is just counter)
      verb         => 0,  # verbosity level
+     saveStateFile => undef, # after each iteration, save the current state
 
      # Internals
      dt           => undef, # DirTracker instance
      tocheck      => undef, 
      tochecksoon  => undef,
      sepoch       => 0, # Start Epoch
-     lepoch       => 0, # Last Scan Epoch
      doit         => 1, # Iteration number
 
      # Ready
      ready        => 0,
+
+     # Version
+     version      => 0,
 
      # error handler
      errorh    => $errorh,
@@ -85,9 +88,9 @@ sub new {
 
 sub set_dir {
   my $err = MMisc::check_dir_r($_[1]);
-  $_[0]->_set_error_and_return("Problem with directory (" . $_[1] . "): $err", 0)
+  return($_[0]->_set_error_and_return("Problem with directory (" . $_[1] . "): $err", 0))
     if (! MMisc::is_blank($err));
-  $_[0]->_set_error_and_return("Can not change value once initialization is complete", 0)
+  return($_[0]->_set_error_and_return("Can not change value once initialization is complete", 0))
     if ($_[0]->{ready} == 1);
   $_[0]->{id} = $_[1];
 }
@@ -95,7 +98,7 @@ sub set_dir {
 ##
 
 sub get_dir {
-  $_[0]->_set_error_and_return("value not set", 0)
+  return($_[0]->_set_error_and_return("value not set", 0))
     if (! defined($_[0]->{id}));
   return($_[0]->{id});
 }
@@ -106,7 +109,7 @@ sub get_dir {
 
 sub set_command {
   my $err = MMisc::check_file_x($_[1]);
-  $_[0]->_set_error_and_return("Problem with executable (" . $_[1] . "): $err", 0)
+  return($_[0]->_set_error_and_return("Problem with executable (" . $_[1] . "): $err", 0))
     if (! MMisc::is_blank($err));
   $_[0]->{cmd} = $_[1];
 }
@@ -114,7 +117,7 @@ sub set_command {
 ##
 
 sub get_command {
-  $_[0]->_set_error_and_return("value not set", undef)
+  return($_[0]->_set_error_and_return("value not set", undef))
     if (! defined($_[0]->{cmd}));
   return($_[0]->{cmd});
 }
@@ -125,9 +128,9 @@ sub get_command {
 my $tsmin = 10;
 
 sub set_scaninterval {
-  $_[0]->_set_error_and_return("value under minimum value of ${tsmin}s", 0)
+  return($_[0]->_set_error_and_return("value under minimum value of ${tsmin}s", 0))
     if ($_[1] < $tsmin);
-  $_[0]->{tosleep} = $tsmin;
+  $_[0]->{tosleep} = $_[1];
   return(1);
 }
 
@@ -143,9 +146,9 @@ sub get_scaninterval {
 
 sub set_salttool {
   my $err = MMisc::check_file_x($_[1]);
-  $_[0]->_set_error_and_return("Problem with executable (" . $_[1] . "): $err", 0)
+  return($_[0]->_set_error_and_return("Problem with executable (" . $_[1] . "): $err", 0))
     if (! MMisc::is_blank($err));
-  $_[0]->_set_error_and_return("Can not change value once initialization is complete", 0)
+  return($_[0]->_set_error_and_return("Can not change value once initialization is complete", 0))
     if ($_[0]->{ready} == 1);
   $_[0]->{salttool} = $_[1];
 }
@@ -170,12 +173,68 @@ sub get_verbosity_level {
 
 
 ##########
+## 'verb'
+
+sub set_saveStateFile {
+  $_[0]->{saveStateFile} = $_[1];
+  return(1);
+}
+
+sub get_saveStateFile {
+  return($_[0]->{saveStateFile});
+}
+
+sub __md_clone_value {
+  return($_[0]->_set_error_and_return( MMisc::error_quit("Attribute (" . $_[2] . ") not defined in MemDump object"), 0))
+    if (! exists $_[1]->{$_[2]});
+  $_[0]->{$_[2]} = $_[1]->{$_[2]};
+  return(1);
+}
+
+sub load_saveStateFile {
+  return(0) if (! defined $_[0]->{saveStateFile});
+  return(0) if (MMisc::is_file_r($_[0]->{saveStateFile}) == 0);
+
+  return($_[0]->_set_error_and_return("\'init\' already done, will not load saveStateFile", 0))
+    if ($_[0]->{ready} == 1);
+ 
+  MMisc::warn_print("Trying to load saveStateFile (" . $_[0]->{saveStateFile} .")");
+
+  my $tmp = MMisc::load_memory_object($_[0]->{saveStateFile});
+  return($_[0]->_set_error_and_return("Problem with memory object: empty ?", 0))
+    if (! defined $tmp);
+  
+  return($_[0]->_set_error_and_return("Memory object was save for a later version of this package (" . $tmp->{version} . ", we can only read up to: " . $_[0]->{version} . ")", 0))
+    if ($tmp->{version} > $_[0]->{version});
+
+  # Version 0
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'id'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'tosleep'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'cmd'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'salttool'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'ignore'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'verb'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'dt'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'tocheck'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'tochecksoon'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'sepoch'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'doit'));
+  return(0) if (! $_[0]->__md_clone_value($tmp, 'ready'));
+
+  # Version 1
+#  if ($tmp->{version} == 1) {
+#  }
+  
+  return(1);
+}
+
+##########
 ## 'ignore'
 
 sub addto_ignore {
-  $_[0]->_set_error_and_return("can not use an empty value", 0)
+  return($_[0]->_set_error_and_return("can not use an empty value", 0))
     if (MMisc::is_blank($_[1]));
-  push @{$_[0]->{ignore}}, $_[1];
+  ${$_[0]->{ignore}}{$_[1]}++;
   return(1);
 }
 
@@ -183,23 +242,31 @@ sub getlist_ignore {
   return($_[0]->{ignore});
 }
 
+sub empty_ignore {
+  $_[0]->{ignore} = undef;
+}
+
+sub delfrom_ignore {
+  delete ${$_[0]->{ignore}}{$_[1]};
+}
+
 
 ##############################
 ## init()
 
 sub init {
-  $_[0]->_set_error_and_return("\'init\' already done, will not restart it", 0)
+  return($_[0]->_set_error_and_return("\'init\' already done, will not restart it", 0))
     if ($_[0]->{ready} == 1);
 
-  $_[0]->_set_error_and_return("\'dir\' value not set, can not initialize", 0)
+  return($_[0]->_set_error_and_return("\'dir\' value not set, can not initialize", 0))
     if (! defined($_[0]->{id}));
-  $_[0]->_set_error_and_return("\'command\' value not set, can not initialize", 0)
+  return($_[0]->_set_error_and_return("\'command\' value not set, can not initialize", 0))
     if (! defined($_[0]->{cmd}));
-  $_[0]->_set_error_and_return("\'scaninterval\' value not set, can not initialize", 0)
+  return($_[0]->_set_error_and_return("\'scaninterval\' value not set, can not initialize", 0))
     if (! defined($_[0]->{tosleep}));
 
   my $dt = new DirTracker($_[0]->{id}, $_[0]->{salttool});
-  $_[0]->_set_error_and_return("Problem with DirTracker: " . $dt->get_errormsg(), 0)
+  return($_[0]->_set_error_and_return("Problem with DirTracker: " . $dt->get_errormsg(), 0))
     if ($dt->error());
   $_[0]->{dt} = $dt;
 
@@ -207,7 +274,7 @@ sub init {
   MMisc::vprint(($_[0]->{verb} > 0), "!! Performing initial scan of (" . $_[0]->{id} . ")\n");
 
   $_[0]->{dt}->init(1);
-  $_[0]->_set_error_and_return("Problem with DirTracker initialization: " . $_[0]->{dt}->get_errormsg(), 0)
+  return($_[0]->_set_error_and_return("Problem with DirTracker initialization: " . $_[0]->{dt}->get_errormsg(), 0))
     if ($_[0]->{dt}->error());
   
   $_[0]->{ready} = 1;
@@ -219,7 +286,7 @@ sub init {
 ## loop()
 
 sub loop {
-  $_[0]->_set_error_and_return("\'init\' not done, can not loop", 0)
+  return($_[0]->_set_error_and_return("\'init\' not done, can not loop", 0))
     if ($_[0]->{ready} == 0);
   
   while ($_[0]->{doit}) {
@@ -232,7 +299,7 @@ sub loop {
 # single_iteration()
 
 sub single_iteration {
-  $_[0]->_set_error_and_return("\'init\' not done, can not run iteration", 0)
+  return($_[0]->_set_error_and_return("\'init\' not done, can not run iteration", 0))
     if ($_[0]->{ready} == 0);
 
   MMisc::vprint(($_[0]->{verb} > 0), "  (sleeping " . $_[0]->{tosleep} . "s)\n");
@@ -240,9 +307,9 @@ sub single_iteration {
   MMisc::vprint(($_[0]->{verb} > 0), "[" . sprintf("%.02f", MMisc::get_elapsedtime($_[0]->{sepoch})) . "] Iteration: " . $_[0]->{doit} . "\n");
   
   my @newfiles = $_[0]->{dt}->scan();
-  $_[0]->_set_error_and_return("Problem with DirTracker scan: " . $_[0]->{dt}->get_errormsg(), 0) if ($_[0]->{dt}->error());
+  return($_[0]->_set_error_and_return("Problem with DirTracker scan: " . $_[0]->{dt}->get_errormsg(), 0)) 
+    if ($_[0]->{dt}->error());
   MMisc::vprint(($_[0]->{verb} > 0), "!! Performing updated scan of (" . $_[0]->{id} . ")\n");
-  $_[0]->{lepoch} = MMisc::get_currenttime();
 
   if ($_[0]->{verb} > 1) {
     foreach my $file ($_[0]->{dt}->just_added()) { MMisc::vprint(($_[0]->{verb} > 1), " (justAdded) $file\n"); }
@@ -300,6 +367,8 @@ sub single_iteration {
   }
   
   $_[0]->{doit}++;
+
+  return(0) if (! $_[0]->__saveState());
   return(1);
 }
 
@@ -308,12 +377,13 @@ sub single_iteration {
 ## __process_file($file)  
 
 sub __process_file {
-  if (scalar @{$_[0]->{ignore}} > 0) {
+  my @tmp = keys %{$_[0]->{ignore}};
+  if (scalar @tmp > 0) {
     my $file_part = $_[1];
     $file_part =~ s%^.+/%%;
     my $skipfile = 0;
-    for (my $i = 0; $i < scalar @{$_[0]->{ignore}} || $skipfile; $i++) {
-      my $v = ${$_[0]->{ignore}}[$i];
+    for (my $i = 0; $i < scalar @tmp || $skipfile; $i++) {
+      my $v = $tmp[$i];
       $skipfile = ($file_part =~ m%$v%) ? 1 : 0;
     }
     if ($skipfile) {
@@ -327,6 +397,28 @@ sub __process_file {
   
   # run command in background, as far as WE are concerned we did our job
   system("$command &");
+}
+
+
+##########
+## __saveState()
+
+sub __saveState {
+  return(1) if (! defined $_[0]->{saveStateFile});
+
+  # create a temporary save
+  return($_[0]->_set_error_and_return("Problem writing temporary saveStateFile", 0))
+    if (! MMisc::dump_memory_object($_[0]->{saveStateFile}, ".temp", $_[0], undef, undef, 0, 'dump'));
+  
+  # move it as the permanent one
+  my $err = MMisc::filecopy($_[0]->{saveStateFile} . ".temp", $_[0]->{saveStateFile});
+  return($_[0]->_set_error_and_return("Problem finalizing saveSateFile", 0))
+    if (! MMisc::is_blank($err));
+
+  # remove temporary one
+  unlink($_[0]->{saveStateFile} . ".temp");
+
+  return(1);
 }
 
 
