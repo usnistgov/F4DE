@@ -1874,9 +1874,7 @@ sub ls_ok {
 
 sub randomize {
   my @d = ();
-  while (@_) {                                                                                                                                                                                                                            
-    push @d, splice(@_, rand @_, 1);                                                                                                                                                                                                
-  }     
+  while (@_) { push @d, splice(@_, rand @_, 1); }
   return @d;
 }
 
@@ -1891,8 +1889,8 @@ sub get_elapsedtime { return(tv_interval($_[0])); }
 
 ##########
 ### Added by Jon Fiscus
-### This routine returns 0 if the value to take the sqrt of is essentially zero, but negative do
-### to floating point problems
+### This routine returns 0 if the value to take the sqrt of is essentially zero, but negative
+### due to floating point problems
 sub safe_sqrt {
   my $v = $_[0];
 
