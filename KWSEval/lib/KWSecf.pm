@@ -56,6 +56,7 @@ sub __init {
   $self->{FILE} = $ecffile;
   $self->{SIGN_DUR} = 0.0;
   $self->{EVAL_SIGN_DUR} = 0.0;
+  $self->{LANGUAGE} = "";
   $self->{VER} = "";
   $self->{EXCERPT} = ();
   $self->{FILECHANTIME} = {};
@@ -243,6 +244,7 @@ sub toString
     print "Dump of ECF File\n";
     print "   File: " . $self->{FILE} . "\n";
     print "   Signal duration: " . $self->{SIGN_DUR} . "\n";
+    print "   Language: " . $self->{LANGUAGE} . "\n";
     print "   Version: " . $self->{VER} . "\n";
     print "   Excerpt:\n";
     
@@ -315,6 +317,7 @@ sub loadXMLFile {
   $self->{SIGN_DUR} = &__get_attr(\%ecf_attr, $ecf_attrs[0]);
   $self->{VER} = &__get_attr(\%ecf_attr, $ecf_attrs[1]);
   my $language = &__get_attr(\%ecf_attr, $ecf_attrs[2]);
+  $self->{LANGUAGE} = $language;
 
   my $exp = 'excerpt';
   while (! MMisc::is_blank($section)) {
@@ -415,14 +418,14 @@ sub get_XMLrewrite {
      
   my $txt = "";
 
-  $txt .= "<ecf source_signal_duration=\"$self->{SIGN_DUR}\" version=\"$self->{VER}\">\n";
+  $txt .= "<ecf source_signal_duration=\"$self->{SIGN_DUR}\" language=\"$self->{LANGUAGE}\" version=\"$self->{VER}\">\n";
      
   if ($self->{EXCERPT}) {
     for (my $i=0; $i < @{ $self->{EXCERPT} }; $i++) {
       my $tbegform = sprintf("%.3f", $self->{EXCERPT}[$i]->{TBEG});
       my $tdurform = sprintf("%.3f", $self->{EXCERPT}[$i]->{DUR});
       
-      $txt .= "<excerpt audio_filename=\"$self->{EXCERPT}[$i]->{AUDIO_FILENAME}\" channel=\"$self->{EXCERPT}[$i]->{CHANNEL}\" tbeg=\"$tbegform\" dur=\"$tdurform\" language=\"$self->{EXCERPT}[$i]->{LANGUAGE}\" source_type=\"$self->{EXCERPT}[$i]->{SOURCE_TYPE}\"/>\n";
+      $txt .= "  <excerpt audio_filename=\"$self->{EXCERPT}[$i]->{AUDIO_FILENAME}\" channel=\"$self->{EXCERPT}[$i]->{CHANNEL}\" tbeg=\"$tbegform\" dur=\"$tdurform\" source_type=\"$self->{EXCERPT}[$i]->{SOURCE_TYPE}\"/>\n";
     }
   }
     
@@ -506,6 +509,7 @@ sub load_MemDump_File {
   $self->_md_clone_value($object, 'FILE');
   $self->_md_clone_value($object, 'SIGN_DUR');
   $self->_md_clone_value($object, 'EVAL_SIGN_DUR');
+  $self->_md_clone_value($object, 'LANGUAGE');
   $self->_md_clone_value($object, 'VER');
   $self->_md_clone_value($object, 'EXCERPT');
   $self->_md_clone_value($object, 'FILECHANTIME');
