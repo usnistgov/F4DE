@@ -3,10 +3,10 @@
   <xsd:element name="kwslist">
     <xsd:complexType>
       <xsd:sequence>
-        <xsd:element name="detected_termlist" minOccurs="0" maxOccurs="unbounded">
+        <xsd:element name="detected_kwlist" minOccurs="0" maxOccurs="unbounded">
           <xsd:complexType>
             <xsd:sequence>
-              <xsd:element name="term" minOccurs="0" maxOccurs="unbounded">
+              <xsd:element name="kw" minOccurs="0" maxOccurs="unbounded">
                 <xsd:complexType>
                   <xsd:attribute name="file" type="xsd:string" use="required" />
                   <xsd:attribute name="channel" type="xsd:integer" use="required" />
@@ -24,9 +24,9 @@
                 </xsd:complexType>
               </xsd:element>
             </xsd:sequence>
-            <xsd:attribute name="termid" type="xsd:string" use="required" />
-            <xsd:attribute name="term_search_time" type="xsd:decimal" use="required" />
-            <xsd:attribute name="oov_term_count" use="required">
+            <xsd:attribute name="kwid" type="xsd:string" use="required" />
+            <xsd:attribute name="search_time" type="xsd:decimal" use="required" />
+            <xsd:attribute name="oov_count" use="required">
               <xsd:simpleType>
                 <xsd:restriction base="xsd:string">
                   <xsd:pattern value="NA|[0-9]+"/>
@@ -36,7 +36,7 @@
           </xsd:complexType>
         </xsd:element>
       </xsd:sequence>
-      <xsd:attribute name="termlist_filename" type="xsd:string" use="required" />
+      <xsd:attribute name="kwlist_filename" type="xsd:string" use="required" />
       <xsd:attribute name="indexing_time" type="xsd:decimal" use="required" />
       <xsd:attribute name="index_size" type="xsd:decimal" use="required" />
       <xsd:attribute name="system_id" type="xsd:string" use="required" />

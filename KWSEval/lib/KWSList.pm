@@ -173,12 +173,12 @@ sub loadXMLFile {
     if (! MMisc::is_blank($kwslistfilestring));
   
   # Order is important
-  my @kwslist_attrs = ('termlist_filename', 'indexing_time', 'language', 'index_size', 'system_id'); 
-  my @dtl_attrs = ('termid', 'term_search_time', 'oov_term_count');
+  my @kwslist_attrs = ('kwlist_filename', 'indexing_time', 'language', 'index_size', 'system_id'); 
+  my @dtl_attrs = ('kwid', 'search_time', 'oov_count');
   my @term_attrs = ('file', 'channel', 'tbeg', 'dur', 'score', 'decision');
 
   my ($err, $string, @results) = 
-    &kwslist_xml_processor($string, $dem, 'kwslist', \@kwslist_attrs, 'detected_termlist', \@dtl_attrs,'term', \@term_attrs);
+    &kwslist_xml_processor($string, $dem, 'kwslist', \@kwslist_attrs, 'detected_kwlist', \@dtl_attrs,'kw', \@term_attrs);
   return("Problem during XML internal processing: $err")
     if (! MMisc::is_blank($err));
   return("Leftover content post XML internal processing: $string")
@@ -194,7 +194,7 @@ sub loadXMLFile {
   my $rkwslist_attr = shift @results;
   return("Found unexpected data in extracted XML")
     if (scalar @results > 1);
-  if (scalar @results == 1) { # contains at least one 'detected_termlist'
+  if (scalar @results == 1) { # contains at least one 'detected_kwlist'
     my $rtbd = shift @results;
     return("Expected ARRAY in extracted data")
       if (ref($rtbd) ne 'ARRAY');
@@ -205,7 +205,7 @@ sub loadXMLFile {
       my $detectedoov = &__get_attr($rdtl_attr, $dtl_attrs[2]);
       my $detectedterm = new KWSDetectedList($detectedtermid, $detectedsearchtime, $detectedoov);
 
-      if (scalar @$rtbd > 0) { # data left, if the first one is an array it is a 'term'
+      if (scalar @$rtbd > 0) { # data left, if the first one is an array it is a 'kw'
         my $temp = $$rtbd[0];
         if (ref($temp) eq 'ARRAY') {
           for (my $i = 0; $i < scalar @$temp; $i++) {
@@ -322,16 +322,16 @@ sub get_XMLrewrite {
 
   my $txt = "";
   
-  $txt .= "<kwslist termlist_filename=\"$self->{TERMLIST_FILENAME}\" indexing_time=\"$self->{INDEXING_TIME}\" language=\"$self->{LANGUAGE}\" index_size=\"$self->{INDEX_SIZE}\" system_id=\"$self->{SYSTEM_ID}\">\n";
+  $txt .= "<kwslist kwlist_filename=\"$self->{TERMLIST_FILENAME}\" indexing_time=\"$self->{INDEXING_TIME}\" language=\"$self->{LANGUAGE}\" index_size=\"$self->{INDEX_SIZE}\" system_id=\"$self->{SYSTEM_ID}\">\n";
      
   foreach my $termsid (sort keys %{ $self->{TERMS} }) {
-    $txt .= "  <detected_termlist termid=\"$termsid\" term_search_time=\"$self->{TERMS}{$termsid}->{SEARCH_TIME}\" oov_term_count=\"$self->{TERMS}{$termsid}->{OOV_TERM_COUNT}\">\n";
+    $txt .= "  <detected_kwlist kwid=\"$termsid\" search_time=\"$self->{TERMS}{$termsid}->{SEARCH_TIME}\" oov_count=\"$self->{TERMS}{$termsid}->{OOV_TERM_COUNT}\">\n";
     if ($self->{TERMS}{$termsid}->{TERMS}) {
       for (my $i = 0; $i < @{ $self->{TERMS}{$termsid}->{TERMS} }; $i++) {
-        $txt .= "    <term file=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{FILE}\" channel=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{CHAN}\" tbeg=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{BT}\" dur=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{DUR}\" score=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{SCORE}\" decision=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{DECISION}\"/>\n";
+        $txt .= "    <kw file=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{FILE}\" channel=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{CHAN}\" tbeg=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{BT}\" dur=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{DUR}\" score=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{SCORE}\" decision=\"$self->{TERMS}{$termsid}->{TERMS}[$i]->{DECISION}\"/>\n";
       }
     }
-    $txt .= "  </detected_termlist>\n";
+    $txt .= "  </detected_kwlist>\n";
   }
   $txt .= "</kwslist>\n";
   
