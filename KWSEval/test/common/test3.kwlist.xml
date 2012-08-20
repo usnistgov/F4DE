@@ -1,4 +1,4 @@
-<termlist ecf_filename="test3.ecf.xml" version="20060511-0900" language="english" compareNormalize="lowercase" encoding="UTF-8">
-<term termid="TERM-001"><termtext>visit</termtext></term>
-<term termid="TERM-002"><termtext>year old</termtext></term>
-</termlist>
+<kwlist ecf_filename="test3.ecf.xml" version="20060511-0900" language="english" compareNormalize="lowercase" encoding="UTF-8">
+<kw kwid="TERM-001"><kwtext>visit</kwtext></kw>
+<kw kwid="TERM-002"><kwtext>year old</kwtext></kw>
+</kwlist>

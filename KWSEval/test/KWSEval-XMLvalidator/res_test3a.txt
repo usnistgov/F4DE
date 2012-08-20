@@ -276,7 +276,7 @@
 </kwlist>
 ../common/test3.tlist.xml: validates
 <kwlist ecf_filename="test3.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="20060511-0900">
-  <kw kwid="KW-001">
+  <kw kwid="TERM-001">
     <kwtext>visit</kwtext>
     <kwinfo>
       <attr>
@@ -285,7 +285,7 @@
       </attr>
     </kwinfo>
   </kw>
-  <kw kwid="KW-002">
+  <kw kwid="TERM-002">
     <kwtext>year old</kwtext>
     <kwinfo>
       <attr>
@@ -570,7 +570,7 @@
 </kwlist>
 ../common/test5.tlist.xml: validates
 <kwlist ecf_filename="test5.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="01">
-  <kw kwid="KW-01">
+  <kw kwid="TERM-01">
     <kwtext>yes</kwtext>
     <kwinfo>
       <attr>
@@ -611,7 +611,7 @@
       </attr>
     </kwinfo>
   </kw>
-  <kw kwid="KW-02">
+  <kw kwid="TERM-02">
     <kwtext>sure</kwtext>
     <kwinfo>
       <attr>
@@ -652,7 +652,7 @@
       </attr>
     </kwinfo>
   </kw>
-  <kw kwid="KW-03">
+  <kw kwid="TERM-03">
     <kwtext>why not</kwtext>
     <kwinfo>
       <attr>
@@ -693,7 +693,7 @@
       </attr>
     </kwinfo>
   </kw>
-  <kw kwid="KW-04">
+  <kw kwid="TERM-04">
     <kwtext>hello</kwtext>
     <kwinfo>
       <attr>
@@ -737,7 +737,7 @@
 </kwlist>
 ../common/test6.tlist.xml: validates
 <kwlist ecf_filename="test5.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="01">
-  <kw kwid="KW-01">
+  <kw kwid="TERM-01">
     <kwtext>yes</kwtext>
     <kwinfo>
       <attr>
@@ -778,7 +778,7 @@
       </attr>
     </kwinfo>
   </kw>
-  <kw kwid="KW-02">
+  <kw kwid="TERM-02">
     <kwtext>sure</kwtext>
     <kwinfo>
       <attr>
@@ -819,7 +819,7 @@
       </attr>
     </kwinfo>
   </kw>
-  <kw kwid="KW-03">
+  <kw kwid="TERM-03">
     <kwtext>why not</kwtext>
     <kwinfo>
       <attr>
@@ -860,7 +860,7 @@
       </attr>
     </kwinfo>
   </kw>
-  <kw kwid="KW-04">
+  <kw kwid="TERM-04">
     <kwtext>hello</kwtext>
     <kwinfo>
       <attr>

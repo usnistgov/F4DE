@@ -1,7 +1,7 @@
-<termlist ecf_filename="test5.ecf.xml" version="01" language="english" compareNormalize="lowercase" encoding="UTF-8">
-<term termid="TERM-01">
-    <termtext>yes</termtext>
-    <terminfo>
+<kwlist ecf_filename="test5.ecf.xml" version="01" language="english" compareNormalize="lowercase" encoding="UTF-8">
+<kw kwid="TERM-01">
+    <kwtext>yes</kwtext>
+    <kwinfo>
     <attr>
       <name>Char. Quantile</name>
       <value>0 - 25.0</value>
@@ -34,11 +34,11 @@
       <name>Syllables Quantile</name>
       <value>0 - 25.0</value>
     </attr>
-    </terminfo>
-</term>
-<term termid="TERM-02">
-    <termtext>sure</termtext>
-    <terminfo>
+    </kwinfo>
+</kw>
+<kw kwid="TERM-02">
+    <kwtext>sure</kwtext>
+    <kwinfo>
     <attr>
       <name>Char. Quantile</name>
       <value>0 - 25.0</value>
@@ -71,11 +71,11 @@
       <name>Syllables Quantile</name>
       <value>0 - 25.0</value>
     </attr>
-    </terminfo>
-</term>
-<term termid="TERM-03">
-    <termtext>why not</termtext>
-    <terminfo>
+    </kwinfo>
+</kw>
+<kw kwid="TERM-03">
+    <kwtext>why not</kwtext>
+    <kwinfo>
     <attr>
       <name>Char. Quantile</name>
       <value>0 - 25.0</value>
@@ -108,11 +108,11 @@
       <name>Syllables Quantile</name>
       <value>0 - 25.0</value>
     </attr>
-    </terminfo>
-</term>
-<term termid="TERM-04">
-    <termtext>hello</termtext>
-    <terminfo>
+    </kwinfo>
+</kw>
+<kw kwid="TERM-04">
+    <kwtext>hello</kwtext>
+    <kwinfo>
     <attr>
       <name>Char. Quantile</name>
       <value>0 - 25.0</value>
@@ -145,6 +145,6 @@
       <name>Syllables Quantile</name>
       <value>0 - 25.0</value>
     </attr>
-  </terminfo>
-</term>
-</termlist>
+  </kwinfo>
+</kw>
+</kwlist>
