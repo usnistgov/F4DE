@@ -196,7 +196,7 @@ GetOptions
 (
     'ecffile=s'                           => \$ECFfile,
     'rttmfile=s'                          => \$RTTMfile,
-    'stdfile=s'                           => \$STDfile,
+    'sysfile|stdfile=s'                   => \$STDfile,
     'termfile=s'                          => \$TERMfile,
     'Find-threshold=f'                    => \$thresholdFind,
     'Similarity-threshold=f'              => \$thresholdAlign,
@@ -282,7 +282,7 @@ if ($fileRoot =~ m:/[^/]+$:) { $fileRoot .= "."; } #if the fileroot has a prepen
 #check if the options are valid to run
 MMisc::error_quit("An RTTM file must be set")
   if (MMisc::is_blank($RTTMfile));
-MMisc::error_quit("A TermList file must be set")
+MMisc::error_quit("A KWList file must be set")
   if (MMisc::is_blank($TERMfile));
 
 if($haveReports) {
@@ -489,13 +489,13 @@ MMisc::ok_exit();
 sub set_usage {
   my $tmp = "";
 
-	$tmp .= "KWSEval.pl -e ecffile -r rttmfile -s stdfile -t termfile -f fileroot [ OPTIONS ]\n";
+	$tmp .= "KWSEval.pl -e ecffile -r rttmfile -s kwsfile -t kwfile -f fileroot [ OPTIONS ]\n";
 	$tmp .= "\n";
 	$tmp .= "Required file arguments:\n";
 	$tmp .= "  -e, --ecffile            Path to the ECF file.\n";
 	$tmp .= "  -r, --rttmfile           Path to the RTTM file.\n";
-	$tmp .= "  -s, --stdfile            Path to the STDList file.\n";
-	$tmp .= "  -t, --termfile           Path to the TermList file.\n";
+	$tmp .= "  -s, --sysfile            Path to the KWSList file.\n";
+	$tmp .= "  -t, --termfile           Path to the KWList file.\n";
 	$tmp .= "\n";
 	$tmp .= "Find options:\n";
 	$tmp .= "  -F, --Find-threshold <thresh>\n";
