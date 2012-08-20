@@ -235,7 +235,7 @@ sub loadXMLFile {
   my $f4b = 'F4DE_BASE';
   my $xmllint_env = "F4DE_XMLLINT";
   my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
-  my @xsdfilesl = ('KWSEval-kwlist.xsd');
+  my @xsdfilesl = ('KWSEval-termlist.xsd');
 
 #  print STDERR "Loading Term List file '$tlistf'.\n";
   
