@@ -235,7 +235,7 @@ sub loadXMLFile {
   my $f4b = 'F4DE_BASE';
   my $xmllint_env = "F4DE_XMLLINT";
   my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
-  my @xsdfilesl = ('KWSEval-termlist.xsd');
+  my @xsdfilesl = ('KWSEval-kwlist.xsd');
 
 #  print STDERR "Loading Term List file '$tlistf'.\n";
   
@@ -263,14 +263,14 @@ sub loadXMLFile {
   # Remove <?xml ...?> header
   $tlistfilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
   
-  # At this point, all we ought to have left is the '<termlist>' content
+  # At this point, all we ought to have left is the '<kwlist>' content
   return("After initial cleanup, we found more than just \'termlist\', aborting")
-    if (! ( ($tlistfilestring =~ m%^\s*\<termlist\s%is) && ($tlistfilestring =~ m%\<\/termlist\>\s*$%is) ) );
+    if (! ( ($tlistfilestring =~ m%^\s*\<kwlist\s%is) && ($tlistfilestring =~ m%\<\/kwlist\>\s*$%is) ) );
   my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
   # and if we extract it, the remaining string should be empty
   
   # for attributes, array order is important
-  my $here = 'termlist';
+  my $here = 'kwlist';
   my @tlist_attrs = ( 'ecf_filename', 'language', 'encoding', 'compareNormalize', 'version' );
   ($err, my $string, my $section, my %tlist_attr) = &element_extractor_check($dem, $tlistfilestring, $here, \@tlist_attrs);
   return($err) if (! MMisc::is_blank($err));
@@ -290,10 +290,10 @@ sub loadXMLFile {
   $section = decode_utf8($section)
     if ($self->{ENCODING} eq 'UFT-8');
   
-  # process all 'term'
+  # process all 'kw'
   my %attrib = ();
-  my $exp = 'term';
-  my @term_attrs = ('termid');
+  my $exp = 'kw';
+  my @term_attrs = ('kwid');
   while (! MMisc::is_blank($section)) {
     # First off, confirm the first section is the expected one
     my $name = MtXML::get_next_xml_name(\$section, $dem);
@@ -359,33 +359,33 @@ sub process_term_content {
   my ($string, $dem) = @_;
 
   my @no_attrs = ();
-  # get 'termtext'
-  (my $err, $string, my $termtext, my %iattr1) = &element_extractor_check($dem, $string, 'termtext', \@no_attrs);
+  # get 'kwtext'
+  (my $err, $string, my $termtext, my %iattr1) = &element_extractor_check($dem, $string, 'kwtext', \@no_attrs);
   return($err) if (! MMisc::is_blank($err));
 
   my %ti_attr = ();
-  # if $string is now empty, there was no terminfo
+  # if $string is now empty, there was no kwinfo
   return("", $termtext, %ti_attr) if (MMisc::is_blank($string));
 
-  # if not empty, it _must_ be a 'terminfo'
-  ($err, $string, my $content, my %iattr2) = &element_extractor_check($dem, $string, 'terminfo', \@no_attrs);
+  # if not empty, it _must_ be a 'kwinfo'
+  ($err, $string, my $content, my %iattr2) = &element_extractor_check($dem, $string, 'kwinfo', \@no_attrs);
   return($err) if (! MMisc::is_blank($err));
   # now it must be empty
-  return("After extracting the \'terminfo\', there was some unexpected leftover data, aborting: $string")
+  return("After extracting the \'kwinfo\', there was some unexpected leftover data, aborting: $string")
     if (! MMisc::is_blank($string));
 
   my $doit = 1;
   while ($doit) {
     # process 'attr'
     ($err, $content, my $attr, my %iattr3) = &element_extractor_check($dem, $content, 'attr', \@no_attrs);
-    return("Processing <terminfo>: $err") if (! MMisc::is_blank($err));
+    return("Processing <kwinfo>: $err") if (! MMisc::is_blank($err));
     
     # from <attr>: <name> and <value>
     ($err, $attr, my $name, my %iattr4) = &element_extractor_check($dem, $attr, 'name', \@no_attrs);
-    return("Processing <terminfo>'s <attr>: $err") if (! MMisc::is_blank($err));
+    return("Processing <kwinfo>'s <attr>: $err") if (! MMisc::is_blank($err));
     ($err, $attr, my $value, my %iattr5) = &element_extractor_check($dem, $attr, 'value', \@no_attrs);
-    return("Processing <terminfo>'s <attr>: $err") if (! MMisc::is_blank($err));
-    return("After processing <terminfo>'s <attr>: leftover content found, aborting: $attr")
+    return("Processing <kwinfo>'s <attr>: $err") if (! MMisc::is_blank($err));
+    return("After processing <kwinfo>'s <attr>: leftover content found, aborting: $attr")
       if (! MMisc::is_blank($attr));
     
     $ti_attr{$name} = $value;
@@ -439,11 +439,11 @@ sub get_XMLrewrite {
   
   my $txt = "";
     
-  $txt .= "<termlist ecf_filename=\"$self->{ECF_FILENAME}\" language=\"$self->{LANGUAGE}\" encoding=\"$self->{ENCODING}\" compareNormalize=\"$self->{COMPARENORMALIZE}\" version=\"$self->{VERSION}\">\n";
+  $txt .= "<kwlist ecf_filename=\"$self->{ECF_FILENAME}\" language=\"$self->{LANGUAGE}\" encoding=\"$self->{ENCODING}\" compareNormalize=\"$self->{COMPARENORMALIZE}\" version=\"$self->{VERSION}\">\n";
   
   foreach my $termid (sort keys %{ $self->{TERMS} }) {
-    $txt .= "  <term termid=\"$termid\">\n";
-    $txt .= "    <termtext>$self->{TERMS}{$termid}->{TEXT}</termtext>\n";
+    $txt .= "  <kw kwid=\"$termid\">\n";
+    $txt .= "    <kwtext>$self->{TERMS}{$termid}->{TEXT}</kwtext>\n";
     my $in = "";
     foreach my $termattrname (sort keys %{ $self->{TERMS}{$termid} }) {
       next if( ($termattrname eq "TERMID") || ($termattrname eq "TEXT") );
@@ -452,11 +452,11 @@ sub get_XMLrewrite {
       $in .= "        <value>$self->{TERMS}{$termid}->{$termattrname}</value>\n";
       $in .= "      </attr>\n";
     }
-    $txt .= "    <terminfo>\n$in    </terminfo>\n" if (! MMisc::is_blank($in));
-    $txt .= "  </term>\n";
+    $txt .= "    <kwinfo>\n$in    </kwinfo>\n" if (! MMisc::is_blank($in));
+    $txt .= "  </kw>\n";
   }
   
-  $txt .= "</termlist>\n";
+  $txt .= "</kwlist>\n";
   
   return($txt);
 }
