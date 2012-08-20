@@ -241,7 +241,7 @@ $versionid
 Usage:
 $0 [--help] [--version] [--write [directory] [--WriteMemDump [mode]]] --ecf ecf_file.xml [ecf_file.xml [...]]
 $0 [--help] [--version] [--write [directory] [--WriteMemDump [mode]]] --kwslist kwslist_file.xml [kwslist_file.xml [...]]
-$0 [--help] [--version] [--write [directory] [--WriteMemDump [mode]]] --termlist termlist_file.xml [termlist_file.xml [...]]
+$0 [--help] [--version] [--write [directory] [--WriteMemDump [mode]]] --termlist kwlist_file.xml [kwlist_file.xml [...]]
 
 Will validate KWS Eval's ECF, TermList or KWSlist files
 
