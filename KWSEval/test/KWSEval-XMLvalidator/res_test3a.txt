@@ -2,577 +2,577 @@
 [[RETURN CODE]] 0
 [[STDOUT]]
 ../common/test2.tlist.xml: validates
-<termlist ecf_filename="test2.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="20060511-0900">
-  <term termid="TEST-01">
-    <termtext>vatican</termtext>
-    <terminfo>
+<kwlist ecf_filename="test2.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="20060511-0900">
+  <kw kwid="TEST-01">
+    <kwtext>vatican</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>v a t i c a n</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-02">
-    <termtext>vignali</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-02">
+    <kwtext>vignali</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>v i g n a l i</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-03">
-    <termtext>visit</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-03">
+    <kwtext>visit</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>v i s i t</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-04">
-    <termtext>watch</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-04">
+    <kwtext>watch</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>w a t c h</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-05">
-    <termtext>ways</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-05">
+    <kwtext>ways</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>w a y s</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-06">
-    <termtext>weapons</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-06">
+    <kwtext>weapons</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>w e a p o n s</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-07">
-    <termtext>wednesday</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-07">
+    <kwtext>wednesday</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>w e d n e s d a y</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-08">
-    <termtext>welcome</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-08">
+    <kwtext>welcome</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>w e l c o m e</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-09">
-    <termtext>whose</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-09">
+    <kwtext>whose</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>w h o s e</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-10">
-    <termtext>yes</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-10">
+    <kwtext>yes</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>y e s</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-11">
-    <termtext>salt lake</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-11">
+    <kwtext>salt lake</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>s a l t l a k e</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-12">
-    <termtext>missile defense</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-12">
+    <kwtext>missile defense</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>m i s s i l e d e f e n s e</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-13">
-    <termtext>prime minister</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-13">
+    <kwtext>prime minister</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>p r i m e m i n i s t e r</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-14">
-    <termtext>v. o.</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-14">
+    <kwtext>v. o.</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>v . o .</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-15">
-    <termtext>white house</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-15">
+    <kwtext>white house</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>w h i t e h o u s e</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-16">
-    <termtext>hugh rodham</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-16">
+    <kwtext>hugh rodham</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>h u g h r o d h a m</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-17">
-    <termtext>pacific northwest</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-17">
+    <kwtext>pacific northwest</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>p a c i f i c n o r t h w e s t</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-18">
-    <termtext>t. v.</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-18">
+    <kwtext>t. v.</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>t . v .</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-19">
-    <termtext>year old</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-19">
+    <kwtext>year old</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>y e a r o l d</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-20">
-    <termtext>dale earnhardt</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-20">
+    <kwtext>dale earnhardt</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>d a l e e a r n h a r d t</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-21">
-    <termtext>the united states</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-21">
+    <kwtext>the united states</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>t h e u n i t e d s t a t e s</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-22">
-    <termtext>b. c. news</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-22">
+    <kwtext>b. c. news</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>b . c . n e w s</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-23">
-    <termtext>n. b. c.</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-23">
+    <kwtext>n. b. c.</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>n . b . c .</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-24">
-    <termtext>salt lake city</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-24">
+    <kwtext>salt lake city</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>s a l t l a k e c i t y</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-25">
-    <termtext>n. b. c.'s</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-25">
+    <kwtext>n. b. c.'s</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>n . b . c . ' s</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-26">
-    <termtext>did not know</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-26">
+    <kwtext>did not know</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>d i d n o t k n o w</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-27">
-    <termtext>one of the</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-27">
+    <kwtext>one of the</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>o n e o f t h e</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-28">
-    <termtext>v. o. a.</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-28">
+    <kwtext>v. o. a.</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>v . o . a .</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-29">
-    <termtext>c. n. n.</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-29">
+    <kwtext>c. n. n.</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>c . n . n .</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-30">
-    <termtext>the pacific northwest</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-30">
+    <kwtext>the pacific northwest</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>t h e p a c i f i c n o r t h w e s t</value>
       </attr>
-    </terminfo>
-  </term>
-</termlist>
+    </kwinfo>
+  </kw>
+</kwlist>
 ../common/test3.tlist.xml: validates
-<termlist ecf_filename="test3.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="20060511-0900">
-  <term termid="TERM-001">
-    <termtext>visit</termtext>
-    <terminfo>
+<kwlist ecf_filename="test3.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="20060511-0900">
+  <kw kwid="KW-001">
+    <kwtext>visit</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>v i s i t</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TERM-002">
-    <termtext>year old</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="KW-002">
+    <kwtext>year old</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>y e a r o l d</value>
       </attr>
-    </terminfo>
-  </term>
-</termlist>
+    </kwinfo>
+  </kw>
+</kwlist>
 ../common/test4.cantonese.tlist.xml: validates
-<termlist ecf_filename="Demo.cantonese.source.tlist.xml" language="cantonese" encoding="UTF-8" compareNormalize="" version="20060511-0900">
-  <term termid="TEST-00">
-    <termtext>å</termtext>
-    <terminfo>
+<kwlist ecf_filename="Demo.cantonese.source.tlist.xml" language="cantonese" encoding="UTF-8" compareNormalize="" version="20060511-0900">
+  <kw kwid="TEST-00">
+    <kwtext>å</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å  </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-01">
-    <termtext>ç³»</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-01">
+    <kwtext>ç³»</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>ç ³ »</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-02">
-    <termtext>ä½ </termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-02">
+    <kwtext>ä½ </kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>ä ½  </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-03">
-    <termtext>æ</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-03">
+    <kwtext>æ</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>æ  </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-04">
-    <termtext>å</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-04">
+    <kwtext>å</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å  </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-05">
-    <termtext>å¥½</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-05">
+    <kwtext>å¥½</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å ¥ ½</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-06">
-    <termtext>é½</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-06">
+    <kwtext>é½</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>é  ½</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-07">
-    <termtext>ä¸ª</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-07">
+    <kwtext>ä¸ª</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>ä ¸ ª</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-08">
-    <termtext>æå²</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-08">
+    <kwtext>æå²</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>æ   å  ²</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-09">
-    <termtext>å¦</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-09">
+    <kwtext>å¦</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å  ¦</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-10">
-    <termtext>ç³» å</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-10">
+    <kwtext>ç³» å</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>ç ³ » å  </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-11">
-    <termtext>æ ä¸ª</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-11">
+    <kwtext>æ ä¸ª</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>æ   ä ¸ ª</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-12">
-    <termtext>å ç³»</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-12">
+    <kwtext>å ç³»</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å   ç ³ »</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-13">
-    <termtext>ç³» å¯</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-13">
+    <kwtext>ç³» å¯</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>ç ³ » å  ¯</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-14">
-    <termtext>ç³» åª</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-14">
+    <kwtext>ç³» åª</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>ç ³ » å  ª</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-15">
-    <termtext>å ç³»</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-15">
+    <kwtext>å ç³»</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å   ç ³ »</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-16">
-    <termtext>å å</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-16">
+    <kwtext>å å</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å   å  </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-17">
-    <termtext>å°± ç³»</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-17">
+    <kwtext>å°± ç³»</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å ° ± ç ³ »</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-18">
-    <termtext>åº åº¦</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-18">
+    <kwtext>åº åº¦</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å  º å º ¦</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-19">
-    <termtext>å ä½ </termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-19">
+    <kwtext>å ä½ </kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å   ä ½  </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-20">
-    <termtext>å ç³» å</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-20">
+    <kwtext>å ç³» å</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å   ç ³ » å  </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-21">
-    <termtext>ç³» å ç³»</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-21">
+    <kwtext>ç³» å ç³»</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>ç ³ » å   ç ³ »</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-22">
-    <termtext>ç³» å æ</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-22">
+    <kwtext>ç³» å æ</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>ç ³ » å   æ  </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-23">
-    <termtext>å ç³» å </termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-23">
+    <kwtext>å ç³» å </kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å   ç ³ » å   </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-24">
-    <termtext>å¯ ç³» å¯</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-24">
+    <kwtext>å¯ ç³» å¯</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å  ¯ ç ³ » å  ¯</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-25">
-    <termtext>ç³» å¯ ç³»</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-25">
+    <kwtext>ç³» å¯ ç³»</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>ç ³ » å  ¯ ç ³ »</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-26">
-    <termtext>å°± ç³» å¯</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-26">
+    <kwtext>å°± ç³» å¯</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å ° ± ç ³ » å  ¯</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-27">
-    <termtext>ç³» ç³» ç³»</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-27">
+    <kwtext>ç³» ç³» ç³»</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>ç ³ » ç ³ » ç ³ »</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-28">
-    <termtext>å ç å</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-28">
+    <kwtext>å ç å</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å   ç   å  </value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TEST-29">
-    <termtext>å¥½ å¥½ è¸©</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="TEST-29">
+    <kwtext>å¥½ å¥½ è¸©</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>å ¥ ½ å ¥ ½ è ¸ ©</value>
       </attr>
-    </terminfo>
-  </term>
-</termlist>
+    </kwinfo>
+  </kw>
+</kwlist>
 ../common/test5.tlist.xml: validates
-<termlist ecf_filename="test5.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="01">
-  <term termid="TERM-01">
-    <termtext>yes</termtext>
-    <terminfo>
+<kwlist ecf_filename="test5.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="01">
+  <kw kwid="KW-01">
+    <kwtext>yes</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>y e s</value>
@@ -609,11 +609,11 @@
         <name>Syllables Quantile</name>
         <value>0 - 25.0</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TERM-02">
-    <termtext>sure</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="KW-02">
+    <kwtext>sure</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>s u r e</value>
@@ -650,11 +650,11 @@
         <name>Syllables Quantile</name>
         <value>0 - 25.0</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TERM-03">
-    <termtext>why not</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="KW-03">
+    <kwtext>why not</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>w h y n o t</value>
@@ -691,11 +691,11 @@
         <name>Syllables Quantile</name>
         <value>0 - 25.0</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TERM-04">
-    <termtext>hello</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="KW-04">
+    <kwtext>hello</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>h e l l o</value>
@@ -732,14 +732,14 @@
         <name>Syllables Quantile</name>
         <value>0 - 25.0</value>
       </attr>
-    </terminfo>
-  </term>
-</termlist>
+    </kwinfo>
+  </kw>
+</kwlist>
 ../common/test6.tlist.xml: validates
-<termlist ecf_filename="test5.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="01">
-  <term termid="TERM-01">
-    <termtext>yes</termtext>
-    <terminfo>
+<kwlist ecf_filename="test5.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="01">
+  <kw kwid="KW-01">
+    <kwtext>yes</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>y e s</value>
@@ -776,11 +776,11 @@
         <name>Syllables Quantile</name>
         <value>0 - 25.0</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TERM-02">
-    <termtext>sure</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="KW-02">
+    <kwtext>sure</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>s u r e</value>
@@ -817,11 +817,11 @@
         <name>Syllables Quantile</name>
         <value>0 - 25.0</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TERM-03">
-    <termtext>why not</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="KW-03">
+    <kwtext>why not</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>w h y n o t</value>
@@ -858,11 +858,11 @@
         <name>Syllables Quantile</name>
         <value>0 - 25.0</value>
       </attr>
-    </terminfo>
-  </term>
-  <term termid="TERM-04">
-    <termtext>hello</termtext>
-    <terminfo>
+    </kwinfo>
+  </kw>
+  <kw kwid="KW-04">
+    <kwtext>hello</kwtext>
+    <kwinfo>
       <attr>
         <name>CHARSPLITTEXT</name>
         <value>h e l l o</value>
@@ -899,9 +899,9 @@
         <name>Syllables Quantile</name>
         <value>0 - 25.0</value>
       </attr>
-    </terminfo>
-  </term>
-</termlist>
+    </kwinfo>
+  </kw>
+</kwlist>
 All files processed (Validated: 5 | Total: 5)
 
 
