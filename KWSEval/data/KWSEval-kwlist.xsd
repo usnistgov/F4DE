@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:element name="termlist">
+  <xsd:element name="kwlist">
     <xsd:complexType>
       <xsd:sequence>
-        <xsd:element name="term" minOccurs="0" maxOccurs="unbounded">
+        <xsd:element name="kw" minOccurs="0" maxOccurs="unbounded">
           <xsd:complexType>
             <xsd:sequence>
-              <xsd:element name="termtext" type="xsd:string" minOccurs="1" maxOccurs="1" />
-              <xsd:element name="terminfo" minOccurs="0" maxOccurs="1">
+              <xsd:element name="kwtext" type="xsd:string" minOccurs="1" maxOccurs="1" />
+              <xsd:element name="kwinfo" minOccurs="0" maxOccurs="1">
                 <xsd:complexType>
                   <xsd:sequence>
                     <xsd:element name="attr" minOccurs="1" maxOccurs="unbounded">
@@ -22,7 +22,7 @@
                 </xsd:complexType>
               </xsd:element>
             </xsd:sequence>
-            <xsd:attribute name="termid" type="xsd:string" use="required" />
+            <xsd:attribute name="kwid" type="xsd:string" use="required" />
           </xsd:complexType>
         </xsd:element>
       </xsd:sequence>
