@@ -34,22 +34,22 @@ $testr += &do_simple_test_dir($tn, "(KWSList: Validation -> MemDump 1 save -> Me
 
 #####
 $tn = "test3";
-$testr += &do_simple_test($tn, "(TermList Validation)", "$validator -t ../common/test2.tlist.xml ../common/test3.tlist.xml ../common/test4.cantonese.tlist.xml ../common/test5.tlist.xml ../common/test6.tlist.xml -w", "res_${tn}.txt");
+$testr += &do_simple_test($tn, "(KWList Validation)", "$validator -t ../common/test2.tlist.xml ../common/test3.tlist.xml ../common/test4.cantonese.tlist.xml ../common/test5.tlist.xml ../common/test6.tlist.xml -w", "res_${tn}.txt");
 
 ##
 $tn = "test4a";
 my $tf = "test2.tlist.xml";
-$testr += &do_simple_test_dir($tn, "(TermList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(KWList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test4b";
 my $tf = "test5.tlist.xml";
-$testr += &do_simple_test_dir($tn, "(TermList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(KWList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test4c";
 my $tf = "test4.cantonese.tlist.xml";
-$testr += &do_simple_test_dir($tn, "(TermList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
+$testr += &do_simple_test_dir($tn, "(KWList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 #####
 $tn = "test5";
