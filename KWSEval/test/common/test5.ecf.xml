@@ -1,4 +1,4 @@
-<ecf source_signal_duration="100.000" version="01">
-<excerpt audio_filename="FILE01.sph" channel="1" tbeg="0.000" dur="50.000" language="english" source_type="bnews"/>
-<excerpt audio_filename="FILE02.sph" channel="2" tbeg="50.000" dur="50.000" language="english" source_type="bnews"/>
+<ecf source_signal_duration="100.000" language="english" version="01">
+  <excerpt audio_filename="FILE01.sph" channel="1" tbeg="0.000" dur="50.000" source_type="bnews"/>
+  <excerpt audio_filename="FILE02.sph" channel="2" tbeg="50.000" dur="50.000" source_type="bnews"/>
 </ecf>

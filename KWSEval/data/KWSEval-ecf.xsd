@@ -9,7 +9,6 @@
             <xsd:attribute name="channel" type="xsd:integer" use="required" />
             <xsd:attribute name="tbeg" type="xsd:decimal" use="required" />
             <xsd:attribute name="dur" type="xsd:decimal" use="required" />
-            <xsd:attribute name="language" type="xsd:string" use="required" />
             <xsd:attribute name="source_type" use="required">
               <xsd:simpleType>
                 <xsd:restriction base="xsd:string">
@@ -24,6 +23,7 @@
       </xsd:sequence>
       <xsd:attribute name="source_signal_duration" type="xsd:decimal" use="required" />
       <xsd:attribute name="version" type="xsd:string" use="required" />
+      <xsd:attribute name="language" type="xsd:string" use="required" />
     </xsd:complexType>
   </xsd:element>
 </xsd:schema>

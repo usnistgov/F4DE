@@ -303,8 +303,8 @@ sub loadXMLFile {
   my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
   
   # order is important
-  my @ecf_attrs = ('source_signal_duration', 'version');
-  my @exc_attrs = ('audio_filename', 'channel', 'tbeg', 'dur', 'language', 'source_type');
+  my @ecf_attrs = ('source_signal_duration', 'version', 'language');
+  my @exc_attrs = ('audio_filename', 'channel', 'tbeg', 'dur', 'source_type');
 
   my $here = 'ecf';
   ($err, my $string, my $section, my %ecf_attr) = &element_extractor_check($dem, $ecffilestring, $here, \@ecf_attrs);
@@ -314,6 +314,7 @@ sub loadXMLFile {
 
   $self->{SIGN_DUR} = &__get_attr(\%ecf_attr, $ecf_attrs[0]);
   $self->{VER} = &__get_attr(\%ecf_attr, $ecf_attrs[1]);
+  my $language = &__get_attr(\%ecf_attr, $ecf_attrs[2]);
 
   my $exp = 'excerpt';
   while (! MMisc::is_blank($section)) {
@@ -332,8 +333,7 @@ sub loadXMLFile {
     my $channel = &__get_attr(\%exc_attr, $exc_attrs[1]);
     my $tbeg = &__get_attr(\%exc_attr, $exc_attrs[2]);
     my $dur = &__get_attr(\%exc_attr, $exc_attrs[3]);
-    my $language = &__get_attr(\%exc_attr, $exc_attrs[4]);
-    my $source_type = &__get_attr(\%exc_attr, $exc_attrs[5]);
+    my $source_type = &__get_attr(\%exc_attr, $exc_attrs[4]);
 
     my $purged_filename = "";
     my ($errf, $d, $f, $e) = MMisc::split_dir_file_ext($audio_filename);
