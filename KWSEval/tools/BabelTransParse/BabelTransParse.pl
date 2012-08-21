@@ -216,7 +216,7 @@ open (TLIST, ">$root.tlist.xml") || die "Failed to open $root.tlist.xml";
 binmode TLIST, "utf8" if ($encoding eq "UTF-8");
 print "   Building file $root.tlist.xml\n";
 
-print ECF "<ecf source_signal_duration=\"$totalDuration\" version=\"ECF Built by BabelTransParse.pl\">\n";
+print ECF "<ecf source_signal_duration=\"$totalDuration\" language=\"$lang\" version=\"ECF Built by BabelTransParse.pl\">\n";
 foreach my $trans(sort keys %$db){
   my $outTransName = $trans;
   $outTransName =~ s:.*/::;
@@ -225,7 +225,6 @@ foreach my $trans(sort keys %$db){
     "channel=\"1\" ".
     "tbeg=\"".$db->{$trans}{bt}."\" ".
     "dur=\"".$db->{$trans}{et}."\" ".
-    "language=\"$lang\" ".
     "source_type=\"cts\"/>\n";
   ### Interate over the segments
   my $spkr = 1;
@@ -341,30 +340,30 @@ foreach my $trans(sort keys %$db){
   }
 }
 
-print TLIST "<termlist ecf_filename=\"$root.tlist.xml\" version=\"20060511-0900\" language=\"$lang\" encoding=\"$encoding\" compareNormalize=\"$norm\">\n";
+print TLIST "<kwlist ecf_filename=\"$root.tlist.xml\" version=\"20060511-0900\" language=\"$lang\" encoding=\"$encoding\" compareNormalize=\"$norm\">\n";
 
 my @sortedunigrams = sort { $unigram->{$b} <=> $unigram->{$a} } keys %$unigram;
 print "Using 10 unigrams for terms\n";
 for (my $i=0; $i<10; $i++){
 #  print "$i $unigram->{$sortedunigrams[$i]}\n";
-  print TLIST "<term termid=\"TEST-".sprintf("%02d",$i)."\"><termtext>$sortedunigrams[$i]</termtext></term>\n";
+  print TLIST "<kw kwid=\"TEST-".sprintf("%02d",$i)."\"><kwtext>$sortedunigrams[$i]</kwtext></kw>\n";
 }
 
 my @sortedBigrams = sort { $bigram->{$b} <=> $bigram->{$a} } keys %$bigram;
 print "Using 10 bigrams for terms\n";
 for (my $i=0; $i<10; $i++){
 #  print "$i $bigram->{$sortedBigrams[$i]}\n";
-  print TLIST "<term termid=\"TEST-".sprintf("%02d",$i+10)."\"><termtext>$sortedBigrams[$i]</termtext></term>\n";
+  print TLIST "<kw kwid=\"TEST-".sprintf("%02d",$i+10)."\"><kwtext>$sortedBigrams[$i]</kwtext></kw>\n";
 }
 
 my @sortedtrigrams = sort { $trigram->{$b} <=> $trigram->{$a} } keys %$trigram;
 print "Using 10 trigrams for terms\n";
 for (my $i=0; $i<10; $i++){
 #  print "$i $trigram->{$sortedtrigrams[$i]}\n";
-  print TLIST "<term termid=\"TEST-".sprintf("%02d",$i+20)."\"><termtext>$sortedtrigrams[$i]</termtext></term>\n";
+  print TLIST "<kw kwid=\"TEST-".sprintf("%02d",$i+20)."\"><kwtext>$sortedtrigrams[$i]</kwtext></kw>\n";
 }
 
-print TLIST "</termlist>\n";
+print TLIST "</kwlist>\n";
 
 #<?xml version="1.0" encoding="UTF-8"?>
 #<termlist ecf_filename="expt_06_std_eval06_eng_all_spch_expt_1.ecf.xml" language="english" version="20061103-0942">
