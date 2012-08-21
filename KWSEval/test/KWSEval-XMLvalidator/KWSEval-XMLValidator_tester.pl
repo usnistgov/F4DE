@@ -19,8 +19,13 @@ my $tn = ""; # Test name
 my $t0 = F4DE_TestCore::get_currenttime();
 
 #####
-$tn = "test1";
+$tn = "test1a";
 $testr += &do_simple_test($tn, "(KWSList Validation)", "$validator -k ../common/test2.kwslist.xml ../common/test3.kwslist.xml ../common/test5.kwslist.xml ../common/test6.kwslist.xml -w", "res_${tn}.txt");
+
+##
+$tn = "test1b";
+my $tf = "test5.kwslist.xml";
+$testr += &do_simple_test_dir($tn, "(KWSList: Validation -> save 1 -> re-load -> save 2 -> cmp 1 vs 2)", "$validator -k ../common/$tf -w __${tn}_1 && $validator -k __${tn}_1/$tf -w __${tn}_2 && diff -s __${tn}_1/$tf __${tn}_2/$tf", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test2a";
@@ -33,8 +38,13 @@ $tf = "test2.kwslist.xml";
 $testr += &do_simple_test_dir($tn, "(KWSList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -k ../common/$tf -w __${tn}_1 -W && $validator -k __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 #####
-$tn = "test3";
+$tn = "test3a";
 $testr += &do_simple_test($tn, "(KWList Validation)", "$validator -t ../common/test2.tlist.xml ../common/test3.tlist.xml ../common/test4.cantonese.tlist.xml ../common/test5.tlist.xml ../common/test6.tlist.xml -w", "res_${tn}.txt");
+
+##
+$tn = "test3b";
+my $tf = "test2.tlist.xml";
+$testr += &do_simple_test_dir($tn, "(KWList: Validation -> save 1 -> MemDump re-load -> save 2 -> cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 && $validator -t __${tn}_1/$tf -w __${tn}_2 && diff -s __${tn}_1/$tf __${tn}_2/$tf", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test4a";
@@ -52,8 +62,13 @@ my $tf = "test4.cantonese.tlist.xml";
 $testr += &do_simple_test_dir($tn, "(KWList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 #####
-$tn = "test5";
+$tn = "test5a";
 $testr += &do_simple_test($tn, "(ECF Validation)", "$validator -e ../common/test1.ecf.xml ../common/test2.ecf.xml ../common/test3.ecf.xml ../common/test3.scoring.ecf.xml ../common/test5.ecf.xml ../common/test6.ecf.xml -w", "res_${tn}.txt");
+
+##
+$tn = "test5b";
+my $tf = "test1.ecf.xml";
+$testr += &do_simple_test_dir($tn, "(ECF: Validation -> save 1 -> re-load -> save 2 -> cmp 1 vs 2)", "$validator -e ../common/$tf -w __${tn}_1 && $validator -e __${tn}_1/$tf -w __${tn}_2 && diff -s __${tn}_1/$tf __${tn}_2/$tf", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test6a";
