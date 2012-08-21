@@ -1,0 +1,15 @@
+[[COMMANDLINE]] ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -e ../common/test1.ecf.xml -w __test5b_1 && ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -e __test5b_1/test1.ecf.xml -w __test5b_2 && diff -s __test5b_1/test1.ecf.xml __test5b_2/test1.ecf.xml
+[[RETURN CODE]] 0
+[[STDOUT]]
+../common/test1.ecf.xml: validates
+Wrote: __test5b_1/test1.ecf.xml
+All files processed (Validated: 1 | Total: 1)
+
+__test5b_1/test1.ecf.xml: validates
+Wrote: __test5b_2/test1.ecf.xml
+All files processed (Validated: 1 | Total: 1)
+
+Files __test5b_1/test1.ecf.xml and __test5b_2/test1.ecf.xml are identical
+
+[[STDERR]]
+

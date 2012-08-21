@@ -1,0 +1,15 @@
+[[COMMANDLINE]] ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -t ../common/test2.tlist.xml -w __test3b_1 && ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -t __test3b_1/test2.tlist.xml -w __test3b_2 && diff -s __test3b_1/test2.tlist.xml __test3b_2/test2.tlist.xml
+[[RETURN CODE]] 0
+[[STDOUT]]
+../common/test2.tlist.xml: validates
+Wrote: __test3b_1/test2.tlist.xml
+All files processed (Validated: 1 | Total: 1)
+
+__test3b_1/test2.tlist.xml: validates
+Wrote: __test3b_2/test2.tlist.xml
+All files processed (Validated: 1 | Total: 1)
+
+Files __test3b_1/test2.tlist.xml and __test3b_2/test2.tlist.xml are identical
+
+[[STDERR]]
+
