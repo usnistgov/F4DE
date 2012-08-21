@@ -249,7 +249,7 @@ sub alignTerms
     }
 
     #Add TermIDs as empty blocks if no data
-    if (not defined $trials->{"trials"}{$termid} and $includeBlocksWNoTarg == 1) {
+    if (not defined $trials->{"trials"}{$termid}) {
       $trials->addEmptyBlock($termid);
       $trials->addBlockMetaData($termid, \%blockMetaData);
       
@@ -261,7 +261,12 @@ sub alignTerms
 	push (@possible_groups, @{ &{ $groupFilter }($self, undef, $self->{TERMLIST}->{TERMS}{$termid})}) if ($groupFilter eq \&KWSAlignment::groupByAttributes);
 	foreach my $group (@possible_groups) {
 	  my $grpTotDur = $totdur;
-	  $grpTotDur = $self->{ECF}->calcTotalDur($self->{SRCTYPEGROUPS}->{$group}, $self->{FILECHANS}) if ($groupFilter eq \&KWSAlignment::groupByECFSourceType);	    
+	  $grpTotDur = $self->{ECF}->calcTotalDur($self->{SRCTYPEGROUPS}->{$group}, $self->{FILECHANS}) if ($groupFilter eq \&KWSAlignment::groupByECFSourceType);
+	  if ($grpTotDur == 0) {
+	    MMisc::warn_print("No ECF segments available for group : $group, (group duration is 0)");
+	    next;
+	  }
+
 	  $qtrials{$group} = new TrialsTWV({ ("TotDur" => $grpTotDur, "TrialsPerSecond" => $trialsPerSec, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg) }) if (not defined $qtrials{$group});
 	  $qtrials{$group}->addEmptyBlock($termid);
 	  $qtrials{$group}->addBlockMetaData($termid, \%blockMetaData);
@@ -488,8 +493,7 @@ sub unitTest
 		    "2 Word Terms" => [ "TERM-03" ],
 		   );
   my %ecfgroups = (
-		   "BNEWS+CTS" => [ "bnews", "cts" ],
-		   "CONFMTG" => [ "confmtg" ],
+		   "BNEWS+CTS" => [ "bnews", "cts" ]
 		  );
   my @filechans = ("FILE01/1");
   my @attributes = ("Characters");
@@ -538,10 +542,10 @@ sub unitTest
   my $qtrials0 = $qdetset->{DETList}[0]->{DET}->getTrials();
   my $qtrials1 = $qdetset->{DETList}[1]->{DET}->getTrials();
   print "Checking conditional trial counts(1)...\t";
-  if (keys %{ $qtrials0->{"trials"} } == 2) { print "OK\n" }
+  if (keys %{ $qtrials0->{"trials"} } == 3) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
   print "Checking conditional trial counts(2)...\t";
-  if (keys %{ $qtrials1->{"trials"} } == 1) { print "OK\n" }
+  if (keys %{ $qtrials1->{"trials"} } == 2) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
 
   #checking pooled results

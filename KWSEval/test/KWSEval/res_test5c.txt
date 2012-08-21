@@ -18,7 +18,7 @@ Summary Report: -
 |           |                  Inputs                  |                               Actual Decision TWV Analysis                                |
 |   Title   |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   TWV    |  Dec. Tresh  |
 |-----------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
-|   Segment |         32 |     389 |       72 |    411 |       339 |          3 |    69 |      50 |   0.00011 |    0.105 |   0.7875 |       0.1398 |
+|   Segment |         33 |     389 |       72 |    411 |       339 |          3 |    69 |      50 |   0.00010 |    0.105 |   0.7907 |       0.1398 |
 Block Summary Report: -
 |  Performance Summary Over and Ensemble of Subsets  |
 |                Key                |     Value      |
@@ -66,11 +66,12 @@ Keyword  TEST-01  |                                            vatican |       4
          TEST-28  |                                           v. o. a. |      10 |      10 |           0 |     2 |       0 |    0.9006 |   0.00010 |    0.000 |
          TEST-29  |                                           c. n. n. |       9 |       8 |           0 |     4 |       1 |    0.6901 |   0.00020 |    0.111 |
          TEST-30  |                              the pacific northwest |       7 |       7 |           0 |     0 |       0 |    1.0000 |   0.00000 |    0.000 |
+         TEST-31  |               non occuring term - no system output |       0 |       0 |           0 |     0 |       0 |        NA |   0.00000 |       NA |
          TEST-32  |   non occuring term - false alarms below threshold |       0 |       0 |           3 |     0 |       0 |        NA |   0.00000 |       NA |
          TEST-33  |   non occuring term - false alarms above threshold |       0 |       0 |           0 |     3 |       0 |        NA |   0.00015 |       NA |
 Summary  Totals   |                                                    |     389 |     339 |           3 |    69 |      50 |           |           |          |
-         Means    |                                                    |      12 |      11 |           0 |     2 |       2 |           |   0.00011 |    0.105 |
-         TWV      |                                                    |         |         |             |       |         |    0.7875 |           |          |
+         Means    |                                                    |      12 |      10 |           0 |     2 |       2 |           |   0.00010 |    0.105 |
+         TWV      |                                                    |         |         |             |       |         |    0.7907 |           |          |
 
 [[STDERR]]
 

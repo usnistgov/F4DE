@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -Y MTG:CONFMTG -O -B -y TXT -f -
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -O -B -y TXT -f -
 [[RETURN CODE]] 0
 [[STDOUT]]
 Conditional Summary Report: -
@@ -43,6 +43,7 @@ Conditional Block Summary Report: -
 Keyword  TERM-01  |        yes |      15 |      10 |     2 |       5 |   -22.8604 |   0.02353 |    0.333 |
          TERM-02  |       sure |      15 |       5 |     3 |      10 |   -34.9573 |   0.03529 |    0.667 |
          TERM-03  |    why not |       5 |       2 |     5 |       3 |   -52.2263 |   0.05263 |    0.600 |
+         TERM-04  |      hello |         |         |       |         |            |           |          |
 Summary  Totals   |            |      35 |      17 |    10 |      18 |            |           |          |
          Means    |            |      12 |       6 |     3 |       6 |            |   0.03715 |    0.533 |
          TWV      |            |         |         |       |         |   -36.6813 |           |          |

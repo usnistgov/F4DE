@@ -27,7 +27,7 @@ $testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../com
 
 ##
 $tn = "test2";
-$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -Y MTG:CONFMTG -O -B -y TXT -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -O -B -y TXT -f -", "res_$tn.txt");
 
 ##
 $tn = "test3";

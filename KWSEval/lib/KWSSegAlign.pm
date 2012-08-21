@@ -177,6 +177,34 @@ sub alignSegments
     print CSVREPORT "\n" if (defined $csvreportfile);
   }
 
+#####
+  #Add empty blocks for terms which are not in sys
+  foreach my $term (values %{ $self->{TERMLIST}{TERMS} }) {
+    my $termid = $term->{TERMID};
+    if (not defined $trials->{"trials"}{$termid}) {
+      my %blockMetaData = ();
+      $blockMetaData{"Text"} = $self->{TERMLIST}->{TERMS}{$term->{TERMID}}{TEXT} if (not $pooled);
+      
+      $trials->addEmptyBlock($termid);
+      $trials->addBlockMetaData($termid, \%blockMetaData);
+      
+      if (defined $groupFilter) {
+	my @possible_groups = (); #empty trials should be added to all groups
+	push (@possible_groups, keys %{ $self->{SRCTYPEGROUPS} });
+	push (@possible_groups, keys %{ $self->{TERMGROUPS} });
+	push (@possible_groups, @{ &{ $groupFilter }($self, undef, $term)}) if ($groupFilter eq \&KWSSegAlign::groupByAttributes);
+	foreach my $group (@possible_groups) {
+	  my $totTrials = scalar(@fsegments);
+	  $totTrials = $grouptcounts{$group} if (defined $grouptcounts{$group});
+	  $qtrials{$group} = new TrialsDiscreteTWV({ ("TotTrials" => $totTrials, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg) }) if (not defined $qtrials{$group});
+	  $qtrials{$group}->addEmptyBlock($termid);
+	  $qtrials{$group}->addBlockMetaData($termid, \%blockMetaData);
+	}
+      }
+    }
+  }
+#####
+
   my $metric = new MetricDiscreteTWV({ ('Cost' =>$KoefC, 'Value' => $KoefV, 'Ptarg' => $probofterm ) }, $trials);
   my $detcurve = new DETCurve($trials, $metric, $trials->{"DecisionID"}, $listIsolineCoef, undef);
   $detset->addDET($trials->{"DecisionID"}, $detcurve);
@@ -383,10 +411,10 @@ sub unitTest
   my $qtrials0 = $qdetset->{DETList}[0]->{DET}->getTrials();
   my $qtrials1 = $qdetset->{DETList}[1]->{DET}->getTrials();
   print "Checking conditional trial counts(1)...\t";
-  if (keys %{ $qtrials0->{"trials"} } == 2) { print "OK\n" }
+  if (keys %{ $qtrials0->{"trials"} } == 3) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
   print "Checking conditional trial counts(2)...\t";
-  if (keys %{ $qtrials1->{"trials"} } == 1) { print "OK\n" }
+  if (keys %{ $qtrials1->{"trials"} } == 2) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
 
   #checking pooled results
