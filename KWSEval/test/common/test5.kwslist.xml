@@ -1,4 +1,4 @@
-<kwslist kwlist_filename="test5.tlist.xml" indexing_time="0.00" language="english" index_size="27" system_id="">
+<kwslist kwlist_filename="test5.tlist.xml" language="english" system_id="">
 <detected_kwlist kwid="TERM-01" search_time="24.3" oov_count="0">
 <kw file="FILE01" channel="1" tbeg="0.000" dur="1.000" score="0.912" decision="YES"/>
 <kw file="FILE01" channel="1" tbeg="5.000" dur="1.000" score="0.648" decision="YES"/>

@@ -37,8 +37,6 @@
         </xsd:element>
       </xsd:sequence>
       <xsd:attribute name="kwlist_filename" type="xsd:string" use="required" />
-      <xsd:attribute name="indexing_time" type="xsd:decimal" use="required" />
-      <xsd:attribute name="index_size" type="xsd:decimal" use="required" />
       <xsd:attribute name="system_id" type="xsd:string" use="required" />
       <xsd:attribute name="language" type="xsd:string" use="required" />
     </xsd:complexType>

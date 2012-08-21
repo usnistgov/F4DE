@@ -57,9 +57,7 @@ sub __init {
   $self->{MIN_YES} = 9999.0;
   $self->{MAX_NO} = -9999.0;
   $self->{DIFF_SCORE} = 0.0;
-  $self->{INDEXING_TIME} = 0;
   $self->{LANGUAGE} = "";
-  $self->{INDEX_SIZE} = 0;
   $self->{SYSTEM_ID} = "";
   $self->{TERMS} = {};
   # Added to avoid overwriting in file load
@@ -98,7 +96,6 @@ sub toString
 
     print "Dump of KWSList File\n";
     print "   TermList filename: " . $self->{TERMLIST_FILENAME} . "\n";
-    print "   Indexing time: " . $self->{INDEXING_TIME} . "\n";
     print "   Language: " . $self->{LANGUAGE} . "\n";
     print "   Detected TL:\n";
     
@@ -173,7 +170,7 @@ sub loadXMLFile {
     if (! MMisc::is_blank($kwslistfilestring));
   
   # Order is important
-  my @kwslist_attrs = ('kwlist_filename', 'indexing_time', 'language', 'index_size', 'system_id'); 
+  my @kwslist_attrs = ('kwlist_filename', 'language', 'system_id'); 
   my @dtl_attrs = ('kwid', 'search_time', 'oov_count');
   my @term_attrs = ('file', 'channel', 'tbeg', 'dur', 'score', 'decision');
 
@@ -240,10 +237,8 @@ sub loadXMLFile {
   }
 
   $self->{TERMLIST_FILENAME} = &__get_attr($rkwslist_attr, $kwslist_attrs[0]);
-  $self->{INDEXING_TIME} = &__get_attr($rkwslist_attr, $kwslist_attrs[1]);
-  $self->{LANGUAGE} = &__get_attr($rkwslist_attr, $kwslist_attrs[2]);
-  $self->{INDEX_SIZE} = &__get_attr($rkwslist_attr, $kwslist_attrs[3]);
-  $self->{SYSTEM_ID} = &__get_attr($rkwslist_attr, $kwslist_attrs[4]);
+  $self->{LANGUAGE} = &__get_attr($rkwslist_attr, $kwslist_attrs[1]);
+  $self->{SYSTEM_ID} = &__get_attr($rkwslist_attr, $kwslist_attrs[2]);
 
 #  print MMisc::get_sorted_MemDump(\$self);
 
@@ -322,7 +317,7 @@ sub get_XMLrewrite {
 
   my $txt = "";
   
-  $txt .= "<kwslist kwlist_filename=\"$self->{TERMLIST_FILENAME}\" indexing_time=\"$self->{INDEXING_TIME}\" language=\"$self->{LANGUAGE}\" index_size=\"$self->{INDEX_SIZE}\" system_id=\"$self->{SYSTEM_ID}\">\n";
+  $txt .= "<kwslist kwlist_filename=\"$self->{TERMLIST_FILENAME}\" language=\"$self->{LANGUAGE}\" system_id=\"$self->{SYSTEM_ID}\">\n";
      
   foreach my $termsid (sort keys %{ $self->{TERMS} }) {
     $txt .= "  <detected_kwlist kwid=\"$termsid\" search_time=\"$self->{TERMS}{$termsid}->{SEARCH_TIME}\" oov_count=\"$self->{TERMS}{$termsid}->{OOV_TERM_COUNT}\">\n";
@@ -417,9 +412,7 @@ sub load_MemDump_File {
   $self->_md_clone_value($object, 'MIN_YES');
   $self->_md_clone_value($object, 'MAX_NO');
   $self->_md_clone_value($object, 'DIFF_SCORE');
-  $self->_md_clone_value($object, 'INDEXING_TIME');
   $self->_md_clone_value($object, 'LANGUAGE');
-  $self->_md_clone_value($object, 'INDEX_SIZE');
   $self->_md_clone_value($object, 'SYSTEM_ID');
   $self->_md_clone_value($object, 'TERMS');
 

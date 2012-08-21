@@ -1,4 +1,4 @@
-<kwslist kwlist_filename="test3.tlist.xml" indexing_time="74390.00" language="english" index_size="21235877" system_id="Test3 System ID">
+<kwslist kwlist_filename="test3.tlist.xml" language="english" system_id="Test3 System ID">
 <detected_kwlist kwid="TERM-001" search_time="24.3" oov_count="0">
 <kw file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1630.710" dur="0.370" score="0.966931" decision="YES"/>
 <kw file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="697.120" dur="0.260" score="0.970571" decision="YES"/>

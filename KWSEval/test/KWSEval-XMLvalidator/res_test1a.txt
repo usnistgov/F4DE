@@ -2,7 +2,7 @@
 [[RETURN CODE]] 0
 [[STDOUT]]
 ../common/test2.kwslist.xml: validates
-<kwslist kwlist_filename="test2.tlist.xml" indexing_time="74390.00" language="english" index_size="21235877" system_id="">
+<kwslist kwlist_filename="test2.tlist.xml" language="english" system_id="">
   <detected_kwlist kwid="TEST-01" search_time="24.3" oov_count="0">
     <kw file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1211.630" dur="0.470" score="0.995379" decision="YES"/>
     <kw file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1221.380" dur="0.490" score="0.994927" decision="YES"/>
@@ -527,7 +527,7 @@
   </detected_kwlist>
 </kwslist>
 ../common/test3.kwslist.xml: validates
-<kwslist kwlist_filename="test3.tlist.xml" indexing_time="74390.00" language="english" index_size="21235877" system_id="Test3 System ID">
+<kwslist kwlist_filename="test3.tlist.xml" language="english" system_id="Test3 System ID">
   <detected_kwlist kwid="TERM-001" search_time="24.3" oov_count="0">
     <kw file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1630.710" dur="0.370" score="0.966931" decision="YES"/>
     <kw file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="697.120" dur="0.260" score="0.970571" decision="YES"/>
@@ -563,7 +563,7 @@
   </detected_kwlist>
 </kwslist>
 ../common/test5.kwslist.xml: validates
-<kwslist kwlist_filename="test5.tlist.xml" indexing_time="0.00" language="english" index_size="27" system_id="">
+<kwslist kwlist_filename="test5.tlist.xml" language="english" system_id="">
   <detected_kwlist kwid="TERM-01" search_time="24.3" oov_count="0">
     <kw file="FILE01" channel="1" tbeg="0.000" dur="1.000" score="0.912" decision="YES"/>
     <kw file="FILE01" channel="1" tbeg="5.000" dur="1.000" score="0.648" decision="YES"/>
@@ -599,7 +599,7 @@
   </detected_kwlist>
 </kwslist>
 ../common/test6.kwslist.xml: validates
-<kwslist kwlist_filename="test5.tlist.xml" indexing_time="0.00" language="english" index_size="27" system_id="">
+<kwslist kwlist_filename="test5.tlist.xml" language="english" system_id="">
   <detected_kwlist kwid="TERM-01" search_time="24.3" oov_count="0">
     <kw file="FILE01" channel="1" tbeg="0.000" dur="1.000" score="0.912" decision="YES"/>
     <kw file="FILE01" channel="1" tbeg="5.000" dur="1.000" score="0.648" decision="YES"/>
