@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.tlist.xml -o -b -f -
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.kwlist.xml -o -b -f -
 [[RETURN CODE]] 0
 [[STDOUT]]
 Summary Report: -

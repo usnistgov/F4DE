@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -O -B -y TXT -f -
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -Y BN+CTS:BNEWS,CTS -O -B -y TXT -f -
 [[RETURN CODE]] 0
 [[STDOUT]]
 Conditional Summary Report: -

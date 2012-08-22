@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -g -f -
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.kwlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -g -f -
 [[RETURN CODE]] 0
 [[STDOUT]]
 Summary Report: -
