@@ -97,7 +97,7 @@ my $reiter = 3;
 
 #my $KWSEval_dir_path = "../../src";
 #my $KWSEval_testfile_dir_path = "../../test_suite";
-#my $command_to_run = "perl -I$KWSEval_dir_path $KWSEval_dir_path/KWSEval.pl -e $KWSEval_testfile_dir_path/test2.ecf.xml -r $KWSEval_testfile_dir_path/test2.rttm -s $KWSEval_testfile_dir_path/test2.stdlist.xml -t $KWSEval_testfile_dir_path/test2.tlist.xml -A 1>/dev/null 2>/dev/null";
+#my $command_to_run = "perl -I$KWSEval_dir_path $KWSEval_dir_path/KWSEval.pl -e $KWSEval_testfile_dir_path/test2.ecf.xml -r $KWSEval_testfile_dir_path/test2.rttm -s $KWSEval_testfile_dir_path/test2.stdlist.xml -t $KWSEval_testfile_dir_path/test2.kwlist.xml -A 1>/dev/null 2>/dev/null";
 
 my $ascliteRunCommand = "/tmp/asclite -o sgml stdout -f 0 -noisg -F -D -overlap-limit 3 -r /tmp/rt04s.040420.mdm.overlap.stm.filt stm -h /tmp/rt04s.040810.mdm.overlap.ctm.filt ctm >> /dev/null";
 

@@ -1,4 +1,4 @@
-<kwlist ecf_filename="Demo.cantonese.source.tlist.xml" version="20060511-0900" language="cantonese" encoding="UTF-8" compareNormalize="">
+<kwlist ecf_filename="Demo.cantonese.source.kwlist.xml" version="20060511-0900" language="cantonese" encoding="UTF-8" compareNormalize="">
 <kw kwid="TEST-00"><kwtext>啊</kwtext></kw>
 <kw kwid="TEST-01"><kwtext>系</kwtext></kw>
 <kw kwid="TEST-02"><kwtext>你</kwtext></kw>

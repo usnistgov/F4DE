@@ -100,7 +100,7 @@ for (my $t=0; $t<@aterms; $t++) {
 }
 
 #Output file
-$outfilename = $language . ".tlist.xml" if ($outfilename eq "");
+$outfilename = $language . ".kwlist.xml" if ($outfilename eq "");
 $TermList->setLanguage($language);
 $TermList->setCompareNormalize($normalization) if ($normalization ne "");
 my $version = 1; #??

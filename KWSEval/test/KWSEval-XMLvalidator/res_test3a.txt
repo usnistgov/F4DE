@@ -296,7 +296,7 @@
   </kw>
 </kwlist>
 ../common/test4.cantonese.kwlist.xml: validates
-<kwlist ecf_filename="Demo.cantonese.source.tlist.xml" language="cantonese" encoding="UTF-8" compareNormalize="" version="20060511-0900">
+<kwlist ecf_filename="Demo.cantonese.source.kwlist.xml" language="cantonese" encoding="UTF-8" compareNormalize="" version="20060511-0900">
   <kw kwid="TEST-00">
     <kwtext>å</kwtext>
     <kwinfo>
