@@ -23,35 +23,35 @@ my $t0 = F4DE_TestCore::get_currenttime();
 
 ##
 $tn = "test1";
-$testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.tlist.xml -o -b -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.kwlist.xml -o -b -f -", "res_$tn.txt");
 
 ##
 $tn = "test2";
-$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.tlist.xml -Y BN+CTS:BNEWS,CTS -O -B -y TXT -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -Y BN+CTS:BNEWS,CTS -O -B -y TXT -f -", "res_$tn.txt");
 
 ##
 $tn = "test3";
-$testr += &do_simple_test($tn, "(DataCalculation: Segment)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -g -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Segment)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.kwlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -g -f -", "res_$tn.txt");
 
 ##
 $tn = "test4";
-$testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.tlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.kwlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -f -", "res_$tn.txt");
 
 ##
 $tn = "test5a";
-$testr += &do_simple_test($tn, "(Handling terms with no targs: Occurrence, with inc)", "$tool -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.tlist.xml -o -b -inc -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(Handling terms with no targs: Occurrence, with inc)", "$tool -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.kwlist.xml -o -b -inc -f -", "res_$tn.txt");
 
 ##
 $tn = "test5b";
-$testr += &do_simple_test($tn, "(Handling terms with no targs: Occurrence)", "$tool -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.tlist.xml -o -b -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(Handling terms with no targs: Occurrence)", "$tool -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.kwlist.xml -o -b -f -", "res_$tn.txt");
 
 ##
 $tn = "test5c";
-$testr += &do_simple_test($tn, "(Handling terms with no targs: Segment, with -inc)", "$tool -g -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.tlist.xml -o -b -inc -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(Handling terms with no targs: Segment, with -inc)", "$tool -g -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.kwlist.xml -o -b -inc -f -", "res_$tn.txt");
 
 ##
 $tn = "test5d";
-$testr += &do_simple_test($tn, "(Handling terms with no targs: Segment)", "$tool -g -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.tlist.xml -o -b -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(Handling terms with no targs: Segment)", "$tool -g -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.kwlist.xml -o -b -f -", "res_$tn.txt");
 
 #####
 

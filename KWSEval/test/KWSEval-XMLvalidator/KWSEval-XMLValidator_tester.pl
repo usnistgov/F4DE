@@ -39,26 +39,26 @@ $testr += &do_simple_test_dir($tn, "(KWSList: Validation -> MemDump 1 save -> Me
 
 #####
 $tn = "test3a";
-$testr += &do_simple_test($tn, "(KWList Validation)", "$validator -t ../common/test2.tlist.xml ../common/test3.tlist.xml ../common/test4.cantonese.tlist.xml ../common/test5.tlist.xml ../common/test6.tlist.xml -w", "res_${tn}.txt");
+$testr += &do_simple_test($tn, "(KWList Validation)", "$validator -t ../common/test2.kwlist.xml ../common/test3.kwlist.xml ../common/test4.cantonese.kwlist.xml ../common/test5.kwlist.xml ../common/test6.kwlist.xml -w", "res_${tn}.txt");
 
 ##
 $tn = "test3b";
-my $tf = "test2.tlist.xml";
+my $tf = "test2.kwlist.xml";
 $testr += &do_simple_test_dir($tn, "(KWList: Validation -> save 1 -> MemDump re-load -> save 2 -> cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 && $validator -t __${tn}_1/$tf -w __${tn}_2 && diff -s __${tn}_1/$tf __${tn}_2/$tf", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test4a";
-my $tf = "test2.tlist.xml";
+my $tf = "test2.kwlist.xml";
 $testr += &do_simple_test_dir($tn, "(KWList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test4b";
-my $tf = "test5.tlist.xml";
+my $tf = "test5.kwlist.xml";
 $testr += &do_simple_test_dir($tn, "(KWList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 ##
 $tn = "test4c";
-my $tf = "test4.cantonese.tlist.xml";
+my $tf = "test4.cantonese.kwlist.xml";
 $testr += &do_simple_test_dir($tn, "(KWList: Validation -> MemDump 1 save -> MemDump re-load -> MemDump 2 save -> Memdump cmp 1 vs 2)", "$validator -t ../common/$tf -w __${tn}_1 -W && $validator -t __${tn}_1/$tf.memdump -w __${tn}_2 -W && diff -s __${tn}_1/$tf.memdump __${tn}_2/$tf.memdump", "res_$tn.txt", ["__${tn}_1", "__${tn}_2"]);
 
 #####

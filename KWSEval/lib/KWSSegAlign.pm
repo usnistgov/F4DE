@@ -329,7 +329,7 @@ sub unitTest
   my $rttmfile = $path . "test5.rttm";
   my $kwsfile = $path . "test5.kwslist.xml";
   my $ecffile = $path . "test5.ecf.xml";
-  my $termlistfile = $path . "test5.tlist.xml";
+  my $termlistfile = $path . "test5.kwlist.xml";
 
 #NOTE: This unit test assumes that overlapping sections of speech are collapsed into one segment.
 #Any changes to RTTMList which intentionally change how segments are composed will recquire a refactor of this unit test.

@@ -212,9 +212,9 @@ open (STM, ">$root.stm") || die "Failed to open $root.stm";
 binmode(STM, "utf8") if ($encoding eq "UTF-8");
 print "   Building file $root.stm\n";
 
-open (TLIST, ">$root.tlist.xml") || die "Failed to open $root.tlist.xml";
+open (TLIST, ">$root.kwlist.xml") || die "Failed to open $root.kwlist.xml";
 binmode TLIST, "utf8" if ($encoding eq "UTF-8");
-print "   Building file $root.tlist.xml\n";
+print "   Building file $root.kwlist.xml\n";
 
 print ECF "<ecf source_signal_duration=\"$totalDuration\" language=\"$lang\" version=\"ECF Built by BabelTransParse.pl\">\n";
 foreach my $trans(sort keys %$db){
@@ -340,7 +340,7 @@ foreach my $trans(sort keys %$db){
   }
 }
 
-print TLIST "<kwlist ecf_filename=\"$root.tlist.xml\" version=\"20060511-0900\" language=\"$lang\" encoding=\"$encoding\" compareNormalize=\"$norm\">\n";
+print TLIST "<kwlist ecf_filename=\"$root.kwlist.xml\" version=\"20060511-0900\" language=\"$lang\" encoding=\"$encoding\" compareNormalize=\"$norm\">\n";
 
 my @sortedunigrams = sort { $unigram->{$b} <=> $unigram->{$a} } keys %$unigram;
 print "Using 10 unigrams for terms\n";

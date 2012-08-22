@@ -157,17 +157,17 @@ for langID in 101 104 105 106 english ; do
     echo ""
 
     echo "Generate two random systems";
-    $KWSLISTGEN -t $OUTROOT.source.tlist.xml -r $OUTROOT.source.rttm -o $OUTROOT.sys1.stdlist.xml -m 0.2 -f 0.2
-    $KWSLISTGEN -t $OUTROOT.source.tlist.xml -r $OUTROOT.source.rttm -o $OUTROOT.sys2.stdlist.xml -m 0.1 -f 0.1
+    $KWSLISTGEN -t $OUTROOT.source.kwlist.xml -r $OUTROOT.source.rttm -o $OUTROOT.sys1.stdlist.xml -m 0.2 -f 0.2
+    $KWSLISTGEN -t $OUTROOT.source.kwlist.xml -r $OUTROOT.source.rttm -o $OUTROOT.sys2.stdlist.xml -m 0.1 -f 0.1
     echo ""
 
     echo "Validating random systems"
-    $KWSVALIDATE -t $BABELDATA-Demo/$language.source.tlist.xml -e $BABELDATA-Demo/$language.source.ecf.xml -s $BABELDATA-Demo/$language.sys1.stdlist.xml
-    $KWSVALIDATE -t $BABELDATA-Demo/$language.source.tlist.xml -e $BABELDATA-Demo/$language.source.ecf.xml -s $BABELDATA-Demo/$language.sys2.stdlist.xml
+    $KWSVALIDATE -t $BABELDATA-Demo/$language.source.kwlist.xml -e $BABELDATA-Demo/$language.source.ecf.xml -s $BABELDATA-Demo/$language.sys1.stdlist.xml
+    $KWSVALIDATE -t $BABELDATA-Demo/$language.source.kwlist.xml -e $BABELDATA-Demo/$language.source.ecf.xml -s $BABELDATA-Demo/$language.sys2.stdlist.xml
     echo ""
 
     echo "Add N-Gram annotations to the Term list file"
-    $TLISTADDNGRAM -i $OUTROOT.source.tlist.xml -o $OUTROOT.source.tlist.annot.xml -n
+    $TLISTADDNGRAM -i $OUTROOT.source.kwlist.xml -o $OUTROOT.source.kwlist.annot.xml -n
     for sys in sys1 sys2 ; do
 	echo ""
 	echo "Compute occurrence reports for $sys"
@@ -176,7 +176,7 @@ for langID in 101 104 105 106 english ; do
 	    -I "Demo system $sys" \
 	    -e $OUTROOT.source.ecf.xml \
 	    -r $OUTROOT.source.rttm \
-	    -t $OUTROOT.source.tlist.annot.xml \
+	    -t $OUTROOT.source.kwlist.annot.xml \
 	    -s $OUTROOT.$sys.stdlist.xml \
 	    -c \
 	    -o \
@@ -197,7 +197,7 @@ for langID in 101 104 105 106 english ; do
 	    -I "Demo system $sys" \
 	    -e $OUTROOT.source.ecf.xml \
 	    -r $OUTROOT.source.rttm \
-	    -t $OUTROOT.source.tlist.annot.xml \
+	    -t $OUTROOT.source.kwlist.annot.xml \
 	    -s $OUTROOT.$sys.stdlist.xml \
 	    -c \
 	    -o \

@@ -28,7 +28,7 @@
 #use Carp qw(cluck);
 #$SIG{__WARN__} = sub { cluck "Warning:\n", @_, "\n";  die; };
 
-# Test: perl KWSEval.pl -e ../test_suite/test2.ecf.xml -r ../test_suite/test2.rttm -s ../test_suite/test2.stdlist.xml -t ../test_suite/test2.tlist.xml -o -A
+# Test: perl KWSEval.pl -e ../test_suite/test2.ecf.xml -r ../test_suite/test2.rttm -s ../test_suite/test2.stdlist.xml -t ../test_suite/test2.kwlist.xml -o -A
 
 use strict;
 use Encode;

@@ -99,7 +99,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 # Options processing
 
 my $ecf_ext = '.ecf.xml';
-my $tlist_ext = '.tlist.xml';
+my $tlist_ext = '.kwlist.xml';
 
 my $rttm_ext = ".rttm";
 
