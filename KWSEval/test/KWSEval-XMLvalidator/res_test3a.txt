@@ -1,7 +1,7 @@
-[[COMMANDLINE]] ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -t ../common/test2.tlist.xml ../common/test3.tlist.xml ../common/test4.cantonese.tlist.xml ../common/test5.tlist.xml ../common/test6.tlist.xml -w
+[[COMMANDLINE]] ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -t ../common/test2.kwlist.xml ../common/test3.kwlist.xml ../common/test4.cantonese.kwlist.xml ../common/test5.kwlist.xml ../common/test6.kwlist.xml -w
 [[RETURN CODE]] 0
 [[STDOUT]]
-../common/test2.tlist.xml: validates
+../common/test2.kwlist.xml: validates
 <kwlist ecf_filename="test2.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="20060511-0900">
   <kw kwid="TEST-01">
     <kwtext>vatican</kwtext>
@@ -274,7 +274,7 @@
     </kwinfo>
   </kw>
 </kwlist>
-../common/test3.tlist.xml: validates
+../common/test3.kwlist.xml: validates
 <kwlist ecf_filename="test3.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="20060511-0900">
   <kw kwid="TERM-001">
     <kwtext>visit</kwtext>
@@ -295,7 +295,7 @@
     </kwinfo>
   </kw>
 </kwlist>
-../common/test4.cantonese.tlist.xml: validates
+../common/test4.cantonese.kwlist.xml: validates
 <kwlist ecf_filename="Demo.cantonese.source.tlist.xml" language="cantonese" encoding="UTF-8" compareNormalize="" version="20060511-0900">
   <kw kwid="TEST-00">
     <kwtext>å</kwtext>
@@ -568,7 +568,7 @@
     </kwinfo>
   </kw>
 </kwlist>
-../common/test5.tlist.xml: validates
+../common/test5.kwlist.xml: validates
 <kwlist ecf_filename="test5.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="01">
   <kw kwid="TERM-01">
     <kwtext>yes</kwtext>
@@ -735,7 +735,7 @@
     </kwinfo>
   </kw>
 </kwlist>
-../common/test6.tlist.xml: validates
+../common/test6.kwlist.xml: validates
 <kwlist ecf_filename="test5.ecf.xml" language="english" encoding="UTF-8" compareNormalize="lowercase" version="01">
   <kw kwid="TERM-01">
     <kwtext>yes</kwtext>

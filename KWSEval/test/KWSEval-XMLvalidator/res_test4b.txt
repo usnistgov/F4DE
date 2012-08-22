@@ -1,17 +1,17 @@
-[[COMMANDLINE]] ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -t ../common/test5.tlist.xml -w __test4b_1 -W && ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -t __test4b_1/test5.tlist.xml.memdump -w __test4b_2 -W && diff -s __test4b_1/test5.tlist.xml.memdump __test4b_2/test5.tlist.xml.memdump
+[[COMMANDLINE]] ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -t ../common/test5.kwlist.xml -w __test4b_1 -W && ../../tools/KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl -t __test4b_1/test5.kwlist.xml.memdump -w __test4b_2 -W && diff -s __test4b_1/test5.kwlist.xml.memdump __test4b_2/test5.kwlist.xml.memdump
 [[RETURN CODE]] 0
 [[STDOUT]]
-../common/test5.tlist.xml: validates
-Wrote: __test4b_1/test5.tlist.xml
-Wrote: __test4b_1/test5.tlist.xml.memdump
+../common/test5.kwlist.xml: validates
+Wrote: __test4b_1/test5.kwlist.xml
+Wrote: __test4b_1/test5.kwlist.xml.memdump
 All files processed (Validated: 1 | Total: 1)
 
-__test4b_1/test5.tlist.xml.memdump: validates
-Wrote: __test4b_2/test5.tlist.xml
-Wrote: __test4b_2/test5.tlist.xml.memdump
+__test4b_1/test5.kwlist.xml.memdump: validates
+Wrote: __test4b_2/test5.kwlist.xml
+Wrote: __test4b_2/test5.kwlist.xml.memdump
 All files processed (Validated: 1 | Total: 1)
 
-Files __test4b_1/test5.tlist.xml.memdump and __test4b_2/test5.tlist.xml.memdump are identical
+Files __test4b_1/test5.kwlist.xml.memdump and __test4b_2/test5.kwlist.xml.memdump are identical
 
 [[STDERR]]
 
