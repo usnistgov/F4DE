@@ -131,10 +131,10 @@ sub calcTotalDur
 	$TEND = $sortedExs[$j]->{TBEG} if ($sortedExs[$j]->{TBEG} < $TEND);
       }
       my $dur = ($TEND - $sortedExs[$i]->{TBEG});
-      $TotDur += $dur;
+      $TotDur += $dur * ($sortedExs[$i]->{SOURCE_TYPE} eq "splitcts" ? 0.5 : 1)
     }
   }
-  return $TotDur;
+  return ($TotDur);
 }
 
 sub unitTest
@@ -148,8 +148,8 @@ sub unitTest
     }
 
     print "Test ECF\n";
-    
-    print " Loading File...          ";
+
+    print " Loading File ($file1)...          ";
     my $ecf = new KWSecf($file1);
     print "OK\n";
     
@@ -222,16 +222,30 @@ sub unitTest
     }
 
     print " Calculating total duration(1)... ";
-    if (abs($ecf->calcTotalDur - 7997.148) <= .0005) { print "OK\n"; }
+    my ($dur) = $ecf->calcTotalDur();
+    if (abs($dur - 8997.148) <= .0005) { print "OK\n"; }
     else { print "FAILED!\n"; return 0; }
 
     print " Calculating total duration(2)... ";
-    if (abs($ecf->calcTotalDur(["bnews"]) - 3570.363) <= .0005) { print "OK\n"; }
+    ($dur) = $ecf->calcTotalDur(["bnews"]);
+    if (abs($dur - 3570.363) <= .0005) { print "OK\n"; }
     else { print "FAILED!\n"; return 0; }
 
     print " Calculating total duration(3)... ";
-    if (abs($ecf->calcTotalDur([], ["^.*_ARB_.*\/[12]", "ar_4489_exA\/[12]"]) - 3870.853) <= .0005) { print "OK\n"; }
+    ($dur) = $ecf->calcTotalDur([], ["^.*_ARB_.*\/[12]", "ar_4489_exA\/[12]"]);
+    if (abs($dur - 3870.853) <= .0005) { print "OK\n"; }
     else { print "FAILED!\n"; return 0; }
+
+    print " Calculating total duration(4)... ";
+    ($dur) = $ecf->calcTotalDur(["cts"]);
+    if (abs($dur - 4426.785) <= .0005) { print "OK\n"; }
+    else { print "FAILED!\n"; return 0; }
+
+    print " Calculating total duration(5)... ";
+    ($dur) = $ecf->calcTotalDur(["splitcts"]);
+    if (abs($dur - 1000.000) <= .0005) { print "OK\n"; }
+    else { print "FAILED!\n"; return 0; }
+
 
     print "All tests OK\n";
     return 1;

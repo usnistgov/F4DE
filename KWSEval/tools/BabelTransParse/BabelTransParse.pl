@@ -225,7 +225,7 @@ foreach my $trans(sort keys %$db){
     "channel=\"1\" ".
     "tbeg=\"".$db->{$trans}{bt}."\" ".
     "dur=\"".$db->{$trans}{et}."\" ".
-    "source_type=\"cts\"/>\n";
+    "source_type=\"splitcts\"/>\n";
   ### Interate over the segments
   my $spkr = 1;
   for (my $seg=0; $seg < @{ $db->{$trans}{transcript} }; $seg++){

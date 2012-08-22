@@ -31,6 +31,8 @@
   <excerpt audio_filename="audio/eval03/arabicic/cts/ar_7060_exA.sph" channel="2" tbeg="0.000" dur="306.490" source_type="cts"/>
   <excerpt audio_filename="audio/eval03/arabicic/cts/ar_7068_exA.sph" channel="1" tbeg="0.000" dur="304.805" source_type="cts"/>
   <excerpt audio_filename="audio/eval03/arabicic/cts/ar_7068_exA.sph" channel="2" tbeg="0.000" dur="304.805" source_type="cts"/>
+  <excerpt audio_filename="audio/eval03/arabicic/cts/ar_7068_exA_inLine.sph" channel="1" tbeg="0.000" dur="1000.000" source_type="splitcts"/>
+  <excerpt audio_filename="audio/eval03/arabicic/cts/ar_7068_exA_outLine.sph" channel="1" tbeg="0.000" dur="1000.000" source_type="splitcts"/>
 </ecf>
 ../common/test2.ecf.xml: validates
 <ecf source_signal_duration="28575.908" language="english" version="">
