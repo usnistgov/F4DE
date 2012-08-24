@@ -364,6 +364,7 @@ else
   $alignment->setFilterData(\%filterTypeArray, \%filterTermArray, \@arraycmdline, \@Queries);
 
 #Setup filters
+  push (@filters, \&KWSAlignment::belongsInECF);
   push (@filters, \&KWSAlignment::filterByFileChan) if (@arraycmdline > 0);
 
   $groupBySubroutine = \&KWSAlignment::groupByECFSourceType if ($groupBySrcType == 1);
