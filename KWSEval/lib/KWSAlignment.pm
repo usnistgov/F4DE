@@ -56,16 +56,16 @@ sub new
   $self->{FILECHANS} = undef; #@ of 'file/chan's allowed in the conditional report
   ##
 
-  #Create index of terms by file/channel
-  foreach my $termid (sort keys %{ $self->{KWSLIST}{TERMS} }) {
-    foreach my $term (@{ $self->{KWSLIST}{TERMS}{$termid}{TERMS} }) {
-      push (@{ $self->{TERMLKUP}{$termid}{$term->{FILE}}{$term->{CHAN}} }, $term);
-    }
-  }
-
   #Add ecf segments to QuickECF lookup
   foreach my $ecfexcerpt (@{ $self->{ECF}{EXCERPT} }) {
     push (@{ $self->{QUICKECF}{$ecfexcerpt->{FILE}}{$ecfexcerpt->{CHANNEL}} }, $ecfexcerpt);
+  }
+
+  #Create index of terms by file/channel
+  foreach my $termid (sort keys %{ $self->{KWSLIST}{TERMS} }) {
+    foreach my $term (@{ $self->{KWSLIST}{TERMS}{$termid}{TERMS} }) {
+      push (@{ $self->{TERMLKUP}{$termid}{$term->{FILE}}{$term->{CHAN}} }, $term) if (KWSAlignment::belongsInECF($self, $term) == 1);
+    }
   }
 
   bless $self;
@@ -122,7 +122,7 @@ sub alignTerms
 	  }
 	  $syss{$sys} = $sys;
 	}
-
+	
 	my @kparams = ( $epsilonTime, $epsilonScore, $sthreshold );
 	my $biMatch = new BipartiteMatch(\%refs, \%syss, \&_bipartiteKernel, \@kparams);
 	$biMatch->compute();
@@ -268,8 +268,10 @@ sub alignTerms
 	  }
 
 	  $qtrials{$group} = new TrialsTWV({ ("TotDur" => $grpTotDur, "TrialsPerSecond" => $trialsPerSec, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg) }) if (not defined $qtrials{$group});
-	  $qtrials{$group}->addEmptyBlock($termid);
-	  $qtrials{$group}->addBlockMetaData($termid, \%blockMetaData);
+	  if (not defined $qtrials{$group}->{"trials"}{$termid}) {
+	    $qtrials{$group}->addEmptyBlock($termid);
+	    $qtrials{$group}->addBlockMetaData($termid, \%blockMetaData);
+	  }
 	}
       }
     }

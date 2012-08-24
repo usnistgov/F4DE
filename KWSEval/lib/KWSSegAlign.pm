@@ -54,10 +54,8 @@ sub new
   ##
 
   #Create index of terms by file/channel
-  foreach my $termid (sort keys %{ $self->{KWSLIST}{TERMS} })
-  {
-    foreach my $term (@{ $self->{KWSLIST}{TERMS}{$termid}{TERMS} })
-    {
+  foreach my $termid (sort keys %{ $self->{KWSLIST}{TERMS} }) {
+    foreach my $term (@{ $self->{KWSLIST}{TERMS}{$termid}{TERMS} }) {
       push (@{ $self->{TERMLKUP}{$termid}{$term->{FILE}}{$term->{CHAN}} }, $term);
     }
   }
@@ -105,6 +103,7 @@ sub alignSegments
       $grouptcounts{$group} = $self->_countECFGroupSegments($group, \@fsegments); }
     else { $grouptcounts{$group} = scalar(@fsegments); }
   }
+
   my $trials = new TrialsDiscreteTWV({ ( "TotTrials" => scalar(@fsegments), "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg ) });
   my $detset = new DETCurveSet();
 
@@ -197,8 +196,10 @@ sub alignSegments
 	  my $totTrials = scalar(@fsegments);
 	  $totTrials = $grouptcounts{$group} if (defined $grouptcounts{$group});
 	  $qtrials{$group} = new TrialsDiscreteTWV({ ("TotTrials" => $totTrials, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg) }) if (not defined $qtrials{$group});
-	  $qtrials{$group}->addEmptyBlock($termid);
-	  $qtrials{$group}->addBlockMetaData($termid, \%blockMetaData);
+	  if (not defined $qtrials{$group}->{"trials"}{$termid}) {
+	    $qtrials{$group}->addEmptyBlock($termid);
+	    $qtrials{$group}->addBlockMetaData($termid, \%blockMetaData);
+	  }
 	}
       }
     }
