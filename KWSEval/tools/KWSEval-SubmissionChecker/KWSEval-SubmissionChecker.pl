@@ -516,16 +516,16 @@ sub check_ecf_tlist_pairs {
   my @tmp1 = keys %$recf;
   push @tmp1, keys %$rtlist;
   foreach my $k1 (sort (MMisc::make_array_of_unique_values(\@tmp1))) {
-    MMisc::error_quit("Can not find any ECF with <CORPUSID>: $k1")
+    MMisc::error_quit("While checking for matching ECF & KWlist pairs: can not find any ECF with <CORPUSID>: $k1")
       if (! exists $$recf{$k1});
-    MMisc::error_quit("Can not find any Termlist with <CORPUSID>: $k1")
+    MMisc::error_quit("While checking for matching ECF & KWlist pairs: can not find any KWlist with <CORPUSID>: $k1")
       if (! exists $$rtlist{$k1});
     my @tmp2 = keys %{$$recf{$k1}};
     push @tmp2, keys %{$$rtlist{$k1}};
     foreach my $k2 (sort (MMisc::make_array_of_unique_values(\@tmp2))) {
-      MMisc::error_quit("Can not find any ECF with <PARTITION>: $k2")
+      MMisc::error_quit("While checking for matching ECF & KWlist pairs: can not find any ECF with <PARTITION>: $k2")
         if (! exists $$recf{$k1}{$k2});
-      MMisc::error_quit("Can not find any Termlist with <PARTITION>: $k2")
+      MMisc::error_quit("While checking for matching ECF & KWlist pairs: can not find any KWlist with <PARTITION>: $k2")
         if (! exists $$rtlist{$k1}{$k2});
       my @a = ();
       push (@a, $rttm_ext) if (MMisc::safe_exists($rrttm, $k1, $k2));
