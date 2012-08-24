@@ -389,6 +389,7 @@ sub errFABlockCalc(){
   
 #  my $NTarg =  $self->{TRIALS}->getNumTarg($block);
 #  return (($NTarg > 0) ? ($nFa / ($self->{TRIALPARAMS}->{TotTrials} - $self->{TRIALS}->getNumTarg($block))) : undef);
+  return undef if ($self->{TRIALPARAMS}->{TotTrials} - $self->{TRIALS}->getNumTarg($block) == 0);
   return ($nFa / ($self->{TRIALPARAMS}->{TotTrials} - $self->{TRIALS}->getNumTarg($block)));
 }
 
