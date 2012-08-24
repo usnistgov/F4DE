@@ -40,7 +40,7 @@ to be available. The tool will be run from within this AAA directory,
 as the tool's databases will be created within the uncompressed
 directory structure. Once completed, go into the "AAA" directory
 
-% cd <DESTINATION_DIR>
+% cd <AAA_DESTINATION_DIR>
 % tar xvfj <AAARCHIVE_DOWNLOAD_DIR>/AAA-Linux.tar.bz2
 % cd AAA
 
@@ -68,13 +68,25 @@ prompts you with its usage content (the first line should start with
 -- APPENDIX
 ------------
 
+*** Proxy use ***
+
+If you need to use a proxy, after finishing the installation of 'aaagent',
+please edit the <AAA_DESTINATION_DIR>/AAA/config/AAconfiguration.txt
+and add/adapt the following lines to the "[configuration]" section of the file:
+
+ProxyServer = <proxy host name>:<port number>
+ProxyUserPassword = <user_name>:<password>
+
+
+
 *** User directory Python 2.7.3 installation ***
 
 - Install pythonbrew (follow instructions at: https://github.com/utahta/pythonbrew ) 
 
 - then install python 2.7.3:
 
-Only for OSX 10.5 (Lepopard): use homebrew (see: see: http://mxcl.github.com/homebrew/ )  to install 'sqlite3' and 'curl' (and symlink the "curl-config" file from its Cellar to homebrew's bin)
+Only for OSX 10.5 (Lepopard): use homebrew (see: see: http://mxcl.github.com/homebrew/ )
+to install 'sqlite3' and 'curl' (and symlink the "curl-config" file from its Cellar to homebrew's bin)
 
 % pythonbrew install 2.7.3
 
