@@ -53,6 +53,14 @@ $testr += &do_simple_test($tn, "(Handling terms with no targs: Segment, with -in
 $tn = "test5d";
 $testr += &do_simple_test($tn, "(Handling terms with no targs: Segment)", "$tool -g -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.kwlist.xml -o -b -f -", "res_$tn.txt");
 
+##
+$tn = "test6a";
+$testr += &do_simple_test($tn, "(Handle terms outside of ECF Segments: Occurence)", "$tool -e ../common/test5.short.ecf.xml -r ../common/test5.rttm -s ../common/test5.kwslist.xml -t ../common/test5.kwlist.xml -o -b -f -", "res_$tn.txt");
+
+##
+$tn = "test6b";
+$testr += &do_simple_test($tn, "(Handle terms outside of ECF Segments: Segment)", "$tool -g -e ../common/test5.short.ecf.xml -r ../common/test5.rttm -s ../common/test5.kwslist.xml -t ../common/test5.kwlist.xml -o -b -f -", "res_$tn.txt");
+
 #####
 
 my $elapsed = F4DE_TestCore::get_elapsedtime($t0);

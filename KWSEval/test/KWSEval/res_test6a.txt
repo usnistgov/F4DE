@@ -1,0 +1,52 @@
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test5.short.ecf.xml -r ../common/test5.rttm -s ../common/test5.kwslist.xml -t ../common/test5.kwlist.xml -o -b -f -
+[[RETURN CODE]] 0
+[[STDOUT]]
+Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |               50 |
+|      IncludeBlocksWithNoTargets |                0 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |               50 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+|              |                  Inputs                  |                               Actual Decision TWV Analysis                                |
+|    Title     |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   TWV    |  Dec. Tresh  |
+|--------------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
+|   Occurrence |          3 |      25 |        0 |     17 |        17 |          0 |     0 |       8 |   0.00000 |    0.367 |   0.6333 |       0.3450 |
+Block Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |               50 |
+|      IncludeBlocksWithNoTargets |                0 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |               50 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+                  |  MetaData  |                              Occurrence                               |
+                  |    Text    |  #Targ  |  #Corr  |  #FA  |  #Miss  |   TWV    |    PFA    |  PMISS   |
+------------------+------------+---------+---------+-------+---------+----------+-----------+----------+
+Keyword  TERM-01  |        yes |      10 |      10 |     0 |       0 |   1.0000 |   0.00000 |    0.000 |
+         TERM-02  |       sure |      10 |       5 |     0 |       5 |   0.5000 |   0.00000 |    0.500 |
+         TERM-03  |    why not |       5 |       2 |     0 |       3 |   0.4000 |   0.00000 |    0.600 |
+         TERM-04  |      hello |         |         |       |         |          |           |          |
+Summary  Totals   |            |      25 |      17 |     0 |       8 |          |           |          |
+         Means    |            |       8 |       6 |     0 |       3 |          |   0.00000 |    0.367 |
+         TWV      |            |         |         |       |         |   0.6333 |           |          |
+
+[[STDERR]]
+
