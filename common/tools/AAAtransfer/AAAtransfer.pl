@@ -223,8 +223,8 @@ sub vprint { return() if ($verb == 0); print join("", @_); }
 sub set_usage {
     my $tmp=<<EOF
 
-$0 [--help] [--verbose] --agent toolLocation [--toolVersion] --upload FileOrDir --email address [--email address [...]] [--subject "email subject"] [--body emailBodyContentFile] [--continous IntervalInSeconds]
-$0 [--help] [--verbose] --agent toolLocation [--toolVersion] --download DownloadToDir [--email address] [--continous IntervalInSeconds]
+$0 [--help] [--verbose [--verbose]] --agent toolLocation [--toolVersion] --upload FileOrDir --email address [--email address [...]] [--subject "email subject"] [--body emailBodyContentFile] [--continous IntervalInSeconds]
+$0 [--help] [--verbose [--verbose]] --agent toolLocation [--toolVersion] --download DownloadToDir [--email address] [--continous IntervalInSeconds]
 
 Using AAA agent:
 - 'Upload' file or directory content to given email address
