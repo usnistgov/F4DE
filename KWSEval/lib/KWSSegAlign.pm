@@ -69,6 +69,7 @@ sub alignSegments
   my ($self, $csvreportfile, $segmentFilters, $groupFilter, $threshhold, $KoefC, $KoefV, $probofterm, $listIsolineCoef, $pooled, $includeBlocksWNoTarg) = @_;
   open (CSVREPORT, ">$csvreportfile") if (defined $csvreportfile);
   binmode(CSVREPORT, $self->{RTTMLIST}->getPerlEncodingString()) if (defined $csvreportfile && $self->{RTTMLIST}->{ENCODING} ne "");
+  print CSVREPORT "file,channel,termid,term,ref_bt,ref_et,sys_bt,sys_et,sys_score,sys_decision,alignment\n" if (defined $csvreportfile);
 
   $includeBlocksWNoTarg = 0 if ($includeBlocksWNoTarg != 1);
 
@@ -108,9 +109,7 @@ sub alignSegments
   my $detset = new DETCurveSet();
 
   foreach my $segment (@fsegments) {
-    
-    print CSVREPORT $segment->{FILE} . "," . $segment->{CHAN} . "," . $segment->{TYPE} . "," . $segment->{BT} . "," . $segment->{ET} if (defined $csvreportfile);
-    
+        
     my @terms = values %{ $self->{TERMLIST}{TERMS} };
     foreach my $term (@terms) {
       my $trialBlock = $term->{TERMID};
@@ -132,22 +131,12 @@ sub alignSegments
 	  push (@crecords, $record);
 	}
       }
-      print CSVREPORT ",TermID:" . $term->{TERMID} if (($istarget || @crecords > 0) && defined $csvreportfile);
-
-      #List reference occurences in segment
-      if ($istarget) {
-	#Need rttm for normalization
-	my $termoccs = $segment->findTermsInSegment($self->{TERMLIST}{TERMS}{$term->{TERMID}}{TEXT}, $threshhold, $self->{RTTMLIST});
-	if (defined $csvreportfile) {
-	  for (my $i=0; $i<@{ $termoccs }; $i++) { print CSVREPORT "," . $termoccs->[$i][0]->{BT} . "," . $termoccs->[$i][-1]->{ET}; }
-	}
-      }
 
       if (@crecords > 0) {
 	#If multiple records contained in segment we take the one with the highest score.
 	my $dominantrec = (sort {$b->{SCORE} <=> $a->{SCORE}} @crecords)[0];
-
-	print CSVREPORT "," . $dominantrec->{BT} . "," . $dominantrec->{ET} . "," . $dominantrec->{SCORE} . "," . $dominantrec->{DECISION} if (defined $csvreportfile);
+	my $align_result = $istarget ? "CORR" : $dominantrec->{DECISION} =~ /yes/i ? "FA" : "CORR!DET";
+	print CSVREPORT $self->{TERMLIST}{LANGUAGE} . "," . $segment->{FILE} . "," . $segment->{CHAN} . "," . $term->{TERMID} . "," . $term->{TEXT} . "," . $segment->{BT} . "," . $segment->{ET} . "," . $dominantrec->{BT} . "," . $dominantrec->{ET} . "," . $dominantrec->{SCORE} . "," . $dominantrec->{DECISION} . "," . $align_result . "\n" if (defined $csvreportfile);
 
 	#Add trial for occurence report
 	$trials->addTrial($trialBlock, $dominantrec->{SCORE}, $dominantrec->{DECISION}, $istarget, \%blockMetaData);
@@ -164,6 +153,8 @@ sub alignSegments
       elsif ($istarget) {
 	$trials->addTrial($trialBlock, undef, "OMITTED", $istarget, \%blockMetaData);
 
+	print CSVREPORT $self->{TERMLIST}{LANGUAGE} . "," . $segment->{FILE} . "," . $segment->{CHAN} . "," . $term->{TERMID} . "," . $term->{TEXT} . "," . $segment->{BT} . "," . $segment->{ET} . "," . "," .  ","  . ","  . "," . "MISS\n" if (defined $csvreportfile);
+
 	next if (not defined $groupFilter);
 	foreach my $group (@{ &{ $groupFilter }($self, $segment, $term) }) {
 	  my $totTrials = scalar(@fsegments);
@@ -173,7 +164,6 @@ sub alignSegments
 	}
       }
     }
-    print CSVREPORT "\n" if (defined $csvreportfile);
   }
 
 #####
