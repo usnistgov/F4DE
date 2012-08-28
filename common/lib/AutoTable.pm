@@ -540,6 +540,7 @@ sub renderHTMLTable(){
     for (my $node=0; $node<@nodeSet; $node++) {
       my $lid = &__getLID($rowIDs[$row], $nodeSet[$node]{subs}[0]);
       my $str = defined($self->{data}{$lid}) ? $self->{data}{$lid} : "&nbsp;";
+      $str = "&nbsp;" if (MMisc::is_blank($str));
       my ($h1, $h2) = ("", "");
 #      print "[$lid]\n";
       ($h1, $h2) = &__process_special($ok_specials[0], $self->{special}{$lid}) 
