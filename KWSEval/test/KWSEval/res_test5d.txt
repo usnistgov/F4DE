@@ -1,6 +1,12 @@
 [[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -g -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.kwslist.xml -t ../common/test7.kwlist.xml -o -b -f -
 [[RETURN CODE]] 0
 [[STDOUT]]
+Loading ECF ../common/test7.ecf.xml
+Loading KWSList File ../common/test7.kwslist.xml
+Loading KWList File ../common/test7.kwlist.xml
+Loading RTTM File ../common/test7.rttm
+Performing Segment Alignment
+Computing requested DET curves and reports
 Summary Report: -
 |  Performance Summary Over and Ensemble of Subsets  |
 |                Key                |     Value      |

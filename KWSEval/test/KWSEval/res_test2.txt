@@ -1,6 +1,12 @@
 [[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -Y BN+CTS:BNEWS,CTS -O -B -y TXT -f -
 [[RETURN CODE]] 0
 [[STDOUT]]
+Loading ECF ../common/test6.ecf.xml
+Loading KWSList File ../common/test6.kwslist.xml
+Loading KWList File ../common/test6.kwlist.xml
+Loading RTTM File ../common/test6.rttm
+Performing Occurrence Alignment
+Computing requested DET curves and reports
 Conditional Summary Report: -
 |  Performance Summary Over and Ensemble of Subsets  |
 |               Key               |      Value       |

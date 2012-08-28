@@ -1,6 +1,12 @@
 [[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.kwlist.xml -o -b -O -B -Y CTS:cts -Y BNEWS:bnews -Y CONFMTG:confmtg -Y ALL:cts,bnews,confmtg -f -
 [[RETURN CODE]] 0
 [[STDOUT]]
+Loading ECF ../common/test2.ecf.xml
+Loading KWSList File ../common/test2.kwslist.xml
+Loading KWList File ../common/test2.kwlist.xml
+Loading RTTM File ../common/test2.rttm
+Performing Occurrence Alignment
+Computing requested DET curves and reports
 Summary Report: -
 |  Performance Summary Over and Ensemble of Subsets  |
 |               Key               |      Value       |
