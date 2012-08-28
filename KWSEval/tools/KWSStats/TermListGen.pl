@@ -34,6 +34,7 @@ my $normalization = "";
 my $outfilename = "";
 my $encoding = "";
 my $inTlist = "";
+my $idTextPrefix = "TERM-";
 
 GetOptions
 (
@@ -43,6 +44,7 @@ GetOptions
  'encoding=s' => \$encoding,
  'normalization=s' => \$normalization,
  'out-file-name=s' => \$outfilename,
+ 'idTextPrefix=s' => \$idTextPrefix,
 ) or MMisc::error_quit("Unknown option(s)\n");
 
 #Check required arguments
@@ -87,7 +89,7 @@ if ($inTlist ne "") {
 my $TermList = new TermList();
 my @aterms = keys %terms;
 for (my $t=0; $t<@aterms; $t++) {
-  my $termid = "TERM-" . sprintf("%04d", $t);
+  my $termid = $idTextPrefix . sprintf("%04d", $t+1);
   $TermList->{TERMS}{$termid} = new TermListRecord({ TERMID => $termid, TEXT => $aterms[$t]});
 #  $TermList->{TERMS}{$termid}{TERMID} = $termid;
 #  $TermList->{TERMS}{$termid}{TEXT} = $aterms[$t];
