@@ -111,6 +111,12 @@ sub SetSystemID
     $self->{SYSTEM_ID} = $sysid;
 }
 
+sub getSystemID
+{
+    my ($self) = @_;
+    return($self->{SYSTEM_ID});
+}
+
 ########################################
 
 sub loadXMLFile {
