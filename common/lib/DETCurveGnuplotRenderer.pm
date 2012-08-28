@@ -1308,10 +1308,10 @@ sub _getLineTitleString
 
   $title = "$metStr ";
   foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
-    $title .= sprintf(" $faStr=%.3f", $fa) if ($supVal eq "F");
-    $title .= sprintf(" $missStr=%.3f", $miss) if ($supVal eq "M");
-    $title .= sprintf(" Thr=%.3f", $thr) if ($supVal eq "T");
-    $title .= sprintf(" $combStr=%.3f", $comb) if ($supVal eq "C");
+    $title .= sprintf(" $faStr=".$det->{METRIC}->errFAPrintFormat(),     $fa) if ($supVal eq "F");
+    $title .= sprintf(" $missStr=".$det->{METRIC}->errMissPrintFormat(), $miss) if ($supVal eq "M");
+    $title .= sprintf(" Thr=".$det->{METRIC}->combPrintFormat(),         $thr) if ($supVal eq "T");
+    $title .= sprintf(" $combStr=".$det->{METRIC}->combPrintFormat(),    $comb) if ($supVal eq "C");
   }
   $title;        
 }
