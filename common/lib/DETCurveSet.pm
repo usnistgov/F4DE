@@ -637,12 +637,11 @@ sub _findVariableParams(){
 #Temporary backwards compatability sub
 sub renderAsTxt(){
   my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $csvfn) = @_;
-  $self->renderReport($csvfn, $buildCurves, $includeCounts, $DETOptions, "CSV") if (defined $csvfn);
-  return $self->renderReport($fileRoot, $buildCurves, $includeCounts, $DETOptions, "TXT");
+  return $self->renderReport($fileRoot, $buildCurves, $includeCounts, $DETOptions, "TXT", $csvfn);
 }
 
 sub renderReport(){
-  my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $renderType) = @_;
+  my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $renderType, $csvfn) = @_;
   #renderType = ("TXT" | "HTML" | "CSV"), default is "TXT"
   if (@{ $self->{DETList} } == 0) {
     return "Error: No DETs provided to produce a report from";
@@ -668,13 +667,13 @@ sub renderReport(){
 
   my $hat = $self->_buildHeaderTable($multiInfo->{COMBINED_DET_PNG});
 
+  MMisc::writeTo($csvfn, "", 1, 0, $at->renderCSV()) if (! MMisc::is_blank($csvfn));
+
   if ($renderType eq "HTML") {
     return($hat->renderHTMLTable("") . "<br><br>" . $at->renderHTMLTable(""));
-  }
-  elsif ($renderType eq "CSV") {
+  } elsif ($renderType eq "CSV") {
     return($at->renderCSV());
-  }
-  else {
+  } else {
     return($hat->renderTxtTable(2) . "\n\n" . $at->renderTxtTable(2));
   }
 }
