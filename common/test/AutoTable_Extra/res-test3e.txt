@@ -362,7 +362,7 @@
 </tr>
 <tr>
   <td  align="right" > 47 </td>  <!-- File: ../common/md.csv | Line: 000000000047 TrialID  --> 
-  <td  align="right" >  </td>  <!-- File: ../common/md.csv | Line: 000000000047 color  --> 
+  <td  align="right" > &nbsp; </td>  <!-- File: ../common/md.csv | Line: 000000000047 color  --> 
 </tr>
 <tr>
   <td  align="right" > 48 </td>  <!-- File: ../common/md.csv | Line: 000000000048 TrialID  --> 

@@ -350,7 +350,7 @@
   <td  align="right" > 47 </td>  <!-- christopher_____ TrialID  --> 
   <td  align="right" > christopher </td>  <!-- christopher_____ name  --> 
   <td  align="right" > 1995 </td>  <!-- christopher_____ year  --> 
-  <td  align="right" >  </td>  <!-- christopher_____ color  --> 
+  <td  align="right" > &nbsp; </td>  <!-- christopher_____ color  --> 
 </tr>
 <tr>
   <td  align="right" > 48 </td>  <!-- christopher_____blue TrialID  --> 

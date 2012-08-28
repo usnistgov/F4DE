@@ -458,7 +458,7 @@
   <td  align="right" > 47 </td>  <!-- 47 TrialID  --> 
   <td  align="right" > christopher </td>  <!-- 47 name  --> 
   <td  align="right" > 1995 </td>  <!-- 47 year  --> 
-  <td  align="right" >  </td>  <!-- 47 color  --> 
+  <td  align="right" > &nbsp; </td>  <!-- 47 color  --> 
 </tr>
 <tr>
   <td  align="right" > 48 </td>  <!-- 48 TrialID  --> 
