@@ -180,7 +180,7 @@ GetOptions
    'J|firstSetSize=i'            => \$firstSetSize,
    'L|secondSetSize=i'           => \$secondSetSize,
    'z|perf-at-fixed=s'           => \@perfAtFixedDefs,
-  );
+  ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n");
 
 ## Docs
 pod2usage(1) if $help;
