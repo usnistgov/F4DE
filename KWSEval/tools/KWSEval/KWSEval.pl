@@ -266,7 +266,7 @@ else {
 	# Use the list given on the command-line
 	foreach my $coefi ( split( /,/ , $OptionIsoline ) ) {
 		MMisc::error_quit("The coefficient for the iso-line if not a proper floating-point")
-      if( $coefi !~ /^\d+(\.\d+)?$/ );
+      if( $coefi !~ /^\d<+(\.\d+)?$/ );
 		push( @tmplistiso1, $coefi );
 	}
 }
@@ -304,26 +304,30 @@ my $ECF;
 my $STD;
 
 my $err;
-if($haveReports) {
-  $err = MMisc::check_file_r($ECFfile);
-  MMisc::error_quit("Problem with ECF File ($ECFfile): $err")
-    if (! MMisc::is_blank($err));
-  $ECF = new KWSecf($ECFfile);
 
-  $err = MMisc::check_file_r($STDfile);
-  MMisc::error_quit("Problem with STD File ($STDfile): $err")
-    if (! MMisc::is_blank($err));
-  $STD = new KWSList($STDfile);
-  $STD->SetSystemID($IDSystem) if (! MMisc::is_blank($IDSystem));
-}
+$err = MMisc::check_file_r($ECFfile);
+MMisc::error_quit("Problem with ECF File ($ECFfile): $err")
+  if (! MMisc::is_blank($err));
+print "Loading ECF $ECFfile\n";
+$ECF = new KWSecf($ECFfile);
+
+$err = MMisc::check_file_r($STDfile);
+MMisc::error_quit("Problem with STD File ($STDfile): $err")
+  if (! MMisc::is_blank($err));
+print "Loading KWSList File $STDfile\n";
+$STD = new KWSList($STDfile);
+$STD->SetSystemID($IDSystem) if (! MMisc::is_blank($IDSystem));
+
 $err = MMisc::check_file_r($TERMfile);
 MMisc::error_quit("Problem with TERM File ($TERMfile): $err")
   if (! MMisc::is_blank($err));
+print "Loading KWList File $TERMfile\n";
 my $TERM = new TermList($TERMfile);
 
 $err = MMisc::check_file_r($RTTMfile);
 MMisc::error_quit("Problem with RTTM File ($RTTMfile): $err")
   if (! MMisc::is_blank($err));
+print "Loading RTTM File $RTTMfile\n";
 my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), 
                         $TERM->getCompareNormalize(), $TERM->getEncoding());  
 
@@ -343,6 +347,7 @@ if ($requestalignCSV == 1) {
 if ($segmentbased != 0)
 {
 ###Segment based Alignment
+  print "Performing Segment Alignment\n";
   my $segAlignment = new KWSSegAlign($RTTM, $STD, $ECF, $TERM);
   $segAlignment->setFilterData(\%filterTypeArray, \%filterTermArray, \@arraycmdline, \@Queries);
 
@@ -360,6 +365,7 @@ if ($segmentbased != 0)
 else
 {
 ###Occurence based Alignment
+  print "Performing Occurrence Alignment\n";
   my $alignment = new KWSAlignment($RTTM, $STD, $ECF, $TERM);
   $alignment->setFilterData(\%filterTypeArray, \%filterTermArray, \@arraycmdline, \@Queries);
 
@@ -376,6 +382,7 @@ else
   @alignResults = @{ $alignment->alignTerms($alignmentCSV, \@filters, $groupBySubroutine, $thresholdFind, $thresholdAlign, $KoefC, $KoefV, \@listIsolineCoef, $trialsPerSec, $probOfTerm, $PooledTermDETs, $includeNoTargBlocks) };
 }
 
+print "Computing requested DET curves and reports\n";
 #Set dets
 my $detoptions = { ("Xmin" => .0001,
                     "Xmax" => 40,
@@ -387,6 +394,9 @@ my $detoptions = { ("Xmin" => .0001,
                     "yScare" => "nd",
                     "ColorScheme" => "color",
                     "createDETfiles" => 1,
+                    "DrawIsometriclines" => 1,
+                    "Isometriclines" => [ (0.3) ],
+                    "title" => $STD->getSystemID(),
                     "serialize" => 1 ) };
 
 $dset = $alignResults[0];
