@@ -297,7 +297,7 @@ sub unitTest {
   if (defined($dir)){
     my $ds = new DETCurveSet("MetricDiscreteTWV Tests");
     die "Error: Failed to add second det" if ("success" ne $ds->addDET("2 Blocks no targ", $det2));
-    print $ds->renderReport("$dir/DiscreteTWV.unitTest.test2.det", 1, 1, $options, "TXT");
+    print $ds->renderReport("$dir/DiscreteTWV.unitTest.test2.det", 1, 1, $options);
   }   
 
   print "    Checking to see of Excluding blocks without targets works...";
@@ -313,7 +313,7 @@ sub unitTest {
   if (defined($dir)){
     my $ds = new DETCurveSet("MetricDiscreteTWV Tests");
     die "Error: Failed to add third det" if ("success" ne $ds->addDET("2 blocks not targ but ignored", $det3));
-    print $ds->renderReport("$dir/DiscreteTWV.unitTest.test3.det", 1, 1, $options, "TXT");
+    print $ds->renderReport("$dir/DiscreteTWV.unitTest.test3.det", 1, 1, $options);
   }   
 
 }

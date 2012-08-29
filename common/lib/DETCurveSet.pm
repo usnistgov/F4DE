@@ -637,12 +637,13 @@ sub _findVariableParams(){
 #Temporary backwards compatability sub
 sub renderAsTxt(){
   my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $csvfn) = @_;
-  return $self->renderReport($fileRoot, $buildCurves, $includeCounts, $DETOptions, "TXT", $csvfn);
+  #return $self->renderReport($fileRoot, $buildCurves, $includeCounts, $DETOptions, "TXT", $csvfn);
+  return $self->renderReport($fileRoot, $buildCurves, $includeCounts, $DETOptions, undef, $csvfn);
 }
 
 sub renderReport(){
-  my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $renderType, $csvfn) = @_;
-  #renderType = ("TXT" | "HTML" | "CSV"), default is "TXT"
+  my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $txtfn, $csvfn, $htmlfn, $binmode) = @_;
+
   if (@{ $self->{DETList} } == 0) {
     return "Error: No DETs provided to produce a report from";
   }
@@ -662,20 +663,17 @@ sub renderReport(){
   
   my $at = $self->_buildAutoTable($buildCurves, $includeCounts, $reportActual, $DETOptions->{DETShowPoint_Ratios});
     
-  my $trial = $self->{DETList}[0]->{DET}->getTrials();
-  my $metric = $self->{DETList}[0]->{DET}->getMetric();
+#  my $trial = $self->{DETList}[0]->{DET}->getTrials();
+#  my $metric = $self->{DETList}[0]->{DET}->getMetric();
 
   my $hat = $self->_buildHeaderTable($multiInfo->{COMBINED_DET_PNG});
 
+  my $renderedTxt = $hat->renderTxtTable(2) . "\n\n" . $at->renderTxtTable(2);
   MMisc::writeTo($csvfn, "", 1, 0, $at->renderCSV()) if (! MMisc::is_blank($csvfn));
+  MMisc::writeTo($txtfn, "", 1, 0, $renderedTxt, undef, undef, undef, undef, undef, $binmode) if (! MMisc::is_blank($txtfn));
+  MMisc::writeTo($htmlfn, "", 1, 0, $hat->renderHTMLTable("") . "<br><br>" . $at->renderHTMLTable(""), undef, undef, undef, undef, undef, $binmode) if (! MMisc::is_blank($htmlfn));
 
-  if ($renderType eq "HTML") {
-    return($hat->renderHTMLTable("") . "<br><br>" . $at->renderHTMLTable(""));
-  } elsif ($renderType eq "CSV") {
-    return($at->renderCSV());
-  } else {
-    return($hat->renderTxtTable(2) . "\n\n" . $at->renderTxtTable(2));
-  }
+  return $renderedTxt;
 }
 
 sub renderCSV {
@@ -700,21 +698,16 @@ sub renderCSV {
 }     
 
 sub renderBlockedReport {
-  my ($self, $renderType, $includeCorrNonDetect) = @_;
-  #renderType = ("TEXT" | "HTML" | "CSV"), default is "TEXT"
+  my ($self, $includeCorrNonDetect, $txtfn, $csvfn, $htmlfn, $binmode) = @_;
 
   my $hat = $self->_buildHeaderTable();
   my $at = $self->_buildBlockedAutoTable($includeCorrNonDetect);
 
-  if ($renderType eq "HTML") {
-    return($hat->renderHTMLTable("") . "<br><br>" . $at->renderHTMLTable(""));
-  }
-  elsif ($renderType eq "CSV") {
-    return($at->renderCSV());
-  }
-  else {
-    return($hat->renderTxtTable(2) . "\n\n" . $at->renderTxtTable(2));
-  }
+  my $renderedTxt = $hat->renderTxtTable(2) . "\n\n" . $at->renderTxtTable(2);
+  MMisc::writeTo($csvfn, "", 1, 0, $at->renderCSV()) if (! MMisc::is_blank($csvfn));
+  MMisc::writeTo($txtfn, "", 1, 0, $renderedTxt, undef, undef, undef, undef, undef, $binmode) if (! MMisc::is_blank($txtfn));
+  MMisc::writeTo($htmlfn, "", 1, 0, $hat->renderHTMLTable("") . "<br><br>" . $at->renderHTMLTable(""), undef, undef, undef, undef, undef, $binmode) if (! MMisc::is_blank($htmlfn));
+  return $renderedTxt
 }
 
 #####

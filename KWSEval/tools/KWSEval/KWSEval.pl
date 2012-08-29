@@ -412,69 +412,59 @@ if ($requestDETCurve || $requestDETConditionalCurve) {
 }
 
 my $file;
-foreach my $reportOutType (@{ $reportOutTypes }) {
-  next if (! $reportOutType =~ /(TXT|CSV|HTML)/i);
-#Render summary reports
-  if ($requestSumReport) {
-    if ($fileRoot eq "-") { $file = "-"; }
-    else { $file = $fileRoot . "sum." . lc $reportOutType; }
+my $binmode = ($RTTM->{ENCODING} ne "") ? $RTTM->getPerlEncodingString() : undef;
+my %outTypes = map {  lc($_) => 1  } @$reportOutTypes;
 
-    print "Summary Report: " . $file . "\n";
-    open (SUMREPORT, ">$file");
-    #set binmode
-    if ($RTTM->{ENCODING} ne ""){
-      binmode(SUMREPORT, $RTTM->getPerlEncodingString());
-    }
-    my $detsPath = "";
-    if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/sum" }
-    else { $detsPath = "dets/sum"; }
-    print SUMREPORT $dset->renderReport($detsPath, $requestDETCurve, 1, $detoptions, $reportOutType);
-    close (SUMREPORT);
-  }
-  if ($requestBlockSumReport) {
-    if ($fileRoot eq "-") { $file = "-"; }
-    else { $file = $fileRoot . "bsum." . lc $reportOutType; }
-    
-    print "Block Summary Report: " . $file . "\n";
-    open (BSUMREPORT, ">$file");
-    #set binmode
-    if ($RTTM->{ENCODING} ne ""){
-      binmode(BSUMREPORT, $RTTM->getPerlEncodingString());
-    }
-    print BSUMREPORT $dset->renderBlockedReport($reportOutType, $segmentbased); #shows Corr!Det if segment based
-    close (BSUMREPORT);
-  }
+#Render summary reports
+if ($requestSumReport) {
+  if ($fileRoot eq "-") { $file = "-"; }
+  else { $file = $fileRoot . "sum"; }
   
+  print "Summary Report: " . $file . "\n";
+  
+  my $detsPath = "";
+  if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/sum" }
+  else { $detsPath = "dets/sum"; }
+  $dset->renderReport($detsPath, $requestDETCurve, 1, $detoptions, 
+		      ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
+		      ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
+		      ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode);
+}
+if ($requestBlockSumReport) {
+  if ($fileRoot eq "-") { $file = "-"; }
+  else { $file = $fileRoot . "bsum"; }
+  
+  print "Block Summary Report: " . $file . "\n";
+  
+  $dset->renderBlockedReport($segmentbased,
+			     ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
+			     ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
+			     ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode); #shows Corr!Det if segment based
+}
 #Render conditional summary reports
-  if ($requestCondSumReport) {
-    if ($fileRoot eq "-") { $file = "-"; }
-    else { $file = $fileRoot . "cond.sum." . lc $reportOutType; }
-    
-    print "Conditional Summary Report: " . $file . "\n";
-    open (QSUMREPORT, ">$file");
-    #set binmode
-    if ($RTTM->{ENCODING} ne ""){
-      binmode(QSUMREPORT, $RTTM->getPerlEncodingString());
-    }
-    my $detsPath = "";
-    if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/cond.sum" }
-    else { $detsPath = "dets/cond.sum"; }
-    print QSUMREPORT $qdset->renderReport($detsPath, $requestDETConditionalCurve, 1, $detoptions, $reportOutType);
-    close (QSUMREPORT);
-  }
-  if ($requestCondBlockSumReport) {
-    if ($fileRoot eq "-") { $file = "-"; }
-    else { $file = $fileRoot . "cond.bsum." . lc $reportOutType; }
-    
-    print "Conditional Block Summary Report: " . $file . "\n";
-    open (QBSUMREPORT, ">$file");
-    #set binmode
-    if ($RTTM->{ENCODING} ne ""){
-      binmode(QBSUMREPORT, $RTTM->getPerlEncodingString());
-    }
-    print QBSUMREPORT $qdset->renderBlockedReport($reportOutType, $segmentbased); #shows Corr!Det if segment based
-    close (QBSUMREPORT);
-  }
+if ($requestCondSumReport) {
+  if ($fileRoot eq "-") { $file = "-"; }
+  else { $file = $fileRoot . "cond.sum"; }
+  
+  print "Conditional Summary Report: " . $file . "\n";
+  my $detsPath = "";
+  if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/cond.sum" }
+  else { $detsPath = "dets/cond.sum"; }
+  $qdset->renderReport($detsPath, $requestDETConditionalCurve, 1, $detoptions,
+		      ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
+		      ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
+		      ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode);
+}
+if ($requestCondBlockSumReport) {
+  if ($fileRoot eq "-") { $file = "-"; }
+  else { $file = $fileRoot . "cond.bsum"; }
+  
+  print "Conditional Block Summary Report: " . $file . "\n";
+
+  $qdset->renderBlockedReport($segmentbased,
+			      ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
+			      ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
+			      ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode); #shows Corr!Det if segment based
 }
 ###
 
