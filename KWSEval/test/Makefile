@@ -7,6 +7,7 @@ install:
 	@echo "Nothing to do for install"
 
 check:
+	@(cd Pre; make $@)
 	@echo "* Running unit tests"
 	@(cd ../lib; perl -I. -I../../common/lib -e 'use RTTMList; use Encode; use encoding "euc-cn"; use encoding "utf8"; exit(1) if (! RTTMList::unitTest("../test/common/test1.rttm", "../test/common/test4.cantonese.rttm", "../test/common/test4.cantonese.kwlist.xml"));')
 	@(cd ../lib; perl -I. -I../../common/lib -e 'use KWSecf; exit(1) if (! KWSecf::unitTest("../test/common/test1.ecf.xml"));')
