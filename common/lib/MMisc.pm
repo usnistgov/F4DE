@@ -36,7 +36,7 @@ use POSIX;
 use Cwd qw(cwd abs_path);
 use Data::Dumper;
 use File::Find;
-use File::Temp qw(tempfile tempdir);
+use File::Temp qw(tempdir);
 use File::Copy;
 use List::Util qw(reduce);
 use Time::HiRes qw(gettimeofday tv_interval);
