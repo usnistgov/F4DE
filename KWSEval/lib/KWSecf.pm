@@ -361,7 +361,7 @@ sub loadXMLFile {
     }
 
     $self->{EVAL_SIGN_DUR} += sprintf("%.4f", $dur) 
-      if (! $self->{FILECHANTIME}{$purged_filename});
+      if (! MMisc::safe_exists(\%{$self->{FILECHANTIME}}, $purged_filename));
 
     push @{$self->{EXCERPT}}, new KWSecf_excerpt($audio_filename, $channel, $tbeg, $dur, $language, $source_type);
 
@@ -562,23 +562,20 @@ sub loadFile {
 
 ####################
 
-sub FilteringTime
-{
-    my($self, $file, $chan, $bt, $et) = @_;
-    
-    if($self->{FILECHANTIME}{$file}{$chan})
-    {
-        for(my $i=0; $i<@{ $self->{FILECHANTIME}{$file}{$chan} }; $i++)
-        {
-            if( ($bt >= $self->{FILECHANTIME}{$file}{$chan}[$i][0]) && ($et <= $self->{FILECHANTIME}{$file}{$chan}[$i][1]) )
-            {
-                return(1);
-            }
-        }
+sub FilteringTime {
+  my ($self, $file, $chan, $bt, $et) = @_;
+  
+  if (MMisc::safe_exists(\%{$self->{FILECHANTIME}}, $file, $chan)) {
+    for (my $i=0; $i < @{ $self->{FILECHANTIME}{$file}{$chan} }; $i++) {
+      return(1) if ( ($bt >= $self->{FILECHANTIME}{$file}{$chan}[$i][0]) 
+                     && ($et <= $self->{FILECHANTIME}{$file}{$chan}[$i][1]) )
     }
+  }
     
-    return(0);
+  return(0);
 }
+
+########################################
 
 1;
 
