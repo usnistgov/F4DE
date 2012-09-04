@@ -1,0 +1,10 @@
+<kwlist ecf_filename="Demo.cantonese.source.kwlist.xml" version="20060511-0900" language="cantonese" encoding="UTF-8" compareNormalize="">
+<kw kwid="TEST-00"><kwtext>听到</kwtext></kw>
+<kw kwid="TEST-01"><kwtext>到</kwtext></kw>
+<kw kwid="TEST-02"><kwtext>到-</kwtext></kw>
+<kw kwid="TEST-03"><kwtext>听</kwtext></kw>
+<kw kwid="TEST-04"><kwtext>to</kwtext></kw>
+<kw kwid="TEST-05"><kwtext>t</kwtext></kw>
+<kw kwid="TEST-06"><kwtext>t-</kwtext></kw>
+<kw kwid="TEST-07"><kwtext>o</kwtext></kw>
+</kwlist>
