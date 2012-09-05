@@ -57,6 +57,9 @@ sub new {
   my $language = shift;
   my $normalizationType = shift;
   my $encoding = shift;
+  my $charSplitText = shift;
+  my $charSplitTextNotASCII = shift;
+  my $charSplitTextDeleteHyphens = shift;
   
   my $self = TranscriptHolder->new();
   
@@ -66,6 +69,9 @@ sub new {
   $self->{LEXBYSPKR} = {};
   $self->{NOSCORE} = {};
   $self->{TERMLKUP} = {};
+  $self->{charSplitText} = $charSplitText;
+  $self->{charSplitTextNotASCII} = $charSplitTextNotASCII;
+  $self->{charSplitTextDeleteHyphens} = $charSplitTextDeleteHyphens;
 
   # For a quick file rewrite
   $self->{CoreText} = "";
@@ -126,7 +132,7 @@ sub unitTest
     print "Test RTTMList\n";
       
     print " Loading English File (lowerecase normalization)...          ";
-    my $rttm_eng_norm = new RTTMList($file1,"english","lowercase", "");
+    my $rttm_eng_norm = new RTTMList($file1,"english","lowercase", "", 0, 0, 0);
     print "OK\n";
 
     return 0 unless(unitTestFind($rttm_eng_norm, "Yates",        2,  0.1));
@@ -143,7 +149,7 @@ sub unitTest
     return 0 unless(unitTestFind($rttm_eng_norm, "jacques chirac", 2,  0.1));
 
     print " Loading English File (no normalization)...          \n";
-    my $rttm_eng_nonorm = new RTTMList($file1,"english","","");
+    my $rttm_eng_nonorm = new RTTMList($file1,"english","","", 0, 0, 0);
 
     return 0 unless(unitTestFind($rttm_eng_nonorm, "Yates",        2, 0.1));
     return 0 unless(unitTestFind($rttm_eng_nonorm, "yates",        0, 0.1));
@@ -160,9 +166,9 @@ sub unitTest
     return 0 unless(unitTestFind($rttm_eng_norm, "word1 word2",       3, 0.5));
     return 0 unless(unitTestFind($rttm_eng_norm, "word1 word2 word3", 2, 0.5));
     
-    my $tlist = new TermList($file2tlist);
+    my $tlist = new TermList($file2tlist, 0, 0, 0);
     print "Loading Cantonese File (no normalization)...          \n";
-    my $rttm_cant = new RTTMList($file2, $tlist->getLanguage(), $tlist->getCompareNormalize(), $tlist->getEncoding());
+    my $rttm_cant = new RTTMList($file2, $tlist->getLanguage(), $tlist->getCompareNormalize(), $tlist->getEncoding(), 0, 0, 0);
 
     return 0 unless(unitTestFind($rttm_cant, $tlist->{TERMS}{"TEST-00"}{TEXT}, 4, 0.5));
     return 0 unless(unitTestFind($rttm_cant, $tlist->{TERMS}{"TEST-07"}{TEXT}, 1, 0.5));
@@ -293,6 +299,16 @@ sub findTermHashToArray
   return \@outlist;
 }
 
+sub dumper
+{  
+  my ($self) = @_;
+  my $save = $Data::Dumper::Maxdepth;
+  $Data::Dumper::Maxdepth = 10;
+  my $str = Dumper($self);  
+  $Data::Dumper::Maxdepth = $save;
+  return $str;
+}
+
 sub toString
 {
     my ($self) = @_;
@@ -372,15 +388,27 @@ sub loadSSVFile {
     my ($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf) = @rest;
 
     if (uc($type) eq "LEXEME") {
-      my $record = new RTTMRecord($type, $file, $chan, $bt, $dur, $text, $stype, $spkr, $conf);
-      push (@{ $self->{LEXEMES}{$file}{$chan} }, $record);
-      #Add record to lexeme by speaker table
-      push (@{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }, $record);
-      if ($stype ne "frag" && $stype ne "fp") {
-        #Add record to term lookup table
-        my $tok = $record->{TOKEN};
-        $tok = $self->normalizeTerm($tok);
-        push(@{ $self->{TERMLKUP}{$tok} }, $record);
+      if ($self->{charSplitText}){
+        $text = $self->charSplitText($text, $self->{charSplitTextNotASCII}, $self->{charSplitTextDeleteHyphens});
+      }
+      my @textTokens = split(/\s/, $text);
+      my $initBt = $bt; 
+      my $initDur = $dur;
+      for (my $tok=0; $tok<@textTokens; $tok++){
+        if (@textTokens > 1){
+          $dur = sprintf("%.3f",($initDur / @textTokens));
+          $bt = sprintf("%.3f",$initBt + $dur * $tok)
+        }
+        my $record = new RTTMRecord($type, $file, $chan, $bt, $dur, $textTokens[$tok], $stype, $spkr, $conf);
+        push (@{ $self->{LEXEMES}{$file}{$chan} }, $record);
+        #Add record to lexeme by speaker table
+        push (@{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr} }, $record);
+        if ($stype ne "frag" && $stype ne "fp") {
+          #Add record to term lookup table
+          my $tok = $record->{TOKEN};
+          $tok = $self->normalizeTerm($tok);
+          push(@{ $self->{TERMLKUP}{$tok} }, $record);
+        }
       }
     } elsif (uc($type) eq "SPEAKER") {
       push (@{ $self->{SPEAKERS}{$file}{$chan} }, new RTTMRecord($type, $file, $chan, $bt, $dur, undef, undef, $spkr, $conf) );

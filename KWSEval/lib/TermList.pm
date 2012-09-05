@@ -53,13 +53,19 @@ use MtXML;
 sub new {
   my $class = shift;
   my $termlistfile = shift;
-  
+  my $charSplitText = shift;
+  my $charSplitTextNotASCII = shift;
+  my $charSplitTextDeleteHyphens = shift;
+
   my $self = TranscriptHolder->new();
   
   $self->{TERMLIST_FILENAME} = $termlistfile;
   $self->{ECF_FILENAME} = "";
   $self->{VERSION} = "";
   $self->{TERMS} = {};
+  $self->{charSplitText} = $charSplitText;
+  $self->{charSplitTextNotASCII} = $charSplitTextNotASCII;
+  $self->{charSplitTextDeleteHyphens} = $charSplitTextDeleteHyphens;
 
   $self->{LoadedFile} = 0;
   
@@ -311,7 +317,8 @@ sub loadXMLFile {
     ($err, my $termtext, my %ti_attr) = &process_term_content($insection, $dem);
     return($err) if (! MMisc::is_blank($err));
     
-    $attrib{TEXT} = $termtext;
+    $attrib{TEXT} = (!$self->{charSplitText} ? $termtext : $self->charSplitText($termtext, $self->{charSplitTextNotASCII}, $self->{charSplitTextDeleteHyphens}));
+    
     foreach my $name (keys %ti_attr) {
       $attrib{$name} = ($name eq 'Syllables') ? sprintf("%02d", $ti_attr{$name}) : $ti_attr{$name};
     }

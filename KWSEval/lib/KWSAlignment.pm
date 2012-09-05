@@ -466,10 +466,10 @@ sub unitTest
 
   print "Loading Files..\n";
   print "Loading TermList...\t";
-  my $tlist = new TermList($termlistfile);
+  my $tlist = new TermList($termlistfile, 0, 0, 0);
   print "OK\n";
   print "Loading RTTMList...\t";
-  my $rttm = new RTTMList($rttmfile, $tlist->getLanguage(), $tlist->getCompareNormalize(), $tlist->getEncoding());
+  my $rttm = new RTTMList($rttmfile, $tlist->getLanguage(), $tlist->getCompareNormalize(), $tlist->getEncoding(), 0, 0, 0);
   print "OK\n";
   print "Loading KWSList...\t";
   my $kws = new KWSList($kwsfile);

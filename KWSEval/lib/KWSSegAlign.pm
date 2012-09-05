@@ -87,6 +87,7 @@ sub alignSegments
   }
   
   MMisc::error_quit("Segment filter yielded no segments for inferred segmentation alignment.  Aborting.")  if(@segments <= 0);
+#  print "Segments found: ".scalar(@segments)."\n";
   
     #Initialize trials
   my %qtrials = (); #Conditional trials
@@ -327,10 +328,10 @@ sub unitTest
 
   print "  Loading Files..\n";
   print "Loading TermList...\t";
-  my $termlist = new TermList($termlistfile);
+  my $termlist = new TermList($termlistfile, 0, 0, 0);
   print "OK\n";
   print "Loading RTTMList...\t";
-  my $rttmlist = new RTTMList($rttmfile, $termlist->getLanguage(), $termlist->getCompareNormalize(), $termlist->getEncoding());
+  my $rttmlist = new RTTMList($rttmfile, $termlist->getLanguage(), $termlist->getCompareNormalize(), $termlist->getEncoding(), 0, 0, 0);
   print "OK\n";
   print "Loading KWSList...\t";
   my $kwslist = new KWSList($kwsfile);
