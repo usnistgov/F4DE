@@ -670,7 +670,7 @@ sub segmentsFromTimeframe
       if ($lex->{BT} >= $spkrBT && $lex->{ET} <= $spkrET)
       {
 	#LOWERCASING
-	push (@{ $spkrrecs{$speaker->{SPKR}}{lc $lex->{TOKEN}} }, $lex);
+	push (@{ $spkrrecs{$speaker->{SPKR}}{$lex->{TOKEN}}}, $lex);
       }
     }
     if (scalar(@outlist) > 0 && $outlist[-1]->{ET} > $speaker->{BT})
@@ -742,7 +742,7 @@ sub getAllSegments()
 	  if ($lex->{BT} >= $spkrBT && $lex->{ET} <= $spkrET)
 	  {
 	    #LOWERCASING
-	    push (@{ $spkrrecs{$speaker->{SPKR}}{lc $lex->{TOKEN}} }, $lex);
+	    push (@{ $spkrrecs{$speaker->{SPKR}}{$lex->{TOKEN}}}, $lex);
 	  }
 	}
 	if (scalar(@outlist) > 0 && $outlist[-1]->{ET} > $speaker->{BT}

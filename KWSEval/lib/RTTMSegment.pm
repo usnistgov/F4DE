@@ -50,7 +50,8 @@ sub findTermsInSegment
   $term =~ s/\s*$//;
   #Need rttm for normalization
   if (defined $rttm) { $term = $rttm->normalizeTerm($term); }
-  else { $term = lc $term; }
+  else { $term = lc $term;}
+
   my @terms = split(/\s+/, $term);
   #Currently no order to returned matches
   foreach my $spkr (sort keys %{ $self->{SPKRRECS} })
