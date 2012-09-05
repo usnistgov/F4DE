@@ -200,10 +200,6 @@ open (RTTM, ">$root.rttm") || die "Failed to open $root.rttm";
 binmode(RTTM, "utf8") if ($encoding eq "UTF-8");
 print "   Building file $root.rttm\n";
 
-open (CHARRTTM, ">$root.charsplit.rttm") || die "Failed to open $root.charsplit.rttm";
-binmode(CHARRTTM, "utf8") if ($encoding eq "UTF-8");
-print "   Building file $root.charsplit.rttm\n";
-
 open (SYSRTTM, ">$root.sys.rttm") || die "Failed to open $root.sys.rttm";
 binmode(SYSRTTM, "utf8") if ($encoding eq "UTF-8");
 print "   Building file $root.sys.rttm\n";
@@ -234,7 +230,6 @@ foreach my $trans(sort keys %$db){
     my $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt});
     my $et = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{et});
     print RTTM "SPEAKER $outTransName 1 $bt $dur <NA> <NA> spkr1 <NA>\n";
-    print CHARRTTM "SPEAKER $outTransName 1 $bt $dur <NA> <NA> spkr1 <NA>\n";
     print SYSRTTM "SPEAKER $outTransName 1 $bt $dur <NA> <NA> spkr1 <NA>\n";
     my @toks = split(/\s+/,$db->{$trans}{transcript}[$seg]{text});
     my $lastToken = undef;
@@ -281,17 +276,6 @@ foreach my $trans(sort keys %$db){
       $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt} + ($dur * $t));
  
       print RTTM "$type $outTransName 1 $bt $dur $token $stype spkr1 0.5\n";
-      if ($type eq "LEXEME" && $stype eq "lex"){
-        ### Subdivide the characters
-        my @cs = split("",  $token);
-        my $newDur = sprintf("%.3f",($dur / @cs));
-        for (my $c=0; $c<@cs; $c++){
-          my $thisBt = sprintf("%.3f",$bt + $newDur * $c);        
-          print CHARRTTM "$type $outTransName 1 $thisBt $newDur $cs[$c] $stype spkr1 0.5\n";         
-        }
-      } else {
-        print CHARRTTM "$type $outTransName 1 $bt $dur $token $stype spkr1 0.5\n";
-      }
       $lexCount ++ if ($type eq "LEXEME" && $stype eq "lex");
       if (($lexCount + 3) % 10 == 0){
         ##  Don't make an output unless it's the 3rd word (+10). IE, 10% del
@@ -311,7 +295,7 @@ foreach my $trans(sort keys %$db){
 
       ### Build the reference STM for STT scoring
       if ($type eq "LEXEME"){
-        my $isOptDel = ($stype eq "fp" || $stype eq "frag");
+        my $isOptDel = ($stype eq "fp" || $stype eq "frag" || $stype eq "for-lex");
         $stmText .= " ".($isOptDel ? "(".$token.")" : $token) 
       }
       
@@ -329,13 +313,12 @@ foreach my $trans(sort keys %$db){
     }
     if ($isNoScoreKWS){
       print RTTM "NOSCORE $outTransName 1 $bt $dur <NA> <NA> <NA> <NA>\n";
-      print CHARRTTM "NOSCORE $outTransName 1 $bt $dur <NA> <NA> <NA> <NA>\n";
     }
     if ($isNoScoreSTT){
-      print STM ";;$outTransName 1 spkr1 $bt $et $stmText\n";
-      print STM "$outTransName 1 spkr1 $bt $et IGNORE_TIME_SEGMENT_IN_SCORING\n";
+      print STM ";;$outTransName 1 $outTransName $bt $et $stmText\n";
+      print STM "$outTransName 1 $outTransName $bt $et IGNORE_TIME_SEGMENT_IN_SCORING\n";
     } else {
-      print STM "$outTransName 1 spkr1 $bt $et $stmText\n";
+      print STM "$outTransName 1 $outTransName $bt $et $stmText\n";
     }
   }
 }
@@ -378,7 +361,6 @@ print ECF "</ecf>\n";
 
 close ECF;
 close RTTM;
-close CHARRTTM;
 close SYSRTTM;
 close STM;
 close TLIST;
@@ -394,4 +376,4 @@ sub set_usage {
 
   return($tmp);
 }
-0
+
