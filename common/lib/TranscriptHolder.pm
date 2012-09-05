@@ -134,4 +134,130 @@ sub normalizeTerm
   return $term;
 }
 
+sub charSplitText
+{
+  my ($self, $text, $notASCII, $deleteHyphens) = @_;
+  
+  my $modText = $text;
+  ## Do the split
+  $modText = join(" ", split("",$modText));
+  ## Handle the ASCII
+  if ($notASCII){
+#    $modText =~ s/([a-z])\s+([a-z])/$1$2/g;
+#    $modText =~ s/([a-z])\s+([a-z])/$1$2/g;
+    $modText =~ s/([\001-\177])\s+([\001-\177])/$1$2/g;
+    $modText =~ s/([\001-\177])\s+([\001-\177])/$1$2/g;
+  }
+  ## Handle hyphens
+  $modText =~ s/-/ /g if ($deleteHyphens);
+  ### Cleanup spaces
+  $modText =~ s/\s+/ /g;
+  $modText =~ s/^\s+//;
+  $modText =~ s/\s+$//;
+  return $modText;
+}
+
+sub unitTestCharSplitText
+{
+  my ($th, $orig, $exp, $notAscii, $deleteHyphen) = @_;
+  
+  my $res = $th->charSplitText($orig, $notAscii, $deleteHyphen);
+  
+  if ($res ne $exp){
+    print "\nError: charSplitText($orig, $notAscii, $deleteHyphen) = $res but expected $exp\n";
+    return 1;
+  }
+  return ;
+}
+
+sub unitTest
+{
+  my $th = new TranscriptHolder();
+  $th->setEncoding("UTF-8");
+  my $err = 0;
+  
+  print "Testing Transcript Holder\n";
+  
+  ### NO OPTIONS
+  print "  No options...   ";
+  $err += unitTestCharSplitText($th, "a", "a", 0, 0);
+  $err += unitTestCharSplitText($th, "a ", "a", 0, 0);
+  $err += unitTestCharSplitText($th, " a", "a", 0, 0);
+  $err += unitTestCharSplitText($th, "ab", "a b", 0, 0);
+  $err += unitTestCharSplitText($th, "a b", "a b", 0, 0);
+  $err += unitTestCharSplitText($th, "abc", "a b c", 0, 0);
+
+  $err += unitTestCharSplitText($th, "对", "对", 0, 0);
+  $err += unitTestCharSplitText($th, "对 ", "对", 0, 0);
+  $err += unitTestCharSplitText($th, " 对", "对", 0, 0);
+  $err += unitTestCharSplitText($th, "对症", "对 症", 0, 0);
+  $err += unitTestCharSplitText($th, "对 症", "对 症", 0, 0);
+  $err += unitTestCharSplitText($th, "对症下", "对 症 下", 0, 0);
+
+  $err += unitTestCharSplitText($th, "a对b症c下d", "a 对 b 症 c 下 d", 0, 0);
+  $err += unitTestCharSplitText($th, "a对症c下d", "a 对 症 c 下 d", 0, 0);
+  $err += unitTestCharSplitText($th, "a对症下d", "a 对 症 下 d", 0, 0);
+
+  $err += unitTestCharSplitText($th, "ab症c下d", "a b 症 c 下 d", 0, 0);
+  $err += unitTestCharSplitText($th, "abc下d", "a b c 下 d", 0, 0);
+
+  $err += unitTestCharSplitText($th, "a-b", "a - b", 0, 0);
+  $err += unitTestCharSplitText($th, "a-b-", "a - b -", 0, 0);
+  $err += unitTestCharSplitText($th, "-a-b-", "- a - b -", 0, 0);
+
+  $err += unitTestCharSplitText($th, "对-症", "对 - 症", 0, 0);
+  $err += unitTestCharSplitText($th, "对-症-", "对 - 症 -", 0, 0);
+  $err += unitTestCharSplitText($th, "-对-症-", "- 对 - 症 -", 0, 0);
+  print "\n";
+  
+  print "  Deleting hyphens...   ";
+  ### Testing Delete hypehd
+  $err += unitTestCharSplitText($th, "a-b", "a b", 0, 1);
+  $err += unitTestCharSplitText($th, "a-b-", "a b", 0, 1);
+  $err += unitTestCharSplitText($th, "-a-b-", "a b", 0, 1);
+
+  $err += unitTestCharSplitText($th, "对-症", "对 症", 0, 1);
+  $err += unitTestCharSplitText($th, "对-症-", "对 症", 0, 1);
+  $err += unitTestCharSplitText($th, "-对-症-", "对 症", 0, 1);
+  print "\n";
+  
+  print "  Not ASCII...   ";
+  $err += unitTestCharSplitText($th, "a", "a", 1, 0);
+  $err += unitTestCharSplitText($th, "a ", "a", 1, 0);
+  $err += unitTestCharSplitText($th, " a", "a", 1, 0);
+  $err += unitTestCharSplitText($th, "ab", "ab", 1, 0);
+  $err += unitTestCharSplitText($th, "abc", "abc", 1, 0);
+  $err += unitTestCharSplitText($th, "abcd", "abcd", 1, 0);
+
+  $err += unitTestCharSplitText($th, "对", "对", 1, 0);
+  $err += unitTestCharSplitText($th, "对 ", "对", 1, 0);
+  $err += unitTestCharSplitText($th, " 对", "对", 1, 0);
+  $err += unitTestCharSplitText($th, "对症", "对 症", 1, 0);
+  $err += unitTestCharSplitText($th, "对 症", "对 症", 1, 0);
+  $err += unitTestCharSplitText($th, "对症下", "对 症 下", 1, 0);
+
+  $err += unitTestCharSplitText($th, "ab对", "ab 对", 1, 0);
+  $err += unitTestCharSplitText($th, "对ab", "对 ab", 1, 0);
+  $err += unitTestCharSplitText($th, "a对b", "a 对 b", 1, 0);
+  $err += unitTestCharSplitText($th, "ab对ab", "ab 对 ab", 1, 0);
+  $err += unitTestCharSplitText($th, "abc对abc", "abc 对 abc", 1, 0);
+  $err += unitTestCharSplitText($th, "abcd对abcd", "abcd 对 abcd", 1, 0);
+  $err += unitTestCharSplitText($th, "abcd对症abcd", "abcd 对 症 abcd", 1, 0);
+    
+  print "\n";
+  
+  print "  Deleting hypehns and Not ASCII...   ";
+  $err += unitTestCharSplitText($th, "a", "a", 1, 1);
+  $err += unitTestCharSplitText($th, "ab", "ab", 1, 1);
+  $err += unitTestCharSplitText($th, "abc", "abc", 1, 1);
+  $err += unitTestCharSplitText($th, "abcd", "abcd", 1, 1);
+  $err += unitTestCharSplitText($th, "a-b", "a b", 1, 1);
+  $err += unitTestCharSplitText($th, "a-b-", "a b", 1, 1);
+  $err += unitTestCharSplitText($th, "-a-b-", "a b", 1, 1);
+  
+  return 1 if ($err > 0);
+  print "\nOK\n";
+  return 0    
+}
+
 1;
