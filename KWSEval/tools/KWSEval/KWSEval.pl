@@ -192,6 +192,12 @@ my @listIsolineCoef = ();
 
 my @Queries;
 
+my $charSplitText = 0;
+my $charSplitTextNotASCII = 0;
+my $charSplitTextDeleteHyphens = 0;
+
+my @textPrefilters = ();
+
 GetOptions
 (
     'ecffile=s'                           => \$ECFfile,
@@ -225,7 +231,8 @@ GetOptions
     'help'                                => sub { MMisc::ok_quit($usage); },
     'words-oov'                           => \$requestwordsoov,
     'include-blocks-w-notargs'            => \$includeNoTargBlocks,
-    'ID-System=s'                         => \$IDSystem,
+    'ID-System=s'                         => \$IDSystem, 
+    'xprefilterText=s@'                   => \@textPrefilters,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
 #parsing TermIDs
@@ -299,6 +306,20 @@ if ($groupBySrcType + $groupByTerm + $groupByAttr + $requestwordsoov > 1) {
   MMisc::error_quit("Cannot specify more than one condition (-Y, -q, -T) for the conditional report");
 } #Perhaps a more descriptive error
 
+foreach my $filt(@textPrefilters){
+  if ($filt =~ /^charsplit$/i){
+    $charSplitText = 1;
+  } elsif ($filt =~ /^notascii$/i){
+    $charSplitTextNotASCII = 1;
+  } elsif ($filt =~ /^deletehyphens$/i){
+    $charSplitTextDeleteHyphens = 1;
+  } else {
+    MMisc::error_quit("Error: -zprefilterText option /$filt/ not defined.  Aborting.");
+  }
+}
+print "Warning: -zprefilterText notASCII ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextNotASCII);
+print "Warning: -zprefilterText deleteHyphens ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextDeleteHyphens);
+
 ###loading the files
 my $ECF;
 my $STD;
@@ -322,14 +343,15 @@ $err = MMisc::check_file_r($TERMfile);
 MMisc::error_quit("Problem with TERM File ($TERMfile): $err")
   if (! MMisc::is_blank($err));
 print "Loading KWList File $TERMfile\n";
-my $TERM = new TermList($TERMfile);
+my $TERM = new TermList($TERMfile, $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);
 
 $err = MMisc::check_file_r($RTTMfile);
 MMisc::error_quit("Problem with RTTM File ($RTTMfile): $err")
   if (! MMisc::is_blank($err));
 print "Loading RTTM File $RTTMfile\n";
 my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), 
-                        $TERM->getCompareNormalize(), $TERM->getEncoding());  
+                        $TERM->getCompareNormalize(), $TERM->getEncoding(), $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);
+#print $RTTM->dumper();
 
 # clean the filter for terms
 $numberFiltersTermArray = keys %filterTermArray;
@@ -547,18 +569,22 @@ sub set_usage {
 	$tmp .= "                            Include the iso line information inside the serialized det curve.\n";
 	$tmp .= "                            Every <coef> can be specified, or it uses those by default.\n";
 	$tmp .= "                            The <coef> is the ratio Pmiss/Pfa.\n";
-	$tmp .= "  -d, --det-curve                          Output the DET Curve.\n";
-	$tmp .= "  -D, --DET-conditional-curve              Output the Conditional DET Curve.\n";
-	$tmp .= "  -P, --Pooled-DETs        Produce term occurrence DET Curves instead of 'Term Weighted' DETs.\n";
-  $tmp .= "  -C, --Clean-DETs-folder  Removes all non-png files from the generated dets folder.\n";
-  $tmp .= "  -c, --csv-of-alignment         Output the alignment CSV.";
-  $tmp .= "  -y, --ytype-of-report-output   Output types of the reports. (TXT,CSV,HTML) (Default is Text)\n";
+	$tmp .= "  -d, --det-curve               Output the DET Curve.\n";
+	$tmp .= "  -D, --DET-conditional-curve   Output the Conditional DET Curve.\n";
+	$tmp .= "  -P, --Pooled-DETs             Produce term occurrence DET Curves instead of 'Term Weighted' DETs.\n";
+  $tmp .= "  -C, --Clean-DETs-folder       Removes all non-png files from the generated dets folder.\n";
+  $tmp .= "  -c, --csv-of-alignment        Output the alignment CSV.";
+  $tmp .= "  -y, --ytype-of-report-output  Output types of the reports. (TXT,CSV,HTML) (Default is Text)\n";
 	$tmp .= "  -k, --koefcorrect <value>     Value for correct (C).\n";
 	$tmp .= "  -K, --Koefincorrect <value>   Value for incorrect (V).\n";
 	$tmp .= "  -n, --number-trials-per-sec <value>  The number of trials per second. (default: 1)\n";
-	$tmp .= "  -p, --prob-of-term <value>  The probability of a term. (default: 0.0001)\n";
+	$tmp .= "  -p, --prob-of-term <value>    The probability of a term. (default: 0.0001)\n";
   $tmp .= "  -inc, --include-blocks-w-notargs  Include blocks with no targets in block reports.\n";
-	$tmp .= "  -I, --ID-System <name>   Overwrites the name of the STD system.\n";
+	$tmp .= "  -I, --ID-System <name>        Overwrites the name of the STD system.\n";
+	$tmp .= "  -z, --zprefilterText <opts>   Prefilter the KWList and  RTTM with the options.  May be used more than once.\n";
+	$tmp .= "                                  charSplit -> split multi-character tokens into characters\n";
+  $tmp .= "                                  notASCII  -> do not split ASCII words.  (no effect without charSplit)\n";
+  $tmp .= "                                  deleteHyphens -> treat hyphens like required whitespace. (no effect without charSplit)\n";
 	$tmp .= "\n";
 	$tmp .= "Other options:\n";
 	$tmp .= "\n";
