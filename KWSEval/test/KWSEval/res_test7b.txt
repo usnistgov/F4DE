@@ -1,0 +1,62 @@
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test8.ecf.xml -r ../common/test8.cantonese.rttm -s ../common/test8.cantonese.kwslist.xml -t ../common/test8.cantonese.kwlist.xml -csv -o -b -f - -x charsplit
+[[RETURN CODE]] 0
+[[STDOUT]]
+Loading ECF ../common/test8.ecf.xml
+Loading KWSList File ../common/test8.cantonese.kwslist.xml
+Loading KWList File ../common/test8.cantonese.kwlist.xml
+Loading RTTM File ../common/test8.cantonese.rttm
+Performing Occurrence Alignment
+Computing requested DET curves and reports
+Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |               50 |
+|      IncludeBlocksWithNoTargets |                0 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |               50 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+|              |                  Inputs                  |                               Actual Decision TWV Analysis                                |
+|    Title     |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   TWV    |  Dec. Tresh  |
+|--------------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
+|   Occurrence |          6 |       6 |        0 |      0 |         0 |          0 |     0 |       6 |   0.00000 |    1.000 |   0.0000 |           NA |
+Block Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |               50 |
+|      IncludeBlocksWithNoTargets |                0 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |               50 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+                  |  MetaData  |                              Occurrence                               |
+                  |    Text    |  #Targ  |  #Corr  |  #FA  |  #Miss  |   TWV    |    PFA    |  PMISS   |
+------------------+------------+---------+---------+-------+---------+----------+-----------+----------+
+Keyword  TEST-00  |        听 到 |       1 |       0 |     0 |       1 |   0.0000 |   0.00000 |    1.000 |
+         TEST-01  |          到 |       1 |       0 |     0 |       1 |   0.0000 |   0.00000 |    1.000 |
+         TEST-02  |        到 - |         |         |       |         |          |           |          |
+         TEST-03  |          听 |       1 |       0 |     0 |       1 |   0.0000 |   0.00000 |    1.000 |
+         TEST-04  |        t o |       1 |       0 |     0 |       1 |   0.0000 |   0.00000 |    1.000 |
+         TEST-05  |          t |       1 |       0 |     0 |       1 |   0.0000 |   0.00000 |    1.000 |
+         TEST-06  |        t - |         |         |       |         |          |           |          |
+         TEST-07  |          o |       1 |       0 |     0 |       1 |   0.0000 |   0.00000 |    1.000 |
+Summary  Totals   |            |       6 |       0 |     0 |       6 |          |           |          |
+         Means    |            |       1 |       0 |     0 |       1 |          |   0.00000 |    1.000 |
+         TWV      |            |         |         |       |         |   0.0000 |           |          |
+
+[[STDERR]]
+

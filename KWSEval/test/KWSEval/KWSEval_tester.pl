@@ -61,7 +61,26 @@ $testr += &do_simple_test($tn, "(Handle terms outside of ECF Segments: Occurence
 $tn = "test6b";
 $testr += &do_simple_test($tn, "(Handle terms outside of ECF Segments: Segment)", "$tool -g -e ../common/test5.short.ecf.xml -r ../common/test5.rttm -s ../common/test5.kwslist.xml -t ../common/test5.kwlist.xml -o -b -f -", "res_$tn.txt");
 
-#####
+##
+$tn = "test7a";
+$testr += &do_simple_test($tn, "Cantonese, no special changes", "$tool -e ../common/test8.ecf.xml -r ../common/test8.cantonese.rttm -s ../common/test8.cantonese.kwslist.xml -t ../common/test8.cantonese.kwlist.xml -csv -o -b -f -", "res_$tn.txt");
+
+##
+$tn = "test7b";
+$testr += &do_simple_test($tn, "Cantonese, Split all characters", "$tool -e ../common/test8.ecf.xml -r ../common/test8.cantonese.rttm -s ../common/test8.cantonese.kwslist.xml -t ../common/test8.cantonese.kwlist.xml -csv -o -b -f - -x charsplit", "res_$tn.txt");
+
+##
+$tn = "test7c";
+$testr += &do_simple_test($tn, "Cantonese, Split all characters except ASCII", "$tool -e ../common/test8.ecf.xml -r ../common/test8.cantonese.rttm -s ../common/test8.cantonese.kwslist.xml -t ../common/test8.cantonese.kwlist.xml -csv -o -b -f - -x charsplit -x notASCII", "res_$tn.txt");
+
+##
+$tn = "test7d";
+$testr += &do_simple_test($tn, "Cantonese, Split all characters, delete hyphens", "$tool -e ../common/test8.ecf.xml -r ../common/test8.cantonese.rttm -s ../common/test8.cantonese.kwslist.xml -t ../common/test8.cantonese.kwlist.xml -csv -o -b -f - -x charsplit -x deleteHyphens", "res_$tn.txt");
+
+##
+$tn = "test7e";
+$testr += &do_simple_test($tn, "Cantonese, Split all characters except ASCII, delete hyphens", "$tool -e ../common/test8.ecf.xml -r ../common/test8.cantonese.rttm -s ../common/test8.cantonese.kwslist.xml -t ../common/test8.cantonese.kwlist.xml -csv -o -b -f - -x charsplit -x deleteHyphens -x notASCII", "res_$tn.txt");
+####
 
 my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
 my $add = "";
