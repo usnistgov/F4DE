@@ -134,7 +134,7 @@ if (! MMisc::is_blank($mddir)) {
       if (! MMisc::is_blank($err));
 }
 
-my $TERM = new TermList($TERMfile);
+my $TERM = new TermList($TERMfile, 0, 0, 0);
 my $ECF = new KWSecf($ECFfile);
 my $KWS = new KWSList($KWSfile);
 my $RTTM = (! MMisc::is_blank($RTTMfile)) ? 

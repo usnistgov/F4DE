@@ -68,7 +68,7 @@ MMisc::error_quit("makeTextSplitChars is mutually exclusive will all other edits
 
 
 #Load TermList
-$TermList = new TermList($inTlist);
+$TermList = new TermList($inTlist, 0, 0, 0);
 
 if ($makeTextSplitChars){
    foreach my $termid (keys %{ $TermList->{TERMS} }) {
@@ -144,7 +144,7 @@ if (@rttms > 0){
     my $key = "RefOccurences:$rttm";
     my $quantKey = "QuantizedRefOccurences:$rttm";
     my $rttm = new RTTMList($rttm, $TermList->getLanguage(),
-                            $TermList->getCompareNormalize(), $TermList->getEncoding());  
+                            $TermList->getCompareNormalize(), $TermList->getEncoding(), 0, 0, 0);  
     my @terms = keys %{ $TermList->{TERMS} };
     my $n = 0;
     foreach my $termid (keys %{ $TermList->{TERMS} }) {

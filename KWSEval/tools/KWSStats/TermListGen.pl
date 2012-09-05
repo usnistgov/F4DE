@@ -72,7 +72,7 @@ foreach my $tfile (@tlistfiles) {
 my %preservedAnnots = ();
 #Get Terms from in TermList
 if ($inTlist ne "") {
-  my $inTermList = new TermList($inTlist);
+  my $inTermList = new TermList($inTlist, 0, 0, 0);
   foreach my $termid (keys %{ $inTermList->{TERMS} }) {
     my $text = $inTermList->normalizeTerm($inTermList->{TERMS}{$termid}{TEXT});
     $terms{$text} = 1;
@@ -86,7 +86,7 @@ if ($inTlist ne "") {
 }
 
 #Build TermList
-my $TermList = new TermList();
+my $TermList = new TermList(undef, 0, 0, 0);
 my @aterms = keys %terms;
 for (my $t=0; $t<@aterms; $t++) {
   my $termid = $idTextPrefix . sprintf("%04d", $t+1);

@@ -131,7 +131,7 @@ GetOptions
 MMisc::error_quit("A TermList file must be set\n\n$usage\n") if($Termfile eq "");
 MMisc::error_quit("At least Query file must be set\n\n$usage\n") if(scalar(@Queries) == 0);
 
-my $TERM = new TermList($Termfile);
+my $TERM = new TermList($Termfile, 0, 0, 0);
 
 my %attributes;
 

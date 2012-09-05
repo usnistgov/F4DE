@@ -44,7 +44,7 @@ MMisc::error_quit("Specify an input KWList file via -k.") if ($kwfile eq "");
 MMisc::error_quit("Specify an output KWList file via -o.") if ($outkwfile eq "");
 
 #Load TermList
-my $kwList = new TermList($kwfile);
+my $kwList = new TermList($kwfile, 0, 0, 0);
 my %ht = ();
 my $n = 0;
 

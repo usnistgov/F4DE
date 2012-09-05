@@ -49,7 +49,7 @@ MMisc::error_quit("Specify a KWList file via -k.") if ($kwfile eq "");
 
 
 #Load TermList
-my $kwList = new TermList($kwfile);
+my $kwList = new TermList($kwfile, 0, 0, 0);
 
 # Listing the potential attributes
 if (defined($listAttr)){

@@ -220,7 +220,7 @@ sub load_KWSList {
 ## 
 
 sub load_TermList {
-  my $object = new TermList();
+  my $object = new TermList(undef, 0, 0, 0);
   my $err = $object->loadFile($_[0]);
   return($err, $object);
 }
