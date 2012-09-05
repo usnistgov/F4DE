@@ -124,12 +124,12 @@ print "Generate a random system with Pmiss=$missPct and PFa=$faPct\n";
 $err = MMisc::check_file_r($Termfile);
 MMisc::error_quit("Problem with TERM File ($Termfile): $err")
   if (! MMisc::is_blank($err));
-my $TERM = new TermList($Termfile);
+my $TERM = new TermList($Termfile, 0, 0, 0);
 
 $err = MMisc::check_file_r($RTTMfile);
 MMisc::error_quit("Problem with RTTM File ($RTTMfile): $err")
   if (! MMisc::is_blank($err));
-my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(), $TERM->getEncoding());
+my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(), $TERM->getEncoding(), 0, 0, 0);
 
 my $STDOUT = new_empty KWSList($Outfile);
 
