@@ -163,7 +163,7 @@ MMisc::error_quit("An Output file must be set\n\n$usage\n") if ($Outfile eq "");
 MMisc::error_quit("A Version must be set\n\n$usage\n") if ($Versionnumber eq "");
 
 my $ECF = new KWSecf($ECFfile);
-my $RTTM = new RTTMList($RTTMfile, "", "", "");
+my $RTTM = new RTTMList($RTTMfile, "", "", "", 0, 0, 0);
 my $ECFOUT = new_empty KWSecf($Outfile);
 
 $ECFOUT->{SIGN_DUR} = $ECF->{SIGN_DUR};
