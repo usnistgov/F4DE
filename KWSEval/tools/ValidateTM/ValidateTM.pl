@@ -107,24 +107,16 @@ MMisc::error_quit("$usage")
 
 my $ECF = undef;
 if (! MMisc::is_blank($ECFfile)) {
+  print "** Loading ECF: $ECFfile\n";
   my $err = MMisc::check_file_r($ECFfile);
   MMisc::error_quit("Problem with \'--ECF\' file ($ECFfile): $err")
       if (! MMisc::is_blank($err));
   $ECF = new KWSecf($ECFfile);
 }
 
-my $STM = undef;
-if (! MMisc::is_blank($STMfile)) {
-  my $err = MMisc::check_file_r($STMfile);
-  MMisc::error_quit("Problem with \'--STM\' file ($STMfile): $err")
-      if (! MMisc::is_blank($err));
-  $STM = new KWSEvalSTM($STMfile);
-  MMisc::error_quit("Problem with STM file: " . $STM->get_errormsg())
-      if ($STM->error());
-}
-
 my $CTM = undef;
 if (! MMisc::is_blank($CTMfile)) {
+  print "** Loading CTM: $CTMfile\n";
   my $err = MMisc::check_file_r($CTMfile);
   MMisc::error_quit("Problem with \'--CTM\' file ($CTMfile): $err")
       if (! MMisc::is_blank($err));
@@ -133,25 +125,24 @@ if (! MMisc::is_blank($CTMfile)) {
       if ($CTM->error());
 }
 
+my $STM = undef;
+if (! MMisc::is_blank($STMfile)) {
+  print "** Loading STM: $STMfile\n";
+  my $err = MMisc::check_file_r($STMfile);
+  MMisc::error_quit("Problem with \'--STM\' file ($STMfile): $err")
+      if (! MMisc::is_blank($err));
+  $STM = new KWSEvalSTM($STMfile);
+  MMisc::error_quit("Problem with STM file: " . $STM->get_errormsg())
+      if ($STM->error());
+}
+
 ####################
 my %all = ();
-
-my @stm_list = ();
-my %stm_hash = ();
-if (defined $STM) {
-  @stm_list = $STM->get_fulllist();
-  MMisc::error_quit("Problem obtaining content list from STM file: " . $STM->get_errormsg())
-      if ($STM->error());
-  for (my $i = 0; $i < scalar @stm_list; $i++) {
-    my ($file, $channel, $bt, $et) = @{$stm_list[$i]};
-    @{$stm_hash{$file}{$channel}} = [$bt, $et];
-    $all{$file}{$channel}++;
-  }
-}
 
 my @ctm_list = ();
 my %ctm_hash = ();
 if (defined $CTM) {
+  print "** Obtaining CTM's entries\n";
   @ctm_list = $CTM->get_fulllist();
   MMisc::error_quit("Problem obtaining content list from CTM file: " . $CTM->get_errormsg())
       if ($CTM->error());
@@ -162,11 +153,26 @@ if (defined $CTM) {
   }
 }
 
+my @stm_list = ();
+my %stm_hash = ();
+if (defined $STM) {
+  print "** Obtaining STM's entries\n";
+  @stm_list = $STM->get_fulllist();
+  MMisc::error_quit("Problem obtaining content list from STM file: " . $STM->get_errormsg())
+      if ($STM->error());
+  for (my $i = 0; $i < scalar @stm_list; $i++) {
+    my ($file, $channel, $bt, $et) = @{$stm_list[$i]};
+    @{$stm_hash{$file}{$channel}} = [$bt, $et];
+    $all{$file}{$channel}++;
+  }
+}
+
 ####################
 my $errc = 0;
 
 ## CTM vs STM
 if (defined $CTM && defined $STM) {
+  print "** Checking CTM vs STM's File/Channel pairs\n";
   my %tmp = ();
   foreach my $file (keys %all) {
     foreach my $channel (keys %{$all{$file}}) {
@@ -184,6 +190,7 @@ if (defined $CTM && defined $STM) {
 
 # CTM vs ECF
 if (defined $CTM && defined $ECF) {
+  print "** Checking CTM vs ECF's entries\n";
   for (my $i = 0; $i < scalar @ctm_list; $i++) {
     my ($file, $channel, $bt, $et) = @{$ctm_list[$i]};
     if ($ECF->FilteringTime($file, $channel, $bt, $et) == 0) {
@@ -195,6 +202,7 @@ if (defined $CTM && defined $ECF) {
 
 # STM vs ECF
 if (defined $STM && defined $ECF) {
+  print "** Checking STM vs ECF's entries\n";
   for (my $i = 0; $i < scalar @stm_list; $i++) {
     my ($file, $channel, $bt, $et) = @{$stm_list[$i]};
     if ($ECF->FilteringTime($file, $channel, $bt, $et) == 0) {
