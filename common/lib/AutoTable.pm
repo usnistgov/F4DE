@@ -1340,13 +1340,18 @@ sub _centerJust(){
 }
 
 sub loadGridFromSTDIN{
-  my ($renderer) = @_;
+  my ($renderer, $props) = @_;
+  #print Dumper($props);
  
   my $at = new AutoTable();
+  foreach my $prop(keys %$props){
+    $at->{Properties}->setValue($prop, $props->{$prop});
+  }
   while (<STDIN>){
     chomp;
     my @a = split;
     $at->addData($a[0], $a[1], $a[2]);
+    $at->setSpecial($a[1], $a[2], $a[3]) if (@a > 3);
   }
   if ($renderer eq "Txt") {
     print($at->renderTxtTable(1));
