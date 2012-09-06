@@ -110,7 +110,6 @@ sub alignSegments
   my $detset = new DETCurveSet();
 
   foreach my $segment (@fsegments) {
-        
     my @terms = values %{ $self->{TERMLIST}{TERMS} };
     foreach my $term (@terms) {
       my $trialBlock = $term->{TERMID};

@@ -180,11 +180,11 @@ sub unitTest
 
     #segmetsFromTimeframe tests
     print " Segmenting (1)...        ";
-    my $segments1 = $rttm_eng_nonorm->segmentsFromTimeframe("20031209_193946_PBS_ENG", 1, 33.575, 62.375);
+    my $segments1 = $rttm_eng_norm->segmentsFromTimeframe("20031209_193946_PBS_ENG", 1, 33.575, 62.375);
     print "OK\n";
 
     print " Segmenting (2)...        ";
-    my $segments2 = $rttm_eng_nonorm->segmentsFromTimeframe("20031218_004126_PBS_ENG", 1, 101.439, 13.818);
+    my $segments2 = $rttm_eng_norm->segmentsFromTimeframe("20031218_004126_PBS_ENG", 1, 101.439, 13.818);
     print "OK\n";
 
     print " Number of segments (1)...";
@@ -670,7 +670,7 @@ sub segmentsFromTimeframe
       if ($lex->{BT} >= $spkrBT && $lex->{ET} <= $spkrET)
       {
 	#LOWERCASING
-	push (@{ $spkrrecs{$speaker->{SPKR}}{$lex->{TOKEN}}}, $lex);
+	push (@{ $spkrrecs{$speaker->{SPKR}}{$self->normalizeTerm($lex->{TOKEN})}}, $lex);
       }
     }
     if (scalar(@outlist) > 0 && $outlist[-1]->{ET} > $speaker->{BT})
@@ -742,7 +742,7 @@ sub getAllSegments()
 	  if ($lex->{BT} >= $spkrBT && $lex->{ET} <= $spkrET)
 	  {
 	    #LOWERCASING
-	    push (@{ $spkrrecs{$speaker->{SPKR}}{$lex->{TOKEN}}}, $lex);
+	    push (@{ $spkrrecs{$speaker->{SPKR}}{$self->normalizeTerm($lex->{TOKEN})}}, $lex);
 	  }
 	}
 	if (scalar(@outlist) > 0 && $outlist[-1]->{ET} > $speaker->{BT}
