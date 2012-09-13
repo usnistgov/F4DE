@@ -2095,6 +2095,16 @@ sub filecopy {
   return("");
 }
 
+##
+
+sub filecopytodir {
+  my ($if, $od) = @_;
+
+  my $of = $if;
+  $of =~ s%^.+/%%;
+  return(&filecopy($if, "$od/$of"));
+}
+
 ##########
 
 sub is_email {
