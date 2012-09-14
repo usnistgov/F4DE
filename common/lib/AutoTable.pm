@@ -1359,6 +1359,8 @@ sub loadGridFromSTDIN{
     print($at->renderHTMLTable(1));
   } elsif ($renderer eq "LaTeX") {
     print($at->renderLaTeXTable(1)); 
+  } elsif ($renderer eq "CSV") {
+    print($at->renderCSV()); 
   } else {
     die "Error: I need a Renderer for now '$renderer'\n";
   }
