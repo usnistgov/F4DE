@@ -1096,18 +1096,18 @@ sub miniJobRunner {
   
   ## Skip ?
   if (&does_dir_exist($dsSkip)) {
-    &vprint($verb, "[miniJobRunner] ${toprint2}Skip requested");
+    &vprint($verb, "[miniJobRunner] ${toprint2}Skip requested\n");
     return("", 0);
   }
 
   ## Previously bad ?
   if (&does_dir_exist($dsBad)) {
       if (! $redobad) {
-        &vprint($verb, "[miniJobRunner] ${toprint2}Previous bad run present, skipping");
+        &vprint($verb, "[miniJobRunner] ${toprint2}Previous bad run present, skipping\n");
         return("", 0);
       }
       
-      &vprint($verb, "[miniJobRunner] ${toprint2}Deleting previous run lockdir [$dsBad]");
+      &vprint($verb, "[miniJobRunner] ${toprint2}Deleting previous run lockdir [$dsBad]\n");
       `rm -rf $dsBad`;
       return("Problem deleting \'bad\' lockdir [$dsBad], still present ?", 0)
         if (&does_dir_exist($dsBad));
@@ -1116,11 +1116,11 @@ sub miniJobRunner {
   ## Previously done ?
   if (&does_dir_exist($dsDone)) {
     my $flf = "$dsDone/$blogfile";
-    if (&does_file_exists($flf)) {
-      vprint($verb, "[miniJobRunner] ${toprint2}Previously succesfully completed");
+    if (&does_file_exist($flf)) {
+      vprint($verb, "[miniJobRunner] ${toprint2}Previously succesfully completed\n");
       return("", 0);
     } else {
-      vprint($verb, "[miniJobRunner] ${toprint2}Previously succesfully completed, but logfile absent => considering as new run, Deleting previous run lockdir [$dsDone]");
+      vprint($verb, "[miniJobRunner] ${toprint2}Previously succesfully completed, but logfile absent => considering as new run, Deleting previous run lockdir [$dsDone]\n");
       `rm -rf $dsDone`;
       return("Problem deleting lockdir [$dsDone], still present ?", 0)
         if (&does_dir_exist($dsDone));
@@ -1129,27 +1129,27 @@ sub miniJobRunner {
 
   ## Already in progress ?
   if (&does_dir_exist($dsRun)) {
-    &vprint($verb, "[miniJobRunner] ${toprint2}Job already in progress, Skipping");
+    &vprint($verb, "[miniJobRunner] ${toprint2}Job already in progress, Skipping\n");
     return("", 0);
   }
 
   # Actual run
   &vprint($verb, "[miniJobRunner] ${toprint2}In progress\n");
-  &vprint(($verb > 1), "[miniJobRunner] ${toprint2}Creating \"In Progress\" lock dir");
+  &vprint(($verb > 1), "[miniJobRunner] ${toprint2}Creating \"In Progress\" lock dir\n");
   return("Could not create writable dir ($dsRun)", 0)
     if (! &make_wdir($dsRun));
   my $flf = "$dsRun/$blogfile";
 
   my ($rv, $tx, $so, $se, $retcode, $flogfile)
     = &write_syscall_logfile($flf, @cmd);
-  vprint(($verb > 1), "[miniJobRunner] ${toprint2}Final Logfile different from expected one: $flogfile")
+  vprint(($verb > 1), "[miniJobRunner] ${toprint2}Final Logfile different from expected one: $flogfile\n")
     if ($flogfile ne $flf);
 
   if ($retcode == 0) {
     return("Could not rename [$dsRun] to [$dsDone]: $!", 1, $rv, $tx, $so, $se, $retcode, $flogfile)
       if (! rename($dsRun, $dsDone));
     $flogfile =~ s%$dsRun%$dsDone%;
-    vprint($verb, "[miniJobRunner] ${toprint2}Job succesfully completed");
+    vprint($verb, "[miniJobRunner] ${toprint2}Job succesfully completed\n");
     return("", 1, $rv, $tx, $so, $se, $retcode, $flogfile);
   }
 
