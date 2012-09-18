@@ -1069,7 +1069,7 @@ sub miniJobRunner {
     if (! &is_blank($err));
   my $lockdir = "$blockdir/$name";
   return("The lockdir directory ($lockdir) must not exist", 0)
-    if (&does_dir_exists($lockdir));
+    if (&does_dir_exist($lockdir));
 
   # check for badly formed lockdir
   my @dir_end = ("done", "skip", "bad", "inprogress");
@@ -1089,19 +1089,19 @@ sub miniJobRunner {
   # check for multiple state lock directory
   my @mulcheck = ();
   foreach my $tmpld (@all) {
-    push(@mulcheck, $tmpld) if (&does_dir_exists($tmpld));
+    push(@mulcheck, $tmpld) if (&does_dir_exist($tmpld));
   }
   return("Can not run program, lockdir already exists in multiple states:\n - " . join("\n - ", @mulcheck), 0)
     if (scalar @mulcheck > 1);
   
   ## Skip ?
-  if (&does_dir_exists($dsSkip)) {
+  if (&does_dir_exist($dsSkip)) {
     &vprint($verb, "[miniJobRunner] ${toprint2}Skip requested");
     return("", 0);
   }
 
   ## Previously bad ?
-  if (&does_dir_exists($dsBad)) {
+  if (&does_dir_exist($dsBad)) {
       if (! $redobad) {
         &vprint($verb, "[miniJobRunner] ${toprint2}Previous bad run present, skipping");
         return("", 0);
@@ -1110,11 +1110,11 @@ sub miniJobRunner {
       &vprint($verb, "[miniJobRunner] ${toprint2}Deleting previous run lockdir [$dsBad]");
       `rm -rf $dsBad`;
       return("Problem deleting \'bad\' lockdir [$dsBad], still present ?", 0)
-        if (&does_dir_exists($dsBad));
+        if (&does_dir_exist($dsBad));
     }
 
   ## Previously done ?
-  if (&does_dir_exists($dsDone)) {
+  if (&does_dir_exist($dsDone)) {
     my $flf = "$dsDone/$blogfile";
     if (&does_file_exists($flf)) {
       vprint($verb, "[miniJobRunner] ${toprint2}Previously succesfully completed");
@@ -1123,12 +1123,12 @@ sub miniJobRunner {
       vprint($verb, "[miniJobRunner] ${toprint2}Previously succesfully completed, but logfile absent => considering as new run, Deleting previous run lockdir [$dsDone]");
       `rm -rf $dsDone`;
       return("Problem deleting lockdir [$dsDone], still present ?", 0)
-        if (&does_dir_exists($dsDone));
+        if (&does_dir_exist($dsDone));
     }
   }
 
   ## Already in progress ?
-  if (&does_dir_exists($dsRun)) {
+  if (&does_dir_exist($dsRun)) {
     &vprint($verb, "[miniJobRunner] ${toprint2}Job already in progress, Skipping");
     return("", 0);
   }
