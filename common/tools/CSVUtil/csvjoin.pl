@@ -100,6 +100,7 @@ MMisc::error_quit($usage) if (scalar @ARGV == 0);
 my $outcsv = "";
 my @joincol = ();
 my $replace = 0;
+my $firstfilekeep = 0;
 
 my %opt = ();
 GetOptions
@@ -109,6 +110,7 @@ GetOptions
    'outcsv=s'  => \$outcsv,
    'joincol=s' => \@joincol,
    'replace'   => \$replace,
+   'LimitKeysToFirstFile'    => \$firstfilekeep,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if (($opt{'help'}) || (scalar @ARGV == 0));
 
@@ -124,6 +126,7 @@ my %all = ();
 my %header = ();
 foreach my $if (@ARGV) {
   &load_file($if);
+  $firstfilekeep++ if ($firstfilekeep > 0);
 }
 #print MMisc::get_sorted_MemDump(\%all);
 
@@ -139,7 +142,8 @@ sub add2all {
   if (scalar @jc > 0) {
     my $k = shift @jc;
     my $v = $$rlh[$$rcolm{$k}];
-    $txt .= "{\'$k\'=\'$v\'}"; 
+    $txt .= "{\'$k\'=\'$v\'}";
+    return() if (($firstfilekeep > 1) && (! MMisc::safe_exists($rall, $v)));
     &add2all(\%{$$rall{$v}}, $rlh, $rcolm, $txt, $radd, $rremove, @jc);
     return();
   }
@@ -155,14 +159,14 @@ sub add2all {
   }
   
   foreach my $k (keys %{$radd}) {
-#    print "[$k]\n";
+    print "[$k]\n";
     next if (exists $jch{$k});
     next if (MMisc::safe_exists($rremove, $k));
     MMisc::error_quit("\$all$txt" . "{\'$k\'} already present, will not overwrite (unless \'--replace\' is selected)")
         if ((exists $$rall{$k}) && (! $replace));
     my $v = $$radd{$k};
     $$rall{$k} = $v;
-#    print "[$txt]{$k} = $v\n";
+    print "[$txt]{$k} = $v\n";
   }
 }
 
@@ -355,7 +359,7 @@ sub save_file {
 sub set_usage{
   my $tmp=<<EOF
 
-$0 [--help] --outcsv filename [--joincol name [--joincol name [...]]] [--replace] infile.csv[++colname=colvalue[++...]][::colname[::...]] [infile.csv[...] [...]]
+$0 [--help] --outcsv filename [--joincol name [--joincol name [...]]] [--replace] [--LimitKeysToFirstFile] infile.csv[++colname=colvalue[++...]][::colname[::...]] [infile.csv[...] [...]]
 
 Does a simple CSV join on primary key columns; and will add columns from all files seen
 Warning: will stop in case of primary key collision unless --replace is selected
@@ -365,6 +369,7 @@ Where:
   --outcsv      filename to write the joined table to
   --joincol     primary key column name (used in in \'joincol\' order)
   --replace     In case of primary key collision, replace previous value
+  --LimitKeysToFirstFile      If a key from the first file is not present in the following, remove that line from the output file
 
 Options can be specified for infile.csv:
   ++colname=colvalue will add extra columns to the loaded file
