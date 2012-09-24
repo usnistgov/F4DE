@@ -30,6 +30,8 @@ use strict;
 use MErrorH;
 use MMisc;
 
+####################
+
 sub new {
   my ($class) = shift @_;
 
@@ -291,14 +293,15 @@ sub is_encoding_set {
 
 ############################################################
 
-sub run_xmllint {
+sub run_xmllint_pipe {
   my ($self, $file) = @_;
 
   my $xmllint = $self->get_xmllint();
   my $xsdpath = $self->get_xsdpath();
   my @xsdfilesl = $self->get_xsdfilesl();
-
-  return("") if ($self->error());
+  return(undef) if ($self->error());
+  
+  my $stderr_file = MMisc::get_tmpfilename();
 
   $file =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
 
@@ -307,16 +310,67 @@ sub run_xmllint {
   if ($self->is_encoding_set()) {
     push @cmd, '--encode', $self->get_encoding();
   }
+  push @cmd, '--format';
   push @cmd, $file;
 
-  my ($retcode, $stdout, $stderr) = MMisc::do_system_call(@cmd);
+  open SE, ">$stderr_file" 
+    or MMisc::error_quit("Problem creating temporary file ? ($stderr_file)");
+  binmode(SE, ":unix");
+#  close SE;
 
+  open(FH, join(" ", @cmd) . " 2> $stderr_file |");
+  return(*FH, $stderr_file);
+}
+
+#####
+
+sub run_xmllint {
+  my ($self, $file, $ofile) = @_;
+  
+  my $xmllint = $self->get_xmllint();
+  my $xsdpath = $self->get_xsdpath();
+  my @xsdfilesl = $self->get_xsdfilesl();
+  
+  return("") if ($self->error());
+  
+  $file =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
+  my $fileout = 1;
+  if (MMisc::is_blank($ofile)) {
+    $ofile = MMisc::get_tmpfilename();
+  } elsif ($ofile eq 'NOOUT') {
+    $fileout = 0;
+  }
+  if ($fileout) {
+    open FILE, ">$ofile"
+      or $self->_set_error_and_return("Problem creating output file ($ofile)", "");
+    close FILE;
+  }
+
+  my @cmd = ($xmllint, "--path", "\"$xsdpath\"", 
+             "--schema", $xsdpath . "/" . $xsdfilesl[0]);
+  if ($self->is_encoding_set()) {
+    push @cmd, '--encode', $self->get_encoding();
+  }
+  if ($fileout) {
+    push @cmd, '--output', $ofile;
+    push @cmd, '--format';
+  } else {
+    push @cmd, '--noout';
+  }
+  push @cmd, $file;
+  
+#  print "[**] " . join(" | ", @cmd) . "\n";
+  my ($retcode, $stdout, $stderr) = MMisc::do_system_call(@cmd);
+  
   if ($retcode != 0) {
     $self->_set_errormsg("Problem validating file with \'xmllint\' ($stderr), aborting");
     return("");
   }
+#  print "[$ofile]\n";
 
-  return($stdout);
+  return("") if (! $fileout);
+
+  return(MMisc::slurp_file($ofile));
 }
 
 ############################################################
@@ -345,6 +399,17 @@ sub error {
 sub clear_error {
   my ($self) = @_;
   return($self->{errormsg}->clear());
+}
+
+#####
+
+sub _set_error_and_return {
+  my $self = shift @_;
+  my $errormsg = shift @_;
+  
+  $self->_set_errormsg($errormsg);
+  
+  return(@_);
 }
 
 ############################################################
