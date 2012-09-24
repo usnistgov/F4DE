@@ -29,6 +29,7 @@ use strict;
 use MMisc;
 
 # No 'new', simply functions
+my $__MtXML_des = '#####default error string#####';
 
 ##########
 
@@ -230,9 +231,7 @@ sub get_next_xml_section {
   my $section = $des;
 
   $name = &get_next_xml_name($rstr, $des);
-  if ($name eq $des) {
-    return($name,  "");
-  }
+  return($name,  "") if ($name eq $des);
 
   $section = &get_named_xml_section($name, $rstr, $des);
 
@@ -302,6 +301,38 @@ sub element_extractor {
     if (! &remove_xml_tags($here, \$section));
 
   return("", $string, $section, %iattr);
+}
+
+########################################
+
+# MtXML::line_extractor(default_error_string, input_string)
+# There must be only one FULL content per line (does not have to be closed but must end with >)
+# return(error, closed, section_name, section_content, attributes)
+sub line_extractor {
+  my ($line) = @_;
+
+  # Remove all XML comments
+  $line =~ s%\<\!\-\-.+?\-\-\>%%sg;
+  # Remove <?xml ...?> header
+  $line =~ s%\<\?xml.+?\?\>%%is;
+
+  return("", 1, "") if (MMisc::is_blank($line));
+
+  my $name = &get_next_xml_name(\$line, $__MtXML_des);
+  return("Problem finding XML name [$line]", 0, "") if ($name eq $__MtXML_des);
+#  print "[$name]\n";
+  my ($err, %res) = &get_inline_xml_attributes($name, $line);
+  return("Problem extracting attributes for \'$name\' [$line]", 0, "") 
+    if (! MMisc::is_blank($err));
+#  foreach my $k (keys %res) { print "  -> $k : " . $res{$k} . "\n";  }
+
+  # quick cleanup
+  $line =~ s%^\s+%%;
+  $line =~ s%\s+$%%;
+  return("", 1, $name, $line, %res)
+    if (&remove_xml_tags($name, \$line));
+
+  return("", (substr($name, 0, 1) eq '/') ? 1 : 0, $name, "", %res);
 }
 
 ############################################################
