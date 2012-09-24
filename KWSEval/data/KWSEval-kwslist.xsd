@@ -39,6 +39,8 @@
       <xsd:attribute name="kwlist_filename" type="xsd:string" use="required" />
       <xsd:attribute name="system_id" type="xsd:string" use="required" />
       <xsd:attribute name="language" type="xsd:string" use="required" />
+      <xsd:attribute name="min_score" type="xsd:float" use="optional" />
+      <xsd:attribute name="max_score" type="xsd:float" use="optional" />
     </xsd:complexType>
   </xsd:element>
 </xsd:schema>
