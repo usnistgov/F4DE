@@ -82,7 +82,8 @@ sub loadSSVFile {
     or return($self->_set_error_and_return("Unable to open for read file '$file' : $!", 0));
 
   my $linec = 0;
-  my $core_text = "";  
+  my $core_text = "";
+  my ($alt_mode, $alt_min_beg, $alt_max_end, $alt_last_et) = (undef, undef, undef, undef);
   while (my $line = <FILE>) {
     $linec++;
     chomp($line);
@@ -99,7 +100,21 @@ sub loadSSVFile {
         if (scalar @rest < 5);
     my ($file, $chan, $bt, $dur, $text, $conf) = @rest;
 
-    # Not Processing ALT just yet
+    # <ALT_BEG>
+    if (uc($text) eq "<ALT_BEG>") {
+      return($self->_set_error_and_return("Problem with Line (#$linec): Starting a new <ALT_BEG> when a previous one was never close (started on line $alt_mode) [$line]", 0))
+        if (defined $alt_mode);
+      $alt_mode = $linec;
+      $alt_min_beg = undef;
+      $alt_max_end = undef;
+      $alt_last_et = undef;
+      next;
+    }
+    # <ALT>
+    if (uc($text) eq "<ALT>") {
+      $alt_last_et = undef;
+      next;
+    }
 
     return($self->_set_error_and_return("Problem with Line (#$linec): begtime [$bt] not a positive number ? [$line]", 0))
       if ((! MMisc::is_float($bt)) || ($bt < 0));
@@ -112,6 +127,22 @@ sub loadSSVFile {
     return($self->_set_error_and_return("Problem with Line (#$linec): confidence [$conf] not a positive number ? [$line]", 0))
       if ((! MMisc::is_float($conf)) || ($conf < 0));
 
+    # <ALT_END>
+    if (uc($text) eq "<ALT_END>") {
+      $bt = $alt_min_beg;
+      $et = $alt_max_end;
+      $alt_mode = undef;
+    }
+
+    # within an <ALT ...>
+    if (defined $alt_mode) {
+      return($self->_set_error_and_return("Problem with Line (#$linec): starting time of <ALT...> entry is after the end of the previous line (prev. end: $alt_last_et / curr. bt: $bt) [$line]", 0))
+        if ((defined $alt_last_et) && ($bt > $alt_last_et));
+      $alt_min_beg = $bt if ((! defined $alt_min_beg) || ($bt < $alt_min_beg));
+      $alt_max_end = $et if ((! defined $alt_max_end) || ($et > $alt_max_end));
+      $alt_last_et = $et;
+    }
+
     push @{$self->{content}{$file}{$chan}}, $bt, $et;
 
 #    print "[" . join("] [", @rest) . "]\n";
@@ -119,6 +150,9 @@ sub loadSSVFile {
   }
   close FILE;
 
+  return($self->_set_error_and_return("Problem with Line (#$linec): Started a new <ALT_BEG> which was not closed at file end (started on line $alt_mode)", 0))
+    if (defined $alt_mode);
+  
   $self->{CoreText} = $core_text;
 
   $self->{FILE} = $file;
