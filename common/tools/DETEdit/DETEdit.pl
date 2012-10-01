@@ -90,6 +90,9 @@ my $inputSrl = undef;
 my $outputSrl = undef;
 my $gzipPROG = "gzip";
 
+my @plotControls = ();
+my ($smooth, $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions) = (undef, undef, undef, undef);
+
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 GetOptions
@@ -103,6 +106,8 @@ GetOptions
    
    'Z|ZipPROG=s'    => \$gzipPROG,
    
+   'p|plotControls=s'            => \@plotControls,
+
    'version'      => sub { my $name = $0; $name =~ s/.*\/(.+)/$1/; print "$name version $VERSION\n"; exit(0); },
    'h|help'         => \$help,
    'm|man'          => \$man,
@@ -120,7 +125,20 @@ pod2usage("ERROR: The output must be specified as either 'inPlace' or as a file 
 pod2usage("ERROR: The output must be specified as either 'inPlace' or as a file via -o, but NOT both!\n")
   if (defined($outputSrl) && $inPlace == 1);
 
+
+foreach my $directive (@plotControls){
+  if ($directive =~ /smooth=(\d+),(\d+),(\d+)$/){
+    ($smooth, $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions) = (1, $1, $2, $3);    
+  } else {
+    print "Warning: Unknown plot directive /$directive/\n";
+  }
+}
+
 my $inDet = DETCurve::readFromFile($inputSrl, $gzipPROG);
+if ($smooth){
+  $inDet = $inDet->getSmoothedDET($smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions);
+}
+
 
 ##Make the edits
 if (defined($title)){
@@ -169,7 +187,7 @@ DETEdit.pl -- Edit properties in a serialized DET Curve.
 
 =head1 SYNOPSIS
 
-S<B<DETEdit.pl> [--help | --man | --version] -input-srl F<IN_SRL_FILE>  [--Inplace] --output-srl F<OUT_SRL_FILE> [--title I<"title">] [--titleRegex I<regexp>] [--ZipPROG I<prog>]>
+S<B<DETEdit.pl> [--help | --man | --version] -input-srl F<IN_SRL_FILE>  [--Inplace] --output-srl F<OUT_SRL_FILE> [--title I<"title">] [--titleRegex I<regexp>] [--ZipPROG I<prog>] [--plotControls> F<Directive>]>
 
 =head1 DESCRIPTION
 
@@ -202,6 +220,12 @@ Modify the title with the regular expression.  If both B<title> and B<titleRegex
 =item B<-Z>, B<--ZipPROG> F<GZIP_PATH>
 
 Specify the full path name to gzip (default: 'gzip').
+
+=item B<-p>, B<--plotControls> F<Directive>
+
+The B<plotControl> options provides access to fine control the the DET curve display.
+
+/smooth=AdjacentDecisions,extraTargs,extraNonTargs/   -> Build a smoothed DET with the following parameters.     <AdjacentDecisions> use the average decision score +/- the number pf points.  0 means no averaging.  <extraTargs> adds the N targets with linearly interpolated values between each pair of targets.  0 means no targets added.  <extraNonTargs> does the same operation a <extraTargs> except to the non targets.
 
 =item B<-h>, B<--help>
 
