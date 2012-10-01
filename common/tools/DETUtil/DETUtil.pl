@@ -128,6 +128,7 @@ my $firstSet = "";
 my $secondSetSize = 10;
 my $secondSet = "";
 my $restSet = "";
+my ($smooth, $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions) = (undef, undef, undef, undef);
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
@@ -314,6 +315,8 @@ foreach my $directive (@plotControls){
     $ht{MMiss}         = $3 if ($3 ne "");
     $ht{color}         = $4 if ($4 ne "");
     push @{ $options{PerfBox} }, \%ht;
+  } elsif ($directive =~ /smooth=(\d+),(\d+),(\d+)$/){
+    ($smooth, $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions) = (1, $1, $2, $3);    
   } else {
     print "Warning: Unknown plot directive /$directive/\n";
   }
@@ -426,7 +429,12 @@ foreach my $srlDef ( @ARGV )
   vprint("[*] Loading SRL file ($srl)\n"); 
 
   my $loadeddet = DETCurve::readFromFile($srl, $gzipPROG);
-
+  if ($smooth){
+    $loadeddet = $loadeddet->getSmoothedDET($smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions);
+  }
+  
+#  print $loadeddet->getTrials()->dump();
+  
   my %lineAttr = ();
 	if (defined($newLabel)){
     ### then we will control the plot style
@@ -839,6 +847,8 @@ The B<plotControl> options provides access to fine control the the DET curve dis
 
 
 /PointSetAreaDefinition=(Area|Radius)/     -> The value of C<pointSize> is display as either area of  the point or the width.  Def. is radius.
+
+/smooth=AdjacentDecisions,extraTargs,extraNonTargs/   -> Build a smoothed DET with the following parameters.     <AdjacentDecisions> use the average decision score +/- the number pf points.  0 means no averaging.  <extraTargs> adds the N targets with linearly interpolated values between each pair of targets.  0 means no targets added.  <extraNonTargs> does the same operation a <extraTargs> except to the non targets.
 
 =item B<-F>, B<--ForceRecompute>
 
