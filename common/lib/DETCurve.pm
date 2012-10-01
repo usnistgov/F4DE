@@ -1203,4 +1203,24 @@ sub compareBest ($$) {
     }
 }
 
+sub getSmoothedDET{
+  my ($self, $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions) = @_;
+
+  my $trial = $self->getTrials();
+  ### Set the Trial metrics based on the metricType
+  my $otrial = $trial->getSmoothTrials( $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions);
+
+  if (defined($trial->getTrialActualDecisionThreshold())){
+    $otrial->setTrialActualDecisionThreshold($trial->getTrialActualDecisionThreshold());
+  }
+  ### Make a metric clone
+  my $metric = $self->getMetric()->cloneForTrial($otrial);
+
+  my $outDet = new DETCurve($otrial, $metric, "Smoothed ".$self->getLineTitle(), [()], $self->{GZIPPROG});
+  $outDet->computePoints();
+
+  return($outDet);
+}
+
+
 1;
