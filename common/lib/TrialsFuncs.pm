@@ -1136,6 +1136,74 @@ sub mergeTrials{
   
 }
 
+####################
+
+sub smooth{
+  my ($data, $i, $preI, $postI) = @_;
+  my ($sum, $n) = (0, 0);
+#  my @v = ();
+  for (my $x=$i-$preI; $x <= $i + $postI; $x++){
+    if ($x >= 0 && $x < @{ $data }){
+      $sum += $data->[$x];
+      $n++;
+#      push @v, $data->[$x];
+    }
+  }
+#  print "$i $preI $postI $sum $n (".join(",",@v).") Avg=".($sum/$n)."\n";
+  return (($n == 0) ? undef : $sum/$n);
+}
+  
+sub getSmoothTrials{
+  my ($self, $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions) = @_;
+
+  ### Sanity Check 
+  my @blockIDs = $self->getBlockIDs();
+  MMisc::error_quit("trial smoothing with 0 or multi-block trial data not supported (" . scalar @blockIDs . ")")
+      if (@blockIDs != 1);
+
+  ### First the params
+  my $tmode = ref($self);
+  my $otrial = $tmode->new( $self->getTrialParams(), $self->getTaskID(),
+                            $self->getBlockID(), $self->getDecisionID() );
+                           
+
+  my $newBlock = sprintf("smooth_%d_TARGexpand_%d_NONTARGexpand_%d", $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions);
+
+  my $maxNO = $self->{'trials'}{$blockIDs[0]}{"MAX NO NONTARG"};
+  $maxNO = $self->{'trials'}{$blockIDs[0]}{"MAX NO TARG"} if ($maxNO < $self->{'trials'}{$blockIDs[0]}{"MAX NO NONTARG"});
+  if (defined($self->getTrialActualDecisionThreshold())){
+    $maxNO = $self->getTrialActualDecisionThreshold();
+  }
+
+  my $last = undef;
+  for (my $t=0; $t<@{$self->{'trials'}{$blockIDs[0]}{TARG}}; $t++){
+    my $now = smooth($self->{'trials'}{$blockIDs[0]}{TARG}, $t, $smoothWindowSize, $smoothWindowSize);
+    if (defined($last)){
+      for (my $exp=0; $exp < $targExtraDecisions; $exp++){
+        my $interpScr = $last + (($now - $last) / $targExtraDecisions * $exp);
+        $otrial->addTrial($newBlock, $interpScr, ($interpScr <= $maxNO ? "NO" : "YES"), 1, undef);
+      }
+    }
+    $otrial->addTrial($newBlock, $now, ($now <= $maxNO ? "NO" : "YES"), 1, undef);
+    $last = $now;
+  }
+  $last = undef;
+  for (my $t=0; $t<@{$self->{'trials'}{$blockIDs[0]}{NONTARG}}; $t++){
+    my $now = smooth($self->{'trials'}{$blockIDs[0]}{NONTARG}, $t, $smoothWindowSize, $smoothWindowSize);
+    if (defined($last)){
+      for (my $exp=0; $exp < $nonTargExtraDecisions; $exp++){
+        my $interpScr = $last + (($now - $last) / $nonTargExtraDecisions * $exp);
+        $otrial->addTrial($newBlock, $interpScr, ($interpScr <= $maxNO ? "NO" : "YES"), 0, undef);
+      }
+    }
+    $otrial->addTrial($newBlock, $now, ($now <= $maxNO ? "NO" : "YES"), 0, undef);
+    $last = $now;
+  }
+  return($otrial);
+}
+
+####################
+
 ### This is a class method
 sub buildDEVAModeTestFiles{
   my ($fileRoot) = "MTest";
