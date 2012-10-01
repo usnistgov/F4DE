@@ -1629,9 +1629,9 @@ sub writeGNUGraph{
       my @a = ($points->[$i][0], 
                ppndf($points->[$i][1]), 
                ppndf($points->[$i][2]),
-               $points->[$i][1],
-               $points->[$i][2],
-               $points->[$i][3]);
+               (defined($points->[$i][1]) ? $points->[$i][1] : "NA"),
+               (defined($points->[$i][2]) ? $points->[$i][2] : "NA"),
+               (defined($points->[$i][3]) ? $points->[$i][3] : "NA"));
       if ($points->[$i][7]-1 <= 0) {
         push @a, "NA NA NA NA NA NA NA NA";
       } else {
