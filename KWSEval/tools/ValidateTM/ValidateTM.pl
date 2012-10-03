@@ -212,7 +212,7 @@ if (defined $STM && defined $ECF) {
   } 
 }
 
-MMisc::ok_quit("No problems detected, files pass validation") if ($errc == 0);
+MMisc::ok_quit("No problems detected, file(s) pass validation") if ($errc == 0);
 MMisc::error_quit("Some problems were detected");
 
 
