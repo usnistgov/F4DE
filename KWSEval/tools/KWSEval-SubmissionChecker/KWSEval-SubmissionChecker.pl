@@ -461,8 +461,8 @@ sub check_name {
 
 ####
 
-sub run_ValidateKWSList {
-  my ($exp, $file, $ecf, $term, $rttm) = @_;
+sub run_ValidateTM {
+  my ($exp, $ctm, $ecf, $stm) = @_;
 
   vprint(3, "Creating the validation directory structure");
 
@@ -474,19 +474,17 @@ sub run_ValidateKWSList {
   my $of = "$od/$exp$kwslist_ext";
 
   my @cmd = ();
-  push @cmd, '-e', $ecf;
-  push @cmd, '-t', $term;
-  push @cmd, '-s', $file;
+  push @cmd, '-E', $ecf;
+  push @cmd, '-C', $ctm;
   if ($scoringReady) {
-    push(@cmd, '-r', $rttm) if (! MMisc::is_blank($rttm));
-    push @cmd, '-m', $od;
+    push(@cmd, '-S', $stm) if (! MMisc::is_blank($stm));
   } else {
-    push @cmd, '-o', $of;
+#    push @cmd, '-o', $of;
   }
 
-  my $lf = "$od/ValidateKWSList_run.log";
-  vprint(4, "Running tool ($ValidateKWSList), log: $lf");
-  my ($err) = &run_tool($lf, $ValidateKWSList, @cmd);
+  my $lf = "$od/ValidateTM_run.log";
+  vprint(4, "Running tool ($ValidateTM), log: $lf");
+  my ($err) = &run_tool($lf, $ValidateTM, @cmd);
 
   return($err) if (! MMisc::is_blank($err));
 
@@ -512,7 +510,7 @@ sub run_ValidateKWSList {
   $err = MMisc::filecopytodir($file, $od);
   return($err) if (! MMisc::is_blank($err));
 
-  if (($scoringReady) && (! MMisc::is_blank($sttm))) {
+  if (($scoringReady) && (! MMisc::is_blank($stm))) {
     push(@cmd, '-S', $stm);
     $err = MMisc::filecopytodir($stm, $od);
     return($err) if (! MMisc::is_blank($err));
