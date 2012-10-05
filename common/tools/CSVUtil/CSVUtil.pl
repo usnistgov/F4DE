@@ -28,6 +28,7 @@
 # $Id$
 
 use strict;
+use Statistics::Descriptive;
 
 my ($f4b, @f4bv, $f4d);
 BEGIN {
@@ -46,40 +47,315 @@ use Data::Dumper;
 use AutoTable;
 use MMisc;
 
-my $Usage = "csv_grep.pl [-v] -i InCSV|- -r row1|row2|... -c column1|column2|... -o outCSV|-\n".
+my $Usage = 
+"CSVUtil.pl [-v] -i InCSV|- -o outCSV|- -r row1|row2|... -c column1|column2|... \n".
+"    --or-- [-v] -i InCSV|- -a outAutoTable -R column1|column2|... -C column1|column2|... -V column1 \n".
 "Desc:  Read in a csv file extracting ONLY the specified columns and writing them to the output file.\n";
 
 my $in = undef;
-my $out = undef;
+my $outCSV = undef;
+my $outAT = undef;
 my $col = undef;
 my $row = undef;
+my @ATcol = ();
+my @ATrow = ();
+my $ATval = undef;
 my $reverse = 0;
+my @outputTypes = ();
+my $quiet = 0;
+my $statForRow = "";
+my $statForCol = "";
 
 use Getopt::Long;
+Getopt::Long::Configure ("bundling", "no_ignore_case");
 my $result = GetOptions ("i=s" => \$in,
-			 "o=s" => \$out,
+			 "o=s" => \$outCSV,
+			 "a=s" => \$outAT,
 			 "c=s" => \$col,
 			 "r=s" => \$row,
+			 "R=s@" => \@ATrow,
+			 "V=s" => \$ATval,
+			 "C=s@" => \@ATcol,
+			 "OutputType=s@" => \@outputTypes,
+			 "quiet" => \$quiet,
+			 "statForRow=s" => \$statForRow,
+			 "statForCol=s" => \$statForCol,
 			 "-v"  => \$reverse);
-die "Aborting:\n$Usage\n:" if (!$result);
+MMisc::error_quit("Aborting:\n$Usage\n:") if (!$result);
 
-die("Error: Argument -i req'd\n" . $Usage) if (!defined($in));
-die("Error: Argument -c and/or -r req'd\n" . $Usage) if (!defined($col) && !defined($row));
-die("Error: Argument -o req'd\n" . $Usage) if (!defined($out));
+push(@outputTypes, "csv") if (@outputTypes == 0);
 
-my $at = new AutoTable(); 
-if (! $at->loadCSV($in)) {
-  die("Error: Failed to load CSV file '$in'");
+MMisc::error_quit("Argument -i req'd\n" . $Usage) if (!defined($in));
+MMisc::error_quit("Argument -o or -a req'd\n" . $Usage) if (!defined($outCSV) && !defined($outAT));
+foreach my $otype(@outputTypes){
+  MMisc::error_quit("OutputType $otype not (csv|txt|html|tgrid)\n" . $Usage) if ($otype !~ /^(csv|txt|html|tgrid)$/);
+}
+MMisc::error_quit("statForRow not (continuous|discrete)\n" . $Usage) if ($statForRow !~ /^(continuous|discrete|)$/);
+MMisc::error_quit("statForCol not (continuous|discrete)\n" . $Usage) if ($statForCol !~ /^(continuous|discrete|)$/);
+
+print "Info: KeepColumns = $col\n" if (!$quiet);
+print "Info: KeepRows = $row\n" if (!$quiet);
+print "Info: outputTypes = (".join(", ",@outputTypes).")\n" if (!$quiet);
+print "Info: statForRow = $statForRow\n" if (!$quiet);
+print "Info: statForCol = $statForCol\n" if (!$quiet);
+
+if (defined($outCSV)){
+  MMisc::error_quit("Error: Argument -c and/or -r req'd\n" . $Usage) if (!defined($col) && !defined($row));
+
+  my $at = new AutoTable(); 
+  if (! $at->loadCSV($in)) {
+    die("Error: Failed to load CSV file '$in'");
+  }
+  
+  $at->setProperties({ "KeepColumnsInOutput" => $col }) if (defined($col)); 
+  $at->setProperties({ "KeepRowsInOutput" => $row }) if (defined($row)); 
+
+  foreach my $otype(@outputTypes){
+    MMisc::writeTo("$outCSV.$otype", "", 1, 0, $at->renderByType($otype));
+  }
+} else {  
+  MMisc::error_quit("Error: -C, -V, and -R req'd\n" . $Usage) if (@ATcol == 0 || @ATrow == 0 || !defined($ATval));
+
+  my $at = new AutoTable(); 
+  if (! $at->loadCSV($in)) {
+    MMisc::error_quit("Error: Failed to load CSV file '$in'");
+  }
+
+  ### Go through the Keys for matching expressions
+  my @outColIDs = (); my %uniqOutColIDs = ();
+  my @outRowColIDs = (); my %uniqRowOutColIDs = ();
+  my @outValueColIDs = (); my %uniqValueOutColIDs = ();
+  foreach my $colDef(@ATcol){
+    foreach my $colID($at->getColIDs("AsAdded")){
+      if ($colID =~ /$colDef/){
+        push @outColIDs, $colID if (! exists($uniqOutColIDs{$colID}));
+        $uniqOutColIDs{$colID} = 1;
+      }
+    }
+  }
+  print "Info: Column colIds (".join(",",@ATcol).") - ".join(", ",@outColIDs)."\n" if (!$quiet);
+  MMisc::error_quit("-C resulted in no columns") if (@outColIDs == 0);
+  ###
+  foreach my $colDef(@ATrow){
+    foreach my $colID($at->getColIDs("AsAdded")){
+      if ($colID =~ /$colDef/){
+        push @outRowColIDs, $colID if (! exists($uniqRowOutColIDs{$colID}));
+        $uniqRowOutColIDs{$colID} = 1;
+      }
+    }
+  }
+  print "Info: Row colIds (".join(",",@ATrow).")  - ".join(", ",@outRowColIDs)."\n" if (!$quiet);
+  MMisc::error_quit("-R resulted in no columns for rows") if (@outRowColIDs == 0);
+  ###
+  foreach my $colDef($ATval){
+    foreach my $colID($at->getColIDs("AsAdded")){
+      if ($colID =~ /$colDef/){
+        push @outValueColIDs, $colID if (! exists($uniqValueOutColIDs{$colID}));
+        $uniqValueOutColIDs{$colID} = 1;
+      }
+    }
+  }
+  print "Info: Value colIds ($ATval) - ".join(", ",@outValueColIDs)."\n" if (!$quiet);
+  MMisc::error_quit("-V resulted in no columns for cel values") if (@outValueColIDs == 0);
+
+  my $newAt = new AutoTable(); 
+  foreach my $rowIDStr ($at->getRowIDs("AsAdded")) {
+    ### Build the column label
+    my ($colLab, $rowLab, $val) = ("", "", "");
+    my $stat = Statistics::Descriptive::Full->new();
+   
+    for (my $i=0; $i<@outRowColIDs; $i++){
+      $rowLab .= ($i != 0 ? "|" : "") . $at->getData($outRowColIDs[$i], $rowIDStr);
+    }
+    for (my $i=0; $i<@outColIDs; $i++){
+      $colLab .= ($i != 0 ? "|" : "") . $at->getData($outColIDs[$i], $rowIDStr);
+      for (my $j=0; $j<@outValueColIDs; $j++){
+        $val .= ($j != 0 ? " " : "") . $at->getData($outValueColIDs[$j], $rowIDStr);
+      }
+      $newAt->addData($val, $outValueColIDs[$i]."|".$colLab, $rowLab);
+    }
+  }
+
+  my @rowIDS = $newAt->getRowIDs("AsAdded");
+  my @colIDS = $newAt->getColIDs("AsAdded");
+  my $statColIDStr = undef;
+  my %statRowValues = ();
+  my %allDiscreteKeys = ();
+  my $colStatLab = undef;
+
+  if ($statForRow ne ""){
+    foreach my $rowIDStr (@rowIDS) {
+      next if ($row ne "" && $rowIDStr !~ /^($row)$/);
+      
+      my $stat = Statistics::Descriptive::Full->new();
+      my %statDiscrete = ();
+      foreach my $colIDStr (@colIDS) {
+        if (! defined($statColIDStr)){
+          ($statColIDStr = $colIDStr) =~ s/[^|]+\|/ |/g;
+          $statColIDStr =~ s/\|[^\|]+$/| /g;
+        }
+        my $val = $newAt->getData($colIDStr, $rowIDStr);
+        if ($statForRow eq "continuous"){
+          $val =~ s/\s+//g;
+          $stat->add_data($val);
+        } elsif ($statForRow eq "discrete") {
+          $statDiscrete{$val} = 0 if (!exists($statDiscrete{$val}));
+          $statDiscrete{$val} ++;        
+        }
+      }
+      if (! defined($colStatLab)){
+        $colStatLab = $statColIDStr;
+        $colStatLab =~ s/\|\s*$//;
+      }
+      if ($statForRow eq "continuous"){
+        $newAt->addData($stat->count(), $colStatLab."Stat|Count", $rowIDStr); 
+        $newAt->addData(sprintf("%.4f",$stat->min()), $colStatLab."Stat|Min", $rowIDStr); 
+        $newAt->addData(sprintf("%.4f",$stat->mean()), $colStatLab."Stat|Mean", $rowIDStr);
+        $newAt->addData(sprintf("%.4f",$stat->median()), $colStatLab."Stat|Median", $rowIDStr);
+        $newAt->addData(sprintf("%.4f",$stat->max()), $colStatLab."Stat|Max", $rowIDStr);
+        $newAt->addData(sprintf("%.4f",$stat->standard_deviation()), $colStatLab."Stat|StdDev", $rowIDStr);
+        $statRowValues{Mean}{$rowIDStr} = sprintf("%.4f",$stat->mean());
+        $statRowValues{Median}{$rowIDStr} = sprintf("%.4f",$stat->median());      
+      } elsif ($statForRow eq "discrete") {
+        ### If I have for room in the colums for lab so use it
+        foreach my $key(keys %statDiscrete){
+          my $skey = ($key eq "" ? " " : $key);
+          $newAt->addData($statDiscrete{$key}, $colStatLab."Value|$skey", $rowIDStr);
+          $allDiscreteKeys{$skey} = 1;
+        }
+#        $newAt->addData($count, $colStatLab."Summary|Count", $rowIDStr);
+      } 
+    }
+  }
+  ### Add zero values for discrete
+  if ($statForRow eq "discrete") {
+    foreach my $rowIDStr (@rowIDS) {
+      foreach my $discKey(keys %allDiscreteKeys){
+        my $val = $newAt->getData($colStatLab."Value|$discKey", $rowIDStr);
+        $newAt->addData(0, $colStatLab."Value|$discKey", $rowIDStr) if (!defined($val));
+      }
+    }
+  }
+
+  ### Compute the ordinals
+  if ($statForRow eq "continuous"){
+    foreach my $stat("Mean", "Median"){
+      my $ranks = getRanks($statRowValues{$stat}, 0.01);
+      foreach my $rowid(keys %$ranks){
+        $newAt->addData($ranks->{$rowid}, $colStatLab."Rank|$stat", $rowid); 
+      }
+    }
+  }
+
+  my %statColValues = ();
+  my $statRowIDStr = undef;
+  if ($statForCol ne ""){
+    my $rowStatLab = undef;
+    my %statDiscrete = ();
+    foreach my $colIDStr (@colIDS) {
+      my $stat = Statistics::Descriptive::Full->new();
+      foreach my $rowIDStr (@rowIDS) {
+        next if ($row ne "" && $rowIDStr  !~ /^($row)$/);
+        if (! defined($statRowIDStr)){
+          ($statRowIDStr = $rowIDStr) =~ s/[^|]+\|/ |/g;
+          $statRowIDStr =~ s/\|[^\|]+$/| /g;
+        }
+        my $val = $newAt->getData($colIDStr, $rowIDStr);
+        if ($statForCol eq "continuous"){
+          $val =~ s/\s+//g;
+          $stat->add_data($val);
+        } elsif ($statForCol eq "discrete") {
+          $val = " " if ($val eq "");
+          $statDiscrete{$val} = 0 if (!exists($statDiscrete{$val}));
+          $statDiscrete{$val} ++;        
+        }
+      }
+      if (! defined($rowStatLab)){
+        $rowStatLab = $statRowIDStr;
+        $rowStatLab =~ s/\|\s*$//;
+      }
+      if ($statForCol eq "continuous"){
+        $newAt->addData($stat->count(), $colIDStr, $rowStatLab."Stat|Count"); 
+        $newAt->addData(sprintf("%.4f",$stat->min()), $colIDStr, $rowStatLab."Stat|Min"); 
+        $newAt->addData(sprintf("%.4f",$stat->mean()), $colIDStr, $rowStatLab."Stat|Mean"); 
+        $newAt->addData(sprintf("%.4f",$stat->median()), $colIDStr, $rowStatLab."Stat|Median"); 
+        $newAt->addData(sprintf("%.4f",$stat->max()), $colIDStr, $rowStatLab."Stat|Max"); 
+        $newAt->addData(sprintf("%.4f",$stat->standard_deviation()), $colIDStr, $rowStatLab."Stat|StdDEv"); 
+        $statColValues{Mean}{$colIDStr} = sprintf("%.4f",$stat->mean());
+        $statColValues{Median}{$colIDStr} = sprintf("%.4f",$stat->median());      
+      } elsif ($statForCol eq "discrete") {
+        my $count = 0;
+        ### If I have for room in the colums for lab so use it
+        foreach my $key(keys %statDiscrete){
+          $newAt->addData($statDiscrete{$key}, $colIDStr, $rowStatLab."Value|$key");
+          $count += $statDiscrete{$key};
+          $statDiscrete{$key} = 1;
+        }
+      } 
+    }
+    ### Add zero values for discrete
+    if ($statForRow eq "discrete") {
+      foreach my $colIDStr (@colIDS) {
+        foreach my $discKey(keys %allDiscreteKeys){
+          my $val = $newAt->getData($colIDStr, $rowStatLab."Value|$discKey");
+          $newAt->addData(0, $colIDStr, $rowStatLab."Value|$discKey") if (!defined($val));
+        }
+      }
+    }
+    ### Compute the ordinals
+    if ($statForCol eq "continuous"){
+      foreach my $stat("Mean", "Median"){
+        my $ranks = getRanks($statColValues{$stat}, 0.01);
+        foreach my $col(keys %$ranks){
+          $newAt->addData($ranks->{$col}, $col, $rowStatLab."Rank|$stat"); 
+        }
+      }
+    }
+  }
+
+  $newAt->setProperties({ "KeepColumnsInOutput" => $col }) if (defined($col)); 
+  $newAt->setProperties({ "KeepRowsInOutput" => "$row|.*Stat.*|.*Value.*|.*Rank.*" }) if (defined($row)); 
+  
+  foreach my $otype(@outputTypes){
+    MMisc::writeTo("$outAT.$otype", "", 1, 0, $newAt->renderByType($otype));
+  }
 }
 
-$at->setProperties({ "KeepColumnsInOutput" => $col }) if (defined($col)); 
-$at->setProperties({ "KeepRowsInOutput" => $row }) if (defined($row)); 
+sub getRanks(){
+  my ($hash, $tieThresh) = @_;
 
-if ($out eq "-"){
-  print $at->renderCSV(); 
-} else {
-  MMisc::writeTo($out, "", 1, 0, $at->renderCSV());
+  my $rank=1;
+  my %ranks = ();
+
+  my @keys = sort { $hash->{$a} <=> $hash->{$b} } keys %$hash;
+  foreach my $col(@keys){
+#    print "$hash->{$col}\n";
+    $ranks{$col} = $rank++;
+  }
+  ### Adjust for ties
+  my $i = 0;
+  while ($i < @keys){
+    my $end = $i;
+    my $min = $hash->{$keys[$i]};
+    my $sum = 0;
+    while ($end < @keys && abs($hash->{$keys[$end]} - $hash->{$keys[$i]}) < $tieThresh){
+      $sum += $ranks{$keys[$end]};
+      $end++;
+    }
+    if ($i+1 != $end){
+      for (my $j=$i; $j<$end; $j++){
+#        $ranks{$keys[$j]} .= " $hash->{$keys[$j]} | $sum / ($end - $i) = ".($sum / ($end - $i));
+         $ranks{$keys[$j]} = sprintf("%.1f", ($sum / ($end - $i)));
+      }
+      $i = $end;
+    } else {
+      $i++;
+    }
+  }
+#  print Dumper(\%ranks);
+  return (\%ranks);
 }
+
 
 exit(0);
 
