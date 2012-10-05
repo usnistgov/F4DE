@@ -52,7 +52,7 @@ use MtXML;
 
 sub new {
   my $class = shift;
-  my $termlistfile = shift;
+  my $termlistfile = shift;  
   my $charSplitText = shift;
   my $charSplitTextNotASCII = shift;
   my $charSplitTextDeleteHyphens = shift;
@@ -72,7 +72,7 @@ sub new {
   bless $self;
   
   my $err = "";
-  $self->loadFile($termlistfile) if (defined($termlistfile));
+  $err = $self->loadFile($termlistfile) if (defined($termlistfile));
   MMisc::error_quit($err) if (! MMisc::is_blank($err));
   
   return $self;
@@ -205,6 +205,37 @@ sub QueriesToTermSet
     }
 }
 
+sub getTermFromID
+{
+    my ($self, $termID) = @_;
+
+    if (exists($self->{TERMS}{$termID})){ 
+      return($self->{TERMS}{$termID});
+    }
+    return(undef);
+}
+
+sub removeTermByID
+{
+    my ($self, $termID) = @_;
+
+    if (exists($self->{TERMS}{$termID})){ 
+      delete($self->{TERMS}{$termID});
+    }
+}
+
+sub getTermFromText
+{
+    my ($self, $termText) = @_;
+
+    foreach my $id(keys %{ $self->{TERMS} }){
+      if ($self->{TERMS}{$id}{TEXT} eq $termText){ 
+        return($self->{TERMS}{$id});  
+      }
+    }
+    return(undef);
+}
+
 sub toString
 {
     my ($self) = @_;
@@ -310,6 +341,7 @@ sub loadXMLFile {
     ($err, $section, my $insection, my %term_attr) = &element_extractor_check($dem, $section, $exp, \@term_attrs);
     return($err) if (! MMisc::is_blank($err));
     
+    %attrib = ();
     $attrib{TERMID} = &__get_attr(\%term_attr, $term_attrs[0]);
     return("Term ID $attrib{TERMID} already exists")
       if (exists($self->{TERMS}{$attrib{TERMID}}));
@@ -329,6 +361,12 @@ sub loadXMLFile {
   $self->{LoadedFile} = 1;
 
   return("");
+}
+
+sub addTerm
+{
+  my ($self, $term, $id) = @_;
+  $self->{TERMS}{$id} = $term;
 }
 
 #####
