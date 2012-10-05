@@ -42,6 +42,10 @@ my $useSplitChars = 0;
 my $ReduceDuplicateInfo = 0;
 my $makeTextSplitChars = 0;
 my $cleanNonEssentialAttributes = 0;
+my $attrValueStr = undef;  ### must be a HASH structure that can be eval'd
+my $attrValue = undef;  ### must be a HASH structure that can be eval'd
+my $selectAttrValueStr = undef;
+my $selectAttrValue = undef;
 
 #Options
 #Need flags for adding programmatically generated annots, (i.e. NGram)
@@ -58,6 +62,8 @@ GetOptions
  'makeTextSplitChars' => \$makeTextSplitChars,
  'ReduceDuplicateInfo' => \$ReduceDuplicateInfo,
  'CleanNonEssentialAttributes' => \$cleanNonEssentialAttributes,
+ 'selectAttrValue=s' => \$selectAttrValueStr,
+ 'attrValue=s' => \$attrValueStr,
 ) or MMisc::error_quit("Unknown option(s)\n");
 
 #Check required options
@@ -65,10 +71,31 @@ MMisc::error_quit("in-term-list required.") if ($inTlist eq "");
 MMisc::error_quit("out-file-name required.") if ($outfilename eq "");
 MMisc::error_quit("makeTextSplitChars is mutually exclusive will all other edits.") 
   if ($makeTextSplitChars && ($ngram || (@rttms > 0) || $character || (@annotFiles > 0) || $useSplitChars));
-
+if (defined($attrValueStr)){
+  eval("\$attrValue = ".$attrValueStr);
+#  print "Adding annotations:\n".Dumper($attrValue);
+#  exit;
+  MMisc::error_quit("Unable to parse attribute value String '$attrValueStr'") if (! defined($attrValue)); 
+  MMisc::error_quit("parse attribute value String '$attrValueStr' is not a hash") if (ref($attrValue) ne "HASH"); 
+}
+if (defined($selectAttrValueStr)){
+  eval("\$selectAttrValue = ".$selectAttrValueStr);
+#  print "Select Terms annotations $selectAttrValueStr:\n".Dumper($selectAttrValue);
+#  exit;
+  MMisc::error_quit("Unable to parse attribute value String '$attrValueStr'") if (! defined($selectAttrValue)); 
+  MMisc::error_quit("parse attribute value String '$attrValueStr' is not a hash") if (ref($selectAttrValue) ne "HASH"); 
+}
 
 #Load TermList
 $TermList = new TermList($inTlist, 0, 0, 0);
+### Apply the attrValue
+if (defined($attrValueStr)){
+ foreach my $termid (keys %{ $TermList->{TERMS} }) {
+    foreach my $key(keys %$attrValue){
+      $TermList->{TERMS}{$termid}->setAttrValue($key, $attrValue->{$key});
+    }
+  }
+}
 
 if ($makeTextSplitChars){
    foreach my $termid (keys %{ $TermList->{TERMS} }) {
@@ -178,6 +205,29 @@ if (@rttms > 0){
       $TermList->{TERMS}{$termid}->setAttrValue($quantKey, $quantN);
     }
   }
+}
+
+### Filter unselected terms
+if (defined($selectAttrValueStr)){
+  my $numDel = 0;
+  print "Removing un-selected terms \n";
+#  print join(" ",keys %$selectAttrValue)."\n";
+  foreach my $termid (keys %{ $TermList->{TERMS} }) {
+    my $keep = 0;
+#    print "$termid\n";
+    foreach my $keepAttr(keys %$selectAttrValue){
+      my $val = $TermList->{TERMS}{$termid}->getAttrValue($keepAttr);
+#      print Dumper($TermList->{TERMS}{$termid});
+      my $pat = $selectAttrValue->{$keepAttr};
+#      print " $termid $keepAttr val=$val pat=$pat\n";
+      $keep = 1 if (defined($val) && $val =~ /^($pat)$/);
+    }
+    if (! $keep){
+      $TermList->removeTermByID($termid) ;
+      $numDel ++;
+    }
+  }      
+  print "  $numDel keywords deleted\n";
 }
 
 if ($cleanNonEssentialAttributes){
