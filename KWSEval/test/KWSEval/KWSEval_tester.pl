@@ -27,7 +27,15 @@ $testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../com
 
 ##
 $tn = "test2";
-$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -Y BN+CTS:BNEWS,CTS -O -B -y TXT -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Source Type)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -Y BN+CTS:BNEWS,CTS -O -B -y TXT -f -", "res_$tn.txt");
+
+##
+$tn = "test2a";
+$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Attribute Query)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -q Characters -O -B -y TXT -f -", "res_$tn.txt");
+
+##
+$tn = "test2b";
+$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Attribute Query with regular expression filter)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -q 'Characters:regex=^[35]\$' -O -B -y TXT -f -", "res_$tn.txt");
 
 ##
 $tn = "test3";
