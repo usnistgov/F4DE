@@ -555,6 +555,21 @@ sub renderHTMLTable(){
   $out;
 }
 
+sub renderByType(){
+  my ($self, $type) = @_;
+  if ($type eq "txt"){
+    return $self->renderTxtTable(1);
+  } elsif ($type eq "html"){
+    return $self->renderHTMLTable("");
+  } elsif ($type eq "csv"){
+    return $self->renderCSV();
+  } elsif ($type eq "tgrid"){
+    return $self->renderGrid("\t");
+  } else {
+    return "Error: Requested AutoTable type $type unknown\n"
+  }
+}
+
 sub renderTxtTable(){
 #<<<<<<< AutoTable.pm
   my ($self, $gap) = @_;
@@ -1244,10 +1259,23 @@ sub _safeSplit{
   ### Remove the /|/ symbols
   MMisc::filterArray(\@arr, "\\|");
 #  print "Call $matchStr $text    (".join(",",@arr).")\n";
+  ### Merge if the split was escaped
+  for (my $i=0; $i<@arr; $i++){
+    if ($arr[$i] =~ /\\\\$/) {
+      ; ### Do nothing the escape  was escaped
+    } elsif ($arr[$i] =~ /\\$/) {
+#        print "   Merge\n";
+      if ($i+1 < @arr){
+        $arr[$i] .= "|" . splice(@arr,$i+1,1);
+        $i --;  # Make sure we redo this $i because of the merge
+      }
+    }  
+  }
   ### Check to make sure there are NO empty elements.  If there are, then die
   foreach (@arr){
     MMisc::error_quit("Column/row header \"$text\" contains empty items which is illegal") if ($_ eq "");
   } 
+#  print "safesplit ".join("%",@arr)."\n";;
   @arr;
 }
 
@@ -1339,17 +1367,37 @@ sub _centerJust(){
   $self->_nChrStr($left, " ") . $str . $self->_nChrStr($right, " ");
 }
 
+sub renderGrid(){
+  my ($self, $sep) = @_;
+  my $str = "";
+  
+  my @rowIDS = $self->getRowIDs("AsAdded");
+  my @colIDS = $self->getColIDs("AsAdded");
+  foreach my $col(@colIDS){
+    foreach my $row(@rowIDS){
+      my $val = $self->getData($col, $row);
+      $str .= "$val$sep$col$sep$row\n" if (defined($val));
+    }
+  }            
+  return $str;
+}
+
 sub loadGridFromSTDIN{
   my ($renderer, $props) = @_;
   #print Dumper($props);
- 
+  my $sep = '\s';
+  
   my $at = new AutoTable();
-  foreach my $prop(keys %$props){
-    $at->{Properties}->setValue($prop, $props->{$prop});
+  foreach my $prop(keys %$props){       
+    if ($prop eq "separator"){
+      $sep = $props->{$prop};
+    } else {
+      $at->{Properties}->setValue($prop, $props->{$prop});
+    }
   }
   while (<STDIN>){
     chomp;
-    my @a = split;
+    my @a = split(/$sep/);
     $at->addData($a[0], $a[1], $a[2]);
     $at->setSpecial($a[1], $a[2], $a[3]) if (@a > 3);
   }
