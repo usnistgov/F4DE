@@ -271,12 +271,17 @@ sub groupByECFSourceType
 
 sub groupByAttributes
 {
-  my ($self, $segment, $term) = @_;
-
+  my ($self, $rec, $term) = @_;
   my @groups = ();
-  foreach my $attribute (@{ $self->{ATTRIBUTES} }) {
+  foreach my $attrvalexp (@{ $self->{ATTRIBUTES} }) {
+    my ($attribute, $value_regexp) = ($attrvalexp, undef);
+    if ($attrvalexp =~ /^(.+):regex=(.+)$/){
+      ($attribute, $value_regexp) = ($1, $2)
+    }
     my $value = $term->{$attribute};
-    push (@groups, ($attribute . "-" . $value)) if (defined $value);
+    if (defined($value)){
+      push (@groups, ($attribute . "-" . $value)) if ((!defined $value_regexp) || ($value =~ /$value_regexp/));
+    }
   }
   return \@groups;
 }
