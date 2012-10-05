@@ -37,8 +37,8 @@ sub new
     }
 
     ## Add the character separated term text
-    $self->{CHARSPLITTEXT} = join(" ", split("", $self->{TEXT}));
-    $self->{CHARSPLITTEXT} =~ s/\s+/ /g; 
+#    $self->{CHARSPLITTEXT} = join(" ", split("", $self->{TEXT}));
+#    $self->{CHARSPLITTEXT} =~ s/\s+/ /g; 
     
     bless $self;
     return $self;
