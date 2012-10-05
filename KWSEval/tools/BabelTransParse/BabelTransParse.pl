@@ -217,10 +217,10 @@ foreach my $trans(sort keys %$db){
   my $outTransName = $trans;
   $outTransName =~ s:.*/::;
   $outTransName =~ s:\.[^.]*$::;
-  print ECF "<excerpt audio_filename=\"$outTransName\" ".
+  print ECF "  <excerpt audio_filename=\"$outTransName\" ".
     "channel=\"1\" ".
-    "tbeg=\"".$db->{$trans}{bt}."\" ".
-    "dur=\"".$db->{$trans}{et}."\" ".
+    "tbeg=\"".sprintf("%.3f",$db->{$trans}{bt})."\" ".
+    "dur=\"".sprintf("%.3f",$db->{$trans}{et})."\" ".
     "source_type=\"splitcts\"/>\n";
   ### Interate over the segments
   my $spkr = 1;
@@ -242,6 +242,7 @@ foreach my $trans(sort keys %$db){
     my $wrd = '[^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]+([_-][^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]+)*';
     my $isNoScoreKWS = 0;
     my $isNoScoreSTT = 0;
+    print "Warning: No tokens $outTransName $bt\n" if (@toks == 0);
     for (my $t = 0; $t < @toks; $t++){
       my $token = $toks[$t];
       my($type,$stype) = ("LEXEME", "lex");
@@ -264,7 +265,9 @@ foreach my $trans(sort keys %$db){
       elsif ($token eq "<prompt>"){    $type = "NON-SPEECH"; $stype = "other"; $isNoScoreSTT = 1; $isNoScoreKWS = 1; }
       elsif ($token eq "<overlap>"){   $type = "NON-SPEECH"; $stype = "other"; $isNoScoreSTT = 1; $isNoScoreKWS = 1; }
       elsif ($token =~ /^\*(${wrd})\*$/){   $token = $1;                 }  ## Mispronounced
-      elsif ($token =~ /^(${wrd}-)$/){      $stype = "frag";             }  ## Fragments
+      elsif ($token =~ /^\*(${wrd}-)\*$/){  $token = $1;     $stype = "frag";            }  ## Mispronounced fragment
+      elsif ($token =~ /^(${wrd}-)$/){                       $stype = "frag";             }  ## Fragments
+      elsif ($token =~ /^(-${wrd})$/){                       $stype = "frag";             }  ## Fragments
 #      elsif ($token =~ /^(${notpunct}+(_${notpunct}+)+)$/){      $stype = "frag";  }  ## Acronyms
       elsif ($token =~ /^\~$/){        $type = "NON-SPEECH"; $stype = "other"  }  ## truncations
       elsif ($token =~ /^$wrd$/){    ;                                       } ## Do nothing
@@ -315,10 +318,10 @@ foreach my $trans(sort keys %$db){
       print RTTM "NOSCORE $outTransName 1 $bt $dur <NA> <NA> <NA> <NA>\n";
     }
     if ($isNoScoreSTT){
-      print STM ";;$outTransName 1 $outTransName $bt $et $stmText\n";
-      print STM "$outTransName 1 $outTransName $bt $et IGNORE_TIME_SEGMENT_IN_SCORING\n";
+      print STM ";;$outTransName 1 Aggregated $bt $et $stmText\n";
+      print STM "$outTransName 1 Aggregated $bt $et IGNORE_TIME_SEGMENT_IN_SCORING\n";
     } else {
-      print STM "$outTransName 1 $outTransName $bt $et $stmText\n";
+      print STM "$outTransName 1 Aggregated $bt $et $stmText\n";
     }
   }
 }
