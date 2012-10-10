@@ -1,0 +1,57 @@
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -q 'Characters:regex=^[35]$' -O -B -y TXT -f -
+[[RETURN CODE]] 0
+[[STDOUT]]
+Loading ECF ../common/test6.ecf.xml
+Loading KWSList File ../common/test6.kwslist.xml
+Loading KWList File ../common/test6.kwlist.xml
+Loading RTTM File ../common/test6.rttm
+Performing Occurrence Alignment
+Computing requested DET curves and reports
+Conditional Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |              100 |
+|      IncludeBlocksWithNoTargets |                0 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |              100 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+|                |           Inputs            |                                Actual Decision TWV Analysis                                 |
+|     Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    TWV     |  Dec. Tresh  |
+|----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+------------+--------------+
+|   Characters-3 |      15 |        2 |     12 |        10 |          0 |     2 |       5 |   0.02353 |    0.333 |   -22.8604 |       0.3450 |
+|   Characters-5 |       0 |        0 |      0 |         0 |          0 |     0 |       0 |        NA |       NA |         NA |           NA |
+Conditional Block Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |              100 |
+|      IncludeBlocksWithNoTargets |                0 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |              100 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+                  |  MetaData  |                              Characters-3                               |                         Characters-5                          |
+                  |    Text    |  #Targ  |  #Corr  |  #FA  |  #Miss  |    TWV     |    PFA    |  PMISS   |  #Miss  |  #FA  |  #Corr  |  #Targ  |  PFA  |  PMISS  |  TWV  |
+------------------+------------+---------+---------+-------+---------+------------+-----------+----------+---------+-------+---------+---------+-------+---------+-------+
+Keyword  TERM-01  |        yes |      15 |      10 |     2 |       5 |   -22.8604 |   0.02353 |    0.333 |         |       |         |         |       |         |       |
+         TERM-04  |      hello |         |         |       |         |            |           |          |         |       |         |         |       |         |       |
+Summary  Totals   |            |      15 |      10 |     2 |       5 |            |           |          |       0 |     0 |       0 |       0 |       |         |       |
+         Means    |            |      15 |      10 |     2 |       5 |            |   0.02353 |    0.333 |       0 |     0 |       0 |       0 |    NA |      NA |       |
+         TWV      |            |         |         |       |         |   -22.8604 |           |          |         |       |         |         |       |         |    NA |
+
+[[STDERR]]
+
