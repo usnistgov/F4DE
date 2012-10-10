@@ -164,18 +164,27 @@ foreach my $trans(@tfiles){
   my $lastTime = undef;
   my $thisTime = undef;
   my $text = undef;
+  my $lastWasTime = 0;
   while (<TRANS>){
     chomp;
     if ($_ =~ /^\[(\d+\.\d+)]$/){
       $thisTime = $1;
+      if ($lastWasTime){
+        print "Warning: Consecutive times for $trans found at $lastTime and $thisTime.  Inserting <no-speech>\n";
+        MMisc::error_quit("Internal error: \$text defined when it should not be for consecutive times") if (defined($text));
+        $text = "<no-speech>";
+      }
+      
       if (defined($text)){  ### I have transcript data so flush it
         push @{ $db->{$trans}{transcript} }, {bt=>$lastTime, et=>$thisTime, text=>$text};
         $text = undef;
       }
       $trans_bt = $thisTime if ($trans_bt > $thisTime);
       $trans_et = $thisTime if ($trans_et < $thisTime);
+      $lastWasTime = 1;
     } else { 
       $text = $_;
+      $lastWasTime = 0;
     }
 
     $lastTime = $thisTime;
