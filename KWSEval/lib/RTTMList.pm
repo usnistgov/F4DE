@@ -440,7 +440,7 @@ sub saveFile {
   $to = &_rm_mds($to);
 
   my $txt = $self->{CoreText};
-  return(MMisc::writeTo($to, "", 1, 0, $txt,  undef, undef, undef, undef, undef ,$self->getPerlEncodingString()));
+  return(MMisc::writeTo($to, "", 1, 0, $txt,  undef, undef, undef, undef, undef , (! MMisc::is_blank($self->{ENCODING})) ? $self->getPerlEncodingString() : undef));
 }
 
 ########## 'save' / 'load' Memmory Dump functions
