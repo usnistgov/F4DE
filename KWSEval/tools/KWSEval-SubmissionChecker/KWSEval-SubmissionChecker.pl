@@ -491,37 +491,37 @@ sub run_ValidateTM {
   return("");
 }
 
+#####
+
 sub run_ValidateKWSList {
-  my ($exp, $file, $ecf, $stm) = @_;
+  my ($exp, $file, $ecf, $term, $rttm) = @_;
 
   vprint(3, "Creating the validation directory structure");
 
-  my $od = "$outdir/$exp$ctm_ext";
+  my $od = "$outdir/$exp";
   return("Problem creating output dir ($od)")
     if (! MMisc::make_wdir($od));
   vprint(4, "Output dir: $od");
   
+  my $of = "$od/$exp$kwslist_ext";
+
   my @cmd = ();
-  push @cmd, '-E', $ecf;
-  my $err = MMisc::filecopytodir($ecf, $od);
-  return($err) if (! MMisc::is_blank($err));
-
-  push @cmd, '-C', $file;
-  $err = MMisc::filecopytodir($file, $od);
-  return($err) if (! MMisc::is_blank($err));
-
-  if (($scoringReady) && (! MMisc::is_blank($stm))) {
-    push(@cmd, '-S', $stm);
-    $err = MMisc::filecopytodir($stm, $od);
-    return($err) if (! MMisc::is_blank($err));
+  push @cmd, '-e', $ecf;
+  push @cmd, '-t', $term;
+  push @cmd, '-s', $file;
+  if ($scoringReady) {
+    push(@cmd, '-r', $rttm) if (! MMisc::is_blank($rttm));
+    push @cmd, '-m', $od;
+  } else {
+    push @cmd, '-o', $of;
   }
 
   my $lf = "$od/ValidateKWSList_run.log";
-  vprint(4, "Running tool ($ValidateTM), log: $lf");
-  my ($err) = &run_tool($lf, $ValidateTM, @cmd);
-  
+  vprint(4, "Running tool ($ValidateKWSList), log: $lf");
+  my ($err) = &run_tool($lf, $ValidateKWSList, @cmd);
+
   return($err) if (! MMisc::is_blank($err));
-  
+
   return("");
 }
 
