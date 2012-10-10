@@ -81,7 +81,7 @@ sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
 foreach my $pn ("MMisc", "RTTMList", "KWSecf", "TermList", "KWSList", "KWSTools", "KWSMappedRecord", 'BipartiteMatch',
-                "KWSAlignment", "KWSSegAlign", "CacheOccurrences", "DETCurveSet", "DETCurve", "MetricTWV", "TrialsTWV") {
+                "KWSAlignment", "KWSSegAlign", "DETCurveSet", "DETCurve", "MetricTWV", "TrialsTWV") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
