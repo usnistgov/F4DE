@@ -47,6 +47,13 @@ my $attrValue = undef;  ### must be a HASH structure that can be eval'd
 my $selectAttrValueStr = undef;
 my $selectAttrValue = undef;
 
+my $charSplitText = 0;
+my $charSplitTextNotASCII = 0;
+my $charSplitTextDeleteHyphens = 0;
+
+my @textPrefilters = ();
+
+
 #Options
 #Need flags for adding programmatically generated annots, (i.e. NGram)
 GetOptions
@@ -64,6 +71,7 @@ GetOptions
  'CleanNonEssentialAttributes' => \$cleanNonEssentialAttributes,
  'selectAttrValue=s' => \$selectAttrValueStr,
  'attrValue=s' => \$attrValueStr,
+ 'xprefilterText=s@'                   => \@textPrefilters,
 ) or MMisc::error_quit("Unknown option(s)\n");
 
 #Check required options
@@ -85,9 +93,24 @@ if (defined($selectAttrValueStr)){
   MMisc::error_quit("Unable to parse attribute value String '$attrValueStr'") if (! defined($selectAttrValue)); 
   MMisc::error_quit("parse attribute value String '$attrValueStr' is not a hash") if (ref($selectAttrValue) ne "HASH"); 
 }
+foreach my $filt(@textPrefilters){
+  if ($filt =~ /^charsplit$/i){
+    $charSplitText = 1;
+  } elsif ($filt =~ /^notascii$/i){
+    $charSplitTextNotASCII = 1;
+  } elsif ($filt =~ /^deletehyphens$/i){
+    $charSplitTextDeleteHyphens = 1;
+  } else {
+    MMisc::error_quit("Error: -zprefilterText option /$filt/ not defined.  Aborting.");
+  }
+}
+print "Warning: -zprefilterText notASCII ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextNotASCII);
+print "Warning: -zprefilterText deleteHyphens ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextDeleteHyphens);
+
+############  READY TO BEGIN ######################
 
 #Load TermList
-$TermList = new TermList($inTlist, 0, 0, 0);
+$TermList = new TermList($inTlist, $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);
 ### Apply the attrValue
 if (defined($attrValueStr)){
  foreach my $termid (keys %{ $TermList->{TERMS} }) {
@@ -171,7 +194,8 @@ if (@rttms > 0){
     my $key = "RefOccurences:$rttm";
     my $quantKey = "QuantizedRefOccurences:$rttm";
     my $rttm = new RTTMList($rttm, $TermList->getLanguage(),
-                            $TermList->getCompareNormalize(), $TermList->getEncoding(), 0, 0, 0);  
+                            $TermList->getCompareNormalize(), $TermList->getEncoding(), 
+                            $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);  
     my @terms = keys %{ $TermList->{TERMS} };
     my $n = 0;
     foreach my $termid (keys %{ $TermList->{TERMS} }) {
