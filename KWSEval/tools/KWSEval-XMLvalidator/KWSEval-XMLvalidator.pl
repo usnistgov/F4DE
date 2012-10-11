@@ -222,7 +222,8 @@ sub load_KWSList {
 
 sub load_TermList {
   my $object = new TermList(undef, 0, 0, 0);
-  my $err = $object->loadFile($_[0]);
+  # if we are not rewritting ... skip TERM creation in memory, just validate
+  my $err = $object->loadFile($_[0], ($writeback == -1) ? 1: 0);
   return($err, $object);
 }
 
