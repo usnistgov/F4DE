@@ -106,94 +106,94 @@
 ../common/test4.cantonese.kwlist.xml: validates
 <kwlist ecf_filename="Demo.cantonese.source.kwlist.xml" language="cantonese" encoding="UTF-8" compareNormalize="" version="20060511-0900">
   <kw kwid="TEST-00">
-    <kwtext>å</kwtext>
+    <kwtext>啊</kwtext>
   </kw>
   <kw kwid="TEST-01">
-    <kwtext>ç³»</kwtext>
+    <kwtext>系</kwtext>
   </kw>
   <kw kwid="TEST-02">
-    <kwtext>ä½ </kwtext>
+    <kwtext>你</kwtext>
   </kw>
   <kw kwid="TEST-03">
-    <kwtext>æ</kwtext>
+    <kwtext>我</kwtext>
   </kw>
   <kw kwid="TEST-04">
-    <kwtext>å</kwtext>
+    <kwtext>唔</kwtext>
   </kw>
   <kw kwid="TEST-05">
-    <kwtext>å¥½</kwtext>
+    <kwtext>好</kwtext>
   </kw>
   <kw kwid="TEST-06">
-    <kwtext>é½</kwtext>
+    <kwtext>都</kwtext>
   </kw>
   <kw kwid="TEST-07">
-    <kwtext>ä¸ª</kwtext>
+    <kwtext>个</kwtext>
   </kw>
   <kw kwid="TEST-08">
-    <kwtext>æå²</kwtext>
+    <kwtext>果啲</kwtext>
   </kw>
   <kw kwid="TEST-09">
-    <kwtext>å¦</kwtext>
+    <kwtext>啦</kwtext>
   </kw>
   <kw kwid="TEST-10">
-    <kwtext>ç³» å</kwtext>
+    <kwtext>系 啊</kwtext>
   </kw>
   <kw kwid="TEST-11">
-    <kwtext>æ ä¸ª</kwtext>
+    <kwtext>果 个</kwtext>
   </kw>
   <kw kwid="TEST-12">
-    <kwtext>å ç³»</kwtext>
+    <kwtext>唔 系</kwtext>
   </kw>
   <kw kwid="TEST-13">
-    <kwtext>ç³» å¯</kwtext>
+    <kwtext>系 咯</kwtext>
   </kw>
   <kw kwid="TEST-14">
-    <kwtext>ç³» åª</kwtext>
+    <kwtext>系 咪</kwtext>
   </kw>
   <kw kwid="TEST-15">
-    <kwtext>å ç³»</kwtext>
+    <kwtext>啊 系</kwtext>
   </kw>
   <kw kwid="TEST-16">
-    <kwtext>å å</kwtext>
+    <kwtext>啊 嘛</kwtext>
   </kw>
   <kw kwid="TEST-17">
-    <kwtext>å°± ç³»</kwtext>
+    <kwtext>就 系</kwtext>
   </kw>
   <kw kwid="TEST-18">
-    <kwtext>åº åº¦</kwtext>
+    <kwtext>喺 度</kwtext>
   </kw>
   <kw kwid="TEST-19">
-    <kwtext>å ä½ </kwtext>
+    <kwtext>咁 你</kwtext>
   </kw>
   <kw kwid="TEST-20">
-    <kwtext>å ç³» å</kwtext>
+    <kwtext>啊 系 啊</kwtext>
   </kw>
   <kw kwid="TEST-21">
-    <kwtext>ç³» å ç³»</kwtext>
+    <kwtext>系 啊 系</kwtext>
   </kw>
   <kw kwid="TEST-22">
-    <kwtext>ç³» å æ</kwtext>
+    <kwtext>系 啊 我</kwtext>
   </kw>
   <kw kwid="TEST-23">
-    <kwtext>å ç³» å </kwtext>
+    <kwtext>唔 系 几</kwtext>
   </kw>
   <kw kwid="TEST-24">
-    <kwtext>å¯ ç³» å¯</kwtext>
+    <kwtext>咯 系 咯</kwtext>
   </kw>
   <kw kwid="TEST-25">
-    <kwtext>ç³» å¯ ç³»</kwtext>
+    <kwtext>系 咯 系</kwtext>
   </kw>
   <kw kwid="TEST-26">
-    <kwtext>å°± ç³» å¯</kwtext>
+    <kwtext>就 系 咯</kwtext>
   </kw>
   <kw kwid="TEST-27">
-    <kwtext>ç³» ç³» ç³»</kwtext>
+    <kwtext>系 系 系</kwtext>
   </kw>
   <kw kwid="TEST-28">
-    <kwtext>å ç å</kwtext>
+    <kwtext>啊 睇 啊</kwtext>
   </kw>
   <kw kwid="TEST-29">
-    <kwtext>å¥½ å¥½ è¸©</kwtext>
+    <kwtext>好 好 踩</kwtext>
   </kw>
 </kwlist>
 ../common/test5.kwlist.xml: validates
