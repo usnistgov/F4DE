@@ -31,7 +31,7 @@ $testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Sourc
 
 ##
 $tn = "test2b";
-$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Attribute Query)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -q Characters -O -B -y TXT -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Attribute Query)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -q 'Characters:regex=^[35]\$' -O -B -y TXT -f -", "res_$tn.txt");
 
 ##
 $tn = "test2c";
