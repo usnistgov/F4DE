@@ -32,6 +32,7 @@ use TranscriptHolder;
 
 use strict;
 use AutoTable;
+use Encode;
 
 my $version     = "0.1b";
 
@@ -50,6 +51,11 @@ use MMisc;
 use xmllintHelper;
 use MtXML;
 
+#####
+my @tlist_attrs = ( 'ecf_filename', 'language', 'encoding', 'compareNormalize', 'version' );
+my @term_attrs = ('kwid');
+
+#####
 sub new {
   my $class = shift;
   my $termlistfile = shift;  
@@ -62,12 +68,20 @@ sub new {
   $self->{TERMLIST_FILENAME} = $termlistfile;
   $self->{ECF_FILENAME} = "";
   $self->{VERSION} = "";
+  # new default is to NOT CreateTerms
+  $self->{CreateTerms} = 0;
   $self->{TERMS} = {};
   $self->{charSplitText} = $charSplitText;
   $self->{charSplitTextNotASCII} = $charSplitTextNotASCII;
   $self->{charSplitTextDeleteHyphens} = $charSplitTextDeleteHyphens;
 
-  $self->{LoadedFile} = 0;
+  # Added to avoid overwriting in file load
+  $self->{LoadedFile} = 0; # 0 not loaded
+  $self->{LoadInProgress} = 0; 
+  # File handles & related variables
+  $self->{FH} = undef;
+  $self->{linec} = 0;
+  $self->{SEfile} = undef;
   
   bless $self;
   
@@ -253,120 +267,31 @@ sub toString
     }
 }
 
-####################
+########################################
 
-sub loadXMLFile {
-  my ($self, $tlistf) = @_;
+sub __precheck_kwlist_encoding {
+  my ($file) = @_;
+  open FILE, "<$file"
+    or return("Problem opening file ($file) : $!");
+  my $txt = "";
+  read(FILE, $txt, 2048);
+  close FILE;
 
-  return("Refusing to load a file on top of an already existing object")
-    if ($self->{LoadedFile} != 0);
-
-  my $err = MMisc::check_file_r($tlistf);
-  return("Problem with input file ($tlistf): $err")
-    if (! MMisc::is_blank($err));
-  
-  my $modfp = MMisc::find_Module_path('TermList');
-  return("Could not obtain \'TermList.pm\' location, aborting")
-    if (! defined $modfp);
-
-  my $f4b = 'F4DE_BASE';
-  my $xmllint_env = "F4DE_XMLLINT";
-  my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
-  my @xsdfilesl = ('KWSEval-kwlist.xsd');
-
-#  print STDERR "Loading Term List file '$tlistf'.\n";
-  
-  # First let us use xmllint on the file XML file
-  my $xmlh = new xmllintHelper();
-  my $xmllint = MMisc::get_env_val($xmllint_env, "");
-  return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xmllint($xmllint));
-  return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xsdfilesl(@xsdfilesl));
-  return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xsdpath($xsdpath));
-  return("While trying to set xmllint \'encoding\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_encoding('UTF-8'));
-  
-  my $tlistfilestring = $xmlh->run_xmllint($tlistf);
-  return("$tlistf: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
-    if ($xmlh->error());
-
-  ## Processing file content
-
-  # Remove all XML comments
-  $tlistfilestring =~ s%\<\!\-\-.+?\-\-\>%%sg;
-  
-  # Remove <?xml ...?> header
-  $tlistfilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
-  
-  # At this point, all we ought to have left is the '<kwlist>' content
-  return("After initial cleanup, we found more than just \'termlist\', aborting")
-    if (! ( ($tlistfilestring =~ m%^\s*\<kwlist\s%is) && ($tlistfilestring =~ m%\<\/kwlist\>\s*$%is) ) );
-  my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
-  # and if we extract it, the remaining string should be empty
-  
-  # for attributes, array order is important
-  my $here = 'kwlist';
-  my @tlist_attrs = ( 'ecf_filename', 'language', 'encoding', 'compareNormalize', 'version' );
-  ($err, my $string, my $section, my %tlist_attr) = &element_extractor_check($dem, $tlistfilestring, $here, \@tlist_attrs);
+  my ($err, %res) = MtXML::get_inline_xml_attributes('kwlist', $txt);
   return($err) if (! MMisc::is_blank($err));
-  return("After removing '<$here>', found leftover content, aborting")
-    if (! MMisc::is_blank($string));
-  
-  $self->{ECF_FILENAME} = &__get_attr(\%tlist_attr, $tlist_attrs[0]);
-  return("new TermList failed: " . $self->errormsg())
-    if (! $self->setLanguage(&__get_attr(\%tlist_attr, $tlist_attrs[1])));
-  return("new TermList failed: " . $self->errormsg())
-    if (! $self->setEncoding(&__get_attr(\%tlist_attr, $tlist_attrs[2])));
-  return("new TermList failed: " . $self->errormsg())
-    if (! $self->setCompareNormalize(&__get_attr(\%tlist_attr, $tlist_attrs[3])));
-  $self->{VERSION} = &__get_attr(\%tlist_attr, $tlist_attrs[4]);
-  
-  # UTF-8 data pre-processing
-  $section = decode_utf8($section)
-    if ($self->{ENCODING} eq 'UFT-8');
-  
-  # process all 'kw'
-  my %attrib = ();
-  my $exp = 'kw';
-  my @term_attrs = ('kwid');
-  while (! MMisc::is_blank($section)) {
-    # First off, confirm the first section is the expected one
-    my $name = MtXML::get_next_xml_name(\$section, $dem);
-    return("In \'$here\', while checking for \'$exp\': Problem obtaining a valid XML name, aborting")
-      if ($name eq $dem);
-    return("In \'$here\': \'$exp\' section not present (instead: $name), aborting")
-      if ($name ne $exp);
-    ($err, $section, my $insection, my %term_attr) = &element_extractor_check($dem, $section, $exp, \@term_attrs);
-    return($err) if (! MMisc::is_blank($err));
-    
-    %attrib = ();
-    $attrib{TERMID} = &__get_attr(\%term_attr, $term_attrs[0]);
-    return("Term ID $attrib{TERMID} already exists")
-      if (exists($self->{TERMS}{$attrib{TERMID}}));
-    
-    ($err, my $termtext, my %ti_attr) = &process_term_content($insection, $dem);
-    return($err) if (! MMisc::is_blank($err));
-    
-    $attrib{TEXT} = (!$self->{charSplitText} ? $termtext : $self->charSplitText($termtext, $self->{charSplitTextNotASCII}, $self->{charSplitTextDeleteHyphens}));
-    
-    foreach my $name (keys %ti_attr) {
-      $attrib{$name} = ($name eq 'Syllables') ? sprintf("%02d", $ti_attr{$name}) : $ti_attr{$name};
-    }
-    
-    $self->{TERMS}{$attrib{TERMID}} = new TermListRecord(\%attrib);
-  }
+  return("", $res{'encoding'}) if (exists $res{'encoding'});
 
-  $self->{LoadedFile} = 1;
-
-  return("");
+  return("", "");
 }
 
-sub addTerm
-{
-  my ($self, $term, $id) = @_;
-  $self->{TERMS}{$id} = $term;
+#####
+
+sub __SEcheck {
+  my $txt = MMisc::slurp_file($_[0]->{SEfile});
+  if (! MMisc::is_blank($txt)) {
+    return($txt) if (! ($txt =~ m%validates%gi));
+  }
+  return("");
 }
 
 #####
@@ -380,67 +305,249 @@ sub __get_attr {
   return($$rh{$key});
 }
 
-####
+#####
 
-sub element_extractor_check {
-  my ($dem, $string, $here, $rattr) = @_;
+# Note: "CreateTerms" is selected here (0 for false, 1 for true)
+# wihtout it set to 1, KWs will not be created 
+sub openXMLFileAccess {
+  my ($self, $kwlistf, $CreateTerms) = @_;
 
-  $string = MMisc::clean_begend_spaces($string);
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
+  return("Refusing to load a file on top of a stream already in progress")
+    if ($self->{LoadInProgress} != 0);
 
-  (my $err, $string, my $section, my %iattr) = MtXML::element_extractor($dem, $string, $here);
-  return($err) if (! MMisc::is_blank($err));
+ my $err = MMisc::check_file_r($kwlistf);
+  return("Problem with input file ($kwlistf): $err")
+    if (! MMisc::is_blank($err));
 
-  foreach my $attr (@$rattr) {
-    return("Could not find <$here>'s $attr attribute")
-      if (! exists $iattr{$attr});
-  }
+  $self->{TERMLIST_FILENAME} = $kwlistf;
 
-  return("", $string, $section, %iattr);
-}
+  $self->{CreateTerms} = 1
+    if ($CreateTerms != 0);
 
-##########
+  my $modfp = MMisc::find_Module_path('TermList');
+  return("Could not obtain \'TermList.pm\' location, aborting")
+      if (! defined $modfp);
 
-sub process_term_content {
-  my ($string, $dem) = @_;
+  ($err, my $xml_encoding) = &__precheck_kwlist_encoding($kwlistf);
+  return("Problem while extracting encoding: $err")
+    if (! MMisc::is_blank($err));
 
-  my @no_attrs = ();
-  # get 'kwtext'
-  (my $err, $string, my $termtext, my %iattr1) = &element_extractor_check($dem, $string, 'kwtext', \@no_attrs);
-  return($err) if (! MMisc::is_blank($err));
+  my $f4b = 'F4DE_BASE';
+  my $xmllint_env = "F4DE_XMLLINT";
+  my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
+  my @xsdfilesl = ('KWSEval-kwlist.xsd');
 
-  my %ti_attr = ();
-  # if $string is now empty, there was no kwinfo
-  return("", $termtext, %ti_attr) if (MMisc::is_blank($string));
+  # First let us use xmllint on the file XML file
+  my $xmlh = new xmllintHelper();
+  my $xmllint = MMisc::get_env_val($xmllint_env, "");
+  return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xmllint($xmllint));
+  return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xsdfilesl(@xsdfilesl));
+  return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xsdpath($xsdpath));
+  return("While trying to set xmllint's encoding: " . $xmlh->get_errormsg())
+    if ((! MMisc::is_blank($xml_encoding)) && (! $xmlh->set_encoding($xml_encoding)));
 
-  # if not empty, it _must_ be a 'kwinfo'
-  ($err, $string, my $content, my %iattr2) = &element_extractor_check($dem, $string, 'kwinfo', \@no_attrs);
-  return($err) if (! MMisc::is_blank($err));
-  # now it must be empty
-  return("After extracting the \'kwinfo\', there was some unexpected leftover data, aborting: $string")
-    if (! MMisc::is_blank($string));
+#  print STDERR "Loading KW List file '$kwlistf'.\n";
+  
+  (local *KWLISTFH, my $sefile) = $xmlh->run_xmllint_pipe($kwlistf);
+  return("While trying to load XML file ($kwlistf) : " . $xmlh->get_errormsg() )
+    if ($xmlh->error());
+
+  $self->{FH} = *KWLISTFH;
+  $self->{SEfile} = $sefile;
 
   my $doit = 1;
-  while ($doit) {
-    # process 'attr'
-    ($err, $content, my $attr, my %iattr3) = &element_extractor_check($dem, $content, 'attr', \@no_attrs);
-    return("Processing <kwinfo>: $err") if (! MMisc::is_blank($err));
-    
-    # from <attr>: <name> and <value>
-    ($err, $attr, my $name, my %iattr4) = &element_extractor_check($dem, $attr, 'name', \@no_attrs);
-    return("Processing <kwinfo>'s <attr>: $err") if (! MMisc::is_blank($err));
-    ($err, $attr, my $value, my %iattr5) = &element_extractor_check($dem, $attr, 'value', \@no_attrs);
-    return("Processing <kwinfo>'s <attr>: $err") if (! MMisc::is_blank($err));
-    return("After processing <kwinfo>'s <attr>: leftover content found, aborting: $attr")
-      if (! MMisc::is_blank($attr));
-    
-    $ti_attr{$name} = $value;
+  # Load the KWLIST header
+  while ($doit == 1) {
+    my $se_err = $self->__SEcheck();
+    return("Problem with validation: $se_err")
+      if (! MMisc::is_blank($se_err));
 
-    $doit = 0 if (MMisc::is_blank($content));
+    if (eof(KWLISTFH)) {
+      $doit = -1;
+      next;
+    }
+    my $line = <KWLISTFH>;
+    chomp($line);
+    $self->{linec}++;
+
+    my ($err, $closed, $name, $content, %vals) = MtXML::line_extractor($line);
+    return("Problem processing File Access: $err")
+      if (! MMisc::is_blank($err));
+    
+    next if ($name eq "");
+
+    if ($name eq 'kwlist') {
+      $self->{ECF_FILENAME} = &__get_attr(\%vals, $tlist_attrs[0]);
+      return("new TermList failed: " . $self->errormsg())
+        if (! $self->setLanguage(&__get_attr(\%vals, $tlist_attrs[1])));
+      return("new TermList failed: " . $self->errormsg())
+        if (! $self->setEncoding(&__get_attr(\%vals, $tlist_attrs[2])));
+      return("new TermList failed: " . $self->errormsg())
+        if (! $self->setCompareNormalize(&__get_attr(\%vals, $tlist_attrs[3])));
+      $self->{VERSION} = &__get_attr(\%vals, $tlist_attrs[4]);
+      $doit = 0; # we are done reading the header
+      binmode KWLISTFH, $self->getPerlEncodingString()
+        if (! MMisc::is_blank($self->{ENCODING}));
+      next;
+    }
+
+    return("Invalid content: $line");
   }
 
-  return("", $termtext, %ti_attr);
+  if ($doit == -1) {
+    # Reached EOF already ?
+    my $se_err = $self->__SEcheck();
+    return("Problem with validation: $se_err")
+      if (! MMisc::is_blank($se_err));
+    
+    return("Reached EOF in header ?");
+  }
+
+  $self->{LoadInProgress} = 1;
+  return("");
 }
 
+#####
+
+sub getNextKW {
+  my ($self) = @_;
+
+  return("Can not process, no loading in progress", undef)
+    if ($self->{LoadInProgress} == 0);
+  
+  local *KWLISTFH = $self->{FH};
+  my %attrib = ();
+  my ($attr_name, $attr_value) = ("", "");
+  my $doit = 1;
+  my $kw = undef;
+  # Load the KWLIST header
+  while ($doit == 1) {
+ 
+    my $se_err = $self->__SEcheck();
+    return("Problem with validation: $se_err", undef)
+      if (! MMisc::is_blank($se_err));      
+
+    if (eof(KWLISTFH)) {
+      $doit = -1;
+      next;
+    }
+    my $line = <KWLISTFH>;
+    $line = decode_utf8($line)
+      if ($self->{ENCODING} eq 'UTF-8');
+    chomp($line);
+    $self->{linec}++;
+    
+    my ($err, $closed, $name, $content, %vals) = MtXML::line_extractor($line);
+    return("Problem processing File Access: $err", undef)
+      if (! MMisc::is_blank($err));
+#    print "{$name} [$line]\n";
+
+    next if ($name eq "");
+    
+    if ($name eq 'kw') {
+      $attrib{TERMID} = &__get_attr(\%vals, $term_attrs[0]);
+      return("Term ID $attrib{TERMID} already exists")
+        if (exists($self->{TERMS}{$attrib{TERMID}}));
+
+      if ($closed) {
+        $kw = new TermListRecord(\%attrib);
+        if ($self->{CreateTerms} == 1) {
+          $self->{TERMS}{$attrib{TERMID}} = $kw;
+        }
+        $doit = 0;
+      }
+      next;
+    }
+
+    if ($name eq '/kw') {
+      $kw = new TermListRecord(\%attrib);
+      if ($self->{CreateTerms} == 1) {
+        $self->{TERMS}{$attrib{TERMID}} = $kw;
+      }
+      $doit = 0;
+      next;
+    }
+    
+    if ($name eq 'kwtext') {
+      $attrib{TEXT} = ( ! $self->{charSplitText}) ? $content 
+        : $self->charSplitText($content, $self->{charSplitTextNotASCII}, $self->{charSplitTextDeleteHyphens});
+      next;
+    }
+
+    next if ($name eq 'kwinfo'); # we do not need the header
+
+    if ($name eq 'attr') {
+      ($attr_name, $attr_value) = ("", "");
+      next;
+    }
+
+    if ($name eq 'name') {
+      $attr_name = $content;
+      next;
+    }
+
+    if ($name eq 'value') {
+      $attr_value = $content;
+      next;
+    }
+
+    if ($name eq '/attr') {
+#      print "[$attr_name] -> [$attr_value]\n";
+      $attrib{$attr_name} = ($attr_name eq 'Syllables') ? sprintf("%02d", $attr_value) : $attr_value;
+      next;
+    }
+
+    # Unprocessed content
+    next if (substr($name, 0, 1) eq '/');
+    return("UNKNOWN Line: $line", undef);
+  }
+  
+  if ($doit == -1) { # EOF
+    my $se_err = $self->__SEcheck();
+    return($se_err, undef) if (! MMisc::is_blank($se_err));
+    $self->{LoadedFile} = 1;
+    $self->{LoadInProgress} = 0;
+    close KWLISTFH;
+    close SE;
+    $self->{FH} = undef;
+    $self->{SEfile} = undef;
+    return("", undef);
+  }
+
+  return("", $kw);
+}
+
+####################
+
+# 'justValidate' will ask for TERMs not to be created (ie no rewrite possible)
+sub loadXMLFile {
+  my ($self, $kwlistf, $justValidate) = @_;
+
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
+
+  # First: open the file access to read the header, asking for TERMs to be created
+  my $err = $self->openXMLFileAccess($kwlistf, ($justValidate == 1) ? 0 : 1);
+  return($err) if (! MMisc::is_blank($err));
+  
+  my $doit = 1;
+  while ($doit) {
+    # Then process each 'kw' at a time
+    my ($lerr, $ldw) = $self->getNextKW();
+    # any error while reading ?
+    return($lerr) if (! MMisc::is_blank($err));
+    # Stop processing when the last entry processed is undefined
+    $doit = 0 if (! defined $ldw);
+#    print ". " . $ldw->{TERMID} . "\n";
+  }
+
+  return("");
+}
 
 ############################################################
 
@@ -471,10 +578,10 @@ sub saveFile {
   my ($self, $fn) = @_;
   
   my $to = MMisc::is_blank($fn) ? $self->{TERMLIST_FILENAME} : $fn;
-  # Re-adapt the file name to remove all ".memdump" (if any)
+  # Re-adapt the file name to remove all ."memdump" (if any)
   $to = &_rm_mds($to);
   my $txt = $self->get_XMLrewrite();
-  return(MMisc::writeTo($to, "", 1, 0, $txt, undef, undef, undef, undef, undef ,$self->getPerlEncodingString()));
+  return(MMisc::writeTo($to, "", 1, 0, $txt, undef, undef, undef, undef, undef, (! MMisc::is_blank($self->{ENCODING})) ? $self->getPerlEncodingString() : undef ));
 }
 
 #####
@@ -581,7 +688,16 @@ sub load_MemDump_File {
   $self->_md_clone_value($object, 'TERMLIST_FILENAME');
   $self->_md_clone_value($object, 'ECF_FILENAME');
   $self->_md_clone_value($object, 'VERSION');
+  $self->_md_clone_value($object, 'CreateTerms');
   $self->_md_clone_value($object, 'TERMS');
+  $self->_md_clone_value($object, 'charSplitText');
+  $self->_md_clone_value($object, 'charSplitTextNotASCII');
+  $self->_md_clone_value($object, 'charSplitTextDeleteHyphens');
+  $self->_md_clone_value($object, 'LoadedFile');
+  $self->_md_clone_value($object, 'LoadInProgress');
+  $self->_md_clone_value($object, 'FH');
+  $self->_md_clone_value($object, 'linec');
+  $self->_md_clone_value($object, 'SEfile');
   $self->_md_clone_value($object, 'COMPARENORMALIZE');
   $self->_md_clone_value($object, 'ENCODING');
   $self->_md_clone_value($object, 'LANGUAGE');
