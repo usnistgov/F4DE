@@ -318,6 +318,8 @@ sub run_xmllint_pipe {
   binmode(SE, ":unix");
 #  close SE;
 
+  local *FH;
+
   open(FH, join(" ", @cmd) . " 2> $stderr_file |");
   return(*FH, $stderr_file);
 }
