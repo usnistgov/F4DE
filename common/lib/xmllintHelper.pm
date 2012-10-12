@@ -313,13 +313,12 @@ sub run_xmllint_pipe {
   push @cmd, '--format';
   push @cmd, $file;
 
+  local *SE;
   open SE, ">$stderr_file" 
     or MMisc::error_quit("Problem creating temporary file ? ($stderr_file)");
-  binmode(SE, ":unix");
-#  close SE;
+  close SE;
 
   local *FH;
-
   open(FH, join(" ", @cmd) . " 2> $stderr_file |");
   return(*FH, $stderr_file);
 }
