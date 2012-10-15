@@ -49,6 +49,11 @@ use MMisc;
 use xmllintHelper;
 use MtXML;
 
+##########
+my @ecf_attrs = ('source_signal_duration', 'version', 'language');
+my @exc_attrs = ('audio_filename', 'channel', 'tbeg', 'dur', 'source_type');
+#####
+
 sub __init {
   my $self = shift;
   my $ecffile = shift;
@@ -61,8 +66,14 @@ sub __init {
   $self->{EXCERPT} = ();
   $self->{FILECHANTIME} = {};
   $self->{FILE_EVAL_SIGN_DUR} = {};
+
   # Added to avoid overwriting in file load
-  $self->{LoadedFile} = 0;
+  $self->{LoadedFile} = 0; # 0 not loaded
+  $self->{LoadInProgress} = 0; 
+  # File handles & related variables
+  $self->{FH} = undef;
+  $self->{linec} = 0;
+  $self->{SEfile} = undef;
 }
 
 sub new {
@@ -270,116 +281,11 @@ sub toString
 
 ########################################
 
-sub loadXMLFile {
-  my ($self, $ecff) = @_;
-
-  return("Refusing to load a file on top of an already existing object")
-    if ($self->{LoadedFile} != 0);
-  
-  my $err = MMisc::check_file_r($ecff);
-  return("Problem with input file ($ecff): $err")
-    if (! MMisc::is_blank($err));
-
-  my $modfp = MMisc::find_Module_path('KWSecf');
-  return("Could not obtain \'KWSecf.pm\' location, aborting")
-    if (! defined $modfp);
-
-  my $f4b = 'F4DE_BASE';
-  my $xmllint_env = "F4DE_XMLLINT";
-  my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
-  my @xsdfilesl = ('KWSEval-ecf.xsd');
-
-#  print STDERR "Loading ECF file '$ecff'.\n";
-
-  # First let us use xmllint on the file XML file
-  my $xmlh = new xmllintHelper();
-  my $xmllint = MMisc::get_env_val($xmllint_env, "");
-  return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xmllint($xmllint));
-  return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xsdfilesl(@xsdfilesl));
-  return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xsdpath($xsdpath));
-
-  my $ecffilestring = $xmlh->run_xmllint($ecff);
-  return("$ecff: \'xmllint\' validation failed [" . $xmlh->get_errormsg() . "]\n")
-    if ($xmlh->error());
-
-  ## Processing file content
-
-  # Remove all XML comments
-  $ecffilestring =~ s%\<\!\-\-.+?\-\-\>%%sg;
-
-  # Remove <?xml ...?> header
-  $ecffilestring =~ s%^\s*\<\?xml.+?\?\>%%is;
-
-  # At this point, all we ought to have left is the '<ecf>' content
-  return("After initial cleanup, we found more than just \'ecf\', aborting")
-    if (! ( ($ecffilestring =~ m%^\s*\<ecf\s%is) && ($ecffilestring =~ m%\<\/ecf\>\s*$%is) ) );
-  my $dem = "Martial's DEFAULT ERROR MESSAGE THAT SHOULD NOT BE FOUND IN STRING, OR IF IT IS WE ARE SO VERY UNLUCKY";
-  
-  # order is important
-  my @ecf_attrs = ('source_signal_duration', 'version', 'language');
-  my @exc_attrs = ('audio_filename', 'channel', 'tbeg', 'dur', 'source_type');
-
-  my $here = 'ecf';
-  ($err, my $string, my $section, my %ecf_attr) = &element_extractor_check($dem, $ecffilestring, $here, \@ecf_attrs);
-  return($err) if (! MMisc::is_blank($err));
-  return("After removing '<$here>', found leftover content, aborting")
-    if (! MMisc::is_blank($string));
-
-  $self->{SIGN_DUR} = &__get_attr(\%ecf_attr, $ecf_attrs[0]);
-  $self->{VER} = &__get_attr(\%ecf_attr, $ecf_attrs[1]);
-  my $language = &__get_attr(\%ecf_attr, $ecf_attrs[2]);
-  $self->{LANGUAGE} = $language;
-
-  my $exp = 'excerpt';
-  while (! MMisc::is_blank($section)) {
-    # First off, confirm the first section is the expected one
-    my $name = MtXML::get_next_xml_name(\$section, $dem);
-    return("In \'$here\', while checking for \'$exp\': Problem obtaining a valid XML name, aborting")
-      if ($name eq $dem);
-    return("In \'$here\': \'$exp\' section not present (instead: $name), aborting")
-      if ($name ne $exp);
-    ($err, $section, my $dummy, my %exc_attr) = &element_extractor_check($dem, $section, $exp, \@exc_attrs);
-    return($err) if (! MMisc::is_blank($err));
-    return("While processing <$here>'s <$exp>, found unexpected content: $dummy")
-      if (! MMisc::is_blank($dummy));
-
-    my $audio_filename = &__get_attr(\%exc_attr, $exc_attrs[0]);
-    my $channel = &__get_attr(\%exc_attr, $exc_attrs[1]);
-    my $tbeg = &__get_attr(\%exc_attr, $exc_attrs[2]);
-    my $dur = &__get_attr(\%exc_attr, $exc_attrs[3]);
-    my $source_type = &__get_attr(\%exc_attr, $exc_attrs[4]);
-
-    my $purged_filename = "";
-    my ($errf, $d, $f, $e) = MMisc::split_dir_file_ext($audio_filename);
-    if (($e eq 'sph') || ($e eq 'wav')) {
-      $purged_filename = $f;
-    } else {
-      $purged_filename = MMisc::concat_dir_file_ext('', $f, $e);
-    }
-
-    $self->{EVAL_SIGN_DUR} += sprintf("%.4f", $dur) 
-      if (! MMisc::safe_exists(\%{$self->{FILECHANTIME}}, $purged_filename));
-
-    push @{$self->{EXCERPT}}, new KWSecf_excerpt($audio_filename, $channel, $tbeg, $dur, $language, $source_type);
-
-    ### Track the source types for the reports
-    push @{$self->{FILECHANTIME}{$purged_filename}{$channel}}, [ ($tbeg, $tbeg + $dur) ];
-        
-    $self->{FILE_EVAL_SIGN_DUR}{$purged_filename} = 0 
-      if (! $self->{FILE_EVAL_SIGN_DUR}{$purged_filename});
-    $self->{FILE_EVAL_SIGN_DUR}{$purged_filename} += sprintf("%.4f", $dur);
+sub __SEcheck {
+  my $txt = MMisc::slurp_file($_[0]->{SEfile});
+  if (! MMisc::is_blank($txt)) {
+    return($txt) if (! ($txt =~ m%validates%gi));
   }
-
-  foreach my $filename (keys %{$self->{FILE_EVAL_SIGN_DUR}}) {
-    my $nbrchannel = scalar(keys(%{$self->{FILECHANTIME}{$filename}}));
-    $self->{FILE_EVAL_SIGN_DUR}{$filename} = $self->{FILE_EVAL_SIGN_DUR}{$filename}/$nbrchannel;
-  }
-
-  $self->{LoadedFile} = 1;
-
   return("");
 }
 
@@ -394,7 +300,206 @@ sub __get_attr {
   return($$rh{$key});
 }
 
-####
+#####
+
+sub openXMLFileAccess {
+  my ($self, $ecf) = @_;
+
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
+  return("Refusing to load a file on top of a stream already in progress")
+    if ($self->{LoadInProgress} != 0);
+
+ my $err = MMisc::check_file_r($ecf);
+  return("Problem with input file ($ecf): $err")
+    if (! MMisc::is_blank($err));
+
+  $self->{FILE} = $ecf;
+
+  my $modfp = MMisc::find_Module_path('KWSecf');
+  return("Could not obtain \'KWSecf.pm\' location, aborting")
+      if (! defined $modfp);
+
+  my $f4b = 'F4DE_BASE';
+  my $xmllint_env = "F4DE_XMLLINT";
+  my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
+  my @xsdfilesl = ('KWSEval-ecf.xsd');
+
+  # First let us use xmllint on the file XML file
+  my $xmlh = new xmllintHelper();
+  my $xmllint = MMisc::get_env_val($xmllint_env, "");
+  return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xmllint($xmllint));
+  return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xsdfilesl(@xsdfilesl));
+  return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
+    if (! $xmlh->set_xsdpath($xsdpath));
+
+#  print STDERR "Loading ECF file '$ecf'.\n";
+  
+  (local *ECFFH, my $sefile) = $xmlh->run_xmllint_pipe($ecf);
+  return("While trying to ECF file ($ecf) : " . $xmlh->get_errormsg() )
+    if ($xmlh->error());
+
+  $self->{FH} = *ECFFH;
+  $self->{SEfile} = $sefile;
+
+  my $doit = 1;
+  # Load the header
+  while ($doit == 1) {
+    my $se_err = $self->__SEcheck();
+    return("Problem with validation: $se_err")
+      if (! MMisc::is_blank($se_err));
+
+    if (eof(ECFFH)) {
+      $doit = -1;
+      next;
+    }
+    my $line = <ECFFH>;
+    chomp($line);
+    $self->{linec}++;
+
+    my ($err, $closed, $name, $content, %vals) = MtXML::line_extractor($line);
+    return("Problem processing File Access: $err")
+      if (! MMisc::is_blank($err));
+    
+    next if ($name eq "");
+
+    if ($name eq 'ecf') {
+      $self->{SIGN_DUR} = &__get_attr(\%vals, $ecf_attrs[0]);
+      $self->{VER}      = &__get_attr(\%vals, $ecf_attrs[1]);
+      $self->{LANGUAGE} = &__get_attr(\%vals, $ecf_attrs[2]);
+      $doit = 0; # we are done reading the header
+      next;
+    }
+
+    return("Invalid content: $line");
+  }
+
+  if ($doit == -1) {
+    # Reached EOF already ?
+    my $se_err = $self->__SEcheck();
+    return("Problem with validation: $se_err")
+      if (! MMisc::is_blank($se_err));
+    
+    return("Reached EOF in header ?");
+  }
+
+  $self->{LoadInProgress} = 1;
+  return("");
+}
+
+#####
+
+sub getNextExerpt {
+  my ($self) = @_;
+
+  return("Can not process, no loading in progress", undef)
+    if ($self->{LoadInProgress} == 0);
+  
+  local *ECFFH = $self->{FH};
+  my %attrib = ();
+  my ($attr_name, $attr_value) = ("", "");
+  my $doit = 1;
+  my $kwex = undef;
+  while ($doit == 1) {
+     my $se_err = $self->__SEcheck();
+    return("Problem with validation: $se_err", undef)
+      if (! MMisc::is_blank($se_err));      
+
+    if (eof(ECFFH)) {
+      $doit = -1;
+      next;
+    }
+    my $line = <ECFFH>;
+    chomp($line);
+    $self->{linec}++;
+    
+    my ($err, $closed, $name, $content, %vals) = MtXML::line_extractor($line);
+    return("Problem processing File Access: $err", undef)
+      if (! MMisc::is_blank($err));
+#    print "{$name} [$line]\n";
+
+    next if ($name eq "");
+    
+    if ($name eq 'excerpt') {
+      my $audio_filename = &__get_attr(\%vals, $exc_attrs[0]);
+      my $channel = &__get_attr(\%vals, $exc_attrs[1]);
+      my $tbeg = &__get_attr(\%vals, $exc_attrs[2]);
+      my $dur = &__get_attr(\%vals, $exc_attrs[3]);
+      my $source_type = &__get_attr(\%vals, $exc_attrs[4]);
+
+      my $purged_filename = "";
+      my ($errf, $d, $f, $e) = MMisc::split_dir_file_ext($audio_filename);
+      if (($e eq 'sph') || ($e eq 'wav')) {
+        $purged_filename = $f;
+      } else {
+        $purged_filename = MMisc::concat_dir_file_ext('', $f, $e);
+      }
+      
+      $self->{EVAL_SIGN_DUR} += sprintf("%.4f", $dur) 
+        if (! MMisc::safe_exists(\%{$self->{FILECHANTIME}}, $purged_filename));
+
+      $kwex = new KWSecf_excerpt($audio_filename, $channel, $tbeg, $dur, $self->{LANGUAGE}, $source_type);
+      push @{$self->{EXCERPT}}, $kwex;
+
+      ### Track the source types for the reports
+      push @{$self->{FILECHANTIME}{$purged_filename}{$channel}}, [ ($tbeg, $tbeg + $dur) ];
+        
+      $self->{FILE_EVAL_SIGN_DUR}{$purged_filename} = 0 
+        if (! $self->{FILE_EVAL_SIGN_DUR}{$purged_filename});
+      $self->{FILE_EVAL_SIGN_DUR}{$purged_filename} += sprintf("%.4f", $dur);
+
+      $doit = 0 if ($closed);
+      next;
+    }
+
+    # Unprocessed content
+    next if (substr($name, 0, 1) eq '/');
+    return("UNKNOWN Line: $line", undef);
+  }
+  
+  if ($doit == -1) { # EOF
+    my $se_err = $self->__SEcheck();
+    return($se_err, undef) if (! MMisc::is_blank($se_err));
+    $self->{LoadedFile} = 1;
+    $self->{LoadInProgress} = 0;
+    close ECFFH;
+    close SE;
+    $self->{FH} = undef;
+    $self->{SEfile} = undef;
+    return("", undef);
+  }
+
+  return("", $kwex);
+}
+
+##########
+
+sub loadXMLFile {
+  my ($self, $ecf) = @_;
+
+  return("Refusing to load a file on top of an already existing object")
+    if ($self->{LoadedFile} != 0);
+
+  # First: open the file access to read the header
+  my $err = $self->openXMLFileAccess($ecf);
+  return($err) if (! MMisc::is_blank($err));
+  
+  my $doit = 1;
+  while ($doit) {
+    # Then process each 'excerpt' at a time
+    my ($lerr, $kwex) = $self->getNextExerpt();
+    # any error while reading ?
+    return($lerr) if (! MMisc::is_blank($err));
+    # Stop processing when the last entry processed is undefined
+    $doit = 0 if (! defined $kwex);
+  }
+
+  return("");
+}
+
+#####
 
 sub element_extractor_check {
   my ($dem, $string, $here, $rattr) = @_;
@@ -528,6 +633,12 @@ sub load_MemDump_File {
   $self->_md_clone_value($object, 'EXCERPT');
   $self->_md_clone_value($object, 'FILECHANTIME');
   $self->_md_clone_value($object, 'FILE_EVAL_SIGN_DUR');
+
+  $self->_md_clone_value($object, 'LoadedFile');
+  $self->_md_clone_value($object, 'LoadInProgress');
+  $self->_md_clone_value($object, 'FH');
+  $self->_md_clone_value($object, 'linec');
+  $self->_md_clone_value($object, 'SEfile');
 
   $self->{LoadedFile} = 1;
 
