@@ -336,7 +336,12 @@ $err = MMisc::check_file_r($STDfile);
 MMisc::error_quit("Problem with STD File ($STDfile): $err")
   if (! MMisc::is_blank($err));
 print "Loading KWSList File $STDfile\n";
-$STD = new KWSList($STDfile);
+if ($segmentbased != 0) {
+  $STD = new KWSList($STDfile);
+} else { #for now only do sequential loading for regular alignment
+  $STD = new KWSList();
+  print $STD->openXMLFileAccess($STDfile, 0); #now ready for getNextDetectedKWlist
+}
 $STD->SetSystemID($IDSystem) if (! MMisc::is_blank($IDSystem));
 
 $err = MMisc::check_file_r($TERMfile);
