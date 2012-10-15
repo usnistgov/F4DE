@@ -55,17 +55,11 @@ sub new
   $self->{ATTRIBUTE} = undef; #Attribute to group by, groups should be the values of this attribute
   $self->{FILECHANS} = undef; #@ of 'file/chan's allowed in the conditional report
   ##
+  $self->{OOVCOUNTS} = (); #track term oov counts for filtering.
 
   #Add ecf segments to QuickECF lookup
   foreach my $ecfexcerpt (@{ $self->{ECF}{EXCERPT} }) {
     push (@{ $self->{QUICKECF}{$ecfexcerpt->{FILE}}{$ecfexcerpt->{CHANNEL}} }, $ecfexcerpt);
-  }
-
-  #Create index of terms by file/channel
-  foreach my $termid (sort keys %{ $self->{KWSLIST}{TERMS} }) {
-    foreach my $term (@{ $self->{KWSLIST}{TERMS}{$termid}{TERMS} }) {
-      push (@{ $self->{TERMLKUP}{$termid}{$term->{FILE}}{$term->{CHAN}} }, $term) if (KWSAlignment::belongsInECF($self, $term) == 1);
-    }
   }
 
   bless $self;
@@ -84,9 +78,7 @@ sub alignTerms
 
   $includeBlocksWNoTarg = 0 if ($includeBlocksWNoTarg != 1);
 
-  open (CSVREPORT, ">$csvreportfile") if (defined $csvreportfile);
-  binmode(CSVREPORT, $self->{RTTMLIST}->getPerlEncodingString()) if (defined $csvreportfile && $self->{RTTMLIST}->{ENCODING} ne "");
-  print CSVREPORT "language,file,channel,termid,term,ref_bt,ref_et,sys_bt,sys_et,sys_score,sys_decision,alignment\n" if (defined $csvreportfile);
+  $self->configure_csv_writer($csvreportfile) if defined $csvreportfile;
 
   my %qtrials = (); #Conditional trials
   my $qdetset = new DETCurveSet();
@@ -94,8 +86,33 @@ sub alignTerms
   my $totdur = $self->{ECF}->calcTotalDur(undef, $self->{FILECHANS});
   my $trials = new TrialsTWV({ ("TotDur" => $totdur, "TrialsPerSecond" => $trialsPerSec, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg) });
   my $detset = new DETCurveSet();
+  
+  my %missed_terms = map {$_ => $_} keys %{ $self->{TERMLIST}{TERMS} }; #track terms missed by kws
+  my $kws_done_loading = 0;
+  while (1) {
+    #get next detected list
+    my @detected_results = $self->{KWSLIST}->getNextDetectedKWlist() unless $kws_done_loading;
+    my ($msg, $detected_list) = ($detected_results[0], $detected_results[1]);
+    warn $msg unless MMisc::is_blank($msg);
+    #
+    my $termid = "";
+    if (!defined $detected_list) {
+      $kws_done_loading = 1;
+      $termid = (keys %missed_terms)[0];
+      last unless $termid; #if no detected list and no terms, then done
+      delete $missed_terms{$termid};
+    } else {
+      $termid = $detected_list->{TERMID};
+      delete $missed_terms{$termid};
+      $self->{OOVCOUNTS}{$termid} = $detected_list->{OOV_TERM_COUNT};
+    }
 
-  foreach my $termid (sort keys %{ $self->{TERMLIST}{TERMS} }) {
+    #build TERMLKUP
+    my %termlkup = ();
+    foreach my $sys_term (@{ $detected_list->{TERMS} }) {
+      push @{ $termlkup{$sys_term->{FILE}}{$sys_term->{CHAN}} }, $sys_term if (KWSAlignment::belongsInECF($self, $sys_term) == 1);
+    }
+
     my %refoccs = %{ $self->{RTTMLIST}->findTermOccurrences($self->{TERMLIST}->{TERMS}{$termid}{TEXT}, $fthreshold) };
     
     my $trialBlock = $termid;
@@ -116,7 +133,8 @@ sub alignTerms
 	  $refs{$ref} = $ref;
 	}
 	my %syss = ();
-      SYSBUILD: foreach my $sys (@{ $self->{TERMLKUP}{$termid}{$file}{$chan} }) {
+
+      SYSBUILD: foreach my $sys (@{ $termlkup{$file}{$chan} }) {
 	  foreach my $tfilter (@{ $termFilters }) {
 	    next SYSBUILD if (&{ $tfilter }($self, $sys) == 0);
 	  }
@@ -132,18 +150,8 @@ sub alignTerms
 	  my $sysid = $mapped->[0];
 	  my $refid = $mapped->[1];
 
-	  print CSVREPORT $self->{TERMLIST}{LANGUAGE} . "," . 
-	    $refs{$refid}->[0]->{FILE} . "," . 
-	    $refs{$refid}->[0]->{CHAN} . "," . 
-	    $termid . "," . 
-	    $self->{TERMLIST}->{TERMS}{$termid}{TEXT} . "," . 
-	    $refs{$refid}->[0]->{BT} . "," . 
-	    $refs{$refid}->[-1]->{ET} . "," . 
-	    $syss{$sysid}->{BT} . "," . 
-	    $syss{$sysid}->{ET} . "," . 
-	    $syss{$sysid}->{SCORE} . "," . 
-	    $syss{$sysid}->{DECISION} . ",CORR\n"
-	    if (defined $csvreportfile);
+	  $self->csv_write_align_str($self->{TERMLIST}{TERMS}{$termid}, $refs{$refid}, $syss{$sysid}) 
+	    if defined $csvreportfile;
 	  
 	  #Add hit to trial
 	  $trials->addTrial($trialBlock, $syss{$sysid}->{SCORE}, $syss{$sysid}->{DECISION}, 1, \%blockMetaData);
@@ -159,14 +167,9 @@ sub alignTerms
 	}
 	#Misses
 	foreach my $refid (@{ $biMatch->{unmapped_ref} }) {
-	  print CSVREPORT $self->{TERMLIST}{LANGUAGE} . "," . 
-	    $refs{$refid}->[0]->{FILE} . "," . 
-	    $refs{$refid}->[0]->{CHAN} . "," . 
-	    $termid . "," . 
-	    $self->{TERMLIST}->{TERMS}{$termid}{TEXT} . "," . 
-	    $refs{$refid}->[0]->{BT} . "," . 
-	    $refs{$refid}->[-1]->{ET} . ",,,,,MISS\n"
-	    if (defined $csvreportfile);
+
+	  $self->csv_write_align_str($self->{TERMLIST}{TERMS}{$termid}, $refs{$refid}, undef) 
+	    if defined $csvreportfile;
 	  
 	  #Add miss to trial
 	  $trials->addTrial($trialBlock, undef, "OMITTED", 1, \%blockMetaData);
@@ -185,19 +188,9 @@ sub alignTerms
 	  my $alignresult = "CORR!DET";
 	  $alignresult = "FA" if ($syss{$sysid}->{DECISION} eq "YES");
 	  #Record as Correct non-detect or False Alarm
-	  print CSVREPORT $self->{TERMLIST}{LANGUAGE} . "," . 
-	    $syss{$sysid}->{FILE} . "," .
-	    $syss{$sysid}->{CHAN} . "," .
-	    $termid . "," .
-	    $self->{TERMLIST}->{TERMS}{$termid}{TEXT} . "," .
-	    ",," . 
-	    $syss{$sysid}->{BT} . "," . 
-	    $syss{$sysid}->{ET} . "," . 
-	    $syss{$sysid}->{SCORE} . "," . 
-	    $syss{$sysid}->{DECISION} . "," .
-	    $alignresult . "\n"
-	    if (defined $csvreportfile);
-	  
+	  $self->csv_write_align_str($self->{TERMLIST}{TERMS}{$termid}, undef, $syss{$sysid}) 
+	    if defined $csvreportfile;
+
 	  #Add FA or Corr!Det to trial
 	  $trials->addTrial($trialBlock, $syss{$sysid}->{SCORE}, $syss{$sysid}->{DECISION}, 0, \%blockMetaData);
 	  
@@ -213,27 +206,17 @@ sub alignTerms
       }
     }
     #Check for terms in file/chan combintations which weren't present in ref occurrences
-    foreach my $file (keys %{ $self->{TERMLKUP}{$termid} }) {
-      foreach my $chan (keys %{ $self->{TERMLKUP}{$termid}{$file} }) {
+    foreach my $file (keys %termlkup ) {
+      foreach my $chan (keys %{ $termlkup{$file} }) {
 	next if (defined $usedfilechans{$file}{$chan} && $usedfilechans{$file}{$chan} == 1);
 	#record as FA or Corr!Det
-	foreach my $sysocc (@{ $self->{TERMLKUP}{$termid}{$file}{$chan} }) {
+	foreach my $sysocc (@{ $termlkup{$file}{$chan} }) {
 	  my $alignresult = "CORR!DET";
 	  $alignresult = "FA" if ($sysocc->{DECISION} eq "YES");
 	  #Record as Correct non-detect or False Alarm
-	  print CSVREPORT $self->{TERMLIST}{LANGUAGE} . "," . 
-	    $sysocc->{FILE} . "," .
-	    $sysocc->{CHAN} . "," .
-	    $termid . "," . 
-	    $self->{TERMLIST}->{TERMS}{$termid}{TEXT} . "," . 
-	    ",," .
-	    $sysocc->{BT} . "," . 
-	    $sysocc->{ET} . "," . 
-	    $sysocc->{SCORE} . "," . 
-	    $sysocc->{DECISION} . "," .
-	    $alignresult . "\n"
-	    if (defined $csvreportfile);
-	  
+	  $self->csv_write_align_str($self->{TERMLIST}{TERMS}{$termid}, undef, $sysocc) 
+	    if defined $csvreportfile;
+	  	  
 	  #Add FA or Corr!Det to trial
 	  $trials->addTrial($trialBlock, $sysocc->{SCORE}, $sysocc->{DECISION}, 0, \%blockMetaData);
 	    
@@ -251,9 +234,10 @@ sub alignTerms
 
     #Add TermIDs as empty blocks if no data
     if (not defined $trials->{"trials"}{$termid}) {
-      $trials->addEmptyBlock($termid);
-      $trials->addBlockMetaData($termid, \%blockMetaData);
-      
+      unless ($pooled) {
+	$trials->addEmptyBlock($termid);
+	$trials->addBlockMetaData($termid, \%blockMetaData);
+      }
       
       if (defined $groupFilter) {
 	my @possible_groups = (); #empty trials should be added to all groups
@@ -290,9 +274,41 @@ sub alignTerms
     $qdetset->addDET($qtrialname, $qdetcurve);
   }
 
-  close (CSVREPORT) if (defined $csvreportfile);
+  $self->csv_close() if defined $csvreportfile;
 
   return [ $detset, $qdetset ];
+}
+
+###### CSV Writer #########
+
+sub configure_csv_writer {
+ my ($self, $filename) = @_;
+
+ open CSVFH, ">$filename";
+ binmode CSVFH, $self->{RTTMLIST}->getPerlEncodingString() if $self->{RTTMLIST}->{ENCODING} ne "";
+ *CSVFH;
+ print CSVFH "language,file,channel,termid,term,ref_bt,ref_et,sys_bt,sys_et,sys_score,sys_decision,alignment\n";
+}
+sub csv_write_align_str {
+  my ($self, $term, $refs, $sys) = @_;
+  my $result = $sys ? ($sys->{DECISION} eq "YES" ? ($refs ? "CORR" : "FA") : ($refs ? "MISS" : "FA")) : "MISS";
+  print CSVFH join(",",
+			    $self->{RTTMLIST}->{LANGUAGE},
+			    ($refs->[0] || $sys)->{FILE},
+			    ($refs->[0] || $sys)->{CHAN},
+			    $term->{TERMID},
+			    $term->{TEXT},
+			    $refs->[0]->{BT},
+			    $refs->[-1]->{ET},
+			    $sys->{BT},
+			    $sys->{ET},
+			    $sys->{SCORE},
+			    $sys->{DECISION},
+			    $result) . "\n" if defined *CSVFH;
+}
+sub csv_close {
+  my $self = shift;
+  close CSVFH if defined *CSVFH;
 }
 
 #>===========Filters==========<#
@@ -375,7 +391,7 @@ sub groupByOOV
   my ($self, $rec, $term) = @_;
 
   my @groups = ();
-  if ($self->{KWSLIST}{TERMS}{$term->{TERMID}}{OOV_TERM_COUNT} > 0) {
+  if ($self->{OOVCOUNTS}{$term->{TERMID}} > 0) {
     push (@groups, "OOV"); }
   else {
     push (@groups, "IV"); }
@@ -478,7 +494,8 @@ sub unitTest
   my $rttm = new RTTMList($rttmfile, $tlist->getLanguage(), $tlist->getCompareNormalize(), $tlist->getEncoding(), 0, 0, 0);
   print "OK\n";
   print "Loading KWSList...\t";
-  my $kws = new KWSList($kwsfile);
+  my $kws = new KWSList();
+  $kws->openXMLFileAccess($kwsfile);
   print "OK\n";
   print "Loading KWSecf...\t";
   my $ecf = new KWSecf($ecffile);
@@ -558,6 +575,9 @@ sub unitTest
   else { print "FAILED\n"; return 0 }
 
   #checking pooled results
+  $kws = new KWSList();
+  $kws->openXMLFileAccess($kwsfile, 1);
+  $kwsalign->{KWSLIST} = $kws;
   my @presults = @{ $kwsalign->alignTerms(undef, [], $termfilter, $findthresh, $alignthresh, $KoefC, $KoefV, \@isolinecoef, $trialspersec, $probofterm, 1) };
 
   my $pdetset = $presults[0];
