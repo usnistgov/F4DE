@@ -26,7 +26,7 @@ Summary Report: -
 |              |                  Inputs                  |                               Actual Decision TWV Analysis                                |
 |    Title     |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   TWV    |  Dec. Tresh  |
 |--------------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
-|   Occurrence |          2 |       2 |        0 |      0 |         0 |          0 |     0 |       2 |   0.00000 |    1.000 |   0.0000 |           NA |
+|   Occurrence |          2 |       2 |        0 |      1 |         1 |          0 |     0 |       1 |   0.00000 |    0.500 |   0.5000 |       0.9120 |
 Block Summary Report: -
 |  Performance Summary Over and Ensemble of Subsets  |
 |               Key               |      Value       |
@@ -46,7 +46,7 @@ Block Summary Report: -
                   |  MetaData  |                              Occurrence                               |
                   |    Text    |  #Targ  |  #Corr  |  #FA  |  #Miss  |   TWV    |    PFA    |  PMISS   |
 ------------------+------------+---------+---------+-------+---------+----------+-----------+----------+
-Keyword  TEST-00  |         听到 |       1 |       0 |     0 |       1 |   0.0000 |   0.00000 |    1.000 |
+Keyword  TEST-00  |         听到 |       1 |       1 |     0 |       0 |   1.0000 |   0.00000 |    0.000 |
          TEST-01  |          到 |         |         |       |         |          |           |          |
          TEST-02  |         到- |         |         |       |         |          |           |          |
          TEST-03  |          听 |         |         |       |         |          |           |          |
@@ -54,9 +54,9 @@ Keyword  TEST-00  |         听到 |       1 |       0 |     0 |       1 |   0.0
          TEST-05  |          t |         |         |       |         |          |           |          |
          TEST-06  |         t- |         |         |       |         |          |           |          |
          TEST-07  |          o |         |         |       |         |          |           |          |
-Summary  Totals   |            |       2 |       0 |     0 |       2 |          |           |          |
-         Means    |            |       1 |       0 |     0 |       1 |          |   0.00000 |    1.000 |
-         TWV      |            |         |         |       |         |   0.0000 |           |          |
+Summary  Totals   |            |       2 |       1 |     0 |       1 |          |           |          |
+         Means    |            |       1 |       0 |     0 |       0 |          |   0.00000 |    0.500 |
+         TWV      |            |         |         |       |         |   0.5000 |           |          |
 
 [[STDERR]]
 
