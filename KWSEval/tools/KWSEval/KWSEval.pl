@@ -141,6 +141,7 @@ my $PooledTermDETs = 0;
 my $cleanDETsFolder = 0;
 my $requestalignCSV = 0;
 my $includeNoTargBlocks = 0;
+my $justSystemTerms = 0;
 
 my $reportOutTypes = [ "TXT" ];
 
@@ -231,6 +232,7 @@ GetOptions
     'help'                                => sub { MMisc::ok_quit($usage); },
     'words-oov'                           => \$requestwordsoov,
     'include-blocks-w-notargs'            => \$includeNoTargBlocks,
+    'just-system-terms'                   => \$justSystemTerms,
     'ID-System=s'                         => \$IDSystem, 
     'xprefilterText=s@'                   => \@textPrefilters,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
@@ -387,7 +389,7 @@ if ($segmentbased != 0)
   $groupBySubroutine = \&KWSSegAlign::groupByOOV if ($requestwordsoov == 1);
 
   #Align
-  @alignResults = @{ $segAlignment->alignSegments($alignmentCSV, \@filters, $groupBySubroutine, $thresholdFind, $KoefC, $KoefV, $probOfTerm, \@listIsolineCoef, $PooledTermDETs, $includeNoTargBlocks) };
+  @alignResults = @{ $segAlignment->alignSegments($alignmentCSV, \@filters, $groupBySubroutine, $thresholdFind, $KoefC, $KoefV, $probOfTerm, \@listIsolineCoef, $PooledTermDETs, $includeNoTargBlocks, $justSystemTerms) };
 }
 else
 {
@@ -406,7 +408,7 @@ else
   $groupBySubroutine = \&KWSAlignment::groupByOOV if ($requestwordsoov == 1);
 
   #Align
-  @alignResults = @{ $alignment->alignTerms($alignmentCSV, \@filters, $groupBySubroutine, $thresholdFind, $thresholdAlign, $KoefC, $KoefV, \@listIsolineCoef, $trialsPerSec, $probOfTerm, $PooledTermDETs, $includeNoTargBlocks) };
+  @alignResults = @{ $alignment->alignTerms($alignmentCSV, \@filters, $groupBySubroutine, $thresholdFind, $thresholdAlign, $KoefC, $KoefV, \@listIsolineCoef, $trialsPerSec, $probOfTerm, $PooledTermDETs, $includeNoTargBlocks, $justSystemTerms) };
 }
 
 print "Computing requested DET curves and reports\n";
@@ -589,6 +591,7 @@ sub set_usage {
   $tmp .= "  -inc, --include-blocks-w-notargs  Include blocks with no targets in block reports.\n";
 	$tmp .= "  -I, --ID-System <name>        Overwrites the name of the STD system.\n";
 	$tmp .= "  -z, --zprefilterText <opts>   Prefilter the KWList and  RTTM with the options.  May be used more than once.\n";
+  $tmp .= "  -j, --just-system-terms       Ignores terms which are not present in the system output.\n";
 	$tmp .= "                                  charSplit -> split multi-character tokens into characters\n";
   $tmp .= "                                  notASCII  -> do not split ASCII words.  (no effect without charSplit)\n";
   $tmp .= "                                  deleteHyphens -> treat hyphens like required whitespace. (no effect without charSplit)\n";

@@ -66,12 +66,13 @@ sub new
 
 sub alignSegments
 {
-  my ($self, $csvreportfile, $segmentFilters, $groupFilter, $threshhold, $KoefC, $KoefV, $probofterm, $listIsolineCoef, $pooled, $includeBlocksWNoTarg) = @_;
+  my ($self, $csvreportfile, $segmentFilters, $groupFilter, $threshhold, $KoefC, $KoefV, $probofterm, $listIsolineCoef, $pooled, $includeBlocksWNoTarg, $justSystemTerms) = @_;
   open (CSVREPORT, ">$csvreportfile") if (defined $csvreportfile);
   binmode(CSVREPORT, $self->{RTTMLIST}->getPerlEncodingString()) if (defined $csvreportfile && $self->{RTTMLIST}->{ENCODING} ne "");
   print CSVREPORT "file,channel,termid,term,ref_bt,ref_et,sys_bt,sys_et,sys_score,sys_decision,alignment\n" if (defined $csvreportfile);
 
   $includeBlocksWNoTarg = 0 if ($includeBlocksWNoTarg != 1);
+  $justSystemTerms = 0 if ($justSystemTerms != 1);
 
   my @segments = ();
   foreach my $ecfexcerpt (@{ $self->{ECF}{EXCERPT} }) {
@@ -169,6 +170,7 @@ sub alignSegments
 #####
   #Add empty blocks for terms which are not in sys
   foreach my $term (values %{ $self->{TERMLIST}{TERMS} }) {
+    last if $justSystemTerms == 1;
     my $termid = $term->{TERMID};
     if (not defined $trials->{"trials"}{$termid}) {
       my %blockMetaData = ();

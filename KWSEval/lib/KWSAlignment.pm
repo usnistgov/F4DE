@@ -68,7 +68,7 @@ sub new
 
 sub alignTerms
 {
-  my ($self, $csvreportfile, $termFilters, $groupFilter, $fthreshold, $sthreshold, $KoefC, $KoefV, $listIsolineCoef, $trialsPerSec, $probofterm, $pooled, $includeBlocksWNoTarg) = @_;
+  my ($self, $csvreportfile, $termFilters, $groupFilter, $fthreshold, $sthreshold, $KoefC, $KoefV, $listIsolineCoef, $trialsPerSec, $probofterm, $pooled, $includeBlocksWNoTarg, $justSystemTerms) = @_;
   #fthreshold being the max time gap betwen two words that can be considered to be in the same term
   #sthreshold being the max time different between a system's term detection midpoint and the reference term's timeframe
 
@@ -77,6 +77,7 @@ sub alignTerms
   my $epsilonScore = 1e-6; #this weights score congruence in the joint mapping table
 
   $includeBlocksWNoTarg = 0 if ($includeBlocksWNoTarg != 1);
+  $justSystemTerms = 0 if ($justSystemTerms != 1);
 
   $self->configure_csv_writer($csvreportfile) if defined $csvreportfile;
 
@@ -97,6 +98,7 @@ sub alignTerms
     #
     my $termid = "";
     if (!defined $detected_list) {
+      last if $justSystemTerms == 1;
       $kws_done_loading = 1;
       $termid = (keys %missed_terms)[0];
       last unless $termid; #if no detected list and no terms, then done
