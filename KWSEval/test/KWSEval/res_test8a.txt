@@ -1,0 +1,86 @@
+[[COMMANDLINE]] ../../tools/KWSEval/KWSEval.pl -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.missing_term.kwslist.xml -t ../common/test7.kwlist.xml -o -b -inc -f - -j
+[[RETURN CODE]] 0
+[[STDOUT]]
+Loading ECF ../common/test7.ecf.xml
+Loading KWSList File ../common/test7.missing_term.kwslist.xml
+Loading KWList File ../common/test7.kwlist.xml
+Loading RTTM File ../common/test7.rttm
+Performing Occurrence Alignment
+Computing requested DET curves and reports
+Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |            28576 |
+|      IncludeBlocksWithNoTargets |                1 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |        28575.908 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+|              |                  Inputs                  |                               Actual Decision TWV Analysis                                |
+|    Title     |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   TWV    |  Dec. Tresh  |
+|--------------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
+|   Occurrence |         32 |     462 |      142 |    468 |       326 |          3 |   139 |     136 |   0.00015 |    0.284 |   0.5635 |       0.1398 |
+Block Summary Report: -
+|  Performance Summary Over and Ensemble of Subsets  |
+|               Key               |      Value       |
+|---------------------------------+------------------+
+|                    System Title |               NA |
+|                     Decision ID |       Occurrence |
+|                       TotTrials |            28576 |
+|      IncludeBlocksWithNoTargets |                1 |
+|                 TrialsPerSecond |                1 |
+|                          TotDur |        28575.908 |
+|                            BETA |            999.9 |
+|                           Value |                1 |
+|                           Ptarg |           0.0001 |
+|                            Cost |           0.1000 |
+
+
+                  |                      MetaData                      |                               Occurrence                               |
+                  |                        Text                        |  #Targ  |  #Corr  |  #FA  |  #Miss  |    TWV    |    PFA    |  PMISS   |
+------------------+----------------------------------------------------+---------+---------+-------+---------+-----------+-----------+----------+
+Keyword  TEST-01  |                                            vatican |       5 |       1 |     3 |       4 |    0.0950 |   0.00011 |    0.800 |
+         TEST-02  |                                            vignali |       5 |       0 |     0 |       5 |    0.0000 |   0.00000 |    1.000 |
+         TEST-03  |                                              visit |       8 |       6 |     2 |       2 |    0.6800 |   0.00007 |    0.250 |
+         TEST-04  |                                              watch |      29 |      25 |    10 |       4 |    0.5118 |   0.00035 |    0.138 |
+         TEST-05  |                                               ways |      13 |       9 |     8 |       4 |    0.4123 |   0.00028 |    0.308 |
+         TEST-06  |                                            weapons |       9 |       5 |     4 |       4 |    0.4155 |   0.00014 |    0.444 |
+         TEST-07  |                                          wednesday |       8 |       5 |     2 |       3 |    0.5550 |   0.00007 |    0.375 |
+         TEST-08  |                                            welcome |       5 |       5 |     0 |       0 |    1.0000 |   0.00000 |    0.000 |
+         TEST-09  |                                              whose |      10 |       5 |     1 |       5 |    0.4650 |   0.00004 |    0.500 |
+         TEST-10  |                                                yes |      89 |      43 |    20 |      46 |   -0.2189 |   0.00070 |    0.517 |
+         TEST-11  |                                          salt lake |      22 |      15 |     6 |       7 |    0.4717 |   0.00021 |    0.318 |
+         TEST-12  |                                    missile defense |      11 |       9 |     2 |       2 |    0.7482 |   0.00007 |    0.182 |
+         TEST-13  |                                     prime minister |      11 |       6 |     5 |       5 |    0.3704 |   0.00018 |    0.455 |
+         TEST-14  |                                              v. o. |      10 |       9 |     4 |       1 |    0.7600 |   0.00014 |    0.100 |
+         TEST-15  |                                        white house |      10 |       8 |     3 |       2 |    0.6950 |   0.00011 |    0.200 |
+         TEST-16  |                                        hugh rodham |       9 |       7 |     1 |       2 |    0.7428 |   0.00004 |    0.222 |
+         TEST-17  |                                  pacific northwest |       9 |       7 |     1 |       2 |    0.7428 |   0.00004 |    0.222 |
+         TEST-18  |                                              t. v. |      26 |      22 |     5 |       4 |    0.6710 |   0.00018 |    0.154 |
+         TEST-19  |                                           year old |      14 |      11 |     9 |       3 |    0.4706 |   0.00032 |    0.214 |
+         TEST-20  |                                     dale earnhardt |       7 |       3 |     4 |       4 |    0.2886 |   0.00014 |    0.571 |
+         TEST-21  |                                  the united states |      28 |      24 |     4 |       4 |    0.7170 |   0.00014 |    0.143 |
+         TEST-22  |                                         b. c. news |      21 |      19 |     4 |       2 |    0.7647 |   0.00014 |    0.095 |
+         TEST-23  |                                           n. b. c. |      20 |      14 |     8 |       6 |    0.4199 |   0.00028 |    0.300 |
+         TEST-24  |                                     salt lake city |      15 |      12 |     2 |       3 |    0.7300 |   0.00007 |    0.200 |
+         TEST-25  |                                         n. b. c.'s |      13 |      11 |     2 |       2 |    0.7761 |   0.00007 |    0.154 |
+         TEST-26  |                                       did not know |       1 |       1 |     0 |       0 |    1.0000 |   0.00000 |    0.000 |
+         TEST-27  |                                         one of the |      27 |      21 |     8 |       6 |    0.4976 |   0.00028 |    0.222 |
+         TEST-28  |                                           v. o. a. |      10 |       9 |     3 |       1 |    0.7950 |   0.00011 |    0.100 |
+         TEST-29  |                                           c. n. n. |       9 |       7 |    14 |       2 |    0.2878 |   0.00049 |    0.222 |
+         TEST-30  |                              the pacific northwest |       8 |       7 |     1 |       1 |    0.8400 |   0.00004 |    0.125 |
+         TEST-32  |   non occuring term - false alarms below threshold |       0 |       0 |     0 |       0 |        NA |   0.00000 |       NA |
+         TEST-33  |   non occuring term - false alarms above threshold |       0 |       0 |     3 |       0 |        NA |   0.00010 |       NA |
+Summary  Totals   |                                                    |     462 |     326 |   139 |     136 |           |           |          |
+         Means    |                                                    |      14 |      10 |     4 |       4 |           |   0.00015 |    0.284 |
+         TWV      |                                                    |         |         |       |         |    0.5635 |           |          |
+
+[[STDERR]]
+

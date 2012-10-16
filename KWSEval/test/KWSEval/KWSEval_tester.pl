@@ -88,6 +88,14 @@ $testr += &do_simple_test($tn, "Cantonese, Split all characters, delete hyphens"
 ##
 $tn = "test7e";
 $testr += &do_simple_test($tn, "Cantonese, Split all characters except ASCII, delete hyphens", "$tool -e ../common/test8.ecf.xml -r ../common/test8.cantonese.rttm -s ../common/test8.cantonese.kwslist.xml -t ../common/test8.cantonese.kwlist.xml -csv -o -b -f - -x charsplit -x deleteHyphens -x notASCII", "res_$tn.txt");
+
+##
+$tn = "test8a";
+$testr += &do_simple_test($tn, "Just system terms (Occurence)", "$tool -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.missing_term.kwslist.xml -t ../common/test7.kwlist.xml -o -b -inc -f - -j", "res_$tn.txt");
+
+##
+$tn = "test8b";
+$testr += &do_simple_test($tn, "Just system terms (Segment)", "$tool -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.missing_term.kwslist.xml -t ../common/test7.kwlist.xml -o -b -inc -f - -j -g", "res_$tn.txt");
 ####
 
 my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
