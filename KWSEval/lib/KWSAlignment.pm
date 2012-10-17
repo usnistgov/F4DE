@@ -71,7 +71,6 @@ sub alignTerms
   my ($self, $csvreportfile, $termFilters, $groupFilter, $fthreshold, $sthreshold, $KoefC, $KoefV, $listIsolineCoef, $trialsPerSec, $probofterm, $pooled, $includeBlocksWNoTarg, $justSystemTerms) = @_;
   #fthreshold being the max time gap betwen two words that can be considered to be in the same term
   #sthreshold being the max time different between a system's term detection midpoint and the reference term's timeframe
-
   #BipartiteMatch Kernel params
   my $epsilonTime = 1e-8; #this weights time congruence in the joint mapping table
   my $epsilonScore = 1e-6; #this weights score congruence in the joint mapping table
@@ -135,15 +134,19 @@ sub alignTerms
 	  $refs{$ref} = $ref;
 	}
 	my %syss = ();
-
+	
+	my ($min_score, $max_score) = (undef, undef);
       SYSBUILD: foreach my $sys (@{ $termlkup{$file}{$chan} }) {
 	  foreach my $tfilter (@{ $termFilters }) {
 	    next SYSBUILD if (&{ $tfilter }($self, $sys) == 0);
 	  }
 	  $syss{$sys} = $sys;
+	  $min_score = $sys->{SCORE} unless defined $min_score && $min_score < $sys->{SCORE};
+	  $max_score = $sys->{SCORE} unless defined $max_score && $max_score > $sys->{SCORE};
 	}
-	
-	my @kparams = ( $epsilonTime, $epsilonScore, $sthreshold );
+	my @kparams = ( $epsilonTime, $epsilonScore, $sthreshold, 
+			$self->{KWSLIST}{MIN_SCORE}, $self->{KWSLIST}{MAX_SCORE}, 
+			$min_score, $max_score);
 	my $biMatch = new BipartiteMatch(\%refs, \%syss, \&_bipartiteKernel, \@kparams);
 	$biMatch->compute();
 
@@ -444,24 +447,27 @@ sub _dumpsysocc
   print "Score: " . $sys->{SCORE} . "\tDec: " . $sys->{DECISION} . "\n";
 }
 
-sub _bipartiteKernel
-{
+sub _bipartiteKernel {
   my ($ref, $sys, @params) = @_;
+  my ($epsilonTime, $epsilonScore, $threshold, $kwsListMin, $kwsListMax, $localMin, $localMax) = @params;
 
-  return ('', -1) if (!defined $ref || !defined $sys);
+  return ('', -1) unless $ref and $sys;
 
-  #params[0] = epsilon time, params[1] = epsilon score, params[2] = alignment threshold
-  my $maxBT = 0.0;
-  if ($sys->{BT} > $ref->[0]->{BT}) { $maxBT = $sys->{BT} }
-  else { $maxBT = $ref->[0]->{BT} }
-  my $minET = 0.0;
-  if ($sys->{ET} < $ref->[-1]->{ET}) { $minET = $sys->{ET} }
-  else { $minET = $ref->[-1]->{ET} }
+  my $minScore = defined $kwsListMin ? $kwsListMin : $localMin;
+  my $maxScore = defined $kwsListMax ? $kwsListMax : $localMax;
 
-  my $dTime = $minET - $maxBT;
-  return ('', undef) if ($sys->{MID} < $ref->[0]->{BT} - $params[2] || $sys->{MID} > $ref->[-1]->{ET} + $params[2]);
+  my $maxBT = $sys->{BT} > $ref->[0]->{BT} ? $sys->{BT} : $ref->[0]->{BT};
+  my $minET = $sys->{ET} < $ref->[-1]->{ET} ? $sys->{ET} : $ref->[-1]->{ET};
 
-  my $kscore = 1 + ($params[0] * $dTime) + ($params[1] * $sys->{SCORE});
+  return ('', undef) if ($sys->{MID} < $ref->[0]->{BT} - $threshold || 
+			 $sys->{MID} > $ref->[-1]->{ET} + $threshold);
+
+  my $refDtime = $ref->[-1]->{ET} - $ref->[0]->{BT};
+  my $timeCgr = ($minET - $maxBT) / ($refDtime > 0.00001 ? $refDtime : 0.00001);
+  my $Dscore = $maxScore - $minScore;
+  my $scoreCgr = ($sys->{SCORE} - $minScore) / ($Dscore > 0.00001 ? $Dscore : 0.00001);
+
+  my $kscore = 1 + ($epsilonTime * $timeCgr) + ($epsilonScore * $scoreCgr);
   return ('', $kscore);
 }
 
@@ -620,6 +626,25 @@ sub unitTest
   print "Checking group filters(4)...\t";
   if ($kwsalign->groupByECFSourceType($termstofilter[0], undef)->[0] eq "BNEWS+CTS") { print "OK\n" }
   else { print "FAILED\n"; return 0 }
+
+  print "Checking bipartite kernel function(1)...\t";
+  my @params = (0.1, 0.1, 0.5, undef, undef, 0.5, 0.9);
+  my $ref = ();
+  push @$ref, {BT => 1.5, ET => 2, MID => 1.75};
+  my $sys = {BT => 1, ET => 2, MID => 1.5, SCORE => 0.8};
+  if (_bipartiteKernel($ref, $sys, @params) eq "1.175") { print "OK\n" }
+  else { print "FAILED\n"; return 0}
+  @params = (0.1, 0.1, 0.5, 0.5, 0.9);
+  print "Checking bipartite kernel function(2)...\t";
+  if (_bipartiteKernel($ref, $sys, @params) eq "1.175") { print "OK\n" }
+  else { print "FAILED\n"; return 0}
+  $sys = {BT => 3, ET => 4, SCORE => 0.6};
+  print "Checking bipartite kernel function(3)...\t";
+  if (MMisc::is_blank(_bipartiteKernel($ref, $sys, @params))) { print "OK\n" }
+  else { print "FAILED\n"; return 0};
+  print "Checking bipartite kernel function(4)...\t";
+  if (_bipartiteKernel(undef, undef, @params) == -1) { print "OK\n" }
+  else { print "FAILED\n"; return 0};
 
   print "\nAll tests...\tOK\n";
   return 1;
