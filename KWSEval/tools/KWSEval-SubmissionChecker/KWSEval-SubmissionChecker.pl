@@ -126,9 +126,10 @@ my $outdir = undef;
 my @dbDir = ();
 my $eteam = undef;
 my $scoringReady = 0;
+my $aMT = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                   S  V       d   h  k     q st v     #
+# Used: A         K   O   ST V       d   h  k   o q st v   z #
 
 my %opt = ();
 GetOptions
@@ -145,6 +146,7 @@ GetOptions
    'kwslistValidator=s' => \$ValidateKWSList,
    'TmValidator=s' => \$ValidateTM,
    'scoringReady'   => \$scoringReady,
+   'AllowMissingTerms' => \$aMT,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -509,6 +511,7 @@ sub run_ValidateKWSList {
   push @cmd, '-e', $ecf;
   push @cmd, '-t', $term;
   push @cmd, '-s', $file;
+  push(@cmd, '-A') if ($aMT);
   if ($scoringReady) {
     push(@cmd, '-r', $rttm) if (! MMisc::is_blank($rttm));
     push @cmd, '-m', $od;
@@ -636,7 +639,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] --Specfile perlEvalfile --dbDir dir [--dbDir dir [...]] [--kwslistValidator tool] [--TmValidator tool] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID$kwslist_ext
+Usage: $0 [--help | --version] --Specfile perlEvalfile --dbDir dir [--dbDir dir [...]] [--kwslistValidator tool [--AllowMissingTerms]] [--TmValidator tool] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID$kwslist_ext
 
 Will confirm that a submission file conforms to the BABEL 'Submission Instructions'.
 
@@ -650,6 +653,7 @@ For \'$ctm_ext\' files, only the \'$ecf_ext\' file is required.
   --Specfile      Specify the \'perlEvalfile\' that contains definitions specific to the evaluation run
   --dbDir         Directory where the sidecar files are located. Multiple can be specified by separating them using a colon (\':\') or using the option multiple time
   --kwslistValidator  Location of the \'ValidateKWSList\' tool (default: $ValidateKWSList) for validating \'$kwslist_ext\' files
+  --AllowMissingTerms  Authorize TERMs defined in KWList file but not in the KWSlist file
   --TmValidator  Location of the \'ValidateTM\' tool (default: $ValidateTM) for validating \'$ctm_ext\' files
   --Verbose       Explain step by step what is being checked
   --outdir        Output directory where validation is performed (if not provided, default is to use a temporary directory)
