@@ -16,7 +16,7 @@ all:
 install:
 	@echo "Nothing to do for install"
 
-check: ${ValidateKWSList_exec} ${ValidateKWSList}
+check: ${ValidateKWSList_tester} ${ValidateKWSList}
 	@(${PERL} ${ValidateKWSList_tester} ${ValidateKWSList} $@)
 
 makecheckfiles: ${ValidateKWSList_tester} ${ValidateKWSList}
