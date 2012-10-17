@@ -98,6 +98,7 @@ my $KWSfile = "";
 my $RTTMfile = "";
 my $outputfile = "";
 my $mddir = "";
+my $aMT = 0;
 
 GetOptions
   (
@@ -107,6 +108,7 @@ GetOptions
    'rttmfile=s'   => \$RTTMfile,
    'output=s'     => \$outputfile,
    'memdumpDir=s' => \$mddir,
+   'AllowMissingTerms' => \$aMT,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::error_quit("$usage")
@@ -136,7 +138,6 @@ if (! MMisc::is_blank($mddir)) {
 
 my $TERM = new TermList($TERMfile, 0, 0, 0);
 my $ECF = new KWSecf($ECFfile);
-my $KWS = new KWSList($KWSfile);
 my $RTTM = (! MMisc::is_blank($RTTMfile)) ? 
   new RTTMList($RTTMfile, $TERM->getLanguage(), 
                $TERM->getCompareNormalize(), $TERM->getEncoding()) 
@@ -145,35 +146,57 @@ my $RTTM = (! MMisc::is_blank($RTTMfile)) ?
 my %ListTerms;
 foreach my $termid (keys %{ $TERM->{TERMS} }) { $ListTerms{$termid} = 1; }
 
+my $KWS = new KWSList();
+$err = $KWS->openXMLFileAccess($KWSfile, 1);
+MMisc::error_quit("Problem loading KWSList file ($KWSfile) : $err")
+  if (! MMisc::is_blank($err));
+
 my $errors = 0;
 my $warnings = 0;
-foreach my $termid (sort keys %{ $KWS->{TERMS} }) {
+my $doit = 1;
+while ($doit) {
+  # Then process each 'kw' at a time
+  my ($lerr, $ldw) = $KWS->getNextDetectedKWlist();
+  # any error while reading ?
+  MMisc::error_quit("Problem reading KWSList: $lerr")
+      if (! MMisc::is_blank($err));
+
+  # Stop processing when the last entry processed is undefined
+  if (! defined $ldw) {
+    $doit = 0;
+    next;
+  }
+
+  my $termid = $ldw->{TERMID};
+
   if (exists($TERM->{TERMS}{$termid})) {
     delete $ListTerms{$termid};
     
     ### No need to check if there are no occurrences for the term
-    next if (! defined($KWS->{TERMS}{$termid}->{TERMS}));
+    next if (! defined($ldw->{TERMS}));
     
-    for (my $i=0; $i<@{ $KWS->{TERMS}{$termid}->{TERMS} }; $i++) {
+    for (my $i=0; $i<@{ $ldw->{TERMS} }; $i++) {
       if (0 == $ECF->FilteringTime
-          ($KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}, 
-           $KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN},
-           $KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT},
-           $KWS->{TERMS}{$termid}->{TERMS}[$i]->{ET}) ) {
-        print "ERROR - KWS detected term ID '$termid' (File '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}', Channel '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}', Begin time '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}') not defined in the ECF.\n";
+          ($ldw->{TERMS}[$i]->{FILE}, 
+           $ldw->{TERMS}[$i]->{CHAN},
+           $ldw->{TERMS}[$i]->{BT},
+           $ldw->{TERMS}[$i]->{ET}) ) {
+        print "ERROR - KWS detected term ID '$termid' (File '$ldw->{TERMS}[$i]->{FILE}', Channel '$ldw->{TERMS}[$i]->{CHAN}', Begin time '$ldw->{TERMS}[$i]->{BT}', duration '$ldw->{TERMS}[$i]->{DUR}') not defined in the ECF.\n";
         $errors++;
         delete $KWS->{TERMS}{$termid}->{TERMS}[$i];
+        delete $ldw->{TERMS}[$i];
       }
     }
 		
     my %uniqueDetected = ();
-    for (my $i=0; $i<@{ $KWS->{TERMS}{$termid}->{TERMS} }; $i++) {
-      if (! exists( $uniqueDetected{"$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{SCORE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DECISION}"} )) {
-        $uniqueDetected{"$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{SCORE}"."|"."$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DECISION}"} = 1;
+    for (my $i=0; $i<@{ $ldw->{TERMS} }; $i++) {
+      if (! exists( $uniqueDetected{"$ldw->{TERMS}[$i]->{FILE}"."|"."$ldw->{TERMS}[$i]->{CHAN}"."|"."$ldw->{TERMS}[$i]->{BT}"."|"."$ldw->{TERMS}[$i]->{DUR}"."|"."$ldw->{TERMS}[$i]->{SCORE}"."|"."$ldw->{TERMS}[$i]->{DECISION}"} )) {
+        $uniqueDetected{"$ldw->{TERMS}[$i]->{FILE}"."|"."$ldw->{TERMS}[$i]->{CHAN}"."|"."$ldw->{TERMS}[$i]->{BT}"."|"."$ldw->{TERMS}[$i]->{DUR}"."|"."$ldw->{TERMS}[$i]->{SCORE}"."|"."$ldw->{TERMS}[$i]->{DECISION}"} = 1;
       } else {
-        print "WARNING - KWS detected term ID '$termid' (File '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{FILE}', Channel '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{CHAN}', Begin time '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{BT}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DUR}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{SCORE}', duration '$KWS->{TERMS}{$termid}->{TERMS}[$i]->{DECISION}') is a duplicate.\n";
+        print "WARNING - KWS detected term ID '$termid' (File '$ldw->{TERMS}[$i]->{FILE}', Channel '$ldw->{TERMS}[$i]->{CHAN}', Begin time '$ldw->{TERMS}[$i]->{BT}', duration '$ldw->{TERMS}[$i]->{DUR}', duration '$ldw->{TERMS}[$i]->{SCORE}', duration '$ldw->{TERMS}[$i]->{DECISION}') is a duplicate.\n";
         $warnings++;
         delete $KWS->{TERMS}{$termid}->{TERMS}[$i];
+        delete $ldw->{TERMS}[$i];
       }
     }
   } else {
@@ -183,9 +206,11 @@ foreach my $termid (sort keys %{ $KWS->{TERMS} }) {
   }
 }
 
-foreach my $termid (sort keys %ListTerms) {
-  print "ERROR - ID '$termid' defined in the Term List but absent in KWS file.\n";
-  $errors++;
+if ($aMT == 0) {
+  foreach my $termid (sort keys %ListTerms) {
+    print "ERROR - ID '$termid' defined in the Term List but absent in KWS file.\n";
+    $errors++;
+  }
 }
 
 if ($errors + $warnings > 0) {
@@ -194,10 +219,13 @@ if ($errors + $warnings > 0) {
   print "'$KWSfile' validates!\n";
 }
 
-if($outputfile ne "") {
-  $KWS->{KWSLIST_FILENAME} = $outputfile;
-  $KWS->saveFile();
-
+if ($outputfile ne "") {
+  if ($outputfile eq '/////') {
+    print $KWS->get_XMLrewrite();
+  } else {
+    $KWS->{KWSLIST_FILENAME} = $outputfile;
+    $KWS->saveFile();
+  }
   print "The new KWS file '$outputfile' will not be proper because some terms have not been detected in the original KWS file!\n" 
     if (keys( %ListTerms ) != 0);
 }
@@ -232,12 +260,14 @@ sub set_usage {
   my $usage = "$0 --termfile termfile --ecf ecfile --sysfile kwsfile [--rttmfile rttmfile] [--output purged_KWSlist] [--memdumpDir dir]\n";
   $usage .= "\n";
   $usage .= "Required file arguments:\n";
-  $usage .= "  --termfile        Path to the TermList file\n";
+  $usage .= "  --termfile        Path to the KWList file\n";
   $usage .= "  --ecffile         Path to the ECF file\n";
   $usage .= "  --sysfile         Path to the KWSList file\n";
+  $usage .= "Optional arguments:\n";
   $usage .= "  --rttmfile        Path to the RTTM file\n";
   $usage .= "  --output          Path to the output new purged KWS file\n";
   $usage .= "  --memdumpDir      Path to the directory where to put all processed input files\n";
+  $usage .= "  --AllowMissingTerms  Authorize TERMs defined in KWList file but not in the KWSlist file\n";
   $usage .= "\n";
   
   return($usage);
