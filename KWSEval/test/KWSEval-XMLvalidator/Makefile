@@ -16,13 +16,13 @@ all:
 install:
 	@echo "Nothing to do for install"
 
-check: ${KWSEval-XMLValidator_tester_exec} ${KWSEval-XMLValidator}
+check: ${KWSEval-XMLValidator_tester} ${KWSEval-XMLValidator}
 	@(${PERL} ${KWSEval-XMLValidator_tester} ${KWSEval-XMLValidator} $@)
 
-makecheckfiles: ${KWSEval-XMLValidator_tester_exec} ${KWSEval-XMLValidator}
+makecheckfiles: ${KWSEval-XMLValidator_tester} ${KWSEval-XMLValidator}
 	@(${PERL} ${KWSEval-XMLValidator_tester} ${KWSEval-XMLValidator} $@)
 
-makecompcheckfiles: ${KWSEval-XMLValidator_tester_exec} ${KWSEval-XMLValidator}
+makecompcheckfiles: ${KWSEval-XMLValidator_tester} ${KWSEval-XMLValidator}
 	@(${PERL} ${KWSEval-XMLValidator_tester} ${KWSEval-XMLValidator} $@)
 
 cleanresfiles:
