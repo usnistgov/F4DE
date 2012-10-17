@@ -16,5 +16,7 @@ check:
 	@(echo "")
 	@(cd KWSEval-XMLvalidator; make $@)
 	@(echo "")
+	@(cd ValidateKWSList; make $@)
+	@(echo "")
 	@(cd KWSEval; make $@)
 	@echo "***** All tests ran succesfully"
