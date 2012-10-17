@@ -1,0 +1,42 @@
+[[COMMANDLINE]] ../../tools/ValidateKWSList/ValidateKWSList.pl -t ../../test/common/test3.kwlist.xml -e ../../test/common/test3.ecf.xml -s ../../test/common/test3.kwslist.xml -o /////
+[[RETURN CODE]] 0
+[[STDOUT]]
+'../../test/common/test3.kwslist.xml' validates!
+<kwslist kwlist_filename="test3.kwlist.xml" language="english" system_id="Test3 System ID">
+  <detected_kwlist kwid="TERM-001" search_time="24.3" oov_count="0">
+    <kw file="20010206_1830_1900_ABC_WNT_exA" channel="1" tbeg="1630.710" dur="0.370" score="0.966931" decision="YES"/>
+    <kw file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="697.120" dur="0.260" score="0.970571" decision="YES"/>
+    <kw file="20010220_2000_2100_PRI_TWD_exA" channel="1" tbeg="1475.910" dur="0.310" score="0.824710" decision="YES"/>
+    <kw file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1539.510" dur="0.330" score="0.887494" decision="YES"/>
+    <kw file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="185.960" dur="0.390" score="0.994659" decision="YES"/>
+    <kw file="fsh_60493_exA" channel="2" tbeg="230.508" dur="0.262" score="0.902341" decision="YES"/>
+    <kw file="fsh_60885_exA" channel="2" tbeg="166.494" dur="0.364" score="0.959281" decision="YES"/>
+    <kw file="NIST_20050412-1303_exA" channel="1" tbeg="117.288" dur="0.360" score="0.916841" decision="YES"/>
+  </detected_kwlist>
+  <detected_kwlist kwid="TERM-002" search_time="32.3" oov_count="0">
+    <kw file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="478.560" dur="0.360" score="0.990268" decision="YES"/>
+    <kw file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1131.190" dur="0.300" score="0.980209" decision="YES"/>
+    <kw file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1297.440" dur="0.340" score="0.995410" decision="YES"/>
+    <kw file="20010217_1000_1030_VOA_ENG_exA" channel="1" tbeg="1726.290" dur="0.350" score="0.995101" decision="YES"/>
+    <kw file="20010221_1830_1900_NBC_NNW_exA" channel="1" tbeg="1258.490" dur="0.370" score="0.995338" decision="YES"/>
+    <kw file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="553.470" dur="0.390" score="0.995410" decision="YES"/>
+    <kw file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="599.240" dur="0.230" score="0.995410" decision="YES"/>
+    <kw file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="604.750" dur="0.270" score="0.975797" decision="YES"/>
+    <kw file="20010225_0900_0930_CNN_HDL_exA" channel="1" tbeg="711.900" dur="0.250" score="0.995410" decision="YES"/>
+    <kw file="20010228_2100_2200_MNB_NBW_exA" channel="1" tbeg="1062.700" dur="0.400" score="0.808747" decision="YES"/>
+    <kw file="fsh_60650_exA" channel="1" tbeg="108.680" dur="0.430" score="0.953068" decision="YES"/>
+    <kw file="fsh_60650_exA" channel="2" tbeg="167.720" dur="0.316" score="0.937968" decision="YES"/>
+    <kw file="fsh_60650_exA" channel="2" tbeg="168.718" dur="0.256" score="0.937338" decision="YES"/>
+    <kw file="fsh_60720_exA" channel="2" tbeg="140.610" dur="0.438" score="0.863663" decision="YES"/>
+    <kw file="fsh_60720_exA" channel="2" tbeg="142.356" dur="0.324" score="0.931426" decision="YES"/>
+    <kw file="fsh_60862_exA" channel="2" tbeg="223.068" dur="0.254" score="0.956835" decision="YES"/>
+    <kw file="fsh_60862_exA" channel="2" tbeg="225.916" dur="0.264" score="0.968750" decision="YES"/>
+    <kw file="fsh_60862_exA" channel="2" tbeg="233.944" dur="0.502" score="0.946188" decision="YES"/>
+    <kw file="fsh_60862_exA" channel="2" tbeg="238.422" dur="0.372" score="0.946111" decision="YES"/>
+    <kw file="fsh_61130_exA" channel="2" tbeg="121.830" dur="0.364" score="0.909593" decision="YES"/>
+    <kw file="fsh_61130_exA" channel="2" tbeg="121.830" dur="0.440" score="0.700000" decision="NO"/>
+  </detected_kwlist>
+</kwslist>
+
+[[STDERR]]
+

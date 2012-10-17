@@ -1,0 +1,43 @@
+[[COMMANDLINE]] ../../tools/ValidateKWSList/ValidateKWSList.pl -t ../../test/common/test5.kwlist.xml -e ../../test/common/test5.ecf.xml -s ../../test/common/test5.kwslist.xml -A -o /////
+[[RETURN CODE]] 0
+[[STDOUT]]
+'../../test/common/test5.kwslist.xml' validates!
+<kwslist kwlist_filename="test5.kwlist.xml" language="english" system_id="">
+  <detected_kwlist kwid="TERM-01" search_time="24.3" oov_count="0">
+    <kw file="FILE01" channel="1" tbeg="0.000" dur="1.000" score="0.912" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="5.000" dur="1.000" score="0.648" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="10.000" dur="1.000" score="0.746" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="15.000" dur="1.000" score="0.823" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="20.000" dur="1.000" score="0.723" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="25.000" dur="1.000" score="0.423" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="30.000" dur="1.000" score="0.345" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="35.000" dur="1.000" score="0.785" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="40.000" dur="1.000" score="0.568" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="45.000" dur="1.000" score="0.567" decision="YES"/>
+    <kw file="FILE02" channel="2" tbeg="90.000" dur="1.000" score="0.546" decision="YES"/>
+    <kw file="FILE02" channel="2" tbeg="95.000" dur="1.000" score="0.393" decision="YES"/>
+  </detected_kwlist>
+  <detected_kwlist kwid="TERM-02" search_time="24.3" oov_count="1">
+    <kw file="FILE01" channel="1" tbeg="1.000" dur="1.000" score="0.952" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="6.000" dur="1.000" score="0.964" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="11.000" dur="1.000" score="0.835" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="16.000" dur="1.000" score="0.734" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="21.000" dur="1.000" score="0.467" decision="YES"/>
+    <kw file="FILE02" channel="2" tbeg="86.000" dur="1.000" score="0.724" decision="YES"/>
+    <kw file="FILE02" channel="2" tbeg="91.000" dur="1.000" score="0.732" decision="YES"/>
+    <kw file="FILE02" channel="2" tbeg="96.000" dur="1.000" score="0.834" decision="YES"/>
+  </detected_kwlist>
+  <detected_kwlist kwid="TERM-03" search_time="24.3" oov_count="0">
+    <kw file="FILE01" channel="1" tbeg="2.000" dur="2.000" score="0.994" decision="YES"/>
+    <kw file="FILE01" channel="1" tbeg="7.000" dur="2.000" score="0.901" decision="YES"/>
+    <kw file="FILE02" channel="2" tbeg="57.000" dur="2.000" score="0.845" decision="YES"/>
+    <kw file="FILE02" channel="2" tbeg="62.000" dur="2.000" score="0.452" decision="YES"/>
+    <kw file="FILE02" channel="2" tbeg="67.000" dur="2.000" score="0.345" decision="YES"/>
+    <kw file="FILE02" channel="2" tbeg="72.000" dur="2.000" score="0.623" decision="YES"/>
+    <kw file="FILE02" channel="2" tbeg="77.000" dur="2.000" score="0.734" decision="YES"/>
+  </detected_kwlist>
+</kwslist>
+The new KWS file '/////' will not be proper because some terms have not been detected in the original KWS file!
+
+[[STDERR]]
+
