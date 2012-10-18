@@ -661,7 +661,7 @@ For \'$ctm_ext\' files, only the \'$ecf_ext\' file is required.
   --TmValidator  Location of the \'ValidateTM\' tool (default: $ValidateTM) for validating \'$ctm_ext\' files
   --Verbose       Explain step by step what is being checked
   --outdir        Output directory where validation is performed (if not provided, default is to use a temporary directory)
-  --scoringReady  When using this mode, a copy of the \"$ecf_ext\", \"$tlist_ext\" and \"$rttm_ext\" (if present) files will be created & memdump-ed in \'--outdir\' for scoring
+  --scoringReady  When using this mode, a copy of the input file for validation will be copied in \'--outdir\' for scoring
   --quit_if_non_scorable  If for any reason, any submission is non scorable, quit without continuing the check process, instead of adding information to a report printed at the end
 
 EOF
