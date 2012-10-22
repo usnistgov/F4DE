@@ -102,6 +102,7 @@ sub _initProps{
   die "Failed to add property ColorScheme" unless ($props->addProp("ColorScheme", "color", ("color", "grey")));
   die "Failed to add property MissUnit" unless ($props->addProp("MissUnit", "Prob", ("Prob", "Rate")));
   die "Failed to add property KeySpacing" unless ($props->addProp("KeySpacing", "0.7", ()));
+  die "Failed to add property CurveLineStyle" unless ($props->addProp("CurveLineStyle", "lines", ("lines", "points", "linespoints")));
   die "Failed to add property KeyLoc" unless ($props->addProp("KeyLoc", "top", ("left", "right", "center", "top", "bottom", "outside", "below",
                                                               "left top",    "center top",    "right top",
                                                               "left center", "center center", "right center",
@@ -280,6 +281,12 @@ sub _parseOptions{
       $self->{colorsRGB} = [ (2..100) ];    
     }
   }  
+
+  if (exists($options->{CurveLineStyle})){
+    if (! $self->{props}->setValue("CurveLineStyle", $options->{CurveLineStyle})){
+      die "Error: DET option CurveLineStyle illegal. ".$self->{props}->get_errormsg();
+    }
+  }
 }
 
 sub thisabs{ ($_[0] < 0) ? $_[0]*(-1) : $_[0]; }
@@ -1327,6 +1334,7 @@ sub _getLineTitleString
 ### DETShowPoint_Best  -> write the Max Value if the element exists
 ### KeyLoc -> set the key location.  Values can be left | right | top | bottom | outside | below 
 ### Isolines -> Draw the isolines coefs
+### CurveLineStyle -> sets the curve line style
 
 ### This is NOT an instance METHOD!!!!!!!!!!!!!!
 sub writeMultiDetGraph
@@ -1345,6 +1353,7 @@ sub writeMultiDetGraph
     ### Consult the properties
     my $xScale = $self->{props}->getValue("xScale");
     my $yScale = $self->{props}->getValue("yScale");    
+    my $curveLineStyle = $self->{props}->getValue("CurveLineStyle");    
 
     ### This contains info from individual DET plots
     my %multiInfo = ();
@@ -1499,11 +1508,13 @@ sub writeMultiDetGraph
         $ycol = ($yScale eq "nd" ? "2" : "4");
         if ($self->{DETShowPoint_Actual} || ($self->{DETShowPoint_Best}) || $self->{DETShowPoint_Ratios}){
           ### PLOT the Curve with NO TITLE because it will be used for the 1st point 
-          push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol notitle with lines lc $color lw $lineWidth";
+          my $prType = " $curveLineStyle ".(($curveLineStyle =~ /point/) ? "pt $closedPoint  ps $thisPointSize" : "");
+          push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol notitle with $prType lc $color lw $lineWidth";
         } else { 
           my $title = "title '"._gnuplotSafeString($ltitle)."'";
           $title = "notitle" if ($displayKey eq "false");
-          push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol $title with lines lc $color lw $lineWidth";
+          my $prType = " $curveLineStyle ".(($curveLineStyle =~ /point/) ? "pt $closedPoint  ps $thisPointSize" : "");
+          push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol $title with $prType lc $color lw $lineWidth";
           $ltitle = "";
         }
         
@@ -1516,7 +1527,8 @@ sub writeMultiDetGraph
           $ltitle .= $self->_getLineTitleString("Actual", 0, $detset->getDETForID($d), 
                                                 \@offAxisLabels, $color, $closedPoint, $thisPointSize, 0); 
           my $title = ($displayKey eq "false") ? "notitle" : "title '"._gnuplotSafeString($ltitle)."'";
-          push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol $title with linespoints lc $color pt $closedPoint ps $thisPointSize";
+          my $prType = $curveLineStyle.($curveLineStyle =~ /point/ ? " pt $closedPoint  ps $thisPointSize" : "");
+          push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol $title with $prType lc $color";
           ## Clear out the title!
           $ltitle = "";
         }
@@ -1581,6 +1593,7 @@ sub writeGNUGraph{
   ### Consult the properties
   my $xScale = $self->{props}->getValue("xScale");
   my $yScale = $self->{props}->getValue("yScale");    
+  my $curveLineStyle = $self->{props}->getValue("CurveLineStyle");    
 
   my ($missStr, $faStr, $combStr) = ( $metric->errMissLab(), $metric->errFALab(), $metric->combLab());
   my $combType = ($ metric->combType() eq "minimizable" ? "Min" : "Max");
@@ -1703,9 +1716,11 @@ sub writeGNUGraph{
   $xcol = ($xScale eq "nd" ? "3" : "5");
   $ycol = ($yScale eq "nd" ? "2" : "4");
   if ($self->{DETShowPoint_Actual} || ($self->{DETShowPoint_Best}) || $self->{DETShowPoint_Ratios}){
-    push @PLOTCOMS, "    '$fileRoot.dat.1' using $xcol:$ycol notitle with lines lc $curveColor";
+    my $prType = " $curveLineStyle ".(($curveLineStyle =~ /point/) ? "" : "" );
+    push @PLOTCOMS, "    '$fileRoot.dat.1' using $xcol:$ycol notitle with $prType lc $curveColor";
   } else {  
-    push @PLOTCOMS, "    '$fileRoot.dat.1' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with lines lc $curveColor";
+    my $prType = " $curveLineStyle ".(($curveLineStyle =~ /point/) ? "" : "");
+    push @PLOTCOMS, "    '$fileRoot.dat.1' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with $prType lc $curveColor";
     $ltitle = "";
   }
   
@@ -1717,14 +1732,14 @@ sub writeGNUGraph{
 
     $xcol = ($xScale eq "nd" ? "11" : "9");
     $ycol = ($yScale eq "nd" ? "10" : "8");
-    push @PLOTCOMS, sprintf("   '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with linespoints lc $curveColor pt 6 ps $pointSize ");
+    push @PLOTCOMS, sprintf("   '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $curveColor pt 6 ps $pointSize ");
 
 #    $ltitle  .= " Actual ".sprintf("$combStr=%.3f", $actComb);
 #    my $bestlab = $self->_getOffAxisLabel($miss, $fa, 2, 7, $pointSize, 0); 
 #    push (@offAxisLabels, $bestlab) if ($bestlab ne "");
 #    $xcol = ($xScale eq "nd" ? "11" : "9");
 #    $ycol = ($yScale eq "nd" ? "10" : "8");
-#    push @PLOTCOMS, sprintf("   '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with linespoints lc $curveColor pt 6 ps $pointSize ");
+#    push @PLOTCOMS, sprintf("   '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with $curveLineStyle lc $curveColor pt 6 ps $pointSize ");
 #    my $lab = $self->_getOffAxisLabel($actMiss, $actFa, 2, 6, $pointSize, 0); 
 #    push (@offAxisLabels, $lab) if ($lab ne "");
     
@@ -1752,10 +1767,11 @@ sub writeGNUGraph{
     $ltitle .= "+/- 2 Standard Error";
     $xcol = ($xScale eq "nd" ? "8" : "12");
     $ycol = ($yScale eq "nd" ? "7" : "13");
-    push @PLOTCOMS, sprintf("  '$fileRoot.dat.1' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with lines lc $curveColor"); 
+    my $prType = " $curveLineStyle ".(($curveLineStyle =~ /point/) ? "" : "");
+    push @PLOTCOMS, sprintf("  '$fileRoot.dat.1' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with $prType lc $curveColor"); 
     $xcol = ($xScale eq "nd" ? "10" : "14");
     $ycol = ($yScale eq "nd" ? "9" : "13");
-    push @PLOTCOMS, "  '$fileRoot.dat.1' using $xcol:$ycol notitle with lines lc $curveColor";
+    push @PLOTCOMS, "  '$fileRoot.dat.1' using $xcol:$ycol notitle with $prType lc $curveColor";
     ## Clear out the title!
     $ltitle = "";
   }
