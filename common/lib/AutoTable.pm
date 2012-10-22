@@ -25,6 +25,9 @@ package AutoTable;
 
 # $Id$
 
+use TranscriptHolder;
+@ISA = qw(TranscriptHolder);
+
 use strict;
 
 use MMisc;
@@ -1473,6 +1476,7 @@ sub __loadCSVcore {
 
   open FILE, "<$file"
     or return($self->_set_error_and_return("Could not open CSV file ($file): $!\n", 0));
+  binmode FILE, $self->getPerlEncodingString() if (! MMisc::is_blank($self->getPerlEncodingString()));
   my @filec = <FILE>;
   close FILE;
   chomp @filec;
@@ -1481,6 +1485,7 @@ sub __loadCSVcore {
   if ($withSpecial) {
     open FILE, "<$sp_file"
       or return($self->_set_error_and_return("Could not open Special CSV file ($sp_file): $!\n", 0));
+    binmode FILE, $self->getPerlEncodingString() if (! MMisc::is_blank($self->getPerlEncodingString()));
     @sp_filec = <FILE>;
     close FILE;
     chomp @sp_filec;
