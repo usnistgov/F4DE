@@ -68,6 +68,7 @@ sub new
        EVALSTRUCT => (defined($evalstruct)) ? 1 : 0,
        POINT_COMPUTATION_ATTEMPTED => 0,
        FIXED_MFA_VLAUES => undef,
+       CURVE_STYLE => "UniqThreshold",
       };
         
     bless $self;
@@ -184,36 +185,52 @@ sub bigDETUnitTest {
 
 sub oneBigDET
   {
-   my ($root, $nt) = @_;
+   my ($root, $nt, $nnt, $numblk, $style) = @_;
 
     print " Computing big DET Curve... ".($nt)." trials\n";
     my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
     
     #####################################  Without data  ###############################    
-    my $emptyTrial = new TrialsFuncs({ ("TOTALTRIALS" => $nt) },
+    my $emptyTrial = new TrialsFuncs({ ("TOTALTRIALS" => $nt + $nnt) },
                                      "Term Detection", "Term", "Occurrence");
 
     print "   ... adding trials\n";
-    for (my $i=0; $i<$nt/2; $i++){
-    	my $r = (($i % 1000)  == 0 ? 0.5 : rand());
-    	$emptyTrial->addTrial("he", $r, ($r < 0.5 ? "NO" : "YES"), 1);
-      $r = (($i % 1000)  == 0 ? 0.5 : rand());
-      $emptyTrial->addTrial("he", $r, ($r < 0.5 ? "NO" : "YES"), 0);
-    	print "   Made trials < ".(2*$i)."\n" if ($i*2 % 1000000 == 0); 
+    my $tot = 0;
+    for (my $blk=0; $blk<$numblk; $blk++){
+     
+      for (my $i=0; $i<$nt; $i++){
+        my $r = rand();
+        $emptyTrial->addTrial("he$blk", $r, ($r < 0.5 ? "NO" : "YES"), 1);
+        $tot++;
+        print "   Block $blk Made trials < $tot\n" if ($tot % 10000 == 0); 
+      }
+      for (my $i=0; $i<$nnt; $i++){
+        my $r = rand();
+        $emptyTrial->addTrial("he$blk", $r, ($r < 0.5 ? "NO" : "YES"), 0);
+        $tot++;
+        print "   Block $blk Made trials < $tot\n" if ($tot % 10000 == 0); 
+      }
     }
-    
     my $met = new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial);
     if (ref($met) ne "MetricTestStub") {
       die "Error: Unable to create a MetricTestStub object with message '$met'\n";
     }
     
     my $emptydet = new DETCurve($emptyTrial, $met, "footitle", \@isolinecoef, undef);
+    $emptydet->setCurveStyle($style);
     use DETCurveSet;
     my $ds = new DETCurveSet("title");
     $ds->addDET("Biggy", $emptydet);
 #    my %ht = ("createDETfiles", 1, "serialize", 0);
-    my %ht = ("createDETfiles", 1);
-    print $ds->renderAsTxt($root, 1, 1, \%ht);
+    my $dcRend = new DETCurveGnuplotRenderer({"yScale" => "linear", "xScale" => "linear",
+                                              "Xmin" => 0, "Xmax" => 100, "Ymin" => 0, "Ymax" => 100,
+                                              "DETShowPoint_Ratios" => 1,
+                                              "DrawIsoratiolines" => 1, "Isoratiolines" => [ (.35, .7, .98, 1.9, 40, 99) ],
+                                              "DETLineAttr" => { ("Art DET1" => { label => "New DET1", lineWidth => 1, pointSize => 2, pointTypeSet => "circle", color => "rgb \"#ff00ff\"" },
+                                                                  "Art DET2" => { label => "New DET2", lineWidth => 1, pointSize => 3, pointTypeSet => "circle", color => "rgb \"#00ff00\"" },
+                                                                  "Normal 2" => { label => "Norm 2", lineWidth => 1, pointSize => 1, pointTypeSet => "square", color => "rgb \"#0000ff\"" },
+                                                                  "Normal 1" =>   { label => "Norm 1", lineWidth => 1, pointSize => 1, pointTypeSet => "circle", color => "rgb \"#222222\"" })}})  ;
+    $dcRend->writeMultiDetGraph("BIGDET",  $ds);
 }
 
 sub blockWeightedUnitTest()
@@ -314,8 +331,9 @@ sub blockWeightedUnitTest()
 
     my $ret = $blockdet->testGeneratedPoints(\@points, "  ");
     die $ret if ($ret ne "ok");
+    print "  OK\n";
     
-    print " Checking MMiss for fixed MFA...";
+    print " Checking MMiss for fixed MFA...";
     my $MMissPnts = $blockdet->computeMMissForFixedMFA([(.03, .08, .5, .6, .7, .9)]);
     die "Error: Computation of MMiss for fixed MFA failed for id 1" if (abs($MMissPnts->[0]{InterpMMiss} - 0.8333) >= 0.0001);
     die "Error: Computation of MMiss for fixed MFA failed for id 2" if (abs($MMissPnts->[1]{InterpMMiss} - 0.7355) >= 0.0001);
@@ -331,31 +349,240 @@ sub blockWeightedUnitTest()
     die "Error: Computation of Score for fixed MFA failed for id 5" if (abs($MMissPnts->[4]{InterpScore} - 0.1000) >= 0.0001);
     die "Error: Computation of Score for fixed MFA failed for id 6" if (abs($MMissPnts->[5]{InterpScore} - 0.1000) >= 0.0001);
     print "  OK\n";
+
     
-    print " Checking Area...";
+    print " Checking Area...";
     $blockdet->computeArea();
     print "  OK\n";
-  }
+}
+
+sub articulatedDetUnitTest{
+    use DETCurveSet;
+    use DETCurveGnuplotRenderer;
+
+    my $ds = new DETCurveSet("title");
+
+    my $trial = new TrialsFuncs({ ("TOTALTRIALS" => 10) },
+                               "Term Detection", "Term", "Occurrence");
+
+    $trial->addTrial("she", 0.1, "NO", 0);
+    $trial->addTrial("she", 0.2, "NO", 0);
+    $trial->addTrial("she", 0.3, "NO", 1);
+    $trial->addTrial("she", 0.4, "NO", 0);
+    $trial->addTrial("she", 0.5, "NO", 0);
+    $trial->addTrial("she", 0.6, "NO", 0);
+    $trial->addTrial("she", 0.7, "NO", 1);
+    $trial->addTrial("she", 0.8, "YES", 0);
+    $trial->addTrial("she", 0.9, "YES", 1);
+    $trial->addTrial("she", 1.0, "YES", 1);
+
+    $trial->addTrial("he", 0.41, "NO", 1);
+    $trial->addTrial("he", 0.51, "YES", 0);
+    $trial->addTrial("he", 0.61, "YES", 0);
+    $trial->addTrial("he", 0.7, "YES", 1);
+    $trial->addTrial("he", undef, "OMITTED", 1);
+    $trial->addTrial("he", undef, "OMITTED", 1);
+
+    $trial->addTrial("skip", 0.41, "NO", 0);
+    $trial->addTrial("skip", 0.51, "YES", 0);
+    $trial->addTrial("skip", 0.61, "YES", 0);
+    $trial->addTrial("skip", 0.7, "YES", 0);
+
+    $trial->addTrial("notskip", 0.41, "NO", 0);
+    $trial->addTrial("notskip", 0.51, "YES", 0);
+    $trial->addTrial("notskip", 0.61, "YES", 0);
+    $trial->addTrial("notskip", 0.7, "YES", 0);
+    $trial->addTrial("notskip", undef, "OMITTED", 1);
+    $trial->addTrial("notskip", undef, "OMITTED", 1);
+
+##################  Testing the reduces block with the previous test data
+
+    print " Checking Articulated DET with sample data ...\n";
+    ## This was built from DETtesting-v2 with MissingTarg=0, MissingNonTarg=0
+    #    
+    #               Thr    Pmiss  Pfa    TWval     SSDPmiss, SSDPfa, SSDValue, #blocks
+    my @points = [  (0.1,  0.500, 0.611, -610.550, 0.500,    0.347,  346.550,   3) ];
+#    push @points, [ (0.2,  0.500, 0.556, -555.000, 0.500,    0.255,  254.235,   3) ];
+    push @points, [ (0.3,  0.500, 0.500, -499.450, 0.500,    0.167,  166.401,   3) ];
+#    push @points, [ (0.4,  0.583, 0.500, -499.533, 0.382,    0.167,  166.525,   3) ];
+    push @points, [ (0.41, 0.583, 0.444, -443.983, 0.382,    0.096,   96.288,   3) ];
+#    push @points, [ (0.5,  0.667, 0.403, -402.404, 0.382,    0.087,   86.407,   3) ];
+#    push @points, [ (0.51, 0.667, 0.347, -346.854, 0.382,    0.024,   24.344,   3) ];
+#    push @points, [ (0.6,  0.667, 0.250, -249.642, 0.382,    0.083,   83.076,   3) ];
+#    push @points, [ (0.61, 0.667, 0.194, -194.092, 0.382,    0.048,   48.397,   3) ];
+    push @points, [ (0.7,  0.667, 0.097,  -96.879, 0.382,    0.087,   86.568,   3) ];
+#    push @points, [ (0.8,  0.833, 0.056,  -55.383, 0.289,    0.096,   95.927,   3) ];
+    push @points, [ (0.9,  0.833, 0.000,    0.167, 0.289,    0.000,    0.289,   3) ];
+    push @points, [ (1.0,  0.917, 0.000,    0.083, 0.144,    0.000,    0.144,   3) ];
+
+    my $artBaseDet = new DETCurve($trial, 
+                                  new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
+                                  "Art Base", [()], "gzip");
+    $artBaseDet->setCurveStyle("Articulated");
+
+    my $reducedDet = new DETCurve($trial, 
+                                  new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $trial),
+                                  "Norm Base", [()], "gzip");
+    $reducedDet->setCurveStyle("UniqThreshold");
+#    $reducedDet->computePoints();
+#    $artBaseDet->computePoints();
+#    my $ret = $reducedDet->testGeneratedPoints(\@points, "  ");
+#    die $ret if ($ret ne "ok");
+#    $ds->addDET("Art Base", $artBaseDet);
+#    $ds->addDET("Normal Base", $reducedDet);
+    print "  OK\n";
+    
+    print " Checking Detailed Articulated DET ...\n";
+    
+    #####################################  With data  ###############################    
+    
+    my $artTrial = new TrialsFuncs({ ("TOTALTRIALS" => 60) },
+                               "Term Detection", "Term", "Occurrence");
+    ### 10 targets the range 0.1 - 1
+    $artTrial->addTrial("she", 0.1, "NO", 1);
+    $artTrial->addTrial("she", 0.2, "NO", 1);
+    $artTrial->addTrial("she", 0.3, "NO", 1);
+    $artTrial->addTrial("she", 0.4, "NO", 1);
+    $artTrial->addTrial("she", 0.5, "NO", 1);
+    $artTrial->addTrial("she", 0.6, "YES", 1);
+    $artTrial->addTrial("she", 0.8997, "YES", 1);
+    $artTrial->addTrial("she", 0.8998, "YES", 1);
+    $artTrial->addTrial("she", 0.8999, "YES", 1);
+    $artTrial->addTrial("she", 1.0, "YES", 1);
+    my $scr = 0;
+    ## case 1;  11 NT
+    for (my $i=0, my $st=0.1; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.2; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.2; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.4; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.5; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.6; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.7; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.8; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.9; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=1.0; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+
+    my $artDet = new DETCurve($artTrial, 
+                              new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $artTrial),
+                              "artDet", [ (.35, .7, .98, 1.9, 40, 99) ], "gzip");
+    $artDet->setCurveStyle("Articulated");
+
+    my $uniqThrDet = new DETCurve($artTrial, 
+                                  new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $artTrial),
+                                  "UnigThr", [ (.35, .7, .98, 1.9, 40, 99) ], "gzip");
+    $artDet->computePoints();
+    $uniqThrDet->computePoints();
+    $ds->addDET("Art DET1", $artDet);
+    $ds->addDET("Normal 1", $uniqThrDet);
+    
+#######
+    my $artTrial2 = new TrialsFuncs({ ("TOTALTRIALS" => 60) },
+                               "Term Detection", "Term", "Occurrence");
+    ### 10 targets the range 0.1 - 1
+    $artTrial2->addTrial("she", 0.2, "NO", 1);
+    $artTrial2->addTrial("she", 0.4, "NO", 1);
+    $artTrial2->addTrial("she", 0.4, "NO", 1);
+    $artTrial2->addTrial("she", 0.4, "NO", 1);
+    $artTrial2->addTrial("she", 0.74, "NO", 1);
+    $artTrial2->addTrial("she", 0.78, "YES", 1);
+    $artTrial2->addTrial("she", 0.8, "YES", 1);
+    $artTrial2->addTrial("she", 0.84, "YES", 1);
+    $artTrial2->addTrial("she", 0.8, "YES", 1);
+    $artTrial2->addTrial("she", 0.9, "YES", 1);
+    my $scr = 0;
+    ## case 1;  11 NT
+    for (my $i=0, my $st=0.1; $i<13; $i++){ $scr = $st + $i * 0.02; $artTrial2->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.2; $i<9; $i++){ $scr = $st + $i * 0.02; $artTrial2->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.2; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial2->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.4; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial2->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.5; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial2->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.6; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial2->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.7; $i<5; $i++){ $scr = $st + $i * 0.02; $artTrial2->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.8; $i<1; $i++){ $scr = $st + $i * 0.02; $artTrial2->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=0.9; $i<1; $i++){ $scr = $st + $i * 0.02; $artTrial2->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+    for (my $i=0, my $st=1.0; $i<1; $i++){ $scr = $st + $i * 0.02; $artTrial2->addTrial("she", $scr, $scr < 55 ? "NO" : "YES", 0); }
+
+    my $artDet2 = new DETCurve($artTrial2, 
+                              new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $artTrial2),
+                              "artDET2", [ (.35, .7, .98, 1.28, 40, 99) ], "gzip");
+    $artDet2->setCurveStyle("Articulated");
+
+    my $uniqThrDet2 = new DETCurve($artTrial2, 
+                                  new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $artTrial2),
+                                  "uniqThr2", [ (.35, .7, .98, 1.9, 40, 99) ], "gzip");
+#    $artDet2->computePoints();
+#    $uniqThrDet2->computePoints();
+#    $ds->addDET("Art DET2", $artDet2);
+#    $ds->addDET("Normal 2", $uniqThrDet2);
+#######
+    my $dcRend = new DETCurveGnuplotRenderer(
+      {"yScale" => "linear", "xScale" => "linear",
+       "CurveLineStyle" => "linespoints", 
+       "Xmin" => 0, "Xmax" => 100, "Ymin" => 0, "Ymax" => 100,
+       "DETShowPoint_Ratios" => 0,
+       "DrawIsoratiolines" => 1, "Isoratiolines" => [ (.35, .7, .98, 1.9, 40, 99) ],
+       "DETLineAttr" => { ("Art Base" => { lineWidth => 1, pointSize => 2, pointTypeSet => "circle", color => "rgb \"#00ff00\"" },
+                           "Art DET1" => { lineWidth => 1, pointSize => 2, pointTypeSet => "circle", color => "rgb \"#00ff\"" },
+                           "Art DET2" => { lineWidth => 1, pointSize => 3, pointTypeSet => "circle", color => "rgb \"#ff0000\"" },
+                           "Normal Base" => { lineWidth => 1, pointSize => 1, pointTypeSet => "square", color => "rgb \"#222222\"" },
+                           "Normal 2" => { lineWidth => 1, pointSize => 1, pointTypeSet => "square", color => "rgb \"#222222\"" },
+                           "Normal 1" => { lineWidth => 1, pointSize => 1, pointTypeSet => "circle", color => "rgb \"#222222\"" })}})  ;
+    $dcRend->writeMultiDetGraph("ARTDET",  $ds);
+exit;
+    print " Checking Articulated DET with sample data ...\n";
+    ## This was built from DETtesting-v2 with MissingTarg=0, MissingNonTarg=0
+    #    
+    #               Thr    Pmiss  Pfa    TWval     SSDPmiss, SSDPfa, SSDValue, #blocks
+    my @points = [  (0.1,  0.500, 0.611, -610.550, 0.500,    0.347,  346.550,   3) ];
+    my $ret = $artDet->testGeneratedPoints(\@points, "  ");
+    die $ret if ($ret ne "ok");
+    print "  OK\n";
+}
 
 ### This method compares a "100% correct" 2-dim table of point to the calculated points
 sub testGeneratedPoints{
   my ($self, $points, $pre) = @_;
   my ($compPoints) = $self->getPoints();
-
+  my $errors = 0;
+  my $msg = "";
+  
+  if (0){ 
+    for (my $i=0; $i<@$compPoints; $i++) {
+      print "$i=";
+      for (my $j=0; $j<@{ $compPoints->[$i] }; $j++) {
+        printf(", %.3f",$compPoints->[$i][$j]);
+      }
+      print "\n";
+    }
+  }
   print "${pre}Checking the number of points...";
-  return "\nError: Number of computed DET points not correct.  Expected ".scalar(@$points)." != ".scalar(@$compPoints)."\n" 
-    if (@$points != @$compPoints);
-  print "  Ok\n";
+  if (@$points != @$compPoints){
+    $msg .= "Error: Number of computed DET points not correct.  Expected ".scalar(@$points)." != ".scalar(@$compPoints)."\n" ;
+    $errors++;
+    print "  Failed\n";
+  } else {
+    print "  Ok\n";
+  }
   print "${pre}Checking points...";
+  my $ptErr = 0;
+  my $ptMsg = "";
   for (my $i=0; $i<@$points; $i++) {
-    my $msg = "\nError: Det isn't correct for point $i value %d:\n   expected '".join(",",@{$points->[$i]})."'\n".
-      "        got '".join(",",@{$compPoints->[$i]})."'";
+    $ptErr = 0;
+    $ptMsg = "";
     for (my $value=0; $value < 8; $value++){
-      return sprintf($msg, $value) if (thisabs($points->[$i][$value] - sprintf("%.3f",$compPoints->[$i][$value])) > 0.00);
+      if (thisabs($points->[$i][$value] - sprintf("%.3f",$compPoints->[$i][$value])) > 0.00){
+         $ptMsg .= "$value,";
+         $ptErr ++;
+      }
+    }
+    if ($ptErr > 0){
+      $msg .= "Error: Det isn't correct for point $i values ($ptMsg) failed:\n   expected '".join(",",@{$points->[$i]})."'\n".
+              "        got '".join(",",@{$compPoints->[$i]})."'";
+      $errors++;          
+      last;
     }
   }    
-  print "  Ok\n";
-  return "ok";
+  return ($errors > 0) ? $msg : "ok";
 }
 
 
@@ -665,7 +892,7 @@ sub getMaximizable {
 
 sub IntersectionIsolineParameter
   {
-    my ($self, $x1, $y1, $x2, $y2) = @_;
+    my ($self, $x1, $y1, $x2, $y2, $moveOnToNext) = @_;
     my ($t, $xt, $yt) = (undef, undef, undef);
     return (undef, undef, undef, undef) if( ( scalar( @{ $self->{ISOLINE_COEFFICIENTS} } ) == 0 ) || ( scalar( @{ $self->{ISOLINE_COEFFICIENTS} } ) == $self->{ISOLINE_COEFFICIENTS_INDEX} ) );
 
@@ -675,7 +902,7 @@ sub IntersectionIsolineParameter
                 
       if ( defined( $t ) ) {
         if ( $t >= 0 && $t <= 1 ) {
-          $self->{ISOLINE_COEFFICIENTS_INDEX} = $i+1;
+          $self->{ISOLINE_COEFFICIENTS_INDEX} = $i+1 if ($moveOnToNext);
           return ($t, $m, $xt, $yt);
         } elsif ( $t > 1 ) {
           $self->{ISOLINE_COEFFICIENTS_INDEX} = $i;
@@ -689,14 +916,18 @@ sub IntersectionIsolineParameter
 
 sub AllIntersectionIsolineParameter
   {
-    my ($self, $x1, $y1, $x2, $y2) = @_;
+    my ($self, $x1, $y1, $x2, $y2, $moveOnToNext) = @_;
     my @out = ();
     my ($t, $m, $xt, $yt) = (undef, undef, undef, undef);
         
     do
       {
-        ($t, $m, $xt, $yt) = $self->IntersectionIsolineParameter($x1, $y1, $x2, $y2);
-        push( @out, [($t, $m, $xt, $yt)] ) if( defined( $t ) );
+        ($t, $m, $xt, $yt) = $self->IntersectionIsolineParameter($x1, $y1, $x2, $y2, $moveOnToNext);
+        if( defined( $t ) ){
+#          print "     Found Line = moveOntToNext=$moveOnToNext\n";
+          push( @out, [($t, $m, $xt, $yt)] );
+          return(@out) if (! $moveOnToNext);
+        }
       }
         while ( defined( $t ) );
         
@@ -810,7 +1041,9 @@ sub computePoints
     ## For faster computation;
     $self->{TRIALS}->sortTrials();
         
+#    print "Computing points: ".`date`;
     $self->{POINTS} = $self->Compute_blocked_DET_points($self->{TRIALS});
+#    print "Point computatiuon complete: ".`date`;
 
   }
 
@@ -828,14 +1061,16 @@ sub Compute_blocked_DET_points
     my $previousAvgMmiss = 0;
     my $previousAvgMfa = 0;
     my $findMaxComb = ($self->{METRIC}->combType() eq "maximizable" ? 1 : 0);
-
+    my $style = ($self->getCurveStyle() eq "UniqThreshold") ? 1 : ($self->getCurveStyle() eq "Articulated" ? 2 : -1); 
 
     ### Reduce the block set to only ones with targets and setup the DS!
     foreach $block ($trial->getBlockIDs()) {
       next if (! $trial->isBlockEvaluated($block));
 
       $numBlocks++;
-      $blocks{$block} = { TARGi => 0, NONTARGi => 0, MFA => undef, MMISS => undef, COMB => undef, PREVMFA => undef, PREVMMISS => undef,
+      $blocks{$block} = { TARGi => 0, NONTARGi => 0, MFA => undef, MMISS => undef,
+                          CACHEDMFA => undef, CACHEDMMISS => undef, COMB => undef, 
+                          PREVMFA => undef, PREVMMISS => undef, PREVTARGi => undef, PREVNONTARGi => undef,
                           TARGNScr => $trial->getNumTargScr($block), NONTARGNScr =>  $trial->getNumNonTargScr($block)};
       if ($blocks{$block}{TARGNScr} > 0) {
         $minScore = $trial->getTargDecScr($block,0)
@@ -850,17 +1085,11 @@ sub Compute_blocked_DET_points
           if (!defined($maxScore) || $maxScore < $trial->getNonTargDecScr($block,$blocks{$block}{NONTARGNScr} - 1));
       }
     }
+#    MetricFuncs::dumpBlocksStruct(\%blocks);
 
-    # print Dumper(\%blocks);    
     $self->{MINSCORE} = $minScore;
     $self->{MAXSCORE} = $maxScore;
     
-    #    if ($numBlocks <= 1)
-    #    {
-    #           $self->{MESSAGES} .= "WARNING: '".$self->{TRIALS}->getBlockId()."' weighted DET curves can not be computed with $numBlocks ".$self->{TRIALS}->getBlockId()."s\n";
-    #           return undef;
-    #    }
-
     if (!defined($self->{MINSCORE}) || !defined($self->{MAXSCORE})) {
       my ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial);
       push(@Outputs, [ ( "NaN", $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks) ] );
@@ -875,24 +1104,34 @@ sub Compute_blocked_DET_points
       return \@Outputs;
     }
 
-    #   print "Blocks: '".join(" ",keys %blocks)."'  minScore: $minScore\n";
+#    print "Blocks: '".join(" ",keys %blocks)."'  minScore: $minScore\n";
     my ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial);
     push(@Outputs, [ ( $minScore, $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks) ] );
+#    print "    (mMiss=$mMiss, mFa=$mFa, minScore=$minScore)\n";
 
     my $prevMin = $minScore;
     $self->{BESTCOMB}{DETECTIONSCORE} = $minScore;
     $self->{BESTCOMB}{COMB} = $TWComb;
     $self->{BESTCOMB}{MFA} = $mFa;
     $self->{BESTCOMB}{MMISS} = $mMiss;
-   
-    while ($self->updateMinScoreForBlockWeighted(\%blocks, \$minScore, $trial)) {
-      # Add info of previous average
-      $previousAvgMfa = $mFa;
-      $previousAvgMmiss = $mMiss;
-      ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial);
-                
-      my @listparams = $self->AllIntersectionIsolineParameter($previousAvgMfa, $previousAvgMmiss, $mFa, $mMiss);
+    $previousAvgMmiss = $mMiss;
+    $previousAvgMfa = $mFa;
+    
+    my $scoreBound = undef;
+    my $lastMove = undef;
+    my $prevMove = undef;
 
+    my $stateInfo = { PREVMMISS => $mMiss, PREVMFA => $mFa, PREVMINSCORE => $minScore };
+    my @listparams;
+#    print "Initial Min Score: $minScore\n";
+  POINT:    
+    while ($self->updateMinScoreForBlockWeighted(\%blocks, \$minScore, $trial, $style, \$stateInfo)){
+#      print "    " ; MetricFuncs::dumpBlocksStruct(\%blocks);
+      ### Calculate the current scores
+      ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial);
+#      print "    consuming point (minScore=$minScore, mMiss=$mMiss, mFa=$mFa, )\n";
+
+      @listparams = $self->AllIntersectionIsolineParameter($previousAvgMfa, $previousAvgMmiss, $mFa, $mMiss, 1);
       foreach my $setelt ( @listparams ) {
         my ($paramt, $isolinecoef, $estMFa, $estMMiss) = @{ $setelt };
 	$self->AddIsolineInformation(\%blocks, $paramt, $isolinecoef, $estMFa, $estMMiss, $minScore) if( defined ( $paramt ) );
@@ -917,62 +1156,192 @@ sub Compute_blocked_DET_points
       } 
                 
       $prevMin = $minScore;
+      $prevMove = $lastMove;
+      $previousAvgMfa = $mFa;
+      $previousAvgMmiss = $mMiss;
     }
     
     \@Outputs;
   }
 
+sub _minUndefSafe{
+   my $m = undef;
+   foreach (@_){
+     $m = $_ if (!defined($m) || (defined($m) && defined($_) && $m > $_));
+   }
+   return $m;
+}
+
 sub updateMinScoreForBlockWeighted
-  {
-    my ($self, $blocks, $minScore, $trial) = @_;
-    my $change = 0;
-        
-    #Advance Skipping the min
-    foreach $b(keys %$blocks) {
-      # Add info of previous in the block id
-      $blocks->{$b}{PREVMFA} = $blocks->{$b}{MFA};
-      $blocks->{$b}{PREVMMISS} = $blocks->{$b}{MMISS};
-        
-      while ($blocks->{$b}{TARGi} < $blocks->{$b}{TARGNScr} &&
-             $trial->getTargDecScr($b, $blocks->{$b}{TARGi}) <= $$minScore) {
-        $blocks->{$b}{MFA} = undef;
-        $blocks->{$b}{TARGi} ++;
-        $change++;
-      }
-                
-      while ($blocks->{$b}{NONTARGi} < $blocks->{$b}{NONTARGNScr} &&
-             $trial->getNonTargDecScr($b,$blocks->{$b}{NONTARGi}) <= $$minScore) {
-        $blocks->{$b}{MFA} = undef;
-        $blocks->{$b}{NONTARGi} ++;
-        $change++;
-      }
+{
+  my ($self, $blocks, $minScore, $trial, $style, $stateInfo) = @_;
+  my $change = 0;
+  my $boundChange = 0;
+
+#  print "-----------------------    Starting update\n";
+  ### Record were we came from        
+  foreach $b(keys %$blocks) {
+    # Add info of previous in the block id
+    $blocks->{$b}{PREVMFA} = $blocks->{$b}{MFA};
+    $blocks->{$b}{PREVMMISS} = $blocks->{$b}{MMISS};
+    $blocks->{$b}{PREVTARGi} = $blocks->{$b}{TARGi};
+    $blocks->{$b}{PREVNONTARGi} = $blocks->{$b}{NONTARGi};
+  } 
+
+  if (exists(${$stateInfo}->{NextMin})){
+#    print Dumper($$stateInfo);
+    $$minScore = ${$stateInfo}->{NextMin};
+    delete ${$stateInfo}->{NextMin};
+  } else {
+  
+  #Advance Skipping the min and record the next new MIN
+  my $nextTargVal = undef;
+  my $nextNonTargVal = undef;
+  my $val;
+  my $N_change = 0;
+  foreach $b(keys %$blocks) { 
+    ### Skip the current minScores for targs
+    while ($blocks->{$b}{TARGi} < $blocks->{$b}{TARGNScr} &&
+           $trial->getTargDecScr($b, $blocks->{$b}{TARGi}) <= $$minScore) {
+      $blocks->{$b}{TARGi} ++;
+      $N_change ++;
     }
-        
-    my $newMin = undef;
-    my $dataLeft = 0;
-    foreach $b(keys %$blocks) {
-      $newMin = $trial->getTargDecScr($b, $blocks->{$b}{TARGi})
-        if (($blocks->{$b}{TARGi} < $blocks->{$b}{TARGNScr}) &&
-            (!defined($newMin) || $newMin > $trial->getTargDecScr($b, $blocks->{$b}{TARGi})));
-                                        
-      $newMin = $trial->getNonTargDecScr($b,$blocks->{$b}{NONTARGi})
-        if (($blocks->{$b}{NONTARGi} < $blocks->{$b}{NONTARGNScr}) &&
-            (!defined($newMin) || $newMin > $trial->getNonTargDecScr($b, $blocks->{$b}{NONTARGi})));
-                                        
-      $dataLeft = 1 if (($blocks->{$b}{TARGi} < $blocks->{$b}{TARGNScr}) ||
-                        ($blocks->{$b}{NONTARGi} < $blocks->{$b}{NONTARGNScr}));
-                        
+    ### Skip the current minScores for nontargs
+    while ($blocks->{$b}{NONTARGi} < $blocks->{$b}{NONTARGNScr} &&
+           $trial->getNonTargDecScr($b,$blocks->{$b}{NONTARGi}) <= $$minScore) {
+      $blocks->{$b}{NONTARGi} ++;
+      $N_change ++;
     }
-        
-    if (! $dataLeft) {
-      # We stepped off the last system output.  Therefore, we need to need to signify it
-      $$minScore = undef;
-      0;                        ## no change
-    } else {
-      $$minScore = $newMin if (defined($newMin)); ## Return the prevMin if there was nothing left
-      $change;
+    ### Targi and nonTargi now point to the next position in the arrays.  We next need to decide 
+    ###   OPTION 1: What the threshold would be for this position
+    if ($blocks->{$b}{TARGi} < $blocks->{$b}{TARGNScr}){
+      $val = $trial->getTargDecScr($b, $blocks->{$b}{TARGi});
+      $nextTargVal = $val if (!defined($nextTargVal) || $nextTargVal > $val);        
+    }
+    if ($blocks->{$b}{NONTARGi} < $blocks->{$b}{NONTARGNScr}) {
+      $val = $trial->getNonTargDecScr($b,$blocks->{$b}{NONTARGi});
+      $nextNonTargVal = $val if (!defined($nextNonTargVal) || $nextNonTargVal > $val);        
     }
   }
+#  print "After Initial shift: "; MetricFuncs::dumpBlocksStruct($blocks);
+  
+  my ($N_min) = _minUndefSafe($nextTargVal, $nextNonTargVal);
+#  print "    Next: min=$N_min, change=$N_change (Tar=$nextTargVal, NTar=$nextNonTargVal)\n";
+  ### Are we done?
+  if (!defined($N_min)){
+#    print "    !!! End of the search no next Minimum\n";
+    return(0);
+  }
+  
+  if ($style == 1) {
+    $$minScore = $N_min;
+
+  } else {
+    my $PrecF_min = undef;
+    my $PrecM_min = undef;
+    my $nextNextTarg = undef;
+    my $nextNextNonTarg = undef;
+
+    if (defined($nextTargVal)){
+      foreach $b(keys %$blocks) { 
+        $blocks->{$b}{NONTARGi} = $blocks->{$b}{PREVNONTARGi};
+        while ($blocks->{$b}{NONTARGi} < $blocks->{$b}{NONTARGNScr} &&
+               $trial->getNonTargDecScr($b,$blocks->{$b}{NONTARGi}) < $nextTargVal) {
+
+          $val = $trial->getNonTargDecScr($b, $blocks->{$b}{NONTARGi});
+          if ($val > $nextNonTargVal){
+            $nextNextNonTarg = $val if (!defined($nextNextNonTarg) || $nextNextNonTarg < $val);       
+          }
+          $blocks->{$b}{NONTARGi} ++;
+        }
+  
+      }    
+#      print "        nextNextNonTarg: min=$nextNextNonTarg\n";
+    }
+
+    if (defined($nextNonTargVal)){
+      foreach $b(keys %$blocks) { 
+        $blocks->{$b}{TARGi} = $blocks->{$b}{PREVTARGi};
+        while ($blocks->{$b}{TARGi} < $blocks->{$b}{TARGNScr} &&
+               $trial->getTargDecScr($b,$blocks->{$b}{TARGi}) < $nextNonTargVal) {
+
+          $val = $trial->getTargDecScr($b, $blocks->{$b}{TARGi});
+          if ($val > $nextTargVal){
+            $nextNextTarg = $val if (!defined($nextNextTarg) || $nextNextTarg < $val);       
+          }
+          $blocks->{$b}{TARGi} ++;
+        }
+  
+      }    
+#      print "        nextNextTarg: min=$nextNextTarg\n";
+    }
+
+    if (defined($nextTargVal) && defined($nextNonTargVal)){
+        ### Need to decide what to d
+#      print "one\n";
+      if (defined($nextNextNonTarg) && $nextTargVal > $nextNonTargVal && $nextTargVal > $nextNextNonTarg){ 
+##        print "two\n";
+        ${$stateInfo}->{NextMin} = $nextNextNonTarg if ($nextNextNonTarg > $nextNonTargVal);
+        $$minScore = $nextNonTargVal;
+
+#        $$minScore = $nextNextNonTarg;
+      } elsif (defined($nextNextTarg) && $nextNonTargVal > $nextTargVal && $nextNonTargVal > $nextNextTarg){ 
+##        print "three\n";
+        ${$stateInfo}->{NextMin} = $nextNextTarg if ($nextNextTarg > $nextTargVal);
+        $$minScore = $nextTargVal;
+
+#        $$minScore = $nextNextTarg;
+        
+      } else {    
+        $$minScore = $N_min;
+      }
+    } elsif (!defined($nextTargVal)) {    
+##      print "five\n";
+      ${$stateInfo}->{NextMin} = $nextNextNonTarg if (defined($nextNextNonTarg) && $nextNextNonTarg > $nextNonTargVal);
+      $$minScore = $nextNonTargVal;      
+     } elsif (!defined($nextNonTargVal)) {    
+##      print "six\n";
+      ${$stateInfo}->{NextMin} = $nextNextTarg if (defined($nextNextTarg) && $nextNextTarg > $nextTargVal);
+      $$minScore = $nextTargVal;      
+    } else {
+      $$minScore = $N_min;
+    }
+#    $$minScore = _minUndefSafe($N_min, $nextNextTarg, $nextNextNonTarg);
+  }
+}
+       
+#  print "    !!! Min set to $$minScore\n";
+  ### Advance just like before
+  my $dataLeft = 0;
+  $change = 0;
+  foreach $b(keys %$blocks) { 
+    $blocks->{$b}{TARGi} = $blocks->{$b}{PREVTARGi};
+    while ($blocks->{$b}{TARGi} < $blocks->{$b}{TARGNScr} &&
+           $trial->getTargDecScr($b, $blocks->{$b}{TARGi}) < $$minScore) {
+       $blocks->{$b}{MMISS} = undef;
+       $blocks->{$b}{TARGi} ++;
+      $change++;
+    }
+    $blocks->{$b}{NONTARGi} = $blocks->{$b}{PREVNONTARGi};            
+    while ($blocks->{$b}{NONTARGi} < $blocks->{$b}{NONTARGNScr} &&
+           $trial->getNonTargDecScr($b,$blocks->{$b}{NONTARGi}) < $$minScore) {
+      $blocks->{$b}{MFA} = undef;
+      $blocks->{$b}{NONTARGi} ++;
+      $change++;
+    }
+    $dataLeft = 1 if (($blocks->{$b}{TARGi} < $blocks->{$b}{TARGNScr}) ||
+                      ($blocks->{$b}{NONTARGi} < $blocks->{$b}{NONTARGNScr}));
+  }
+#  print "    Change = $change, $dataLeft\n";
+#  print "    After final shift: "; MetricFuncs::dumpBlocksStruct($blocks);
+  if (! $dataLeft) {
+    # We stepped off the last system output.  Therefore, we need to need to signify it
+    $$minScore = undef;
+    return 0;                        ## no change
+  } else {
+    return $change;
+  }
+}
 
 sub computeBlockWeighted
   {
@@ -980,12 +1349,17 @@ sub computeBlockWeighted
     my $b = "";
         
     foreach $b (keys %$blocks) {
-      if (!defined($blocks->{$b}{MFA})) {
+      if (!defined($blocks->{$b}{MMISS})) {
         my $NMiss = $blocks->{$b}{TARGi} + $trial->getNumOmittedTarg($b);
+        ## Caching: Calculate is not yet calculated
+        $blocks->{$b}{MMISS}        = $NMiss; #$self->{METRIC}->errMissBlockCalc($NMiss, $b);
+        $blocks->{$b}{CACHEDMMISS}  = undef;
+      }
+      if (!defined($blocks->{$b}{MFA})) {
         my $NFalse = $blocks->{$b}{NONTARGNScr} - $blocks->{$b}{NONTARGi};                                                                                                                                   
         ## Caching: Calculate is not yet calculated
-        $blocks->{$b}{MMISS} = $NMiss; #$self->{METRIC}->errMissBlockCalc($NMiss, $b);
-        $blocks->{$b}{MFA}   = $NFalse; #$self->{METRIC}->errFABlockCalc  ($NFalse, $b);
+        $blocks->{$b}{MFA}          = $NFalse; #$self->{METRIC}->errFABlockCalc  ($NFalse, $b);
+        $blocks->{$b}{CACHEDMFA}  = undef;
       }
     }
 #    foreach $b (keys %$blocks) {
@@ -1222,5 +1596,16 @@ sub getSmoothedDET{
   return($outDet);
 }
 
+sub getCurveStyle{
+  my ($self) = @_;
+  my $st = $self->{CURVE_STYLE};
+  return (! defined($st) ? "UniqThreshold" : ($st eq "" ? "UniqThreshold" : $st));
+}
+
+sub setCurveStyle{
+  my ($self, $style) = @_;
+  $self->{CURVE_STYLE} = $style;
+  die "Error: Unknown curve style.  Must be either (UniqThreshold|Articulated)" if ($style !~ /^(UniqThreshold|Articulated)$/);
+}
 
 1;
