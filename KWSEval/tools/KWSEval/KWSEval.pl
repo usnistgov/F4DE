@@ -199,6 +199,8 @@ my $charSplitTextDeleteHyphens = 0;
 
 my @textPrefilters = ();
 
+my $articulatedDET = 0;
+
 GetOptions
 (
     'ecffile=s'                           => \$ECFfile,
@@ -235,6 +237,7 @@ GetOptions
     'just-system-terms'                   => \$justSystemTerms,
     'ID-System=s'                         => \$IDSystem, 
     'xprefilterText=s@'                   => \@textPrefilters,
+    'articlulatedDET'                     => \$articulatedDET,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
 #parsing TermIDs
@@ -362,7 +365,6 @@ my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(),
 
 # clean the filter for terms
 $numberFiltersTermArray = keys %filterTermArray;
-
 ####Alignments
 my @alignResults;
 my ($dset, $qdset);
@@ -430,6 +432,15 @@ my $detoptions = { ("Xmin" => .0001,
 
 $dset = $alignResults[0];
 $qdset = $alignResults[1];
+
+## Set the DET renderStyle
+if ($articulatedDET){
+  print "Building Articulated DETs\n";
+  foreach my $det(@{ $dset->getDETList() }, @{ $qdset->getDETList() }){
+    $det->setCurveStyle("Articulated");
+  }
+}
+
 
 ##Render reports
 my $detsPath = "";
