@@ -547,12 +547,29 @@ sub combCalcWeightedMiss(){
 Returns the wieghted FA value for the combined calculation 
 
 =cut
+
 sub combCalcWeightedFA(){
   my ($self, $faErr) = @_;
   $faErr;
 }
 
+####################################################################################################
+=pod
 
+=item B<dumpBlocksStruct>()
+
+PRints the structure used by the Compute functions.
+
+=cut
+
+sub dumpBlocksStruct{
+  my ($bs) = @_;
+  print "Block Str:";
+  foreach my $blk(keys %$bs){
+    print " $blk:[TARGi=$bs->{$blk}->{TARGi}, NONTARGi=$bs->{$blk}->{NONTARGi}]";
+  }
+  print "\n";
+}
 
 ####################################################################################################
 =pod
@@ -598,24 +615,35 @@ the CODE DIES as this should never happen.
     my ($combSum, $combSumSqr, $combN) = (0, 0, 0);
     my ($missSum, $missSumSqr, $missN) = (0, 0, 0);
     my ($faSum,   $faSumSqr,   $faN) =   (0, 0, 0);
+    my ($miss, $fa);
     
     #    my $combAvg = $self->combErrCalc($missAvg, $faAvg);
     #    ($combAvg, undef, $missAvg, $missSSD, $faAvg, $faSSD);
     my @ktmp = keys %$data;
     for (my $ik = 0; $ik < scalar @ktmp; $ik++) {
       my $block = $ktmp[$ik];
+
       my $luFA = $data->{$block}{MFA};
       my $luMiss = $data->{$block}{MMISS};
       die "Error: Can't calculate errCombBlockSetCalc: key 'MFA' for block '$block' missing" if (! defined($luFA));
       die "Error: Can't calculate errCombBlockSetCalc: key 'MMISS' for block '$block' missing" if (! defined($luMiss));
 
-      my $miss = $self->errMissBlockCalc($luMiss, $block); 
+      
+      $miss = $data->{$block}{CACHEDMMISS};
+      if (!defined($miss)){       
+        $miss = $self->errMissBlockCalc($luMiss, $block); 
+        $data->{$block}{CACHEDMMISS} = $miss;
+      }
       if (defined($miss)) {
         $missSum += $miss;
         $missSumSqr += $miss * $miss;
         $missN++;
       }
-      my $fa = $self->errFABlockCalc($luFA, $block); 
+      $fa = $data->{$block}{CACHEDMFA};
+      if (!defined($fa)){
+        $fa = $self->errFABlockCalc($luFA, $block); 
+        $data->{$block}{CACHEDMFA} = $fa;
+      }
       if (defined($fa)) {
         $faSum += $fa;
         $faSumSqr += $fa * $fa;
