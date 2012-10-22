@@ -373,6 +373,22 @@ sub unitTest {
   return 1;
 }
 
+#### Just build a big trials structure to testing memory usage
+sub unitTestMakeBigTrials(){                                                                                                                                                
+  my $trial = new TrialsFuncs({ (TOTAL_TRIALS => 1000000) },                                                                                                                
+                              "Term Detection", "Term", "Occurrence");                                                                                                      
+  print "Begining build\n";                                                                                                                                                 
+  for (my $blk=0; $blk<10000; $blk++){                                                                                                                                      
+    my $blkid=sprintf("Block=%05d",$blk);                                                                                                                                   
+    print "  On $blk\n" if (($blk) % 1000 == 0);                                                                                                                            
+    for (my $tr=0; $tr<1000; $tr++){                                                                                                                                        
+      my $scr = rand();                                                                                                                                                     
+      $trial->addTrial($blkid, $scr, ($scr < 0.5) ? "NO" : "YES", rand());                                                                                                  
+    }                                                                                                                                                                       
+  }                                                                                                                                                                         
+  print "Build done\n";                                                                                                                                                     
+}                                                                                                                                                                           
+                                                                                                                                                                            
 sub isCompatible(){
   my ($self, $tr2) = @_;
   
@@ -480,6 +496,7 @@ sub addTrial {
         if (! $isTarg);
   }
   $self->{"trials"}{$block}{$decision." $attr"} ++;
+  $self->{"trials"}{$block}{"NUM ".$attr} ++;
 }
 
 ####################################################################################################
@@ -523,6 +540,8 @@ sub _initForBlock {
     $self->{"trials"}{$block}{"MIN YES NONTARG"} = undef;
     $self->{"trials"}{$block}{"MAX NO TARG"} = undef;
     $self->{"trials"}{$block}{"MAX NO NONTARG"} = undef;
+    $self->{"trials"}{$block}{"NUM TARG"} = 0;
+    $self->{"trials"}{$block}{"NUM NONTARG"} = 0;
   }
 }
 
@@ -906,7 +925,8 @@ sub getNumNoTarg {
 
 sub getNumTarg {
   my ($self, $block) = @_;
-  ($self->getNumNoTarg($block) + $self->getNumYesTarg($block) + $self->getNumOmittedTarg($block) );
+  $self->{"trials"}->{$block}->{"NUM TARG"};
+#  ($self->getNumNoTarg($block) + $self->getNumYesTarg($block) + $self->getNumOmittedTarg($block) );
 }
 
 sub getNumSys {
@@ -966,8 +986,8 @@ sub getNumCorrNonDetect {
 
 sub getNumNonTarg {
   my ($self, $block) = @_;
-  ($self->{"trials"}->{$block}->{"NO NONTARG"} + 
-   $self->{"trials"}->{$block}->{"YES NONTARG"})
+  $self->{"trials"}->{$block}->{"NUM NONTARG"};
+#  ($self->{"trials"}->{$block}->{"NO NONTARG"} + $self->{"trials"}->{$block}->{"YES NONTARG"})
 }
 
 sub _stater {
