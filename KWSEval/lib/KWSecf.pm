@@ -671,6 +671,16 @@ sub loadFile {
   return($self->loadXMLFile($ecff));
 }
 
+sub getFileEvalSignalDur(){
+  my ($self, $file) = @_;
+  return (exists($self->{FILE_EVAL_SIGN_DUR}{$file})) ? $self->{FILE_EVAL_SIGN_DUR}{$file} : undef;
+}
+
+sub getFileEvalSignalDurList(){
+  my ($self) = @_;
+  return (keys %{ $self->{FILE_EVAL_SIGN_DUR} });
+}
+
 ####################
 
 sub FilteringTime {
