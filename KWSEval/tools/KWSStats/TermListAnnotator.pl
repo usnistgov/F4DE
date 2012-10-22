@@ -52,7 +52,7 @@ my $charSplitTextNotASCII = 0;
 my $charSplitTextDeleteHyphens = 0;
 
 my @textPrefilters = ();
-
+my @deleteAttr = ();
 
 #Options
 #Need flags for adding programmatically generated annots, (i.e. NGram)
@@ -72,6 +72,7 @@ GetOptions
  'selectAttrValue=s' => \$selectAttrValueStr,
  'attrValue=s' => \$attrValueStr,
  'xprefilterText=s@'                   => \@textPrefilters,
+ 'deleteAttr=s@'                       => \@deleteAttr,
 ) or MMisc::error_quit("Unknown option(s)\n");
 
 #Check required options
@@ -148,12 +149,12 @@ foreach my $file (@annotFiles) {
         $annotations{$term}{$attr} = $val;
       } else {
         if (! $ReduceDuplicateInfo){
-          $annotations{$term}{$attr} .= "|".$val;
+          $annotations{$term}{$attr} .= ",".$val;
         } else {
           my $re = quotemeta($annotations{$term}{$attr});
           $re =~ s:\\\|:|:g;  ### Activates the pipes!!!!
           if ($val !~ /^($re)$/){
-            $annotations{$term}{$attr} .= "|".$val;
+            $annotations{$term}{$attr} .= ",".$val;
           }
         }
       }
@@ -262,6 +263,14 @@ if ($cleanNonEssentialAttributes){
         $TermList->{TERMS}{$termid}->deleteAttr($attr);
       }
     }
+  }
+}
+
+### Delete the requested attributes
+foreach my $attr(@deleteAttr){
+  print "Removing Attribute $attr\n";
+  foreach my $termid (keys %{ $TermList->{TERMS} }) {
+     $TermList->{TERMS}{$termid}->deleteAttr($attr);
   }
 }
 
