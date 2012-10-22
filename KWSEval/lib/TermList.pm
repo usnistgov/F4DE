@@ -219,6 +219,20 @@ sub QueriesToTermSet
     }
 }
 
+sub addTerm                                                                                                                                                                                  
+{                                                                                                                                                                                            
+  my ($self, $term, $id) = @_;                                                                                                                                                               
+  $self->{TERMS}{$id} = $term;                                                                                                                                                               
+}                                                                                                                                                                                            
+                                                                                                                                                                                             
+sub getTermIDs
+{
+    my ($self) = @_;
+
+    return(keys %{ $self->{TERMS} });
+}
+
+
 sub getTermFromID
 {
     my ($self, $termID) = @_;
