@@ -1527,8 +1527,7 @@ sub writeMultiDetGraph
           $ltitle .= $self->_getLineTitleString("Actual", 0, $detset->getDETForID($d), 
                                                 \@offAxisLabels, $color, $closedPoint, $thisPointSize, 0); 
           my $title = ($displayKey eq "false") ? "notitle" : "title '"._gnuplotSafeString($ltitle)."'";
-          my $prType = $curveLineStyle.($curveLineStyle =~ /point/ ? " pt $closedPoint  ps $thisPointSize" : "");
-          push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol $title with $prType lc $color";
+          push @PLOTCOMS, "    '$troot.dat.2' using $xcol:$ycol $title with linespoints pt $closedPoint ps $thisPointSize lc $color";
           ## Clear out the title!
           $ltitle = "";
         }
