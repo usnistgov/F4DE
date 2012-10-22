@@ -55,9 +55,12 @@ MMisc::error_quit("Language argument required.") if ($language eq "");
 #Get Terms
 print "Loading new term csv file '$tlistfile'\n";
 my $keywordAT = new AutoTable();
+$keywordAT->setEncoding($encoding);
+$keywordAT->setCompareNormalize($normalization);
 MMisc::error_quit("Problem loading CSV $tlistfile into Auto Table: " . $keywordAT->get_errormsg())
       if (! $keywordAT->loadCSV($tlistfile));
-print "   ".scalar($keywordAT->getRowIDs("AsAdded"))." rows loaded\n";
+print "mesg ". $keywordAT->get_errormsg()."\n";
+print "   ".scalar($keywordAT->getRowIDs("AsAdded"))." rows loaded \n";
 
 my $inTermList;
 #Get Terms from in TermList
@@ -132,8 +135,12 @@ foreach my $lineID($keywordAT->getRowIDs("AsAdded")){
     if (!defined $oldVal){
       $term->setAttrValue($col,$val);
     } else {
-      print "Info: term ".$term->getAttrValue("TERMID")." /$keyword/ $col has multiple values ($oldVal, $val)\n"
-        if ($oldVal ne "$val");;
+      my $new = 1;
+      foreach my $ov(split(/,/,$oldVal)){ $new = 0 if ($val eq $ov);  }
+      if ($new){
+        $term->setAttrValue($col,"$oldVal,$val");
+        print "Info: term ".$term->getAttrValue("TERMID")." /$keyword/ $col has multiple values ($oldVal,$val)\n";
+      }
     }
   }
 }
