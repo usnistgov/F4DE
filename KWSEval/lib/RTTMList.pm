@@ -116,7 +116,7 @@ sub unitTestFind
 
 sub unitTest
 {
-    my ($file1, $file2, $file2tlist) = @_;
+    my ($file1, $file2, $file2tlist, $seg_test_file) = @_;
 
     my $err = MMisc::check_file_r($file1);
     if (! MMisc::is_blank($err)) {
@@ -126,6 +126,11 @@ sub unitTest
     $err = MMisc::check_file_r($file2);
     if (! MMisc::is_blank($err)) {
       print "Issue with needed test file ($file2) : $err\n";
+      return(0);
+    }
+    $err = MMisc::check_file_r($seg_test_file);
+    if (! MMisc::is_blank($err)) {
+      print "Issue with needed test file ($seg_test_file) : $err\n";
       return(0);
     }
 
@@ -201,32 +206,6 @@ sub unitTest
     }
     print "OK\n";
 
-    print " #Records per seg (1)...  ";
-    my $reccount;
-    foreach my $spkr (keys %{ @{ $segments1 }[1]->{SPKRRECS} }) {
-      foreach my $tok (keys %{ @{ $segments1 }[1]->{SPKRRECS}{$spkr} }) {
-	$reccount+=scalar(@{ @{ $segments1 }[1]->{SPKRRECS}{$spkr}{$tok} });
-      }
-    }
-    if ($reccount != 38) {
-      print "FAILED\n";
-      return 0;
-    }
-    print "OK\n";
-
-    $reccount = 0;
-    print " #Records per seg (2)...  ";
-    foreach my $spkr (keys %{ @{ $segments2 }[0]->{SPKRRECS} }) {
-      foreach my $tok (keys %{ @{ $segments2 }[0]->{SPKRRECS}{$spkr} }) {
-	$reccount+=scalar(@{ @{ $segments2 }[0]->{SPKRRECS}{$spkr}{$tok} });
-      }
-    }
-    if ($reccount != 31) {
-      print "FAILED\n";
-      return 0;
-    }
-    print "OK\n";
-
     print " Continuity of segs ...   ";
     for(my $i=0; $i<@{ $segments1 }-1; $i++) {
       if (@{ $segments1 }[$i]->{ET} != @{ $segments1 }[$i+1]->{BT}) {
@@ -235,52 +214,47 @@ sub unitTest
       }
     }
     print "OK\n";
- 
-    #RTTMSegment.pm tests
-    print " Find terms in seg (1)... ";
-    if ($segments1->[3]->hasTerm("president", 0.5)) {
-      print "OK\n";
-    }
-    else {
-      print "FAILED\n";
-      return 0;
-    }
 
-    print " Find terms in seg (2)... ";
-    if ($segments1->[3]->hasTerm("PrEsIdEnT", 0.5)) {
-      print "OK\n";
-    }
-    else {
-      print "FAILED\n";
-      return 0;
-    }
+    #special segment tests
+    my $rttm_seg_test = new RTTMList($seg_test_file,"english","","", 0, 0, 0);
 
-    print " Find terms in seg (3)... ";
-    if (!$segments1->[0]->hasTerm("john tkacik is", 0.5)) {
-      print "OK\n";
-    }
-    else {
-      print "FAILED\n";
-      return 0;
-    }
+    my $segments3 = $rttm_seg_test->segmentsFromTimeframe("FILE01", 1, 0.0, 8.0);
+    print " Starting buffer segment .. ";
+    my $seg = $segments3->[0];
+    if ($seg->{BT} == 0.0 && $seg->{ET} == 1.0 && $seg->{TYPE} eq 'NONSPEECH') { print "OK\n" }
+    else { print "FAILED\n" and return 0 }
 
-    print " Find terms in seg (4)... ";
-    if ($segments2->[0]->hasTerm("legislation", 0.5)) {
-      print "OK\n";
-    }
-    else {
-      print "FAILED\n";
-      return 0;
-    }
+    print " Ending buffer segment .. ";
+    $seg = $segments3->[-1];
+    if ($seg->{BT} == 6.0 && $seg->{ET} == 8.0 && $seg->{TYPE} eq 'NONSPEECH') { print "OK\n" }
+    else { print "FAILED\n" and return 0 }
 
-    print " Find terms in seg (5)... ";
-    if ($segments1->[3]->hasTerm("this statement", 0.5)) {
-      print "OK\n";
-    }
-    else {
-      print "FAILED\n";
-      return 0;
-    }
+    my $segments4 = $rttm_seg_test->segmentsFromTimeframe("FILE01", 1, 1.0, 19.0);
+    $seg = $segments4->[0];
+    print " Speaker overlap (1) .. ";
+    if ($seg->{BT} == 1.0 && $seg->{ET} == 6.0 && $seg->{TYPE} eq 'SPEECH') { print "OK\n" }
+    else { print "FAILED\n" and return 0 }
+
+    $seg = $segments4->[2];
+    print " Speaker overlap (2) .. ";
+    if ($seg->{BT} = 10.0 && $seg->{ET} == 13.0 && $seg->{TYPE} eq 'SPEECH') { print "OK\n" }
+    else { print "FAILED\n" and return 0 }
+
+    $seg = $segments4->[-1];
+    print " Speaker overlap (3) .. ";
+    if ($seg->{BT} == 15.0 && $seg->{ET} == 20.0 && $seg->{TYPE} eq 'SPEECH') { print "OK\n" }
+    else { print "FAILED\n" and return 0 }
+
+    my $segments5 = $rttm_seg_test->segmentsFromTimeframe("FILE01", 1, 2.0, 9.0);
+    $seg = $segments5->[0];
+    print " Speaker overlapping timeframe (1) .. ";
+    if ($seg->{BT} == 2.0 && $seg->{ET} == 3.0 && $seg->{TYPE} eq 'NONSPEECH') { print "OK\n" }
+    else { print "FAILED\n" and return 0 }
+    
+    $seg = $segments5->[-1];
+    print " Speaker overlapping timeframe (2) .. ";
+    if ($seg->{BT} == 4.0 && $seg->{ET} == 11.0 && $seg->{TYPE} eq 'NONSPEECH') { print "OK\n" }
+    else { print "FAILED\n" and return 0 }
 
     print "All Tests OK\n";
     return 1;
@@ -639,147 +613,37 @@ sub findTermOccurrences
     return(\%outHash); 
 }
 
-sub segmentsFromTimeframe
-{
-  my ($self, $file, $chan, $bt, $dur, $ecfexcerpt) = @_;
-  #ecfexcerpt is optional, if included sets the source type of each segment based on the ecfexcerpt
+sub segmentsFromTimeframe {
+  my ($self, $file, $chan, $bt, $dur) = @_;
 
-  my @outlist = ();
+  my @segs = ();
+  my $last_et = sub { return defined $segs[-1] ? $segs[-1]->{ET} : $bt };
   my $et = sprintf("%.4f", $bt + $dur);
-  my $lastsegET = $bt;
-  
-#  $Data::Dumper::MaxDepth = 1; print Dumper($self); die;
+  foreach my $spkr_node (sort { $a->{BT} <=> $b->{BT} } @{ $self->{SPEAKERS}{$file}{$chan} }) {
+    next if $spkr_node->{BT} < $bt || $spkr_node->{ET} > $et;
 
-  return \@outlist if (not defined $self->{SPEAKERS}{$file}{$chan});
-  foreach my $speaker (sort {$a->{BT} <=> $b->{BT}} @{ $self->{SPEAKERS}{$file}{$chan} })
-  {
-    my $spkrBT = $speaker->{BT};
-    my $spkrET = $speaker->{ET};
-    next if ($spkrBT < $bt || $spkrET > $et); #Speaker segment is outside of the timeframe
-    my %spkrrecs = ();
-    my $lastsegDUR = sprintf("%.4f", $spkrBT - $lastsegET);
-    if ($lastsegDUR > 0)
-    {
-      my $newseg = new RTTMSegment('NONSPEECH', $file, $chan, $lastsegET, $lastsegDUR, undef);
-      $newseg->{ECFSRCTYPE} = $ecfexcerpt->{SOURCE_TYPE} if (defined $ecfexcerpt);
-      push (@outlist, $newseg);
+    if ($spkr_node->{BT} > &$last_et) {
+      push @segs, new RTTMSegment('NONSPEECH', $file, $chan, 
+				  &$last_et, $spkr_node->{BT} - &$last_et);
     }
-    next if (not defined $self->{LEXBYSPKR}{$file}{$chan}{$speaker->{SPKR}});
-    foreach my $lex (sort {$a->{BT} <=> $b->{BT};} @{ $self->{LEXBYSPKR}{$file}{$chan}{$speaker->{SPKR}} })
-    {
-      if ($lex->{BT} >= $spkrBT && $lex->{ET} <= $spkrET)
-      {
-	#LOWERCASING
-	push (@{ $spkrrecs{$speaker->{SPKR}}{$self->normalizeTerm($lex->{TOKEN})}}, $lex);
-      }
-    }
-    if (scalar(@outlist) > 0 && $outlist[-1]->{ET} > $speaker->{BT})
-    {
-      #MERGE SEGMENTS
-      #Segments are merged if they overlap, overlapping segments merge speakers and lexemes
-      $outlist[-1]->{DUR} = sprintf("%.4f", $speaker->{ET} - $outlist[-1]->{BT});
-      $outlist[-1]->{ET} = $speaker->{ET};
-      if (defined $spkrrecs{$speaker->{SPKR}} && keys %{ $spkrrecs{$speaker->{SPKR}} } > 0) {
-	foreach my $tok (keys %{ $spkrrecs{$speaker->{SPKR}} }) {
-	  push (@{ $outlist[-1]->{SPKRRECS}{$speaker->{SPKR}}{$tok} }, @{ $spkrrecs{$speaker->{SPKR}}{$tok} });
-	}
-      }
-    }
-    else
-    {
-      my $newseg = new RTTMSegment('SPEECH', $file, $chan, $spkrBT, $speaker->{DUR}, \%spkrrecs);
-      $newseg->{ECFSRCTYPE} = $ecfexcerpt->{SOURCE_TYPE} if (defined $ecfexcerpt);
-      push (@outlist, $newseg);
-    }
-    $lastsegET = $speaker->{ET};
-  }
-  #Set last NONSPEECH segment if needed
-  if ($lastsegET < $et)
-  {
-    my $newseg = new RTTMSegment('NONSPEECH', $file, $chan, $lastsegET, sprintf("%.4f", $et - $lastsegET), undef);
-    $newseg->{ECFSRCTYPE} = $ecfexcerpt->{SOURCE_TYPE} if (defined $ecfexcerpt);
-    push (@outlist, $newseg)
-  }
 
-  return (\@outlist);
-}
-
-sub getAllSegments()
-{
-  my ($self, $ecf) = @_; #ecf optional, if defined each segment will be given a Source_Type if it fits into an ecfexcerpt.
-  
-  my @outlist = ();
-  foreach my $file (sort keys %{ $self->{SPEAKERS} })
-  {
-    foreach my $chan (sort keys %{ $self->{SPEAKERS}{$file} })
-    {
-      my @ecfexcerpts = ();
-      if (defined $ecf)
-      {
-	foreach my $ecfe (@{ $ecf->{EXCERPT} })
-	{
-	  if ($ecfe->{FILE} eq $file && $ecfe->{CHANNEL} eq $chan)
-	  {
-	    push (@ecfexcerpts, $ecfe);
-	  }
-	}
-      }
-      my @speakers = sort {$a->{BT} <=> $b->{BT}} @{ $self->{SPEAKERS}{$file}{$chan} };
-      my $lastsegET = $speakers[0]->{BT} if (defined $speakers[0]);
-      foreach my $speaker (@speakers)
-      {
-	my $spkrBT = $speaker->{BT};
-	my $spkrET = $speaker->{ET};
-	my %spkrrecs = ();
-	my $lastsegDUR = sprintf("%.4f", $spkrBT - $lastsegET);
-	if ($lastsegDUR > 0)
-	{
-	  push (@outlist, new RTTMSegment('NONSPEECH', $file, $chan, $lastsegET, $lastsegDUR, undef));
-	}
-	next if (not defined $self->{LEXBYSPKR}{$file}{$chan}{$speaker->{SPKR}});
-	foreach my $lex (sort {$a->{BT} <=> $b->{BT};} @{ $self->{LEXBYSPKR}{$file}{$chan}{$speaker->{SPKR}} })
-	{
-	  if ($lex->{BT} >= $spkrBT && $lex->{ET} <= $spkrET)
-	  {
-	    #LOWERCASING
-	    push (@{ $spkrrecs{$speaker->{SPKR}}{$self->normalizeTerm($lex->{TOKEN})}}, $lex);
-	  }
-	}
-	if (scalar(@outlist) > 0 && $outlist[-1]->{ET} > $speaker->{BT}
-	  && $speaker->{FILE} eq $outlist[-1]->{FILE} && $speaker->{CHAN} eq $outlist[-1]->{CHAN})
-	{
-	  #MERGE SEGMENTS
-	  #Segments are merged if they overlap, overlapping segments merge speakers and lexemes
-	  $outlist[-1]->{DUR} = sprintf("%.4f", $speaker->{ET} - $outlist[-1]->{BT});
-	  $outlist[-1]->{ET} = $speaker->{ET};
-
-	  if (defined $spkrrecs{$speaker->{SPKR}} && keys %{ $spkrrecs{$speaker->{SPKR}} } > 0)
-	  {
-	    foreach my $tok (keys %{ $spkrrecs{$speaker->{SPKR}} }) {
-	      push (@{ $outlist[-1]->{SPKRRECS}{$speaker->{SPKR}}{$tok} }, @{ $spkrrecs{$speaker->{SPKR}}{$tok} });
-	    }
-	  }
-	}
-	else
-	{
-	  my $newseg = new RTTMSegment('SPEECH', $file, $chan, $spkrBT, $speaker->{DUR}, \%spkrrecs);
-	  foreach my $ecfe (@ecfexcerpts)
-	  {
-	    if ($newseg->{BT} >= $ecfe->{TBEG} && $newseg->{ET} <= $ecfe->{TEND})
-	    {
-              #Set the segment's Source Type if it belongs in an ecf_excerpt
-	      $newseg->{ECFSRCTYPE} = $ecfe->{SOURCE_TYPE};
-	      last;
-	    }
-	  }
-	  push (@outlist, $newseg);
-	}
-	$lastsegET = $speaker->{ET};
-      }
+    if (&$last_et == $spkr_node->{BT}) {
+      push @segs, new RTTMSegment('SPEECH', $file, $chan, $spkr_node->{BT},
+				  $spkr_node->{ET} - $spkr_node->{BT});
+    }
+    elsif ($segs[-1]->{TYPE} eq "SPEECH" && $spkr_node->{ET} > &$last_et) {
+      $segs[-1]->{ET} = $spkr_node->{ET};
+      $segs[-1]->recalc_dur;
+    }
+    #tag lexes
+    foreach my $lex (@{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr_node->{SPKR}} }) {
+      $lex->{SEG} = $segs[-1] if ($lex->{BT} >= $segs[-1]->{BT} && $lex->{ET} <= $segs[-1]->{ET});
     }
   }
-
-  return (\@outlist);
+  if (&$last_et < $et) {
+    push @segs, new RTTMSegment('NONSPEECH', $file, $chan, &$last_et, $et - &$last_et);
+  }
+  return \@segs;
 }
 
 1;

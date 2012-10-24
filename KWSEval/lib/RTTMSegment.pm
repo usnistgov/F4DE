@@ -41,10 +41,15 @@ sub new
   return $self;
 }
 
+sub recalc_dur {
+  my $self = shift;
+  $self->{DUR} = $self->{ET} - $self->{BT};
+}
+
 sub findTermsInSegment
 {
   my ($self, $term, $threshold, $rttm) = @_;
-
+  MMisc::warn_print "Using deprecated function 'findTermsInSegment' in RTTMSegment.pm!!";
   my @outList;
   $term =~ s/^\s*//;
   $term =~ s/\s*$//;
@@ -112,7 +117,7 @@ sub findTermsInSegment
 sub hasTerm
 {
   my ($self, $term, $threshold, $rttm) = @_;
-
+  MMisc::warn_print "Using deprecated function 'hasTerm' in RTTMSegment.pm!!";
   $term =~ s/^\s*//;
   $term =~ s/\s*$//;
   #Need rttm for normalization
