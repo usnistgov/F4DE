@@ -1,0 +1,113 @@
+<kwlist ecf_filename="test5.ecf.xml" version="01" language="english" compareNormalize="lowercase" encoding="UTF-8">
+<kw kwid="TERM-01">
+    <kwtext>yes</kwtext>
+    <kwinfo>
+    <attr>
+      <name>Char. Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    <attr>
+      <name>Characters</name>
+      <value>3</value>
+    </attr>
+    <attr>
+      <name>Duration Quantile</name>
+      <value>0 - 33.3</value>
+    </attr>
+    <attr>
+      <name>NGram</name>
+      <value>1-grams</value>
+    </attr>
+    <attr>
+      <name>Occ. AllSources</name>
+      <value>1</value>
+    </attr>
+    <attr>
+      <name>Occ. Avg Mean</name>
+      <value>0.1904</value>
+    </attr>
+    <attr>
+      <name>Syllables</name>
+      <value>01</value>
+    </attr>
+    <attr>
+      <name>Syllables Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    </kwinfo>
+</kw>
+<kw kwid="TERM-02">
+    <kwtext>sure</kwtext>
+    <kwinfo>
+    <attr>
+      <name>Char. Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    <attr>
+      <name>Characters</name>
+      <value>4</value>
+    </attr>
+    <attr>
+      <name>Duration Quantile</name>
+      <value>0 - 33.3</value>
+    </attr>
+    <attr>
+      <name>NGram</name>
+      <value>1-grams</value>
+    </attr>
+    <attr>
+      <name>Occ. AllSources</name>
+      <value>1</value>
+    </attr>
+    <attr>
+      <name>Occ. Avg Mean</name>
+      <value>0.1624</value>
+    </attr>
+    <attr>
+      <name>Syllables</name>
+      <value>01</value>
+    </attr>
+    <attr>
+      <name>Syllables Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    </kwinfo>
+</kw>
+<kw kwid="TERM-03">
+    <kwtext>why not</kwtext>
+    <kwinfo>
+    <attr>
+      <name>Char. Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    <attr>
+      <name>Characters</name>
+      <value>7</value>
+    </attr>
+    <attr>
+      <name>Duration Quantile</name>
+      <value>0 - 33.3</value>
+    </attr>
+    <attr>
+      <name>NGram</name>
+      <value>1-grams</value>
+    </attr>
+    <attr>
+      <name>Occ. AllSources</name>
+      <value>1</value>
+    </attr>
+    <attr>
+      <name>Occ. Avg Mean</name>
+      <value>0.0124</value>
+    </attr>
+    <attr>
+      <name>Syllables</name>
+      <value>02</value>
+    </attr>
+    <attr>
+      <name>Syllables Quantile</name>
+      <value>0 - 25.0</value>
+    </attr>
+    </kwinfo>
+</kw>
+</kwlist>

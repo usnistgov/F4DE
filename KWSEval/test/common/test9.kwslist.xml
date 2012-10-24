@@ -1,0 +1,20 @@
+<kwslist kwlist_filename="test5.kwlist.xml" language="english" system_id="">
+<detected_kwlist kwid="TERM-01" search_time="24.3" oov_count="0">
+<kw file="FILE01" channel="1" tbeg="0.000" dur="1.000" score="0.912" decision="YES"/>
+<kw file="FILE01" channel="1" tbeg="1.000" dur="2.000" score="0.890" decision="YES"/>
+<kw file="FILE01" channel="1" tbeg="11.700" dur="0.500" score="0.990" decision="YES"/>
+</detected_kwlist>
+<detected_kwlist kwid="TERM-02" search_time="24.3" oov_count="0">
+<kw file="FILE01" channel="1" tbeg="4.000" dur="1.000" score="0.952" decision="YES"/>
+<kw file="FILE01" channel="1" tbeg="10.000" dur="0.500" score="0.888" decision="YES"/>
+<kw file="FILE01" channel="1" tbeg="10.500" dur="0.500" score="0.767" decision="YES"/>
+<kw file="FILE01" channel="1" tbeg="15.000" dur="1.000" score="0.902" decision="YES"/>
+<kw file="FILE02" channel="2" tbeg="0.000" dur="1.000" score="0.988" decision="YES"/>
+<kw file="FILE03" channel="1" tbeg="1.000" dur="1.000" score="0.925" decision="YES"/>
+<kw file="FILE03" channel="1" tbeg="2.000" dur="1.000" score="0.922" decision="YES"/>
+</detected_kwlist>
+<detected_kwlist kwid="TERM-03" search_time="24.3" oov_count="0">
+<kw file="FILE01" channel="1" tbeg="2.000" dur="1.000" score="0.994" decision="YES"/>
+<kw file="FILE01" channel="1" tbeg="10.000" dur="2.000" score="0.921" decision="YES"/>
+</detected_kwlist>
+</kwslist>

@@ -45,6 +45,7 @@ sub new
   $self->{ECF} = shift;
   $self->{TERMLIST} = shift;  
   $self->{TERMLKUP} = {};
+  $self->{SEGLKUP} = {};
 
   ##Filter Data
   $self->{SRCTYPEGROUPS} = undef; #{Group name}->@ of src types allowed in that group
@@ -53,11 +54,9 @@ sub new
   $self->{FILECHANS} = (); #@ of 'file/chan's allowed in the conditional report
   ##
 
-  #Create index of terms by file/channel
-  foreach my $termid (sort keys %{ $self->{KWSLIST}{TERMS} }) {
-    foreach my $term (@{ $self->{KWSLIST}{TERMS}{$termid}{TERMS} }) {
-      push (@{ $self->{TERMLKUP}{$termid}{$term->{FILE}}{$term->{CHAN}} }, $term);
-    }
+  #Add ecf segments to QuickECF lookup
+  foreach my $ecfexcerpt (@{ $self->{ECF}{EXCERPT} }) {
+    push (@{ $self->{QUICKECF}{$ecfexcerpt->{FILE}}{$ecfexcerpt->{CHANNEL}} }, $ecfexcerpt);
   }
 
   bless $self;
@@ -66,29 +65,30 @@ sub new
 
 sub alignSegments
 {
-  my ($self, $csvreportfile, $segmentFilters, $groupFilter, $threshhold, $KoefC, $KoefV, $probofterm, $listIsolineCoef, $pooled, $includeBlocksWNoTarg, $justSystemTerms) = @_;
-  open (CSVREPORT, ">$csvreportfile") if (defined $csvreportfile);
-  binmode(CSVREPORT, $self->{RTTMLIST}->getPerlEncodingString()) if (defined $csvreportfile && $self->{RTTMLIST}->{ENCODING} ne "");
-  print CSVREPORT "file,channel,termid,term,ref_bt,ref_et,sys_bt,sys_et,sys_score,sys_decision,alignment\n" if (defined $csvreportfile);
+  my ($self, $csvreportfile, $segmentFilters, $groupFilter, $threshold, $KoefC, $KoefV, $probofterm, $listIsolineCoef, $pooled, $includeBlocksWNoTarg, $justSystemTerms) = @_;
+
+  $self->configure_csv_writer($csvreportfile) unless MMisc::is_blank($csvreportfile);
 
   $includeBlocksWNoTarg = 0 if ($includeBlocksWNoTarg != 1);
   $justSystemTerms = 0 if ($justSystemTerms != 1);
 
   my @segments = ();
   foreach my $ecfexcerpt (@{ $self->{ECF}{EXCERPT} }) {
-    push (@segments, @{ $self->{RTTMLIST}->segmentsFromTimeframe($ecfexcerpt->{FILE}, $ecfexcerpt->{CHANNEL}, $ecfexcerpt->{TBEG}, $ecfexcerpt->{DUR}, $ecfexcerpt) });
+    push (@segments, @{ $self->{RTTMLIST}->segmentsFromTimeframe($ecfexcerpt->{FILE}, $ecfexcerpt->{CHANNEL}, $ecfexcerpt->{TBEG}, $ecfexcerpt->{DUR}) });
   }
 
   my @fsegments = (); #filtered segments
-  SEGFILTER: foreach my $segment (@segments) {
+  SEGFILTER: foreach my $seg (@segments) {
     foreach my $filter (@{ $segmentFilters }) {
-      next SEGFILTER if (&{ $filter }($self, $segment) == 0);
+      next SEGFILTER if (&{ $filter }($self, $seg) == 0);
     }
-    push (@fsegments, $segment);
+    push (@fsegments, $seg);
+    
+    #used for mapping FA's to segments.
+    push (@{ $self->{SEGLKUP}{$seg->{FILE}}{$seg->{CHAN}} }, $seg)
   }
   
   MMisc::error_quit("Segment filter yielded no segments for inferred segmentation alignment.  Aborting.")  if(@segments <= 0);
-#  print "Segments found: ".scalar(@segments)."\n";
   
     #Initialize trials
   my %qtrials = (); #Conditional trials
@@ -110,58 +110,147 @@ sub alignSegments
   my $trials = new TrialsDiscreteTWV({ ( "TotTrials" => scalar(@fsegments), "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg ) });
   my $detset = new DETCurveSet();
 
-  foreach my $segment (@fsegments) {
-    my @terms = values %{ $self->{TERMLIST}{TERMS} };
-    foreach my $term (@terms) {
-      my $trialBlock = $term->{TERMID};
-      $trialBlock = "Pooled" if ($pooled);
+  my %missed_terms = map {$_ => $_} keys %{ $self->{TERMLIST}{TERMS} }; #track terms missed by kws
+  my $kws_done_loading = 0;
+  while (1) {
+    my @detected_results = $self->{KWSLIST}->getNextDetectedKWlist() unless $kws_done_loading;
+    my ($msg, $detected_list) = ($detected_results[0], $detected_results[1]);
+    warn $msg unless MMisc::is_blank($msg);
+    #
+    my $termid = "";
+    if (!defined $detected_list) {
+      $kws_done_loading = 1;
+      $termid = (keys %missed_terms)[0];
+      last unless $termid; #if no detected list and no terms, then done
+      delete $missed_terms{$termid};
+    } else {
+      $termid = $detected_list->{TERMID};
+      delete $missed_terms{$termid};
+      $self->{OOVCOUNTS}{$termid} = $detected_list->{OOV_TERM_COUNT};
+    }
 
-      my %blockMetaData = ();
-      $blockMetaData{"Text"} = $self->{TERMLIST}->{TERMS}{$term->{TERMID}}{TEXT} if (not $pooled);
+    #build TERMLKUP
+    #prunes sys occs which are dupes in a segment
+    my %termlkup = ();
+    my %seg_sys_occs = ();
+    foreach my $sys (@{ $detected_list->{TERMS} }) {
+      my $seg = $self->_seg_of_sys_occ($sys);
+      next if MMisc::is_blank($seg);
+      $seg_sys_occs{$seg} = $sys if !defined $seg_sys_occs{$seg} || $sys->{SCORE} > $seg_sys_occs{$seg}->{SCORE};
+    }
+    foreach my $sys (values %seg_sys_occs) {
+      push @{ $termlkup{$sys->{FILE}}{$sys->{CHAN}} }, $sys;
+    }
+    my %refoccs = %{ $self->{RTTMLIST}->findTermOccurrences($self->{TERMLIST}->{TERMS}{$termid}{TEXT}, $threshold) }; 
 
-      my @crecords = (); #Records contained in the segment.
-      #Need rttm for normalization
-      my $istarget = $segment->hasTerm($term->{TEXT}, $threshhold, $self->{RTTMLIST});
-      
-      foreach my $record (@{ $self->{TERMLKUP}{$term->{TERMID}}{$segment->{FILE}}{$segment->{CHAN}} }) {
-	if ($record->{BT} >= $segment->{BT} && $record->{ET} <= $segment->{ET}) {
-	  push (@crecords, $record);
+    my $trialBlock = $termid;
+    $trialBlock = "Pooled" if ($pooled);
+    my $term = $self->{TERMLIST}->{TERMS}{$termid};
+    my %blockMetaData = ();
+    $blockMetaData{"Text"} = $term->{TEXT} if (not $pooled);
+
+    my %usedfilechans = ();
+    foreach my $file (keys %refoccs) {
+      foreach my $chan (keys %{ $refoccs{$file} }) {
+	$usedfilechans{$file}{$chan} = 1;
+	my %refs = ();
+      REFBUILD: foreach my $ref (@{ $refoccs{$file}{$chan} }) {
+	  foreach my $sfilter (@{ $segmentFilters }) {
+	    next REFBUILD if (&{ $sfilter }($self, $ref) == 0);
+	  }
+	  next if MMisc::is_blank($ref->[0]{SEG});
+	  $refs{$ref->[0]{SEG}} = $ref->[0]{SEG} unless $ref->[0]{SEG} != $ref->[-1]{SEG};
 	}
-	elsif ($record->{MID} >= $segment->{BT} && $record->{MID} <= $segment->{ET}) {
-          #print "WARNING: KWSTermRecord was not precisely inside of segment\n";
-	  push (@crecords, $record);
+	my %syss = ();
+      SYSBUILD: foreach my $sys (@{ $termlkup{$file}{$chan} }) {
+	  foreach my $sfilter (@{ $segmentFilters }) {
+	    next SYSBUILD if (&{ $sfilter }($self, $sys) == 0);
+	  }
+	  $syss{$sys} = $sys;
+	}
+	
+	my $results = _seg_aligner($self, \%refs, \%syss);
+
+	foreach my $mapped (@{ $results->{mapped} }) {
+	  my ($sysid, $refid) = ($mapped->[0], $mapped->[1]);
+
+	  $self->csv_write_align_str($term, $refs{$refid}, $syss{$sysid})
+	    unless MMisc::is_blank($csvreportfile);
+
+	  #add hit to trial
+	  $trials->addTrial($trialBlock, $syss{$sysid}->{SCORE}, $syss{$sysid}->{DECISION}, 1, \%blockMetaData);
+
+	  #add to conditional
+	  next if (not defined $groupFilter);
+	  foreach my $group (@{ &{ $groupFilter }($self, $refs{$refid}, $term) }) {
+	    my $totTrials = scalar(@fsegments);
+	    $totTrials = $grouptcounts{$group} if (defined $grouptcounts{$group});
+	    $qtrials{$group} = new TrialsDiscreteTWV({ ( "TotTrials" => $totTrials, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg ) }) if (not defined $qtrials{$group});
+	    $qtrials{$group}->addTrial($termid, $syss{$sysid}->{SCORE}, $syss{$sysid}->{DECISION}, 1, \%blockMetaData);
+	  }
+	}
+	#Misses
+	foreach my $refid (@{ $results->{unmapped_ref} }) {
+
+	  $self->csv_write_align_str($term, $refs{$refid}, undef)
+	    unless MMisc::is_blank($csvreportfile);
+
+	  #add miss to trial
+	  $trials->addTrial($trialBlock, undef, "OMITTED", 1, \%blockMetaData);
+
+	  #add to conditional
+	  next if (not defined $groupFilter);
+	  foreach my $group (@{ &{ $groupFilter }($self, $refs{$refid}, $term) }) {
+	    my $totTrials = scalar(@fsegments);
+	    $totTrials = $grouptcounts{$group} if (defined $grouptcounts{$group});
+	    $qtrials{$group} = new TrialsDiscreteTWV({ ( "TotTrials" => $totTrials, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg ) }) if (not defined $qtrials{$group});
+	    $qtrials{$group}->addTrial($termid, undef, "OMITTED", 1, \%blockMetaData);
+	  }
+	}
+	#FA & Corr!Det
+	foreach my $sysid (@{ $results->{unmapped_sys} }) {
+
+	  $self->csv_write_align_str($term, undef, $syss{$sysid})
+	    unless MMisc::is_blank($csvreportfile);
+
+	  #Add FA or Corr!Det to trial
+	  $trials->addTrial($trialBlock, $syss{$sysid}->{SCORE}, $syss{$sysid}->{DECISION}, 0, \%blockMetaData);
+	  
+	  #add to conditional
+	  next if (not defined $groupFilter);
+	  foreach my $group (@{ &{ $groupFilter }($self, $syss{$sysid}, $term) }) {
+	    my $totTrials = scalar(@fsegments);
+	    $totTrials = $grouptcounts{$group} if (defined $grouptcounts{$group});
+	    $qtrials{$group} = new TrialsDiscreteTWV({ ( "TotTrials" => $totTrials, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg ) }) if (not defined $qtrials{$group});
+	    $qtrials{$group}->addTrial($termid, $syss{$sysid}->{SCORE}, $syss{$sysid}->{DECISION}, 0, \%blockMetaData);
+	  }
 	}
       }
+    }
+    foreach my $file (keys %termlkup ) {
+      foreach my $chan (keys %{ $termlkup{$file} }) {
+	next if (defined $usedfilechans{$file}{$chan} && $usedfilechans{$file}{$chan} == 1);
+	#record as FA or Corr!Det
 
-      if (@crecords > 0) {
-	#If multiple records contained in segment we take the one with the highest score.
-	my $dominantrec = (sort {$b->{SCORE} <=> $a->{SCORE}} @crecords)[0];
-	my $align_result = $istarget ? "CORR" : $dominantrec->{DECISION} =~ /yes/i ? "FA" : "CORR!DET";
-	print CSVREPORT $self->{TERMLIST}{LANGUAGE} . "," . $segment->{FILE} . "," . $segment->{CHAN} . "," . $term->{TERMID} . "," . $term->{TEXT} . "," . $segment->{BT} . "," . $segment->{ET} . "," . $dominantrec->{BT} . "," . $dominantrec->{ET} . "," . $dominantrec->{SCORE} . "," . $dominantrec->{DECISION} . "," . $align_result . "\n" if (defined $csvreportfile);
+	foreach my $sysocc (@{ $termlkup{$file}{$chan} }) {
+	  my $alignresult = "CORR!DET";
+	  $alignresult = "FA" if ($sysocc->{DECISION} eq "YES");
+	  #Record as Correct non-detect or False Alarm
+	  $self->csv_write_align_str($term, undef, $sysocc)
+	    unless MMisc::is_blank($csvreportfile);
 
-	#Add trial for occurence report
-	$trials->addTrial($trialBlock, $dominantrec->{SCORE}, $dominantrec->{DECISION}, $istarget, \%blockMetaData);
 
-	#Add trial for conditional occurence report based on whatever grouping filter is being used
-	next if (not defined $groupFilter);
-	foreach my $group (@{ &{ $groupFilter }($self, $segment, $term) }) {
-	  my $totTrials = scalar(@fsegments);
-	  $totTrials = $grouptcounts{$group} if (defined $grouptcounts{$group});
-	  $qtrials{$group} = new TrialsDiscreteTWV({ ( "TotTrials" => $totTrials, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg ) }) if (not defined $qtrials{$group});
-	  $qtrials{$group}->addTrial($term->{TERMID}, $dominantrec->{SCORE}, $dominantrec->{DECISION}, $istarget, \%blockMetaData);
-	}
-      }
-      elsif ($istarget) {
-	$trials->addTrial($trialBlock, undef, "OMITTED", $istarget, \%blockMetaData);
-
-	print CSVREPORT $self->{TERMLIST}{LANGUAGE} . "," . $segment->{FILE} . "," . $segment->{CHAN} . "," . $term->{TERMID} . "," . $term->{TEXT} . "," . $segment->{BT} . "," . $segment->{ET} . "," . "," .  ","  . ","  . "," . "MISS\n" if (defined $csvreportfile);
-
-	next if (not defined $groupFilter);
-	foreach my $group (@{ &{ $groupFilter }($self, $segment, $term) }) {
-	  my $totTrials = scalar(@fsegments);
-	  $totTrials = $grouptcounts{$group} if (defined $grouptcounts{$group});
-	  $qtrials{$group} = new TrialsDiscreteTWV({ ( "TotTrials" => $totTrials, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg ) }) if (not defined $qtrials{$group});
-	  $qtrials{$group}->addTrial($term->{TERMID}, undef, "OMITTED", $istarget, \%blockMetaData);
+	  #Add FA or Corr!Det to trial
+	  $trials->addTrial($trialBlock, $sysocc->{SCORE}, $sysocc->{DECISION}, 0, \%blockMetaData);
+	    
+	  #Add FA or Corr!Det to conditional trial
+	  next if (not defined $groupFilter);
+	  foreach my $group (@{ &{ $groupFilter }($self, $sysocc, $term) }) {
+	    my $totTrials = scalar(@fsegments);
+	    $totTrials = $grouptcounts{$group} if (defined $grouptcounts{$group});
+	    $qtrials{$group} = new TrialsDiscreteTWV({ ( "TotTrials" => $totTrials, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg ) }) if (not defined $qtrials{$group});
+	    $qtrials{$group}->addTrial($termid, $sysocc->{SCORE}, $sysocc->{DECISION}, 0, \%blockMetaData);
+	  }
 	}
       }
     }
@@ -208,11 +297,42 @@ sub alignSegments
     $qdetset->addDET($qtrialname, $qdetcurve);
   }
 
-  close (CSVREPORT) if (defined $csvreportfile);
-  
+  $self->csv_close() unless MMisc::is_blank($csvreportfile);
+
   return [ $detset, $qdetset ]; 
 }
 
+###### CSV Writer #########
+
+sub configure_csv_writer {
+ my ($self, $filename) = @_;
+
+ open CSVFH, ">$filename";
+ binmode CSVFH, $self->{RTTMLIST}->getPerlEncodingString() if $self->{RTTMLIST}->{ENCODING} ne "";
+ *CSVFH;
+ print CSVFH "language,file,channel,termid,term,ref_bt,ref_et,sys_bt,sys_et,sys_score,sys_decision,alignment\n";
+}
+sub csv_write_align_str {
+  my ($self, $term, $ref, $sys) = @_;
+  my $result = $sys ? ($sys->{DECISION} eq "YES" ? ($ref ? "CORR" : "FA") : ($ref ? "MISS" : "FA")) : "MISS";
+  print CSVFH join(",",
+			    $self->{RTTMLIST}->{LANGUAGE},
+			    ($ref || $sys)->{FILE},
+			    ($ref || $sys)->{CHAN},
+			    $term->{TERMID},
+			    $term->{TEXT},
+			    $ref->{BT},
+			    $ref->{ET},
+			    $sys->{BT},
+			    $sys->{ET},
+			    $sys->{SCORE},
+			    $sys->{DECISION},
+			    $result) . "\n" if defined *CSVFH;
+}
+sub csv_close {
+  my $self = shift;
+  close CSVFH if defined *CSVFH;
+}
 
 #>======<> DETCurve Filters <>======<#
 
@@ -259,12 +379,10 @@ sub groupByECFSourceType
   my @groups = ();
   foreach my $group (keys %{ $self->{SRCTYPEGROUPS} })
   {
-    if (defined $segment->{ECFSRCTYPE}) {
-      foreach my $srctype (@{ $self->{SRCTYPEGROUPS}{$group} }) {
-	if ($segment->{ECFSRCTYPE} =~ /^$srctype$/i) {
-	  push (@groups, $group);
-	  last;
-	}
+    foreach my $srctype (@{ $self->{SRCTYPEGROUPS}{$group} }) {
+      if ($self->{QUICKECF}{$segment->{FILE}}{$segment->{CHAN}}->[0]->{SOURCE_TYPE} =~ /^$srctype$/i) {
+	push (@groups, $group);
+	last;
       }
     }
   }
@@ -302,17 +420,51 @@ sub groupByOOV
 
 #>==================================<#
 
+sub _seg_of_sys_occ {
+  my ($self, $sys) = @_;
+  foreach my $seg (@{ $self->{SEGLKUP}{$sys->{FILE}}{$sys->{CHAN}} }) {
+    return $seg if ($sys->{MID} >= $seg->{BT} && $sys->{MID} <= $seg->{ET});
+  }
+}
+
+sub _seg_aligner {
+  my ($self, $refs, $syss) = @_;
+  my %results = ();
+  
+  my %matches = ();
+  foreach my $sysid (keys %{ $syss }) {
+    $results{unmapped_sys}{$sysid} = 1;
+    foreach my $refid (keys %{ $refs }) {
+#     $results{unmapped_ref}{$refid} = 1;
+      if ($syss->{$sysid}{MID} >= $refs->{$refid}{BT} && $syss->{$sysid}{MID} <= $refs->{$refid}{ET}) {
+	delete $results{unmapped_sys}{$sysid};
+	$matches{$refid} = $sysid; #should only be one possible sys.
+      }
+    }
+  }
+
+  #format results
+  my (@u_syss, @u_refs) = ((), ());
+  foreach my $u_sys (keys %{ $results{unmapped_sys} }) { push @u_syss, $u_sys; }
+  foreach my $u_ref (keys %{ $refs }) { push @u_refs, $u_ref unless defined $matches{$u_ref}; }
+  $results{unmapped_sys} = \@u_syss;
+  $results{unmapped_ref} = \@u_refs;
+  foreach my $matched_ref (keys %matches) {
+    #may not need the reference \
+    push @{ $results{mapped} }, [$matches{$matched_ref}, $matched_ref];
+  }
+  return \%results;
+}
+
 sub _countECFGroupSegments
 {
   my ($self, $group, $segments) = @_;
   my $count = 0;
   foreach my $seg (@{ $segments }) {
-    if (defined $seg->{ECFSRCTYPE}) {
-      foreach my $srctype (@{ $self->{SRCTYPEGROUPS}{$group} }) {
-	if ($seg->{ECFSRCTYPE} =~ /^$srctype$/i) {
-	  $count++;
-	  last;
-	}
+    foreach my $srctype (@{ $self->{SRCTYPEGROUPS}{$group} }) {
+      if ($self->{QUICKECF}{$seg->{FILE}}{$seg->{CHAN}}[0]->{SOURCE_TYPE} =~ /^$srctype$/i) {
+	$count++;
+	last;
       }
     }
   }
@@ -340,7 +492,8 @@ sub unitTest
   my $rttmlist = new RTTMList($rttmfile, $termlist->getLanguage(), $termlist->getCompareNormalize(), $termlist->getEncoding(), 0, 0, 0);
   print "OK\n";
   print "Loading KWSList...\t";
-  my $kwslist = new KWSList($kwsfile);
+  my $kwslist = new KWSList();
+  $kwslist->openXMLFileAccess($kwsfile, 1);
   print "OK\n";
   print "Loading KWSecf...\t";
   my $ecflist = new KWSecf($ecffile);
@@ -415,12 +568,17 @@ sub unitTest
   if (keys %{ $qtrials1->{"trials"} } == 2) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
 
+  #reset align object for pooled test
+  my $kwslist = new KWSList();
+  $kwslist->openXMLFileAccess($kwsfile, 1);
+  my $pooled_kwssegalign = new KWSSegAlign($rttmlist, $kwslist, $ecflist, $termlist);  
+
   #checking pooled results
-  my @presults = @{ $kwssegalign->alignSegments(undef, [], $termfilter, $findthresh, $KoefC, $KoefV, $probofterm, \@isolinecoef, 1) };
+  my @presults = @{ $pooled_kwssegalign->alignSegments(undef, [], $termfilter, $findthresh, $KoefC, $KoefV, $probofterm, \@isolinecoef, 1) };
 
   my $pdetset = $presults[0];
   my $ptrials = $pdetset->{DETList}[0]->{DET}->getTrials();
-  
+
   print "Checking pooled trial counts(1)...\t";
   if ($ptrials->{"trials"}->{"Pooled"}{"YES TARG"} == 17 &&
       $ptrials->{"trials"}->{"Pooled"}{"NO TARG"} == 0 &&
@@ -437,7 +595,8 @@ sub unitTest
   if (scalar(@filteredterms) == 10) { print "OK\n" }
   else { print "FAILED\n"; return 0 }
 
-  my $testseg = @{ $kwssegalign->{RTTMLIST}->getAllSegments($kwssegalign->{ECF}) }[0];
+  #Not an actual seg, but should still work for groupByECFSourceType
+  my $testseg = $filteredterms[0];
 
   my $testterm = $kwssegalign->{TERMLIST}->{TERMS}{"TERM-01"};
   print "Checking group filters(1)...\t";

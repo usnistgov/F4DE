@@ -98,6 +98,11 @@ $tn = "test8b";
 $testr += &do_simple_test($tn, "Just system terms (Segment)", "$tool -e ../common/test7.ecf.xml -r ../common/test7.rttm -s ../common/test7.missing_term.kwslist.xml -t ../common/test7.kwlist.xml -o -b -inc -f - -j -g", "res_$tn.txt");
 ####
 
+##
+$tn = "test9";
+$testr += &do_simple_test($tn, "Corner case checks (Segment)", "$tool -e ../common/test9.ecf.xml -r ../common/test9.rttm -s ../common/test9.kwslist.xml -t ../common/test9.kwlist.xml -o -b -g -f -", "res_$tn.txt");
+####
+
 my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
 my $add = "";
 $add .= " [Elapsed: $elapsed seconds]" if (F4DE_TestCore::is_elapsedtime_on());
