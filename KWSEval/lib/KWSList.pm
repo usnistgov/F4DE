@@ -373,7 +373,6 @@ sub getNextDetectedKWlist {
     $self->{LoadedFile} = 1;
     $self->{LoadInProgress} = 0;
     close KWSLISTFH;
-    close SE;
     $self->{FH} = undef;
     $self->{SEfile} = undef;
     return("", undef);
@@ -386,7 +385,7 @@ sub getNextDetectedKWlist {
 
 # 'justValidate' will ask for TERMs not to be created (ie no rewrite possible)
 sub loadXMLFile {
-  my ($self, $kwslistf, $justValidate) = @_;
+  my ($self, $kwslistf, $justValidate) = MMisc::iuav(\@_, undef, undef, 0);
 
   return("Refusing to load a file on top of an already existing object")
     if ($self->{LoadedFile} != 0);

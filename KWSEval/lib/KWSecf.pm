@@ -465,7 +465,6 @@ sub getNextExerpt {
     $self->{LoadedFile} = 1;
     $self->{LoadInProgress} = 0;
     close ECFFH;
-    close SE;
     $self->{FH} = undef;
     $self->{SEfile} = undef;
     return("", undef);
