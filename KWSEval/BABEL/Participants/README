@@ -1,0 +1,90 @@
+Date: 2012/10/30
+
+This file contains instructions on how to set and use the "SubmissionHelper.sh" script
+
+
+
+--Note:
+--------
+
+- lines starting by % are command lines
+
+- command lines with <TEXT> are to be adapted to your specific "TEXT" values
+
+
+
+--Prerequisite:
+-------------
+
+- make sure that at least F4DE's "make mincheck" and "make KWSEvalcheck" complete succesfully ('make' commands are run from the base F4DE's directory)
+
+- you must have a functional scp command with an associated account (with a passphrase) on the scoring transfer system. We recommend having an 'ssh-agent' in place to faciliate data transfer
+
+- require "JobRunner.pl" 
+
+- (for scoring) require the 'sctk' tool installed (at least version 2.4.4).
+See: http://www.nist.gov/itl/iad/mig/tools.cfm
+
+- an understanding of the EXPID composition from the BABEL Evaluation Plan
+
+- the matching KWSEval system input files (ECF and Keyword List files)
+to the EXPID you are submitting
+
+
+
+--Configuration Steps:
+-------------------
+
+In order to be able to use the tool (SubmissionHelper.sh), its
+configuration file (SubmissionHelper.cfg) must be created.
+
+For BABEL 2012, the simplest way to do so is to make a symbolic link
+from SubmissionHelper_BABEL12.cfg to SubmissionHelper.cfg:
+
+% ln -s SubmissionHelper_BABEL12.cfg SubmissionHelper.cfg
+
+The default configuration file is designed to make everything work
+from the current directory, 'JobRunner.pl', 
+and the 'bin' directory for the SCTK installation.
+For this to happen, please make symbolic link to your installation
+location of the tools to the current directory:
+
+% ln -s <JOBRUNNER_DIRECTORY>/JobRunner.pl
+
+% ln -s <SCTK_INSTALL_BIN_DIRECTORY> sctkbin
+
+Edit the 'scp_user' line to reflect your scoring transfer system account information.
+
+Familiarize yourself with the list of options of the tool by running it without any option:
+
+% ./SubmissionHelper.sh
+
+Confirm that the "SubmissionHelper.sh" tool is functional by
+calling it from the current directory with a invalid file (such as
+this README), which should fail, but will confirm that the expected
+entries from the configuration file (SubmissionHelper.cfg) are
+presumed valid:
+
+% ./SubmissionHelper.sh README
+
+
+-- Manual configuration:
+---------------------
+
+If you decide to not use the default configuration, please copy
+SubmissionHelper_BABEL12.cfg to SubmissionHelper.cfg and adapt 
+fields in the copied file.
+
+
+-- Submiting an EXPID:
+-------------------
+
+Simply run the "SubmissionHelper.sh" tool (from the current location)
+with a valid EXPID submission, and follow the step by step description
+of the processing:
+
+% ./SubmissionHelper.sh <EXPID>.kwslist.xml
+
+Note: It is possible to interrupt the process and restart it at a
+later time by running the same command line with the exact same
+"<EXPID>.kwslist.xml" file
