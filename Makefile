@@ -402,7 +402,8 @@ dist_archive_pre_remove:
 ## R_tools
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/R_tools
 ## KWSEval
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Server
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL-aaa/Server
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL-ssh/Server
 
 create_mans:
 # common
