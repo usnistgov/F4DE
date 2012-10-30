@@ -382,7 +382,8 @@ sub __process_file {
     my $file_part = $_[1];
     $file_part =~ s%^.+/%%;
     my $skipfile = 0;
-    for (my $i = 0; $i < scalar @tmp || $skipfile; $i++) {
+    for (my $i = 0; $i < scalar @tmp; $i++) {
+      next if ($skipfile);
       my $v = $tmp[$i];
       $skipfile = ($file_part =~ m%$v%) ? 1 : 0;
     }
