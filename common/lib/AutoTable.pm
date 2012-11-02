@@ -73,30 +73,29 @@ my @ok_specials = ("HTML", "CSV", "TEXT", "LaTeX"); # order is important
 sub new {
   my ($class) = shift @_;
   
+  my $self = TranscriptHolder->new();
+
   my $errormsg = new MErrorH("AutoTable");
   
-  my $self =
-  {
-    hasData => 0,
-    data => { },
-    special => { },
-    rowLabOrder => 
+  $self->{hasData} = 0;
+  $self->{data} = { };
+  $self->{special} = { };
+  $self->{rowLabOrder} = 
     {
       ThisIDNum    => 0,
       SubIDCount   => 0,
       SubID        => {},
       width        => { charLen => 0 },
-    },
-    colLabOrder => 
+    };
+  $self->{colLabOrder} = 
     {
       ThisIDNum    => 0,
       SubIDCount   => 0,
       SubID        => {},
       width        => { charLen => 0 },
-    },
-    Properties  => new PropList(),
-    errormsg    => $errormsg,
-  };
+    };
+  $self->{Properties} = new PropList();
+  $self->{errormsg}    = $errormsg;
   
   bless $self;
 
@@ -1310,7 +1309,7 @@ sub addData__core {
   my $lid = &__getLID($rowid, $colid);
   if (defined($self->{data}{$lid})) {
     if ($unique) {
-      print "Warning Datum for '$rowid $colid' has multiple instances (not replacing)\n"; 
+      print "Warning Datum value '$val' for '$rowid $colid' has multiple instances (not replacing)\n"; 
       return 1;
     }
     $unique = -1; # replacement (no add)
@@ -1833,6 +1832,18 @@ sub increment{
   $x = 0 if (! defined($x));
   $x ++;
   $at->setData($x, $col, $row);
+}
+
+############################################################
+sub incrementBy{
+  my ($at, $col, $row, $val) = @_;
+
+  my $x = $at->getData($col, $row);
+  $x = 0 if (! defined($x));
+  $x += $val;
+##  print REP "$x $col $row\n";
+  $at->setData($x, $col, $row);
+#  print REP Dumper($at);
 }
 
 1;
