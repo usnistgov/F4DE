@@ -94,7 +94,7 @@ This should fail due a validation error.
 From within the 'dbDir' are some samples that can be used for testing your setup; for example:
 
 
-% ./SubmissionHelper.sh -R dbDir/samples/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1.kwslist.xml
+% ./SubmissionHelper.sh dbDir/samples/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1.kwslist.xml
 
 should prompt a submission log similar to:
 
