@@ -297,7 +297,7 @@ fi
 # obtain last uploaded file's SHA256 for download
 lsha256=`cat $lf` 
 if [ -z "$lsha256" ]; then error_quit "No previous SHA value available, aborting"; fi
-#echo "[SHA256:$lsha256]"
+echo "Remote SHA256 : $lsha256"
 sfile="${lsha256}.status"
 
 ########## Step 3
