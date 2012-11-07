@@ -314,7 +314,7 @@ sub configure_csv_writer {
 }
 sub csv_write_align_str {
   my ($self, $term, $ref, $sys) = @_;
-  my $result = $sys ? ($sys->{DECISION} eq "YES" ? ($ref ? "CORR" : "FA") : ($ref ? "MISS" : "FA")) : "MISS";
+  my $result = $sys ? ($sys->{DECISION} eq "YES" ? ($ref ? "CORR" : "FA") : ($ref ? "MISS" : "CORR!DET")) : "MISS";
   print CSVFH join(",",
 			    $self->{RTTMLIST}->{LANGUAGE},
 			    ($ref || $sys)->{FILE},
