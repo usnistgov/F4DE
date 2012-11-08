@@ -12,6 +12,23 @@ This file contains instructions on how to set and use the "SubmissionHelper.sh" 
 - command lines with <TEXT> are to be adapted to your specific "TEXT" values
 
 
+--Obtaining a scp account:
+-------------
+
+0) If not familiar with SSH, please see: http://www.wikihow.com/Use-SSH
+
+1) decide on the user name of your team; it must follow the pattern "kws-<SITE>_<TEAM>" (<SITE> and <TEAM> can not contain - or _)
+
+2) insure you have a valid SSH public key file (with a non empty passphrase of 12 or more characters), as you will need it to provide it to NIST for account creation purpose
+
+3) email 'indus@nist.gov' with your user, site and team names, the list of users expected to use the service with contact information (email + phone) and the public keys attached to the given user.
+
+4) you should receive an email from NIST with a confirmation or request for clarification related to the creation of the account that will contain testing instructions.
+
+5) test to confirm you can upload and download a file according to the instructions in the email your received from step 4
+
+Please remember that access to the system is done via public key + passphrase only.
+
 
 --Prerequisite:
 -------------
@@ -21,10 +38,10 @@ KWSEvalcheck" complete succesfully ('make' commands are run from the
 base F4DE's directory)
 
 - you must have a functional scp command with an associated account
-(with a passphrase) on the scoring transfer system. We strongly
-recommend that an 'ssh-agent' be in place to faciliate data transfer,
+(with a passphrase) on the scoring transfer system. We strongly recommend
+that an 'ssh-agent' be in place to faciliate data transfer,
 as every communication with the scoring server is done via 'scp'
-(including status checks). 
+(including status checks).
 For details on 'ssh-agent', please refer to your 'man ssh-agent' as well as
 https://en.wikipedia.org/wiki/Ssh-agent
 
@@ -32,7 +49,7 @@ https://en.wikipedia.org/wiki/Ssh-agent
 separate download)
 
 - a copy of the cumulative release of scoring software driver files
-for Babel KWS and STT evaluations (for futre reference we will call it
+for Babel KWS and STT evaluations (for future reference we will call it
 'IndusDB')
 
 - (for scoring your own input files) require the 'sctk' tool installed
