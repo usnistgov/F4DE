@@ -18,7 +18,7 @@ This file contains instructions on how to set and use the "SubmissionHelper.sh" 
 0) If not familiar with SSH, please see: http://www.wikihow.com/Use-SSH
 
 1) decide on the user name of your team; it must follow the pattern
-"kws-<SITE>_<TEAM>" (<SITE> and <TEAM> can not contain - or _)
+"kws-<TEAM>[_<SITE>]" (<TEAM> or <SITE> can not contain - or _)
 
 2) ensure you have a valid SSH public key file (with a non empty
 passphrase of 12 or more characters), as you will need it to provide
