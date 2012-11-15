@@ -24,10 +24,12 @@ This file contains instructions on how to set and use the "SubmissionHelper.sh" 
 passphrase of 12 or more characters), as you will need it to provide
 it to NIST for account creation purpose
 
-3) email 'indus@nist.gov' with your user, site and team names, the
-list of users expected to use the service with contact information
-(email + phone) and attach to the email the public keys for the given
-user (do not inline its text).
+3) email 'indus@nist.gov' with:
+- your user, site and team names
+- the list of users expected to use the service with contact information (email + phone)
+- attach to the email the public keys for the given user (do not inline its text)
+- provide us with a list of the IP subnet that will need access to the ssh server
+
 
 4) you should receive an email from NIST with a confirmation or
 request for clarification related to the creation of the account that
