@@ -66,6 +66,36 @@ sub new
        DETShowPoint_Best => 0,
        DETShowPoint_Ratios => 0,
        DETShowPoint_SupportValues => [ ('C', 'M', 'F', 'T')],
+       ### From Brian A.  'rgb "\#ff0000"', 'rgb "\#0000ff"', 'rgb "\#00ff00"', 'rgb "\#ffd700"', 'rgb "\#006400"', 'rgb "\#8383ff"', 'rgb "\#a0522d"', 'rgb "\#00ffc1"', 'rgb "\#008395"', 'rgb "\#00008b"', 'rgb "\#95d34f"', 'rgb "\#f69edb"', 'rgb "\#800080"', 'rgb "\#f61160"', 'rgb "\#ffc183"', 'rgb "\#8ca77b"', 'rgb "\#ff8c00"', 'rgb "\#837200"', 'rgb "\#72f6ff"', 'rgb "\#9ec1ff"', 'rgb "\#72607b"', 'rgb "\#800000"', 'rgb "\#ffff00"',
+
+       colorSchemeDefs => { "colorPresentation" => 
+                                       { DETFont => { normal => "font arial 14.5",
+                                                      hd => "font arial 50" },
+                                         colorRGB => [ ('rgb "\#ff0000"', 'rgb "\#0000ff"', 'rgb "\#00ff00"', 'rgb "\#ffd700"', 'rgb "\#006400"', 'rgb "\#8383ff"', 'rgb "\#a0522d"', 'rgb "\#00ffc1"', 'rgb "\#008395"', 'rgb "\#00008b"', 'rgb "\#95d34f"', 'rgb "\#f69edb"', 'rgb "\#800080"', 'rgb "\#f61160"', 'rgb "\#ffc183"', 'rgb "\#8ca77b"', 'rgb "\#ff8c00"', 'rgb "\#837200"', 'rgb "\#72f6ff"', 'rgb "\#9ec1ff"', 'rgb "\#72607b"', 'rgb "\#800000"', 'rgb "\#ffff00"' ) ],
+                                         ISORatioLineStyle => { color => "rgb \"\#666666\"",
+                                                                width => 3},
+                                         ISOCostLineStyle  => { color => "rgb \"\#bbbbbb\"",
+                                                             width => 2} },
+                            "color" => { DETFont => { normal => "medium",
+                                                      hd => "font arial 40" },
+                                         colorRGB => [ ("rgb \"#000000\"", "rgb \"#c0c0c0\"", "rgb \"#909090\"", "rgb \"#606060\"") ],
+                                         ISORatioLineStyle => { color => "rgb \"\#DDDDDD\"",
+                                                                width => 1},
+                                         ISOCostLineStyle  => { color => "rgb \"\#FFD700\"",
+                                                             width => 1} },
+                            "grey"  => { DETFont => { normal => "medium",
+                                                      hd => "font arial 40" },
+                                         colorRGB => [ (2.1.100) ],
+                                         ISORatioLineStyle => { color => "rgb \"\#DDDDDD\"",
+                                                                width => 1},
+                                         ISOCostLineStyle  => { color => "rgb \"\#b0b0b0b\"",
+                                                                width => 1} }},
+       colors => { DETfont => undef,
+                   colorRGB => undef,
+                   ISORatioLineStyle => { color => undef,
+                                          width => undef},
+                   ISOCostLineStyle  => { color => undef,
+                                          width => undef}},
        
        serialize => 1,
        BuildPNG => 1,
@@ -99,7 +129,7 @@ sub _initProps{
   die "Failed to add property xScale" unless ($props->addProp("xScale", "nd", ("nd", "log", "linear")));
   die "Failed to add property yScale" unless ($props->addProp("yScale", "nd", ("nd", "log", "linear")));
   die "Failed to add property FAUnit" unless ($props->addProp("FAUnit", "Prob", ("Prob", "Rate")));
-  die "Failed to add property ColorScheme" unless ($props->addProp("ColorScheme", "color", ("color", "grey")));
+  die "Failed to add property ColorScheme" unless ($props->addProp("ColorScheme", "color", ("color", "grey", "colorPresentation")));
   die "Failed to add property MissUnit" unless ($props->addProp("MissUnit", "Prob", ("Prob", "Rate")));
   die "Failed to add property KeySpacing" unless ($props->addProp("KeySpacing", "0.7", ()));
   die "Failed to add property CurveLineStyle" unless ($props->addProp("CurveLineStyle", "lines", ("lines", "points", "linespoints")));
@@ -275,17 +305,39 @@ sub _parseOptions{
     if (! $self->{props}->setValue("ColorScheme", $options->{ColorScheme})){
       die "Error: DET option ColorScheme illegal. ".$self->{props}->get_errormsg();
     }
-    if ($self->{props}->getValue("ColorScheme") eq "grey"){
-      $self->{colorsRGB} = [ ("rgb \"#000000\"", "rgb \"#c0c0c0\"", "rgb \"#909090\"", "rgb \"#606060\"") ];    
-    } elsif ($self->{props}->getValue("ColorScheme") eq "color"){
-      $self->{colorsRGB} = [ (2..100) ];    
-    }
+    $self->{colors}->{colorRGB} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{colorRGB};
+    $self->{colors}->{ISORatioLineStyle}{color} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISORatioLineStyle}{color};
+    $self->{colors}->{ISORatioLineStyle}{width} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISORatioLineStyle}{width};
+    $self->{colors}->{ISOCostLineStyle}{color} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISOCostLineStyle}{color};
+    $self->{colors}->{ISOCostLineStyle}{width} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISOCostLineStyle}{width};
+    $self->{colors}->{DETFont} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{DETFont}{($self->{HD} ? "hd" : "normal")};
+#    if ($self->{props}->getValue("ColorScheme") eq "grey"){
+#      $self->{colorsRGB} = [ ("rgb \"#000000\"", "rgb \"#c0c0c0\"", "rgb \"#909090\"", "rgb \"#606060\"") ];    
+#    } elsif ($self->{props}->getValue("ColorScheme") eq "color"){
+#      $self->{colorsRGB} = [ (2.1.100) ];    
+#    }
+    
   }  
 
   if (exists($options->{CurveLineStyle})){
     if (! $self->{props}->setValue("CurveLineStyle", $options->{CurveLineStyle})){
       die "Error: DET option CurveLineStyle illegal. ".$self->{props}->get_errormsg();
     }
+  }
+  if (exists($options->{ISORatioLineColor})){
+    $self->{colors}->{ISORatioLineStyle}{color} = "rgb \"\#".$options->{ISORatioLineColor}."\"";
+  }
+  if (exists($options->{ISORatioLineWidth})){
+    $self->{colors}->{ISORatioLineStyle}{width} = $options->{ISORatioLineWidth};
+  }
+  if (exists($options->{ISOCostLineColor})){
+    $self->{colors}->{ISOCostLineStyle}{color} = "rgb \"\#".$options->{ISOCostLineColor}."\"";
+  }
+  if (exists($options->{ISOCostLineWidth})){
+    $self->{colors}->{ISOCostLineStyle}{width} = $options->{ISOCostLineWidth};
+  }
+  if (exists($options->{DETFont})){
+    $self->{colors}->{DETFont} = $options->{DETFont};
   }
 }
 
@@ -298,7 +350,7 @@ sub unitTest{
 }
 
 sub renderUnitTest{
-  my ($dir) = @_;
+  my ($dir, $doNormal, $doHD, $doHDa) = @_;
 
   print "Test DETCurveGnuplotRenderer...Dir=$dir...";
   my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
@@ -412,9 +464,12 @@ sub renderUnitTest{
 
   system "rm -rf $dir";
   system "mkdir -p $dir";
+  my $dcRend;
   my $options = { ("ColorScheme" => "grey",
                    "DrawIsometriclines" => 1,
+                   "DrawIsoratiolines" => 1,
                    "serialize" => 0,
+                   "Isoratiolines" =>  [ ( 1 ) ],
                    "Isometriclines" => [ (0.7, 0.5, 0.3, 0, -5) ],
                    "DETLineAttr" => { ("Name 1" => { label => "New DET1", lineWidth => 9, pointSize => 2, pointTypeSet => "square", color => "rgb \"#0000ff\"" }),
                                     },
@@ -437,24 +492,27 @@ sub renderUnitTest{
   $options->{xScale} = "nd";
   $options->{yScale} = "nd";
   $options->{title} = "ND vs. ND";
-
+  
   $options->{KeyLoc} = "bottom";
   $options->{HD} = 0;
-  $options->{AutoAdapt} = 0;
-  my $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1.nd.nd",  $ds);
-
+  $options->{AutoAdapt} = 0;  
+  if ($doNormal){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1.nd.nd",  $ds);
+  }
+  
   $options->{KeyLoc} = "bottom";
   $options->{HD} = 1;
   $options->{AutoAdapt} = 0;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1HD.nd.nd",  $ds);
-
+  if ($doHD){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1HD.nd.nd",  $ds);
+  }
+  
   $options->{KeyLoc} = "below";
   $options->{HD} = 1;
   $options->{AutoAdapt} = 1;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1HDa.nd.nd",  $ds);
+  if ($doHDa){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1HDa.nd.nd",  $ds);
+  }
   
   $options->{Xmin} = .0001;
   $options->{Xmax} = 1;
@@ -462,51 +520,67 @@ sub renderUnitTest{
   $options->{Ymax} = 1;
   $options->{xScale} = "log";
   $options->{yScale} = "log";
+  $options->{ISORatioLineColor} = "00ff00";
+  $options->{ISORatioLineWidth} = 4;
+  $options->{ISOCostLineColor} = "0000ff";
+  $options->{ISOCostLineWidth} = 8;
+  $options->{DETFont} = "font arial 2";
   $options->{title} = "LOG vs. LOG";
 
   $options->{KeyLoc} = "bottom";
   $options->{HD} = 0;
   $options->{AutoAdapt} = 0;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1.log.log",  $ds);
-
+  if ($doNormal){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1.log.log",  $ds);
+  }
+  
   $options->{KeyLoc} = "bottom";
   $options->{HD} = 1;
   $options->{AutoAdapt} = 0;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1HD.log.log",  $ds);
-
+  if ($doHD){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1HD.log.log",  $ds);
+  }
+  
   $options->{KeyLoc} = "below";
   $options->{HD} = 1;
   $options->{AutoAdapt} = 1;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1HDa.log.log",  $ds);
-
+  if ($doHDa){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1HDa.log.log",  $ds);
+  } 
+  
   $options->{xScale} = "linear";
   $options->{yScale} = "linear";
   $options->{title} = "LIN vs. LIN";
   $options->{DETShowPoint_Actual} = 0;
   $options->{PointSize} = 4;
   $options->{ColorScheme} = "color";
+  delete($options->{ISORatioLineColor});
+  delete($options->{ISORatioLineWidth});
+  delete($options->{ISOCostLineColor});
+  delete($options->{ISOCostLineWidth});
+  delete($options->{DETFont});
 
   $options->{KeyLoc} = "bottom";
   $options->{HD} = 0;
   $options->{AutoAdapt} = 0;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1.lin.lin",  $ds);
-
+  if ($doNormal){
+    $dcRend = new DETCurveGnuplotRenderer($options);   $dcRend->writeMultiDetGraph("$dir/g1.lin.lin",  $ds);
+  }
+  
   $options->{KeyLoc} = "bottom";
   $options->{HD} = 1;
   $options->{AutoAdapt} = 0;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1HD.lin.lin",  $ds);
-
+  if ($doHD){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1HD.lin.lin",  $ds);
+  }
+  
   $options->{KeyLoc} = "below";
   $options->{HD} = 1;
   $options->{AutoAdapt} = 1;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1HDa.lin.lin",  $ds);
-
+  if ($doHDa){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1HDa.lin.lin",  $ds);
+  }
+  
   $options->{xScale} = "log";
   $options->{yScale} = "nd";
   $options->{Ymax} = "99.9";
@@ -514,26 +588,29 @@ sub renderUnitTest{
   $options->{title} = "ND vs. LOG";
   $options->{DETShowPoint_Actual} = 0;
   $options->{PointSize} = 4;
-  $options->{ColorScheme} = "color";
+  $options->{ColorScheme} = "colorPresentation";
 
   $options->{KeyLoc} = "bottom";
   $options->{HD} = 0;
   $options->{AutoAdapt} = 0;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1.nd.log",  $ds);
+  if ($doNormal){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1.nd.log",  $ds);
+  }
   
   $options->{KeyLoc} = "bottom";
   $options->{HD} = 1;
   $options->{AutoAdapt} = 0;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1HD.nd.log",  $ds);
-
+  if ($doHD){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1HD.nd.log",  $ds);
+  }
+  
   $options->{KeyLoc} = "below";
   $options->{HD} = 1;
   $options->{AutoAdapt} = 1;
-  $dcRend = new DETCurveGnuplotRenderer($options);
-  $dcRend->writeMultiDetGraph("$dir/g1HDa.nd.log",  $ds);
-
+  if ($doHDa){
+    $dcRend = new DETCurveGnuplotRenderer($options);  $dcRend->writeMultiDetGraph("$dir/g1HDa.nd.log",  $ds);
+  }
+  
   &__renderUnitTest_HTML($dir, "");
   &__renderUnitTest_HTML($dir, "HD");
   &__renderUnitTest_HTML($dir, "HDa");
@@ -1089,7 +1166,9 @@ sub _drawIsoratiolines{
   return if (! $self->{DrawIsoratiolines});
 
   my $troot = sprintf( "%s.isoratiolines", $fileRoot );
-  my $color = "rgb \"\#DDDDDD\"";
+  my $color = $self->{colors}->{ISORatioLineStyle}->{color};
+  my $width = $self->{colors}->{ISORatioLineStyle}->{width};
+  
   open( ISODAT, "> $troot" ); 
             
   foreach my $isocoef (@{ $self->{Isoratiolines} } ) {
@@ -1117,7 +1196,7 @@ sub _drawIsoratiolines{
     printf ISODAT "\n";
   }
   close( ISODAT );
-  push @$PLOTCOMS, "  '$troot' title 'Iso-cost ratio line(s)' with lines lt $color";
+  push @$PLOTCOMS, "  '$troot' title 'Iso-cost ratio line(s)' with lines lt $color lw $width";
 }
 
 sub _drawIsometriclines{
@@ -1126,7 +1205,9 @@ sub _drawIsometriclines{
   return if (! $self->{DrawIsometriclines});
 
   my $troot = sprintf( "%s.isometriclines", $fileRoot );
-  my $color = ($self->{props}->getValue("ColorScheme") eq "color" ? "rgb \"\#FFD700\"" : "rgb \"\#b0b0b0\"");
+  my $color = $self->{colors}->{ISOCostLineStyle}->{color};
+  my $width = $self->{colors}->{ISOCostLineStyle}->{width};
+  
   open( ISODAT, "> $troot" );
       
   my $labelind = 10;
@@ -1173,7 +1254,7 @@ sub _drawIsometriclines{
                 
   close( ISODAT );
    
-  push @$PLOTCOMS, "  '$troot' title 'Iso-" . $metric->combLab() . " lines' with lines lt $color";
+  push @$PLOTCOMS, "  '$troot' title 'Iso-" . $metric->combLab() . " lines' with lines lt $color lw $width";
 }
 
 sub _makePointSetLabels{
@@ -1577,7 +1658,8 @@ sub writeMultiDetGraph
 
     if ($self->{makePNG}) {
       $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
-      buildPNG($fileRoot, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef), $self->{HD}, $self->{AutoAdapt});
+      buildPNG($fileRoot, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef), $self->{HD}, $self->{AutoAdapt},
+               $self->{colors}->{DETFont});
     }
     \%multiInfo;
   }
@@ -1830,7 +1912,7 @@ sub writeGNUGraph{
   close PLT;
   
   if ($self->{BuildPNG}) {
-    buildPNG($fileRoot, $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt});
+    buildPNG($fileRoot, $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt}, $self->{colors}->{DETFont});
     $det->setDETPng("$fileRoot.png");
   }
   
@@ -1864,7 +1946,7 @@ sub writeGNUGraph{
   }
   close THRESHPLT;
   if ($self->{BuildPNG}) {
-    buildPNG($fileRoot.".thresh", $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt});
+    buildPNG($fileRoot.".thresh", $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt}, $self->{colors}->{DETFont});
     $det->setThreshPng("$fileRoot.thresh.png");
   }
   1;
@@ -1874,7 +1956,7 @@ sub writeGNUGraph{
 ### To see the test pattern: (echo set terminal png medium size 600,400; echo test) | gnuplot > foo.png
 sub buildPNG
 {
-  my ($fileRoot, $gnuplot, $hd, $aa) = @_;
+  my ($fileRoot, $gnuplot, $hd, $aa, $font) = @_;
   
   my ($w, $h, $sp1, $sp2) = ($hd) ? (3000, 3000, 6, 6) : (800, 800, 12, 12);
   
@@ -1898,8 +1980,6 @@ sub buildPNG
   close FILE;
   #MMisc::error_quit("[$fileRoot]");
   
-  my $font = ($hd) ? "font arial 20" : "medium";
-
   ## Use this with gnuplot 3.X
   #	system("cat $fileRoot.plt | perl -pe \'\$_ = \"set terminal png medium \n\" if (\$_ =~ /set terminal/)\' | gnuplot > $fileRoot.png");
   #    my $newTermCommand = "set terminal png medium size 10000,10000 crop xffffff x000000 x404040 x000000 xc0c0c0 x909090 x606060   x000000 xc0c0c0 x909090 x606060";
@@ -1963,7 +2043,7 @@ sub buildPNG
       MMisc::error_quit("Could not extract size of PNG");
     }
     
-    &buildPNG($fileRoot, $gnuplot, $hd, $aa + 100); # add 100 pixels to height
+    &buildPNG($fileRoot, $gnuplot, $hd, $aa + 100, $font); # add 100 pixels to height
   }
   
 }
