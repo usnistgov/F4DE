@@ -41,6 +41,7 @@ use Data::Dumper;
 my $key_KeyColumnTxt   = "KeyColumnTxt";
 my $key_SortRowKeyTxt   = "SortRowKeyTxt";
 my $key_SortColKeyTxt   = "SortColKeyTxt";
+my $key_TxtPrefix =       "TxtPrefix";
 
 ## CSV
 my $key_KeyColumnCsv   = "KeyColumnCsv";
@@ -103,6 +104,7 @@ sub new {
   $self->{Properties}->addProp($key_KeyColumnTxt,   "Keep", ("Keep", "Remove"));
   $self->{Properties}->addProp($key_SortRowKeyTxt,   "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->{Properties}->addProp($key_SortColKeyTxt,   "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_TxtPrefix,       "", ());
 
   ## CSV
   $self->{Properties}->addProp($key_KeyColumnCsv,   "Keep", ("Keep", "Remove"));
@@ -575,6 +577,8 @@ sub renderByType(){
 sub renderTxtTable(){
 #<<<<<<< AutoTable.pm
   my ($self, $gap) = @_;
+  my $prefix = $self->{Properties}->getValue($key_TxtPrefix);
+
   
   ### Make sure there is data.   If there isn't report nothing exists
   my @_da = keys %{ $self->{data} };
@@ -606,6 +610,7 @@ sub renderTxtTable(){
   my @nodeSet;
   MMisc::error_quit("Internal Error: No levels defined") if ($levels < 1);
   for (my $level=0; $level < $levels; $level++){
+    $out .= $prefix;
     ### Render the row data
     if ($k1c){
       for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
@@ -634,20 +639,9 @@ sub renderTxtTable(){
       $out .= "|" if ($node < @nodeSet - 1);	    
     }
     $out .= "|\n";
-##=======
-##  my @IDs = $self->{render}{colIDs};
-##  my $levels = $self->{render}{colLabelLevels};
-##  my @nodeSet;
-##  MMisc::error_quit("Internal Error: No levels defined") if ($levels < 1);
-##  for (my $level=0; $level < $levels; $level++){
-##    ### Render the row data
-##    for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
-##      $out .= $self->_centerJust("", $self->{render}{rowLabelWidth}->[$rowLevel]);    
-##      $out .= $self->_centerJust("", $gap); 
-##>>>>>>> 1.3
   }
-#<<<<<<< AutoTable.pm
   ### The separator
+  $out .= $prefix;
   if ($k1c){
     for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
       $out .= $self->_nChrStr($self->{render}{rowLabelWidth}->[$rowLevel] + $gap, "-");
@@ -655,24 +649,7 @@ sub renderTxtTable(){
     $out .= "+";
   } else {
     $out .= "|";
-##=======
-##    $out .= "|";
-##    
-##    ### Render the col data
-##    my $tree = $self->{render}{colLabelHeir}; 
-##    @nodeSet = @{ $tree->{nodes} };
-##    
-##    my $searchLevel = $level;
-##    while ($searchLevel > 0){
-##      my @stack = @nodeSet;
-##      @nodeSet = ();
-##      foreach my $nd(@stack){ 
-##	push @nodeSet, @{ $nd->{nodes} };
-##      }
-##      $searchLevel --;
-##>>>>>>> 1.3
   }
-#<<<<<<< AutoTable.pm
   for (my $node=0; $node<@nodeSet; $node++) {
     $out .= "" . $self->_nChrStr($nodeSet[$node]{width},"-") . "+";
   }    
@@ -684,14 +661,14 @@ sub renderTxtTable(){
     push @colIDs, $nd->{subs}[0];
   }
   #    print "ColIDs ".join(" ",@colIDs)."\n";
-#    print join(" ",@colIDs)."\n";
+  #    print join(" ",@colIDs)."\n";
   my $rowSort = $self->{Properties}->getValue($key_SortRowKeyTxt);
   my @rowIDs = $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $rowSort,
 					  $self->{Properties}->getValue($key_KeepRowsInOutput));
-#    print join(" ",@rowIDs)."\n";
-#<<<<<<< AutoTable.pm
+  #    print join(" ",@rowIDs)."\n";
   my @lastRowLabel = ();
   foreach my $rowIDStr (@rowIDs) {
+    $out .= $prefix;
     ### Render the row header column 
     if ($k1c){
       my @ids = _safeSplit("|", $rowIDStr);
@@ -710,37 +687,6 @@ sub renderTxtTable(){
 	}
 	
 	$out .= $self->_leftJust($print ? $ids[$rowLevel] : "", $self->{render}{rowLabelWidth}->[$rowLevel]);    
-##=======
-##  my @lastRowLabel = ();
-##  foreach my $rowIDStr (@rowIDs) {
-###	if (! $r1c) {
-###	    for (my $c=1; $c<=$numRowLev; $c++) {
-###	    for (my $c=1; $c<=1; $c++) {
-###		$out .= $self->_leftJust($rowIDStr, $maxRowLabWidth);
-###	    }
-###	    $out .= "|";
-###	}
-##    ### Render the row header column 
-##    if (1){
-##      my @ids = split(/\|/, $rowIDStr);
-##      my $print = 1;
-##      for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
-##	$lastRowLabel[$rowLevel] = "" if (! defined($lastRowLabel[$rowLevel]));
-##	
-##	$print = 1;
-##	if ($lastRowLabel[$rowLevel] eq $ids[$rowLevel]){
-##	  $print = 0;
-##	} else {
-##	  ### if we print a level, then print all levels below
-##	  for (my $trl=$rowLevel+1; $trl < @{ $self->{render}{rowLabelWidth} }; $trl++){
-##	    $lastRowLabel[$trl] = "";
-##	  }
-##	}
-##	
-##	$out .= $self->_leftJust($print ? $ids[$rowLevel] : "", $self->{render}{rowLabelWidth}->[$rowLevel]);    
-##>>>>>>> 1.3
-#		$out .= $self->_leftJust("", $gap) if ($rowLevel != 0);
-#<<<<<<< AutoTable.pm
 	$out .= $self->_leftJust("", $gap);
 	
 	$lastRowLabel[$rowLevel] = $ids[$rowLevel];
@@ -755,21 +701,6 @@ sub renderTxtTable(){
   }   
   
   $out;
-###=======
-###	$out .= $self->_leftJust("", $gap);
-###	
-###	$lastRowLabel[$rowLevel] = $ids[$rowLevel];
-###      }
-###      $out .= "|";
-###    }
-###    for (my $node=0; $node<@nodeSet; $node++) {
-###      $out .= " " . $self->_rightJust($self->{data}{&__getLID($rowIDStr, $nodeSet[$node]{subs}[0])}, $nodeSet[$node]{width} - 2) . " |";
-###    }
-###    
-###    $out .= "\n";
-###  }   
-###  $out;
-###>>>>>>> 1.3
 }
 
 ##########
