@@ -301,23 +301,18 @@ sub _parseOptions{
   $self->{gnuplotPROG} = $options->{gnuplotPROG} if (exists($options->{gnuplotPROG}));
   $self->{pointSize} = $options->{PointSize} if (exists($options->{PointSize}));
 
-  if (exists($options->{ColorScheme})){
-    if (! $self->{props}->setValue("ColorScheme", $options->{ColorScheme})){
-      die "Error: DET option ColorScheme illegal. ".$self->{props}->get_errormsg();
-    }
-    $self->{colors}->{colorRGB} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{colorRGB};
-    $self->{colors}->{ISORatioLineStyle}{color} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISORatioLineStyle}{color};
-    $self->{colors}->{ISORatioLineStyle}{width} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISORatioLineStyle}{width};
-    $self->{colors}->{ISOCostLineStyle}{color} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISOCostLineStyle}{color};
-    $self->{colors}->{ISOCostLineStyle}{width} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISOCostLineStyle}{width};
-    $self->{colors}->{DETFont} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{DETFont}{($self->{HD} ? "hd" : "normal")};
-#    if ($self->{props}->getValue("ColorScheme") eq "grey"){
-#      $self->{colorsRGB} = [ ("rgb \"#000000\"", "rgb \"#c0c0c0\"", "rgb \"#909090\"", "rgb \"#606060\"") ];    
-#    } elsif ($self->{props}->getValue("ColorScheme") eq "color"){
-#      $self->{colorsRGB} = [ (2.1.100) ];    
-#    }
-    
-  }  
+  if (! exists($options->{ColorScheme})){
+    $options->{ColorScheme} = "color";
+  }
+  if (! $self->{props}->setValue("ColorScheme", $options->{ColorScheme})){
+    die "Error: DET option ColorScheme illegal. ".$self->{props}->get_errormsg();
+  }
+  $self->{colors}->{colorRGB} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{colorRGB};
+  $self->{colors}->{ISORatioLineStyle}{color} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISORatioLineStyle}{color};
+  $self->{colors}->{ISORatioLineStyle}{width} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISORatioLineStyle}{width};
+  $self->{colors}->{ISOCostLineStyle}{color} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISOCostLineStyle}{color};
+  $self->{colors}->{ISOCostLineStyle}{width} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISOCostLineStyle}{width};
+  $self->{colors}->{DETFont} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{DETFont}{($self->{HD} ? "hd" : "normal")};
 
   if (exists($options->{CurveLineStyle})){
     if (! $self->{props}->setValue("CurveLineStyle", $options->{CurveLineStyle})){

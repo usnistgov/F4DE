@@ -120,6 +120,7 @@ my $HD = 0;
 my $AutoAdapt = 0;
 my $verbose = 0;
 my @perfAtFixedDefs = ();
+my ($smooth, $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions) = (undef, undef, undef, undef);
 
 # Variables for Brad's hacks.
 my $sortBy = undef;
@@ -128,7 +129,6 @@ my $firstSet = "";
 my $secondSetSize = 10;
 my $secondSet = "";
 my $restSet = "";
-my ($smooth, $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions) = (undef, undef, undef, undef);
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
@@ -280,8 +280,9 @@ foreach my $directive (@plotControls){
   my $intRegex = '\d*';
 
   &vprint("[*] Processing directive \'$directive\'\n");
-  if ($directive =~ /ColorScheme=gr[ae]y/){
-    $options{ColorScheme} = "grey";
+  if ($directive =~ /ColorScheme=(color|colorPresentation|gr[ae]y)$/){
+    $options{ColorScheme} = $1;
+    $options{ColorScheme} =~ s/gray/grey/;;
   } elsif ($directive =~ /PointSize=(\d+)/){
     $options{PointSize} = $1;
   } elsif ($directive =~ /PointSetAreaDefinition=(Area|Radius)/){
@@ -317,9 +318,20 @@ foreach my $directive (@plotControls){
     push @{ $options{PerfBox} }, \%ht;
   } elsif ($directive =~ /smooth=(\d+),(\d+),(\d+)$/){
     ($smooth, $smoothWindowSize, $targExtraDecisions, $nonTargExtraDecisions) = (1, $1, $2, $3);    
+  } elsif ($directive =~ /Font=(.+)$/){
+    $options{DETFont} = $1;
+  } elsif ($directive =~ /ISORatioLineStyle=([\da-fA-F]{6}|),(\d+|)$/){
+    my ($one, $two) = ($1, $2);
+    $options{ISORatioLineColor} = $one if ($one ne "");
+    $options{ISORatioLineWidth} = $two if ($two ne "");
+  } elsif ($directive =~ /ISOMetricLineStyle=([\da-fA-F]{6}|),(\d+|)$/){ 
+    my ($one, $two) = ($1, $2);
+    $options{ISOCostLineColor} = $one if ($one ne "");
+    $options{ISOCostLineWidth} = $two if ($two ne "");
   } else {
     print "Warning: Unknown plot directive /$directive/\n";
   }
+#  print Dumper(\%options);
 }
 
 if (defined($axisScales))
@@ -835,7 +847,13 @@ The B<plotControl> options provides access to fine control the the DET curve dis
 
 /KeySpacing=<FLOAT>/ -> Sets the inter-line spaces in the key to the float.  Default is 0.7
 
-/ColorScheme=grey/  ->  Sets the color scheme to greyscale.
+/ColorScheme=grey/  ->  Sets the color scheme to either (grey|color|colorPresentatio).
+
+/Font=<GNUPLOT_PNG_FONT_STRING>/  ->  Sets the PNG font to the value.  NOTE: There is no syntax checking.  possibilities are "medium", "font arial 20".
+
+/ISOMetricLineStyle=<RRGGBB>,<D>  -> Sets the color of the ISO Metric lines to the RGB color with width <D>.  Either or both can be omitted to use the default.
+
+/ISOMRatioLineStyle=<RRGGBB>,<D>  -> Sets the color of the ISO Ratio lines to the RGB color with width <D>.  Either or both can be omitted to use the default.
 
 /PointSize=\d+/     -> Overrides to default point size to the specified integer.
 
