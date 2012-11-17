@@ -128,9 +128,10 @@ my $pc_check = 0;
 my %pc_check_h = ();
 my $outdir = undef;
 my $trialindex = undef;
+my $audtid = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:                   ST V           h    m   q s uvw    #
+# Used: A                 ST V           h    m   q s uvw    #
 
 my %opt = ();
 GetOptions
@@ -146,6 +147,7 @@ GetOptions
    'Specfile=s'     => \$specfile,
    'outdir=s'       => \$outdir,
    'TrialIndex=s'   => \$trialindex,
+   'AllowUnknowDetectionTrialID' => \$audtid,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -839,8 +841,10 @@ sub check_TrialIDs {
   my $err = &id_check($dbfile, "Unknown TrialID", $db_unknownTID[0], $db_unknownTID[1]);
   return($err) if (! MMisc::is_blank($err));
 
-  my $err = &id_check($dbfile, "Unknown \'detection\' TrialID", $db_detectionTID[0], $db_detectionTID[1]);
-  return($err) if (! MMisc::is_blank($err));
+  if ($audtid == 0) {
+    my $err = &id_check($dbfile, "Unknown \'detection\' TrialID", $db_detectionTID[0], $db_detectionTID[1]);
+    return($err) if (! MMisc::is_blank($err));
+  }
 
   my $err = &id_check($dbfile, "Unknown \'threshold\' EventID", $db_thresholdEID[0], $db_thresholdEID[1]);
   return($err) if (! MMisc::is_blank($err));
@@ -967,7 +971,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version | --man] --Specfile perlEvalfile --TrialIndex index.csv [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--outdir dir] [--quit_if_non_scorable] last_parameter
+Usage: $0 [--help | --version | --man] --Specfile perlEvalfile --TrialIndex index.csv [--Verbose] [--uncompress_dir dir | --work_in_dir dir] [--outdir dir] [--AllowUnknowDetectionTrialID] [--quit_if_non_scorable] last_parameter
 
 Will confirm that a submission file conforms to the 'Submission Instructions', in the Appendices of the 'TRECVid Multimedia Event Detection Evaluation Plan'. The program needs a 'Specfile' to load some of its eval specific definitions.
 
@@ -984,6 +988,7 @@ Only in the '--work_in_dir' case does it become <TEAM>.
   --uncompress_dir  Specify the directory in which the archive file will be uncompressed
   --work_in_dir   Bypass all steps up to and including uncompression and work with files in the directory specified (useful to confirm a submission before generating its archive)
   --outdir        When validating DB content, output generated DB in this directory
+  --AllowUnknowDetectionTrialID  This is only to be used in case the final Reference TrialIndex has less elements than the original given to participants, as it skip the verification for unknown TrialIDs present in submissions
   --quit_if_non_scorable  If for any reason, any submission is non scorable, quit without continuing the check process, instead of adding information to a report printed at the end
 
 Note:
