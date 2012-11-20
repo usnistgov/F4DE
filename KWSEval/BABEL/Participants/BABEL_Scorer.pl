@@ -634,6 +634,16 @@ if ($ltask =~ /KWS/){
                                                   "TokSeg" => "SplitCharText", 
                                                   "Protocol" => "Occur" } 
                       }
+  elsif ($lang eq "104") { $preferredScoring  = { "Set" => "Full",
+                                                  "TokTimes" => "MITLLFA3", 
+                                                  "TokSeg" => "AppenWordSeg", 
+                                                  "Protocol" => "Occur" } 
+                          }
+  elsif ($lang eq "105") { $preferredScoring  = { "Set" => "Full",
+                                                  "TokTimes" => "MITLLFA3", 
+                                                  "TokSeg" => "AppenWordSeg", 
+                                                  "Protocol" => "Occur" } 
+                          }
   elsif ($lang eq "106") { $preferredScoring  = { "Set" => "Full",
                                                   "TokTimes" => "MITLLFA3", 
                                                   "TokSeg" => "AppenWordSeg", 
