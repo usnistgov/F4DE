@@ -226,7 +226,7 @@ DEVAinstall_noman:
 
 KWSEVALDIR=KWSEval
 KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl,KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl,KWSEval-SubmissionChecker/{KWSEval-SubmissionChecker.pl,KWS12-SubmissionChecker.sh}}
-KWSEVALBABEL=BABEL-ssh/Participants/BABEL{_Scorer.pl,12_Scorer.sh}
+KWSEVALBABEL=BABEL/Participants/BABEL{_Scorer.pl,12_Scorer.sh}
 
 KWSEvalinstall:
 	@make KWSEvalinstall_common
@@ -402,8 +402,8 @@ dist_archive_pre_remove:
 ## R_tools
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/R_tools
 ## KWSEval
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL-aaa/Server
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL-ssh/Server
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL-aaa
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Server
 
 create_mans:
 # common
