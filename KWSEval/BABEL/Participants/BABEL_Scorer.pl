@@ -63,7 +63,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("MMisc") {
+foreach my $pn ("MMisc", "KWSEval_SCHelper") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -120,9 +120,10 @@ my $ProcGraph = undef;
 my $sha256 = "";
 my $sctkbindir = "";
 my $sysdesc = "";
+my $eteam = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:    D   H  K    P  ST V      cdef h         rst v     #
+# Used:    DE  H  K    P  ST V      cdef h         rst v     #
 
 my %opt = ();
 GetOptions
@@ -144,6 +145,7 @@ GetOptions
    'Hsha256id=s' => \$sha256,
    'Tsctkbin=s' => \$sctkbindir,
    'tSystemDescription=s' => \$sysdesc,
+   'ExpectedTeamName=s' => \$eteam,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -208,42 +210,9 @@ MMisc::error_quit("Did not find any ECF or TLIST files; will not be able to cont
 
 ########################################
 
-# Expected values
-my $expid_count = 9;
-my @expid_tag;
-my @expid_corpus;
-my @expid_partition;
-my @expid_scase;
-my @expid_task;
-my @expid_trncond;
-my @expid_sysid_beg;
+my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile);
 
-my $tmpstr = MMisc::slurp_file($specfile);
-MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
-  if (! defined $tmpstr);
-eval $tmpstr;
-MMisc::error_quit("Problem during \'SpecFile\' use ($specfile) : " . join(" | ", $@))
-  if $@;
-
-sub __cfgcheck {
-  my ($t, $v, $c) = @_;
-  return if ($c == 0);
-  MMisc::error_quit("Missing or improper datum [$t] in \'SpecFile\' ($specfile)")
-    if ($v);
-}
-
-# EXPID side
-&__cfgcheck("\@expid_tag", (scalar @expid_tag == 0), 1);
-&__cfgcheck("\@expid_partition", (scalar @expid_partition == 0), 1);
-&__cfgcheck("\@expid_scase", (scalar @expid_scase == 0), 1);
-&__cfgcheck("\@expid_task", (scalar @expid_task == 0), 1);
-&__cfgcheck("\@expid_trncond", (scalar @expid_trncond == 0), 1);
-&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0), 1);
-
-my $kwsyear = $expid_tag[0];
-
-my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion) 
-  = &check_name($expid);
+my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $expid);
 MMisc::error_quit($lerr) if (! MMisc::is_blank($lerr));
 
 MMisc::error_quit("Can not score; no usable ECF & TLIST files with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'dbDir\'")
@@ -253,8 +222,6 @@ MMisc::error_quit("Error: Corpus id $lcorpus does not begin with /babel###/")
   if ($lcorpus !~ /^(babel(\d\d\d)).*$/);
 my $languageID = $1;
 my $lang = $2;
-
-#print "($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion) \n";
 
 my @summaryDETS = ();
 
@@ -815,59 +782,6 @@ MMisc::ok_exit();
 
 ############################################################
 
-sub cmp_exp {
-  my ($t, $v, @e) = @_;
-
-  return("$t ($v) does not compare to expected value (" . join(" ", @e) ."). ")
-    if (! grep(m%^$v$%, @e));
-
-  return("");
-}
-
-##
-
-sub check_name {
-  my ($name) = @_;
-
-  my $et = "\'EXP-ID\' not of the form \'${kwsyear}_<TEAM>_<CORPUS>_<PARTITION>_<SCASE>_<TASK>_<TRNCOND>_<SYSID>_<VERSION>\' : ";
-  
-  my ($ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion,
-      @left) = split(m%\_%, $name);
-  
-  return($et . " leftover entries: " . join(" ", @left) . ". ", "")
-    if (scalar @left > 0);
-  
-  return($et ." missing parameters. ", "")
-    if (MMisc::any_blank($ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion));
-  
-  my $err = "";
-  
-  $err .= &cmp_exp($kwsyear, $ltag, @expid_tag);
-  
-  $err .= &cmp_exp("<PARTITION>",  $lpart, @expid_partition);
-  $err .= &cmp_exp("<SCASE>", $lscase, @expid_scase);
-  $err .= &cmp_exp("<TASK>", $ltask, @expid_task);
-  $err .= &cmp_exp("<TRNCOND>", $ltrncond, @expid_trncond);
-  
-  my $b = substr($lsysid, 0, 2);
-  $err .= "<SYSID> ($lsysid) does not start by expected value (" 
-    . join(" ", @expid_sysid_beg) . "). "
-    if (! grep(m%^$b$%, @expid_sysid_beg));
-  
-  $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
-    if ( ($lversion !~ m%^\d+$%) || ($lversion =~ m%^0%) || ($lversion > 199) );
-  # More than 199 submissions would make anybody suspicious ;)
-  
-  return($et . $err, "")
-    if (! MMisc::is_blank($err));
-  
-  vprint(3, "$ltag | <TEAM> = $lteam | <CORPUS> = $lcorpus | <PARTITION> = $lpart | <SCASE> = $lscase | <TASK> = $ltask | <TRNCOND> = $ltrncond | <SYSID> = $lsysid | <VERSION> = $lversion");
-  
-  return("", $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion);
-}
-
-########################################
-
 sub split_corpus_partition {
   my ($f, $e) = @_;
   $f =~ s%$e$%%i;
@@ -952,7 +866,7 @@ sub vprint {
 ############################################################
 
 sub set_usage {
-  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] --Specfile specfile --expid EXPID --sysfile kwslist --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]] [--fileCreate file [--fileCreate file [...]]]\n";
+  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--ExpectedTeamName TEAM] --Specfile specfile --expid EXPID --sysfile kwslist --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]] [--fileCreate file [--fileCreate file [...]]]\n";
   $usage .= "\n";
   $usage .= "Will score a submission file against data present in the dbDir.\n";
   $usage .= "\nThe program needs a \'dbDir\' to load some of its eval specific definitions; this directory must contain pairs of <CORPUSID>_<PARTITION> \".ecf.xml\" and \".kwlist.xml\" files that match the component of the EXPID to confirm expected data validity, as well as a <CORPUSID>_<PARTITION> directory containing reference data needed for scoring.\n";
@@ -963,6 +877,7 @@ sub set_usage {
   $usage .= "  --KWSEval    Location of the KWSEval tool (default: $kwseval)\n";
   $usage .= "  --DETUtil    Location of the DETUtil tool (default: $detutil)\n";
   $usage .= "  --Hsha256id  SHA256 ID\n";
+  $usage .= "  --ExpectedTeamName  Expected value of TEAM (used to check EXPID content)\n";
   $usage .= "  --Tsctkbin   Location of SCTK's bin directory\n";
   $usage .= "  --Specfile   Configuration file containing EXPID definition\n";
   $usage .= "  --sysfile    KWS list input file\n";
