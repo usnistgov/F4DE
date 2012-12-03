@@ -70,7 +70,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc") {
+foreach my $pn ("MMisc", "KWSEval_SCHelper") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -201,39 +201,7 @@ MMisc::error_quit("Did not find any ECF or TLIST files; will not be able to cont
 
 ########################################
 
-# Expected values
-my $expid_count = 9;
-my @expid_tag;
-my @expid_corpus;
-my @expid_partition;
-my @expid_scase;
-my @expid_task;
-my @expid_trncond;
-my @expid_sysid_beg;
-
-my $tmpstr = MMisc::slurp_file($specfile);
-MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
-  if (! defined $tmpstr);
-eval $tmpstr;
-MMisc::error_quit("Problem during \'SpecFile\' use ($specfile) : " . join(" | ", $@))
-  if $@;
-
-sub __cfgcheck {
-  my ($t, $v, $c) = @_;
-  return if ($c == 0);
-  MMisc::error_quit("Missing or improper datum [$t] in \'SpecFile\' ($specfile)")
-    if ($v);
-}
-
-# EXPID side
-&__cfgcheck("\@expid_tag", (scalar @expid_tag == 0), 1);
-&__cfgcheck("\@expid_partition", (scalar @expid_partition == 0), 1);
-&__cfgcheck("\@expid_scase", (scalar @expid_scase == 0), 1);
-&__cfgcheck("\@expid_task", (scalar @expid_task == 0), 1);
-&__cfgcheck("\@expid_trncond", (scalar @expid_trncond == 0), 1);
-&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0), 1);
-
-my $kwsyear = $expid_tag[0];
+my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile);
 
 my $todo = scalar @ARGV;
 my $done = 0;
@@ -358,7 +326,7 @@ sub check_submission {
   $f =~ s%^.+/%%; # erase the directory part of the file
 
   vprint(2, "Checking EXPID");
-  my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion) = &check_name($f);
+  my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $f);
   return($lerr) if (! MMisc::is_blank($lerr));
 
   if ($mode eq $kwslist_ext) {
@@ -406,62 +374,6 @@ sub ctm_validation {
 }
 
 ##########
-
-sub cmp_exp {
-  my ($t, $v, @e) = @_;
-
-  return("$t ($v) does not compare to expected value (" . join(" ", @e) ."). ")
-    if (! grep(m%^$v$%, @e));
-
-  return("");
-}
-
-##
-
-sub check_name {
-  my ($name) = @_;
-
-  my $et = "\'EXP-ID\' not of the form \'${kwsyear}_<TEAM>_<CORPUS>_<PARTITION>_<SCASE>_<TASK>_<TRNCOND>_<SYSID>_<VERSION>\' : ";
-  
-  my ($ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion,
-      @left) = split(m%\_%, $name);
-  
-  return($et . " leftover entries: " . join(" ", @left) . ". ", "")
-    if (scalar @left > 0);
-  
-  return($et ." missing parameters. ", "")
-    if (MMisc::any_blank($ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion));
-  
-  my $err = "";
-  
-  $err .= &cmp_exp($kwsyear, $ltag, @expid_tag);
-
-  $err .= " <TEAM> ($lteam) is different from required <TEAM> ($eteam). "
-    if ((defined $eteam) && ($eteam ne $lteam));
-  
-  $err .= &cmp_exp("<PARTITION>",  $lpart, @expid_partition);
-  $err .= &cmp_exp("<SCASE>", $lscase, @expid_scase);
-  $err .= &cmp_exp("<TASK>", $ltask, @expid_task);
-  $err .= &cmp_exp("<TRNCOND>", $ltrncond, @expid_trncond);
-  
-  my $b = substr($lsysid, 0, 2);
-  $err .= "<SYSID> ($lsysid) does not start by expected value (" 
-    . join(" ", @expid_sysid_beg) . "). "
-    if (! grep(m%^$b$%, @expid_sysid_beg));
-  
-  $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
-    if ( ($lversion !~ m%^\d+$%) || ($lversion =~ m%^0%) || ($lversion > 199) );
-  # More than 199 submissions would make anybody suspicious ;)
-  
-  return($et . $err, "")
-    if (! MMisc::is_blank($err));
-  
-  vprint(3, "$ltag | <TEAM> = $lteam | <CORPUS> = $lcorpus | <PARTITION> = $lpart | <SCASE> = $lscase | <TASK> = $ltask | <TRNCOND> = $ltrncond | <SYSID> = $lsysid | <VERSION> = $lversion");
-  
-  return("", $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion);
-}
-
-####
 
 sub run_ValidateTM {
   my ($exp, $ctm, $ecf, $stm) = @_;
