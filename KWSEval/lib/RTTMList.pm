@@ -60,6 +60,7 @@ sub new {
   my $charSplitText = shift;
   my $charSplitTextNotASCII = shift;
   my $charSplitTextDeleteHyphens = shift;
+  my $bypassCoreText = MMisc::iuv($_[0], 0); 
   
   my $self = TranscriptHolder->new();
   
@@ -73,8 +74,9 @@ sub new {
   $self->{charSplitTextNotASCII} = $charSplitTextNotASCII;
   $self->{charSplitTextDeleteHyphens} = $charSplitTextDeleteHyphens;
 
-  # For a quick file rewrite
+  # For a quick file rewrite (if not bypassed)
   $self->{CoreText} = "";
+  $self->{bypassCoreText} = $bypassCoreText;
   
   # Added to avoid overwriting in file load
   $self->{LoadedFile} = 0;
@@ -393,7 +395,8 @@ sub loadSSVFile {
       next;
     }
 
-    $core_text .= "$line\n";
+    $core_text .= "$line\n"
+      if ($self->{bypassCoreText} == 0);
   }
   close RTTM;
 
@@ -409,7 +412,10 @@ sub loadSSVFile {
 sub saveFile {
   my ($self, $fn) = @_;
   
-  my $to = MMisc::is_blank($fn) ? $self->{FILE} : $fn;
+  MMisc::error_quit("Can not write file ($fn), since file was loaded with the \'bypassCoreText\' option on")
+      if ($self->{bypassCoreText} != 0);
+ 
+ my $to = MMisc::is_blank($fn) ? $self->{FILE} : $fn;
   # Re-adapt the file name to remove all ".memdump" (if any)
   $to = &_rm_mds($to);
 
@@ -513,6 +519,7 @@ sub load_MemDump_File {
   $self->_md_clone_value($object, 'LEXBYSPKR');
   $self->_md_clone_value($object, 'NOSCORE');
   $self->_md_clone_value($object, 'TERMLKUP');
+  $self->_md_clone_value($object, 'bypassCoreText');
 
   # recreate NEXT links from stripped down version
   $self->__linkEntries();
