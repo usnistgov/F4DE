@@ -110,7 +110,7 @@ MMisc::error_quit("An RTTM file must be set\n\n$usage\n") if($RTTMfile eq "");
 MMisc::error_quit("An Term file must be set\n\n") if($Termfile eq "");
 MMisc::error_quit("An Output file must be set") if($Outfile eq "");
 
-my $RTTM = new RTTMList($RTTMfile, "", "", "", 0, 0, 0);
+my $RTTM = new RTTMList($RTTMfile, "", "", "", 0, 0, 0, 1); # bypassCoreText -> no RTTM text rewrite possible
 my $TERM = new TermList($Termfile, 0, 0, 0);
 my $TERMOUT = new_empty TermList($Outfile, $TERM->{ECF_FILENAME}, $TERM->{VERSION}, $TERM->{LANGUAGE}, $TERM->getEncoding(), $TERM->getCompareNormalize());
 
