@@ -129,7 +129,7 @@ my $TERM = new TermList($Termfile, 0, 0, 0);
 $err = MMisc::check_file_r($RTTMfile);
 MMisc::error_quit("Problem with RTTM File ($RTTMfile): $err")
   if (! MMisc::is_blank($err));
-my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(), $TERM->getEncoding(), 0, 0, 0);
+my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), $TERM->getCompareNormalize(), $TERM->getEncoding(), 0, 0, 0, 1); # bypassCoreText -> no RTTM text rewrite possible
 
 my $STDOUT = new_empty KWSList($Outfile);
 

@@ -196,7 +196,7 @@ if (@rttms > 0){
     my $quantKey = "QuantizedRefOccurences:$rttm";
     my $rttm = new RTTMList($rttm, $TermList->getLanguage(),
                             $TermList->getCompareNormalize(), $TermList->getEncoding(), 
-                            $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);  
+                            $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens, 1); # bypassCoreText -> no RTTM text rewrite possible  
     my @terms = keys %{ $TermList->{TERMS} };
     my $n = 0;
     foreach my $termid (keys %{ $TermList->{TERMS} }) {

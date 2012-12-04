@@ -356,7 +356,7 @@ MMisc::error_quit("Problem with RTTM File ($RTTMfile): $err")
   if (! MMisc::is_blank($err));
 print "Loading RTTM File $RTTMfile\n";
 my $RTTM = new RTTMList($RTTMfile, $TERM->getLanguage(), 
-                        $TERM->getCompareNormalize(), $TERM->getEncoding(), $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);
+                        $TERM->getCompareNormalize(), $TERM->getEncoding(), $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens, 1); # bypassCoreText -> no RTTM text rewrite possible
 #print $RTTM->dumper();
 
 # clean the filter for terms
