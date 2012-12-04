@@ -140,7 +140,8 @@ my $TERM = new TermList($TERMfile, 0, 0, 0);
 my $ECF = new KWSecf($ECFfile);
 my $RTTM = (! MMisc::is_blank($RTTMfile)) ? 
   new RTTMList($RTTMfile, $TERM->getLanguage(), 
-               $TERM->getCompareNormalize(), $TERM->getEncoding()) 
+               $TERM->getCompareNormalize(), $TERM->getEncoding()
+               undef, undef, undef, (! MMisc::is_blank($mddir)) ? 0 : 1) # only 'bypassCoreText' (ie not RTTM-rewrite possible) if we are NOT going to rewrite the file out
   : undef;
 
 my %ListTerms;
