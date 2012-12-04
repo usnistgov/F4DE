@@ -46,6 +46,7 @@ use MErrorH;
 sub new {
   my $class = shift;
   my $ctmfile = shift;
+  my $bypassCoreText = MMisc::iuv($_[0], 0); 
 
   my $errorh = new MErrorH('KWSEvalCTM');
   my $errorv = $errorh->error();
@@ -54,7 +55,8 @@ sub new {
     {
      FILE       => $ctmfile,
      content    => undef,
-     CoreText   => "", # for a quick rewrite
+     CoreText   => "", # for a quick rewrite (if not bypassed)
+     bypassCoreText   => $bypassCoreText,
      LoadedFile => 0, # to avoid overwriting
      errorh     => $errorh,
      errorv     => $errorv, # cache information
@@ -87,7 +89,8 @@ sub loadSSVFile {
   while (my $line = <FILE>) {
     $linec++;
     chomp($line);
-    $core_text .= "$line\n";
+    $core_text .= "$line\n"
+      if ($self->{bypassCoreText} == 0);
 
     $line =~ s%\;\;.*$%%;
     next if (MMisc::is_blank($line));
@@ -165,6 +168,9 @@ sub loadSSVFile {
 
 sub saveFile {
   my ($self, $fn) = @_;
+
+  MMisc::error_quit("Can not write file ($fn), since file was loaded with the \'bypassCoreText\' option on")
+      if ($self->{bypassCoreText} != 0);
   
   my $to = MMisc::is_blank($fn) ? $self->{FILE} : $fn;
   # Re-adapt the file name to remove all ".memdump" (if any)
@@ -246,7 +252,10 @@ sub load_MemDump_File {
 
   my $object = MMisc::load_memory_object($file, $MemDump_FileHeader_gz);
 
-  ## TO ADD
+  $self->_md_clone_value($object, 'FILE');
+  $self->_md_clone_value($object, 'content');
+  $self->_md_clone_value($object, 'CoreText');
+  $self->_md_clone_value($object, 'bypassCoreText');
 
   $self->{LoadedFile} = 1;
 
@@ -256,7 +265,7 @@ sub load_MemDump_File {
 #####
 
 sub loadFile {
-  my ($self, $ctmFile) = @_;
+  my ($self, $ctmFile, $bypassCoreText) = @_;
 
   return($self->_set_error_and_return("Refusing to load a file on top of an already existing object", 0))
     if ($self->{LoadedFile} != 0);
