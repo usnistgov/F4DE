@@ -120,7 +120,7 @@ if (! MMisc::is_blank($CTMfile)) {
   my $err = MMisc::check_file_r($CTMfile);
   MMisc::error_quit("Problem with \'--CTM\' file ($CTMfile): $err")
       if (! MMisc::is_blank($err));
-  $CTM = new KWSEvalCTM($CTMfile);
+  $CTM = new KWSEvalCTM($CTMfile, 1);
   MMisc::error_quit("Problem with CTM file: " . $CTM->get_errormsg())
       if ($CTM->error());
 }
@@ -131,7 +131,7 @@ if (! MMisc::is_blank($STMfile)) {
   my $err = MMisc::check_file_r($STMfile);
   MMisc::error_quit("Problem with \'--STM\' file ($STMfile): $err")
       if (! MMisc::is_blank($err));
-  $STM = new KWSEvalSTM($STMfile);
+  $STM = new KWSEvalSTM($STMfile, 1);
   MMisc::error_quit("Problem with STM file: " . $STM->get_errormsg())
       if ($STM->error());
 }
