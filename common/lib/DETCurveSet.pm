@@ -990,41 +990,45 @@ sub renderDETCompare
 	return($at->renderTxtTable(2), $conclusion, \@list_isopoints);
 }
 
-sub renderIsoRatioIntersection
-{
-	my ($self) = @_;
-	
-	my $at = new AutoTable();
-	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove"} );
+sub renderIsoRatioIntersection {
+  my $self = shift @_;
+  my $mode = MMisc::iuv($_[0], 'text'); 
 
+  my $at = new AutoTable();
+  $at->setProperties( { "KeyColumnHTML" => "Remove", "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove"} );
+  
   for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
     my $det = $self->{DETList}[$d]->{DET};
     my $key = $self->{DETList}[$d]->{KEY};
+    
+    foreach my $cof ( sort {$a <=> $b} @{ $det->{ISOLINE_COEFFICIENTS} } ) {		
+      if(defined($det->{ISOPOINTS}{$cof})) {
+        my $rowtitle = "$key|$cof";
+        $at->addData($det->{LINETITLE}, "DET Title", $rowtitle);
+        $at->addData(sprintf("%.4f", $cof), "Coef", $rowtitle);
+        $at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MFA}), $det->getMetric()->errFALab(),   $rowtitle);
+        $at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS}), $det->getMetric()->errMissLab(), $rowtitle);
+        $at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_COMB}), $det->getMetric()->combLab(), $rowtitle);
+      }
+    }
+  }
  
-		foreach my $cof ( sort {$a <=> $b} @{ $det->{ISOLINE_COEFFICIENTS} } )
-		{		
-			if(defined($det->{ISOPOINTS}{$cof}))
-			{
-				my $rowtitle = "$key|$cof";
-				$at->addData($det->{LINETITLE},                                            "DET Title",                     $rowtitle);
-				$at->addData(sprintf("%.4f", $cof),                                        "Coef",                          $rowtitle);
-				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MFA}),   $det->getMetric()->errFALab(),   $rowtitle);
-				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS}), $det->getMetric()->errMissLab(), $rowtitle);
-				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_COMB}),  $det->getMetric()->combLab(),    $rowtitle);
-			}
-		}
-	}
-	
-	return $at->renderTxtTable(2);
+  return($at->renderCSV())
+    if ($mode eq 'csv');
+  
+  return($at->renderHTMLTable())
+    if ($mode eq 'html');
+
+  return $at->renderTxtTable(2);
 }
 
-sub renderPerfForFixedMFA
-{
-	my ($self, $MFAFixedValues) = @_;
-	
-	my $at = new AutoTable();
-	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove"} );
-
+sub renderPerfForFixedMFA {
+  my ($self, $MFAFixedValues) = @_;
+  my $mode = MMisc::iuv($_[2], 'text');
+  
+  my $at = new AutoTable();
+  $at->setProperties( { "KeyColumnHTML" => "Remove", "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove"} );
+  
   for (my $d=0; $d<@{ $self->{DETList} }; $d++) {
     my $det = $self->{DETList}[$d]->{DET};
     my $key = $self->{DETList}[$d]->{KEY};
@@ -1034,14 +1038,20 @@ sub renderPerfForFixedMFA
       my $MFAFixedValuesResults = $det->{FIXED_MFA_VLAUES};
       for (my $i=0; $i<@$MFAFixedValues; $i++){
         my $rowtitle = "$key|$i";
-        $at->addData($det->{LINETITLE},                                        "DET Title",                     $rowtitle);
-  			$at->addData(sprintf("%.4f", $MFAFixedValuesResults->[$i]->{MFA}),   $det->getMetric()->errFALab(),   $rowtitle);
-    		$at->addData(sprintf("%.4f", $MFAFixedValuesResults->[$i]->{InterpMMiss}), $det->getMetric()->errMissLab(), $rowtitle);
+        $at->addData($det->{LINETITLE}, "DET Title", $rowtitle);
+        $at->addData(sprintf("%.4f", $MFAFixedValuesResults->[$i]->{MFA}), $det->getMetric()->errFALab(),   $rowtitle);
+        $at->addData(sprintf("%.4f", $MFAFixedValuesResults->[$i]->{InterpMMiss}), $det->getMetric()->errMissLab(), $rowtitle);
       }
     } 
   } 
+  
+  return($at->renderCSV())
+    if ($mode eq 'csv');
+  
+  return($at->renderHTMLTable())
+    if ($mode eq 'html');
 
-	return $at->renderTxtTable(2);
+  return $at->renderTxtTable(2);
 }
 
 sub sort {
