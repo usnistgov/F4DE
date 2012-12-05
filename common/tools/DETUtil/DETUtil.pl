@@ -563,19 +563,24 @@ if ($sortBy) {
     $ds->sort($sortBy);
 }
 
-if($IsoRatioStatisticFile ne "")
-{
+if($IsoRatioStatisticFile ne "") {
+  my $lmode = 'text';
+  $lmode = 'csv' if ($IsoRatioStatisticFile =~ m%\.csv$%i);
+  $lmode = 'html' if ($IsoRatioStatisticFile =~ m%\.html$%i);
   vprint ("[*] Performing 'renderIsoRatioIntersection'\n");
-	open(FILESTATS, ">", $IsoRatioStatisticFile) or die "$!";
-	print FILESTATS $ds->renderIsoRatioIntersection();
-	close(FILESTATS)
+  open(FILESTATS, ">", $IsoRatioStatisticFile) or die "$!";
+  print FILESTATS $ds->renderIsoRatioIntersection($lmode);
+  close(FILESTATS)
 }
 
 if ($MFAFixedValuesReport ne ""){
+  my $lmode = 'text';
+  $lmode = 'csv' if ($MFAFixedValuesReport =~ m%\.csv$%i);
+  $lmode = 'html' if ($MFAFixedValuesReport =~ m%\.html$%i);
   vprint ("[*] Performing 'Fixed MFA Values Report'\n");
-	open(FILESTATS, ">", $MFAFixedValuesReport) or die "$!";
-	print FILESTATS $ds->renderPerfForFixedMFA(\@MFAFixedValues);
-	close(FILESTATS)
+  open(FILESTATS, ">", $MFAFixedValuesReport) or die "$!";
+  print FILESTATS $ds->renderPerfForFixedMFA(\@MFAFixedValues, $lmode);
+  close(FILESTATS)
 }
 
 if($DetCompare)
@@ -716,7 +721,7 @@ displayKey -> A boolean value for whether or not the SRL will be displayed in th
 
 Output png file.
 
-=item B<-r>, B<--output-ratiostats> F<FILE>
+=item B<-r>, B<--ratiostats> F<FILE>
 
 Output report file containing the intersection coordinates and Combined Cost between the DET Curve and the the Iso-ratio lines.
 
