@@ -59,7 +59,7 @@ $keywordAT->setEncoding($encoding);
 $keywordAT->setCompareNormalize($normalization);
 MMisc::error_quit("Problem loading CSV $tlistfile into Auto Table: " . $keywordAT->get_errormsg())
       if (! $keywordAT->loadCSV($tlistfile));
-print "mesg ". $keywordAT->get_errormsg()."\n";
+print "   Load mesg ". $keywordAT->get_errormsg()."\n";
 print "   ".scalar($keywordAT->getRowIDs("AsAdded"))." rows loaded \n";
 
 my $inTermList;
