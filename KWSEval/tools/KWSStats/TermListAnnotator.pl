@@ -50,6 +50,7 @@ my $selectAttrValue = undef;
 my $charSplitText = 0;
 my $charSplitTextNotASCII = 0;
 my $charSplitTextDeleteHyphens = 0;
+my $charTextRegex = undef;
 
 my @textPrefilters = ();
 my @deleteAttr = ();
@@ -101,6 +102,8 @@ foreach my $filt(@textPrefilters){
     $charSplitTextNotASCII = 1;
   } elsif ($filt =~ /^deletehyphens$/i){
     $charSplitTextDeleteHyphens = 1;
+  } elsif ($filt =~ /^regex=(.+)$/i){
+    $charTextRegex = $1
   } else {
     MMisc::error_quit("Error: -zprefilterText option /$filt/ not defined.  Aborting.");
   }
@@ -111,7 +114,8 @@ print "Warning: -zprefilterText deleteHyphens ignored because -z charsplit not u
 ############  READY TO BEGIN ######################
 
 #Load TermList
-$TermList = new TermList($inTlist, $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);
+#$TermList = new TermList($inTlist, $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);
+$TermList = new TermList($inTlist, 0, 0, 0);
 ### Apply the attrValue
 if (defined($attrValueStr)){
  foreach my $termid (keys %{ $TermList->{TERMS} }) {
@@ -127,65 +131,84 @@ if ($makeTextSplitChars){
    }
 }
 
+if (defined $charTextRegex){
+   print "Applying text filter $charTextRegex\n";
+   die "Unable to parse regex $charTextRegex" unless ($charTextRegex =~ /s\/(.+)\/(.*)\/$/);
+   my ($p1, $p2, $p3) = ($1, $2, $3);
+   foreach my $termid (keys %{ $TermList->{TERMS} }) {
+     $TermList->{TERMS}{$termid}{TEXT} =~ s/$p1/$p2/g;
+   }
+}
+
 my %annotations = ();
 #Build file annots
 foreach my $file (@annotFiles) {
   open(AFILE, $file) or MMisc::error_quit("Unable to open file '$file'");
   binmode(AFILE, $TermList->getPerlEncodingString()) if ($TermList->{ENCODING} ne "");
 
+  my $nonFoundTerms = 0;
   while (<AFILE>) {
     chomp;
     my @data = split(/,/,$_);
     my ($term) = shift(@data);
     $term =~ s/^\s+//; $term =~ s/\s+$//;
-    while (@data > 0){
-      die "Error: Inconsistent attribute value pairs in '$_'"  if (@data < 2);
-      my $attr = shift(@data);
-      my $val = shift(@data);
+    my $termRec = undef;
+    if (! $charSplitText){
+      $termRec = $TermList->getTermFromText($term);
+    } else {
+      my $normTerm = $TermList->charSplitText($term, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);
+      $termRec = $TermList->getTermFromTextAfterCharSplit($normTerm, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);
+    }
+    if (defined($termRec)){
+      while (@data > 0){
+        die "Error: Inconsistent attribute value pairs in '$_'"  if (@data < 2);
+        my $attr = shift(@data);
+        my $val = shift(@data);
   
-      $attr =~ s/^\s+//; $attr =~ s/\s+$//;
-      $val =~ s/^\s+//; $val =~ s/\s+$//;
-      if (! defined($annotations{$term}{$attr})){
-        $annotations{$term}{$attr} = $val;
-      } else {
-        if (! $ReduceDuplicateInfo){
-          $annotations{$term}{$attr} .= ",".$val;
+        $attr =~ s/^\s+//; $attr =~ s/\s+$//;
+        $val =~ s/^\s+//; $val =~ s/\s+$//;
+        my $existingVal = $termRec->getAttrValue($attr);
+        if (!defined($existingVal)){
+          $termRec->setAttrValue($attr, $val);
         } else {
-          my $re = quotemeta($annotations{$term}{$attr});
-          $re =~ s:\\\|:|:g;  ### Activates the pipes!!!!
-          if ($val !~ /^($re)$/){
-            $annotations{$term}{$attr} .= ",".$val;
-          }
+          $termRec->setAttrValue($attr, $existingVal . "|" . $val);
         }
-      }
+      } 
+    } else {
+      print "Warning: Term record not found for line /$_/\n";
+      $nonFoundTerms ++;
     }
   }
+  print "Warning: $nonFoundTerms terms not found by text\n" if ($nonFoundTerms > 0);
   close AFILE;
 }
 
 #Run annotation functions
-foreach my $termid (keys %{ $TermList->{TERMS} }) {
-  my $text = $TermList->{TERMS}{$termid}{TEXT};
-  if ($character != 0) {
-    $annotations{$text}{"Characters"} = &charactersOfTerm($text);
+if ($character != 0) {
+  print "Computing character counts\n";
+  foreach my $termid (keys %{ $TermList->{TERMS} }) {
+    my $term = $TermList->{TERMS}{$termid};
+    $term->setAttrValue("Characters", &charactersOfTerm($term->getAttrValue("TEXT")));
   }
-  if ($ngram != 0) {
-    $annotations{$text}{"NGram Order"} = &ngramOfTerm($text);
+}
+if ($ngram != 0) {
+  print "Computing N-gram counts\n";
+  foreach my $termid (keys %{ $TermList->{TERMS} }) {
+    my $term = $TermList->{TERMS}{$termid};
+    $term->setAttrValue("NGram Order", &ngramOfTerm($term->getAttrValue("TEXT")));
   }
 }
 
-#Add Annotations
-foreach my $termid (keys %{ $TermList->{TERMS} }) {
-  foreach my $key (keys %{ $annotations{$TermList->{TERMS}{$termid}{TEXT}} }) {
-    if (!defined($TermList->{TERMS}{$termid}->getAttrValue($key))){
-      $TermList->{TERMS}{$termid}->setAttrValue($key, $annotations{$TermList->{TERMS}{$termid}{TEXT}}{$key});
-    } else {
-      $TermList->{TERMS}{$termid}->setAttrValue($key, 
-                         $TermList->{TERMS}{$termid}->getAttrValue($key) . "|" .
-                         $annotations{$TermList->{TERMS}{$termid}{TEXT}}{$key});
-    }
-  }
-}
+### Replace original texts and Removing the ORIGTEXT attribute
+#foreach my $termid (keys %{ $TermList->{TERMS} }) {
+#  my $term = $TermList->getTermFromID($termid);
+#  my $origText = $term->getAttrValue("ORIGTEXT");
+#  my $text = $term->getAttrValue("TEXT");
+#  if (defined($origText) && $origText ne $text){
+#    $term->setAttrValue("TEXT", $origText);
+#  }
+#  $term->deleteAttr("ORIGTEXT");  
+#}
 
 ## Add the counts from the RTTMs
 if (@rttms > 0){
