@@ -20,9 +20,10 @@ This file contains instructions on how to set and use the "SubmissionHelper.sh" 
 1) decide on the user name of your team; it must follow the pattern
 "kws-<TEAM>[_<SITE>]" (<TEAM> or <SITE> can not contain - or _)
 
-2) ensure you have a valid SSH public key file (with a non empty
-passphrase of 12 or more characters), as you will need it to provide
-it to NIST for account creation purpose
+2) ensure you have a valid SSH Protocol 2 (using '% ssh_keygen -t dsa'
+or '% ssh_keygen -t rsa') public key file (with a non empty passphrase
+of 12 or more characters), as you will need it to provide it to NIST
+for account creation purpose
 
 3) email 'indus@nist.gov' with:
 - your user, site and team names
