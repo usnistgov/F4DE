@@ -589,7 +589,7 @@ sub set_usage {
 	$tmp .= "  -D, --DET-conditional-curve   Output the Conditional DET Curve.\n";
 	$tmp .= "  -P, --Pooled-DETs             Produce term occurrence DET Curves instead of 'Term Weighted' DETs.\n";
   $tmp .= "  -C, --Clean-DETs-folder       Removes all non-png files from the generated dets folder.\n";
-  $tmp .= "  -c, --csv-of-alignment        Output the alignment CSV.";
+  $tmp .= "  -c, --csv-of-alignment        Output the alignment CSV.\n";
   $tmp .= "  -y, --ytype-of-report-output  Output types of the reports. (TXT,CSV,HTML) (Default is Text)\n";
 	$tmp .= "  -k, --koefcorrect <value>     Value for correct (C).\n";
 	$tmp .= "  -K, --Koefincorrect <value>   Value for incorrect (V).\n";
@@ -604,6 +604,7 @@ sub set_usage {
   $tmp .= "                                  deleteHyphens -> treat hyphens like required whitespace. (no effect without charSplit)\n";
 	$tmp .= "\n";
 	$tmp .= "Other options:\n";
+	$tmp .= "  -a, --articulatedDET     Compute the faster articulated DET curves.\n";
 	$tmp .= "\n";
 
   return($tmp);
