@@ -212,7 +212,7 @@ MMisc::error_quit("Did not find any ECF or TLIST files; will not be able to cont
 
 my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile);
 
-my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $expid);
+my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $expid, $verb);
 MMisc::error_quit($lerr) if (! MMisc::is_blank($lerr));
 
 MMisc::error_quit("Can not score; no usable ECF & TLIST files with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'dbDir\'")
