@@ -264,6 +264,21 @@ sub getTermFromText
     return(undef);
 }
 
+sub getTermFromTextAfterCharSplit
+{
+    my ($self, $termText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens) = @_;
+
+
+    foreach my $id(keys %{ $self->{TERMS} }){
+      $self->{TERMS}{$id}{_INTERNAL_CH} = $self->charSplitText($self->{TERMS}{$id}{TEXT}, $charSplitTextNotASCII, $charSplitTextDeleteHyphens)
+        if (! exists($self->{TERMS}{$id}{_INTERNAL_CH}));
+      if ($self->{TERMS}{$id}{_INTERNAL_CH} eq $termText){ 
+        return($self->{TERMS}{$id});  
+      }
+    }
+    return(undef);
+}
+
 sub toString
 {
     my ($self) = @_;
@@ -611,7 +626,7 @@ sub get_XMLrewrite {
     $txt .= "    <kwtext>$self->{TERMS}{$termid}->{TEXT}</kwtext>\n";
     my $in = "";
     foreach my $termattrname (sort keys %{ $self->{TERMS}{$termid} }) {
-      next if( ($termattrname eq "TERMID") || ($termattrname eq "TEXT") );
+      next if( ($termattrname eq "TERMID") || ($termattrname eq "TEXT") || $termattrname =~ /_INTERNAL_/);
       $in .= "      <attr>\n";
       $in .= "        <name>$termattrname</name>\n";
       $in .= "        <value>$self->{TERMS}{$termid}->{$termattrname}</value>\n";
