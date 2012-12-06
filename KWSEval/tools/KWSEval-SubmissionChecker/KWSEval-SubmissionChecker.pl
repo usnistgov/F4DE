@@ -326,7 +326,7 @@ sub check_submission {
   $f =~ s%^.+/%%; # erase the directory part of the file
 
   vprint(2, "Checking EXPID");
-  my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $f);
+  my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $f, $verb);
   return($lerr) if (! MMisc::is_blank($lerr));
 
   if ($mode eq $kwslist_ext) {
