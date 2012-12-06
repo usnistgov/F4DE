@@ -103,12 +103,20 @@ sub cmp_exp {
 
 #####
 
+sub vprint {
+  my $verb = shift @_;
+  return if (! $verb);
+  my $s = "********************";
+  print substr($s, 0, shift @_), " ", join("", @_), "\n";
+}
+
+#####
+
 sub check_name {
-  my $kwsyear = shift @_;
-  my $eteam = shift @_;
-  return(&check_name_kws12($kwsyear, $eteam, @_))
+  my ($kwsyear, $eteam, $name, $verb) = @_;
+  return(&check_name_kws12($kwsyear, $eteam, $name, $verb))
     if ($kwsyear eq 'KWS12');
-  return(&check_name_kws13($kwsyear, $eteam, @_))
+  return(&check_name_kws13($kwsyear, $eteam, $name, $verb))
     if ($kwsyear eq 'KWS13');
   MMisc::error_quit("Unknown EXPID name handler for \'$kwsyear\'");
 }
@@ -116,7 +124,7 @@ sub check_name {
 ##
 
 sub check_name_kws12 {
-  my ($kwsyear, $eteam, $name) = @_;
+  my ($kwsyear, $eteam, $name, $verb) = @_;
 
   my $et = "\'EXP-ID\' not of the form \'${kwsyear}_<TEAM>_<CORPUS>_<PARTITION>_<SCASE>_<TASK>_<TRNCOND>_<SYSID>_<VERSION>\' : ";
   
@@ -153,7 +161,7 @@ sub check_name_kws12 {
   return($et . $err, "")
     if (! MMisc::is_blank($err));
   
-  vprint(3, "$ltag | <TEAM> = $lteam | <CORPUS> = $lcorpus | <PARTITION> = $lpart | <SCASE> = $lscase | <TASK> = $ltask | <TRNCOND> = $ltrncond | <SYSID> = $lsysid | <VERSION> = $lversion");
+  &vprint($verb, 3, "$ltag | <TEAM> = $lteam | <CORPUS> = $lcorpus | <PARTITION> = $lpart | <SCASE> = $lscase | <TASK> = $ltask | <TRNCOND> = $ltrncond | <SYSID> = $lsysid | <VERSION> = $lversion");
   
   return("", $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, undef, undef, undef);
 }
@@ -161,7 +169,7 @@ sub check_name_kws12 {
 ##
 
 sub check_name_kws13 {
-  my ($kwsyear, $eteam, $name) = @_;
+  my ($kwsyear, $eteam, $name, $verb) = @_;
 
   my $et = "\'EXP-ID\' not of the form \'${kwsyear}_<TEAM>_<CORPUS>_<PARTITION>_<SCASE>_<TASK>_<LP>_<LR>_<AUD>_<SYSID>_<VERSION>\' : ";
   
@@ -199,7 +207,7 @@ sub check_name_kws13 {
   return($et . $err, "")
     if (! MMisc::is_blank($err));
   
-  vprint(3, "$ltag | <TEAM> = $lteam | <CORPUS> = $lcorpus | <PARTITION> = $lpart | <SCASE> = $lscase | <TASK> = $ltask | <LP> = $llp | <LR> = $llr | <AUD> = $laud | <SYSID> = $lsysid | <VERSION> = $lversion");
+  &vprint($verb, 3, "$ltag | <TEAM> = $lteam | <CORPUS> = $lcorpus | <PARTITION> = $lpart | <SCASE> = $lscase | <TASK> = $ltask | <LP> = $llp | <LR> = $llr | <AUD> = $laud | <SYSID> = $lsysid | <VERSION> = $lversion");
   
   return("", $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, undef, $lsysid, $lversion, $llr, $llp, $laud);
 }
