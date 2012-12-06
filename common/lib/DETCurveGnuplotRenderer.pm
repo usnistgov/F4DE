@@ -61,6 +61,7 @@ sub new
        PointSet => undef,
 #       PerfBox => undef,
        DETLineAttr => undef,
+       labelNum => 1,
        # Control the values on the DET Lines
        DETShowPoint_Actual => 0,
        DETShowPoint_Best => 0,
@@ -138,6 +139,7 @@ sub _initProps{
                                                               "left center", "center center", "right center",
                                                               "left bottom", "center bottom", "right bottom")));
   die "Failed to add property PointSetAreaDefinition" unless ($props->addProp("PointSetAreaDefinition", "Radius", ("Area", "Radius")));
+  die "Failed to add property PlotDETCurves" unless ($props->addProp("PlotDETCurves", "true", ("true", "false")));
   
   $props;
 }
@@ -334,6 +336,12 @@ sub _parseOptions{
   if (exists($options->{DETFont})){
     $self->{colors}->{DETFont} = $options->{DETFont};
   }
+
+  if (exists($options->{PlotDETCurves})) {
+    if (! $self->{props}->setValue("PlotDETCurves", $options->{PlotDETCurves})){
+      die "Error: DET option PlotDETCurves illegal. ".$self->{props}->get_errormsg();
+    }
+  }  
 }
 
 sub thisabs{ ($_[0] < 0) ? $_[0]*(-1) : $_[0]; }
@@ -473,6 +481,22 @@ sub renderUnitTest{
                                    { MMiss => .4,  MFA => .80, pointSize => 8,  pointType => 12, color => "rgb \"#ff0000\"", label => "Point2=12" }, 
                                    { MMiss => .2,  MFA => .05, pointSize => 4,  pointType => 4, color => "rgb \"#ff0000\"", label => "Point2=4" }, 
                                    { MMiss => .2,  MFA => .40, pointSize => 4, pointType => 6, color => "rgb \"#ff0000\"" }, 
+                                   { MMiss => .9,  MFA => .90, pointSize => 1, pointType => 7, color => "rgb \"#ff0000\"", label => "arrow 0",
+                                     arrow => "true", length => .05, angle => 0, justification => "left" }, 
+                                   { MMiss => .9,  MFA => .85, pointSize => 1, pointType => 7, color => "rgb \"#ff0000\"", label => "arrow 45",
+                                     arrow => "true", length => .05, angle => 45, justification => "left" }, 
+                                   { MMiss => .9,  MFA => .80, pointSize => 1, pointType => 7, color => "rgb \"#ff0000\"", label => "arrow 90",
+                                     arrow => "true", length => .05, angle => 90, justification => "center" }, 
+                                   { MMiss => .9,  MFA => .75, pointSize => 1, pointType => 7, color => "rgb \"#ff0000\"", label => "arrow 135",
+                                     arrow => "true", length => .05, angle => 135, justification => "right" }, 
+                                   { MMiss => .9,  MFA => .70, pointSize => 1, pointType => 7, color => "rgb \"#ff0000\"", label => "arrow 180",
+                                     arrow => "true", length => .05, angle => 180, justification => "right" }, 
+                                   { MMiss => .8,  MFA => .75, pointSize => 1, pointType => 7, color => "rgb \"#ff0000\"", label => "arrow 225",
+                                     arrow => "true", length => .05, angle => 225, justification => "right" }, 
+                                   { MMiss => .8,  MFA => .8, pointSize => 1, pointType => 7, color => "rgb \"#ff0000\"", label => "arrow 270",
+                                     arrow => "true", length => .05, angle => 270, justification => "center" }, 
+                                   { MMiss => .8,  MFA => .85, pointSize => 1, pointType => 7, color => "rgb \"#ff0000\"", label => "arrow 315",
+                                     arrow => "true", length => .05, angle => 315, justification => "left" }, 
                                    ] ,
                    "PerfBox" => [ { MMiss => 0.70, MFA => 0.20, color => "rgb \"#000000\"", title => "Inner Box 1"},  
                                   { MMiss => 0.40, MFA => 0.10, color => "rgb \"#ff0000\"", title => "Inner Box 2"},  
@@ -1205,16 +1229,14 @@ sub _drawIsometriclines{
   
   open( ISODAT, "> $troot" );
       
-  my $labelind = 10;
-            
   foreach my $isocoef (@{ $self->{Isometriclines} } ) {
     my $ytemp = $metric->MISSForGivenComb($isocoef, $self->{Bounds}{xmin}{metric});
     my $xtemp = $metric->FAForGivenComb($isocoef, $self->{Bounds}{ymax}{metric});
           
-    my $linelabel = _getIsoMetricLineLabel($ytemp, $self->{Bounds}{xmin}{metric}, 
-                                           $self->{Bounds}{ymin}{metric}, $self->{Bounds}{ymax}{metric}, $self->{props}->getValue("yScale"), 
-                                           $self->{Bounds}{xmin}{metric}, $self->{Bounds}{xmax}{metric}, $self->{props}->getValue("xScale"),
-                                           $color, $labelind, sprintf("%.3f", $isocoef), $xtemp);
+    my $linelabel = $self->_getIsoMetricLineLabel($ytemp, $self->{Bounds}{xmin}{metric}, 
+                                                  $self->{Bounds}{ymin}{metric}, $self->{Bounds}{ymax}{metric}, $self->{props}->getValue("yScale"), 
+                                                  $self->{Bounds}{xmin}{metric}, $self->{Bounds}{xmax}{metric}, $self->{props}->getValue("xScale"),
+                                                  $color, sprintf("%.3f", $isocoef), $xtemp);
     push (@$labels, $linelabel);
                             
     my $pred_y = $self->{Bounds}{ymin}{metric}+1;    
@@ -1244,7 +1266,6 @@ sub _drawIsometriclines{
                                      
     printf ISODAT "\n";
           
-    $labelind++;
   }
                 
   close( ISODAT );
@@ -1261,8 +1282,10 @@ sub _makePointSetLabels{
   my $pset = $self->{PointSet};
  
   foreach my $point(@$pset){
-    my ($xpos, $ypos) = (_getValueInGraph($point->{MFA}, $self->{Bounds}{xmin}{metric}, $self->{Bounds}{xmax}{metric}, $self->{props}->getValue("xScale")),
-                         _getValueInGraph($point->{MMiss}, $self->{Bounds}{ymin}{metric}, $self->{Bounds}{ymax}{metric}, $self->{props}->getValue("yScale")));
+    my ($xpos, $ypos) = (_getValueInGraph($point->{MFA}, $self->{Bounds}{xmin}{metric}, 
+                                          $self->{Bounds}{xmax}{metric}, $self->{props}->getValue("xScale")),
+                         _getValueInGraph($point->{MMiss}, $self->{Bounds}{ymin}{metric},
+                                          $self->{Bounds}{ymax}{metric}, $self->{props}->getValue("yScale")));
 
     ### If the points are off the graph, place them in the border
     if ($xpos < 0) { $xpos = -0.02; }
@@ -1278,14 +1301,60 @@ sub _makePointSetLabels{
       $mySize = sqrt($mySize / 3.141592653589) / sqrt(1 / 3.141592653589);
     }
 
-    push @labs, 
-        "set label \"".(exists($point->{label}) ? $point->{label} : "")."\" " .
+    ### if arrows are NOT requested
+    if (! exists($point->{arrow})){
+      push @labs, 
+        "set label ".($self->{labelNum}++)." \"".(exists($point->{label}) ? $point->{label} : "")."\" " .
         (exists($point->{justification}) ? $point->{justification}." " : "") .
         " point ".
         "lc ".(exists($point->{color}) ? $point->{color} : 1)." ".
         "pt ".(exists($point->{pointType}) ? $point->{pointType} : 1)." ".
         "ps ".$mySize." ".
         "at graph $xpos, graph  $ypos";              
+    } else {
+      my $r = $point->{"angle"}; 
+      my $l = $point->{"length"};  ### scale is in graph percentage
+      my $pi = 3.14159265358979;
+#      print "r = $r , l = $l\n";
+      my ($graph_X_min, $graph_X_max) = (_getValueInGraph($self->{Bounds}{xmin}{metric}, $self->{Bounds}{xmin}{metric}, 
+                                          $self->{Bounds}{xmax}{metric}, $self->{props}->getValue("xScale")),
+                                          _getValueInGraph($self->{Bounds}{xmax}{metric}, $self->{Bounds}{xmin}{metric}, 
+                                          $self->{Bounds}{xmax}{metric}, $self->{props}->getValue("xScale")));
+      my ($graph_Y_min, $graph_Y_max) = (_getValueInGraph($self->{Bounds}{ymin}{metric}, $self->{Bounds}{ymin}{metric}, 
+                                          $self->{Bounds}{ymax}{metric}, $self->{props}->getValue("yScale")),
+                                          _getValueInGraph($self->{Bounds}{ymax}{metric}, $self->{Bounds}{ymin}{metric}, 
+                                          $self->{Bounds}{ymax}{metric}, $self->{props}->getValue("yScale")));
+
+      my ($normX, $normY) = (cos($pi * $r / 180) * $l, $l * sin($pi * $r / 180));
+#      print "normX = $normX , normY = $normY\n";
+#      print "graph_X_min = $graph_X_min , graph_X_max = $graph_X_max\n";
+#      print "graph_Y_min = $graph_Y_min , graph_Y_max = $graph_Y_max\n";
+    
+    
+      my ($fromXpos, $fromYpos) = ($xpos + ($normX * ($graph_X_max - $graph_X_min)),
+                                   $ypos + ($normY * ($graph_Y_max - $graph_Y_min)));
+#      print "  xpos = $xpos , ypos = $ypos\n";
+#      print "  fromXpos = $fromXpos , fromYpos = $fromYpos\n";
+      #Plot the point, arrow, and text separately
+      push @labs, 
+        "set label ".($self->{labelNum}++)." \"\" " .
+        " point ".
+        "lc ".(exists($point->{color}) ? $point->{color} : 1)." ".
+        "pt ".(exists($point->{pointType}) ? $point->{pointType} : 1)." ".
+        "ps ".$mySize." ".
+        "at graph $xpos, graph  $ypos";              
+      #Plot the arrow
+      push @labs, 
+        "set arrow " .
+        "from graph $fromXpos, graph $fromYpos " .
+        "to graph $xpos, graph $ypos";              
+      #Plot the label at the end of the arrow
+      push @labs, 
+        "set label ".($self->{labelNum}++)." \"".(exists($point->{label}) ? $point->{label} : "")."\" " .
+        (exists($point->{justification}) ? $point->{justification}." " : "") .
+        " nopoint ".
+        "at graph $fromXpos, graph  $fromYpos";              
+    }
   }      
   @labs;
 }
@@ -1317,29 +1386,29 @@ sub _getOffAxisLabel{
   ###       ------
   ###    Q7   Q8   Q9
   # Q1
-  if ($gyval > 1 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q1" : "")."\" point lc $color pt $pointType ps $pointSize at graph  -0.02, graph   1.02"; }
+  if ($gyval > 1 && $gxval < 0) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q1" : "")."\" point lc $color pt $pointType ps $pointSize at graph  -0.02, graph   1.02"; }
   # Q2
-  if ($gyval > 1 && $gxval < 1) { return "set label \"".($qstr == 1 ? "Q2" : "")."\" point lc $color pt $pointType ps $pointSize at graph $gxval, graph   1.02"; }
+  if ($gyval > 1 && $gxval < 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q2" : "")."\" point lc $color pt $pointType ps $pointSize at graph $gxval, graph   1.02"; }
   # Q3
-  if ($gyval > 1 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q3" : "")."\" point lc $color pt $pointType ps $pointSize at graph   1.02, graph   1.02"; }
+  if ($gyval > 1 && $gxval > 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q3" : "")."\" point lc $color pt $pointType ps $pointSize at graph   1.02, graph   1.02"; }
   # Q4
-  if ($gyval > 0 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q4" : "")."\" point lc $color pt $pointType ps $pointSize at graph  -0.02, graph $gyval"; }
+  if ($gyval > 0 && $gxval < 0) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q4" : "")."\" point lc $color pt $pointType ps $pointSize at graph  -0.02, graph $gyval"; }
   # Q5
   if ($gyval > 0 && $gxval < 1) { return ""; }
   # Q6
-  if ($gyval > 0 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q6" : "")."\" point lc $color pt $pointType ps $pointSize at graph     1.02, graph $gyval"; }
+  if ($gyval > 0 && $gxval > 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q6" : "")."\" point lc $color pt $pointType ps $pointSize at graph     1.02, graph $gyval"; }
   # Q7
-  if ($gyval < 0 && $gxval < 0) { return "set label \"".($qstr == 1 ? "Q7" : "")."\" point lc $color pt $pointType ps $pointSize at graph    -0.02, graph  -0.02"; }
+  if ($gyval < 0 && $gxval < 0) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q7" : "")."\" point lc $color pt $pointType ps $pointSize at graph    -0.02, graph  -0.02"; }
   # Q8
-  if ($gyval < 0 && $gxval < 1) { return "set label \"".($qstr == 1 ? "Q8" : "")."\" point lc $color pt $pointType ps $pointSize at graph   $gxval, graph  -0.02"; }
+  if ($gyval < 0 && $gxval < 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q8" : "")."\" point lc $color pt $pointType ps $pointSize at graph   $gxval, graph  -0.02"; }
   # Q9
-  if ($gyval < 0 && $gxval > 1) { return "set label \"".($qstr == 1 ? "Q9" : "")."\" point lc $color pt $pointType ps $pointSize at graph     1.02, graph  -0.02"; }
+  if ($gyval < 0 && $gxval > 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q9" : "")."\" point lc $color pt $pointType ps $pointSize at graph     1.02, graph  -0.02"; }
   "";
 }
 
 sub _getIsoMetricLineLabel
 {
-	my ($yval, $xval, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $indexl, $qstr, $xtemp) = @_;
+	my ($self, $yval, $xval, $ymin, $ymax, $yScale, $xmin, $xmax, $xScale, $color, $qstr, $xtemp) = @_;
 	my $gyval = _getValueInGraph($yval, $ymin, $ymax, $yScale);
 	my $gxval = _getValueInGraph($xval, $xmin, $xmax, $xScale);
 	my $just = "left";
@@ -1355,7 +1424,7 @@ sub _getIsoMetricLineLabel
   	$gyval -= 0.01;
 	  $gxval += 0.005;
   }
-	return "set label $indexl \"$qstr\" at graph $gxval, graph $gyval $just nopoint textcolor $color";
+	return "set label ".($self->{labelNum}++)." \"$qstr\" at graph $gxval, graph $gyval $just nopoint textcolor $color";
 }
 
 sub _getLineTitleString
@@ -1411,6 +1480,7 @@ sub _getLineTitleString
 ### KeyLoc -> set the key location.  Values can be left | right | top | bottom | outside | below 
 ### Isolines -> Draw the isolines coefs
 ### CurveLineStyle -> sets the curve line style
+### PlotDETCurves -> Leaves out the det curves
 
 ### This is NOT an instance METHOD!!!!!!!!!!!!!!
 sub writeMultiDetGraph
@@ -1420,6 +1490,11 @@ sub writeMultiDetGraph
 
     my $numDET = scalar(@{ $detset->getDETList() });
     return undef if ($numDET < 0);
+    
+    my $plotDETCurves = $self->{props}->getValue("PlotDETCurves");
+    if ($plotDETCurves eq "false"){
+      $numDET = 0;
+    }    
     
     $self->_extractMetricProps($detset->getDETForID(0)->{METRIC});
 
@@ -1935,7 +2010,7 @@ sub writeGNUGraph{
     }
     print THRESHPLT "\n";
   } else {
-    print THRESHPLT "set label \"No detection outputs produced by the system.  Threshold plot is empty.\" at graph 0.2, graph 0.5\n";
+    print THRESHPLT "set label ".($self->{labelNum}++)."  \"No detection outputs produced by the system.  Threshold plot is empty.\" at graph 0.2, graph 0.5\n";
     print THRESHPLT "set size ratio 1\n"; 
     print THRESHPLT "plot [0:1] [0:1] -x notitle with points\n";
   }
