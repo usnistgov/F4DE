@@ -292,7 +292,7 @@ foreach my $directive (@plotControls){
   } elsif ($directive =~ /ExtraPoint=(.*)$/){
     my $pointDef = $1;
     my $colorRegex = 'rgb[ _]"#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
-    my $fullExp = "^([^:]*):($numRegex):($numRegex):($intRegex):($intRegex):(($colorRegex)|):(left|right|center|)\$";
+    my $fullExp = "^([^:]*):($numRegex):($numRegex):($intRegex):($intRegex):(($colorRegex)|):(left|right|center|)(:arrow:($numRegex):($numRegex))?\$";
     die "Error: Point definition /$pointDef/ does not match the pattern /$fullExp/" 
       if ($pointDef !~ /$fullExp/);
     my %ht = ();
@@ -303,6 +303,11 @@ foreach my $directive (@plotControls){
     $ht{pointType}     = $5 if ($5 ne "");
     $ht{color}         = $6 if ($6 ne "");
     $ht{justification} = $8 if ($8 ne "");
+    if ($9 ne ""){
+      $ht{arrow} = "true";
+      $ht{length} = $10;
+      $ht{angle} = $11;
+    }
     push @{ $options{PointSet} }, \%ht;
   } elsif ($directive =~ /PerfBox=(.*)$/){
     my $perfBox = $1;
@@ -328,6 +333,8 @@ foreach my $directive (@plotControls){
     my ($one, $two) = ($1, $2);
     $options{ISOCostLineColor} = $one if ($one ne "");
     $options{ISOCostLineWidth} = $two if ($two ne "");
+  } elsif ($directive =~ /PlotDETCurves=(true|false)$/){ 
+    $options{PlotDETCurves} = $1;
   } else {
     print "Warning: Unknown plot directive /$directive/\n";
   }
@@ -870,6 +877,8 @@ The B<plotControl> options provides access to fine control the the DET curve dis
 
 
 /PointSetAreaDefinition=(Area|Radius)/     -> The value of C<pointSize> is display as either area of  the point or the width.  Def. is radius.
+
+/PlotDETCurves=(true|false)/     -> Include or exclude the DETCurves in the DET plot.  Default is /true/.
 
 /smooth=AdjacentDecisions,extraTargs,extraNonTargs/   -> Build a smoothed DET with the following parameters.     <AdjacentDecisions> use the average decision score +/- the number pf points.  0 means no averaging.  <extraTargs> adds the N targets with linearly interpolated values between each pair of targets.  0 means no targets added.  <extraNonTargs> does the same operation a <extraTargs> except to the non targets.
 
