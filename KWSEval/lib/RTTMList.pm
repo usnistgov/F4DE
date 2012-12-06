@@ -48,6 +48,7 @@ use Data::Dumper;
 use RTTMRecord;
 use RTTMSegment;
 use TermList;
+use TermListRecord;
 
 use MMisc;
 
@@ -568,6 +569,8 @@ sub findTermOccurrences
     my @terms = split(/\s+/, $term);
     #print Dumper (\@terms);
     #Currently no order to returned matches
+
+    die "Error: term /$term/ has no constituents tokens to find\n" if (@terms == 0);
     foreach my $record (@{ $self->{TERMLKUP}{$terms[0]} })
     {
       my @tmpList = ();
