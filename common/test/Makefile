@@ -23,6 +23,7 @@ check:
 	@(cd ../lib; perl -I. -e 'use MMisc; MMisc::unitTest();')
 	@(cd ../lib; perl -I. -e 'use TranscriptHolder; TranscriptHolder::unitTest()')
 	@(cd AutoTable_Extra; make check)
+	@(cd DETUtil; make check)
 	@echo ""
 	@echo "***** All tests ran succesfully"
 

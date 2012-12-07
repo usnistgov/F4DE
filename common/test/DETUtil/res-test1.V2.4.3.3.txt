@@ -1,0 +1,21 @@
+[[COMMANDLINE]] perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -o foo.png res-test1.V2.4.3.3.srl.gz ; cat foo.results.txt | perl -pe 's:/\S+:file:g' 
+[[RETURN CODE]] 0
+[[STDOUT]]
+Wrote: foo.results.txt
+|  Performance Summary Over and Ensemble of Subsets  |
+|             Key             |        Value         |
+|-----------------------------+----------------------+
+|                System Title |                   NA |
+|                 Decision ID |                Trial |
+|                    CostMiss |                    1 |
+|                      CostFA |                    1 |
+|                       Ptarg |                  0.5 |
+
+
+|                 |           Inputs            |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                                                                                           DET Curve Graphs                                                                                           |
+|      Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                                           DET Curve                                           |                                           Threshold Curve                                            |
+|-----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+-----------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+|   Block BlockID |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87255 |    0.270 |   1.1430 |       0.5063 |   0.00980 |    0.918 |   0.9282 |         4.894 |   file |   file |
+
+[[STDERR]]
+
