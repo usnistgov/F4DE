@@ -929,6 +929,12 @@ sub getNumTarg {
 #  ($self->getNumNoTarg($block) + $self->getNumYesTarg($block) + $self->getNumOmittedTarg($block) );
 }
 
+sub setComputedNumTarg {
+  my ($self, $block) = @_;
+  $self->{"trials"}->{$block}->{"NUM TARG"} = 
+    ($self->getNumNoTarg($block) + $self->getNumYesTarg($block) + $self->getNumOmittedTarg($block) );
+}
+
 sub getNumSys {
   my ($self, $block) = @_;
   ($self->getNumNoTarg($block) + $self->getNumYesTarg($block) + $self->getNumYesNonTarg($block) + $self->getNumNoNonTarg($block));
@@ -988,6 +994,32 @@ sub getNumNonTarg {
   my ($self, $block) = @_;
   $self->{"trials"}->{$block}->{"NUM NONTARG"};
 #  ($self->{"trials"}->{$block}->{"NO NONTARG"} + $self->{"trials"}->{$block}->{"YES NONTARG"})
+}
+
+sub setComputedNumNonTarg {
+  my ($self, $block) = @_;
+  $self->{"trials"}->{$block}->{"NUM NONTARG"} = 
+    ($self->{"trials"}->{$block}->{"NO NONTARG"} + $self->{"trials"}->{$block}->{"YES NONTARG"})
+}
+
+sub fixBackwardCompatabilityProblems{
+  my ($self) = @_;
+  my $fixes = 0;
+  ### The speedup computing NumNonTarg and numTarg introduced a compatability problem.  This code checks for and
+  ### set's the state to the expected form
+  foreach my $block($self->getBlockIDs()){
+    if (! defined($self->getNumNonTarg($block))){
+      ### Need to fix this      
+      $self->setComputedNumNonTarg($block);
+      $fixes ++;
+    }
+    if (! defined($self->getNumTarg($block))){
+      ### Need to fix this      
+      $self->setComputedNumTarg($block);
+      $fixes ++;
+    }
+  }
+#  print "Advisement: $fixes backward compatability fixes applied to the Trials  structure\n";
 }
 
 sub _stater {

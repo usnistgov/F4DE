@@ -757,6 +757,10 @@ sub readFromFile
       $VAR1->{"POINTS"} = \@arr;
     }
 
+    ### Chack for and correct backward compatability problems in the TrialsStructure
+    $VAR1->getTrials()->fixBackwardCompatabilityProblems();
+    
+
     $VAR1;
   }
 
