@@ -225,6 +225,18 @@ sub addTerm
   $self->{TERMS}{$id} = $term;                                                                                                                                                               
 }                                                                                                                                                                                            
                                                                                                                                                                                              
+sub setVersion
+{                                                                                                                                                                                            
+  my ($self, $ver) = @_;                                                                                                                                                               
+  $self->{VERSION} = $ver;
+}                                                                                                                                                                                            
+                                                                                                                                                                                             
+sub getVersion
+{                                                                                                                                                                                            
+  my ($self) = @_;                                                                                                                                                               
+  return $self->{VE0RSION};
+}                                                                                                                                                                                            
+                                                                                                                                                                                             
 sub getTermIDs
 {
     my ($self) = @_;
