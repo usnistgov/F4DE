@@ -15,6 +15,11 @@ my $tn = "";
 
 my $t0 = F4DE_TestCore::get_currenttime();
 
+###
+###  This code tests reading OLD srl files.  The srls are built by hand by uncommenting the code to save .srl files in DEVA/test/MTests
+###  and moving them in place following the version conventions.
+###
+
 
 foreach my $testid("1", "1o", "3", "3d"){
   foreach my $version("2.4.4", "2.4.3.3"){
@@ -25,22 +30,6 @@ foreach my $testid("1", "1o", "3", "3d"){
     
   }
 }
-exit;
-
-
-#a  $tn = "test1o-$version";
-#  $testr += &do_simple_test($tn, "(Unit Test)", 
-#            "perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -o foo.png res-$tn.txt.$version.srl.gz ; cat foo.results.txt | perl -pe 's:/\\S+:file:g' ", "res-$tn.txt");
-
-#  $tn = "test3-$version";
-#  $testr += &do_simple_test($tn, "(Unit Test)", 
-#            "perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -o foo.png res-$tn.txt.$version.srl.gz ; cat foo.results.txt | perl -pe 's:/\\S+:file:g' ", "res-$tn.txt");
-
-##  $tn = "test3d-$version";
-#  $testr += &do_simple_test($tn, "(Unit Test)", 
-#            "perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -o foo.png res-$tn.txt.$version.srl.gz ; cat foo.results.txt | perl -pe 's:/\\S+:file:g' ", "res-$tn.txt");
-
-
 
 #####
 
