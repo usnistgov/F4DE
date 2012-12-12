@@ -246,7 +246,7 @@ sub valok {
 sub valerr {
   my ($fname, $txt) = @_;
   &valok($fname, "[ERROR] $txt");
-  &valok($fname, "[ERROR] ** Please refer to the \'Submission Instructions\', in the Appendices of the \'TRECVid Event Detection Evaluation Plan\' for more information");
+  &valok($fname, "[ERROR] ** Please refer to the \'Submission Instructions\', in the Appendices of the \'KWS Evaluation Plan\' for more information");
 
   MMisc::error_quit("\'quit_if_non_scorable\' selected, quitting")
     if ($qins);

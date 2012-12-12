@@ -29,15 +29,15 @@ fi
 
 # Check tv ed submision checker
 if [ -z ${tvedsc:-} ]; then
-  echo "ERROR: No TrecVid Submission Checker set, aborting"
+  echo "ERROR: No KWS Submission Checker set, aborting"
   exit 1
 fi
 if [ ! -f $tvedsc ]; then
-  echo "ERROR: Could not find need the TrecVid Submission Checker program ($tvedsc), aborting"
+  echo "ERROR: Could not find need the KWS Submission Checker program ($tvedsc), aborting"
   exit 1
 fi
 if [ ! -x $tvedsc ]; then
-  echo "ERROR: TrecVid Submission Checker program ($tvedsc) is not executable, aborting"
+  echo "ERROR: KWS Submission Checker program ($tvedsc) is not executable, aborting"
   exit 1
 fi
 
