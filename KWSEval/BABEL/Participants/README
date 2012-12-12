@@ -1,4 +1,4 @@
-Date: 2012/10/30
+Date: 2012/12/12
 
 This file contains instructions on how to set and use the "SubmissionHelper.sh" script
 
@@ -31,7 +31,6 @@ for account creation purpose
 - attach to the email the public keys for the given user (do not inline its text)
 - provide us with a list of the IP subnet that will need access to the ssh server
 
-
 4) you should receive an email from NIST with a confirmation or
 request for clarification related to the creation of the account that
 will contain testing instructions.
@@ -39,7 +38,7 @@ will contain testing instructions.
 5) test to confirm you can upload and download a file according to the
 instructions in the email your received from step 4
 
-Please remember that access to the system is done via public key +
+Please remember that access to the system is done via 'scp' using public key +
 passphrase only.
 
 
@@ -91,8 +90,9 @@ account information.
 
 % cp SubmissionHelper_BABEL12.cfg SubmissionHelper.cfg
 
+For BABEL 2012, the file to copy is called:  SubmissionHelper_BABEL13.cfg
 
-The default configuration file is designed to make everything work
+The default configuration files are designed to make everything work
 from the current directory, 'JobRunner.pl', 
 and the 'bin' directory for the SCTK installation.
 For this to happen, please make symbolic link to your installation
@@ -151,13 +151,6 @@ Remote Server: Report Uploaded
 NOTE: the first time any 'scp' is done with the Scoring Server, you
 might be prompted for accepting the SSH key of the remote host, please
 enter 'yes'.
-
--- Manual configuration:
----------------------
-
-If you decide to not use the default configuration, copy
-SubmissionHelper_BABEL12.cfg to SubmissionHelper.cfg and adapt 
-fields in the copied file.
 
 
 -- Submiting an EXPID:
