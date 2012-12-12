@@ -35,6 +35,7 @@ my $outfilename = "";
 my $encoding = "";
 my $inTlist = "";
 my $idTextPrefix = "TERM-";
+my $fileVersion = "Built by TermListGen";
 
 GetOptions
 (
@@ -42,6 +43,7 @@ GetOptions
  'in-term-list=s' => \$inTlist,
  'language=s' => \$language,
  'encoding=s' => \$encoding,
+ 'version=s' => \$fileVersion,
  'normalization=s' => \$normalization,
  'out-file-name=s' => \$outfilename,
  'idTextPrefix=s' => \$idTextPrefix,
@@ -59,7 +61,6 @@ $keywordAT->setEncoding($encoding);
 $keywordAT->setCompareNormalize($normalization);
 MMisc::error_quit("Problem loading CSV $tlistfile into Auto Table: " . $keywordAT->get_errormsg())
       if (! $keywordAT->loadCSV($tlistfile));
-print "   Load mesg ". $keywordAT->get_errormsg()."\n";
 print "   ".scalar($keywordAT->getRowIDs("AsAdded"))." rows loaded \n";
 
 my $inTermList;
@@ -89,6 +90,7 @@ if ($inTlist ne "") {
   $inTermList->setCompareNormalize($normalization) if ($normalization ne "");
   $encoding = "UTF-8" if ($encoding =~ m/utf-?8/i);
   $inTermList->setEncoding($encoding);
+  $inTermList->setVersion($fileVersion);
 }
 print "  TermLists ready\n";
 
@@ -151,8 +153,6 @@ foreach my $lineID($keywordAT->getRowIDs("AsAdded")){
 #$outfilename = $language . ".kwlist.xml" if ($outfilename eq "");
 #$TermList->setLanguage($language);
 #$TermList->setCompareNormalize($normalization) if ($normalization ne "");
-my $version = 1; #??
-$inTermList->{VERSION} = $version;
 #$encoding = "UTF-8" if ($encoding =~ m/utf-?8/i);
 #$TermList->setEncoding($encoding);
 $inTermList->saveFile($outfilename);
