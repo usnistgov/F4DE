@@ -93,11 +93,13 @@ foreach my $otype(@outputTypes){
 MMisc::error_quit("statForRow not (continuous|discrete)\n" . $Usage) if ($statForRow !~ /^(continuous|discrete|)$/);
 MMisc::error_quit("statForCol not (continuous|discrete)\n" . $Usage) if ($statForCol !~ /^(continuous|discrete|)$/);
 
-print "Info: KeepColumns = $col\n" if (!$quiet);
-print "Info: KeepRows = $row\n" if (!$quiet);
-print "Info: outputTypes = (".join(", ",@outputTypes).")\n" if (!$quiet);
-print "Info: statForRow = $statForRow\n" if (!$quiet);
-print "Info: statForCol = $statForCol\n" if (!$quiet);
+if ($outAT ne "-" && $outCSV ne "-"){
+  print "Info: KeepColumns = $col\n" if (!$quiet);
+  print "Info: KeepRows = $row\n" if (!$quiet);
+  print "Info: outputTypes = (".join(", ",@outputTypes).")\n" if (!$quiet);
+  print "Info: statForRow = $statForRow\n" if (!$quiet);
+  print "Info: statForCol = $statForCol\n" if (!$quiet);
+}
 
 if (defined($outCSV)){
   MMisc::error_quit("Error: Argument -c and/or -r req'd\n" . $Usage) if (!defined($col) && !defined($row));
@@ -111,7 +113,7 @@ if (defined($outCSV)){
   $at->setProperties({ "KeepRowsInOutput" => $row }) if (defined($row)); 
 
   foreach my $otype(@outputTypes){
-    MMisc::writeTo("$outCSV.$otype", "", 1, 0, $at->renderByType($otype));
+    MMisc::writeTo("$outCSV"  . ($outCSV eq "-" ? "" : ".$otype"), "", 1, 0, $at->renderByType($otype));
   }
 } else {  
   MMisc::error_quit("Error: -C, -V, and -R req'd\n" . $Usage) if (@ATcol == 0 || @ATrow == 0 || !defined($ATval));
@@ -316,8 +318,8 @@ if (defined($outCSV)){
   $newAt->setProperties({ "KeepColumnsInOutput" => $col }) if (defined($col)); 
   $newAt->setProperties({ "KeepRowsInOutput" => "$row|.*Stat.*|.*Value.*|.*Rank.*" }) if (defined($row)); 
   
-  foreach my $otype(@outputTypes){
-    MMisc::writeTo("$outAT.$otype", "", 1, 0, $newAt->renderByType($otype));
+  foreach my $otype(@outputTypes){    
+    MMisc::writeTo("$outAT" . ($outAT eq "-" ? "" : ".$otype"), "", 1, 0, $newAt->renderByType($otype));
   }
 }
 
