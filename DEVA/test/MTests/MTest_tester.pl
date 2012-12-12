@@ -100,6 +100,11 @@ sub do_less_simple_test {
   my $command = "$tool -o $tdir $cadd $trial_metric_add ; cat $tdir/scoreDB.scores.txt";
   my $retval = &do_simple_test($testname, $subtype, $command, $res, $rev);
 
+#### Enable this code to build srl files for the common/lib/DETUtil tests
+#  if ($mode eq $mmk){
+#    system "cp $tdir/*.srl.gz $res.srl.gz";
+#  }
+
   if ($mode eq $mmk) {
     print "  (keeping: $tdir)\n";
   } else {
