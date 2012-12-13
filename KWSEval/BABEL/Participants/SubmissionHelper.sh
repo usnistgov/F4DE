@@ -112,6 +112,7 @@ kmode=`echo $if | perl -ne 's%^.+/%%;s%\_.+$%%; print uc($_)'`
 if [ "A$kmode" == "A" ]; then error_quit "No KWS mode information found"; fi
 
 conf="${kmode}_SubmissionHelper.cfg"
+echo "-- Loading Configuration file: $conf"
 check_file "$conf"
 source "$conf"
 

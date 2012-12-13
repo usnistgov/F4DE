@@ -127,6 +127,7 @@ your setup; for example:
 
 should prompt a submission log similar to:
 
+-- Loading Configuration file: KWS12_SubmissionHelper.cfg
 ** Submission file: [KWS12-dbDir/samples/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1.kwslist.xml]
    SHA256 : 4043be376e0e8060d54c6f53673e53da8d4d25ef46db98befaa237a8551a72a7
 ++ Validation step
@@ -139,8 +140,8 @@ Remote Server: Scoring
 Remote Server: Report Uploaded
 ++ Downloading Results
   <- Trying to download result file
-** Result file: /Users/martial/Works/F4DE/KWSEval/BABEL-ssh/Participants/_KWS12-downloads/27da546477cfac992756ff66346fb9c03190616a21187325e8112222c4530d90.tar.bz2
-** Uncompressed in: /Users/martial/Works/F4DE/KWSEval/BABEL-ssh/Participants/KWS12-Results/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1
+** Result file: /home/user/F4DE/KWSEval/BABEL/Participants/_KWS12-downloads/27da546477cfac992756ff66346fb9c03190616a21187325e8112222c4530d90.tar.bz2
+** Uncompressed in: /home/user/F4DE/KWSEval/BABEL/Participants/KWS12-Results/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1
 
 (this may take a few minutes to complete)
 
