@@ -108,7 +108,10 @@ if  [ $# != 1 ]; then usage; error_quit "No submission file on command line, qui
 if=$1
 check_file "$if"
 
-conf="SubmissionHelper.cfg"
+kmode=`echo $if | perl -ne 's%^.+/%%;s%\_.+$%%; print uc($_)'`
+if [ "A$kmode" == "A" ]; then error_quit "No KWS mode information found"; fi
+
+conf="${kmode}_SubmissionHelper.cfg"
 check_file "$conf"
 source "$conf"
 

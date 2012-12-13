@@ -80,32 +80,29 @@ to the EXPID you are submitting
 -------------------
 
 In order to be able to use the tool (SubmissionHelper.sh), its
-configuration file (SubmissionHelper.cfg) must be created.
-
-For BABEL 2012, the simplest way to do so is to copy
-SubmissionHelper_BABEL12.cfg to SubmissionHelper.cfg, 
-and edit the configuration file (SubmissionHelper.cfg)'s 
-'scp_user' line to reflect your scoring transfer system 
-account information.
-
-% cp SubmissionHelper_BABEL12.cfg SubmissionHelper.cfg
-
-For BABEL 2012, the file to copy is called:  SubmissionHelper_BABEL13.cfg
+configuration file must be edited: 
+- For BABEL 2012, edit the KWS12_SubmissionHelper.cfg 's 'scp_user' line to reflect 
+your scoring transfer system account information.
+- For BABEL 2013, the file to edit is called:  KWS13_SubmissionHelper.cfg
 
 The default configuration files are designed to make everything work
-from the current directory, 'JobRunner.pl', 
-and the 'bin' directory for the SCTK installation.
-For this to happen, please make symbolic link to your installation
-location of the tools to the current directory:
+from the current directory, 'JobRunner.pl', and the 'bin' directory
+for the SCTK installation.  For this to happen, please make symbolic
+link to your installation location of the tools to the current
+directory:
 
 % ln -s <JOBRUNNER_DIRECTORY>/JobRunner.pl
 
 % ln -s <SCTK_INSTALL_BIN_DIRECTORY> sctkbin
 
 Make the local copy of your 'IndusDB' available as the
-SubmissionHelper's 'dbDir':
-
-% ln -s <INDUSDB_DIR> dbDir
+SubmissionHelper's <DBDIR>:
+- For BABEL12, the directory should be called "KWS12-dbDir" 
+(as specified in the KWS12_SubmissionHelper.cfg file)
+% ln -s <KWS12_INDUSDB_DIR> KWS12-dbDir
+- For BABEL13, the directory must be named "KWS13-dbDir"
+(as specified in the KWS13_SubmissionHelper.cfg file)
+% ln -s <KWS13_INDUSDB_DIR> KWS13-dbDir
 
 
 Familiarize yourself with the list of options of the tool by running
@@ -113,25 +110,24 @@ it without any option:
 
 % ./SubmissionHelper.sh
 
-Confirm that the "SubmissionHelper.sh" tool is functional by
-calling it from the current directory with a invalid file (such as
-this README), which should fail, but will confirm that the expected
-entries from the configuration file (SubmissionHelper.cfg) are
-presumed valid:
+Confirm that the "SubmissionHelper.sh" tool is functional by calling
+it from the current directory with a invalid file (such as one of the
+configuration file), which should fail, but will confirm that the
+expected entries from the configuration file are presumed valid:
 
-% ./SubmissionHelper.sh README
+% ./SubmissionHelper.sh KWS12_SubmissionHelper.cfg
 
-This should fail due a validation error.
+This should fail due a validation error (if the needed
+directories/files specified by the configuration file are present)
 
-From within the 'dbDir' are some samples that can be used for testing
+From within the <DBDIR> are some samples that can be used for testing
 your setup; for example:
 
-
-% ./SubmissionHelper.sh dbDir/samples/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1.kwslist.xml
+% ./SubmissionHelper.sh KWS12-dbDir/samples/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1.kwslist.xml
 
 should prompt a submission log similar to:
 
-** Submission file: [dbDir/samples/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1.kwslist.xml]
+** Submission file: [KWS12-dbDir/samples/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1.kwslist.xml]
    SHA256 : 4043be376e0e8060d54c6f53673e53da8d4d25ef46db98befaa237a8551a72a7
 ++ Validation step
   -> validating submission file
@@ -143,8 +139,8 @@ Remote Server: Scoring
 Remote Server: Report Uploaded
 ++ Downloading Results
   <- Trying to download result file
-** Result file: /Users/martial/Works/F4DE/KWSEval/BABEL-ssh/Participants/_downloads/27da546477cfac992756ff66346fb9c03190616a21187325e8112222c4530d90.tar.bz2
-** Uncompressed in: /Users/martial/Works/F4DE/KWSEval/BABEL-ssh/Participants/Results/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1
+** Result file: /Users/martial/Works/F4DE/KWSEval/BABEL-ssh/Participants/_KWS12-downloads/27da546477cfac992756ff66346fb9c03190616a21187325e8112222c4530d90.tar.bz2
+** Uncompressed in: /Users/martial/Works/F4DE/KWSEval/BABEL-ssh/Participants/KWS12-Results/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1
 
 (this may take a few minutes to complete)
 
