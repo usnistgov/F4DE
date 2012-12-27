@@ -432,60 +432,109 @@
 ##########
 [**] LaTeX
 %% add to document header: \usepackage{multirow}
-\begin{tabular}{|c|c|c|c|c|}
+\begin{tabular}{|c|c|c|}
 \hline
-\multicolumn{2}{|c|}{ } & name & year & color\\
+name & year & color\\
 \hline
-\multirow{50}{*}{File: ../common/md.csv } &  Line: 000000000001 & jack & 1959 & blue\\
-\cline{2-5} &  Line: 000000000002 & {\sffamily jack} & 1965 & red\\
-\cline{2-5} &  Line: 000000000003 & jack & {\ttfamily 1973} & yellow\\
-\cline{2-5} &  Line: 000000000004 & jack & 1976 & {\upshape red}\\
-\cline{2-5} &  Line: 000000000005 & jack & 1986 & purple\\
-\cline{2-5} &  Line: 000000000006 & {\slshape jack} & 1999 & green\\
-\cline{2-5} &  Line: 000000000007 & jack & {\scshape 2000} & black\\
-\cline{2-5} &  Line: 000000000008 & jack & 2005 & {\bfseries red}\\
-\cline{2-5} &  Line: 000000000009 & jack & 2010 & orange\\
-\cline{2-5} &  Line: 000000000010 & jack & 2010 & yellow\\
-\cline{2-5} &  Line: 000000000011 & mary & 1973 & blue\\
-\cline{2-5} &  Line: 000000000012 & mary & 1974 & purple\\
-\cline{2-5} &  Line: 000000000013 & mary & 1985 & pink\\
-\cline{2-5} &  Line: 000000000014 & mary & 1986 & black\\
-\cline{2-5} &  Line: 000000000015 & mary & 1995 & pink\\
-\cline{2-5} &  Line: 000000000016 & stephen & 1999 & red\\
-\cline{2-5} &  Line: 000000000017 & stephen & 2000 & white\\
-\cline{2-5} &  Line: 000000000018 & stephen & 2000 & blue\\
-\cline{2-5} &  Line: 000000000019 & stephen & 2000 & pink\\
-\cline{2-5} &  Line: 000000000020 & stephen & 2001 & blue\\
-\cline{2-5} &  Line: 000000000021 & alex & 1999 & white\\
-\cline{2-5} &  Line: 000000000022 & alex & 2000 & orange\\
-\cline{2-5} &  Line: 000000000023 & {\scriptsize alex} & 2001 & red\\
-\cline{2-5} &  Line: 000000000024 & alex & {\footnotesize 2002} & purple\\
-\cline{2-5} &  Line: 000000000025 & alex & 2003 & {\small white}\\
-\cline{2-5} &  Line: 000000000026 & alex & 2004 & blue\\
-\cline{2-5} &  Line: 000000000027 & {\large alex} & 2005 & white\\
-\cline{2-5} &  Line: 000000000028 & alex & {\Large 2006} & white\\
-\cline{2-5} &  Line: 000000000029 & alex & 2007 & {\huge red}\\
-\cline{2-5} &  Line: 000000000030 & alex & 2008 & yellow\\
-\cline{2-5} &  Line: 000000000031 & karin & 1970 & white\\
-\cline{2-5} &  Line: 000000000032 & karin & 1975 & blue\\
-\cline{2-5} &  Line: 000000000033 & karin & 1980 & white\\
-\cline{2-5} &  Line: 000000000034 & karin & 1985 & white\\
-\cline{2-5} &  Line: 000000000035 & karin & 1990 & black\\
-\cline{2-5} &  Line: 000000000036 & karin & 1995 & orange\\
-\cline{2-5} &  Line: 000000000037 & karin & 2000 & yellow\\
-\cline{2-5} &  Line: 000000000038 & karin & 2005 & green\\
-\cline{2-5} &  Line: 000000000039 & karin & 2010 & purple\\
-\cline{2-5} &  Line: 000000000040 & karin & 2010 & blue\\
-\cline{2-5} &  Line: 000000000041 & akane & 1990 & red\\
-\cline{2-5} &  Line: 000000000042 & akane & 1991 & white\\
-\cline{2-5} &  Line: 000000000043 & akane & 1992 & blue\\
-\cline{2-5} &  Line: 000000000044 & chang & 1995 & black\\
-\cline{2-5} &  Line: 000000000045 & chang & 2007 & red\\
-\cline{2-5} &  Line: 000000000046 & chang & 2008 & purple\\
-\cline{2-5} &  Line: 000000000047 & christopher & 1995 & \\
-\cline{2-5} &  Line: 000000000048 & christopher & 2000 & blue\\
-\cline{2-5} &  Line: 000000000049 & robert & 2005 & green\\
-\cline{2-5} &  Line: 000000000050 & christina & 2006 & yellow\\
+jack & 1959 & blue\\
+\hline
+{\sffamily jack} & 1965 & red\\
+\hline
+jack & {\ttfamily 1973} & yellow\\
+\hline
+jack & 1976 & {\upshape red}\\
+\hline
+jack & 1986 & purple\\
+\hline
+{\slshape jack} & 1999 & green\\
+\hline
+jack & {\scshape 2000} & black\\
+\hline
+jack & 2005 & {\bfseries red}\\
+\hline
+jack & 2010 & orange\\
+\hline
+jack & 2010 & yellow\\
+\hline
+mary & 1973 & blue\\
+\hline
+mary & 1974 & purple\\
+\hline
+mary & 1985 & pink\\
+\hline
+mary & 1986 & black\\
+\hline
+mary & 1995 & pink\\
+\hline
+stephen & 1999 & red\\
+\hline
+stephen & 2000 & white\\
+\hline
+stephen & 2000 & blue\\
+\hline
+stephen & 2000 & pink\\
+\hline
+stephen & 2001 & blue\\
+\hline
+alex & 1999 & white\\
+\hline
+alex & 2000 & orange\\
+\hline
+{\scriptsize alex} & 2001 & red\\
+\hline
+alex & {\footnotesize 2002} & purple\\
+\hline
+alex & 2003 & {\small white}\\
+\hline
+alex & 2004 & blue\\
+\hline
+{\large alex} & 2005 & white\\
+\hline
+alex & {\Large 2006} & white\\
+\hline
+alex & 2007 & {\huge red}\\
+\hline
+alex & 2008 & yellow\\
+\hline
+karin & 1970 & white\\
+\hline
+karin & 1975 & blue\\
+\hline
+karin & 1980 & white\\
+\hline
+karin & 1985 & white\\
+\hline
+karin & 1990 & black\\
+\hline
+karin & 1995 & orange\\
+\hline
+karin & 2000 & yellow\\
+\hline
+karin & 2005 & green\\
+\hline
+karin & 2010 & purple\\
+\hline
+karin & 2010 & blue\\
+\hline
+akane & 1990 & red\\
+\hline
+akane & 1991 & white\\
+\hline
+akane & 1992 & blue\\
+\hline
+chang & 1995 & black\\
+\hline
+chang & 2007 & red\\
+\hline
+chang & 2008 & purple\\
+\hline
+christopher & 1995 & \\
+\hline
+christopher & 2000 & blue\\
+\hline
+robert & 2005 & green\\
+\hline
+christina & 2006 & yellow\\
 \hline
 \end{tabular}
 Done

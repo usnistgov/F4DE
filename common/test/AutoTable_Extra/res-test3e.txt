@@ -381,60 +381,109 @@
 ##########
 [**] LaTeX
 %% add to document header: \usepackage{multirow}
-\begin{tabular}{|c|c|c|c|}
+\begin{tabular}{|c|c|}
 \hline
-\multicolumn{2}{|c|}{ } & TrialID & color\\
+TrialID & color\\
 \hline
-\multirow{50}{*}{File: ../common/md.csv } &  Line: 000000000001 & {\em 1} & blue\\
-\cline{2-4} &  Line: 000000000002 & 2 & red\\
-\cline{2-4} &  Line: 000000000003 & 3 & yellow\\
-\cline{2-4} &  Line: 000000000004 & 4 & {\upshape red}\\
-\cline{2-4} &  Line: 000000000005 & {\itshape 5} & purple\\
-\cline{2-4} &  Line: 000000000006 & 6 & green\\
-\cline{2-4} &  Line: 000000000007 & 7 & black\\
-\cline{2-4} &  Line: 000000000008 & 8 & {\bfseries red}\\
-\cline{2-4} &  Line: 000000000009 & {\mdseries 9} & orange\\
-\cline{2-4} &  Line: 000000000010 & 10 & yellow\\
-\cline{2-4} &  Line: 000000000011 & 11 & blue\\
-\cline{2-4} &  Line: 000000000012 & \uppercase{12} & purple\\
-\cline{2-4} &  Line: 000000000013 & 13 & pink\\
-\cline{2-4} &  Line: 000000000014 & 14 & black\\
-\cline{2-4} &  Line: 000000000015 & 15 & pink\\
-\cline{2-4} &  Line: 000000000016 & 16 & red\\
-\cline{2-4} &  Line: 000000000017 & 17 & white\\
-\cline{2-4} &  Line: 000000000018 & 18 & blue\\
-\cline{2-4} &  Line: 000000000019 & 19 & pink\\
-\cline{2-4} &  Line: 000000000020 & 20 & blue\\
-\cline{2-4} &  Line: 000000000021 & 21 & white\\
-\cline{2-4} &  Line: 000000000022 & {\tiny 22} & orange\\
-\cline{2-4} &  Line: 000000000023 & 23 & red\\
-\cline{2-4} &  Line: 000000000024 & 24 & purple\\
-\cline{2-4} &  Line: 000000000025 & 25 & {\small white}\\
-\cline{2-4} &  Line: 000000000026 & {\normalsize 26} & blue\\
-\cline{2-4} &  Line: 000000000027 & 27 & white\\
-\cline{2-4} &  Line: 000000000028 & 28 & white\\
-\cline{2-4} &  Line: 000000000029 & 29 & {\huge red}\\
-\cline{2-4} &  Line: 000000000030 & {\Huge 30} & yellow\\
-\cline{2-4} &  Line: 000000000031 & 31 & white\\
-\cline{2-4} &  Line: 000000000032 & 32 & blue\\
-\cline{2-4} &  Line: 000000000033 & 33 & white\\
-\cline{2-4} &  Line: 000000000034 & 34 & white\\
-\cline{2-4} &  Line: 000000000035 & 35 & black\\
-\cline{2-4} &  Line: 000000000036 & 36 & orange\\
-\cline{2-4} &  Line: 000000000037 & 37 & yellow\\
-\cline{2-4} &  Line: 000000000038 & 38 & green\\
-\cline{2-4} &  Line: 000000000039 & 39 & purple\\
-\cline{2-4} &  Line: 000000000040 & 40 & blue\\
-\cline{2-4} &  Line: 000000000041 & 41 & red\\
-\cline{2-4} &  Line: 000000000042 & 42 & white\\
-\cline{2-4} &  Line: 000000000043 & 43 & blue\\
-\cline{2-4} &  Line: 000000000044 & 44 & black\\
-\cline{2-4} &  Line: 000000000045 & 45 & red\\
-\cline{2-4} &  Line: 000000000046 & 46 & purple\\
-\cline{2-4} &  Line: 000000000047 & 47 & \\
-\cline{2-4} &  Line: 000000000048 & 48 & blue\\
-\cline{2-4} &  Line: 000000000049 & 49 & green\\
-\cline{2-4} &  Line: 000000000050 & 50 & yellow\\
+{\em 1} & blue\\
+\hline
+2 & red\\
+\hline
+3 & yellow\\
+\hline
+4 & {\upshape red}\\
+\hline
+{\itshape 5} & purple\\
+\hline
+6 & green\\
+\hline
+7 & black\\
+\hline
+8 & {\bfseries red}\\
+\hline
+{\mdseries 9} & orange\\
+\hline
+10 & yellow\\
+\hline
+11 & blue\\
+\hline
+\uppercase{12} & purple\\
+\hline
+13 & pink\\
+\hline
+14 & black\\
+\hline
+15 & pink\\
+\hline
+16 & red\\
+\hline
+17 & white\\
+\hline
+18 & blue\\
+\hline
+19 & pink\\
+\hline
+20 & blue\\
+\hline
+21 & white\\
+\hline
+{\tiny 22} & orange\\
+\hline
+23 & red\\
+\hline
+24 & purple\\
+\hline
+25 & {\small white}\\
+\hline
+{\normalsize 26} & blue\\
+\hline
+27 & white\\
+\hline
+28 & white\\
+\hline
+29 & {\huge red}\\
+\hline
+{\Huge 30} & yellow\\
+\hline
+31 & white\\
+\hline
+32 & blue\\
+\hline
+33 & white\\
+\hline
+34 & white\\
+\hline
+35 & black\\
+\hline
+36 & orange\\
+\hline
+37 & yellow\\
+\hline
+38 & green\\
+\hline
+39 & purple\\
+\hline
+40 & blue\\
+\hline
+41 & red\\
+\hline
+42 & white\\
+\hline
+43 & blue\\
+\hline
+44 & black\\
+\hline
+45 & red\\
+\hline
+46 & purple\\
+\hline
+47 & \\
+\hline
+48 & blue\\
+\hline
+49 & green\\
+\hline
+50 & yellow\\
 \hline
 \end{tabular}
 Done
