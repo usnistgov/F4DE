@@ -141,7 +141,7 @@ sub setProperties(){
   my ($self, $propHT) = @_;
   
   if (! $self->{Properties}->setValueFromHash($propHT)) {
-    $self->_set_errormsg("Could not set Properties: ",$self->{Properties}->get_errormsg());
+    $self->_set_errormsg("Could not set Properties: " . $self->{Properties}->get_errormsg());
     return (0);
   }
   return (1);
@@ -321,10 +321,9 @@ sub __getLID {
 
 
 sub _buildHeir(){
-  my ($self, $gap) = @_;
-  
-  $self->_buildLabelHeir("col", $gap);
-  $self->_buildLabelHeir("row", $gap);
+  # (0:$self, 1:$gap)
+  $_[0]->_buildLabelHeir('col', $_[1]);
+  $_[0]->_buildLabelHeir('row', $_[1]);
 }
 
 ########################################
@@ -394,7 +393,6 @@ sub __process_special {
  return(&__LaTeX_proc_sp($str))
     if ($mode eq $ok_specials[3]);
 
-
   # only HTML and LaTeX for now
   return("", "");
 }
@@ -413,7 +411,7 @@ sub renderHTMLTable(){
   ##########
   my $keyCol = $self->{Properties}->getValue($key_KeyColumnHTML);
   if ($self->{Properties}->error()) {
-    $self->_set_errormsg("Unable to get the $key_KeyColumnHTML property.  Message is ".$self->{Properties}->get_errormsg());
+    $self->_set_errormsg("Unable to get the $key_KeyColumnHTML property.  Message is " . $self->{Properties}->get_errormsg());
     return(undef);
   }
   my $k1c = ($keyCol eq "Keep") ? 1 : 0;
@@ -421,7 +419,7 @@ sub renderHTMLTable(){
   ########## HTML options
   my $colHeadBGColor = $self->{Properties}->getValue($key_htmlColHeadBGColor);
   if ($self->{Properties}->error()) {
-    $self->_set_errormsg("Unable to get the $key_htmlColHeadBGColor property.  Message is ".$self->{Properties}->get_errormsg());
+    $self->_set_errormsg("Unable to get the $key_htmlColHeadBGColor property.  Message is " . $self->{Properties}->get_errormsg());
     return(undef);
   }
   $colHeadBGColor = " bgcolor=\"$colHeadBGColor\""if ($colHeadBGColor ne "");
@@ -429,21 +427,21 @@ sub renderHTMLTable(){
   ########## HTML options
   my $rowHeadBGColor = $self->{Properties}->getValue($key_htmlRowHeadBGColor);
   if ($self->{Properties}->error()) {
-    $self->_set_errormsg("Unable to get the $key_htmlRowHeadBGColor property.  Message is ".$self->{Properties}->get_errormsg());
+    $self->_set_errormsg("Unable to get the $key_htmlRowHeadBGColor property.  Message is " . $self->{Properties}->get_errormsg());
     return(undef);
   }
   $rowHeadBGColor = " bgcolor=\"$rowHeadBGColor\""if ($rowHeadBGColor ne "");
   ####
   my $cellBGColor = $self->{Properties}->getValue($key_htmlCellBGColor);
   if ($self->{Properties}->error()) {
-    $self->_set_errormsg("Unable to get the $key_htmlCellBGColor property.  Message is ".$self->{Properties}->get_errormsg());
+    $self->_set_errormsg("Unable to get the $key_htmlCellBGColor property.  Message is " . $self->{Properties}->get_errormsg());
     return(undef);
   }
   $cellBGColor = " bgcolor=\"$cellBGColor\""if ($cellBGColor ne "");
   ###
   my $cellAltLineBGColor = $self->{Properties}->getValue($key_htmlAltLineCellBGColor);
   if ($self->{Properties}->error()) {
-    $self->_set_errormsg("Unable to get the $key_htmlAltLineCellBGColor property.  Message is ".$self->{Properties}->get_errormsg());
+    $self->_set_errormsg("Unable to get the $key_htmlAltLineCellBGColor property.  Message is " . $self->{Properties}->get_errormsg());
     return(undef);
   }
   $cellAltLineBGColor = " bgcolor=\"$cellAltLineBGColor\""if ($cellAltLineBGColor ne "");
@@ -569,6 +567,8 @@ sub renderByType(){
     return $self->renderCSV();
   } elsif ($type eq "tgrid"){
     return $self->renderGrid("\t");
+  } elsif ($type eq 'latex'){
+    return $self->renderLaTeXTable();
   } else {
     return "Error: Requested AutoTable type $type unknown\n"
   }
@@ -796,7 +796,7 @@ sub renderLaTeXTable(){
   ##########
   my $keyCol = $self->{Properties}->getValue($key_KeyColumnLaTeX);
   if ($self->{Properties}->error()) {
-    $self->_set_errormsg("Unable to get the $key_KeyColumnHTML property.  Message is ".$self->{Properties}->get_errormsg());
+    $self->_set_errormsg("Unable to get the $key_KeyColumnLaTeX property.  Message is ".$self->{Properties}->get_errormsg());
     return(undef);
   }
   my $k1c = ($keyCol eq "Keep") ? 1 : 0;
@@ -1071,22 +1071,24 @@ sub _buildTree(){
 }
 
 sub _addLab(){
-  my ($self, $type, $id, $val) = @_;
-  my $ht = $self->{$type."LabOrder"};
+  # (0:$self, 1:$type, 2:$id, 3:$val)
+  my $ht = $_[0]->{$_[1].'LabOrder'};
   
-  if (! exists($ht->{SubID}{$id}{SubIDCount})) {
-    $ht->{SubID}{$id} = { thisIDNum => $ht->{SubIDCount} ++,
-                          SubIDCount => 0,
-                          SubID => {},
-			  labels => [ _safeSplit("|",$id) ], 
-                          width => { charLen => 0 } };
+  if (! exists($ht->{SubID}{$_[2]}{SubIDCount})) {
+    $ht->{SubID}{$_[2]} = 
+      {
+       thisIDNum => $ht->{SubIDCount} ++,
+       SubIDCount => 0,
+       SubID => {},
+       labels => [ _safeSplit("|",$_[2]) ], 
+       width => { charLen => 0 } 
+      };
   }
   
-  $ht = $ht->{SubID}{$id};
+  $ht = $ht->{SubID}{$_[2]};
   
   ### HT is now the lowest level so we can save of the length for later
-  $ht->{width}{charLen} = length($val) if ($ht->{width}{charLen} < length($val));
-  
+  $ht->{width}{charLen} = length($_[3]) if ($ht->{width}{charLen} < length($_[3]));
 }
 
 sub _getNumLev(){
@@ -1232,24 +1234,26 @@ sub setSpecial {
 ##########
 
 sub addData__core {
-  my ($self, $val, $colid, $rowid, $special, $unique) = @_;
+  # (0:$self, 1:$val, 2:$colid, 3:$rowid, 4:$special, 5:$unique)
+
+  my $unique = $_[5];
+
+  $_[0]->_addLab('col', $_[2], $_[1]);
+  $_[0]->_addLab('row', $_[3], $_[1]);
   
-  $self->_addLab("col", $colid, $val);
-  $self->_addLab("row", $rowid, $val);
-  
-  my $lid = &__getLID($rowid, $colid);
-  if (defined($self->{data}{$lid})) {
+  my $lid = &__getLID($_[3], $_[2]);
+  if (defined($_[0]->{data}{$lid})) {
     if ($unique) {
-      print "Warning Datum value '$val' for '$rowid $colid' has multiple instances (not replacing)\n"; 
-      return 1;
+      printf("Warning Datum value \'%s\' for \'%s %s\' has multiple instances (not replacing)\n", $_[1], $_[3], $_[2]); 
+      return(1);
     }
     $unique = -1; # replacement (no add)
   }
-  $self->{data}{$lid} = $val;
-  if (! MMisc::is_blank($special)) {
-    $self->{special}{$lid} = $special;
+  $_[0]->{data}{$lid} = $_[1];
+  if (! MMisc::is_blank($_[4])) {
+    $_[0]->{special}{$lid} = $_[4];
   }
-  $self->{hasData}++ if ($unique != -1); 
+  $_[0]->{hasData}++ if ($unique != -1); 
   
   return(1);
 }
@@ -1257,47 +1261,44 @@ sub addData__core {
 #####
 
 sub addData {
-  my ($self, $val, $colid, $rowid, $special) = @_;
-  return($self->addData__core($val, $colid, $rowid, $special, 1));
+  # (0:$self, 1:$val, 2:$colid, 3:$rowid, 4:$special)
+  return($_[0]->addData__core($_[1], $_[2], $_[3], $_[4], 1));
 }
 
 #####
 
 sub setData {
-  my ($self, $val, $colid, $rowid, $special) = @_;
-  return($self->addData__core($val, $colid, $rowid, $special, 0));
+  # (0:$self, 1:$val, 2:$colid, 3:$rowid, 4:$special)
+  return($_[0]->addData__core($_[1], $_[2], $_[3], $_[4], 0));
 }
 
 ##########
 
-sub dump(){
-  my ($self) = @_;
-  print Dumper($self);
-}
+sub dump(){ print Dumper($_[0]); }
 
 sub _nChrStr(){
   my ($self, $n, $chr) = @_;
   my $fmt = "%${n}s";
-  my $str = sprintf($fmt, "");
+  my $str = sprintf($fmt, '');
   $str =~ s/ /$chr/g;
-  $str;
+  return($str);
 }
 
 sub _leftJust(){
-  my ($self, $str, $len) = @_;
-  $str . $self->_nChrStr($len - length($str), " ");
+  # (0:$self, 1:$str, 2:$len)
+  return($_[1] . $_[0]->_nChrStr($_[2] - length($_[1]), ' '));
 }
 
 sub _rightJust(){
-  my ($self, $str, $len) = @_;
-  $self->_nChrStr($len - (defined($str) ? length($str) : 0), " ") . (defined($str) ? $str : "");
+  # (0:$self, 1:$str, 2:$len)
+  return($_[0]->_nChrStr($_[2] - (defined($_[1]) ? length($_[1]) : 0), ' ') . (defined($_[1]) ? $_[1] : ''));
 }
 
 sub _centerJust(){
-  my ($self, $str, $len) = @_;
-  my $left = sprintf("%d", ($len - length($str)) / 2);
-  my $right = $len - (length($str) + $left);
-  $self->_nChrStr($left, " ") . $str . $self->_nChrStr($right, " ");
+  # (0:$self, 1:$str, 2:$len)
+  my $left = sprintf("%d", ($_[2] - length($_[1])) / 2);
+  my $right = $_[2] - (length($_[1]) + $left);
+  return($_[0]->_nChrStr($left, ' ') . $_[1] . $_[0]->_nChrStr($right, ' '));
 }
 
 sub renderGrid(){
@@ -1339,7 +1340,7 @@ sub loadGridFromSTDIN{
   } elsif ($renderer eq "HTML") {
     print($at->renderHTMLTable(1));
   } elsif ($renderer eq "LaTeX") {
-    print($at->renderLaTeXTable(1)); 
+    print($at->renderLaTeXTable()); 
   } elsif ($renderer eq "CSV") {
     print($at->renderCSV()); 
   } else {
@@ -1352,6 +1353,7 @@ sub loadGridFromSTDIN{
 sub create_MasterKey {
   # arg 0: self
   # args : column components in order
+  return($_[1]) if (scalar @_ == 2);
   my $self = shift @_;
   return(join("_____", @_));
 }
@@ -1382,152 +1384,161 @@ sub __loadCSVcore {
   # if not modifying a value make sure to set to 'undef' so that defaults are used
   # refer to Text::CSV's perldoc for more details
 
-  return($self->_set_error_and_return("Can not load a CSV to a AutoTable which already has data", 0))
+  return($self->_set_error_and_return('Can not load a CSV to a AutoTable which already has data', 0))
     if ($self->{hasData});
   
   my $err;
 
   ($err, $rmkc) = &__check_zero_array_ref($rmkc);
-  return($self->_set_error_and_return("Issue with AutoTable's reference to master key columns: $err", 0))
+  return($self->_set_error_and_return("Issue with AutoTable\'s reference to master key columns: $err", 0))
     if (! MMisc::is_blank($err));
 
   ($err, $rk) = &__check_zero_array_ref($rk);
-  return($self->_set_error_and_return("Issue with AutoTable's reference to keep header: $err", 0))
+  return($self->_set_error_and_return("Issue with AutoTable\'s reference to keep header: $err", 0))
     if (! MMisc::is_blank($err));
 
   ($err, $rr) = &__check_zero_array_ref($rr);
-  return($self->_set_error_and_return("Issue with AutoTable's reference to \"to remove headers\": $err", 0))
+  return($self->_set_error_and_return("Issue with AutoTable\'s reference to \"to remove headers\": $err", 0))
     if (! MMisc::is_blank($err));
 
-  return($self->_set_error_and_return("Can not both remove and keep headers at the same time", 0))
+  return($self->_set_error_and_return('Can not both remove and keep headers at the same time', 0))
     if ((defined $rk) && (defined $rr));
 
   my $withSpecial = (MMisc::is_blank($sp_file)) ? 0 : 1;
 
-  open FILE, "<$file"
+  open LFILE, "<$file"
     or return($self->_set_error_and_return("Could not open CSV file ($file): $!\n", 0));
-  binmode FILE, $self->getPerlEncodingString() if (! MMisc::is_blank($self->getPerlEncodingString()));
-  my @filec = <FILE>;
-  close FILE;
-  chomp @filec;
+  binmode LFILE, $self->getPerlEncodingString()
+    if (! MMisc::is_blank($self->getPerlEncodingString()));
   
   my @sp_filec = ();
   if ($withSpecial) {
-    open FILE, "<$sp_file"
+    open SPFILE, "<$sp_file"
       or return($self->_set_error_and_return("Could not open Special CSV file ($sp_file): $!\n", 0));
-    binmode FILE, $self->getPerlEncodingString() if (! MMisc::is_blank($self->getPerlEncodingString()));
-    @sp_filec = <FILE>;
-    close FILE;
-    chomp @sp_filec;
-    return($self->_set_error_and_return("Not the same number of lines between CSV file and Special CSV file (" . scalar @filec . " vs " . scalar @sp_filec . ")", 0))
-      if (scalar @filec != scalar @sp_filec);
+    binmode SPFILE, $self->getPerlEncodingString() 
+      if (! MMisc::is_blank($self->getPerlEncodingString()));
   } 
 
-  return($self->_set_error_and_return("Not content in CSV file or header only ? (\# lines: " . scalar @filec . ")", 0))
-    if (scalar @filec < 2);
-
   my $csvh = new CSVHelper($qc, $sc);
-  return($self->_set_error_and_return("Problem creating CSV handler", 0))
+  return($self->_set_error_and_return('Problem creating CSV handler', 0))
     if (! defined $csvh);
-  return($self->_set_error_and_return("Problem with CSV handler: " . $csvh->get_errormsg(), 0))
+  return($self->_set_error_and_return('Problem with CSV handler: ' . $csvh->get_errormsg(), 0))
     if ($csvh->error());
 
   my $sp_csvh = undef;
   if ($withSpecial) {
     $sp_csvh = new CSVHelper($sp_qc, $sp_sc);
-    return($self->_set_error_and_return("Problem creating Special CSV handler", 0))
+    return($self->_set_error_and_return('Problem creating Special CSV handler', 0))
       if (! defined $sp_csvh);
-    return($self->_set_error_and_return("Problem with Special CSV handler: " . $sp_csvh->get_errormsg(), 0))
+    return($self->_set_error_and_return('Problem with Special CSV handler: ' . $sp_csvh->get_errormsg(), 0))
       if ($sp_csvh->error());
   }
-  
-  my %csv = ();
-  my %sp_csv = ();
-  my %elt1 = ();
-  my @order = ();
-  my $inc = 0;
-  for (my $i = 0; $i < scalar @filec; $i++) {
-    my $line = $filec[$i];
-    my $sp_line = ($withSpecial) ? $sp_filec[$i] : "";
-    
-    my $key = sprintf("File: $file | Line: %012d", $inc);
-    my @cols = $csvh->csvline2array($line);
-    return($self->_set_error_and_return("Problem with CSV line: " . $csvh->get_errormsg(), 0))
-      if ($csvh->error());
-
-    my @sp_cols = ();
-    if ($withSpecial) {
-      @sp_cols = $sp_csvh->csvline2array($sp_line);
-      return($self->_set_error_and_return("Problem with Special CSV line: " . $sp_csvh->get_errormsg(), 0))
-        if ($sp_csvh->error());
-      return($self->_set_error_and_return("Problem with Special CSV line: no the same number of columns between main CSV and Special CSV (" . scalar @cols . " vs " . scalar @sp_cols . ")", 0))
-        if (scalar @cols  != scalar @sp_cols);
-    }
-
-
-    if ($inc > 0) {
-      $elt1{$cols[0]}++;
-    } else {
-      $csvh->set_number_of_columns(scalar @cols);
-      $sp_csvh->set_number_of_columns(scalar @cols) if ($withSpecial);
-    }
-    
-    push @order, $key;
-    push @{$csv{$key}}, @cols;
-    if ($withSpecial) {
-      push @{$sp_csv{$key}}, @sp_cols;
-    }
-
-    $inc++;
-  }
-  
-  $self->setProperties({ "$key_KeyColumnCsv" => "Remove", "$key_KeyColumnTxt" => "Remove", "$key_KeyColumnHTML" => "Remove"});
-
-  my @colIDs = @{$csv{$order[0]}};
-
-  my %match = MMisc::array1d_to_ordering_hash(\@colIDs);
-  if (defined $rmkc) {
-    my @nf = ();
-    for (my $i = 0; $i < scalar @$rmkc; $i++) {
-      push(@nf, $$rmkc[$i]) if (! exists $match{$$rmkc[$i]});
-    }
-    return($self->_set_error_and_return("Can not load a CSV to a AutoTable: missing required MasterKey columns:" . join(", ", @nf), 0))
-      if (scalar @nf > 0);
-  }
-
+ 
+  $self->setProperties({ $key_KeyColumnCsv => 'Remove', $key_KeyColumnTxt => 'Remove', $key_KeyColumnHTML => 'Remove', $key_KeyColumnLaTeX => 'Remove'});
+ 
+  my %match = ();
   my %rem = ();
-  if (defined $rr) {
-    for (my $i = 0; $i < scalar @$rr; $i++) {
-      $rem{$$rr[$i]}++;
-    }
-  }
-  if (defined $rk) {
-    my %t = MMisc::array1d_to_count_hash($rk);
-    for (my $i = 0; $i < scalar @colIDs; $i++) {
-      $rem{$colIDs[$i]}++ if (! exists $t{$colIDs[$i]});
-    }
-  }
+  my @colIDs = ();
 
-  for (my $i = 1; $i < scalar @order; $i++) {
-    my $key = $order[$i];
-    my @a = @{$csv{$key}};
-    my @sp_a = ($withSpecial) ? @{$sp_csv{$key}} : ();
-    my $ID = $key;
-    if (defined $rmkc) {
-      my @t = ();
-      for (my $k = 0; $k < scalar @$rmkc; $k++) {
-        push @t, $a[$match{$$rmkc[$k]}];
-      }
-      $ID = $self->create_MasterKey(@t);
-    }
+  my $inc = 0;
+  my $line = '';
+  my $sp_line = '';
+  my @cols = ();
+  my @sp_cols = ();
+
+  my $doit = 1;
+  my $toread = 4096;
+  my $eofl = 0;
+  my $eofsp = 0;
+  while ($doit) {
+    my $read = 0;
     
-    for (my $j = 0; $j < scalar @a; $j++) {
-      next if (exists $rem{$colIDs[$j]});
-      $self->setData($a[$j], $colIDs[$j], $ID);
-      $self->setSpecial($colIDs[$j], $ID, $sp_a[$j]) if (! MMisc::is_blank($sp_a[$j]));
+    my @lines = ();
+    my @sp_lines = ();
+    while ($read < $toread) {
+      push @lines, scalar readline(*LFILE);
+      $eofl = eof(LFILE);
+      if ($withSpecial) {
+        push @sp_lines, scalar readline(*SPFILE);
+        $eofsp = eof(SPFILE);
+        return($self->_set_error_and_return('Not the same number of lines between CSV file and Special CSV file (more in special) ?'))
+          if ($eofsp && (! $eofl));
+        return($self->_set_error_and_return('Not the same number of lines between CSV file and Special CSV file (less in special) ?'))
+          if ((! $eofsp) && $eofl);
+      }
+      $read += $eofl ? $toread : 1;
+    }
+    chomp @lines;
+    chomp @sp_lines;
+    $doit = 0 if ($eofl);
+
+    for (my $ln = 0; $ln < scalar @lines; $ln++) {
+      $line = $lines[$ln];
+      $sp_line = ($withSpecial) ? $sp_lines[$ln] : '';
+
+      my $key = (! defined $rmkc) ? sprintf("File: $file | Line: %012d", $inc) : "";
+      @cols = ();
+      @cols = $csvh->csvline2array($line);
+      return($self->_set_error_and_return('Problem with CSV line: ' . $csvh->get_errormsg(), 0))
+        if ($csvh->error());
+      $csvh->set_number_of_columns(scalar @cols) if ($inc == 0);
+      
+      @sp_cols = ();
+      if ($withSpecial) {
+        @sp_cols = $sp_csvh->csvline2array($sp_line);
+        return($self->_set_error_and_return('Problem with Special CSV line: ' . $sp_csvh->get_errormsg(), 0))
+          if ($sp_csvh->error());
+        $sp_csvh->set_number_of_columns(scalar @sp_cols) if ($inc == 0);
+      }      
+
+      # First line, process header
+      if ($inc == 0) { # First line
+        %match = MMisc::array1d_to_ordering_hash(\@cols);
+        if (defined $rmkc) {
+          my @nf = ();
+          for (my $i = 0; $i < scalar @$rmkc; $i++) {
+            push(@nf, $$rmkc[$i]) if (! exists $match{$$rmkc[$i]});
+          }
+          return($self->_set_error_and_return('Can not load CSV to AutoTable: missing required MasterKey columns:' . join(", ", @nf), 0))
+            if (scalar @nf > 0);
+        }
+
+        if (defined $rr) {
+          for (my $i = 0; $i < scalar @$rr; $i++) {
+            $rem{$$rr[$i]}++;
+          }
+        }
+        if (defined $rk) {
+          my %t = MMisc::array1d_to_count_hash($rk);
+          for (my $i = 0; $i < scalar @cols; $i++) {
+            $rem{$cols[$i]}++ if (! exists $t{$cols[$i]});
+          }
+        }
+        @colIDs = @cols;
+      } else {
+        # Every other lines, process data
+        if (defined $rmkc) {
+          my @t = ();
+          for (my $k = 0; $k < scalar @$rmkc; $k++) {
+            push @t, $cols[$match{$$rmkc[$k]}];
+          }
+          $key = $self->create_MasterKey(@t);
+        }
+        
+        for (my $j = 0; $j < scalar @cols; $j++) {
+          next if (exists $rem{$colIDs[$j]});
+          $self->setData($cols[$j], $colIDs[$j], $key);
+          $self->setSpecial($colIDs[$j], $key, $sp_cols[$j]) 
+            if (($withSpecial) && (! MMisc::is_blank($sp_cols[$j])));
+        }
+      }
+
+      $inc++;
     }
   }
-  
+  close LFILE;
+  close SPFILE;
+
   return(1);
 }
 
@@ -1686,61 +1697,50 @@ sub renderCSVandSpecial { return($_[0]->__renderCSVcore(1, $_[1], $_[2])); }
 ################## Access functions #########################################
 
 sub getData{
-  my ($self, $colid, $rowid) = @_;
-  
-  if (defined($self->{data}{&__getLID($rowid, $colid)})) {
-    return $self->{data}{&__getLID($rowid, $colid)};
-  }
+  # (0:$self, 1:$colid, 2:$rowid)
+  my $id = &__getLID($_[2], $_[1]);
+  return($_[0]->{data}{$id}) if (defined($_[0]->{data}{$id}));
   return(undef);    
 }
 
 sub getColIDs{
-  my ($self, $order) = @_;
-  return $self->_getOrderedLabelIDs($self->{"colLabOrder"}, $order, $self->{Properties}->getValue($key_KeepColumnsInOutput));
+  # (0:$self, 1:$order)
+  return($_[0]->_getOrderedLabelIDs($_[0]->{'colLabOrder'}, $_[1], $_[0]->{Properties}->getValue($key_KeepColumnsInOutput)));
 }
 
 sub getRowIDs{
-  my ($self, $order) = @_;
-  return $self->_getOrderedLabelIDs($self->{"rowLabOrder"}, $order, $self->{Properties}->getValue($key_KeepRowsInOutput));
+  # (0:$self, 1:$order)
+  return($_[0]->_getOrderedLabelIDs($_[0]->{'rowLabOrder'}, $_[1], $_[0]->{Properties}->getValue($key_KeepRowsInOutput)));
 }
 
 sub hasColID{
-  my ($self, $id) = @_;
-  return exists($self->{"colLabOrder"}->{SubID}{$id});
+  # (0:$self, 1:$id)
+  return(exists($_[0]->{'colLabOrder'}->{SubID}{$_[1]}));
 }
 
 sub hasRowID{
-  my ($self, $id) = @_;
-  return exists($self->{"rowLabOrder"}->{SubID}{$id});
+  # (0:$self, 1:$id)
+  return(exists($_[0]->{'rowLabOrder'}->{SubID}{$_[1]}));
 }
 
 ############################################################
 
 sub _set_errormsg {
-  my ($self, $txt) = @_;
-  $self->{errormsg}->set_errormsg($txt);
+  # (0:$self, 1:$txt)
+  $_[0]->{errormsg}->set_errormsg($_[1]);
 }
 
 #####
 
-sub get_errormsg {
-  my ($self) = @_;
-  return($self->{errormsg}->errormsg());
-}
+sub get_errormsg { return($_[0]->{errormsg}->errormsg()); }
 
 #####
 
-sub error {
-  my ($self) = @_;
-  return($self->{errormsg}->error());
-}
+sub error { return($_[0]->{errormsg}->error()); }
 
 #####
 
-sub clear_error {
-  my ($self) = @_;
-  return($self->{errormsg}->clear());
-}
+sub clear_error { return($_[0]->{errormsg}->clear()); }
 
 #####
 
@@ -1757,24 +1757,21 @@ sub _set_error_and_return {
 
 ### Add 1 to the value for the col/row
 sub increment{
-  my ($at, $col, $row) = @_;
-
-  my $x = $at->getData($col, $row);
+  # ($at:0 , $col:1, $row:2)
+  my $x = $_[0]->getData($_[1], $_[2]);
   $x = 0 if (! defined($x));
-  $x ++;
-  $at->setData($x, $col, $row);
+  $x++;
+  $_[0]->setData($x, $_[1], $_[2]);
 }
 
 ############################################################
 sub incrementBy{
-  my ($at, $col, $row, $val) = @_;
+  # ($at:0, $col:1, $row:2, $val:3)
 
-  my $x = $at->getData($col, $row);
+  my $x = $_[0]->getData($_[1], $_[2]);
   $x = 0 if (! defined($x));
-  $x += $val;
-##  print REP "$x $col $row\n";
-  $at->setData($x, $col, $row);
-#  print REP Dumper($at);
+  $x += $_[3];
+  $_[0]->setData($x, $_[1], $_[2]);
 }
 
 1;
