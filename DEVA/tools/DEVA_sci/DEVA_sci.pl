@@ -362,11 +362,11 @@ foreach my $key (keys %sys) {
   }
 
   if ($g_thr) {
-      $bid_trials{$ubid}->addTrialWithoutDecision($bid, $sys{$key}{$Scorecolumn}, $istarg);
+    $bid_trials{$ubid}->addTrialWithoutDecision($bid, $sys{$key}{$Scorecolumn}, $istarg);
   } else {
     $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg);
   }
-
+  
   push(@at, [$key, $bid, $sys{$key}{$Scorecolumn},
              $decision, ($istarg == 1) ? 'TARG' : 'NonTARG']) if ($GetTrialsDB);
 }
@@ -408,7 +408,7 @@ MMisc::error_quit("Problem at check point") if ($tot1 != $tot2);
 
 &add_array2TrialsDB($dbfile, \@at) if (($GetTrialsDB) && (scalar @at > 0));
 
-&doDETwork(%bid_trials);
+&doDETwork();
 
 MMisc::ok_quit("Done");
 
@@ -536,8 +536,6 @@ sub def_bid_trials {
 #####
 
 sub doDETwork {
-  my %bid_trials = @_;
-
   my $detSet = new DETCurveSet("DET Set");
 
   foreach my $bid (keys %bid_trials) {
