@@ -61,11 +61,11 @@ if ($xobj->error()) {
 ##########
 print "** Checking for gnuplot : ";
 
-my ($err, $gnuplot, $gv) = DETCurveGnuplotRenderer::get_gnuplotcmd();
-if (MMisc::is_blank($err)) {
+my ($derr, $gnuplot, $gv) = DETCurveGnuplotRenderer::get_gnuplotcmd();
+if (MMisc::is_blank($derr)) {
   print "$gnuplot [$gv]\n\n";
 } else {
-  print "  ** $err **\n\n";
+  print "  ** $derr **\n\n";
   $err++;
 }
 
