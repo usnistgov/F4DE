@@ -115,7 +115,7 @@ sub alignSegments
   while (1) {
     my @detected_results = $self->{KWSLIST}->getNextDetectedKWlist() unless $kws_done_loading;
     my ($msg, $detected_list) = ($detected_results[0], $detected_results[1]);
-    warn $msg unless MMisc::is_blank($msg);
+    MMisc::error_quit($msg) if (! MMisc::is_blank($msg));
     #
     my $termid = "";
     if (!defined $detected_list) {
