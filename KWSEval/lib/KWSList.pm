@@ -157,6 +157,8 @@ sub getSystemID {
 ########################################
 
 sub __SEcheck {
+  return("") if (! defined $_[0]->{SEfile});
+
   my $txt = MMisc::slurp_file($_[0]->{SEfile});
   if (! MMisc::is_blank($txt)) {
     return($txt) if (! ($txt =~ m%validates%gi));
@@ -180,7 +182,7 @@ sub __get_attr {
 # Note: "CreateTerms" is selected here (0 for false, 1 for true)
 # wihtout it set to 1, TERMs will not be created 
 sub openXMLFileAccess {
-  my ($self, $kwslistf, $CreateTerms) = @_;
+  my ($self, $kwslistf, $CreateTerms, $bypassxmllint) = @_;
 
   return("Refusing to load a file on top of an already existing object")
     if ($self->{LoadedFile} != 0);
@@ -200,29 +202,36 @@ sub openXMLFileAccess {
   return("Could not obtain \'KWSList.pm\' location, aborting")
       if (! defined $modfp);
 
-  my $f4b = 'F4DE_BASE';
-  my $xmllint_env = "F4DE_XMLLINT";
-  my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
-  my @xsdfilesl = ('KWSEval-kwslist.xsd');
-
-  # First let us use xmllint on the file XML file
-  my $xmlh = new xmllintHelper();
-  my $xmllint = MMisc::get_env_val($xmllint_env, "");
-  return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xmllint($xmllint));
-  return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xsdfilesl(@xsdfilesl));
-  return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xsdpath($xsdpath));
-
-#  print STDERR "Loading KWS List file '$kwslistf'.\n";
-  
-  (local *KWSLISTFH, my $sefile) = $xmlh->run_xmllint_pipe($kwslistf);
-  return("While trying to load XML file ($kwslistf) : " . $xmlh->get_errormsg() )
-    if ($xmlh->error());
-
-  $self->{FH} = *KWSLISTFH;
-  $self->{SEfile} = $sefile;
+  if ($bypassxmllint == 1) {
+    open(local *KWSLISTFH, "<$kwslistf")
+      or return("Problem opening input file ($kwslistf): $!");
+    $self->{FH} = *KWSLISTFH;
+  } else {
+    my $f4b = 'F4DE_BASE';
+    my $xmllint_env = "F4DE_XMLLINT";
+    my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
+    my @xsdfilesl = ('KWSEval-kwslist.xsd');
+    
+    # First let us use xmllint on the file XML file
+    my $xmlh = new xmllintHelper();
+    my $xmllint = MMisc::get_env_val($xmllint_env, "");
+    return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_xmllint($xmllint));
+    return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_xsdfilesl(@xsdfilesl));
+    return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_xsdpath($xsdpath));
+    
+    #  print STDERR "Loading KWS List file '$kwslistf'.\n";
+    
+    (local *KWSLISTFH, my $sefile) = $xmlh->run_xmllint_pipe($kwslistf);
+    return("While trying to load XML file ($kwslistf) : " . $xmlh->get_errormsg() )
+      if ($xmlh->error());
+    
+    $self->{FH} = *KWSLISTFH;
+    $self->{SEfile} = $sefile;
+  }
+  local *KWSLISTFH = $self->{FH};
 
   my $doit = 1;
   # Load the KWSLIST header
@@ -305,7 +314,7 @@ sub getNextDetectedKWlist {
     my $line = <KWSLISTFH>;
     chomp($line);
     $self->{linec}++;
-    
+#print "[$line]\n";    
     my ($err, $closed, $name, $content, %vals) = MtXML::line_extractor($line);
     return("Problem processing File Access: $err", undef)
       if (! MMisc::is_blank($err));
