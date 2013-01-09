@@ -121,9 +121,10 @@ my $sha256 = "";
 my $sctkbindir = "";
 my $sysdesc = "";
 my $eteam = undef;
+my $bypassxmllint = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:    DE  H  K    P  ST V      cdef h         rst v     #
+# Used:    DE  H  K    P  ST V X    cdef h         rst v     #
 
 my %opt = ();
 GetOptions
@@ -146,6 +147,7 @@ GetOptions
    'Tsctkbin=s' => \$sctkbindir,
    'tSystemDescription=s' => \$sysdesc,
    'ExpectedTeamName=s' => \$eteam,
+   'XmllintBypass' => \$bypassxmllint,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -347,7 +349,8 @@ sub execKWSScoreRun{
     " -s $def->{KWSLIST}".
     " $def->{KWSEVAL_OPTS}".
     " -f $compRoot".
-    " -y TXT -y HTML ";
+    " -y TXT -y HTML";
+  $com .= " -X" if ($bypassxmllint);
 
   if (! -f "$compRoot.log"){
     my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$compRoot.log", $com);
@@ -866,7 +869,7 @@ sub vprint {
 ############################################################
 
 sub set_usage {
-  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--ExpectedTeamName TEAM] --Specfile specfile --expid EXPID --sysfile kwslist --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]] [--fileCreate file [--fileCreate file [...]]]\n";
+  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--ExpectedTeamName TEAM] --Specfile specfile --expid EXPID --sysfile kwslist --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]] [--fileCreate file [--fileCreate file [...]]]\n";
   $usage .= "\n";
   $usage .= "Will score a submission file against data present in the dbDir.\n";
   $usage .= "\nThe program needs a \'dbDir\' to load some of its eval specific definitions; this directory must contain pairs of <CORPUSID>_<PARTITION> \".ecf.xml\" and \".kwlist.xml\" files that match the component of the EXPID to confirm expected data validity, as well as a <CORPUSID>_<PARTITION> directory containing reference data needed for scoring.\n";
@@ -875,6 +878,7 @@ sub set_usage {
   $usage .= "  --help       Display this help message\n";
   $usage .= "  --Verbose    Be more verbose\n";
   $usage .= "  --KWSEval    Location of the KWSEval tool (default: $kwseval)\n";
+  $usage .= "  --XmllintBypass      Bypass xmllint check of the KWSList XML file (this will reduce the memory footprint when loading the file, but requires that the file be formatted in a way similar to how \'xmllint --format\' would)\n";
   $usage .= "  --DETUtil    Location of the DETUtil tool (default: $detutil)\n";
   $usage .= "  --Hsha256id  SHA256 ID\n";
   $usage .= "  --ExpectedTeamName  Expected value of TEAM (used to check EXPID content)\n";

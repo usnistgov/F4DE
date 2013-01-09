@@ -99,6 +99,10 @@ my $RTTMfile = "";
 my $outputfile = "";
 my $mddir = "";
 my $aMT = 0;
+my $bypassxmllint = 0;
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
+# Used: A                      X      e       m o  rst       #
 
 GetOptions
   (
@@ -109,6 +113,7 @@ GetOptions
    'output=s'     => \$outputfile,
    'memdumpDir=s' => \$mddir,
    'AllowMissingTerms' => \$aMT,
+   'XmllintBypass' => \$bypassxmllint,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::error_quit("$usage")
@@ -148,7 +153,7 @@ my %ListTerms;
 foreach my $termid (keys %{ $TERM->{TERMS} }) { $ListTerms{$termid} = 1; }
 
 my $KWS = new KWSList();
-$err = $KWS->openXMLFileAccess($KWSfile, 1);
+$err = $KWS->openXMLFileAccess($KWSfile, 1, $bypassxmllint);
 MMisc::error_quit("Problem loading KWSList file ($KWSfile) : $err")
   if (! MMisc::is_blank($err));
 
@@ -258,7 +263,7 @@ sub saveObject {
 #####
 
 sub set_usage {
-  my $usage = "$0 --termfile termfile --ecf ecfile --sysfile kwsfile [--rttmfile rttmfile] [--output purged_KWSlist] [--memdumpDir dir]\n";
+  my $usage = "$0 --termfile termfile --ecf ecfile --sysfile kwsfile [--rttmfile rttmfile] [--output purged_KWSlist] [--memdumpDir dir] [--AllowMissingTerms] [--XmllintBypass] \n";
   $usage .= "\n";
   $usage .= "Required file arguments:\n";
   $usage .= "  --termfile        Path to the KWList file\n";
@@ -269,6 +274,8 @@ sub set_usage {
   $usage .= "  --output          Path to the output new purged KWS file\n";
   $usage .= "  --memdumpDir      Path to the directory where to put all processed input files\n";
   $usage .= "  --AllowMissingTerms  Authorize TERMs defined in KWList file but not in the KWSlist file\n";
+  $usage .= "  --XmllintBypass   Bypass xmllint check of the KWSList XML file (this will reduce the memory footprint when loading the file, but requires that the file be formatted in a way similar to how \'xmllint --format\' would)\n"; 
+
   $usage .= "\n";
   
   return($usage);

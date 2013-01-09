@@ -200,6 +200,7 @@ my $charSplitTextDeleteHyphens = 0;
 my @textPrefilters = ();
 
 my $articulatedDET = 0;
+my $bypassxmllint = 0;
 
 GetOptions
 (
@@ -238,6 +239,7 @@ GetOptions
     'ID-System=s'                         => \$IDSystem, 
     'xprefilterText=s@'                   => \@textPrefilters,
     'articlulatedDET'                     => \$articulatedDET,
+    'XmllintBypass'                       => \$bypassxmllint,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
 #parsing TermIDs
@@ -342,7 +344,7 @@ MMisc::error_quit("Problem with STD File ($STDfile): $err")
   if (! MMisc::is_blank($err));
 print "Loading KWSList File $STDfile\n";
 $STD = new KWSList();
-$STD->openXMLFileAccess($STDfile, 0); #now ready for getNextDetectedKWlist
+$STD->openXMLFileAccess($STDfile, 0, $bypassxmllint); #now ready for getNextDetectedKWlist
 $STD->SetSystemID($IDSystem) if (! MMisc::is_blank($IDSystem));
 
 $err = MMisc::check_file_r($TERMfile);
@@ -605,6 +607,7 @@ sub set_usage {
 	$tmp .= "\n";
 	$tmp .= "Other options:\n";
 	$tmp .= "  -a, --articulatedDET     Compute the faster articulated DET curves.\n";
+  $tmp .= "  -X, --XmllintBypass      Bypass xmllint check of the KWSList XML file (this will reduce the memory footprint when loading the file, but requires that the file be formatted in a way similar to how \'xmllint --format\' would).\n"; 
 	$tmp .= "\n";
 
   return($tmp);
