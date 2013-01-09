@@ -37,6 +37,8 @@ use Data::Dumper;
 
 use DETCurveGnuplotRenderer;
 
+my $unitTestMode = 0;
+
 sub new
 {
   my $class = shift;
@@ -93,7 +95,10 @@ sub alignTerms
     #get next detected list
     my @detected_results = $self->{KWSLIST}->getNextDetectedKWlist() unless $kws_done_loading;
     my ($msg, $detected_list) = ($detected_results[0], $detected_results[1]);
-    MMisc::error_quit($msg) if (! MMisc::is_blank($msg));
+    if (! MMisc::is_blank($msg)) {
+      MMisc::error_quit($msg) if ($unitTestMode == 0);
+      warn($msg);
+    }
     #
     my $termid = "";
     if (!defined $detected_list) {
@@ -486,6 +491,7 @@ sub _ecfOfRecord
 
 sub unitTest
 {
+  $unitTestMode = 1;
   print "Test KWSAlignment\n";
   my $path = shift;
 
@@ -647,6 +653,7 @@ sub unitTest
   else { print "FAILED\n"; return 0};
 
   print "\nAll tests...\tOK\n";
+  $unitTestMode = 0;
   return 1;
 }
 
