@@ -37,7 +37,7 @@ SYSDESC=""
 AUTH_TERM=0
 validator_cmdadd=""
 XMLLINTBYPASS=0
-while getopts "hrARS:" OPTION
+while getopts "hrARS:X" OPTION
 do
   case $OPTION in
     h)
@@ -118,7 +118,9 @@ check_file "$if"
 kmode=`echo $if | perl -ne 's%^.+/%%;s%\_.+$%%; print uc($_)'`
 if [ "A$kmode" == "A" ]; then error_quit "No KWS mode information found"; fi
 
-conf="${kmode}_SubmissionHelper.cfg"
+subhelp_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($1)); print $dir' $0`
+
+conf="${subhelp_dir}/${kmode}_SubmissionHelper.cfg"
 echo "-- Loading Configuration file: $conf"
 check_file "$conf"
 source "$conf"
