@@ -104,7 +104,7 @@ sub getLanguage
 sub setEncoding{
     my ($self, $type) = @_;
 
-    if (!defined($type) || $type !~ /^(UTF-8|)$/){
+    if (!defined($type) || ($type !~ /^(UTF-8|)$/ && $type !~ /^gb2312$/i)){
        $self->set_errormsg("Error: setCompareNormalize failed because of unknown encoding /$type/");
        return 0;
     }
@@ -124,6 +124,7 @@ sub getPerlEncodingString
   my ($self) = @_;
   
   return (":utf8") if ($self->{ENCODING} eq "UTF-8");
+  return (":gb2312-raw") if ($self->{ENCODING} =~ /^gb2312$/i);
   return ($self->{ENCODING});
 }
 
