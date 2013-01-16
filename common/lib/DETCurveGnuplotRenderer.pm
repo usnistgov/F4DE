@@ -67,6 +67,7 @@ sub new
        DETShowPoint_Best => 0,
        DETShowPoint_Ratios => 0,
        DETShowPoint_SupportValues => [ ('C', 'M', 'F', 'T')],
+       DETShowEvaluatedBlocks => 0,
        ### From Brian A.  'rgb "\#ff0000"', 'rgb "\#0000ff"', 'rgb "\#00ff00"', 'rgb "\#ffd700"', 'rgb "\#006400"', 'rgb "\#8383ff"', 'rgb "\#a0522d"', 'rgb "\#00ffc1"', 'rgb "\#008395"', 'rgb "\#00008b"', 'rgb "\#95d34f"', 'rgb "\#f69edb"', 'rgb "\#800080"', 'rgb "\#f61160"', 'rgb "\#ffc183"', 'rgb "\#8ca77b"', 'rgb "\#ff8c00"', 'rgb "\#837200"', 'rgb "\#72f6ff"', 'rgb "\#9ec1ff"', 'rgb "\#72607b"', 'rgb "\#800000"', 'rgb "\#ffff00"',
 
        colorSchemeDefs => { "colorPresentation" => 
@@ -286,6 +287,7 @@ sub _parseOptions{
   }
   
   ### Controls the point statistics plotted on the DET Curve
+  $self->{DETShowEvaluatedBlocks} = $options->{DETShowEvaluatedBlocks} if (exists($options->{DETShowEvaluatedBlocks}));
   $self->{DETShowPoint_Actual} = $options->{DETShowPoint_Actual} if (exists($options->{DETShowPoint_Actual}));
   $self->{DETShowPoint_Best}   = $options->{DETShowPoint_Best}   if (exists($options->{DETShowPoint_Best}));
   $self->{DETShowPoint_Ratios} = $options->{DETShowPoint_Ratios} if (exists($options->{DETShowPoint_Ratios}));
@@ -1436,36 +1438,41 @@ sub _getLineTitleString
 
   my ($missStr, $faStr, $combStr) = ( $det->{METRIC}->errMissLab(), $det->{METRIC}->errFALab(), 
                                       $det->{METRIC}->combLab());
-  if ($type eq "Actual"){
-     my ($MeanActComb, $SampleStdDevActComb, $MeanMiss, $SampleStdDevMiss, $MeanFA, $SampleStdDevFA) =
-            $det->getMetric()->getActualDecisionPerformance();
-     ($metStr, $comb, $fa, $miss, $thr) = ("Actual", $MeanActComb, $MeanFA, $MeanMiss,
-                                           $det->getTrials()->getTrialActualDecisionThreshold());
-  } elsif ($type eq "Best"){
-     ($metStr, $comb, $fa, $miss, $thr) = ($det->{METRIC}->combType() eq "minimizable" ? "Min" : "Max", 
-                                           $det->getBestCombComb(),
-                                           $det->getBestCombMFA(),
-                                           $det->getBestCombMMiss(),
-                                           $det->getBestCombDetectionScore());
-  } elsif ($type eq "ErrorRatio"){
-    ($metStr, $comb, $fa, $miss, $thr) = ("IsoRatio=$ratio", 
-                                          $det->getIsolinePointsCombValue($ratio), 
-                                          $det->getIsolinePointsMFAValue($ratio),
-                                          $det->getIsolinePointsMMissValue($ratio),
-                                          $det->getIsolinePointsDetectionScoreValue($ratio));
-  }
 
-  my $lab = $self->_getOffAxisLabel($miss, $fa, $offAxisColor, $offAxisClosedPoint, $offAxisPointSize, $offAxisQStr); 
-  push (@$offAxisArr, $lab) if ($lab ne "");
-
-  $title = "$metStr ";
-  foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
-    $title .= sprintf(" $faStr=".$det->{METRIC}->errFAPrintFormat(),     $fa) if ($supVal eq "F");
-    $title .= sprintf(" $missStr=".$det->{METRIC}->errMissPrintFormat(), $miss) if ($supVal eq "M");
-    $title .= sprintf(" Thr=".$det->{METRIC}->combPrintFormat(),         $thr) if ($supVal eq "T");
-    $title .= sprintf(" $combStr=".$det->{METRIC}->combPrintFormat(),    $comb) if ($supVal eq "C");
+  if ($type eq "EvaluatedBlocks"){
+    $title = " (".$det->getTrials()->getNumEvaluatedBlocks()." of ".$det->getTrials()->getNumBlocks()." ".$det->getTrials()->getBlockID().")";
+  } else {
+    if ($type eq "Actual"){
+       my ($MeanActComb, $SampleStdDevActComb, $MeanMiss, $SampleStdDevMiss, $MeanFA, $SampleStdDevFA) =
+              $det->getMetric()->getActualDecisionPerformance();
+       ($metStr, $comb, $fa, $miss, $thr) = ("Actual", $MeanActComb, $MeanFA, $MeanMiss,
+                                             $det->getTrials()->getTrialActualDecisionThreshold());
+    } elsif ($type eq "Best"){
+       ($metStr, $comb, $fa, $miss, $thr) = ($det->{METRIC}->combType() eq "minimizable" ? "Min" : "Max", 
+                                             $det->getBestCombComb(),
+                                             $det->getBestCombMFA(),
+                                             $det->getBestCombMMiss(),
+                                             $det->getBestCombDetectionScore());
+    } elsif ($type eq "ErrorRatio"){
+      ($metStr, $comb, $fa, $miss, $thr) = ("IsoRatio=$ratio", 
+                                            $det->getIsolinePointsCombValue($ratio), 
+                                            $det->getIsolinePointsMFAValue($ratio),
+                                            $det->getIsolinePointsMMissValue($ratio),
+                                            $det->getIsolinePointsDetectionScoreValue($ratio));
+    }
+  
+    my $lab = $self->_getOffAxisLabel($miss, $fa, $offAxisColor, $offAxisClosedPoint, $offAxisPointSize, $offAxisQStr); 
+    push (@$offAxisArr, $lab) if ($lab ne "");
+  
+    $title = "$metStr";
+    foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
+      $title .= sprintf(" $faStr=".$det->{METRIC}->errFAPrintFormat(),     $fa) if ($supVal eq "F");
+      $title .= sprintf(" $missStr=".$det->{METRIC}->errMissPrintFormat(), $miss) if ($supVal eq "M");
+      $title .= sprintf(" Thr=".$det->{METRIC}->combPrintFormat(),         $thr) if ($supVal eq "T");
+      $title .= sprintf(" $combStr=".$det->{METRIC}->combPrintFormat(),    $comb) if ($supVal eq "C");
+    }
   }
-  $title;        
+  return $title;        
 }
 
 ### Options for graphs:
@@ -1638,6 +1645,12 @@ sub writeMultiDetGraph
        if ($ret) {                        
         my $ltitle = $lineTitle;
         my ($xcol, $ycol);
+
+        ### Add the number of evaluated blocks if requested
+        if ($self->{DETShowEvaluatedBlocks}) {
+          $ltitle .= $self->_getLineTitleString("EvaluatedBlocks", 0, $detset->getDETForID($d), 
+                                                \@offAxisLabels, $color, $closedPoint, $thisPointSize, 0); 
+        }
     
         ### Add the PERF Box BEFORE the First DET Curve
         if (exists($self->{PerfBox}) && $d == 0){
@@ -1653,7 +1666,7 @@ sub writeMultiDetGraph
             $nbox++;
           }
         }
-                         
+        
         ### The curve
         $xcol = ($xScale eq "nd" ? "3" : "5");
         $ycol = ($yScale eq "nd" ? "2" : "4");
@@ -1713,6 +1726,7 @@ sub writeMultiDetGraph
           }
         }
 
+                         
       }
 
     }

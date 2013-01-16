@@ -260,6 +260,7 @@ foreach my $code(split("", defined($lineTitleModification) ? $lineTitleModificat
   elsif ($code eq "B"){   $options{DETShowPoint_Best} = 1; }
   elsif ($code eq "R"){   $options{DETShowPoint_Ratios} = 1; }
   elsif ($code eq "t"){   $options{lTitleNoDETType} = 1;}
+  elsif ($code eq "E"){   $options{DETShowEvaluatedBlocks} = 1;}
   elsif ($code =~ /^([TFMC])$/){
     die "Error: --lineTitle code $code used twice" if (exists($parseHT{$code}));
     push (@{ $options{DETShowPoint_SupportValues} }, $code);
@@ -818,6 +819,7 @@ Modifiers to control the type of calculated point to include:
     A -> Include the "Actual" point (used to be -O)
     B -> Include the "Best" combined value
     R -> Include the Iso Ratio points
+    E -> Include the number of evalauted blocks
 
 =item 
 
