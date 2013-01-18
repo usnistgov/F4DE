@@ -15,30 +15,13 @@ error_quit () {
 ########## Usage/Options Processing
 usage () {
 cat << EOF
-Usage: $0 [-h] FileToUse SubHelpLocation CommandToRun
+Usage: $0 FileToUse SubHelpLocation CommandToRun
 
 The script run "CommandToRun MatchingFile" and matching the result to the FileToRun
 (the script needs the location of the SubmissionHelper tool to load the Evaluation specific configuration file)
 
-OPTIONS:
-   -h      Show this message
 EOF
 }
-
-while getopts "h" OPTION
-do
-    case $OPTION in
-        h)
-            usage
-            exit 1
-            ;;
-        ?)
-            usage
-            exit 1
-            ;;
-    esac
-done
-
 
 ## Check that a file exists, is a file and is readable
 # call: check_file filename
@@ -66,7 +49,7 @@ check_dir () {
 ########################################
 ## Command line check
 
-if [[ $# < 3 ]]; then usage; error_quit "No FileToRun or CommandToRun on command line, quitting" ; fi
+if [ $# -lt 3 ]; then usage; error_quit "No FileToRun or CommandToRun on command line, quitting" ; fi
 
 ####################
 
@@ -117,7 +100,7 @@ if [ "A$doit" == "A1" ]; then
             res1=".__tmp_res1"
             res2=".__tmp_res2"
             rm -f $res1 $res2
-            echo "[*****] Running: $subhelp $subhelp_xtras $finf"
+            echo "[*****] Running: $* $finf"
             $* $finf
             if [ "${?}" -ne "0" ]; then error_quit "Problem running tool, aborting"; fi
       # confirm results are present
@@ -126,10 +109,10 @@ if [ "A$doit" == "A1" ]; then
             check_dir "$resdir"
             resfile="$resdir/$resf"
             check_file "$resfile"
-            perl -pe 's%/tmp/\S+?\.png%%g' "$resfile"> $res1
+            perl -pe 's%(\s)\S+?\.png%$1%g' "$resfile"> $res1
             cmpfile="$ff"
             check_file "$cmpfile"
-            perl -pe 's%/tmp/\S+?\.png%%g' "$cmpfile"> $res2
+            perl -pe 's%(\s)\S+?\.png%$1%g' "$cmpfile"> $res2
             cmp -s $res1 $res2
             if [ "${?}" -ne "0" ]; then error_quit "Resulting file ($resfile) does not contain the same numbers as expected file ($cmpfile) [temporary file names location excluded]"; fi
             echo "[=====] ok"
