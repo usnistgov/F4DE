@@ -112,7 +112,7 @@ my $expid = "";
 my $sysfile = "";
 my $scrdir = "";
 my $resdir = "";
-my @dbDir = "";
+my @dbDir = ();
 my $specfile = "";
 my @donefile = ();
 my $verb = 0;
@@ -869,7 +869,7 @@ sub vprint {
 ############################################################
 
 sub set_usage {
-  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--ExpectedTeamName TEAM] --Specfile specfile --expid EXPID --sysfile kwslist --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]] [--fileCreate file [--fileCreate file [...]]]\n";
+  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--fileCreate file [--fileCreate file [...]]] [--ProcGraph tool] [--ExpectedTeamName TEAM] --Specfile specfile --expid EXPID --sysfile file --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]]\n";
   $usage .= "\n";
   $usage .= "Will score a submission file against data present in the dbDir.\n";
   $usage .= "\nThe program needs a \'dbDir\' to load some of its eval specific definitions; this directory must contain pairs of <CORPUSID>_<PARTITION> \".ecf.xml\" and \".kwlist.xml\" files that match the component of the EXPID to confirm expected data validity, as well as a <CORPUSID>_<PARTITION> directory containing reference data needed for scoring.\n";
@@ -881,15 +881,15 @@ sub set_usage {
   $usage .= "  --XmllintBypass      Bypass xmllint check of the KWSList XML file (this will reduce the memory footprint when loading the file, but requires that the file be formatted in a way similar to how \'xmllint --format\' would)\n";
   $usage .= "  --DETUtil    Location of the DETUtil tool (default: $detutil)\n";
   $usage .= "  --Hsha256id  SHA256 ID\n";
+  $usage .= "  --fileCreate   If requested, once succesfully run, will create the file before exiting with success (: separated or multiple can be specified)\n";
+  $usage .= "  --ProcGraph  Location of the ProcGraph tool.  If defined ProcGraph will be run. (default: UNDEF)\n";
   $usage .= "  --ExpectedTeamName  Expected value of TEAM (used to check EXPID content)\n";
   $usage .= "  --Tsctkbin   Location of SCTK's bin directory\n";
   $usage .= "  --Specfile   Configuration file containing EXPID definition\n";
-  $usage .= "  --sysfile    KWS list input file\n";
+  $usage .= "  --sysfile    System input file\n";
   $usage .= "  --compdir    Directory where computation can be performed\n";
   $usage .= "  --resdir     Directory that will be returned to participants\n";
   $usage .= "  --dbDir      Directory containing ECF, TLIST, RTTM files (: separated or multiple can be specified)\n";
-  $usage .= "  --fileCreate   If requested, once succesfully run, will create the file before exiting with success (: separated or multiple can be specified)\n";
-  $usage .= "  --ProcGraph  Location of the ProcGraph tool.  If defined ProcGraph will be run. (default: UNDEF)\n";
 
   $usage .= "\n";
   
