@@ -91,7 +91,7 @@ get_basedir () {
 ########################################
 ## Command line check
 
-if  [[ $# < 1 ]]; then usage; error_quit "No check directory or files on command line, quitting" ; fi
+if  [ $# -lt 1 ]; then usage; error_quit "No check directory or files on command line, quitting" ; fi
 
 ####################
 
