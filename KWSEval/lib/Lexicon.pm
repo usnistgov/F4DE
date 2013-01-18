@@ -10,12 +10,13 @@ use Encode;
 
 sub new {
   my $class = shift;
-  my ($lex_fn, $encoding, $language) = @_;
+  my ($lex_fn, $encoding, $language, $compare_normalize) = @_;
 
   my $self = new TranscriptHolder();
   $self->{terms} => {};
   $self->setEncoding($encoding); #set encoding here?
   $self->setLanguage($language);
+  $self->setCompareNormalize($compare_normalize) unless MMisc::is_blank($compare_normalize);
 
   bless $self;
   #set parser
