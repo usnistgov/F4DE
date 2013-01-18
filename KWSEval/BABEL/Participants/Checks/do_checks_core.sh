@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# BABEL Participant Submission Helper Checker
+# BABEL Participant SubmissionHelper + BABELScorer Checker (Core)
 #   (by Martial Michel)
 # ID: $Id$
 # Revision: $Revision$
@@ -15,43 +15,22 @@ error_quit () {
 ########## Usage/Options Processing
 usage () {
 cat << EOF
-Usage: $0 [-h] [-A] [-R] [-X] CompsDir
+Usage: $0 [-h] FileToUse SubHelpLocation CommandToRun
 
-The script will run a set of the BABEL Scoring Server by submitting matching files to the results found in the CompsDir
+The script run "CommandToRun MatchingFile" and matching the result to the FileToRun
+(the script needs the location of the SubmissionHelper tool to load the Evaluation specific configuration file)
 
 OPTIONS:
    -h      Show this message
-   -A      Authorize TERMs defined in KWList file but not in the KWSlist file
-   -R      Resubmit a system file
-   -X      Pass the XmllintBypass option to KWSList validation and scoring tools
 EOF
 }
 
-RESUBMIT=0
-AUTH_TERM=0
-XMLLINTBYPASS=0
-subhelp_xtras=""
-while getopts "hARX" OPTION
+while getopts "h" OPTION
 do
     case $OPTION in
         h)
             usage
             exit 1
-            ;;
-        A)
-            AUTH_TERM=1
-            subhelp_xtras="${subhelp_xtras} -A"
-            shift $((OPTIND-1)); OPTIND=1
-            ;;
-        R)
-            RESUBMIT=1
-            subhelp_xtras="${subhelp_xtras} -R"
-            shift $((OPTIND-1)); OPTIND=1
-            ;;
-        X)
-            XMLLINTBYPASS=1
-            subhelp_xtras="${subhelp_xtras} -X"
-            shift $((OPTIND-1)); OPTIND=1
             ;;
         ?)
             usage
@@ -87,79 +66,76 @@ check_dir () {
 ########################################
 ## Command line check
 
-if  [ $# != 1 ]; then usage; error_quit "No check directory on command line, quitting" ; fi
-id=$1
-check_dir "$id"
+if [[ $# < 3 ]]; then usage; error_quit "No FileToRun or CommandToRun on command line, quitting" ; fi
 
 ####################
 
-subhelp="../SubmissionHelper.sh"
+ff=$1
+shift
+
+subhelp=$1
+shift
 check_file_x "$subhelp"
 
 subhelp_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($1)); print $dir' $subhelp`
 
 ####################
-# Get list of available files to work with
-fl=`ls $id`
-
-for f in $fl
-do
 # Obtaining relevant information
-    echo ""
-    echo "[**********] [TestFile] $f"
-    eval=`echo $f | perl -ne 'print $1 if (m%^(\w+?)_%);'`
-    inf=`echo $f | perl -ne 'print $1 if (m%^(.+?)_____%);'`
-    base=`echo $inf | perl -ne 'print $1 if (m%^(.+?)\.[a-z\.]+$%i);'`
-    ext=`echo $inf | perl -ne 'print $1 if (m%^.+?\.([a-z\.]+)$%);'`
-    resf=`echo $f | perl -ne 'print $1 if (m%_____(.+)$%);'`
+
+f=`echo $ff | perl -ne 'print $1 if (m%^[^\/]+/(.+)$%);'`
+
+echo ""
+echo "[**********] [TestFile] $ff"
+eval=`echo $f | perl -ne 'print $1 if (m%^(\w+?)_%);'`
+inf=`echo $f | perl -ne 'print $1 if (m%^(.+?)_____%);'`
+base=`echo $inf | perl -ne 'print $1 if (m%^(.+?)\.[a-z\.]+$%i);'`
+ext=`echo $inf | perl -ne 'print $1 if (m%^.+?\.([a-z\.]+)$%);'`
+resf=`echo $f | perl -ne 'print $1 if (m%_____(.+)$%);'`
 #  echo "[EVAL:$eval] [base:$base |ext:$ext] [Res:$resf]"
     
 # Checks
-    doit=1
-    if [ "A$eval" == "A" ]; then echo "!! Could not extract Evaluation information, skipping"; doit=0; fi
-    if [ "A$inf" == "A" ]; then echo "!! Could not extract Input File information, skipping"; doit=0; fi
-    if [ "A$base" == "A" ]; then echo "!! Could not extract Base File information, skipping"; doit=0; fi
-    if [ "A$ext" == "A" ]; then echo "!! Could not extract Expected File Extension information, skipping"; doit=0; fi
-    if [ "A$resf" == "A" ]; then echo "!! Could not extract Expected Result File information, skipping"; doit=0; fi
-    
+doit=1
+if [ "A$eval" == "A" ]; then echo "!! Could not extract Evaluation information, skipping"; doit=0; fi
+if [ "A$inf" == "A" ]; then echo "!! Could not extract Input File information, skipping"; doit=0; fi
+if [ "A$base" == "A" ]; then echo "!! Could not extract Base File information, skipping"; doit=0; fi
+if [ "A$ext" == "A" ]; then echo "!! Could not extract Expected File Extension information, skipping"; doit=0; fi
+if [ "A$resf" == "A" ]; then echo "!! Could not extract Expected Result File information, skipping"; doit=0; fi
+
 ### Doit
-    if [ "A$doit" == "A1" ]; then
+if [ "A$doit" == "A1" ]; then
   # Load configuration file
-        conf="$subhelp_dir/${eval}_SubmissionHelper.cfg"
-        if [ ! -f "$conf" ]; then
-            echo "!! Skipping test: No $eval configuration file ($conf)"
+    conf="$subhelp_dir/${eval}_SubmissionHelper.cfg"
+    if [ ! -f "$conf" ]; then
+        echo "!! Skipping test: No $eval configuration file ($conf)"
+    else
+        source "$conf"
+        finf="${dbDir}/samples/$inf"
+        if [ ! -f "$finf" ]; then
+            echo "!! Skipping test: No $eval input file ($finf)"
         else
-            source "$conf"
-            finf="${dbDir}/samples/$inf"
-            if [ ! -f "$finf" ]; then
-                echo "!! Skipping test: No $eval input file ($finf)"
-            else
-                echo ""
-                res1=".__tmp_res1"
-                res2=".__tmp_res2"
-                rm -f $res1 $res2
-                echo "[*****] Running: $subhelp $subhelp_xtras $finf"
-                $subhelp $subhelp_xtras $finf
-                if [ "${?}" -ne "0" ]; then error_quit "Problem running tool, aborting"; fi
+            echo ""
+            res1=".__tmp_res1"
+            res2=".__tmp_res2"
+            rm -f $res1 $res2
+            echo "[*****] Running: $subhelp $subhelp_xtras $finf"
+            $* $finf
+            if [ "${?}" -ne "0" ]; then error_quit "Problem running tool, aborting"; fi
       # confirm results are present
-                echo "[-----] Checking for comparison file: $resf"
-                resdir="$uncompdir/$base"
-                check_dir "$resdir"
-                resfile="$resdir/$resf"
-                check_file "$resfile"
-                perl -pe 's%/tmp/\S+?\.png%%g' "$resfile"> $res1
-                cmpfile="$id/$f"
-                check_file "$cmpfile"
-                perl -pe 's%/tmp/\S+?\.png%%g' "$cmpfile"> $res2
-                cmp -s $res1 $res2
-                if [ "${?}" -ne "0" ]; then error_quit "Resulting file ($resfile) does not contain the same numbers as expected file ($cmpfile) [temporary file names location excluded]"; fi
-                echo "[=====] ok"
-                rm -f $res1 $res2
-            fi
+            echo "[-----] Checking for comparison file: $resf"
+            resdir="$uncompdir/$base"
+            check_dir "$resdir"
+            resfile="$resdir/$resf"
+            check_file "$resfile"
+            perl -pe 's%/tmp/\S+?\.png%%g' "$resfile"> $res1
+            cmpfile="$ff"
+            check_file "$cmpfile"
+            perl -pe 's%/tmp/\S+?\.png%%g' "$cmpfile"> $res2
+            cmp -s $res1 $res2
+            if [ "${?}" -ne "0" ]; then error_quit "Resulting file ($resfile) does not contain the same numbers as expected file ($cmpfile) [temporary file names location excluded]"; fi
+            echo "[=====] ok"
+            rm -f $res1 $res2
         fi
     fi
-done
+fi
 
 exit 0
-
-
