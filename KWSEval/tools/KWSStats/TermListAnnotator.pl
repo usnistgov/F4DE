@@ -210,6 +210,10 @@ if ($ngram != 0) {
 #  $term->deleteAttr("ORIGTEXT");  
 #}
 
+#for inferred duration model
+my $num_sampled_terms = 0;
+my $total_per_char_dur = 0;
+
 ## Add the counts from the RTTMs
 if (@rttms > 0){
   print "Loading RTTMs for analisys\n";
@@ -224,6 +228,7 @@ if (@rttms > 0){
                             $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens, 1); # bypassCoreText -> no RTTM text rewrite possible  
     my @terms = keys %{ $TermList->{TERMS} };
     my $n = 0;
+
     foreach my $termid (keys %{ $TermList->{TERMS} }) {
       print "      Processing term $termid ".($n++)." of ".scalar(@terms)." ".$TermList->{TERMS}{$termid}->toPerl()."\n";
       my $text;
@@ -270,9 +275,33 @@ if (@rttms > 0){
 	  }
 	}
 	$TermList->{TERMS}{$termid}->setAttrValue($quantizedDurationKey, $quant_dur);
+
+	#Calculate mean char duration
+	my $nchars = &charactersOfTerm($TermList->{TERMS}{$termid}{TEXT});
+	$total_per_char_dur += ($mean_term_dur / $nchars);
+	$num_sampled_terms += 1;
       }
     }
   }
+}
+
+#Inferred Term Duration
+my $dur_per_char = ($total_per_char_dur / $num_sampled_terms) if $num_sampled_terms > 0;
+#build mean character duration
+foreach my $termid (keys %{ $TermList->{TERMS} }) {
+  my $nchars = &charactersOfTerm($TermList->{TERMS}{$termid}{TEXT});
+  my $inferred_dur = $dur_per_char * $nchars;
+  my $quant_inf_dur = "";
+  $TermList->{TERMS}{$termid}->setAttrValue("InferredDuration", sprintf("%.4f", $inferred_dur));
+  #quantize inferred duration
+  for (my $i = 1; $i <= 10; $i++) {
+    my $upper = $i * 0.5;
+    if ($inferred_dur < $upper) {
+      $quant_inf_dur = sprintf("%.1f", $upper - 0.5)."-".sprintf("%.1f", $upper);
+      last;
+    }
+  }
+  $TermList->{TERMS}{$termid}->setAttrValue("QuantizedInferredDuration", $quant_inf_dur);
 }
 
 ### Filter unselected terms
