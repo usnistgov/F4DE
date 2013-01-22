@@ -217,6 +217,8 @@ if (@rttms > 0){
     print "   Processing $rttm\n";
     my $key = "RefOccurences:$rttm";
     my $quantKey = "QuantizedRefOccurences:$rttm";
+    my $meanDurationKey = "MeanDuration:$rttm";
+    my $quantizedDurationKey = "QuantizedDuration:$rttm";
     my $rttm = new RTTMList($rttm, $TermList->getLanguage(),
                             $TermList->getCompareNormalize(), $TermList->getEncoding(), 
                             $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens, 1); # bypassCoreText -> no RTTM text rewrite possible  
@@ -231,8 +233,10 @@ if (@rttms > 0){
         $text = $TermList->{TERMS}{$termid}{CHARSPLITTEXT};
       }
       my $out = RTTMList::findTermHashToArray($rttm->findTermOccurrences($text, 0.5));
+      my $total_dur = 0.0;
       foreach my $dat(@$out){
         print "$termid ".$dat->[0]->{FILE}."\n";
+	$total_dur += ($dat->[-1]->{ET} - $dat->[0]->{BT});
       }
       my $n = scalar(@$out);
       my $quantN = $n;
@@ -251,6 +255,22 @@ if (@rttms > 0){
        
       $TermList->{TERMS}{$termid}->setAttrValue($key, $n);
       $TermList->{TERMS}{$termid}->setAttrValue($quantKey, $quantN);
+      if ($n > 0) {
+	#Mean term duration annotations
+	my $mean_term_dur = ($total_dur / $n);
+	my $quant_dur = "";
+	$TermList->{TERMS}{$termid}->setAttrValue($meanDurationKey, sprintf("%.4f", $mean_term_dur));
+
+	#quantize duration
+	for (my $i = 1; $i <= 10; $i++) {
+	  my $upper = $i * 0.5;
+	  if ($mean_term_dur < $upper) {
+	    $quant_dur = sprintf("%.1f", $upper - 0.5)."-".sprintf("%.1f", $upper);
+	    last;
+	  }
+	}
+	$TermList->{TERMS}{$termid}->setAttrValue($quantizedDurationKey, $quant_dur);
+      }
     }
   }
 }
