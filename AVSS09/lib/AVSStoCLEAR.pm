@@ -104,12 +104,18 @@ sub error {
 
 ##########
 
-sub _set_error_and_return {
-  my ($self, $errormsg, @rest) = @_;
-
+sub _set_error_and_return_array {
+  my $self = shift @_;
+  my $errormsg = shift @_;
   $self->_set_errormsg($errormsg);
+  return(@_);
+}
 
-  return(@rest);
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 ############################################################
@@ -118,13 +124,13 @@ sub load_ViPER_AVSS {
   my ($self, $in, $ifgap, $gapsh) =
     ($_[0], $_[1], MMisc::iuv($_[2], 5), MMisc::iuv($_[3], 25));
 
-  return($self->_set_error_and_return("No input file provided", 0))
+  return($self->_set_error_and_return_array("No input file provided", 0))
     if (MMisc::is_blank($in));
 
   open IN, "<$in"
-    or return($self->_set_error_and_return("Could not open input_file ($in) : $!", 0));
+    or return($self->_set_error_and_return_array("Could not open input_file ($in) : $!", 0));
 
-  return($self->_set_error_and_return("File already loaded [$in]", 0))
+  return($self->_set_error_and_return_array("File already loaded [$in]", 0))
     if (exists $self->{clip}{$in});
 
   my @content = <IN>;
@@ -149,7 +155,7 @@ sub load_ViPER_AVSS {
     ## Get the clip name the regexp way
     if ($section =~ m%<\s*object\s+[^>]*name=\"Clip\">%) {
       $clip = &_extract_named_Xvalue("DATA-SOURCE", "svalue", $section);
-      return($self->_set_error_and_return("Seen the clip entry, but could not extract it or empty value, aborting", 0))
+      return($self->_set_error_and_return_array("Seen the clip entry, but could not extract it or empty value, aborting", 0))
           if ((!defined $clip) || (MMisc::is_blank($clip)));
       $clip =~ s%\s%_%g; # Replace spaces by _ in clip name
       $self->{clip_csv_data}{$in}{"Clip"} = $clip;
@@ -162,13 +168,13 @@ sub load_ViPER_AVSS {
     if ($section =~ m%<\s*object\s+[^>]*name=\"Annotation\">%) {
       my $tmp = "NAME";
       my $val = &_extract_named_Xvalue($tmp, "svalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $self->{clip_csv_data}{$in}{"Clip Set"} = $val;
 
       $tmp = "DATA-SET";
       $val = &_extract_named_Xvalue($tmp, "svalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $self->{clip_csv_data}{$in}{"Data Set"} = $val;
 
@@ -179,19 +185,19 @@ sub load_ViPER_AVSS {
     if ($section =~ m%<\s*object\s+[^>]*name=\"Target-Event-Set\">%) {
       my $tmp = "TIME-OF-DAY";
       my $val = &_extract_named_Xvalue($tmp, "svalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $self->{clip_csv_data}{$in}{"Time of Day"} = $val;
 
       $tmp = "DURATION";
       $val = &_extract_named_Xvalue($tmp, "svalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $self->{clip_csv_data}{$in}{"Duration"} = $val;
 
       $tmp = "DISTRACTION";
       $val = &_extract_named_Xvalue($tmp, "svalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $val =~ s%[\(\)]%%g;
       $self->{clip_csv_data}{$in}{"Distraction"} = $val;
@@ -203,7 +209,7 @@ sub load_ViPER_AVSS {
     if ($section =~ m%<\s*object\s+[^>]*name=\"Target-Event\">%) {
       my $tmp = "CROWD-DENSITY";
       my $val = &_extract_named_Xvalue($tmp, "svalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $self->{clip_csv_data}{$in}{"Crowd Density"} = $val;
 
@@ -212,7 +218,7 @@ sub load_ViPER_AVSS {
 
     #####
     my ($err, $txt, $idv, $rbbl, $robbl, $loc_xml, $occ_xml, $lfsv, $fsv, $sfsv) = &_process_section($name, $section);
-    return($self->_set_error_and_return($err, 0))
+    return($self->_set_error_and_return_array($err, 0))
       if (! MMisc::is_blank($err));
     next if (MMisc::is_blank($txt));
 
@@ -229,31 +235,31 @@ sub load_ViPER_AVSS {
 
       my $tmp = "NAME";
       my $val = &_extract_named_Xvalue($tmp, "svalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $self->{obj_csv_data}{$in}{$idv}{"Name"} = $val;
 
       $tmp = "DRESS";
       $val = &_extract_named_Xvalue($tmp, "svalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $self->{obj_csv_data}{$in}{$idv}{"Dress"} = $val;
 
       $tmp = "SEX";
       $val = &_extract_named_Xvalue($tmp, "svalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $self->{obj_csv_data}{$in}{$idv}{"Sex"} = $val;
 
       $tmp = "COLOUR";
       $val = &_extract_named_Xvalue($tmp, "svalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $self->{obj_csv_data}{$in}{$idv}{"Colour"} = $val;
 
       $tmp = "BAG";
       $val = &_extract_named_Xvalue($tmp, "bvalue", $section);
-      return($self->_set_error_and_return("Could not extract \"$tmp\" (or empty value), aborting", 0))
+      return($self->_set_error_and_return_array("Could not extract \"$tmp\" (or empty value), aborting", 0))
         if ((! defined $val) || (MMisc::is_blank($val)));
       $self->{obj_csv_data}{$in}{$idv}{"Bag"} = $val;
     }
@@ -276,14 +282,14 @@ sub load_ViPER_AVSS {
     # Fill the extra CSV information
     {
       my $fs_fs = new ViperFramespan($fsv);
-      return($self->_set_error_and_return("Problem creating GapShorten framespan : " . $fs_fs->get_errormsg(), 0))
+      return($self->_set_error_and_return_array("Problem creating GapShorten framespan : " . $fs_fs->get_errormsg(), 0))
         if ($fs_fs->error());
       $fs_fs->gap_shorten($gapsh);
-      return($self->_set_error_and_return("Problem during GapShorten : " . $fs_fs->get_errormsg(), 0))
+      return($self->_set_error_and_return_array("Problem during GapShorten : " . $fs_fs->get_errormsg(), 0))
         if ($fs_fs->error());
 
       my $gsc = $fs_fs->count_pairs_in_value();
-      return($self->_set_error_and_return("Problem during GapShorten's pair count : " . $fs_fs->get_errormsg(), 0))
+      return($self->_set_error_and_return_array("Problem during GapShorten's pair count : " . $fs_fs->get_errormsg(), 0))
         if ($fs_fs->error());
       
       my $gstxt = "";
@@ -302,7 +308,7 @@ sub load_ViPER_AVSS {
   }
   
   # Finished processing the file
-  return($self->_set_error_and_return("Could not find clip details", 0))
+  return($self->_set_error_and_return_array("Could not find clip details", 0))
     if (MMisc::is_blank($clip));
 
   $gfs = $self->_simplify_fs($gfs);
@@ -320,13 +326,13 @@ sub load_ViPER_AVSS {
   $self->{end_frame}{$in} = $ef;
   if ($self->{ifgap} != 0) {
     my $tig = $self->{ifgap};
-    return($self->_set_error_and_return("IFramesGap already set ($tig) and different from requested value ($ifgap)", 0))
+    return($self->_set_error_and_return_array("IFramesGap already set ($tig) and different from requested value ($ifgap)", 0))
     if ($ifgap != $tig);
   }
   $self->{ifgap} = $ifgap;
 
   my ($err, $if_list) = &_compute_iflist($if_list_comp, $ef, $ifgap);
-  return($self->_set_error_and_return($err, 0))
+  return($self->_set_error_and_return_array($err, 0))
     if (! MMisc::is_blank($err));
   $self->{if_list}{$in} = $if_list;
 
@@ -348,7 +354,7 @@ sub _create_CLEAR_ViPER {
   my $xml = "";
   my $xmlt = "";
   
-  return($self->_set_error_and_return("Could not find file [$in]", ""))
+  return($self->_set_error_and_return_scalar("Could not find file [$in]", ""))
     if (! exists $self->{clip}{$in});
 
   my $clip = $self->{clip}{$in};
@@ -406,10 +412,10 @@ sub create_CLEAR_EmptySYS_ViPER { # Empty SYS
 sub get_comparables {
   my ($self, $in1, $in2) = @_;
 
-  return($self->_set_error_and_return("First key [$in1] not found", undef))
+  return($self->_set_error_and_return_scalar("First key [$in1] not found", undef))
     if (! exists $self->{clip}{$in1});
 
-  return($self->_set_error_and_return("Second key [$in2] not found", undef))
+  return($self->_set_error_and_return_scalar("Second key [$in2] not found", undef))
     if (! exists $self->{clip}{$in2});
 
   my @keys1 = keys %{$self->{id_sfs}{$in1}};
@@ -434,16 +440,16 @@ sub get_comparables {
 
       my $fs_k1 = new ViperFramespan();
       $fs_k1->set_value($k1fs);
-      return($self->_set_error_and_return("Problem with 1st key framespan: " . $fs_k1->get_errormsg(), undef))
+      return($self->_set_error_and_return_scalar("Problem with 1st key framespan: " . $fs_k1->get_errormsg(), undef))
         if ($fs_k1->error());
 
       my $fs_k2 = new ViperFramespan();
       $fs_k2->set_value($k2fs);
-      return($self->_set_error_and_return("Problem with 2nd key framespan: " . $fs_k1->get_errormsg(), undef))
+      return($self->_set_error_and_return_scalar("Problem with 2nd key framespan: " . $fs_k1->get_errormsg(), undef))
         if ($fs_k2->error());
   
       my $fs_ov = $fs_k1->get_overlap($fs_k2);
-      return($self->_set_error_and_return("Problem with overlap framespan: " . $fs_k1->get_errormsg(), undef))
+      return($self->_set_error_and_return_scalar("Problem with overlap framespan: " . $fs_k1->get_errormsg(), undef))
         if ($fs_k1->error());
 
       if (! defined $fs_ov) { # No overlap
@@ -495,7 +501,7 @@ sub get_appear_order {
     foreach my $f (sort _num keys %tmp) {
       push @{$resk{$id}}, $tmp{$f};
       push @{$resbf{$id}}, $f;
-      return($self->_set_error_and_return("Two entries for ID [$id] have the same start frame, this should never happen", undef))
+      return($self->_set_error_and_return_array("Two entries for ID [$id] have the same start frame, this should never happen", undef))
         if ($pf == $f);
       $pf = $f;
     }
@@ -509,7 +515,7 @@ sub get_appear_order {
 sub get_cam_id {
   my ($self, $in) = @_;
 
-  return($self->_set_error_and_return("Clip information not available for key [$in]", undef))
+  return($self->_set_error_and_return_scalar("Clip information not available for key [$in]", undef))
     if (! exists $self->{clip}{$in});
 
   # No need to redo it if we already did it in the past
@@ -525,7 +531,7 @@ sub get_cam_id {
   $c =~ s%[^\d]$%%; # remove the trailing qualifier (letter)
   $c =~ s%^.+(\d)$%$1%; # remove everything but the last number
 
-  return($self->_set_error_and_return("Could not extract camera information", undef))
+  return($self->_set_error_and_return_scalar("Could not extract camera information", undef))
     if (MMisc::is_blank($c));
   
   return($c);
@@ -541,7 +547,7 @@ sub create_composite_CLEAR_ViPER {
   my $endf = 0;
   my $iflt = "";
   foreach my $k (@$rk) {
-    return($self->_set_error_and_return("Could not find key [$k]", ""))
+    return($self->_set_error_and_return_scalar("Could not find key [$k]", ""))
       if (! exists $self->{clip}{$k});
     $gfs .= " " . $self->{gfs}{$k};
     my $te = $self->{end_frame}{$k};
@@ -563,7 +569,7 @@ sub create_composite_CLEAR_ViPER {
     my $c = $self->get_cam_id($k);
     return("") if ($self->error());
     
-    return($self->_set_error_and_return("Could not find requested camera", ""))
+    return($self->_set_error_and_return_scalar("Could not find requested camera", ""))
       if (! exists $$rorder{$c});
     my @todo = @{$$rorder{$c}};
     
@@ -583,7 +589,7 @@ sub create_composite_CLEAR_ViPER {
 sub get_clip_csv_data_headers {
   my ($self, $in) = @_;
 
-  return($self->_set_error_and_return("Clip not found [$in]", undef, undef))
+  return($self->_set_error_and_return_array("Clip not found [$in]", undef, undef))
     if (! exists $self->{clip_csv_data}{$in});
 
   my @headers = ("Clip Set", "Clip", "Data Set", "Time of Day",
@@ -597,7 +603,7 @@ sub get_clip_csv_data_headers {
 sub get_clip_csv_data {
   my ($self, $in) = @_;
 
-  return($self->_set_error_and_return("Clip not found [$in]", undef, undef))
+  return($self->_set_error_and_return_array("Clip not found [$in]", undef, undef))
     if (! exists $self->{clip_csv_data}{$in});
 
   my @headers = $self->get_clip_csv_data_headers($in);
@@ -620,7 +626,7 @@ sub get_clip_csv_data {
 sub get_obj_csv_data_headers {
   my ($self, $in) = @_;
 
-  return($self->_set_error_and_return("Clip not found [$in]", undef, undef))
+  return($self->_set_error_and_return_array("Clip not found [$in]", undef, undef))
     if (! exists $self->{clip_csv_data}{$in});
 
   my @headers = ("Target ID", "Target Seen", "Beginning Frame", "Ending Frame",
@@ -634,10 +640,10 @@ sub get_obj_csv_data_headers {
 sub get_obj_csv_data {
   my ($self, $in, $id) = @_;
 
-  return($self->_set_error_and_return("Clip not found [$in]", undef))
+  return($self->_set_error_and_return_array("Clip not found [$in]", undef))
     if (! exists $self->{clip_csv_data}{$in});
 
-  return($self->_set_error_and_return("ID not found [$id]", undef))
+  return($self->_set_error_and_return_array("ID not found [$id]", undef))
     if (! exists $self->{obj_csv_data}{$in}{$id}{"Target ID"});
 
   my @headers = $self->get_obj_csv_data_headers($in);
@@ -724,9 +730,9 @@ sub _xmlrender_loc_occ {
   my ($self, $in, $id, $gtf) = 
     ($_[0], $_[1], $_[2], MMisc::iuv($_[3], 1));
   
-  return($self->_set_error_and_return("Could not find key [$in]", undef))
+  return($self->_set_error_and_return_array("Could not find key [$in]", undef))
     if (! exists $self->{clip}{$in});
-  return($self->_set_error_and_return("Could not find requested ID [$id] for key [$in]", undef))
+  return($self->_set_error_and_return_array("Could not find requested ID [$id] for key [$in]", undef))
     if (! exists $self->{rbboxl}{$in}{$id});
 
   my $rbbl = $self->{rbboxl}{$in}{$id};
@@ -746,9 +752,9 @@ sub _shiftdiv_bboxes {
   my ($self, $in, $id, $xp, $yp, $div, $gtf) =
     ($_[0], $_[1], $_[2], $_[3], $_[4], $_[5], MMisc::iuv($_[6], 1));
 
-  return($self->_set_error_and_return("Could not find key [$in]", undef))
+  return($self->_set_error_and_return_array("Could not find key [$in]", undef))
     if (! exists $self->{clip}{$in});
-  return($self->_set_error_and_return("Could not find requested ID [$id] for key [$in]", undef))
+  return($self->_set_error_and_return_array("Could not find requested ID [$id] for key [$in]", undef))
     if (! exists $self->{rbboxl}{$in}{$id});
 
   my $rbbl = $self->{rbboxl}{$in}{$id};
@@ -777,23 +783,23 @@ sub _shiftdiv_bbox {
 
     my $v = "x";
     $bb = &_shiftdiv_bbV($bb, $v, $xp, $div);
-    return($self->_set_error_and_return("Could not find \"$v\" in bbox", undef))
+    return($self->_set_error_and_return_array("Could not find \"$v\" in bbox", undef))
       if (! defined $bb);
 
     $v = "y";
     $bb = &_shiftdiv_bbV($bb, $v, $yp, $div);
-    return($self->_set_error_and_return("Could not find \"$v\" in bbox", undef))
+    return($self->_set_error_and_return_array("Could not find \"$v\" in bbox", undef))
       if (! defined $bb);
 
     if ($div != 1) {
       $v = "width";
       $bb = &_shiftdiv_bbV($bb, $v, 0, $div);
-      return($self->_set_error_and_return("Could not find \"$v\" in bbox", undef))
+      return($self->_set_error_and_return_array("Could not find \"$v\" in bbox", undef))
         if (! defined $bb);
       
       $v = "height";
       $bb = &_shiftdiv_bbV($bb, $v, 0, $div);
-      return($self->_set_error_and_return("Could not find \"$v\" in bbox", undef))
+      return($self->_set_error_and_return_array("Could not find \"$v\" in bbox", undef))
         if (! defined $bb);
     }
 
@@ -836,7 +842,7 @@ sub _create_all_objects_xml {
     $gtf = 0;
   }
 
-  return($self->_set_error_and_return("Could not find file [$in]", ""))
+  return($self->_set_error_and_return_array("Could not find file [$in]", ""))
     if (! exists $self->{clip}{$in});
 
   my $xml = "";
@@ -850,7 +856,7 @@ sub _create_all_objects_xml {
     if (! defined $rshdivs) {
       (my $err, $loc_xml, $occ_xml, $fsv, $sfsv) = 
         $self->_xmlrender_loc_occ($in, $idv, ($sts) ? -1 : $gtf);
-      return($self->_set_error_and_return("Problem while generating loc/occ [key: $in / ID: $idv] : $err", ""))
+      return($self->_set_error_and_return_array("Problem while generating loc/occ [key: $in / ID: $idv] : $err", ""))
         if (! MMisc::is_blank($err));
     } else {
       my @todo = MMisc::clone(@$rshdivs);
@@ -863,7 +869,7 @@ sub _create_all_objects_xml {
       (my $err, $loc_xml, $occ_xml, $fsv, $sfsv) = 
         $self->_shiftdiv_bboxes($in, $idv, $xp, $yp, $div, $gtf);
 
-      return($self->_set_error_and_return("Problem while shifting [key: $in / ID: $idv] : $err", ""))
+      return($self->_set_error_and_return_array("Problem while shifting [key: $in / ID: $idv] : $err", ""))
         if (! MMisc::is_blank($err));
     }
 
@@ -1221,7 +1227,7 @@ sub _simplify_fs {
 
   my $fs_fs = new ViperFramespan();
   $fs_fs->set_value($v);
-  return($self->_set_error_and_return("Framespan error: " . $fs_fs->get_errormsg(), ""))
+  return($self->_set_error_and_return_scalar("Framespan error: " . $fs_fs->get_errormsg(), ""))
     if ($fs_fs->error());
 
   return($fs_fs->get_value());
@@ -1234,16 +1240,16 @@ sub _get_short_fs {
 
   my $fs_fs = new ViperFramespan();
   $fs_fs->set_value($v);
-  return($self->_set_error_and_return("Framespan error: " . $fs_fs->get_errormsg(), ""))
+  return($self->_set_error_and_return_scalar("Framespan error: " . $fs_fs->get_errormsg(), ""))
     if ($fs_fs->error());
 
   my ($begf, $endf) = $fs_fs->get_beg_end_fs();
-  return($self->_set_error_and_return("Framespan error: " . $fs_fs->get_errormsg(), ""))
+  return($self->_set_error_and_return_scalar("Framespan error: " . $fs_fs->get_errormsg(), ""))
     if ($fs_fs->error());
 
   my $fs_sfs = new ViperFramespan();
   $fs_sfs->set_value_beg_end($begf, $endf);
-  return($self->_set_error_and_return("Shorten framespan error: " . $fs_sfs->get_errormsg(), ""))
+  return($self->_set_error_and_return_scalar("Shorten framespan error: " . $fs_sfs->get_errormsg(), ""))
     if ($fs_sfs->error());
 
   return($fs_sfs->get_value());
@@ -1271,7 +1277,7 @@ sub _get_beg_end {
   my ($self, $v) = @_;
 
   my ($err, $b, $e) = &_get_begend_noself($v);
-  return($self->_set_error_and_return($err, -1, -1))
+  return($self->_set_error_and_return_array($err, -1, -1))
     if (! MMisc::is_blank($err));
 
   return($b, $e);
@@ -1297,7 +1303,7 @@ sub _fs_sort {
 sub _get_ids {
   my ($self, $in) = @_;
 
-  return($self->_set_error_and_return("Key not present [$in]", undef))
+  return($self->_set_error_and_return_array("Key not present [$in]", undef))
     if (! exists $self->{id_fs}{$in});
 
   my @ids = keys %{$self->{id_fs}{$in}};

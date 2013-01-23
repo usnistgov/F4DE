@@ -73,15 +73,15 @@ sub new {
 sub loadSSVFile {
   my ($self, $file) = @_;
 
-  return($self->_set_error_and_return("Refusing to load a file on top of an already existing object", 0))
+  return($self->_set_error_and_return_scalar("Refusing to load a file on top of an already existing object", 0))
     if ($self->{LoadedFile} != 0);
 
   my $err = MMisc::check_file_r($file);
-  return($self->_set_error_and_return("Problem with input file ($file): $err", 0))
+  return($self->_set_error_and_return_scalar("Problem with input file ($file): $err", 0))
     if (! MMisc::is_blank($err));
 
   open(FILE, $file) 
-    or return($self->_set_error_and_return("Unable to open for read file '$file' : $!", 0));
+    or return($self->_set_error_and_return_scalar("Unable to open for read file '$file' : $!", 0));
 
   my $linec = 0;
   my $core_text = "";  
@@ -98,7 +98,7 @@ sub loadSSVFile {
     $line =~ s%\s+$%%;
 
     my @rest = split(m/\s+/, $line); 
-    return($self->_set_error_and_return("Problem with Line (#$linec): needed at least 5 arguments, found " . scalar @rest . " [$line]", 0)) 
+    return($self->_set_error_and_return_scalar("Problem with Line (#$linec): needed at least 5 arguments, found " . scalar @rest . " [$line]", 0)) 
         if (scalar @rest < 5);
     my ($file, $chan, $speakerid, $bt, $et) = MMisc::shiftX(5, \@rest);
     my $label = "";
@@ -107,18 +107,18 @@ sub loadSSVFile {
     }
     my $transcript = join(" ", @rest);
 
-    return($self->_set_error_and_return("Problem with Line (#$linec): begtime [$bt] not a positive number ? [$line]", 0))
+    return($self->_set_error_and_return_scalar("Problem with Line (#$linec): begtime [$bt] not a positive number ? [$line]", 0))
       if ((! MMisc::is_float($bt)) || ($bt < 0));
 
-    return($self->_set_error_and_return("Problem with Line (#$linec): endtime [$et] not a positive number ? [$line]", 0))
+    return($self->_set_error_and_return_scalar("Problem with Line (#$linec): endtime [$et] not a positive number ? [$line]", 0))
       if ((! MMisc::is_float($et)) || ($et < 0));
 
-    return($self->_set_error_and_return("Problem with Line (#$linec): endtime <= begtime [$et <= $bt] ?  [$line]", 0))
+    return($self->_set_error_and_return_scalar("Problem with Line (#$linec): endtime <= begtime [$et <= $bt] ?  [$line]", 0))
       if ($et <= $bt);
     
-    return($self->_set_error_and_return("Problem with Line (#$linec): transcript contains a \( but not a \) [$line]", 0))
+    return($self->_set_error_and_return_scalar("Problem with Line (#$linec): transcript contains a \( but not a \) [$line]", 0))
       if (($transcript =~ m%\((.*)$%) && (! ($1 =~ m%\)%)));
-    return($self->_set_error_and_return("Problem with Line (#$linec): transcript contains a \) but not a \( [$line]", 0))
+    return($self->_set_error_and_return_scalar("Problem with Line (#$linec): transcript contains a \) but not a \( [$line]", 0))
       if (($transcript =~ m%^(.*)\)%) && (! ($1 =~ m%\(%)));
 
     push @{$self->{content}{$file}{$chan}}, $bt, $et;
@@ -214,11 +214,11 @@ sub _md_clone_value {
 sub load_MemDump_File {
   my ($self, $file) = @_;
 
-  return($self->_set_error_and_return("Refusing to load a file on top of an already existing object", 0))
+  return($self->_set_error_and_return_scalar("Refusing to load a file on top of an already existing object", 0))
     if ($self->{LoadedFile} != 0);
 
   my $err = MMisc::check_file_r($file);
-  return($self->_set_error_and_return("Problem with input file ($file): $err", 0))
+  return($self->_set_error_and_return_scalar("Problem with input file ($file): $err", 0))
     if (! MMisc::is_blank($err));
 
   my $object = MMisc::load_memory_object($file, $MemDump_FileHeader_gz);
@@ -238,15 +238,15 @@ sub load_MemDump_File {
 sub loadFile {
   my ($self, $stmFile) = @_;
 
-  return($self->_set_error_and_return("Refusing to load a file on top of an already existing object", 0))
+  return($self->_set_error_and_return_scalar("Refusing to load a file on top of an already existing object", 0))
     if ($self->{LoadedFile} != 0);
   
   my $err = MMisc::check_file_r($stmFile);
-  return($self->_set_error_and_return("Problem with input file ($stmFile): $err", 0))
+  return($self->_set_error_and_return_scalar("Problem with input file ($stmFile): $err", 0))
     if (! MMisc::is_blank($err));
 
   open FILE, "<$stmFile"
-    or return($self->_set_error_and_return("Problem opening file ($stmFile) : $!", 0));
+    or return($self->_set_error_and_return_scalar("Problem opening file ($stmFile) : $!", 0));
 
   my $header = <FILE>;
   close FILE;
@@ -262,7 +262,7 @@ sub loadFile {
 ############################################################
 
 sub get_fulllist {
-  return($_[0]->_set_error_and_return("Can not provide a full list for a file non loaded file", undef))
+  return($_[0]->_set_error_and_return_array("Can not provide a full list for a file non loaded file", undef))
     if ($_[0]->{LoadedFile} == 0);
   
   my @out = ();
@@ -300,13 +300,18 @@ sub clear_error {
 
 ##########
 
-sub _set_error_and_return {
+sub _set_error_and_return_array {
   my $self = shift @_;
   my $errormsg = shift @_;
-
   $self->_set_errormsg($errormsg);
-
   return(@_);
+}
+
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 ############################################################

@@ -73,15 +73,15 @@ sub new {
 sub loadSSVFile {
   my ($self, $file) = @_;
 
-  return($self->_set_error_and_return("Refusing to load a file on top of an already existing object", 0))
+  return($self->_set_error_and_return_scalar("Refusing to load a file on top of an already existing object", 0))
     if ($self->{LoadedFile} != 0);
 
   my $err = MMisc::check_file_r($file);
-  return($self->_set_error_and_return("Problem with input file ($file): $err", 0))
+  return($self->_set_error_and_return_scalar("Problem with input file ($file): $err", 0))
     if (! MMisc::is_blank($err));
 
   open(FILE, $file) 
-    or return($self->_set_error_and_return("Unable to open for read file '$file' : $!", 0));
+    or return($self->_set_error_and_return_scalar("Unable to open for read file '$file' : $!", 0));
 
   my $linec = 0;
   my $core_text = "";
@@ -99,13 +99,13 @@ sub loadSSVFile {
     $line =~ s%\s+$%%;
 
     my @rest = split(m/\s+/, $line); 
-    return($self->_set_error_and_return("Problem with Line (#$linec): needed at least 5 arguments, found " . scalar @rest . " [$line]", 0)) 
+    return($self->_set_error_and_return_scalar("Problem with Line (#$linec): needed at least 5 arguments, found " . scalar @rest . " [$line]", 0)) 
         if (scalar @rest < 5);
     my ($file, $chan, $bt, $dur, $text, $conf) = @rest;
 
     # <ALT_BEG>
     if (uc($text) eq "<ALT_BEG>") {
-      return($self->_set_error_and_return("Problem with Line (#$linec): Starting a new <ALT_BEG> when a previous one was never close (started on line $alt_mode) [$line]", 0))
+      return($self->_set_error_and_return_scalar("Problem with Line (#$linec): Starting a new <ALT_BEG> when a previous one was never close (started on line $alt_mode) [$line]", 0))
         if (defined $alt_mode);
       $alt_mode = $linec;
       $alt_min_beg = undef;
@@ -119,15 +119,15 @@ sub loadSSVFile {
       next;
     }
 
-    return($self->_set_error_and_return("Problem with Line (#$linec): begtime [$bt] not a positive number ? [$line]", 0))
+    return($self->_set_error_and_return_scalar("Problem with Line (#$linec): begtime [$bt] not a positive number ? [$line]", 0))
       if ((! MMisc::is_float($bt)) || ($bt < 0));
 
-    return($self->_set_error_and_return("Problem with Line (#$linec): duration [$dur] not a positive number ? [$line]", 0))
+    return($self->_set_error_and_return_scalar("Problem with Line (#$linec): duration [$dur] not a positive number ? [$line]", 0))
       if ((! MMisc::is_float($dur)) || ($dur < 0));
 
     my $et = $bt + $dur;
 
-    return($self->_set_error_and_return("Problem with Line (#$linec): confidence [$conf] not a positive number ? [$line]", 0))
+    return($self->_set_error_and_return_scalar("Problem with Line (#$linec): confidence [$conf] not a positive number ? [$line]", 0))
       if ((! MMisc::is_float($conf)) || ($conf < 0));
 
     # <ALT_END>
@@ -139,7 +139,7 @@ sub loadSSVFile {
 
     # within an <ALT ...>
     if (defined $alt_mode) {
-      return($self->_set_error_and_return("Problem with Line (#$linec): starting time of <ALT...> entry is after the end of the previous line (prev. end: $alt_last_et / curr. bt: $bt) [$line]", 0))
+      return($self->_set_error_and_return_scalar("Problem with Line (#$linec): starting time of <ALT...> entry is after the end of the previous line (prev. end: $alt_last_et / curr. bt: $bt) [$line]", 0))
         if ((defined $alt_last_et) && ($bt > $alt_last_et));
       $alt_min_beg = $bt if ((! defined $alt_min_beg) || ($bt < $alt_min_beg));
       $alt_max_end = $et if ((! defined $alt_max_end) || ($et > $alt_max_end));
@@ -153,7 +153,7 @@ sub loadSSVFile {
   }
   close FILE;
 
-  return($self->_set_error_and_return("Problem with Line (#$linec): Started a new <ALT_BEG> which was not closed at file end (started on line $alt_mode)", 0))
+  return($self->_set_error_and_return_scalar("Problem with Line (#$linec): Started a new <ALT_BEG> which was not closed at file end (started on line $alt_mode)", 0))
     if (defined $alt_mode);
   
   $self->{CoreText} = $core_text;
@@ -243,11 +243,11 @@ sub _md_clone_value {
 sub load_MemDump_File {
   my ($self, $file) = @_;
 
-  return($self->_set_error_and_return("Refusing to load a file on top of an already existing object", 0))
+  return($self->_set_error_and_return_scalar("Refusing to load a file on top of an already existing object", 0))
     if ($self->{LoadedFile} != 0);
 
   my $err = MMisc::check_file_r($file);
-  return($self->_set_error_and_return("Problem with input file ($file): $err", 0))
+  return($self->_set_error_and_return_scalar("Problem with input file ($file): $err", 0))
     if (! MMisc::is_blank($err));
 
   my $object = MMisc::load_memory_object($file, $MemDump_FileHeader_gz);
@@ -267,15 +267,15 @@ sub load_MemDump_File {
 sub loadFile {
   my ($self, $ctmFile, $bypassCoreText) = @_;
 
-  return($self->_set_error_and_return("Refusing to load a file on top of an already existing object", 0))
+  return($self->_set_error_and_return_scalar("Refusing to load a file on top of an already existing object", 0))
     if ($self->{LoadedFile} != 0);
   
   my $err = MMisc::check_file_r($ctmFile);
-  return($self->_set_error_and_return("Problem with input file ($ctmFile): $err", 0))
+  return($self->_set_error_and_return_scalar("Problem with input file ($ctmFile): $err", 0))
     if (! MMisc::is_blank($err));
 
   open FILE, "<$ctmFile"
-    or return($self->_set_error_and_return("Problem opening file ($ctmFile) : $!", 0));
+    or return($self->_set_error_and_return_scalar("Problem opening file ($ctmFile) : $!", 0));
 
   my $header = <FILE>;
   close FILE;
@@ -291,7 +291,7 @@ sub loadFile {
 ############################################################
 
 sub get_fulllist {
-  return($_[0]->_set_error_and_return("Can not provide a full list for a file non loaded file", undef))
+  return($_[0]->_set_error_and_return_array("Can not provide a full list for a file non loaded file", undef))
     if ($_[0]->{LoadedFile} == 0);
   
   my @out = ();
@@ -329,13 +329,18 @@ sub clear_error {
 
 ##########
 
-sub _set_error_and_return {
+sub _set_error_and_return_array {
   my $self = shift @_;
   my $errormsg = shift @_;
-
   $self->_set_errormsg($errormsg);
-
   return(@_);
+}
+
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 ############################################################

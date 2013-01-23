@@ -743,7 +743,7 @@ sub get_ttid_type {
 sub get_ttid_evaluate {
   my ($self, $ttid) = @_;
 
-  return($self->_set_error_and_return("Requested TTID ($ttid) not present in ECF", undef))
+  return($self->_set_error_and_return_scalar("Requested TTID ($ttid) not present in ECF", undef))
     if (! $self->is_ttid_in($ttid));
 
   return($self->{tracking_trials}{$ttid}{$tt_keys[0]});
@@ -756,10 +756,10 @@ sub get_ttid_sffn_evaluate {
 
   return(undef) if ($self->error());
 
-  return($self->_set_error_and_return("Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
+  return($self->_set_error_and_return_scalar("Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
     if (! $self->is_sffn_in_ttid($ttid, $sffn));
 
-  return($self->_set_error_and_return("Internal Error: " . $tt_keys[0] . " for Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
+  return($self->_set_error_and_return_scalar("Internal Error: " . $tt_keys[0] . " for Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
     if (! exists $self->{tracking_trials}{$ttid}{$tt_keys[0]});
 
   return($self->{tracking_trials}{$ttid}{$tt_keys[0]});
@@ -772,10 +772,10 @@ sub _get_ttid_sffn_dcrf {
   
   return(undef) if ($self->error());
 
-  return($self->_set_error_and_return("Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
+  return($self->_set_error_and_return_scalar("Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
     if (! $self->is_sffn_in_ttid($ttid, $sffn));
 
-  return($self->_set_error_and_return("Internal Error: $key for Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
+  return($self->_set_error_and_return_scalar("Internal Error: $key for Tracking Trial ($ttid) and sourcefile ($sffn) not present", undef))
     if (! exists $self->{tracking_trials}{$ttid}{$tt_keys[2]}{$sffn});
 
   return(undef)
@@ -880,7 +880,7 @@ sub get_sffn_list_for_ttid {
 
   return(@out) if ($self->error());
 
-  return($self->_set_error_and_return("Requested \'ttid\' ($ttid) not found", @out))
+  return($self->_set_error_and_return_array("Requested \'ttid\' ($ttid) not found", @out))
     if (! exists $self->{tracking_trials}{$ttid});
 
   @out = keys %{$self->{tracking_trials}{$ttid}{$tt_keys[2]}};
@@ -893,7 +893,7 @@ sub get_sffn_list_for_ttid {
 sub get_camid_from_ttid_sffn {
   my ($self, $rttid, $sffn) = @_;
 
-  return($self->_set_error_and_return("Could not find \'camid\' for \'ttid\' ($rttid) and \'sffn\' ($sffn)", ""))
+  return($self->_set_error_and_return_scalar("Could not find \'camid\' for \'ttid\' ($rttid) and \'sffn\' ($sffn)", ""))
     if (! exists $self->{tracking_trials}{$rttid}{$tt_keys[2]}{$sffn}{$ttp_keys[4]});
 
   return($self->{tracking_trials}{$rttid}{$tt_keys[2]}{$sffn}{$ttp_keys[4]});
@@ -904,7 +904,7 @@ sub get_camid_from_ttid_sffn {
 sub get_ttid_primary_camid {
   my ($self, $rttid) = @_;
 
-  return($self->_set_error_and_return("Could not find primary \'camid\' for \'ttid\' ($rttid)", ""))
+  return($self->_set_error_and_return_scalar("Could not find primary \'camid\' for \'ttid\' ($rttid)", ""))
     if (! exists $self->{tracking_trials}{$rttid}{$tt_keys[3]});
 
   my $sffn = $self->{tracking_trials}{$rttid}{$tt_keys[3]};
@@ -971,12 +971,18 @@ sub error {
 
 #####
 
-sub _set_error_and_return {
-  my ($self, $errormsg) = @_;
-
+sub _set_error_and_return_array {
+  my $self = shift @_;
+  my $errormsg = shift @_;
   $self->_set_errormsg($errormsg);
-
   return(@_);
+}
+
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 #####

@@ -194,12 +194,18 @@ sub error {
 
 ##########
 
-sub _set_error_and_return {
-  my ($self, $errormsg, @rest) = @_;
-
+sub _set_error_and_return_array {
+  my $self = shift @_;
+  my $errormsg = shift @_;
   $self->_set_errormsg($errormsg);
+  return(@_);
+}
 
-  return(@rest);
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 ############################################################
@@ -209,7 +215,7 @@ sub __get_cldt {
   my ($self) = @_;
 
   my $cldt = $self->{cldt};
-  return($self->_set_error_and_return("Undefined CLEARDTViperFile", undef))
+  return($self->_set_error_and_return_scalar("Undefined CLEARDTViperFile", undef))
     if (! defined $cldt);
 
   return($cldt);
@@ -226,7 +232,7 @@ sub __cldt_caller {
   return(@$rderr) if (! defined $cldt);
 
   my @ok = &{$func}($cldt, @params);
-  return($self->_set_error_and_return($cldt->get_errormsg(), @$rderr))
+  return($self->_set_error_and_return_array($cldt->get_errormsg(), @$rderr))
     if ($cldt->error());
 
   return(@ok);
@@ -443,7 +449,7 @@ sub __check_cldt_validity {
   my ($domain) = $self->__cldt_caller
     (\&CLEARDTViperFile::get_domain, [""]);
   return(0) if ($self->error());
-  return($self->_set_error_and_return("Wrong domain for type [$domain] (expected: $ok_domain)", 0))
+  return($self->_set_error_and_return_scalar("Wrong domain for type [$domain] (expected: $ok_domain)", 0))
     if ($domain ne $ok_domain);
 
   # Then check the keys in 'fhash'
@@ -452,7 +458,7 @@ sub __check_cldt_validity {
 
   my @fh_keys = keys %fhash;
   my ($rin, $rout) = MMisc::compare_arrays(\@ok_elements, \@fh_keys);
-  return($self->_set_error_and_return("Found unknown elements in file [" . join(", ", @$rout) . "]", 0))
+  return($self->_set_error_and_return_scalar("Found unknown elements in file [" . join(", ", @$rout) . "]", 0))
     if (scalar @$rout > 0);
 
   # Then do a deeper check on PERSON keys and framespans
@@ -477,7 +483,7 @@ sub __check_cldt_validity {
 
 #    my ($rin, $rout) = MMisc::compare_arrays(\@keys, \@slope);
     my ($rin, $rout) = MMisc::compare_arrays(\@slope, \@keys);
-    return($self->_set_error_and_return("Found unknown elements in file [" . join(", ", @$rout) . "]", 0))
+    return($self->_set_error_and_return_scalar("Found unknown elements in file [" . join(", ", @$rout) . "]", 0))
       if (scalar @$rout > 0);
 
     my $dummy = $slope[0]; # Get 'framespan'
@@ -503,7 +509,7 @@ sub __check_cldt_validity {
       $tfs = $self->__validate_fs($tfs);
       return(0) if ($self->error());
       # On a text level, both values should be the same
-      return($self->_set_error_and_return("Value framespan ($tfs) does not cover full range ($fsv) for $pk / $id / $attr", 0))
+      return($self->_set_error_and_return_scalar("Value framespan ($tfs) does not cover full range ($fsv) for $pk / $id / $attr", 0))
         if ($tfs ne $fsv);
     }
   }
@@ -539,7 +545,7 @@ sub add_to_id {
 
   return(0) if ($self->error());
 
-  return($self->_set_error_and_return("Can only use \"add_to_id\" on validated XML files", 0))
+  return($self->_set_error_and_return_scalar("Can only use \"add_to_id\" on validated XML files", 0))
     if (! $self->is_validated());
 
   my %fhash = $self->_get_cldt_fhash();
@@ -557,10 +563,10 @@ sub add_to_id {
   for (my $ki = 0; $ki < scalar @keys; $ki++) {
     my $key = $keys[$ki];
     my $nk = $key + $toadd;
-    return($self->_set_error_and_return("Can not change ID to \"$nk\" (from \"$key\"), not an authorized value", 0))
+    return($self->_set_error_and_return_scalar("Can not change ID to \"$nk\" (from \"$key\"), not an authorized value", 0))
       if ($nk < 0);
 
-    return($self->_set_error_and_return("Can not add ($toadd) to ID ($key), an element with the expected value ($nk) already exists", 0))
+    return($self->_set_error_and_return_scalar("Can not add ($toadd) to ID ($key), an element with the expected value ($nk) already exists", 0))
       if (exists $fhash{$pk}{$nk});
 
     # Create the new one
@@ -597,7 +603,7 @@ sub modify_bboxes {
 
   return(0) if ($self->error());
 
-  return($self->_set_error_and_return("Can only use \"modify_bboxes\" on validated XML files", 0))
+  return($self->_set_error_and_return_scalar("Can only use \"modify_bboxes\" on validated XML files", 0))
     if (! $self->is_validated());
 
   my %fhash = $self->_get_cldt_fhash();
@@ -617,7 +623,7 @@ sub modify_bboxes {
     for (my $fi = 0; $fi < scalar @tmpa; $fi++) {
       my $fs = $tmpa[$fi];
       my @bbox = @{$fhash{$pk}{$key}{$lk}{$fs}};
-      return($self->_set_error_and_return("WEIRD: bbox contains other than just x,y,h,w ?", 0))
+      return($self->_set_error_and_return_scalar("WEIRD: bbox contains other than just x,y,h,w ?", 0))
         if (scalar @bbox != 4);
       my $x = &_adddiv_bbv($bbox[0], $xadd, $hwmul);
       my $y = &_adddiv_bbv($bbox[1], $yadd, $hwmul);
@@ -626,7 +632,7 @@ sub modify_bboxes {
       my @nbbox = ($x, $y, $h, $w);
       
       foreach my $v (@nbbox) {
-        return($self->_set_error_and_return("Modified bbox contains negative values", 0))
+        return($self->_set_error_and_return_scalar("Modified bbox contains negative values", 0))
           if ($v < 0);
       }
       
@@ -673,7 +679,7 @@ sub __self_fs2vfs {
   my ($self, $fs) = @_;
 
   my ($err, $fs_fs) = &__fs2vfs($fs);
-  return($self->_set_error_and_return($err, undef))
+  return($self->_set_error_and_return_scalar($err, undef))
     if (! MMisc::is_blank($err));
 
   return($fs_fs);
@@ -778,7 +784,7 @@ sub shift_frames {
 
   return(0) if ($self->error());
 
-  return($self->_set_error_and_return("Can only use \"shift_frames\" on validated XML files", 0))
+  return($self->_set_error_and_return_scalar("Can only use \"shift_frames\" on validated XML files", 0))
     if (! $self->is_validated());
 
   my %fhash = $self->_get_cldt_fhash();
@@ -791,28 +797,28 @@ sub shift_frames {
   # PERSON
   my $k = $ak[0];
   (my $err, my $tm, %fhash) = &_shift_fhash_set($k, $fss, %fhash);
-  return($self->_set_error_and_return($err, 0))
+  return($self->_set_error_and_return_scalar($err, 0))
     if (! MMisc::is_blank($err));
   $max = $tm if ($tm > $max);
 
   # I-FRAMES
   my $k = $ak[1];
   (my $err, my $tm, %fhash) = &_shift_fhash_set($k, $fss, %fhash);
-  return($self->_set_error_and_return($err, 0))
+  return($self->_set_error_and_return_scalar($err, 0))
     if (! MMisc::is_blank($err));
   $max = $tm if ($tm > $max);
 
   # FRAME
   my $k = $ak[2];
   (my $err, my $tm, %fhash) = &_shift_fhash_set($k, $fss, %fhash);
-  return($self->_set_error_and_return($err, 0))
+  return($self->_set_error_and_return_scalar($err, 0))
     if (! MMisc::is_blank($err));
   $max = $tm if ($tm > $max);
   
   # file's NUMFRAMES
   my $k = $ak[3];
   my $nf = "NUMFRAMES";
-  return($self->_set_error_and_return("Could not find \"$k\"'s \"$nf\" key", 0))
+  return($self->_set_error_and_return_scalar("Could not find \"$k\"'s \"$nf\" key", 0))
     if (! exists $fhash{$k}{$nf});
   my $cm = $fhash{$k}{$nf};
   if ($cm < $max) {
@@ -904,7 +910,7 @@ sub Transformation_Helper {
 
   return(-1) if ($self->error());
 
-  return($self->_set_error_and_return("Can only use \"Transformation_Helper\" on validated XML files", -1))
+  return($self->_set_error_and_return_scalar("Can only use \"Transformation_Helper\" on validated XML files", -1))
     if (! $self->is_validated());
 
   my $mods = 0;
@@ -948,7 +954,7 @@ sub reformat_xml {
 
   return(0) if ($self->error());
 
-  return($self->_set_error_and_return("Can only use \"reformat_xml\" on validated XML files", 0))
+  return($self->_set_error_and_return_scalar("Can only use \"reformat_xml\" on validated XML files", 0))
     if (! $self->is_validated());
 
   return($self->__cldt_caller
@@ -983,7 +989,7 @@ sub write_XML {
 
   return(0) if ($self->error());
 
-  return($self->_set_error_and_return("Can only use \"write_XML\" on validated XML files", 0))
+  return($self->_set_error_and_return_scalar("Can only use \"write_XML\" on validated XML files", 0))
     if (! $self->is_validated());
 
   my $cldt = $self->__get_cldt();
@@ -999,28 +1005,28 @@ sub write_MemDumps {
 
   return(0) if ($self->error());
 
-  return($self->_set_error_and_return("Can only use \"write_MemDump\" on validated XML files", 0))
+  return($self->_set_error_and_return_scalar("Can only use \"write_MemDump\" on validated XML files", 0))
     if (! $self->is_validated());
 
   my $cldt = $self->__get_cldt();
   return(0) if ($self->error());
 
   # First write the ViperFile MemDump
-  return($self->_set_error_and_return("Problem writing the \'Memory Dump\' representation of the ViperFile object"), 0)
+  return($self->_set_error_and_return_scalar("Problem writing the \'Memory Dump\' representation of the ViperFile object"), 0)
     if (! CLEARDTHelperFunctions::save_ViperFile_MemDump($fname, $cldt, $mdm));
 
   # Then process the "sequence" (unless skip requested)
   return(1) if ($skip_smd);
 
   my $eval_sequence = CLEARSequence->new($fname);
-  $self->_set_error_and_return("Failed scoring 'CLEARSequence' instance creation. $eval_sequence", 0)
+  $self->_set_error_and_return_scalar("Failed scoring 'CLEARSequence' instance creation. $eval_sequence", 0)
     if (ref($eval_sequence) ne "CLEARSequence");
 
   $cldt->reformat_ds($eval_sequence, $isgtf, @ok_objects);
-  $self->_set_error_and_return("Could not reformat Viper File: $fname. " . $cldt->get_errormsg(), 0)
+  $self->_set_error_and_return_scalar("Could not reformat Viper File: $fname. " . $cldt->get_errormsg(), 0)
     if ($cldt->error());
 
-  $self->_set_error_and_return("Problem writing the 'Memory Dump' representation of the Scoring Sequence object", 0)
+  $self->_set_error_and_return_scalar("Problem writing the 'Memory Dump' representation of the Scoring Sequence object", 0)
     if (! CLEARDTHelperFunctions::save_ScoringSequence_MemDump($fname, $eval_sequence, $mdm));
 
   return(1);
@@ -1110,26 +1116,26 @@ sub merge {
 
   return(0) if ($self->error());
 
-  return($self->_set_error_and_return("Can only use \"merge\" on validated XML files", 0))
+  return($self->_set_error_and_return_scalar("Can only use \"merge\" on validated XML files", 0))
     if (! $self->is_validated());
 
-  return($self->_set_error_and_return("Problem with \"other\" entity of \"merge\": " . $other->get_errormsg()))
+  return($self->_set_error_and_return_scalar("Problem with \"other\" entity of \"merge\": " . $other->get_errormsg()))
     if ($other->error());
 
-  return($self->_set_error_and_return("Can only use \"merge\" on validated XML files (other)", 0))
+  return($self->_set_error_and_return_scalar("Can only use \"merge\" on validated XML files (other)", 0))
     if (! $other->is_validated());
 
   my $sffn1 = $self->get_sourcefile_filename();
   my $sffn2 = $other->get_sourcefile_filename();
 
-  return($self->_set_error_and_return("Sourcefile's filename do not match ($sffn1 vs $sffn2)", 0))
+  return($self->_set_error_and_return_scalar("Sourcefile's filename do not match ($sffn1 vs $sffn2)", 0))
     if ($sffn1 ne $sffn2);
   
   # Get the 'fhash's
   my %fhash1 = $self->_get_cldt_fhash();
   return(0) if ($self->error());
   my %fhash2 = $other->_get_cldt_fhash();
-  return($self->_set_error_and_return("Problem obtaining \"other\"'s data:" . $other->get_errormsg(), 0))
+  return($self->_set_error_and_return_scalar("Problem obtaining \"other\"'s data:" . $other->get_errormsg(), 0))
     if ($other->error());
 
   ### Process in order
@@ -1142,7 +1148,7 @@ sub merge {
     my @tmpa = keys %{$fhash2{$k}};
     for (my $ii = 0; $ii < scalar @tmpa; $ii++) {
       my $id = $tmpa[$ii];
-      return($self->_set_error_and_return("\"$k\" ID ($id) already exist, will not overwrite it", 0))
+      return($self->_set_error_and_return_scalar("\"$k\" ID ($id) already exist, will not overwrite it", 0))
         if (exists $fhash1{$k}{$id});
       %{$fhash1{$k}{$id}} = MMisc::clone(%{$fhash2{$k}{$id}});
     }
@@ -1151,21 +1157,21 @@ sub merge {
   # I-FRAMES (ViperFramespan overlap entries)
   my $k = $ak[1];
   my ($err) = &_union_fhash_set($k, \%fhash1, %fhash2);
-  return($self->_set_error_and_return("Problem while working on \"$k\": $err", 0))
+  return($self->_set_error_and_return_scalar("Problem while working on \"$k\": $err", 0))
     if (! MMisc::is_blank($err));
 
   # FRAMES
   my $k = $ak[2];
   my ($err) = &_union_fhash_set($k, \%fhash1, %fhash2);
-  return($self->_set_error_and_return("Problem while working on \"$k\": $err", 0))
+  return($self->_set_error_and_return_scalar("Problem while working on \"$k\": $err", 0))
     if (! MMisc::is_blank($err));
 
   # file's NUMFRAMES
   my $k = $ak[3];
   my $nf = "NUMFRAMES";
-  return($self->_set_error_and_return("Could not find master's \"$k\"'s \"$nf\" key", 0))
+  return($self->_set_error_and_return_scalar("Could not find master's \"$k\"'s \"$nf\" key", 0))
     if (! exists $fhash1{$k}{$nf});
-  return($self->_set_error_and_return("Could not find \"other\"'s \"$k\"'s \"$nf\" key", 0))
+  return($self->_set_error_and_return_scalar("Could not find \"other\"'s \"$k\"'s \"$nf\" key", 0))
     if (! exists $fhash2{$k}{$nf});
   if ($fhash2{$k}{$nf} > $fhash1{$k}{$nf}) {
     my $cm = $fhash1{$k}{$nf};
@@ -1227,7 +1233,7 @@ sub __get_fs_beg_end {
   return(undef, undef) if ($self->error());
 
   my ($b, $e) = $fs_fs->get_beg_end_fs();
-  return($self->_set_error_and_return("Problem with ViperFramespan: " . $fs_fs->get_errormsg(), undef, undef))
+  return($self->_set_error_and_return_array("Problem with ViperFramespan: " . $fs_fs->get_errormsg(), undef, undef))
     if ($fs_fs->error());
 
   return($b, $e);
@@ -1238,7 +1244,7 @@ sub __get_fs_beg_end {
 sub __vc_gfhash {
   my ($self) = @_;
 
-  return($self->_set_error_and_return("Not a validated XML files", undef))
+  return($self->_set_error_and_return_array("Not a validated XML files", undef))
     if (! $self->is_validated());
   
   return($self->_get_cldt_fhash());
@@ -1278,13 +1284,13 @@ sub __get_fslist {
   my (%fhash) = $self->__vc_gfhash();
   return(undef) if ($self->error());
 
-  return($self->_set_error_and_return("Can not find request \"$k1\" ID ($k2)", undef))
+  return($self->_set_error_and_return_array("Can not find request \"$k1\" ID ($k2)", undef))
     if (! exists $fhash{$k1}{$k2});
-  return($self->_set_error_and_return("Can not find request \"$k1\" ID ($$k2)'s key ($k3)", undef))
+  return($self->_set_error_and_return_array("Can not find request \"$k1\" ID ($$k2)'s key ($k3)", undef))
     if (! exists $fhash{$k1}{$k2}{$k3});
 
   my @fs_list = keys %{$fhash{$k1}{$k2}{$k3}};
-  return($self->_set_error_and_return("Could not find any framespan for requested \"$k1\" ID ($k2)'s key ($k3)", undef))
+  return($self->_set_error_and_return_array("Could not find any framespan for requested \"$k1\" ID ($k2)'s key ($k3)", undef))
     if (scalar @fs_list == 0);
 
   return(@fs_list);
@@ -1319,11 +1325,11 @@ sub __get_fslist_key_is {
   my @ofs = ();
   for (my $fi = 0; $fi < scalar @fs_list; $fi++) {
     my $fs = $fs_list[$fi];
-    return($self->_set_error_and_return("Can not find fhash location [$k1 / $k2 / $k3 / $fs]", undef))
+    return($self->_set_error_and_return_array("Can not find fhash location [$k1 / $k2 / $k3 / $fs]", undef))
       if (! exists $fhash{$k1}{$k2}{$k3}{$fs});
     my $tv = $fhash{$k1}{$k2}{$k3}{$fs};
     my ($err, $v) = MMisc::dive_structure($tv);
-    return($self->_set_error_and_return("While checking variable status: $err", undef))
+    return($self->_set_error_and_return_array("While checking variable status: $err", undef))
       if (! MMisc::is_blank($err));
 
     if ($v eq $val) {
@@ -1331,7 +1337,7 @@ sub __get_fslist_key_is {
       next;
     }
 
-    return($self->_set_error_and_return("Unknow $k3 status ($v) for framespan ($fs)", undef))
+    return($self->_set_error_and_return_array("Unknow $k3 status ($v) for framespan ($fs)", undef))
       if ($v ne $oth_val);
   }
 
@@ -1346,7 +1352,7 @@ sub _is_DCX {
 
   my ($ig) = $self->check_if_gtf();
   return(undef) if ($self->error());
-  return($self->_set_error_and_return("$mode is only valid for GTF", undef))
+  return($self->_set_error_and_return_scalar("$mode is only valid for GTF", undef))
     if (! $ig);
 
   my (@ofs) = $self->__get_fslist_key_is($k1, $k2, $k3, $fk, $ofk);
@@ -1422,12 +1428,12 @@ sub __set_key_truefalse_fs_to {
   $fstc = $fs_fstc->get_value();
 
   my $fs_ov = $fs_fstc->get_overlap($fs_ffs);
-  return($self->_set_error_and_return("Problem with framespan overlap: " . $fs_fstc->get_errormsg(), 0))
+  return($self->_set_error_and_return_scalar("Problem with framespan overlap: " . $fs_fstc->get_errormsg(), 0))
     if ($fs_fstc->error());
-  return($self->_set_error_and_return("Requested framespan ($fstc) is not within [$k1 / $k2 / $k3] 's framespan ($ffs)", 0))
+  return($self->_set_error_and_return_scalar("Requested framespan ($fstc) is not within [$k1 / $k2 / $k3] 's framespan ($ffs)", 0))
     if (! defined $fs_ov);
   my $ov = $fs_ov->get_value();
-  return($self->_set_error_and_return("Requested framespan ($fstc) goes beyond [$k1 / k2 / $k3] 's framespan ($ffs)", 0))
+  return($self->_set_error_and_return_scalar("Requested framespan ($fstc) goes beyond [$k1 / k2 / $k3] 's framespan ($ffs)", 0))
     if ($ov ne $fstc);
 
   # Now get the values in the object that are already at the requested value
@@ -1446,7 +1452,7 @@ sub __set_key_truefalse_fs_to {
     # Do its union with the requested framespan to obtain the total list
     # of values to be set to this value
     my $ok = $fs_to->union($fs_ov);
-    return($self->_set_error_and_return("Problem while doing the union of \'$to\' framespan ($tofslist) and requested framespans ($ov): " . $fs_to->get_errormsg(), 0))
+    return($self->_set_error_and_return_scalar("Problem while doing the union of \'$to\' framespan ($tofslist) and requested framespans ($ov): " . $fs_to->get_errormsg(), 0))
       if ($fs_to->error());
   } else {
     # Otherwise, no union is possible and fs_to is equal to fs_ov
@@ -1471,17 +1477,17 @@ sub __set_key_truefalse_fs_to {
 
   # Otherwise, get "other" framespan values
   my $fs_other = $fs_to->bounded_not($b, $e);
-  return($self->_set_error_and_return("Problem while obtaining \'$other\' framespan: " . $fs_to->get_errormsg(), 0))
+  return($self->_set_error_and_return_scalar("Problem while obtaining \'$other\' framespan: " . $fs_to->get_errormsg(), 0))
     if ($fs_to->error());
-  return($self->_set_error_and_return("Problem while obtaining \'$other\' framespan", 0))
+  return($self->_set_error_and_return_scalar("Problem while obtaining \'$other\' framespan", 0))
     if (! defined $fs_other);
 
   # At this point, we have the final list of "to" and "other" framespans
   my @to_list = $fs_to->list_pairs();
-  return($self->_set_error_and_return("Problem while obtaining \'$to\' framespan list: " . $fs_to->get_errormsg(), 0))
+  return($self->_set_error_and_return_scalar("Problem while obtaining \'$to\' framespan list: " . $fs_to->get_errormsg(), 0))
     if ($fs_to->error());
   my @other_list = $fs_other->list_pairs();
-  return($self->_set_error_and_return("Problem while obtaining \'$other\' framespan list: " . $fs_other->get_errormsg(), 0))
+  return($self->_set_error_and_return_scalar("Problem while obtaining \'$other\' framespan list: " . $fs_other->get_errormsg(), 0))
     if ($fs_other->error());
   
   # Delete any previous value
@@ -1512,12 +1518,12 @@ sub _flip_DCX {
 
   my ($ig) = $self->check_if_gtf();
   return(undef) if ($self->error());
-  return($self->_set_error_and_return("$mode is only valid for GTF", undef))
+  return($self->_set_error_and_return_scalar("$mode is only valid for GTF", undef))
     if (! $ig);
   
   my $ok = $self->__set_key_truefalse_fs_to($k1, $k2, $k3, $opt_fs, $fk, $ofk);
   return(undef) if ($self->error());
-  return($self->_set_error_and_return("An error occurred while $mode set", undef))
+  return($self->_set_error_and_return_scalar("An error occurred while $mode set", undef))
     if (! $ok);
   
   # Same order check
@@ -1566,7 +1572,7 @@ sub unset_DCR {
 sub _flip_DCF {
   my ($self, $fs, $fk, $ofk, $soc) = @_;
   
-  return($self->_set_error_and_return("No framespan provided for \'set_DCF\'", undef))
+  return($self->_set_error_and_return_scalar("No framespan provided for \'set_DCF\'", undef))
     if (! defined $fs);
   return($self->_flip_DCX($fs, $k_frame, '0', $dcf_key, $dcf_kw, $fk, $ofk, $soc));
 }
@@ -1593,7 +1599,7 @@ sub set_evaluate_all {
 sub set_evaluate_range {
   my ($self, $fs) = @_;
 
-  return($self->_set_error_and_return("No framespan provided for \'set_evaluate_range\'", undef))
+  return($self->_set_error_and_return_scalar("No framespan provided for \'set_evaluate_range\'", undef))
     if (! defined $fs);
 
   # First, "evaluate none"
@@ -1617,11 +1623,11 @@ sub _create_object_core {
 
   return(undef) if ($self->error());
 
-  return($self->_set_error_and_return("No location information", undef))
+  return($self->_set_error_and_return_array("No location information", undef))
     if ((! defined $rloc_fs_bbox) || (scalar(keys %$rloc_fs_bbox) == 0));
 
   my ($err, $fs_fs) = &__fs2vfs($req_fs);
-  return($self->_set_error_and_return("Invalid $k_person global framespan ($req_fs): $err", undef))
+  return($self->_set_error_and_return_array("Invalid $k_person global framespan ($req_fs): $err", undef))
     if (! MMisc::is_blank($err));
   my $fs = $fs_fs->get_value();
 
@@ -1641,14 +1647,14 @@ sub _create_object_core {
   for (my $li = 0; $li < scalar @tmpa; $li++) {
     my $lfs = $tmpa[$li];
     my ($err, $fs_lfs) = &__fs2vfs($lfs);
-    return($self->_set_error_and_return("Invalid location framespan ($lfs): $err", undef))
+    return($self->_set_error_and_return_array("Invalid location framespan ($lfs): $err", undef))
       if (! MMisc::is_blank($err));
 
     my @bbox = @{$$rloc_fs_bbox{$lfs}};
-    return($self->_set_error_and_return("Not a valid location boundingbox for framespan ($lfs)", undef))
+    return($self->_set_error_and_return_array("Not a valid location boundingbox for framespan ($lfs)", undef))
     if (scalar @bbox != 4);
 
-    return($self->_set_error_and_return("Location framespan ($lfs) is not within englobing framespan ($fs)", undef))
+    return($self->_set_error_and_return_array("Location framespan ($lfs) is not within englobing framespan ($fs)", undef))
       if (! $fs_lfs->is_within($fs_fs));
 
     $object{'LOCATION'}{$lfs} = [ @bbox ];
@@ -1664,7 +1670,7 @@ sub create_SYS_object {
 
   my $ig = $self->check_if_gtf();
   return(0) if ($self->error());
-  return($self->_set_error_and_return("Can not add a SYS object to a GTF", 0))
+  return($self->_set_error_and_return_scalar("Can not add a SYS object to a GTF", 0))
     if ($ig);
 
   my (%fhash) = $self->__vc_gfhash();
@@ -1697,24 +1703,24 @@ sub create_REF_object {
 
   my $ig = $self->check_if_gtf();
   return(0) if ($self->error());
-  return($self->_set_error_and_return("Can not add a GTf object to a SYS", 0))
+  return($self->_set_error_and_return_scalar("Can not add a GTf object to a SYS", 0))
     if (! $ig);
 
   my ($err, $fs_fs) = &__fs2vfs($req_fs);
-  return($self->_set_error_and_return("Invalid $k_person global framespan ($req_fs): $err", 0))
+  return($self->_set_error_and_return_scalar("Invalid $k_person global framespan ($req_fs): $err", 0))
     if (! MMisc::is_blank($err));
   my $fs = $fs_fs->get_value();
 
-  return($self->_set_error_and_return("Invalid list of occluded framespans", 0))
+  return($self->_set_error_and_return_scalar("Invalid list of occluded framespans", 0))
     if (! defined $rocc_fs);
   my @occ_fsl = ();
   for (my $li = 0; $li < scalar @{$rocc_fs}; $li++) {
     my $lfs = $$rocc_fs[$li];
     my ($err, $fs_lfs) = &__fs2vfs($lfs);
-    return($self->_set_error_and_return("Invalid occluded framespan ($lfs): $err", 0))
+    return($self->_set_error_and_return_scalar("Invalid occluded framespan ($lfs): $err", 0))
       if (! MMisc::is_blank($err));
     
-    return($self->_set_error_and_return("occluded framespan ($lfs) is not within englobing framespan ($fs)", undef))
+    return($self->_set_error_and_return_scalar("occluded framespan ($lfs) is not within englobing framespan ($fs)", undef))
       if (! $fs_lfs->is_within($fs_fs));
  
     push @occ_fsl, $fs_lfs->get_value();
@@ -1747,7 +1753,7 @@ sub create_REF_object {
   if (! MMisc::is_blank($occ_fs)) { # Do we have anything to occlude ?
     my $ok = $self->_flip_DCX($occ_fs, $k_person, $id, $occ_key, "OCCLUDED", $k_true, $k_false);
     return(0) if ($self->error());
-    return($self->_set_error_and_return("Could not add \"OCCLUDED\" entries to newly created $k_person (id $id)", 0))
+    return($self->_set_error_and_return_scalar("Could not add \"OCCLUDED\" entries to newly created $k_person (id $id)", 0))
       if (! defined $ok);
   }
 
@@ -1763,7 +1769,7 @@ sub _create_DCOR {
 
   my $ig = $self->check_if_gtf();
   return(0) if ($self->error());
-  return($self->_set_error_and_return("$mode is only valid for GTF", 0))
+  return($self->_set_error_and_return_scalar("$mode is only valid for GTF", 0))
     if (! $ig);
 
   # Create a REF object with no occluded frames
@@ -1774,7 +1780,7 @@ sub _create_DCOR {
   # and then set it as a DCX
   my $ok = $self->_flip_DCX($opt_fs, $k_person, $id, $dcor_key, $mode, $k_true, $k_false, 1);
   return(0) if ($self->error());
-  return($self->_set_error_and_return("Could not convert newly created $k_person (id $id) to a $mode", 0))
+  return($self->_set_error_and_return_scalar("Could not convert newly created $k_person (id $id) to a $mode", 0))
     if (! defined $ok);
 
   return($id);
@@ -1799,14 +1805,14 @@ sub clone {
 
   return(undef) if ($self->error());
 
-  return($self->_set_error_and_return("Can only \"clone\" validated objects", undef))
+  return($self->_set_error_and_return_scalar("Can only \"clone\" validated objects", undef))
     if (! $self->is_validated());
 
   my $cldt = $self->__get_cldt();
   my $new_cldt = $cldt->clone();
 
   my $ret = new AVSS09ViperFile($new_cldt);
-  return($self->_set_error_and_return($ret->get_errormsg(), undef))
+  return($self->_set_error_and_return_scalar($ret->get_errormsg(), undef))
     if ($ret->error());
 
   # Force validation
@@ -1825,7 +1831,7 @@ sub clone_selected_ids {
   @ids = MMisc::make_array_of_unique_values(\@ids);
 
   my ($rin, $rout) = MMisc::confirm_first_array_values(\@ids, \@kidl);
-  $self->_set_error_and_return("IDs not present: " . join(", ", @$rout), undef)
+  $self->_set_error_and_return_scalar("IDs not present: " . join(", ", @$rout), undef)
   if (scalar @$rout > 0);
 
   my ($rin, $rout) = MMisc::compare_arrays(\@ids, \@kidl);
@@ -1843,7 +1849,7 @@ sub clone_selected_ids {
   }
 
   my $ok = $ret->_set_cldt_fhash(%fhash);
-  return($self->_set_error_and_return("Problem in clone: " . $ret->get_errormsg(), undef))
+  return($self->_set_error_and_return_scalar("Problem in clone: " . $ret->get_errormsg(), undef))
     if ($ret->error());
 
   # Force validation
