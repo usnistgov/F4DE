@@ -109,7 +109,7 @@ sub init {
   my $self = shift @_;
   my $follow = MMisc::iuv(\@_, 0);
 
-  return($self->_set_error_and_return("Init was already run once, can not run it again", 0))
+  return($self->_set_error_and_return_scalar("Init was already run once, can not run it again", 0))
     if (defined $self->{init_scandate});
 
   my $dir = $self->{dir};
@@ -133,7 +133,7 @@ sub init {
 
   # Now that the watch is set, we obtain the entire files list and obtain its SHA256
   my ($err, @contained_files) = MMisc::find_all_files($dir);
-  return($self->_set_error_and_return("Problem finding file list for dir ($dir): $err", 0))
+  return($self->_set_error_and_return_scalar("Problem finding file list for dir ($dir): $err", 0))
     if (! MMisc::is_blank($err));
   my $now = MMisc::get_scalar_currenttime();
   foreach my $file (@contained_files) {
@@ -156,7 +156,7 @@ sub init {
 ## return the list of new (never present previously) files added since last scan
 # (rely on SHA256digest to process file copies)
 sub scan {
-  return($_[0]->_set_error_and_return("Init was never run", ))
+  return($_[0]->_set_error_and_return_array("Init was never run", ))
     if (! defined $_[0]->{init_scandate});
 
   my @out = ();
@@ -192,7 +192,7 @@ sub scan {
     }
 
     foreach my $file ($changes[$i]->files_deleted) { # process deleted files
-      return($_[0]->_set_error_and_return("No SHA256 digest for file ($file) present", ))
+      return($_[0]->_set_error_and_return_array("No SHA256 digest for file ($file) present", ))
         if (! exists $_[0]->{files2sha}{$file});
       my $sha256 = $_[0]->{files2sha}{$file};
       delete $_[0]->{file2sha}{$file};
@@ -217,10 +217,10 @@ sub scan {
 # sha256digest(FileName)
 ## return the SHA 256 digest of given file or undef in case of problem
 sub sha256digest {
-  return($_[0]->_set_error_and_return("Init was never run", undef))
+  return($_[0]->_set_error_and_return_scalar("Init was never run", undef))
     if (! defined $_[0]->{init_scandate});
 
-  return($_[0]->_set_error_and_return("Do not have an SHA256 digest for file (" . $_[1] . ")", undef))
+  return($_[0]->_set_error_and_return_scalar("Do not have an SHA256 digest for file (" . $_[1] . ")", undef))
     if (! exists $_[0]->{files2sha}{$_[1]});
   
   return($_[0]->{files2sha}{$_[1]});
@@ -231,7 +231,7 @@ sub __get_adf {
   # 0: self
   # 1: self entry (ex: 'added')
   # 2: scandate: keep entries added since scandate value (undef for all)
-  return($_[0]->_set_error_and_return("Init was never run", ))
+  return($_[0]->_set_error_and_return_array("Init was never run", ))
     if (! defined $_[0]->{init_scandate});
 
   my @out = ();
@@ -279,7 +279,7 @@ sub modified_since { $_[0]->__get_modified($_[1]); }
 
 #####
 sub __get_modified {
-  return($_[0]->_set_error_and_return("Init was never run", ))
+  return($_[0]->_set_error_and_return_array("Init was never run", ))
     if (! defined $_[0]->{init_scandate});
 
   my @out = ();
@@ -419,13 +419,18 @@ sub clear_error {
 
 ##########
 
-sub _set_error_and_return {
+sub _set_error_and_return_array {
   my $self = shift @_;
   my $errormsg = shift @_;
-
   $self->_set_errormsg($errormsg);
-
   return(@_);
+}
+
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 ############################################################

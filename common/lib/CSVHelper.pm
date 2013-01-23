@@ -92,7 +92,7 @@ sub set_number_of_columns {
 
   return(0) if ($_[0]->{errorv});
   
-  return($_[0]->_set_error_and_return("\'column number\' can not be less than 1", 0))
+  return($_[0]->_set_error_and_return_scalar("\'column number\' can not be less than 1", 0))
     if ($_[1] < 1);
 
   $_[0]->{col_nbr} = $_[1];
@@ -114,10 +114,10 @@ sub array2csvline {
   # rest  : array
   my $self = shift @_;
 
-  return($self->_set_error_and_return("Given number of elements in array (" . scalar @_ . ") is different from expected number (" . $self->{col_nbr} . ")", undef))
+  return($self->_set_error_and_return_scalar("Given number of elements in array (" . scalar @_ . ") is different from expected number (" . $self->{col_nbr} . ")", undef))
     if ((defined $self->{col_nbr}) && ($self->{col_nbr} != scalar @_));
 
-  return($self->_set_error_and_return
+  return($self->_set_error_and_return_scalar
          ("Problem adding elements to CSV: " 
           . $self->{csvh}->error_diag() . " (" . $self->{csvh}->error_input() . ")"
           , undef))
@@ -133,14 +133,14 @@ sub csvline2array {
   # arg 1 : value
 
   my @bad = ();
-  return($_[0]->_set_error_and_return
+  return($_[0]->_set_error_and_return_array
          ("Problem obtaining array from CSV line [" . $_[1] . "]: " 
           . $_[0]->{csvh}->error_diag() . " (" . $_[0]->{csvh}->error_input() . ")"
           , @bad))
     if (! $_[0]->{csvh}->parse($_[1]));
 
   my @columns = $_[0]->{csvh}->fields();
-  return($_[0]->_set_error_and_return("Number of elements in extracted array (" . scalar @columns . ") is different from expected number (" . $_[0]->{col_nbr} . ")", @bad))
+  return($_[0]->_set_error_and_return_array("Number of elements in extracted array (" . scalar @columns . ") is different from expected number (" . $_[0]->{col_nbr} . ")", @bad))
     if ((defined $_[0]->{col_nbr}) && ($_[0]->{col_nbr} != scalar @columns));
 
   return(@columns);
@@ -187,7 +187,7 @@ sub loadCSV_getheader {
 
   my @h = ();
   my $err = $_[0]->__loadCSV($_[1]);
-  return($_[0]->_set_error_and_return($err, @h))
+  return($_[0]->_set_error_and_return_array($err, @h))
     if (! MMisc::is_blank($err));
 
   my $line = <CSV>;
@@ -208,7 +208,7 @@ sub loadCSV_tohash {
   my %out = ();
 
   my $err = $self->__loadCSV($file);
-  return($self->_set_error_and_return($err, %out))
+  return($self->_set_error_and_return_array($err, %out))
     if (! MMisc::is_blank($err));
  
   my $line = <CSV>;
@@ -233,7 +233,7 @@ sub loadCSV_tohash {
     $nd{$h} = $pos{$h};
     delete $rh{$h};
   }
-  return($self->_set_error_and_return("Could not find requested headers: " . join(", ", @nf), %out))
+  return($self->_set_error_and_return_array("Could not find requested headers: " . join(", ", @nf), %out))
     if (scalar @nf > 0);
 
   my $doa = scalar(keys %rh); # do filled array or do increments ?
@@ -299,13 +299,18 @@ sub error {
 
 #####
 
-sub _set_error_and_return {
+sub _set_error_and_return_array {
   my $self = shift @_;
   my $errormsg = shift @_;
-
   $self->_set_errormsg($errormsg);
-
   return(@_);
+}
+
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 ############################################################

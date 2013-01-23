@@ -1384,53 +1384,53 @@ sub __loadCSVcore {
   # if not modifying a value make sure to set to 'undef' so that defaults are used
   # refer to Text::CSV's perldoc for more details
 
-  return($self->_set_error_and_return('Can not load a CSV to a AutoTable which already has data', 0))
+  return($self->_set_error_and_return_scalar('Can not load a CSV to a AutoTable which already has data', 0))
     if ($self->{hasData});
   
   my $err;
 
   ($err, $rmkc) = &__check_zero_array_ref($rmkc);
-  return($self->_set_error_and_return("Issue with AutoTable\'s reference to master key columns: $err", 0))
+  return($self->_set_error_and_return_scalar("Issue with AutoTable\'s reference to master key columns: $err", 0))
     if (! MMisc::is_blank($err));
 
   ($err, $rk) = &__check_zero_array_ref($rk);
-  return($self->_set_error_and_return("Issue with AutoTable\'s reference to keep header: $err", 0))
+  return($self->_set_error_and_return_scalar("Issue with AutoTable\'s reference to keep header: $err", 0))
     if (! MMisc::is_blank($err));
 
   ($err, $rr) = &__check_zero_array_ref($rr);
-  return($self->_set_error_and_return("Issue with AutoTable\'s reference to \"to remove headers\": $err", 0))
+  return($self->_set_error_and_return_scalar("Issue with AutoTable\'s reference to \"to remove headers\": $err", 0))
     if (! MMisc::is_blank($err));
 
-  return($self->_set_error_and_return('Can not both remove and keep headers at the same time', 0))
+  return($self->_set_error_and_return_scalar('Can not both remove and keep headers at the same time', 0))
     if ((defined $rk) && (defined $rr));
 
   my $withSpecial = (MMisc::is_blank($sp_file)) ? 0 : 1;
 
   open LFILE, "<$file"
-    or return($self->_set_error_and_return("Could not open CSV file ($file): $!\n", 0));
+    or return($self->_set_error_and_return_scalar("Could not open CSV file ($file): $!\n", 0));
   binmode LFILE, $self->getPerlEncodingString()
     if (! MMisc::is_blank($self->getPerlEncodingString()));
   
   my @sp_filec = ();
   if ($withSpecial) {
     open SPFILE, "<$sp_file"
-      or return($self->_set_error_and_return("Could not open Special CSV file ($sp_file): $!\n", 0));
+      or return($self->_set_error_and_return_scalar("Could not open Special CSV file ($sp_file): $!\n", 0));
     binmode SPFILE, $self->getPerlEncodingString() 
       if (! MMisc::is_blank($self->getPerlEncodingString()));
   } 
 
   my $csvh = new CSVHelper($qc, $sc);
-  return($self->_set_error_and_return('Problem creating CSV handler', 0))
+  return($self->_set_error_and_return_scalar('Problem creating CSV handler', 0))
     if (! defined $csvh);
-  return($self->_set_error_and_return('Problem with CSV handler: ' . $csvh->get_errormsg(), 0))
+  return($self->_set_error_and_return_scalar('Problem with CSV handler: ' . $csvh->get_errormsg(), 0))
     if ($csvh->error());
 
   my $sp_csvh = undef;
   if ($withSpecial) {
     $sp_csvh = new CSVHelper($sp_qc, $sp_sc);
-    return($self->_set_error_and_return('Problem creating Special CSV handler', 0))
+    return($self->_set_error_and_return_scalar('Problem creating Special CSV handler', 0))
       if (! defined $sp_csvh);
-    return($self->_set_error_and_return('Problem with Special CSV handler: ' . $sp_csvh->get_errormsg(), 0))
+    return($self->_set_error_and_return_scalar('Problem with Special CSV handler: ' . $sp_csvh->get_errormsg(), 0))
       if ($sp_csvh->error());
   }
  
@@ -1461,9 +1461,9 @@ sub __loadCSVcore {
       if ($withSpecial) {
         push @sp_lines, scalar readline(*SPFILE);
         $eofsp = eof(SPFILE);
-        return($self->_set_error_and_return('Not the same number of lines between CSV file and Special CSV file (more in special) ?'))
+        return($self->_set_error_and_return_scalar('Not the same number of lines between CSV file and Special CSV file (more in special) ?'))
           if ($eofsp && (! $eofl));
-        return($self->_set_error_and_return('Not the same number of lines between CSV file and Special CSV file (less in special) ?'))
+        return($self->_set_error_and_return_scalar('Not the same number of lines between CSV file and Special CSV file (less in special) ?'))
           if ((! $eofsp) && $eofl);
       }
       $read += $eofl ? $toread : 1;
@@ -1479,14 +1479,14 @@ sub __loadCSVcore {
       my $key = (! defined $rmkc) ? sprintf("File: $file | Line: %012d", $inc) : "";
       @cols = ();
       @cols = $csvh->csvline2array($line);
-      return($self->_set_error_and_return('Problem with CSV line: ' . $csvh->get_errormsg(), 0))
+      return($self->_set_error_and_return_scalar('Problem with CSV line: ' . $csvh->get_errormsg(), 0))
         if ($csvh->error());
       $csvh->set_number_of_columns(scalar @cols) if ($inc == 0);
       
       @sp_cols = ();
       if ($withSpecial) {
         @sp_cols = $sp_csvh->csvline2array($sp_line);
-        return($self->_set_error_and_return('Problem with Special CSV line: ' . $sp_csvh->get_errormsg(), 0))
+        return($self->_set_error_and_return_scalar('Problem with Special CSV line: ' . $sp_csvh->get_errormsg(), 0))
           if ($sp_csvh->error());
         $sp_csvh->set_number_of_columns(scalar @sp_cols) if ($inc == 0);
       }      
@@ -1499,7 +1499,7 @@ sub __loadCSVcore {
           for (my $i = 0; $i < scalar @$rmkc; $i++) {
             push(@nf, $$rmkc[$i]) if (! exists $match{$$rmkc[$i]});
           }
-          return($self->_set_error_and_return('Can not load CSV to AutoTable: missing required MasterKey columns:' . join(", ", @nf), 0))
+          return($self->_set_error_and_return_scalar('Can not load CSV to AutoTable: missing required MasterKey columns:' . join(", ", @nf), 0))
             if (scalar @nf > 0);
         }
 
@@ -1587,7 +1587,7 @@ sub loadCSVandSpecial {
   my $file = shift @_;
   my $sp_file = shift @_;
   my ($rmkc, $rk, $rr, $qc, $sc, $sp_qc, $sp_sc) = MMisc::iuav(\@_, undef, undef, undef, undef, undef, undef, undef);
-  return($self->_set_error_and_return("No Special CSV file specified ?", 0))
+  return($self->_set_error_and_return_scalar("No Special CSV file specified ?", 0))
     if (MMisc::is_blank($sp_file));
   return($self->__loadCSVcore($file, $sp_file, $rmkc, $rk, $rr, $qc, $sc, $sp_qc, $sp_sc));
 }
@@ -1629,15 +1629,15 @@ sub __renderCSVcore {
   my @colIDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, $colSort, $self->{Properties}->getValue($key_KeepColumnsInOutput));
   
   my $csvh = new CSVHelper($qc, $sc);
-  return($self->_set_error_and_return("Problem creating CSV handler", 0))
+  return($self->_set_error_and_return_array("Problem creating CSV handler", 0))
     if (! defined $csvh);
-  return($self->_set_error_and_return("Problem with CSV handler: " . $csvh->get_errormsg(), 0))
+  return($self->_set_error_and_return_array("Problem with CSV handler: " . $csvh->get_errormsg(), 0))
     if ($csvh->error());
 
   my $sp_csvh = new CSVHelper($qc, $sc);
-  return($self->_set_error_and_return("Problem creating CSV handler", 0))
+  return($self->_set_error_and_return_array("Problem creating CSV handler", 0))
     if (! defined $sp_csvh);
-  return($self->_set_error_and_return("Problem with CSV handler: " . $sp_csvh->get_errormsg(), 0))
+  return($self->_set_error_and_return_array("Problem with CSV handler: " . $sp_csvh->get_errormsg(), 0))
     if ($sp_csvh->error());
   
   ### Header output
@@ -1645,7 +1645,7 @@ sub __renderCSVcore {
   push @line, "MasterKey" if ($k1c);
   push @line, @colIDs;
   my $txt = $csvh->array2csvline(@line);
-  return($self->_set_error_and_return("Problem with CSV array: " . $csvh->get_errormsg(), 0))
+  return($self->_set_error_and_return_array("Problem with CSV array: " . $csvh->get_errormsg(), 0))
     if ($csvh->error());
   $out .= "$txt\n";
   $csvh->set_number_of_columns(scalar @line);
@@ -1672,12 +1672,12 @@ sub __renderCSVcore {
       }
     }
     my $txt = $csvh->array2csvline(@line);
-    return($self->_set_error_and_return("Problem with CSV array: " . $csvh->get_errormsg(), 0))
+    return($self->_set_error_and_return_array("Problem with CSV array: " . $csvh->get_errormsg(), 0))
       if ($csvh->error());
     $out .= "$txt\n";
     if ($withSpecial) {
       my $txt = $sp_csvh->array2csvline(@sp_line);
-      return($self->_set_error_and_return("Problem with CSV array: " . $sp_csvh->get_errormsg(), 0))
+      return($self->_set_error_and_return_array("Problem with CSV array: " . $sp_csvh->get_errormsg(), 0))
         if ($sp_csvh->error());
       $sp_out .= "$txt\n";
     }
@@ -1744,13 +1744,18 @@ sub clear_error { return($_[0]->{errormsg}->clear()); }
 
 #####
 
-sub _set_error_and_return {
+sub _set_error_and_return_array {
   my $self = shift @_;
   my $errormsg = shift @_;
-  
   $self->_set_errormsg($errormsg);
-  
   return(@_);
+}
+
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 ############################################################

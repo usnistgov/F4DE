@@ -399,14 +399,14 @@ sub upload {
   my $path = MMisc::get_file_full_path($bpath);
   if (MMisc::does_file_exist($path)) {
     my $err = MMisc::check_file_r($path);
-    return($_[0]->_set_error_and_return("Issue with File to \'upload\' ($path): $err", 0))
+    return($_[0]->_set_error_and_return_scalar("Issue with File to \'upload\' ($path): $err", 0))
       if (! MMisc::is_blank($err));
   } elsif (MMisc::does_dir_exist($path)) {
     my $err = MMisc::check_dir_r($path);
-    return($_[0]->_set_error_and_return("Issue with Directory to \'upload\' ($path): $err", 0))
+    return($_[0]->_set_error_and_return_scalar("Issue with Directory to \'upload\' ($path): $err", 0))
       if (! MMisc::is_blank($err));
   } else {
-    return($_[0]->_set_error_and_return("Issue with file/dir to \'upload\' ($path): not a file or directory ?", 0));
+    return($_[0]->_set_error_and_return_scalar("Issue with file/dir to \'upload\' ($path): not a file or directory ?", 0));
   }
   return(0)
     if (! $self->__set_path([1,2], [$modes[0]], 'Path', $path));
@@ -505,7 +505,7 @@ sub continuous_preferred_upload {
 
   my $dir = MMisc::get_file_full_path($tdir);
   my $err = MMisc::check_dir_r($dir);
-  return($self->_set_error_and_return("\'continuous_upload\' can only be used with directories ($dir): $err", 0))
+  return($self->_set_error_and_return_scalar("\'continuous_upload\' can only be used with directories ($dir): $err", 0))
     if (! MMisc::is_blank($err));
 
   return(0)
@@ -839,7 +839,7 @@ sub obtain_configfile {
 
   my $tmpfile = MMisc::get_tmpfilename();
   open FILE, ">$tmpfile"
-    or return($_[0]->_set_error_and_return("Problem creating configuration file ($tmpfile) : $!", 0));
+    or return($_[0]->_set_error_and_return_scalar("Problem creating configuration file ($tmpfile) : $!", 0));
   print FILE $_[2] . "\n";
   print FILE $_[0]->get_section($_[1], 'configuration', "Task = " . $_[1] . "\n") . "\n";
   print FILE $_[3] . "\n";
@@ -868,7 +868,7 @@ sub runtool {
   my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) 
     = MMisc::write_syscall_logfile($_[1] . ".log", @cmd);
 
-  return($_[0]->_set_error_and_return("Problem with running tool, see log: $logfile"))
+  return($_[0]->_set_error_and_return_scalar("Problem with running tool, see log: $logfile"))
     if ((! $ok) || ($retcode != 0));
 
   return(1);
@@ -905,7 +905,7 @@ sub __set_value {
   for (my $i = 0; $i < scalar @{$_[1]}; $i++) {
     $ok++ if ($v == ${$_[1]}[$i]);
   }
-  return($_[0]->_set_error_and_return("The option \'" . $_[3] ."\' is not available for this tool version ($v), it only work for: " . join(" ", @{$_[1]})), 0)
+  return($_[0]->_set_error_and_return_scalar("The option \'" . $_[3] ."\' is not available for this tool version ($v), it only work for: " . join(" ", @{$_[1]})), 0)
     if (! $ok);
 
   for (my $i = 0; $i < scalar @{$_[2]}; $i++) {
@@ -946,7 +946,7 @@ sub __set_path { return($_[0]->__set_value($_[1], $_[2], $_[3], MMisc::get_file_
 sub __set_mcq {
   my ($self, $versions, $mode, $option, $value, $rpossibles) = @_;
   my %h = MMisc::array1d_to_ordering_hash($rpossibles);
-  return($_[0]->_set_error_and_return("Invalid \'$option\' value ($value), possible values: " . join(", ", @$rpossibles), 0))
+  return($_[0]->_set_error_and_return_scalar("Invalid \'$option\' value ($value), possible values: " . join(", ", @$rpossibles), 0))
     if (! exists $h{$value});
   return($_[0]->__set_value($_[1], $_[2], $_[3], $_[4]));
 }  
@@ -955,7 +955,7 @@ sub __set_mcq {
 
 sub __set_with_constraint {
   my ($self, $versions, $mode, $option, $value, $constraintmet, $errtxt) = @_;
-  return($_[0]->_set_error_and_return("Invalid \'$option\' value ($value), $errtxt", 0))
+  return($_[0]->_set_error_and_return_scalar("Invalid \'$option\' value ($value), $errtxt", 0))
     if (! $constraintmet);
   return($_[0]->__set_value($_[1], $_[2], $_[3], $_[4]));
 }
@@ -985,7 +985,7 @@ sub __set_PostScript {
     if (! $self->__set_file_r($rv, $rm, 'Name', $name));
   # Call
   if ($type eq 'python') {
-    return($self->_set_error_and_return("\'Call\' must be set if \'Type\' is set to \"python\"", 0))
+    return($self->_set_error_and_return_scalar("\'Call\' must be set if \'Type\' is set to \"python\"", 0))
       if (MMisc::is_blank($call));
     return(0)
       if (! $self->__set_value($rv, $rm, 'Call', $call));
@@ -1059,13 +1059,18 @@ sub clear_error {
 
 ##########
 
-sub _set_error_and_return {
+sub _set_error_and_return_array {
   my $self = shift @_;
   my $errormsg = shift @_;
-
   $self->_set_errormsg($errormsg);
-
   return(@_);
+}
+
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 ############################################################

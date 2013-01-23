@@ -88,17 +88,18 @@ sub new {
 
 sub set_dir {
   my $err = MMisc::check_dir_r($_[1]);
-  return($_[0]->_set_error_and_return("Problem with directory (" . $_[1] . "): $err", 0))
+  return($_[0]->_set_error_and_return_scalar("Problem with directory (" . $_[1] . "): $err", 0))
     if (! MMisc::is_blank($err));
-  return($_[0]->_set_error_and_return("Can not change value once initialization is complete", 0))
+  return($_[0]->_set_error_and_return_scalar("Can not change value once initialization is complete", 0))
     if ($_[0]->{ready} == 1);
   $_[0]->{id} = $_[1];
+  return(1);
 }
 
 ##
 
 sub get_dir {
-  return($_[0]->_set_error_and_return("value not set", 0))
+  return($_[0]->_set_error_and_return_scalar("value not set", 0))
     if (! defined($_[0]->{id}));
   return($_[0]->{id});
 }
@@ -109,15 +110,16 @@ sub get_dir {
 
 sub set_command {
   my $err = MMisc::check_file_x($_[1]);
-  return($_[0]->_set_error_and_return("Problem with executable (" . $_[1] . "): $err", 0))
+  return($_[0]->_set_error_and_return_scalar("Problem with executable (" . $_[1] . "): $err", 0))
     if (! MMisc::is_blank($err));
   $_[0]->{cmd} = $_[1];
+  return(1);
 }
 
 ##
 
 sub get_command {
-  return($_[0]->_set_error_and_return("value not set", undef))
+  return($_[0]->_set_error_and_return_scalar("value not set", undef))
     if (! defined($_[0]->{cmd}));
   return($_[0]->{cmd});
 }
@@ -128,7 +130,7 @@ sub get_command {
 my $tsmin = 10;
 
 sub set_scaninterval {
-  return($_[0]->_set_error_and_return("value under minimum value of ${tsmin}s", 0))
+  return($_[0]->_set_error_and_return_scalar("value under minimum value of ${tsmin}s", 0))
     if ($_[1] < $tsmin);
   $_[0]->{tosleep} = $_[1];
   return(1);
@@ -146,11 +148,12 @@ sub get_scaninterval {
 
 sub set_salttool {
   my $err = MMisc::check_file_x($_[1]);
-  return($_[0]->_set_error_and_return("Problem with executable (" . $_[1] . "): $err", 0))
+  return($_[0]->_set_error_and_return_scalar("Problem with executable (" . $_[1] . "): $err", 0))
     if (! MMisc::is_blank($err));
-  return($_[0]->_set_error_and_return("Can not change value once initialization is complete", 0))
+  return($_[0]->_set_error_and_return_scalar("Can not change value once initialization is complete", 0))
     if ($_[0]->{ready} == 1);
   $_[0]->{salttool} = $_[1];
+  return(1);
 }
 
 ##
@@ -185,7 +188,7 @@ sub get_saveStateFile {
 }
 
 sub __md_clone_value {
-  return($_[0]->_set_error_and_return( MMisc::error_quit("Attribute (" . $_[2] . ") not defined in MemDump object"), 0))
+  return($_[0]->_set_error_and_return_scalar( MMisc::error_quit("Attribute (" . $_[2] . ") not defined in MemDump object"), 0))
     if (! exists $_[1]->{$_[2]});
   $_[0]->{$_[2]} = $_[1]->{$_[2]};
   return(1);
@@ -195,16 +198,16 @@ sub load_saveStateFile {
   return(0) if (! defined $_[0]->{saveStateFile});
   return(0) if (MMisc::is_file_r($_[0]->{saveStateFile}) == 0);
 
-  return($_[0]->_set_error_and_return("\'init\' already done, will not load saveStateFile", 0))
+  return($_[0]->_set_error_and_return_scalar("\'init\' already done, will not load saveStateFile", 0))
     if ($_[0]->{ready} == 1);
  
   MMisc::warn_print("Trying to load saveStateFile (" . $_[0]->{saveStateFile} .")");
 
   my $tmp = MMisc::load_memory_object($_[0]->{saveStateFile});
-  return($_[0]->_set_error_and_return("Problem with memory object: empty ?", 0))
+  return($_[0]->_set_error_and_return_scalar("Problem with memory object: empty ?", 0))
     if (! defined $tmp);
   
-  return($_[0]->_set_error_and_return("Memory object was save for a later version of this package (" . $tmp->{version} . ", we can only read up to: " . $_[0]->{version} . ")", 0))
+  return($_[0]->_set_error_and_return_scalar("Memory object was save for a later version of this package (" . $tmp->{version} . ", we can only read up to: " . $_[0]->{version} . ")", 0))
     if ($tmp->{version} > $_[0]->{version});
 
   # Version 0
@@ -232,7 +235,7 @@ sub load_saveStateFile {
 ## 'ignore'
 
 sub addto_ignore {
-  return($_[0]->_set_error_and_return("can not use an empty value", 0))
+  return($_[0]->_set_error_and_return_scalar("can not use an empty value", 0))
     if (MMisc::is_blank($_[1]));
   ${$_[0]->{ignore}}{$_[1]}++;
   return(1);
@@ -255,18 +258,18 @@ sub delfrom_ignore {
 ## init()
 
 sub init {
-  return($_[0]->_set_error_and_return("\'init\' already done, will not restart it", 0))
+  return($_[0]->_set_error_and_return_scalar("\'init\' already done, will not restart it", 0))
     if ($_[0]->{ready} == 1);
 
-  return($_[0]->_set_error_and_return("\'dir\' value not set, can not initialize", 0))
+  return($_[0]->_set_error_and_return_scalar("\'dir\' value not set, can not initialize", 0))
     if (! defined($_[0]->{id}));
-  return($_[0]->_set_error_and_return("\'command\' value not set, can not initialize", 0))
+  return($_[0]->_set_error_and_return_scalar("\'command\' value not set, can not initialize", 0))
     if (! defined($_[0]->{cmd}));
-  return($_[0]->_set_error_and_return("\'scaninterval\' value not set, can not initialize", 0))
+  return($_[0]->_set_error_and_return_scalar("\'scaninterval\' value not set, can not initialize", 0))
     if (! defined($_[0]->{tosleep}));
 
   my $dt = new DirTracker($_[0]->{id}, $_[0]->{salttool});
-  return($_[0]->_set_error_and_return("Problem with DirTracker: " . $dt->get_errormsg(), 0))
+  return($_[0]->_set_error_and_return_scalar("Problem with DirTracker: " . $dt->get_errormsg(), 0))
     if ($dt->error());
   $_[0]->{dt} = $dt;
 
@@ -274,7 +277,7 @@ sub init {
   MMisc::vprint(($_[0]->{verb} > 0), "!! Performing initial scan of (" . $_[0]->{id} . ")\n");
 
   $_[0]->{dt}->init(1);
-  return($_[0]->_set_error_and_return("Problem with DirTracker initialization: " . $_[0]->{dt}->get_errormsg(), 0))
+  return($_[0]->_set_error_and_return_scalar("Problem with DirTracker initialization: " . $_[0]->{dt}->get_errormsg(), 0))
     if ($_[0]->{dt}->error());
   
   $_[0]->{ready} = 1;
@@ -286,20 +289,21 @@ sub init {
 ## loop()
 
 sub loop {
-  return($_[0]->_set_error_and_return("\'init\' not done, can not loop", 0))
+  return($_[0]->_set_error_and_return_scalar("\'init\' not done, can not loop", 0))
     if ($_[0]->{ready} == 0);
   
   while ($_[0]->{doit}) {
     $_[0]->single_iteration();
     return(0) if ($_[0]->error());
   }
+  return(1);
 }
 
 ##############################
 # single_iteration()
 
 sub single_iteration {
-  return($_[0]->_set_error_and_return("\'init\' not done, can not run iteration", 0))
+  return($_[0]->_set_error_and_return_scalar("\'init\' not done, can not run iteration", 0))
     if ($_[0]->{ready} == 0);
 
   MMisc::vprint(($_[0]->{verb} > 0), "  (sleeping " . $_[0]->{tosleep} . "s)\n");
@@ -307,7 +311,7 @@ sub single_iteration {
   MMisc::vprint(($_[0]->{verb} > 0), "[" . sprintf("%.02f", MMisc::get_elapsedtime($_[0]->{sepoch})) . "] Iteration: " . $_[0]->{doit} . "\n");
   
   my @newfiles = $_[0]->{dt}->scan();
-  return($_[0]->_set_error_and_return("Problem with DirTracker scan: " . $_[0]->{dt}->get_errormsg(), 0)) 
+  return($_[0]->_set_error_and_return_scalar("Problem with DirTracker scan: " . $_[0]->{dt}->get_errormsg(), 0)) 
     if ($_[0]->{dt}->error());
   MMisc::vprint(($_[0]->{verb} > 0), "!! Performing updated scan of (" . $_[0]->{id} . ")\n");
 
@@ -408,12 +412,12 @@ sub __saveState {
   return(1) if (! defined $_[0]->{saveStateFile});
 
   # create a temporary save
-  return($_[0]->_set_error_and_return("Problem writing temporary saveStateFile", 0))
+  return($_[0]->_set_error_and_return_scalar("Problem writing temporary saveStateFile", 0))
     if (! MMisc::dump_memory_object($_[0]->{saveStateFile}, ".temp", $_[0], undef, undef, 0, 'dump'));
   
   # move it as the permanent one
   my $err = MMisc::filecopy($_[0]->{saveStateFile} . ".temp", $_[0]->{saveStateFile});
-  return($_[0]->_set_error_and_return("Problem finalizing saveSateFile", 0))
+  return($_[0]->_set_error_and_return_scalar("Problem finalizing saveSateFile", 0))
     if (! MMisc::is_blank($err));
 
   # remove temporary one
@@ -447,13 +451,18 @@ sub clear_error {
 
 ##########
 
-sub _set_error_and_return {
+sub _set_error_and_return_array {
   my $self = shift @_;
   my $errormsg = shift @_;
-
   $self->_set_errormsg($errormsg);
-
   return(@_);
+}
+
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 ############################################################

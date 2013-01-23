@@ -343,7 +343,7 @@ sub run_xmllint {
   }
   if ($fileout) {
     open FILE, ">$ofile"
-      or $self->_set_error_and_return("Problem creating output file ($ofile)", "");
+      or $self->_set_error_and_return_scalar("Problem creating output file ($ofile)", "");
     close FILE;
   }
 
@@ -404,13 +404,18 @@ sub clear_error {
 
 #####
 
-sub _set_error_and_return {
+sub _set_error_and_return_array {
   my $self = shift @_;
   my $errormsg = shift @_;
-  
   $self->_set_errormsg($errormsg);
-  
   return(@_);
+}
+
+#####
+
+sub _set_error_and_return_scalar {
+  $_[0]->_set_errormsg($_[1]);
+  return($_[2]);
 }
 
 ############################################################
