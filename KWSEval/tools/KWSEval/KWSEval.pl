@@ -201,45 +201,50 @@ my @textPrefilters = ();
 
 my $articulatedDET = 0;
 my $bypassxmllint = 0;
+my $xpng = 0;
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
+# Used:  BCDEF  I K  NOP  ST   XY abcdefghijk  nopqrst vwxy  #
 
 GetOptions
-(
-    'ecffile=s'                           => \$ECFfile,
-    'rttmfile=s'                          => \$RTTMfile,
-    'sysfile|stdfile=s'                   => \$STDfile,
-    'termfile=s'                          => \$TERMfile,
-    'Find-threshold=f'                    => \$thresholdFind,
-    'Similarity-threshold=f'              => \$thresholdAlign,
-    'file-root=s'                         => \$fileRoot,
-    'osummary-report'                     => \$requestSumReport,
-    'block-summary-report'                => \$requestBlockSumReport,
-    'Osummary-conditional-report'         => \$requestCondSumReport,
-    'Block-summary-conditional-report'    => \$requestCondBlockSumReport,
-    'Term=s@'                             => \@arrayparseterm,
-    'query=s@'                            => \@Queries,
-    'Namefile=s@'                         => \@arraycmdline,
-    'YSourcetype=s@'                      => \@arrayparsetype,
-    "gsegment-based-alignment"            => \$segmentbased,
-    'iso-lines:s'                         => \$OptionIsoline,
-    'det-curve'                           => \$requestDETCurve,
-    'DET-conditional-curve'               => \$requestDETConditionalCurve,
-    'Clean-DETs-folder'                   => \$cleanDETsFolder,
-    'csv-of-alignment'                    => \$requestalignCSV,
-    'ytypes-of-report-output=s@'          => \$reportOutTypes,
-    'koefcorrect=f'                       => \$KoefC,
-    'Koefincorrect=f'                     => \$KoefV,
-    'number-trials-per-sec=f'             => \$trialsPerSec,
-    'prob-of-term=f'                      => \$probOfTerm,
-    'Pooled-DETs'                         => \$PooledTermDETs,
-    'version'                             => sub { MMisc::ok_quit($versionid); },
-    'help'                                => sub { MMisc::ok_quit($usage); },
-    'words-oov'                           => \$requestwordsoov,
-    'include-blocks-w-notargs'            => \$includeNoTargBlocks,
-    'just-system-terms'                   => \$justSystemTerms,
-    'ID-System=s'                         => \$IDSystem, 
-    'xprefilterText=s@'                   => \@textPrefilters,
-    'articlulatedDET'                     => \$articulatedDET,
-    'XmllintBypass'                       => \$bypassxmllint,
+  (
+   'ecffile=s'                           => \$ECFfile,
+   'rttmfile=s'                          => \$RTTMfile,
+   'sysfile|stdfile=s'                   => \$STDfile,
+   'termfile=s'                          => \$TERMfile,
+   'Find-threshold=f'                    => \$thresholdFind,
+   'Similarity-threshold=f'              => \$thresholdAlign,
+   'file-root=s'                         => \$fileRoot,
+   'osummary-report'                     => \$requestSumReport,
+   'block-summary-report'                => \$requestBlockSumReport,
+   'Osummary-conditional-report'         => \$requestCondSumReport,
+   'Block-summary-conditional-report'    => \$requestCondBlockSumReport,
+   'Term=s@'                             => \@arrayparseterm,
+   'query=s@'                            => \@Queries,
+   'Namefile=s@'                         => \@arraycmdline,
+   'YSourcetype=s@'                      => \@arrayparsetype,
+   "gsegment-based-alignment"            => \$segmentbased,
+   'iso-lines:s'                         => \$OptionIsoline,
+   'det-curve'                           => \$requestDETCurve,
+   'DET-conditional-curve'               => \$requestDETConditionalCurve,
+   'Clean-DETs-folder'                   => \$cleanDETsFolder,
+   'csv-of-alignment'                    => \$requestalignCSV,
+   'ytypes-of-report-output=s@'          => \$reportOutTypes,
+   'koefcorrect=f'                       => \$KoefC,
+   'Koefincorrect=f'                     => \$KoefV,
+   'number-trials-per-sec=f'             => \$trialsPerSec,
+   'prob-of-term=f'                      => \$probOfTerm,
+   'Pooled-DETs'                         => \$PooledTermDETs,
+   'version'                             => sub { MMisc::ok_quit($versionid); },
+   'help'                                => sub { MMisc::ok_quit($usage); },
+   'words-oov'                           => \$requestwordsoov,
+   'include-blocks-w-notargs'            => \$includeNoTargBlocks,
+   'just-system-terms'                   => \$justSystemTerms,
+   'ID-System=s'                         => \$IDSystem, 
+   'xprefilterText=s@'                   => \@textPrefilters,
+   'articlulatedDET'                     => \$articulatedDET,
+   'XmllintBypass'                       => \$bypassxmllint,
+   'ExcludePNGFileFromTxtTable'          => \$xpng,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
 #parsing TermIDs
@@ -413,20 +418,23 @@ else
 
 print "Computing requested DET curves and reports\n";
 #Set dets
-my $detoptions = { ("Xmin" => .0001,
-                    "Xmax" => 40,
-                    "Ymin" => 5,
-                    "Ymax" => 98,
-                    "DETShowPoint_Actual" => 1,
-                    "DETShowPoint_Best" => 1,
-                    "xScale" => "nd",
-                    "yScare" => "nd",
-                    "ColorScheme" => "color",
-                    "createDETfiles" => 1,
-                    "DrawIsometriclines" => 1,
-                    "Isometriclines" => [ (0.3) ],
-                    "title" => $STD->getSystemID(),
-                    "serialize" => 1 ) };
+my $detoptions = 
+{ ("Xmin" => .0001,
+   "Xmax" => 40,
+   "Ymin" => 5,
+   "Ymax" => 98,
+   "DETShowPoint_Actual" => 1,
+   "DETShowPoint_Best" => 1,
+   "xScale" => "nd",
+   "yScare" => "nd",
+   "ColorScheme" => "color",
+   "createDETfiles" => 1,
+   "DrawIsometriclines" => 1,
+   "Isometriclines" => [ (0.3) ],
+   "title" => $STD->getSystemID(),
+   "serialize" => 1,
+   'ExcludePNGFileFromTxtTable' => $xpng
+  ) };
 
 $dset = $alignResults[0];
 $qdset = $alignResults[1];
