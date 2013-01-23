@@ -1,4 +1,4 @@
-[[COMMANDLINE]] perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -o foo.png res-test3.V2.4.3.3.srl.gz ; cat foo.results.txt | perl -pe 's:/\S+:file:g' 
+[[COMMANDLINE]] perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -X -o foo.png res-test3.V2.4.3.3.srl.gz ; cat foo.results.txt
 [[RETURN CODE]] 0
 [[STDOUT]]
 Wrote: foo.results.txt
@@ -12,10 +12,10 @@ Wrote: foo.results.txt
 |                       Ptarg |                  0.5 |
 
 
-|                       |                 Inputs                 |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                                                                                          DET Curve Graphs                                                                                          |
-|         Title         |  #Block  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                                          DET Curve                                           |                                           Threshold Curve                                           |
-|-----------------------+----------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+----------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+
-|   Block Block Average |        4 |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87296 |    0.261 |   1.1340 |       0.5063 |   0.00934 |    0.919 |   0.9286 |         4.894 |   file |   file |
+|                       |                 Inputs                 |                               Actual Decision NDC Analysis                                |
+|         Title         |  #Block  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |
+|-----------------------+----------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
+|   Block Block Average |        4 |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87296 |    0.261 |   1.1340 |       0.5063 |
 
 [[STDERR]]
 

@@ -1,4 +1,4 @@
-[[COMMANDLINE]] perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -o foo.png res-test1o.V2.4.4.srl.gz ; cat foo.results.txt | perl -pe 's:/\S+:file:g' 
+[[COMMANDLINE]] perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -X -o foo.png res-test1o.V2.4.4.srl.gz ; cat foo.results.txt
 [[RETURN CODE]] 0
 [[STDOUT]]
 Wrote: foo.results.txt
@@ -12,10 +12,10 @@ Wrote: foo.results.txt
 |                       Ptarg |                  0.5 |
 
 
-|                 |           Inputs            |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                                                                                          DET Curve Graphs                                                                                          |
-|      Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                                          DET Curve                                           |                                           Threshold Curve                                           |
-|-----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+----------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+
-|   Block BlockID |     196 |      178 |    321 |       143 |          0 |   178 |      53 |   1.00000 |    0.270 |   1.2704 |       0.5247 |   0.00000 |    0.929 |   0.9286 |         4.981 |   file |   file |
+|                 |           Inputs            |                               Actual Decision NDC Analysis                                |
+|      Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |
+|-----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
+|   Block BlockID |     196 |      178 |    321 |       143 |          0 |   178 |      53 |   1.00000 |    0.270 |   1.2704 |       0.5247 |
 
 [[STDERR]]
 

@@ -1,4 +1,4 @@
-[[COMMANDLINE]] perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -o foo.png res-test3d.V2.4.3.3.srl.gz ; cat foo.results.txt | perl -pe 's:/\S+:file:g' 
+[[COMMANDLINE]] perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -X -o foo.png res-test3d.V2.4.3.3.srl.gz ; cat foo.results.txt
 [[RETURN CODE]] 0
 [[STDOUT]]
 Wrote: foo.results.txt
@@ -12,10 +12,10 @@ Wrote: foo.results.txt
 |                       Ptarg |                  0.5 |
 
 
-|                       |                 Inputs                 |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |                                                                                          DET Curve Graphs                                                                                          |
-|         Title         |  #Color  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |                                          DET Curve                                           |                                           Threshold Curve                                           |
-|-----------------------+----------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+----------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------+
-|   Color Color Average |        4 |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87296 |    0.261 |   1.1340 |       0.6562 |   0.00934 |    0.919 |   0.9286 |         0.931 |   file |   file |
+|                       |                 Inputs                 |                               Actual Decision NDC Analysis                                |
+|         Title         |  #Color  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |
+|-----------------------+----------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
+|   Color Color Average |        4 |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87296 |    0.261 |   1.1340 |       0.6562 |
 
 [[STDERR]]
 
