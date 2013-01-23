@@ -315,8 +315,7 @@ sub _PN(){
 }
 
 sub _buildAutoTable(){
-  my ($self, $buildCurves, $includeCounts, $reportActual, $includeIsoRatios, $includeFixedMFA) = @_;
-    
+  my ($self, $buildCurves, $includeCounts, $reportActual, $includeIsoRatios, $includeFixedMFA, $xpng) = @_;
   my $useAT = 1;
   
   my $at = ($useAT ? new AutoTable() : new SimpleAutoTable());
@@ -393,7 +392,7 @@ sub _buildAutoTable(){
       $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
 
       my $detpng = $det->getDETPng();
-      if ($detpng ne "") {
+      if (($detpng ne "") && ($xpng != 1)) {
 	if ($detpng =~ m:([^/]+)/([^/]+)$:) {
 	  $detpng = $1 . "/" . $2;
 	}
@@ -401,7 +400,7 @@ sub _buildAutoTable(){
         $at->addData($det->getDETPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "DET Curve", $key, $deturl);
       }
       my $threshpng = $det->getThreshPng();
-      if ($threshpng ne "") {
+      if (($threshpng ne "") && ($xpng != 1)) {
 	if ($threshpng =~ m/([^\/]+)\/([^\/]+)$/) {
 	  $threshpng = $1 . "/" . $2;
 	}
@@ -446,7 +445,7 @@ sub _buildAutoTable(){
   $at->{Properties}->{KEYS}{"KeyColumnCsv"} = "Remove";
   $at->{Properties}->{KEYS}{"KeyColumnLaTeX"} = "Remove";
 
-  $at;
+  return($at);
 }
 
 sub _buildBlockedAutoTable()
@@ -557,7 +556,7 @@ sub _buildBlockedAutoTable()
 
 sub _buildHeaderTable 
 {
-  my ($self, $combinedDETpng) = @_;
+  my ($self, $combinedDETpng, $xpng) = @_;
 
   my $at = new AutoTable();
   my $trial = $self->{DETList}[0]->{DET}->getTrials();
@@ -590,7 +589,7 @@ sub _buildHeaderTable
   }
 
   my $deturl = "";
-  if ($combinedDETpng) {
+  if (($combinedDETpng) && ($xpng != 1)) {
     if ($combinedDETpng =~ m:([^/]+)/([^/]+)$:) {
       $deturl = $1 . "/" . $2;
     }
@@ -662,13 +661,25 @@ sub renderReport(){
   my $variableParams = $self->_findVariableParams();
   
   my $at = $self->_buildAutoTable($buildCurves, $includeCounts, $reportActual, $DETOptions->{DETShowPoint_Ratios});
-    
+  my $tat = undef;
+  if ($DETOptions->{ExcludePNGFileFromTextTable} == 1) {
+    $tat = $self->_buildAutoTable(0, $includeCounts, $reportActual, $DETOptions->{DETShowPoint_Ratios}, 0, 1);
+  } else {
+    $tat = $at;
+  }
+
 #  my $trial = $self->{DETList}[0]->{DET}->getTrials();
 #  my $metric = $self->{DETList}[0]->{DET}->getMetric();
 
   my $hat = $self->_buildHeaderTable($multiInfo->{COMBINED_DET_PNG});
+  my $that = undef;
+  if ($DETOptions->{ExcludePNGFileFromTextTable} == 1) {
+    $that = $self->_buildHeaderTable($multiInfo->{COMBINED_DET_PNG}, 1);
+  } else {
+    $that = $hat;
+  }
 
-  my $renderedTxt = $hat->renderTxtTable(2) . "\n\n" . $at->renderTxtTable(2);
+  my $renderedTxt = $that->renderTxtTable(2) . "\n\n" . $tat->renderTxtTable(2);
   MMisc::writeTo($csvfn, "", 1, 0, $at->renderCSV()) if (! MMisc::is_blank($csvfn));
   MMisc::writeTo($txtfn, "", 1, 0, $renderedTxt, undef, undef, undef, undef, undef, $binmode) if (! MMisc::is_blank($txtfn));
   MMisc::writeTo($htmlfn, "", 1, 0, $hat->renderHTMLTable("") . "<br><br>" . $at->renderHTMLTable(""), undef, undef, undef, undef, undef, $binmode) if (! MMisc::is_blank($htmlfn));
