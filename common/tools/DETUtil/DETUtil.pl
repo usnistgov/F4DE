@@ -129,11 +129,12 @@ my $firstSet = "";
 my $secondSetSize = 10;
 my $secondSet = "";
 my $restSet = "";
+my $xpng = 0;
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: ABCDEFGHIJKL   PQRST V   Za cde ghi klm op rst v x z #
+# Used: ABCDEFGHIJKL   PQRST V X Za cde ghi klm op rst v x z #
 
 GetOptions
   (
@@ -164,7 +165,8 @@ GetOptions
    'p|plotControls=s'            => \@plotControls,
    'F|ForceRecompute'            => \$forceRecompute,
    'x|txtTable'                  => \$doTxtTable,  
-    
+   'X|ExcludePNGFileFromTxtTable' => \$xpng,
+   
    'H|HD'                        => \$HD,
    'a|autoAdapt'                 => \$AutoAdapt,
 
@@ -275,6 +277,8 @@ $options{createDETfiles} = 1;
 
 $options{HD} = $HD;
 $options{AutoAdapt} = $AutoAdapt;
+
+$options{ExcludePNGFileFromTextTable} = $xpng;
 
 foreach my $directive (@plotControls){
   my $numRegex = '\d+|\d+\.\d*|\d*\.\d+|\d*\.\d+e-\d\d';
@@ -653,7 +657,7 @@ if ($doTxtTable) {
   my $txtf = $OutPNGfile;
   $txtf =~ s/\.png$//i;
   $txtf .= ".results.txt";
-  my $txt = $ds->renderAsTxt("$temp/merge", 1, \%options);
+  my $txt = $ds->renderAsTxt("$temp/merge", 1, 1, \%options);
   MMisc::writeTo($txtf, "", 1, 0, $txt);
 }
 
@@ -891,6 +895,10 @@ Force the DET points to be recomputed.  Some of the other options also re-comput
 =item B<-x> B<--txtTable>
 
 Generate a table of statistics.  
+
+=item B<-X> B<--ExcludePNGFileFromTextTable>
+
+Exclude the PNG files location from text tables generated.  
 
 =item B<-d> B<--dumpFile>
 
