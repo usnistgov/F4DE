@@ -39,6 +39,7 @@ my $versionid = "KWEval_SCHelper.pm Version: $version";
 
 ##
 use MMisc;
+use KWSList;
 
 ##########
 # Expected values
@@ -211,6 +212,38 @@ sub check_name_kws13 {
   
   return("", $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, undef, $lsysid, $lversion, $llr, $llp, $laud);
 }
+
+################################################################################
+
+sub check_kwslist_kwlist {
+  my ($kwslistf, $bypassxmllint, @dbdir) = @_;
+
+  # Load the KWSLIST to get the actual "TERMLIST_FILENAME" ...
+  my $object = new KWSList(undef);
+  my $err = $object->openXMLFileAccess($sf, 0, $bypassxmllint);
+  return("Problem checking KWSList file header ($sf): $err", "")
+    if (! MMisc::is_blank($err));
+  my $tf = $object->get_TERMLIST_FILENAME();
+  return("Problem examining KWSList file's header, could not find a \'kwlist\' entry", "")
+    if (MMisc::is_blank($tf));
+
+  ## if no dbDir is provided, we simply return the path found as is
+  return("", $tf) if (scalar @dbdir == 0);
+
+  ## Otherwise we try to find the file in dbDir 
+
+  # remove any path
+  $tf =~ s%^.+/%%;
+
+  for (my $i = 0; $i < scalar @dbdir; $i++) {
+    my $file = "$dir/$tf";
+    return("", $file)
+      if (MMisc::does_file_exist($file));
+  }
+
+  return("Could not find file ($tf) in DBdir", ""); 
+}
+
 
 ########################################
 
