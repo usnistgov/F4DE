@@ -222,6 +222,7 @@ if (@rttms > 0){
     my $key = "RefOccurences:$rttm";
     my $quantKey = "QuantizedRefOccurences:$rttm";
     my $meanDurationKey = "MeanDuration:$rttm";
+    my $meanDurPerCharKey = "MeanDurPerChar:$rttm";
     my $quantizedDurationKey = "QuantizedDuration:$rttm";
     my $rttm = new RTTMList($rttm, $TermList->getLanguage(),
                             $TermList->getCompareNormalize(), $TermList->getEncoding(), 
@@ -280,6 +281,9 @@ if (@rttms > 0){
 	my $nchars = &charactersOfTerm($TermList->{TERMS}{$termid}{TEXT});
 	$total_per_char_dur += ($mean_term_dur / $nchars);
 	$num_sampled_terms += 1;
+
+	#Add mean duration per character
+	$TermList->{TERMS}{$termid}->setAttrValue($meanDurPerCharKey, sprintf("%.4f", $mean_term_dur / $nchars));
       }
     }
   }

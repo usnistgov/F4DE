@@ -24,6 +24,7 @@ use lib (@f4bv);
 
 use Getopt::Long;
 use Data::Dumper;
+use Statistics::Descriptive;
 use MMisc;
 use TermList;
 use TermListRecord;
@@ -36,6 +37,8 @@ my @oneFact = ();
 my @twoFact = ();
 my $listAttr = undef;
 my @rttms = ();
+my $plot_root = "";
+my $plot_count = 1;
 
 GetOptions
 (
@@ -44,6 +47,7 @@ GetOptions
   '1Fact=s@' => \@oneFact,
   '2Fact=s@' => \@twoFact,
   'list' => \$listAttr,
+  'plotroot=s' => \$plot_root,
 ) or MMisc::error_quit("Unknown option(s)\n");
 
 #Check required arguments
@@ -68,52 +72,224 @@ if (defined($listAttr)){
   print "\n";
 }
 
-# One Factor Analsys
-print "Conducting one Factor Analysis for attributes: ".join(", ",@oneFact)."\n";
+foreach my $attr(@oneFact) {
+  $attr =~ s/^([^:]+)://; my $type = $1;
+  my ($fact_recorder, $fact_renderer) = &__1_fact_gen_for_type($type, $attr) or next;
 
-foreach my $attr(@oneFact){
-  my $at = new AutoTable();
-  my $val;
   foreach my $termid (keys %{ $kwList1->{TERMS} }) {
-    #  my $text = $kwList1->{TERMS}{$termid}{TEXT};
-    $val = $kwList1->{TERMS}{$termid}->getAttrValuee($attr);
-    if (defined($val)){
-      $val =~ s/\|/_/g;
-      $at->increment("Count", $val);
-    } else {
-      $at->increment("Count", "UNDEF");
-    }
+    my $val = $kwList1->{TERMS}{$termid}->getAttrValue($attr);
+    &{ $fact_recorder }($val) if $val;
   }
-  print "One Factor Analsis of $attr\n";
-  $at->{Properties}->setValue("SortColKeyTxt", "Alpha");
-  $at->{Properties}->setValue("SortRowKeyTxt", "Alpha");
-  print $at->renderTxtTable(1);
-  print "\n";
+  print "One Factor Analysis of $attr\n";
+  &{ $fact_renderer }();
 }
 
+###1 factor report generators
+sub __1_fact_gen_for_type {
+  my ($type, $attr) = @_;
+  if ($type =~ /d/i) { return &__discrete_1_fact($attr); }
+  elsif ($type =~ /c/i) { return &__continuous_1_fact($attr); }
+  else { warn("Unrecognized type '$type' for $attr.\n") and return; }
+}
+sub __discrete_1_fact {
+  my $attr = shift;
+  my $at = new AutoTable();
+  return (sub { #recorder
+	    my $val = shift;
+	    $at->increment("Count", $val ? $val : "UNDEF");
+	  },
+	  sub { #renderer
+	    $at->setProperties({"SortRowKeyTxt" => "Alpha"});
+	    print $at->renderTxtTable(1);
+	  });
+} #?
+sub __continuous_1_fact {
+  my $attr = shift;
+  my $stats = new Statistics::Descriptive::Full;
+  return (sub { #recorder
+	    my $val = shift;
+	    $stats->add_data($val) if $val;
+	  },
+	  sub { #renderer
+	      my $at = new AutoTable();
+	      my %plot_data = ();
+	      $at->addData(sprintf("%.4f", $stats->min()), "Min", "Data");
+	      $at->addData(sprintf("%.4f", $stats->quantile(1)), "Lower Quartile", "Data");
+	      $at->addData(sprintf("%.4f", $stats->median()), "Median", "Data");
+	      $at->addData(sprintf("%.4f", $stats->mean()), "Mean", "Data");
+	      $at->addData(sprintf("%.4f", $stats->quantile(3)), "Upper Quartile", "Data");
+	      $at->addData(sprintf("%.4f", $stats->max()), "Max", "Data");
+	      print $at->renderTxtTable(1);
+	      $plot_data{"Data"} = [$stats->min(),
+				  $stats->quantile(1),
+				  $stats->median(),
+				  $stats->quantile(3),
+				  $stats->max(),
+				  $stats->mean()];
+	      unless (MMisc::is_blank($plot_root)) { 
+		render_box_plot(\%plot_data, "$plot_root$plot_count", undef, $attr);
+		$plot_count++;
+	      }
+	  });
+} #?
+###
 
-# Two Factor Analsys
-print "Conducting Two Factor Analysis for attributes: ".join(", ",@twoFact)."\n";
-
-foreach my $attr1attr2(@twoFact){
+#two factor
+foreach my $attr1attr2(@twoFact) {
   my ($attr1, $attr2) = split(/\|/, $attr1attr2);
-
-  my $at = new AutoTable();
-  my $val1;
-  my $val2;
+  $attr1 =~ s/^([^:]+)://; my $type1 = $1;
+  $attr2 =~ s/^([^:]+)://; my $type2 = $1;
+   
+  my ($fact_recorder, $fact_renderer) = &__2_fact_gen_for_type($type1, $attr1, $type2, $attr2) or next;
   foreach my $termid (keys %{ $kwList1->{TERMS} }) {
-    #  my $text = $kwList->{TERMS}{$termid}{TEXT};
-    $val1 = $kwList1->{TERMS}{$termid}->getAttrValue($attr1);
-    $val2 = $kwList1->{TERMS}{$termid}->getAttrValue($attr2);
-    $at->increment($attr2."|".((defined $val2) ? $val2 : "UNDEF"),
-                   $attr1."|".((defined $val1) ? $val1 : "UNDEF"));
+    my $val1 = $kwList1->{TERMS}{$termid}->getAttrValue($attr1);
+    my $val2 = $kwList1->{TERMS}{$termid}->getAttrValue($attr2);
+    &{ $fact_recorder }($val1, $val2) if $val1 and $val2;
   }
-  print "Two Factor Analsis of $attr1attr2\n";
-  $at->{Properties}->setValue("SortColKeyTxt", "Alpha");
-  $at->{Properties}->setValue("SortRowKeyTxt", "Alpha");
-  print $at->renderTxtTable(1);
-  print "\n";
+  print "Two Factor Analysis of $attr1|$attr2\n";
+  &{ $fact_renderer }();
 }
+
+###2 factor report generators
+sub __2_fact_gen_for_type {
+  my ($type1, $attr1, $type2, $attr2) = @_; #attr taken only for axis labels on plots
+  if ("$type1$type2" =~ /dd/i) { return &__dd_2_fact($attr1, $attr2); }
+  elsif ("$type1$type2" =~ /cd/i) { return &__cd_2_fact($attr1, $attr2); }
+  elsif ("$type1$type2" =~ /cc/i) { return &__cc_2_fact($attr1, $attr2); }
+  else { warn("Unrecognized type '$type1$type2'.\n") and return; }
+}
+sub __dd_2_fact {
+  my ($attr1, $attr2) = @_;
+  my $at = new AutoTable();
+  return (sub { #recorder
+	    my ($val1, $val2) = @_;
+	    $at->increment($val1 ? $val1 : "UNDEF", $val2 ? $val2 : "UNDEF");
+	  },
+	  sub { #renderer
+	    print $at->renderTxtTable(1);
+	  });
+}
+sub __cd_2_fact {
+  my ($attr1, $attr2) = @_;
+  my %results = ();
+  $results{"Grand"} = new Statistics::Descriptive::Full;
+  return (sub { #recorder
+	    my ($val1, $val2) = @_;
+	    $results{$val2} ||= new Statistics::Descriptive::Full;
+	    $results{$val2}->add_data($val1);
+	    $results{"Grand"}->add_data($val1);
+	  },
+	  sub { #renderer
+	    my $at = new AutoTable();
+	    $at->setProperties({"SortRowKeyTxt" => "Alpha"});
+	    my %plot_data = ();
+	    foreach my $key(keys %results) {
+	      $at->addData(sprintf("%.4f", $results{$key}->min()), "Min", $key);
+	      $at->addData(sprintf("%.4f", $results{$key}->quantile(1)), "Lower Quartile", $key);
+	      $at->addData(sprintf("%.4f", $results{$key}->median()), "Median", $key);
+	      $at->addData(sprintf("%.4f", $results{$key}->mean()), "Mean", $key);
+	      $at->addData(sprintf("%.4f", $results{$key}->quantile(3)), "Upper Quartile", $key);
+	      $at->addData(sprintf("%.4f", $results{$key}->max()), "Max", $key);
+	      $plot_data{$key} = [$results{$key}->min(),
+				  $results{$key}->quantile(1),
+				  $results{$key}->median(),
+				  $results{$key}->quantile(3),
+				  $results{$key}->max(),
+				  $results{$key}->mean()];
+	    }
+	    unless (MMisc::is_blank($plot_root)) {
+	      render_box_plot(\%plot_data, "$plot_root$plot_count", $attr2, $attr1);
+	      $plot_count++;
+	    }
+	    print $at->renderTxtTable(1);
+	  });
+}
+sub __cc_2_fact {
+  my ($attr1, $attr2) = @_;
+  my @results = ();
+  my ($grand_v1, $grand_v2) = (0.0, 0.0);
+  return (sub { #recorder
+	    my ($val1, $val2) = @_;
+	    $grand_v1 += $val1; $grand_v2 += $val2;
+	    push @results, "$val2, $val1"; # reverse these?
+	  },
+	  sub { #renderer
+	    if (scalar(@results) > 0) {
+	      $grand_v1 /= scalar(@results);
+	      $grand_v2 /= scalar(@results);
+	      push @results, sprintf("%.4f", $grand_v2)." ".sprintf("%.4f", $grand_v1);
+	    }
+	    unless (MMisc::is_blank($plot_root)) {
+	      render_scatter_plot(\@results, "$plot_root$plot_count", $attr2, $attr1);
+	      $plot_count++;
+	    }
+	  });
+}
+
+###
+
+
+### Box plot
+sub render_box_plot {
+  my $data = shift; #should be { xtic => (min, 1stQ, median, 3rdQ, max, mean) }
+  my $plot_name = shift;
+  my $xlabel = shift;
+  my $ylabel = shift;
+  
+  my @keys = sort( keys %{ $data } );
+  my $plt = "";
+  $plt.="set terminal png large\n";
+  $plt.="set bars 2\n";
+  $plt.="set logscale y\n";
+  $plt.="set xlabel \\\"$xlabel\\\"\n" if $xlabel;
+  $plt.="set ylabel \\\"$ylabel\\\"\n" if $ylabel;
+  my $count = 1;
+  my $data_str = "";
+  my @xtics = ();
+  foreach my $xtic (@keys) {
+    push @xtics, "\\\"$xtic\\\" $count";
+    $data_str.="$count ".join(" ", @{ $data->{$xtic} })."\n";
+    $count++;
+  }
+  $data_str.="e\n";
+
+  $plt.="set xtics (".join(",", @xtics).")\n";
+  $plt.="set xtics right rotate by 45\n";
+
+  $plt.="plot '-' using 1:3:2:6:5 with candlesticks whiskerbars 0.5 lw 2, \\\n";
+  $plt.=" '-' using 1:4:4:4:4 with candlesticks lt -4 lc rgbcolor \\\"#0000ff\\\" notitle\n";
+  $plt.=$data_str;
+  $plt.=$data_str;
+
+  system "echo \"$plt\" | gnuplot > $plot_name.png";
+}
+###
+
+### Scatter plot
+
+sub render_scatter_plot {
+  my $data = shift; #should be @ of points
+  my $plot_name = shift;
+  my $xlabel = shift;
+  my $ylabel = shift;
+
+  my $plt = "";
+  $plt.="set terminal png large\n";
+  $plt.="set style function dots\n";
+  $plt.="set xlabel \\\"$xlabel\\\"\n" if $xlabel;
+  $plt.="set ylabel \\\"$ylabel\\\"\n" if $ylabel;
+  $plt.="plot '-'\n";
+  my $data_str = "";
+  foreach my $points (@{ $data }) {
+    $data_str.="$points\n";
+  }
+  $data_str.="e\n";
+  $plt.=$data_str;
+
+  system "echo \"$plt\" | gnuplot > $plot_name.png";
+}
+
+###
 
 sub applySetOperations{
   my ($a1, $a2, $op) = @_;
