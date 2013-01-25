@@ -39,7 +39,7 @@ AUTH_TERM=0
 validator_cmdadd=""
 XMLLINTBYPASS=0
 XPNG=0
-while getopts "hrARS:X" OPTION
+while getopts "hrARS:XE" OPTION
 do
   case $OPTION in
     h)
