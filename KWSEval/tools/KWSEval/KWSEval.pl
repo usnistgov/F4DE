@@ -205,6 +205,7 @@ my $xpng = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:  BCDEF  I K  NOP  ST   XY abcdefghijk  nopqrst vwxy  #
+# Mult:                                   i                  #
 
 GetOptions
   (
@@ -616,6 +617,7 @@ sub set_usage {
 	$tmp .= "Other options:\n";
 	$tmp .= "  -a, --articulatedDET     Compute the faster articulated DET curves.\n";
   $tmp .= "  -X, --XmllintBypass      Bypass xmllint check of the KWSList XML file (this will reduce the memory footprint when loading the file, but requires that the file be formatted in a way similar to how \'xmllint --format\' would).\n"; 
+  $tmp .= "  --ExcludePNGFileFromTxtTable   Exclude PNG files loaction from output text tables\n";
 	$tmp .= "\n";
 
   return($tmp);
