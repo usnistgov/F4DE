@@ -118,15 +118,30 @@ do
         fl="$fl $e"
     elif [ -d $e ]; then
         t=`ls $e`
-        fl="$fl $t"
+        for x in $t; do if [ -f "$e/$x" ]; then fl="$fl $e/$x"; fi; done
     else
         echo "Skipping: Not a file or a dir [$e]"
     fi
 done
 
-for f in $fl
+# Prune extra configuration files
+cfl=""
+for e in $fl
 do
-    $tool $f $subhelp $subhelp $subhelp_xtras
+  xconf=`echo $e | perl -ne 'print $1 if (m%^\.conf_\w+$%);'`
+  if [ "A$xconf" == "A" ]; then
+    cfl="$cfl $e"
+  fi
+done
+
+for f in $cfl
+do
+    xtra=""
+    xtraf="$ff.conf_SubmissionHelper"
+    if [ -f $xtraf ]; then
+        xtra=`cat $xtraf`
+    fi
+    $tool $f $subhelp $subhelp -E $subhelp_xtras $xtra
 done
 
 exit 0
