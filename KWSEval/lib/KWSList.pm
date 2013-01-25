@@ -143,16 +143,20 @@ sub toString {
 #####
 
 sub SetSystemID {
-    my ($self, $sysid) = @_;
-    $self->{SYSTEM_ID} = $sysid;
+    # ($self, $sysid) 
+    $_[0]->{SYSTEM_ID} = $_[1];
 }
 
 #####
 
 sub getSystemID {
-  my ($self) = @_;
-  return($self->{SYSTEM_ID});
+  # ($self)
+  return($_[0]->{SYSTEM_ID});
 }
+
+##########
+
+sub get_TERMLIST_FILENAME { return($_[0]->{TERMLIST_FILENAME}); }
 
 ########################################
 
