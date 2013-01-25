@@ -70,7 +70,7 @@ my $partofthistool = "It should have been part of this tools' files. Please chec
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "KWSEval_SCHelper") {
+foreach my $pn ("MMisc", "KWSEval_SCHelper", "KWSList") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -104,6 +104,8 @@ my $tlist_ext = '.kwlist.xml';
 my $rttm_ext = ".rttm";
 
 my $kwslist_ext = ".kwslist.xml";
+my $kwslist_ext_rgx = "\.kwslist\d*\.xml";
+my $kwslist_ext_act = "";
 my $ctm_ext = ".ctm";
 my $stm_ext = ".stm";
 
@@ -320,11 +322,15 @@ sub check_submission {
 
   # Remove the file ending (and extract it value for 'mode' selector)
   my $mode = undef;
-  $mode = $kwslist_ext if ($f =~ s%$kwslist_ext%%i);
-  $mode = $ctm_ext if ($f =~ s%$ctm_ext%%i);
-  return("File must end in either \'$kwslist_ext\' or \'$ctm_ext\' to be usable")
-    if (! defined $mode);
-
+  if ($f =~ s%($kwslist_ext_rgx)$%%i) {
+    $mode = $kwslist_ext;
+    $kwlist_ext_act = $1;
+  } elsif ($f =~ s%$ctm_ext%%i) {
+    $mode = $ctm_ext;
+  } else {
+    return("File must end in either \'$kwslist_ext\' or \'$ctm_ext\' to be usable")
+      if (! defined $mode);
+  }
   $f =~ s%^.+/%%; # erase the directory part of the file
 
   vprint(2, "Checking EXPID");
@@ -351,8 +357,11 @@ sub kwslist_validation {
 
   vprint(2, "Running Validation tool");
   my $n_ecf = $ecfs{$lcorpus}{$lpart};
-  my $n_tlist = $tlists{$lcorpus}{$lpart};
+#  my $n_tlist = $tlists{$lcorpus}{$lpart};
   my $n_rttm = (MMisc::safe_exists(\%rttms, $lcorpus, $lpart)) ? $rttms{$lcorpus}{$lpart} : "";
+
+  my ($err, $n_tlist) = KWSEval_SCHelper::check_kwslist_kwlist($sf, $bypassxmllint, @dbDir);
+  return($err) if (! MMisc::is_blank($err));
 
   $err = &run_ValidateKWSList($f, $sf, $n_ecf, $n_tlist, $n_rttm);
   return($err);
@@ -420,7 +429,7 @@ sub run_ValidateKWSList {
   return("Problem creating output dir ($od)")
     if (! MMisc::make_wdir($od));
   vprint(4, "Output dir: $od");
-  my $of = "$od/$exp$kwslist_ext";
+  my $of = "$od/$exp$kwslist_ext_act";
 
   my @cmd = ();
   push @cmd, '-e', $ecf;
