@@ -324,7 +324,7 @@ sub check_submission {
   my $mode = undef;
   if ($f =~ s%($kwslist_ext_rgx)$%%i) {
     $mode = $kwslist_ext;
-    $kwlist_ext_act = $1;
+    $kwslist_ext_act = $1;
   } elsif ($f =~ s%$ctm_ext%%i) {
     $mode = $ctm_ext;
   } else {
