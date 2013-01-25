@@ -122,9 +122,11 @@ my $sctkbindir = "";
 my $sysdesc = "";
 my $eteam = undef;
 my $bypassxmllint = 0;
+my $xpng = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:    DE  H  K    P  ST V X    cdef h         rst v     #
+# Mult:     E                                                #
 
 my %opt = ();
 GetOptions
@@ -148,6 +150,7 @@ GetOptions
    'tSystemDescription=s' => \$sysdesc,
    'ExpectedTeamName=s' => \$eteam,
    'XmllintBypass' => \$bypassxmllint,
+   'ExcludePNGFileFromTxtTable'          => \$xpng,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -350,7 +353,8 @@ sub execKWSScoreRun{
     " $def->{KWSEVAL_OPTS}".
     " -f $compRoot".
     " -y TXT -y HTML";
-  $com .= " -X" if ($bypassxmllint);
+  $com .= " --XmllintBypass" if ($bypassxmllint);
+  $com .= " --ExcludePNGFileFromTxtTable" if ($xpng);
 
   if (! -f "$compRoot.log"){
     my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$compRoot.log", $com);
@@ -572,7 +576,12 @@ if ($ltask =~ /KWS/){
           $def->{"runDesc"} = "$setStr, $protocolStr, $tokTimesStr, $tokSegStr";
           $def->{"systemDesc"} = "$lsysid $lversion: $lcorpus $lpart - $setStr";
           $def->{"KWSLIST"} = $sysfile;
-          $def->{"KWLIST"} = "$db/${lcorpus}_${lpart}.annot.kwlist.xml";
+          my ($err, $n_tlist) = 
+            KWSEval_SCHelper::check_kwslist_kwlist($sysfile, $bypassxmllint);
+          MMisc::error_quit("Problem with KWSList's KWList entry: $err")
+              if (! MMisc::is_blank($err));
+          $n_tlist =~ s%^.+\.(kwlist(\d*)\.xml)$%$1%i;
+          $def->{"KWLIST"} = "$db/${lcorpus}_${lpart}.annot.$n_tlist";
           $def->{"ECF"} = $ecfs->{$setID};
           $def->{"RTTM"} = $rttms->{$tokTimesID};
           $def->{"outputRoot"} = $runID;
@@ -620,7 +629,7 @@ if ($ltask =~ /KWS/){
                                                   "Protocol" => "Occur" } 
                           }
   else {
-    MMisc::error_quit("Internale error: KWS evaluation does not have preferred scoring set language $languageID defined")
+    MMisc::error_quit("Internal error: KWS evaluation does not have preferred scoring set language $languageID defined")
   }
   
 #  execKWSScoreRun($kwRun1, $lscase, $readme, $preferredScoring);
