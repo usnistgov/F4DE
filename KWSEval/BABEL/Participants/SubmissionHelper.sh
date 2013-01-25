@@ -17,7 +17,7 @@ error_quit () {
 usage()
 {
 cat << EOF
-Usage: $0 [-h] [-r] [-A] [-R] [-S SystemDescription.txt] [-X] <EXPID>.kwslist.xml|<EXPID>.ctm
+Usage: $0 [-h] [-r] [-A] [-R] [-S SystemDescription.txt] [-X] [-E] <EXPID>.kwslist.xml|<EXPID>.ctm
 
 The script will submit the <EXPID>.kwslist.xml or <EXPID>.ctm to the BABEL Scoring Server
 
@@ -28,6 +28,7 @@ OPTIONS:
    -R      Resubmit a system file
    -S      System Description file
    -X      Pass the XmllintBypass option to KWSList validation and scoring tools
+   -E      Exlude PNG file from result table
 EOF
 }
 
@@ -37,6 +38,7 @@ SYSDESC=""
 AUTH_TERM=0
 validator_cmdadd=""
 XMLLINTBYPASS=0
+XPNG=0
 while getopts "hrARS:X" OPTION
 do
   case $OPTION in
@@ -65,6 +67,10 @@ do
     X)
       XMLLINTBYPASS=1
       validator_cmdadd="${validator_cmdadd} -X"
+      shift $((OPTIND-1)); OPTIND=1
+      ;;
+    E)
+      XPNG=1
       shift $((OPTIND-1)); OPTIND=1
       ;;
     ?)
@@ -248,7 +254,7 @@ else
   echo "  -- validated earlier, skipping revalidation"
 fi
 
-expid=`echo $if | perl -pe 's%.(kwslist.xml|ctm)$%%i; s%^.*/%%;'`
+expid=`echo $if | perl -pe 's%\.(kwslist\d*\.xml|ctm)$%%i; s%^.*/%%;'`
 sfile="${sha256}.status"
 
 ########## Step 2
@@ -278,13 +284,18 @@ if [ ! -f "$lf" ]; then
   fi
 
   if [ "A${AUTH_TERM}" == "A1" ]; then
-    mkdir "${tid}/ExtraOptions"
+    if [ ! -d "${tid}/ExtraOptions" ]; then mkdir "${tid}/ExtraOptions"; fi
     echo "1" > "${tid}/ExtraOptions/AUTH_TERM"
   fi
 
   if [ "A${XMLLINTBYPASS}" == "A1" ]; then
-    mkdir "${tid}/ExtraOptions"
+    if [ ! -d "${tid}/ExtraOptions" ]; then mkdir "${tid}/ExtraOptions"; fi
     echo "1" > "${tid}/ExtraOptions/XMLLINTBYPASS"
+  fi
+
+  if [ "A${XPNG}" == "A1" ]; then
+    if [ ! -d "${tid}/ExtraOptions" ]; then mkdir "${tid}/ExtraOptions"; fi
+    echo "1" > "${tid}/ExtraOptions/XPNG"
   fi
 
   pwd=`pwd`
