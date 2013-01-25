@@ -520,7 +520,10 @@ sub execKWSEnsemble2{
   }
   
   if (! -f "$scrdir/$def->{ensembleRoot}.png"){ 
-    $com = "$detutil $def->{DETOPTIONS} --txtTable -I -Q 0.3 -T '$mainTitle' -o $scrdir/$def->{ensembleRoot}.png ".join(" ",@srls);
+    $com = "$detutil $def->{DETOPTIONS} --txtTable -I -Q 0.3 -T '$mainTitle'";
+    $com .= ($xpng == 1) ? " --ExcludePNGFileFromTxtTable" : "";
+    $com .= " -o $scrdir/$def->{ensembleRoot}.png ";
+    $com .= join(" ",@srls);
     MMisc::writeTo("$scrdir/$def->{ensembleRoot}.sh", "", 0, 0, "$com\n");
     my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$scrdir/$def->{ensembleRoot}.log", $com);
     MMisc::error_quit("DETUtil ".$def->{ensembleID}." failed returned $ret. Aborting") if ($retcode != 0);    
@@ -580,7 +583,7 @@ if ($ltask =~ /KWS/){
             KWSEval_SCHelper::check_kwslist_kwlist($sysfile, $bypassxmllint);
           MMisc::error_quit("Problem with KWSList's KWList entry: $err")
               if (! MMisc::is_blank($err));
-          $n_tlist =~ s%^.+\.(kwlist(\d*)\.xml)$%$1%i;
+          $n_tlist =~ s%^.+\.(kwlist\d*\.xml)$%$1%i;
           $def->{"KWLIST"} = "$db/${lcorpus}_${lpart}.annot.$n_tlist";
           $def->{"ECF"} = $ecfs->{$setID};
           $def->{"RTTM"} = $rttms->{$tokTimesID};
@@ -878,7 +881,7 @@ sub vprint {
 ############################################################
 
 sub set_usage {
-  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--fileCreate file [--fileCreate file [...]]] [--ProcGraph tool] [--ExpectedTeamName TEAM] --Specfile specfile --expid EXPID --sysfile file --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]]\n";
+  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass] [--ExcludePNGFileFromTxtTable]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--fileCreate file [--fileCreate file [...]]] [--ProcGraph tool] [--ExpectedTeamName TEAM] --Specfile specfile --expid EXPID --sysfile file --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]]\n";
   $usage .= "\n";
   $usage .= "Will score a submission file against data present in the dbDir.\n";
   $usage .= "\nThe program needs a \'dbDir\' to load some of its eval specific definitions; this directory must contain pairs of <CORPUSID>_<PARTITION> \".ecf.xml\" and \".kwlist.xml\" files that match the component of the EXPID to confirm expected data validity, as well as a <CORPUSID>_<PARTITION> directory containing reference data needed for scoring.\n";
@@ -888,6 +891,7 @@ sub set_usage {
   $usage .= "  --Verbose    Be more verbose\n";
   $usage .= "  --KWSEval    Location of the KWSEval tool (default: $kwseval)\n";
   $usage .= "  --XmllintBypass      Bypass xmllint check of the KWSList XML file (this will reduce the memory footprint when loading the file, but requires that the file be formatted in a way similar to how \'xmllint --format\' would)\n";
+  $usage .= "  --ExcludePNGFileFromTxtTable  Exclude PNG files loaction from output text tables\n";
   $usage .= "  --DETUtil    Location of the DETUtil tool (default: $detutil)\n";
   $usage .= "  --Hsha256id  SHA256 ID\n";
   $usage .= "  --fileCreate   If requested, once succesfully run, will create the file before exiting with success (: separated or multiple can be specified)\n";
