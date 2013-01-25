@@ -107,13 +107,23 @@ do
         fl="$fl $e"
     elif [ -d $e ]; then
         t=`ls $e`
-        fl="$fl $t"
+        for x in $t; do if [ -f "$e/$x" ]; then fl="$fl $e/$x"; fi; done
     else
         echo "Skipping: Not a file or a dir [$e]"
     fi
 done
 
-for ff in $fl
+# Prune extra configuration files
+cfl=""
+for e in $fl
+do
+  xconf=`echo $e | perl -ne 'print $1 if (m%^\.conf_\w+$%);'`
+  if [ "A$xconf" == "A" ]; then
+    cfl="$cfl $e"
+  fi
+done
+
+for ff in $cfl
 do
     f=`echo $ff | perl -ne 'print $1 if (m%^[^\/]+/(.+)$%);'`
 
@@ -150,7 +160,13 @@ do
                     if [ -d "$resdir" ]; then rm -rf $resdir; fi
                     mkdir -p $resdir
 
-                    $tool $ff $subhelp $babscr --Specfile $scconf --expid $expid --sysfile $finf --compdir $compdir --resdir $resdir --dbDir $dbDir $babscr_xtras
+                    xtra=""
+                    xtraf="$ff.conf_BabelScorer"
+                    if [ -f $xtraf ]; then
+                        xtra=`cat $xtraf`
+                    fi
+
+                    $tool $ff $subhelp $babscr --Specfile $scconf --expid $expid --sysfile $finf --compdir $compdir --resdir $resdir --dbDir $dbDir --Tsctkbin $sctkbindir --ExcludePNGFileFromTxtTable $babscr_xtras $xtra
                 fi
             fi
         fi
