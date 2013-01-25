@@ -220,8 +220,8 @@ sub check_kwslist_kwlist {
 
   # Load the KWSLIST to get the actual "TERMLIST_FILENAME" ...
   my $object = new KWSList(undef);
-  my $err = $object->openXMLFileAccess($sf, 0, $bypassxmllint);
-  return("Problem checking KWSList file header ($sf): $err", "")
+  my $err = $object->openXMLFileAccess($kwslistf, 0, $bypassxmllint);
+  return("Problem checking KWSList file header ($kwslistf): $err", "")
     if (! MMisc::is_blank($err));
   my $tf = $object->get_TERMLIST_FILENAME();
   return("Problem examining KWSList file's header, could not find a \'kwlist\' entry", "")
@@ -236,7 +236,7 @@ sub check_kwslist_kwlist {
   $tf =~ s%^.+/%%;
 
   for (my $i = 0; $i < scalar @dbdir; $i++) {
-    my $file = "$dir/$tf";
+    my $file = $dbdir[$i] . "/$tf";
     return("", $file)
       if (MMisc::does_file_exist($file));
   }
