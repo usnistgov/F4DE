@@ -17,7 +17,7 @@ error_quit () {
 usage()
 {
 cat << EOF
-Usage: $0 [-h] [-r] [-A] [-R] [-S SystemDescription.txt] [-X] [-E] <EXPID>.kwslist.xml|<EXPID>.ctm
+Usage: $0 [-h] [-r] [-A] [-V] [-R] [-S SystemDescription.txt] [-X] [-E] <EXPID>.kwslist.xml|<EXPID>.ctm
 
 The script will submit the <EXPID>.kwslist.xml or <EXPID>.ctm to the BABEL Scoring Server
 
@@ -25,7 +25,8 @@ OPTIONS:
    -h      Show this message
    -r      Redownload results
    -A      Authorize TERMs defined in KWList file but not in the KWSlist file
-   -R      Resubmit a system file (will force a re-validation)
+   -V      re-Validate input file (in case component of the scoring tools was modified)
+   -R      Resubmit a system file
    -S      System Description file
    -X      Pass the XmllintBypass option to KWSList validation and scoring tools
    -E      Exlude PNG file from result table
@@ -33,13 +34,14 @@ EOF
 }
 
 RESUBMIT=0
+REVALIDATE=0
 REDODOWNLOAD=0
 SYSDESC=""
 AUTH_TERM=0
 validator_cmdadd=""
 XMLLINTBYPASS=0
 XPNG=0
-while getopts "hrARS:XE" OPTION
+while getopts "hrAVRS:XE" OPTION
 do
   case $OPTION in
     h)
@@ -53,6 +55,10 @@ do
     A)
       AUTH_TERM=1
       validator_cmdadd="${validator_cmdadd} -A"
+      shift $((OPTIND-1)); OPTIND=1
+      ;;
+    V)
+      REVALIDATE=1
       shift $((OPTIND-1)); OPTIND=1
       ;;
     R)
@@ -232,7 +238,8 @@ lf_base="$lockdir/$sha256"
 # Step 5: Uncompress Results
 # if a step is redone, its remove the next lock file to force a redo of the next step ...
 
-# if resubmit was requested, erase validation lock
+# if resubmit or revalidate was requested, erase validation lock
+if [ "A$REVALIDATE" == "A1" ]; then rm -f $lf_base.01-*; fi
 if [ "A$RESUBMIT" == "A1" ]; then rm -f $lf_base.01-*; fi
 # do not redownload unless the scoring server tells us the file is ready for download
 if [ "A$REDODOWNLOAD" == "A1" ]; then rm -f $lf_base.03-*; fi
@@ -244,7 +251,7 @@ nlf="$lf_base.02-uploaded"
 if [ ! -f "$lf" ]; then
   echo "  -> validating submission file"
   tld="${sha256}-Validation"
-  if [ "A$RESUBMIT" == "A1" ]; then rm -rf "$JRlockdir/$tld*"; fi
+  if [ "A$REVALIDATE" == "A1" ]; then rm -rf "$JRlockdir/$tld*"; fi
   $jobrunner -b -l "$JRlockdir" -n "$tld" -S 99 -- "$subcheck" -d "$dbDir" -k "$validator" $validator_cmdadd -T "$TMvalidator" "$if" &> "$lf.log"
   if [ "${?}" -ne "99" ]; then error_quit "**** Submission did not validate, aborting (check within a directory starting with \'$JRlockdir/$tld\' for details, as well as: $lf.log)"; fi
   # if 'redoBad' was triggered, consider the submission new: remove any lock files (and logs)
