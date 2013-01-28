@@ -17,7 +17,7 @@ error_quit () {
 usage()
 {
 cat << EOF
-Usage: $0 [-h] [-r] [-A] [-V] [-R] [-S SystemDescription.txt] [-X] [-E] <EXPID>.kwslist.xml|<EXPID>.ctm
+Usage: $0 [-h] [-r] [-A] [-R] [-V] [-S SystemDescription.txt] [-X] [-E] <EXPID>.kwslist.xml|<EXPID>.ctm
 
 The script will submit the <EXPID>.kwslist.xml or <EXPID>.ctm to the BABEL Scoring Server
 
@@ -25,8 +25,8 @@ OPTIONS:
    -h      Show this message
    -r      Redownload results
    -A      Authorize TERMs defined in KWList file but not in the KWSlist file
-   -V      re-Validate input file (in case component of the scoring tools was modified)
    -R      Resubmit a system file
+   -V      re-Validate input file (in case component of the scoring tools was modified)
    -S      System Description file
    -X      Pass the XmllintBypass option to KWSList validation and scoring tools
    -E      Exlude PNG file from result table
