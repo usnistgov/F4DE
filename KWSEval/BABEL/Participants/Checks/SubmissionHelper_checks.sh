@@ -154,18 +154,20 @@ do
     $tool $f $subhelp $subhelp -E $subhelp_xtras $xtra
 
     if [ "${?}" -ne "0" ]; then
-        run_bad="${run_bad}\n$ff"
+        run_bad="${run_bad} $ff"
     else
-        run_good="${run_bad}\n$ff"
+        run_good="${run_good} $ff"
     fi
     
 done
 
 echo ""
 echo ""
-echo "***** OK Runs:\n$run_good"
+echo "***** OK Runs:"
+for i in $run_good; do echo $i; done
 echo ""
-echo "***** BAD Runs:\n$run_bad"
+echo "***** BAD Runs:"
+for i in $run_bad; do echo $i; done
 
 exit 0
 
