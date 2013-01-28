@@ -15,7 +15,7 @@ error_quit () {
 ########## Usage/Options Processing
 usage () {
     cat << EOF
-Usage: $0 [-h] [-A] [-R] [-X] CompsDir|CompsFile [...]
+Usage: $0 [-h] [-A] [-R] [-V] [-X] CompsDir|CompsFile [...]
 
 The script will submit files to the BABEL Scoring Server
 
@@ -23,15 +23,17 @@ OPTIONS:
    -h      Show this message
    -A      Authorize TERMs defined in KWList file but not in the KWSlist file
    -R      Resubmit a system file
+   -V      re-Validate input file (in case component of the scoring tools was modified)
    -X      Pass the XmllintBypass option to KWSList validation and scoring tools
 EOF
 }
 
 RESUBMIT=0
+REVALIDATE=0
 AUTH_TERM=0
 XMLLINTBYPASS=0
 subhelp_xtras=""
-while getopts "hARX" OPTION
+while getopts "hARXV" OPTION
 do
     case $OPTION in
         h)
@@ -46,6 +48,11 @@ do
         R)
             RESUBMIT=1
             subhelp_xtras="${subhelp_xtras} -R"
+            shift $((OPTIND-1)); OPTIND=1
+            ;;
+        V)
+            REVALIDATE=1
+            subhelp_xtras="${subhelp_xtras} -V"
             shift $((OPTIND-1)); OPTIND=1
             ;;
         X)
