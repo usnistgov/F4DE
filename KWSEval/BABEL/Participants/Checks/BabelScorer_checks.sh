@@ -123,6 +123,9 @@ do
   fi
 done
 
+run_bad=""
+run_good=""
+
 for ff in $cfl
 do
     f=`echo $ff | perl -ne 'print $1 if (m%^[^\/]+/(.+)$%);'`
@@ -167,10 +170,24 @@ do
                     fi
 
                     $tool $ff $subhelp $babscr --Specfile $scconf --expid $expid --sysfile $finf --compdir $compdir --resdir $resdir --dbDir $dbDir --Tsctkbin $sctkbindir --ExcludePNGFileFromTxtTable $babscr_xtras $xtra
+
+                    if [ "${?}" -ne "0" ]; then
+                        run_bad="${run_bad} $ff"
+                    else
+                        run_good="${run_good} $ff"
+                    fi
                 fi
             fi
         fi
     fi
 done
+
+echo ""
+echo ""
+echo "***** OK Runs:"
+for i in $run_good; do echo $i; done
+echo ""
+echo "***** BAD Runs:"
+for i in $run_bad; do echo $i; done
 
 exit 0

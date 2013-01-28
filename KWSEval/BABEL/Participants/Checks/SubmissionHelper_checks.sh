@@ -141,6 +141,9 @@ do
   fi
 done
 
+run_bad=""
+run_good=""
+
 for f in $cfl
 do
     xtra=""
@@ -149,7 +152,20 @@ do
         xtra=`cat $xtraf`
     fi
     $tool $f $subhelp $subhelp -E $subhelp_xtras $xtra
+
+    if [ "${?}" -ne "0" ]; then
+        run_bad="${run_bad}\n$ff"
+    else
+        run_good="${run_bad}\n$ff"
+    fi
+    
 done
+
+echo ""
+echo ""
+echo "***** OK Runs:\n$run_good"
+echo ""
+echo "***** BAD Runs:\n$run_bad"
 
 exit 0
 
