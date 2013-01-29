@@ -105,7 +105,7 @@ if [ "A$doit" == "A1" ]; then
             if [ "${?}" -ne "0" ]; then error_quit "Problem running tool, aborting"; fi
       # confirm results are present
             echo "[-----] Checking for comparison file: $resf"
-            resdir="$uncompdir/$base"
+            resdir="$uncompdir/$inf"
             check_dir "$resdir"
             resfile="$resdir/$resf"
             check_file "$resfile"

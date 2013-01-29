@@ -159,7 +159,7 @@ do
                     echo "!! Skipping test: No $eval input file ($finf)"
                 else
                     compdir=`mktemp -d -t ${expid}`
-                    resdir="$uncompdir/$expid"
+                    resdir="$uncompdir/$inf"
                     if [ -d "$resdir" ]; then rm -rf $resdir; fi
                     mkdir -p $resdir
 
