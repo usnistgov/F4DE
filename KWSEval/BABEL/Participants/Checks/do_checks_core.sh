@@ -71,8 +71,8 @@ echo ""
 echo "[**********] [TestFile] $ff"
 eval=`echo $f | perl -ne 'print $1 if (m%^(\w+?)_%);'`
 inf=`echo $f | perl -ne 'print $1 if (m%^(.+?)_____%);'`
-base=`echo $inf | perl -ne 'print $1 if (m%^(.+?)\.[a-z\.]+$%i);'`
-ext=`echo $inf | perl -ne 'print $1 if (m%^.+?\.([a-z\.]+)$%);'`
+base=`echo $inf | perl -ne 'print $1 if (m%^(.+?)\.[a-z\d\.]+$%i);'`
+ext=`echo $inf | perl -ne 'print $1 if (m%^.+?\.([a-z\d\.]+)$%);'`
 resf=`echo $f | perl -ne 'print $1 if (m%_____(.+)$%);'`
 #  echo "[EVAL:$eval] [base:$base |ext:$ext] [Res:$resf]"
     

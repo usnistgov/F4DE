@@ -132,7 +132,7 @@ do
 
     eval=`echo $f | perl -ne 'print $1 if (m%^(\w+?)_%);'`
     inf=`echo $f | perl -ne 'print $1 if (m%^(.+?)_____%);'`
-    expid=`echo $inf | perl -ne 'print $1 if (m%^(.+?)\.[a-z\.]+$%i);'`
+    expid=`echo $inf | perl -ne 'print $1 if (m%^(.+?)\.[a-z\d\.]+$%i);'`
     
 # Checks
     doit=1
