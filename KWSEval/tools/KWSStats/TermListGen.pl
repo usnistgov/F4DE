@@ -36,7 +36,7 @@ my $encoding = "";
 my $inTlist = "";
 my $idTextPrefix = "TERM-";
 my $fileVersion = "Built by TermListGen";
-
+my $kwKeepPref = "union";   
 GetOptions
 (
  'file=s' => \$tlistfile,
@@ -44,6 +44,7 @@ GetOptions
  'language=s' => \$language,
  'encoding=s' => \$encoding,
  'version=s' => \$fileVersion,
+ 'kwKeepPreference=s' => \$kwKeepPref,
  'normalization=s' => \$normalization,
  'out-file-name=s' => \$outfilename,
  'idTextPrefix=s' => \$idTextPrefix,
@@ -53,6 +54,7 @@ GetOptions
 MMisc::error_quit("Specify a term file.") if ($tlistfile eq "");
 MMisc::error_quit("Specify the output file.") if ($outfilename eq "");
 MMisc::error_quit("Language argument required.") if ($language eq "");
+MMisc::error_quit("kwKeepPref = $kwKeepPref but not /(union|old|new)/") if ($kwKeepPref !~ /^(union|old|new)$/);
 
 #Get Terms
 print "Loading new term csv file '$tlistfile'\n";
@@ -83,6 +85,10 @@ if ($inTlist ne "") {
 #    }
 #  }
 
+  ### This will get deleted later
+  foreach my $termid (keys %{ $inTermList->{TERMS} }) {
+    $inTermList->{TERMS}{$termid}->setAttrValue("__TLG__InitialTermFile__", "1");
+  }
 } else {
   print "Starting empty termlist\n";
   $inTermList = new TermList(undef, 0, 0, 0);
@@ -93,23 +99,6 @@ if ($inTlist ne "") {
   $inTermList->setVersion($fileVersion);
 }
 print "  TermLists ready\n";
-
-#Build TermList
-##my $TermList = new TermList(undef, 0, 0, 0);
-##my @aterms = keys %terms;
-##for (my $t=0; $t<@aterms; $t++) {
-##  my $termid = $idTextPrefix . sprintf("%04d", $t+1);
-##  $termid = $terms{$aterms[$t]} if ($terms{$aterms[$t]} ne "1");
-##  $TermList->{TERMS}{$termid} = new TermListRecord({ TERMID => $termid, TEXT => $aterms[$t]});
-###  $TermList->{TERMS}{$termid}{TERMID} = $termid;
-###  $TermList->{TERMS}{$termid}{TEXT} = $aterms[$t];
-##  if ($preservedAnnots{$aterms[$t]}) {
-##    #Add preserved annotations
-##    foreach my $key (keys %{ $preservedAnnots{$aterms[$t]} }) {
-##      $TermList->{TERMS}{$termid}{$key} = $preservedAnnots{$aterms[$t]}{$key};
-##    }
-##  }
-##}
 
 ### Loop over the AutoTable adding keywords
 my @cols = $keywordAT->getColIDs("AsAdded");
@@ -128,6 +117,7 @@ foreach my $lineID($keywordAT->getRowIDs("AsAdded")){
     $term = new TermListRecord({ "TERMID" => $newID, "TEXT" => $keyword});
     $inTermList->addTerm($term, $newID);
   }
+  $term->setAttrValue("__TLG__FromNewFile__", "1");
 #  print $term->toStringFull();
   foreach my $col(@cols){
     next if ($col eq "KEYWORD");
@@ -147,7 +137,24 @@ foreach my $lineID($keywordAT->getRowIDs("AsAdded")){
   }
 }
 
-
+## Loop through terms keeping the ones for the preference
+foreach my $termid (keys %{ $inTermList->{TERMS} }) {
+  my $term = $inTermList->{TERMS}{$termid};
+  my $fromInit = $term->getAttrValue("__TLG__InitialTermFile__");
+  $term->deleteAttr("__TLG__InitialTermFile__");
+  
+  my $fromNew = $term->getAttrValue("__TLG__FromNewFile__");
+  $term->deleteAttr("__TLG__FromNewFile__");
+  
+  #print "$termid $fromInit $fromNew\n";
+  if ($kwKeepPref eq "union"){
+    ; ## do nothing
+  } elsif ($kwKeepPref eq "old") {
+    $inTermList->removeTermByID($termid) unless defined($fromInit);
+  } elsif ($kwKeepPref eq "new") {
+    $inTermList->removeTermByID($termid) unless defined($fromNew);
+  }
+}
 
 #Output file
 #$outfilename = $language . ".kwlist.xml" if ($outfilename eq "");
