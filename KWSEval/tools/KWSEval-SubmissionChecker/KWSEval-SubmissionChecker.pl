@@ -104,7 +104,7 @@ my $tlist_ext = '.kwlist.xml';
 my $rttm_ext = ".rttm";
 
 my $kwslist_ext = ".kwslist.xml";
-my $kwslist_ext_rgx = "\.kwslist\d*\.xml";
+my $kwslist_ext_rgx = '\.kwslist\d*\.xml';
 my $kwslist_ext_act = "";
 my $ctm_ext = ".ctm";
 my $stm_ext = ".stm";
@@ -325,7 +325,7 @@ sub check_submission {
   if ($f =~ s%($kwslist_ext_rgx)$%%i) {
     $mode = $kwslist_ext;
     $kwslist_ext_act = $1;
-  } elsif ($f =~ s%$ctm_ext%%i) {
+  } elsif ($f =~ s%$ctm_ext$%%i) {
     $mode = $ctm_ext;
   } else {
     return("File must end in either \'$kwslist_ext\' or \'$ctm_ext\' to be usable")
