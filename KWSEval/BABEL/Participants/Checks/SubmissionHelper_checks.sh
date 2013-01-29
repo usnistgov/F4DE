@@ -147,16 +147,16 @@ run_good=""
 for f in $cfl
 do
     xtra=""
-    xtraf="$ff.conf_SubmissionHelper"
+    xtraf="$f.conf_SubmissionHelper"
     if [ -f $xtraf ]; then
         xtra=`cat $xtraf`
     fi
     $tool $f $subhelp $subhelp -E $subhelp_xtras $xtra
 
     if [ "${?}" -ne "0" ]; then
-        run_bad="${run_bad} $ff"
+        run_bad="${run_bad} $f"
     else
-        run_good="${run_good} $ff"
+        run_good="${run_good} $f"
     fi
     
 done
