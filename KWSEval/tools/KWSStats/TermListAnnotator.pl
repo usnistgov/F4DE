@@ -31,6 +31,7 @@ use RTTMList;
 
 my $outfilename = "";
 my @annotFiles = ();
+my @csvAnnotFiles = ();
 my @annotScripts = ();
 my @rttms = ();
 my $inTlist = "";
@@ -46,6 +47,8 @@ my $attrValueStr = undef;  ### must be a HASH structure that can be eval'd
 my $attrValue = undef;  ### must be a HASH structure that can be eval'd
 my $selectAttrValueStr = undef;
 my $selectAttrValue = undef;
+my $warnFailedLookup = 0; 
+my $addInferredCharaterDuration = 0;
 
 my $charSplitText = 0;
 my $charSplitTextNotASCII = 0;
@@ -61,6 +64,7 @@ GetOptions
 (
  'in-term-list=s' => \$inTlist,
  'annot-files=s@' => \@annotFiles,
+ 'csv-annot-files=s@' => \@csvAnnotFiles,
  'out-file-name=s' => \$outfilename,
  'n-gram' => \$ngram,
  'character' => \$character,
@@ -69,7 +73,9 @@ GetOptions
  'useSplitChars' => \$useSplitChars,
  'makeTextSplitChars' => \$makeTextSplitChars,
  'ReduceDuplicateInfo' => \$ReduceDuplicateInfo,
+ 'addInferredCharaterDuration' => \$addInferredCharaterDuration,
  'CleanNonEssentialAttributes' => \$cleanNonEssentialAttributes,
+ 'warnFailedTermLookup' => \$warnFailedLookup,
  'selectAttrValue=s' => \$selectAttrValueStr,
  'attrValue=s' => \$attrValueStr,
  'xprefilterText=s@'                   => \@textPrefilters,
@@ -105,12 +111,12 @@ foreach my $filt(@textPrefilters){
   } elsif ($filt =~ /^regex=(.+)$/i){
     $charTextRegex = $1
   } else {
-    MMisc::error_quit("Error: -zprefilterText option /$filt/ not defined.  Aborting.");
+    MMisc::error_quit("Error: -xprefilterText option /$filt/ not defined.  Aborting.");
   }
 }
 print "Warning: -zprefilterText notASCII ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextNotASCII);
 print "Warning: -zprefilterText deleteHyphens ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextDeleteHyphens);
-
+print "Warning: -addInferredCharaterDuration ingnored because no RTTMs are present\n" if ($addInferredCharaterDuration && @rttms <= 0);
 ############  READY TO BEGIN ######################
 
 #Load TermList
@@ -183,6 +189,55 @@ foreach my $file (@annotFiles) {
   close AFILE;
 }
 
+foreach my $csvfile (@csvAnnotFiles) {
+  print "Loading annotation csv file '$csvfile'\n";
+  my $at = new AutoTable();
+  $at->setEncoding($TermList->getEncoding());
+  $at->setCompareNormalize($TermList->getCompareNormalize());
+  MMisc::error_quit("Problem loading CSV $csvfile into Auto Table: " . $at->get_errormsg() )
+      if (! $at->loadCSV($csvfile, undef, undef, undef, undef, "\t"));
+  print "   CSV Error message ".$at->get_errormsg() ."\n";
+  print "   ".scalar($at->getRowIDs("AsAdded"))." rows loaded \n";  
+
+  my @cols = $at->getColIDs("AsAdded");
+  my $t = 1;
+  my %warnings = ();
+  foreach my $lineID($at->getRowIDs("AsAdded")){
+#    print "Processing $lineID\n";
+    my $keyword = $at->getData("KEYWORD", $lineID);
+    my $term = $TermList->getTermFromText($keyword);
+    if (!defined($term)){
+      die "Failed to find term for keyword $keyword" if (! $warnFailedLookup);
+      print "Warning: term lookup fpr /$keyword/ failed.  Skipping\n";
+      next
+    }
+    
+    foreach my $col(@cols){
+      next if ($col eq "KEYWORD");
+      if ($col eq ""){
+        if (!exists($warnings{$col})){ 
+          print "Warning: There is a blank column header in $csvfile which was ignored\n";
+          $warnings{$col} = 1;
+        }
+        next;
+      }
+      my $val = $at->getData($col, $lineID);
+      my $oldVal = $term->getAttrValue($col);
+      if (!defined $oldVal){
+        $term->setAttrValue($col,$val);
+      } else {
+        my $new = 1;
+        foreach my $ov(split(/,/,$oldVal)){ $new = 0 if ($val eq $ov);  }
+        if ($new){
+          $term->setAttrValue($col,"$oldVal,$val");
+          print "Info: term ".$term->getAttrValue("TERMID")." /$keyword/ $col has multiple values ($oldVal,$val)\n";
+        }
+      }
+    }
+  }
+#    print "  new term needed\n";
+}
+
 #Run annotation functions
 if ($character != 0) {
   print "Computing character counts\n";
@@ -217,6 +272,15 @@ my $total_per_char_dur = 0;
 ## Add the counts from the RTTMs
 if (@rttms > 0){
   print "Loading RTTMs for analisys\n";
+###<<<<<<< TermListAnnotator.pl
+###  foreach my $rttmInfo(@rttms){
+###    my ($rttmFile, $tag) = split(/:/,$rttmInfo);
+###    $tag = $rttmFile if (! defined($tag));
+###    print "   Processing $rttmFile, adding tag $tag\n";
+###    my $key = "RefOcc-$tag";
+###    my $quantKey = "QRefOcc-$tag";
+###    my $rttm = new RTTMList($rttmFile, $TermList->getLanguage(),
+###=======
   foreach my $rttm(@rttms){
     print "   Processing $rttm\n";
     my $key = "RefOccurences:$rttm";
@@ -225,6 +289,7 @@ if (@rttms > 0){
     my $meanDurPerCharKey = "MeanDurPerChar:$rttm";
     my $quantizedDurationKey = "QuantizedDuration:$rttm";
     my $rttm = new RTTMList($rttm, $TermList->getLanguage(),
+###>>>>>>> 1.13
                             $TermList->getCompareNormalize(), $TermList->getEncoding(), 
                             $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens, 1); # bypassCoreText -> no RTTM text rewrite possible  
     my @terms = keys %{ $TermList->{TERMS} };
@@ -232,11 +297,10 @@ if (@rttms > 0){
 
     foreach my $termid (keys %{ $TermList->{TERMS} }) {
       print "      Processing term $termid ".($n++)." of ".scalar(@terms)." ".$TermList->{TERMS}{$termid}->toPerl()."\n";
-      my $text;
-      if (! $useSplitChars){
-        $text = $TermList->{TERMS}{$termid}{TEXT};
-      } else {
-        $text = $TermList->{TERMS}{$termid}{CHARSPLITTEXT};
+      my $text = $TermList->{TERMS}{$termid}{TEXT};
+
+      if ($charSplitText){
+        $text = $TermList->charSplitText($text, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);
       }
       my $out = RTTMList::findTermHashToArray($rttm->findTermOccurrences($text, 0.5));
       my $total_dur = 0.0;
@@ -246,18 +310,19 @@ if (@rttms > 0){
       }
       my $n = scalar(@$out);
       my $quantN = $n;
-      if ($n >= 1 && $n <= 1) { $quantN = "0001"; }
-      elsif ($n >= 2 && $n <= 4) { $quantN = "0002-4"; }
-      elsif ($n >= 5 && $n <= 9) { $quantN = "0005-9"; }
-      elsif ($n >= 10 && $n <= 19) { $quantN = "0010-19"; }
-      elsif ($n >= 20 && $n <= 49) { $quantN = "0020-49"; }
-      elsif ($n >= 50 && $n <= 99) { $quantN = "0050-99"; }
-      elsif ($n >= 100 && $n <= 199) { $quantN = "0100-199"; }
-      elsif ($n >= 200 && $n <= 499) { $quantN = "0200-499"; }
-      elsif ($n >= 500 && $n <= 999) { $quantN = "0500-999"; }
-      elsif ($n >= 1000 && $n <= 1999) { $quantN = "1000-1999"; }
-      elsif ($n >= 2000 && $n <= 4999) { $quantN = "2000-4999"; }
-      elsif ($n >= 5000 && $n <= 9999) { $quantN = "5000-9999"; }
+      if ($n == 0) { $quantN = "0000x0"; }
+      elsif ($n >= 1 && $n <= 1) { $quantN = "0001x1"; }
+      elsif ($n >= 2 && $n <= 4) { $quantN = "0002x4"; }
+      elsif ($n >= 5 && $n <= 9) { $quantN = "0005x9"; }
+      elsif ($n >= 10 && $n <= 19) { $quantN = "0010x19"; }
+      elsif ($n >= 20 && $n <= 49) { $quantN = "0020x49"; }
+      elsif ($n >= 50 && $n <= 99) { $quantN = "0050x99"; }
+      elsif ($n >= 100 && $n <= 199) { $quantN = "0100x199"; }
+      elsif ($n >= 200 && $n <= 499) { $quantN = "0200x499"; }
+      elsif ($n >= 500 && $n <= 999) { $quantN = "0500x999"; }
+      elsif ($n >= 1000 && $n <= 1999) { $quantN = "1000x1999"; }
+      elsif ($n >= 2000 && $n <= 4999) { $quantN = "2000x4999"; }
+      elsif ($n >= 5000 && $n <= 9999) { $quantN = "5000x9999"; }
        
       $TermList->{TERMS}{$termid}->setAttrValue($key, $n);
       $TermList->{TERMS}{$termid}->setAttrValue($quantKey, $quantN);
@@ -296,16 +361,20 @@ foreach my $termid (keys %{ $TermList->{TERMS} }) {
   my $nchars = &charactersOfTerm($TermList->{TERMS}{$termid}{TEXT});
   my $inferred_dur = $dur_per_char * $nchars;
   my $quant_inf_dur = "";
-  $TermList->{TERMS}{$termid}->setAttrValue("InferredDuration", sprintf("%.4f", $inferred_dur));
-  #quantize inferred duration
-  for (my $i = 1; $i <= 10; $i++) {
-    my $upper = $i * 0.5;
-    if ($inferred_dur < $upper) {
-      $quant_inf_dur = sprintf("%.1f", $upper - 0.5)."-".sprintf("%.1f", $upper);
-      last;
+  my $quant_inf_dur_per_char = "";
+  if ($addInferredCharaterDuration){
+    $TermList->{TERMS}{$termid}->setAttrValue("InferredDuration", sprintf("%.4f", $inferred_dur));
+
+    #quantize inferred duration
+    for (my $i = 1; $i <= 10; $i++) {
+      my $upper = $i * 0.5;
+      if ($inferred_dur < $upper) {
+        $quant_inf_dur = sprintf("%.1f", $upper - 0.5)."-".sprintf("%.1f", $upper);
+        last;
+      }
     }
+    $TermList->{TERMS}{$termid}->setAttrValue("QuantizedInferredDuration", $quant_inf_dur);
   }
-  $TermList->{TERMS}{$termid}->setAttrValue("QuantizedInferredDuration", $quant_inf_dur);
 }
 
 ### Filter unselected terms
@@ -365,7 +434,7 @@ sub charactersOfTerm
   $term =~ s/\s+//g;
   
   my @chars = split(//, $term);
-  scalar(@chars);
+  sprintf("%02d",scalar(@chars));
 }
 
 sub ngramOfTerm
@@ -373,5 +442,5 @@ sub ngramOfTerm
   my ($term) = @_;
 
   my @words = split(/\s/, $term);
-  scalar(@words);
+  sprintf("%02d",scalar(@words));
 }
