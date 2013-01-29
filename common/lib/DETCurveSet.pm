@@ -1017,9 +1017,10 @@ sub renderIsoRatioIntersection {
         my $rowtitle = "$key|$cof";
         $at->addData($det->{LINETITLE}, "DET Title", $rowtitle);
         $at->addData(sprintf("%.4f", $cof), "Coef", $rowtitle);
-        $at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MFA}), $det->getMetric()->errFALab(),   $rowtitle);
-        $at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS}), $det->getMetric()->errMissLab(), $rowtitle);
-        $at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_COMB}), $det->getMetric()->combLab(), $rowtitle);
+        $at->addData(sprintf($det->getMetric()->errFAPrintFormat(), $det->{ISOPOINTS}{$cof}{INTERPOLATED_MFA}), $det->getMetric()->errFALab(),   $rowtitle);
+        $at->addData(sprintf($det->getMetric()->errMissPrintFormat(), $det->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS}), $det->getMetric()->errMissLab(), $rowtitle);
+        $at->addData(sprintf($det->getMetric()->combPrintFormat(), $det->{ISOPOINTS}{$cof}{INTERPOLATED_COMB}), $det->getMetric()->combLab(), $rowtitle);
+        $at->addData(sprintf("%.8f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_DETECTSCORE}), "Detection Threshold", $rowtitle);
       }
     }
   }
