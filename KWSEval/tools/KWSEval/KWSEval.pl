@@ -286,7 +286,7 @@ else {
 	# Use the list given on the command-line
 	foreach my $coefi ( split( /,/ , $OptionIsoline ) ) {
 		MMisc::error_quit("The coefficient for the iso-line if not a proper floating-point")
-      if( $coefi !~ /^\d<+(\.\d+)?$/ );
+      if( $coefi !~ /^\d+(\.\d+)?$/ );
 		push( @tmplistiso1, $coefi );
 	}
 }
