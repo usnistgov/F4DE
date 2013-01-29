@@ -102,7 +102,8 @@ foreach my $key(@keys){
         $highestNgramTerm = $termid;
       }        
       my $relStat = $kwList->{TERMS}{$termid}->getAttrValue("ReleaseStatus");
-      push(@public, $termid) if (defined($relStat) && $relStat =~ /public/i);
+      my $use = $kwList->{TERMS}{$termid}->getAttrValue("KeywordUse");
+      push(@public, $termid) if ((defined($relStat) && $relStat =~ /public/i) || (defined($use) && $use =~ /dryrun/i))
     }
     my $selectTerm = undef;
     if (@public > 1){
