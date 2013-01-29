@@ -355,25 +355,30 @@ if (@rttms > 0){
 }
 
 #Inferred Term Duration
-my $dur_per_char = ($total_per_char_dur / $num_sampled_terms) if $num_sampled_terms > 0;
-#build mean character duration
-foreach my $termid (keys %{ $TermList->{TERMS} }) {
-  my $nchars = &charactersOfTerm($TermList->{TERMS}{$termid}{TEXT});
-  my $inferred_dur = $dur_per_char * $nchars;
-  my $quant_inf_dur = "";
-  my $quant_inf_dur_per_char = "";
-  if ($addInferredCharaterDuration){
-    $TermList->{TERMS}{$termid}->setAttrValue("InferredDuration", sprintf("%.4f", $inferred_dur));
-
-    #quantize inferred duration
-    for (my $i = 1; $i <= 10; $i++) {
-      my $upper = $i * 0.5;
-      if ($inferred_dur < $upper) {
-        $quant_inf_dur = sprintf("%.1f", $upper - 0.5)."-".sprintf("%.1f", $upper);
-        last;
+if ($addInferredCharaterDuration){
+  if ($num_sampled_terms > 0) {
+    my $dur_per_char = ($total_per_char_dur / $num_sampled_terms);
+    #build mean character duration
+    foreach my $termid (keys %{ $TermList->{TERMS} }) {
+      my $nchars = &charactersOfTerm($TermList->{TERMS}{$termid}{TEXT});
+      my $inferred_dur = $dur_per_char * $nchars;
+      my $quant_inf_dur = "";
+      my $quant_inf_dur_per_char = "";
+    
+      $TermList->{TERMS}{$termid}->setAttrValue("InferredDuration", sprintf("%.4f", $inferred_dur));
+    
+      #quantize inferred duration
+      for (my $i = 1; $i <= 10; $i++) {
+	my $upper = $i * 0.5;
+	if ($inferred_dur < $upper) {
+	  $quant_inf_dur = sprintf("%.1f", $upper - 0.5)."-".sprintf("%.1f", $upper);
+	  last;
+	}
       }
+      $TermList->{TERMS}{$termid}->setAttrValue("QuantizedInferredDuration", $quant_inf_dur);
     }
-    $TermList->{TERMS}{$termid}->setAttrValue("QuantizedInferredDuration", $quant_inf_dur);
+  } else {
+    warn "Could not compute Inferred Character Duration (Number of sampled terms = 0)\n";
   }
 }
 
