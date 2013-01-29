@@ -50,7 +50,12 @@ use MMisc;
 my $Usage = 
 "CSVUtil.pl [-v] -i InCSV|- -o outCSV|- -r row1|row2|... -c column1|column2|... \n".
 "    --or-- [-v] -i InCSV|- -a outAutoTable -R column1|column2|... -C column1|column2|... -V column1 \n".
-"Desc:  Read in a csv file extracting ONLY the specified columns and writing them to the output file.\n";
+"    --or-- [-v] -i InCSV|- -q setOfValues -C column1|column2|... -V column1 \n".
+"    --or-- [-v] -i InCSV|- -Info\n".
+"Desc:  Read in a csv file extracting ONLY the specified columns and writing them to the output file.\n".
+"       -q returns a table for values for the columns.\n".
+"       -QuoteChar <char> sets the quote charater\n".
+"       -SepChar <char> sets the column separator.  The special value <TAB> will bv converted to a 'tab' character.\n";
 
 my $in = undef;
 my $outCSV = undef;
@@ -65,12 +70,18 @@ my @outputTypes = ();
 my $quiet = 0;
 my $statForRow = "";
 my $statForCol = "";
+my $printInfo = undef;
+my $outUniqQuery = undef;
+my $encoding = "UTF-8";
+my $quoteChar = undef;
+my $sepChar = undef;
 
 use Getopt::Long;
 Getopt::Long::Configure ("bundling", "no_ignore_case");
 my $result = GetOptions ("i=s" => \$in,
 			 "o=s" => \$outCSV,
 			 "a=s" => \$outAT,
+			 "q=s" => \$outUniqQuery,
 			 "c=s" => \$col,
 			 "r=s" => \$row,
 			 "R=s@" => \@ATrow,
@@ -80,48 +91,95 @@ my $result = GetOptions ("i=s" => \$in,
 			 "quiet" => \$quiet,
 			 "statForRow=s" => \$statForRow,
 			 "statForCol=s" => \$statForCol,
+			 "encoding=s" => \$encoding,
+			 "Info" => \$printInfo,
+			 "QuoteChars=s" => \$quoteChar,
+			 "SepChar=s" => \$sepChar,
 			 "-v"  => \$reverse);
 MMisc::error_quit("Aborting:\n$Usage\n:") if (!$result);
 
 push(@outputTypes, "csv") if (@outputTypes == 0);
 
 MMisc::error_quit("Argument -i req'd\n" . $Usage) if (!defined($in));
-MMisc::error_quit("Argument -o or -a req'd\n" . $Usage) if (!defined($outCSV) && !defined($outAT));
+MMisc::error_quit("An argument for output is req'd either -I, -o, or -a req'd\n" . $Usage) if (!defined($outCSV) && !defined($outAT) && !defined($printInfo) && !defined($outUniqQuery));
 foreach my $otype(@outputTypes){
   MMisc::error_quit("OutputType $otype not (csv|txt|html|tgrid)\n" . $Usage) if ($otype !~ /^(csv|txt|html|tgrid)$/);
 }
 MMisc::error_quit("statForRow not (continuous|discrete)\n" . $Usage) if ($statForRow !~ /^(continuous|discrete|)$/);
 MMisc::error_quit("statForCol not (continuous|discrete)\n" . $Usage) if ($statForCol !~ /^(continuous|discrete|)$/);
 
-if ($outAT ne "-" && $outCSV ne "-"){
+### Handle the tab character
+$sepChar = "\t" if ($sepChar eq "\\t" || $sepChar eq "<TAB>");
+
+if ($outAT ne "-" && $outCSV ne "-" && $outUniqQuery ne "-"){
   print "Info: KeepColumns = $col\n" if (!$quiet);
   print "Info: KeepRows = $row\n" if (!$quiet);
   print "Info: outputTypes = (".join(", ",@outputTypes).")\n" if (!$quiet);
   print "Info: statForRow = $statForRow\n" if (!$quiet);
   print "Info: statForCol = $statForCol\n" if (!$quiet);
+  print "Info: quoteChar = ".(!defined($quoteChar) ? "UNDEF" : (($quoteChar eq "") ? "EMPTY" : $quoteChar))."\n" if (!$quiet);
+  print "Info: sepChar = ".(!defined($sepChar) ? "UNDEF" : (($sepChar eq "\t") ? "<TAB>" : $sepChar))."\n" if (!$quiet);
+}
+
+my $at = new AutoTable(); 
+$at->setEncoding($encoding);
+if (! $at->loadCSV($in, undef, undef, undef, $quoteChar, $sepChar)) {
+  die("Error: Failed to load CSV file '$in'");
+}
+  
+if (defined($printInfo)){
+  print "Information about $in\n";
+  print scalar($at->getRowIDs("AsAdded"))." Rows:\n";
+  print scalar($at->getColIDs("AsAdded"))." Columns: \n";
+  print "   ".join(",\n   ", $at->getColIDs("AsAdded") )."\n";
 }
 
 if (defined($outCSV)){
   MMisc::error_quit("Error: Argument -c and/or -r req'd\n" . $Usage) if (!defined($col) && !defined($row));
 
-  my $at = new AutoTable(); 
-  if (! $at->loadCSV($in)) {
-    die("Error: Failed to load CSV file '$in'");
-  }
-  
   $at->setProperties({ "KeepColumnsInOutput" => $col }) if (defined($col)); 
   $at->setProperties({ "KeepRowsInOutput" => $row }) if (defined($row)); 
 
   foreach my $otype(@outputTypes){
     MMisc::writeTo("$outCSV"  . ($outCSV eq "-" ? "" : ".$otype"), "", 1, 0, $at->renderByType($otype));
   }
-} else {  
-  MMisc::error_quit("Error: -C, -V, and -R req'd\n" . $Usage) if (@ATcol == 0 || @ATrow == 0 || !defined($ATval));
+} 
 
-  my $at = new AutoTable(); 
-  if (! $at->loadCSV($in)) {
-    MMisc::error_quit("Error: Failed to load CSV file '$in'");
+if (defined($outUniqQuery)){
+  MMisc::error_quit("Error: -C, and -V req'd\n" . $Usage) if (@ATcol == 0 || !defined($ATval));
+
+  ### Go through the Keys for matching expressions
+  my @outColIDs = (); my %uniqOutColIDs = ();
+  my @outRowColIDs = (); my %uniqRowOutColIDs = ();
+  my @outValueColIDs = (); my %uniqValueOutColIDs = ();
+  foreach my $colDef(@ATcol){
+    foreach my $colID($at->getColIDs("AsAdded")){
+      if ($colID =~ /$colDef/){
+        push @outColIDs, $colID if (! exists($uniqOutColIDs{$colID}));
+        $uniqOutColIDs{$colID} = 1;
+      }
+    }
   }
+#  print "Query columns: ".join(" ", @outColIDs)."\n";
+  my %ht = ();
+  foreach my $rowIDStr ($at->getRowIDs("AsAdded")) {
+    my $key = "";
+    foreach my $colID(@outColIDs){
+      $key .= "_$colID=".$at->getData($colID, $rowIDStr);
+    }
+    $key =~ s/^_//;
+#    print "$key\n";
+    push (@{ $ht{$key} }, $at->getData($ATval, $rowIDStr));
+  
+  }
+
+  foreach my $key(sort keys %ht){
+    MMisc::writeTo("$outUniqQuery" , "", 1, 1, "$key -> ".join(" ",@{ $ht{$key} })."\n");
+  }
+  
+  
+} elsif (defined($outAT)){
+  MMisc::error_quit("Error: -C, -V, and -R req'd\n" . $Usage) if (@ATcol == 0 || @ATrow == 0 || !defined($ATval));
 
   ### Go through the Keys for matching expressions
   my @outColIDs = (); my %uniqOutColIDs = ();
@@ -161,6 +219,7 @@ if (defined($outCSV)){
   MMisc::error_quit("-V resulted in no columns for cel values") if (@outValueColIDs == 0);
 
   my $newAt = new AutoTable(); 
+  $newAt->setEncoding($encoding);
   foreach my $rowIDStr ($at->getRowIDs("AsAdded")) {
     ### Build the column label
     my ($colLab, $rowLab, $val) = ("", "", "");
