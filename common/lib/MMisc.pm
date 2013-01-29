@@ -1567,6 +1567,13 @@ sub make_wdir {
 
 ##########
 
+sub follow_link {
+  if (-l $_[0]) { return(readlink($_[0])); }
+  return($_[0]);
+}
+
+#####
+
 sub list_dirs_files {
   my $dir = &iuv($_[0], '');
 
@@ -1583,15 +1590,21 @@ sub list_dirs_files {
   my @u = ();
   for (my $i = 0; $i < scalar @fl; $i++) {
     my $entry = $fl[$i];
-    my $ff = "$dir/$entry";
+    my $ff = &follow_link("$dir/$entry", $dir);
+    $ff = "$dir/$ff" if ($ff =~ m%^\.\.\/%);
+
     if (-d $ff) {
+#      print "[D] $entry -> $ff\n";
       push @d, $entry;
       next;
     }
     if (-f $ff) {
+#      print "[F] $entry -> $ff\n";
       push @f, $entry;
       next;
     }
+    
+#    print "[?] $entry -> $ff\n";
     push @u, $entry;
   }
 
@@ -1600,34 +1613,22 @@ sub list_dirs_files {
 
 #####
 
-sub get_dirs_list {
+sub get_dirs_list { return(&_get_files_dir_list_core($_[0], 0)); }
+
+sub get_files_list { return(&_get_files_dir_list_core($_[0], 1)); }
+
+sub _get_files_dir_list_core {
+  # 0: dir | 1: 0=dir/1=file
   my $dir = &iuv($_[0], '');
-
   my @out = ();
-
   return(@out) if (&is_blank($dir));
-
-  my ($err, $rd, $rf, $ru) = &list_dirs_files($dir);
-
-  return(@out) if (! &is_blank($err));
-
+  my ($err, $rd, $rf, $ru) = &list_dirs_files("$dir/.");
+  if (! &is_blank($err)) {
+    &warn_print("While checking dir ($dir): $err");
+    return(@out);
+  }
+  return(@{$rf}) if ($_[1] == 1);
   return(@{$rd});
-}
-
-#####
-
-sub get_files_list {
-  my $dir = &iuv($_[0], '');
-
-  my @out = ();
-
-  return(@out) if (&is_blank($dir));
-
-  my ($err, $rd, $rf, $ru) = &list_dirs_files($dir);
-
-  return(@out) if (! &is_blank($err));
-
-  return(@{$rf});
 }
 
 ##########
