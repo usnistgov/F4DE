@@ -184,10 +184,10 @@ done
 
 echo ""
 echo ""
-echo "***** OK Runs:"
+echo "***** "`echo $run_good | wc -w`" OK"
 for i in $run_good; do echo $i; done
 echo ""
-echo "***** BAD Runs:"
+echo "***** "`echo $run_bad | wc -w`" BAD"
 for i in $run_bad; do echo $i; done
 
 exit 0
