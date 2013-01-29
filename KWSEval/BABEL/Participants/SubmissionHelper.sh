@@ -262,7 +262,8 @@ else
   echo "  -- validated earlier, skipping revalidation"
 fi
 
-expid=`echo $if | perl -pe 's%\.(kwslist\d*\.xml|ctm)$%%i; s%^.*/%%;'`
+subfile=`echo $if | perl -pe 's%^.*/%%;'`
+expid=`echo $subfile | perl -pe 's%\.(kwslist\d*\.xml|ctm)$%%i;'`
 sfile="${sha256}.status"
 
 ########## Step 2
@@ -414,15 +415,15 @@ if [ "A$uncomp" == "A1" ]; then
     pwd=`pwd`
     cd "$uncompdir"
     # Erase old result of the same name
-    rm -rf "$expid"
+    rm -rf "$subfile"
     # create it (again)
-    make_dir "$expid"
-    cd "$expid"
+    make_dir "$subfile"
+    cd "$subfile"
     tar xfj "$file"
     cd "$pwd"
     touch "$lf"
   fi
-  echo "** Uncompressed in: $uncompdir/$expid"
+  echo "** Uncompressed in: $uncompdir/$subfile"
 fi
 
 # Done
