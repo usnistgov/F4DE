@@ -37,6 +37,8 @@ my @oneFact = ();
 my @twoFact = ();
 my $listAttr = undef;
 my @rttms = ();
+my $splitChar = '\|';
+my @attrPreConds = ();
 my $plot_root = "";
 my $plot_count = 1;
 
@@ -47,12 +49,31 @@ GetOptions
   '1Fact=s@' => \@oneFact,
   '2Fact=s@' => \@twoFact,
   'list' => \$listAttr,
+  'splitChar=s' => \$splitChar,
+  'attrPreConditions=s@' => \@attrPreConds,  ## To include a KW, all conditions must be met  '<attr>:regex=<val>'
   'plotroot=s' => \$plot_root,
 ) or MMisc::error_quit("Unknown option(s)\n");
 
 #Check required arguments
 MMisc::error_quit("Specify a KWList file via -k.") if ($kwfile1 eq "");
 
+# Parse the preconditions
+my @kwConds = ();
+foreach my $pc(@attrPreConds){
+  print "Parsing Precondition $pc\n";
+  die "Error: Failed to parse precondition /$pc/" unless($pc =~ /^(.+):regex=(.+)$/);
+  push @kwConds, { attr => $1, valRegex => $2 };
+}
+#print Dumper(\@kwConds);
+sub kwMeetsPreCondition{
+ my ($kw) = @_;
+ for (my $i=0; $i<@kwConds; $i++){
+   my $val = $kw->getAttrValue($kwConds[$i]{"attr"});
+   return 0 unless(defined($val));
+   return 0 if ($val !~ /$kwConds[$i]{"valRegex"}/);
+ }
+ return 1;
+}
 
 #Load TermList
 my $kwList1 = new TermList($kwfile1, 1, 1, 1);
@@ -77,6 +98,7 @@ foreach my $attr(@oneFact) {
   my ($fact_recorder, $fact_renderer) = &__1_fact_gen_for_type($type, $attr) or next;
 
   foreach my $termid (keys %{ $kwList1->{TERMS} }) {
+    next unless (kwMeetsPreCondition($kwList1->{TERMS}{$termid}));
     my $val = $kwList1->{TERMS}{$termid}->getAttrValue($attr);
     &{ $fact_recorder }($val) if $val;
   }
@@ -113,6 +135,7 @@ sub __continuous_1_fact {
 	  sub { #renderer
 	      my $at = new AutoTable();
 	      my %plot_data = ();
+	      $at->addData($stats->count(), "Count", "Data");
 	      $at->addData(sprintf("%.4f", $stats->min()), "Min", "Data");
 	      $at->addData(sprintf("%.4f", $stats->quantile(1)), "Lower Quartile", "Data");
 	      $at->addData(sprintf("%.4f", $stats->median()), "Median", "Data");
@@ -142,9 +165,23 @@ foreach my $attr1attr2(@twoFact) {
    
   my ($fact_recorder, $fact_renderer) = &__2_fact_gen_for_type($type1, $attr1, $type2, $attr2) or next;
   foreach my $termid (keys %{ $kwList1->{TERMS} }) {
+###<<<<<<< KWListStat.pl
+###    #  my $text = $kwList1->{TERMS}{$termid}{TEXT};
+###
+###    $val = $kwList1->{TERMS}{$termid}->getAttrValue($attr);
+###    if (defined($val)){
+###      $val =~ s/\|/_/g;
+###      $at->increment("Count", $val);
+###    } else {
+###      $at->increment("Count", "UNDEF");
+###    }
+###=======
+    next unless (kwMeetsPreCondition($kwList1->{TERMS}{$termid}));
+
     my $val1 = $kwList1->{TERMS}{$termid}->getAttrValue($attr1);
     my $val2 = $kwList1->{TERMS}{$termid}->getAttrValue($attr2);
     &{ $fact_recorder }($val1, $val2) if $val1 and $val2;
+###>>>>>>> 1.4
   }
   print "Two Factor Analysis of $attr1|$attr2\n";
   &{ $fact_renderer }();
@@ -184,6 +221,7 @@ sub __cd_2_fact {
 	    $at->setProperties({"SortRowKeyTxt" => "Alpha"});
 	    my %plot_data = ();
 	    foreach my $key(keys %results) {
+	      $at->addData($results{$key}->count(), "Count", $key);
 	      $at->addData(sprintf("%.4f", $results{$key}->min()), "Min", $key);
 	      $at->addData(sprintf("%.4f", $results{$key}->quantile(1)), "Lower Quartile", $key);
 	      $at->addData(sprintf("%.4f", $results{$key}->median()), "Median", $key);
@@ -229,6 +267,34 @@ sub __cc_2_fact {
 ###
 
 
+###foreach my $attr1attr2(@twoFact){
+###  my ($attr1, $attr2) = split(/$splitChar/, $attr1attr2);
+###  my @attr1Labs = split(/\|/,$attr1);
+###  my @attr2Labs = split(/\|/,$attr2);
+###  print "   attr1=".join(",",@attr1Labs)." attr2=".join(",",@attr2Labs)."\n";
+###  my $at = new AutoTable();
+###  my $val1;
+###  my $val2;
+###  foreach my $termid (keys %{ $kwList1->{TERMS} }) {
+###    next unless(kwMeetsPreCondition($kwList1->{TERMS}{$termid}));
+###    
+###    #  my $text = $kwList->{TERMS}{$termid}{TEXT};
+###    foreach my $subAttr1(@attr1Labs){
+###      foreach my $subAttr2(@attr2Labs){
+###       $val1 = $kwList1->{TERMS}{$termid}->getAttrValue($subAttr1);
+###       $val2 = $kwList1->{TERMS}{$termid}->getAttrValue($subAttr2);
+###       $at->increment($subAttr2."|".((defined $val2) ? $val2 : "UNDEF"),
+###                      $subAttr1."|".((defined $val1) ? $val1 : "UNDEF"));
+###      }
+###    }
+###  }
+###  print "Two Factor Analsis of $attr1attr2\n";
+###  $at->{Properties}->setValue("SortColKeyTxt", "Alpha");
+###  $at->{Properties}->setValue("SortRowKeyTxt", "Alpha");
+###  print $at->renderTxtTable(1);
+###  print "\n";
+###}
+
 ### Box plot
 sub render_box_plot {
   my $data = shift; #should be { xtic => (min, 1stQ, median, 3rdQ, max, mean) }
@@ -238,9 +304,9 @@ sub render_box_plot {
   
   my @keys = sort( keys %{ $data } );
   my $plt = "";
-  $plt.="set terminal png large\n";
+  $plt.="set terminal png font arial 10\n";
   $plt.="set bars 2\n";
-  $plt.="set logscale y\n";
+#  $plt.="set logscale y\n";
   $plt.="set xlabel \\\"$xlabel\\\"\n" if $xlabel;
   $plt.="set ylabel \\\"$ylabel\\\"\n" if $ylabel;
   my $count = 1;
@@ -254,14 +320,15 @@ sub render_box_plot {
   $data_str.="e\n";
 
   $plt.="set xtics (".join(",", @xtics).")\n";
-  $plt.="set xtics right rotate by 45\n";
-
-  $plt.="plot '-' using 1:3:2:6:5 with candlesticks whiskerbars 0.5 lw 2, \\\n";
+  $plt.="set xtics nomirror rotate by -45\n";
+  $plt.="set title \\\"Distribution of $ylabel as a function of $xlabel\\\"\n";
+  
+  $plt.="plot [0:".(scalar @keys + 1)."] '-' using 1:3:2:6:5 with candlesticks whiskerbars 0.5 lw 2, \\\n";
   $plt.=" '-' using 1:4:4:4:4 with candlesticks lt -4 lc rgbcolor \\\"#0000ff\\\" notitle\n";
   $plt.=$data_str;
   $plt.=$data_str;
-
-  system "echo \"$plt\" | gnuplot > $plot_name.png";
+  print "Writing box plot: $plot_name.png\n";
+  system "echo \"$plt\" | tee $plot_name.plt | gnuplot > $plot_name.png";
 }
 ###
 
@@ -363,12 +430,25 @@ if ($kwfile2 ne ""){
   print arrayComparisonReport(\@kw1KW_nonorm, \@kw2KW_nonorm, "Set1", "Set2", "   ");
   print "\n";
   print "   Uniq to Set1: ".join(", ",@{ applySetOperations(\@kw1KW_nonorm, \@kw2KW_nonorm, "A - B") })."\n\n";
+  print "   Uniq to Set2: ".join(", ",@{ applySetOperations(\@kw1KW_nonorm, \@kw2KW_nonorm, "B - A") })."\n\n";
+  foreach my $t(@{ applySetOperations(\@kw1KW_nonorm, \@kw2KW_nonorm, "B - A")}){
+    my $term = $kwList2->getTermFromText($t);
+    print "      Uniq in Set2: $t ".$term->getAttrValue("TERMID")."\n";
+  }
   
   print "Compare the keyword texts WITH Normalization\n";
   my @kw1KW_norm = ();
   my @kw2KW_norm = ();
   foreach my $id(@kw1ids){ my $t = $kwList1->getTermFromID($id); push @kw1KW_norm, $kwList1->normalizeTerm($t->getAttrValue("TEXT")); }
   foreach my $id(@kw2ids){ my $t = $kwList2->getTermFromID($id); push @kw2KW_norm, $kwList2->normalizeTerm($t->getAttrValue("TEXT")); }
+  print arrayComparisonReport(\@kw1KW_norm, \@kw2KW_norm, "Set1", "Set2", "   ");
+  print "\n";
+
+  print "Compare the keyword texts WITH Normalization AND KWIDs\n";
+  @kw1KW_norm = ();
+  @kw2KW_norm = ();
+  foreach my $id(@kw1ids){ my $t = $kwList1->getTermFromID($id); push @kw1KW_norm, $t->getAttrValue("TERMID")." ".$kwList1->normalizeTerm($t->getAttrValue("TEXT")); }
+  foreach my $id(@kw2ids){ my $t = $kwList2->getTermFromID($id); push @kw2KW_norm, $t->getAttrValue("TERMID")." ".$kwList2->normalizeTerm($t->getAttrValue("TEXT")); }
   print arrayComparisonReport(\@kw1KW_norm, \@kw2KW_norm, "Set1", "Set2", "   ");
   print "\n";
   
