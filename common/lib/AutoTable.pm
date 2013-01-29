@@ -42,6 +42,7 @@ my $key_KeyColumnTxt   = "KeyColumnTxt";
 my $key_SortRowKeyTxt   = "SortRowKeyTxt";
 my $key_SortColKeyTxt   = "SortColKeyTxt";
 my $key_TxtPrefix =       "TxtPrefix";
+my $key_TxtCellJustification       = "TxtCellJustification";
 
 ## CSV
 my $key_KeyColumnCsv   = "KeyColumnCsv";
@@ -105,6 +106,7 @@ sub new {
   $self->{Properties}->addProp($key_SortRowKeyTxt,   "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->{Properties}->addProp($key_SortColKeyTxt,   "AsAdded", ("AsAdded", "Num", "Alpha"));
   $self->{Properties}->addProp($key_TxtPrefix,       "", ());
+  $self->{Properties}->addProp($key_TxtCellJustification, "right", ("right", "left", "center"));
 
   ## CSV
   $self->{Properties}->addProp($key_KeyColumnCsv,   "Keep", ("Keep", "Remove"));
@@ -578,8 +580,8 @@ sub renderTxtTable(){
 #<<<<<<< AutoTable.pm
   my ($self, $gap) = @_;
   my $prefix = $self->{Properties}->getValue($key_TxtPrefix);
+  my $cellJust = $self->{Properties}->getValue($key_TxtCellJustification);
 
-  
   ### Make sure there is data.   If there isn't report nothing exists
   my @_da = keys %{ $self->{data} };
   return "Warning: Empty table.  Nothing to produce.\n" if (@_da == 0);
@@ -694,7 +696,13 @@ sub renderTxtTable(){
     }
     $out .= "|";
     for (my $node=0; $node<@nodeSet; $node++) {
-      $out .= " " . $self->_rightJust($self->{data}{&__getLID($rowIDStr, $nodeSet[$node]{subs}[0])}, $nodeSet[$node]{width} - 2) . " |";
+      if ($cellJust eq "left"){
+        $out .= " " . $self->_leftJust($self->{data}{&__getLID($rowIDStr, $nodeSet[$node]{subs}[0])}, $nodeSet[$node]{width} - 2) . " |";
+      }elsif ($cellJust eq "right"){
+        $out .= " " . $self->_rightJust($self->{data}{&__getLID($rowIDStr, $nodeSet[$node]{subs}[0])}, $nodeSet[$node]{width} - 2) . " |";
+      }else { ##center
+        $out .= " " . $self->_centerJust($self->{data}{&__getLID($rowIDStr, $nodeSet[$node]{subs}[0])}, $nodeSet[$node]{width} - 2) . " |";
+      }       
     }
     
     $out .= "\n";
@@ -1329,9 +1337,18 @@ sub loadGridFromSTDIN{
       $at->{Properties}->setValue($prop, $props->{$prop});
     }
   }
+  my %nameLUT = ();
+  my $n = 0;
   while (<STDIN>){
     chomp;
     my @a = split(/$sep/);
+    
+    $nameLUT{$a[1]} = sprintf("L%02d", $n++) if (! exists($nameLUT{$a[1]}));
+    $nameLUT{$a[2]} = sprintf("L%02d", $n++) if (! exists($nameLUT{$a[2]}));
+    
+#    $a[1] = $nameLUT{$a[1]};
+#    $a[2] = $nameLUT{$a[2]};
+    
     $at->addData($a[0], $a[1], $a[2]);
     $at->setSpecial($a[1], $a[2], $a[3]) if (@a > 3);
   }
@@ -1346,6 +1363,7 @@ sub loadGridFromSTDIN{
   } else {
     die "Error: I need a Renderer for now '$renderer'\n";
   }
+  #print Dumper(\%nameLUT);
 }
 
 ##########
