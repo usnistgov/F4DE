@@ -188,7 +188,7 @@ my $fileRoot = "";
 my $requestwordsoov = 0;
 my $IDSystem = "";
 
-my $OptionIsoline = "";
+my $OptionIsoline = undef;
 my @listIsolineCoef = ();
 
 my @Queries;
@@ -274,7 +274,7 @@ $requestalignCSV = 1 if($requestalignCSV != 0);
 my @tmplistiso1 = ();
 my @tmplistiso2 = ();
 
-if( $OptionIsoline eq "" ) {
+if( ! defined($OptionIsoline)) {
 	# Create the default list of coefficients
 	foreach my $PFAi ( @isoPFA ) {
 		foreach my $PMISSi ( @isoPMISS ) {
