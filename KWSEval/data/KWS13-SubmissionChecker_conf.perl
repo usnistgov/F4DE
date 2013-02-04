@@ -7,3 +7,6 @@ $expid_count = 11;
 @expid_lr = ( 'BaseLR', 'BabelLR', 'OtherLR' ); # order is important
 @expid_aud = ( 'NTAR', 'TAR' ); # order is important
 @expid_sysid_beg = ( "p-", "c-" ); # order is important
+
+#
+@Scase_toSequester = ( $expid_scase[1], $expid_scase[2] );

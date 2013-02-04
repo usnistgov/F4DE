@@ -55,6 +55,7 @@ my @expid_lp;
 my @expid_lr;
 my @expid_aud;
 
+my @Scase_toSequester = ();
 
 #####
 
@@ -111,7 +112,11 @@ sub vprint {
   print substr($s, 0, shift @_), " ", join("", @_), "\n";
 }
 
-#####
+##########
+
+sub get_Scase_toSequester { return(@Scase_toSequester); }
+
+##########
 
 sub check_name {
   my ($kwsyear, $eteam, $name, $verb) = @_;
