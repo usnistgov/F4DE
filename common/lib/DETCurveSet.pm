@@ -44,6 +44,7 @@ sub new
       { 
        Title => $title,
        DETList => [ () ], ### an array of hashes containing the det curves,  
+       LAST_GNU_MEASURE_THRESHPLOT_PNG => undef,
        KEYLUT => {},
       };
 
@@ -295,6 +296,16 @@ sub getDETList(){
   }
   
   return \@arr;
+}
+
+sub setMeasureThreshPng(){
+  my ($self, $measure, $png) = @_;
+  $self->{LAST_GNU_MEASURE_THRESHPLOT_PNG}{$measure} = $png;
+}
+
+sub getMeasureThreshPngHT(){
+  my ($self) = @_;
+  $self->{LAST_GNU_MEASURE_THRESHPLOT_PNG}
 }
 
 sub hasDETs(){

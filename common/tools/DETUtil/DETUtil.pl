@@ -340,6 +340,11 @@ foreach my $directive (@plotControls){
     $options{ISOCostLineWidth} = $two if ($two ne "");
   } elsif ($directive =~ /PlotDETCurves=(true|false)$/){ 
     $options{PlotDETCurves} = $1;
+  } elsif ($directive =~ /^PlotMeasureThresholdPlots(=withSE)?$/){ 
+    $options{PlotMeasureThresholdPlots} = "true";
+    if (defined($1)){
+      $options{PlotMeasureThresholdPlots} = "trueWithSE";
+    }
   } else {
     print "Warning: Unknown plot directive /$directive/\n";
   }
@@ -659,6 +664,18 @@ if ($doTxtTable) {
   $txtf .= ".results.txt";
   my $txt = $ds->renderAsTxt("$temp/merge", 1, 1, \%options);
   MMisc::writeTo($txtf, "", 1, 0, $txt);
+}
+
+my $measureThrHT = $ds->getMeasureThreshPngHT();
+if (defined($measureThrHT)){
+  foreach my $meas(keys %$measureThrHT){
+    my $inf = $measureThrHT->{$meas};
+    my $newpng = $OutPNGfile;
+    $newpng =~ s/\.png$/.$meas.png/i;
+    &vprint("[*] Copying [$inf] to [$newpng]\n");
+    my $err =  MMisc::filecopy($inf, $newpng);
+    MMisc::error_quit($err) if (! MMisc::is_blank($err));
+  }
 }
 
 if ($dumpFile){

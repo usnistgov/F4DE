@@ -59,6 +59,7 @@ sub new
        POINTS => undef, ## 2D array (score, Mmiss, Mfa, comb);  IF style is blocked, then (sampleStandardDev(Mmiss), ssd(Mfa), ssd(ssdComb), $numBlocks) 
        LAST_GNU_DETFILE_PNG => "",
        LAST_GNU_THRESHPLOT_PNG => "",
+       LAST_GNU_MEASURE_THRESHPLOT_PNG => undef,
        LAST_SERIALIZED_DET => "",
        MESSAGES => "",
        ISOLINE_COEFFICIENTS => [ sort {$a <=> $b} @$listIsolineCoef],
@@ -839,6 +840,17 @@ sub setThreshPng(){
   my ($self, $png) = @_;
   $self->{LAST_GNU_THRESHPLOT_PNG} = $png;
 }
+
+sub setMeasureThreshPng(){
+  my ($self, $measure, $png) = @_;
+  $self->{LAST_GNU_MEASURE_THRESHPLOT_PNG}{$measure} = $png;
+}
+
+sub getMeasureThreshPngHT(){
+  my ($self) = @_;
+  $self->{LAST_GNU_MEASURE_THRESHPLOT_PNG}
+}
+
 
 sub getSerializedDET(){
   my ($self) = @_;

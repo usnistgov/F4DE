@@ -141,6 +141,7 @@ sub _initProps{
                                                               "left bottom", "center bottom", "right bottom")));
   die "Failed to add property PointSetAreaDefinition" unless ($props->addProp("PointSetAreaDefinition", "Radius", ("Area", "Radius")));
   die "Failed to add property PlotDETCurves" unless ($props->addProp("PlotDETCurves", "true", ("true", "false")));
+  die "Failed to add property PlotMeasureThresholdPlots" unless ($props->addProp("PlotMeasureThresholdPlots", "false", ("true", "trueWithSE", "false")));
   
   $props;
 }
@@ -344,6 +345,12 @@ sub _parseOptions{
       die "Error: DET option PlotDETCurves illegal. ".$self->{props}->get_errormsg();
     }
   }  
+  
+  if (exists($options->{PlotMeasureThresholdPlots})){
+    if (! $self->{props}->setValue("PlotMeasureThresholdPlots", $options->{PlotMeasureThresholdPlots})){
+      die "Error: DET option PlotMeasureThresholdPlots illegal. ".$self->{props}->get_errormsg();
+    }
+  }
 }
 
 sub thisabs{ ($_[0] < 0) ? $_[0]*(-1) : $_[0]; }
@@ -404,6 +411,26 @@ sub renderUnitTest{
   $trial2->addTrial("she", 0.90, "YES", 1);
   $trial2->addTrial("she", 0.95, "YES", 1);
   $trial2->addTrial("she", 1.0, "YES", 1);
+
+  $trial2->addTrial("two", 0.20, "NO", 0);
+  $trial2->addTrial("two", 0.25, "NO", 0);
+  $trial2->addTrial("two", 0.30, "NO", 0);
+  $trial2->addTrial("two", 0.35, "NO", 0);
+  $trial2->addTrial("two", 0.40, "NO", 1);
+  $trial2->addTrial("two", 0.45, "NO", 1);
+  $trial2->addTrial("two", 0.50, "YES", 0);
+  $trial2->addTrial("two", 0.55, "YES", 1);
+  $trial2->addTrial("two", 0.60, "YES", 0);
+  $trial2->addTrial("two", 0.65, "YES", 1);
+  $trial2->addTrial("two", 0.70, "YES", 1);
+  $trial2->addTrial("two", 0.75, "YES", 0);
+  $trial2->addTrial("two", 0.80, "YES", 0);
+  $trial2->addTrial("two", 0.85, "YES", 1);
+  $trial2->addTrial("two", 0.90, "YES", 0);
+  $trial2->addTrial("two", 0.95, "YES", 1);
+  $trial2->addTrial("two", 0.90, "YES", 1);
+  $trial2->addTrial("two", 0.95, "YES", 1);
+  $trial2->addTrial("two", 1.0, "YES", 1);
 
   my $trial3 = new TrialsFuncs({ ("TOTALTRIALS" => 40) },
                                "Term Detection", "Term", "Occurrence");
@@ -473,7 +500,8 @@ sub renderUnitTest{
   my $options = { ("ColorScheme" => "grey",
                    "DrawIsometriclines" => 1,
                    "DrawIsoratiolines" => 1,
-                   "serialize" => 0,
+                   "serialize" => 1,
+                   "PlotMeasureThresholdPlots" => "trueWithSE",
                    "Isoratiolines" =>  [ ( 1 ) ],
                    "Isometriclines" => [ (0.7, 0.5, 0.3, 0, -5) ],
                    "DETLineAttr" => { ("Name 1" => { label => "New DET1", lineWidth => 9, pointSize => 2, pointTypeSet => "square", color => "rgb \"#0000ff\"" }),
@@ -654,12 +682,40 @@ sub __renderUnitTest_HTML {
   print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.png\"></TD>\n";
   print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.png\"></TD>\n";
   print HTML "  </TR>\n";
+
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.thresh.PFA.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.thresh.PFA.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.thresh.PFA.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.thresh.PFA.png\"></TD>\n";
+  print HTML "  </TR>\n";
+  
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.thresh.PMiss.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.thresh.PMiss.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.thresh.PMiss.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.thresh.PMiss.png\"></TD>\n";
+  print HTML "  </TR>\n";
+  
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.thresh.Value.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.thresh.Value.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.thresh.Value.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.thresh.Value.png\"></TD>\n";
+  print HTML "  </TR>\n";
   
   print HTML "  <TR>\n";
   print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.Name_1.png\"></TD>\n";
   print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.Name_1.png\"></TD>\n";
   print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.Name_1.png\"></TD>\n";
   print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.Name_1.png\"></TD>\n";
+  print HTML "  </TR>\n";
+
+  print HTML "  <TR>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.Name_2.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.Name_2.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.Name_2.png\"></TD>\n";
+  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.Name_2.png\"></TD>\n";
   print HTML "  </TR>\n";
 
   print HTML "  <TR>\n";
@@ -676,13 +732,15 @@ sub __renderUnitTest_HTML {
   print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.Name_2.thresh.png\"></TD>\n";
   print HTML "  </TR>\n";
 
-  print HTML "  <TR>\n";
-  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.Name_3.thresh.png\"></TD>\n";
-  print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.Name_3.thresh.png\"></TD>\n";
-  print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.Name_3.thresh.png\"></TD>\n";
-  print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.Name_3.thresh.png\"></TD>\n";
-  print HTML "  </TR>\n";
-
+  foreach my $type("", ".PFA", ".PMiss", ".Value"){
+    print HTML "  <TR>\n";
+    print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.nd.Name_2.thresh$type.png\"></TD>\n";
+    print HTML "   <TD width=25%> <IMG src=\"g1$m.log.log.Name_2.thresh$type.png\"></TD>\n";
+    print HTML "   <TD width=25%> <IMG src=\"g1$m.lin.lin.Name_2.thresh$type.png\"></TD>\n";
+    print HTML "   <TD width=25%> <IMG src=\"g1$m.nd.log.Name_2.thresh$type.png\"></TD>\n";
+    print HTML "  </TR>\n";
+  } 
+  
   print HTML " </TABLE>\n";
   print HTML "</BODY>\n";
   print HTML "</HTML>\n";
@@ -1594,6 +1652,25 @@ sub writeMultiDetGraph
       push @PLOTCOMS, "  '$trootpoints2' notitle with points lt $colorpoints2 pt 6 ps 1";
     }
         
+    ### make the Joint Threshhold plots
+    my $plotMeasureThresh = ($self->{props}->getValue("PlotMeasureThresholdPlots") =~ /^(true|trueWithSE)$/);    
+    my $plotMeasureThreshWithSE = ($self->{props}->getValue("PlotMeasureThresholdPlots") =~ /^(trueWithSE)$/);    
+    my %plotMeasHT = (FA => { name => $faStr,   valueCol => 5, p2SECol => 14, m2SECol => 12},
+                      MI => { name => $missStr, valueCol => 4, p2SECol => 13, m2SECol => 11},
+                      CO => { name => $combStr, valueCol => 6, p2SECol => 16, m2SECol => 15});
+
+    if ($plotMeasureThresh){
+      foreach my $type(keys %plotMeasHT){
+        my $fh;
+        open($fh,"> $fileRoot.thresh.".$plotMeasHT{$type}{name}.".plt") ||
+          die("unable to open DET gnuplot file $fileRoot.thresh.$plotMeasHT{$type}{name}.plt");
+        $plotMeasHT{$type}{FILE} = $fh;
+        $self->write_gnuplot_threshold_header($plotMeasHT{$type}{FILE}, $plotMeasHT{$type}{name}." Threshold Plot - "._gnuplotSafeString($self->{title}));
+        print { $plotMeasHT{$type}{FILE} } "set ylabel \"".$plotMeasHT{$type}{name}."\"\n";
+        print { $plotMeasHT{$type}{FILE} } "plot  ";
+      }
+    } 
+
     ### Write Individual Dets
     for (my $d=0; $d < $numDET; $d++) {
       my $openPoint = $self->{pointTypes}->[ $d % scalar(@{ $self->{pointTypes} }) ]->[0];
@@ -1681,7 +1758,24 @@ sub writeMultiDetGraph
           push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol $title with $prType lc $color lw $lineWidth";
           $ltitle = "";
         }
-        
+
+        if ($plotMeasureThresh){
+          foreach my $type(keys %plotMeasHT){
+            print { $plotMeasHT{$type}{FILE} } ($d == 0) ? "\\\n" : ",\\\n";
+            my $ttext = $detset->getDETForID($d)->{LINETITLE};
+            my $title = "title '"._gnuplotSafeString($ttext)."'";
+            my $SEtitle = "title '+/-2SE "._gnuplotSafeString($ttext)."'";
+            $title = "notitle" if ($displayKey eq "false");
+            my $prType = " $curveLineStyle ".(($curveLineStyle =~ /point/) ? "pt $closedPoint  ps $thisPointSize" : "");
+            print { $plotMeasHT{$type}{FILE} } "  '$troot.dat.1' using 1:".$plotMeasHT{$type}{valueCol}." $title with $prType lc $color lw $lineWidth"; 
+            my $halflw = $lineWidth/2;
+            if ($detset->getDETForID($d)->getTrials()->getNumEvaluatedBlocks() > 1 && $plotMeasureThreshWithSE){
+              print { $plotMeasHT{$type}{FILE} } ",\\\n  '$troot.dat.1' using 1:".$plotMeasHT{$type}{p2SECol}." $SEtitle with $prType lc $color lw $halflw, \\\n";
+              print { $plotMeasHT{$type}{FILE} } "  '$troot.dat.1' using 1:".$plotMeasHT{$type}{m2SECol}." notitle with $prType lc $color lw $halflw";        
+            }
+          }
+        }                 
+       
         ### Actual
         if ($self->{DETShowPoint_Actual}){
           $xcol = ($xScale eq "nd" ? "11" : "9");
@@ -1726,7 +1820,6 @@ sub writeMultiDetGraph
           }
         }
 
-                         
       }
 
     }
@@ -1738,13 +1831,22 @@ sub writeMultiDetGraph
     $self->write_gnuplot_DET_header($detset->getDETForID(0)->{METRIC}, *MAINPLT, \@offAxisLabels);
     print MAINPLT join(",\\\n", @PLOTCOMS);
     close MAINPLT;
-
+    
+    foreach my $type(keys %plotMeasHT){
+      close $plotMeasHT{$type}{FILE};
+    }
 
     if ($self->{makePNG}) {
       $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
       buildPNG($fileRoot, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef), $self->{HD}, $self->{AutoAdapt},
                $self->{colors}->{DETFont});
+      foreach my $type(keys %plotMeasHT){
+        buildPNG("$fileRoot.thresh.".$plotMeasHT{$type}{name}, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef), $self->{HD}, $self->{AutoAdapt},
+                 $self->{colors}->{DETFont});
+        $detset->setMeasureThreshPng($plotMeasHT{$type}{name},"$fileRoot.thresh.".$plotMeasHT{$type}{name}.".png");
+      }
     }
+    
     \%multiInfo;
   }
 
@@ -1759,9 +1861,12 @@ sub writeGNUGraph{
   my $xScale = $self->{props}->getValue("xScale");
   my $yScale = $self->{props}->getValue("yScale");    
   my $curveLineStyle = $self->{props}->getValue("CurveLineStyle");    
+  my $plotMeasureThresh = ($self->{props}->getValue("PlotMeasureThresholdPlots") =~ /^(true|trueWithSE)$/);    
+  my $plotMeasureThreshWithSE = ($self->{props}->getValue("PlotMeasureThresholdPlots") =~ /^(trueWithSE)$/);    
 
   my ($missStr, $faStr, $combStr) = ( $metric->errMissLab(), $metric->errFALab(), $metric->combLab());
   my $combType = ($ metric->combType() eq "minimizable" ? "Min" : "Max");
+  my $numBlk = $det->getTrials()->getNumEvaluatedBlocks();
 
   ## Make sure the points are computed
   $det->computePoints();
@@ -1790,6 +1895,16 @@ sub writeGNUGraph{
   open(THRESHPLT,"> $fileRoot.thresh.plt") ||
     die("unable to open DET gnuplot file $fileRoot.thresh.plt");
 
+  if ($plotMeasureThresh){
+    open(THRESHPLT_FA,"> $fileRoot.thresh.$faStr.plt") ||
+      die("unable to open DET gnuplot file $fileRoot.thresh.$faStr.plt");
+  
+    open(THRESHPLT_MISS,"> $fileRoot.thresh.$missStr.plt") ||
+      die("unable to open DET gnuplot file $fileRoot.thresh.$missStr.plt");
+  
+    open(THRESHPLT_COMB,"> $fileRoot.thresh.$combStr.plt") ||
+      die("unable to open DET gnuplot file $fileRoot.thresh.$combStr.plt");
+  }
   ### The line data file
   my $withErrorCurve = 1;
   open(DAT,"> $fileRoot.dat.1") ||
@@ -1802,7 +1917,7 @@ sub writeGNUGraph{
   print DAT "#                ppndf() is the normal deviant of a probability. ppndf(.5)=0\n"; 
   print DAT "#                -2SE(v) is v - 2(StandardError(v)) = v - 2 * (sampleStandardDev / sqrt(n-1)\n";
   print DAT "#                        the value \"NA\" is used when n <= 1\n"; 
-  print DAT "# 1:score 2:ppndf($missStr) 3:ppndf($faStr) 4:$missStr 5:$faStr 6:$combStr 7:ppndf(-2SE($missStr)) 8:ppndf(-2SE($faStr)) 9:ppndf(+2SE($missStr)) 10:ppndf(+2SE($faStr)) 11:-2SE($missStr) 12:-2SE($faStr) 13:+2SE($missStr) 14:+2SE($faStr) 15:SE($combStr)\n";
+  print DAT "# 1:score 2:ppndf($missStr) 3:ppndf($faStr) 4:$missStr 5:$faStr 6:$combStr 7:ppndf(-2SE($missStr)) 8:ppndf(-2SE($faStr)) 9:ppndf(+2SE($missStr)) 10:ppndf(+2SE($faStr)) 11:-2SE($missStr) 12:-2SE($faStr) 13:+2SE($missStr) 14:+2SE($faStr) 15:-2SE($combStr) 16:+2SE($combStr)\n";
   for (my $i=0; $i<@{ $points }; $i++) {
       my @a = ($points->[$i][0], 
                ppndf($points->[$i][1]), 
@@ -1821,7 +1936,8 @@ sub writeGNUGraph{
                   (defined($points->[$i][5]) ? ($points->[$i][2] - 2*($points->[$i][5] / sqrt($points->[$i][7]))) : "NA"),
                   (defined($points->[$i][4]) ? ($points->[$i][1] + 2*($points->[$i][4] / sqrt($points->[$i][7]))) : "NA"),
                   (defined($points->[$i][5]) ? ($points->[$i][2] + 2*($points->[$i][5] / sqrt($points->[$i][7]))) : "NA"),
-                  (defined($points->[$i][6]) ? ($points->[$i][2] - 2*($points->[$i][6] / sqrt($points->[$i][7]))) : "NA"));
+                  (defined($points->[$i][6]) ? ($points->[$i][3] - 2*($points->[$i][6] / sqrt($points->[$i][7]))) : "NA"),
+                  (defined($points->[$i][6]) ? ($points->[$i][3] + 2*($points->[$i][6] / sqrt($points->[$i][7]))) : "NA"));
       }
       push @a, "\n";
       print DAT join(" ",@a);
@@ -2010,28 +2126,87 @@ sub writeGNUGraph{
     $threshMax += 0.000001;
   }
   $self->write_gnuplot_threshold_header(*THRESHPLT, "Threshold Plot for $self->{title}");
+  if ($plotMeasureThresh){
+    $self->write_gnuplot_threshold_header(*THRESHPLT_FA, "$faStr Threshold Plot for $self->{title}");
+    $self->write_gnuplot_threshold_header(*THRESHPLT_MISS, "$missStr Threshold Plot for $self->{title}");
+    $self->write_gnuplot_threshold_header(*THRESHPLT_COMB, "$combStr Threshold Plot for $self->{title}");
+  }
   if (defined($threshMin)){
     print THRESHPLT "plot [$threshMin:$threshMax]  \\\n";
-    print THRESHPLT "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines lt 2, \\\n";
-    print THRESHPLT "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines lt 3, \\\n";
-    print THRESHPLT "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines lt 4";
+    if ($plotMeasureThresh){
+      print THRESHPLT_FA "plot [$threshMin:$threshMax]  \\\n";
+      print THRESHPLT_MISS "plot [$threshMin:$threshMax]  \\\n";
+      print THRESHPLT_COMB "plot [$threshMin:$threshMax]  \\\n";
+    }
+    ### Miss
+    print THRESHPLT      "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines lt 2, \\\n";
+    if ($plotMeasureThresh){
+      print THRESHPLT_MISS "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines lt 2"; 
+      if ($numBlk > 1 && $plotMeasureThreshWithSE){
+        print THRESHPLT_MISS ", \\\n  '$fileRoot.dat.1' using 1:13 title '+/-2SE' with lines lt 0, \\\n";
+        print THRESHPLT_MISS "  '$fileRoot.dat.1' using 1:11 notitle with lines lt 0";
+      }
+      print THRESHPLT_MISS "\n";
+    }
+    ### FA
+    print THRESHPLT    "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines lt 3, \\\n";
+    if ($plotMeasureThresh){
+      print THRESHPLT_FA "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines lt 3";
+      if ($numBlk > 1 && $plotMeasureThreshWithSE){
+        print THRESHPLT_FA ",\\\n  '$fileRoot.dat.1' using 1:14 title '+/-2SE' with lines lt 0, \\\n";
+        print THRESHPLT_FA "  '$fileRoot.dat.1' using 1:12 notitle with lines lt 0";        
+      }
+      print THRESHOLD_FA "\n";
+    }
+    ### COMB
+    print THRESHPLT      "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines lt 4";
+    if ($plotMeasureThresh){
+      print THRESHPLT_COMB "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines lt 4";
+      if ($numBlk > 1 && $plotMeasureThreshWithSE){
+        print THRESHPLT_COMB ",\\\n  '$fileRoot.dat.1' using 1:16 title '+/-2SE' with lines lt 0";
+        print THRESHPLT_COMB ",\\\n  '$fileRoot.dat.1' using 1:15 notitle with lines lt 0";        
+      }
+    }
     if ($self->{DETShowPoint_Actual}){
-      print THRESHPLT ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines lt 5";
+      print THRESHPLT      ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines lt 5";
+      print THRESHPLT_COMB ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines lt 5" if ($plotMeasureThresh);;
     }
     if (defined($det->getBestCombComb())) {
-      print THRESHPLT ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points lt 6";
-#      print THRESHPLT ", \\\n  ".$det->getBestCombComb()." title '$combType $combStr' with lines lt 6";
+      print THRESHPLT      ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points lt 6";
+      print THRESHPLT_COMB ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points lt 6" if ($plotMeasureThresh);
     }
     print THRESHPLT "\n";
-  } else {
-    print THRESHPLT "set label ".($self->{labelNum}++)."  \"No detection outputs produced by the system.  Threshold plot is empty.\" at graph 0.2, graph 0.5\n";
-    print THRESHPLT "set size ratio 1\n"; 
-    print THRESHPLT "plot [0:1] [0:1] -x notitle with points\n";
+    if ($plotMeasureThresh){
+      print THRESHPLT_FA "\n";
+      print THRESHPLT_MISS "\n";
+      print THRESHPLT_COMB "\n";
+    }
+  }   else {
+    my $failStr = "set label ".($self->{labelNum}++)."  \"No detection outputs produced by the system.  Threshold plot is empty.\" at graph 0.2, graph 0.5\n".
+                  "set size ratio 1\n".
+                  "plot [0:1] [0:1] -x notitle with points\n";
+    print THRESHPLT $failStr;
+    if ($plotMeasureThresh){
+      print THRESHPLT_FA $failStr;
+      print THRESHPLT_MISS $failStr;
+      print THRESHPLT_COMB $failStr;
+    }
   }
   close THRESHPLT;
+  if ($plotMeasureThresh){
+    close THRESHPLT_FA;
+    close THRESHPLT_MISS;
+    close THRESHPLT_COMB;
+  }
   if ($self->{BuildPNG}) {
     buildPNG($fileRoot.".thresh", $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt}, $self->{colors}->{DETFont});
     $det->setThreshPng("$fileRoot.thresh.png");
+    if ($plotMeasureThresh){
+      foreach my $m($faStr, $missStr, $combStr){        
+        buildPNG($fileRoot.".thresh.$m", $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt}, $self->{colors}->{DETFont});
+        $det->setMeasureThreshPng($m, "$fileRoot.thresh.$m.png");        
+      }
+    }
   }
   1;
 }
