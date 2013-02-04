@@ -123,10 +123,12 @@ my $sysdesc = "";
 my $eteam = undef;
 my $bypassxmllint = 0;
 my $xpng = 0;
+my $pendingfile = "";
+my $releasefile = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:    DE  H  K    P  ST V X    cdef h         rst v     #
-# Mult:     E                                                #
+# Used:    DEF H  K    P  ST V X    cdef h         rst v     #
+# Mult:     EF                                               #
 
 my %opt = ();
 GetOptions
@@ -151,6 +153,8 @@ GetOptions
    'ExpectedTeamName=s' => \$eteam,
    'XmllintBypass' => \$bypassxmllint,
    'ExcludePNGFileFromTxtTable'          => \$xpng,
+   'FilePending=s' => \$pendingfile,
+   'FileRelease=s' => \$releasefile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -171,6 +175,10 @@ for (my $i = 0; $i < $tmp; $i++) {
   my $v = shift @dbDir;
   push @dbDir, split(m%\:%, $v);
 }
+
+MMisc::error_quit("\'FilePending\' and \'FileRelease\' must be used at the same time")
+  if ((MMisc::all_blank($pendingfile, $releasefile) == 0)
+      && (MMisc::any_blank($pendingfile, $releasefile))); 
 
 my $err = MMisc::check_file_r($sysfile);
 MMisc::error_quit("Problem with \'sysfile\' file ($sysfile): $err")
@@ -216,6 +224,8 @@ MMisc::error_quit("Did not find any ECF or TLIST files; will not be able to cont
 ########################################
 
 my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile);
+
+my @Scase_toSequester = KWSEval_SCHelper::get_Scase_toSequester();
 
 my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $expid, $verb);
 MMisc::error_quit($lerr) if (! MMisc::is_blank($lerr));
@@ -793,6 +803,17 @@ if (scalar @donefile > 0) {
         if (! MMisc::writeTo($donefile[$i]));
   }
 }
+
+if (MMisc::all_blank($pendingfile, $releasefile) == 0) {
+  if (grep(m%^$lscase$%, @Scase_toSequester)) {
+    MMisc::error_quit("Could not create \'FilePending\' file ($pendingfile)")
+        if (! MMisc::writeTo($pendingfile));
+  } else {
+    MMisc::error_quit("Could not create \'FileRelease\' file ($releasefile)")
+        if (! MMisc::writeTo($releasefile));
+  }
+}
+
 MMisc::ok_exit();
 
 ############################################################
@@ -881,7 +902,7 @@ sub vprint {
 ############################################################
 
 sub set_usage {
-  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass] [--ExcludePNGFileFromTxtTable]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--fileCreate file [--fileCreate file [...]]] [--ProcGraph tool] [--ExpectedTeamName TEAM] --Specfile specfile --expid EXPID --sysfile file --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]]\n";
+  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass] [--ExcludePNGFileFromTxtTable]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--fileCreate file [--fileCreate file [...]]] [--ProcGraph tool] [--ExpectedTeamName TEAM] --Specfile specfile --expid EXPID --sysfile file --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]] [--FilePending file --FileRelease file]\n";
   $usage .= "\n";
   $usage .= "Will score a submission file against data present in the dbDir.\n";
   $usage .= "\nThe program needs a \'dbDir\' to load some of its eval specific definitions; this directory must contain pairs of <CORPUSID>_<PARTITION> \".ecf.xml\" and \".kwlist.xml\" files that match the component of the EXPID to confirm expected data validity, as well as a <CORPUSID>_<PARTITION> directory containing reference data needed for scoring.\n";
@@ -903,6 +924,8 @@ sub set_usage {
   $usage .= "  --compdir    Directory where computation can be performed\n";
   $usage .= "  --resdir     Directory that will be returned to participants\n";
   $usage .= "  --dbDir      Directory containing ECF, TLIST, RTTM files (: separated or multiple can be specified)\n";
+  $usage .= "  --FilePending  Specify the file that will be created if a <SCASE> is listed in the configuration file as to be sequestered, until authorized for release\n";
+  $usage .= "  --FileRelease  Specify the file that will be created if a <SCASE> is not listed in the configuration file as to be sequestered\n";
 
   $usage .= "\n";
   
