@@ -27,19 +27,19 @@ package MMisc;
 
 # $Id$
 
+
 use strict;
-use POSIX;
-##use Carp;
 
 ##### Warning: only use packages that are part of the 'Core Modules'
 # see: http://perldoc.perl.org/index-modules-A.html
 use Cwd qw(cwd abs_path);
 use Data::Dumper;
 use File::Find;
-use File::Temp qw(tempdir tmpnam);
+use File::Temp qw(tempdir tempfile);
 use File::Copy;
 use List::Util qw(reduce);
 use Time::HiRes qw(gettimeofday tv_interval);
+
 
 ##### For non 'Core Modules' you will need to load them from within the specific function
 # (recommended to set a variable to avoid having to reload it)
@@ -76,8 +76,9 @@ sub get_tmpdir {
 
 #####
 
-sub get_tmpfilename {
-  my $file = tmpnam();
+# Request a temporary file (file is created)
+sub get_tmpfile {
+  my ($fh, $file) = tempfile();
   return($file);
 }
 
@@ -870,7 +871,7 @@ sub mem_gzip {
 
   return(undef) if (&is_blank($tozip));
 
-  my $filename = &get_tmpfilename();
+  my $filename = &get_tmpfile();
   open(FH, " | gzip > $filename")
     or return(undef);
   print FH $tozip;
@@ -886,7 +887,7 @@ sub mem_gunzip {
 
   return(undef) if (&is_blank($tounzip));
 
-  my $filename = &get_tmpfilename();
+  my $filename = &get_tmpfile();
   open FILE, ">$filename"
     or return(undef);
   print FILE $tounzip;
@@ -948,8 +949,8 @@ sub _system_call_logfile {
   my $stderrfile = '';
   if ((! defined $logfile) || (&is_blank($logfile))) {
     # Get temporary filenames (created by the command line call)
-    $stdoutfile = &get_tmpfilename();
-    $stderrfile = &get_tmpfilename();
+    $stdoutfile = &get_tmpfile();
+    $stderrfile = &get_tmpfile();
   } else {
     $stdoutfile = $logfile . '.stdout';
     $stderrfile = $logfile . '.stderr';
@@ -2256,6 +2257,9 @@ sub filterArray {
 
 ############################################################
 
+sub __floor { return (int($_[0])); }
+sub __ceil  { return (int($_[0]+0.99)); }
+
 
 sub unitTest {
 	print "Test MMisc\n";
@@ -2409,7 +2413,7 @@ sub compareData{
 
   ### Unpaired T Test UNEqual Variances
   my %uht = ();
-  $uht{df} = floor(((($ht{var1}/$ht{N1}) + ($ht{var2} / $ht{N2}) * ($ht{var1}/$ht{N1}) + ($ht{var2} / $ht{N2}))) /
+  $uht{df} = &__floor(((($ht{var1}/$ht{N1}) + ($ht{var2} / $ht{N2}) * ($ht{var1}/$ht{N1}) + ($ht{var2} / $ht{N2}))) /
                    ( ((($ht{var1}/$ht{N1}) *($ht{var1}/$ht{N1})) / ($ht{N1} - 1)) + ((($ht{var2}/$ht{N2}) *($ht{var2}/$ht{N2})) / ($ht{N2} - 1))));
   $uht{testStat} = ($ht{mean1} - $ht{mean2}) / MMisc::safe_sqrt(($ht{var1}/$ht{N1}) + ($ht{var2} / $ht{N2}));
   $uht{POneTail} = Statistics::Distributions::tprob($uht{df}, $uht{testStat} * ($uht{testStat} < 0 ? -1 : 1));
