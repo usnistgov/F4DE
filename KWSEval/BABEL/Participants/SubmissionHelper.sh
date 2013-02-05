@@ -254,8 +254,6 @@ if [ ! -f "$lf" ]; then
   if [ "A$REVALIDATE" == "A1" ]; then rm -rf "$JRlockdir/$tld*"; fi
   $jobrunner -b -l "$JRlockdir" -n "$tld" -S 99 -- "$subcheck" -d "$dbDir" -k "$validator" $validator_cmdadd -T "$TMvalidator" "$if" &> "$lf.log"
   if [ "${?}" -ne "99" ]; then error_quit "**** Submission did not validate, aborting (check within a directory starting with \'$JRlockdir/$tld\' for details, as well as: $lf.log)"; fi
-  # if 'redoBad' was triggered, consider the submission new: remove any lock files (and logs)
-  rm -f $lf_base.*
   touch "$lf"
   rm -f "$nlf"
 else
@@ -356,7 +354,7 @@ else
     $scp_cmd "$status_file" "$efile" &> $lf.log
     if [ -e $efile ]; then
       read=`head -1 $efile`
-      mv "$efile" "$efile.last"
+      cp "$efile" "$efile.last"
     else
       read="Awaiting Status update from scoring server"
     fi
