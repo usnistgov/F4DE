@@ -55,7 +55,9 @@ my @expid_lp;
 my @expid_lr;
 my @expid_aud;
 
-my @Scase_toSequester = ();
+my @Scase_toSequester;
+
+my %AuthorizedSet;
 
 #####
 
@@ -88,6 +90,11 @@ sub loadSpecfile {
   &__cfgcheck($specfile, "\@expid_lr", (scalar @expid_lr == 0), ($expid_count == 11));
   &__cfgcheck($specfile, "\@expid_aud", (scalar @expid_aud == 0), ($expid_count == 11));
   &__cfgcheck($specfile, "\@expid_sysid_beg", (scalar @expid_sysid_beg == 0), 1);
+
+  MMisc::error_quit("More \@Scase_toSequester than scase in \'SpecFile\' ($specfile)")
+      if (scalar @Scase_toSequester > scalar @expid_scase);
+  MMisc::error_quit("No \%AuthorizedSet set in \'SpecFile\' ($specfile)")
+      if (scalar keys %AuthorizedSet == 0);
   
   return($expid_tag[0]);
 }
@@ -115,6 +122,7 @@ sub vprint {
 ##########
 
 sub get_Scase_toSequester { return(@Scase_toSequester); }
+sub get_AuthorizedSet { return(%AuthorizedSet); }
 
 ##########
 
