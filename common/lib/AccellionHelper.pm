@@ -837,7 +837,7 @@ sub obtain_configfile {
   # 2: pre-text
   # 3: post-text
 
-  my $tmpfile = MMisc::get_tmpfilename();
+  my $tmpfile = MMisc::get_tmpfile();
   open FILE, ">$tmpfile"
     or return($_[0]->_set_error_and_return_scalar("Problem creating configuration file ($tmpfile) : $!", 0));
   print FILE $_[2] . "\n";

@@ -397,7 +397,7 @@ sub commandAdd {
 sub sqliteCommands {
   my ($sqlitecmd, $dbfile, $cmdlist) = @_;
 
-  my $tf = MMisc::get_tmpfilename();
+  my $tf = MMisc::get_tmpfile();
   return("Problem obtaining a temporary file")
     if (MMisc::is_blank($tf));
 

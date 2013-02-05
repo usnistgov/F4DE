@@ -301,7 +301,7 @@ sub run_xmllint_pipe {
   my @xsdfilesl = $self->get_xsdfilesl();
   return(undef) if ($self->error());
   
-  my $stderr_file = MMisc::get_tmpfilename();
+  my $stderr_file = MMisc::get_tmpfile();
 
   $file =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
 
@@ -337,7 +337,7 @@ sub run_xmllint {
   $file =~ s{^~([^/]*)}{$1?(getpwnam($1))[7]:($ENV{HOME} || $ENV{LOGDIR})}ex;
   my $fileout = 1;
   if (MMisc::is_blank($ofile)) {
-    $ofile = MMisc::get_tmpfilename();
+    $ofile = MMisc::get_tmpfile();
   } elsif ($ofile eq 'NOOUT') {
     $fileout = 0;
   }

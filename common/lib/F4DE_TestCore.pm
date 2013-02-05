@@ -190,7 +190,7 @@ sub _run_core {
     $ofile = $cmp2resfile;
     $ofile .= $mmc_add if ($mode eq $magicmode_comp);
   } else {
-    $ofile = MMisc::get_tmpfilename();
+    $ofile = MMisc::get_tmpfile();
   }
 
   my $t0 = &get_currenttime();

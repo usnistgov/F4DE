@@ -461,7 +461,7 @@ sub run_ValidateKWSList {
 sub run_tool {
   my ($lf, $tool, @cmds) = @_;
 
-  $lf = MMisc::get_tmpfilename() if (MMisc::is_blank($lf));
+  $lf = MMisc::get_tmpfile() if (MMisc::is_blank($lf));
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     MMisc::write_syscall_smart_logfile($lf, $tool, @cmds); 

@@ -13,7 +13,7 @@ sub __not4ohc { ($mode ne "OpenHaRT_minirelease_check") ? $_[0] : '' }
 
 ##########
 print "** Checking that the temporary location can be used:\n";
-my $tmp = MMisc::get_tmpfilename();
+my $tmp = MMisc::get_tmpfile();
 print "  - obtained temp file name: \"$tmp\"\n";
 print "  - trying to create it: ";
 if (open FILE, ">$tmp") {
