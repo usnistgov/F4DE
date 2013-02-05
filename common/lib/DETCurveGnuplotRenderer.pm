@@ -1840,10 +1840,12 @@ sub writeMultiDetGraph
       $multiInfo{COMBINED_DET_PNG} = "$fileRoot.png";
       buildPNG($fileRoot, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef), $self->{HD}, $self->{AutoAdapt},
                $self->{colors}->{DETFont});
-      foreach my $type(keys %plotMeasHT){
-        buildPNG("$fileRoot.thresh.".$plotMeasHT{$type}{name}, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef), $self->{HD}, $self->{AutoAdapt},
-                 $self->{colors}->{DETFont});
-        $detset->setMeasureThreshPng($plotMeasHT{$type}{name},"$fileRoot.thresh.".$plotMeasHT{$type}{name}.".png");
+      if ($plotMeasureThresh){
+        foreach my $type(keys %plotMeasHT){
+          buildPNG("$fileRoot.thresh.".$plotMeasHT{$type}{name}, (exists($self->{gnuplotPROG}) ? $self->{gnuplotPROG} : undef), $self->{HD}, $self->{AutoAdapt},
+                   $self->{colors}->{DETFont});
+          $detset->setMeasureThreshPng($plotMeasHT{$type}{name},"$fileRoot.thresh.".$plotMeasHT{$type}{name}.".png");
+        }
       }
     }
     
