@@ -671,7 +671,7 @@ if (defined($measureThrHT)){
   foreach my $meas(keys %$measureThrHT){
     my $inf = $measureThrHT->{$meas};
     my $newpng = $OutPNGfile;
-    $newpng =~ s/\.png$/.$meas.png/i;
+    $newpng =~ s/\.png$/.thresh.$meas.png/i;
     &vprint("[*] Copying [$inf] to [$newpng]\n");
     my $err =  MMisc::filecopy($inf, $newpng);
     MMisc::error_quit($err) if (! MMisc::is_blank($err));
