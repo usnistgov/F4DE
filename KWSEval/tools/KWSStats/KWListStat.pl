@@ -41,6 +41,7 @@ my $splitChar = '\|';
 my @attrPreConds = ();
 my $plot_root = "";
 my $plot_count = 1;
+my $outputType = "txt";
 
 GetOptions
 (
@@ -51,6 +52,7 @@ GetOptions
   'list' => \$listAttr,
   'splitChar=s' => \$splitChar,
   'attrPreConditions=s@' => \@attrPreConds,  ## To include a KW, all conditions must be met  '<attr>:regex=<val>'
+  'outputType=s' => \$outputType, 
   'plotroot=s' => \$plot_root,
 ) or MMisc::error_quit("Unknown option(s)\n");
 
@@ -89,8 +91,7 @@ if (defined($listAttr)){
       $at->increment("#Terms", $attr);
     }
   }
-  print $at->renderTxtTable(1);
-  print "\n";
+  print $at->renderByType($outputType); 
 }
 
 foreach my $attr(@oneFact) {
@@ -104,7 +105,7 @@ foreach my $attr(@oneFact) {
     my $val = $kwList1->{TERMS}{$termid}->getAttrValue($attr);
     &{ $fact_recorder }($val) if $val;
   }
-  print "One Factor Analysis of $attr\n";
+  print "One Factor Analysis of $attr\n" if ($outputType eq "txt");
   &{ $fact_renderer }();
 }
 
@@ -124,7 +125,7 @@ sub __discrete_1_fact {
 	  },
 	  sub { #renderer
 	    $at->setProperties({"SortRowKeyTxt" => "Alpha"});
-	    print $at->renderTxtTable(1);
+	    print $at->renderByType($outputType); 
 	  });
 } #?
 sub __continuous_1_fact {
@@ -144,7 +145,7 @@ sub __continuous_1_fact {
 	      $at->addData(sprintf("%.4f", $stats->mean()), "Mean", "Data");
 	      $at->addData(sprintf("%.4f", $stats->quantile(3)), "Upper Quartile", "Data");
 	      $at->addData(sprintf("%.4f", $stats->max()), "Max", "Data");
-	      print $at->renderTxtTable(1);
+	      print $at->renderByType($outputType); 
 	      $plot_data{"Data"} = [$stats->min(),
 				  $stats->quantile(1),
 				  $stats->median(),
@@ -172,25 +173,13 @@ foreach my $attr1attr2(@twoFact) {
    
   my ($fact_recorder, $fact_renderer) = &__2_fact_gen_for_type($type1, $attr1, $type2, $attr2) or next;
   foreach my $termid (keys %{ $kwList1->{TERMS} }) {
-###<<<<<<< KWListStat.pl
-###    #  my $text = $kwList1->{TERMS}{$termid}{TEXT};
-###
-###    $val = $kwList1->{TERMS}{$termid}->getAttrValue($attr);
-###    if (defined($val)){
-###      $val =~ s/\|/_/g;
-###      $at->increment("Count", $val);
-###    } else {
-###      $at->increment("Count", "UNDEF");
-###    }
-###=======
     next unless (kwMeetsPreCondition($kwList1->{TERMS}{$termid}));
 
     my $val1 = $kwList1->{TERMS}{$termid}->getAttrValue($attr1);
     my $val2 = $kwList1->{TERMS}{$termid}->getAttrValue($attr2);
     &{ $fact_recorder }($val1, $val2) if $val1 and $val2;
-###>>>>>>> 1.4
   }
-  print "Two Factor Analysis of $attr1|$attr2\n";
+  print "Two Factor Analysis of $attr1|$attr2\n" if ($outputType eq "txt");
   &{ $fact_renderer }();
 }
 
@@ -210,7 +199,7 @@ sub __dd_2_fact {
 	    $at->increment($val1 ? $val1 : "UNDEF", $val2 ? $val2 : "UNDEF");
 	  },
 	  sub { #renderer
-	    print $at->renderTxtTable(1);
+	    print $at->renderByType($outputType); 
 	  });
 }
 sub __cd_2_fact {
@@ -246,7 +235,7 @@ sub __cd_2_fact {
 	      render_box_plot(\%plot_data, "$plot_root$plot_count", $attr2, $attr1);
 	      $plot_count++;
 	    }
-	    print $at->renderTxtTable(1);
+	    print $at->renderByType($outputType); 
 	  });
 }
 sub __cc_2_fact {
@@ -272,35 +261,6 @@ sub __cc_2_fact {
 }
 
 ###
-
-
-###foreach my $attr1attr2(@twoFact){
-###  my ($attr1, $attr2) = split(/$splitChar/, $attr1attr2);
-###  my @attr1Labs = split(/\|/,$attr1);
-###  my @attr2Labs = split(/\|/,$attr2);
-###  print "   attr1=".join(",",@attr1Labs)." attr2=".join(",",@attr2Labs)."\n";
-###  my $at = new AutoTable();
-###  my $val1;
-###  my $val2;
-###  foreach my $termid (keys %{ $kwList1->{TERMS} }) {
-###    next unless(kwMeetsPreCondition($kwList1->{TERMS}{$termid}));
-###    
-###    #  my $text = $kwList->{TERMS}{$termid}{TEXT};
-###    foreach my $subAttr1(@attr1Labs){
-###      foreach my $subAttr2(@attr2Labs){
-###       $val1 = $kwList1->{TERMS}{$termid}->getAttrValue($subAttr1);
-###       $val2 = $kwList1->{TERMS}{$termid}->getAttrValue($subAttr2);
-###       $at->increment($subAttr2."|".((defined $val2) ? $val2 : "UNDEF"),
-###                      $subAttr1."|".((defined $val1) ? $val1 : "UNDEF"));
-###      }
-###    }
-###  }
-###  print "Two Factor Analsis of $attr1attr2\n";
-###  $at->{Properties}->setValue("SortColKeyTxt", "Alpha");
-###  $at->{Properties}->setValue("SortRowKeyTxt", "Alpha");
-###  print $at->renderTxtTable(1);
-###  print "\n";
-###}
 
 ### Box plot
 sub render_box_plot {
@@ -412,7 +372,7 @@ sub arrayComparisonReport{
   $at->addData(scalar(@$intersect), "In $a2ID", "In $a1ID");
 
   $at->{Properties}->setValue("TxtPrefix", "   ");
-  return $at->renderTxtTable(); 
+  return $at->renderByType($outputType); 
 }
 
 ### Compare KWList
@@ -461,4 +421,4 @@ if ($kwfile2 ne ""){
   
 }
 
-MMisc::ok_quit();
+exit 0;
