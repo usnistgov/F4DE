@@ -94,7 +94,9 @@ if (defined($listAttr)){
 }
 
 foreach my $attr(@oneFact) {
-  $attr =~ s/^([^:]+)://; my $type = $1;
+  die "Error: Can't parse 1-factor string /$attr/ !~ /^([^:]):(.+)\$/" unless ($attr =~ /^([^:]):(.+)$/);
+  my $type = $1;
+  $attr = $2;
   my ($fact_recorder, $fact_renderer) = &__1_fact_gen_for_type($type, $attr) or next;
 
   foreach my $termid (keys %{ $kwList1->{TERMS} }) {
@@ -160,8 +162,13 @@ sub __continuous_1_fact {
 #two factor
 foreach my $attr1attr2(@twoFact) {
   my ($attr1, $attr2) = split(/\|/, $attr1attr2);
-  $attr1 =~ s/^([^:]+)://; my $type1 = $1;
-  $attr2 =~ s/^([^:]+)://; my $type2 = $1;
+
+  die "Error: Can't parse first 2-factor string /$attr1/ !~ /^([^:]):(.+)\$/" unless ($attr1 =~ /^([^:]):(.+)$/);
+  my $type1 = $1;
+  $attr1 = $2;
+  die "Error: Can't parse second 2-factor string /$attr2/ !~ /^([^:]):(.+)\$/" unless ($attr2 =~ /^([^:]):(.+)$/);
+  my $type2 = $1;
+  $attr2 = $2;
    
   my ($fact_recorder, $fact_renderer) = &__2_fact_gen_for_type($type1, $attr1, $type2, $attr2) or next;
   foreach my $termid (keys %{ $kwList1->{TERMS} }) {
