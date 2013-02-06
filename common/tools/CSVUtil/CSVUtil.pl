@@ -124,7 +124,7 @@ if ($outAT ne "-" && $outCSV ne "-" && $outUniqQuery ne "-"){
 my $at = new AutoTable(); 
 $at->setEncoding($encoding);
 if (! $at->loadCSV($in, undef, undef, undef, $quoteChar, $sepChar)) {
-  die("Error: Failed to load CSV file '$in'");
+  die("Error: Failed to load CSV file '$in' ".$at->get_errormsg());
 }
   
 if (defined($printInfo)){
