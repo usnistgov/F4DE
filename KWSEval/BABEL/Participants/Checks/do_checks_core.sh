@@ -46,6 +46,19 @@ check_dir () {
     if [ ! -r "$1" ]; then error_quit "Directory ($1) is not readable"; fi
 }
 
+find_file_in_dbDir () {
+  filev=""
+  for dbd in $dbDir_list
+  do
+      if [ "A$filev" == "A" ]; then
+          tmp_filev="$dbd/samples/$1"
+          if [ -f $tmp_filev ]; then
+            filev=$tmp_filev
+          fi
+      fi
+  done
+}
+
 ########################################
 ## Command line check
 
@@ -92,7 +105,10 @@ if [ "A$doit" == "A1" ]; then
         echo "!! Skipping test: No $eval configuration file ($conf)"
     else
         source "$conf"
-        finf="${dbDir}/samples/$inf"
+
+        dbDir_list=$(echo $dbDir | tr ":" "\n")
+        find_file_in_dbDir "$inf"
+        finf="$filev"
         if [ ! -f "$finf" ]; then
             echo "!! Skipping test: No $eval input file ($finf)"
         else
