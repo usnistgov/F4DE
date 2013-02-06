@@ -37,6 +37,8 @@ my $inTlist = "";
 my $idTextPrefix = "TERM-";
 my $fileVersion = "Built by TermListGen";
 my $kwKeepPref = "union";   
+my $annotKeepPref = "keepOld";
+
 GetOptions
 (
  'file=s' => \$tlistfile,
@@ -45,6 +47,7 @@ GetOptions
  'encoding=s' => \$encoding,
  'version=s' => \$fileVersion,
  'kwKeepPreference=s' => \$kwKeepPref,
+ 'annotKeepPreference=s' => \$annotKeepPref,
  'normalization=s' => \$normalization,
  'out-file-name=s' => \$outfilename,
  'idTextPrefix=s' => \$idTextPrefix,
@@ -55,6 +58,7 @@ MMisc::error_quit("Specify a term file.") if ($tlistfile eq "");
 MMisc::error_quit("Specify the output file.") if ($outfilename eq "");
 MMisc::error_quit("Language argument required.") if ($language eq "");
 MMisc::error_quit("kwKeepPref = $kwKeepPref but not /(union|old|new)/") if ($kwKeepPref !~ /^(union|old|new)$/);
+MMisc::error_quit("annotKeepPref = $annotKeepPref but not /(keepOld|deleteOld)/") if ($annotKeepPref !~ /^(keepOld|deleteOld)$/);
 
 #Get Terms
 print "Loading new term csv file '$tlistfile'\n";
@@ -146,6 +150,12 @@ foreach my $termid (keys %{ $inTermList->{TERMS} }) {
   my $fromNew = $term->getAttrValue("__TLG__FromNewFile__");
   $term->deleteAttr("__TLG__FromNewFile__");
   
+  if ($annotKeepPref eq "deleteOld"){
+    foreach my $attr($term->getAttrs()){
+      $term->deleteAttr($attr) if ($attr !~ /^(TEXT|TERMID)$/);
+    }
+  }
+
   #print "$termid $fromInit $fromNew\n";
   if ($kwKeepPref eq "union"){
     ; ## do nothing
