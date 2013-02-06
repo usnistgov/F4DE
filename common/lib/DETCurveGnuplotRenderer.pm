@@ -1832,8 +1832,10 @@ sub writeMultiDetGraph
     print MAINPLT join(",\\\n", @PLOTCOMS);
     close MAINPLT;
     
-    foreach my $type(keys %plotMeasHT){
-      close $plotMeasHT{$type}{FILE};
+    if ($plotMeasureThresh){
+      foreach my $type(keys %plotMeasHT){
+        close $plotMeasHT{$type}{FILE};
+      }
     }
 
     if ($self->{makePNG}) {
