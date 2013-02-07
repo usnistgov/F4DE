@@ -28,5 +28,5 @@ $AuthorizedSet{$expid_partition[0]}{$expid_scase[2]} = 1;
 $AuthorizedSet{$expid_partition[0]}{$expid_scase[3]} = 1;
 
 # Authorize only BaEval and BaSurp scase for 'conv-eval'
+$AuthorizedSet{$expid_partition[1]}{$expid_scase[1]} = 1;
 $AuthorizedSet{$expid_partition[1]}{$expid_scase[2]} = 1;
-$AuthorizedSet{$expid_partition[1]}{$expid_scase[3]} = 1;
