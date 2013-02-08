@@ -5,10 +5,15 @@
 # ID: $Id$
 # Revision: $Revision$
 
+WEBPAGE=""
+
 ## Exit with error status
 # call: error_quit errormessage
 error_quit () {
   echo "ERROR: $1"
+  if [ "A${WEBPAGE}" != "A" ]; then
+    echo "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<html>\n<head>\n<title>ERROR</title>\n</head>\n<body>\nERROR: $1\n</html>\n" > ${WEBPAGE}
+  fi
   exit 1
 }
 
@@ -17,7 +22,7 @@ error_quit () {
 usage()
 {
 cat << EOF
-Usage: $0 [-h] [-r] [-A] [-R] [-V] [-S SystemDescription.txt] [-X] [-E] <EXPID>.kwslist.xml|<EXPID>.ctm
+Usage: $0 [-h] [-r] [-A] [-R] [-V] [-S SystemDescription.txt] [-X] [-E] [-W file.html] <EXPID>.kwslist.xml|<EXPID>.ctm
 
 The script will submit the <EXPID>.kwslist.xml or <EXPID>.ctm to the BABEL Scoring Server
 
@@ -30,6 +35,7 @@ OPTIONS:
    -S      System Description file
    -X      Pass the XmllintBypass option to KWSList validation and scoring tools
    -E      Exlude PNG file from result table
+   -W      Generate a web page progress bar detailing each step in the process
 EOF
 }
 
@@ -41,7 +47,8 @@ AUTH_TERM=0
 validator_cmdadd=""
 XMLLINTBYPASS=0
 XPNG=0
-while getopts "hrAVRS:XE" OPTION
+WEBPAGE=""
+while getopts "hrAVRS:XEW:" OPTION
 do
   case $OPTION in
     h)
@@ -77,6 +84,11 @@ do
       ;;
     E)
       XPNG=1
+      shift $((OPTIND-1)); OPTIND=1
+      ;;
+    W)
+      WEBPAGE=${OPTARG}
+      shift $((OPTIND-1)); OPTIND=1
       shift $((OPTIND-1)); OPTIND=1
       ;;
     ?)
@@ -120,6 +132,10 @@ check_dir () {
   if [ ! -r "$1" ]; then error_quit "Directory ($1) is not readable"; fi
 }
 
+if [ "A${WEBPAGE}" != "A" ]; then
+  echo "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<html>\n<head>\n<meta http-equiv=\"REFRESH\" content=\"10\">\n<title></title>\n</head>\n<body>\n<progress value=\"0\">0\%</progress>Awaiting\n</body>\n</html>\n" > ${WEBPAGE}
+fi
+
 ########################################
 ## Command line check
 
@@ -127,13 +143,26 @@ if  [ $# != 1 ]; then usage; error_quit "No submission file on command line, qui
 if=$1
 check_file "$if"
 
+subhelp_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($ARGV[0])); print $dir' $0`
+
+conf="${subhelp_dir}/SubmissionHelper_common.cfg"
+echo "-- Loading Configuration file: $conf"
+check_file "$conf"
+source "$conf"
+
+if [ -z "${htmlproggen+xxx}" ]; then error_quit "htmlproggen is not set"; fi
+if [ -z "$htmlproggen" ] && [ "${htmlproggen+xxx}" = "xxx" ]; then error_quit "htmlproggen has no value set"; fi
+check_file_x "$htmlproggen"
+
+##
+
 kmode=`echo $if | perl -ne 's%^.+/%%;s%\_.+$%%; print uc($_)'`
 if [ "A$kmode" == "A" ]; then error_quit "No KWS mode information found"; fi
 
-subhelp_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($1)); print $dir' $0`
-
 conf="${subhelp_dir}/${kmode}_SubmissionHelper.cfg"
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 10 -M 190 -m "Loading Configuration file"; fi
 echo "-- Loading Configuration file: $conf"
+
 check_file "$conf"
 source "$conf"
 
@@ -246,6 +275,7 @@ if [ "A$REDODOWNLOAD" == "A1" ]; then rm -f $lf_base.03-*; fi
 
 ########## Step 1
 echo "++ Validation step"
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 20 -M 190 -m "Validation"; fi
 lf="$lf_base.01-validated"
 nlf="$lf_base.02-uploaded"
 if [ ! -f "$lf" ]; then
@@ -266,6 +296,7 @@ sfile="${sha256}.status"
 
 ########## Step 2
 echo "++ Archive Generation and Upload"
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 30 -M 190 -m "Archive Generation"; fi
 lf="$nlf"
 nlf="$lf_base.03-scored"
 if [ ! -f "$lf" ]; then
@@ -315,6 +346,7 @@ if [ ! -f "$lf" ]; then
   if [ "${?}" -ne "0" ]; then error_quit "Problem obtaining file's SHA256 ($atif): $llsha256"; fi
 
   echo "  -> transfer file"
+  if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 40 -M 190 -m "Transfering submission"; fi
   ${scp_cmd} "$atif" "${scp_user}@${scp_host}:${scp_uploads}/." &> "$lf.log"
   if [ "${?}" -ne "0" ]; then error_quit "Problem uploading file ($atif), see: $lf.log"; fi
 
@@ -338,6 +370,7 @@ sfile="${lsha256}.status"
 
 ########## Step 3
 echo "++ Awaiting scoring server completion"
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 50 -M 190 -m "Awaiting on scoring server"; fi
 status_file="${scp_user}@${scp_host}:${scp_status}/$sfile"
 lf="$nlf"
 nlf="$lf_base.04-returned"
@@ -346,21 +379,29 @@ if [ -f "$lf" ]; then
 else 
   sv="30"
   expected="Report Uploaded"
+  fread=""
   read=""
   lastread=""
+  addv="0"
   efile="$statusdir/$sfile"
   while [ "A$read" != "A$expected" ]
   do
     $scp_cmd "$status_file" "$efile" &> $lf.log
     if [ -e $efile ]; then
-      read=`head -1 $efile`
+      fread=`head -1 $efile`
+      read=`echo $fread | perl -pe 's%\s+percent\:[\d\.]+$%%'`
+      addv=`echo $fread | perl -ne 'if (m%percent\:([\d\.]+)$%) { print $1 } else { print "0"}'`
       cp "$efile" "$efile.last"
     else
       read="Awaiting Status update from scoring server"
+      fread="$read"
     fi
-    if  [ "A$read" != "A$lastread" ]; then echo "Remote Server: $read"; fi
-    lastread="$read"
     if [[ $read == ERROR* ]]; then error_quit "$read"; fi
+    if  [ "A$read" != "A$lastread" ]; then 
+        echo "Remote Server: $read ($addv%)"
+        if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 50 -a $addv -M 190 -m "Scoring Server: $read"; fi
+    fi
+    lastread="$read"
     if [ "A$read" != "A$expected" ]; then sleep $sv; fi
   done
   touch "$lf"
@@ -369,6 +410,7 @@ fi
 
 ########## Step 4
 echo "++ Downloading Results"
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 160 -M 190 -m "Downloading results"; fi
 lf="$nlf"
 nlf="$lf_base.05-uncompressed"
 file=`find $dloaddir | grep $lsha256.tar.bz2 | perl -l -ne '$_{$_} = -M; END { $,="\n"; print sort {$_{$b} <=> $_{$a}} keys %_; }' | tail -1` # get the list, sort it by modification time and get the latest file (bottom of the list in this case)
@@ -396,10 +438,11 @@ else
   touch "$lf"
   rm -f "$nlf"
 fi
-
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 170 -M 190 -m "Results file received"; fi
 
 #################### Step 5 (not for manual mode)
 echo "** Result file: $file"
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 180 -M 190 -m "Uncompressing results"; fi
 if [ "A$REDODOWNLOAD" == "A1" ]; then
   if [ "A$old_file" == "A$file" ]; then
     echo "  == No newer file obtained, using old file for unarchiving"
@@ -424,4 +467,5 @@ if [ "A$uncomp" == "A1" ]; then
   echo "** Uncompressed in: $uncompdir/$subfile"
 fi
 
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 190 -M 190 -m "Complete"; fi
 # Done
