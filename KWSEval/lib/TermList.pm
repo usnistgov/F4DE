@@ -580,7 +580,7 @@ sub loadXMLFile {
     # Then process each 'kw' at a time
     my ($lerr, $ldw) = $self->getNextKW();
     # any error while reading ?
-    return($lerr) if (! MMisc::is_blank($err));
+    return($lerr) if (! MMisc::is_blank($lerr));
     # Stop processing when the last entry processed is undefined
     $doit = 0 if (! defined $ldw);
 #    print ". " . $ldw->{TERMID} . "\n";
