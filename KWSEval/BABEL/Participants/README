@@ -81,8 +81,10 @@ to the EXPID you are submitting
 
 In order to be able to use the tool (SubmissionHelper.sh), its
 configuration file must be edited: 
-- For BABEL 2012, edit the KWS12_SubmissionHelper.cfg 's 'scp_user' line to reflect 
+- For all, edit the SubmissionHelper_common.cfg 's 'scp_user' line to reflect 
 your scoring transfer system account information.
+- For BABEL 2012, edit the KWS12_SubmissionHelper.cfg and confirm the values 
+match your settings
 - For BABEL 2013, the file to edit is called:  KWS13_SubmissionHelper.cfg
 
 The default configuration files are designed to make everything work
