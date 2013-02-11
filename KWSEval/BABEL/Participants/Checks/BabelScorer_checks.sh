@@ -141,7 +141,7 @@ run_good=""
 
 for ff in $cfl
 do
-    f=`echo $ff | perl -ne 'print $1 if (m%^[^\/]+/(.+)$%);'`
+    f=`echo $ff | perl -ne 'if (m%^.+/([^\/]+)$%){ print $1;}else{print $_;}'`
 
     eval=`echo $f | perl -ne 'print $1 if (m%^(\w+?)_%);'`
     inf=`echo $f | perl -ne 'print $1 if (m%^(.+?)_____%);'`
