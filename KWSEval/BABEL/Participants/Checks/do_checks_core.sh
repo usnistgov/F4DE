@@ -15,13 +15,34 @@ error_quit () {
 ########## Usage/Options Processing
 usage () {
 cat << EOF
-Usage: $0 FileToUse SubHelpLocation CommandToRun
+Usage: $0 -A FileToUse SubHelpLocation CommandToRun
 
 The script run "CommandToRun MatchingFile" and matching the result to the FileToRun
 (the script needs the location of the SubmissionHelper tool to load the Evaluation specific configuration file)
 
+-A request for the file within the samples dir to be added to the command line
+
 EOF
 }
+
+ADDTOEND=0
+while getopts "hA" OPTION
+do
+    case $OPTION in
+        h)
+            usage
+            exit 1
+            ;;
+        A)
+            ADDTOEND=1
+            shift $((OPTIND-1)); OPTIND=1
+            ;;
+        ?)
+            usage
+            exit 1
+            ;;
+    esac
+done
 
 ## Check that a file exists, is a file and is readable
 # call: check_file filename
@@ -78,7 +99,7 @@ subhelp_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = 
 ####################
 # Obtaining relevant information
 
-f=`echo $ff | perl -ne 'print $1 if (m%^[^\/]+/(.+)$%);'`
+f=`echo $ff | perl -ne 'if (m%^.+/([^\/]+)$%){ print $1;}else{print $_;}'`
 
 echo ""
 echo "[**********] [TestFile] $ff"
@@ -116,8 +137,10 @@ if [ "A$doit" == "A1" ]; then
             res1=".__tmp_res1"
             res2=".__tmp_res2"
             rm -f $res1 $res2
-            echo "[*****] Running: $* $finf"
-            $* $finf
+            cmdtorun="$*"
+            if [ "A$ADDTOEND" == "A1" ]; then cmdtorun="$cmdtorun $finf"; fi
+            echo "[*****] Running: $cmdtorun"
+            $cmdtorun
             if [ "${?}" -ne "0" ]; then error_quit "Problem running tool, aborting"; fi
       # confirm results are present
             echo "[-----] Checking for comparison file: $resf"
