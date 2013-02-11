@@ -160,6 +160,10 @@ GetOptions
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
+MMisc::error_quit("Leftover arguemnts on the command line: " . join(" ", @ARGV) . "\n\n$usage")
+  if (scalar @ARGV != 0);
+
+
 MMisc::error_quit("\'expid\' required\n\n$usage")
   if (MMisc::is_blank($expid));
 MMisc::error_quit("\'sysfile\' required\n\n$usage")
