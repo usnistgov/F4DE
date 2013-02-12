@@ -151,7 +151,7 @@ do
     if [ -f $xtraf ]; then
         xtra=`cat $xtraf`
     fi
-    $tool $f $subhelp $subhelp -E $subhelp_xtras $xtra
+    $tool -A $f $subhelp $subhelp -E $subhelp_xtras $xtra
 
     if [ "${?}" -ne "0" ]; then
         run_bad="${run_bad} $f"
