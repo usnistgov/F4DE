@@ -192,6 +192,7 @@ my $OptionIsoline = undef;
 my @listIsolineCoef = ();
 
 my @Queries;
+my $Groupbytarg = 0;
 
 my $charSplitText = 0;
 my $charSplitTextNotASCII = 0;
@@ -204,7 +205,7 @@ my $bypassxmllint = 0;
 my $xpng = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:  BCDEF  I K  NOP  ST   XY abcdefghijk  nopqrst vwxy  #
+# Used:  BCDEFG I K  NOP  ST   XY abcdefghijk  nopqrst vwxy  #
 # Mult:                                   i                  #
 
 GetOptions
@@ -222,6 +223,7 @@ GetOptions
    'Block-summary-conditional-report'    => \$requestCondBlockSumReport,
    'Term=s@'                             => \@arrayparseterm,
    'query=s@'                            => \@Queries,
+   'Group-by-targ'                       => \$Groupbytarg,
    'Namefile=s@'                         => \@arraycmdline,
    'YSourcetype=s@'                      => \@arrayparsetype,
    "gsegment-based-alignment"            => \$segmentbased,
@@ -315,8 +317,9 @@ if($haveReports) {
 my $groupBySrcType = 0; $groupBySrcType = 1 if (keys %filterTypeArray > 0);
 my $groupByTerm = 0; $groupByTerm = 1 if (keys %filterTermArray > 0);
 my $groupByAttr = 0; $groupByAttr = 1 if (@Queries > 0);
-if ($groupBySrcType + $groupByTerm + $groupByAttr + $requestwordsoov > 1) {
-  MMisc::error_quit("Cannot specify more than one condition (-Y, -q, -T) for the conditional report");
+my $groupByTarg = 0; $groupByTarg = 1 if ($Groupbytarg);
+if ($groupBySrcType + $groupByTerm + $groupByAttr + $requestwordsoov + $groupByTarg > 1) {
+  MMisc::error_quit("Cannot specify more than one condition (-Y, -q, -T, -G) for the conditional report");
 } #Perhaps a more descriptive error
 
 foreach my $filt(@textPrefilters){
@@ -393,6 +396,7 @@ if ($segmentbased != 0)
   $groupBySubroutine = \&KWSSegAlign::groupByTerms if ($groupByTerm == 1);
   $groupBySubroutine = \&KWSSegAlign::groupByAttributes if ($groupByAttr == 1);
   $groupBySubroutine = \&KWSSegAlign::groupByOOV if ($requestwordsoov == 1);
+  $groupBySubroutine = \&KWSSegAlign::groupByIsTarget if ($groupByTarg == 1);
 
   #Align
   @alignResults = @{ $segAlignment->alignSegments($alignmentCSV, \@filters, $groupBySubroutine, $thresholdFind, $KoefC, $KoefV, $probOfTerm, \@listIsolineCoef, $PooledTermDETs, $includeNoTargBlocks, $justSystemTerms) };
@@ -412,7 +416,8 @@ else
   $groupBySubroutine = \&KWSAlignment::groupByTerms if ($groupByTerm == 1);
   $groupBySubroutine = \&KWSAlignment::groupByAttributes if ($groupByAttr == 1);
   $groupBySubroutine = \&KWSAlignment::groupByOOV if ($requestwordsoov == 1);
-
+  $groupBySubroutine = \&KWSAlignment::groupByIsTarget if ($groupByTarg == 1);
+  
   #Align
   @alignResults = @{ $alignment->alignTerms($alignmentCSV, \@filters, $groupBySubroutine, $thresholdFind, $thresholdAlign, $KoefC, $KoefV, \@listIsolineCoef, $trialsPerSec, $probOfTerm, $PooledTermDETs, $includeNoTargBlocks, $justSystemTerms) };
 }
@@ -568,6 +573,7 @@ sub set_usage {
 	$tmp .= "                           be displayed in the Conditional Occurrence Report and Condi-\n";
 	$tmp .= "                           tional DET Curve. An name can be given to the set by specifying\n";
 	$tmp .= "                           <set_name> (<type> can be a regular expression).\n";
+  $tmp .= "  -G, --Group-by-targ\n";
 	$tmp .= "  -N, --Namefile <file/channel>[,<file/channel>[, ...]]\n";
 	$tmp .= "                           Only the <file> and <channel> or the list of <file> and <chan-\n";
 	$tmp .= "                           nel> (separated by ',') will be displayed in the Occurrence\n";

@@ -110,6 +110,7 @@ sub alignSegments
   }
 
   my $trials = new TrialsDiscreteTWV({ ( "TotTrials" => scalar(@fsegments), "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg ) });
+  $self->{MAINTRIALS} = $trials; #Needed for groupByIsTarget grouper
   my $detset = new DETCurveSet();
 
   my %missed_terms = map {$_ => $_} keys %{ $self->{TERMLIST}{TERMS} }; #track terms missed by kws
@@ -278,6 +279,7 @@ sub alignSegments
 	push (@possible_groups, keys %{ $self->{SRCTYPEGROUPS} });
 	push (@possible_groups, keys %{ $self->{TERMGROUPS} });
 	push (@possible_groups, @{ &{ $groupFilter }($self, undef, $term)}) if ($groupFilter eq \&KWSSegAlign::groupByAttributes);
+	push (@possible_groups, "NoTargets") if ($groupFilter eq \&KWSSegAlign::groupByIsTarget);
 	foreach my $group (@possible_groups) {
 	  my $totTrials = scalar(@fsegments);
 	  $totTrials = $grouptcounts{$group} if (defined $grouptcounts{$group});
@@ -391,6 +393,17 @@ sub groupByECFSourceType
       }
     }
   }
+  return \@groups;
+}
+
+sub groupByIsTarget {
+  my ($self, $rec, $term) = @_;
+  my @groups = ();
+
+  $self->{MAINTRIALS}->getNumTarg($term->{TERMID}) > 0 ?
+    push @groups, "HasTargets" :
+      push @groups, "NoTargets";
+
   return \@groups;
 }
 

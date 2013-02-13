@@ -87,6 +87,7 @@ sub alignTerms
 
   my $totdur = $self->{ECF}->calcTotalDur(undef, $self->{FILECHANS});
   my $trials = new TrialsTWV({ ("TotDur" => $totdur, "TrialsPerSecond" => $trialsPerSec, "IncludeBlocksWithNoTargets" => $includeBlocksWNoTarg) });
+  $self->{MAINTRIALS} = $trials; #needed for Targ/NoTarg grouping
   my $detset = new DETCurveSet();
   
   my %missed_terms = map {$_ => $_} keys %{ $self->{TERMLIST}{TERMS} }; #track terms missed by kws
@@ -254,6 +255,7 @@ sub alignTerms
 	push (@possible_groups, keys %{ $self->{SRCTYPEGROUPS} });
 	push (@possible_groups, keys %{ $self->{TERMGROUPS} });
 	push (@possible_groups, @{ &{ $groupFilter }($self, undef, $self->{TERMLIST}->{TERMS}{$termid})}) if ($groupFilter eq \&KWSAlignment::groupByAttributes);
+	push (@possible_groups, "NoTargets") if ($groupFilter eq \&KWSAlignment::groupByIsTarget);
 	foreach my $group (@possible_groups) {
 	  my $grpTotDur = $totdur;
 	  $grpTotDur = $self->{ECF}->calcTotalDur($self->{SRCTYPEGROUPS}->{$group}, $self->{FILECHANS}) if ($groupFilter eq \&KWSAlignment::groupByECFSourceType);
@@ -360,6 +362,17 @@ sub belongsInECF
     }
   }
   return 0;
+}
+
+sub groupByIsTarget {
+  my ($self, $rec, $term) = @_;
+  my @groups = ();
+
+  $self->{MAINTRIALS}->getNumTarg($term->{TERMID}) > 0 ?
+    push @groups, "HasTargets" :
+      push @groups, "NoTargets";
+
+  return \@groups;
 }
 
 sub groupByTerms
