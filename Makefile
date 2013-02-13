@@ -429,6 +429,7 @@ dist_common:
 	@echo `cat ${F4DE_VERSION}`"-"`date +%Y%m%d-%H%M`.tar.bz2 > /tmp/.f4de_distname
 	@echo `pwd` > /tmp/.f4de_pwd
 	@(cd /tmp; tar cfj `cat /tmp/.f4de_pwd`/`cat /tmp/.f4de_distname` --exclude CVS --exclude .DS_Store --exclude "*~" `cat ${F4DE_VERSION}`)
+	@md5 `cat /tmp/.f4de_distname` > `cat /tmp/.f4de_distname`.md5
 	@echo ""
 	@echo ""
 	@echo "** Release ready:" `cat /tmp/.f4de_distname`
