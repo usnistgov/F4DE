@@ -73,6 +73,20 @@ sub __cfgcheck {
 sub loadSpecfile {
   my ($specfile) = @_;
 
+  # reset values
+  @expid_tag = ();
+  @expid_corpus = ();
+  @expid_partition = ();
+  @expid_scase = ();
+  @expid_task = ();
+  @expid_trncond = ();
+  @expid_sysid_beg = ();
+  @expid_lp = ();
+  @expid_lr = ();
+  @expid_aud = ();
+  @Scase_toSequester = ();
+  %AuthorizedSet = ();
+
   my $tmpstr = MMisc::slurp_file($specfile);
   MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
       if (! defined $tmpstr);
