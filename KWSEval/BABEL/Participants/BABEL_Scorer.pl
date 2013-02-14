@@ -367,6 +367,7 @@ sub execKWSScoreRun{
     $com = "$ProcGraph --cumul --Tree --outdir $procDir --gnuplot --Generat -- ";
   }  
   $com .= "$kwseval -I \"$def->{systemDesc}\" ".
+    " -iso ''".
     " -e $def->{ECF}".
     " -r $def->{RTTM}".
     " -t $def->{KWLIST}".
