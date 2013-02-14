@@ -165,6 +165,7 @@ foreach my $trans(@tfiles){
   my $thisTime = undef;
   my $text = undef;
   my $lastWasTime = 0;
+
   while (<TRANS>){
     chomp;
     if ($_ =~ /^\[(\d+\.\d+)]$/){
@@ -194,7 +195,7 @@ foreach my $trans(@tfiles){
   $totalDuration += $trans_et - $trans_bt;
   close TRANS;
 #  MMisc::error_quit("End of file with a non-used transcript line") if (defined($text));
-  print("End of file with a non-used transcript line") if (defined($text));
+  print("End of file with a non-used transcript line\n") if (defined($text));
 }
 #print Dumper($db);
 
