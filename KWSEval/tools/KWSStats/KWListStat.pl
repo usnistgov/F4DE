@@ -62,7 +62,7 @@ MMisc::error_quit("Specify a KWList file via -k.") if ($kwfile1 eq "");
 # Parse the preconditions
 my @kwConds = ();
 foreach my $pc(@attrPreConds){
-  print "Parsing Precondition $pc\n";
+  print "Parsing Precondition $pc\n" if ($outputType eq "txt");
   die "Error: Failed to parse precondition /$pc/" unless($pc =~ /^(.+):regex=(.+)$/);
   push @kwConds, { attr => $1, valRegex => $2 };
 }
@@ -78,7 +78,7 @@ sub kwMeetsPreCondition{
 }
 
 #Load TermList
-my $kwList1 = new TermList($kwfile1, 1, 1, 1);
+my $kwList1 = new TermList($kwfile1, 0, 0, 0);
 
 # Listing the potential attributes
 if (defined($listAttr)){
@@ -325,6 +325,22 @@ sub render_scatter_plot {
 
 ###
 
+sub getDups{
+  my ($a1) = @_;
+
+  my %ht = ();
+  foreach my $v(@$a1){
+    $ht{$v} = 0 if (! exists($ht{$v}));
+    $ht{$v} ++;  
+  }
+  ### report dups in a1
+  my @dups = ();
+  foreach my $v(keys %ht){  
+    push (@dups, $v) if ($ht{$v} > 1); 
+  }
+  return (\@dups);
+}
+
 sub applySetOperations{
   my ($a1, $a2, $op) = @_;
   my %ht = ();
@@ -347,6 +363,10 @@ sub applySetOperations{
     foreach my $k(keys %ht){
       push @res, $k if ($ht{$k} == 11);
     }
+  } elsif ($op eq "union"){
+    foreach my $k(keys %ht){
+      push @res, $k;
+    }
   } elsif ($op eq "A - B"){
     foreach my $k(keys %ht){
       push @res, $k if ($ht{$k} == 1);
@@ -361,54 +381,62 @@ sub applySetOperations{
 }
 
 sub arrayComparisonReport{
-  my ($a1, $a2, $a1ID, $a2ID, $prefix) = @_;
-  
-  my $intersect = applySetOperations($a1, $a2, "intersect");
-  my $at = new AutoTable();
-  
-  $at->addData(scalar(@$a1),        "In $a1ID", "In $a1ID");
-  $at->addData(scalar(@$intersect), "In $a1ID", "In $a2ID");
-  $at->addData(scalar(@$a2),        "In $a2ID", "In $a2ID");
-  $at->addData(scalar(@$intersect), "In $a2ID", "In $a1ID");
+  my ($a, $b, $aID, $bID, $prefix) = @_;
 
-  $at->{Properties}->setValue("TxtPrefix", "   ");
-  return $at->renderByType($outputType); 
+  my $dupsA = getDups($a);
+  my $dupsB = getDups($b);
+  
+  my $rep = "${prefix}Array comparison report\n";
+  $rep .= "${prefix}   ".scalar(@$a)." elements in $aID, ".scalar(@$dupsA)." duplicate elements.\n";
+  $rep .= "${prefix}   ".scalar(@$b)." elements in $bID, ".scalar(@$dupsB)." duplicate elements.\n";
+
+  my $intersect = applySetOperations($a, $b, "intersect");
+  my $AnotB = applySetOperations($a, $b, "$aID - $bID");
+  my $BnotA = applySetOperations($a, $b, "$bID - $aID");
+  my $union= applySetOperations($a, $b, "union"); 
+  if (@$AnotB == 0 && @$BnotA == 0){
+    $rep .= "${prefix}   Sets are equal\n";
+  } else {
+    $rep .= "${prefix}   Sets are NOT equal\n";
+    $rep .= "${prefix}      ".scalar(@$intersect)." elements in intersection($aID, $bID)\n";
+    $rep .= "${prefix}      ".scalar(@$AnotB)." elements in ($aID - $bID)\n";
+#    $rep .= "${prefix}           ".join(", ",@$AnotB)."\n" if (@$AnotB > 0); 
+    $rep .= "${prefix}      ".scalar(@$BnotA)." elements in ($bID - $aID)\n";
+#    $rep .= "${prefix}           ".join(", ",@$BnotA)."\n" if (@$BnotA > 0); 
+    $rep .= "${prefix}      ".scalar(@$union)." elements in union($aID, $bID)\n";
+  }
+  return $rep;
 }
 
 ### Compare KWList
 if ($kwfile2 ne ""){
   print "Comparing keyword lists\n";
-  print "  Set1 -> $kwfile1\n";
-  print "  Set2 -> $kwfile2\n\n";
+  print "  A -> $kwfile1\n";
+  print "  B-> $kwfile2\n\n";
 
-  my $kwList2 = new TermList($kwfile2, 1, 1, 1);
+  my $kwList2 = new TermList($kwfile2, 0, 0, 0);
   
   print "Compare the keyword IDS\n";
   my @kw1ids = $kwList1->getTermIDs();
   my @kw2ids = $kwList2->getTermIDs();
-  print arrayComparisonReport(\@kw1ids, \@kw2ids, "Set1", "Set2", "   ");
+  print arrayComparisonReport(\@kw1ids, \@kw2ids, "A", "B", "   ");
   print "\n";
+
 
   print "Compare the keyword texts WITHOUT Normalization\n";
   my @kw1KW_nonorm = ();
   my @kw2KW_nonorm = ();
   foreach my $id(@kw1ids){ my $t = $kwList1->getTermFromID($id); push @kw1KW_nonorm, $t->getAttrValue("TEXT"); }
   foreach my $id(@kw2ids){ my $t = $kwList2->getTermFromID($id); push @kw2KW_nonorm, $t->getAttrValue("TEXT"); }
-  print arrayComparisonReport(\@kw1KW_nonorm, \@kw2KW_nonorm, "Set1", "Set2", "   ");
+  print arrayComparisonReport(\@kw1KW_nonorm, \@kw2KW_nonorm, "A", "B", "   ");
   print "\n";
-  print "   Uniq to Set1: ".join(", ",@{ applySetOperations(\@kw1KW_nonorm, \@kw2KW_nonorm, "A - B") })."\n\n";
-  print "   Uniq to Set2: ".join(", ",@{ applySetOperations(\@kw1KW_nonorm, \@kw2KW_nonorm, "B - A") })."\n\n";
-  foreach my $t(@{ applySetOperations(\@kw1KW_nonorm, \@kw2KW_nonorm, "B - A")}){
-    my $term = $kwList2->getTermFromText($t);
-    print "      Uniq in Set2: $t ".$term->getAttrValue("TERMID")."\n";
-  }
   
   print "Compare the keyword texts WITH Normalization\n";
   my @kw1KW_norm = ();
   my @kw2KW_norm = ();
   foreach my $id(@kw1ids){ my $t = $kwList1->getTermFromID($id); push @kw1KW_norm, $kwList1->normalizeTerm($t->getAttrValue("TEXT")); }
   foreach my $id(@kw2ids){ my $t = $kwList2->getTermFromID($id); push @kw2KW_norm, $kwList2->normalizeTerm($t->getAttrValue("TEXT")); }
-  print arrayComparisonReport(\@kw1KW_norm, \@kw2KW_norm, "Set1", "Set2", "   ");
+  print arrayComparisonReport(\@kw1KW_norm, \@kw2KW_norm, "A", "B", "   ");
   print "\n";
 
   print "Compare the keyword texts WITH Normalization AND KWIDs\n";
@@ -416,7 +444,7 @@ if ($kwfile2 ne ""){
   @kw2KW_norm = ();
   foreach my $id(@kw1ids){ my $t = $kwList1->getTermFromID($id); push @kw1KW_norm, $t->getAttrValue("TERMID")." ".$kwList1->normalizeTerm($t->getAttrValue("TEXT")); }
   foreach my $id(@kw2ids){ my $t = $kwList2->getTermFromID($id); push @kw2KW_norm, $t->getAttrValue("TERMID")." ".$kwList2->normalizeTerm($t->getAttrValue("TEXT")); }
-  print arrayComparisonReport(\@kw1KW_norm, \@kw2KW_norm, "Set1", "Set2", "   ");
+  print arrayComparisonReport(\@kw1KW_norm, \@kw2KW_norm, "A", "B", "   ");
   print "\n";
   
 }
