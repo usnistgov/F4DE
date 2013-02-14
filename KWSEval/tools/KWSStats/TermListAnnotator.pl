@@ -296,7 +296,7 @@ if (@rttms > 0){
     my $n = 0;
 
     foreach my $termid (keys %{ $TermList->{TERMS} }) {
-      print "      Processing term $termid ".($n++)." of ".scalar(@terms)." ".$TermList->{TERMS}{$termid}->toPerl()."\n";
+      #print "      Processing term $termid ".($n++)." of ".scalar(@terms)." ".$TermList->{TERMS}{$termid}->toPerl()."\n";
       my $text = $TermList->{TERMS}{$termid}{TEXT};
 
       if ($charSplitText){
@@ -305,7 +305,7 @@ if (@rttms > 0){
       my $out = RTTMList::findTermHashToArray($rttm->findTermOccurrences($text, 0.5));
       my $total_dur = 0.0;
       foreach my $dat(@$out){
-        print "$termid ".$dat->[0]->{FILE}."\n";
+#        print "$termid ".$dat->[0]->{FILE}."\n";
 	$total_dur += ($dat->[-1]->{ET} - $dat->[0]->{BT});
       }
       my $n = scalar(@$out);
