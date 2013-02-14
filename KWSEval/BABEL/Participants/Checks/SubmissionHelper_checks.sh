@@ -102,16 +102,16 @@ if  [ $# -lt 1 ]; then usage; error_quit "No check directory or files on command
 
 ####################
 
-subhelp="../SubmissionHelper.sh"
+get_basedir $0
+tool_dir="$wbd"
+check_dir $tool_dir
+
+subhelp="${tool_dir}/../SubmissionHelper.sh"
 check_file_x "$subhelp"
 
 get_basedir $subhelp
 subhelp_dir="$wbd"
 check_dir $subhelp_dir
-
-get_basedir $0
-tool_dir="$wbd"
-check_dir $tool_dir
 
 tool="$tool_dir/do_checks_core.sh"
 check_file_x "$tool"
