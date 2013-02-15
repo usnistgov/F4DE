@@ -192,7 +192,7 @@ AVSS09install_noman:
 
 DEVADIR=DEVA
 DEVATOOLS=tools/DEVA_{cli/DEVA_cli,filter/DEVA_filter,sci/DEVA_sci}.pl
-MEDTOOLS=tools/MED-SubmissionChecker/{MED-SubmissionChecker.pl,TV11MED-SubmissionChecker.sh,TV12MED-SubmissionChecker.sh}
+MEDTOOLS=tools/MED-SubmissionChecker/{MED-SubmissionChecker.pl,TV1{1,2}MED-SubmissionChecker.sh}
 DEVATOOLS_MAN=tools/DEVA_cli/DEVA_cli.pl
 
 DEVAinstall:
@@ -225,8 +225,8 @@ DEVAinstall_noman:
 ##########
 
 KWSEVALDIR=KWSEval
-KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl,KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl,KWSEval-SubmissionChecker/{KWSEval-SubmissionChecker.pl,KWS12-SubmissionChecker.sh}}
-KWSEVALBABEL=BABEL/Participants/BABEL{_Scorer.pl,12_Scorer.sh}
+KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl,KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl,KWSEval-SubmissionChecker/{KWSEval-SubmissionChecker.pl,KWS1{2,3}-SubmissionChecker.sh}}
+KWSEVALBABEL=BABEL/Participants/BABEL{_Scorer.pl,1{2,3}_Scorer.sh}
 
 KWSEvalinstall:
 	@make KWSEvalinstall_common
