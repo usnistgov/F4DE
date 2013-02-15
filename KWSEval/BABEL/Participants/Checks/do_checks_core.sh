@@ -118,45 +118,48 @@ if [ "A$base" == "A" ]; then echo "!! Could not extract Base File information, s
 if [ "A$ext" == "A" ]; then echo "!! Could not extract Expected File Extension information, skipping"; doit=0; fi
 if [ "A$resf" == "A" ]; then echo "!! Could not extract Expected Result File information, skipping"; doit=0; fi
 
-### Doit
-if [ "A$doit" == "A1" ]; then
-  # Load configuration file
-    conf="$subhelp_dir/${eval}_SubmissionHelper.cfg"
-    if [ ! -f "$conf" ]; then
-        echo "!! Skipping test: No $eval configuration file ($conf)"
-    else
-        source "$conf"
+if ["A$doit" == "A0" ]; then
+  exit 1
+done
 
-        dbDir_list=$(echo $dbDir | tr ":" "\n")
-        find_file_in_dbDir "$inf"
-        finf="$filev"
-        if [ ! -f "$finf" ]; then
-            echo "!! Skipping test: No $eval input file ($finf)"
-        else
-            echo ""
-            res1=".__tmp_res1"
-            res2=".__tmp_res2"
-            rm -f $res1 $res2
-            cmdtorun="$*"
-            if [ "A$ADDTOEND" == "A1" ]; then cmdtorun="$cmdtorun $finf"; fi
-            echo "[*****] Running: $cmdtorun"
-            $cmdtorun
-            if [ "${?}" -ne "0" ]; then error_quit "Problem running tool, aborting"; fi
+
+### Doit
+# Load configuration file
+conf="$subhelp_dir/${eval}_SubmissionHelper.cfg"
+if [ ! -f "$conf" ]; then
+    echo "!! Skipping test: No $eval configuration file ($conf)"
+else
+    source "$conf"
+    
+    dbDir_list=$(echo $dbDir | tr ":" "\n")
+    find_file_in_dbDir "$inf"
+    finf="$filev"
+    if [ ! -f "$finf" ]; then
+        echo "!! Skipping test: No $eval input file ($finf)"
+    else
+        echo ""
+        res1=".__tmp_res1"
+        res2=".__tmp_res2"
+        rm -f $res1 $res2
+        cmdtorun="$*"
+        if [ "A$ADDTOEND" == "A1" ]; then cmdtorun="$cmdtorun $finf"; fi
+        echo "[*****] Running: $cmdtorun"
+        $cmdtorun
+        if [ "${?}" -ne "0" ]; then error_quit "Problem running tool, aborting"; fi
       # confirm results are present
-            echo "[-----] Checking for comparison file: $resf"
-            resdir="$uncompdir/$inf"
-            check_dir "$resdir"
-            resfile="$resdir/$resf"
-            check_file "$resfile"
-            perl -pe 's%(\s)\S+?\.png%$1%g' "$resfile"> $res1
-            cmpfile="$ff"
-            check_file "$cmpfile"
-            perl -pe 's%(\s)\S+?\.png%$1%g' "$cmpfile"> $res2
-            cmp -s $res1 $res2
-            if [ "${?}" -ne "0" ]; then error_quit "Resulting file ($resfile) does not contain the same numbers as expected file ($cmpfile) [temporary file names location excluded]"; fi
-            echo "[=====] ok"
-            rm -f $res1 $res2
-        fi
+        echo "[-----] Checking for comparison file: $resf"
+        resdir="$uncompdir/$inf"
+        check_dir "$resdir"
+        resfile="$resdir/$resf"
+        check_file "$resfile"
+        perl -pe 's%(\s)\S+?\.png%$1%g' "$resfile"> $res1
+        cmpfile="$ff"
+        check_file "$cmpfile"
+        perl -pe 's%(\s)\S+?\.png%$1%g' "$cmpfile"> $res2
+        cmp -s $res1 $res2
+        if [ "${?}" -ne "0" ]; then error_quit "Resulting file ($resfile) does not contain the same numbers as expected file ($cmpfile) [temporary file names location excluded]"; fi
+        echo "[=====] ok"
+        rm -f $res1 $res2
     fi
 fi
 
