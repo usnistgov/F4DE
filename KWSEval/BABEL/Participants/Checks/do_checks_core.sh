@@ -118,7 +118,7 @@ if [ "A$base" == "A" ]; then echo "!! Could not extract Base File information, s
 if [ "A$ext" == "A" ]; then echo "!! Could not extract Expected File Extension information, skipping"; doit=0; fi
 if [ "A$resf" == "A" ]; then echo "!! Could not extract Expected Result File information, skipping"; doit=0; fi
 
-if ["A$doit" == "A0" ]; then
+if [ "A$doit" == "A0" ]; then
   exit 1
 fi
 
