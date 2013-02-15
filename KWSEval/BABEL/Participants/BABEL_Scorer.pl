@@ -608,7 +608,7 @@ if ($ltask =~ /KWS/){
           $def->{"systemDesc"} = "$lsysid $lversion: $lcorpus $lpart - $setStr";
           $def->{"KWSLIST"} = $sysfile;
           my ($err, $n_tlist) = 
-            KWSEval_SCHelper::check_kwslist_kwlist($sysfile, $bypassxmllint);
+            KWSEval_SCHelper::check_kwslist_kwlist($sysfile, $bypassxmllint, @dbDir);
           MMisc::error_quit("Problem with KWSList's KWList entry: $err")
               if (! MMisc::is_blank($err));
           $n_tlist =~ s%^.+\.(kwlist\d*\.xml)$%$1%i;
