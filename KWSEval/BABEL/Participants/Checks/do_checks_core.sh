@@ -120,7 +120,7 @@ if [ "A$resf" == "A" ]; then echo "!! Could not extract Expected Result File inf
 
 if ["A$doit" == "A0" ]; then
   exit 1
-done
+fi
 
 
 ### Doit
