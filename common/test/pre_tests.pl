@@ -125,14 +125,26 @@ if (! defined $rsync) {
 }
 
 print "** Checking for gnuplot : ";
-
 my ($derr, $gnuplot, $gv) = DETCurveGnuplotRenderer::get_gnuplotcmd();
 if (MMisc::is_blank($derr)) {
-  print "$gnuplot [$gv]\n\n";
+  print "$gnuplot [$gv]\n";
+
+  print "  ** Checking for \'gnuplot\' PNG mode : ";
+  my $gppng = "echo \"set terminal png\" | $gnuplot";
+  my ($rc, $so, $se) = MMisc::do_system_call($gppng);
+  if ($rc != 0) {
+    print "  ** missing **\n";
+    $err++;
+  } else {
+    print " ok\n";
+  }
 } else {
-  print "  ** $derr **\n\n";
+  print "  ** $derr **\n";
   $err++;
 }
+print "\n";
+
+
 
 ####################
 print "\n\n";
