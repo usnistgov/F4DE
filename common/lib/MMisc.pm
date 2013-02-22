@@ -945,6 +945,7 @@ sub _system_call_logfile {
   my $cmdline = '(' . join(' ', @rest) . ')'; 
 
   my $retcode = -1;
+  my $signal = 0;
   my $stdoutfile = '';
   my $stderrfile = '';
   if ((! defined $logfile) || (&is_blank($logfile))) {
@@ -967,6 +968,7 @@ sub _system_call_logfile {
   open (CMD, "$cmdline 1> $stdoutfile 2> $stderrfile |");
   close CMD;
   $retcode = $? >> 8;
+  $signal = $? & 127;
 
   $| = $ov;
 
@@ -978,7 +980,7 @@ sub _system_call_logfile {
   unlink($stdoutfile);
   unlink($stderrfile);
 
-  return($retcode, $stdout, $stderr);
+  return($retcode, $stdout, $stderr, $signal);
 }
 
 #####
@@ -995,17 +997,18 @@ sub write_syscall_logfile {
   return(0, '', '', '', '') 
     if ( (&is_blank($ofile)) || (scalar @_ == 0) );
 
-  my ($retcode, $stdout, $stderr) = &_system_call_logfile($ofile, @_);
+  my ($retcode, $stdout, $stderr, $signal) = &_system_call_logfile($ofile, @_);
 
   my $otxt = '[[COMMANDLINE]] ' . join(' ', @_) . "\n"
     . "[[RETURN CODE]] $retcode\n"
-      . "[[STDOUT]]\n$stdout\n\n"
-        . "[[STDERR]]\n$stderr\n";
+    . ( ($signal > 0) ? "[[SIGNAL]] $signal\n" : "" )
+    . "[[STDOUT]]\n$stdout\n\n"
+    . "[[STDERR]]\n$stderr\n";
 
-  return(0, $otxt, $stdout, $stderr, $retcode, $ofile)
+  return(0, $otxt, $stdout, $stderr, $retcode, $ofile, $signal)
     if (! &writeTo($ofile, '', 0, 0, $otxt));
 
-  return(1, $otxt, $stdout, $stderr, $retcode, $ofile);
+  return(1, $otxt, $stdout, $stderr, $retcode, $ofile, $signal);
 }
 
 #####
@@ -1141,21 +1144,21 @@ sub miniJobRunner {
     if (! &make_wdir($dsRun));
   my $flf = "$dsRun/$blogfile";
 
-  my ($rv, $tx, $so, $se, $retcode, $flogfile)
+  my ($rv, $tx, $so, $se, $retcode, $flogfile, $signal)
     = &write_syscall_logfile($flf, @cmd);
   vprint(($verb > 1), "[miniJobRunner] ${toprint2}Final Logfile different from expected one: $flogfile\n")
     if ($flogfile ne $flf);
 
-  if ($retcode == 0) {
+  if (($retcode == 0) && ($signal == 0)) {
     return("Could not rename [$dsRun] to [$dsDone]: $!", 1, $rv, $tx, $so, $se, $retcode, $flogfile)
       if (! rename($dsRun, $dsDone));
     $flogfile =~ s%$dsRun%$dsDone%;
     vprint($verb, "[miniJobRunner] ${toprint2}Job succesfully completed\n");
-    return("", 1, $rv, $tx, $so, $se, $retcode, $flogfile);
+    return("", 1, $rv, $tx, $so, $se, $retcode, $flogfile, $signal);
   }
 
   ## If we are here, it means it was a BAD run
-  return("Could not rename [$dsRun] to [$dsBad]: $!", 1, $rv, $tx, $so, $se, $retcode, $flogfile)
+  return("Could not rename [$dsRun] to [$dsBad]: $!", 1, $rv, $tx, $so, $se, $retcode, $flogfile, $signal)
     if (! rename($dsRun, $dsBad));
   $flogfile =~ s%$dsRun%$dsBad%;
   return("Error during run, see logfile ($flogfile)", 1, $rv, $tx, $so, $se, $retcode, $flogfile);
