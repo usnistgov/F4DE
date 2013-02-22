@@ -446,7 +446,7 @@ OpH_D=F4DE-OpenHaRT_minirelease
 OpenHaRT_minirelease:
 	@mkdir -p ${OpH_D}/common/{lib,tools/{SQLite_tools,CSVUtil},test/{AutoTable_Extra,SQLite_tools,common}}
 	@rsync -a ${F4DE_VERSION} ${OpH_D}/.
-	@rsync -a common/lib/{MMisc,MErrorH,CSVHelper,PropList,AutoTable,MtSQLite,F4DE_TestCore}.pm ${OpH_D}/common/lib/.
+	@rsync -a common/lib/{MMisc,MErrorH,CSVHelper,PropList,AutoTable,MtSQLite,F4DE_TestCore,TranscriptHolder}.pm ${OpH_D}/common/lib/.
 	@rsync -a common/tools/SQLite_tools/*.pl ${OpH_D}/common/tools/SQLite_tools/.
 	@rsync -a common/tools/CSVUtil/*.pl ${OpH_D}/common/tools/CSVUtil/.
 	@rsync -a common/test/{Makefile,pre_tests.pl} ${OpH_D}/common/test/.

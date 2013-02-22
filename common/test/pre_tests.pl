@@ -3,7 +3,6 @@
 
 use strict;
 use MMisc;
-use DETCurveGnuplotRenderer;
 
 my $err = 0;
 
@@ -106,7 +105,7 @@ if ($ms > 0) {
   print "  ** WARNING: The optional yet recommended \"Text::CSV_XS\" package is not available in your perl installation. It can greatly improve the speed of CSV handling.\n";
 }
 
-##########
+########## SHA
 print "\n** Package with acceptable variation:\n";
 $ms = &_chkpkg("Digest::SHA", "Digest::SHA::PurePerl");
 if ($ms > 1) {
@@ -114,7 +113,7 @@ if ($ms > 1) {
   $err++;
 }
 
-##########
+########## rsync
 print "\n** Checking for \'rsync\' (needed by installer): ";
 my $rsync = MMisc::cmd_which("rsync");
 if (! defined $rsync) {
@@ -124,26 +123,28 @@ if (! defined $rsync) {
   print " found ($rsync)\n";
 }
 
-print "** Checking for gnuplot : ";
-my ($derr, $gnuplot, $gv) = DETCurveGnuplotRenderer::get_gnuplotcmd();
-if (MMisc::is_blank($derr)) {
-  print "$gnuplot [$gv]\n";
-
-  print "  ** Checking for \'gnuplot\' PNG mode : ";
-  my $gppng = "echo \"set terminal png\" | $gnuplot";
-  my ($rc, $so, $se) = MMisc::do_system_call($gppng);
-  if ($rc != 0) {
-    print "  ** missing **\n";
-    $err++;
+########## gnuplot
+if ($mode ne "OpenHaRT_minirelease_check") {
+  print "** Checking for gnuplot : ";
+  my ($derr, $gnuplot, $gv) = DETCurveGnuplotRenderer::get_gnuplotcmd();
+  if (MMisc::is_blank($derr)) {
+    print "$gnuplot [$gv]\n";
+    
+    print "  ** Checking for \'gnuplot\' PNG mode : ";
+    my $gppng = "echo \"set terminal png\" | $gnuplot";
+    my ($rc, $so, $se) = MMisc::do_system_call($gppng);
+    if ($rc != 0) {
+      print "  ** missing **\n";
+      $err++;
+    } else {
+      print " ok\n";
+    }
   } else {
-    print " ok\n";
+    print "  ** $derr **\n";
+    $err++;
   }
-} else {
-  print "  ** $derr **\n";
-  $err++;
+  print "\n";
 }
-print "\n";
-
 
 
 ####################
