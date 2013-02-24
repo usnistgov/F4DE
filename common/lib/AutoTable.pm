@@ -1402,8 +1402,8 @@ sub __loadCSVcore {
   # if not modifying a value make sure to set to 'undef' so that defaults are used
   # refer to Text::CSV's perldoc for more details
 
-  return($self->_set_error_and_return_scalar('Can not load a CSV to a AutoTable which already has data', 0))
-    if ($self->{hasData});
+#  return($self->_set_error_and_return_scalar('Can not load a CSV to a AutoTable which already has data', 0))
+#    if ($self->{hasData});
   
   my $err;
 
@@ -1494,7 +1494,7 @@ sub __loadCSVcore {
       $line = $lines[$ln];
       $sp_line = ($withSpecial) ? $sp_lines[$ln] : '';
 
-      my $key = (! defined $rmkc) ? sprintf("File: $file | Line: %012d", $inc) : "";
+      my $key = (! defined $rmkc) ? sprintf("File: $file _____ Line: %012d", $inc) : "";
       @cols = ();
       @cols = $csvh->csvline2array($line);
       return($self->_set_error_and_return_scalar('Problem with CSV line: ' . $csvh->get_errormsg(), 0))
@@ -1730,6 +1730,87 @@ sub getRowIDs{
   # (0:$self, 1:$order)
   return($_[0]->_getOrderedLabelIDs($_[0]->{'rowLabOrder'}, $_[1], $_[0]->{Properties}->getValue($key_KeepRowsInOutput)));
 }
+
+
+sub pivot{
+  # (0:$self, 1:$order)
+  my ($self, $rowLabelSet, $rowAttrs, $colAttrs) = @_;
+
+  my $newAT = new AutoTable();
+  if (! defined($rowLabelSet)){
+    my @arr = $self->getRowIDs("AsAdded") ;
+    $rowLabelSet = \@arr;
+  }
+  my @returnLabelSet = ();
+  my $val;
+
+  foreach my $rLab(@$rowLabelSet){
+    my $rowID = "";
+    my $colID = "";
+    foreach my $rAttr(@$rowAttrs){
+      my $val = $self->getData($rAttr, $rLab);
+      $rowID .= "|".($val eq "" ? "OOPS" : $val);
+    }
+    $rowID =~ s/^\|//;
+    foreach my $cAttr(@$colAttrs){
+      my $val = $self->getData($cAttr, $rLab);
+      $colID .= "|".($val eq "" ? "OOPS" : $val);
+    }
+    $colID =~ s/^\|//;
+
+    $newAT->increment($colID, $rowID);
+  }
+  return ($newAT);  
+
+}
+
+
+sub getFilteredRowIDs{
+  # (0:$self, 1:$order)
+  my ($self, $rowLabelSet, $filters, $keepIf) = @_;
+  
+  if (! defined($rowLabelSet)){
+    my @arr = $self->getRowIDs("AsAdded") ;
+    $rowLabelSet = \@arr;
+  }
+  my @returnLabelSet = ();
+
+  foreach my $rLab(@$rowLabelSet){
+#    print "$rLab\n";
+    my $keep = 1;
+    foreach my $filt(@$filters){
+#      print Dumper($filt);
+      my $attr = $filt->{attr};
+      my $regex = $filt->{regex};
+      my $equalStr = $filt->{eqStr};
+      my $equal = $filt->{eq};
+      my $gtrThan = $filt->{gt};
+      my $lessThan = $filt->{lt};
+      my $gtrThanEqTo = $filt->{gte};
+      my $lessThanEqTo = $filt->{lte};
+
+      my $val = $self->getData($attr, $rLab);
+      if (!defined($val)) {
+	$keep = 0;
+	last;
+      }
+
+      $keep = 0 if (defined($regex)        && $val !~ /$regex/);
+      $keep = 0 if (defined($equalStr)     && $val ne $equalStr);
+      $keep = 0 if (defined($equal)        && $val != $equal);
+      $keep = 0 if (defined($gtrThan)      && $val <= $gtrThan);
+      $keep = 0 if (defined($gtrThanEqTo)  && $val < $gtrThanEqTo);
+      $keep = 0 if (defined($lessThan)     && $val >= $lessThan);
+      $keep = 0 if (defined($lessThanEqTo) && $val > $lessThanEqTo);
+#      print "$attr, $regex, $gtrThan, $lessThan, $gtrThanEqTo, $lessThanEqTo, $val, keep=$keep\n";
+
+    }
+    push(@returnLabelSet, $rLab) if ($keepIf ? $keep == 1 : $keep == 0);
+  }
+
+  return(\@returnLabelSet)
+}
+
 
 sub hasColID{
   # (0:$self, 1:$id)
