@@ -459,7 +459,7 @@ sub renderHTMLTable(){
   $self->_buildHeir(1);
   
 #    print Dumper($self);
-  my @IDs = $self->{render}{colIDs};
+  my @IDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, $self->{Properties}->getValue($key_SortColKeyHTML), $self->{Properties}->getValue($key_KeepColumnsInOutput));
   my $levels = $self->{render}{colLabelLevels};
   
   my @nodeSet;
@@ -1796,5 +1796,8 @@ sub incrementBy{
   $x += $_[3];
   $_[0]->setData($x, $_[1], $_[2]);
 }
+
+
+
 
 1;
