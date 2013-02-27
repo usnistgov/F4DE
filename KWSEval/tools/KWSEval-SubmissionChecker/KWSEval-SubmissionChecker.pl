@@ -213,6 +213,8 @@ KWSEval_SCHelper::check_ecf_tlist_pairs($verb, \%ecfs, \%tlists, $rttm_ext, \%rt
 
 my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile);
 
+my %AuthorizedSet = KWSEval_SCHelper::get_AuthorizedSet();
+
 my $todo = scalar @ARGV;
 my $done = 0;
 my %warnings = ();
@@ -342,7 +344,12 @@ sub check_submission {
   vprint(2, "Checking EXPID");
   my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $f, $verb);
   return($lerr) if (! MMisc::is_blank($lerr));
-
+  
+  return("No Rule set for <PARTITION>=$lpart <SCASE>=$lscase")
+    if (! MMisc::safe_exists(\%AuthorizedSet, $lpart, $lscase));
+  return("The <PARTITION>=$lpart <SCASE>=$lscase combination is not authorized")
+    if ($AuthorizedSet{$lpart}{$lscase} == 0);
+  
   if ($mode eq $kwslist_ext) {
     return(&kwslist_validation($f, $sf, $lcorpus, $lpart));
   } elsif ($mode eq $ctm_ext) {
