@@ -198,11 +198,16 @@ for (my $i = 0; $i < scalar @dbDir; $i++) {
   $err = MMisc::check_dir_r($dbDir[$i]);
   MMisc::error_quit("Problem with \'dbDir\' (" . $dbDir[$i] . ") : $err")
     if (! MMisc::is_blank($err));
-  &obtain_ecf_tlist($dbDir[$i], \%ecfs, \%tlists, \%rttms, \%stms);
+  KWSEval_SCHelper::obtain_ecf_tlist
+    ($dbDir[$i], 
+     $ecf_ext, \%ecfs, 
+     $tlist_ext_rgx, \%tlists, 
+     $rttm_ext, \%rttms, 
+     \%stms);
 }
 MMisc::error_quit("Did not find any ECF or TLIST files; will not be able to continue")
   if ((scalar (keys %ecfs) == 0) || (scalar (keys %tlists) == 0));
-&check_ecf_tlist_pairs(\%ecfs, \%tlists, \%rttms, \%stms);
+KWSEval_SCHelper::check_ecf_tlist_pairs($verb, \%ecfs, \%tlists, $rttm_ext, \%rttms, $stm_ext, \%stms);
 
 ########################################
 
@@ -475,85 +480,6 @@ sub run_tool {
 }
 
 ########################################
-
-sub split_corpus_partition {
-  my ($f, $e) = @_;
-  $f =~ s%$e$%%i;
-  my (@rest) = split(m%\_%, $f);
-  MMisc::error_quit("Could not split ($f) in <CORPUSID>_<PARTITION>")
-    if (scalar @rest != 2);
-  return("", @rest);
-}
-
-#####
-
-sub prune_list {
-  my $dir = shift @_;
-  my $ext = shift @_;
-  my $robj = shift @_;
-  my $duplok = shift @_;
-
-  my @list = grep(m%$ext$%i, @_);
-  my %rest = MMisc::array1d_to_ordering_hash(\@_);
-  for (my $i = 0; $i < scalar @list; $i++) {
-    my $file = $list[$i];
-    my ($err, $cid, $pid) = split_corpus_partition($file, $ext);
-    MMisc::error_quit($err) if (! MMisc::is_blank($err));
-    my $here = "$dir/$file";
-    if ($duplok == 0) {
-      MMisc::warn_print("An \'$ext\' file already exist for <CORPUSID> = $cid | <PARTITION> = $pid (" . $$robj{$cid}{$pid} . "), being replaced by: $here")
-        if (MMisc::safe_exists($robj, $cid, $pid));
-    }
-    $$robj{$cid}{$pid} = $here;
-    delete $rest{$file};
-  }
-
-  return(sort {$rest{$a} <=> $rest{$b}} (keys %rest));
-}
-
-##
-
-sub obtain_ecf_tlist {
-  my ($dir, $recf, $rtlist, $rrttm, $rstm) = @_;
-
-  my @files = MMisc::get_files_list($dir);
-
-  @files = &prune_list($dir, $tlist_ext_rgx, $rtlist, 1, @files);
-  @files = &prune_list($dir, $rttm_ext, $rrttm, 0, @files);
-  @files = &prune_list($dir, $ecf_ext, $recf, 0, @files);
-  @files = &prune_list($dir, $stm_ext, $rstm, 0, @files);
-}
-
-#####
-
-sub check_ecf_tlist_pairs {
-  my ($recf, $rtlist, $rrttm, $rstm) = @_;
-
-  vprint(1, "Checking found ECF & TLIST");
-  my @tmp1 = keys %$recf;
-  push @tmp1, keys %$rtlist;
-  foreach my $k1 (sort (MMisc::make_array_of_unique_values(\@tmp1))) {
-    MMisc::error_quit("While checking for matching ECF & KWlist pairs: can not find any ECF with <CORPUSID>: $k1")
-      if (! exists $$recf{$k1});
-    MMisc::error_quit("While checking for matching ECF & KWlist pairs: can not find any KWlist with <CORPUSID>: $k1")
-      if (! exists $$rtlist{$k1});
-    my @tmp2 = keys %{$$recf{$k1}};
-    push @tmp2, keys %{$$rtlist{$k1}};
-    foreach my $k2 (sort (MMisc::make_array_of_unique_values(\@tmp2))) {
-      MMisc::error_quit("While checking for matching ECF & KWlist pairs: can not find any ECF with <PARTITION>: $k2")
-        if (! exists $$recf{$k1}{$k2});
-      MMisc::error_quit("While checking for matching ECF & KWlist pairs: can not find any KWlist with <PARTITION>: $k2")
-        if (! exists $$rtlist{$k1}{$k2});
-      my @a = ();
-      push (@a, $rttm_ext) if (MMisc::safe_exists($rrttm, $k1, $k2));
-      push (@a, $stm_ext) if (MMisc::safe_exists($rstm, $k1, $k2));
-      my $tmp = (scalar @a > 0) ? " | \'" . join("\' & \'", @a) . "\' found" : "";
-      vprint(2, "Have <CORPUSID> = $k1 | <PARTITION> = $k2$tmp");
-    }
-  }
-}
-
-##########
 
 sub vprint {
   return if (! $verb);
