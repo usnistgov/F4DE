@@ -100,6 +100,7 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 my $ecf_ext = '.ecf.xml';
 my $tlist_ext = '.kwlist.xml';
+my $tlist_ext_rgx = '\.kwlist\d*\.xml';
 
 my $rttm_ext = ".rttm";
 
@@ -490,6 +491,7 @@ sub prune_list {
   my $dir = shift @_;
   my $ext = shift @_;
   my $robj = shift @_;
+  my $duplok = shift @_;
 
   my @list = grep(m%$ext$%i, @_);
   my %rest = MMisc::array1d_to_ordering_hash(\@_);
@@ -498,8 +500,10 @@ sub prune_list {
     my ($err, $cid, $pid) = split_corpus_partition($file, $ext);
     MMisc::error_quit($err) if (! MMisc::is_blank($err));
     my $here = "$dir/$file";
-    MMisc::warn_print("An \'$ext\' file already exist for <CORPUSID> = $cid | <PARTITION> = $pid (" . $$robj{$cid}{$pid} . "), being replaced by: $here")
-      if (MMisc::safe_exists($robj, $cid, $pid));
+    if ($duplok == 0) {
+      MMisc::warn_print("An \'$ext\' file already exist for <CORPUSID> = $cid | <PARTITION> = $pid (" . $$robj{$cid}{$pid} . "), being replaced by: $here")
+        if (MMisc::safe_exists($robj, $cid, $pid));
+    }
     $$robj{$cid}{$pid} = $here;
     delete $rest{$file};
   }
@@ -514,10 +518,10 @@ sub obtain_ecf_tlist {
 
   my @files = MMisc::get_files_list($dir);
 
-  @files = &prune_list($dir, $tlist_ext, $rtlist, @files);
-  @files = &prune_list($dir, $rttm_ext, $rrttm, @files);
-  @files = &prune_list($dir, $ecf_ext, $recf, @files);
-  @files = &prune_list($dir, $stm_ext, $rstm, @files);
+  @files = &prune_list($dir, $tlist_ext_rgx, $rtlist, 1, @files);
+  @files = &prune_list($dir, $rttm_ext, $rrttm, 0, @files);
+  @files = &prune_list($dir, $ecf_ext, $recf, 0, @files);
+  @files = &prune_list($dir, $stm_ext, $rstm, 0, @files);
 }
 
 #####
