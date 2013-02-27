@@ -281,7 +281,7 @@ nlf="$lf_base.02-uploaded"
 if [ ! -f "$lf" ]; then
   echo "  -> validating submission file"
   tld="${sha256}-Validation"
-  if [ "A$REVALIDATE" == "A1" ]; then rm -rf "$JRlockdir/$tld*"; fi
+  if [ "A$REVALIDATE" == "A1" ]; then rm -rf "$JRlockdir/$tld"*; fi
   $jobrunner -b -l "$JRlockdir" -n "$tld" -S 99 -- "$subcheck" -d "$dbDir" -k "$validator" $validator_cmdadd -T "$TMvalidator" "$if" &> "$lf.log"
   if [ "${?}" -ne "99" ]; then error_quit "**** Submission did not validate, aborting (check within a directory starting with \'$JRlockdir/$tld\' for details, as well as: $lf.log)"; fi
   touch "$lf"
