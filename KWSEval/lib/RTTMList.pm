@@ -629,25 +629,28 @@ sub segmentsFromTimeframe {
   my @segs = ();
   my $last_et = sub { return defined $segs[-1] ? $segs[-1]->{ET} : $bt };
   my $et = sprintf("%.4f", $bt + $dur);
-  foreach my $spkr_node (sort { $a->{BT} <=> $b->{BT} } @{ $self->{SPEAKERS}{$file}{$chan} }) {
-    next if $spkr_node->{BT} < $bt || $spkr_node->{ET} > $et;
 
-    if ($spkr_node->{BT} > &$last_et) {
-      push @segs, new RTTMSegment('NONSPEECH', $file, $chan, 
-				  &$last_et, $spkr_node->{BT} - &$last_et);
-    }
+  if (defined($self->{SPEAKERS}{$file}{$chan})) {
+    foreach my $spkr_node (sort { $a->{BT} <=> $b->{BT} } @{ $self->{SPEAKERS}{$file}{$chan} }) {
+      next if $spkr_node->{BT} < $bt || $spkr_node->{ET} > $et;
+      
+      if ($spkr_node->{BT} > &$last_et) {
+	push @segs, new RTTMSegment('NONSPEECH', $file, $chan, 
+				    &$last_et, $spkr_node->{BT} - &$last_et);
+      }
 
-    if (&$last_et == $spkr_node->{BT}) {
-      push @segs, new RTTMSegment('SPEECH', $file, $chan, $spkr_node->{BT},
-				  $spkr_node->{ET} - $spkr_node->{BT});
-    }
-    elsif ($segs[-1]->{TYPE} eq "SPEECH" && $spkr_node->{ET} > &$last_et) {
-      $segs[-1]->{ET} = $spkr_node->{ET};
-      $segs[-1]->recalc_dur;
-    }
-    #tag lexes
-    foreach my $lex (@{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr_node->{SPKR}} }) {
-      $lex->{SEG} = $segs[-1] if ($lex->{BT} >= $segs[-1]->{BT} && $lex->{ET} <= $segs[-1]->{ET});
+      if (&$last_et == $spkr_node->{BT}) {
+	push @segs, new RTTMSegment('SPEECH', $file, $chan, $spkr_node->{BT},
+				    $spkr_node->{ET} - $spkr_node->{BT});
+      }
+      elsif ($segs[-1]->{TYPE} eq "SPEECH" && $spkr_node->{ET} > &$last_et) {
+	$segs[-1]->{ET} = $spkr_node->{ET};
+	$segs[-1]->recalc_dur;
+      }
+      #tag lexes
+      foreach my $lex (@{ $self->{LEXBYSPKR}{$file}{$chan}{$spkr_node->{SPKR}} }) {
+	$lex->{SEG} = $segs[-1] if ($lex->{BT} >= $segs[-1]->{BT} && $lex->{ET} <= $segs[-1]->{ET});
+      }
     }
   }
   if (&$last_et < $et) {
