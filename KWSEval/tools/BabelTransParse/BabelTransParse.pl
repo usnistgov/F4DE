@@ -147,11 +147,17 @@ foreach my $trans(@tfiles){
   my ($trans_bt, $trans_et) = (999999999, -1);
   ### Extract meaning from the name
   if ($trans =~ /(BABEL_(BP|OPT)_(\d{3})_(\d{5})_(\d{8})_(\d{6})_(inLine|outLine).txt)/){
-    $db->{$trans}{PERIOD} = $1;
-    $db->{$trans}{LANG} = $2;
-    $db->{$trans}{SID} = $3;
-    $db->{$trans}{DATE} = $4;
-    $db->{$trans}{LINE} = $6;
+    $db->{$trans}{PERIOD} = $2;
+    $db->{$trans}{LANG} = $3;
+    $db->{$trans}{SID} = $4;
+    $db->{$trans}{DATE} = $5;
+    $db->{$trans}{LINE} = $7;
+  } elsif ($trans =~ /(BABEL_(BP|OPT)_(\d{3})_(\d{5})_(\d{8})_(\d{6})_([a-zA-Z\d]{2})_scripted.txt)/) {
+    $db->{$trans}{PERIOD} = $2;
+    $db->{$trans}{LANG} = $3;
+    $db->{$trans}{SID} = $4;
+    $db->{$trans}{DATE} = $5;
+    $db->{$trans}{PROMPTID} = $7;
   }
 
   ### open the file
@@ -223,7 +229,9 @@ binmode TLIST, "utf8" if ($encoding eq "UTF-8");
 print "   Building file $root.kwlist.xml\n";
 
 print ECF "<ecf source_signal_duration=\"$totalDuration\" language=\"$lang\" version=\"ECF Built by BabelTransParse.pl\">\n";
-foreach my $trans(sort keys %$db){
+foreach my $trans(sort {$db->{$a}{SID}<=>$db->{$b}{SID}} keys %$db){
+#  print Dumper($db->{$trans});
+#  die;
   my $outTransName = $trans;
   $outTransName =~ s:.*/::;
   $outTransName =~ s:\.[^.]*$::;
