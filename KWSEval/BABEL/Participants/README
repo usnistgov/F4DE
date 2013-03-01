@@ -166,6 +166,10 @@ of the processing:
   or
 % ./SubmissionHelper.sh <EXPID>.ctm
 
+Run:
+% ./SubmissionHelper.sh -S <SYSTEMDESCRIPTION>.txt <EXPID>.<EXT>
+  to add a system description to your submission
+
 Note: It is possible to interrupt the process and restart it at a
 later time by running the same command line with the exact same
 "<EXPID>.kwslist.xml" (or "<EXPID>.ctm") file
