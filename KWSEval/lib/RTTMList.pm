@@ -149,7 +149,8 @@ sub unitTest
     return 0 unless(unitTestFind($rttm_eng_norm, "has been a",   3,  0.1));
     return 0 unless(unitTestFind($rttm_eng_norm, "r",            0,  0.1));
     return 0 unless(unitTestFind($rttm_eng_norm, "uh",           0,  0.1));
-    return 0 unless(unitTestFind($rttm_eng_norm, "two after",    1,  0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "two after",    0,  0.1));
+    return 0 unless(unitTestFind($rttm_eng_norm, "vibrant for",    0,  0.1));
     return 0 unless(unitTestFind($rttm_eng_norm, "s.",           11, 0.1));
     return 0 unless(unitTestFind($rttm_eng_norm, "karachi used", 1,  0.1));
     print " Case insenstivity\n";
@@ -583,13 +584,15 @@ sub findTermOccurrences
 	if (defined $hoprecord->{NEXT} &&
 	    sprintf("%.4f", ($hoprecord->{NEXT}{BT} - $hoprecord->{ET})) <= $threshold)
 	{
-	  
-	  if ($hoprecord->{NEXT}{STYPE} eq "frag" ||
-	      $hoprecord->{NEXT}{STYPE} eq "fp")
-	  {
-	    $hoprecord = $hoprecord->{NEXT};
-	    next;
-	  }
+
+## This code was incorrectly placed per the 2013 evaluation plan
+##
+##	  if ($hoprecord->{NEXT}{STYPE} eq "frag" ||
+##	      $hoprecord->{NEXT}{STYPE} eq "fp")
+##	  {
+##	    $hoprecord = $hoprecord->{NEXT};
+##	    next;
+##	  }
 
 	  my $pattern1 = $terms[$termpos];
 	  my $pattern2 = $hoprecord->{NEXT}{TOKEN};
