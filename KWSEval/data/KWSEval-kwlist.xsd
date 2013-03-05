@@ -33,6 +33,7 @@
         <xsd:simpleType>
           <xsd:restriction base="xsd:string">
             <xsd:enumeration value="UTF-8" />
+            <xsd:enumeration value="GB2312" />
           </xsd:restriction>
         </xsd:simpleType>
       </xsd:attribute>
