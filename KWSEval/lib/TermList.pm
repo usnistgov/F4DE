@@ -374,9 +374,9 @@ sub openXMLFileAccess {
   ($err, my $xml_encoding) = &__precheck_kwlist_encoding($kwlistf);
   return("Problem while extracting encoding: $err")
     if (! MMisc::is_blank($err));
-  if ($xml_encoding =~ m%^gb2312$%) {
+  if ($xml_encoding =~ m%^gb2312$%i) {
     MMisc::warn_print("Forcing XMLlint bypass for $xml_encoding files")
-        if ($bypassxmllint = 0);
+        if ($bypassxmllint == 0);
     $bypassxmllint = 1;
   }
 
