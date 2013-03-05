@@ -88,7 +88,7 @@ sub new {
   my $err = "";
   $err = $self->loadFile($termlistfile) if (defined($termlistfile));
   MMisc::error_quit($err) if (! MMisc::is_blank($err));
-  
+
   return $self;
 }
 
@@ -219,11 +219,15 @@ sub QueriesToTermSet
     }
 }
 
-sub addTerm                                                                                                                                                                                  
-{                                                                                                                                                                                            
-  my ($self, $term, $id) = @_;                                                                                                                                                               
-  $self->{TERMS}{$id} = $term;                                                                                                                                                               
-}                                                                                                                                                                                            
+sub addTerm
+{
+  my ($self, $term, $id) = @_;
+  if ($self->{KWLKUP}{$term}) {
+    print "Term '$term' already exists at ID(s): ".join(',', @{ $self->{KWLKUP}{$term} })."\n";
+  }
+  push @{ $self->{KWLKUP}{$term} }, $id;
+  $self->{TERMS}{$id} = $term;
+}
                                                                                                                                                                                              
 sub setVersion
 {                                                                                                                                                                                            
@@ -494,7 +498,7 @@ sub getNextKW {
       if ($self->{ENCODING} eq 'UTF-8');
     chomp($line);
     $self->{linec}++;
-    
+
     my ($err, $closed, $name, $content, %vals) = MtXML::line_extractor($line);
     return("Problem processing File Access: $err", undef)
       if (! MMisc::is_blank($err));
