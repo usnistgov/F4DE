@@ -110,6 +110,7 @@ my $t = 1;
 foreach my $lineID($keywordAT->getRowIDs("AsAdded")){
 #  print "Processing $lineID\n";
   my $keyword = $keywordAT->getData("KEYWORD", $lineID);
+  MMisc::error_quit("KEYWORD for $lineID is undefined!") unless defined $keyword;
   my $term = $inTermList->getTermFromText($keyword);
   if (!defined($term)){
 #    print "  new term needed\n";
