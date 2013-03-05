@@ -351,7 +351,7 @@ sub __get_attr {
 # Note: "CreateTerms" is selected here (0 for false, 1 for true)
 # wihtout it set to 1, KWs will not be created 
 sub openXMLFileAccess {
-  my ($self, $kwlistf, $CreateTerms) = @_;
+  my ($self, $kwlistf, $CreateTerms, $bypassxmllint) = @_;
 
   return("Refusing to load a file on top of an already existing object")
     if ($self->{LoadedFile} != 0);
@@ -374,32 +374,44 @@ sub openXMLFileAccess {
   ($err, my $xml_encoding) = &__precheck_kwlist_encoding($kwlistf);
   return("Problem while extracting encoding: $err")
     if (! MMisc::is_blank($err));
+  if ($xml_encoding =~ m%^gb2312$%) {
+    MMisc::warn_print("Forcing XMLlint bypass for $xml_encoding files")
+        if ($bypassxmllint = 0);
+    $bypassxmllint = 1;
+  }
 
-  my $f4b = 'F4DE_BASE';
-  my $xmllint_env = "F4DE_XMLLINT";
-  my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
-  my @xsdfilesl = ('KWSEval-kwlist.xsd');
+  if ($bypassxmllint == 1) {
+    open(local *KWLISTFH, "<$kwlistf")
+      or return("Problem opening input file ($kwlistf): $!");
+    $self->{FH} = *KWLISTFH;
+  } else {
+    my $f4b = 'F4DE_BASE';
+    my $xmllint_env = "F4DE_XMLLINT";
+    my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
+    my @xsdfilesl = ('KWSEval-kwlist.xsd');
 
-  # First let us use xmllint on the file XML file
-  my $xmlh = new xmllintHelper();
-  my $xmllint = MMisc::get_env_val($xmllint_env, "");
-  return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xmllint($xmllint));
-  return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xsdfilesl(@xsdfilesl));
-  return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
-    if (! $xmlh->set_xsdpath($xsdpath));
-  return("While trying to set xmllint's encoding: " . $xmlh->get_errormsg())
-    if ((! MMisc::is_blank($xml_encoding)) && (! $xmlh->set_encoding($xml_encoding)));
+    # First let us use xmllint on the file XML file
+    my $xmlh = new xmllintHelper();
+    my $xmllint = MMisc::get_env_val($xmllint_env, "");
+    return("While trying to set \'xmllint\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_xmllint($xmllint));
+    return("While trying to set \'xsdfilesl\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_xsdfilesl(@xsdfilesl));
+    return("While trying to set \'Xsdpath\' (" . $xmlh->get_errormsg() . ")")
+      if (! $xmlh->set_xsdpath($xsdpath));
+    return("While trying to set xmllint's encoding: " . $xmlh->get_errormsg())
+      if ((! MMisc::is_blank($xml_encoding)) && (! $xmlh->set_encoding($xml_encoding)));
+    
+    #  print STDERR "Loading KW List file '$kwlistf'.\n";
+    
+    (local *KWLISTFH, my $sefile) = $xmlh->run_xmllint_pipe($kwlistf);
+    return("While trying to load XML file ($kwlistf) : " . $xmlh->get_errormsg() )
+      if ($xmlh->error());
 
-#  print STDERR "Loading KW List file '$kwlistf'.\n";
-  
-  (local *KWLISTFH, my $sefile) = $xmlh->run_xmllint_pipe($kwlistf);
-  return("While trying to load XML file ($kwlistf) : " . $xmlh->get_errormsg() )
-    if ($xmlh->error());
-
-  $self->{FH} = *KWLISTFH;
-  $self->{SEfile} = $sefile;
+    $self->{FH} = *KWLISTFH;
+    $self->{SEfile} = $sefile;
+  }
+  local *KWLISTFH = $self->{FH};
 
   my $doit = 1;
   # Load the KWLIST header
