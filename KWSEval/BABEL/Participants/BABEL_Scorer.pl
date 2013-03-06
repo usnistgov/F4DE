@@ -335,11 +335,12 @@ sub execKWSScoreRun{
   my $compRoot = "$scrdir/".$def->{outputRoot};
 
   ### Check the preferred Scoring attributes
+#  print "    Check of run ".$def->{"runDesc"}."\n";
   foreach my $attr(keys %{ $def->{"RunAttributes"} }){
-#    print "Check $attr $preferredScoring->{$attr} =~ $def->{RunAttributes}{$attr}\n"; 
+#    print "       Check $attr $preferredScoring->{$attr} =~ $def->{RunAttributes}{$attr}\n"; 
     if (exists($preferredScoring->{$attr})){
       if ($def->{"RunAttributes"}{$attr} !~ /$preferredScoring->{$attr}/){
-#         print "          Run Attribute $attr does not match definition.  Skipping\n";
+#         print "          Run Attribute $attr=/".$def->{"RunAttributes"}{$attr}."/ does not match definition.  Skipping\n";
          return("NotRequested");
       }
     }
@@ -599,11 +600,12 @@ if ($ltask =~ /KWS/){
       my ($proto) = {"Occur" => "-c -o -b -d",
                      "InfSeg" => "-c -o -b -d -g"};
  
-      foreach my $tokTimesDEF("AppenInterp:Uniform Appen times", "MITLLFA2:MITLL Force Ali. V2", "MITLLFA3:MITLL Force Ali. V3"){
+      foreach my $tokTimesDEF("AppenInterp:Uniform Appen times", "MITLLFA2:MITLL Force Ali. V2", "MITLLFA3:MITLL Force Ali. V3", "STD06FA:STD06 Force Aligment Times"){
         my ($tokTimesID, $tokTimesStr) = split(/:/, $tokTimesDEF);
         my $rttms = {"AppenInterp" => "$db/${lcorpus}_${lpart}.rttm",
                      "MITLLFA2" => "$db/${lcorpus}_${lpart}.mitllfa2.rttm",
-                     "MITLLFA3" => "$db/${lcorpus}_${lpart}.mitllfa3.rttm"};
+                     "MITLLFA3" => "$db/${lcorpus}_${lpart}.mitllfa3.rttm",
+                     "STD06FA" => "$db/${lcorpus}_${lpart}.std06FA.rttm"};
 
         foreach my $tokSegDEF("AppenWordSeg:Original orthography", "SplitCharText:Split character texts"){
           my ($tokSegID, $tokSegStr) = split(/:/, $tokSegDEF);
@@ -634,7 +636,7 @@ if ($ltask =~ /KWS/){
           $def->{"RunAttributeStr"}={"Set" => $setStr, "Protocol" => $protocolStr, "TokTimes" => $tokTimesStr, "TokSeg"=> $tokSegStr};
           
           $RunDefs{$runID} = $def;
-        }
+          }
       }
     }
   }
@@ -665,6 +667,21 @@ if ($ltask =~ /KWS/){
   elsif ($lang eq "106") { $preferredScoring  = { "Set" => "Full",
                                                   "TokTimes" => "MITLLFA3", 
                                                   "TokSeg" => "AppenWordSeg", 
+                                                  "Protocol" => "Occur" } 
+                          }
+  elsif ($lang eq "001") { $preferredScoring  = { "Set" => "Full",
+                                                  "TokTimes" => "STD06FA", 
+                                                  "TokSeg" => "AppenWordSeg", 
+                                                  "Protocol" => "Occur" } 
+                          }
+  elsif ($lang eq "002") { $preferredScoring  = { "Set" => "Full",
+                                                  "TokTimes" => "STD06FA", 
+                                                  "TokSeg" => "AppenWordSeg", 
+                                                  "Protocol" => "Occur" } 
+                          }
+  elsif ($lang eq "003") { $preferredScoring  = { "Set" => "Full",
+                                                  "TokTimes" => "STD06FA", 
+                                                  "TokSeg" => "SplitCharText", 
                                                   "Protocol" => "Occur" } 
                           }
   else {
