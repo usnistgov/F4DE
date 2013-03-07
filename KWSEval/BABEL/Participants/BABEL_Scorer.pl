@@ -279,14 +279,24 @@ print join("\n",@parseInfo)."\n";
 
 my ($com, $ret);
 my $db = undef;
+my $indusCorporaDefsFile = undef;
 foreach (@dbDir){
   if (-d "$_/${lcorpus}_${lpart}"){
     $db = "$_/${lcorpus}_${lpart}";
+    ### Now look for the CorporaDefsFile
+    if (-f "$_/IndusCorporaDefs.pl"){
+      $indusCorporaDefsFile = "$_/IndusCorporaDefs.pl";
+    }
     last;
   }
 }
 MMisc::error_quit("Step 1 failed to find the reference file database. Aborting") if (! defined($db));
 print "Info: dbDir = $db\n";
+MMisc::error_quit("Step 1 failed to find the IndusCorporaDefs file in the dbDir $db, Aborting") if (! defined($indusCorporaDefsFile));
+my $indusCorporaDefs = undef;
+eval `cat $indusCorporaDefsFile`;
+MMisc::error_quit("Step 1 failed to load $indusCorporaDefsFile successfully.  Aborting") if (! defined($indusCorporaDefs));
+print "Info: indusCorporaDefsFile = $indusCorporaDefsFile version '".$indusCorporaDefs->{version}."'\n";
 
 ### Paranoia check for the DryRun.  This will be implemented elsewhere!!!!!!
 if ($lcorpus =~ /babel101b-v0.4c-DryRunEval-v3/){
@@ -410,6 +420,16 @@ sub execSTTScoreRun{
 
   MMisc::error_quit("Problem with scoring case.  Results copy not defined") if (! exists($def->{RESULTS}{$scase}));
 
+  ### Check the SCLITE Version
+  my $minScliteVersionNum = 2.7;
+  my @scliteVersion=grep { $_ =~ /sclite Version:/ } split(/\n/,`$sclite 2>&1 `);
+  MMisc::error_quit("SCLITE Version check failed: Not able to exec sclite and get the version tag") if (@scliteVersion != 1);
+  MMisc::error_quit("SCLITE Version check failed: Not able to parse sclite version tag /$scliteVersion[0]/") 
+     if ($scliteVersion[0] !~ /sclite Version:\s+(\d+(\.\d+)+)/);
+  my $scliteVersionNum = $1;
+  MMisc::error_quit("SCLITE Version check failed: Minmum version $minScliteVersionNum higher that available version $scliteVersionNum")
+     if ($minScliteVersionNum > $scliteVersionNum); 
+
   ### Check the pre-requisites.  If they exist, run.  If not, Skip
   my $skip = "";
   foreach my $prereq(@{ $def->{filePreReq} }){
@@ -435,7 +455,7 @@ sub execSTTScoreRun{
   if (defined $GLM){
     print "  GLM $GLM exists and will be used\n";
   } else {
-    print "  $GLM not found.  No filtering will occur\n";
+    print "  GLM $GLM not found.  No filtering will occur\n";
   }
 
   MMisc::writeTo($readme, "", 0, 1, "STT Scoring ".$def->{runID}.": Scase $scase: ".$def->{runDesc}."\n   Output file root name: $def->{outputName}\n");
@@ -517,7 +537,7 @@ sub execKWSEnsemble2{
         $use = 0;
       }
     }
-    my $stype = ($def->{scoreDefs}->{$sdef}{RunAttributes}{"Protocol"} eq "Occur" ? "Occurrence" : "Segment");
+    my $stype = ($def->{scoreDefs}->{$sdef}{RunAttributes}{"KWSProtocol"} eq "Occur" ? "Occurrence" : "Segment");
     my $srl = "$scrdir/$def->{scoreDefs}{$sdef}{outputRoot}.dets/sum.$stype.srl.gz";
     $use = 0 if (! -f $srl);
     
@@ -578,6 +598,24 @@ sub execKWSEnsemble2{
 ###   AppInterp | AppSeg | MITLLFA -> reference time mark derivation
 ###   AppWordSeg | SplitChar -> Style of transcript 
 
+### Look up the preferred scoring settings for the language
+MMisc::error_quit("Step 1 failed to find the preferred scoring options in indusCorporaDefsFile for $languageID in the dbDir.  Aborting") 
+   if (! exists($indusCorporaDefs->{languages}{$languageID}));
+
+my $preferredScoring = $indusCorporaDefs->{languages}{$languageID};
+#print Dumper($preferredScoring); 
+foreach my $__req("KWSProtocol", "TokTimes", "TokSeg", "Set", "STTOptions"){
+   MMisc::error_quit("Step 1 failed: $__req not defined in IndusCorpusDefs for $languageID.  Aborting") 
+      if (! exists($preferredScoring->{$__req}));
+   if ($__req ne "STTOptions"){
+     print "Info: indusCorporaDefsFile for $languageID: $__req => $preferredScoring->{$__req}\n";
+   } else {
+     foreach my $__req__stt(keys %{ $preferredScoring->{$__req} }){
+       print "Info: indusCorporaDefsFile for $languageID: $__req\{$__req__stt\} => $preferredScoring->{$__req}{$__req__stt}\n";
+     }
+   }
+}
+
 if ($ltask =~ /KWS/){
   print "Beginning $ltask scoring\n";
 
@@ -632,8 +670,8 @@ if ($ltask =~ /KWS/){
           push @{ $def->{"filePreReq"} }, $ecfs->{$setID} if ($setID ne "Full");  ### Non-Full is optional
           push @{ $def->{"filePreReq"} }, $rttms->{$tokTimesID} if ($tokTimesID ne "MITLLFA3");  ### Non-Full is optional
 
-          $def->{"RunAttributes"} = {"Set" => $setID,  "Protocol" => $protocolID,  "TokTimes" => $tokTimesID,  "TokSeg"=> $tokSegID};
-          $def->{"RunAttributeStr"}={"Set" => $setStr, "Protocol" => $protocolStr, "TokTimes" => $tokTimesStr, "TokSeg"=> $tokSegStr};
+          $def->{"RunAttributes"} = {"Set" => $setID,  "KWSProtocol" => $protocolID,  "TokTimes" => $tokTimesID,  "TokSeg"=> $tokSegID};
+          $def->{"RunAttributeStr"}={"Set" => $setStr, "KWSProtocol" => $protocolStr, "TokTimes" => $tokTimesStr, "TokSeg"=> $tokSegStr};
           
           $RunDefs{$runID} = $def;
           }
@@ -648,46 +686,6 @@ if ($ltask =~ /KWS/){
   MMisc::writeTo($readme, "", 0, 1, "Date: ".`date`);
   MMisc::writeTo($readme, "", 0, 1, join("\n",@parseInfo)."\n");
  
-  my $preferredScoring = undef;
-  if ($lang eq "101") { $preferredScoring     = { "Set" => "Full|DevSubset|DevProgSubset",
-                                                  "TokTimes" => "MITLLFA[23]", 
-                                                  "TokSeg" => "SplitCharText", 
-                                                  "Protocol" => "Occur" } 
-                      }
-  elsif ($lang eq "104") { $preferredScoring  = { "Set" => "Full",
-                                                  "TokTimes" => "MITLLFA3", 
-                                                  "TokSeg" => "AppenWordSeg", 
-                                                  "Protocol" => "Occur" } 
-                          }
-  elsif ($lang eq "105") { $preferredScoring  = { "Set" => "Full",
-                                                  "TokTimes" => "MITLLFA3", 
-                                                  "TokSeg" => "AppenWordSeg", 
-                                                  "Protocol" => "Occur" } 
-                          }
-  elsif ($lang eq "106") { $preferredScoring  = { "Set" => "Full",
-                                                  "TokTimes" => "MITLLFA3", 
-                                                  "TokSeg" => "AppenWordSeg", 
-                                                  "Protocol" => "Occur" } 
-                          }
-  elsif ($lang eq "001") { $preferredScoring  = { "Set" => "Full",
-                                                  "TokTimes" => "STD06FA", 
-                                                  "TokSeg" => "AppenWordSeg", 
-                                                  "Protocol" => "Occur" } 
-                          }
-  elsif ($lang eq "002") { $preferredScoring  = { "Set" => "Full",
-                                                  "TokTimes" => "STD06FA", 
-                                                  "TokSeg" => "AppenWordSeg", 
-                                                  "Protocol" => "Occur" } 
-                          }
-  elsif ($lang eq "003") { $preferredScoring  = { "Set" => "Full",
-                                                  "TokTimes" => "STD06FA", 
-                                                  "TokSeg" => "SplitCharText", 
-                                                  "Protocol" => "Occur" } 
-                          }
-  else {
-    MMisc::error_quit("Internal error: KWS evaluation does not have preferred scoring set language $languageID defined")
-  }
-  
 #  execKWSScoreRun($kwRun1, $lscase, $readme, $preferredScoring);
   my @completed = ();
   foreach my $defKey(sort keys %RunDefs){
@@ -704,7 +702,7 @@ if ($ltask =~ /KWS/){
 
   execKWSEnsemble2({scoreDefs => \%RunDefs,
                     selectDefs => { "Set" => ".*", "TokTimes" => ".*",
-                                    "TokSeg" => ".*", "Protocol" => "Occur"},
+                                    "TokSeg" => ".*", "KWSProtocol" => "Occur"},
                     ensembleID => "Ensemble.AllOccur",
                     ensembleRoot => "Ensemble.AllOccur",
                     ensembleTitle => "All Occurrence Scorings",
@@ -729,7 +727,7 @@ if ($ltask =~ /KWS/){
                "outputName" => "FullSet-WER",
                "STM" => "$db/${lcorpus}_${lpart}.stm",
                "SYS" => $sysfile,
-               "SCLITEL_OPTS" => "",
+               "SCLITE_OPTS" => $preferredScoring->{"STTOptions"}{"encoding"},
                "RESULTS" => {
                  "BaDev"  => [  "\\.sh", "\\.sys.txt", "\\.raw.txt", "\\.dtl.txt", "\\.prf", "\\.sgml"],
                  "BaEval" => [  "\\.sh", "\\.sys.txt", "\\.raw.txt"                               ],
@@ -743,7 +741,7 @@ if ($ltask =~ /KWS/){
                "outputName" => "FullSet-CER",
                "STM" => "$db/${lcorpus}_${lpart}.stm",
                "SYS" => $sysfile,
-               "SCLITE_OPTS" => "-c NOASCII DH",
+               "SCLITE_OPTS" => "-c NOASCII DH ". $preferredScoring->{"STTOptions"}{"encoding"},
                "RESULTS" => {
                  "BaDev"  => [  "\\.sh", "\\.sys.txt", "\\.raw.txt", "\\.dtl.txt", "\\.prf.txt", "\\.sgml"],
                  "BaEval" => [  "\\.sh", "\\.sys.txt", "\\.raw.txt"                               ],
@@ -757,7 +755,7 @@ if ($ltask =~ /KWS/){
                "outputName" => "DevSubset-WER",
                "STM" => "$db/${lcorpus}_${lpart}.dev.stm",
                "SYS" => $sysfile,
-               "SCLITEL_OPTS" => "",
+               "SCLITE_OPTS" => $preferredScoring->{"STTOptions"}{"encoding"},
                "RESULTS" => {
                  "BaDev"  => [  "\\.sh", "\\.sys.txt", "\\.raw.txt", "\\.dtl.txt", "\\.prf.txt", "\\.sgml"],
                  "BaEval" => [  "\\.sh", "\\.sys.txt", "\\.raw.txt", "\\.dtl.txt", "\\.prf.txt", "\\.sgml"],
@@ -772,7 +770,7 @@ if ($ltask =~ /KWS/){
                "outputName" => "DevSubset-CER",
                "STM" => "$db/${lcorpus}_${lpart}.dev.stm",
                "SYS" => $sysfile,
-               "SCLITE_OPTS" => "-c NOASCII DH",
+               "SCLITE_OPTS" => "-c NOASCII DH ". $preferredScoring->{"STTOptions"}{"encoding"},
                "RESULTS" => {
                  "BaDev"  => [  "\\.sh", "\\.sys.txt", "\\.raw.txt", "\\.dtl.txt", "\\.prf.txt", "\\.sgml"],
                  "BaEval" => [  "\\.sh", "\\.sys.txt", "\\.raw.txt", "\\.dtl.txt", "\\.prf.txt", "\\.sgml"],
@@ -786,7 +784,7 @@ if ($ltask =~ /KWS/){
                "outputName" => "DevProgSubset-WER",
                "STM" => "$db/${lcorpus}_${lpart}.dev-progress.stm",
                "SYS" => $sysfile,
-               "SCLITEL_OPTS" => "",
+               "SCLITE_OPTS" =>  $preferredScoring->{"STTOptions"}{"encoding"},
                "RESULTS" => {
                  "BaDev"  => [  "\\.sh", "\\.sys.txt", "\\.raw.txt", "\\.dtl.txt", "\\.prf.txt", "\\.sgml"],
                  "BaEval" => [  "\\.sh", "\\.sys.txt", "\\.raw.txt"                               ],
@@ -801,7 +799,7 @@ if ($ltask =~ /KWS/){
                "outputName" => "DevProgSubset-CER",
                "STM" => "$db/${lcorpus}_${lpart}.dev-progress.stm",
                "SYS" => $sysfile,
-               "SCLITE_OPTS" => "-c NOASCII DH",
+               "SCLITE_OPTS" => "-c NOASCII DH ". $preferredScoring->{"STTOptions"}{"encoding"},
                "RESULTS" => {
                  "BaDev"  => [  "\\.sh", "\\.sys.txt", "\\.raw.txt", "\\.dtl.txt", "\\.prf.txt", "\\.sgml"],
                  "BaEval" => [  "\\.sh", "\\.sys.txt", "\\.raw.txt"                               ],
