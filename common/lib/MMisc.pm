@@ -206,6 +206,7 @@ sub clean_end_spaces {
 }
 
 #####
+
 sub clean_begend_spaces {
   my $txt = $_[0];
 
