@@ -588,7 +588,7 @@ sub loadXMLFile {
     if ($self->{LoadedFile} != 0);
 
   # First: open the file access to read the header, asking for TERMs to be created
-  my $err = $self->openXMLFileAccess($kwlistf, ($justValidate == 1) ? 0 : 1);
+  my $err = $self->openXMLFileAccess($kwlistf, ($justValidate == 1) ? 0 : 1, 0);
   return($err) if (! MMisc::is_blank($err));
   
   my $doit = 1;
