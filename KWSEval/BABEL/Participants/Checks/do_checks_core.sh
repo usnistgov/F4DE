@@ -21,12 +21,14 @@ The script run "CommandToRun MatchingFile" and matching the result to the FileTo
 (the script needs the location of the SubmissionHelper tool to load the Evaluation specific configuration file)
 
 -A request for the file within the samples dir to be added to the command line
+-D <BAD> Write the diff of the BAD file to <BAD>.
 
 EOF
 }
 
 ADDTOEND=0
-while getopts "hA" OPTION
+DOCUMENTBAD=""
+while getopts "hAD:" OPTION
 do
     case $OPTION in
         h)
@@ -36,6 +38,12 @@ do
         A)
             ADDTOEND=1
             shift $((OPTIND-1)); OPTIND=1
+            ;;
+        D)
+            DOCUMENTBAD=$OPTARG
+            shift $((OPTIND-2)); OPTIND=1
+	    echo "Writing BAD summary to $DOCUMENTBAD"
+            shift 
             ;;
         ?)
             usage
@@ -157,7 +165,14 @@ else
         check_file "$cmpfile"
         perl -pe 's%(\s)\S+?\.png%$1%g' "$cmpfile"> $res2
         cmp -s $res1 $res2
-        if [ "${?}" -ne "0" ]; then error_quit "Resulting file ($resfile) does not contain the same numbers as expected file ($cmpfile) [temporary file names location excluded]"; fi
+	ret=${?}
+        if [ ! -z $DOCUMENTBAD ] ; then
+	    if [ "$ret" -ne "0" ] ; then
+		echo "cmp -s $resfile $cmpfile" >> $DOCUMENTBAD
+		diff -s $res1 $res2 >> $DOCUMENTBAD
+	    fi
+	fi
+        if [ "$ret" -ne "0" ]; then error_quit "Resulting file ($resfile) does not contain the same numbers as expected file ($cmpfile) [temporary file names location excluded]"; fi
         echo "[=====] ok"
         rm -f $res1 $res2
     fi

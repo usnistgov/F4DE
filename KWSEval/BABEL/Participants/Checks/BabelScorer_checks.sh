@@ -20,14 +20,17 @@ Usage: $0 [-h] [-X] CompsDir|CompsFile [...]
 The script will submit files to the local BABEL_Scorer
 
 OPTIONS:
-   -h      Show this message
-   -X      Pass the XmllintBypass option to KWSList validation and scoring tools
+   -h        Show this message
+   -X        Pass the XmllintBypass option to KWSList validation and scoring tools
+   -D <BAD>  Documet the Bad runs in the file BAD
 EOF
 }
 
 XMLLINTBYPASS=0
 babscr_xtras=""
-while getopts "hX" OPTION
+DOCUMENTBAD=""
+toolOpt=""
+while getopts "hXD:" OPTION
 do
     case $OPTION in
         h)
@@ -39,13 +42,23 @@ do
             babscr_xtras="${babscr_xtras} -X"
             shift $((OPTIND-1)); OPTIND=1
             ;;
+        D)
+            DOCUMENTBAD=$OPTARG
+            shift $((OPTIND-1));
+	    toolOpt="-D $DOCUMENTBAD"
+	    echo "Writing BAD summary to $DOCUMENTBAD"
+	    if [ -f "$DOCUMENTBAD" ] ; then
+		echo "    $DOCUMENTBAD exists!  NOT overwriting!!!!!"
+		DOCUMENTBAD=""
+		toolOpt=""
+	    fi
+            ;;
         ?)
             usage
             exit 1
             ;;
     esac
 done
-
 
 ## Check that a file exists, is a file and is readable
 # call: check_file filename
@@ -171,7 +184,7 @@ do
                 find_file_in_dbDir "$inf"
                 finf="$filev"
                 if [ ! -f "$finf" ]; then
-                    echo "!! Skipping test: No $eval input file ($inf) in dbDir"
+                    echo "!! Skipping test: No $eval input file ($inf) in dbDir $dbDir"
                 else
                     compdir=`mktemp -d -t ${expid}`
                     resdir="$uncompdir/$inf"
@@ -184,9 +197,15 @@ do
                         xtra=`cat $xtraf`
                     fi
 
-                    $tool $ff $subhelp $babscr --Specfile $scconf --expid $expid --sysfile $finf --compdir $compdir --resdir $resdir --dbDir $dbDir --Tsctkbin $sctkbindir --ExcludePNGFileFromTxtTable $babscr_xtras $xtra
-
+		    if [ ! -z $DOCUMENTBAD ] ; then 
+			echo TESTING $ff >> $DOCUMENTBAD
+		    fi
+		    com="$subhelp $babscr --Specfile $scconf --expid $expid --sysfile $finf --compdir $compdir --resdir $resdir --dbDir $dbDir --Tsctkbin $sctkbindir --ExcludePNGFileFromTxtTable $babscr_xtras $xtra"
+                    $tool $toolOpt $ff $com
                     if [ "${?}" -ne "0" ]; then
+			if [ ! -z $DOCUMENTBAD ] ; then 
+			    echo COMMAND $com >> $DOCUMENTBAD
+			fi
                         run_bad="${run_bad} $ff"
                     else
                         run_good="${run_good} $ff"
@@ -203,6 +222,11 @@ echo "***** "`echo $run_good | wc -w`" OK"
 for i in $run_good; do echo $i; done
 echo ""
 echo "***** "`echo $run_bad | wc -w`" BAD"
-for i in $run_bad; do echo $i; done
+for i in $run_bad; do
+    echo $i;
+    if [ ! -z $DOCUMENTBAD ] ; then 
+	echo BAD $i >> $DOCUMENTBAD
+    fi
+done
 
 exit 0
