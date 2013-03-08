@@ -400,9 +400,9 @@ sub arrayComparisonReport{
     $rep .= "${prefix}   Sets are NOT equal\n";
     $rep .= "${prefix}      ".scalar(@$intersect)." elements in intersection($aID, $bID)\n";
     $rep .= "${prefix}      ".scalar(@$AnotB)." elements in ($aID - $bID)\n";
-#    $rep .= "${prefix}           ".join(", ",@$AnotB)."\n" if (@$AnotB > 0); 
+    $rep .= "${prefix}           ".join("\n${prefix}           ",@$AnotB)."\n" if (@$AnotB > 0); 
     $rep .= "${prefix}      ".scalar(@$BnotA)." elements in ($bID - $aID)\n";
-#    $rep .= "${prefix}           ".join(", ",@$BnotA)."\n" if (@$BnotA > 0); 
+    $rep .= "${prefix}           ".join("\n${prefix}           ",@$BnotA)."\n" if (@$BnotA > 0); 
     $rep .= "${prefix}      ".scalar(@$union)." elements in union($aID, $bID)\n";
   }
   return $rep;
