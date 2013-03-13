@@ -243,7 +243,7 @@ foreach my $trans(sort {$db->{$a}{SID}<=>$db->{$b}{SID}} keys %$db){
   ### Interate over the segments
   my $spkr = 1;
   for (my $seg=0; $seg < @{ $db->{$trans}{transcript} }; $seg++){
-    print "$seg $db->{$trans}{transcript}[$seg]{bt} $db->{$trans}{transcript}[$seg]{et}\n";
+#    print "$seg $db->{$trans}{transcript}[$seg]{bt} $db->{$trans}{transcript}[$seg]{et}\n";
     my $dur = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}));
     my $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt});
     my $et = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{et});
