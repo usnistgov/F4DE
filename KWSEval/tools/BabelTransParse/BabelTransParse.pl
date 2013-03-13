@@ -243,7 +243,7 @@ foreach my $trans(sort {$db->{$a}{SID}<=>$db->{$b}{SID}} keys %$db){
   ### Interate over the segments
   my $spkr = 1;
   for (my $seg=0; $seg < @{ $db->{$trans}{transcript} }; $seg++){
-#    print "$seg $db->{$trans}{transcript}[$seg]{bt} $db->{$trans}{transcript}[$seg]{et}\n";
+    print "$seg $db->{$trans}{transcript}[$seg]{bt} $db->{$trans}{transcript}[$seg]{et}\n";
     my $dur = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}));
     my $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt});
     my $et = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{et});
@@ -261,6 +261,7 @@ foreach my $trans(sort {$db->{$a}{SID}<=>$db->{$b}{SID}} keys %$db){
     my $isNoScoreKWS = 0;
     my $isNoScoreSTT = 0;
     print "Warning: No tokens $outTransName $bt\n" if (@toks == 0);
+    my $tokBt = $bt;
     for (my $t = 0; $t < @toks; $t++){
       my $token = $toks[$t];
       my($type,$stype) = ("LEXEME", "lex");
@@ -294,24 +295,24 @@ foreach my $trans(sort {$db->{$a}{SID}<=>$db->{$b}{SID}} keys %$db){
       }
       next if ($type eq "skip");
       $dur = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}) / (@toks + 1));
-      $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt} + ($dur * $t));
+      $tokBt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt} + ($dur * $t));
  
-      print RTTM "$type $outTransName 1 $bt $dur $token $stype spkr1 0.5\n";
+      print RTTM "$type $outTransName 1 $tokBt $dur $token $stype spkr1 0.5\n";
       $lexCount ++ if ($type eq "LEXEME" && $stype eq "lex");
       if (($lexCount + 3) % 10 == 0){
         ##  Don't make an output unless it's the 3rd word (+10). IE, 10% del
         ;
       } elsif (($lexCount + 5) % 10 == 0){
         ##  make an output a sub on the 5th word (+10). IE, 10% sub
-        print SYSRTTM "$type $outTransName 1 $bt $dur $token$token $stype spkr1 0.5\n" ;
+        print SYSRTTM "$type $outTransName 1 $tokBt $dur $token$token $stype spkr1 0.5\n" ;
       } elsif (($lexCount + 8) % 10 == 0){
         ##  make an output an ins on the 8th word (+10). IE, 10% ins
         my $dur2 = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}) / (@toks + 1) / 2.0);
         my $btdur2 = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt} + ($dur * $t) + $dur2);
-        print SYSRTTM "$type $outTransName 1 $bt $dur2 $token $stype spkr1 0.5\n"; 
+        print SYSRTTM "$type $outTransName 1 $tokBt $dur2 $token $stype spkr1 0.5\n"; 
         print SYSRTTM "$type $outTransName 1 $btdur2 $dur2 $token$token $stype spkr1 0.5\n";
       } else {
-        print SYSRTTM "$type $outTransName 1 $bt $dur $token $stype spkr1 0.5\n" ;
+        print SYSRTTM "$type $outTransName 1 $tokBt $dur $token $stype spkr1 0.5\n" ;
       }
 
       ### Build the reference STM for STT scoring
