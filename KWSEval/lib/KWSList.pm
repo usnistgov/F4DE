@@ -154,6 +154,20 @@ sub getSystemID {
   return($_[0]->{SYSTEM_ID});
 }
 
+#####
+
+sub getTermIDs {
+    # ($self) 
+    keys %{ $_[0]->{TERMS} };
+}
+
+#####
+
+sub deleteTermByID {
+    # ($self, $termID) 
+    delete($_[0]->{TERMS}{$_[1]});
+}
+
 ##########
 
 sub get_TERMLIST_FILENAME { return($_[0]->{TERMLIST_FILENAME}); }
