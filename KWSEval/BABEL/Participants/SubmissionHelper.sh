@@ -22,7 +22,9 @@ error_quit () {
 usage()
 {
 cat << EOF
-Usage: $0 [-h] [-r] [-A] [-R] [-V] [-S SystemDescription.txt] [-X] [-E] [-W file.html] <EXPID>.kwslist.xml|<EXPID>.ctm
+Usage:
+$0 [-h] [-r] [-A] [-R] [-V] [-S SystemDescription.txt] [-X] [-E] [-W file.html] [-Q] <EXPID>.kwslist.xml|<EXPID>.ctm
+$0 -C <SHA256> -M <KWS12|KWS13|...>
 
 The script will submit the <EXPID>.kwslist.xml or <EXPID>.ctm to the BABEL Scoring Server
 
@@ -36,6 +38,10 @@ OPTIONS:
    -X      Pass the XmllintBypass option to KWSList validation and scoring tools
    -E      Exlude PNG file from result table
    -W      Generate a web page progress bar detailing each step in the process
+   -Q      Quit after uploading file
+
+   -C      Continue from where SHA256 job was when last stopped. Must use "Internal SHA256" value. Must have at least passed validation and uploading step.
+   -M      Evaluation mode (ie the first component of the original submission file's EXPID)
 EOF
 }
 
@@ -48,7 +54,10 @@ validator_cmdadd=""
 XMLLINTBYPASS=0
 XPNG=0
 WEBPAGE=""
-while getopts "hrAVRS:XEW:" OPTION
+CONTSHA=""
+kmode=""
+QAU=0
+while getopts "hrAVRS:XEW:C:M:Q" OPTION
 do
   case $OPTION in
     h)
@@ -91,6 +100,20 @@ do
       shift $((OPTIND-1)); OPTIND=1
       shift $((OPTIND-1)); OPTIND=1
       ;;
+    C)
+      CONTSHA=${OPTARG}
+      shift $((OPTIND-1)); OPTIND=1
+      shift $((OPTIND-1)); OPTIND=1
+      ;;
+    M)
+      kmode=${OPTARG}
+      shift $((OPTIND-1)); OPTIND=1
+      shift $((OPTIND-1)); OPTIND=1
+      ;;
+    Q)
+      QAU=1
+      shift $((OPTIND-1)); OPTIND=1
+      ;;
     ?)
       usage
       exit 1
@@ -98,7 +121,11 @@ do
   esac
 done
 
-
+if [ "A${CONTSHA}" != "A" ]; then
+  if [ "A$REVALIDATE" == "A1" ]; then error_quit "Can not use -V option with -C"; fi
+  if [ "A$RESUBMIT" == "A1" ]; then error_quit "Can not use -R option with -C"; fi
+  if [ "A$QAU" == "A1" ]; then error_quit "Can not use -Q option with -C"; fi
+fi
 
 ## Create expected directory if not present, exit with error if not capable
 # Also check we can write in the directory if it already exists
@@ -139,9 +166,14 @@ fi
 ########################################
 ## Command line check
 
-if  [ $# != 1 ]; then usage; error_quit "No submission file on command line, quitting" ; fi
-if=$1
-check_file "$if"
+if [ "A${CONTSHA}" == "A" ]; then
+  if  [ $# != 1 ]; then usage; error_quit "No submission file on command line, quitting" ; fi
+  if=$1
+  check_file "$if"
+else
+  if  [ $# != 0 ]; then usage; error_quit "When using -C,  no submission file can be on the command line, quitting" ; fi
+  if="__NOT__A__VALID__FILE__"
+fi
 
 subhelp_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($ARGV[0])); print $dir' $0`
 
@@ -156,7 +188,7 @@ check_file_x "$htmlproggen"
 
 ##
 
-kmode=`echo $if | perl -ne 's%^.+/%%;s%\_.+$%%; print uc($_)'`
+if [ "A${CONTSHA}" == "A" ]; then kmode=`echo $if | perl -ne 's%^.+/%%;s%\_.+$%%; print uc($_)'`; fi
 if [ "A$kmode" == "A" ]; then error_quit "No KWS mode information found"; fi
 
 conf="${subhelp_dir}/${kmode}_SubmissionHelper.cfg"
@@ -251,12 +283,17 @@ if [ "A$uncomp" == "A1" ]; then
 fi
 
 ############################################################
-echo "** Submission file: [$if]"
+if [ "A${CONTSHA}" == "A" ]; then
+  echo "** Submission file: [$if]"
 
-# we want to get the file's SHA256
-sha256=`perl -I$F4DEclib -e 'use MMisc; $if=$ARGV[0]; my ($e, $s) = MMisc::file_sha256digest($if); MMisc::error_quit($e) if (! MMisc::is_blank($e)); print $s;' $if`
-if [ "${?}" -ne "0" ]; then error_quit "Problem obtaining file's SHA256 ($if): $sha256"; fi
-echo "   SHA256 : $sha256"
+  # we want to get the file's SHA256
+  sha256=`perl -I$F4DEclib -e 'use MMisc; $if=$ARGV[0]; my ($e, $s) = MMisc::file_sha256digest($if); MMisc::error_quit($e) if (! MMisc::is_blank($e)); print $s;' $if`
+  if [ "${?}" -ne "0" ]; then error_quit "Problem obtaining file's SHA256 ($if): $sha256"; fi
+else
+  sha256="$CONTSHA"
+fi
+
+echo "   Internal SHA256 : $sha256"
 lf_base="$lockdir/$sha256"
 
 # FYI:
@@ -275,30 +312,36 @@ if [ "A$REDODOWNLOAD" == "A1" ]; then rm -f $lf_base.03-*; fi
 
 ########## Step 1
 echo "++ Validation step"
-if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 20 -M 190 -m "Validation"; fi
 lf="$lf_base.01-validated"
 nlf="$lf_base.02-uploaded"
+if [ "A${CONTSHA}" != "A" ]; then
+  if [ ! -f "$lf" ]; then error_quit "Can not run -C if matching file was not validated"; fi
+fi
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 20 -M 190 -m "Validation"; fi
 if [ ! -f "$lf" ]; then
   echo "  -> validating submission file"
   tld="${sha256}-Validation"
   if [ "A$REVALIDATE" == "A1" ]; then rm -rf "$JRlockdir/$tld"*; fi
   $jobrunner -b -l "$JRlockdir" -n "$tld" -S 99 -- "$subcheck" -d "$dbDir" -k "$validator" $validator_cmdadd -T "$TMvalidator" "$if" &> "$lf.log"
   if [ "${?}" -ne "99" ]; then error_quit "**** Submission did not validate, aborting (check within a directory starting with \'$JRlockdir/$tld\' for details, as well as: $lf.log)"; fi
-  touch "$lf"
+  subfile=`echo $if | perl -pe 's%^.*/%%;'`
+  echo "$subfile" > "$lf"
   rm -f "$nlf"
 else
   echo "  -- validated earlier, skipping revalidation"
 fi
 
-subfile=`echo $if | perl -pe 's%^.*/%%;'`
-expid=`echo $subfile | perl -pe 's%\.(kwslist\d*\.xml|ctm)$%%i;'`
-sfile="${sha256}.status"
+subfile=`cat $lf`
+if [ -z "$subfile" ]; then error_quit "No previous cached submission file value available, aborting"; fi
 
 ########## Step 2
 echo "++ Archive Generation and Upload"
-if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 30 -M 190 -m "Archive Generation"; fi
 lf="$nlf"
 nlf="$lf_base.03-scored"
+if [ "A${CONTSHA}" != "A" ]; then
+  if [ ! -f "$lf" ]; then error_quit "Can not run -C if archive was not generated and uploaded"; fi
+fi
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 30 -M 190 -m "Archive Generation"; fi
 if [ ! -f "$lf" ]; then
   bnm=`basename $if`
   tid=`perl -I$F4DEclib -e 'use MMisc; print MMisc::get_tmpdir();'`
@@ -368,9 +411,14 @@ if [ -z "$lsha256" ]; then error_quit "No previous SHA value available, aborting
 echo "Remote SHA256 : $lsha256"
 sfile="${lsha256}.status"
 
+if [ "A$QAU" == "A1" ]; then 
+  echo "File uploaded: exiting"
+  exit 0
+fi
+
 ########## Step 3
 echo "++ Awaiting scoring server completion"
-if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 50 -M 190 -m "Awaiting on scoring server"; fi
+if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 50 -M 190 -m "Awaiting Status update from scoring server"; fi
 status_file="${scp_user}@${scp_host}:${scp_status}/$sfile"
 lf="$nlf"
 nlf="$lf_base.04-returned"
@@ -382,7 +430,7 @@ else
   fread=""
   read=""
   lastread=""
-  addv="0"
+  addv=""
   efile="$statusdir/$sfile"
   while [ "A$read" != "A$expected" ]
   do
@@ -398,8 +446,12 @@ else
     fi
     if [[ $read == ERROR* ]]; then error_quit "$read"; fi
     if  [ "A$read" != "A$lastread" ]; then 
-        echo "Remote Server: $read ($addv%)"
-        if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 50 -a $addv -M 190 -m "Scoring Server: $read"; fi
+        add_text=""
+        if [ "A$addv" != "A" ]; then
+          add_text=" ($addv%)"
+          if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 50 -a $addv -M 190 -m "Scoring Server: $read"; fi
+        fi
+        echo "Remote Server: $read$add_text"
     fi
     lastread="$read"
     if [ "A$read" != "A$expected" ]; then sleep $sv; fi
