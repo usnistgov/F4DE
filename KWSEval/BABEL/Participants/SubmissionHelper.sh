@@ -355,6 +355,7 @@ if [ ! -f "$lf" ]; then
   echo "$commentChar" >> "$tif"
   echo "$commentChar"'<!''--'" File: $bnm -->" >> "$tif"
   echo "$commentChar"'<!''--'" Epoch: $epoch -->" >> "$tif"
+  echo "$commentChar"'<!''--'" InternalSHA256: $sha256 -->" >> "$tif"
 
   lsha256=`perl -I$F4DEclib -e 'use MMisc; $if=$ARGV[0]; my ($e, $s) = MMisc::file_sha256digest($if); MMisc::error_quit($e) if (! MMisc::is_blank($e)); print $s;' $tif`
   if [ "${?}" -ne "0" ]; then error_quit "Problem obtaining file's SHA256 ($tif): $lsha256"; fi
