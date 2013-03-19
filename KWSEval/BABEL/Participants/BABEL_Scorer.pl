@@ -664,7 +664,7 @@ if ($ltask =~ /KWS/){
           $def->{"ECF"} = $ecfs->{$setID};
           $def->{"RTTM"} = $rttms->{$tokTimesID};
           $def->{"outputRoot"} = $runID;
-          $def->{"KWSEVAL_OPTS"} = $proto->{$protocolID}." ".$tokSegs->{$tokSegID};
+          $def->{"KWSEVAL_OPTS"} = $proto->{$protocolID}." ".$tokSegs->{$tokSegID}." -a";
           $def->{"RESULTS"} = {"BaDev" => $BaDev->{$setID}, "BaEval" => $BaEval->{$setID} };
           $def->{"filePreReq"} = [ ];
           push @{ $def->{"filePreReq"} }, $ecfs->{$setID} if ($setID ne "Full");  ### Non-Full is optional
