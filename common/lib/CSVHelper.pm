@@ -204,17 +204,32 @@ sub loadCSV_tohash {
   my $self = shift @_;
   my $file = shift @_;
   # rest : keys order
-
+ 
   my %out = ();
+  my $ok = $self->loadCSV_tohashref($file, \%out, @_);
+
+  return(%out);
+}
+
+##
+
+sub loadCSV_tohashref {
+  # arg 0 : self
+  # arg 1 : file name
+  # arg 2 : reference to hash
+  my $self = shift @_;
+  my $file = shift @_;
+  my $rout = shift @_;
+  # rest : keys order
 
   my $err = $self->__loadCSV($file);
-  return($self->_set_error_and_return_array($err, %out))
+  return($self->_set_error_and_return_array($err, 0))
     if (! MMisc::is_blank($err));
  
   my $line = <CSV>;
 
   my @headers = $self->csvline2array($line);
-  return(%out) if ($self->{errorv});
+  return(0) if ($self->{errorv});
 
   my %pos = ();
   for (my $i = 0; $i < scalar @headers; $i++) {
@@ -233,13 +248,13 @@ sub loadCSV_tohash {
     $nd{$h} = $pos{$h};
     delete $rh{$h};
   }
-  return($self->_set_error_and_return_array("Could not find requested headers: " . join(", ", @nf), %out))
+  return($self->_set_error_and_return_array("Could not find requested headers: " . join(", ", @nf), 0))
     if (scalar @nf > 0);
 
   my $doa = scalar(keys %rh); # do filled array or do increments ?
 
   $self->set_number_of_columns(scalar @headers);
-  return(%out) if ($self->{errorv});
+  return(0) if ($self->{errorv});
 
   my $cont = 1;
   my $code = "";
@@ -251,7 +266,7 @@ sub loadCSV_tohash {
     }
     
     my @array = $self->csvline2array($line);
-    return(%out) if ($self->{errorv});
+    return(0) if ($self->{errorv});
 
     if ($doa) {
       my @d = ();
@@ -260,19 +275,19 @@ sub loadCSV_tohash {
         my $h = $headers[$i];
         next if (exists $nd{$h});
         my $v = $array[$i];
-        MMisc::push_tohash(\%out, $v, @d, $h);
+        MMisc::push_tohash($rout, $v, @d, $h);
       }
     } else { # increment value
       my @d = ();
       for (my $i = 0; $i < scalar @_; $i++) { push @d, $array[$pos{$_[$i]}]; }
-      MMisc::inc_tohash(\%out, @d);
+      MMisc::inc_tohash($rout, @d);
     }
     
     $cont++;
   }
   close CSV;
   
-  return(%out);
+  return(1);
 }
 
 ############################################################
