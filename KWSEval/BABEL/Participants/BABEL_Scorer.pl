@@ -319,6 +319,18 @@ if ($lcorpus =~ /babel101b-v0.4c-DryRunEval-v3/){
 ###    Combine DET: Full data, Dev only, dev-eval
 ###   Reporting
 ###    BaDev - Not re
+sub copySystemDescription{
+  my ($sdesc, $dir) = @_;
+
+  if ($sdesc ne ""){
+    if (-f $sdesc){
+      system "mkdir -p $dir/SystemDescription";
+      system "cp $sdesc $dir/SystemDescription";
+    } else {
+      _warn_add("System description defined /$sdesc/, but does not exist");
+    }  
+  }
+}
 
 sub copyToResult{
   my ($scrdir, $resdir, $fileRootName, $fileRegexps) = @_;
@@ -391,7 +403,7 @@ sub execKWSScoreRun{
     " -r $def->{RTTM}".
     " -t $def->{KWLIST}".
     " -s $def->{KWSLIST}".
-    " $def->{KWSEVAL_OPTS}".
+    " $def->{KWSEVAL_OPTS}{$lscase}".
     " -f $compRoot".
     " -y TXT -y HTML";
   $com .= " --XmllintBypass" if ($bypassxmllint);
@@ -473,13 +485,25 @@ sub execSTTScoreRun{
     MMisc::error_quit("Unable to handle system input file $def->{SYS}): $err");
   }
 
+
+
+  $com = "perl -pe '' < $def->{STM} >> $def->{CTM}.nulltokens";
+  MMisc::writeTo("$compRoot.sh", "", 0, 1, "$com\n");
+  my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$compRoot.ctm.nulltokens.log", $com);
+  MMisc::error_quit("CTM Sorting execution failed ".$def->{runID}." returned $ret. Aborting") if ($retcode != 0);
+
   $com = "$hubscore sortCTM < $def->{CTM} > $def->{CTM}.sort";
   MMisc::writeTo("$compRoot.sh", "", 0, 1, "$com\n");
-  my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$compRoot.sort.log", $com);
+  my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$compRoot.ctm.sort.log", $com);
+  MMisc::error_quit("CTM Sorting execution failed ".$def->{runID}." returned $ret. Aborting") if ($retcode != 0);
+
+  $com = "$hubscore sortSTM < $def->{STM} > $def->{CTM}.ref.sort";
+  MMisc::writeTo("$compRoot.sh", "", 0, 1, "$com\n");
+  my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$compRoot.stm.sort.log", $com);
   MMisc::error_quit("CTM Sorting execution failed ".$def->{runID}." returned $ret. Aborting") if ($retcode != 0);
 
   my $ctmFile = "$def->{CTM}.sort";
-  my $stmFile = $def->{STM};
+  my $stmFile = "$def->{CTM}.ref.sort";
   
   if (defined($GLM)){
     $com = "$csrfilt -i ctm $GLM < $def->{CTM}.sort > $def->{CTM}.filter "; 
@@ -577,7 +601,7 @@ sub execKWSEnsemble2{
   }
   
   if (! -f "$scrdir/$def->{ensembleRoot}.png"){ 
-    $com = "$detutil $def->{DETOPTIONS} --txtTable -I -Q 0.3 -T '$mainTitle'";
+    $com = "$detutil $def->{DETOPTIONS}{$scase} --txtTable -I -Q 0.3 -T '$mainTitle' --plot ColorScheme=colorPresentation";
     $com .= ($xpng == 1) ? " --ExcludePNGFileFromTxtTable" : "";
     $com .= " -o $scrdir/$def->{ensembleRoot}.png ";
     $com .= join(" ",@srls);
@@ -629,7 +653,7 @@ if ($ltask =~ /KWS/){
     my $BaDev  = {"Full" => [      "\\.alignment.csv", "\\.log", "\\.sh", "\\.sum.*", "\\.bsum.*", "\\.dets/.*srl.gz", "\\.dets/.*.png"],
                   "DevSubset" => [ "\\.alignment.csv", "\\.log", "\\.sh", "\\.sum.*", "\\.bsum.*", "\\.dets/.*srl.gz", "\\.dets/.*.png"],
                   "DevProgSubset" => [ ] };
-    my $BaEval = {"Full" => [                          "\\.log", "\\.sh",                                              "\\.dets/.*.png"],
+    my $BaEval = {"Full" => [                          "\\.log", "\\.sh", "\\.sum.*",                                  "\\.dets/.*.png"],
                   "DevSubset" => [ "\\.alignment.csv", "\\.log", "\\.sh", "\\.sum.*", "\\.bsum.*",                     "\\.dets/.*.png"],
                   "DevProgSubset" => [                 "\\.log", "\\.sh",                                              "\\.dets/.*.png"] };
     
@@ -664,8 +688,10 @@ if ($ltask =~ /KWS/){
           $def->{"ECF"} = $ecfs->{$setID};
           $def->{"RTTM"} = $rttms->{$tokTimesID};
           $def->{"outputRoot"} = $runID;
-          $def->{"KWSEVAL_OPTS"} = $proto->{$protocolID}." ".$tokSegs->{$tokSegID}." -a";
-          $def->{"RESULTS"} = {"BaDev" => $BaDev->{$setID}, "BaEval" => $BaEval->{$setID} };
+          $def->{"KWSEVAL_OPTS"} = { "BaDev" =>  $proto->{$protocolID}." ".$tokSegs->{$tokSegID}." -a --ExcludePNGFileFromTxtTable",
+                                     "BaEval" => $proto->{$protocolID}." ".$tokSegs->{$tokSegID}." -a --ExcludePNGFileFromTxtTable --ExcludeCountsFromReports" };
+          $def->{"RESULTS"} = {"BaDev" => $BaDev->{$setID}, 
+                               "BaEval" => $BaEval->{$setID} };
           $def->{"filePreReq"} = [ ];
           push @{ $def->{"filePreReq"} }, $ecfs->{$setID} if ($setID ne "Full");  ### Non-Full is optional
           push @{ $def->{"filePreReq"} }, $rttms->{$tokTimesID} if ($tokTimesID ne "MITLLFA3");  ### Non-Full is optional
@@ -679,6 +705,8 @@ if ($ltask =~ /KWS/){
     }
   }
 #  print Dumper(\%RunDefs);
+  copySystemDescription($sysdesc, $scrdir);
+
   ## Interate of the DEFS
   my $readme = "$scrdir/Readme.txt";             
   ### Add some content to the README
@@ -696,9 +724,9 @@ if ($ltask =~ /KWS/){
   print "\nCompleted KWS Runs:\n   ".join("\n   ",@completed)."\n";
  
   my $detOpts = " --plot 'ExtraPoint=Team = $lteam:.004:.1:0:1::' ";
-    $detOpts .= " --plot 'ExtraPoint=System = ${lsysid}_${lversion}:.004:.085:0:1::' ",;
-    $detOpts .= " --plot 'ExtraPoint=Data = $lcorpus $lpart:.004:.070:0:1::' ";
-    $detOpts .= " --plot 'ExtraPoint=SHA256 = $sha256:.004:.055:0:1::' " if ($sha256 ne "");
+    $detOpts .= " --plot 'ExtraPoint=System = ${lsysid}_${lversion}:.004:.080:0:1::' ",;
+    $detOpts .= " --plot 'ExtraPoint=Data = $lcorpus $lpart:.004:.060:0:1::' ";
+    $detOpts .= " --plot 'ExtraPoint=SHA256 = $sha256:.004:.04:0:1::' " if ($sha256 ne "");
 
   execKWSEnsemble2({scoreDefs => \%RunDefs,
                     selectDefs => { "Set" => ".*", "TokTimes" => ".*",
@@ -706,7 +734,8 @@ if ($ltask =~ /KWS/){
                     ensembleID => "Ensemble.AllOccur",
                     ensembleRoot => "Ensemble.AllOccur",
                     ensembleTitle => "All Occurrence Scorings",
-                    DETOPTIONS => $detOpts, 
+                    DETOPTIONS => { "BaDev" => $detOpts,
+                                    "BaEval" => "$detOpts  --ExcludeCountsFromReports"},                                    
                     RESULTS => {
                        "BaDev" =>  [  "\\.log", "\\.sh", ".png", ".results.txt"],
                        "BaEval" => [  "\\.log", "\\.sh", ".png", ".results.txt"],
@@ -715,8 +744,9 @@ if ($ltask =~ /KWS/){
                   $lscase, $readme);
   
   print "\nStep 4: Cleanup\n";
-  print "  Scoring completed.  Copying readme\n";
+  print "  Scoring completed.  Copying readme and system description\n";
   copyToResult($scrdir, $resdir, "Readme", [ ".txt" ]);
+  copySystemDescription($sysdesc, $resdir);
 } elsif ($ltask =~ /STT/){
   print "Beginning $ltask scoring\n";
 
@@ -807,9 +837,7 @@ if ($ltask =~ /KWS/){
              };
              
   my $readme = "$scrdir/Readme.txt";             
-  my $sttMesg = "File: Readme.txt\n".
-                "Date: ".`date`.
-                "Contents: This directory contains STT scoring reports.  The file is organized by sets of the results organized\n".
+  my $sttMesg = "Contents: This directory contains STT scoring reports.  The file is organized by sets of the results organized\n".
                 "          by the following file prefixes.  Not all prefixes will exist depending on the dataset scored.\n".
                 "\n".
                 "          FullSet_Word - Word based scoring on the full data set\n".
@@ -821,6 +849,9 @@ if ($ltask =~ /KWS/){
                 "\n".
                 "!!!  These results (all files and content) are FOUO until they have been vetted for release.  !!!\n".
                 "\n";
+  MMisc::writeTo($readme, "", 0, 0, "Program: $versionid\n");  ## Initial erase
+  MMisc::writeTo($readme, "", 0, 1, "Date: ".`date`);
+  MMisc::writeTo($readme, "", 0, 1, join("\n",@parseInfo)."\n");
   MMisc::writeTo($readme, "", 0, 1, $sttMesg);
  
   execSTTScoreRun($sttRun1, $lscase, $readme);
