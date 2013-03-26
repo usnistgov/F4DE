@@ -706,9 +706,9 @@ if ($ltask =~ /KWS/){
   MMisc::writeTo($readme, "", 0, 0, "Program: $versionid\n");  ## Initial erase
   MMisc::writeTo($readme, "", 0, 1, "Date: ".`date`);
   MMisc::writeTo($readme, "", 0, 1, join("\n",@parseInfo)."\n");
-  MMisc::writeTo($readme, "", 0, 1, "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-  MMisc::writeTo($readme, "", 0, 1,   "!!!  These results (all files and content) are FOUO until they have been vetted for release.  !!!\n".
-  MMisc::writeTo($readme, "", 0, 1,   "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+  MMisc::writeTo($readme, "", 0, 1, "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+  MMisc::writeTo($readme, "", 0, 1,   "!!!  These results (all files and content) are FOUO until they have been vetted for release.  !!!\n");
+  MMisc::writeTo($readme, "", 0, 1,   "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n");
  
 #  execKWSScoreRun($kwRun1, $lscase, $readme, $preferredScoring);
   my @completed = ();
