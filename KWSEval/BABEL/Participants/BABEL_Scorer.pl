@@ -28,7 +28,7 @@ use strict;
 # Version
 
 # $Id$
-my $version     = "0.2b";
+my $version     = "0.3";
 if ($version =~ m/b$/) {
   (my $cvs_version = '$Revision$') =~ s/[^0-9\.]//g;
   $version = "$version (CVS: $cvs_version)";
@@ -484,13 +484,6 @@ sub execSTTScoreRun{
   } else {
     MMisc::error_quit("Unable to handle system input file $def->{SYS}): $err");
   }
-
-
-
-  $com = "perl -pe '' < $def->{STM} >> $def->{CTM}.nulltokens";
-  MMisc::writeTo("$compRoot.sh", "", 0, 1, "$com\n");
-  my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$compRoot.ctm.nulltokens.log", $com);
-  MMisc::error_quit("CTM Sorting execution failed ".$def->{runID}." returned $ret. Aborting") if ($retcode != 0);
 
   $com = "$hubscore sortCTM < $def->{CTM} > $def->{CTM}.sort";
   MMisc::writeTo("$compRoot.sh", "", 0, 1, "$com\n");
