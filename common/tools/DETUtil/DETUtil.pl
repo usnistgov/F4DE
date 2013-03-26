@@ -130,6 +130,7 @@ my $secondSetSize = 10;
 my $secondSet = "";
 my $restSet = "";
 my $xpng = 0;
+my $excludeCounts = 0;
 
 Getopt::Long::Configure(qw( no_ignore_case ));
 
@@ -166,6 +167,7 @@ GetOptions
    'F|ForceRecompute'            => \$forceRecompute,
    'x|txtTable'                  => \$doTxtTable,  
    'X|ExcludePNGFileFromTxtTable' => \$xpng,
+   'ExcludeCountsFromReports'    => \$excludeCounts,
    
    'H|HD'                        => \$HD,
    'a|autoAdapt'                 => \$AutoAdapt,
@@ -642,7 +644,7 @@ else
 &vprint("[*] Temp dir \'$temp\'\n");
 
 &vprint("[*] Performing 'renderAsTxt'\n");
-my $report = $ds->renderAsTxt("$temp/merge", 1, 1, \%options);
+my $report = $ds->renderAsTxt("$temp/merge", 1, $excludeCounts == 0 ? 1 : 0, \%options);
 my $inf = "$temp/merge.png";
 &vprint("[*] Copying [$inf] to [$OutPNGfile]\n");
 my $err =  MMisc::filecopy($inf, $OutPNGfile);
@@ -653,7 +655,7 @@ if ($docsv) {
   my $csvf = $OutPNGfile;
   $csvf =~ s/\.png$//i;
   $csvf .= ".csv";
-  my $csv = $ds->renderCSV("$temp/merge", 1, \%options);
+  my $csv = $ds->renderCSV("$temp/merge", $excludeCounts == 0 ? 1 : 0, \%options);
   MMisc::writeTo($csvf, "", 1, 0, $csv);
 }
 
@@ -662,7 +664,7 @@ if ($doTxtTable) {
   my $txtf = $OutPNGfile;
   $txtf =~ s/\.png$//i;
   $txtf .= ".results.txt";
-  my $txt = $ds->renderAsTxt("$temp/merge", 1, 1, \%options);
+  my $txt = $ds->renderAsTxt("$temp/merge", 1, $excludeCounts == 0 ? 1 : 0, \%options);
   MMisc::writeTo($txtf, "", 1, 0, $txt);
 }
 
@@ -916,6 +918,10 @@ Generate a table of statistics.
 =item B<-X> B<--ExcludePNGFileFromTextTable>
 
 Exclude the PNG files location from text tables generated.  
+
+=item B<-X> B<--ExcludeCountsFromReports>
+
+Exclude trial counts from report tables\n";
 
 =item B<-d> B<--dumpFile>
 

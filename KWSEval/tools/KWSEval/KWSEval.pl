@@ -203,6 +203,7 @@ my @textPrefilters = ();
 my $articulatedDET = 0;
 my $bypassxmllint = 0;
 my $xpng = 0;
+my $excludeCounts = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:  BCDEFG I K  NOP  ST   XY abcdefghijk  nopqrst vwxy  #
@@ -248,6 +249,7 @@ GetOptions
    'articlulatedDET'                     => \$articulatedDET,
    'XmllintBypass'                       => \$bypassxmllint,
    'ExcludePNGFileFromTxtTable'          => \$xpng,
+   'ExcludeCountsFromReports'            => \$excludeCounts,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
 #parsing TermIDs
@@ -477,7 +479,7 @@ if ($requestSumReport) {
   my $detsPath = "";
   if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/sum" }
   else { $detsPath = "dets/sum"; }
-  $dset->renderReport($detsPath, $requestDETCurve, 1, $detoptions, 
+  $dset->renderReport($detsPath, $requestDETCurve, $excludeCounts == 0 ? 1 : 0, $detoptions, 
 		      ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
 		      ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
 		      ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode);
@@ -621,9 +623,10 @@ sub set_usage {
   $tmp .= "                                  deleteHyphens -> treat hyphens like required whitespace. (no effect without charSplit)\n";
 	$tmp .= "\n";
 	$tmp .= "Other options:\n";
-	$tmp .= "  -a, --articulatedDET     Compute the faster articulated DET curves.\n";
-  $tmp .= "  -X, --XmllintBypass      Bypass xmllint check of the KWSList XML file (this will reduce the memory footprint when loading the file, but requires that the file be formatted in a way similar to how \'xmllint --format\' would).\n"; 
-  $tmp .= "  --ExcludePNGFileFromTxtTable   Exclude PNG files loaction from output text tables\n";
+	$tmp .= "  -a, --articulatedDET          Compute the faster articulated DET curves.\n";
+  $tmp .= "  -X, --XmllintBypass           Bypass xmllint check of the KWSList XML file (this will reduce the memory footprint when loading the file, but requires that the file be formatted in a way similar to how \'xmllint --format\' would).\n"; 
+  $tmp .= "  --ExcludePNGFileFromTxtTable  Exclude PNG files loaction from output text tables\n";
+  $tmp .= "  --ExcludeCountsFromReports    Exclude trial counts from report tables\n";
 	$tmp .= "\n";
 
   return($tmp);
