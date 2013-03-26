@@ -518,7 +518,7 @@ sub execSTTScoreRun{
     " -n $def->{outputName}".
     " -o sum rsum prf dtl sgml".
     " -f 0".
-    " -D -F -e utf-8".
+    " -D -F".
     " $def->{SCLITE_OPTS}";
 
   if (! -f "$compRoot.log"){
@@ -756,7 +756,7 @@ if ($ltask =~ /KWS/){
                "SCLITE_OPTS" => $preferredScoring->{"STTOptions"}{"encoding"},
                "RESULTS" => {
                  "BaDev"  => [  "\\.sh", "\\.sys.txt", "\\.raw.txt", "\\.dtl.txt", "\\.prf", "\\.sgml"],
-                 "BaEval" => [  "\\.sh", "\\.sys.txt", "\\.raw.txt"                               ],
+                 "BaEval" => [  "\\.sh", "\\.sys.txt",                               ],
                }
              };
              
@@ -770,7 +770,7 @@ if ($ltask =~ /KWS/){
                "SCLITE_OPTS" => "-c NOASCII DH ". $preferredScoring->{"STTOptions"}{"encoding"},
                "RESULTS" => {
                  "BaDev"  => [  "\\.sh", "\\.sys.txt", "\\.raw.txt", "\\.dtl.txt", "\\.prf.txt", "\\.sgml"],
-                 "BaEval" => [  "\\.sh", "\\.sys.txt", "\\.raw.txt"                               ],
+                 "BaEval" => [  "\\.sh", "\\.sys.txt",                               ],
                }
              };
 
