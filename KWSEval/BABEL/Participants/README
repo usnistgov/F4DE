@@ -32,14 +32,27 @@ for account creation purpose
 - provide us with a list of the IP subnet that will need access to the ssh server
 
 4) you should receive an email from NIST with a confirmation or
-request for clarification related to the creation of the account that
-will contain testing instructions.
+request for clarification related to the creation of the account.
 
-5) test to confirm you can upload and download a file according to the
-instructions in the email your received from step 4
+5) edit the SubmissionHelper_common.cfg 's 'scp_user' line to reflect
+your scoring transfer system account information. Test to confirm your
+ssh setup is operational by using:
 
-Please remember that access to the system is done via 'scp' using public key +
-passphrase only.
+% ./scp_tester.sh
+
+which will use the setup information in your configuration file
+and try to upload it to the Scoring Server.
+Should it succeed, you will be told so, and your scp account set up
+should be complete.
+Otherwise an error message will be printed. Please send the generated
+log file to us for review.
+
+NOTE: Please remember that access to the system is done via 'scp'
+using public key + passphrase only.
+
+NOTE: the first time any 'scp' is done with the Scoring Server, you
+might be prompted for accepting the SSH key of the remote host, please
+enter 'yes'.
 
 
 --Prerequisite:
@@ -57,15 +70,15 @@ as every communication with the scoring server is done via 'scp'
 to your 'man ssh-agent' as well as
 https://en.wikipedia.org/wiki/Ssh-agent
 
-- require "JobRunner.pl" (should have been made available to you as a
-separate download)
+- require "JobRunner.pl". See:
+http://www.nist.gov/itl/iad/mig/tools.cfm
 
 - a copy of the cumulative release of scoring software driver files
 for Babel KWS and STT evaluations (for future reference we will call
 it 'IndusDB')
 
 - (for scoring your own STT input files) require the 'sctk' tool installed
-(at least version 2.4.4).  See:
+(at least version 2.4.7).  See:
 http://www.nist.gov/itl/iad/mig/tools.cfm
 
 - an understanding of the EXPID composition from the BABEL Evaluation
@@ -106,6 +119,7 @@ SubmissionHelper's <DBDIR>:
 (as specified in the KWS13_SubmissionHelper.cfg file)
 % ln -s <KWS13_INDUSDB_DIR> KWS13-dbDir
 
+Please insure that you have completed the scp account setup and testing.
 
 Familiarize yourself with the list of options of the tool by running
 it without any option:
