@@ -163,6 +163,10 @@ if [ "A${WEBPAGE}" != "A" ]; then
   echo "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<html>\n<head>\n<meta http-equiv=\"REFRESH\" content=\"10\">\n<title></title>\n</head>\n<body>\n<progress value=\"0\">0\%</progress>Awaiting\n</body>\n</html>\n" > ${WEBPAGE}
 fi
 
+if [ "A${SYSDESC}" != "A" ]; then
+    check_file "${SYSDESC}"
+fi
+
 ########################################
 ## Command line check
 
