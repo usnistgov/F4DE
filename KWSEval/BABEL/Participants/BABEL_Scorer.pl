@@ -505,7 +505,7 @@ sub execSTTScoreRun{
     MMisc::error_quit("CTM Filter execution failed ".$def->{runID}." returned $ret. Aborting") if ($retcode != 0);
     $ctmFile = "$def->{CTM}.filter";
 
-    $com = "$csrfilt -i stm $GLM < $def->{STM} > $def->{CTM}.ref.filter "; 
+    $com = "$csrfilt -i stm $GLM < $def->{STM}.ref.sort > $def->{CTM}.ref.filter "; 
     MMisc::writeTo("$compRoot.sh", "", 0, 1, "$com\n");
     my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$compRoot.filter.log", $com);
     MMisc::error_quit("CTM Filter execution failed ".$def->{runID}." returned $ret. Aborting") if ($retcode != 0);  
