@@ -259,7 +259,7 @@ if [ -z "$uncompdir" ] && [ "${uncompdir+xxx}" = "xxx" ];then uncomp=0; fi
 ########################################
 
 # Check tools
-for tool in "$subcheck" "$validator" "$TMvalidator" "$jobrunner"
+for tool in "$scp_cmd" "$subcheck" "$validator" "$TMvalidator" "$jobrunner"
 do
   check_file_x "$tool"
 done
