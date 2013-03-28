@@ -26,7 +26,9 @@ Usage:
 $0 [-h] [-r] [-A] [-R] [-V] [-S SystemDescription.txt] [-X] [-E] [-W file.html] [-Q] <EXPID>.kwslist.xml|<EXPID>.ctm
 $0 -C <SHA256> -M <KWS12|KWS13|...>
 
-The script will submit the <EXPID>.kwslist.xml or <EXPID>.ctm to the BABEL Scoring Server
+The script will submit the <EXPID>.kwslist.xml or <EXPID>.ctm to the BABEL Scoring Server.
+
+If you have submitted the exact same <EXPID>.<EXT> file content in the past (see tool output for "skipping" messages) or are changing the content of the "System Description", please use the '-R' option to insure this is considered a new submission by the scoring server.
 
 OPTIONS:
    -h      Show this message
@@ -347,6 +349,9 @@ lf="$nlf"
 nlf="$lf_base.03-scored"
 if [ "A${CONTSHA}" != "A" ]; then
   if [ ! -f "$lf" ]; then error_quit "Can not run -C if archive was not generated and uploaded"; fi
+#else
+#  if [ -f "$lf" ]; then
+#  fi
 fi
 if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 30 -M 190 -m "Archive Generation"; fi
 if [ ! -f "$lf" ]; then
