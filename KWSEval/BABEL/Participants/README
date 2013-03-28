@@ -1,4 +1,4 @@
-Date: 2012/12/12
+Date: 2013/03/28
 
 This file contains instructions on how to set and use the "SubmissionHelper.sh" script
 
@@ -214,3 +214,37 @@ validation and uploading step from the submission's SHA256 and
 "Evaluation mode" (the first component of the EXPID), using:
 % ./SubmissionHelper.sh -C <SHA256> -M <EVALUATION_MODE>
 
+-- Internal and Remote SHA256:
+-------------------
+
+The tool use both an "Internal SHA256" and a "Remote SHA256".
+
+* The "Internal SHA256" is used locally and is the SHA256 digest of the
+submission file. This avoid submissions to the Scoring Server of two
+identical files from a same source, and allow the SubmissionHelper
+tool to be able to be re-run at a later date with the exact same
+submission file and continue from where it left off.
+
+If you are trying to submit a file sent previously with the same EXPID
+but a different version number, the tool will refuse to do so because
+the new filename and the old filename do not match.
+  If this is an actual replacement submission, use the tool's -R
+option to resubmit using the same "Internal SHA256".
+  If this is a new and different submission which happens to have the
+same exact content, please modify the file content so that it is at
+least one byte different (add an extra comment or such), so that its
+"Internal SHA256" differs and the tool can too be run later on that
+file to continue where this specific fiel left off.
+
+* The "Remote SHA256" is the SHA256 digest obtained from a modified
+version of the submission file where some additional comments were
+added. This is the value that is used on the Scoring Server, and the
+value that is needed when doing email exhchanges with the Scoring
+Server team.
+
+* A list of the know "Internal SHA256", "Remote SHA256" and
+ "Submission File" can be obtained by running:
+% ./InternalSHA_to_RemoteSHA.pl
+
+See the tool usage to learn how to produce HTML or CSV output file, or search a specific
+SHA256/filename text.
