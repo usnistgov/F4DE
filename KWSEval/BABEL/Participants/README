@@ -202,6 +202,13 @@ earlier, skipping reupload"). In order to resubmit a submission file,
 use:
 % ./SubmissionHelper.sh -R <EXPID>.<EXT>
 
+EXTRA RESUBMISSION NOTE: If you have submitted the exact same
+<EXPID>.<EXT> file content in the past (see tool output for "skipping"
+messages) or are changing the content of the "System Description",
+please insure this is considered a new submission by the scoring
+server, using:
+% ./SubmissionHelper.sh -R [-S <SYSTEMDESCRIPTION>.txt] <EXPID>.<EXT>
+
 NOTE: it is possible to resume a submission that already passed
 validation and uploading step from the submission's SHA256 and
 "Evaluation mode" (the first component of the EXPID), using:
