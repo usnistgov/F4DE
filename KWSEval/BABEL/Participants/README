@@ -145,7 +145,7 @@ should prompt a submission log similar to:
 
 -- Loading Configuration file: KWS12_SubmissionHelper.cfg
 ** Submission file: [KWS12-dbDir/samples/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1.kwslist.xml]
-   SHA256 : 4043be376e0e8060d54c6f53673e53da8d4d25ef46db98befaa237a8551a72a7
+   Internal SHA256 : 4043be376e0e8060d54c6f53673e53da8d4d25ef46db98befaa237a8551a72a7
 ++ Validation step
   -> validating submission file
 ++ Archive Generation and Upload
@@ -184,6 +184,26 @@ Run:
 % ./SubmissionHelper.sh -S <SYSTEMDESCRIPTION>.txt <EXPID>.<EXT>
   to add a system description to your submission
 
-Note: It is possible to interrupt the process and restart it at a
+NOTE: it is possible to interrupt the process and restart it at a
 later time by running the same command line with the exact same
-"<EXPID>.kwslist.xml" (or "<EXPID>.ctm") file
+"<EXPID>.<EXT>" file. There is also a mean to ask the tool to exit
+after uploading the files, this is done using:
+% ./SubmissionHelper.sh -Q <EXPID>.<EXT>
+
+RESUBMISSION NOTE: the tool create an "Internal SHA256" value from the
+file content alone in order to avoid duplicate submissions with the
+same file content. Therefore, should a file be submitted that was
+already submitted previously, the tool will consider the submission to
+be a continuation of a past submission, and skip steps performed on
+the previous file. This behavior can be noticed when looking at the
+tool ouptut, as the tool will notofy the user that it did skip a step
+(ex: "-- validated earlier, skipping revalidation" or "-- transfered
+earlier, skipping reupload"). In order to resubmit a submission file,
+use:
+% ./SubmissionHelper.sh -R <EXPID>.<EXT>
+
+NOTE: it is possible to resume a submission that already passed
+validation and uploading step from the submission's SHA256 and
+"Evaluation mode" (the first component of the EXPID), using:
+% ./SubmissionHelper.sh -C <SHA256> -M <EVALUATION_MODE>
+
