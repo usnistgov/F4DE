@@ -23,7 +23,7 @@ usage()
 {
 cat << EOF
 Usage:
-$0 [-h] [-r] [-A] [-R] [-V] [-S SystemDescription.txt] [-X] [-E] [-W file.html] [-Q] <EXPID>.kwslist.xml|<EXPID>.ctm
+$0 [-h] [-r] [-A] [-R] [-Y] [-V] [-S SystemDescription.txt] [-X] [-E] [-W file.html] [-Q] <EXPID>.kwslist.xml|<EXPID>.ctm
 $0 -C <SHA256> -M <KWS12|KWS13|...>
 
 The script will submit the <EXPID>.kwslist.xml or <EXPID>.ctm to the BABEL Scoring Server.
@@ -35,6 +35,7 @@ OPTIONS:
    -r      Redownload results
    -A      Authorize TERMs defined in KWList file but not in the KWSlist file
    -R      Resubmit a system file (*1)
+   -Y      Fix validation cache information (the tool itself will prompt you to rerun with this option if the cache information is invalid)
    -V      re-Validate input file (in case component of the scoring tools was modified)
    -S      System Description file
    -X      Pass the XmllintBypass option to KWSList validation and scoring tools
@@ -62,7 +63,8 @@ WEBPAGE=""
 CONTSHA=""
 kmode=""
 QAU=0
-while getopts "hrAVRS:XEW:C:M:Q" OPTION
+FIXCACHE=0
+while getopts "hrAVRS:XEW:C:M:QY" OPTION
 do
   case $OPTION in
     h)
@@ -119,6 +121,10 @@ do
       QAU=1
       shift $((OPTIND-1)); OPTIND=1
       ;;
+    Y)
+      FIXCACHE=1
+      shift $((OPTIND-1)); OPTIND=1
+      ;;
     ?)
       usage
       exit 1
@@ -168,9 +174,7 @@ if [ "A${WEBPAGE}" != "A" ]; then
   echo "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<html>\n<head>\n<meta http-equiv=\"REFRESH\" content=\"10\">\n<title></title>\n</head>\n<body>\n<progress value=\"0\">0\%</progress>Awaiting\n</body>\n</html>\n" > ${WEBPAGE}
 fi
 
-if [ "A${SYSDESC}" != "A" ]; then
-    check_file "${SYSDESC}"
-fi
+if [ "A${SYSDESC}" != "A" ]; then check_file "${SYSDESC}"; fi
 
 ########################################
 ## Command line check
@@ -325,6 +329,19 @@ lf="$lf_base.01-validated"
 nlf="$lf_base.02-uploaded"
 if [ "A${CONTSHA}" != "A" ]; then
   if [ ! -f "$lf" ]; then error_quit "Can not run -C if matching file was not validated"; fi
+else
+  if [ -f "$lf" ]; then
+    osubfile=`cat $lf`
+    if [ -z "$osubfile" ]; then 
+      echo "!!!!! WARNING !!!!! this SHA256 was used previously, but we can not determine the used submission file; if this is a resubmission, make sure to use the \'-R\' option, otherwise, please see the README's 'Internal and Remote SHA256' section"
+    else
+      nsubfile=`echo $if | perl -pe 's%^.*/%%;'`
+      # if submission files differ and we are not resubmitting, exit with error
+      if [ "A${osubfile}" != "A${nsubfile}" ]; then
+          if [ "A${RESUBMIT}" == "A0" ]; then error_quit "Will not allow submission of a file with the same SHA256 as a previous one while its filename is different (was: $osubfile / now: $nsubfile). If this is a resubmission, please use the \'-R\' option"; fi
+      fi
+    fi
+  fi
 fi
 if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 20 -M 190 -m "Validation"; fi
 if [ ! -f "$lf" ]; then
@@ -341,7 +358,14 @@ else
 fi
 
 subfile=`cat $lf`
-if [ -z "$subfile" ]; then error_quit "No previous cached submission file value available, aborting"; fi
+if [ -z "$subfile" ]; then
+  if [ "A${FIXCACHE}" == "A0" ]; then
+    error_quit "No previous cached submission file value available, aborting. If this is not a resubmission, please rerun using the '-Y' option"
+  else
+    subfile=`echo $if | perl -pe 's%^.*/%%;'`
+    echo "$subfile" > "$lf"
+  fi
+fi
 
 ########## Step 2
 echo "++ Archive Generation and Upload"
@@ -349,9 +373,6 @@ lf="$nlf"
 nlf="$lf_base.03-scored"
 if [ "A${CONTSHA}" != "A" ]; then
   if [ ! -f "$lf" ]; then error_quit "Can not run -C if archive was not generated and uploaded"; fi
-#else
-#  if [ -f "$lf" ]; then
-#  fi
 fi
 if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 30 -M 190 -m "Archive Generation"; fi
 if [ ! -f "$lf" ]; then
@@ -416,6 +437,9 @@ if [ ! -f "$lf" ]; then
   rm -f "$nlf"
 else
   echo "  -- transfered earlier, skipping reupload"
+  if [ "A${SYSDESC}" != "A" ]; then
+    echo "!!!!! WARNING !!!!! the archive was uploaded previously, but you are specifying a 'SystemDescription.txt' file on the command line, if this is a replacement file, please rerun the command with the \'-R\' option"
+  fi
 fi
 
 # obtain last uploaded file's SHA256 for download
