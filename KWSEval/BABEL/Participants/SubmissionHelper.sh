@@ -32,7 +32,7 @@ OPTIONS:
    -h      Show this message
    -r      Redownload results
    -A      Authorize TERMs defined in KWList file but not in the KWSlist file
-   -R      Resubmit a system file
+   -R      Resubmit a system file (*1)
    -V      re-Validate input file (in case component of the scoring tools was modified)
    -S      System Description file
    -X      Pass the XmllintBypass option to KWSList validation and scoring tools
@@ -42,6 +42,9 @@ OPTIONS:
 
    -C      Continue from where SHA256 job was when last stopped. Must use "Internal SHA256" value. Must have at least passed validation and uploading step.
    -M      Evaluation mode (ie the first component of the original submission file's EXPID)
+
+NOTES:
+ *1: the tool create an "Internal SHA256" value from the file content alone in order to avoid duplicate submissions with the same file content. Therefore, should a file be submitted that was already submitted previously, the tool will consider the submission to be a continuation of a past submission, and skip steps performed on the previous file. Use this option to force a resubmission. See "RESUBMISSION NOTE" in the Participant's README file for more details.
 EOF
 }
 
