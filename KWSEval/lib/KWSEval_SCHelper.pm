@@ -58,6 +58,9 @@ my @expid_aud;
 my @Scase_toSequester;
 
 my %AuthorizedSet;
+my $ctm_rgx = undef;
+my $kwslist_rgx = undef;
+my %Task2Regexp;
 
 #####
 
@@ -71,7 +74,10 @@ sub __cfgcheck {
 #####
 
 sub loadSpecfile {
-  my ($specfile) = @_;
+  my ($specfile, $uctm_rgx, $ukwslist_rgx) = @_;
+
+  MMisc::error_quit("One of CTM or KWSLIST regexp is not provided to the function, aborting")
+      if ((! defined $uctm_rgx) || (! defined $ukwslist_rgx));
 
   # reset values
   @expid_tag = ();
@@ -86,6 +92,9 @@ sub loadSpecfile {
   @expid_aud = ();
   @Scase_toSequester = ();
   %AuthorizedSet = ();
+  %Task2Regexp = ();
+  $ctm_rgx = $uctm_rgx;
+  $kwslist_rgx = $ukwslist_rgx;
 
   my $tmpstr = MMisc::slurp_file($specfile);
   MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
@@ -109,6 +118,8 @@ sub loadSpecfile {
       if (scalar @Scase_toSequester > scalar @expid_scase);
   MMisc::error_quit("No \%AuthorizedSet set in \'SpecFile\' ($specfile)")
       if (scalar keys %AuthorizedSet == 0);
+  MMisc::error_quit("No \%Task2Regexp set in \'SpecFile\' ($specfile)")
+      if (scalar keys %Task2Regexp == 0);
   
   return($expid_tag[0]);
 }
@@ -141,10 +152,10 @@ sub get_AuthorizedSet { return(%AuthorizedSet); }
 ##########
 
 sub check_name {
-  my ($kwsyear, $eteam, $name, $verb) = @_;
-  return(&check_name_kws12($kwsyear, $eteam, $name, $verb))
+  my ($kwsyear, $eteam, $name, $ext, $verb) = @_;
+  return(&check_name_kws12($kwsyear, $eteam, $name, $ext, $verb))
     if ($kwsyear eq 'KWS12');
-  return(&check_name_kws13($kwsyear, $eteam, $name, $verb))
+  return(&check_name_kws13($kwsyear, $eteam, $name, $ext, $verb))
     if ($kwsyear eq 'KWS13');
   MMisc::error_quit("Unknown EXPID name handler for \'$kwsyear\'");
 }
@@ -152,7 +163,7 @@ sub check_name {
 ##
 
 sub check_name_kws12 {
-  my ($kwsyear, $eteam, $name, $verb) = @_;
+  my ($kwsyear, $eteam, $name, $ext, $verb) = @_;
 
   my $et = "\'EXP-ID\' not of the form \'${kwsyear}_<TEAM>_<CORPUS>_<PARTITION>_<SCASE>_<TASK>_<TRNCOND>_<SYSID>_<VERSION>\' : ";
   
@@ -175,6 +186,17 @@ sub check_name_kws12 {
   $err .= &cmp_exp("<PARTITION>",  $lpart, @expid_partition);
   $err .= &cmp_exp("<SCASE>", $lscase, @expid_scase);
   $err .= &cmp_exp("<TASK>", $ltask, @expid_task);
+
+  if (grep(m%^$ltask$%, @expid_task)) {
+    if (! MMisc::safe_exists(\%Task2Regexp, $ltask)) {
+      &err .= "Can not find an extension match for task ($ltask). ";
+    } else {
+      my $tv = $Task2Regexp{$ltask};
+      $err .= "File's extension ($ext) for task ($ltask) does not match authorized regexp ($tv). "
+        if ($ext !~ m%^$tv$%);
+    }
+  }
+
   $err .= &cmp_exp("<TRNCOND>", $ltrncond, @expid_trncond);
   
   my $b = substr($lsysid, 0, 2);
@@ -197,7 +219,7 @@ sub check_name_kws12 {
 ##
 
 sub check_name_kws13 {
-  my ($kwsyear, $eteam, $name, $verb) = @_;
+  my ($kwsyear, $eteam, $name, $ext, $verb) = @_;
 
   my $et = "\'EXP-ID\' not of the form \'${kwsyear}_<TEAM>_<CORPUS>_<PARTITION>_<SCASE>_<TASK>_<LP>_<LR>_<AUD>_<SYSID>_<VERSION>\' : ";
   
@@ -220,6 +242,17 @@ sub check_name_kws13 {
   $err .= &cmp_exp("<PARTITION>",  $lpart, @expid_partition);
   $err .= &cmp_exp("<SCASE>", $lscase, @expid_scase);
   $err .= &cmp_exp("<TASK>", $ltask, @expid_task);
+
+  if (grep(m%^$ltask$%, @expid_task)) {
+    if (! MMisc::safe_exists(\%Task2Regexp, $ltask)) {
+      &err .= "Can not find an extension match for task ($ltask). ";
+    } else {
+      my $tv = $Task2Regexp{$ltask};
+      $err .= "File's extension ($ext) for task ($ltask) does not match authorized regexp ($tv). "
+        if ($ext !~ m%^$tv$%);
+    }
+  }
+
   $err .= &cmp_exp("<LP>", $llp, @expid_lp);
   $err .= &cmp_exp("<LR>", $llr, @expid_lr);
   $err .= &cmp_exp("<AUD>", $laud, @expid_aud);

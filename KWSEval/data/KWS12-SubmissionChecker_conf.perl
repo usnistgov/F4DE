@@ -29,3 +29,9 @@ $AuthorizedSet{$expid_partition[0]}{$expid_scase[3]} = 1;
 # Authorize only BaEval and BaSurp scase for 'conv-eval'
 $AuthorizedSet{$expid_partition[1]}{$expid_scase[2]} = 1;
 $AuthorizedSet{$expid_partition[1]}{$expid_scase[3]} = 1;
+
+# task to ext regexp match
+$Task2Regexp{$expid_task[0]} = $kwslist_rgx;
+$Task2Regexp{$expid_task[1]} = $kwslist_rgx;
+$Task2Regexp{$expid_task[2]} = $ctm_rgx;
+
