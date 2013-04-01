@@ -1,4 +1,4 @@
-Date: 2013/03/28
+Date: 2013/04/01
 
 This file contains instructions on how to set and use the "SubmissionHelper.sh" script
 
@@ -55,7 +55,7 @@ might be prompted for accepting the SSH key of the remote host, please
 enter 'yes'.
 
 
---Prerequisite:
+--Prerequisites for using the Submission Helper tool:
 -------------
 
 - make sure that at least F4DE's "make mincheck" and "make
