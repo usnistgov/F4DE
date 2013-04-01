@@ -98,6 +98,7 @@ my $stm_ext = ".stm";
 my $rttm_ext = ".rttm";
 
 my $kwslist_ext = ".kwslist.xml";
+my $ctm_ext = ".ctm";
 
 my $kwseval = (exists $ENV{$f4b})
   ? $ENV{$f4b} . "/bin/KWSEval"
@@ -235,12 +236,22 @@ KWSEval_SCHelper::check_ecf_tlist_pairs($verb, \%ecfs, \%tlists, $rttm_ext, \%rt
 
 ########################################
 
-my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile);
+my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile, $ctm_ext, $kwslist_ext);
 
 my @Scase_toSequester = KWSEval_SCHelper::get_Scase_toSequester();
 my %AuthorizedSet = KWSEval_SCHelper::get_AuthorizedSet();
 
-my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $expid, $verb);
+# Remove the file ending (and extract it value for 'mode' selector)
+my $mode = undef;
+if ($sysfile =~ m%$kwslist_ext$%i) {
+  $mode = $kwslist_ext;
+} elsif ($sysfile =~ m%$ctm_ext$%i) {
+  $mode = $ctm_ext;
+}
+MMisc::error_quit("File must end in either \'$kwslist_ext\' or \'$ctm_ext\' to be usable")
+  if (! defined $mode);
+
+my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $expid, $mode, $verb);
 MMisc::error_quit($lerr) if (! MMisc::is_blank($lerr));
 
 MMisc::error_quit("No Rule set for <PARTITION>=$lpart <SCASE>=$lscase")

@@ -211,7 +211,7 @@ KWSEval_SCHelper::check_ecf_tlist_pairs($verb, \%ecfs, \%tlists, $rttm_ext, \%rt
 
 ########################################
 
-my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile);
+my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile, $ctm_ext, $kwslist_ext);
 
 my %AuthorizedSet = KWSEval_SCHelper::get_AuthorizedSet();
 
@@ -342,7 +342,7 @@ sub check_submission {
   $f =~ s%^.+/%%; # erase the directory part of the file
 
   vprint(2, "Checking EXPID");
-  my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $f, $verb);
+  my ($lerr, $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $ltrncond, $lsysid, $lversion, $lp, $lr, $laud) = KWSEval_SCHelper::check_name($kwsyear, $eteam, $f, $mode, $verb);
   return($lerr) if (! MMisc::is_blank($lerr));
   
   return("No Rule set for <PARTITION>=$lpart <SCASE>=$lscase")
@@ -504,13 +504,15 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] --Specfile perlEvalfile --dbDir dir [--dbDir dir [...]] [--kwslistValidator tool [--AllowMissingTerms] [--XmllintBypass]] [--TmValidator tool] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID$kwslist_ext
+Usage: $0 [--help | --version] --Specfile perlEvalfile --dbDir dir [--dbDir dir [...]] [--kwslistValidator tool [--AllowMissingTerms] [--XmllintBypass]] [--TmValidator tool] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID.extension
 
 Will confirm that a submission file conforms to the BABEL 'Submission Instructions'.
 
 The program needs a 'dbDir' to load some of its eval specific definitions.
-For \'$kwslist_ext\' files, this directory must contain pairs of <CORPUSID>_<PARTITION> \"$ecf_ext\" and \"$tlist_ext\" files that match the component of the EXPID.
-For \'$ctm_ext\' files, only the \'$ecf_ext\' file is required.
+
+".extension" is one of: $kwslist_ext $ctm_ext
+  For \'$kwslist_ext\' files, this directory must contain pairs of <CORPUSID>_<PARTITION> \"$ecf_ext\" and \"$tlist_ext\" files that match the component of the EXPID.
+  For \'$ctm_ext\' files, only the \'$ecf_ext\' file is required.
 
  Where:
   --help          Print this usage information and exit
