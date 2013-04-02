@@ -23,8 +23,9 @@ usage()
 {
 cat << EOF
 Usage:
-$0 [-h] [-r] [-A] [-R] [-Y] [-V] [-S SystemDescription.txt] [-X] [-E] [-W file.html] [-Q] <EXPID>.kwslist.xml|<EXPID>.ctm
-$0 -C <SHA256> -M <KWS12|KWS13|...>
+$0 [-h] [-r] [-A] [-R] [-Y] [-V] [-S SystemDescription.txt] [-X] [-E] [-W file.html] [-Q] <EXPID>.<EXT>
+$0 -M <KWS12|KWS13|...> -C <InternalSHA256> 
+$0 -M <KWS12|KWS13|...> -D <RemoteSHA256>
 
 The script will submit the <EXPID>.kwslist.xml or <EXPID>.ctm to the BABEL Scoring Server.
 
@@ -43,8 +44,10 @@ OPTIONS:
    -W      Generate a web page progress bar detailing each step in the process
    -Q      Quit after uploading file
 
-   -C      Continue from where SHA256 job was when last stopped. Must use "Internal SHA256" value. Must have at least passed validation and uploading step.
    -M      Evaluation mode (ie the first component of the original submission file's EXPID)
+   -C      Continue from where InternalSHA256 job was when last stopped. Must use "Internal SHA256" value. Must have at least passed validation and uploading step.
+   -D      Download results matching RemoteSHA256. This option is only to retrieve a result file; force the use of -r. Note that the result directory will contain the RemoteSHA256, not the EXPID
+
 
 NOTES:
  *1: the tool create an "Internal SHA256" value from the file content alone in order to avoid duplicate submissions with the same file content. Therefore, should a file be submitted that was already submitted previously, the tool will consider the submission to be a continuation of a past submission, and skip steps performed on the previous file. Use this option to force a resubmission. See "RESUBMISSION NOTE" in the Participant's README file for more details.
@@ -64,7 +67,8 @@ CONTSHA=""
 kmode=""
 QAU=0
 FIXCACHE=0
-while getopts "hrAVRS:XEW:C:M:QY" OPTION
+DOWNLOADSHA=""
+while getopts "hrAVRS:XEW:C:M:QYD:" OPTION
 do
   case $OPTION in
     h)
@@ -125,6 +129,11 @@ do
       FIXCACHE=1
       shift $((OPTIND-1)); OPTIND=1
       ;;
+    D)
+      DOWNLOADSHA=${OPTARG}
+      shift $((OPTIND-1)); OPTIND=1
+      shift $((OPTIND-1)); OPTIND=1
+      ;;
     ?)
       usage
       exit 1
@@ -133,9 +142,18 @@ do
 done
 
 if [ "A${CONTSHA}" != "A" ]; then
+  if [ "A$kmode" == "A" ]; then error_quit "Must specify -k when using -C"; fi
   if [ "A$REVALIDATE" == "A1" ]; then error_quit "Can not use -V option with -C"; fi
   if [ "A$RESUBMIT" == "A1" ]; then error_quit "Can not use -R option with -C"; fi
   if [ "A$QAU" == "A1" ]; then error_quit "Can not use -Q option with -C"; fi
+fi
+
+if [ "A${DOWNLOADSHA}" != "A" ]; then
+  if [ "A$kmode" == "A" ]; then error_quit "Must specify -k when using -D"; fi
+  if [ "A$REVALIDATE" == "A1" ]; then error_quit "Can not use -V option with -D"; fi
+  if [ "A$RESUBMIT" == "A1" ]; then error_quit "Can not use -R option with -D"; fi
+  if [ "A$QAU" == "A1" ]; then error_quit "Can not use -Q option with -D"; fi
+  REDODOWNLOAD=1
 fi
 
 ## Create expected directory if not present, exit with error if not capable
@@ -179,12 +197,12 @@ if [ "A${SYSDESC}" != "A" ]; then check_file "${SYSDESC}"; fi
 ########################################
 ## Command line check
 
-if [ "A${CONTSHA}" == "A" ]; then
+if [ "A${CONTSHA}${DOWNLOADSHA}" == "A" ]; then
   if  [ $# != 1 ]; then usage; error_quit "No submission file on command line, quitting" ; fi
   if=$1
   check_file "$if"
 else
-  if  [ $# != 0 ]; then usage; error_quit "When using -C,  no submission file can be on the command line, quitting" ; fi
+  if  [ $# != 0 ]; then usage; error_quit "When using -C or -D,  no submission file can be on the command line, quitting" ; fi
   if="__NOT__A__VALID__FILE__"
 fi
 
@@ -201,7 +219,7 @@ check_file_x "$htmlproggen"
 
 ##
 
-if [ "A${CONTSHA}" == "A" ]; then kmode=`echo $if | perl -ne 's%^.+/%%;s%\_.+$%%; print uc($_)'`; fi
+if [ "A${CONTSHA}${DOWNLOADSHA}" == "A" ]; then kmode=`echo $if | perl -ne 's%^.+/%%;s%\_.+$%%; print uc($_)'`; fi
 if [ "A$kmode" == "A" ]; then error_quit "No KWS mode information found"; fi
 
 conf="${subhelp_dir}/${kmode}_SubmissionHelper.cfg"
@@ -296,7 +314,7 @@ if [ "A$uncomp" == "A1" ]; then
 fi
 
 ############################################################
-if [ "A${CONTSHA}" == "A" ]; then
+if [ "A${CONTSHA}${DOWNLOADSHA}" == "A" ]; then
   echo "** Submission file: [$if]"
 
   # we want to get the file's SHA256
@@ -306,6 +324,7 @@ else
   sha256="$CONTSHA"
 fi
 
+if [ "A${DOWNLOADSHA}" == "A" ]; then # if -D => skip everything until "Downloading Results"
 echo "   Internal SHA256 : $sha256"
 lf_base="$lockdir/$sha256"
 
@@ -496,6 +515,12 @@ else
   touch "$lf"
   rm -f "$nlf"
 fi
+else # ELSE: if [ "A${DOWNLOADSHA}" == "A" ]; then
+  lsha256="${DOWNLOADSHA}"
+  lf_base=`perl -I$F4DEclib -e 'use MMisc; print MMisc::get_tmpfile();'`
+  nlf="$lf_base.04-returned"
+  subfile="$lsha256"
+fi # END: if [ "A${DOWNLOADSHA}" == "A" ]; then
 
 ########## Step 4
 echo "++ Downloading Results"
