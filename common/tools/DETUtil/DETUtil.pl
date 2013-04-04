@@ -135,7 +135,7 @@ my $excludeCounts = 0;
 Getopt::Long::Configure(qw( no_ignore_case ));
 
 # Av:   ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: ABCDEFGHIJKL   PQRST V X Za cde ghi klm op rst v x z #
+# Used: ABCDEFGHIJKL   PQRST V X Za cde ghi klm opqrst v x z #
 
 GetOptions
   (
@@ -167,7 +167,7 @@ GetOptions
    'F|ForceRecompute'            => \$forceRecompute,
    'x|txtTable'                  => \$doTxtTable,  
    'X|ExcludePNGFileFromTxtTable' => \$xpng,
-   'ExcludeCountsFromReports'    => \$excludeCounts,
+   'q|ExcludeCountsFromReports'    => \$excludeCounts,
    
    'H|HD'                        => \$HD,
    'a|autoAdapt'                 => \$AutoAdapt,
@@ -915,11 +915,11 @@ Force the DET points to be recomputed.  Some of the other options also re-comput
 
 Generate a table of statistics.  
 
-=item B<-X> B<--ExcludePNGFileFromTextTable>
-
+=item B<-X> B<--ExcludePNGFileFromTxtTable>
+                
 Exclude the PNG files location from text tables generated.  
 
-=item B<-X> B<--ExcludeCountsFromReports>
+=item B<-q> B<--ExcludeCountsFromReports>
 
 Exclude trial counts from report tables\n";
 
