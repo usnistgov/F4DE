@@ -301,7 +301,7 @@ sub check_kwslist_kwlist {
       if (MMisc::does_file_exist($file));
   }
 
-  return("Could not find file ($tf) in DBdir", ""); 
+  return("Could not find in dbDir the \'kwlist_filename\' ($tf) listed in the header of the \'kwslist.xml\'", ""); 
 }
 
 ############################################################
