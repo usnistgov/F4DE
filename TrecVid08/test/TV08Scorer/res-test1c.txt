@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test1-1md-sys.xml -g ../common/test1-gtf.xml -s -o -D 1000
+[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl --NoDet --noPNG -a -f 25 -d 1 ../common/test1-1md-sys.xml -g ../common/test1-gtf.xml -s -o -D 1000
 [[RETURN CODE]] 0
 [[STDOUT]]
 ***** STEP 1: Loading files in Memory
@@ -79,12 +79,12 @@ Computed using:  Rtarget = 1.8 | CostMiss = 10 | CostFA = 1
 |               Rtarget |                        1.8 |
 
 
-|                   |           Inputs            |                               Actual Decision DCR Analysis                                |
-|       Title       |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    RFA    |  PMiss   |   DCR    |  Dec. Tresh  |
-|-------------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
-|   CellToEar Event |       3 |        0 |      2 |         0 |          0 |     0 |       3 |   0.00000 |    1.000 |   1.0000 |       0.9900 |
-|   ObjectGet Event |       1 |        0 |      1 |         0 |          0 |     0 |       1 |   0.00000 |    1.000 |   1.0000 |       0.7800 |
-|   ObjectPut Event |       1 |        0 |      1 |         1 |          0 |     0 |       0 |   0.00000 |    0.000 |   0.0000 |       0.4500 |
+|                   |           Inputs            |                               Actual Decision DCR Analysis                                |              Minimum DCR Analysis               |
+|       Title       |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    RFA    |  PMiss   |   DCR    |  Dec. Tresh  |    RFA    |  PMiss   |   DCR    |  Dec. Thresh  |
+|-------------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+
+|   CellToEar Event |       3 |        0 |      2 |         0 |          0 |     0 |       3 |   0.00000 |    1.000 |   1.0000 |       0.9900 |   0.00000 |    0.333 |   0.3333 |         0.230 |
+|   ObjectGet Event |       1 |        0 |      1 |         0 |          0 |     0 |       1 |   0.00000 |    1.000 |   1.0000 |       0.7800 |   0.00000 |    0.000 |   0.0000 |         0.780 |
+|   ObjectPut Event |       1 |        0 |      1 |         1 |          0 |     0 |       0 |   0.00000 |    0.000 |   0.0000 |       0.4500 |   0.00000 |    0.000 |   0.0000 |         0.450 |
 
 
 ***** Done *****

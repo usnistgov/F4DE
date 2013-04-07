@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test2-1md_1fa-sys.xml -g ../common/test2-gtf.xml -s -o -D 1000 -L
+[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl --NoDet --noPNG -a -f 25 -d 1 ../common/test2-1md_1fa-sys.xml -g ../common/test2-gtf.xml -s -o -D 1000 -L
 [[RETURN CODE]] 0
 [[STDOUT]]
 ***** STEP 1: Loading files in Memory
@@ -83,12 +83,12 @@ Computed using:  Rtarget = 1.8 | CostMiss = 10 | CostFA = 1
 |               Rtarget |                        1.8 |
 
 
-|                    |           Inputs            |                               Actual Decision DCR Analysis                                |
-|       Title        |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    RFA    |  PMiss   |   DCR    |  Dec. Tresh  |
-|--------------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
-|    CellToEar Event |       3 |        0 |      3 |         1 |          0 |     0 |       2 |   0.00000 |    0.667 |   0.6667 |     101.5000 |
-|    ObjectGet Event |       1 |        0 |      1 |         0 |          0 |     0 |       1 |   0.00000 |    1.000 |   1.0000 |      99.0000 |
-|   PersonRuns Event |       0 |        1 |      1 |         0 |          0 |     1 |       0 |   3.60000 |       NA |       NA |     -10.0000 |
+|                    |           Inputs            |                               Actual Decision DCR Analysis                                |              Minimum DCR Analysis               |
+|       Title        |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    RFA    |  PMiss   |   DCR    |  Dec. Tresh  |    RFA    |  PMiss   |   DCR    |  Dec. Thresh  |
+|--------------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+
+|    CellToEar Event |       3 |        0 |      3 |         1 |          0 |     0 |       2 |   0.00000 |    0.667 |   0.6667 |     101.5000 |   0.00000 |    0.000 |   0.0000 |        -0.990 |
+|    ObjectGet Event |       1 |        0 |      1 |         0 |          0 |     0 |       1 |   0.00000 |    1.000 |   1.0000 |      99.0000 |   0.00000 |    0.000 |   0.0000 |        99.000 |
+|   PersonRuns Event |       0 |        1 |      1 |         0 |          0 |     1 |       0 |   3.60000 |       NA |       NA |     -10.0000 |   3.60000 |       NA |       NA |       -10.000 |
 
 
 ***** Done *****

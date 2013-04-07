@@ -111,7 +111,7 @@ sub do_simple_test {
   my $fsf = "";
   foreach my $i (split(m%\s+%, $sf)) { $fsf .= "../common/$i ";}
 
-  my $command = "$scorer -a -f 25 -d 1 ${fsf}-g ${frf}-s -o $ao";
+  my $command = "$scorer --NoDet --noPNG -a -f 25 -d 1 ${fsf}-g ${frf}-s -o $ao";
   $totest++;
 
   return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev));

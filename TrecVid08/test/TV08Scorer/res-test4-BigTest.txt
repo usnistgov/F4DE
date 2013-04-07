@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl -a -f 25 -d 1 ../common/test4-BigTest.sys.xml -g ../common/test4-BigTest.ref.xml -s -o -D 90000 --computeDETCurve --noPNG -N
+[[COMMANDLINE]] ../../tools/TV08Scorer/TV08Scorer.pl --NoDet --noPNG -a -f 25 -d 1 ../common/test4-BigTest.sys.xml -g ../common/test4-BigTest.ref.xml -s -o -D 90000 --computeDETCurve --noPNG -N
 [[RETURN CODE]] 0
 [[STDOUT]]
 ***** STEP 1: Loading files in Memory
