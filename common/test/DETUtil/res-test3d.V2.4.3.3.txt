@@ -12,10 +12,10 @@ Wrote: foo.results.txt
 |                       Ptarg |                  0.5 |
 
 
-|                       |                 Inputs                 |                               Actual Decision NDC Analysis                                |
-|         Title         |  #Color  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |
-|-----------------------+----------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
-|   Color Color Average |        4 |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87296 |    0.261 |   1.1340 |       0.6562 |
+|                       |                 Inputs                 |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |
+|         Title         |  #Color  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |
+|-----------------------+----------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+
+|   Color Color Average |        4 |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87296 |    0.261 |   1.1340 |       0.6562 |   0.00934 |    0.919 |   0.9286 |         0.931 |
 
 [[STDERR]]
 

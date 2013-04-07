@@ -12,10 +12,10 @@ Wrote: foo.results.txt
 |                       Ptarg |                  0.5 |
 
 
-|                 |           Inputs            |                               Actual Decision NDC Analysis                                |
-|      Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |
-|-----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
-|   Block BlockID |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87255 |    0.270 |   1.1430 |       0.5063 |
+|                 |           Inputs            |                               Actual Decision NDC Analysis                                |              Minimum NDC Analysis               |
+|      Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   NDC    |  Dec. Tresh  |    PFA    |  PMiss   |   NDC    |  Dec. Thresh  |
+|-----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+
+|   Block BlockID |     196 |      204 |    400 |       143 |         26 |   178 |      53 |   0.87255 |    0.270 |   1.1430 |       0.5063 |   0.00980 |    0.918 |   0.9282 |         4.894 |
 
 [[STDERR]]
 
