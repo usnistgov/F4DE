@@ -28,7 +28,7 @@ use strict;
 # Version
 
 # $Id$
-my $version     = "0.3";
+my $version     = "0.4";
 if ($version =~ m/b$/) {
   (my $cvs_version = '$Revision$') =~ s/[^0-9\.]//g;
   $version = "$version (CVS: $cvs_version)";
@@ -307,6 +307,9 @@ MMisc::error_quit("Step 1 failed to find the IndusCorporaDefs file in the dbDir 
 my $indusCorporaDefs = undef;
 eval `cat $indusCorporaDefsFile`;
 MMisc::error_quit("Step 1 failed to load $indusCorporaDefsFile successfully.  Aborting") if (! defined($indusCorporaDefs));
+my $reqIDB = 3;
+MMisc::error_quit("Step 1 failed: IndusDB too old.  Must be > $reqIDB.  Aborting") if (!exists ($indusCorporaDefs->{versionID}));
+MMisc::error_quit("Step 1 failed: IndusDB too old.  Must be > $reqIDB.  Aborting") if ($indusCorporaDefs->{versionID} < $reqIDB);
 print "Info: indusCorporaDefsFile = $indusCorporaDefsFile version '".$indusCorporaDefs->{version}."'\n";
 
 ### Paranoia check for the DryRun.  This will be implemented elsewhere!!!!!!
@@ -649,17 +652,9 @@ if ($ltask =~ /KWS/){
 
   my %RunDefs = ();  
   ### Make the run structures via foreac
-  foreach my $setDEF("Full:Full Submission", "DevSubset:Dev Subset", "DevProgSubset:Dev-Progress Subset"){
-    my ($setID, $setStr) = split(/:/, $setDEF);
-    my $ecfs = {"Full" => "$db/${lcorpus}_${lpart}.scoring.ecf.xml", 
-                "DevSubset" => "$db/${lcorpus}_${lpart}.scoring.dev.ecf.xml",
-                "DevProgSubset" => "$db/${lcorpus}_${lpart}.scoring.dev-progress.ecf.xml"};
-    my $BaDev  = {"Full" => [      "\\.alignment.csv", "\\.log", "\\.sh", "\\.sum.*", "\\.bsum.*", "\\.dets/.*srl.gz", "\\.dets/.*.png"],
-                  "DevSubset" => [ "\\.alignment.csv", "\\.log", "\\.sh", "\\.sum.*", "\\.bsum.*", "\\.dets/.*srl.gz", "\\.dets/.*.png"],
-                  "DevProgSubset" => [ ] };
-    my $BaEval = {"Full" => [                          "\\.log", "\\.sh", "\\.sum.*",                                  "\\.dets/.*.png"],
-                  "DevSubset" => [ "\\.alignment.csv", "\\.log", "\\.sh", "\\.sum.*", "\\.bsum.*",                     "\\.dets/.*.png"],
-                  "DevProgSubset" => [                 "\\.log", "\\.sh",                                              "\\.dets/.*.png"] };
+  foreach my $setID(sort keys % {$indusCorporaDefs->{sets}}){
+    my ($setStr) = $indusCorporaDefs->{sets}{$setID}{Desc};
+    my $ecf = $indusCorporaDefs->{sets}{$setID}{ECF};
     
     foreach my $protocolDEF("Occur:Occurrence scoring", "InfSeg:Inferred Segment scoring"){
       my ($protocolID, $protocolStr) = split(/:/, $protocolDEF);
@@ -689,15 +684,15 @@ if ($ltask =~ /KWS/){
               if (! MMisc::is_blank($err));
           $n_tlist =~ s%^.+\.(kwlist\d*\.xml)$%$1%i;
           $def->{"KWLIST"} = "$db/${lcorpus}_${lpart}.annot.$n_tlist";
-          $def->{"ECF"} = $ecfs->{$setID};
+          $def->{"ECF"} = $ecf;
           $def->{"RTTM"} = $rttms->{$tokTimesID};
           $def->{"outputRoot"} = $runID;
           $def->{"KWSEVAL_OPTS"} = { "BaDev" =>  $proto->{$protocolID}." ".$tokSegs->{$tokSegID}." -a --ExcludePNGFileFromTxtTable",
                                      "BaEval" => $proto->{$protocolID}." ".$tokSegs->{$tokSegID}." -a --ExcludePNGFileFromTxtTable --ExcludeCountsFromReports" };
-          $def->{"RESULTS"} = {"BaDev" => $BaDev->{$setID}, 
-                               "BaEval" => $BaEval->{$setID} };
+          $def->{"RESULTS"} = {"BaDev" => $indusCorporaDefs->{sets}{$setID}{KWS}{BaDev},
+                               "BaEval" => $indusCorporaDefs->{sets}{$setID}{KWS}{BaEval}};
           $def->{"filePreReq"} = [ ];
-          push @{ $def->{"filePreReq"} }, $ecfs->{$setID} if ($setID ne "Full");  ### Non-Full is optional
+          push @{ $def->{"filePreReq"} }, $ecf if ($setID ne "Full");  ### Non-Full is optional
           push @{ $def->{"filePreReq"} }, $rttms->{$tokTimesID} if ($tokTimesID ne "MITLLFA3");  ### Non-Full is optional
 
           $def->{"RunAttributes"} = {"Set" => $setID,  "KWSProtocol" => $protocolID,  "TokTimes" => $tokTimesID,  "TokSeg"=> $tokSegID};
@@ -730,10 +725,10 @@ if ($ltask =~ /KWS/){
 
   print "\nCompleted KWS Runs:\n   ".join("\n   ",@completed)."\n";
  
-  my $detOpts = " --plot 'ExtraPoint=Team = $lteam:.004:.1:0:1::' ";
-    $detOpts .= " --plot 'ExtraPoint=System = ${lsysid}_${lversion}:.004:.080:0:1::' ",;
-    $detOpts .= " --plot 'ExtraPoint=Data = $lcorpus $lpart:.004:.060:0:1::' ";
-    $detOpts .= " --plot 'ExtraPoint=SHA256 = $sha256:.004:.04:0:1::' " if ($sha256 ne "");
+  my $detOpts = " --plot 'ExtraPoint=Team = $lteam:.004:.12:0:1::' ";
+    $detOpts .= " --plot 'ExtraPoint=System = ${lsysid}_${lversion}:.004:.10:0:1::' ",;
+    $detOpts .= " --plot 'ExtraPoint=Data = $lcorpus $lpart:.004:.0805:0:1::' ";
+    $detOpts .= " --plot 'ExtraPoint=SHA256 = $sha256:.004:.062:0:1::' " if ($sha256 ne "");
 
   execKWSEnsemble2({scoreDefs => \%RunDefs,
                     selectDefs => { "Set" => ".*", "TokTimes" => ".*",
@@ -742,7 +737,7 @@ if ($ltask =~ /KWS/){
                     ensembleRoot => "Ensemble.AllOccur",
                     ensembleTitle => "All Occurrence Scorings",
                     DETOPTIONS => { "BaDev" => $detOpts,
-                                    "BaEval" => "$detOpts  --ExcludeCountsFromReports"},                                    
+                                    "BaEval" => "$detOpts  --ExcludePNGFileFromTxtTable --ExcludeCountsFromReports"},                                    
                     RESULTS => {
                        "BaDev" =>  [  "\\.log", "\\.sh", ".png", ".results.txt"],
                        "BaEval" => [  "\\.log", "\\.sh", ".png", ".results.txt"],
