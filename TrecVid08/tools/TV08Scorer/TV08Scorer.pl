@@ -546,18 +546,31 @@ if ($alc == 0) {
   my ($xm, $xM, $ym, $yM)= @dc_range;
   my $tmp_csvfile = (MMisc::is_blank($outputRootFile)) 
     ? "" : "$outputRootFile.scores.csv";
-  MMisc::writeTo
-    ($outputRootFile, ".scores.txt", 1, 0, 
-     $detSet->renderAsTxt
-     ($outputRootFile . ".det", $doDC, 1, 
-      { (xScale => "log", Xmin => $xm, Xmax => $xM, Ymin => $ym, Ymax => $yM,
-         gnuplotPROG => $gnuplotPROG,
-         createDETfiles => ($nodetfiles ? 0: 1),
-         BuildPNG => ($noPNG ? 0 : 1)),
-        serialize => 1, # we want SRL files
-      },
-      $tmp_csvfile)
-    );
+  my $report = $detSet->renderReport($outputRootFile . ".det", 1, 
+                                     { (xScale => "log", Xmin => $xm, Xmax => $xM, Ymin => $ym, Ymax => $yM,
+                                       gnuplotPROG => $gnuplotPROG,
+                                       createDETfiles => ($nodetfiles ? 0: 1),
+                                       BuildPNG => ($noPNG ? 0 : 1)),
+                                       serialize => 1, # we want SRL files
+                                     }, 
+                                     ($outputRootFile eq "" ? "" : $outputRootFile.".scores.txt"),
+                                     $tmp_csvfile,
+                                     undef,
+                                     undef);
+  print $report if ($outputRootFile eq "");
+  
+#  MMisc::writeTo
+#    ($outputRootFile, ".scores.txt", 1, 0, 
+#     $detSet->renderAsTxt
+#     ($outputRootFile . ".det", $doDC, 1, 
+#      { (xScale => "log", Xmin => $xm, Xmax => $xM, Ymin => $ym, Ymax => $yM,
+#         gnuplotPROG => $gnuplotPROG,
+#         createDETfiles => ($nodetfiles ? 0: 1),
+#         BuildPNG => ($noPNG ? 0 : 1)),
+#        serialize => 1, # we want SRL files
+#      },
+#      $tmp_csvfile)
+#    );
 }
 
 ## reWrite XML files

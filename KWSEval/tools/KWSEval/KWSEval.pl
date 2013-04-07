@@ -441,7 +441,8 @@ my $detoptions =
    "Isometriclines" => [ (0.3) ],
    "title" => $STD->getSystemID(),
    "serialize" => 1,
-   'ExcludePNGFileFromTxtTable' => $xpng
+   'ExcludePNGFileFromTxtTable' => ($xpng == 1),
+   "ExcludeCountsFromReports" => ($excludeCounts == 1),
   ) };
 
 $dset = $alignResults[0];
@@ -479,7 +480,7 @@ if ($requestSumReport) {
   my $detsPath = "";
   if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/sum" }
   else { $detsPath = "dets/sum"; }
-  $dset->renderReport($detsPath, $requestDETCurve, $excludeCounts == 0 ? 1 : 0, $detoptions, 
+  $dset->renderReport($detsPath, $requestDETCurve, $detoptions, 
 		      ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
 		      ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
 		      ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode);
@@ -504,7 +505,7 @@ if ($requestCondSumReport) {
   my $detsPath = "";
   if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/cond.sum" }
   else { $detsPath = "dets/cond.sum"; }
-  $qdset->renderReport($detsPath, $requestDETConditionalCurve, 1, $detoptions,
+  $qdset->renderReport($detsPath, $requestDETConditionalCurve, $detoptions,
 		      ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
 		      ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
 		      ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode);
@@ -616,8 +617,8 @@ sub set_usage {
 	$tmp .= "  -p, --prob-of-term <value>    The probability of a term. (default: 0.0001)\n";
   $tmp .= "  -inc, --include-blocks-w-notargs  Include blocks with no targets in block reports.\n";
 	$tmp .= "  -I, --ID-System <name>        Overwrites the name of the STD system.\n";
-	$tmp .= "  -z, --zprefilterText <opts>   Prefilter the KWList and  RTTM with the options.  May be used more than once.\n";
   $tmp .= "  -j, --just-system-terms       Ignores terms which are not present in the system output.\n";
+	$tmp .= "  -z, --zprefilterText <opts>   Prefilter the KWList and  RTTM with the options.  May be used more than once.\n";
 	$tmp .= "                                  charSplit -> split multi-character tokens into characters\n";
   $tmp .= "                                  notASCII  -> do not split ASCII words.  (no effect without charSplit)\n";
   $tmp .= "                                  deleteHyphens -> treat hyphens like required whitespace. (no effect without charSplit)\n";

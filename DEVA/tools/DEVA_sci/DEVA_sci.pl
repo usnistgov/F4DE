@@ -558,21 +558,21 @@ sub doDETwork {
       if ($rtn ne "success");
   }
 
-  MMisc::writeTo
-    ($bDETf, ".scores.txt", 1, 0, 
-     $detSet->renderAsTxt
-     ("$bDETf.det", 1, 1, 
-      { (xScale => $xscale, yScale => $yscale, 
-         Xmin => $xm, Xmax => $xM,
-         Ymin => $ym, Ymax => $yM,
-         gnuplotPROG => MMisc::cmd_which("gnuplot"),
-         createDETfiles => 1,
-         serialize => 1,
-         BuildPNG => 1,
-         DETShowPoint_Actual => 1),
-      },
-      "$bDETf.scores.csv")
-    );
+  my $report = $detSet->renderReport($bDETf . ".det", 1, 
+                                     { (xScale => $xscale, yScale => $yscale, 
+                                        Xmin => $xm, Xmax => $xM,
+                                        Ymin => $ym, Ymax => $yM,
+                                        gnuplotPROG => MMisc::cmd_which("gnuplot"),
+                                        createDETfiles => 1,
+                                        serialize => 1,
+                                        BuildPNG => 1,
+                                        DETShowPoint_Actual => 1),
+                                     },
+                                     ($bDETf eq "" ? "" : $bDETf.".scores.txt"),
+                                     "$bDETf.scores.csv",
+                                     undef,
+                                     undef);
+  print $report if ($bDETf eq "");
 }
 
 ########## 

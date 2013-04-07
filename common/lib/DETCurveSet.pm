@@ -326,13 +326,19 @@ sub _PN(){
 }
 
 sub _buildAutoTable(){
-  my ($self, $buildCurves, $includeCounts, $reportActual, $includeIsoRatios, $includeFixedMFA, $xpng) = @_;
+  my ($self, $buildCurves, $DETOptions) = @_;
   my $useAT = 1;
-  
+  #print Dumper($DETOptions);
   my $at = ($useAT ? new AutoTable() : new SimpleAutoTable());
 	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove", 
                               "SortRowKeyTxt" => "Alpha", "SortRowKeyCsv" => "Alpha" } );
 
+  my $includeIsoRatios = (exists($DETOptions->{DETShowPoint_Ratios}) && ($DETOptions->{DETShowPoint_Ratios} == 1)) ? 1 : 0;
+  my $includeCounts = 1;   $includeCounts = 0 if (exists($DETOptions->{ExcludeCountsFromReports}) && $DETOptions->{ExcludeCountsFromReports} == 1);
+  my $includePNG    = 1;   $includePNG = 0    if (exists($DETOptions->{ExcludePNGFileFromTextTable}) && $DETOptions->{ExcludePNGFileFromTextTable} == 1);
+  my $reportActual  = 1;   $reportActual = 0  if (exists($DETOptions->{ReportActual}) && $DETOptions->{ReportActual} == 0);
+  my $reportBest    = 1;
+  
   ## Variable params get added to the report
   my $variableParams = $self->_findVariableParams();
 
@@ -397,26 +403,29 @@ sub _buildAutoTable(){
     if ($buildCurves) {
       my $opt = ($metric->combType() eq "maximizable" ? "Max " : "Min ");
       my $optFull = ($metric->combType() eq "maximizable" ? "Maximum" : "Minimum");
-      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errFALab(),   $key);
-      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombMMiss()),          ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errMissLab(), $key);
-      $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->combLab(),    $key);
-      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
-
-      my $detpng = $det->getDETPng();
-      if (($detpng ne "") && ($xpng != 1)) {
-	if ($detpng =~ m:([^/]+)/([^/]+)$:) {
-	  $detpng = $1 . "/" . $2;
-	}
-	my $deturl = "url={" . $detpng . "}";
-        $at->addData($det->getDETPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "DET Curve", $key, $deturl);
+      if ($reportBest){
+        $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errFALab(),   $key);
+        $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombMMiss()),          ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errMissLab(), $key);
+        $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->combLab(),    $key);
+        $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
       }
-      my $threshpng = $det->getThreshPng();
-      if (($threshpng ne "") && ($xpng != 1)) {
-	if ($threshpng =~ m/([^\/]+)\/([^\/]+)$/) {
-	  $threshpng = $1 . "/" . $2;
-	}
-	my $threshdeturl = "url={" . $threshpng . "}";
-        $at->addData($det->getThreshPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "Threshold Curve", $key, $threshdeturl);
+      my $detpng = $det->getDETPng();
+      if ($includePNG){
+        if ($detpng ne "") {
+  	if ($detpng =~ m:([^/]+)/([^/]+)$:) {
+  	  $detpng = $1 . "/" . $2;
+  	}
+  	my $deturl = "url={" . $detpng . "}";
+          $at->addData($det->getDETPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "DET Curve", $key, $deturl);
+        }
+        my $threshpng = $det->getThreshPng();
+        if ($threshpng ne "") {
+  	if ($threshpng =~ m/([^\/]+)\/([^\/]+)$/) {
+  	  $threshpng = $1 . "/" . $2;
+  	}
+  	my $threshdeturl = "url={" . $threshpng . "}";
+          $at->addData($det->getThreshPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "Threshold Curve", $key, $threshdeturl);
+        }
       }
     }
     if ($includeIsoRatios){
@@ -433,22 +442,23 @@ sub _buildAutoTable(){
 			  }
 		  }  
     }
-  
-    if ($includeFixedMFA && defined($det->{FIXED_MFA_VALUES})){
-      my $MFAFixedResults = $det->{FIXED_MFA_VALUES};
-      for (my $i=0; $i<@$MFAFixedResults; $i++){
-        my $MFA = $MFAFixedResults->[$i]->{MFA};
-        my $MMISS = $MFAFixedResults->[$i]->{InterpMMiss};
-        my $THR = $MFAFixedResults->[$i]->{InterpScore};
-				$at->addData(sprintf("%.4f", $MFA),    
-  				  ($useAT ? "FixedFA|" : "" ) . sprintf("%.4f-".$det->getMetric()->errFALab(), $MFA),   $key);
-  			$at->addData(sprintf("%.4f", $MMISS),    
-     		  ($useAT ? "FixedFA|" : "" ) . sprintf("%.4f-".$det->getMetric()->errMissLab(), $MFA),   $key);
-  			$at->addData(sprintf("%.4f", $THR),    
-     		  ($useAT ? "FixedFA|" : "" ) . sprintf("%.4f-Dec. Thresh", $MFA),   $key);
-			 
-		  }  
-    }
+
+### JF, not sure this is needed  
+###    if ($includeFixedMFA && defined($det->{FIXED_MFA_VALUES})){
+###      my $MFAFixedResults = $det->{FIXED_MFA_VALUES};
+###      for (my $i=0; $i<@$MFAFixedResults; $i++){
+###        my $MFA = $MFAFixedResults->[$i]->{MFA};
+###        my $MMISS = $MFAFixedResults->[$i]->{InterpMMiss};
+###        my $THR = $MFAFixedResults->[$i]->{InterpScore};
+###				$at->addData(sprintf("%.4f", $MFA),    
+###  				  ($useAT ? "FixedFA|" : "" ) . sprintf("%.4f-".$det->getMetric()->errFALab(), $MFA),   $key);
+###  			$at->addData(sprintf("%.4f", $MMISS),    
+###     		  ($useAT ? "FixedFA|" : "" ) . sprintf("%.4f-".$det->getMetric()->errMissLab(), $MFA),   $key);
+###  			$at->addData(sprintf("%.4f", $THR),    
+###     		  ($useAT ? "FixedFA|" : "" ) . sprintf("%.4f-Dec. Thresh", $MFA),   $key);
+###			 
+###		  }  
+###    }
   }
 
   $at->{Properties}->{KEYS}{"KeyColumnHTML"} = "Remove";
@@ -646,38 +656,28 @@ sub _findVariableParams(){
 
 #Temporary backwards compatability sub
 sub renderAsTxt(){
-  my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $csvfn) = @_;
+  my ($self, $fileRoot, $buildCurves, $DETOptions, $csvfn) = @_;
   #return $self->renderReport($fileRoot, $buildCurves, $includeCounts, $DETOptions, "TXT", $csvfn);
-  return $self->renderReport($fileRoot, $buildCurves, $includeCounts, $DETOptions, undef, $csvfn);
+  return $self->renderReport($fileRoot, $buildCurves, $DETOptions, undef, undef, undef);
 }
 
 sub renderReport(){
-  my ($self, $fileRoot, $buildCurves, $includeCounts, $DETOptions, $txtfn, $csvfn, $htmlfn, $binmode) = @_;
+  my ($self, $fileRoot, $buildCurves, $DETOptions, $txtfn, $csvfn, $htmlfn, $binmode) = @_;
 
   if (@{ $self->{DETList} } == 0) {
     return "Error: No DETs provided to produce a report from";
   }
   
-  my $reportActual = 1;
-  $reportActual = $DETOptions->{DETShowPoint_Actual} 
-    if (exists($DETOptions->{DETShowPoint_Actual}));
-
   ### Build the combined and separate DET PNGs
   my $multiInfo = {()};
-  if ($buildCurves && $DETOptions->{createDETfiles}) {
+  if ($buildCurves && (exists($DETOptions->{createDETfiles}) && $DETOptions->{createDETfiles} == 1)) {
     my $dcRend = new DETCurveGnuplotRenderer($DETOptions);
     $multiInfo = $dcRend->writeMultiDetGraph($fileRoot,  $self);
-  }
+  } 
 
   my $variableParams = $self->_findVariableParams();
   
-  my $at = $self->_buildAutoTable($buildCurves, $includeCounts, $reportActual, $DETOptions->{DETShowPoint_Ratios});
-  my $tat = undef;
-  if ($DETOptions->{ExcludePNGFileFromTextTable} == 1) {
-    $tat = $self->_buildAutoTable(0, $includeCounts, $reportActual, $DETOptions->{DETShowPoint_Ratios}, 0, 1);
-  } else {
-    $tat = $at;
-  }
+  my $at = $self->_buildAutoTable($buildCurves, $DETOptions);
 
 #  my $trial = $self->{DETList}[0]->{DET}->getTrials();
 #  my $metric = $self->{DETList}[0]->{DET}->getMetric();
@@ -690,7 +690,7 @@ sub renderReport(){
     $that = $hat;
   }
 
-  my $renderedTxt = $that->renderTxtTable(2) . "\n\n" . $tat->renderTxtTable(2);
+  my $renderedTxt = $that->renderTxtTable(2) . "\n\n" . $at->renderTxtTable(2);
   MMisc::writeTo($csvfn, "", 1, 0, $at->renderCSV()) if (! MMisc::is_blank($csvfn));
   MMisc::writeTo($txtfn, "", 1, 0, $renderedTxt, undef, undef, undef, undef, undef, $binmode) if (! MMisc::is_blank($txtfn));
   MMisc::writeTo($htmlfn, "", 1, 0, $hat->renderHTMLTable("") . "<br><br>" . $at->renderHTMLTable(""), undef, undef, undef, undef, undef, $binmode) if (! MMisc::is_blank($htmlfn));
@@ -698,26 +698,23 @@ sub renderReport(){
   return $renderedTxt;
 }
 
-sub renderCSV {
-    my ($self, $fileRoot, $includeCounts, $DETOptions, $fixedMFAValues) = @_;
-
-  if (@{ $self->{DETList} } == 0) {
-    return "Error: No DETs provided to produce a report from";
-  }
-  
-  my $reportActual = 1;
-  $reportActual = $DETOptions->{DETShowPoint_Actual} if (exists($DETOptions->{DETShowPoint_Actual}));
-
-  my $multiInfo = {()};
-  if ($DETOptions->{createDETfiles}) {
-      my $dcRend = new DETCurveGnuplotRenderer($DETOptions);
-      $multiInfo = $dcRend->writeMultiDetGraph($fileRoot, $self);
-  }
-
-  my $at = $self->_buildAutoTable(1, $includeCounts, $reportActual, $DETOptions->{DETShowPoint_Ratios}, 1);
-    
-  return($at->renderCSV());
-}     
+##sub renderCSV {
+##    my ($self, $fileRoot, $DETOptions, $fixedMFAValues) = @_;
+##
+##  if (@{ $self->{DETList} } == 0) {
+##    return "Error: No DETs provided to produce a report from";
+##  }
+##  
+##  my $multiInfo = {()};
+##  if ($DETOptions->{createDETfiles}) {
+##      my $dcRend = new DETCurveGnuplotRenderer($DETOptions);
+##      $multiInfo = $dcRend->writeMultiDetGraph($fileRoot, $self);
+##  }
+##
+##  my $at = $self->_buildAutoTable(1, $DETOption2);
+##    
+##  return($at->renderCSV());
+##}     
 
 sub renderBlockedReport {
   my ($self, $includeCorrNonDetect, $txtfn, $csvfn, $htmlfn, $binmode) = @_;

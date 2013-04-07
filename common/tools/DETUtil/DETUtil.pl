@@ -111,6 +111,7 @@ my $gzipPROG = "gzip";
 my $gnuplotPROG = "gnuplot";
 my $axisScales = undef;
 my $docsv = 0;
+my $doHTMLTable = 0;
 my @plotControls = ();
 my $dumpFile = 0;
 my $forceRecompute = 0; 
@@ -280,7 +281,8 @@ $options{createDETfiles} = 1;
 $options{HD} = $HD;
 $options{AutoAdapt} = $AutoAdapt;
 
-$options{ExcludePNGFileFromTextTable} = $xpng;
+$options{ExcludePNGFileFromTextTable} = ($xpng == 1);
+$options{ExcludeCountsFromReports} = ($excludeCounts == 1);
 
 foreach my $directive (@plotControls){
   my $numRegex = '\d+|\d+\.\d*|\d*\.\d+|\d*\.\d+e-\d\d';
@@ -643,30 +645,20 @@ else
 }
 &vprint("[*] Temp dir \'$temp\'\n");
 
+### Get the filenames:
+my $pngRoot = $OutPNGfile;  $pngRoot =~ s/\.png$//i;
+
 &vprint("[*] Performing 'renderAsTxt'\n");
-my $report = $ds->renderAsTxt("$temp/merge", 1, $excludeCounts == 0 ? 1 : 0, \%options);
+my $report = $ds->renderReport("$temp/merge", 1, \%options, 
+  ($doTxtTable) ? "$pngRoot.results.txt" : undef,
+  ($docsv) ? "$pngRoot.results.csv" : undef,
+  ($doHTMLTable) ? "$pngRoot.results.html" : undef,
+  undef);
+  
 my $inf = "$temp/merge.png";
 &vprint("[*] Copying [$inf] to [$OutPNGfile]\n");
 my $err =  MMisc::filecopy($inf, $OutPNGfile);
 MMisc::error_quit($err) if (! MMisc::is_blank($err));
-
-if ($docsv) {
-  &vprint("[*] Doing 'generateCSV'\n");
-  my $csvf = $OutPNGfile;
-  $csvf =~ s/\.png$//i;
-  $csvf .= ".csv";
-  my $csv = $ds->renderCSV("$temp/merge", $excludeCounts == 0 ? 1 : 0, \%options);
-  MMisc::writeTo($csvf, "", 1, 0, $csv);
-}
-
-if ($doTxtTable) {
-  &vprint("[*] Doing \'txtTable\'\n");
-  my $txtf = $OutPNGfile;
-  $txtf =~ s/\.png$//i;
-  $txtf .= ".results.txt";
-  my $txt = $ds->renderAsTxt("$temp/merge", 1, $excludeCounts == 0 ? 1 : 0, \%options);
-  MMisc::writeTo($txtf, "", 1, 0, $txt);
-}
 
 my $measureThrHT = $ds->getMeasureThreshPngHT();
 if (defined($measureThrHT)){
@@ -921,7 +913,7 @@ Exclude the PNG files location from text tables generated.
 
 =item B<-q> B<--ExcludeCountsFromReports>
 
-Exclude trial counts from report tables\n";
+Exclude trial counts from report tables.
 
 =item B<-d> B<--dumpFile>
 
