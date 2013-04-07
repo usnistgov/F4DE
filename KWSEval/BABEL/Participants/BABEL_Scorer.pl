@@ -608,7 +608,7 @@ sub execKWSEnsemble2{
   }
   
   if (! -f "$scrdir/$def->{ensembleRoot}.png"){ 
-    $com = "$detutil $def->{DETOPTIONS}{$scase} --txtTable -I -Q 0.3 -T '$mainTitle' --plot ColorScheme=colorPresentation";
+    $com = "$detutil $def->{DETOPTIONS}{$scase} --generateCSV --txtTable -I -Q 0.3 -T '$mainTitle' --plot ColorScheme=colorPresentation";
     $com .= ($xpng == 1) ? " --ExcludePNGFileFromTxtTable" : "";
     $com .= " -o $scrdir/$def->{ensembleRoot}.png ";
     $com .= join(" ",@srls);
