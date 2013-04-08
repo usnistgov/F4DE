@@ -28,7 +28,7 @@ use strict;
 # Version
 
 # $Id$
-my $version     = "0.4";
+my $version     = "0.5";
 if ($version =~ m/b$/) {
   (my $cvs_version = '$Revision$') =~ s/[^0-9\.]//g;
   $version = "$version (CVS: $cvs_version)";
