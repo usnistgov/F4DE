@@ -128,6 +128,7 @@ my $bypassxmllint = 0;
 my $xpng = 0;
 my $pendingfile = "";
 my $releasefile = "";
+my $extendedRunIndusDataDef = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:    DEF H  K    P  ST V X    cdef h         rst v     #
@@ -149,6 +150,7 @@ GetOptions
    'fileCreate=s' => \@donefile,
    'KWSEval=s'  => \$kwseval,
    'DETUtil=s'  => \$detutil,
+   'x|extendedRunIndusDataDef=s' => \$extendedRunIndusDataDef,
    'ProcGraph=s'  => \$ProcGraph,
    'Hsha256id=s' => \$sha256,
    'Tsctkbin=s' => \$sctkbindir,
@@ -202,6 +204,17 @@ MMisc::error_quit("Problem with \'kwseval\' tool ($kwseval): $err")
 $err = MMisc::check_file_x($detutil);
 MMisc::error_quit("Problem with \'detutil\' tool ($detutil): $err")
   if (! MMisc::is_blank($err));
+if (defined($extendedRunIndusDataDef)){
+  $err = MMisc::check_file_r($extendedRunIndusDataDef);
+  MMisc::error_quit("Problem with 'extendedRunIndusDataDef': $err")
+    if (! MMisc::is_blank($err));
+  ### Make the extended computation directory if needed
+  $err = MMisc::check_dir_w($scrdir."-Extended");
+  if (! MMisc::is_blank($err)){
+    MMisc::error_quit("Failed to make Extended Scoring '$scrdir-Extended'")
+      if (! MMisc::make_dir($scrdir."-Extended")); 
+  }  
+}
 
 $ENV{PATH} .= ":".$sctkbindir if (! MMisc::is_blank($sctkbindir));
 my $sclite = "sclite";
@@ -295,7 +308,9 @@ foreach (@dbDir){
   if (-d "$_/${lcorpus}_${lpart}"){
     $db = "$_/${lcorpus}_${lpart}";
     ### Now look for the CorporaDefsFile
-    if (-f "$_/IndusCorporaDefs.pl"){
+    if (defined($extendedRunIndusDataDef)){
+      $indusCorporaDefsFile = $extendedRunIndusDataDef;
+    } elsif (-f "$_/IndusCorporaDefs.pl"){
       $indusCorporaDefsFile = "$_/IndusCorporaDefs.pl";
     }
     last;
@@ -368,7 +383,8 @@ sub copyToResult{
 sub execKWSScoreRun{
   my ($def, $scase, $readme, $preferredScoring) = @_;
   
-  my $compRoot = "$scrdir/".$def->{outputRoot};
+  my $compRoot = "$scrdir/$def->{outputRoot}";
+  my $extendedCompRoot = "$scrdir-Extended/$def->{outputRoot}";
 
   ### Check the preferred Scoring attributes
 #  print "    Check of run ".$def->{"runDesc"}."\n";
@@ -411,19 +427,25 @@ sub execKWSScoreRun{
     system "mkdir -p $procDir";
     $com = "$ProcGraph --cumul --Tree --outdir $procDir --gnuplot --Generat -- ";
   }  
-  $com .= "$kwseval -I \"$def->{systemDesc}\" ".
+  my $usedCompRoot = (! defined($extendedRunIndusDataDef)) ? $compRoot : $extendedCompRoot;
+  $com .= " $kwseval -I \"$def->{systemDesc}\" ".
     " -iso ''".
     " -e $def->{ECF}".
     " -r $def->{RTTM}".
     " -t $def->{KWLIST}".
     " -s $def->{KWSLIST}".
     " $def->{KWSEVAL_OPTS}{$lscase}".
-    " -f $compRoot".
+    " -f $usedCompRoot".
     " -y TXT -y HTML";
   $com .= " --XmllintBypass" if ($bypassxmllint);
   $com .= " --ExcludePNGFileFromTxtTable" if ($xpng);
 
-  if (! -f "$compRoot.log"){
+  my $__run = 1;
+  $__run = 0 if (-f "$compRoot.log");
+  if (defined($extendedRunIndusDataDef)){
+     $__run = 0 if (-f "$extendedCompRoot.log");
+  }
+  if ($__run){
     my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$compRoot.log", $com);
     MMisc::writeTo("$compRoot.sh", "", 0, 0, "$com\n");
     MMisc::error_quit("Scoring execution ".$def->{runID}." returned $ret. Aborting") if ($retcode != 0);
@@ -432,8 +454,12 @@ sub execKWSScoreRun{
   } 
   
   MMisc::writeTo($readme, "", 0, 1, "\n");
-  print "  Execution completed.  Copying to results\n";
-  copyToResult($scrdir, $resdir, $def->{outputRoot}, $def->{RESULTS}{$scase});
+  if (!defined($extendedRunIndusDataDef)){
+    print "  Execution completed.  Copying to results\n";
+    copyToResult($scrdir, $resdir, $def->{outputRoot}, $def->{RESULTS}{$scase});
+  } else {
+    print "  Execution completed.  Not Copying to Results because Extended Scoring requested\n";
+  }
   return("complete");
 }
 
@@ -557,6 +583,8 @@ sub execKWSEnsemble2{
 
   ### Loop through the scoreDefs to see what can be used
   print "\nStep 3: Building ".$def->{ensembleID}.": Scase $scase: ".$def->{ensembleTitle}."\n";
+  my $compRoot = "$scrdir";
+  my $extendedCompRoot = "$scrdir-Extended";
   
   my %attrValues = ();
   my @useSdefs = ();
@@ -568,9 +596,15 @@ sub execKWSEnsemble2{
         $use = 0;
       }
     }
+    my $foundSrl = 0;
     my $stype = ($def->{scoreDefs}->{$sdef}{RunAttributes}{"KWSProtocol"} eq "Occur" ? "Occurrence" : "Segment");
-    my $srl = "$scrdir/$def->{scoreDefs}{$sdef}{outputRoot}.dets/sum.$stype.srl.gz";
-    $use = 0 if (! -f $srl);
+    my $srl = "$compRoot/$def->{scoreDefs}{$sdef}{outputRoot}.dets/sum.$stype.srl.gz";
+    $foundSrl = 1 if (-f $srl);
+    if (! $foundSrl && defined($extendedRunIndusDataDef)){
+      $srl = "$extendedCompRoot/$def->{scoreDefs}{$sdef}{outputRoot}.dets/sum.$stype.srl.gz";
+      $foundSrl = 1 if (-f $srl);
+    }
+    $use = 0 unless($foundSrl);
     
     if ($use){
 #      print "using $sdef\n";
@@ -606,22 +640,27 @@ sub execKWSEnsemble2{
     print "No SRLs: Not computing\n";
     return;
   }
-  
-  if (! -f "$scrdir/$def->{ensembleRoot}.png"){ 
+
+  my $usedCompRoot = (! defined($extendedRunIndusDataDef)) ? $compRoot : $extendedCompRoot;
+
+  if (! -f "$usedCompRoot/$def->{ensembleRoot}.png"){ 
     $com = "$detutil $def->{DETOPTIONS}{$scase} --generateCSV --txtTable -I -Q 0.3 -T '$mainTitle' --plot ColorScheme=colorPresentation";
     $com .= ($xpng == 1) ? " --ExcludePNGFileFromTxtTable" : "";
-    $com .= " -o $scrdir/$def->{ensembleRoot}.png ";
+    $com .= " -o $usedCompRoot/$def->{ensembleRoot}.png ";
     $com .= join(" ",@srls);
-    MMisc::writeTo("$scrdir/$def->{ensembleRoot}.sh", "", 0, 0, "$com\n");
-    my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$scrdir/$def->{ensembleRoot}.log", $com);
+    MMisc::writeTo("$usedCompRoot/$def->{ensembleRoot}.sh", "", 0, 0, "$com\n");
+    my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$usedCompRoot/$def->{ensembleRoot}.log", $com);
     MMisc::error_quit("DETUtil ".$def->{ensembleID}." failed returned $ret. Aborting") if ($retcode != 0);    
   } else {
     print "Skipping previously completed execution\n";
   }
 
-  print "  Execution completed.  Copying to results\n";
-  copyToResult($scrdir, $resdir, $def->{ensembleRoot}, $def->{RESULTS}{$scase});
-
+  if (!defined($extendedRunIndusDataDef)){
+    print "  Execution completed.  Copying to results\n";
+    copyToResult($usedCompRoot, $resdir, $def->{ensembleRoot}, $def->{RESULTS}{$scase});
+  } else {
+    print "  Execution completed.  Not Copying to Results because Extended Scoring requested\n";
+  } 
 }
 
 ### ROOT is going to be
@@ -919,6 +958,10 @@ sub set_usage {
   $usage .= "  --dbDir      Directory containing ECF, TLIST, RTTM files (: separated or multiple can be specified)\n";
   $usage .= "  --FilePending  Specify the file that will be created if a <SCASE> is listed in the configuration file as to be sequestered, until authorized for release\n";
   $usage .= "  --FileRelease  Specify the file that will be created if a <SCASE> is not listed in the configuration file as to be sequestered\n";
+  $usage .= "  --extendedRunIndusDataDef  Specify an alternate IndusDataDef file.  This changes the behavior to:\n";
+  $usage .= "           (1) Existing runs in Computation directory are linked into to Computation-Extended.\n";
+  $usage .= "           (2) Additional computations are stored in Computation-Extended.\n";
+  $usage .= "           (3) No Resuls directory is made.\n";
 
   $usage .= "\n";
   
