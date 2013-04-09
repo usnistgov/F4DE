@@ -184,63 +184,67 @@ Run:
 % ./SubmissionHelper.sh -S <SYSTEMDESCRIPTION>.txt <EXPID>.<EXT>
   to add a system description to your submission
 
-NOTE: it is possible to interrupt the process and restart it at a
-later time by running the same command line with the exact same
-"<EXPID>.<EXT>" file. There is also a mean to ask the tool to exit
-after uploading the files, this is done using:
-% ./SubmissionHelper.sh -Q <EXPID>.<EXT>
+NOTE 1: It is safe to interupt (via Ctrl-C) the submission after seeing
+the message "++ Awaiting scoring server completion" and restart it at
+a later time by running the same command line with the exact same
+"<EXPID>.<EXT>" file. There is also a means to ask the tool to exit
+after uploading the files, this is done using: % ./SubmissionHelper.sh
+-Q <EXPID>.<EXT>
 
-RESUBMISSION NOTE: the tool create an "Internal SHA256" value from the
-file content alone in order to avoid duplicate submissions with the
-same file content. Therefore, should a file be submitted that was
+NOTE : It is possible to resume a submission that already passed
+validation and uploading step from an Internal SHA256 and
+"Evaluation mode" (the first component of the EXPID), using:
+% ./SubmissionHelper.sh -C <INTERNAL_SHA256> -M <EVALUATION_MODE>
+
+NOTE 2: It is possible to resume a submission that already passed
+validation and uploading step from a Remote SHA256 and
+"Evaluation mode" (the first component of the EXPID), using:
+% ./SubmissionHelper.sh -D <REMOTE_SHA256> -M <EVALUATION_MODE>
+
+RESUBMISSION NOTE 1: The tool creates an "Internal SHA256" value from
+the file content alone in order to avoid duplicate submissions with
+the same file content. Therefore, should a file be submitted that was
 already submitted previously, the tool will consider the submission to
-be a continuation of a past submission, and skip steps performed on
-the previous file. This behavior can be noticed when looking at the
-tool ouptut, as the tool will notofy the user that it did skip a step
-(ex: "-- validated earlier, skipping revalidation" or "-- transfered
+be a continuation of a past submission, and skip steps previously
+performed. This behavior can be noticed when looking at the tool
+ouptut, as the tool will notofy the user that it did skip a step (ex:
+"-- validated earlier, skipping revalidation" or "-- transfered
 earlier, skipping reupload"). In order to resubmit a submission file,
 use:
 % ./SubmissionHelper.sh -R <EXPID>.<EXT>
 
-EXTRA RESUBMISSION NOTE: If you have submitted the exact same
+RESUBMISSION NOTE 2: If you have submitted the exact same
 <EXPID>.<EXT> file content in the past (see tool output for "skipping"
 messages) or are changing the content of the "System Description",
 please insure this is considered a new submission by the scoring
-server, using:
-% ./SubmissionHelper.sh -R [-S <SYSTEMDESCRIPTION>.txt] <EXPID>.<EXT>
-
-NOTE: it is possible to resume a submission that already passed
-validation and uploading step from the submission's SHA256 and
-"Evaluation mode" (the first component of the EXPID), using:
-% ./SubmissionHelper.sh -C <SHA256> -M <EVALUATION_MODE>
+server, using -R.
 
 -- Internal and Remote SHA256:
 -------------------
 
 The tool use both an "Internal SHA256" and a "Remote SHA256".
 
-* The "Internal SHA256" is used locally and is the SHA256 digest of the
-submission file. This avoid submissions to the Scoring Server of two
-identical files from a same source, and allow the SubmissionHelper
-tool to be able to be re-run at a later date with the exact same
-submission file and continue from where it left off.
+* The "Internal SHA256" is used locally and is the SHA256 digest of
+the submission file. This avoids sending submissions to the Scoring
+Server of two identical files from a same source, and allows the
+SubmissionHelper tool to be able to be re-run at a later date with the
+exact same submission file and continue from where it left off.
 
 If you are trying to submit a file sent previously with the same EXPID
 but a different version number, the tool will refuse to do so because
 the new filename and the old filename do not match.
-  If this is an actual replacement submission, use the tool's -R
+ - If this is an actual replacement submission, use the tool's -R
 option to resubmit using the same "Internal SHA256".
-  If this is a new and different submission which happens to have the
+ - If this is a new and different submission which happens to have the
 same exact content, please modify the file content so that it is at
 least one byte different (add an extra comment or such), so that its
 "Internal SHA256" differs and the tool can too be run later on that
 file to continue where this specific fiel left off.
 
 * The "Remote SHA256" is the SHA256 digest obtained from a modified
-version of the submission file where some additional comments were
-added. This is the value that is used on the Scoring Server, and the
-value that is needed when doing email exhchanges with the Scoring
-Server team.
+version of the submission file where some additional comments are
+added. This value is used on the Scoring Server and should be sent to
+the Scoring Server team if problems arise.
 
 * A list of the know "Internal SHA256", "Remote SHA256" and
  "Submission File" can be obtained by running:
