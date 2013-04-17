@@ -43,7 +43,7 @@ my $versionid = "DirTracker.pm Version: $version";
 
 ##########
 # new(DirToTrack)
-# new(DirToTrack, SaltTool)
+# new(DirToTrack, SaltTool, keepSHAhistory)
 ## The prupose of this package is to be made aware of TRUE new files added any level of a directory
 # By TRUE, we mean files that when performing a 'scan' have a different SHA256digest than a file already processed previously,
 # so that if a file A exist and is copied to B into a different directory, B is not listed as a new file
@@ -52,9 +52,10 @@ my $versionid = "DirTracker.pm Version: $version";
 ## warning: data is only valid from the most recent 'scan' function
 # 'SaltTool' is a tool to which each new file location (not directory) is provided and is expected to return a one liner string 
 # value on its standard out, which will be used as the beginning of the internal SHA256
+# 'keepSHAhistory' is important to recognize if a file is "new"; if a file with a given SHA
+# disappeared and a new one reappeared with the same SHA, without this option, it would be considered a new file
 sub new {
-
-  my ($class, $dir, $salttool) = @_;
+  my ($class, $dir, $salttool, $keepSHAhistory) = @_;
 
   my $errorh = new MErrorH('DirTracker');
   $errorh->set_errormsg("Can not be instanciated without a directory") 
@@ -82,6 +83,8 @@ sub new {
      files     => undef, # {file} = scandate
      files2sha => undef, ## {file} = sha
      sha2files => undef, ## {sha}{file}
+     seenSHA   => undef, ## {sha} file count
+     SHAhist   => $keepSHAhistory,
      # added & deleted: valid only until next 'scan'
      added     => undef, # {file} = scandate
      deleted   => undef, # {file} = scandate
@@ -142,6 +145,7 @@ sub init {
     $self->{files}{$file} = $now;
     $self->{files2sha}{$file} = $sha256;
     $self->{sha2files}{$sha256}{$file}++;
+    $self->{seenSHA}{$sha256} = scalar(keys %{$self->{sha2files}{$sha256}});
   }
   
   # initialize the scan for followed files
@@ -183,9 +187,14 @@ sub scan {
       $_[0]->{files}{$file} = $now;
       $_[0]->{files2sha}{$file} = $sha256;
       if (! exists $_[0]->{sha2files}{$sha256}) { # a "true" new file
-        push @out, $file;
+        # if history was on: only if that SHA did not exist before
+        if (($_[0]->{SHAhist} != 1) 
+            || (($_[0]->{SHAhist} == 1) && (! exists $_[0]->{seenSHA}{$sha256}))) {
+          push @out, $file;
+        }
       }
       $_[0]->{sha2files}{$sha256}{$file}++;
+      $_[0]->{seenSHA}{$sha256} = scalar(keys %{$_[0]->{sha2files}{$sha256}});
       # maintain added versus deleted list
       $_[0]->{added}{$file} = $now;
       delete $_[0]->{deleted}{$file};
@@ -195,9 +204,12 @@ sub scan {
       return($_[0]->_set_error_and_return_array("No SHA256 digest for file ($file) present", ))
         if (! exists $_[0]->{files2sha}{$file});
       my $sha256 = $_[0]->{files2sha}{$file};
-      delete $_[0]->{file2sha}{$file};
+      delete $_[0]->{files2sha}{$file};
       delete $_[0]->{sha2files}{$sha256}{$file};
-      delete $_[0]->{sha2files}{$sha256} if (scalar(keys %{$_[0]->{sha2files}{$sha256}} == 0)); # prune if empty
+      if (scalar(keys %{$_[0]->{sha2files}{$sha256}} == 0)) { # prune if empty
+        delete $_[0]->{sha2files}{$sha256};
+        $_[0]->{seenSHA}{$sha256} = 0;
+      }        
       # maintain added versus deleted list
       $_[0]->{deleted}{$file} = $now;
       delete $_[0]->{added}{$file};
@@ -362,9 +374,17 @@ sub __files_scan {
       if ($sha256 ne $osha) { # file's SHA256 was modified
         $_[0]->{files2sha}{$_[$i]->name} = $sha256; # modify file's SHA entry
         delete $_[0]->{sha2files}{$osha}{$_[$i]->name}; # delete old sha to file entry
+        $_[0]->{seenSHA}{$osha}--;
         # if there was no entry for this new SHA256, we have a true new candidate
-        push @out, $_[$i]->name if (! exists $_[0]->{sha2files}{$sha256});
+        if (! exists $_[0]->{sha2files}{$sha256}) { # a "true" new file
+          # if history was on: only if that SHA did not exist before
+          if (($_[0]->{SHAhist} != 1) 
+              || (($_[0]->{SHAhist} == 1) && (! exists $_[0]->{seenSHA}{$sha256}))) {
+            push @out, $_[$i]->name;
+          }
+        }
         $_[0]->{sha2files}{$sha256}{$_[$i]->name}++; # create a new one
+        $_[0]->{seenSHA}{$sha256} = scalar(keys %{$_[0]->{sha2files}{$sha256}});
       }
     }
   }
@@ -393,6 +413,28 @@ sub __file_sha256digest {
   }
 
   return($pre . $sha256);
+}
+
+############################################################
+
+sub set_keepSHAhistory {
+  $_[0]->{SHAhist} = $_[1];
+}
+
+sub get_keepSHAhistory {
+  return($_[0]->{SHAhist});
+}
+
+sub revalidate_seenSHA {
+  my @tmp = keys %{$_[0]->{seenSHA}};
+  my %todo = MMisc::array1d_to_ordering_hash(\@tmp);
+  foreach my $sha256 (keys %{$_[0]->{sha2files}}) {
+    $_[0]->{seenSHA}{$sha256} = scalar (keys %{$_[0]->{sha2files}{$sha256}});
+    delete $todo{$sha256};
+  }
+  foreach my $sha256 (keys %todo) {
+    $_[0]->{seenSHA}{$sha256} = 0;
+  }
 }
 
 ############################################################
