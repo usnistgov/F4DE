@@ -55,7 +55,7 @@ sub new {
      id           => undef, # input dir 
      tosleep      => 60, # scan interval (default is 60 seconds)
      cmd          => undef, # command to run
-     salttool     => "",    # SHA256 salt tool 
+     salttool     => "",    # SHA256 salt tool
      ignore       => undef, # hash of filenames chunk to ignore (2nd dim is just counter)
      verb         => 0,  # verbosity level
      saveStateFile => undef, # after each iteration, save the current state
@@ -71,7 +71,7 @@ sub new {
      ready        => 0,
 
      # Version
-     version      => 0,
+     version      => 1,
 
      # error handler
      errorh    => $errorh,
@@ -122,6 +122,21 @@ sub get_command {
   return($_[0]->_set_error_and_return_scalar("value not set", undef))
     if (! defined($_[0]->{cmd}));
   return($_[0]->{cmd});
+}
+
+
+##########
+## 'SHAhist'
+
+sub set_SHAhist {
+  $_[0]->{dt}->set_keepSHAhistory($_[1]);
+  return(1);
+}
+
+##
+
+sub get_SHAhist {
+  return($_[0]->{dt}->get_keepSHAhistory());
 }
 
 
@@ -207,10 +222,9 @@ sub load_saveStateFile {
   return($_[0]->_set_error_and_return_scalar("Problem with memory object: empty ?", 0))
     if (! defined $tmp);
   
-  return($_[0]->_set_error_and_return_scalar("Memory object was save for a later version of this package (" . $tmp->{version} . ", we can only read up to: " . $_[0]->{version} . ")", 0))
+  return($_[0]->_set_error_and_return_scalar("Memory object was saved for a later version of this package (" . $tmp->{version} . ", we can only read up to: " . $_[0]->{version} . ")", 0))
     if ($tmp->{version} > $_[0]->{version});
 
-  # Version 0
   return(0) if (! $_[0]->__md_clone_value($tmp, 'id'));
   return(0) if (! $_[0]->__md_clone_value($tmp, 'tosleep'));
   return(0) if (! $_[0]->__md_clone_value($tmp, 'cmd'));
@@ -224,9 +238,14 @@ sub load_saveStateFile {
   return(0) if (! $_[0]->__md_clone_value($tmp, 'doit'));
   return(0) if (! $_[0]->__md_clone_value($tmp, 'ready'));
 
+  # Version 0
+  if ($tmp->{version} == 0) {
+    $_[0]->{dt}->revalidate_seenSHA();
+  }
+
   # Version 1
-#  if ($tmp->{version} == 1) {
-#  }
+  if ($tmp->{version} == 1) {
+  }
   
   return(1);
 }
