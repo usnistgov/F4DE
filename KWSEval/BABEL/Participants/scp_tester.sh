@@ -81,7 +81,7 @@ check_file_x "$scp_cmd"
 
 #####
 lf="$0.log"
-cmd="$scp_cmd -v -v $conf ${scp_user}@${scp_host}:${scp_status}/."
+cmd="${scp_cmd} ${scp_args} -v -v $conf ${scp_user}@${scp_host}:${scp_status}/."
 echo "** Will run: $cmd"
 echo "** and store log into: $lf"
 echo ""

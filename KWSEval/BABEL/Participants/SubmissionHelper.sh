@@ -443,13 +443,13 @@ if [ ! -f "$lf" ]; then
 
   echo "  -> transfer file"
   if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 40 -M 190 -m "Transfering submission"; fi
-  ${scp_cmd} "$atif" "${scp_user}@${scp_host}:${scp_uploads}/." &> "$lf.log"
+  ${scp_cmd} ${scp_args} "$atif" "${scp_user}@${scp_host}:${scp_uploads}/." &> "$lf.log"
   if [ "${?}" -ne "0" ]; then error_quit "Problem uploading file ($atif), see: $lf.log"; fi
 
   latif="${atif}.${scp_lockext}"
   echo "$llsha256" > $latif
 
-  ${scp_cmd} "$latif" "${scp_user}@${scp_host}:${scp_uploads}/." &> "$lf.log2"
+  ${scp_cmd} ${scp_args} "$latif" "${scp_user}@${scp_host}:${scp_uploads}/." &> "$lf.log2"
   if [ "${?}" -ne "0" ]; then error_quit "Problem uploading file ($latif), see: $lf.log2"; fi
 
   echo "$lsha256" > "$lf"
@@ -490,7 +490,7 @@ else
   efile="$statusdir/$sfile"
   while [ "A$read" != "A$expected" ]
   do
-    $scp_cmd "$status_file" "$efile" &> $lf.log
+    ${scp_cmd} ${scp_args} "$status_file" "$efile" &> $lf.log
     if [ -e $efile ]; then
       fread=`head -1 $efile`
       read=`echo $fread | perl -pe 's%\s+percent\:[\d\.]+$%%'`
@@ -545,7 +545,7 @@ elif [ ! -z "$file" ]; then
   touch "$lf"
 else
   echo "  <- Trying to download result file"
-  $scp_cmd "$scp_user@$scp_host:$scp_downloads/$lsha256.tar.bz2" "$dloaddir/." >& "$lf.log"
+  ${scp_cmd} ${scp_args} "$scp_user@$scp_host:$scp_downloads/$lsha256.tar.bz2" "$dloaddir/." >& "$lf.log"
   if [ "${?}" -ne "0" ]; then error_quit "Problem downloading result file (see: $lf.log)"; fi
   file=`find $dloaddir | grep $lsha256.tar.bz2 | perl -l -ne '$_{$_} = -M; END { $,="\n"; print sort {$_{$b} <=> $_{$a}} keys %_; }' | tail -1`
   if [ -z "$file" ]; then error_quit "Problem downloading result file"; fi
