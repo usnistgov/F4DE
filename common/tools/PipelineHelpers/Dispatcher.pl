@@ -103,12 +103,13 @@ my $salttool = "";
 my @ignore = ();
 my $resumefile = "";
 my $doresume = 0;
+my $SHAhist = 0;
 
 my $usage = &set_usage();
 MMisc::ok_quit($usage) if (scalar @ARGV == 0);
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                  RS         cd   hi        rs  v      #
+# Used:                  RS         cd f hi        rs  v      #
 
 my %opt = ();
 GetOptions
@@ -123,6 +124,7 @@ GetOptions
    'ignoreFile=s' => \@ignore,
    'resumeFile=s' => \$resumefile,
    'Resume' => \$doresume,
+   'fullHistory' => \$SHAhist,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 
@@ -163,6 +165,9 @@ if ($resumed == 0) {
   }
 }
 
+$dh->set_SHAhist($SHAhist);
+MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
+
 $dh->set_scaninterval($tosleep);
 MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
   
@@ -192,7 +197,7 @@ MMisc::ok_quit("Done");
 sub set_usage {
     my $tmp=<<EOF
 
-$0 [--help] [--verbose] [--scaninterval inseconds] [--SaltTool tool] [--ignoreFile string [--ignoreFile string [...]]] [--resumeFile [--Resume]] --dir dirtotrack --command commandtorun
+$0 [--help] [--verbose] [--fullHistory] [--scaninterval inseconds] [--SaltTool tool] [--ignoreFile string [--ignoreFile string [...]]] [--resumeFile [--Resume]] --dir dirtotrack --command commandtorun
 
 Will track for any new files (*) in \'dirtotrack\' (recursively) and start as a background process: \'commandtorun newfile\' (one new process per new file)
 
@@ -205,6 +210,7 @@ Note: the tool can only track directories and files it can have access too
 Where:
   --help          This help message
   --verbose       Be a little more verbose
+  --fullHistory   Keep an internal history of every SHA256 seen (including deleted files whose SHA were authorized to be forgotten)
   --scaninterval  Value in seconds in between recursive directory scans (min: ${tsmin}s, default: ${tosleep}s)
   --SaltTool      Location of a tool which will be given the filename of files for which the SHA256 need to be computed; the one liner standard out string value returned by tool will be used as an extra value prepended to the SHA256 to further differentiate files
   --ignoreFile    If a new file found contain the provided string, do not run the command on it
