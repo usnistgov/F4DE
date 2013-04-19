@@ -328,6 +328,18 @@ if [ "A${DOWNLOADSHA}" == "A" ]; then # if -D => skip everything until "Download
 echo "   Internal SHA256 : $sha256"
 lf_base="$lockdir/$sha256"
 
+lf="$lf_base.01-validated"
+if [ "A$RESUBMIT" == "A1" ]; then
+  if [  -f "$lf" ]; then
+    echo "********** WARNING ********** By using the -R option, you will be sending a replacement submission to the scoring server, and your Internal SHA256 will match a different Remote SHA256. For more details, run \"$0 -h\". It this is the behavior your are attempting, let the countdown finish and the tool will continue."
+    echo -n "********** Press \'ctrl+c\' to abort before countdown complete: "
+    for i in 10 9 8 7 6 5 4 3 2 1 0; do echo -n "$i "; sleep 1; done
+    echo " -- Resubmitting"
+  else
+    echo "***** FYI: You are using the -R option on an entry that has never been seen before. Although this is fine, the -R option should only be used for replacing an already submitted submissions. For more details, run \"$0 -h\""
+  fi
+fi
+
 # FYI:
 # Step 1: Submission Validation
 # Step 2: Submission Upload
