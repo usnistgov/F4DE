@@ -1,6 +1,6 @@
 $expid_count = 11;
 @expid_tag  = ( 'KWS13' ); # should only contain 1 entry
-@expid_partition = ( 'conv-dev', 'conv-eval' ); # order is important
+@expid_partition = ( 'conv-dev', 'conv-eval', 'conv-evalpart1' ); # order is important
 @expid_scase = ( 'BaDev', 'BaEval', 'BaSurp' ); # order is important
 @expid_task = ( 'KWS', 'STT' ); # order is important
 @expid_lp = ( 'FullLP', 'LimitedLP' ); # order is important
@@ -25,11 +25,15 @@ foreach my $_tmp_part (@expid_partition) {
 $AuthorizedSet{$expid_partition[0]}{$expid_scase[0]} = 1;
 $AuthorizedSet{$expid_partition[0]}{$expid_scase[1]} = 1;
 $AuthorizedSet{$expid_partition[0]}{$expid_scase[2]} = 1;
-$AuthorizedSet{$expid_partition[0]}{$expid_scase[3]} = 1;
 
 # Authorize only BaEval and BaSurp scase for 'conv-eval'
 $AuthorizedSet{$expid_partition[1]}{$expid_scase[1]} = 1;
 $AuthorizedSet{$expid_partition[1]}{$expid_scase[2]} = 1;
+
+# Authorize all scase for 'conv-evalpart1'
+$AuthorizedSet{$expid_partition[2]}{$expid_scase[0]} = 1;
+$AuthorizedSet{$expid_partition[2]}{$expid_scase[1]} = 1;
+$AuthorizedSet{$expid_partition[2]}{$expid_scase[2]} = 1;
 
 # task to ext regexp match
 $Task2Regexp{$expid_task[0]} = $kwslist_rgx;
