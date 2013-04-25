@@ -62,7 +62,26 @@ my $ctm_rgx = undef;
 my $kwslist_rgx = undef;
 my %Task2Regexp;
 
-#####
+##########
+
+sub selectSpecfile {
+  my ($default, @dirs) = @_;
+  
+  my $fn = $default;
+  $fn =~ s%^.+/%%; # keep only the file part
+
+  foreach my $dir (reverse @dirs) {
+    my $tc = "$dir/$fn";
+    if (MMisc::does_file_exist($tc)) {
+      MMisc::warn_print("Found a version of the configuration file in a dbDir entry, using: $tc");
+      return($tc);
+    }
+  }
+
+  return($default);
+}
+
+##########
 
 sub __cfgcheck {
   my ($specfile, $t, $v, $c) = @_;
