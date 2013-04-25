@@ -129,6 +129,7 @@ my $xpng = 0;
 my $pendingfile = "";
 my $releasefile = "";
 my $extendedRunIndusDataDef = undef;
+my $forceSpecfile = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:    DEF H  K    P  ST V X    cdef h         rst v     #
@@ -160,6 +161,7 @@ GetOptions
    'ExcludePNGFileFromTxtTable'          => \$xpng,
    'FilePending=s' => \$pendingfile,
    'FileRelease=s' => \$releasefile,
+   'ForceSpecfile:s' => \$forceSpecfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -227,6 +229,12 @@ for (my $i = 0; $i < $tmp; $i++) {
   push @donefile, split(m%\:%, $v);
 }
 
+MMisc::error_quit("No \'Specfile\' given, will not continue processing\n\n$usage\n")
+  if (MMisc::is_blank($specfile));
+my $err = MMisc::check_file_r($specfile);
+MMisc::error_quit("Problem with \'Specfile\' ($specfile) : $err")
+  if (! MMisc::is_blank($err));
+
 ## Find 
 my %ecfs = ();
 my %tlists = ();
@@ -249,6 +257,17 @@ KWSEval_SCHelper::check_ecf_tlist_pairs($verb, \%ecfs, \%tlists, $rttm_ext, \%rt
 
 ########################################
 
+if (defined $forceSpecfile) {
+  if (! MMisc::is_blank($forceSpecfile)) {
+    $specfile = $forceSpecfile;
+    my $err = MMisc::check_file_r($specfile);
+    MMisc::error_quit("Problem with \'ForceSpecfile\' ($specfile) : $err")
+      if (! MMisc::is_blank($err));
+  }
+} else {
+# Find the preferred specfile
+  $specfile = KWSEval_SCHelper::selectSpecfile($specfile, @dbDir);
+}
 my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile, $ctm_ext, $kwslist_ext);
 
 my @Scase_toSequester = KWSEval_SCHelper::get_Scase_toSequester();
@@ -934,7 +953,7 @@ MMisc::ok_exit();
 ############################################################
 
 sub set_usage {
-  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass] [--ExcludePNGFileFromTxtTable]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--fileCreate file [--fileCreate file [...]]] [--ProcGraph tool] [--ExpectedTeamName TEAM] --Specfile specfile --expid EXPID --sysfile file --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]] [--FilePending file --FileRelease file]\n";
+  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass] [--ExcludePNGFileFromTxtTable]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--fileCreate file [--fileCreate file [...]]] [--ProcGraph tool] [--ExpectedTeamName TEAM] --Specfile perlEvalfile [--ForceSpecfile [perlEvalfile]] --expid EXPID --sysfile file --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]] [--FilePending file --FileRelease file]\n";
   $usage .= "\n";
   $usage .= "Will score a submission file against data present in the dbDir.\n";
   $usage .= "\nThe program needs a \'dbDir\' to load some of its eval specific definitions; this directory must contain pairs of <CORPUSID>_<PARTITION> \".ecf.xml\" and \".kwlist.xml\" files that match the component of the EXPID to confirm expected data validity, as well as a <CORPUSID>_<PARTITION> directory containing reference data needed for scoring.\n";
@@ -951,7 +970,8 @@ sub set_usage {
   $usage .= "  --ProcGraph  Location of the ProcGraph tool.  If defined ProcGraph will be run. (default: UNDEF)\n";
   $usage .= "  --ExpectedTeamName  Expected value of TEAM (used to check EXPID content)\n";
   $usage .= "  --Tsctkbin   Location of SCTK's bin directory\n";
-  $usage .= "  --Specfile   Configuration file containing EXPID definition\n";
+  $usage .= "  --Specfile   Configuration file containing EXPID definition (note: if a specfile with the same filename is found in a dbDir, this specialized version will be used unless --ForceSpecfile is used)\n";
+  $usage .= "  --ForceSpecfile  Force the use of the default specfile if no value is provided, or the selected file is provided (overriding the dbDir lookup)\n";
   $usage .= "  --sysfile    System input file\n";
   $usage .= "  --compdir    Directory where computation can be performed\n";
   $usage .= "  --resdir     Directory that will be returned to participants\n";

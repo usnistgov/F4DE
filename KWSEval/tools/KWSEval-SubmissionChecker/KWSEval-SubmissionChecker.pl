@@ -131,9 +131,10 @@ my $eteam = undef;
 my $scoringReady = 0;
 my $aMT = 0;
 my $bypassxmllint = 0;
+my $forceSpecfile = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A         K   O   ST V X     d   h  k   o q st v   z #
+# Used: A    F    K   O   ST V X     d   h  k   o q st v   z #
 
 my %opt = ();
 GetOptions
@@ -152,6 +153,7 @@ GetOptions
    'scoringReady'   => \$scoringReady,
    'AllowMissingTerms' => \$aMT,
    'XmllintBypass' => \$bypassxmllint,
+   'ForceSpecfile:s' => \$forceSpecfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -211,6 +213,17 @@ KWSEval_SCHelper::check_ecf_tlist_pairs($verb, \%ecfs, \%tlists, $rttm_ext, \%rt
 
 ########################################
 
+if (defined $forceSpecfile) {
+  if (! MMisc::is_blank($forceSpecfile)) {
+    $specfile = $forceSpecfile;
+    my $err = MMisc::check_file_r($specfile);
+    MMisc::error_quit("Problem with \'ForceSpecfile\' ($specfile) : $err")
+      if (! MMisc::is_blank($err));
+  }
+} else {
+# Find the preferred specfile
+  $specfile = KWSEval_SCHelper::selectSpecfile($specfile, @dbDir);
+}
 my $kwsyear = KWSEval_SCHelper::loadSpecfile($specfile, $ctm_ext, $kwslist_ext);
 
 my %AuthorizedSet = KWSEval_SCHelper::get_AuthorizedSet();
@@ -504,7 +517,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] --Specfile perlEvalfile --dbDir dir [--dbDir dir [...]] [--kwslistValidator tool [--AllowMissingTerms] [--XmllintBypass]] [--TmValidator tool] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID.extension
+Usage: $0 [--help | --version] --Specfile perlEvalfile [--ForceSpecfile [perlEvalfile]] --dbDir dir [--dbDir dir [...]] [--kwslistValidator tool [--AllowMissingTerms] [--XmllintBypass]] [--TmValidator tool] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID.extension
 
 Will confirm that a submission file conforms to the BABEL 'Submission Instructions'.
 
@@ -517,7 +530,8 @@ The program needs a 'dbDir' to load some of its eval specific definitions.
  Where:
   --help          Print this usage information and exit
   --version       Print version number and exit
-  --Specfile      Specify the \'perlEvalfile\' that contains definitions specific to the evaluation run
+  --Specfile      Configuration file containing EXPID definition (note: if a specfile with the same filename is found in a dbDir, this specialized version will be used unless --ForceSpecfile is used)
+  --ForceSpecfile  Force the use of the default specfile if no value is provided, or the selected file is provided (overriding the dbDir lookup)
   --dbDir         Directory where the sidecar files are located. Multiple can be specified by separating them using a colon (\':\') or using the option multiple time
   --kwslistValidator  Location of the \'ValidateKWSList\' tool (default: $ValidateKWSList) for validating \'$kwslist_ext\' files
   --AllowMissingTerms  Authorize TERMs defined in KWList file but not in the KWSlist file
