@@ -39,7 +39,7 @@ use File::Temp qw(tempdir tempfile);
 use File::Copy;
 use List::Util qw(reduce);
 use Time::HiRes qw(gettimeofday tv_interval);
-
+use AutoTable;
 
 ##### For non 'Core Modules' you will need to load them from within the specific function
 # (recommended to set a variable to avoid having to reload it)
@@ -2476,5 +2476,34 @@ sub compareDataUnitTest{
 
 #  print Dumper(compareData([ (312, 242, 340, 388, 296, 254, 391, 402, 290) ], [ (300, 201, 232, 312, 220, 256, 328, 330, 231) ], 1));
 }
+
+
+sub charHistFromStdin{
+  my ($encoding, $norm) = @_;
+  
+
+  my $at = new AutoTable();
+  $at->setEncoding($encoding) if ($encoding ne "");
+  $at->setCompareNormalize($norm);# if ($norm ne "");
+  binmode STDIN, $at->getPerlEncodingString();
+  while (<STDIN>){
+    foreach my $c(split(//, $_)){
+      $c = "<NL>" if ($c eq "\n");
+      $c = "<SPACE>" if ($c eq " ");
+      $c = "<TAB>" if ($c eq "\t");
+      $c = "<CR>" if ($c eq "\r");
+      
+      ### 
+      $c = $at->normalizeTerm($c)."|".$c;
+      $at->increment("Count",$c);
+    }
+  }
+  
+  $at->setProperties({"SortRowKeyTxt", "Alpha"});
+  print $at->renderTxtTable(1);
+}
+  
+
+
 
 1;
