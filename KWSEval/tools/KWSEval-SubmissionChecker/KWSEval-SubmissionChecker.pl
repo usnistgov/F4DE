@@ -105,8 +105,6 @@ my $tlist_ext_rgx = '\.kwlist\d*\.xml';
 my $rttm_ext = ".rttm";
 
 my $kwslist_ext = ".kwslist.xml";
-my $kwslist_ext_rgx = '\.kwslist\d*\.xml';
-my $kwslist_ext_act = "";
 my $ctm_ext = ".ctm";
 my $stm_ext = ".stm";
 
@@ -343,9 +341,8 @@ sub check_submission {
 
   # Remove the file ending (and extract it value for 'mode' selector)
   my $mode = undef;
-  if ($f =~ s%($kwslist_ext_rgx)$%%i) {
+  if ($f =~ s%$kwslist_ext$%%i) {
     $mode = $kwslist_ext;
-    $kwslist_ext_act = $1;
   } elsif ($f =~ s%$ctm_ext$%%i) {
     $mode = $ctm_ext;
   } else {
@@ -455,7 +452,7 @@ sub run_ValidateKWSList {
   return("Problem creating output dir ($od)")
     if (! MMisc::make_wdir($od));
   vprint(4, "Output dir: $od");
-  my $of = "$od/$exp$kwslist_ext_act";
+  my $of = "$od/$exp$kwslist_ext";
 
   my @cmd = ();
   push @cmd, '-e', $ecf;
