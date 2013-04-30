@@ -39,7 +39,6 @@ use File::Temp qw(tempdir tempfile);
 use File::Copy;
 use List::Util qw(reduce);
 use Time::HiRes qw(gettimeofday tv_interval);
-use AutoTable;
 
 ##### For non 'Core Modules' you will need to load them from within the specific function
 # (recommended to set a variable to avoid having to reload it)
@@ -47,6 +46,8 @@ my $DigestSHA_module = undef;
 my $StatisticsDistributions_module = undef;
 my $YAML_module = undef;
 my $DataDump_module = undef;
+my $AutoTable_module = undef;
+
 
 ##########
 
@@ -2481,6 +2482,12 @@ sub compareDataUnitTest{
 sub charHistFromStdin{
   my ($encoding, $norm) = @_;
   
+  ## Try to use AutoTable
+  if (! defined $AutoTable_module) {
+    &error_quit("Can not use the AutoTable module")
+      if (! &check_package("AutoTable"));
+    $AutoTable_module = "AutoTable";
+  }
 
   my $at = new AutoTable();
   $at->setEncoding($encoding) if ($encoding ne "");
