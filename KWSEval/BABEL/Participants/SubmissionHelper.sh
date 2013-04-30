@@ -285,7 +285,12 @@ if [ -z "$dbDir" ] && [ "${dbDir+xxx}" = "xxx" ]; then error_quit "dbDir has no 
 if [ -z "${uncompdir+xxx}" ]; then error_quit "uncompdir is not set"; fi
 uncomp=1
 if [ -z "$uncompdir" ] && [ "${uncompdir+xxx}" = "xxx" ];then uncomp=0; fi
-
+#
+if [ -z "${contact_email+xxx}" ]; then error_quit "contact_email is not set"; fi
+if [ -z "$contact_email" ] && [ "${contact_email+xxx}" = "xxx" ]; then error_quit "contact_email has no value set"; fi
+#
+if [ -z "${F4DEver+xxx}" ]; then error_quit "F4DEver is not set"; fi
+if [ -z "$F4DEver" ] && [ "${F4DEver+xxx}" = "xxx" ]; then error_quit "F4DEver has no value set"; fi
 
 ########################################
 
@@ -312,6 +317,11 @@ make_dir "$JRlockdir" "JobRunner lock directory"
 if [ "A$uncomp" == "A1" ]; then
   make_dir "$uncompdir" "Uncompress directory"
 fi
+
+# Check destination email is an email address
+if [ "A${contact_email}" == "Aemail@example.com" ]; then error_quit "Please adapt the default value of contact_email to your team contact email"; fi
+tmpdest=`perl -I$F4DEclib -e 'use MMisc; my $m=$ARGV[0]; my $e = MMisc::is_email($m); MMisc::error_quit($e) if (! MMisc::is_blank($e)); print $m;' $contact_email`
+if [ "${?}" -ne "0" ]; then error_quit "Problem with destination's email address ($contact_email): $tmpdest"; fi
 
 ############################################################
 if [ "A${CONTSHA}${DOWNLOADSHA}" == "A" ]; then
@@ -420,6 +430,8 @@ if [ ! -f "$lf" ]; then
   echo "$commentChar"'<!''--'" File: $bnm -->" >> "$tif"
   echo "$commentChar"'<!''--'" Epoch: $epoch -->" >> "$tif"
   echo "$commentChar"'<!''--'" InternalSHA256: $sha256 -->" >> "$tif"
+  echo "$commentChar"'<!''--'" ContactEmail: $contact_email -->" >> "$tif"
+  echo "$commentChar"'<!''--'" F4DE_version : $F4DEver -->" >> "$tif"
 
   lsha256=`perl -I$F4DEclib -e 'use MMisc; $if=$ARGV[0]; my ($e, $s) = MMisc::file_sha256digest($if); MMisc::error_quit($e) if (! MMisc::is_blank($e)); print $s;' $tif`
   if [ "${?}" -ne "0" ]; then error_quit "Problem obtaining file's SHA256 ($tif): $lsha256"; fi
