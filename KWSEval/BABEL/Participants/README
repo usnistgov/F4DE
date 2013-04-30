@@ -54,6 +54,10 @@ NOTE: the first time any 'scp' is done with the Scoring Server, you
 might be prompted for accepting the SSH key of the remote host, please
 enter 'yes'.
 
+6) edit the SubmissionHelper_common.cfg 's 'contact_email' line to reflect
+the email address of the person to contact in case of a problem or questions 
+with your submission
+
 
 --Prerequisites for using the Submission Helper tool:
 -------------
