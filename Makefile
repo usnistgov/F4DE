@@ -408,7 +408,7 @@ dist_archive_pre_remove:
 
 dist_replace:
 # Replace F4DEver in SubmissionHelper_common.cfg
-	@perl -i -pe 's%^(F4DEver=).+$%$1"'`cat ${F4DE_VERSION}`'"%' /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Participants/SubmissionHelper_common.cfg
+	@perl -i -pe 's%^(F4DEver=).+$$%$$1"'`cat ${F4DE_VERSION}`'"%' /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Participants/SubmissionHelper_common.cfg
 
 create_mans:
 # common
