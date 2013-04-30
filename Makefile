@@ -225,7 +225,7 @@ DEVAinstall_noman:
 ##########
 
 KWSEVALDIR=KWSEval
-KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl,KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl,KWSEval-SubmissionChecker/{KWSEval-SubmissionChecker.pl,KWS1{2,3}-SubmissionChecker.sh}}
+KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl,ValidateTM/ValidateTM.pl,KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl,KWSEval-SubmissionChecker/{KWSEval-SubmissionChecker.pl,KWS1{2,3}-SubmissionChecker.sh}}
 KWSEVALBABEL=BABEL/Participants/BABEL{_Scorer.pl,1{2,3}_Scorer.sh}
 
 KWSEvalinstall:
@@ -406,6 +406,10 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Server
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Participants/Checks/Comps*
 
+dist_replace:
+# Replace F4DEver in SubmissionHelper_common.cfg
+	@perl -i -pe 's%^(F4DEver=).+$%$1"'`cat ${F4DE_VERSION}`'"%' /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Participants/SubmissionHelper_common.cfg
+
 create_mans:
 # common
 	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/man
@@ -424,6 +428,7 @@ create_mans:
 dist_common:
 	@cp ${F4DE_VERSION} /tmp
 	@make dist_archive_pre_remove
+	@make dist_replace
 	@make create_mans
 	@echo ""
 	@echo "Building the tar.bz2 file"
