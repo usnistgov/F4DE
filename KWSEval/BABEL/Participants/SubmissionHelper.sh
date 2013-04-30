@@ -318,6 +318,8 @@ if [ "A$uncomp" == "A1" ]; then
   make_dir "$uncompdir" "Uncompress directory"
 fi
 
+if [ "A${scp_user}" == "Akws-test" ]; then error_quit "Please adapt the default value of scp_user to your team's user name"; fi
+
 # Check destination email is an email address
 if [ "A${contact_email}" == "Aemail@example.com" ]; then error_quit "Please adapt the default value of contact_email to your team contact email"; fi
 tmpdest=`perl -I$F4DEclib -e 'use MMisc; my $m=$ARGV[0]; my $e = MMisc::is_email($m); MMisc::error_quit($e) if (! MMisc::is_blank($e)); print $m;' $contact_email`
@@ -431,7 +433,7 @@ if [ ! -f "$lf" ]; then
   echo "$commentChar"'<!''--'" Epoch: $epoch -->" >> "$tif"
   echo "$commentChar"'<!''--'" InternalSHA256: $sha256 -->" >> "$tif"
   echo "$commentChar"'<!''--'" ContactEmail: $contact_email -->" >> "$tif"
-  echo "$commentChar"'<!''--'" F4DE_version : $F4DEver -->" >> "$tif"
+  echo "$commentChar"'<!''--'" F4DE_version: $F4DEver -->" >> "$tif"
 
   lsha256=`perl -I$F4DEclib -e 'use MMisc; $if=$ARGV[0]; my ($e, $s) = MMisc::file_sha256digest($if); MMisc::error_quit($e) if (! MMisc::is_blank($e)); print $s;' $tif`
   if [ "${?}" -ne "0" ]; then error_quit "Problem obtaining file's SHA256 ($tif): $lsha256"; fi
