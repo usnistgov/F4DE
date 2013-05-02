@@ -165,9 +165,6 @@ if ($resumed == 0) {
   }
 }
 
-$dh->set_SHAhist($SHAhist);
-MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
-
 $dh->set_scaninterval($tosleep);
 MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
   
@@ -186,6 +183,9 @@ if ($resumed == 0) {
   $dh->init();
   MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 }
+
+$dh->set_SHAhist($SHAhist);
+MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
 
 $dh->loop(); # we should never come out of here, unless an error occured
 MMisc::error_quit($dh->get_errormsg()) if ($dh->error());
