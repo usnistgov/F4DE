@@ -1576,7 +1576,7 @@ sub compareActual ($$) {
     @tmp = $b->{DET}->getMetric()->getActualDecisionPerformance();
     $b_score = $tmp[0];
 
-    if ($a->{DET}->getMaximizable()) {
+    if (! $a->{DET}->getMaximizable()) {
         return $b_score <=> $a_score; 
     } else {
         return $a_score <=> $b_score; 
