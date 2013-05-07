@@ -160,6 +160,7 @@ fi
 # Also check we can write in the directory if it already exists
 # call: make_dir dir name 
 make_dir () {
+  if [ "A$1" == "A" ]; then error_quit "Can not create directory, no filename provided"; fi
   if [ ! -d "$1" ]; then mkdir -p $1; fi
   if [ ! -d "$1" ]; then error_quit "Problem creating $2 directory ($1)"; fi
   if [ ! -w "$1" ]; then error_quit "Problem with $2 directory ($1), not user writable"; fi
@@ -168,6 +169,7 @@ make_dir () {
 ## Check that a file exists, is a file and is readable
 # call: check_file filename
 check_file () {
+  if [ "A$1" == "A" ]; then error_quit "File name is empty"; fi
   if [ ! -e "$1" ]; then error_quit "File ($1) does not exist"; fi
   if [ ! -f "$1" ]; then error_quit "File ($1) is not a file"; fi
   if [ ! -r "$1" ]; then error_quit "File ($1) is not readable"; fi
@@ -183,10 +185,27 @@ check_file_x () {
 ## Check that a directory exists, is a directory and is readable
 # call: check_dir filename
 check_dir () {
+  if [ "A$1" == "A" ]; then error_quit "Directory name is empty"; fi
   if [ ! -e "$1" ]; then error_quit "Directory ($1) does not exist"; fi
   if [ ! -d "$1" ]; then error_quit "Directory ($1) is not a directory"; fi
   if [ ! -r "$1" ]; then error_quit "Directory ($1) is not readable"; fi
 }
+
+## Find a specific file extension in a given directory
+# Will fail will error in case different than one is found
+# call: find_file_ext dir ext
+find_file_ext_count () {
+  _tmp_find="$1/*$2"
+  _tmp_count=`ls -l $_tmp_find 2>/dev/null | awk '/^-/{c++}END{ print c }'`
+# appears to return "" for nothing
+}
+find_file_ext () {
+  find_file_ext_count "$1" "$2"
+  if [ "A$_tmp_count" != "A1" ]; then error_quit "Found different than one candidate $2 file"; fi
+  result_file=`ls -1 $_tmp_find`
+  check_file $result_file
+}
+
 
 if [ "A${WEBPAGE}" != "A" ]; then
   echo "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n<html>\n<head>\n<meta http-equiv=\"REFRESH\" content=\"10\">\n<title></title>\n</head>\n<body>\n<progress value=\"0\">0\%</progress>Awaiting\n</body>\n</html>\n" > ${WEBPAGE}
@@ -447,23 +466,27 @@ if [ ! -f "$lf" ]; then
   if [ "${?}" -ne "0" ]; then error_quit "Problem obtaining file's SHA256 ($tif): $lsha256"; fi
 
   if [ "A${SYSDESC}" != "A" ]; then
-    mkdir "${tid}/SystemDescription"
-    cp "${SYSDESC}" "${tid}/SystemDescription/"
+    _tmp_sdescd="${tid}/SystemDescription"
+    mkdir "${_tmp_sdescd}"
+    cp "${SYSDESC}" "${_tmp_sdescd}"
+    find_file_ext "${_tmp_sdescd}" ""
   fi
 
+  _tmp_eoptd="${tid}/ExtraOptions"
+
   if [ "A${AUTH_TERM}" == "A1" ]; then
-    if [ ! -d "${tid}/ExtraOptions" ]; then mkdir "${tid}/ExtraOptions"; fi
-    echo "1" > "${tid}/ExtraOptions/AUTH_TERM"
+    if [ ! -d "${_tmp_eoptd}" ]; then mkdir "${_tmp_eoptd}"; fi
+    echo "1" > "${_tmp_eoptd}/AUTH_TERM"
   fi
 
   if [ "A${XMLLINTBYPASS}" == "A1" ]; then
-    if [ ! -d "${tid}/ExtraOptions" ]; then mkdir "${tid}/ExtraOptions"; fi
-    echo "1" > "${tid}/ExtraOptions/XMLLINTBYPASS"
+    if [ ! -d "${_tmp_eoptd}" ]; then mkdir "${_tmp_eoptd}"; fi
+    echo "1" > "${_tmp_eoptd}/XMLLINTBYPASS"
   fi
 
   if [ "A${XPNG}" == "A1" ]; then
-    if [ ! -d "${tid}/ExtraOptions" ]; then mkdir "${tid}/ExtraOptions"; fi
-    echo "1" > "${tid}/ExtraOptions/XPNG"
+    if [ ! -d "${_tmp_eoptd}" ]; then mkdir "${_tmp_eoptd}"; fi
+    echo "1" > "${_tmp_eoptd}/XPNG"
   fi
 
   pwd=`pwd`
