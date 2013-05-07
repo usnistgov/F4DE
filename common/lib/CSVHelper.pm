@@ -53,6 +53,11 @@ sub new {
 
   my $csvh = undef;
 
+  if (defined $qc && length($qc) == 0) {
+    $options{quote_char}  = "";
+    $options{always_quote} = 0;
+  }
+
   if ((defined $qc) && (length($qc) > 0)) {
     $options{quote_char}  = $qc;
     $options{escape_char} = $qc;
