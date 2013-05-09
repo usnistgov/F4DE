@@ -134,6 +134,8 @@ sub _initProps{
   die "Failed to add property ColorScheme" unless ($props->addProp("ColorScheme", "color", ("color", "grey", "colorPresentation")));
   die "Failed to add property MissUnit" unless ($props->addProp("MissUnit", "Prob", ("Prob", "Rate")));
   die "Failed to add property KeySpacing" unless ($props->addProp("KeySpacing", "0.7", ()));
+  die "Failed to add property KeyFontFace" unless ($props->addProp("KeyFontFace", "", ()));
+  die "Failed to add property KeyFontSize" unless ($props->addProp("KeyFontSize", "", ()));
   die "Failed to add property CurveLineStyle" unless ($props->addProp("CurveLineStyle", "lines", ("lines", "points", "linespoints")));
   die "Failed to add property KeyLoc" unless ($props->addProp("KeyLoc", "top", ("left", "right", "center", "top", "bottom", "outside", "below",
                                                               "left top",    "center top",    "right top",
@@ -543,6 +545,9 @@ sub renderUnitTest{
   $options->{title} = "ND vs. ND";
   
   $options->{KeyLoc} = "bottom";
+  $options->{KeySpacing} = ".4";
+  $options->{KeyFontFace} = "ariel";
+  $options->{KeyFontSize} = "3";
   $options->{HD} = 0;
   $options->{AutoAdapt} = 0;  
   if ($doNormal){
@@ -1141,6 +1146,8 @@ sub write_gnuplot_DET_header{
   my $yScale = $self->{props}->getValue("yScale"); 
   my $keyLoc = $self->{props}->getValue("KeyLoc"); 
   my $keySpacing = $self->{props}->getValue("KeySpacing"); 
+  my $keyFontFace = $self->{props}->getValue("KeyFontFace"); 
+  my $keyFontSize = $self->{props}->getValue("KeyFontSize"); 
   my $title = $self->{title}; 
   
   print $FP "set terminal postscript color\n";
@@ -1152,7 +1159,8 @@ sub write_gnuplot_DET_header{
 
   if (defined($keyLoc)) {
     $keyLoc = $bvc if ($keyLoc eq "below");  ### Gnuplot changed
-    print $FP "set key $keyLoc spacing $keySpacing ". ($keyLoc eq $bvc ? "box" : "")."\n";
+    print $FP "set key $keyLoc spacing $keySpacing ". ($keyLoc eq $bvc ? "box" : "")." ".
+      ($keyFontFace.$keyFontSize eq "" ? "" : "font \"$keyFontFace,$keyFontSize\"")."\n";
   }
   
   my $ratio = 0.85;

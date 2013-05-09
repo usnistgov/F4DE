@@ -98,6 +98,8 @@ my $scale = undef;
 my $lineTitleModification = undef;
 my $keyLoc = undef;
 my $keySpacing = undef;
+my $keyFontType = undef;
+my $keyFontSize = undef;
 my @KeyLocDefs = ( "left", "right", "center", "top", "bottom", "outside", "below", "((left|right|center)\\s+(top|bottom|center))" );
 my $DetCompare = 0;
 my $DrawIsoratiolines = 0;
@@ -298,6 +300,10 @@ foreach my $directive (@plotControls){
     $options{PointSetAreaDefinition} = $1;
   } elsif ($directive =~ /KeySpacing=($numRegex)/){
     $options{KeySpacing} = $1;
+  } elsif ($directive =~ /KeyFontFace=(.*)/){
+    $options{KeyFontFace} = $1;
+  } elsif ($directive =~ /KeyFontSize=($numRegex)/){
+    $options{KeyFontSize} = $1;
   } elsif ($directive =~ /ExtraPoint=(.*)$/){
     my $pointDef = $1;
     my $colorRegex = 'rgb[ _]"#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"';
@@ -875,6 +881,10 @@ Sets the X and Y axis scale types for the graph:
 The B<plotControl> options provides access to fine control the the DET curve display.  The option, which can be used multiple times, specifies one of the following directives via the following BNF definitions:
 
 /KeySpacing=<FLOAT>/ -> Sets the inter-line spaces in the key to the float.  Default is 0.7
+
+/KeyFontFace=<STRING>/ -> Sets font face used in the key of the DET Curve.
+
+/KeyFontSize=<STRING>/ -> Sets font size used in the key of the DET Curve. Default is either via '-p Font=..' or the default font.
 
 /ColorScheme=grey/  ->  Sets the color scheme to either (grey|color|colorPresentatio).
 
