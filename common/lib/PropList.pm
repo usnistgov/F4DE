@@ -219,6 +219,20 @@ sub printPropList {
 
 ############################################################
 
+sub printShortPropList {
+    my ($self) = @_;
+    
+    my @pl = $self->getPropList();
+    foreach my $prop (sort @pl) {
+	print "$prop :: ".$self->getValue($prop);
+	my @av = $self->getAuthorizedValues($prop);
+	print " (".join(" | ", @av).")" if (scalar(@av) > 0);
+	print "\n";
+    }
+}
+
+############################################################
+
 sub _set_errormsg {
   my ($self, $txt) = @_;
   $self->{errormsg}->set_errormsg($txt);
