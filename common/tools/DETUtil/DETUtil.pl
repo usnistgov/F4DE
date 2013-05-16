@@ -909,6 +909,8 @@ The B<plotControl> options provides access to fine control the the DET curve dis
 
 /smooth=AdjacentDecisions,extraTargs,extraNonTargs/   -> Build a smoothed DET with the following parameters.     <AdjacentDecisions> use the average decision score +/- the number pf points.  0 means no averaging.  <extraTargs> adds the N targets with linearly interpolated values between each pair of targets.  0 means no targets added.  <extraNonTargs> does the same operation a <extraTargs> except to the non targets.
 
+/PlotMeasureThresholdPlots(=withSE)/  -> Build the threshold plots for two error measures (e.g., miss and false alarm) as a function of the Dectection Score. 
+      
 =item B<-F>, B<--ForceRecompute>
 
 Force the DET points to be recomputed.  Some of the other options also re-compute the points.
