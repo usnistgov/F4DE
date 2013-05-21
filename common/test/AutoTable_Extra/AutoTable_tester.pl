@@ -51,6 +51,38 @@ $testr += &do_simple_test($tn, "(Special load with Keep Only)", "$spload ../comm
 $tn = "test3e";
 $testr += &do_simple_test($tn, "(Special load with Remove headers)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' name,year", "res-$tn.txt");
 
+##
+$tn = "test4a";
+$testr += &do_simple_test($tn, "(Reverse Sort Test)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' \'\' reverse", "res-$tn.txt");
+
+##
+$tn = "test4b";
+$testr += &do_simple_test($tn, "(SHA1 Digest Sort Test)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' \'\' sha1", "res-$tn.txt");
+
+##
+$tn = "test4c";
+$testr += &do_simple_test($tn, "(SHA224 Digest Sort Test)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' \'\' sha224", "res-$tn.txt");
+
+##
+$tn = "test4d";
+$testr += &do_simple_test($tn, "(SHA256 Digest Sort Test)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' \'\' sha256", "res-$tn.txt");
+
+##
+$tn = "test4e";
+$testr += &do_simple_test($tn, "(SHA384 Digest Sort Test)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' \'\' sha384", "res-$tn.txt");
+
+##
+$tn = "test4f";
+$testr += &do_simple_test($tn, "(SHA512 Digest Sort Test)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' \'\' sha512", "res-$tn.txt");
+
+##
+$tn = "test4g";
+$testr += &do_simple_test($tn, "(SHA512/224 Digest Sort Test)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' \'\' sha512224", "res-$tn.txt");
+
+##
+$tn = "test4h";
+$testr += &do_simple_test($tn, "(SHA512/256 Digest Sort Test)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' \'\' sha512256", "res-$tn.txt");
+
 #####
 
 my $elapsed = F4DE_TestCore::get_elapsedtime($t0);
@@ -66,7 +98,7 @@ MMisc::error_quit("Not all test ok$add\n");
 
 sub do_simple_test {
   my ($testname, $subtype, $command, $res, $rev) = 
-    MMisc::iuav(\@_, "", "", "", "", 0);
+    MMisc::iuav(\@_, "", "", "", "", 0, "");
 
   $totest++;
 
