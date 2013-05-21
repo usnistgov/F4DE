@@ -95,12 +95,14 @@ MMisc::error_quit($usage) if (scalar @ARGV == 0);
 # Default values for variables
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                                  h j    o  r          #
+# Used:                                  h j    o qrs         #
 
 my $outcsv = "";
 my @joincol = ();
 my $replace = 0;
 my $firstfilekeep = 0;
+my $separator=",";
+my $quote_char="\"";
 
 my %opt = ();
 GetOptions
@@ -110,6 +112,8 @@ GetOptions
    'outcsv=s'  => \$outcsv,
    'joincol=s' => \@joincol,
    'replace'   => \$replace,
+   'separator=s' => \$separator,
+   'quote=s' => \$quote_char,
    'LimitKeysToFirstFile'    => \$firstfilekeep,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if (($opt{'help'}) || (scalar @ARGV == 0));
@@ -121,6 +125,7 @@ MMisc::error_quit("No \'outcsv\' provided\n\n$usage")
 MMisc::error_quit("Need at least one \'joincol\'\n\n$usage")
   if (scalar @joincol < 1);
 my %jch = (); foreach my $jc (@joincol) { $jch{$jc} = scalar(keys %jch); }
+$separator = "\t" if ($separator eq "<TAB>");
 
 my %all = ();
 my %header = ();
@@ -212,7 +217,7 @@ sub load_file {
   open IFILE, "<$if"
     or MMisc::error_quit("Problem opening input file ($if) : $!");
 
-  my $icsvh = new CSVHelper();
+  my $icsvh = new CSVHelper($quote_char, $separator);
 
   # load headers
   my $sh = 1;
@@ -323,7 +328,7 @@ sub save_file {
   open OFILE, ">$of"
     or MMisc::error_quit("Problem opening output file ($of) : $!");
   
-  my $ocsvh = new CSVHelper();
+  my $ocsvh = new CSVHelper($quote_char, $separator);
 
   # Write header
   my $sh = 1;
@@ -370,6 +375,8 @@ Where:
   --joincol     primary key column name (used in in \'joincol\' order)
   --replace     In case of primary key collision, replace previous value
   --LimitKeysToFirstFile      If a key from the first file is not present in the following, remove that line from the output file
+  --separator   Separator character for both input and output files, use <TAB> for tab separator
+  --quote       Quote field character for both input and output files
 
 Options can be specified for infile.csv:
   ++colname=colvalue will add extra columns to the loaded file
