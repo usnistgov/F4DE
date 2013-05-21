@@ -77,7 +77,15 @@ sub setValue {
 
   if (exists $self->{authval}{$key}) {
     my @av = @{$self->{authval}{$key}};
-    if (! grep(m%^$value$%, @av)) {
+    my $found = 0;
+    if ($value =~ m%^\&%) { # enable call to 'main::function'. Syntax: &text=main::function
+      my $comp = $value;
+      $comp =~ s%(\=).+$%$1%;
+      $found = scalar(grep(m%^$comp%, @av));
+    } else {
+      $found = scalar(grep(m%^$value$%, @av));
+    }
+    if ($found == 0) {
       $self->_set_errormsg("Value ($value) not in the authorized list (" . join(",", @av) . ") for key ($key). ");
       return(0);
     }
