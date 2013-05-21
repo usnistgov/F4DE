@@ -103,20 +103,20 @@ sub new {
 
   ## Text
   $self->{Properties}->addProp($key_KeyColumnTxt,   "Keep", ("Keep", "Remove"));
-  $self->{Properties}->addProp($key_SortRowKeyTxt,   "AsAdded", ("AsAdded", "Num", "Alpha"));
-  $self->{Properties}->addProp($key_SortColKeyTxt,   "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_SortRowKeyTxt,   "AsAdded", ("AsAdded", "Num", "Alpha", "\&Function\="));
+  $self->{Properties}->addProp($key_SortColKeyTxt,   "AsAdded", ("AsAdded", "Num", "Alpha", "\&Function\="));
   $self->{Properties}->addProp($key_TxtPrefix,       "", ());
   $self->{Properties}->addProp($key_TxtCellJustification, "right", ("right", "left", "center"));
 
   ## CSV
   $self->{Properties}->addProp($key_KeyColumnCsv,   "Keep", ("Keep", "Remove"));
-  $self->{Properties}->addProp($key_SortRowKeyCsv,   "AsAdded", ("AsAdded", "Num", "Alpha"));
-  $self->{Properties}->addProp($key_SortColKeyCsv,   "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_SortRowKeyCsv,   "AsAdded", ("AsAdded", "Num", "Alpha", "\&Function\="));
+  $self->{Properties}->addProp($key_SortColKeyCsv,   "AsAdded", ("AsAdded", "Num", "Alpha", "\&Function\="));
 
   ## HTML
   $self->{Properties}->addProp($key_KeyColumnHTML,  "Keep", ("Keep", "Remove"));
-  $self->{Properties}->addProp($key_SortRowKeyHTML,  "AsAdded", ("AsAdded", "Num", "Alpha"));
-  $self->{Properties}->addProp($key_SortColKeyHTML,  "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_SortRowKeyHTML,  "AsAdded", ("AsAdded", "Num", "Alpha", "\&Function\="));
+  $self->{Properties}->addProp($key_SortColKeyHTML,  "AsAdded", ("AsAdded", "Num", "Alpha", "\&Function\="));
   $self->{Properties}->addProp($key_htmlColHeadBGColor, "", ());
   $self->{Properties}->addProp($key_htmlRowHeadBGColor, "", ());
   $self->{Properties}->addProp($key_htmlCellBGColor, "", ());
@@ -125,8 +125,8 @@ sub new {
 
   ## LaTeX
   $self->{Properties}->addProp($key_KeyColumnLaTeX, "Keep", ("Keep", "Remove"));
-  $self->{Properties}->addProp($key_SortRowKeyLaTeX, "AsAdded", ("AsAdded", "Num", "Alpha"));
-  $self->{Properties}->addProp($key_SortColKeyLaTeX, "AsAdded", ("AsAdded", "Num", "Alpha"));
+  $self->{Properties}->addProp($key_SortRowKeyLaTeX, "AsAdded", ("AsAdded", "Num", "Alpha", "\&Function\="));
+  $self->{Properties}->addProp($key_SortColKeyLaTeX, "AsAdded", ("AsAdded", "Num", "Alpha", "\&Function\="));
 
   ##
   $self->{Properties}->addProp($key_KeepColumnsInOutput, "", ());
@@ -1158,6 +1158,9 @@ sub _getOrderedLabelIDs(){
     @sortedKeys = sort { $a <=> $b} keys %{ $ht->{SubID} };
   } elsif ($order eq "Alpha") {
     @sortedKeys = sort keys %{ $ht->{SubID} };
+  } elsif ($order =~ m%^\&Function=(.+)$%) {
+    my $rsf = $1;
+    @sortedKeys = sort {&{\&$rsf}($a,$b)} keys %{ $ht->{SubID} };
   } else {
     MMisc::error_quit("Internal Error AutoTable: Sort order '$order' not defined");
   }  
