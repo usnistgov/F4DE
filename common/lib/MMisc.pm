@@ -1167,12 +1167,12 @@ sub miniJobRunner {
 }
 
 ##########
-# file_sha256digest(FileName)
+# file_shaXXXdigest(FileName)
 ## return(errstring, hexdigest)
 # ie an error message if any as well as the hex digest of the given file
 # (adapted from 'shasum' 's 'sumfile')
-sub file_sha256digest {
-  my ($file) = @_;
+sub file_shaXXXdigest {
+  my ($xxx, $file) = @_;
 
   my $err = &check_file_r($file);
   return("Problem with input file ($file): $err")
@@ -1194,6 +1194,54 @@ sub file_sha256digest {
   if ($@) { return("Problem reading file ($file): $!"); }
   return("", $digest->hexdigest);
 }
+
+# Valid XXX values: 1 224 256 384 512 512/224 512/256
+sub file_sha1digest   { return(&file_shaXXXdigest(1,   $_[0])); }
+sub file_sha224digest { return(&file_shaXXXdigest(224, $_[0])); }
+sub file_sha256digest { return(&file_shaXXXdigest(256, $_[0])); }
+sub file_sha384digest { return(&file_shaXXXdigest(384, $_[0])); }
+sub file_sha512digest { return(&file_shaXXXdigest(512, $_[0])); }
+sub file_sha512224digest { return(&file_shaXXXdigest(512224, $_[0])); }
+sub file_sha512256digest { return(&file_shaXXXdigest(512256, $_[0])); }
+
+
+#####
+# string_shaXXXdigest(string)
+## return(errstring, hexdigest)
+# ie an error message if any as well as the hex digest of the given string
+# (adapted from 'shasum' 's 'sumfile')
+sub string_shaXXXdigest {
+  my ($xxx, $string) = @_;
+
+  return("Empty string")
+    if (&is_blank($string));
+
+  ## Try to use Digest::SHA.  If not installed, use the slower
+  ## but functionally equivalent Digest::SHA::PurePerl instead.
+  if (! defined $DigestSHA_module) {
+    if (&check_package("Digest::SHA")) {
+      $DigestSHA_module = "Digest::SHA";
+    } elsif (&check_package("Digest::SHA::PurePerl")) {
+      $DigestSHA_module = "Digest::SHA::PurePerl";
+    } else {
+      return("Unable to find Digest::SHA or Digest::SHA::PurePerl");
+    }
+  }
+
+  my $digest = eval { $DigestSHA_module->new($xxx)->add($string) };
+  if ($@) { return("Problem analyzing string: $!"); }
+  return("", $digest->hexdigest);
+}
+
+# Valid XXX values: 1 224 256 384 512 512/224 512/256
+sub string_sha1digest   { return(&string_shaXXXdigest(1,   $_[0])); }
+sub string_sha224digest { return(&string_shaXXXdigest(224, $_[0])); }
+sub string_sha256digest { return(&string_shaXXXdigest(256, $_[0])); }
+sub string_sha384digest { return(&string_shaXXXdigest(384, $_[0])); }
+sub string_sha512digest { return(&string_shaXXXdigest(512, $_[0])); }
+sub string_sha512224digest { return(&string_shaXXXdigest(512224, $_[0])); }
+sub string_sha512256digest { return(&string_shaXXXdigest(512256, $_[0])); }
+
 
 ##########
 
