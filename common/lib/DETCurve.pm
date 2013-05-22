@@ -1586,7 +1586,7 @@ sub compareActual ($$) {
 sub compareBest ($$) {
     my ($a, $b) = @_;
 
-    if ($a->{DET}->getMaximizable()) {
+    if (! $a->{DET}->getMaximizable()) {
         return $b->{DET}->getBestCombComb() <=> $a->{DET}->getBestCombComb();
     } else {
         return $a->{DET}->getBestCombComb() <=> $b->{DET}->getBestCombComb();

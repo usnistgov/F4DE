@@ -183,7 +183,7 @@ sub sortTest {
 
     # Desired Results: -2.33, -0.192839415387444, 0
     die " Error: Det curves are improperly sorted for actual cost" 
-        if ($score1 < $score2 || $score2 < $score3);
+        if ($score1 > $score2 || $score2 > $score3);
 
     #####
     # DET1 Best: 0.636363636363636
@@ -197,7 +197,7 @@ sub sortTest {
 
     # Desired Results: 0, 0.4, 0.636363636363636
     die " Error: Det curves are improperly sorted for best cost" 
-        if ($score1 < $score2 || $score2 < $score3);
+        if ($score1 > $score2 || $score2 > $score3);
 
     print "OK\n";
 }
