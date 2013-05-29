@@ -1,4 +1,6 @@
-# TrecVid08
+# DEVA
+
+CPANP_IH=../common/tools/cpanp_installhelper/cpanp_installhelper.sh
 
 all:
 	@echo "Nothing to do"
@@ -8,3 +10,6 @@ install:
 
 check:
 	@(cd test; make $@)
+
+perl_install:
+	@echo "-- Nothing extra for DEVA"

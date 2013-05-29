@@ -334,6 +334,20 @@ KWSEvalcheck:
 check_common:
 	@make from_installdir
 
+
+########## perl_install
+
+perl_install:
+	@echo "***** Trying to install all perl needed modules"
+	@make from_installdir
+	@(cd ${CM_DIR}; make $@)
+	@(cd ${TV08DIR}; make $@)
+	@(cd ${CL07DIR}; make $@)
+	@(cd ${AV09DIR}; make $@)
+	@(cd ${DEVADIR}; make $@)
+	@(cd ${KWSEVALDIR}; make $@)
+
+
 ########################################
 ########## For distribution purpose
 
