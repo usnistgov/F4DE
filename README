@@ -143,6 +143,11 @@ The only pre-requisites of the tool are:
     YAML
     Data::Dump
 
+From the main directory, after having insured that Perl's cpanp is
+installed and properly configured, you can run 'make perl_install' to
+try to help with the automatic installation of the perl modules that
+will be tested in the installation.
+
 
 ----- Actual Installation:
 
