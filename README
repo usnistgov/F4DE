@@ -126,8 +126,7 @@ The only pre-requisites of the tool are:
 
 - some Perl modules (available on CPAN [http://www.cpan.org/]). Availability
   of those will be tested during step 1 ('make check') of the installation
-  process. Installation of those modules can be automated through the 'cpan'
-  command. The list of those modules is as follow:
+  process. The list of those modules is as follow:
     Text::CSV
     Text::CSV_XS
     Math::Random::OO::Uniform
@@ -143,11 +142,14 @@ The only pre-requisites of the tool are:
     YAML
     Data::Dump
 
-From the main directory, after having insured that Perl's cpanp is
-installed and properly configured, you can run 'make perl_install' to
-try to help with the automatic installation of the perl modules that
-will be tested in the installation.
+From the main directory, after having insured side tools, and
+confirmed that Perl's 'cpanp' is installed and properly configured,
+you can run 'make perl_install' to try to help with the automatic
+installation of the perl modules that will be tested in the "make
+check" step.
 
+If you prefer a manual approach, installation of those modules can be
+automated through the 'cpan' command.
 
 ----- Actual Installation:
 

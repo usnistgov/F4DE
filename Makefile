@@ -16,6 +16,8 @@ all:
 	@echo ""
 	@echo "Possible options are:"
 	@echo ""
+	@echo "  perl_install    a helper to try and install required Perl packages  -- make sure the tools listed in the README's 'INSTALLATION' 'Prerequisites' section are installed first. Also insure that Perl's 'cpanp' tool is configured and ready to be used (please note you might be prompted to follow dependencies)"
+	@echo ""
 	@echo "[checks section -- recommended to run before installation -- DO NOT set the F4DE_BASE environment variable]"
 	@echo "(note that each tool individual test can take from a few seconds to a few minutes to complete)"
 	@echo "  mincheck        run only a few common checks"
