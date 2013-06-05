@@ -840,6 +840,103 @@ col1 & col2 & col4 & col4 & col4\\
 </tr>
 </table>
 
+<hr><h1>Complex Table = Function=reverse column sort</h1>
+<h2>Text Rendering</h2>
+<pre>
+             |                      CCC                      |
+             |         col2          |         col1          |
+             |   C   |   B   |   A   |   C   |   B   |   A   |
+-------------+-------+-------+-------+-------+-------+-------+
+srow1  row1  |   1x2 |   1x1 |   1x1 |   1x2 |   1x1 |   1x1 |
+       row2  |   1x2 |   1x1 |   1x1 |   1x2 |   1x1 |   1x1 |
+srow2  row1  |   1x2 |   1x1 |   1x1 |   1x2 |   1x1 |   1x1 |
+       row2  |   1x2 |   1x1 |   1x1 |   1x2 |   1x1 |   1x1 |
+</pre>
+<h2>CSV Rendering</h2>
+<pre>
+"MasterKey","CCC|col2|C","CCC|col2|B","CCC|col2|A","CCC|col1|C","CCC|col1|B","CCC|col1|A"
+"srow1|row1","1x2","1x1","1x1","1x2","1x1","1x1"
+"srow1|row2","1x2","1x1","1x1","1x2","1x1","1x1"
+"srow2|row1","1x2","1x1","1x1","1x2","1x1","1x1"
+"srow2|row2","1x2","1x1","1x1","1x2","1x1","1x1"
+</pre>
+<h2>LaTeX Rendering</h2>
+<pre>
+%% add to document header: \usepackage{multirow}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{2}{|c|}{\multirow{3}{*}{ }} & \multicolumn{6}{|c|}{CCC}\\
+\cline{3-8}\multicolumn{2}{|c|}{ } & \multicolumn{3}{|c|}{col2} & \multicolumn{3}{|c|}{col1}\\
+\cline{3-8}\multicolumn{2}{|c|}{ } & C & B & A & C & B & A\\
+\hline
+\multirow{2}{*}{srow1} & row1 & 1x2 & 1x1 & 1x1 & 1x2 & 1x1 & 1x1\\
+\cline{2-8} & row2 & 1x2 & 1x1 & 1x1 & 1x2 & 1x1 & 1x1\\
+\hline
+\multirow{2}{*}{srow2} & row1 & 1x2 & 1x1 & 1x1 & 1x2 & 1x1 & 1x1\\
+\cline{2-8} & row2 & 1x2 & 1x1 & 1x1 & 1x2 & 1x1 & 1x1\\
+\hline
+\end{tabular}
+</pre>
+<h2>HTML Rendering</h2>
+<table border=1 >
+<tr>
+  <th rowspan=3 colspan=2> &nbsp; </th>
+  <th colspan=6 > CCC  </th>
+</tr>
+<tr>
+  <th colspan=3 > col2  </th>
+  <th colspan=3 > col1  </th>
+</tr>
+<tr>
+  <th > C  </th>
+  <th > B  </th>
+  <th > A  </th>
+  <th > C  </th>
+  <th > B  </th>
+  <th > A  </th>
+</tr>
+<tr>
+  <th rowspan=2 > srow1 </th>
+  <th > row1 </th>
+  <td  align="right" > 1x2 </td>  <!-- srow1|row1 CCC|col2|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row1 CCC|col2|B  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row1 CCC|col2|A  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow1|row1 CCC|col1|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row1 CCC|col1|B  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row1 CCC|col1|A  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th > row2 </th>
+  <td  align="right" > 1x2 </td>  <!-- srow1|row2 CCC|col2|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row2 CCC|col2|B  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row2 CCC|col2|A  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow1|row2 CCC|col1|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row2 CCC|col1|B  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow1|row2 CCC|col1|A  --> 
+</tr>
+<tr>
+  <th rowspan=2 > srow2 </th>
+  <th > row1 </th>
+  <td  align="right" > 1x2 </td>  <!-- srow2|row1 CCC|col2|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row1 CCC|col2|B  --> 
+  <td  align="right" > <a href="http://www.nist.gov/">1x1</a> </td>  <!-- srow2|row1 CCC|col2|A  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow2|row1 CCC|col1|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row1 CCC|col1|B  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row1 CCC|col1|A  --> 
+</tr>
+<tr>
+  <!-- <th> &nbsp; </th> -->
+  <th > row2 </th>
+  <td  align="right" > 1x2 </td>  <!-- srow2|row2 CCC|col2|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row2 CCC|col2|B  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row2 CCC|col2|A  --> 
+  <td  align="right" > 1x2 </td>  <!-- srow2|row2 CCC|col1|C  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row2 CCC|col1|B  --> 
+  <td  align="right" > 1x1 </td>  <!-- srow2|row2 CCC|col1|A  --> 
+</tr>
+</table>
+
 <hr>OK EXIT
 </body></html>
 
