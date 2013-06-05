@@ -40,7 +40,7 @@ MMisc::ok_quit("Done");
 sub __aterr { MMisc::error_quit("Issue with AT : " . $_[0]->get_errormsg()) if ($_[0]->error()); }
 #####
 
-sub reverse_sort { my ($a,$b) = @_; return (reverse($a) cmp reverse($b)); }
+sub reverse_sort { my ($a,$b) = @_; return (-($a cmp $b)); }
 
 sub sha1digest_sort { my ($a,$b) = @_; return (MMisc::string_sha1digest($a) cmp MMisc::string_sha1digest($b)); }
 
