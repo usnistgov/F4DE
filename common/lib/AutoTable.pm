@@ -163,6 +163,11 @@ sub __UT_showAllModes {
 
 ##
 
+sub __UT_aterr { MMisc::error_quit("Issue with AT : " . $_[0]->get_errormsg()) if ($_[0]->error()); }
+sub __UT_reversesort { my ($a,$b) = @_; return (-($a cmp $b)); }
+  
+##
+
 sub unitTest {
   my $makecall = shift @_;
 
@@ -180,6 +185,7 @@ sub unitTest {
       if ($at->renderCSV() !~ /Warning: Empty table./);
   MMisc::error_quit("Empty table not rendered correctly for LaTeX")
       if ($at->renderLaTeXTable() !~ /Warning: Empty table./);
+  $at->__UT_aterr();
 
 #  $at->addData({value => "1x1", link => "/etc/hosts"},  "CCC|col1|A", "srow1|row1");
 #  $at->addData({value => "1x1", link => "/etc/hosts", linkText => "foo"},  "CCC|col1|A", "srow1|row1");
@@ -210,8 +216,9 @@ sub unitTest {
 #  $at->addData("1x1",  "||", "srow2|row2");
 #  $at->addData("1x1",  "||", "srow2|row2");
 #  $at->addData("1x2",  "||", "srow2|row2"); 
- 
-  & __UT_showAllModes("Simple Table", $at);
+  $at->__UT_aterr();
+  &__UT_showAllModes("Simple Table", $at);
+  $at->__UT_aterr();
   
 ##=======
 ##  
@@ -253,8 +260,9 @@ sub unitTest {
   
   $sg->{Properties}->setValue($key_htmlCellBGColor, "\#DDDDDD");
   $sg->{Properties}->setValue($key_htmlAltLineCellBGColor, "\#AAAAAA");
-
-  & __UT_showAllModes("Complex Table (sorted: As Added)", $sg);
+  $sg->__UT_aterr();
+  &__UT_showAllModes("Complex Table (sorted: As Added)", $sg);
+  $sg->__UT_aterr();
 
   $sg->{Properties}->setValue($key_SortColKeyTxt, "Num");
   $sg->{Properties}->setValue($key_SortRowKeyTxt, "Num");
@@ -264,7 +272,9 @@ sub unitTest {
   $sg->{Properties}->setValue($key_SortRowKeyHTML, "Num");
   $sg->{Properties}->setValue($key_SortColKeyLaTeX, "Num");
   $sg->{Properties}->setValue($key_SortRowKeyLaTeX, "Num");
-  & __UT_showAllModes("Complex Table (sorted: Num)", $sg);
+  $sg->__UT_aterr();
+  &__UT_showAllModes("Complex Table (sorted: Num)", $sg);
+  $sg->__UT_aterr();
 
   $sg->{Properties}->setValue($key_SortColKeyTxt, "Alpha");
   $sg->{Properties}->setValue($key_SortRowKeyTxt, "Alpha");
@@ -274,7 +284,9 @@ sub unitTest {
   $sg->{Properties}->setValue($key_SortRowKeyHTML, "Alpha");
   $sg->{Properties}->setValue($key_SortColKeyLaTeX, "Alpha");
   $sg->{Properties}->setValue($key_SortRowKeyLaTeX, "Alpha");
-  & __UT_showAllModes("Complex Table (sorted: Alpha)", $sg);
+  $sg->__UT_aterr();
+  &__UT_showAllModes("Complex Table (sorted: Alpha)", $sg);
+  $sg->__UT_aterr();
 
 ##=======
 ##  
@@ -288,21 +300,36 @@ sub unitTest {
 ##>>>>>>> 1.3
 
   $sg->setProperties({ $key_KeepColumnsInOutput => ".*PartA.*|PartB.*col4" });
-  & __UT_showAllModes("Complex Table = keepColumns .*PartA.*|PartB.*col4", $sg);
+  $sg->__UT_aterr();
+  &__UT_showAllModes("Complex Table = keepColumns .*PartA.*|PartB.*col4", $sg);
+  $sg->__UT_aterr();
   
   $sg->setProperties({ $key_KeepRowsInOutput => ".*PartZ.*" });
   $sg->setProperties({ $key_htmlColHeadBGColor => "pink" });
   $sg->setProperties({ $key_htmlRowHeadBGColor => "orange" });
   $sg->setProperties({ $key_htmlCellBGColor => "red" });
   $sg->setProperties({ $key_htmlCellJust => "center" });
-  & __UT_showAllModes("Complex Table = keepRows *PartZ.*, HTML props", $sg);
+  $sg->__UT_aterr();
+  &__UT_showAllModes("Complex Table = keepRows *PartZ.*, HTML props", $sg);
+  $sg->__UT_aterr();
   
   $sg->setProperties({ $key_KeyColumnHTML => "Remove" });
   $sg->setProperties({ $key_KeyColumnTxt => "Remove" });
   $sg->setProperties({ $key_KeyColumnCsv => "Remove" });
   $sg->setProperties({ $key_KeyColumnLaTeX => "Remove" });
-  & __UT_showAllModes("Complex Table = remove key column", $sg);
+  $sg->__UT_aterr();
+  &__UT_showAllModes("Complex Table = remove key column", $sg);
+  $sg->__UT_aterr();
   
+  my $name = "AutoTable::__UT_reversesort";
+  $at->setProperties({ $key_SortColKeyTxt => "\&Function=$name" });
+  $at->setProperties({ $key_SortColKeyCsv => "\&Function=$name" });
+  $at->setProperties({ $key_SortColKeyHTML => "\&Function=$name" });
+  $at->setProperties({ $key_SortColKeyLaTeX => "\&Function=$name" });
+  $at->__UT_aterr();
+  &__UT_showAllModes("Complex Table = Function=reverse column sort", $at);
+  $at->__UT_aterr();
+
   print "<hr>OK EXIT\n";
 
   print "</body></html>\n";
@@ -1364,7 +1391,7 @@ sub loadGridFromSTDIN{
   } elsif ($renderer eq "CSV") {
     print($at->renderCSV()); 
   } else {
-    die "Error: I need a Renderer for now '$renderer'\n";
+    MMisc::error_quit("I need a Renderer for now '$renderer'\n");
   }
   #print Dumper(\%nameLUT);
 }
