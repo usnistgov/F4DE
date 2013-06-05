@@ -1204,7 +1204,7 @@ sub _getOrderedLabelIDs(){
       foreach my $labelID ($self->_getOrderedLabelIDs($ht->{SubID}->{$sid}), $order,  $IDsToKeep) {
         push @ids, "$sid|$labelID";
       }
-      die;
+      MMisc::error_exit(); # replacing a die that was here
     } else {
       if ($filterIDs == 0){
 	push @ids, $sid
