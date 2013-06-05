@@ -175,9 +175,20 @@ sub unit_test {
     push @err, "Error: $cl: Could not add 'key3' value\n"
       if (! $p->setValue("key3", 1));
     
-    push @err, "Error: $cl: Could had a not authorized 'key3' value\n"
+    push @err, "Error: $cl: Should not have been authorized to add a 'key3' value\n"
       if ($p->setValue("key3", 11));
   }
+
+  push @err, "Error: $cl: Unable to add a special \&Function key"
+    if (! $p->addProp("funckey", undef, "\&Function="));
+
+  my $name = "\&Function=PropList::unit_test";
+  push @err, "Error: $cl: Unable to set the \&Function value"
+    if (! $p->setValue("funckey", $name));
+
+  my $v = $p->getValue("funckey");
+  push @err, "Error: $cl: Obtained value for \&Function is invalid (exp: $name / got: $v)"
+    if ($v ne $name);
   
   if (! $makecall) {
     # $p->_display();
