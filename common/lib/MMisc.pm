@@ -1242,6 +1242,40 @@ sub string_sha512digest { return(&string_shaXXXdigest(512, $_[0])); }
 sub string_sha512224digest { return(&string_shaXXXdigest(512224, $_[0])); }
 sub string_sha512256digest { return(&string_shaXXXdigest(512256, $_[0])); }
 
+#####
+
+sub unitTest_stringSHAdigest {
+  # Lorem Ipsum: http://www.lipsum.com/
+  my $teststring = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eleifend erat et magna molestie tincidunt sagittis nulla consequat. Morbi vitae dui leo. Nullam sagittis ultricies orci quis sodales. Praesent varius dictum massa id eleifend. Maecenas condimentum, elit a scelerisque pellentesque, ante mauris varius turpis, nec commodo risus velit ut augue. Aliquam erat volutpat. Fusce in ligula nisi, vitae lacinia sem. Phasellus posuere urna scelerisque est ultrices imperdiet ornare nisi tempor. In et neque nunc. Praesent scelerisque consectetur neque, at sollicitudin dolor luctus at. Aliquam dolor dui, suscipit eget dignissim vitae, aliquet at elit. Proin eget ante massa.\nSuspendisse molestie euismod lacus vitae tempus. Praesent sodales convallis diam, in aliquam tellus lobortis nec. Nullam et sem ante. Aliquam libero turpis, blandit ac sollicitudin non, faucibus nec ligula. Suspendisse sed quam orci. Proin sit amet enim purus, ac commodo odio. Vivamus vitae ultricies nibh. Cras venenatis justo non felis tempus blandit.\nSed aliquam mauris accumsan tortor bibendum cursus mollis urna volutpat. Donec at neque id massa rutrum accumsan id a libero. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel nibh justo. Donec ultrices erat rhoncus justo mollis eu ultrices metus tincidunt. Sed tincidunt, nisl nec pretium volutpat, augue eros venenatis ante, ac aliquam urna ipsum ac augue. Pellentesque aliquam, dolor sit amet suscipit sagittis, ante libero malesuada tortor, ut dapibus quam urna non sapien. Maecenas vestibulum tincidunt tempor. Integer congue mi a erat congue vestibulum. Aliquam erat volutpat. Morbi euismod dictum eros non luctus. Curabitur tristique ornare nisl, et sagittis tortor fermentum vel. Sed ornare dictum magna, at semper enim convallis ac. Phasellus erat est, bibendum et volutpat vel, pellentesque non leo.\nUt eleifend malesuada dolor eu sodales. Nunc nisi enim, tempus scelerisque malesuada ut, elementum sit amet urna. Vivamus velit libero, consequat at porttitor vitae, posuere ut magna. Praesent eu arcu et leo fringilla cursus. Fusce ultrices aliquet risus, eget congue ipsum porttitor eget. Fusce in nunc leo. Curabitur luctus felis sed ligula scelerisque bibendum. Aliquam vel libero dui, non tristique dolor. Nunc ut gravida dui. Etiam vitae quam odio. Nunc semper turpis nec libero volutpat pellentesque. Aenean convallis, nisl luctus volutpat sollicitudin, diam magna mollis eros, eget blandit dolor lectus vel enim. Fusce erat nulla, posuere id pulvinar ac, condimentum in tellus. Nulla facilisi. Cras quam purus, ultrices vel aliquam eget, condimentum vel lacus. Sed porta, arcu id consequat laoreet, turpis arcu ornare odio, at vestibulum elit lorem vitae ante.\nCurabitur faucibus, tellus consectetur facilisis porta, tortor risus interdum erat, in scelerisque leo enim vitae leo. Integer dignissim, justo quis pellentesque porttitor, diam turpis vehicula purus, sed congue massa odio sed nunc. Aenean condimentum pharetra ornare. Quisque vehicula varius eros sit amet congue. Nulla venenatis vehicula cursus. Proin vel metus quam, et vestibulum nibh. Vestibulum egestas dictum quam luctus bibendum. Etiam quis volutpat nibh. Etiam ornare purus vitae lectus rutrum vestibulum. Aenean scelerisque sagittis dui sollicitudin porta. Curabitur cursus tincidunt convallis. Integer eu urna mauris. Cras sagittis neque vel nisi tempus at dictum nisl mattis. Curabitur a lacus malesuada risus feugiat rhoncus vitae in sapien. Proin placerat consequat porttitor.\n";
+
+  my @todo = (1, 224, 256, 384, 512, 512224, 512256);
+  my %comps = 
+    (
+     $todo[0] => '64fba7a0aef72094c65b09264f33c54408af90aa', # 1
+     $todo[1] => 'c1fff0ef3ecbf6792a89df3bffe4d69b1055d0d78a0c0bb7245080c5', # 224
+     $todo[2] => 'bedb5c5274a6ea58929c9fd03b8fa8efb48fe3e88613e8ecd1b5248fd4e27049', # 256
+     $todo[3] => 'dee0c37e92be73ef83df176bef3add5e813bb70aa7cb8d69cc5088fb68281c11b751125bc9b7e8ae127bd9aa2ce424a4', # 384
+     $todo[4] => '66e6bc053d3baaa76eed667af8b2c01b7c1fc3d1a1c8a2c5e8b2b8f6ca91bb4f74b91c95dfa3f1ea440ee101aa64e01d3281a69096b5c747206379ba37af4266', # 512
+     $todo[5] => '5c16d5a9015051438705118852401cfb365cba090025f88f029fdc2c', # 512224
+     $todo[6] => '8fef1afd622530170acbcda890cc1c7d3639b3febe6969b8d88b56fe9ba2a1eb', # 512256
+    );
+  print " Testing SHA digest string computation:\n";
+  my $fail = 0;
+  foreach my $check (@todo) {
+    print "  SHA $check ... "; 
+    my $comp = $comps{$check};
+    my $res = &string_shaXXXdigest($check, $teststring);
+    if ($comp eq $res) {
+      print "ok\n";
+    } else {
+      print "failed\n";
+#      print "[$res]\{$comp\}\n";
+      $fail++;
+    }
+  }
+
+  return(1)
+}
 
 ##########
 
@@ -2315,12 +2349,13 @@ sub __ceil  { return (int($_[0]+0.99)); }
 
 
 sub unitTest {
-	print "Test MMisc\n";
-	marshalTest();
+  print "Test MMisc\n";
+  marshalTest();
   filterArrayUnitTest();
   interpolateYDimUnitTest();
   compareDataUnitTest();
-	return 1;
+  unitTest_stringSHAdigest();
+  return 1;
 }
 
 sub runFilterArrayCase{
@@ -2336,9 +2371,8 @@ sub runFilterArrayCase{
       $fail = 1 if ($arr->[$i] ne $expected->[$i]) 
     }
   } 
-  if ($fail) {
-    die "\nfilterArray Test Failed: $msg";
-  }
+  error_quit("filterArray Test Failed: $msg") 
+    if ($fail);
 }
 
 sub filterArrayUnitTest{
@@ -2355,40 +2389,42 @@ sub filterArrayUnitTest{
   runFilterArrayCase([ ("aba", "b", "c") ], "^b\$", [ ("aba", "c") ]);
   runFilterArrayCase([ ("aba", "b", "c") ], "ba\$", [ ("b", "c") ]);
   runFilterArrayCase([ ("443", "|", "3") ], "\\|", [ ("443", "3") ]);
-	print "OK\n";
+  print "OK\n";
 }
 
 sub marshalTest {
-	print " Testing marshaling and unmarshaling of matricies\n";
-	print "  Simple matrix test ... ";
-	my @testarr = ([1, 2, 3], [4, 5, 6], [7, 8, 9]);
-	my $teststr = marshal_matrix(@testarr);
-	my @resultarr = unmarshal_matrix($teststr);
-
-	my $cols = @{$resultarr[0]};
-	my $rows = @resultarr;
-	my $j = 0;
-	for (my $i=0; $i < $rows; $i++) {
-		for (my $j=0; $j < $cols; $j++) {
-			die "Error: unmarshaling the matrix." if ($testarr[$i]->[$j] != $resultarr[$i]->[$j]);
-		}
-	}
-	print "OK\n";
-
-	print "  Floating point matrix test ... ";
-	@testarr = ([0.1, 0.2, 0.3], [0.44, 0.55, 0.66], [0.777, 0.888, 0.999]);
-	$teststr = marshal_matrix(@testarr);
-	@resultarr = unmarshal_matrix($teststr);
-
-	$cols = @{$resultarr[0]};
-	$rows = @resultarr;
-	$j = 0;
-	for (my $i=0; $i < $rows; $i++) {
-		for (my $j=0; $j < $cols; $j++) {
-			die "Error: unmarshaling the matrix." if ($testarr[$i]->[$j] != $resultarr[$i]->[$j]);
-		}
-	}
-	print "OK\n";
+  print " Testing marshaling and unmarshaling of matricies\n";
+  print "  Simple matrix test ... ";
+  my @testarr = ([1, 2, 3], [4, 5, 6], [7, 8, 9]);
+  my $teststr = marshal_matrix(@testarr);
+  my @resultarr = unmarshal_matrix($teststr);
+  
+  my $cols = @{$resultarr[0]};
+  my $rows = @resultarr;
+  my $j = 0;
+  for (my $i=0; $i < $rows; $i++) {
+    for (my $j=0; $j < $cols; $j++) {
+      error_quit("unmarshaling the matrix")
+        if ($testarr[$i]->[$j] != $resultarr[$i]->[$j]);
+    }
+  }
+  print "OK\n";
+  
+  print "  Floating point matrix test ... ";
+  @testarr = ([0.1, 0.2, 0.3], [0.44, 0.55, 0.66], [0.777, 0.888, 0.999]);
+  $teststr = marshal_matrix(@testarr);
+  @resultarr = unmarshal_matrix($teststr);
+  
+  $cols = @{$resultarr[0]};
+  $rows = @resultarr;
+  $j = 0;
+  for (my $i=0; $i < $rows; $i++) {
+    for (my $j=0; $j < $cols; $j++) {
+      error_quit("unmarshaling the matrix")
+        if ($testarr[$i]->[$j] != $resultarr[$i]->[$j]);
+    }
+  }
+  print "OK\n";
 }
 
 ### based on points (x1, y1) and (x2, y2), compute the line function and the Y value for $newX
@@ -2403,15 +2439,15 @@ sub interpolateYDim{
 sub interpolateYDimUnitTest(){
 ### unit tests
   print " Testing interpolateYDim...";
-  die if (abs(interpolateYDim(1,1,3,3,2.5) - 2.5) >= 0.0001);
-  die if (abs(interpolateYDim(3,3,1,1,2.5) - 2.5) >= 0.0001);
-  die if (abs(interpolateYDim(1,2,4,5,2.5) - 3.5) >= 0.0001);
+  error_exit() if (abs(interpolateYDim(1,1,3,3,2.5) - 2.5) >= 0.0001);
+  error_exit() if (abs(interpolateYDim(3,3,1,1,2.5) - 2.5) >= 0.0001);
+  error_exit() if (abs(interpolateYDim(1,2,4,5,2.5) - 3.5) >= 0.0001);
   ## extrapolation
-  die if (abs(interpolateYDim(1,2,4,5,7.5) - 8.5) >= 0.0001);
+  error_exit() if (abs(interpolateYDim(1,2,4,5,7.5) - 8.5) >= 0.0001);
   ## horizontal line
-  die if (abs(interpolateYDim(1,2,2,2,7.5) - 2) >= 0.0001);
+  error_exit() if (abs(interpolateYDim(1,2,2,2,7.5) - 2) >= 0.0001);
   ## vertical line
-  die if (abs(interpolateYDim(1,2,1,8,1) - 5) >= 0.0001);
+  error_exit() if (abs(interpolateYDim(1,2,1,8,1) - 5) >= 0.0001);
   print "OK\n"
 }
 
@@ -2428,8 +2464,8 @@ sub compareData{
   my ($sum1, $sum2, $sum1x2, $sumSqr1, $sumSqr2, $diff, $sumSqrDiff) = (0, 0, 0, 0, 0, 0, 0);
 
   my %ht = ();
-  die "Error: compareData needs data in array1" if (@$a1 <= 1);
-  die "Error: compareData needs data in array2" if (@$a2 <= 1);
+  error_quit("compareData needs data in array1") if (@$a1 <= 1);
+  error_quit("compareData needs data in array2") if (@$a2 <= 1);
 
   $ht{N1} = @$a1;
   $ht{N2} = @$a2;
@@ -2453,7 +2489,7 @@ sub compareData{
   my $s = 0;
   for (my $n=0; $n<$ht{N1}; $n++){    $s += ($a1->[$n] - $ht{mean1}) * ($a1->[$n] - $ht{mean1});    }
   for (my $n=0; $n<$ht{N2}; $n++){    $s += ($a2->[$n] - $ht{mean2}) * ($a2->[$n] - $ht{mean2});    }
-  print "$s\n";
+#  print "$s\n";
   my %hth = ();
   $hth{df} = ($ht{N1} + $ht{N2} - 2);
   $hth{pooledSampleVar} = ($s / $hth{df});
@@ -2476,9 +2512,10 @@ sub compareData{
 
   
   
-  die "Error: compareData(): Paired test requested but lengths non-equal" if ($ht{N1} != $ht{N2} && $includePaired);
+  error_quit("compareData(): Paired test requested but lengths non-equal")
+    if ($ht{N1} != $ht{N2} && $includePaired);
   if ($includePaired){
-    die "Error: Correllation Coeff requires at least 2 values" if ($ht{N1} <= 1);
+    error_quit("Correllation Coeff requires at least 2 values") if ($ht{N1} <= 1);
     ### Paired Tests
     $ht{stats}{paired}{N} = $ht{N1};
     my $N = $ht{stats}{paired}{N};
@@ -2509,17 +2546,24 @@ sub compareData{
 }
 
 sub compareDataUnitTest{
-	print " Testing compareData...";  
+  print " Testing compareData...";  
   #my ($r, $avg1, $avg2, $avgDiff, $stddev1, $stddev2, $stddevDiff) = 
   my $ht = compareData([ (60, 61, 62, 63, 65) ], [ (3.1, 3.6, 3.8, 4, 4.1) ], 1);
   #print Dumper($ht);
-  die "Error: compareDataUnitTest failed to calculate R"        if (abs($ht->{stats}{paired}{r}            - 0.911872) > 0.0001);
-  die "Error: compareDataUnitTest failed to calculate StdDev1"  if (abs($ht->{stddev1}      - 1.923538) > 0.0001);
-  die "Error: compareDataUnitTest failed to calculate Avg1"     if (abs($ht->{mean1}        - 62.20000) > 0.0001);
-  die "Error: compareDataUnitTest failed to calculate StdDev2"  if (abs($ht->{stddev2}      - 0.396232) > 0.0001);
-  die "Error: compareDataUnitTest failed to calculate Avg2"     if (abs($ht->{mean2}        - 3.720000) > 0.0001);
-  die "Error: compareDataUnitTest failed to calculate AvgDiff"  if (abs($ht->{stats}{paired}{meanDiff}     - 58.48000) > 0.0001);
-  die "Error: compareDataUnitTest failed to calculate StdDevDiff" if (abs($ht->{stats}{paired}{stddevDiff} - 1.570668) > 0.0001);
+  error_quit("compareDataUnitTest failed to calculate R")
+    if (abs($ht->{stats}{paired}{r} - 0.911872) > 0.0001);
+  error_quit("compareDataUnitTest failed to calculate StdDev1")
+    if (abs($ht->{stddev1} - 1.923538) > 0.0001);
+  error_quit("compareDataUnitTest failed to calculate Avg1")
+    if (abs($ht->{mean1} - 62.20000) > 0.0001);
+  error_quit("compareDataUnitTest failed to calculate StdDev2")
+    if (abs($ht->{stddev2} - 0.396232) > 0.0001);
+  error_quit("compareDataUnitTest failed to calculate Avg2")
+    if (abs($ht->{mean2} - 3.720000) > 0.0001);
+  error_quit("compareDataUnitTest failed to calculate AvgDiff")
+    if (abs($ht->{stats}{paired}{meanDiff} - 58.48000) > 0.0001);
+  error_quit("compareDataUnitTest failed to calculate StdDevDiff")
+    if (abs($ht->{stats}{paired}{stddevDiff} - 1.570668) > 0.0001);
   print "OK\n";
   #print Dumper(compareData([ (134, 146, 104, 119, 124, 161, 107, 83, 113, 129, 97, 123) ], [ (70, 118, 101, 85, 107, 132, 94) ], 0));
 
