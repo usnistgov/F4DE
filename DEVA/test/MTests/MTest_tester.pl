@@ -52,6 +52,12 @@ $tn = "test2m";
 $com =  "-p MED11 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.sys.thresh.csv:threshold MTest.derivSys.sys.index.csv:TrialIndex" ;
 $testr += &do_less_simple_test($tn, "MED11 Profile, Derived system file, block differentiated, trial weighted", $com, "res-$tn.txt");
 
+### Test 2m13
+$tn = "test2m13";
+#./DEVA_cli.pl -p MED13 -s expid.threshold.csv:threshold -s expid.detection.csv:detection -o outdir -r expid_ref.csv expid_TrialIndex.csv:TrialIndex
+$com =  "-p MED13 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.med13.sys.thresh.csv:threshold MTest.derivSys.sys.index.csv:TrialIndex" ;
+$testr += &do_less_simple_test($tn, "MED13 Profile, Derived system file, block differentiated, trial weighted", $com, "res-$tn.txt");
+
 ### Test 3
 $tn = "test3";
 $com =  "--BlockAverage -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.oneSys.ref.csv -s MTest.oneSys.sys.csv -F SQL_filter_Nblock.sql MTest.oneSys.metadata.csv:metadata";
