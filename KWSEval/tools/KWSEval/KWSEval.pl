@@ -204,12 +204,13 @@ my $articulatedDET = 0;
 my $bypassxmllint = 0;
 my $xpng = 0;
 my $excludeCounts = 0;
+my $IncludeRowTotals = 0;
 
 my $measureThreshPlots = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:  BCDEFG I K  NOP  ST   XY abcdefghijk mnopqrst vwxy  #
-# Mult:                                   i                  #
+# Mult:                                   i                z #
 
 GetOptions
   (
@@ -252,6 +253,7 @@ GetOptions
    'XmllintBypass'                       => \$bypassxmllint,
    'ExcludePNGFileFromTxtTable'          => \$xpng,
    'ExcludeCountsFromReports'            => \$excludeCounts,
+   'zincludeRowTotals'                   => \$IncludeRowTotals,
    'measureThreshPlots=s'                => \$measureThreshPlots,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
@@ -451,6 +453,7 @@ my $detoptions =
    "serialize" => 1,
    'ExcludePNGFileFromTxtTable' => ($xpng == 1),
    "ExcludeCountsFromReports" => ($excludeCounts == 1),
+   "ReportRowTotals" => ($IncludeRowTotals == 1) ? 1 : 0,
   ) };
 $detoptions{"PlotMeasureThresholdPlots"} = $measureThreshPlots if ($measureThreshPlots ne ""),
   
@@ -637,6 +640,8 @@ sub set_usage {
   $tmp .= "  -X, --XmllintBypass           Bypass xmllint check of the KWSList XML file (this will reduce the memory footprint when loading the file, but requires that the file be formatted in a way similar to how \'xmllint --format\' would).\n"; 
   $tmp .= "  --ExcludePNGFileFromTxtTable  Exclude PNG files loaction from output text tables\n";
   $tmp .= "  --ExcludeCountsFromReports    Exclude trial counts from report tables\n";
+  $tmp .= "  --zincludeRowTotals           Include column count/mean/SE in the report tables\n";
+  
 	$tmp .= "\n";
 
   return($tmp);
