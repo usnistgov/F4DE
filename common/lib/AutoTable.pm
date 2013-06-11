@@ -25,6 +25,27 @@ package AutoTable;
 
 # $Id$
 
+### AutoTable is Object/Model/View object to handle a sparse 2-d matrix.
+###
+### - Data is entered with a value, columnID, rowID triplet.
+### - IDS (Column or Row) IDs can contain multiple levels from grouping of values 
+### - IDs can begin with the strring "<<FOOTER>>" which is always printed after the body
+###
+###                                                                 <<FOOTER>>
+###
+###                    |  Col1   |  Col2   |  Col3   |  Col4   |    lev1    |  lev2   |
+###               -----+---------+---------+---------+---------+------------+---------+
+###               Row0 |       0 |       0 |       0 |       0 |    rowFoot | rowFoot |
+###               Row1 |       2 |       3 |       4 |       5 |    rowFoot | rowFoot |
+###               Row2 |       4 |       6 |       8 |      10 |    rowFoot | rowFoot |
+###               Row3 |       6 |       9 |      12 |      15 |    rowFoot | rowFoot |
+###               Row4 |       8 |      12 |      16 |      20 |    rowFoot | rowFoot |
+###               -----+---------+---------+---------+---------+------------+---------+
+###   <<FOOTER>>  aa2a | colFoot | colFoot | colFoot | colFoot | rowColFoot |         |
+###               aa2b | colFoot | colFoot | colFoot | colFoot |            |         |
+
+###
+
 use TranscriptHolder;
 @ISA = qw(TranscriptHolder);
 
@@ -341,6 +362,63 @@ sub unitTest {
   MMisc::ok_exit();
   
 }
+
+sub footerUnitTest(){
+  ### Test 1
+  my $at = new AutoTable();
+  for (my $c=4; $c>0; $c--){
+    for (my $r=0; $r<5; $r++){
+       $at->addData($c*$r + $r, "Col$c", "Row$r");      
+    }
+  }
+  for (my $r=0; $r<5; $r++){
+    $at->addData("rowFoot", "<<FOOTER>>lev1", "Row$r");      
+    $at->addData("rowFoot", "<<FOOTER>>lev2", "Row$r");      
+  }
+  for (my $c=4; $c>0; $c--){
+    $at->addData("colFoot", "Col$c", "<<FOOTER>>aa2a");
+    $at->addData("colFoot", "Col$c", "<<FOOTER>>aa2b");
+  }
+  $at->addData("rowColFoot", "<<FOOTER>>lev1", "<<FOOTER>>aa2a");
+  $at->{Properties}->setValue($key_SortColKeyTxt, "Alpha");
+  $at->{Properties}->setValue($key_SortRowKeyTxt, "Alpha");
+  print $at->renderTxtTable(1);
+  
+  
+  
+  
+  ### Test 2
+  $at = new AutoTable();
+ 
+  for (my $t = 0; $t < 2; $t++){
+    for (my $lev = 0; $lev < 2; $lev++){
+      for (my $c=4; $c>0; $c--){
+        for (my $r=0; $r<5; $r++){
+          $at->addData($c*$r + $r + $c, "top$t|Col$c", "Lev$lev|Row$r");      
+        }
+      }
+    }
+  }
+  for (my $lev = 0; $lev < 2; $lev++){
+    for (my $r=0; $r<5; $r++){
+      $at->addData("rowFoot", "<<FOOTER>>lev1|lev2", "Lev$lev|Row$r");      
+      $at->addData("rowFoot", "<<FOOTER>>lev1|lev2b", "Lev$lev|Row$r");      
+      $at->addData("rowFoot", "<<FOOTER>>lev1|lev2c", "Lev$lev|Row$r");      
+    }
+  }
+  for (my $t = 0; $t < 2; $t++){
+    for (my $c=4; $c>0; $c--){
+      $at->addData("colFoot", "top$t|Col$c", "<<FOOTER>>aa1|aa2");
+      $at->addData("colFoot", "top$t|Col$c", "<<FOOTER>>aa1|aa2b");
+      $at->addData("colFoot", "top$t|Col$c", "<<FOOTER>>aa1|aa2c");
+    }      
+  }
+  $at->addData("rowColFoot", "<<FOOTER>>lev1|lev2", "<<FOOTER>>aa1|aa2");
+  $at->{Properties}->setValue($key_SortColKeyTxt, "Alpha");
+  $at->{Properties}->setValue($key_SortRowKeyTxt, "Alpha");
+  print $at->renderTxtTable(1);
+}
+
 
 sub __getLID {
   # arg 0: Row ID
@@ -669,20 +747,6 @@ sub renderTxtTable(){
     }
     $out .= "|\n";
   }
-  ### The separator
-  $out .= $prefix;
-  if ($k1c){
-    for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
-      $out .= $self->_nChrStr($self->{render}{rowLabelWidth}->[$rowLevel] + $gap, "-");
-    }
-    $out .= "+";
-  } else {
-    $out .= "|";
-  }
-  for (my $node=0; $node<@nodeSet; $node++) {
-    $out .= "" . $self->_nChrStr($nodeSet[$node]{width},"-") . "+";
-  }    
-  $out .= "\n";
   
   #### NOW: @nodeSet is the formatting informatlion for the columns!!!
   my @colIDs = ();  ####$self->_getOrderedLabelIDs($self->{"colLabOrder"}, "AsAdded");
@@ -696,7 +760,27 @@ sub renderTxtTable(){
 					  $self->{Properties}->getValue($key_KeepRowsInOutput));
   #    print join(" ",@rowIDs)."\n";
   my @lastRowLabel = ();
+  my $lastRow = undef;
   foreach my $rowIDStr (@rowIDs) {
+    ### The separator
+    if (!defined($lastRow) ||
+        (defined($lastRow) && ($self->{rowLabOrder}{SubID}{$lastRow}{isFooter} != $self->{rowLabOrder}{SubID}{$rowIDStr}{isFooter}))){
+      $out .= $prefix;    
+      if ($k1c){
+        for (my $rowLevel=0; $rowLevel < @{ $self->{render}{rowLabelWidth} }; $rowLevel++){
+          $out .= $self->_nChrStr($self->{render}{rowLabelWidth}->[$rowLevel] + $gap, "-");
+        }
+        $out .= "+";
+      } else {
+        $out .= "|";
+      }
+      for (my $node=0; $node<@nodeSet; $node++) {
+        $out .= "" . $self->_nChrStr($nodeSet[$node]{width},"-") . "+";
+      }    
+      $out .= "\n";
+    }
+    $lastRow = $rowIDStr;
+  
     $out .= $prefix;
     ### Render the row header column 
     if ($k1c){
@@ -1106,9 +1190,9 @@ sub _buildTree(){
 }
 
 sub _addLab(){
-  # (0:$self, 1:$type, 2:$id, 3:$val)
+  # (0:$self, 1:$type, 2:$id, 3:$val, 4:$isFooter)
   my $ht = $_[0]->{$_[1].'LabOrder'};
-  
+
   if (! exists($ht->{SubID}{$_[2]}{SubIDCount})) {
     $ht->{SubID}{$_[2]} = 
       {
@@ -1116,7 +1200,8 @@ sub _addLab(){
        SubIDCount => 0,
        SubID => {},
        labels => [ _safeSplit("|",$_[2]) ], 
-       width => { charLen => 0 } 
+       width => { charLen => 0 },
+       isFooter => $_[4],
       };
   }
   
@@ -1174,23 +1259,42 @@ sub _getColLabelWidth(){
   
 }
 
-sub _getOrderedLabelIDs(){
-  my ($self, $ht, $order, $IDsToKeep) = @_;
-  my @ids = ();
-  
-  my @sortedKeys = ();
+sub _sortKeys(){
+  my ($self, $ht, $order, $keys) = @_;
+
+  my @sortedKeys = ();  
+
   if ($order eq "AsAdded") {
-    @sortedKeys = sort { $ht->{SubID}{$a}->{thisIDNum} <=> $ht->{SubID}{$b}->{thisIDNum}} keys %{ $ht->{SubID} };
+    @sortedKeys = sort { $ht->{SubID}{$a}->{thisIDNum} <=> $ht->{SubID}{$b}->{thisIDNum}} @$keys;
   } elsif ($order eq "Num") {
-    @sortedKeys = sort { $a <=> $b} keys %{ $ht->{SubID} };
+    @sortedKeys = sort { $a <=> $b} @$keys;
   } elsif ($order eq "Alpha") {
-    @sortedKeys = sort keys %{ $ht->{SubID} };
+    @sortedKeys = sort @$keys;
   } elsif ($order =~ m%^\&Function=(.+)$%) {
     my $rsf = $1;
-    @sortedKeys = sort {&{\&$rsf}($a,$b)} keys %{ $ht->{SubID} };
+    @sortedKeys = sort {&{\&$rsf}($a,$b)} @$keys;
   } else {
     MMisc::error_quit("Internal Error AutoTable: Sort order '$order' not defined");
   }  
+  return \@sortedKeys;
+}
+
+sub _getKeys(){
+  my ($self, $ht, $forFooter) = @_;
+  my @keys = ();
+  foreach my $k(keys %{ $ht->{SubID} }){
+    push @keys, $k if ($forFooter == $ht->{SubID}{$k}{isFooter});
+  }
+  return(\@keys);
+}
+  
+sub _getOrderedLabelIDs(){
+  my ($self, $ht, $order, $IDsToKeep) = @_;
+  my @ids = ();
+
+  
+  my @sortedKeys = @{ $self->_sortKeys($ht, $order, $self->_getKeys($ht, 0) ) };
+  push @sortedKeys, @{ $self->_sortKeys($ht, $order, $self->_getKeys($ht, 1) ) };
 
   my @keepIDs = ();
   my $filterIDs = 0;
@@ -1275,14 +1379,18 @@ sub addData__core {
   # (0:$self, 1:$val, 2:$colid, 3:$rowid, 4:$special, 5:$unique)
 
   my $unique = $_[5];
+  my $colID = $_[2];
+  my $colIsFooter = ($colID =~ s/^<<FOOTER>>//) ? 1 : 0;
 
-  $_[0]->_addLab('col', $_[2], $_[1]);
-  $_[0]->_addLab('row', $_[3], $_[1]);
+  my $rowID = $_[3];
+  my $rowIsFooter = ($rowID =~ s/^<<FOOTER>>//) ? 1 : 0;
+  $_[0]->_addLab('col', $colID, $_[1], $colIsFooter);
+  $_[0]->_addLab('row', $rowID, $_[1], $rowIsFooter);
   
-  my $lid = &__getLID($_[3], $_[2]);
+  my $lid = &__getLID($rowID, $colID);
   if (defined($_[0]->{data}{$lid})) {
     if ($unique) {
-      printf("Warning Datum value \'%s\' for \'%s %s\' has multiple instances (not replacing)\n", $_[1], $_[3], $_[2]); 
+      printf("Warning Datum value \'%s\' for \'%s %s\' has multiple instances (not replacing)\n", $_[1], $rowID, $colID); 
       return(1);
     }
     $unique = -1; # replacement (no add)
@@ -1907,8 +2015,5 @@ sub incrementBy{
   $x += $_[3];
   $_[0]->setData($x, $_[1], $_[2]);
 }
-
-
-
 
 1;
