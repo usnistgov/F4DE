@@ -205,8 +205,10 @@ my $bypassxmllint = 0;
 my $xpng = 0;
 my $excludeCounts = 0;
 
+my $measureThreshPlots = "";
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:  BCDEFG I K  NOP  ST   XY abcdefghijk  nopqrst vwxy  #
+# Used:  BCDEFG I K  NOP  ST   XY abcdefghijk mnopqrst vwxy  #
 # Mult:                                   i                  #
 
 GetOptions
@@ -250,6 +252,7 @@ GetOptions
    'XmllintBypass'                       => \$bypassxmllint,
    'ExcludePNGFileFromTxtTable'          => \$xpng,
    'ExcludeCountsFromReports'            => \$excludeCounts,
+   'measureThreshPlots=s'                => \$measureThreshPlots,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
 #parsing TermIDs
@@ -337,6 +340,11 @@ foreach my $filt(@textPrefilters){
 }
 print "Warning: -zprefilterText notASCII ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextNotASCII);
 print "Warning: -zprefilterText deleteHyphens ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextDeleteHyphens);
+
+if ($measureThreshPlots ne ""){
+  Misc::error_quit("Error: argument for -measureThreshPlots must be either (true|trueWithSE), not $measureThreshPlots")
+    if ($measureThreshPlots =~ /^(true|trueWithSE)$/);
+}
 
 ###loading the files
 my $ECF;
@@ -444,7 +452,8 @@ my $detoptions =
    'ExcludePNGFileFromTxtTable' => ($xpng == 1),
    "ExcludeCountsFromReports" => ($excludeCounts == 1),
   ) };
-
+$detoptions{"PlotMeasureThresholdPlots"} = $measureThreshPlots if ($measureThreshPlots ne ""),
+  
 $dset = $alignResults[0];
 $qdset = $alignResults[1];
 
