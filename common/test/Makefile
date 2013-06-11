@@ -10,6 +10,7 @@ check:
 	@perl -I../lib -I../../../common/lib -I../../lib pre_tests.pl
 	@echo "* Running unit tests"
 	@(cd ../lib; perl -I. -e 'use DETCurveSet; DETCurveSet::unitTest();')
+	@(cd ../lib; perl -I. -e 'use DETCurve; DETCurve::globalMeasureUnitTest();')
 	@(cd ../lib; perl -I. -e 'use DETCurve; DETCurve::unitTest();')
 	@(cd ../lib; perl -I. -e 'use DETCurveGnuplotRenderer; DETCurveGnuplotRenderer::unitTest();')
 	@(cd ../lib; perl -I. -e 'use TrialsFuncs; TrialsFuncs::unitTest();')
@@ -22,6 +23,7 @@ check:
 	@(cd ../lib; perl -I. -e 'use SimpleAutoTable; SimpleAutoTable::unitTest(1);')
 	@(cd ../lib; perl -I. -e 'use MMisc; MMisc::unitTest();')
 	@(cd ../lib; perl -I. -e 'use TranscriptHolder; TranscriptHolder::unitTest()')
+	@(cd ../lib; perl -I. -e 'use MetricR0; MetricR0::unitTest()')
 	@(cd AutoTable_Extra; make check)
 	@(cd DETUtil; make check)
 	@echo ""
