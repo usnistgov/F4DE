@@ -1,0 +1,41 @@
+[[COMMANDLINE]] ../../tools/DEVA_cli/DEVA_cli.pl -o res-test2m13.txt.dir -p MED13 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.med13.sys.thresh.csv:threshold MTest.derivSys.sys.index.csv:TrialIndex  ; cat res-test2m13.txt.dir/scoreDB.scores.txt
+[[RETURN CODE]] 0
+[[STDOUT]]
+***** Generating config files
+** REF
+** Derived SYS
+** Metadata
+-> 3 config file generated
+***** Creating initial DataBases (if not already present)
+** Metadata
+** REF
+** SYS
+-> 3 DB file generated
+***** Running Filter
+***** Scoring
+Done
+|       Performance Summary Over and Ensemble of Subsets       |
+|         Key         |                 Value                  |
+|---------------------+----------------------------------------+
+|        System Title |                                DET Set |
+|         Decision ID |                                  Trial |
+|                   m |                                   12.5 |
+|   Combined DET Plot |   res-test2m13.txt.dir/scoreDB.det.png |
+
+
+|                  |            Inputs            |                                  Actual Decision R0 Analysis                                   |                Maximum R0 Analysis                 |  Global Measures  |                                                   DET Curve Graphs                                                   |
+|      Title       |  #Targ  |  #NTarg  |  #Sys   |  #CorDet  |  #Cor!Det  |  #FA   |  #Miss  |  PRetrieve  |  PRecall  |    R0     |  Dec. Tresh  |  PRetrieve  |  PRecall  |    R0    |  Dec. Thresh  |        AP         |                       DET Curve                       |                       Threshold Curve                        |
+|------------------+---------+----------+---------+-----------+------------+--------+---------+-------------+-----------+-----------+--------------+-------------+-----------+----------+---------------+-------------------+-------------------------------------------------------+--------------------------------------------------------------+
+|     EventID Blue |      41 |       59 |     100 |        40 |          8 |     51 |       1 |       0.910 |     0.976 |   -10.399 |        0.656 |       0.010 |     0.024 |   -0.101 |         0.945 |             0.525 |     res-test2m13.txt.dir/scoreDB.det.EventID_Blue.png |     res-test2m13.txt.dir/scoreDB.det.EventID_Blue.thresh.png |
+|    EventID Green |      53 |       47 |     100 |        53 |          6 |     41 |       0 |       0.940 |     1.000 |   -10.750 |        0.656 |       0.010 |     0.019 |   -0.106 |         0.974 |             0.673 |    res-test2m13.txt.dir/scoreDB.det.EventID_Green.png |    res-test2m13.txt.dir/scoreDB.det.EventID_Green.thresh.png |
+|   EventID Purple |      51 |       49 |     100 |         0 |          6 |     43 |      51 |       0.430 |     0.000 |    -5.375 |        0.656 |       0.010 |     0.000 |   -0.125 |         0.925 |             0.320 |   res-test2m13.txt.dir/scoreDB.det.EventID_Purple.png |   res-test2m13.txt.dir/scoreDB.det.EventID_Purple.thresh.png |
+|      EventID Red |      51 |       49 |     100 |        50 |          6 |     43 |       1 |       0.930 |     0.980 |   -10.645 |        0.656 |       0.010 |     0.020 |   -0.105 |         0.958 |             0.624 |      res-test2m13.txt.dir/scoreDB.det.EventID_Red.png |      res-test2m13.txt.dir/scoreDB.det.EventID_Red.thresh.png |
+|------------------+---------+----------+---------+-----------+------------+--------+---------+-------------+-----------+-----------+--------------+-------------+-----------+----------+---------------+-------------------+-------------------------------------------------------+--------------------------------------------------------------+
+|            Count |       4 |        4 |       4 |         4 |          4 |      4 |       4 |           4 |         4 |         4 |            4 |           4 |         4 |        4 |             4 |                 4 |                                                       |                                                              |
+|             Mean |    49.0 |     51.0 |   100.0 |      35.8 |        6.5 |   44.5 |    13.2 |       0.802 |     0.739 |    -9.292 |        0.656 |       0.010 |     0.016 |   -0.109 |         0.951 |             0.536 |                                                       |                                                              |
+|           StdDev |     5.4 |      5.4 |     0.0 |      24.5 |        1.0 |    4.4 |    25.2 |       0.249 |     0.493 |     2.616 |        0.000 |       0.000 |     0.011 |    0.011 |         0.021 |             0.156 |                                                       |                                                              |
+|             -2SE |    38.2 |     40.2 |   100.0 |     -13.2 |        4.5 |   35.6 |   -37.1 |       0.305 |    -0.247 |   -14.524 |        0.656 |       0.010 |    -0.006 |   -0.131 |         0.909 |             0.223 |                                                       |                                                              |
+|             +2SE |    59.8 |     61.8 |   100.0 |      84.7 |        8.5 |   53.4 |    63.6 |       1.300 |     1.725 |    -4.061 |        0.656 |       0.010 |     0.037 |   -0.088 |         0.992 |             0.848 |                                                       |                                                              |
+
+[[STDERR]]
+
