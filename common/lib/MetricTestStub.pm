@@ -154,7 +154,7 @@ sub isoCostRatioCoeffForDETCurve(){ (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1,
 
 
 sub errMissBlockCalc(){
-  my ($self, $nMiss, $block) = @_;
+  my ($self, $nMiss, $nFA, $block) = @_;
   my $NTarg =  $self->{TRIALS}->getNumTarg($block);
   
   ($NTarg > 0) ? $nMiss / $NTarg : undef;
@@ -170,7 +170,7 @@ Returns a printf() format string for printing out miss error measurements.
 =cut
 
 sub errFABlockCalc(){
-  my ($self, $nFa, $block) = @_;
+  my ($self, $nMiss, $nFa, $block) = @_;
   my $NNonTargTrials = (defined($self->{TRIALPARAMS}->{TOTALTRIALS}) ? 
                         $self->{TRIALPARAMS}->{TOTALTRIALS} - $self->{TRIALS}->getNumTarg($block) : 
                         $self->{TRIALS}->getNumNonTarg($block));

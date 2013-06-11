@@ -69,7 +69,8 @@ sub new
 
     ### This implements a normalized cost
     $self->setCombLab("NDC");
-
+    $self->setPerformGlobalMeasure("AP");
+    
     return $self;
   }
 
@@ -151,14 +152,14 @@ sub isoCostRatioCoeffForDETCurve(){ (0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1,
 
 
 sub errMissBlockCalc(){
-  my ($self, $nMiss, $block) = @_;
+  my ($self, $nMiss, $nFa, $block) = @_;
   my $NTarg =  $self->{TRIALS}->getNumTarg($block);
   
   ($NTarg > 0) ? $nMiss / $NTarg : undef;
 }
 
 sub errFABlockCalc(){
-  my ($self, $nFa, $block) = @_;
+  my ($self, $nMiss, $nFa, $block) = @_;
   my $NNonTargTrials = (defined($self->{TRIALPARAMS}->{TOTALTRIALS}) ? 
                         $self->{TRIALPARAMS}->{TOTALTRIALS} - $self->{TRIALS}->getNumTarg($block) : 
                         $self->{TRIALS}->getNumNonTarg($block));
@@ -394,7 +395,7 @@ sub unitTest {
                                    { MMiss => .2828,  MFA => .0212, pointSize => 1,  pointType => 10, color => "rgb \"#ff0000\"", label => "Act  ", justification => "right"}, 
                                    ] ) };
   
-    print $ds->renderAsTxt("$dir/MNLCF.unitTest.det", 1, 1, $options, "");                                                                     
+    print $ds->renderAsTxt("$dir/MNLCF.unitTest.det", 1, $options, "");                                                                     
     ################ HACKED UNIT TEST #################
     # Check to see if the unmarshalling works.
     $det1 = DETCurve::readFromFile("MNLCF.unitTest.det.Do_Nothing.srl.gz");    
@@ -557,7 +558,7 @@ sub randomCurveUnitTest{
   use DETCurveGnuplotRenderer;
   use Math::Random::OO::Uniform;
 
-  my @Ptargs = (0.5);
+  my @Ptargs = (0.5, 0.1, 0.01);
   my @isoRatioCoeff = (.1, 1, 3);
 
   print "Build a random DET curve for Ptarg=(".join(",",@Ptargs).") Dir=/$dir/\n";
@@ -569,12 +570,12 @@ sub randomCurveUnitTest{
     print "  Working on Ptarg=$Ptarg\n";
     my $trial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
   
-    for (my $epoch = 0; $epoch<20; $epoch ++){
+    for (my $epoch = 0; $epoch<1; $epoch ++){
       print "    Epoch $epoch\n";
-      for (my $nt = 0; $nt<10000; $nt ++){
+      for (my $nt = 0; $nt<100000; $nt ++){
         my $scr = $decisionScoreRand->next();
         my $targ = ($targetRand->next() <= $Ptarg ? 1 : 0);
-        $scr += ($targ ? 0.2 : -0.2);
+#        $scr += ($targ ? 0.2 : -0.2);
         
         $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), $targ);
       }
@@ -678,7 +679,7 @@ Run the unit test to set good parameters for the MED test.
 
 =cut
 
-sub MEDSettingsUnitTest(){
+sub MEDSettingsUnitTest{
   my ($dir) = @_;
   
   use Math::Random::OO::Normal;
@@ -834,7 +835,7 @@ sub MEDSettingsUnitTest(){
 ###                       { MMiss => $med2014MI,  MFA => $med2014FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2014"}, 
 ###                       { MMiss => $med2015MI,  MFA => $med2015FA, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "MED2015"}, 
 ###                       ] ) };
-  print $ds->renderAsTxt("$dir/MNLCF-01.MEDSettings.det", 1, 1, $options, "");                                                                     
+  print $ds->renderAsTxt("$dir/MNLCF-01.MEDSettings.det", 1, $options, "");                                                                     
 
 }
 

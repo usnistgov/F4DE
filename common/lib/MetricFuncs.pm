@@ -77,6 +77,8 @@ sub new {
        "combLab" => "Cost",
        "combPrintFormat" => "%6.4f",
        "optimizationStyle" => "minimizable",
+       "globalMeasures" => [()],
+       "defaultPlotOptions" => {},
       };
     bless ($self, $class);
 }
@@ -521,7 +523,7 @@ The method returns C<undef> if either miss or fa error is undefined.
 
   sub combBlockCalc(){
     my ($self, $nMiss, $nFa, $block) = @_;
-    $self->combCalc($self->errMissBlockCalc($nMiss, $block), $self->errFABlockCalc($nFa, $block));
+    $self->combCalc($self->errMissBlockCalc($nMiss, $nFa, $block), $self->errFABlockCalc($nMiss, $nFa, $block));
   }
 
 ####################################################################################################
@@ -564,12 +566,58 @@ PRints the structure used by the Compute functions.
 
 sub dumpBlocksStruct{
   my ($bs) = @_;
-  print "Block Str:";
-  foreach my $blk(keys %$bs){
-    print " $blk:[TARGi=$bs->{$blk}->{TARGi}, NONTARGi=$bs->{$blk}->{NONTARGi}]";
-  }
-  print "\n";
+  print getBlocksStructSummary($bs);
 }
+
+####################################################################################################
+=pod
+
+=item B<getBlocksStructSummary>()
+
+PRints the structure used by the Compute functions.
+
+=cut
+
+sub getBlocksStructSummary{
+  my ($bs) = @_;
+  my $str = "Block Str:";
+  foreach my $blk(keys %$bs){
+    $str .= " $blk:[TARGi=$bs->{$blk}->{TARGi}, NONTARGi=$bs->{$blk}->{NONTARGi}]";
+  }
+  return $str;
+}
+
+####################################################################################################
+=pod
+
+=item B<getBlocksStructNumRetrieved>()
+
+Returns the number of trials consumed
+
+=cut
+
+sub getBlocksStructNumRetrieved{
+  my ($bs) = @_;
+  my $numRet = 0;
+  foreach my $blk(keys %$bs){
+    $numRet += ($bs->{$blk}->{TARGi} + $bs->{$blk}->{NONTARGi}) ;
+  }
+  return($numRet);
+}
+
+#####################################################################################################
+#=pod
+#
+#=item B<getBlocksStructNumRetrievedOfBlock>()
+#
+#Returns the number of trials consumed for a block
+#
+#=cut
+#
+#sub getBlocksStructNumRetrieved{
+#  my ($bs, $blk) = @_;
+#  return ($bs->{$blk}->{TARGi} + $bs->{$blk}->{NONTARGi}) ;
+#}
 
 ####################################################################################################
 =pod
@@ -631,7 +679,7 @@ the CODE DIES as this should never happen.
       
       $miss = $data->{$block}{CACHEDMMISS};
       if (!defined($miss)){       
-        $miss = $self->errMissBlockCalc($luMiss, $block); 
+        $miss = $self->errMissBlockCalc($luMiss, $luFA, $block); 
         $data->{$block}{CACHEDMMISS} = $miss;
       }
       if (defined($miss)) {
@@ -641,7 +689,7 @@ the CODE DIES as this should never happen.
       }
       $fa = $data->{$block}{CACHEDMFA};
       if (!defined($fa)){
-        $fa = $self->errFABlockCalc($luFA, $block); 
+        $fa = $self->errFABlockCalc($luMiss, $luFA, $block); 
         $data->{$block}{CACHEDMFA} = $fa;
       }
       if (defined($fa)) {
@@ -687,7 +735,7 @@ the CODE DIES as this should never happen.
 ####################################################################################################
 =pod
 
-=item B<computeCurveArea>(I<$missErr, I<$faErr>)
+=item B<computeCurveArea>(I<$missErr>, I<$faErr>)
 
 Calculates the area for the curve.  The type can be ABOVE the curve (for a Pmiss, PFA curve) or BELOW the curve (for am ROC curve).  
 The measure is always called AreaUnderTheCurve: the type determines how the MMFA value is used. The value returned has a range from 
@@ -719,6 +767,57 @@ sub combCalc(){
   }
 }
 
+
+####################################################################################################
+=pod
+
+=item B<setPerformGlobalMeasure>(I<$measureName>)
+
+Sets the flag to calculate and report the global measure I<$MeasureName>.
+
+=cut
+
+sub setPerformGlobalMeasure(){
+  my ($self, $measureName) = @_;
+  if ($measureName eq "AP") {
+    my @mlist = grep { $_ eq "AP"} @{ $self->{globalMeasures} };
+    push (@{ $self->{globalMeasures} }, "AP")  if (@mlist == 0);
+  } else {
+    warn "Warning: Global Measure $measureName requested but it is not defined.  Ignoring the request\n";	
+  }
+}
+
+####################################################################################################
+=pod
+
+=item B<getGlobalMeasures>()
+
+Returns the list of global measures.
+
+=cut
+
+sub getGlobalMeasures{
+  my ($self) = @_;
+  
+  return(exists($self->{globalMeasures}) ? $self->{globalMeasures} : [()]);
+}
+
+
+####################################################################################################
+=pod
+
+=item B<getDefaultPlotOptions>()
+
+Returns a pointer to a hash of default plot options.
+
+=cut
+
+sub getDefaultPlotOptions{
+  my ($self) = @_;
+  
+  return(exists($self->{defaultPlotOptions}) ? $self->{defaultPlotOptions} : undef)
+}
+
 ####################################################################################################
 =pod
 
@@ -728,7 +827,7 @@ Compares the expected actual decision performance to the computed
 version C<@$expArr>.  C<$printPrefix> is prepended to any printouts.
 
 =cut
-
+ 
 sub testActualDecisionPerformance{
   my ($self, $act, $pre) = @_;
   my (@compAct) = $self->getActualDecisionPerformance();

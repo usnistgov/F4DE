@@ -34,6 +34,7 @@ use MetricTV08;
 use MetricNormLinearCostFunct;
 use MetricTWV;
 use MetricDiscreteTWV;
+use MetricPrecRecallFbeta;
 
 use Data::Dumper;
 use DETCurveSet;
@@ -70,6 +71,7 @@ sub new
        POINT_COMPUTATION_ATTEMPTED => 0,
        FIXED_MFA_VLAUES => undef,
        CURVE_STYLE => "UniqThreshold",
+       GLOBALMEASURES => {},
       };
         
     bless $self;
@@ -92,6 +94,7 @@ sub unitTest
     srlLoadTest();
     #   unitTestMultiDet();
     # bigDETUnitTest();
+    globalMeasureUnitTest();
     return 1;
   }
 
@@ -169,6 +172,149 @@ sub srlLoadTest {
     print "OK\n";
 
     $Data::Dumper::Sortkeys = $sortKeys;
+    
+}
+
+sub globalMeasureUnitTest(){
+  print "Global Measure Unit Test\n";
+		
+    use MetricNormLinearCostFunct;
+         
+    my $trial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+    $trial->addTrial("she", 0.04, "NO", 1); #20
+    $trial->addTrial("she", 0.05, "NO", 0);
+    $trial->addTrial("she", 0.10, "NO", 0);
+    $trial->addTrial("she", 0.10, "NO", 0);
+    $trial->addTrial("she", 0.10, "NO", 0);
+    $trial->addTrial("she", 0.15, "NO", 0);
+    $trial->addTrial("she", 0.17, "NO", 0);
+    $trial->addTrial("she", 0.20, "NO", 0);
+    $trial->addTrial("she", 0.25, "YES", 0);
+    $trial->addTrial("she", 0.65, "YES", 0);
+    $trial->addTrial("she", 0.69, "YES", 1); #10
+    $trial->addTrial("she", 0.70, "YES", 0);
+    $trial->addTrial("she", 0.70, "YES", 0);
+    $trial->addTrial("she", 0.73, "YES", 0);
+    $trial->addTrial("she", 0.75, "YES", 1); #6
+    $trial->addTrial("she", 0.85, "YES", 0);
+    $trial->addTrial("she", 0.90, "YES", 0);
+    $trial->addTrial("she", 0.92, "YES", 1); #3
+    $trial->addTrial("she", 0.98, "YES", 0);
+    $trial->addTrial("she", 1.0, "YES", 1);  #1
+
+    my $trial2 = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+    $trial2->addTrial("she", 0.15, "NO", 1); #15
+    $trial2->addTrial("she", 0.17, "NO", 0);
+    $trial2->addTrial("she", 0.20, "NO", 0);
+    $trial2->addTrial("she", 0.25, "YES", 0);
+    $trial2->addTrial("she", 0.65, "YES", 0);
+    $trial2->addTrial("she", 0.69, "YES", 0); 
+    $trial2->addTrial("she", 0.70, "YES", 0);
+    $trial2->addTrial("she", 0.70, "YES", 0);
+    $trial2->addTrial("she", 0.73, "YES", 0);
+    $trial2->addTrial("she", 0.75, "YES", 0);
+    $trial2->addTrial("she", 0.85, "YES", 0);
+    $trial2->addTrial("she", 0.90, "YES", 0);
+    $trial2->addTrial("she", 0.92, "YES", 1); #3
+    $trial2->addTrial("she", 0.98, "YES", 0);
+    $trial2->addTrial("she", 1.0, "YES", 1);  #1
+
+    my $trial3 = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+    $trial3->setPreserveTrialID(1);
+    $trial3->addTrial("she", 0.15, "NO",  1, undef, "id25"); #15
+    $trial3->addTrial("she", 0.17, "NO",  0, undef, "id24");
+    $trial3->addTrial("she", 0.20, "NO",  0, undef, "id23");
+    $trial3->addTrial("she", 0.25, "YES", 0, undef, "id22");
+    $trial3->addTrial("she", 0.65, "YES", 0, undef, "id21");
+    $trial3->addTrial("she", 0.69, "YES", 0, undef, "id20"); 
+    $trial3->addTrial("she", 0.70, "YES", 0, undef, "id19");
+    $trial3->addTrial("she", 0.70, "YES", 0, undef, "id18");
+    $trial3->addTrial("she", 0.73, "YES", 0, undef, "id17");
+    $trial3->addTrial("she", 0.75, "YES", 0, undef, "id16");
+    $trial3->addTrial("she", 0.92, "YES", 0, undef, "id15");
+    $trial3->addTrial("she", 0.92, "YES", 0, undef, "id14");
+    $trial3->addTrial("she", 0.92, "YES", 0, undef, "id12");
+    $trial3->addTrial("she", 0.92, "YES", 1, undef, "id13"); #3
+    $trial3->addTrial("she", 1.0, "YES",  1, undef, "id11");  #1
+
+    { 
+      print "  Computing Average Precision...";
+      my @isolinecoef = ( );
+      my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial);
+      my $legacyDet = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef, 1);
+      $legacyDet->computeAvgPrec();
+      #print Dumper($legacyDet->{GLOBALMEASURES});
+      if (! exists($legacyDet->{GLOBALMEASURES}{AP})){
+        print "\n  Error!!! Average Precision not computed\n";
+        exit(1);
+      }
+      if (abs($legacyDet->{GLOBALMEASURES}{AP}{MEASURE}{AP} - 0.563333) > 0.0001) {
+        print "\n  Error!!! Average Precision computed to be $legacyDet->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.563333.  Aborting\n";
+        exit(1);
+      }
+
+      my $met2 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial2);
+      my $legacyDet2 = new DETCurve($trial2, $met2, "Targetted point", \@isolinecoef, undef, 1);
+      $legacyDet2->computeAvgPrec();
+      #print Dumper($legacyDet2->{GLOBALMEASURES});
+      if (! exists($legacyDet2->{GLOBALMEASURES}{AP})){
+        print "\n  Error!!! Average Precision not computed\n";
+        exit(1);
+      }
+      if (abs($legacyDet2->{GLOBALMEASURES}{AP}{MEASURE}{AP} - 0.62222) > 0.0001) {
+        print "\n  Error!!! Average Precision computed to be $legacyDet2->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.62222.  Aborting\n";
+        exit(1);
+      }
+
+      my $met3 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial3);
+      my $legacyDet3 = new DETCurve($trial3, $met3, "Targetted point", \@isolinecoef, undef, 1);
+      $legacyDet3->computeAvgPrec();
+      #print Dumper($legacyDet2->{GLOBALMEASURES});
+      if (! exists($legacyDet3->{GLOBALMEASURES}{AP})){
+        print "\n  Error!!! Average Precision not computed\n";
+        exit(1);
+      }
+      if (abs($legacyDet3->{GLOBALMEASURES}{AP}{MEASURE}{AP} - 0.62222) > 0.0001) {
+        print "\n  Error!!! Average Precision computed to be $legacyDet3->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.62222.  Aborting\n";
+        exit(1);
+      }
+
+      print "OK\n";
+    }
+
+    { 
+      print "  Automatic Average Precision computations ...";
+      my @isolinecoef = ( );
+      my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial);
+      $met->setPerformGlobalMeasure("AP");
+      my $legacyDet = new DETCurve($trial, $met, "First ", \@isolinecoef, undef, 1);
+      $legacyDet->computePoints();
+
+      if (! exists($legacyDet->{GLOBALMEASURES}{AP})){
+        print "\n  Error!!! Average Precision not computed\n";
+        exit(1);
+      }
+
+      my $met2 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial2);
+      $met2->setPerformGlobalMeasure("AP");
+      my $legacyDet2 = new DETCurve($trial2, $met2, "Second", \@isolinecoef, undef, 1);
+      $legacyDet2->computePoints();
+
+      if (! exists($legacyDet2->{GLOBALMEASURES}{AP})){
+        print "\n  Error!!! Average Precision not computed\n";
+        exit(1);
+      }
+
+      if (0){ 
+        use DETCurveSet;
+        my $ds = new DETCurveSet("title");
+        $ds->addDET("First", $legacyDet);
+        $ds->addDET("Second", $legacyDet2);
+        my $txt = $ds->renderAsTxt("foomerge", 1, {(createDETfiles => 0, ReportGlobal => 1, ExcludePNGFileFromTextTable => 1)});  print $txt;
+      }
+      print "OK\n";
+    }
+
 }
 
 sub bigDETUnitTest {
@@ -935,10 +1081,13 @@ sub AllIntersectionIsolineParameter
     my ($self, $x1, $y1, $x2, $y2, $moveOnToNext) = @_;
     my @out = ();
     my ($t, $m, $xt, $yt) = (undef, undef, undef, undef);
+
         
     do
       {
         ($t, $m, $xt, $yt) = $self->IntersectionIsolineParameter($x1, $y1, $x2, $y2, $moveOnToNext);
+#    print "All - ($x1, $y1) ($x2, $y2), $moveOnToNext) - ($t, $m, $xt, $yt) - ".$self->{ISOLINE_COEFFICIENTS_INDEX}.
+#             " (".join(",",@{ $self->{ISOLINE_COEFFICIENTS} }).")\n";
         if( defined( $t ) ){
 #          print "     Found Line = moveOntToNext=$moveOnToNext\n";
           push( @out, [($t, $m, $xt, $yt)] );
@@ -1061,6 +1210,10 @@ sub computePoints
     $self->{POINTS} = $self->Compute_blocked_DET_points($self->{TRIALS});
 #    print "Point computatiuon complete: ".`date`;
 
+    ## Global Computations
+    my @mlist = grep { $_ eq "AP"} @{ $self->{METRIC}->getGlobalMeasures() };
+    $self->computeAvgPrec() if (@mlist != 0);
+ 
   }
 
 sub Compute_blocked_DET_points
@@ -1101,7 +1254,6 @@ sub Compute_blocked_DET_points
           if (!defined($maxScore) || $maxScore < $trial->getNonTargDecScr($block,$blocks{$block}{NONTARGNScr} - 1));
       }
     }
-#    MetricFuncs::dumpBlocksStruct(\%blocks);
 
     $self->{MINSCORE} = $minScore;
     $self->{MAXSCORE} = $maxScore;
@@ -1139,13 +1291,13 @@ sub Compute_blocked_DET_points
 
     my $stateInfo = { PREVMMISS => $mMiss, PREVMFA => $mFa, PREVMINSCORE => $minScore };
     my @listparams;
-#    print "Initial Min Score: $minScore\n";
+    #print "  Init ".MetricFuncs::getBlocksStructSummary(\%blocks)." NumRetrieved=".MetricFuncs::getBlocksStructNumRetrieved(\%blocks)."\n";
+
   POINT:    
     while ($self->updateMinScoreForBlockWeighted(\%blocks, \$minScore, $trial, $style, \$stateInfo)){
-#      print "    " ; MetricFuncs::dumpBlocksStruct(\%blocks);
+      #print "    ".MetricFuncs::getBlocksStructSummary(\%blocks)." NumRetrieved=".MetricFuncs::getBlocksStructNumRetrieved(\%blocks)."\n";
       ### Calculate the current scores
       ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial);
-#      print "    consuming point (minScore=$minScore, mMiss=$mMiss, mFa=$mFa, )\n";
 
       @listparams = $self->AllIntersectionIsolineParameter($previousAvgMfa, $previousAvgMmiss, $mFa, $mMiss, 1);
       foreach my $setelt ( @listparams ) {
@@ -1154,6 +1306,7 @@ sub Compute_blocked_DET_points
       }
                 
       push(@Outputs, [ ( $minScore, $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks ) ] );
+      #print "    consuming point (".join(", ", @{ $Outputs[$#Outputs] })."\n";
 
       if ($findMaxComb) {
         if ($TWComb > $self->{BESTCOMB}{COMB}) {
@@ -1176,8 +1329,9 @@ sub Compute_blocked_DET_points
       $previousAvgMfa = $mFa;
       $previousAvgMmiss = $mMiss;
     }
+    #print "  Final ".MetricFuncs::getBlocksStructSummary(\%blocks)." NumRetrieved=".MetricFuncs::getBlocksStructNumRetrieved(\%blocks)."\n";
     
-    \@Outputs;
+    return \@Outputs;
   }
 
 sub _minUndefSafe{
@@ -1368,13 +1522,15 @@ sub computeBlockWeighted
       if (!defined($blocks->{$b}{MMISS})) {
         my $NMiss = $blocks->{$b}{TARGi} + $trial->getNumOmittedTarg($b);
         ## Caching: Calculate is not yet calculated
-        $blocks->{$b}{MMISS}        = $NMiss; #$self->{METRIC}->errMissBlockCalc($NMiss, $b);
+        $blocks->{$b}{MMISS}        = $NMiss; 
         $blocks->{$b}{CACHEDMMISS}  = undef;
+        $blocks->{$b}{CACHEDMFA}  = undef;
       }
       if (!defined($blocks->{$b}{MFA})) {
         my $NFalse = $blocks->{$b}{NONTARGNScr} - $blocks->{$b}{NONTARGi};                                                                                                                                   
         ## Caching: Calculate is not yet calculated
-        $blocks->{$b}{MFA}          = $NFalse; #$self->{METRIC}->errFABlockCalc  ($NFalse, $b);
+        $blocks->{$b}{MFA}          = $NFalse; 
+        $blocks->{$b}{CACHEDMMISS}  = undef;
         $blocks->{$b}{CACHEDMFA}  = undef;
       }
     }
@@ -1499,6 +1655,74 @@ sub computeArea{
   $area += _area($points->[$#$points][2], $points->[$#$points][1], 0, 1.0);
 
   #  print "Total Area = $area\n";
+}
+
+sub computeAvgPrec{
+  my ($self) = @_;
+  my %apData = ();
+  
+  ## Only Run IFF there is a single block
+  my @blocks = $self->{TRIALS}->getBlockIDs();
+  if (@blocks > 1){
+     $apData{STATUS} = "NotApplicable";
+     $apData{STATUSMESG} = "Not defined for multiple blocks in as Trials Structure";
+     $self->{GLOBALMEASURES}{AP} = \%apData;
+     return;
+  }
+  my $blk = $blocks[0];
+  
+  ## Make sure the block is evaluable
+  if (! $self->{TRIALS}->isBlockEvaluated($blk)){
+     $apData{STATUS} = "NotApplicable";
+     $apData{STATUSMESG} = "Single Block '$blk' is not evaluable";
+     $self->{GLOBALMEASURES}{AP} = \%apData;
+     return;
+  }
+
+  ## Start the code
+  ## Step 1, build the 2-d array    
+  ## Sort  the trials
+  
+  my $ranks = $self->{TRIALS}->getRanks($blk);
+  if (0){                                    
+    my $r = $self->{TRIALS}->getRanks($blk); 
+    for (my $i=0; $i<@$r; $i++){             
+      print join(",",@{$r->[$i]})."\n" if ($r->[$i]->[2] == 1);
+    }                                        
+  }                                          
+
+  my $sum = 0;
+  my $numPos = 0;
+  for (my $t=0; $t<@$ranks; $t++){
+    if ($ranks->[$t]->[2] > 0){
+    	$numPos ++;
+    	#print "$numPos / $ranks->[$t] = ".$numPos / $ranks->[$t]."\n";
+    	$sum += $numPos / $ranks->[$t]->[0];
+    }
+  }
+  if ($numPos > 0){
+    $apData{STATUS} = "Computed";
+    $apData{STATUSMESG} = "Successful";
+    $apData{MEASURE}{AP} = $sum / $numPos;
+    $apData{MEASURE}{POSRANKS} = $ranks;
+  } else {
+    $apData{STATUS} = "NotApplicable";
+    $apData{STATUSMESG} = "No Positives for block $blk";
+    $apData{MEASURE}{POSRANKS} = $ranks;
+  }
+  $self->{GLOBALMEASURES}{AP} = \%apData;
+
+  #print Dumper(\%apData);
+}
+
+sub getGlobalMeasure{
+  my ($self, $measure) = @_;
+  return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
+  if ($measure eq "AP"){
+     return $self->{GLOBALMEASURES}{$measure}{MEASURE}{$measure};
+  } else {	
+     return undef;
+  }
 }
 
 sub ppndf

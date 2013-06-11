@@ -338,7 +338,9 @@ sub _buildAutoTable(){
   my $includePNG    = 1;   $includePNG = 0    if (exists($DETOptions->{ExcludePNGFileFromTextTable}) && $DETOptions->{ExcludePNGFileFromTextTable} == 1);
   my $reportActual  = 1;   $reportActual = 0  if (exists($DETOptions->{ReportActual}) && $DETOptions->{ReportActual} == 0);
   my $reportBest    = 1;
-  
+  my $reportGlobal  = 0;   $reportGlobal = 1  if (exists($DETOptions->{ReportGlobal}) && $DETOptions->{ReportGlobal} == 1);
+  my $reportRowTotals = 0; $reportRowTotals=1 if (exists($DETOptions->{ReportRowTotals}) && $DETOptions->{ReportRowTotals} == 1);
+
   ## Variable params get added to the report
   my $variableParams = $self->_findVariableParams();
 
@@ -409,6 +411,11 @@ sub _buildAutoTable(){
         $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->combLab(),    $key);
         $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
       }
+      if ($reportGlobal){
+      	foreach my $gm(@{ $metric->getGlobalMeasures() }){
+	  $at->addData(&_PN("%.3f", $det->getGlobalMeasure($gm)), ($useAT ? "Global Measures|" : "" ) . $gm,   $key);
+        }
+      }
       my $detpng = $det->getDETPng();
       if ($includePNG){
         if ($detpng ne "") {
@@ -466,6 +473,42 @@ sub _buildAutoTable(){
   $at->{Properties}->{KEYS}{"KeyColumnCsv"} = "Remove";
   $at->{Properties}->{KEYS}{"KeyColumnLaTeX"} = "Remove";
 
+  if ($reportRowTotals){
+    my @dataRowIDs = $at->getRowIDs("AsAdded");
+    my @dataColIDs = $at->getColIDs("AsAdded");
+		$at->addData("Count",  " |Title", "<<FOOTER>>"."Count");
+		$at->addData("Mean",   " |Title", "<<FOOTER>>"."Mean");
+ 		$at->addData("StdDev", " |Title", "<<FOOTER>>"."StdDev");
+ 		$at->addData("+2SE",   " |Title", "<<FOOTER>>"."StdErrP");
+ 		$at->addData("-2SE",   " |Title", "<<FOOTER>>"."StdErrM");
+    
+
+    foreach my $column(@dataColIDs){
+      next if ($column =~ /(Title|Curve Graphs)/);
+      my($sum, $num, $sumSqr) = (0, 0, 0);
+      my $prec = 1;
+      foreach my $rowID(@dataRowIDs){
+        my $val = $at->getData($column, $rowID);
+        if (defined($val)){
+          (my $dec = $val) =~ s/^[^\.]+.?//;
+          $prec = length($dec) if ($prec < length($dec));
+          $num++;
+          $sum += $val;
+          $sumSqr += $val * $val;
+        }
+      }
+      my $mean = $sum / $num;
+      my $var = ($num <= 1 ? undef : (($num * $sumSqr) - ($sum * $sum)) / ($num * ($num - 1)));
+      my $stddev = (defined($var) ? MMisc::safe_sqrt($var) : undef);
+      
+  		$at->addData(sprintf("%d", $num),              $column, "<<FOOTER>>"."Count");
+  		$at->addData(sprintf("%.${prec}f", $mean),     $column, "<<FOOTER>>"."Mean");
+  		$at->addData(sprintf("%.${prec}f", $stddev),   $column, "<<FOOTER>>"."StdDev");
+  		$at->addData(sprintf("%.${prec}f", $mean - $stddev*2), $column, "<<FOOTER>>"."StdErrM");
+  		$at->addData(sprintf("%.${prec}f", $mean + $stddev*2), $column, "<<FOOTER>>"."StdErrP");
+    }
+  }
+
   return($at);
 }
 
@@ -508,10 +551,10 @@ sub _buildBlockedAutoTable()
       $at->addData($nMiss, $key . "|#Miss", $blockID . "|" . $block);
       my $comb = &_PN($metric->combPrintFormat(), $metric->combBlockCalc($nMiss, $nFA, $block));
       $at->addData($comb, $key . "|" . $comblab, $blockID . "|" . $block);
-      my $nPFA = &_PN($metric->errFAPrintFormat(), $metric->errFABlockCalc($nFA, $block));
+      my $nPFA = &_PN($metric->errFAPrintFormat(), $metric->errFABlockCalc($nMiss, $nFA, $block));
       $nPFA = ($nPFA ne "NA") ? $nPFA : 0;
       $at->addData($nPFA, $key . "|PFA", $blockID . "|" . $block);
-      my $nPMISS = &_PN($metric->errMissPrintFormat(), $metric->errMissBlockCalc($nMiss, $block));
+      my $nPMISS = &_PN($metric->errMissPrintFormat(), $metric->errMissBlockCalc($nMiss, $nFA, $block));
       $at->addData($nPMISS, $key . "|PMISS", $blockID . "|" . $block);
     }
 
@@ -662,11 +705,18 @@ sub renderAsTxt(){
 }
 
 sub renderReport(){
-  my ($self, $fileRoot, $buildCurves, $DETOptions, $txtfn, $csvfn, $htmlfn, $binmode) = @_;
+  my ($self, $fileRoot, $buildCurves, $overrideDETOptions, $txtfn, $csvfn, $htmlfn, $binmode) = @_;
 
   if (@{ $self->{DETList} } == 0) {
     return "Error: No DETs provided to produce a report from";
   }
+
+  ### Merge in default options if not set
+  my $DETOptions = {};
+  my $defOpt = $self->{DETList}->[0]->{DET}->getMetric()->getDefaultPlotOptions();
+  foreach my $key(keys %$defOpt){               $DETOptions->{$key} = $defOpt->{$key}   } 
+  foreach my $key(keys %$overrideDETOptions){   $DETOptions->{$key} = $overrideDETOptions->{$key}; }
+  #print Dumper($defOpt);  print Dumper($overrideDETOptions);  print Dumper($DETOptions);
   
   ### Build the combined and separate DET PNGs
   my $multiInfo = {()};
@@ -676,7 +726,6 @@ sub renderReport(){
   } 
 
   my $variableParams = $self->_findVariableParams();
-  
   my $at = $self->_buildAutoTable($buildCurves, $DETOptions);
 
 #  my $trial = $self->{DETList}[0]->{DET}->getTrials();
@@ -803,6 +852,15 @@ sub comb
 
       return( $Cnk );
 }
+
+sub inverse_norm
+{
+  my ($z) = @_;
+  my ($cdf) = cdf_norm(abs($z));   
+  return (0.5 + $cdf) if ($z >= 0);
+  return (0.5 - $cdf);
+}
+
 
 sub cdf_norm
 {

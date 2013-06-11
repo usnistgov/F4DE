@@ -198,12 +198,9 @@ sub unitTest {
        "DrawIsometriclines" => 1,
        "createDETfiles" => 1,
 		   "DrawIsoratiolines" => 1,
-       "serialize" => 1,
        "Isometriclines" => [ (0.1745) ],
        "Isoratiolines" => [ (13.333) ],
        "PointSet" => [ { MMiss => .8,  MFA => .06, pointSize => 1,  pointType => 10, color => "rgb \"#00ff00\"", label => "test"} ] ) };
-
- 
   
   print "  Testing a DET Curve Calculations ..\n";
   $trial->addTrial("she", 0.1, "NO", 0);
@@ -258,7 +255,7 @@ sub unitTest {
   if (defined($dir)){
     my $ds = new DETCurveSet("MetricTWV Tests");
     die "Error: Failed to add first det" if ("success" ne $ds->addDET("2 Blocks no targ", $det1));
-    print $ds->renderAsTxt("$dir/TWV.unitTest.test2.det", 1, 1, $options, "");                                                                     
+    print $ds->renderAsTxt("$dir/TWV.unitTest.test2.det", 1, $options, "");                                                                     
   }   
   $det1 = undef;  ### Make sure it's empty!!!
     
@@ -297,7 +294,7 @@ sub unitTest {
   if (defined($dir)){
     my $ds = new DETCurveSet("MetricTWV Tests");
     die "Error: Failed to add second det" if ("success" ne $ds->addDET("2 Blocks no targ", $det2));
-    print $ds->renderAsTxt("$dir/TWV.unitTest.test2.det", 1, 1, $options, "");                                                                     
+    print $ds->renderAsTxt("$dir/TWV.unitTest.test2.det", 1, $options, "");                                                                     
   }   
 
   print "    Checking to see of Excluding blocks without targets works...";
@@ -310,10 +307,11 @@ sub unitTest {
   die $ret if ($ret ne "ok");
   print "OK\n";
   
+  my $ds = new DETCurveSet("MetricTWV Tests");
+  die "Error: Failed to add third det" if ("success" ne $ds->addDET("2 blocks not targ but ignored", $det3));
   if (defined($dir)){
-    my $ds = new DETCurveSet("MetricTWV Tests");
-    die "Error: Failed to add third det" if ("success" ne $ds->addDET("2 blocks not targ but ignored", $det3));
-    print $ds->renderAsTxt("$dir/TWV.unitTest.test3.det", 1, 1, $options, "");                                                                     
+    $options->{"serialize"} => 1,
+    print $ds->renderAsTxt("$dir/TWV.unitTest.test3.det", 1, $options, "");                                                                     
   }   
 
 }
@@ -357,7 +355,7 @@ application.
 ####################################################################################################
 =pod
 
-=item B<errMissBlockCalc>(I<$nMiss>, I<$block>)
+=item B<errMissBlockCalc>(I<$nMiss>, I<$nFa>, I<$block>)
 
 Calculates the miss error statistic for block '$block' if the number of misses is '$nMiss'.  This functions uses the 
 reference to the trials data structure to find the denominator.   If the denominator is 0, then the statistic is undefined
@@ -365,7 +363,7 @@ and it returns C<undef>.
 
 =cut
 sub errMissBlockCalc(){
-  my ($self, $nMiss, $block) = @_;
+  my ($self, $nMiss, $nFa, $block) = @_;
   my $NTarg =  $self->{TRIALS}->getNumTarg($block);
   
   ($NTarg > 0) ? $nMiss / $NTarg : undef;
@@ -374,7 +372,7 @@ sub errMissBlockCalc(){
 ####################################################################################################
 =pod
 
-=item B<errFABlockCalc>(I<$nFA>, I<$block>)
+=item B<errFABlockCalc>(I<$nMiss>, I<$nFA>, I<$block>)
 
 Calculates the false alarm error statistic for block '$block' if the number of false alarms is '$nFA'.  This functions uses the 
 reference to the trials data structure to find the denominator.   If the denominator is 0, then the statistic is undefined
@@ -382,7 +380,7 @@ and it returns C<undef>.
 
 =cut
 sub errFABlockCalc(){
-  my ($self, $nFa, $block) = @_;
+  my ($self, $nMiss, $nFa, $block) = @_;
 
   ### The denominator is already checked so no need to return undef.  TotalDuration is in seconds!!!!
   #print "$nFa / ($self->{TRIALPARAMS}->{TOTALTRIALS} - ".$self->{TRIALS}->getNumTarg($block).");\n";

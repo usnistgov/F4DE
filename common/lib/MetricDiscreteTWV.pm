@@ -357,7 +357,7 @@ application.
 ####################################################################################################
 =pod
 
-=item B<errMissBlockCalc>(I<$nMiss>, I<$block>)
+=item B<errMissBlockCalc>(I<$nMiss>, I<$nFa>, I<$block>)
 
 Calculates the miss error statistic for block '$block' if the number of misses is '$nMiss'.  This functions uses the 
 reference to the trials data structure to find the denominator.   If the denominator is 0, then the statistic is undefined
@@ -365,7 +365,7 @@ and it returns C<undef>.
 
 =cut
 sub errMissBlockCalc(){
-  my ($self, $nMiss, $block) = @_;
+  my ($self, $nMiss, $nFa, $block) = @_;
   my $NTarg =  $self->{TRIALS}->getNumTarg($block);
   
   ($NTarg > 0) ? $nMiss / $NTarg : undef;
@@ -374,7 +374,7 @@ sub errMissBlockCalc(){
 ####################################################################################################
 =pod
 
-=item B<errFABlockCalc>(I<$nFA>, I<$block>)
+=item B<errFABlockCalc>(I<$nMiss>, I<$nFA>, I<$block>)
 
 Calculates the false alarm error statistic for block '$block' if the number of false alarms is '$nFA'.  This functions uses the 
 reference to the trials data structure to find the denominator.   If the denominator is 0, then the statistic is undefined
@@ -382,7 +382,7 @@ and it returns C<undef>.
 
 =cut
 sub errFABlockCalc(){
-  my ($self, $nFa, $block) = @_;
+  my ($self, $nMiss, $nFa, $block) = @_;
 
   ### The denominator is already checked so no need to return undef.  TotalDuration is in seconds!!!!
   #print "$nFa / ($self->{TRIALPARAMS}->{TOTALTRIALS} - ".$self->{TRIALS}->getNumTarg($block).");\n";

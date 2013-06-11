@@ -67,11 +67,11 @@ sub _buildAutoTable(){
     $at->addData($trial->getNumMiss($block),                   "#Miss", $block);
 
     $str = &_PN($metric->errFAPrintFormat(),
-                $metric->errFABlockCalc($trial->getNumFalseAlarm($block), $block));
+                $metric->errFABlockCalc($trial->getNumMiss($block), $trial->getNumFalseAlarm($block), $block));
     $at->addData($str,                                         $metric->errFALab(), $block);
 
     $str = &_PN($metric->errMissPrintFormat(),
-                $metric->errMissBlockCalc($trial->getNumMiss($block), $block));
+                $metric->errMissBlockCalc($trial->getNumMiss($block), $trial->getNumFalseAlarm($block), $block));
     $at->addData($str,                                         $metric->errMissLab(), $block);
 
     $str = &_PN($metric->combPrintFormat(),

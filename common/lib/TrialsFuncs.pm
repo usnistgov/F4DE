@@ -71,6 +71,8 @@ sub new {
      "trialParams" => $trialParams, ### Hash table for passing info to the Trial* objects 
      "suppliedActDecThresh" => undef,  ### Contains the supplied Decision threshhold for the Actual Decisions :)
      "computedActDecThreshRange" => undef,  ### Contains a hash table with the range for the decision threshold
+     "preserveTrialID" => 0,        ### if true, keep the trial ID and use it as a minor sort key
+     "trialNum" => 0,               ### a counter of added trials
     };
   
   bless $self;
@@ -370,7 +372,67 @@ sub unitTest {
   print "Ok\n";
 #  print $trial->dump();
 
+  print " Preserve trial IDs and getting ranks\n";
+  my @data = ( [ ("she", 0.3, "YES", 1, undef, "trial32", "0000001") ],
+               [ ("she", 0.3,  "NO", 0, undef, "trial22", "0000002") ],
+               [ ("she", 0.3, "YES", 1, undef, "trial31", "0000003") ],
+               [ ("she", 0.3,  "NO", 0, undef, "trial21", "0000004") ],
+               [ ("she", 0.1,  "NO", 1, undef, "trial4",  "0000005") ],
+               [ ("she", 0.7, "YES", 0, undef, "trial1",  "0000006") ]               );
+
+  print "  Test1: no IDs...";
+  $trial = undef;
+  $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+  for (my $i; $i<@data; $i++){
+    $trial->addTrial($data[$i]->[0], $data[$i]->[1], $data[$i]->[2], $data[$i]->[3]);
+  }
+  _checkRank(\@data, $trial->getRanks("she", 1, 1, 1), [ (5, 1, 3, 0, 2, 4) ], 1, 1, 0, 0);
+  print "Ok\n";
+
+  print "  Test2: preserving TrialIDs with IDs...";
+  $trial = undef;
+  $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+  $trial->setPreserveTrialID(1);
+  for (my $i; $i<@data; $i++){
+    $trial->addTrial($data[$i]->[0], $data[$i]->[1], $data[$i]->[2], $data[$i]->[3], $data[$i]->[4], $data[$i]->[5]);
+  }
+  _checkRank(\@data, $trial->getRanks("she", 1, 1, 1), [ (5, 3, 1, 2, 0, 4) ], 1, 1, 1, 0);
+  print "Ok\n";
+
+  print "  Test2: preserving TrialIDs without IDs...";
+  $trial = undef;
+  $trial = new TrialsFuncs({ (TOTAL_TRIALS => 78) }, "Term Detection", "Term", "Occurrence");
+  $trial->setPreserveTrialID(1);
+  for (my $i; $i<@data; $i++){
+    $trial->addTrial($data[$i]->[0], $data[$i]->[1], $data[$i]->[2], $data[$i]->[3]);
+  }
+  _checkRank(\@data, $trial->getRanks("she", 1, 1, 1), [ (5, 0, 1, 2, 3, 4) ], 1, 1, 0, 1);
+  print "Ok\n\n";
+
   return 1;
+}
+
+sub _checkRank{
+  my ($data, $ranks, $expOrd, $checkScore, $checkTarg, $checkID, $checkIDAsInsertOrder) = @_;
+  #print "\n".Dumper($ranks);
+  for (my $r=0; $r < @$expOrd; $r++){ 
+    if ($checkScore){
+      #print "  Score ($ranks->[$r]->[1] != $data->[$expOrd->[$r]]->[1])\n";
+      MMisc::error_quit("Failed: score order wrong") if ($ranks->[$r]->[1] != $data->[$expOrd->[$r]]->[1]);
+    }
+    if ($checkTarg){
+      #print "  Targ ($ranks->[$r]->[2] != $data->[$expOrd->[$r]]->[3])\n";
+      MMisc::error_quit("Failed: Targ") if ($ranks->[$r]->[2] != $data->[$expOrd->[$r]]->[3]);
+    }
+    if ($checkID){
+      #print "  TrialID ($ranks->[$r]->[3] != $data->[$expOrd->[$r]]->[5])\n";
+      MMisc::error_quit("Failed: TrialID out of order") if ($ranks->[$r]->[3] != $data->[$expOrd->[$r]]->[5]);
+    }
+    if ($checkIDAsInsertOrder){
+      #print "  TrailID as Order ($ranks->[$r]->[3] != $data->[$expOrd->[$r]]->[6])\n";
+      MMisc::error_quit("Failed: TrialID As Insert Order out of order") if ($ranks->[$r]->[3] != $data->[$expOrd->[$r]]->[6]);
+    }
+  }
 }
 
 #### Just build a big trials structure to testing memory usage
@@ -465,20 +527,26 @@ I<$isTarg> is a boolean indicating if the trial is an instance of the target or 
 =cut
 
 sub addTrial {
-  my ($self, $block, $sysscore, $decision, $isTarg, $metaData) = @_;
+  my ($self, $block, $sysscore, $decision, $isTarg, $metaData, $trialID) = @_;
   
   MMisc::error_quit("Decision must be \"YES|NO|OMITTED\" not '$decision'")
       if ($decision !~ /^(YES|NO|OMITTED)$/);
   my $attr = ($isTarg ? "TARG" : "NONTARG");
   
   $self->_initForBlock($block);
-  $self->addBlockMetaData($block, $metaData);
+  $self->addBlockMetaData($block, $metaData) if (defined($metaData));
   $self->{computedActDecThreshRange} = undef;  ### Resets on new add!!!
+  $self->{trialNum} ++;
   
   ## update the counts
   $self->{"isSorted"} = 0;
   if ($decision ne "OMITTED") {
-    push(@{ $self->{"trials"}{$block}{$attr} }, $sysscore);
+    ### Push the scores
+    if ($self->{preserveTrialID} != 1){
+      push(@{ $self->{"trials"}{$block}{$attr} }, $sysscore);
+    } else {
+      push(@{ $self->{"trials"}{$block}{$attr} }, [($sysscore, (defined($trialID) ? $trialID : sprintf("%08d",$self->{trialNum}) ))]);  
+    }
     ### Track the YES Threshold
     if ($decision eq "YES"){
       $self->{"trials"}{$block}{"MIN YES $attr"} = $sysscore 
@@ -501,21 +569,21 @@ sub addTrial {
 
 ####################################################################################################
 
-=item B<addTrialWithoutDecision>(I<$blockID>, I<$sysScore>, I<$isTarg>)  
+=item B<addTrialWithoutDecision>(I<$blockID>, I<$sysScore>, I<$isTarg>, I<$blockMetadata>, I<$trialID>)  
 
 Adds a trail which for which no "decision" is given.  The decision is set by applying the TrialActualDecisionThreshold that is set via B<setTrialActualDecisionThreshold>.  The threshold must be set and of type "supplied".  The rest of the arguments are as defined in B<addTrial>.
 
 =cut
 
 sub addTrialWithoutDecision {
-  my ($self, $block, $sysscore, $isTarg) = @_;
+  my ($self, $block, $sysscore, $isTarg, $blockMetadata, $trialID) = @_;
   
   MMisc::error_quit("The ActualDecisionThreshold is not defined but must be in order to add a trial to a Trials object without a decision")
       if (! defined($self->getTrialActualDecisionThreshold()));
   MMisc::error_quit("Score is not defined (and must be) for adding a trial to a Trials object without a decision")
       if (! defined($sysscore));
 
-  $self->addTrial($block, $sysscore, ($sysscore >= $self->getTrialActualDecisionThreshold() ? "YES" : "NO"), $isTarg);
+  $self->addTrial($block, $sysscore, ($sysscore >= $self->getTrialActualDecisionThreshold() ? "YES" : "NO"), $isTarg, $blockMetadata, $trialID);
 }
 
 sub addBlockMetaData {
@@ -594,6 +662,7 @@ sub setTrialActualDecisionThreshold {
 
 sub getTrialActualDecisionThreshold {
   my ($self, $val) = @_;
+
   if (defined($self->{suppliedActDecThresh})){
     return $self->{suppliedActDecThresh};
   } else { 
@@ -643,15 +712,29 @@ sub dump {
 	    
       	    if ($#a > 5) {
 	            foreach $_(0..2) {
-		            $out .= "$a[$_],";
+	              if ($self->{preserveTrialID} != 1){
+  		            $out .= "$a[$_],";
+  		          } else {
+  		            $out .= "($a[$_]->[0]-$a[$_]->[1]),";
+  		          }
 	            }
 	            $out .= "...";
 
 	            foreach $_(($#a-2)..$#a) {
-		            $out .= ",$a[$_]";
+	              if ($self->{preserveTrialID} != 1){
+  		            $out .= ",$a[$_]";
+  		          } else {
+  		            $out .= ", ($a[$_]->[0],$a[$_]->[1])";
+  		          }
 	            }
 	          } else {
-	            $out .= join(",",@a);
+              if ($self->{preserveTrialID} != 1){
+  	            $out .= join(",",@a);
+  	          } else {
+  	            foreach my $v(@a){
+  	             $out .= " [ ".(join(",",@$v))." ]";
+  	            };
+  	          }
 	          }
 	         $out .= ")\n";
 	       } else {
@@ -766,6 +849,10 @@ sub dumpGrid {
 }
 
 sub numerically { $a <=> $b; }
+sub numericallyAndTrialID { $a->[0] != $b->[0] ? $a->[0] <=> $b->[0] : $a->[1] cmp $b->[1]; }
+
+#sub 2dimarrNum0 { $a->[0] <=> $b->[0]; }
+#sub 2dimarrNum0Str2 { $a->[0] != $b->[0] ? $a->[0] <=> $b->[0] : $a->[2] cmp $b->[2]; }
 
 sub sortTrials {
   my ($self) = @_;
@@ -774,12 +861,45 @@ sub sortTrials {
   my @ktmp = keys %{ $self->{"trials"} };
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
-    $self->{"trials"}{$block}{TARG} = [ sort numerically @{ $self->{"trials"}{$block}{TARG} } ];
-    $self->{"trials"}{$block}{NONTARG} = [ sort numerically @{ $self->{"trials"}{$block}{NONTARG} } ];
+    if ($self->{preserveTrialID} != 1){
+      $self->{"trials"}{$block}{TARG} = [ sort numerically @{ $self->{"trials"}{$block}{TARG} } ];
+      $self->{"trials"}{$block}{NONTARG} = [ sort numerically @{ $self->{"trials"}{$block}{NONTARG} } ];
+    } else {
+      $self->{"trials"}{$block}{TARG} = [ sort numericallyAndTrialID @{ $self->{"trials"}{$block}{TARG} } ];
+      $self->{"trials"}{$block}{NONTARG} = [ sort numericallyAndTrialID @{ $self->{"trials"}{$block}{NONTARG} } ];
+    }
   }
   
   $self->{"isSorted"} = 1;
 }
+
+sub getRanks {
+  my ($self, $blk) = @_;
+  my (@data) = ();
+  my ($ntA, $tA) = ($self->{"trials"}{$blk}{NONTARG}, $self->{"trials"}{$blk}{TARG});	
+  my $sorted;
+  
+  if ($self->{preserveTrialID} != 1){
+    my @a = ();
+    for (my $i=0; $i<@$ntA; $i++){      push @a, [($ntA->[$i], 0)] }
+    for (my $i=0; $i<@$tA;  $i++){      push @a, [($tA->[$i],  1)] }
+    ### Reverse for score
+    $sorted = [ sort { $b->[0] cmp $a->[0] } @a ];
+  } else {
+    my @a = ();
+    for (my $i=0; $i<@$ntA; $i++){      push @a, [($ntA->[$i]->[0], 0, $ntA->[$i]->[1])] }
+    for (my $i=0; $i<@$tA;  $i++){      push @a, [($tA->[$i]->[0],  1, $tA->[$i]->[1] )] }
+    ### Reverse for scores, forward for ID
+    $sorted = [ sort { $b->[0] != $a->[0] ? $b->[0] <=> $a->[0] : $a->[2] cmp $b->[2]; }  @a ];
+  }
+  ### Add the rank
+  for (my $i=0; $i<@$sorted; $i++){      splice (@{ $sorted->[$i] }, 0, 0, $i+1); }
+  ### The data is::
+  ###  Rank, Score, 1=Targ|0=NonTarg, TrialId IFF preserveTrialID=1
+  return $sorted;
+
+}
+
 
 sub computeDecisionScoreThreshold {
   my ($self) = @_;
@@ -796,7 +916,7 @@ sub _computeDecisionScoreThreshold {
   
   my @ktmp = keys %{ $self->{"trials"} };
   my $fail = "";
-    
+
   ### Check within Targets and NonTargets
   for (my $i = 0; $i < scalar @ktmp; $i++) {
     my $block = $ktmp[$i];
@@ -1002,6 +1122,11 @@ sub setComputedNumNonTarg {
     ($self->{"trials"}->{$block}->{"NO NONTARG"} + $self->{"trials"}->{$block}->{"YES NONTARG"})
 }
 
+sub setPreserveTrialID {
+  my ($self, $bool) = @_;
+  $self->{preserveTrialID} = ($bool eq "1");
+}
+
 sub fixBackwardCompatabilityProblems{
   my ($self) = @_;
   my $fixes = 0;
@@ -1122,12 +1247,20 @@ sub getTotNumMiss {
 
 sub getTargDecScr {
   my ($self, $block, $ind) = @_;
-  $self->{"trials"}->{$block}->{"TARG"}[$ind]; 
+  if ($self->{preserveTrialID} != 1){
+    $self->{"trials"}->{$block}->{"TARG"}[$ind]; 
+  } else {
+    $self->{"trials"}->{$block}->{"TARG"}[$ind][0]; 
+  }
 }
 
 sub getNonTargDecScr {
   my ($self, $block, $ind) = @_;
-  $self->{"trials"}->{$block}->{"NONTARG"}[$ind]; 
+  if ($self->{preserveTrialID} != 1){
+    $self->{"trials"}->{$block}->{"NONTARG"}[$ind]; 
+  } else {
+    $self->{"trials"}->{$block}->{"NONTARG"}[$ind][0]; 
+  }
 }
 
 sub getBlockId {
