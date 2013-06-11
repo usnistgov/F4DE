@@ -144,7 +144,7 @@ my $decThr = undef;
 my $pbid_dt_sql = "";
 
 my @isolinecoef = ();
-my @dilc = ( 5, 10, 20, 40, 80, 160 );
+my @dilc = ( );
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
 # Used:  B D  G    LM    R TU  XY  b d   hi  lm op rstuv xy   #
@@ -362,9 +362,9 @@ foreach my $key (keys %sys) {
   }
 
   if ($g_thr) {
-    $bid_trials{$ubid}->addTrialWithoutDecision($bid, $sys{$key}{$Scorecolumn}, $istarg);
+    $bid_trials{$ubid}->addTrialWithoutDecision($bid, $sys{$key}{$Scorecolumn}, $istarg, undef, $key);
   } else {
-    $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg);
+    $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg, undef, $key);
   }
   
   push(@at, [$key, $bid, $sys{$key}{$Scorecolumn},
@@ -379,7 +379,7 @@ foreach my $key (keys %ref) {
     # If the ref TID is omitted and it is a non-target trial, then it is NOT an error AND it does not get added to the trials, therefore:
     if ($ref{$key}{$Targcolumn} eq 'y') {
       &def_bid_trials($ubid);
-      $bid_trials{$ubid}->addTrial($bid, undef, "OMITTED", 1);
+      $bid_trials{$ubid}->addTrial($bid, undef, "OMITTED", 1, undef, $key);
       push(@at, [$key, $bid, $sys{$key}{$Scorecolumn}, 'OMITTED', 'TARG']) if ($GetTrialsDB);
       $unmapped_ref_targ++;
     } else {
