@@ -455,7 +455,7 @@ my $detoptions =
    "ExcludeCountsFromReports" => ($excludeCounts == 1),
    "ReportRowTotals" => ($IncludeRowTotals == 1) ? 1 : 0,
   ) };
-$detoptions{"PlotMeasureThresholdPlots"} = $measureThreshPlots if ($measureThreshPlots ne ""),
+$detoptions->{"PlotMeasureThresholdPlots"} = $measureThreshPlots if ($measureThreshPlots ne ""),
   
 $dset = $alignResults[0];
 $qdset = $alignResults[1];
