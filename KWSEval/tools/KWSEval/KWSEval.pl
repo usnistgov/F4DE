@@ -142,6 +142,7 @@ my $cleanDETsFolder = 0;
 my $requestalignCSV = 0;
 my $includeNoTargBlocks = 0;
 my $justSystemTerms = 0;
+my $SerializeSeparateIsoRatioFile = 0;
 
 my $reportOutTypes = [ "TXT" ];
 
@@ -253,8 +254,9 @@ GetOptions
    'XmllintBypass'                       => \$bypassxmllint,
    'ExcludePNGFileFromTxtTable'          => \$xpng,
    'ExcludeCountsFromReports'            => \$excludeCounts,
-   'zincludeRowTotals'                   => \$IncludeRowTotals,
    'measureThreshPlots=s'                => \$measureThreshPlots,
+   'zIsoRatioDAF'                        => \$SerializeSeparateIsoRatioFile,
+   'zincludeRowTotals'                   => \$IncludeRowTotals,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
 #parsing TermIDs
@@ -429,7 +431,7 @@ else
   $groupBySubroutine = \&KWSAlignment::groupByAttributes if ($groupByAttr == 1);
   $groupBySubroutine = \&KWSAlignment::groupByOOV if ($requestwordsoov == 1);
   $groupBySubroutine = \&KWSAlignment::groupByIsTarget if ($groupByTarg == 1);
-  
+
   #Align
   @alignResults = @{ $alignment->alignTerms($alignmentCSV, \@filters, $groupBySubroutine, $thresholdFind, $thresholdAlign, $KoefC, $KoefV, \@listIsolineCoef, $trialsPerSec, $probOfTerm, $PooledTermDETs, $includeNoTargBlocks, $justSystemTerms) };
 }
@@ -443,6 +445,7 @@ my $detoptions =
    "Ymax" => 98,
    "DETShowPoint_Actual" => 1,
    "DETShowPoint_Best" => 1,
+   "DETShowPoint_Ratios" => 1,
    "xScale" => "nd",
    "yScare" => "nd",
    "ColorScheme" => "color",
@@ -455,8 +458,9 @@ my $detoptions =
    "ExcludeCountsFromReports" => ($excludeCounts == 1),
    "ReportRowTotals" => ($IncludeRowTotals == 1) ? 1 : 0,
   ) };
-$detoptions->{"PlotMeasureThresholdPlots"} = $measureThreshPlots if ($measureThreshPlots ne ""),
-  
+$detoptions->{"PlotMeasureThresholdPlots"} = $measureThreshPlots if ($measureThreshPlots ne "");
+$detoptions->{"SerializeSeparateIsoRatioFile"} = "true" if ($SerializeSeparateIsoRatioFile == 1);
+
 $dset = $alignResults[0];
 $qdset = $alignResults[1];
 
@@ -625,15 +629,17 @@ sub set_usage {
   $tmp .= "  -y, --ytype-of-report-output  Output types of the reports. (TXT,CSV,HTML) (Default is Text)\n";
 	$tmp .= "  -k, --koefcorrect <value>     Value for correct (C).\n";
 	$tmp .= "  -K, --Koefincorrect <value>   Value for incorrect (V).\n";
+	$tmp .= "  -m, --measureThreshPlots (true|trueWithSE)  Generate detection score threshold plots for the error measures\n";
 	$tmp .= "  -n, --number-trials-per-sec <value>  The number of trials per second. (default: 1)\n";
 	$tmp .= "  -p, --prob-of-term <value>    The probability of a term. (default: 0.0001)\n";
   $tmp .= "  -inc, --include-blocks-w-notargs  Include blocks with no targets in block reports.\n";
 	$tmp .= "  -I, --ID-System <name>        Overwrites the name of the STD system.\n";
   $tmp .= "  -j, --just-system-terms       Ignores terms which are not present in the system output.\n";
-	$tmp .= "  -z, --zprefilterText <opts>   Prefilter the KWList and  RTTM with the options.  May be used more than once.\n";
+	$tmp .= "      --zprefilterText <opts>   Prefilter the KWList and  RTTM with the options.  May be used more than once.\n";
 	$tmp .= "                                  charSplit -> split multi-character tokens into characters\n";
   $tmp .= "                                  notASCII  -> do not split ASCII words.  (no effect without charSplit)\n";
   $tmp .= "                                  deleteHyphens -> treat hyphens like required whitespace. (no effect without charSplit)\n";
+  $tmp .= "      --zIsoRatioDAF            Write the Iso Ratio status into a separate DAF file and not in the SRL\n";
 	$tmp .= "\n";
 	$tmp .= "Other options:\n";
 	$tmp .= "  -a, --articulatedDET          Compute the faster articulated DET curves.\n";
