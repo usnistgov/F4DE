@@ -132,11 +132,12 @@ if (defined($printInfo)){
   print "Information about $in\n";
   print scalar($at->getRowIDs("AsAdded"))." Rows:\n";
   print scalar($at->getColIDs("AsAdded"))." Columns: \n";
+  my $colNum = 1;
   foreach my $col($at->getColIDs("AsAdded")){
       my $type = $col; 
       $type =~ s/^(.*)(_d|_c|_t|_b|ID)$/$2/;
       $type = "text" if ($type eq $col);
-      print "  $type $col -> ";
+      print "  ".$colNum++.": $type $col -> ";
       if ($type =~ /^(_b|_d)$/){
           my %ht = ();
           foreach my $row($at->getRowIDs("AsAdded")){ 
@@ -147,15 +148,18 @@ if (defined($printInfo)){
       } elsif ($type =~ /^(_c)$/){
           my $stat = Statistics::Descriptive::Full->new();
           my $unk = 0;
+          my $invalid = 0;
           foreach my $row($at->getRowIDs("AsAdded")){ 
               my $val = $at->getData($col, $row);
               if (! defined($val)){
                   $unk++;
+              } elsif ($val !~ /^-?\d+\.?\d*$/){
+                  $invalid++;
               } else {
                   $stat->add_data($val);
               }
           }
-          print "#unk=$unk, #val=".$stat->count().", min=".$stat->min().", mean=".$stat->mean().", median=".$stat->median().", max=".$stat->max();
+          print "#unk=$unk, #invalid=$invalid, #val=".$stat->count().", min=".$stat->min().", mean=".$stat->mean().", median=".$stat->median().", max=".$stat->max();
       } else {
           ;
       }
