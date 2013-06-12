@@ -267,6 +267,8 @@ foreach my $code(split("", defined($lineTitleModification) ? $lineTitleModificat
   elsif ($code eq "B"){   $options{DETShowPoint_Best} = 1; }
   elsif ($code eq "R"){   $options{DETShowPoint_Ratios} = 1; }
   elsif ($code eq "t"){   $options{lTitleNoDETType} = 1;}
+  elsif ($code eq "l"){   $options{DETShowMeasurementsAsLegend} = 1;}
+  elsif ($code eq "v"){   $options{DETAbbreviateMeasureTypes} = 1;}
   elsif ($code eq "E"){   $options{DETShowEvaluatedBlocks} = 1;}
   elsif ($code =~ /^([TFMC])$/){
     die "Error: --lineTitle code $code used twice" if (exists($parseHT{$code}));
@@ -291,7 +293,7 @@ foreach my $directive (@plotControls){
   my $intRegex = '\d*';
 
   &vprint("[*] Processing directive \'$directive\'\n");
-  if ($directive =~ /ColorScheme=(color|colorPresentation|gr[ae]y)$/){
+  if ($directive =~ /ColorScheme=(mono|color|colorPresentation|gr[ae]y)$/){
     $options{ColorScheme} = $1;
     $options{ColorScheme} =~ s/gray/grey/;;
   } elsif ($directive =~ /PointSize=(\d+)/){
@@ -828,20 +830,19 @@ Set the coefficient for the iso-metric lines. Coeficients can be specified, or t
 
 Use  F<TITLE> for the title of the plot.   
 
-=item B<-l>, B<--lineTitle> F<TITLE>
+=item B<-l>, B<--lineTitle> F<STRING>
 
-The DET curve lines includes specialized measurement points.  This option modifies the reported measurements.  F<TITLE> can include any number of these characters.
+The DET curve lines includes specialized measurement points.  This option modifies the reported measurements.  F<STRING> can include any number of these characters.
 
 =over 4
 
 =item 
 
-Modifiers to control the type of calculated point to include:
+Modifiers to control the type of calculated point to include.  Order is important.
 
     A -> Include the "Actual" point (used to be -O)
     B -> Include the "Best" combined value
     R -> Include the Iso Ratio points
-    E -> Include the number of evalauted blocks
 
 =item 
 
@@ -851,12 +852,15 @@ Modifiers to control the supporting measurements for EACH plotted point.  The or
     F -> Include the false alarm (x-axis value) for the point
     M -> Include the missed detection (y-axis value) for the point
     C -> Include the combined measure for the point
+    E -> Include the number of evaluated blocks
 
 =item 
 
-Modifiers for reporting the type of curve (pooled vs. averaged)
+Other modifiers.
 
-    t -> removes the DET curve type
+    l -> Move measurement titles to a legend
+    v -> Abbreviate legends for Actual, Min, Max, ISO 
+    t -> removes the DET curve type (pooled vs. averaged)
 
 =back
     
@@ -887,7 +891,7 @@ The B<plotControl> options provides access to fine control the the DET curve dis
 
 /KeyFontSize=<STRING>/ -> Sets font size used in the key of the DET Curve. Default is either via '-p Font=..' or the default font.
 
-/ColorScheme=grey/  ->  Sets the color scheme to either (grey|color|colorPresentatio).
+/ColorScheme=grey/  ->  Sets the color scheme to either (mono|grey|color|colorPresentation).
 
 /Font=<GNUPLOT_PNG_FONT_STRING>/  ->  Sets the PNG font to the value.  NOTE: There is no syntax checking.  possibilities are "medium", "font arial 20".
 
