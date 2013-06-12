@@ -48,11 +48,12 @@ use AutoTable;
 use MMisc;
 
 my $Usage = 
-"CSVUtil.pl [-v] -i InCSV|- -o outCSV|- -r row1|row2|... -c column1|column2|... \n".
-"    --or-- [-v] -i InCSV|- -a outAutoTable -R column1|column2|... -C column1|column2|... -V column1 \n".
-"    --or-- [-v] -i InCSV|- -q setOfValues -C column1|column2|... -V column1 \n".
-"    --or-- [-v] -i InCSV|- -Info\n".
+"CSVUtil.pl [-v | [-n colName=val] ] -i InCSV|- -o outCSV|- -r row1|row2|... -c column1|column2|... \n".
+"    --or-- [-v | [-n colName=val] ] -i InCSV|- -a outAutoTable -R column1|column2|... -C column1|column2|... -V column1 \n".
+"    --or-- [-v | [-n colName=val] ] -i InCSV|- -q setOfValues -C column1|column2|... -V column1 \n".
+"    --or-- [-v | [-n colName=val] ] -i InCSV|- -Info\n".
 "Desc:  Read in a csv file extracting ONLY the specified columns and writing them to the output file.\n".
+"       -n colName=val adds a column header as 'colName' with the value 'val' for all rows.  -n may be used many times.\n".
 "       -q returns a table for values for the columns.\n".
 "       -QuoteChar <char> sets the quote charater\n".
 "       -SepChar <char> sets the column separator.  The special value <TAB> will bv converted to a 'tab' character.\n";
@@ -75,6 +76,7 @@ my $outUniqQuery = undef;
 my $encoding = "UTF-8";
 my $quoteChar = undef;
 my $sepChar = undef;
+my @extraCol = ();
 
 use Getopt::Long;
 Getopt::Long::Configure ("bundling", "no_ignore_case");
@@ -95,13 +97,15 @@ my $result = GetOptions ("i=s" => \$in,
 			 "Info" => \$printInfo,
 			 "QuoteChars=s" => \$quoteChar,
 			 "SepChar=s" => \$sepChar,
-			 "-v"  => \$reverse);
+			 "-v"  => \$reverse,
+       "n=s@" => \@extraCol,
+			 );
 MMisc::error_quit("Aborting:\n$Usage\n:") if (!$result);
 
 push(@outputTypes, "csv") if (@outputTypes == 0);
 
 MMisc::error_quit("Argument -i req'd\n" . $Usage) if (!defined($in));
-MMisc::error_quit("An argument for output is req'd either -I, -o, or -a req'd\n" . $Usage) if (!defined($outCSV) && !defined($outAT) && !defined($printInfo) && !defined($outUniqQuery));
+MMisc::error_quit("An argument for output is req'd either -I, -o, -n, or -a req'd\n" . $Usage) if (!defined($outCSV) && !defined($outAT) && !defined($printInfo) && !defined($outUniqQuery) && @extraCol == 0);
 foreach my $otype(@outputTypes){
   MMisc::error_quit("OutputType $otype not (csv|txt|html|tgrid)\n" . $Usage) if ($otype !~ /^(csv|txt|html|tgrid)$/);
 }
@@ -110,6 +114,15 @@ MMisc::error_quit("statForCol not (continuous|discrete)\n" . $Usage) if ($statFo
 
 ### Handle the tab character
 $sepChar = "\t" if ($sepChar eq "\\t" || $sepChar eq "<TAB>");
+
+### Check the extra column data transforming it into a usable hash
+if (@extraCol > 0){
+  for (my $d=0; $d<@extraCol; $d++){
+    die "Error: Can't process extra column data /$extraCol[$d]/ !~ /^(\S+)=(.+)\$/" if ($extraCol[$d] !~ /^(\S+)=(.+)$/);
+    $extraCol[$d] = {header => $1, val => $2};
+    $col .= "|$1" if ($col ne "");
+  }
+}
 
 if ($outAT ne "-" && $outCSV ne "-" && $outUniqQuery ne "-"){
   print "Info: KeepColumns = $col\n" if (!$quiet);
@@ -121,12 +134,21 @@ if ($outAT ne "-" && $outCSV ne "-" && $outUniqQuery ne "-"){
   print "Info: sepChar = ".(!defined($sepChar) ? "UNDEF" : (($sepChar eq "\t") ? "<TAB>" : $sepChar))."\n" if (!$quiet);
 }
 
+
 my $at = new AutoTable(); 
 $at->setEncoding($encoding);
 if (! $at->loadCSV($in, undef, undef, undef, $quoteChar, $sepChar)) {
   die("Error: Failed to load CSV file '$in' ".$at->get_errormsg());
 }
-  
+
+### Add the extra columns  
+for (my $d=0; $d<@extraCol; $d++){
+  foreach my $row($at->getRowIDs("AsAdded")){ 
+     $at->addData($extraCol[$d]->{val},$extraCol[$d]->{header},$row);
+  }
+}
+
+
 if (defined($printInfo)){
   use Statistics::Descriptive;
   print "Information about $in\n";
@@ -170,7 +192,7 @@ if (defined($printInfo)){
 }
 
 if (defined($outCSV)){
-  MMisc::error_quit("Error: Argument -c and/or -r req'd\n" . $Usage) if (!defined($col) && !defined($row));
+  MMisc::error_quit("Error: Argument -c, -n, and/or -r req'd\n" . $Usage) if (!defined($col) && !defined($row) && (@extraCol == 0));
 
   $at->setProperties({ "KeepColumnsInOutput" => $col }) if (defined($col)); 
   $at->setProperties({ "KeepRowsInOutput" => $row }) if (defined($row)); 
