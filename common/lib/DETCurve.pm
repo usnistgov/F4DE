@@ -326,7 +326,7 @@ sub bigDETUnitTest {
 #  foreach my $size(1000003){
     system "/home/fiscus/Projects/STD/STDEval/tools/ProcGragh/ProcGraph.pl --cumul --Tree --outdir /tmp --filebase BigDet.$size -- ".
           " perl ".($doProfile ? "-d:DProf" : "")." -I . -e 'use DETCurve; DETCurve::oneBigDET(\"/tmp/BigDet.$size\", $size)'"; 
-#    print "\n";
+    print "\n";
   }
 }
 
@@ -759,7 +759,10 @@ sub testGeneratedPoints{
 # structure.
 sub serialize
   {
-    my ($self, $file) = @_;
+    my ($self, $file, $separateIsoRatios) = @_;
+    ### if not defined, don't separate the isoratios
+    $separateIsoRatios = (! defined($separateIsoRatios)) ? 0 : $separateIsoRatios;
+    
     $self->{LAST_SERIALIZED_DET} = $file;
     open (FILE, ">$file") || die "Error: Unable to open file '$file' to serialize DETCurve to";
     my $orig = $Data::Dumper::Indent; 
@@ -774,6 +777,9 @@ sub serialize
     
     my $t = $self->{'TRIALS'}{'trials'};
     $self->{'TRIALS'}{'trials'} = undef;
+
+    my $_i = $self->{'ISOPOINTS'};
+    $self->{'ISOPOINTS'} = undef if ($separateIsoRatios);
 
     print FILE Dumper($self);
     
@@ -864,6 +870,64 @@ sub serialize
    
     $self->{'POINTS'} = $p;
     $self->{'TRIALS'}{'trials'} = $t;
+    $self->{'ISOPOINTS'} = $_i;
+
+    my @co = sort {$a <=> $b} (keys %{ $self->{ISOPOINTS} });
+    if (@co > 0 && $separateIsoRatios){
+	my $coeff;
+	my $sysRespStatFile = "$file.isoratio.SystemResponseStats.daf.tsv";
+	my $blkRespStatFile = "$file.isoratio.BlockResponseStats.daf.tsv";
+	print "Writing IsoRatio Stats to $sysRespStatFile - coeff(".join(",",@co).")\n";
+
+	my $metStr = $self->{METRIC}->combLab();
+	#######################################################################################
+	open (ISOSYS, ">$sysRespStatFile") || die "Error: Unable to open file '$sysRespStatFile' for iso coefficients";
+	print ISOSYS "sysID";	
+	foreach $coeff (@co){ 
+	    print ISOSYS "\tR${metStr}${coeff}_".$self->{METRIC}->combLab()."_c";
+	    print ISOSYS "\tR${metStr}${coeff}_".$self->{METRIC}->errMissLab()."_c";
+	    print ISOSYS "\tR${metStr}${coeff}_".$self->{METRIC}->errFALab()."_c";
+	    print ISOSYS "\tR${metStr}${coeff}_"."Threshold_c";
+	}
+	print ISOSYS "\n";
+        ###Data
+	print ISOSYS "<SYSID>";
+	foreach $coeff (@co){ 
+	    print ISOSYS "\t".$self->{ISOPOINTS}{$coeff}{INTERPOLATED_COMB};
+	    print ISOSYS "\t".$self->{ISOPOINTS}{$coeff}{INTERPOLATED_MMISS};
+	    print ISOSYS "\t".$self->{ISOPOINTS}{$coeff}{INTERPOLATED_MFA};
+	    print ISOSYS "\t".$self->{ISOPOINTS}{$coeff}{INTERPOLATED_DETECTSCORE};
+	}
+	print ISOSYS "\n";
+	close ISOSYS;
+
+	#######################################################################################
+	open (ISOBLK, ">$blkRespStatFile") || die "Error: Unable to open file '$blkRespStatFile' for iso coefficients";
+	print ISOBLK "sysID\tblockID";	
+	my %blkIDs = ();
+	foreach $coeff (@co){ 
+	    print ISOBLK "\tR${metStr}${coeff}_".$self->{METRIC}->combLab()."_c";
+	    print ISOBLK "\tR${metStr}${coeff}_".$self->{METRIC}->errMissLab()."_c";
+	    print ISOBLK "\tR${metStr}${coeff}_".$self->{METRIC}->errFALab()."_c";
+	    print ISOBLK "\tR${metStr}${coeff}_"."Threshold_c";
+	    foreach my $b ( keys %{ $self->{ISOPOINTS}{$coeff}{BLOCKS} } ) {
+		$blkIDs{$b} = 1;
+	    }
+	}
+	print ISOBLK "\n";
+	foreach my $b ( sort keys(%blkIDs) ) {
+	    print ISOBLK "<SYSID>\t$b";
+	    foreach $coeff (@co){ 
+		print ISOBLK "\t".$self->{ISOPOINTS}{$coeff}{BLOCKS}{$b}{COMB};
+		print ISOBLK "\t".$self->{ISOPOINTS}{$coeff}{BLOCKS}{$b}{MMISS};
+		print ISOBLK "\t".$self->{ISOPOINTS}{$coeff}{BLOCKS}{$b}{MFA};
+		print ISOBLK "\t".$self->{ISOPOINTS}{$coeff}{INTERPOLATED_DETECTSCORE};
+	    }
+	    print ISOBLK "\n";
+	}
+
+	close ISOBLK;
+    }
   }
 
 sub readFromFile
