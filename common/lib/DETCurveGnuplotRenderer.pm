@@ -73,21 +73,32 @@ sub new
        colorSchemeDefs => { "colorPresentation" => 
                                        { DETFont => { normal => "font arial 14.5",
                                                       hd => "font arial 50" },
-                                         colorRGB => [ ('rgb "\#ff0000"', 'rgb "\#0000ff"', 'rgb "\#00ff00"', 'rgb "\#ffd700"', 'rgb "\#006400"', 'rgb "\#8383ff"', 'rgb "\#a0522d"', 'rgb "\#00ffc1"', 'rgb "\#008395"', 'rgb "\#00008b"', 'rgb "\#95d34f"', 'rgb "\#f69edb"', 'rgb "\#800080"', 'rgb "\#f61160"', 'rgb "\#ffc183"', 'rgb "\#8ca77b"', 'rgb "\#ff8c00"', 'rgb "\#837200"', 'rgb "\#72f6ff"', 'rgb "\#9ec1ff"', 'rgb "\#72607b"', 'rgb "\#800000"', 'rgb "\#ffff00"' ) ],
+                                         colorsRGB => [ ('rgb "\#ff0000"', 'rgb "\#0000ff"', 'rgb "\#00ff00"', 'rgb "\#ffd700"', 'rgb "\#006400"', 'rgb "\#8383ff"', 'rgb "\#a0522d"', 'rgb "\#00ffc1"', 'rgb "\#008395"', 'rgb "\#00008b"', 'rgb "\#95d34f"', 'rgb "\#f69edb"', 'rgb "\#800080"', 'rgb "\#f61160"', 'rgb "\#ffc183"', 'rgb "\#8ca77b"', 'rgb "\#ff8c00"', 'rgb "\#837200"', 'rgb "\#72f6ff"', 'rgb "\#9ec1ff"', 'rgb "\#72607b"', 'rgb "\#800000"') ],
+                                         lineWidths => [ (2, 4, 6) ],
                                          ISORatioLineStyle => { color => "rgb \"\#666666\"",
                                                                 width => 3},
                                          ISOCostLineStyle  => { color => "rgb \"\#bbbbbb\"",
-                                                             width => 2} },
-                            "color" => { DETFont => { normal => "medium",
+                                                                width => 2} },
+                            "grey" => { DETFont => { normal => "medium",
                                                       hd => "font arial 40" },
-                                         colorRGB => [ ("rgb \"#000000\"", "rgb \"#c0c0c0\"", "rgb \"#909090\"", "rgb \"#606060\"") ],
+                                         colorsRGB => [ ("rgb \"#000000\"", "rgb \"#c0c0c0\"", "rgb \"#909090\"", "rgb \"#606060\"") ],
+                                         lineWidths => [ (1, 3, 5) ],
                                          ISORatioLineStyle => { color => "rgb \"\#DDDDDD\"",
                                                                 width => 1},
                                          ISOCostLineStyle  => { color => "rgb \"\#FFD700\"",
                                                              width => 1} },
-                            "grey"  => { DETFont => { normal => "medium",
+                            "mono" => { DETFont => { normal => "medium",
                                                       hd => "font arial 40" },
-                                         colorRGB => [ (2.1.100) ],
+                                         colorsRGB => [ ("rgb \"#606060\"") ],
+                                         lineWidths => [ (1, 3, 5) ],
+                                         ISORatioLineStyle => { color => "rgb \"\#DDDDDD\"",
+                                                                width => 1},
+                                         ISOCostLineStyle  => { color => "rgb \"\#FFD700\"",
+                                                             width => 1} },
+                            "color"  => { DETFont => { normal => "medium",
+                                                      hd => "font arial 40" },
+                                         colorsRGB => [ (2..20) ],
+                                         lineWidths => [ (1, 3, 5) ],
                                          ISORatioLineStyle => { color => "rgb \"\#DDDDDD\"",
                                                                 width => 1},
                                          ISOCostLineStyle  => { color => "rgb \"\#b0b0b0b\"",
@@ -131,10 +142,10 @@ sub _initProps{
   die "Failed to add property xScale" unless ($props->addProp("xScale", "nd", ("nd", "log", "linear")));
   die "Failed to add property yScale" unless ($props->addProp("yScale", "nd", ("nd", "log", "linear")));
   die "Failed to add property FAUnit" unless ($props->addProp("FAUnit", "Prob", ("Prob", "Rate")));
-  die "Failed to add property ColorScheme" unless ($props->addProp("ColorScheme", "color", ("color", "grey", "colorPresentation")));
+  die "Failed to add property ColorScheme" unless ($props->addProp("ColorScheme", "color", ("mono", "color", "grey", "colorPresentation")));
   die "Failed to add property MissUnit" unless ($props->addProp("MissUnit", "Prob", ("Prob", "Rate")));
   die "Failed to add property KeySpacing" unless ($props->addProp("KeySpacing", "0.7", ()));
-  die "Failed to add property KeyFontFace" unless ($props->addProp("KeyFontFace", "", ()));
+  die "Failed to add property FontFace" unless ($props->addProp("KeyFontFace", "", ()));
   die "Failed to add property KeyFontSize" unless ($props->addProp("KeyFontSize", "", ()));
   die "Failed to add property CurveLineStyle" unless ($props->addProp("CurveLineStyle", "lines", ("lines", "points", "linespoints")));
   die "Failed to add property KeyLoc" unless ($props->addProp("KeyLoc", "top", ("left", "right", "center", "top", "bottom", "outside", "below",
@@ -144,6 +155,7 @@ sub _initProps{
   die "Failed to add property PointSetAreaDefinition" unless ($props->addProp("PointSetAreaDefinition", "Radius", ("Area", "Radius")));
   die "Failed to add property PlotDETCurves" unless ($props->addProp("PlotDETCurves", "true", ("true", "false")));
   die "Failed to add property PlotMeasureThresholdPlots" unless ($props->addProp("PlotMeasureThresholdPlots", "false", ("true", "trueWithSE", "false")));
+  die "Failed to add property SerializeSeparateIsoRatioFile" unless ($props->addProp("SerializeSeparateIsoRatioFile", "false", ("true", "false")));
   
   $props;
 }
@@ -277,23 +289,13 @@ sub _parseOptions{
 
   $self->{title} = $options->{title} if (exists($options->{title}));
 
-  if (exists($options->{KeyLoc})){
-    if (! $self->{props}->setValue("KeyLoc", $options->{KeyLoc})){
-      die "Error: DET option KeyLoc illegal. ".$self->{props}->get_errormsg();
-    }
-  }
-  
-  if (exists($options->{KeySpacing})){
-    if (! $self->{props}->setValue("KeySpacing", $options->{KeySpacing})){
-      die "Error: DET option KeySpacing illegal. ".$self->{props}->get_errormsg();
-    }
-  }
-  
-  ### Controls the point statistics plotted on the DET Curve
+    ### Controls the point statistics plotted on the DET Curve
   $self->{DETShowEvaluatedBlocks} = $options->{DETShowEvaluatedBlocks} if (exists($options->{DETShowEvaluatedBlocks}));
   $self->{DETShowPoint_Actual} = $options->{DETShowPoint_Actual} if (exists($options->{DETShowPoint_Actual}));
   $self->{DETShowPoint_Best}   = $options->{DETShowPoint_Best}   if (exists($options->{DETShowPoint_Best}));
   $self->{DETShowPoint_Ratios} = $options->{DETShowPoint_Ratios} if (exists($options->{DETShowPoint_Ratios}));
+  $self->{DETShowMeasurementsAsLegend} = $options->{DETShowMeasurementsAsLegend} if (exists($options->{DETShowMeasurementsAsLegend}));
+  $self->{DETAbbreviateMeasureTypes} = $options->{DETAbbreviateMeasureTypes} if (exists($options->{DETAbbreviateMeasureTypes}));
   
   ### Applies to values reported for the ALL points, order is followed 
   $self->{DETShowPoint_SupportValues} = $options->{DETShowPoint_SupportValues} if (exists($options->{DETShowPoint_SupportValues}));
@@ -314,18 +316,15 @@ sub _parseOptions{
   if (! $self->{props}->setValue("ColorScheme", $options->{ColorScheme})){
     die "Error: DET option ColorScheme illegal. ".$self->{props}->get_errormsg();
   }
-  $self->{colors}->{colorRGB} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{colorRGB};
+  $self->{colorsRGB} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{colorsRGB};
   $self->{colors}->{ISORatioLineStyle}{color} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISORatioLineStyle}{color};
   $self->{colors}->{ISORatioLineStyle}{width} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISORatioLineStyle}{width};
   $self->{colors}->{ISOCostLineStyle}{color} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISOCostLineStyle}{color};
   $self->{colors}->{ISOCostLineStyle}{width} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{ISOCostLineStyle}{width};
   $self->{colors}->{DETFont} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{DETFont}{($self->{HD} ? "hd" : "normal")};
+  $self->{lineWidths} = $self->{colorSchemeDefs}->{$options->{ColorScheme}}->{lineWidths};
+  
 
-  if (exists($options->{CurveLineStyle})){
-    if (! $self->{props}->setValue("CurveLineStyle", $options->{CurveLineStyle})){
-      die "Error: DET option CurveLineStyle illegal. ".$self->{props}->get_errormsg();
-    }
-  }
   if (exists($options->{ISORatioLineColor})){
     $self->{colors}->{ISORatioLineStyle}{color} = "rgb \"\#".$options->{ISORatioLineColor}."\"";
   }
@@ -342,16 +341,12 @@ sub _parseOptions{
     $self->{colors}->{DETFont} = $options->{DETFont};
   }
 
-  if (exists($options->{PlotDETCurves})) {
-    if (! $self->{props}->setValue("PlotDETCurves", $options->{PlotDETCurves})){
-      die "Error: DET option PlotDETCurves illegal. ".$self->{props}->get_errormsg();
-    }
-  }  
-  
-  if (exists($options->{PlotMeasureThresholdPlots})){
-    if (! $self->{props}->setValue("PlotMeasureThresholdPlots", $options->{PlotMeasureThresholdPlots})){
-      die "Error: DET option PlotMeasureThresholdPlots illegal. ".$self->{props}->get_errormsg();
-    }
+  foreach my $param("PlotDETCurves", "KeyFontFace", "KeyFontSize", "KeySpacing", "KeyLoc", "PlotMeasureThresholdPlots", "CurveLineStyle", "SerializeSeparateIsoRatioFile"){
+    if (exists($options->{$param})) {
+      if (! $self->{props}->setValue($param, $options->{$param})){  
+        die "Error: DET option $param. ".$self->{props}->get_errormsg();
+      }
+    }  
   }
 }
 
@@ -546,7 +541,7 @@ sub renderUnitTest{
   
   $options->{KeyLoc} = "bottom";
   $options->{KeySpacing} = ".4";
-  $options->{KeyFontFace} = "ariel";
+  $options->{KeyFontFace} = "arial";
   $options->{KeyFontSize} = "3";
   $options->{HD} = 0;
   $options->{AutoAdapt} = 0;  
@@ -1147,6 +1142,7 @@ sub write_gnuplot_DET_header{
   my $keyLoc = $self->{props}->getValue("KeyLoc"); 
   my $keySpacing = $self->{props}->getValue("KeySpacing"); 
   my $keyFontFace = $self->{props}->getValue("KeyFontFace"); 
+  ($keyFontFace = $self->{colors}->{DETFont}) =~ s/font (\S+) .*/$1/ if ($keyFontFace eq "" && $self->{colors}->{DETFont} ne "");
   my $keyFontSize = $self->{props}->getValue("KeyFontSize"); 
   my $title = $self->{title}; 
   
@@ -1156,12 +1152,11 @@ sub write_gnuplot_DET_header{
   print $FP "### Using xScale = $xScale\n";
   print $FP "### Using yScale = $yScale\n";
   print $FP "set style fill  transparent solid 0.10 noborder\n";
+  print $FP "### keyLoc=$keyLoc keySpacing=$keySpacing keyFontFace=$keyFontFace keyFontSize=$keyFontSize\n";
 
-  if (defined($keyLoc)) {
-    $keyLoc = $bvc if ($keyLoc eq "below");  ### Gnuplot changed
-    print $FP "set key $keyLoc spacing $keySpacing ". ($keyLoc eq $bvc ? "box" : "")." ".
-      ($keyFontFace.$keyFontSize eq "" ? "" : "font \"$keyFontFace,$keyFontSize\"")."\n";
-  }
+  $keyLoc = $bvc if ($keyLoc eq "below");  ### Gnuplot changed
+  print $FP "set key $keyLoc spacing $keySpacing ". ($keyLoc eq $bvc ? "box" : "")." ".
+    ($keyFontFace.$keyFontSize eq "" ? "" : "font \"$keyFontFace,$keyFontSize\"")."\n";
   
   my $ratio = 0.85;
   if ($xScale eq "nd" && $yScale eq "nd") {
@@ -1499,28 +1494,40 @@ sub _getLineTitleString
 {
 	my ($self, $type, $ratio, $det, $offAxisArr, $offAxisColor, $offAxisClosedPoint, $offAxisPointSize, $offAxisQStr) = @_;
   
-  my ($metStr, $comb, $fa, $miss, $thr) = ();
+  my ($metStr, $abrMetStr, $comb, $fa, $miss, $thr) = ();
   my $title = "";
 
-  my ($missStr, $faStr, $combStr) = ( $det->{METRIC}->errMissLab(), $det->{METRIC}->errFALab(), 
-                                      $det->{METRIC}->combLab());
+  my ($missStr, $faStr, $combStr, $thrStr) = ( $det->{METRIC}->errMissLab(), $det->{METRIC}->errFALab(), 
+                                      $det->{METRIC}->combLab(), "Thr");
+  my ($tag) = (exists($self->{DETShowMeasurementsAsLegend}) && $self->{DETShowMeasurementsAsLegend}) ? 0 : 1;
 
   if ($type eq "EvaluatedBlocks"){
     $title = " (".$det->getTrials()->getNumEvaluatedBlocks()." of ".$det->getTrials()->getNumBlocks()." ".$det->getTrials()->getBlockID().")";
+  } elsif ($type eq "Legend"){
+    foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
+      $title .= ", " if ($title ne "");
+      $title .= $faStr   if ($supVal eq "F");
+      $title .= $missStr if ($supVal eq "M");
+      $title .= $thrStr  if ($supVal eq "T");
+      $title .= $combStr if ($supVal eq "C");
+    }
+    $title = "Measures: ".$title;
   } else {
     if ($type eq "Actual"){
        my ($MeanActComb, $SampleStdDevActComb, $MeanMiss, $SampleStdDevMiss, $MeanFA, $SampleStdDevFA) =
               $det->getMetric()->getActualDecisionPerformance();
-       ($metStr, $comb, $fa, $miss, $thr) = ("Actual", $MeanActComb, $MeanFA, $MeanMiss,
+       ($metStr, $abrMetStr, $comb, $fa, $miss, $thr) = ("Act", "A", $MeanActComb, $MeanFA, $MeanMiss,
                                              $det->getTrials()->getTrialActualDecisionThreshold());
     } elsif ($type eq "Best"){
-       ($metStr, $comb, $fa, $miss, $thr) = ($det->{METRIC}->combType() eq "minimizable" ? "Min" : "Max", 
+       ($metStr, $abrMetStr, $comb, $fa, $miss, $thr) = ($det->{METRIC}->combType() eq "minimizable" ? "Min" : "Max", 
+                                             "M",
                                              $det->getBestCombComb(),
                                              $det->getBestCombMFA(),
                                              $det->getBestCombMMiss(),
                                              $det->getBestCombDetectionScore());
     } elsif ($type eq "ErrorRatio"){
-      ($metStr, $comb, $fa, $miss, $thr) = ("IsoRatio=$ratio", 
+      ($metStr, $abrMetStr, $comb, $fa, $miss, $thr) = ("IsoRatio=$ratio", 
+                                            "I=$ratio",
                                             $det->getIsolinePointsCombValue($ratio), 
                                             $det->getIsolinePointsMFAValue($ratio),
                                             $det->getIsolinePointsMMissValue($ratio),
@@ -1529,13 +1536,24 @@ sub _getLineTitleString
   
     my $lab = $self->_getOffAxisLabel($miss, $fa, $offAxisColor, $offAxisClosedPoint, $offAxisPointSize, $offAxisQStr); 
     push (@$offAxisArr, $lab) if ($lab ne "");
-  
-    $title = "$metStr";
-    foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
-      $title .= sprintf(" $faStr=".$det->{METRIC}->errFAPrintFormat(),     $fa) if ($supVal eq "F");
-      $title .= sprintf(" $missStr=".$det->{METRIC}->errMissPrintFormat(), $miss) if ($supVal eq "M");
-      $title .= sprintf(" Thr=".$det->{METRIC}->combPrintFormat(),         $thr) if ($supVal eq "T");
-      $title .= sprintf(" $combStr=".$det->{METRIC}->combPrintFormat(),    $comb) if ($supVal eq "C");
+
+    if (! $self->{DETAbbreviateMeasureTypes} || (exists($self->{DETShowMeasurementsAsLegend}) && $self->{DETShowMeasurementsAsLegend})){
+      foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
+        $title .= ($tag ? " " : ", ") if ($title ne "");
+        $title .= sprintf(($tag ? " $faStr=" : "").  $det->{METRIC}->errFAPrintFormat(),     $fa) if ($supVal eq "F");
+        $title .= sprintf(($tag ? " $missStr=" : "").$det->{METRIC}->errMissPrintFormat(), $miss) if ($supVal eq "M");
+        $title .= sprintf(($tag ? " $thrStr=" : ""). $det->{METRIC}->combPrintFormat(),         $thr) if ($supVal eq "T");
+        $title .= sprintf(($tag ? " $combStr=" : "").$det->{METRIC}->combPrintFormat(),    $comb) if ($supVal eq "C");
+      } 
+      $title = "$metStr " . $title;     
+    } else {  
+      foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
+        $title .= ($tag ? " " : ", ") if ($title ne "");
+        $title .= sprintf(($tag ? "$abrMetStr$faStr=" : "").  $det->{METRIC}->errFAPrintFormat(),     $fa) if ($supVal eq "F");
+        $title .= sprintf(($tag ? "$abrMetStr$missStr=" : "").$det->{METRIC}->errMissPrintFormat(), $miss) if ($supVal eq "M");
+        $title .= sprintf(($tag ? "$abrMetStr$thrStr=" : ""). $det->{METRIC}->combPrintFormat(),         $thr) if ($supVal eq "T");
+        $title .= sprintf(($tag ? "$abrMetStr$combStr=" : "").$det->{METRIC}->combPrintFormat(),    $comb) if ($supVal eq "C");
+      } 
     }
   }
   return $title;        
@@ -1679,11 +1697,17 @@ sub writeMultiDetGraph
       }
     } 
 
+    ### Include the measurment legend?
+    if (exists($self->{DETShowMeasurementsAsLegend}) && $self->{DETShowMeasurementsAsLegend}){
+      push @PLOTCOMS, "  999999999 title '".$self->_getLineTitleString("Legend", 0,$detset->getDETForID(0))."' with lines lt rgb \"#ffffff\"";
+    }
+
     ### Write Individual Dets
     for (my $d=0; $d < $numDET; $d++) {
       my $openPoint = $self->{pointTypes}->[ $d % scalar(@{ $self->{pointTypes} }) ]->[0];
       my $closedPoint = $self->{pointTypes}->[ $d % scalar(@{ $self->{pointTypes} }) ]->[1];
-      my $lineWidth = $self->{lineWidths}->[ $d % scalar(@{ $self->{lineWidths} }) ];
+#      my $lineWidth = $self->{lineWidths}->[ $d % scalar(@{ $self->{lineWidths} }) ];
+      my $lineWidth = $self->{lineWidths}->[ ($d / scalar(@{ $self->{colorsRGB} })) % scalar(@{ $self->{lineWidths} }) ];
       my $color = $self->{colorsRGB}->[ $d % scalar(@{ $self->{colorsRGB} }) ];
       my $displayKey = "true";
       my $thisPointSize = $self->{pointSize};
@@ -1875,6 +1899,7 @@ sub writeGNUGraph{
   my $curveLineStyle = $self->{props}->getValue("CurveLineStyle");    
   my $plotMeasureThresh = ($self->{props}->getValue("PlotMeasureThresholdPlots") =~ /^(true|trueWithSE)$/);    
   my $plotMeasureThreshWithSE = ($self->{props}->getValue("PlotMeasureThresholdPlots") =~ /^(trueWithSE)$/);    
+  my $serializeIsoRatio = ($self->{props}->getValue("SerializeSeparateIsoRatioFile") =~ /^(true)$/) ? 1 : 0;    
 
   my ($missStr, $faStr, $combStr) = ( $metric->errMissLab(), $metric->errFALab(), $metric->combLab());
   my $combType = ($ metric->combType() eq "minimizable" ? "Min" : "Max");
@@ -1890,7 +1915,7 @@ sub writeGNUGraph{
   }
  
   ### Serialize the file for later usage
-  $det->serialize("$fileRoot.srl") if ($self->{serialize});
+  $det->serialize("$fileRoot.srl", $serializeIsoRatio) if ($self->{serialize});
   
   ### Set labels for off-graph points
   my @offAxisLabels = ();                                                                                                     
@@ -2000,6 +2025,11 @@ sub writeGNUGraph{
   if ($self->{props}->getValue("MissUnit") ne "Prob" || $self->{props}->getValue("FAUnit") ne "Prob"){
     push @PLOTCOMS, "  -x title 'Random Performance' with lines lc $randomColor";
   }  
+
+  ### Include the measurment legend?
+  if (exists($self->{DETShowMeasurementsAsLegend}) && $self->{DETShowMeasurementsAsLegend}){
+    push @PLOTCOMS, " 0 title 'Measures: ' with lines";
+  }
 
   ### Set the title
   my $ltitle = $self->{title};
