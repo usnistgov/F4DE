@@ -448,6 +448,11 @@ sub __HTML_proc_sp {
     unshift @h2, "$1";
   }
 
+  while ($str =~ s%mourl\=\{([^\}]+?)\}%%) {
+    push @h1, "<a onmouseover=\"show_big(this)\" onmouseout=\"hide_big()\" href=\"$1\">";
+    unshift @h2, "</a>";
+  }
+
   while ($str =~ s%url\=\{([^\}]+?)\}%%) {
     push @h1, "<a href=\"$1\">";
     unshift @h2, "</a>";
@@ -2014,6 +2019,23 @@ sub incrementBy{
   $x = 0 if (! defined($x));
   $x += $_[3];
   $_[0]->setData($x, $_[1], $_[2]);
+}
+
+sub getAutoTableMouseOverScript(){
+    my $self = $@;
+    return "<script>
+function show_big(img) {
+var big_img = window.top.document.querySelectorAll('#big_img')[0];
+big_img.setAttribute(\"src\", img.getAttribute(\"href\"));
+big_img.removeAttribute(\"hidden\");
+}
+function hide_big() {
+var big_img = window.top.document.querySelectorAll('#big_img')[0];
+big_img.setAttribute(\"hidden\", \"true\");
+}
+</script>
+ <img id=\"big_img\" src=\"\" hidden=\"true\" width=\"600\" style=\"position:fixed;right:0;top:0\"/>
+";
 }
 
 1;
