@@ -238,24 +238,31 @@ sub globalMeasureUnitTest(){
     $trial3->addTrial("she", 1.0, "YES",  1, undef, "id11");  #1
 
     { 
-      print "  Computing Average Precision...";
+      print "  Computing Average Precision and AP'...";
       my @isolinecoef = ( );
       my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial);
       my $legacyDet = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef, 1);
       $legacyDet->computeAvgPrec();
+      $legacyDet->computeAvgPrecPrime();
       #print Dumper($legacyDet->{GLOBALMEASURES});
       if (! exists($legacyDet->{GLOBALMEASURES}{AP})){
-        print "\n  Error!!! Average Precision not computed\n";
+        print "\n  Error!!! Average Precision DET1 not computed\n";
         exit(1);
       }
       if (abs($legacyDet->{GLOBALMEASURES}{AP}{MEASURE}{AP} - 0.563333) > 0.0001) {
         print "\n  Error!!! Average Precision computed to be $legacyDet->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.563333.  Aborting\n";
         exit(1);
       }
+      my $appStr = "APP";
+      if (abs($legacyDet->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} - 0.20241409) > 0.0001) {
+        print "\n  Error!!! $appStr computed to be $legacyDet->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} not 0.20241409.  Aborting\n";
+        exit(1);
+      }
 
       my $met2 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial2);
       my $legacyDet2 = new DETCurve($trial2, $met2, "Targetted point", \@isolinecoef, undef, 1);
       $legacyDet2->computeAvgPrec();
+      $legacyDet2->computeAvgPrecPrime();
       #print Dumper($legacyDet2->{GLOBALMEASURES});
       if (! exists($legacyDet2->{GLOBALMEASURES}{AP})){
         print "\n  Error!!! Average Precision not computed\n";
@@ -265,10 +272,15 @@ sub globalMeasureUnitTest(){
         print "\n  Error!!! Average Precision computed to be $legacyDet2->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.62222.  Aborting\n";
         exit(1);
       }
+      if (abs($legacyDet2->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} - 0.336341704) > 0.0001) {
+        print "\n  Error!!! $appStr computed to be $legacyDet2->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} not 0.336341704.  Aborting\n";
+        exit(1);
+      }
 
       my $met3 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial3);
       my $legacyDet3 = new DETCurve($trial3, $met3, "Targetted point", \@isolinecoef, undef, 1);
       $legacyDet3->computeAvgPrec();
+      $legacyDet3->computeAvgPrecPrime();
       #print Dumper($legacyDet2->{GLOBALMEASURES});
       if (! exists($legacyDet3->{GLOBALMEASURES}{AP})){
         print "\n  Error!!! Average Precision not computed\n";
@@ -278,39 +290,62 @@ sub globalMeasureUnitTest(){
         print "\n  Error!!! Average Precision computed to be $legacyDet3->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.62222.  Aborting\n";
         exit(1);
       }
+      if (abs($legacyDet3->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} - 0.336341) > 0.0001) {
+        print "\n  Error!!! $appStr computed to be $legacyDet3->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} not 0.336341.  Aborting\n";
+        exit(1);
+      }
 
       print "OK\n";
     }
 
     { 
-      print "  Automatic Average Precision computations ...";
+      print "  Automatic computations ...\n";
       my @isolinecoef = ( );
-      my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial);
-      $met->setPerformGlobalMeasure("AP");
+      my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01, "AP" => "true", "APP" => "false") },
+                                              $trial);
       my $legacyDet = new DETCurve($trial, $met, "First ", \@isolinecoef, undef, 1);
       $legacyDet->computePoints();
 
-      if (! exists($legacyDet->{GLOBALMEASURES}{AP})){
-        print "\n  Error!!! Average Precision not computed\n";
-        exit(1);
-      }
-
-      my $met2 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial2);
-      $met2->setPerformGlobalMeasure("AP");
+      my $met2 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01, "AP" => "false", "APP" => "true") },
+                                               $trial2);
       my $legacyDet2 = new DETCurve($trial2, $met2, "Second", \@isolinecoef, undef, 1);
       $legacyDet2->computePoints();
-
-      if (! exists($legacyDet2->{GLOBALMEASURES}{AP})){
-        print "\n  Error!!! Average Precision not computed\n";
+  
+      print "    AP Computed ...";
+      if (! exists($legacyDet->{GLOBALMEASURES}{AP})){
+        print "\n  Error!!! Average Precision not computed for DET1\n";
         exit(1);
       }
+      print "Ok\n";
+      print "    AP Not Computed ...";
+      if (exists($legacyDet2->{GLOBALMEASURES}{AP})){
+        print "\n  Error!!! Average Precision exists but should not\n";
+        exit(1);
+      }
+      print "Ok\n";
+      print "    AP' Computed ...";
+      if (! exists($legacyDet2->{GLOBALMEASURES}{"APP"})){
+        print "\n  Error!!! AP' not computed for DET2\n";
+        exit(1);
+      }
+      print "Ok\n";
+      print "    AP' Not Computed ...";
+      if (exists($legacyDet->{GLOBALMEASURES}{"APP"})){
+        print "\n  Error!!! AP' not computed but should not have been\n";
+        exit(1);
+      }
+      print "Ok\n";
 
       if (0){ 
         use DETCurveSet;
         my $ds = new DETCurveSet("title");
-        $ds->addDET("First", $legacyDet);
-        $ds->addDET("Second", $legacyDet2);
-        my $txt = $ds->renderAsTxt("foomerge", 1, {(createDETfiles => 0, ReportGlobal => 1, ExcludePNGFileFromTextTable => 1)});  print $txt;
+        my $rtn = $ds->addDET("First", $legacyDet);
+        MMisc::error_quit("Unable to add 1st DET /$rtn/") if ($rtn ne "success");
+
+        $rtn = $ds->addDET("Second", $legacyDet2);
+        MMisc::error_quit("Unable to add second DET /$rtn/") if ($rtn ne "success");
+        my $txt = $ds->renderAsTxt("foomerge", 1, {(createDETfiles => 0, ReportGlobal => 1, ExcludePNGFileFromTextTable => 1)});  
+        print $txt;
       }
       print "OK\n";
     }
@@ -1277,6 +1312,8 @@ sub computePoints
     ## Global Computations
     my @mlist = grep { $_ eq "AP"} @{ $self->{METRIC}->getGlobalMeasures() };
     $self->computeAvgPrec() if (@mlist != 0);
+    my @mlist = grep { $_ eq "APP"} @{ $self->{METRIC}->getGlobalMeasures() };
+    $self->computeAvgPrecPrime() if (@mlist != 0);
  
   }
 
@@ -1724,13 +1761,36 @@ sub computeArea{
 sub computeAvgPrec{
   my ($self) = @_;
   my %apData = ();
+
+  $self->_computeAvgPrecByType("AP");
+}
+
+sub computeAvgPrecPrime{
+  my ($self) = @_;
+  my %apData = ();
+
+  $self->_computeAvgPrecByType("APP");
+}
+
+#  Un-weighted
+#    Precision(rank) =  tp(rank) / [tp(rank) + fp(rank)]
+#
+
+#    Precision'(rank) = p * tp(rank) / [ p * tp(rank) + f * fp(rank) ] where
+#        p = 100 / number of positive event videos in the searched video set
+#        f = 99,900 / number of false event videos in the searched video set
+        
+sub _computeAvgPrecByType{
+  my ($self, $measureID) = @_;
+  my ($weightP, $weightF) = (1, 1);
+  my %apData = ();
   
   ## Only Run IFF there is a single block
   my @blocks = $self->{TRIALS}->getBlockIDs();
   if (@blocks > 1){
      $apData{STATUS} = "NotApplicable";
      $apData{STATUSMESG} = "Not defined for multiple blocks in as Trials Structure";
-     $self->{GLOBALMEASURES}{AP} = \%apData;
+     $self->{GLOBALMEASURES}{$measureID} = \%apData;
      return;
   }
   my $blk = $blocks[0];
@@ -1739,7 +1799,7 @@ sub computeAvgPrec{
   if (! $self->{TRIALS}->isBlockEvaluated($blk)){
      $apData{STATUS} = "NotApplicable";
      $apData{STATUSMESG} = "Single Block '$blk' is not evaluable";
-     $self->{GLOBALMEASURES}{AP} = \%apData;
+     $self->{GLOBALMEASURES}{$measureID} = \%apData;
      return;
   }
 
@@ -1755,26 +1815,36 @@ sub computeAvgPrec{
     }                                        
   }                                          
 
+  if ($measureID eq "APP"){
+    $weightP = 100 / $self->{TRIALS}->getNumTarg($blk); 
+    $weightF = 99000 / $self->{TRIALS}->getNumNonTarg($blk); 
+    $apData{MEASURE}{STRING} = "AP'";
+  } else {
+    $apData{MEASURE}{STRING} = "AP";
+  }
   my $sum = 0;
   my $numPos = 0;
+  my $numNonPos = 0;
   for (my $t=0; $t<@$ranks; $t++){
     if ($ranks->[$t]->[2] > 0){
     	$numPos ++;
     	#print "$numPos / $ranks->[$t] = ".$numPos / $ranks->[$t]."\n";
-    	$sum += $numPos / $ranks->[$t]->[0];
+    	$sum += ($weightP * $numPos) / (($weightF * $numNonPos) + ($weightP * $numPos));
+    } else {
+    	$numNonPos ++;
     }
   }
   if ($numPos > 0){
     $apData{STATUS} = "Computed";
     $apData{STATUSMESG} = "Successful";
-    $apData{MEASURE}{AP} = $sum / $numPos;
+    $apData{MEASURE}{$measureID} = $sum / $numPos;
     $apData{MEASURE}{POSRANKS} = $ranks;
   } else {
     $apData{STATUS} = "NotApplicable";
     $apData{STATUSMESG} = "No Positives for block $blk";
     $apData{MEASURE}{POSRANKS} = $ranks;
   }
-  $self->{GLOBALMEASURES}{AP} = \%apData;
+  $self->{GLOBALMEASURES}{$measureID} = \%apData;
 
   #print Dumper(\%apData);
 }
@@ -1784,6 +1854,20 @@ sub getGlobalMeasure{
   return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
   if ($measure eq "AP"){
      return $self->{GLOBALMEASURES}{$measure}{MEASURE}{$measure};
+  } if ($measure eq "APP"){
+     return $self->{GLOBALMEASURES}{$measure}{MEASURE}{$measure};
+  } else {	
+     return undef;
+  }
+}
+
+sub getGlobalMeasureString{
+  my ($self, $measure) = @_;
+  return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
+  if ($measure eq "AP"){
+     return $self->{GLOBALMEASURES}{$measure}{MEASURE}{STRING};
+  } if ($measure eq "APP"){
+     return $self->{GLOBALMEASURES}{$measure}{MEASURE}{STRING};
   } else {	
      return undef;
   }

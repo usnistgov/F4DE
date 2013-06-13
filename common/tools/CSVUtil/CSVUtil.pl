@@ -144,7 +144,29 @@ if (! $at->loadCSV($in, undef, undef, undef, $quoteChar, $sepChar)) {
 ### Add the extra columns  
 for (my $d=0; $d<@extraCol; $d++){
   foreach my $row($at->getRowIDs("AsAdded")){ 
-     $at->addData($extraCol[$d]->{val},$extraCol[$d]->{header},$row);
+    my $val = $extraCol[$d]->{val};
+    my $newVal = "";
+    if ($val =~ /^{ (\$val{(.+)}) \=\~ (s\/(.*)\/(.*)\/(.*)) }$/){
+      my $seedField = $2;
+      my $seedOp1 = $4;
+      my $seedOp2 = $5;
+      my $seedOp3 = $6;
+      my $seedValue = $at->getData($seedField, $row);       $seedValue = "" if (! defined($seedValue));
+      my $exp = $3;
+      eval "(\$newVal = \$seedValue) =~ s/$seedOp1/$seedOp2/$seedOp3;\n";
+    } elsif ($val =~ /^{ (\$val{(.+)}) \=\~ (.*) \? (.*) \: (.*) }$/){
+      ## { ($val{Event} =~ /E1/) ? "New" : "Old") }
+      my $seedField = $2;
+      my $seedOp1 = $3;
+      my $seedOp2 = $4;
+      my $seedOp3 = $5;
+      my $seedValue = $at->getData($seedField, $row);       $seedValue = "" if (! defined($seedValue));
+
+      eval "\$newVal = \$seedValue =~ $seedOp1 ? $seedOp2 : $seedOp3\n";
+    } else {
+      $newVal = $val;
+    }
+    $at->addData($newVal,$extraCol[$d]->{header},$row);
   }
 }
 

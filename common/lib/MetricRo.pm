@@ -43,31 +43,23 @@ sub new
     my ($class, $parameters, $trial) = @_;
 
     my $self = MetricFuncs->new($parameters, $trial);
+    bless ($self, $class);
 
-    #######  customizations
-    foreach my $p (@metric_params) {
-      MMisc::error_quit("parameter \'$p\' not defined")
-          if (! exists($self->{PARAMS}->{$p}));
-      MMisc::error_quit("parameter \'$p\' must > 0")
-          if ($self->{PARAMS}->{$p} <= 0);
+    #######  customizations - Required parameters
+    foreach my $p ("m") {
+      MMisc::error_quit("parameter \'$p\' not defined")   if (! exists($self->{PARAMS}->{$p}));
+      MMisc::error_quit("parameter \'$p\' must > 0")      if ($self->{PARAMS}->{$p} <= 0);      
     }
     foreach my $p (@trials_params) {
       MMisc::error_quit("Trials parameter \'$p\' does not exist")
           if (! exists($self->{TRIALPARAMS}->{$p}));
     }
 
-    ## Add normalization constants so they don't need recomputed
-
-   #     print Dumper($self);
-
-    bless ($self, $class);
-
     ### This implements a normalized cost
     $self->setCombLab("R0");
     $self->setErrMissLab("PRecall");
     $self->setErrFALab("PRetrieve");
     $self->setCombTypToMaximizable();
-    $self->setPerformGlobalMeasure("AP");
     $self->setErrMissPrintFormat("%.3f");
     $self->setErrFAPrintFormat("%.3f");
     $self->setCombPrintFormat("%.3f");
@@ -367,8 +359,8 @@ sub unitTest {
   use DETCurveSet;
   use DETCurveGnuplotRenderer;
 
-  my $met = new MetricR0({ ('m' => 2) }, $trial);
-  my $DNmet = new MetricR0({ ('m' => 2) }, $DNtrial);
+  my $met = new MetricR0({ ('m' => 2, 'AP' => "true") }, $trial);
+  my $DNmet = new MetricR0({ ('m' => 2, 'AP' => "true") }, $DNtrial);
 
   ##############################################################################################
   print "  Testing Calculations .. ";
@@ -492,7 +484,7 @@ sub randomCurveUnitTest{
           $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), $targ);
         }
       }
-     my $met = new MetricR0({ ('m' => 12.5) }, $trial);
+     my $met = new MetricR0({ ('m' => 12.5, 'AP' => "true") }, $trial);
 #    $trial->exportForDEVA("DEVA.rand");
 #    die "Stop";
       my $det1 = new DETCurve($trial, $met, "Ptarg = $Ptarg", [(1)], undef);
@@ -557,11 +549,11 @@ sub blockAverageUnitTest{
       $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
       $epochTrial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
     }
-    my $epochMet = new MetricR0({ ('m' => 12.5) }, $trial);
+    my $epochMet = new MetricR0({ ('m' => 12.5, 'AP' => "true") }, $trial);
     my $epochDet = new DETCurve($epochTrial, $epochMet, "Epoch $epoch", \@isolinecoef, undef);
     die "Error: Failed to add first det" if ("success" ne $ds->addDET("Epoch $epoch", $epochDet));
   } 
-  my $met = new MetricR0({ (m => 12.5) }, $trial);
+  my $met = new MetricR0({ (m => 12.5, 'AP' => "true") }, $trial);
   my $det1 = new DETCurve($trial, $met, "Block Averaged", \@isolinecoef, undef);
 
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Block Averaged", $det1));

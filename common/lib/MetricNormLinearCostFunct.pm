@@ -69,7 +69,6 @@ sub new
 
     ### This implements a normalized cost
     $self->setCombLab("NDC");
-    $self->setPerformGlobalMeasure("AP");
     
     return $self;
   }

@@ -877,7 +877,7 @@ sub getRanks {
   my ($self, $blk) = @_;
   my (@data) = ();
   my ($ntA, $tA) = ($self->{"trials"}{$blk}{NONTARG}, $self->{"trials"}{$blk}{TARG});	
-  my $sorted;
+  my $sorted;  ### A 2-dim array, [0] the score/rank, [1] the truth 1=targ, 0=nontarg
   
   if ($self->{preserveTrialID} != 1){
     my @a = ();

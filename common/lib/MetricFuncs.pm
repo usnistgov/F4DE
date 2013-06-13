@@ -77,17 +77,26 @@ sub new {
        "combLab" => "Cost",
        "combPrintFormat" => "%6.4f",
        "optimizationStyle" => "minimizable",
+       "definedGlobalMeasures" => [("AP", "APP")],
        "globalMeasures" => [()],
        "defaultPlotOptions" => {},
       };
+
     bless ($self, $class);
+    ####### Optional parameters for Global Measures
+    foreach my $p (@{ $self->{"definedGlobalMeasures"} }) {
+      if (exists($parameters->{$p})) {
+        $self->setPerformGlobalMeasure($p, $parameters->{$p});
+      }
+    }
+    return $self;
 }
 
 ####################################################################################################
 =item B<isCompatible>(I<$metric>)
 
 Tests to see if the metrics are compatible, meaning that both metrics have the same
-parameters and values for the parameters.
+parameters and values for the parameters EXCLUDING Global parameters.
 
 =cut
 
@@ -99,6 +108,11 @@ sub isCompatible(){
   my @tmp = keys %{ $self->{PARAMS} };
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $k = $tmp[$i];
+
+    ## Avoig globalMeasure checks
+    my @mlist = grep { $_ eq $k} @{ $self->{definedGlobalMeasures} };
+    next if (@mlist > 0);
+
     return 0 if (! exists($met2->{PARAMS}->{$k}));
     return 0 if ($self->{PARAMS}->{$k} ne $met2->{PARAMS}->{$k});
   }
@@ -106,6 +120,11 @@ sub isCompatible(){
   @tmp = keys %{ $met2->{PARAMS} };
   for (my $i = 0; $i < scalar @tmp; $i++) {
     my $k = $tmp[$i];
+
+    ## Avoig globalMeasure checks
+    my @mlist = grep { $_ eq $k} @{ $self->{definedGlobalMeasures} };
+    next if (@mlist > 0);
+
     return 0 if (! exists($self->{PARAMS}->{$k}));
     return 0 if ($self->{PARAMS}->{$k} ne $met2->{PARAMS}->{$k});
   }
@@ -771,19 +790,31 @@ sub combCalc(){
 ####################################################################################################
 =pod
 
-=item B<setPerformGlobalMeasure>(I<$measureName>)
+=item B<setPerformGlobalMeasure>(I<$measureName>, I<$boolSet>)
 
 Sets the flag to calculate and report the global measure I<$MeasureName>.
 
 =cut
 
 sub setPerformGlobalMeasure(){
-  my ($self, $measureName) = @_;
-  if ($measureName eq "AP") {
-    my @mlist = grep { $_ eq "AP"} @{ $self->{globalMeasures} };
-    push (@{ $self->{globalMeasures} }, "AP")  if (@mlist == 0);
+  my ($self, $measureName, $bool) = @_;
+  my $regex = "(AP|APP)";
+  
+  if ($measureName !~ /^${regex}$/){
+    MMisc::warn_print("Global Measure '$measureName' not defined, only '$regex'.  Skipping") ;
+    return;
+  }
+    
+  if ($bool =~ /^true$/i){
+    my @mlist = grep { $_ eq $measureName} @{ $self->{globalMeasures} };
+    push (@{ $self->{globalMeasures} }, $measureName)  if (@mlist == 0);
+  } elsif ($bool =~ /^false$/i){
+    my @mlist = grep { $_ eq $measureName} @{ $self->{globalMeasures} };
+    if (@mlist != 0){
+      $self->{globalMeasures} = grep { $_ ne $measureName} @{ $self->{globalMeasures} };
+    }
   } else {
-    warn "Warning: Global Measure $measureName requested but it is not defined.  Ignoring the request\n";	
+    MMisc::warn_print("Global Measure '$measureName' value $bool does not match (true|false).  Skipping.") 
   }
 }
 

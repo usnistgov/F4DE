@@ -54,8 +54,12 @@ $testr += &do_less_simple_test($tn, "MED11 Profile, Derived system file, block d
 
 ### Test 2m13
 $tn = "test2m13";
-#./DEVA_cli.pl -p MED13 -s expid.threshold.csv:threshold -s expid.detection.csv:detection -o outdir -r expid_ref.csv expid_TrialIndex.csv:TrialIndex
 $com =  "-p MED13 -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.med13.sys.thresh.csv:threshold MTest.derivSys.sys.index.csv:TrialIndex" ;
+$testr += &do_less_simple_test($tn, "MED13 Profile, Derived system file, block differentiated, trial weighted", $com, "res-$tn.txt");
+
+### Test 2m13a
+$tn = "test2m13a";
+$com =  "-p MED13ALADDIN -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.med13.sys.thresh.csv:threshold MTest.derivSys.sys.index.csv:TrialIndex" ;
 $testr += &do_less_simple_test($tn, "MED13 Profile, Derived system file, block differentiated, trial weighted", $com, "res-$tn.txt");
 
 ### Test 3

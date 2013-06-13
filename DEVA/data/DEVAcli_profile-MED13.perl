@@ -5,6 +5,8 @@ $VAR1 = [
           'MetricR0',
           '--UsedMetricParameters',
           'm=12.5',
+          '--UsedMetricParameters',
+          'AP=true',
           '--taskName',
           'MED',
           '--blockName',
