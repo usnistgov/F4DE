@@ -442,7 +442,7 @@ sub unit_test {
   $p->clear_error();
 
   # check that we got 'grey'
-  my $v = $p->getValue("fixfunc");
+  $v = $p->getValue("fixfunc");
   push @err, "Error: $cl: Obtained value for was not fixed as expected (exp: grey / got: $v): " . $p->get_errormsg()
     if ($v ne 'grey');
   $p->clear_error();
@@ -477,7 +477,8 @@ sub unit_test {
     if (! $p->addProp("aoa\@\@2", undef));
   $p->clear_error();
 
-  my @res = $p->getValue('aoa');
+  @res = ();
+  @res = $p->getValue('aoa');
   push @err, "Error: $cl: Expected an empty array, got some data: " . join(" ", @res)
     if (scalar @res > 0);
 
@@ -530,13 +531,12 @@ sub unit_test {
       my $k = $testh_k[$i]; my $e = $testh_v[$i]; my $v = $a{$k};
       push (@err, "Error: $cl: For array of hash, did not find expected value ($e) for key ($k), found: $v") if ($v ne $e);
     }
-    my %a = %{$aoh_res[1]};
+    %a = %{$aoh_res[1]};
     for (my $i = 0; $i < scalar @testh_k; $i++) {
       my $k = $testh_k[$i]; my $e = $testh_k[$i]; my $v = $a{$k};
       push (@err, "Error: $cl: For array of hash, did not find expected value ($e) for key ($k), found: $v") if ($v ne $e);
     }
   }
-  
 
   ## 
   if (! $makecall) {
