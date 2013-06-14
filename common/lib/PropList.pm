@@ -40,6 +40,7 @@ sub new {
     {
      KEYS       => undef,       # the key hash (and default values)
      type       => undef,       # the key special type
+     hashset    => undef,       # for hash: decide if key has empty value or not created
      fixfunc    => undef,       # fix function
      authval    => undef,       # list of authorized values per key
      authfunc   => undef,       # list of authorized functions per key
@@ -70,7 +71,7 @@ sub __checkA {
 ##
 
 sub __checkH {
-  return(0) if (! (${$_[1]} =~ m%^\@?\%($rule)(\:$rule)*$%));
+  return(0) if (! (${$_[1]} =~ m%^\@?\%($rule\!?)(\:$rule\!?)*$%));
   
   my $type = (${$_[1]} =~ m%^\@\%%) ? $ok_types[4] : $ok_types[2];
   ${$_[1]} =~ s%^\@?\%%%;
@@ -125,7 +126,21 @@ sub addProp {
   
   return($self->_set_error_and_return_scalar("Already added a definition for this key ($key)", 0)) if (exists $self->{KEYS}{$key});
 
-  @{$self->{type}{$key}} = (MMisc::is_blank($type)) ? ($ok_types[0]) : split(m%\:%, $type);
+  if (MMisc::is_blank($type)) {
+    @{$self->{type}{$key}} = ($ok_types[0]);
+  } else {
+    my @tc = split(m%\:%, $type);
+    if (($tc[0] eq $ok_types[2]) || ($tc[0] eq $ok_types[4])) {
+      for (my $i = 1; $i < scalar @tc; $i++) {
+        if ($tc[$i] =~ s%\!$%%) {
+          # do not set
+        } else {
+          $self->{hashset}{$key}{$tc[$i]} = 1;
+        }
+      }
+    }
+    @{$self->{type}{$key}} = @tc;
+  }
   $type = $self->{type}{$key}[0];
 
   $self->{fixfunc}{$key} = $func
@@ -214,7 +229,7 @@ sub __setXvalue {
   if ($type eq $ok_types[0]) { # scalar
     $self->{$keyname}{$key} = $value;
   } elsif (($type eq $ok_types[1]) || ($type eq $ok_types[3])) { # array / array of array
-    my @split = split(m%\:%, $value);
+    my @split = split(m%\:%, $value, -1); # force return of empty values
 #    print join(" ", @tc) . " / " . scalar @split . "\n";
     if (scalar @tc > 0) {
       my $nc = $tc[0];
@@ -228,10 +243,15 @@ sub __setXvalue {
       push @{$self->{$keyname}{$key}}, \@split;
     }
   } elsif (($type eq $ok_types[2]) || ($type eq $ok_types[4])) { # hash
-    my @split = split(m%\:%, $value);
+    my @split = split(m%\:%, $value, -1); # force return of empty values
+#    print "[$value] " . scalar @tc . " vs " . scalar @split . "\n";
     return($self->_set_error_and_return_scalar("Can not set the array hash as requested, expecting " . scalar @tc . " components, got " . scalar @split . ". ", 0))
       if (scalar @split != scalar @tc);
-    my %h = (); for (my $i = 0; $i < scalar @tc; $i++) { $h{$tc[$i]} = $split[$i]; }
+    my %h = ();
+    for (my $i = 0; $i < scalar @tc; $i++) {
+      $h{$tc[$i]} = $split[$i]
+        if (exists $self->{hashset}{$key}{$tc[$i]});
+    }
     if ($type eq $ok_types[2]) {
       %{$self->{$keyname}{$key}} = %h;
     } else {
@@ -433,6 +453,48 @@ sub unit_test {
       if ($exp[$i] ne $res[$i]);
   }
  
+  ## Hash with no value set
+  my $tmpk = "";
+  my @thk = ();
+  for (my $i = 0; $i < scalar @testh_k; $i++) { push @thk, $testh_k[$i] . "\!"; }
+  push @err, "Error: $cl: Unable to add a key with empty values for hash type: " . $p->get_errormsg()
+    if (! $p->addProp("ehashtest\%" . join (":", @thk), undef));
+  $p->clear_error();
+
+  push @err, "Error: $cl: Unable to set the hash type with empty values: " . $p->get_errormsg()
+    if (! $p->setValue("ehashtest", "::"));
+  $p->clear_error();
+
+  %hres = $p->getValue('ehashtest');
+  push @err, ("Error: $cl: For hash with no keys to set, found some existsing: " . join(" ", keys %hres))
+    if (scalar(keys %hres) > 0);
+  $p->clear_error();
+ 
+  ## Hash with only one value set
+  $tmpk = "";
+  @thk = ();
+  for (my $i = 0; $i < scalar @testh_k; $i++) { push @thk, $testh_k[$i] . (($i == 0) ? "" : "\!"); }
+  push @err, "Error: $cl: Unable to add a key with one empty values for hash type: " . $p->get_errormsg()
+    if (! $p->addProp("ehashtest2\%" . join (":", @thk), undef));
+  $p->clear_error();
+
+  push @err, "Error: $cl: Unable to set the hash type with one empty values: " . $p->get_errormsg()
+    if (! $p->setValue("ehashtest2", "::"));
+  $p->clear_error();
+
+  %hres = $p->getValue('ehashtest2');
+  push @err, ("Error: $cl: For hash with only one keys set, found other than expected: " . join(" ", keys %hres))
+    if (scalar(keys %hres) != 1);
+  if (! exists($hres{$testh_k[0]})) {
+    push @err, ("Error: $cl: For hash with only one keys set, could not find the expected key (" . $testh_k[0] . ")");
+  } else {
+    my $x = $hres{$testh_k[0]};
+    push @err, ("Error: $cl: For hash with only one keys set, expected key (" . $testh_k[0] . ") value is not empty ($x) ?")
+      if (! MMisc::is_blank($x));
+  }
+  $p->clear_error();
+  
+
   ## Fix function
   push @err, "Error: $cl: Unable to add a fixfunc key:" . $p->get_errormsg()
     if (! $p->addProp('fixfunc&PropList::__UT_gray2grey', undef, ('grey', 'color')));
@@ -578,11 +640,16 @@ sub printPropList {
     print "type: $type";
     if ($type eq $ok_types[0]) {
       print "\n";
-    } elsif (($type eq $ok_types[1]) || ($type eq $ok_types[3])) {
+    } elsif (($type eq $ok_types[1]) || ($type eq $ok_types[3])) { # array
       print (" (of " . $tc[0] . " elements)") if (scalar @tc > 0);
       print "\n";
-    } elsif (($type eq $ok_types[2]) || ($type eq $ok_types[4])) {
+    } elsif (($type eq $ok_types[2]) || ($type eq $ok_types[4])) { # hash
       print "\n  keys: " . join(" ", @tc) . "\n";
+      my @o = ();
+      for (my $i = 0; $i < scalar @tc; $i++) {
+        push(@o, $tc[$i]) if (exists $self->{hashset}{$key}{$tc[$i]});
+      }
+      print "  keys set if no value provided: " . join(" ", @o) . "\n";
     } else {
       print "type: UNKNOWN\n";
     }
@@ -598,7 +665,6 @@ sub printPropList {
       my $a = $av[$k];
       print "  ", $i++, " : ", ((defined $a) ? $a : "undef"), "\n";
     }
-
 
     if ($type eq $ok_types[0]) {
       my $v = $self->getValue($key);
