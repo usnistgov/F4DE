@@ -548,7 +548,8 @@ sub doDETwork {
     MMisc::error_quit("Problem with BlockID ($bid)'s Metric ($metric)")
       if (! defined $met);
 
-    my $detname = $devadetname . " $bid";
+    #my $detname = $devadetname . " $bid";
+    my $detname = $bid;
 
     my $det = new DETCurve($usedtrial, $met, $detname, 
                            \@isolinecoef, MMisc::cmd_which("gzip"));
