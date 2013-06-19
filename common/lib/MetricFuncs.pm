@@ -77,7 +77,7 @@ sub new {
        "combLab" => "Cost",
        "combPrintFormat" => "%6.4f",
        "optimizationStyle" => "minimizable",
-       "definedGlobalMeasures" => [("AP", "APP")],
+       "definedGlobalMeasures" => [("AP", "APP", "APpct", "APPpct")],
        "globalMeasures" => [()],
        "defaultPlotOptions" => {},
       };
@@ -798,7 +798,7 @@ Sets the flag to calculate and report the global measure I<$MeasureName>.
 
 sub setPerformGlobalMeasure(){
   my ($self, $measureName, $bool) = @_;
-  my $regex = "(AP|APP)";
+  my $regex = "(AP|APP|APpct|APPpct)";
   
   if ($measureName !~ /^${regex}$/){
     MMisc::warn_print("Global Measure '$measureName' not defined, only '$regex'.  Skipping") ;
@@ -872,6 +872,7 @@ sub testActualDecisionPerformance{
     if (! defined($act->[$value])){
       return "\nError: Actual point $value computed to not be undefined but should be" if (defined($compAct[$value]));
     } else {
+      #print "if (abs($act->[$value] - ".sprintf("%.5f",$compAct[$value])." > 0.00001);\n";
       return "\nError: Actual point $value expected $act->[$value] but was ".sprintf("%.4f",$compAct[$value])
 	if (abs($act->[$value] - sprintf("%.5f",$compAct[$value])) > 0.00001);
     }
