@@ -23,7 +23,7 @@ check:
 	@(cd ../lib; perl -I. -e 'use SimpleAutoTable; SimpleAutoTable::unitTest(1);')
 	@(cd ../lib; perl -I. -e 'use MMisc; MMisc::unitTest();')
 	@(cd ../lib; perl -I. -e 'use TranscriptHolder; TranscriptHolder::unitTest()')
-	@(cd ../lib; perl -I. -e 'use MetricR0; MetricR0::unitTest()')
+	@(cd ../lib; perl -I. -e 'use MetricRo; MetricRo::unitTest()')
 	@(cd AutoTable_Extra; make check)
 	@(cd DETUtil; make check)
 	@echo ""

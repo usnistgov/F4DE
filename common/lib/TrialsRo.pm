@@ -1,5 +1,5 @@
 # F4DE
-# TrialsPrecRecallFbeta.pm
+# TrialsRo.pm
 # Author: Jon Fiscus
 # 
 # This software was developed at the National Institute of Standards and Technology by
@@ -20,7 +20,7 @@
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-package TrialsR0;
+package TrialsRo;
 
 use TrialsFuncs;
 @ISA = qw(TrialsFuncs);
@@ -37,7 +37,7 @@ sub new {
   my $trialParams =shift  @_;
   my ($taskId, $blockId, $decisionId) = MMisc::iuav(\@_, "Detection", "Block", "Trial");
 
-  MMisc::error_quit("new TrialsR0 called without a \$trialParams value") 
+  MMisc::error_quit("new TrialsRo called without a \$trialParams value") 
     if (! defined($trialParams));
  
   my $self = TrialsFuncs->new($trialParams, $taskId, $blockId, $decisionId);

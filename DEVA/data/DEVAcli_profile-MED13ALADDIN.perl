@@ -2,7 +2,7 @@
 
 $VAR1 = [
           '--usedMetric',
-          'MetricR0',
+          'MetricRo',
           '--UsedMetricParameters',
           'm=12.5',
           '--UsedMetricParameters',
@@ -36,7 +36,7 @@ $VAR1 = [
           '--ymin',
           0,
           '--Ymax',
-          100,
+          1,
           '--zusedXscale',
           'linear',
           '--ZusedYscale',

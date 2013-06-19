@@ -24,8 +24,8 @@ Done
 |   Combined DET Plot |   res-test2m13.txt.dir/scoreDB.det.png |
 
 
-|                  |            Inputs            |                                   Actual Decision R0 Analysis                                    |                 Maximum R0 Analysis                 |  Global Measures  |                   DET Curve Graphs                    |
-|      Title       |  #Targ  |  #NTarg  |  #Sys   |  #CorDet  |  #Cor!Det  |  #FA   |  #Miss  |  Percent Rank  |  Recall  |    R0     |  Dec. Tresh  |  Percent Rank  |  Recall  |   R0    |  Dec. Thresh  |        AP%        |                       DET Curve                       |
+|                  |            Inputs            |                                   Actual Decision Ro Analysis                                    |                 Maximum Ro Analysis                 |  Global Measures  |                   DET Curve Graphs                    |
+|      Title       |  #Targ  |  #NTarg  |  #Sys   |  #CorDet  |  #Cor!Det  |  #FA   |  #Miss  |  Percent Rank  |  Recall  |    Ro     |  Dec. Tresh  |  Percent Rank  |  Recall  |   Ro    |  Dec. Thresh  |        AP%        |                       DET Curve                       |
 |------------------+---------+----------+---------+-----------+------------+--------+---------+----------------+----------+-----------+--------------+----------------+----------+---------+---------------+-------------------+-------------------------------------------------------+
 |     EventID Blue |      41 |       59 |     100 |        40 |          8 |     51 |       1 |           91.0 |     97.6 |   -1039.9 |          0.7 |            1.0 |      2.4 |   -10.1 |           0.9 |              52.5 |     res-test2m13.txt.dir/scoreDB.det.EventID_Blue.png |
 |    EventID Green |      53 |       47 |     100 |        53 |          6 |     41 |       0 |           94.0 |    100.0 |   -1075.0 |          0.7 |            1.0 |      1.9 |   -10.6 |           1.0 |              67.3 |    res-test2m13.txt.dir/scoreDB.det.EventID_Green.png |

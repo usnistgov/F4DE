@@ -1,5 +1,5 @@
 # F4DE
-# MetricR0.pm
+# MetricRo.pm
 # Author: Jon Fiscus
 # 
 # This software was developed at the National Institute of Standards and Technology by
@@ -30,8 +30,8 @@ use strict;
 use AutoTable;
 
 ### Tada!! The metrics!
-use MetricR0;
-use TrialsR0;
+use MetricRo;
+use TrialsRo;
 
 use Data::Dumper;
 use MMisc;
@@ -70,8 +70,8 @@ sub runDemo{
        "Isoratiolines" => [ (12.5) ],
        "Isometriclines" => \@isolinecoef,
        "PointSet" => [] ) };
-  my $dsR0 = makeDET(\%trials, "MetricR0");
-  print $dsR0->renderAsTxt("$dir/MD.R0.randomTest.det", 1, $options, "");       
+  my $dsRo = makeDET(\%trials, "MetricRo");
+  print $dsRo->renderAsTxt("$dir/MD.Ro.randomTest.det", 1, $options, "");       
 
   my ($med2011MI, $med2011FA) = (0.75, 0.06);
   my ($med2012MI, $med2012FA) = (0.50, 0.04);
@@ -123,8 +123,8 @@ sub runDemo{
 
 sub getNewTrials{
   my ($name) = @_;
-  if ($name eq "MetricR0"){
-    return new TrialsR0({ () }, "Detection", "Block", "Trial");
+  if ($name eq "MetricRo"){
+    return new TrialsRo({ () }, "Detection", "Block", "Trial");
   } elsif ($name eq "MetricNormLinearCostFunct"){
     return new TrialsNormLinearCostFunct({ ( ) }, "Detection", "Block", "Trial");
   } else {
@@ -134,8 +134,8 @@ sub getNewTrials{
 
 sub getNewMetric{
   my ($name, $tr) = @_;
-  if ($name eq "MetricR0"){
-    return new MetricR0({ ('m' => 12.5) }, $tr);
+  if ($name eq "MetricRo"){
+    return new MetricRo({ ('m' => 12.5) }, $tr);
   } elsif ($name eq "MetricNormLinearCostFunct"){
     return new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $tr);
   } else {
@@ -149,7 +149,7 @@ sub makeDET{
   my $ds = new DETCurveSet("MetricDemo");
   my @isolinecoef = ();
   
-  print "  Building Setting up MetricR0\n";
+  print "  Building Setting up MetricRo\n";
   my $tr1 = getNewTrials($metName);
   my $tr2 = getNewTrials($metName);
   my $tr3 = getNewTrials($metName);
@@ -221,7 +221,7 @@ sub makeDET{
 ##      $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
 ##      $epochTrial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
 ##    }
-##    my $epochMet = new MetricR0({ ('m' => 12.5) }, $trial);
+##    my $epochMet = new MetricRo({ ('m' => 12.5) }, $trial);
 ##    my $epochDet = new DETCurve($epochTrial, $epochMet, "Epoch $epoch", \@isolinecoef, undef);
 ##    die "Error: Failed to add first det" if ("success" ne $ds->addDET("Epoch $epoch", $epochDet));
 ##  } 

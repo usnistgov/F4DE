@@ -2,7 +2,7 @@
 
 $VAR1 = [
           '--usedMetric',
-          'MetricR0',
+          'MetricRo',
           '--UsedMetricParameters',
           'm=12.5',
           '--UsedMetricParameters',

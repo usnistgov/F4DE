@@ -1,5 +1,5 @@
 # F4DE
-# MetricR0.pm
+# MetricRo.pm
 # Author: Jon Fiscus
 # 
 # This software was developed at the National Institute of Standards and Technology by
@@ -20,7 +20,7 @@
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-package MetricR0;
+package MetricRo;
 
 use MetricFuncs;
 @ISA = qw(MetricFuncs);
@@ -32,8 +32,8 @@ use MMisc;
 
 my @metric_params = ("m");
 
-use TrialsR0;
-my @trials_params = TrialsR0::getParamsList();
+use TrialsRo;
+my @trials_params = TrialsRo::getParamsList();
 
 sub getParamsList { return(@metric_params); }
 sub getTrialsParamsList { return(@trials_params); }
@@ -56,7 +56,7 @@ sub new
     }
 
     ### This implements a normalized cost
-    $self->setCombLab("R0");
+    $self->setCombLab("Ro");
     $self->setErrFAUnit("Pct");
     $self->setErrMissUnit("Pct");
     $self->setErrMissLab("Recall");
@@ -183,12 +183,12 @@ sub errFABlockCalc(){
 
 sub combCalcWeightedMiss(){
   my ($self, $missErr) = @_;
-  die "This function combCalcWeightedMiss() for the MetricR0 metric";
+  die "This function combCalcWeightedMiss() for the MetricRo metric";
 }
 
 sub combCalcWeightedFA(){
   my ($self, $faErr) = @_;
-  die "This function combCalcWeightedFA() for the MetricR0 metric";
+  die "This function combCalcWeightedFA() for the MetricRo metric";
 }
 
 ####################################################################################################
@@ -221,10 +221,10 @@ C<$faErr> is undefined, then the combined calculation returns C<undef>,
 =cut
 
 ### The derivation
-#  R0 = RT - m * Rho(t)
+#  Ro = RT - m * Rho(t)
 #
-#  R0 = miss - m * fa
-#  miss = R0 + m *fa
+#  Ro = miss - m * fa
+#  miss = Ro + m *fa
 
 sub MISSForGivenComb(){
   my ($self, $comb, $faErr) = @_;
@@ -249,9 +249,9 @@ C<$missErr> is undefined, then the combined calculation returns C<undef>,
 =cut
 
 #
-#  R0 = miss - m * fa
-#  R0 - miss = m * fa  
-#  fa = (R0 - miss) / m
+#  Ro = miss - m * fa
+#  Ro - miss = m * fa  
+#  fa = (Ro - miss) / m
 
 sub FAForGivenComb(){
   my ($self, $comb, $missErr) = @_;
@@ -275,13 +275,13 @@ Run all the unit tests.
 sub allUnitTest(){
   my ($dir) = ".";
   die "Error: allUnitTest(\$dir) requires a defined $dir" if (! defined($dir));
-  MetricR0::unitTest($dir);  
+  MetricRo::unitTest($dir);  
 }
 
 sub unitTest {
   my ($dir) = @_;
 
-  print "Test MetricR0...".(defined($dir) ? " Dir=/$dir/" : "(Skipping DET Curve Generation)")."\n";
+  print "Test MetricRo...".(defined($dir) ? " Dir=/$dir/" : "(Skipping DET Curve Generation)")."\n";
 
   my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
 
@@ -290,7 +290,7 @@ sub unitTest {
 ### PFa == 0    - 0  FA  
 ### Cost == 1
 
-  my $DNtrial = new TrialsR0({ () }, "Term Detection", "Term", "Occurrence");
+  my $DNtrial = new TrialsRo({ () }, "Term Detection", "Term", "Occurrence");
   $DNtrial->addTrial("she", 0.03, "NO", 0);
   $DNtrial->addTrial("she", 0.04, "NO", 1);  #276
   $DNtrial->addTrial("she", 0.05, "NO", 1); #275
@@ -313,7 +313,7 @@ sub unitTest {
   $DNtrial->addTrial("she", 0.98, "NO", 0);
   $DNtrial->addTrial("she", 1.00, "NO", 1);  #1
 
-  my $IDs = new TrialsR0({ () }, "Term Detection", "Term", "Occurrence");
+  my $IDs = new TrialsRo({ () }, "Term Detection", "Term", "Occurrence");
   $IDs->addTrial("she", 0.03, "NO", 0, undef, "id300");
   $IDs->addTrial("she", 0.04, "NO", 1, undef, "id276");  #276
   $IDs->addTrial("she", 0.05, "NO", 1, undef, "id275"); #275
@@ -341,7 +341,7 @@ sub unitTest {
 ### PFa == 0.0075  - 3 FA  
 ### Cost == 0.8425
      
-  my $trial = new TrialsR0({ () }, "Term Detection", "Term", "Occurrence");
+  my $trial = new TrialsRo({ () }, "Term Detection", "Term", "Occurrence");
   $trial->addTrial("she", 0.03, "NO", 0);
   $trial->addTrial("she", 0.04, "NO", 0);
   $trial->addTrial("she", 0.05, "NO",  0);
@@ -371,8 +371,8 @@ sub unitTest {
   use DETCurveSet;
   use DETCurveGnuplotRenderer;
 
-  my $met = new MetricR0({ ('m' => 2, 'APPpct' => "true", 'APpct' => "true") }, $trial);
-  my $DNmet = new MetricR0({ ('m' => 2, 'APPpct' => "true", 'APpct' => "true") }, $DNtrial);
+  my $met = new MetricRo({ ('m' => 2, 'APPpct' => "true", 'APpct' => "true") }, $trial);
+  my $DNmet = new MetricRo({ ('m' => 2, 'APPpct' => "true", 'APpct' => "true") }, $DNtrial);
 
   ##############################################################################################
   print "  Testing Calculations .. ";
@@ -385,13 +385,13 @@ sub unitTest {
   die "\nError: errFABlockCalc(#Miss=5, #FA=20, block=she) was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
   
   $exp = -100; $pret = 100; $recall = 100; $ret = $met->combCalc($pret, $recall); 
-  die "\nError: R0 for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
+  die "\nError: Ro for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
   $exp = -200; $pret = 0; $recall = 100; $ret = $met->combCalc($pret, $recall); 
-  die "\nError: R0 for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
+  die "\nError: Ro for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
   $exp = 1; $pret = 1; $recall = 0; $ret = $met->combCalc($pret, $recall); 
-  die "\nError: R0 for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
+  die "\nError: Ro for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
   $exp = -0.5; $pret = 0.5; $recall = 0.5; $ret = $met->combCalc($pret, $recall); 
-  die "\nError: R0 for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
+  die "\nError: Ro for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
 
 
   $exp = 90; $ret = $met->errMissBlockCalc(1, 3, "she"); 
@@ -419,7 +419,7 @@ sub unitTest {
   my $IDsDet = new DETCurve($IDs, $DNmet, "Do Nothing", \@isolinecoef, undef);
   $IDsDet->computePoints();
   
-  my $ds = new DETCurveSet("MetricR0 Tests");
+  my $ds = new DETCurveSet("MetricRo Tests");
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Targetted Point", $det1));
   die "Error: Failed to add second det" if ("success" ne $ds->addDET("Do Nothing", $DNdet));
 
@@ -448,10 +448,10 @@ sub unitTest {
         ExcludePNGFileFromTextTable => 1
      ) };
   
-    print $ds->renderAsTxt("$dir/R0.unitTest.det", 1, $options, "");                                                                     
+    print $ds->renderAsTxt("$dir/Ro.unitTest.det", 1, $options, "");                                                                     
     ################ HACKED UNIT TEST #################
     # Check to see if the unmarshalling works.
-    $det1 = DETCurve::readFromFile("$dir/R0.unitTest.det.Do_Nothing.srl.gz");    
+    $det1 = DETCurve::readFromFile("$dir/Ro.unitTest.det.Do_Nothing.srl.gz");    
     ###################################################
 
   }
@@ -476,7 +476,7 @@ sub randomCurveUnitTest{
   print "Build a random DET curve for Ptarg=(".join(",",@Ptargs).") Dir=/$dir/\n";
   my $decisionScoreRand = Math::Random::OO::Normal->new(0,1);
   my $targetRand = Math::Random::OO::Uniform->new(0,1);
-  my $ds = new DETCurveSet("MetricR0 Tests");
+  my $ds = new DETCurveSet("MetricRo Tests");
       
   foreach my $Ptarg (@Ptargs){
     foreach my $sep (@TargNonTargSep){
@@ -493,7 +493,7 @@ sub randomCurveUnitTest{
           $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), $targ);
         }
       }
-     my $met = new MetricR0({ ('m' => 12.5, 'AP' => "true") }, $trial);
+     my $met = new MetricRo({ ('m' => 12.5, 'AP' => "true") }, $trial);
 #    $trial->exportForDEVA("DEVA.rand");
 #    die "Stop";
       my $det1 = new DETCurve($trial, $met, "Ptarg = $Ptarg", [(1)], undef);
@@ -521,7 +521,7 @@ sub randomCurveUnitTest{
        "serialize" => 1 ) };
        
 #  DB::enable_profile("$dir/MNLCF.randomTest.profile");
-  print $ds->renderAsTxt("$dir/R0.randomTest.det", 1, $options, "");                                                                     
+  print $ds->renderAsTxt("$dir/Ro.randomTest.det", 1, $options, "");                                                                     
 #  DB::finish_profile();
 }
 
@@ -558,11 +558,11 @@ sub blockAverageUnitTest{
       $trial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
       $epochTrial->addTrial("epoch $epoch", $scr, ($scr <= 0.5 ? "NO" : "YES" ), 0);
     }
-    my $epochMet = new MetricR0({ ('m' => 12.5, 'AP' => "true") }, $trial);
+    my $epochMet = new MetricRo({ ('m' => 12.5, 'AP' => "true") }, $trial);
     my $epochDet = new DETCurve($epochTrial, $epochMet, "Epoch $epoch", \@isolinecoef, undef);
     die "Error: Failed to add first det" if ("success" ne $ds->addDET("Epoch $epoch", $epochDet));
   } 
-  my $met = new MetricR0({ (m => 12.5, 'AP' => "true") }, $trial);
+  my $met = new MetricRo({ (m => 12.5, 'AP' => "true") }, $trial);
   my $det1 = new DETCurve($trial, $met, "Block Averaged", \@isolinecoef, undef);
 
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Block Averaged", $det1));
