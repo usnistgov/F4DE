@@ -1310,11 +1310,7 @@ sub computePoints
 #    print "Point computatiuon complete: ".`date`;
 
     ## Global Computations
-    my @mlist = grep { $_ eq "AP"} @{ $self->{METRIC}->getGlobalMeasures() };
-    $self->computeAvgPrec() if (@mlist != 0);
-    my @mlist = grep { $_ eq "APP"} @{ $self->{METRIC}->getGlobalMeasures() };
-    $self->computeAvgPrecPrime() if (@mlist != 0);
- 
+    $self->computeGlobalMeasures($self->{METRIC}->getGlobalMeasures()); 
   }
 
 sub Compute_blocked_DET_points
@@ -1772,6 +1768,20 @@ sub computeAvgPrecPrime{
   $self->_computeAvgPrecByType("APP");
 }
 
+sub computeAvgPrecPct{
+  my ($self) = @_;
+  my %apData = ();
+
+  $self->_computeAvgPrecByType("APpct");
+}
+
+sub computeAvgPrecPrimePct{
+  my ($self) = @_;
+  my %apData = ();
+
+  $self->_computeAvgPrecByType("APPpct");
+}
+
 #  Un-weighted
 #    Precision(rank) =  tp(rank) / [tp(rank) + fp(rank)]
 #
@@ -1782,7 +1792,7 @@ sub computeAvgPrecPrime{
         
 sub _computeAvgPrecByType{
   my ($self, $measureID) = @_;
-  my ($weightP, $weightF) = (1, 1);
+  my ($weightP, $weightF, $scale) = (1, 1, 1);
   my %apData = ();
   
   ## Only Run IFF there is a single block
@@ -1818,9 +1828,31 @@ sub _computeAvgPrecByType{
   if ($measureID eq "APP"){
     $weightP = 100 / $self->{TRIALS}->getNumTarg($blk); 
     $weightF = 99000 / $self->{TRIALS}->getNumNonTarg($blk); 
+    $scale = 1;
     $apData{MEASURE}{STRING} = "AP'";
-  } else {
+    $apData{MEASURE}{ABBREVSTRING} = "AP'";
+    $apData{MEASURE}{FORMAT} = "%.2f"; 
+    $apData{MEASURE}{UNIT} = ""; 
+  } elsif ($measureID eq "APPpct"){
+    $weightP = 100 / $self->{TRIALS}->getNumTarg($blk); 
+    $weightF = 99000 / $self->{TRIALS}->getNumNonTarg($blk); 
+    $scale = 100;
+    $apData{MEASURE}{STRING} = "AP'";
+    $apData{MEASURE}{ABBREVSTRING} = "AP'";
+    $apData{MEASURE}{FORMAT} = "%.1f"; 
+    $apData{MEASURE}{UNIT} = "%"; 
+  } elsif ($measureID eq "AP"){
+    $scale = 1;
     $apData{MEASURE}{STRING} = "AP";
+    $apData{MEASURE}{ABBREVSTRING} = "AP";
+    $apData{MEASURE}{FORMAT} = "%.2f";
+    $apData{MEASURE}{UNIT} = ""; 
+  } elsif ($measureID eq "APpct"){
+    $scale = 100;
+    $apData{MEASURE}{STRING} = "AP";
+    $apData{MEASURE}{ABBREVSTRING} = "AP";
+    $apData{MEASURE}{FORMAT} = "%.1f";
+    $apData{MEASURE}{UNIT} = "%"; 
   }
   my $sum = 0;
   my $numPos = 0;
@@ -1829,7 +1861,7 @@ sub _computeAvgPrecByType{
     if ($ranks->[$t]->[2] > 0){
     	$numPos ++;
     	#print "$numPos / $ranks->[$t] = ".$numPos / $ranks->[$t]."\n";
-    	$sum += ($weightP * $numPos) / (($weightF * $numNonPos) + ($weightP * $numPos));
+    	$sum += (($weightP * $numPos) / (($weightF * $numNonPos) + ($weightP * $numPos))) * $scale;
     } else {
     	$numNonPos ++;
     }
@@ -1849,28 +1881,50 @@ sub _computeAvgPrecByType{
   #print Dumper(\%apData);
 }
 
+sub computeGlobalMeasures{
+  my ($self, $measureSet) = @_;
+  foreach my $mea(@$measureSet){
+    $self->computeAvgPrec() if ($mea eq "AP");
+    $self->computeAvgPrecPrime() if ($mea eq "APP");
+    $self->computeAvgPrecPct() if ($mea eq "APpct");
+    $self->computeAvgPrecPrimePct() if ($mea eq "APPpct");
+  }
+}
+
 sub getGlobalMeasure{
   my ($self, $measure) = @_;
+  $self->computePoints();
   return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
-  if ($measure eq "AP"){
-     return $self->{GLOBALMEASURES}{$measure}{MEASURE}{$measure};
-  } if ($measure eq "APP"){
-     return $self->{GLOBALMEASURES}{$measure}{MEASURE}{$measure};
-  } else {	
-     return undef;
-  }
+  return $self->{GLOBALMEASURES}{$measure}{MEASURE}{$measure};
 }
 
 sub getGlobalMeasureString{
   my ($self, $measure) = @_;
+
+  $self->computePoints();
   return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
-  if ($measure eq "AP"){
-     return $self->{GLOBALMEASURES}{$measure}{MEASURE}{STRING};
-  } if ($measure eq "APP"){
-     return $self->{GLOBALMEASURES}{$measure}{MEASURE}{STRING};
-  } else {	
-     return undef;
-  }
+  return $self->{GLOBALMEASURES}{$measure}{MEASURE}{STRING};
+}
+
+sub getGlobalMeasureAbbrevString{
+  my ($self, $measure) = @_;
+  $self->computePoints();
+  return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
+  return $self->{GLOBALMEASURES}{$measure}{MEASURE}{ABBRREVSTRING};
+}
+
+sub getGlobalMeasureFormat{
+  my ($self, $measure) = @_;
+  $self->computePoints();
+  return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
+  return $self->{GLOBALMEASURES}{$measure}{MEASURE}{FORMAT};
+}
+
+sub getGlobalMeasureUnit{
+  my ($self, $measure) = @_;
+  $self->computePoints();
+  return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
+  return $self->{GLOBALMEASURES}{$measure}{MEASURE}{UNIT};
 }
 
 sub ppndf
