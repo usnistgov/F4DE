@@ -36,7 +36,7 @@ $VAR1 = [
           '--ymin',
           0,
           '--Ymax',
-          1,
+          100,
           '--zusedXscale',
           'linear',
           '--ZusedYscale',
