@@ -270,7 +270,7 @@ foreach my $code(split("", defined($lineTitleModification) ? $lineTitleModificat
   elsif ($code eq "l"){   $options{DETShowMeasurementsAsLegend} = 1;}
   elsif ($code eq "v"){   $options{DETAbbreviateMeasureTypes} = 1;}
   elsif ($code eq "E"){   $options{DETShowEvaluatedBlocks} = 1;}
-  elsif ($code =~ /^([TFMC])$/){
+  elsif ($code =~ /^([TFMCG])$/){
     die "Error: --lineTitle code $code used twice" if (exists($parseHT{$code}));
     push (@{ $options{DETShowPoint_SupportValues} }, $code);
     $parseHT{$code} = 1;
