@@ -853,6 +853,7 @@ Modifiers to control the supporting measurements for EACH plotted point.  The or
     M -> Include the missed detection (y-axis value) for the point
     C -> Include the combined measure for the point
     E -> Include the number of evaluated blocks
+    G -> Include requested global measures
 
 =item 
 
