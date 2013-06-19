@@ -78,10 +78,10 @@ sub new
     $self->{defaultPlotOptions}{ColorScheme} = "colorPresentation";
     $self->{defaultPlotOptions}{ReportRowTotals} = 1;
     $self->{defaultPlotOptions}{IncludeRandomCurve} = "false";
-    $self->{defaultPlotOptions}{DETShowMeasurementsAsLegend} = 1;
+#    $self->{defaultPlotOptions}{DETShowMeasurementsAsLegend} = 1;
     $self->{defaultPlotOptions}{DETShowPoint_Actual} = 1;
 #    $self->{defaultPlotOptions}{DETShowPoint_Best} = 1;
-    $self->{defaultPlotOptions}{DETShowPoint_SupportValues} = [("G", "C")];
+    $self->{defaultPlotOptions}{DETShowPoint_SupportValues} = [("C", "G")];
     $self->{defaultPlotOptions}{KeyLoc} = "right bottom";
     $self->{defaultPlotOptions}{PlotThresh} = "false";
     $self->{defaultPlotOptions}{"XticFormat"} = "%.3f";
