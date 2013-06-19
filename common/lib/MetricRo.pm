@@ -71,8 +71,8 @@ sub new
     $self->{defaultPlotOptions}{Xmax} = 5;
     $self->{defaultPlotOptions}{Ymin} = 0;
     $self->{defaultPlotOptions}{Ymax} = 100;
-    $self->{defaultPlotOptions}{DrawIsometriclines} = 1;
-    $self->{defaultPlotOptions}{Isometriclines} = [(25, 50, 65, 75, 85)];
+#    $self->{defaultPlotOptions}{DrawIsometriclines} = 1;
+#    $self->{defaultPlotOptions}{Isometriclines} = [(25, 50, 65, 75, 85)];
     $self->{defaultPlotOptions}{xScale} = "linear";
     $self->{defaultPlotOptions}{yScale} = "linear";
     $self->{defaultPlotOptions}{ColorScheme} = "colorPresentation";
