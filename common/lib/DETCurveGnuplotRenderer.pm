@@ -55,7 +55,7 @@ sub new
        Isoratiolines => undef,  ### Coefficients
        Isometriclines => undef, ### Coefficients
        Isopoints => undef,
-       title => "DET Plot",
+       title => "",
        gnuplotPROG => undef,
        makePNG => 1,
        PointSet => undef,
@@ -141,21 +141,27 @@ sub _initProps{
   die "Error making a proplist for the DETCurveGnuplotRenderer /".$props->get_errormsg()."/"  if ($props->error());
   die "Failed to add property xScale" unless ($props->addProp("xScale", "nd", ("nd", "log", "linear")));
   die "Failed to add property yScale" unless ($props->addProp("yScale", "nd", ("nd", "log", "linear")));
-  die "Failed to add property FAUnit" unless ($props->addProp("FAUnit", "Prob", ("Prob", "Rate")));
+  die "Failed to add property FAUnit" unless ($props->addProp("FAUnit", "Prob", ("Prob", "Rate", "Pct")));
   die "Failed to add property ColorScheme" unless ($props->addProp("ColorScheme", "color", ("mono", "color", "grey", "colorPresentation")));
-  die "Failed to add property MissUnit" unless ($props->addProp("MissUnit", "Prob", ("Prob", "Rate")));
+  die "Failed to add property MissUnit" unless ($props->addProp("MissUnit", "Prob", ("Prob", "Rate", "Pct")));
   die "Failed to add property KeySpacing" unless ($props->addProp("KeySpacing", "0.7", ()));
+  die "Failed to add property KeySamplen" unless ($props->addProp("KeySamplen", "1", ()));
   die "Failed to add property FontFace" unless ($props->addProp("KeyFontFace", "", ()));
   die "Failed to add property KeyFontSize" unless ($props->addProp("KeyFontSize", "", ()));
   die "Failed to add property CurveLineStyle" unless ($props->addProp("CurveLineStyle", "lines", ("lines", "points", "linespoints")));
   die "Failed to add property KeyLoc" unless ($props->addProp("KeyLoc", "top", ("left", "right", "center", "top", "bottom", "outside", "below",
+                                                              "outside left", "outside right", 
                                                               "left top",    "center top",    "right top",
                                                               "left center", "center center", "right center",
                                                               "left bottom", "center bottom", "right bottom")));
   die "Failed to add property PointSetAreaDefinition" unless ($props->addProp("PointSetAreaDefinition", "Radius", ("Area", "Radius")));
   die "Failed to add property PlotDETCurves" unless ($props->addProp("PlotDETCurves", "true", ("true", "false")));
   die "Failed to add property PlotMeasureThresholdPlots" unless ($props->addProp("PlotMeasureThresholdPlots", "false", ("true", "trueWithSE", "false")));
+  die "Failed to add property SerializeSeparateIsoRatioFile" unless ($props->addProp("PlotThresh", "true", ("true", "false")));
   die "Failed to add property SerializeSeparateIsoRatioFile" unless ($props->addProp("SerializeSeparateIsoRatioFile", "false", ("true", "false")));
+  die "Failed to add property IncludeRandomCurve"            unless ($props->addProp("IncludeRandomCurve",            "true",  ("true", "false")));
+  die "Failed to add property XticFormat"                  unless ($props->addProp("XticFormat",            "",  ()));
+  die "Failed to add property YticFormat"                  unless ($props->addProp("YticFormat",            "",  ()));
   
   $props;
 }
@@ -196,7 +202,9 @@ sub _setComputedProps{
   $self->{Bounds}{ymin}{disp} = MMisc::max($self->{Bounds}{ymin}{req}, 0) if (defined($self->{Bounds}{ymin}{req}));
   
   if (defined($self->{Bounds}{xmax}{req})){
-    if (($self->{props}->getValue("FAUnit") eq "Prob") && $self->{props}->getValue("xScale") eq "nd"){
+    if (($self->{props}->getValue("FAUnit") eq "Pct")){
+       $self->{Bounds}{xmax}{disp} = (MMisc::min($self->{Bounds}{xmax}{req}, 100));
+    } if (($self->{props}->getValue("FAUnit") eq "Prob") && $self->{props}->getValue("xScale") eq "nd"){
        $self->{Bounds}{xmax}{disp} = (MMisc::min($self->{Bounds}{xmax}{req}, 100));
     } elsif ($self->{props}->getValue("FAUnit") eq "Prob"){
        $self->{Bounds}{xmax}{disp} = (MMisc::min($self->{Bounds}{xmax}{req}, 1));
@@ -206,7 +214,9 @@ sub _setComputedProps{
   }
   
   if (defined($self->{Bounds}{ymax}{req})){
-    if ($self->{props}->getValue("MissUnit") eq "Prob" && $self->{props}->getValue("yScale") eq "nd"){
+    if ($self->{props}->getValue("MissUnit") eq "Pct"){
+      $self->{Bounds}{ymax}{disp} = (MMisc::min($self->{Bounds}{ymax}{req}, 100));
+    } if ($self->{props}->getValue("MissUnit") eq "Prob" && $self->{props}->getValue("yScale") eq "nd"){
       $self->{Bounds}{ymax}{disp} = (MMisc::min($self->{Bounds}{ymax}{req}, 100));
     } elsif ($self->{props}->getValue("MissUnit") eq "Prob"){
       $self->{Bounds}{ymax}{disp} = (MMisc::min($self->{Bounds}{ymax}{req}, 1));
@@ -341,7 +351,8 @@ sub _parseOptions{
     $self->{colors}->{DETFont} = $options->{DETFont};
   }
 
-  foreach my $param("PlotDETCurves", "KeyFontFace", "KeyFontSize", "KeySpacing", "KeyLoc", "PlotMeasureThresholdPlots", "CurveLineStyle", "SerializeSeparateIsoRatioFile"){
+  foreach my $param("PlotDETCurves", "KeyFontFace", "KeyFontSize", "KeySpacing", "KeyLoc", "PlotMeasureThresholdPlots", "CurveLineStyle",
+                    "SerializeSeparateIsoRatioFile", "IncludeRandomCurve", "XticFormat", "YticFormat", "PlotThresh"){
     if (exists($options->{$param})) {
       if (! $self->{props}->setValue($param, $options->{$param})){  
         die "Error: DET option $param. ".$self->{props}->get_errormsg();
@@ -1141,6 +1152,7 @@ sub write_gnuplot_DET_header{
   my $yScale = $self->{props}->getValue("yScale"); 
   my $keyLoc = $self->{props}->getValue("KeyLoc"); 
   my $keySpacing = $self->{props}->getValue("KeySpacing"); 
+  my $keySamplen = $self->{props}->getValue("KeySamplen"); 
   my $keyFontFace = $self->{props}->getValue("KeyFontFace"); 
   ($keyFontFace = $self->{colors}->{DETFont}) =~ s/font (\S+) .*/$1/ if ($keyFontFace eq "" && $self->{colors}->{DETFont} ne "");
   my $keyFontSize = $self->{props}->getValue("KeyFontSize"); 
@@ -1155,7 +1167,7 @@ sub write_gnuplot_DET_header{
   print $FP "### keyLoc=$keyLoc keySpacing=$keySpacing keyFontFace=$keyFontFace keyFontSize=$keyFontSize\n";
 
   $keyLoc = $bvc if ($keyLoc eq "below");  ### Gnuplot changed
-  print $FP "set key $keyLoc spacing $keySpacing ". ($keyLoc eq $bvc ? "box" : "")." ".
+  print $FP "set key $keyLoc samplen $keySamplen spacing $keySpacing ". ($keyLoc eq $bvc ? "box" : "")." ".
     ($keyFontFace.$keyFontSize eq "" ? "" : "font \"$keyFontFace,$keyFontSize\"")."\n";
   
   my $ratio = 0.85;
@@ -1182,26 +1194,29 @@ sub write_gnuplot_DET_header{
   print $FP "set ylabel '".$metric->errMissLab()." $ylab'\n";
   print $FP "set xlabel '".$metric->errFALab()." $xlab'\n";
 
+  my $XticFmt = (($self->{props}->getValue("XticFormat") eq "") ? "" : "format \"".$self->{props}->getValue("XticFormat")."\"");
   print $FP join("\n",@$labels)."\n" if (defined($labels));
   if ($xScale eq "nd") {
     print $FP "set noxtics\n"; 
     print $FP $self->_ticsLine('xtics', $self->{Bounds}{xmin}{disp}, $self->{Bounds}{xmax}{disp});
   } elsif ($xScale eq "log") {
-    print $FP "set xtics\n"; 
+    print $FP "set xtics $XticFmt\n"; 
     print $FP "set logscale x\n"; 
   } else {                      # linear
-    print $FP "set xtics\n"; 
+    print $FP "set xtics $XticFmt\n"; 
   }
   ### Write the tic marks
 
+
+  my $YticFmt = (($self->{props}->getValue("YticFormat") eq "") ? "" : "format \"".$self->{props}->getValue("YticFormat")."\"");
   if ($yScale eq "nd") {
     print $FP "set noytics\n"; 
     print $FP $self->_ticsLine('ytics', $self->{Bounds}{ymin}{disp}, $self->{Bounds}{ymax}{disp});
   } elsif ($yScale eq "log") {
-    print $FP "set ytics\n"; 
+    print $FP "set ytics $YticFmt\n"; 
     print $FP "set logscale y\n"; 
   } else {                      # linear
-    print $FP "set ytics\n"; 
+    print $FP "set ytics $YticFmt\n"; 
   }
     
   my $xrange = ($xScale eq "nd" ? "[".ppndf($self->{Bounds}{xmin}{metric}).":".ppndf($self->{Bounds}{xmax}{metric})."]" : "[$self->{Bounds}{xmin}{metric}:$self->{Bounds}{xmax}{metric}]");
@@ -1505,11 +1520,18 @@ sub _getLineTitleString
     $title = " (".$det->getTrials()->getNumEvaluatedBlocks()." of ".$det->getTrials()->getNumBlocks()." ".$det->getTrials()->getBlockID().")";
   } elsif ($type eq "Legend"){
     foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
-      $title .= ", " if ($title ne "");
-      $title .= $faStr   if ($supVal eq "F");
-      $title .= $missStr if ($supVal eq "M");
-      $title .= $thrStr  if ($supVal eq "T");
-      $title .= $combStr if ($supVal eq "C");
+      if ($supVal eq "G"){
+        foreach my $gm(@{ $det->{METRIC}->getGlobalMeasures()}){
+          $title .= ", " if ($title ne "");
+          $title .= $det->getGlobalMeasureString($gm).$det->getGlobalMeasureUnit($gm);
+        }
+      } else {
+        $title .= ", " if ($title ne "");
+        $title .= $faStr   if ($supVal eq "F");
+        $title .= $missStr if ($supVal eq "M");
+        $title .= $thrStr  if ($supVal eq "T");
+        $title .= $combStr if ($supVal eq "C");
+      }
     }
     $title = "Measures: ".$title;
   } else {
@@ -1539,20 +1561,40 @@ sub _getLineTitleString
 
     if (! $self->{DETAbbreviateMeasureTypes} || (exists($self->{DETShowMeasurementsAsLegend}) && $self->{DETShowMeasurementsAsLegend})){
       foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
-        $title .= ($tag ? " " : ", ") if ($title ne "");
-        $title .= sprintf(($tag ? " $faStr=" : "").  $det->{METRIC}->errFAPrintFormat(),     $fa) if ($supVal eq "F");
-        $title .= sprintf(($tag ? " $missStr=" : "").$det->{METRIC}->errMissPrintFormat(), $miss) if ($supVal eq "M");
-        $title .= sprintf(($tag ? " $thrStr=" : ""). $det->{METRIC}->combPrintFormat(),         $thr) if ($supVal eq "T");
-        $title .= sprintf(($tag ? " $combStr=" : "").$det->{METRIC}->combPrintFormat(),    $comb) if ($supVal eq "C");
+        if ($supVal eq "G"){
+          foreach my $gm(@{ $det->{METRIC}->getGlobalMeasures()}){
+            my $gmStr = $det->getGlobalMeasureString($gm);
+            my $gmVal = $det->getGlobalMeasure($gm);
+            my $gmFmt = $det->getGlobalMeasureFormat($gm);
+            $title .= ($tag ? " " : ", ") if ($title ne "");
+            $title .= sprintf(($tag ? " $gmStr=" : "").$gmFmt,    $gmVal);
+          }
+        } else {
+          $title .= ($tag ? " " : ", ") if ($title ne "");
+          $title .= sprintf(($tag ? " $faStr=" : "").  $det->{METRIC}->errFAPrintFormat(),     $fa) if ($supVal eq "F");
+          $title .= sprintf(($tag ? " $missStr=" : "").$det->{METRIC}->errMissPrintFormat(), $miss) if ($supVal eq "M");
+          $title .= sprintf(($tag ? " $thrStr=" : ""). $det->{METRIC}->combPrintFormat(),         $thr) if ($supVal eq "T");
+          $title .= sprintf(($tag ? " $combStr=" : "").$det->{METRIC}->combPrintFormat(),    $comb) if ($supVal eq "C");
+        }
       } 
       $title = "$metStr " . $title;     
     } else {  
       foreach my $supVal(@{ $self->{DETShowPoint_SupportValues} }){
-        $title .= ($tag ? " " : ", ") if ($title ne "");
-        $title .= sprintf(($tag ? "$abrMetStr$faStr=" : "").  $det->{METRIC}->errFAPrintFormat(),     $fa) if ($supVal eq "F");
-        $title .= sprintf(($tag ? "$abrMetStr$missStr=" : "").$det->{METRIC}->errMissPrintFormat(), $miss) if ($supVal eq "M");
-        $title .= sprintf(($tag ? "$abrMetStr$thrStr=" : ""). $det->{METRIC}->combPrintFormat(),         $thr) if ($supVal eq "T");
-        $title .= sprintf(($tag ? "$abrMetStr$combStr=" : "").$det->{METRIC}->combPrintFormat(),    $comb) if ($supVal eq "C");
+        if ($supVal eq "G"){
+          foreach my $gm(@{ $det->{METRIC}->getGlobalMeasures()}){
+            my $gmAbbrevStr = $det->getGlobalMeasureAbbrevString($gm);
+            my $gmVal = $det->getGlobalMeasure($gm);
+            my $gmFmt = $det->getGlobalMeasureFormat($gm);
+            $title .= sprintf(($tag ? " $gmAbbrevStr=" : "").$gmFmt,    $gmVal);
+            $det->getGlobalMeasureString($gm);
+          }
+        } else {
+          $title .= ($tag ? " " : ", ") if ($title ne "");
+          $title .= sprintf(($tag ? "$abrMetStr$faStr=" : "").  $det->{METRIC}->errFAPrintFormat(),     $fa) if ($supVal eq "F");
+          $title .= sprintf(($tag ? "$abrMetStr$missStr=" : "").$det->{METRIC}->errMissPrintFormat(), $miss) if ($supVal eq "M");
+          $title .= sprintf(($tag ? "$abrMetStr$thrStr=" : ""). $det->{METRIC}->combPrintFormat(),         $thr) if ($supVal eq "T");
+          $title .= sprintf(($tag ? "$abrMetStr$combStr=" : "").$det->{METRIC}->combPrintFormat(),    $comb) if ($supVal eq "C");
+        }
       } 
     }
   }
@@ -1610,7 +1652,8 @@ sub writeMultiDetGraph
     push @offAxisLabels, $self->_makePointSetLabels();
     
     ### Check the metric types to see if the random curve is defined
-    if ($self->{props}->getValue("MissUnit") eq "Prob" && $self->{props}->getValue("FAUnit") eq "Prob"){
+    if ($self->{props}->getValue("IncludeRandomCurve") eq "true" && 
+        ($self->{props}->getValue("MissUnit") eq "Prob" && $self->{props}->getValue("FAUnit") eq "Prob")){
        push @PLOTCOMS, "  -x title 'Random Performance' with lines lt 1";
     }
 
@@ -1699,7 +1742,7 @@ sub writeMultiDetGraph
 
     ### Include the measurment legend?
     if (exists($self->{DETShowMeasurementsAsLegend}) && $self->{DETShowMeasurementsAsLegend}){
-      push @PLOTCOMS, "  999999999 title '".$self->_getLineTitleString("Legend", 0,$detset->getDETForID(0))."' with lines lt rgb \"#ffffff\"";
+      push @PLOTCOMS, "  999999999 title \"".$self->_getLineTitleString("Legend", 0,$detset->getDETForID(0))."\" with lines lt rgb \"#ffffff\"";
     }
 
     ### Write Individual Dets
@@ -1747,7 +1790,7 @@ sub writeMultiDetGraph
        
        #########  Since this is recursive, the title gets appended with the sub-title the set it back
        my $saveTitle = $self->{title};
-       $self->{title} .= " - " . $detset->getTitleForID($d);
+       $self->{title} .= ($self->{title} ne "" ? ": " : "") . $detset->getTitleForID($d);
        my $ret = $self->writeGNUGraph($troot, $detset->getDETForID($d));
        $self->{title} = $saveTitle;
        
@@ -1813,7 +1856,7 @@ sub writeMultiDetGraph
           $xcol = ($xScale eq "nd" ? "11" : "9");
           $ycol = ($yScale eq "nd" ? "10" : "8");
           
-          $ltitle .= " - " if ($ltitle ne "");
+          $ltitle .= ": " if ($ltitle ne "");
           $ltitle .= $self->_getLineTitleString("Actual", 0, $detset->getDETForID($d), 
                                                 \@offAxisLabels, $color, $closedPoint, $thisPointSize, 0); 
           my $title = ($displayKey eq "false") ? "notitle" : "title '"._gnuplotSafeString($ltitle)."'";
@@ -1896,6 +1939,7 @@ sub writeGNUGraph{
   ### Consult the properties
   my $xScale = $self->{props}->getValue("xScale");
   my $yScale = $self->{props}->getValue("yScale");    
+  my $plotThresh = $self->{props}->getValue("PlotThresh") eq "true" ? 1 : 0;    
   my $curveLineStyle = $self->{props}->getValue("CurveLineStyle");    
   my $plotMeasureThresh = ($self->{props}->getValue("PlotMeasureThresholdPlots") =~ /^(true|trueWithSE)$/);    
   my $plotMeasureThreshWithSE = ($self->{props}->getValue("PlotMeasureThresholdPlots") =~ /^(trueWithSE)$/);    
@@ -1929,9 +1973,10 @@ sub writeGNUGraph{
   ### Draw the isoratiolines
   $self->_drawIsoratiolines($fileRoot, \@PLOTCOMS, $metric);
         
-  open(THRESHPLT,"> $fileRoot.thresh.plt") ||
-    die("unable to open DET gnuplot file $fileRoot.thresh.plt");
-
+  if ($plotThresh){
+    open(THRESHPLT,"> $fileRoot.thresh.plt") ||
+      die("unable to open DET gnuplot file $fileRoot.thresh.plt");
+  }
   if ($plotMeasureThresh){
     open(THRESHPLT_FA,"> $fileRoot.thresh.$faStr.plt") ||
       die("unable to open DET gnuplot file $fileRoot.thresh.$faStr.plt");
@@ -2022,13 +2067,14 @@ sub writeGNUGraph{
   }
   
   ### Include a random Curve?
-  if ($self->{props}->getValue("MissUnit") ne "Prob" || $self->{props}->getValue("FAUnit") ne "Prob"){
+  if ($self->{props}->getValue("IncludeRandomCurve") eq "true" && 
+      ($self->{props}->getValue("MissUnit") ne "Prob" || $self->{props}->getValue("FAUnit") ne "Prob")){
     push @PLOTCOMS, "  -x title 'Random Performance' with lines lc $randomColor";
   }  
 
   ### Include the measurment legend?
   if (exists($self->{DETShowMeasurementsAsLegend}) && $self->{DETShowMeasurementsAsLegend}){
-    push @PLOTCOMS, " 0 title 'Measures: ' with lines";
+    push @PLOTCOMS, " 0 title \"".$self->_getLineTitleString("Legend", 0, $det, \@offAxisLabels, $curveColor, 6, $pointSize, 0)."\" with lines";
   }
 
   ### Set the title
@@ -2049,7 +2095,7 @@ sub writeGNUGraph{
   
   ### Actual for the DET
   if ($self->{DETShowPoint_Actual}){
-    $ltitle .= " - " if ($ltitle ne "");
+    $ltitle .= ": " if ($ltitle ne "");
     $ltitle .= $self->_getLineTitleString("Actual", 0, $det, 
                                           \@offAxisLabels, $curveColor, 6, $pointSize, 0); 
 
@@ -2075,7 +2121,7 @@ sub writeGNUGraph{
     $xcol = ($xScale eq "nd" ? "6" : "4");
     $ycol = ($yScale eq "nd" ? "5" : "3");
 
-    $ltitle .= " - " if ($ltitle ne "");
+    $ltitle .= ": " if ($ltitle ne "");
     $ltitle .= $self->_getLineTitleString("Best", 0, $det, 
                                           \@offAxisLabels, $curveColor, 7, $pointSize, 0); 
 
@@ -2086,7 +2132,7 @@ sub writeGNUGraph{
   
   ### Error curves
   if ($withErrorCurve) {
-    $ltitle .= " - " if ($ltitle ne "");
+    $ltitle .= ": " if ($ltitle ne "");
     $ltitle .= "+/- 2 Standard Error";
     $xcol = ($xScale eq "nd" ? "8" : "12");
     $ycol = ($yScale eq "nd" ? "7" : "13");
@@ -2105,7 +2151,7 @@ sub writeGNUGraph{
     $xcol = ($xScale eq "nd" ? "6" : "4");
     $ycol = ($yScale eq "nd" ? "5" : "3");
     foreach my $ratio(@{ $self->{Isoratiolines} }){    
-      $ltitle .= " - " if ($ltitle ne "");
+      $ltitle .= ": " if ($ltitle ne "");
       $ltitle .= $self->_getLineTitleString("ErrorRatio", $ratio, $det,
                                                   \@offAxisLabels, $curveColor, 7, $pointSize, 0); 
       push @PLOTCOMS, sprintf("    '$fileRoot.dat.3' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $curveColor pt 7 ps $pointSizeDiv2");  
@@ -2167,21 +2213,27 @@ sub writeGNUGraph{
     $threshMin -= 0.000001;
     $threshMax += 0.000001;
   }
-  $self->write_gnuplot_threshold_header(*THRESHPLT, "Threshold Plot for $self->{title}");
+  if ($plotThresh){
+    $self->write_gnuplot_threshold_header(*THRESHPLT, "Threshold Plot for $self->{title}");
+  }
   if ($plotMeasureThresh){
     $self->write_gnuplot_threshold_header(*THRESHPLT_FA, "$faStr Threshold Plot for $self->{title}");
     $self->write_gnuplot_threshold_header(*THRESHPLT_MISS, "$missStr Threshold Plot for $self->{title}");
     $self->write_gnuplot_threshold_header(*THRESHPLT_COMB, "$combStr Threshold Plot for $self->{title}");
   }
   if (defined($threshMin)){
-    print THRESHPLT "plot [$threshMin:$threshMax]  \\\n";
+    if ($plotThresh){
+      print THRESHPLT "plot [$threshMin:$threshMax]  \\\n";
+    }
     if ($plotMeasureThresh){
       print THRESHPLT_FA "plot [$threshMin:$threshMax]  \\\n";
       print THRESHPLT_MISS "plot [$threshMin:$threshMax]  \\\n";
       print THRESHPLT_COMB "plot [$threshMin:$threshMax]  \\\n";
     }
     ### Miss
-    print THRESHPLT      "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines lt 2, \\\n";
+    if ($plotThresh){
+      print THRESHPLT      "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines lt 2, \\\n";
+    }
     if ($plotMeasureThresh){
       print THRESHPLT_MISS "  '$fileRoot.dat.1' using 1:4 title '$missStr' with lines lt 2"; 
       if ($numBlk > 1 && $plotMeasureThreshWithSE){
@@ -2191,7 +2243,9 @@ sub writeGNUGraph{
       print THRESHPLT_MISS "\n";
     }
     ### FA
-    print THRESHPLT    "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines lt 3, \\\n";
+    if ($plotThresh){
+      print THRESHPLT    "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines lt 3, \\\n";
+    }
     if ($plotMeasureThresh){
       print THRESHPLT_FA "  '$fileRoot.dat.1' using 1:5 title '$faStr' with lines lt 3";
       if ($numBlk > 1 && $plotMeasureThreshWithSE){
@@ -2201,7 +2255,9 @@ sub writeGNUGraph{
       print THRESHOLD_FA "\n";
     }
     ### COMB
-    print THRESHPLT      "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines lt 4";
+    if ($plotThresh){
+      print THRESHPLT      "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines lt 4";
+    }
     if ($plotMeasureThresh){
       print THRESHPLT_COMB "  '$fileRoot.dat.1' using 1:6 title '$combStr' with lines lt 4";
       if ($numBlk > 1 && $plotMeasureThreshWithSE){
@@ -2210,39 +2266,41 @@ sub writeGNUGraph{
       }
     }
     if ($self->{DETShowPoint_Actual}){
-      print THRESHPLT      ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines lt 5";
+      print THRESHPLT      ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines lt 5" if ($plotThresh);
       print THRESHPLT_COMB ", \\\n  $actComb title 'Actual $combStr ".sprintf("%.3f",$actComb)."' with lines lt 5" if ($plotMeasureThresh);;
     }
     if (defined($det->getBestCombComb())) {
-      print THRESHPLT      ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points lt 6";
+      print THRESHPLT      ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points lt 6" if ($plotThresh);
       print THRESHPLT_COMB ", \\\n  '$fileRoot.dat.2' using 1:2 title '$combType $combStr ".sprintf("%.3f, scr %.3f",$comb,$scr)."' with points lt 6" if ($plotMeasureThresh);
     }
-    print THRESHPLT "\n";
+    print THRESHPLT "\n" if ($plotThresh);
     if ($plotMeasureThresh){
       print THRESHPLT_FA "\n";
       print THRESHPLT_MISS "\n";
       print THRESHPLT_COMB "\n";
     }
-  }   else {
+  } else {
     my $failStr = "set label ".($self->{labelNum}++)."  \"No detection outputs produced by the system.  Threshold plot is empty.\" at graph 0.2, graph 0.5\n".
                   "set size ratio 1\n".
                   "plot [0:1] [0:1] -x notitle with points\n";
-    print THRESHPLT $failStr;
+    print THRESHPLT $failStr if ($plotThresh);
     if ($plotMeasureThresh){
       print THRESHPLT_FA $failStr;
       print THRESHPLT_MISS $failStr;
       print THRESHPLT_COMB $failStr;
     }
   }
-  close THRESHPLT;
+  close THRESHPLT if ($plotThresh);
   if ($plotMeasureThresh){
     close THRESHPLT_FA;
     close THRESHPLT_MISS;
     close THRESHPLT_COMB;
   }
   if ($self->{BuildPNG}) {
-    buildPNG($fileRoot.".thresh", $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt}, $self->{colors}->{DETFont});
-    $det->setThreshPng("$fileRoot.thresh.png");
+    if ($plotThresh) {
+      buildPNG($fileRoot.".thresh", $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt}, $self->{colors}->{DETFont});
+      $det->setThreshPng("$fileRoot.thresh.png");
+    }
     if ($plotMeasureThresh){
       foreach my $m($faStr, $missStr, $combStr){        
         buildPNG($fileRoot.".thresh.$m", $self->{gnuplotPROG}, $self->{HD}, $self->{AutoAdapt}, $self->{colors}->{DETFont});
@@ -2250,6 +2308,8 @@ sub writeGNUGraph{
       }
     }
   }
+  ##############  End of Threshold plots
+  
   1;
 }
 
