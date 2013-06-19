@@ -57,22 +57,34 @@ sub new
 
     ### This implements a normalized cost
     $self->setCombLab("R0");
-    $self->setErrMissLab("PRecall");
-    $self->setErrFALab("PRetrieve");
+    $self->setErrFAUnit("Pct");
+    $self->setErrMissUnit("Pct");
+    $self->setErrMissLab("Recall");
+    $self->setErrFALab("Percent Rank");
     $self->setCombTypToMaximizable();
-    $self->setErrMissPrintFormat("%.3f");
-    $self->setErrFAPrintFormat("%.3f");
-    $self->setCombPrintFormat("%.3f");
+    $self->setErrMissPrintFormat("%.1f");
+    $self->setErrFAPrintFormat("%.1f");
+    $self->setCombPrintFormat("%.1f");
 
     $self->{defaultPlotOptions}{ReportGlobal} = 1;
     $self->{defaultPlotOptions}{Xmin} = 0;
-    $self->{defaultPlotOptions}{Xmax} = .10;
+    $self->{defaultPlotOptions}{Xmax} = 5;
     $self->{defaultPlotOptions}{Ymin} = 0;
-    $self->{defaultPlotOptions}{Ymax} = 1;
+    $self->{defaultPlotOptions}{Ymax} = 100;
+    $self->{defaultPlotOptions}{DrawIsometriclines} = 1;
+    $self->{defaultPlotOptions}{Isometriclines} = [(25, 50, 65, 75, 85)];
     $self->{defaultPlotOptions}{xScale} = "linear";
     $self->{defaultPlotOptions}{yScale} = "linear";
     $self->{defaultPlotOptions}{ColorScheme} = "colorPresentation";
     $self->{defaultPlotOptions}{ReportRowTotals} = 1;
+    $self->{defaultPlotOptions}{IncludeRandomCurve} = "false";
+    $self->{defaultPlotOptions}{DETShowMeasurementsAsLegend} = 1;
+    $self->{defaultPlotOptions}{DETShowPoint_Actual} = 1;
+#    $self->{defaultPlotOptions}{DETShowPoint_Best} = 1;
+    $self->{defaultPlotOptions}{DETShowPoint_SupportValues} = [("G", "C")];
+    $self->{defaultPlotOptions}{KeyLoc} = "right bottom";
+    $self->{defaultPlotOptions}{PlotThresh} = "false";
+    $self->{defaultPlotOptions}{"XticFormat"} = "%.3f";
     return $self;
   }
 
@@ -157,7 +169,7 @@ sub errMissBlockCalc(){
   my ($self, $nMiss, $nFA, $block) = @_;
   my $NTarg =  $self->{TRIALS}->getNumTarg($block);
   
-  ($NTarg > 0) ? ($NTarg - $nMiss) / $NTarg : undef; 
+  ($NTarg > 0) ? ($NTarg - $nMiss) / $NTarg * 100: undef; 
 }
 
 #### Percent Recall
@@ -166,7 +178,7 @@ sub errFABlockCalc(){
   my $NTarg =  $self->{TRIALS}->getNumTarg($block);
   my $NRet = ( ($NTarg - $nMiss) + $nFa);
   my $NNTarg = $self->{TRIALS}->getNumNonTarg($block);
-  ($NNTarg + $NTarg > 0) ? ($NRet) / ($NNTarg + $NTarg) : undef;
+  ($NNTarg + $NTarg > 0) ? ($NRet) / ($NNTarg + $NTarg) * 100: undef;
 }
 
 sub combCalcWeightedMiss(){
@@ -359,22 +371,22 @@ sub unitTest {
   use DETCurveSet;
   use DETCurveGnuplotRenderer;
 
-  my $met = new MetricR0({ ('m' => 2, 'AP' => "true") }, $trial);
-  my $DNmet = new MetricR0({ ('m' => 2, 'AP' => "true") }, $DNtrial);
+  my $met = new MetricR0({ ('m' => 2, 'APPpct' => "true", 'APpct' => "true") }, $trial);
+  my $DNmet = new MetricR0({ ('m' => 2, 'APPpct' => "true", 'APpct' => "true") }, $DNtrial);
 
   ##############################################################################################
   print "  Testing Calculations .. ";
   my ($exp, $ret, $pret, $recall, $comb);
   
   ## PercentReturned and recall checks
-  $exp = 0.5; $ret = $met->errMissBlockCalc(5, 20, "she"); 
+  $exp = 50.0; $ret = $met->errMissBlockCalc(5, 20, "she"); 
   die "\nError: errMissBlockCalc(#Miss=5, #FA=20, block=she) was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
-  $exp = 0.0609756097560976; $ret = $met->errFABlockCalc(5, 20, "she"); 
+  $exp = 6.09756097560976; $ret = $met->errFABlockCalc(5, 20, "she");
   die "\nError: errFABlockCalc(#Miss=5, #FA=20, block=she) was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
   
-  $exp = -1; $pret = 1; $recall = 1; $ret = $met->combCalc($pret, $recall); 
+  $exp = -100; $pret = 100; $recall = 100; $ret = $met->combCalc($pret, $recall); 
   die "\nError: R0 for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
-  $exp = -2; $pret = 0; $recall = 1; $ret = $met->combCalc($pret, $recall); 
+  $exp = -200; $pret = 0; $recall = 100; $ret = $met->combCalc($pret, $recall); 
   die "\nError: R0 for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
   $exp = 1; $pret = 1; $recall = 0; $ret = $met->combCalc($pret, $recall); 
   die "\nError: R0 for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
@@ -382,9 +394,9 @@ sub unitTest {
   die "\nError: R0 for PRet=$pret, Recall=$recall was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
 
 
-  $exp = 0.9; $ret = $met->errMissBlockCalc(1, 3, "she"); 
+  $exp = 90; $ret = $met->errMissBlockCalc(1, 3, "she"); 
   die "\nError: errMissBlockCalc(#Miss=1, #FA=3, block=she) was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001);
-  $exp = 0.029268; $ret = $met->errFABlockCalc(1, 3, "she"); 
+  $exp = 2.9268; $ret = $met->errFABlockCalc(1, 3, "she"); 
   die "\nError: errFABlockCalc(#Miss=1, #FA=3, block=she) was = $ret NOT $exp\n " if (abs($ret - $exp) > 0.0001); 
 
   ## Inverse calculations for MISS
@@ -396,9 +408,8 @@ sub unitTest {
   die "\nError: MISSForGivenComb(comb=$comb, recall=$recall) was = $ret NOT $exp\n" if (abs($ret - $exp) > 0.0001);
   print "Ok\n";
 
-  $ret = $met->testActualDecisionPerformance([ ('0.841463', undef, '0.9', undef, '0.0292683', undef) ], "  ");
-  die $ret if ($ret ne "ok");
-
+  $ret = $met->testActualDecisionPerformance([ (84.14634, undef, 90, undef, 2.92683, undef) ], "  ");  die $ret if ($ret ne "ok");
+  
   my $det1 = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef);
   $det1->computePoints();
 
@@ -412,30 +423,28 @@ sub unitTest {
   die "Error: Failed to add first det" if ("success" ne $ds->addDET("Targetted Point", $det1));
   die "Error: Failed to add second det" if ("success" ne $ds->addDET("Do Nothing", $DNdet));
 
-  $exp = 0.850190;
-  die "\nError: Ave Prec for \$det1 is ".$det1->getGlobalMeasure("AP")." not $exp\n" if (abs($det1->getGlobalMeasure("AP") - $exp) > 0.0001);
-  $exp = 0.485611;
-  die "\nError: Ave Prec for \$DNdet is ".$DNdet->getGlobalMeasure("AP")." not $exp\n" if (abs($DNdet->getGlobalMeasure("AP") - $exp) > 0.0001);
-  $exp = 0.5027545;
-  die "\nError: Ave Prec for \$DNdet is ".$IDsDet->getGlobalMeasure("AP")." not $exp\n" if (abs($IDsDet->getGlobalMeasure("AP") - $exp) > 0.0001);
+  $exp = 85.0190;
+  die "\nError: Ave Prec for \$det1 is ".$det1->getGlobalMeasure("APpct")." not $exp\n" 
+    if (abs($det1->getGlobalMeasure("APpct") - $exp) > 0.0001);
+  $exp = 48.5611;
+  die "\nError: Ave Prec for \$DNdet is ".$DNdet->getGlobalMeasure("APpct")." not $exp\n" 
+    if (abs($DNdet->getGlobalMeasure("APpct") - $exp) > 0.0001);
+  $exp = 50.27545;
+  die "\nError: Ave Prec for \$DNdet is ".$IDsDet->getGlobalMeasure("APpct")." not $exp\n" 
+    if (abs($IDsDet->getGlobalMeasure("APpct") - $exp) > 0.0001);
+
+  $exp = 72.0639;
+  die "\nError: Ave Prec for \$det1 is ".$det1->getGlobalMeasure("APPpct")." not $exp\n" 
+    if (abs($det1->getGlobalMeasure("APPpct") - $exp) > 0.0001);
   
 
   if (defined($dir)){
-#    my $options = { ("Xmin" => 0,
-#		   "Xmax" => 100,
-#		   "Ymin" => 0,
-#		   "Ymax" => 100,
-#		   "xScale" => "linear",
-#		   "yScale" => "linear",
     my $options = { (
 		   "ColorScheme" => "colorPresentation",
-       "DrawIsometriclines" => 1,
-       "Isometriclines" => [ (.5, .1) ], 
-#       "DrawIsoratiolines" => 1,
-#       "Isoratiolines" =>  [ (.5) ],
+#       "DrawIsometriclines" => 1,
+#       "Isometriclines" => [ (.5, .1) ], 
        "createDETfiles" => 1,
        "serialize" => 1,
-        ReportGlobal => 1, 
         ExcludePNGFileFromTextTable => 1
      ) };
   
