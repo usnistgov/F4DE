@@ -413,7 +413,8 @@ sub _buildAutoTable(){
       }
       if ($reportGlobal){
       	foreach my $gm(@{ $metric->getGlobalMeasures() }){
-	  $at->addData(&_PN("%.3f", $det->getGlobalMeasure($gm)), ($useAT ? "Global Measures|" : "" ) . $det->getGlobalMeasureString($gm),
+	  $at->addData(&_PN($det->getGlobalMeasureFormat($gm), $det->getGlobalMeasure($gm)),
+	                    ($useAT ? "Global Measures|" : "" ) . $det->getGlobalMeasureString($gm). $det->getGlobalMeasureUnit($gm),
 	     $key);
         }
       }
