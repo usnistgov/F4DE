@@ -74,7 +74,7 @@ install_noman:
 #####
 
 CM_DIR=common
-COMMONTOOLS=tools/{DETEdit/DETEdit.pl,DETMerge/DETMerge.pl,DETUtil/DETUtil.pl,xmllintTools/xsdxmllint.pl}
+COMMONTOOLS=tools/{DETEdit/DETEdit.pl,DETMerge/DETMerge.pl,DETUtil/DETUtil.pl,xmllintTools/xsdxmllint.pl,TableMan/TableMan.pl}
 COMMONTOOLS_MAN=tools/DETUtil/DETUtil.pl
 VIDATDIR=${CM_DIR}/tools/VidAT
 SQLITETOOLSDIR=${CM_DIR}/tools/SQLite_tools
