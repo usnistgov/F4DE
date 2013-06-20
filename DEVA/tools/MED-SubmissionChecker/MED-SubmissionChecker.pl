@@ -209,6 +209,8 @@ my @expid_MEDtype;
 my @expid_traintype;
 my @expid_EAG;
 my @expid_sysid_beg;
+my @expid_sys;
+
 
 my @expected_dir_output;
 my $expected_csv_per_expid = -1;
@@ -240,12 +242,13 @@ sub __cfgcheck {
 
 # EXPID side
 &__cfgcheck("\@expid_tag", (scalar @expid_tag == 0), 1);
+my $medyear = $expid_tag[0];
 &__cfgcheck("\@expid_data", (scalar @expid_data == 0), 1);
 &__cfgcheck("\@expid_task", (scalar @expid_task == 0), ($expid_count == 9));
-&__cfgcheck("\@expid_MEDtype", (scalar @expid_MEDtype == 0), 1);
-&__cfgcheck("\@expid_traintype", (scalar @expid_traintype == 0), ($expid_count == 9));
-&__cfgcheck("\@expid_EAG", (scalar @expid_EAG == 0), 1);
-&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0), 1);
+&__cfgcheck("\@expid_MEDtype", (scalar @expid_MEDtype == 0), ($medyear ne 'MED13'));
+&__cfgcheck("\@expid_traintype", (scalar @expid_traintype == 0), (($expid_count == 9) || ($medyear eq 'MED13')));
+&__cfgcheck("\@expid_EAG", (scalar @expid_EAG == 0), ($medyear ne 'MED13'));
+&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0), ($medyear ne 'MED13'));
 
 &__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0), 1);
 &__cfgcheck("\$expected_csv_per_expid", ($expected_csv_per_expid < 0), 1);
@@ -260,8 +263,6 @@ sub __cfgcheck {
 &__cfgcheck("\@db_thresholdEID", (scalar @db_thresholdEID == 0), 1);
 
 &extend_file_location(\$db_check_sql, 'SQL DB check file', @data_search_path);
-
-my $medyear = $expid_tag[0];
 
 my $doepmd = 0;
 
@@ -280,7 +281,9 @@ foreach my $sf (@ARGV) {
   my $tmpdir = "";
   my $team = "";
   my $data = "";
+  my $eset = "";
   my $err = "";
+  my $subnum = "";
 
   if (! defined $wid) {
     vprint(1, "Checking \'$sf\'");
@@ -302,15 +305,23 @@ foreach my $sf (@ARGV) {
       &valerr($sf, $err);
       next;
     }
-    
-    vprint(1, "Get the TEAM, DATA and SUB-NUM information");
-    ($err, $team, $data, my $subnum) = &check_archive_name($file);
+
+    if ($medyear eq 'MED13') {
+      vprint(1, "Get the TEAM, SEARCH, EVENTSET and SUB-NUM information");
+    } else {
+      vprint(1, "Get the TEAM, DATA and SUB-NUM information");
+    }
+    ($err, $team, $data, $subnum, $eset) = &check_archive_name($file);
     if (! MMisc::is_blank($err)) {
       &valerr($sf, $err);
       next;
     }
-    vprint(2, "<TEAM> = $team | <DATA> = $data | <SUB-NUM> = $subnum");
-    
+    if ($medyear eq 'MED13') {
+      vprint(2, "<TEAM> = $team | <SEARCH> = $data | <EVENTSET> = $eset | <SUB-NUM> = $subnum");
+    } else {
+      vprint(2, "<TEAM> = $team | <DATA> = $data | <SUB-NUM> = $subnum");
+    }
+
     vprint(1, "Uncompressing archive");
     ($err, $tmpdir) = &uncompress_archive($dir, $file, $ext, $rtmpdir);
     if (! MMisc::is_blank($err)) {
@@ -318,13 +329,25 @@ foreach my $sf (@ARGV) {
       next;
     }
   } else {
-    $team = $sf;
+    if ($medyear eq 'MED13') {
+      ($err, $team, $data, $subnum, $eset) = &check_archive_name($sf);
+      if (! MMisc::is_blank($err)) {
+        &valerr($sf, $err);
+        next;
+      }
+    } else {
+      $team = $sf;
+    }
     $tmpdir = $wid;
     my $de = MMisc::check_dir_r($tmpdir);
     MMisc::error_quit("Problem with \'work_in_dir\' directory ($tmpdir): $de")
       if (! MMisc::is_blank($de));
-    vprint(1, "\'work_in_dir\' path");
-    vprint(2, "<TEAM> = $team");
+    vprint(1, "\'work_in_dir\' selected");
+    if ($medyear eq 'MED13') {
+      vprint(2, "<TEAM> = $team | <SEARCH> = $data | <EVENTSET> = $eset");
+    } else {
+      vprint(2, "<TEAM> = $team");
+    }
   }
   vprint(2, "Temporary directory: $tmpdir");
 
@@ -366,7 +389,7 @@ foreach my $sf (@ARGV) {
     foreach my $sdir (sort @$rd) {
       vprint(2, "Checking Submission Directory ($sdir)");
       $wn_key = $sdir;
-      my ($err) = &check_submission_dir("$tmpdir/$odir", $sdir, $team);
+      my ($err) = &check_submission_dir("$tmpdir/$odir", $sdir, $team, $data, $eset);
       if (! MMisc::is_blank($err)) {
         &valerr($sf, "While checking submission dir [$sdir] : " . $err);
         $ok = 0;
@@ -473,6 +496,8 @@ sub check_archive_extension {
 sub check_archive_name {
   my $file = MMisc::iuv(shift @_, "");
 
+  return(check_archive_name13p($file)) if ($medyear eq 'MED13');
+
   my $et = "Archive name not of the form \'${medyear}_<TEAM>_<DATA>_<SUB-NUM>\' : ";
 
   my ($ltag, $lteam, $ldata, $lsubnum, @left) = split(m%\_%, $file);
@@ -492,6 +517,33 @@ sub check_archive_name {
     if (! MMisc::is_blank($err));
 
   return("", $lteam, $ldata, $lsubnum);
+}
+
+##
+
+sub check_archive_name13p {
+  my $file = MMisc::iuv(shift @_, "");
+
+  my $et = "Archive name not of the form \'${medyear}_<TEAM>_<SEARCH>_<EVENTSET>_<SUB-NUM>\' : ";
+
+  my ($ltag, $lteam, $ldata, $leset, $lsubnum, @left) = split(m%\_%, $file);
+  
+  return($et . "leftover entries: " . join(" ", @left))
+    if (scalar @left > 0);
+
+  my $err = "";
+
+  $err .= &cmp_exp($medyear, $ltag, @expid_tag);
+  $err .= &cmp_exp("<SEARCH>",  $ldata, @expid_data);
+  $err .= &cmp_exp("<EVENTSET>",  $leset, @expid_task);
+  
+  $err .= "<SUB-NUM> ($lsubnum) not of the expected form: integer value starting at 1. "
+    if ( ($lsubnum !~ m%^\d+$%) || ($lsubnum =~ m%^0%) );
+
+  return($et . $err, "")
+    if (! MMisc::is_blank($err));
+
+  return("", $lteam, $ldata, $lsubnum, $leset);
 }
 
 ##########
@@ -552,10 +604,10 @@ sub check_for_output_dir {
 ##########
 
 sub check_submission_dir {
-  my ($bd, $dir, $team) = @_;
+  my ($bd, $dir, $team, $data, $eset) = @_;
 
   vprint(3, "Checking name");
-  my ($lerr, $data, $medtype, $task) = &check_name($dir, $team);
+  my ($lerr, $ldata, $medtype, $task) = &check_name($dir, $team, $data, $eset);
   return($lerr) if (! MMisc::is_blank($lerr));
 
   vprint(3, "Checking expected directory files");
@@ -565,10 +617,12 @@ sub check_submission_dir {
 ##########
 
 sub check_name {
+  return(&check_name_med13p(@_))
+    if ($medyear eq 'MED13'); # pre-empt the check for 7 elements here
+  return(&check_name_med12p(@_))
+    if ($medyear eq 'MED12');
   return(&check_name_med11(@_))
     if ($expid_count == 7);
-  return(&check_name_med12p(@_))
-    if ($expid_count == 9);
   MMisc::error_quit("Unknown EXPID name handler for \'$medyear\'");
 }
 
@@ -593,7 +647,7 @@ sub check_name_med11 {
   $err .= " <TEAM> ($lteam) is different from submission file <TEAM> ($team). "
     if ($team ne $lteam);
 
-  $err .= " <DATA> ($ldata) is different ftom submission file <DATA> ($data). "
+  $err .= " <DATA> ($ldata) is different from submission file <DATA> ($data). "
     if ((! MMisc::is_blank($data)) && ($data ne $ldata));
   
   $err .= &cmp_exp($medyear, $ltag, @expid_tag);
@@ -649,7 +703,7 @@ sub check_name_med12p {
   $err .= " <TEAM> ($lteam) is different from submission file <TEAM> ($team)."
     if ($team ne $lteam);
 
-  $err .= " <DATA> ($ldata) is different ftom submission file <DATA> ($data)."
+  $err .= " <DATA> ($ldata) is different from submission file <DATA> ($data)."
     if ((! MMisc::is_blank($data)) && ($data ne $ldata));
   
   $err .= &cmp_exp($medyear, $ltag, @expid_tag);
@@ -682,6 +736,48 @@ sub check_name_med12p {
   vprint(4, "<TEAM> = $lteam | <TAG> = $ltag | <DATA> = $ldata | <TASK> = $ltask | <MEDTYPE> = $lmedtype | <TRAINTYPE> = $ltraintype | <EAG> = $leag | <SYSID> = $lsysid | <VERSION> = $lversion");
   
   return("", $ldata, $lmedtype, $ltask);
+}
+
+#####
+
+sub check_name_med13p {
+  my ($name, $team, $data, $eset) = @_;
+
+  my $et = "\'EXP-ID\' not of the form \'<TEAM>_${medyear}_<SYS>_<SEARCH>_<EVENTSET>_<EKTYPE>_<VERSION>\' : ";
+  
+  my ($lteam, $ltag, $lsys, $lsearch, $leset, $lektype, $lversion,
+      @left) = split(m%\_%, $name);
+  
+  return($et . " leftover entries: " . join(" ", @left) . ". ", "")
+    if (scalar @left > 0);
+  
+  return($et ." missing parameters ($name). ", "")
+    if (MMisc::any_blank($lteam, $ltag, $lsys, $lsearch, $leset, $lversion));
+  
+  my $err = "";
+  
+  $err .= " <TEAM> ($lteam) is different from submission file <TEAM> ($team)."
+    if ($team ne $lteam);
+  $err .= " <SEARCH> ($lsearch) is different from submission file <SEARCH> ($data)."
+    if ($data ne $lsearch);
+  $err .= " <EVENTSET> ($leset) is different from submission file <EVENTSET> ($eset)."
+    if ($eset ne $leset);
+
+  $err .= &cmp_exp($medyear, $ltag, @expid_tag);
+  $err .= &cmp_exp("<SYS>",  $lsys, @expid_sys);
+  $err .= &cmp_exp("<SEARCH>",  $lsearch, @expid_data);
+  $err .= &cmp_exp("<EVENTSET>", $leset, @expid_task);
+  $err .= &cmp_exp("<EKTYPE>", $lektype, @expid_traintype);
+
+  $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
+    if ( ($lversion !~ m%^\d+$%) || ($lversion =~ m%^0%) );
+  
+  return($et . $err, "")
+    if (! MMisc::is_blank($err));
+  
+  vprint(4, "<TEAM> = $lteam | <TAG> = $ltag | <SYS> = $lsys | <SEARCH> = $lsearch | <EVENTSET> = $leset | <EKTYPE> = $lektype | <VERSION> = $lversion");
+  
+  return("", $lsearch, $lsearch, $leset);
 }
 
 ##########
@@ -828,7 +924,7 @@ sub check_TrialIDs {
       return("For <DATA>=$data there can NOT be a <TASK>=$task")
         if ($mtfc == -1);
     }
-    if (($medtype eq $expid_MEDtype[0]) && ($tidc < $mtfc)) {
+    if ((defined $medtype) && ($medtype eq $expid_MEDtype[0]) && ($tidc < $mtfc)) {
       my $txt = "EXPID ($expid) designs this submission as a \'$medtype\', but it contains $tidc EventIDs, when $mtfc are expected to consider it so";
       return($txt) if ($data ne $expid_data[0]);
       MMisc::warn_print("$txt. Since this is a $data submission, only this warning is shown. Otherwise, an error message would have been shown");
@@ -975,8 +1071,8 @@ Usage: $0 [--help | --version | --man] --Specfile perlEvalfile --TrialIndex inde
 
 Will confirm that a submission file conforms to the 'Submission Instructions', in the Appendices of the 'TRECVid Multimedia Event Detection Evaluation Plan'. The program needs a 'Specfile' to load some of its eval specific definitions.
 
-'last_parameter' is usually the archive file(s) to process (of the form <TAG>_<TEAM>_<DATA>_<SUB-NUM>.extension, such as MED11_testTEAM_DRYRUN_1.tar.bz2 or MED12_testTEAM_MED12DRYRUN_1.tar.bz2)
-Only in the '--work_in_dir' case does it become <TEAM>.
+'last_parameter' is usually the archive file(s) to process (see evaluation plan for details).
+Only in the '--work_in_dir' case does it become <TEAM>, and from MED13 forward: the expected archive filename (without its extension).
 
  Where:
   --help          Print this usage information and exit
