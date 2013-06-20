@@ -140,7 +140,7 @@ foreach my $cc (@colConstr) {
     $cn = $1;
     $cstr = $cc;
   } else {
-    MMisc::error_quit("Problem obtaining \'columnname:contraint\' from \'--ColumnConstraint\'");
+    MMisc::error_quit("Problem obtaining \'columnname:constraint\' from \'--ColumnConstraint\'");
   }
   MMisc::error_quit("Empty \'columnname\' for \'--ColumnConstraint\'")
     if (MMisc::is_blank($cn));
@@ -182,7 +182,7 @@ sub load_csv {
       $cn = $1;
       $cstr = $cc;
     } else {
-      MMisc::error_quit("While extracting \'csvfile[:tablename][\%columnname:constraint[...]]\' entry: problem obtaining \'columnname:contraint\'");
+      MMisc::error_quit("While extracting \'csvfile[:tablename][\%columnname:constraint[...]]\' entry: problem obtaining \'columnname:constraint\' from leftover string [$cc]");
     }
     MMisc::error_quit("While extracting \'csvfile[:tablename][\%columnname:constraint[...]]\' entry: Empty \'columnname\'")
       if (MMisc::is_blank($cn));
