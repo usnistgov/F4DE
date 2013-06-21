@@ -9,7 +9,13 @@ $expid_count = 7;
 $expected_csv_per_expid = 2;
 @expected_csv_names = ( 'detection', 'threshold' );
 
-$medtype_fullcount = 30;
+$medtype_fullcount = 0;
+$medtype_fullcount_perTask{$expid_data[0]}{$expid_task[0]} = 3;
+$medtype_fullcount_perTask{$expid_data[0]}{$expid_task[1]} = -1; # not a valid case
+$medtype_fullcount_perTask{$expid_data[1]}{$expid_task[0]} = 20;
+$medtype_fullcount_perTask{$expid_data[1]}{$expid_task[1]} = 20;
+$medtype_fullcount_perTask{$expid_data[2]}{$expid_task[0]} = 20;
+$medtype_fullcount_perTask{$expid_data[2]}{$expid_task[1]} = 20;
 
 $db_check_sql = "TV12MED-SubmissionChecker_conf-DBcheck.sql";
 
