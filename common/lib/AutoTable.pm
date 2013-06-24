@@ -285,17 +285,17 @@ sub unitTest {
   &__UT_showAllModes("Complex Table (sorted: As Added)", $sg);
   $sg->__UT_aterr();
 
-  $sg->{Properties}->setValue($key_SortColKeyTxt, "Num");
-  $sg->{Properties}->setValue($key_SortRowKeyTxt, "Num");
-  $sg->{Properties}->setValue($key_SortColKeyCsv, "Num");
-  $sg->{Properties}->setValue($key_SortRowKeyCsv, "Num");
-  $sg->{Properties}->setValue($key_SortColKeyHTML, "Num");
-  $sg->{Properties}->setValue($key_SortRowKeyHTML, "Num");
-  $sg->{Properties}->setValue($key_SortColKeyLaTeX, "Num");
-  $sg->{Properties}->setValue($key_SortRowKeyLaTeX, "Num");
-  $sg->__UT_aterr();
-  &__UT_showAllModes("Complex Table (sorted: Num)", $sg);
-  $sg->__UT_aterr();
+#  $sg->{Properties}->setValue($key_SortColKeyTxt, "Num");
+#  $sg->{Properties}->setValue($key_SortRowKeyTxt, "Num");
+#  $sg->{Properties}->setValue($key_SortColKeyCsv, "Num");
+#  $sg->{Properties}->setValue($key_SortRowKeyCsv, "Num");
+#  $sg->{Properties}->setValue($key_SortColKeyHTML, "Num");
+#  $sg->{Properties}->setValue($key_SortRowKeyHTML, "Num");
+#  $sg->{Properties}->setValue($key_SortColKeyLaTeX, "Num");
+#  $sg->{Properties}->setValue($key_SortRowKeyLaTeX, "Num");
+#  $sg->__UT_aterr();
+#  &__UT_showAllModes("Complex Table (sorted: Num)", $sg);
+#  $sg->__UT_aterr();
 
   $sg->{Properties}->setValue($key_SortColKeyTxt, "Alpha");
   $sg->{Properties}->setValue($key_SortRowKeyTxt, "Alpha");
@@ -1269,10 +1269,12 @@ sub _sortKeys(){
 
   my @sortedKeys = ();  
 
+#  print "Before: " . join(" -- ", @{$keys}) . "\n";
+
   if ($order eq "AsAdded") {
     @sortedKeys = sort { $ht->{SubID}{$a}->{thisIDNum} <=> $ht->{SubID}{$b}->{thisIDNum}} @$keys;
   } elsif ($order eq "Num") {
-    @sortedKeys = sort { $a <=> $b} @$keys;
+    @sortedKeys = sort { $a <=> $b } @{$keys};
   } elsif ($order eq "Alpha") {
     @sortedKeys = sort @$keys;
   } elsif ($order =~ m%^\&Function=(.+)$%) {
@@ -1281,6 +1283,8 @@ sub _sortKeys(){
   } else {
     MMisc::error_quit("Internal Error AutoTable: Sort order '$order' not defined");
   }  
+#  print "After : " . join(" -- ", @sortedKeys) . "\n";
+
   return \@sortedKeys;
 }
 
