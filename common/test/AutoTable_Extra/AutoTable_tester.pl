@@ -51,6 +51,8 @@ $testr += &do_simple_test($tn, "(Special load with Keep Only)", "$spload ../comm
 $tn = "test3e";
 $testr += &do_simple_test($tn, "(Special load with Remove headers)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' name,year", "res-$tn.txt");
 
+my @okSHAs = MMisc::Available_SHAdigest();
+
 ##
 $tn = "test4a";
 $testr += &do_simple_test($tn, "(Reverse Row Sort)", "$spload ../common/md.csv ../common/md_sp.csv \'\' \'\' \'\' reverse", "res-$tn.txt");
@@ -100,9 +102,16 @@ sub do_simple_test {
   my ($testname, $subtype, $command, $res, $rev) = 
     MMisc::iuav(\@_, "", "", "", "", 0, "");
 
+  my $fskip = "";
+  if ($command =~ m%sha(\d+)$%) {
+    my $sha = $1;
+    $fskip = "not available for this version of Perl"
+      if (! grep(m%$sha$%, @okSHAs));
+  }
+
   $totest++;
 
-  return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev));
+  return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev, $fskip));
 }
 
 ##
