@@ -1,4 +1,4 @@
-[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6 -C word -w -p -c 20:1080
+[[COMMANDLINE]] ../../tools/TV08ViperValidator/TV08ViperValidator.pl -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6 -C 1234 -w -p -c 20:1080
 [[RETURN CODE]] 0
 [[STDOUT]]
 
@@ -44,7 +44,7 @@
   <data>
     <sourcefile filename="file:20050519-1503-Excerpt.mpg">
       <!-- Changed from REF to SYS file
-REF to SYS Seed : word (first value: 0.170828036106)
+REF to SYS Seed : 1234 (first value: 0.740876929442)
 NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 to have the first frame start at 1) -->
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
@@ -59,17 +59,17 @@ NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 
       </file>
       <object name="ObjectPut" id="0" framespan="919:1061">
         <!-- Changed from REF to SYS file
-REF to SYS Seed : word (first value: 0.170828036106)
+REF to SYS Seed : 1234 (first value: 0.740876929442)
 Changed from REF to SYS file
-REF to SYS Seed : word (first value: 0.170828036106)
+REF to SYS Seed : 1234 (first value: 0.740876929442)
 Trimmed from [938:1493] to [938:1080]
 Framespan was shifted by -19 -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
-          <data:bvalue value="true"/>
+          <data:bvalue value="false"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="-33.5958349003722"/>
+          <data:fvalue value="1.75202078676921"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -89,7 +89,7 @@ Framespan was shifted by -19 -->
 | |   Event Types : ObjectPut(x1)[IDs: 0]
 | |  Total Events : 1
 | |       Comment : Changed from REF to SYS file
-REF to SYS Seed : word (first value: 0.170828036106)
+REF to SYS Seed : 1234 (first value: 0.740876929442)
 NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 to have the first frame start at 1)
 ../common/test2-gtf.xml: validates
 [Pre Modifications]
@@ -137,7 +137,7 @@ NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 
   <data>
     <sourcefile filename="file:20050519-1503-Excerpt.mpg">
       <!-- Changed from REF to SYS file
-REF to SYS Seed : word (first value: 0.353728203093)
+REF to SYS Seed : 1234 (first value: 0.360984484190)
 NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 to have the first frame start at 1) -->
       <file id="0" name="Information">
         <attribute name="FRAMERATE">
@@ -152,25 +152,25 @@ NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 
       </file>
       <object name="CellToEar" id="0" framespan="184:1061">
         <!-- Changed from REF to SYS file
-REF to SYS Seed : word (first value: 0.353728203093)
+REF to SYS Seed : 1234 (first value: 0.360984484190)
 Changed from REF to SYS file
-REF to SYS Seed : word (first value: 0.353728203093)
+REF to SYS Seed : 1234 (first value: 0.360984484190)
 Trimmed from [203:3738] to [203:1080]
 Framespan was shifted by -19 -->
         <attribute name="BoundingBox"/>
         <attribute name="DetectionDecision">
-          <data:bvalue value="false"/>
+          <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="59.52502579265"/>
+          <data:fvalue value="-31.9452304167235"/>
         </attribute>
         <attribute name="Point"/>
       </object>
       <object name="ObjectPut" id="0" framespan="1:981">
         <!-- Changed from REF to SYS file
-REF to SYS Seed : word (first value: 0.353728203093)
+REF to SYS Seed : 1234 (first value: 0.360984484190)
 Changed from REF to SYS file
-REF to SYS Seed : word (first value: 0.353728203093)
+REF to SYS Seed : 1234 (first value: 0.360984484190)
 Trimmed from [1:1000] to [20:1000]
 Framespan was shifted by -19 -->
         <attribute name="BoundingBox"/>
@@ -178,7 +178,7 @@ Framespan was shifted by -19 -->
           <data:bvalue value="true"/>
         </attribute>
         <attribute name="DetectionScore">
-          <data:fvalue value="55.1778803631778"/>
+          <data:fvalue value="118.792183594417"/>
         </attribute>
         <attribute name="Point"/>
       </object>
@@ -198,7 +198,7 @@ Framespan was shifted by -19 -->
 | |   Event Types : CellToEar(x1)[IDs: 0] ObjectPut(x1)[IDs: 0]
 | |  Total Events : 2
 | |       Comment : Changed from REF to SYS file
-REF to SYS Seed : word (first value: 0.353728203093)
+REF to SYS Seed : 1234 (first value: 0.360984484190)
 NUMFRAMES modified from 5121 to 1061 (Trimmed to [20:1080], then shifted by -19 to have the first frame start at 1)
 All files processed (Validated: 2 | Total: 2)
 
