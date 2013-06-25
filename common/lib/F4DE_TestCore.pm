@@ -267,10 +267,15 @@ sub check_files {
 #####
 
 sub run_simpletest {
-  my ($testname, $subtype, $cmd, $cmp2resfile, $mode, $erv) = 
-    MMisc::iuav(\@_, "", "", "", "", "", 0);
+  my ($testname, $subtype, $cmd, $cmp2resfile, $mode, $erv, $forceskip) = 
+    MMisc::iuav(\@_, "", "", "", "", "", 0, "");
 
   &print_name($testname, $subtype);
+
+  if (! MMisc::is_blank($forceskip)) {
+    print "Skipped [$forceskip]\n";
+    return(1);
+  }
 
   if ( (&check_skip($testname)) || (! &query_do_test($testname)) ) {
     print "Skipped\n";
