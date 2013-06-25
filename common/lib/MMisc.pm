@@ -1175,7 +1175,7 @@ sub __check_SHAxxx {
   return(1);
 }
 
-my @expSHAs = (1, 224, 256, 384, 512, 51224, 51256);
+my @expSHAs = (1, 224, 256, 384, 512, 512224, 512256);
 my @okSHAs = ();
 
 sub __get_SHAmodule {
