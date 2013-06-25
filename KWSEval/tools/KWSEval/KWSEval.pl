@@ -346,7 +346,7 @@ print "Warning: -zprefilterText notASCII ignored because -z charsplit not used\n
 print "Warning: -zprefilterText deleteHyphens ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextDeleteHyphens);
 
 if ($measureThreshPlots ne ""){
-  Misc::error_quit("Error: argument for -measureThreshPlots must be either (true|trueWithSE), not $measureThreshPlots")
+  MMisc::error_quit("Error: argument for -measureThreshPlots must be either (true|trueWithSE), not $measureThreshPlots")
     if ($measureThreshPlots =~ /^(true|trueWithSE)$/);
 }
 
