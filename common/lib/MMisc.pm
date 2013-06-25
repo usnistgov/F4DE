@@ -1166,6 +1166,49 @@ sub miniJobRunner {
   return("Error during run, see logfile ($flogfile)", 1, $rv, $tx, $so, $se, $retcode, $flogfile);
 }
 
+####################
+# Get SHA capabilities
+
+sub __check_SHAxxx {
+  my $digest = eval { $DigestSHA_module->new($_[0])->add("string") };
+  return(0) if ($@);
+  return(1);
+}
+
+my @expSHAs = (1, 224, 256, 384, 512, 51224, 51256);
+my @okSHAs = ();
+
+sub __get_SHAmodule {
+  return("") if (defined $DigestSHA_module);
+  
+  ## Try to use Digest::SHA.  If not installed, use the slower
+  ## but functionally equivalent Digest::SHA::PurePerl instead.
+
+  if (&check_package("Digest::SHA")) {
+    $DigestSHA_module = "Digest::SHA";
+  } elsif (&check_package("Digest::SHA::PurePerl")) {
+    $DigestSHA_module = "Digest::SHA::PurePerl";
+  } else {
+    return("Unable to find Digest::SHA or Digest::SHA::PurePerl");
+  }
+  
+  foreach my $sha (@expSHAs) {
+    push(@okSHAs, $sha)
+      if (&__check_SHAxxx($sha));
+  }
+
+  return("");
+}
+
+
+sub Available_SHAdigest {
+  my $err = &__get_SHAmodule();
+  &error_quit("Problem obtaining SHA list: $err")
+    if (! MMisc::is_blank($err));
+
+  return(@okSHAs);
+} 
+
 ##########
 # file_shaXXXdigest(FileName)
 ## return(errstring, hexdigest)
@@ -1178,17 +1221,11 @@ sub file_shaXXXdigest {
   return("Problem with input file ($file): $err")
     if (! &is_blank($err));
 
-  ## Try to use Digest::SHA.  If not installed, use the slower
-  ## but functionally equivalent Digest::SHA::PurePerl instead.
-  if (! defined $DigestSHA_module) {
-    if (&check_package("Digest::SHA")) {
-      $DigestSHA_module = "Digest::SHA";
-    } elsif (&check_package("Digest::SHA::PurePerl")) {
-      $DigestSHA_module = "Digest::SHA::PurePerl";
-    } else {
-      return("Unable to find Digest::SHA or Digest::SHA::PurePerl");
-    }
-  }
+  my $err = &__get_SHAmodule();
+  return($err) if (! MMisc::is_blank($err));
+
+  return("Can not do requested SHA Digest ($xxx), capability: " . join(" ", @okSHAs))
+    if (! grep(m%^$xxx$%, @okSHAs));
 
   my $digest = eval { $DigestSHA_module->new(256)->addfile($file, 'b') };
   if ($@) { return("Problem reading file ($file): $!"); }
@@ -1216,17 +1253,11 @@ sub string_shaXXXdigest {
   return("Empty string")
     if (&is_blank($string));
 
-  ## Try to use Digest::SHA.  If not installed, use the slower
-  ## but functionally equivalent Digest::SHA::PurePerl instead.
-  if (! defined $DigestSHA_module) {
-    if (&check_package("Digest::SHA")) {
-      $DigestSHA_module = "Digest::SHA";
-    } elsif (&check_package("Digest::SHA::PurePerl")) {
-      $DigestSHA_module = "Digest::SHA::PurePerl";
-    } else {
-      return("Unable to find Digest::SHA or Digest::SHA::PurePerl");
-    }
-  }
+  my $err = &__get_SHAmodule();
+  return($err) if (! MMisc::is_blank($err));
+
+  return("Can not do requested SHA Digest ($xxx), capability: " . join(" ", @okSHAs))
+    if (! grep(m%^$xxx$%, @okSHAs));
 
   my $digest = eval { $DigestSHA_module->new($xxx)->add($string) };
   if ($@) { return("Problem analyzing string: $!"); }
@@ -1248,7 +1279,8 @@ sub unitTest_stringSHAdigest {
   # Lorem Ipsum: http://www.lipsum.com/
   my $teststring = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eleifend erat et magna molestie tincidunt sagittis nulla consequat. Morbi vitae dui leo. Nullam sagittis ultricies orci quis sodales. Praesent varius dictum massa id eleifend. Maecenas condimentum, elit a scelerisque pellentesque, ante mauris varius turpis, nec commodo risus velit ut augue. Aliquam erat volutpat. Fusce in ligula nisi, vitae lacinia sem. Phasellus posuere urna scelerisque est ultrices imperdiet ornare nisi tempor. In et neque nunc. Praesent scelerisque consectetur neque, at sollicitudin dolor luctus at. Aliquam dolor dui, suscipit eget dignissim vitae, aliquet at elit. Proin eget ante massa.\nSuspendisse molestie euismod lacus vitae tempus. Praesent sodales convallis diam, in aliquam tellus lobortis nec. Nullam et sem ante. Aliquam libero turpis, blandit ac sollicitudin non, faucibus nec ligula. Suspendisse sed quam orci. Proin sit amet enim purus, ac commodo odio. Vivamus vitae ultricies nibh. Cras venenatis justo non felis tempus blandit.\nSed aliquam mauris accumsan tortor bibendum cursus mollis urna volutpat. Donec at neque id massa rutrum accumsan id a libero. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel nibh justo. Donec ultrices erat rhoncus justo mollis eu ultrices metus tincidunt. Sed tincidunt, nisl nec pretium volutpat, augue eros venenatis ante, ac aliquam urna ipsum ac augue. Pellentesque aliquam, dolor sit amet suscipit sagittis, ante libero malesuada tortor, ut dapibus quam urna non sapien. Maecenas vestibulum tincidunt tempor. Integer congue mi a erat congue vestibulum. Aliquam erat volutpat. Morbi euismod dictum eros non luctus. Curabitur tristique ornare nisl, et sagittis tortor fermentum vel. Sed ornare dictum magna, at semper enim convallis ac. Phasellus erat est, bibendum et volutpat vel, pellentesque non leo.\nUt eleifend malesuada dolor eu sodales. Nunc nisi enim, tempus scelerisque malesuada ut, elementum sit amet urna. Vivamus velit libero, consequat at porttitor vitae, posuere ut magna. Praesent eu arcu et leo fringilla cursus. Fusce ultrices aliquet risus, eget congue ipsum porttitor eget. Fusce in nunc leo. Curabitur luctus felis sed ligula scelerisque bibendum. Aliquam vel libero dui, non tristique dolor. Nunc ut gravida dui. Etiam vitae quam odio. Nunc semper turpis nec libero volutpat pellentesque. Aenean convallis, nisl luctus volutpat sollicitudin, diam magna mollis eros, eget blandit dolor lectus vel enim. Fusce erat nulla, posuere id pulvinar ac, condimentum in tellus. Nulla facilisi. Cras quam purus, ultrices vel aliquam eget, condimentum vel lacus. Sed porta, arcu id consequat laoreet, turpis arcu ornare odio, at vestibulum elit lorem vitae ante.\nCurabitur faucibus, tellus consectetur facilisis porta, tortor risus interdum erat, in scelerisque leo enim vitae leo. Integer dignissim, justo quis pellentesque porttitor, diam turpis vehicula purus, sed congue massa odio sed nunc. Aenean condimentum pharetra ornare. Quisque vehicula varius eros sit amet congue. Nulla venenatis vehicula cursus. Proin vel metus quam, et vestibulum nibh. Vestibulum egestas dictum quam luctus bibendum. Etiam quis volutpat nibh. Etiam ornare purus vitae lectus rutrum vestibulum. Aenean scelerisque sagittis dui sollicitudin porta. Curabitur cursus tincidunt convallis. Integer eu urna mauris. Cras sagittis neque vel nisi tempus at dictum nisl mattis. Curabitur a lacus malesuada risus feugiat rhoncus vitae in sapien. Proin placerat consequat porttitor.\n";
 
-  my @todo = (1, 224, 256, 384, 512, 512224, 512256);
+  my @todo = @expSHAs;
+  my @capable = &Available_SHAdigest();
   my %comps = 
     (
      $todo[0] => '64fba7a0aef72094c65b09264f33c54408af90aa', # 1
@@ -1262,19 +1294,23 @@ sub unitTest_stringSHAdigest {
   print " Testing SHA digest string computation:\n";
   my $fail = 0;
   foreach my $check (@todo) {
-    print "  SHA $check ... "; 
-    my $comp = $comps{$check};
-    my $res = &string_shaXXXdigest($check, $teststring);
-    if ($comp eq $res) {
-      print "ok\n";
+    print "  SHA $check ... ";
+    if (! grep(m%^$check$%, @capable)) {
+      print "skipping (not available for this version of Perl)\n";
     } else {
-      print "failed\n";
+      my $comp = $comps{$check};
+      my $res = &string_shaXXXdigest($check, $teststring);
+      if ($comp eq $res) {
+        print "ok\n";
+      } else {
+        print "failed\n";
 #      print "[$res]\{$comp\}\n";
-      $fail++;
+        $fail++;
+      }
     }
   }
 
-  return(1)
+  return($fail)
 }
 
 ##########
@@ -2350,12 +2386,18 @@ sub __ceil  { return (int($_[0]+0.99)); }
 
 sub unitTest {
   print "Test MMisc\n";
-  marshalTest();
-  filterArrayUnitTest();
-  interpolateYDimUnitTest();
-  compareDataUnitTest();
-  unitTest_stringSHAdigest();
-  return 1;
+  my $errc = 0;
+
+  $errc += marshalTest();
+  $errc += filterArrayUnitTest();
+  $errc += interpolateYDimUnitTest();
+  $errc += compareDataUnitTest();
+  $errc += unitTest_stringSHAdigest();
+
+  MMisc::error_quit("Problem with some MMisc unitTest")
+      if ($errc != 0);
+  
+  MMisc::ok_exit();
 }
 
 sub runFilterArrayCase{
@@ -2390,6 +2432,7 @@ sub filterArrayUnitTest{
   runFilterArrayCase([ ("aba", "b", "c") ], "ba\$", [ ("b", "c") ]);
   runFilterArrayCase([ ("443", "|", "3") ], "\\|", [ ("443", "3") ]);
   print "OK\n";
+  return(0);
 }
 
 sub marshalTest {
@@ -2425,6 +2468,8 @@ sub marshalTest {
     }
   }
   print "OK\n";
+
+  return(0);
 }
 
 ### based on points (x1, y1) and (x2, y2), compute the line function and the Y value for $newX
@@ -2448,7 +2493,8 @@ sub interpolateYDimUnitTest(){
   error_exit() if (abs(interpolateYDim(1,2,2,2,7.5) - 2) >= 0.0001);
   ## vertical line
   error_exit() if (abs(interpolateYDim(1,2,1,8,1) - 5) >= 0.0001);
-  print "OK\n"
+  print "OK\n";
+  return(0);
 }
 
 sub compareData{
@@ -2568,6 +2614,7 @@ sub compareDataUnitTest{
   #print Dumper(compareData([ (134, 146, 104, 119, 124, 161, 107, 83, 113, 129, 97, 123) ], [ (70, 118, 101, 85, 107, 132, 94) ], 0));
 
 #  print Dumper(compareData([ (312, 242, 340, 388, 296, 254, 391, 402, 290) ], [ (300, 201, 232, 312, 220, 256, 328, 330, 231) ], 1));
+  return(0);
 }
 
 
