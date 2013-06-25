@@ -347,7 +347,7 @@ print "Warning: -zprefilterText deleteHyphens ignored because -z charsplit not u
 
 if ($measureThreshPlots ne ""){
   MMisc::error_quit("Error: argument for -measureThreshPlots must be either (true|trueWithSE), not $measureThreshPlots")
-    if ($measureThreshPlots =~ /^(true|trueWithSE)$/);
+    if ($measureThreshPlots !~ /^(true|trueWithSE)$/);
 }
 
 ###loading the files
