@@ -15,5 +15,7 @@ $VAR1 =
    '^column\:\s+DetectionTPT\;', "Problem with \'DetectionTPT\' column",
    '^column\:\s+EAGTPT\;', "Problem with \'EAGTPT\' column",
    '^column\:\s+EMDTPT\;', "Problem with \'EMDTPT\' column",
+   '^column\:\s+EBGMDTPT\;', "Problem with \'EBGMDTPT\' column",
+   '^column\:\s+SEARCHMDTPT\;', "Problem with \'SEARCHMDTPT\' column",
    '^\#\s+Primary\s+key\s+candidate\(s\)\:[\s\w_]*?\s+EventID', "Problem with \'EventID\' column (not a primary key ?)"
   ];
