@@ -1,6 +1,6 @@
 File:  README
-Date:  June 13, 2013
-F4DE Version: 2.7.0
+Date:  June 26, 2013
+F4DE Version: 2.7.1
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
@@ -110,6 +110,7 @@ INSTALLATION
 
 F4DE consists of a set of Perl scripts that can be run under a shell terminal.
 It has been confirmed to work under Linux, OS X and Cygwin.
+NOTE: the tools is known not to work with Perl 5.18 (or after), please use a 5.16 at most
 
 The only pre-requisites of the tool are:
 
@@ -141,7 +142,6 @@ The only pre-requisites of the tool are:
     Digest::SHA
     YAML
     Data::Dump
-
 From the main directory, after having insured side tools, and
 confirmed that Perl's 'cpanp' is installed and properly configured,
 you can run 'make perl_install' to try to help with the automatic
