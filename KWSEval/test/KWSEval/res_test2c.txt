@@ -13,14 +13,14 @@ Conditional Summary Report: -
 |---------------------------------+------------------+
 |                    System Title |               NA |
 |                     Decision ID |       Occurrence |
-|                       TotTrials |              100 |
 |      IncludeBlocksWithNoTargets |                0 |
-|                 TrialsPerSecond |                1 |
 |                          TotDur |              100 |
+|                       TotTrials |              100 |
+|                 TrialsPerSecond |                1 |
 |                            BETA |            999.9 |
-|                           Value |                1 |
-|                           Ptarg |           0.0001 |
 |                            Cost |           0.1000 |
+|                           Ptarg |           0.0001 |
+|                           Value |                1 |
 
 
 |                |           Inputs            |                                Actual Decision TWV Analysis                                 |
@@ -34,14 +34,14 @@ Conditional Block Summary Report: -
 |---------------------------------+------------------+
 |                    System Title |               NA |
 |                     Decision ID |       Occurrence |
-|                       TotTrials |              100 |
 |      IncludeBlocksWithNoTargets |                0 |
-|                 TrialsPerSecond |                1 |
 |                          TotDur |              100 |
+|                       TotTrials |              100 |
+|                 TrialsPerSecond |                1 |
 |                            BETA |            999.9 |
-|                           Value |                1 |
-|                           Ptarg |           0.0001 |
 |                            Cost |           0.1000 |
+|                           Ptarg |           0.0001 |
+|                           Value |                1 |
 
 
                   |  MetaData  |                              Characters-3                               |                         Characters-5                          |
