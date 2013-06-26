@@ -70,7 +70,7 @@ occurred for each event kit/test video combination, a decision
 threshold for the event optimizing the primary metric, and the total
 processing time for the detection of an event.  For the DEVA tools,
 each time a system computes an event/test video probability, it is
-called a <i>trial</i>.  A unqiue <b>TrialID</b> identifies each trial.
+called a <i>trial</i>.  A unique <b>TrialID</b> identifies each trial.
 TrialIDs are grouped into a statistical sample block referred to as
 <i>BlockID</i>.
 For MED13, the EventIDs are used as BlockIDs. 
@@ -190,6 +190,8 @@ It must contain five columns:
     generate the metadata for the event metadata store for the event.  The value
     is a positive unbounded value: see the EvalPlan for
     details.</li>
+    <li><i>EBGMDTPT</i>: A value indicating the number of hours used to generate the metadata for the “Background Training Videos”.  The values for this column may be identical if the clips processed are re-used across events.</li>
+    <li><i>SEARCHMDTPT</i>: A value indicating the number of hours used to generate the metadata for the “Search Videos”.  The value MUST be identical for all events.</li>
   </ul>
 </ul>
 
@@ -275,7 +277,7 @@ well as doing some <i>EventID</i> and <i>TrialID</i> checks.
 The submission checker is executed with the following command:
 
 <pre>
-% TV13MED-SubmissionChecker --TrialIndex ED13DRYRUN_Files/MED13DRYRUN_20130501_TrialIndex.csv  MED13_testTEAM_MED13DRYRUN_PS_2.tar.bz2
+% TV13MED-SubmissionChecker --TrialIndex MED13DRYRUN_Files/MED13DRYRUN_20130501_TrialIndex.csv  MED13_testTEAM_MED13DRYRUN_PS_2.tar.bz2
 </pre>
 
 In case of success, the 'ok' string should appear next to the submission name
