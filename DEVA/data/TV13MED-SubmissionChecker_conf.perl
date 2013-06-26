@@ -17,7 +17,7 @@ $medtype_fullcount_perTask{$expid_data[1]}{$expid_task[1]} = 20;
 $medtype_fullcount_perTask{$expid_data[2]}{$expid_task[0]} = 20;
 $medtype_fullcount_perTask{$expid_data[2]}{$expid_task[1]} = 20;
 
-$db_check_sql = "TV12MED-SubmissionChecker_conf-DBcheck.sql";
+$db_check_sql = "TV13MED-SubmissionChecker_conf-DBcheck.sql";
 
 # Order is important: tablename, columnname [, columname ...]
 @db_eventidlist = ("EventIDList", "EventID");
@@ -25,3 +25,4 @@ $db_check_sql = "TV12MED-SubmissionChecker_conf-DBcheck.sql";
 @db_unknownTID  = ("unknownTrialID", "TrialID");
 @db_detectionTID = ("detectionTrialID", "TrialID");
 @db_thresholdEID = ("thresholdEventID", "EventID");
+@db_checkSEARCHMDTPT = ("checkSEARCHMDTPT", "SEARCHMDTPT");
