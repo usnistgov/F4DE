@@ -225,6 +225,7 @@ my @db_detectionTID;
 my @db_thresholdEID;
 my $max_expid = 0;
 my $max_expid_error = 1;
+my @db_checkSEARCHMDTPT;
 
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
@@ -261,6 +262,7 @@ my $medyear = $expid_tag[0];
 &__cfgcheck("\@db_unknownTID", (scalar @db_unknownTID == 0), 1);
 &__cfgcheck("\@db_detectionTID", (scalar @db_detectionTID == 0), 1);
 &__cfgcheck("\@db_thresholdEID", (scalar @db_thresholdEID == 0), 1);
+&__cfgcheck("\@db_checkSEARCHMDTPT", (scalar @db_checkSEARCHMDTPT == 0), ($medyear eq 'MED13'));
 
 &extend_file_location(\$db_check_sql, 'SQL DB check file', @data_search_path);
 
@@ -931,33 +933,44 @@ sub check_TrialIDs {
     }
   }
 
-  my $err = &id_check($dbfile, "Missing TrialID", $db_missingTID[0], $db_missingTID[1]);
-  return($err) if (! MMisc::is_blank($err));
-
-  my $err = &id_check($dbfile, "Unknown TrialID", $db_unknownTID[0], $db_unknownTID[1]);
-  return($err) if (! MMisc::is_blank($err));
-
-  if ($audtid == 0) {
-    my $err = &id_check($dbfile, "Unknown \'detection\' TrialID", $db_detectionTID[0], $db_detectionTID[1]);
+  if (scalar @db_missingTID > 0) {
+    my $err = &id_check($dbfile, "Missing TrialID", $db_missingTID[0], $db_missingTID[1], 0);
     return($err) if (! MMisc::is_blank($err));
   }
 
-  my $err = &id_check($dbfile, "Unknown \'threshold\' EventID", $db_thresholdEID[0], $db_thresholdEID[1]);
-  return($err) if (! MMisc::is_blank($err));
+  if (scalar @db_unknownTID > 0) {
+    my $err = &id_check($dbfile, "Unknown TrialID", $db_unknownTID[0], $db_unknownTID[1], 0);
+    return($err) if (! MMisc::is_blank($err));
+  }
 
+  if (($audtid == 0) && (scalar @db_detectionTID > 0)) {
+    my $err = &id_check($dbfile, "Unknown \'detection\' TrialID", $db_detectionTID[0], $db_detectionTID[1], 0);
+    return($err) if (! MMisc::is_blank($err));
+  }
+
+  if (scalar @db_thresholdEID > 0) {
+    my $err = &id_check($dbfile, "Unknown \'threshold\' EventID", $db_thresholdEID[0], $db_thresholdEID[1], 0);
+    return($err) if (! MMisc::is_blank($err));
+  }
+
+  if (scalar @db_checkSEARCHMDTPT > 0) {
+    my $err = &id_check($dbfile, "unique \'SEARCHMDTPT\' value", $db_checkSEARCHMDTPT[0], $db_checkSEARCHMDTPT[1], 1);
+    return($err) if (! MMisc::is_blank($err));
+  }    
+  
   return("");
 }
 
 #####
 
 sub id_check {
-  my ($dbfile, $txt, $tn, $cn) = @_;
+  my ($dbfile, $txt, $tn, $cn, $mt) = @_;
 
   my @lid = ();
   my ($err, $tidc) = MtSQLite::select_helper__to_array($dbfile, \@lid, $tn, "", $cn);
   return("Problem obtaining the $txt list : $err") if (! MMisc::is_blank($err));
   vprint(5, "Found $tidc $txt");
-  return("$tidc $txt: " . ajoin(" ", @lid)) if ($tidc > 0);
+  return("$tidc $txt: " . ajoin(" ", @lid)) if ($tidc > $mt);
 
   return("");
 }
