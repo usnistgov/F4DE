@@ -94,11 +94,7 @@ sub new {
 
 ####################
 
-sub get_version {
-  my ($self) = @_;
-
-  return($versionid);
-}
+sub get_version { return($versionid); }
 
 ########## 'mapped', 'unmapped_ref', 'unmapped_sys' IDs
 
@@ -120,41 +116,23 @@ sub _get_XXX_ids {
 
 #####
 
-sub get_mapped_ids {
-  my ($self) = @_;
+sub get_mapped_ids { return($_[0]->_get_XXX_ids('mapped')); }
 
-  return($self->_get_XXX_ids('mapped'));
-}
+sub get_unmapped_ref_ids { return($_[0]->_get_XXX_ids('unmapped_ref')); }
 
-#####
-
-sub get_unmapped_ref_ids {
-  my ($self) = @_;
-
-  return($self->_get_XXX_ids('unmapped_ref'));
-}
-
-#####
-
-sub get_unmapped_sys_ids {
-  my ($self) = @_;
-
-  return($self->_get_XXX_ids('unmapped_sys'));
-}
+sub get_unmapped_sys_ids { return($_[0]->_get_XXX_ids('unmapped_sys')); }
 
 ########## 'mapped', 'unmapped_ref', 'unmapped_sys' Objects
 
 sub _get_known_key_in_hash {
-  my ($self, $key, %inhash) = @_;
+  my ($self, $key, $rinhash) = @_;
 
-  if (! exists $inhash{$key}) {
+  if (! exists $$rinhash{$key}) {
     $self->_set_errormsg("Can not find requested known existing key ($key) in given hash");
     return(undef);
   }
 
-  my $val = $inhash{$key};
-
-  return($val);
+  return($$rinhash{$key});
 }
 
 #####
@@ -175,10 +153,10 @@ sub get_mapped_objects {
   for (my $i = 0; $i < scalar @mapped; $i++) {
     my ($sys_id, $ref_id) = @{$mapped[$i]};
 
-    my $sys_obj = $self->_get_known_key_in_hash($sys_id, %sysObj);
+    my $sys_obj = $self->_get_known_key_in_hash($sys_id, \%sysObj);
     return(@out) if ($self->error());
 
-    my $ref_obj = $self->_get_known_key_in_hash($ref_id, %refObj);
+    my $ref_obj = $self->_get_known_key_in_hash($ref_id, \%refObj);
     return(@out) if ($self->error());
 
     push @tmp, [ ($sys_obj, $ref_obj) ];
@@ -192,7 +170,7 @@ sub get_mapped_objects {
 #####
 
 sub _get_XXX_objects {
-  my ($self, $xxx, %inhash) = @_;
+  my ($self, $xxx, $rinhash) = @_;
 
   my @out = ();
 
@@ -201,7 +179,7 @@ sub _get_XXX_objects {
 
   for (my $i = 0; $i < scalar @xxxs; $i++) {
     my $obj_id = $xxxs[$i];
-    my $obj = $self->_get_known_key_in_hash($obj_id, %inhash);
+    my $obj = $self->_get_known_key_in_hash($obj_id, $rinhash);
     return(undef) if ($self->error());
 
     push @out, $obj;
@@ -217,7 +195,7 @@ sub get_unmapped_ref_objects {
 
   my %refObj = %{$self->{refObj}};
 
-  return($self->_get_XXX_objects('unmapped_ref', %refObj));
+  return($self->_get_XXX_objects('unmapped_ref', \%refObj));
 }
 
 #####
@@ -227,7 +205,7 @@ sub get_unmapped_sys_objects {
 
   my %sysObj = %{$self->{sysObj}};
 
-  return($self->_get_XXX_objects('unmapped_sys', %sysObj));
+  return($self->_get_XXX_objects('unmapped_sys', \%sysObj));
 }
 
 ########## 'joint_values', 'false_alarm_values', 'missed_detect_values', 'mapping'
