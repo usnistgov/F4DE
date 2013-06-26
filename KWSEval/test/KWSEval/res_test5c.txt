@@ -13,12 +13,12 @@ Summary Report: -
 |-----------------------------------+----------------+
 |                      System Title |             NA |
 |                       Decision ID |        Segment |
-|        IncludeBlocksWithNoTargets |              1 |
 |                         TotTrials |          19536 |
+|        IncludeBlocksWithNoTargets |              1 |
 |                              BETA |          999.9 |
-|                              Cost |         0.1000 |
-|                             Ptarg |         0.0001 |
 |                             Value |              1 |
+|                             Ptarg |         0.0001 |
+|                              Cost |         0.1000 |
 
 
 |           |                  Inputs                  |                               Actual Decision TWV Analysis                                |
@@ -31,12 +31,12 @@ Block Summary Report: -
 |-----------------------------------+----------------+
 |                      System Title |             NA |
 |                       Decision ID |        Segment |
-|        IncludeBlocksWithNoTargets |              1 |
 |                         TotTrials |          19536 |
+|        IncludeBlocksWithNoTargets |              1 |
 |                              BETA |          999.9 |
-|                              Cost |         0.1000 |
-|                             Ptarg |         0.0001 |
 |                             Value |              1 |
+|                             Ptarg |         0.0001 |
+|                              Cost |         0.1000 |
 
 
                   |                      MetaData                      |                                       Segment                                        |

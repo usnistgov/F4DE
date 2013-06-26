@@ -91,7 +91,7 @@ $tn = "test11a";
 $testr += &do_simple_test($tn, "(ECF [REF])", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6", "res_$tn.txt");
 
 $tn = "test11b";
-$testr += &do_simple_test($tn, "(ECF + ChangeType + Crop [REF])", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6 -C 1234 -w -p -c 20:1080", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(ECF + ChangeType + Crop [REF])", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6 -C word -w -p -c 20:1080", "res_$tn.txt");
 
 ##
 $tn = "test12a";

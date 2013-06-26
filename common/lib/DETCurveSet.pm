@@ -638,7 +638,7 @@ sub _buildHeaderTable
   $at->addData($trial->{"DecisionID"}, $col . "|Value", $rowid);
   $rowid++;
   #Constant Params
-  foreach my $ckey (sort $trial->getTrialParamKeys()) {
+  foreach my $ckey ($trial->getTrialParamKeys()) {
     next if ($ckey =~ m%^_%); #Skip hidden keys
     next if (exists($variableParams->{$ckey}));
     $at->addData($ckey, $col . "|Key", $rowid);
@@ -646,7 +646,7 @@ sub _buildHeaderTable
     $rowid++;
   }
   #Variable Params
-  foreach my $vkey (sort $metric->getParamKeys()) {
+  foreach my $vkey ($metric->getParamKeys()) {
     next if ($vkey =~ m%^_%); #Skip hidden keys
     next if (exists($variableParams->{$vkey}));
     $at->addData($vkey, $col . "|Key", $rowid);

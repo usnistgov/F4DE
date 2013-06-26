@@ -332,7 +332,7 @@ sub validate_events_list {
   my ($self, @events) = @_;
 
   @events = split(m%\,%, join(",", @events));
-  @events = $self->_expand_events_star(@events);
+  @events = $self-> _expand_events_star(@events);
   @events = MMisc::make_array_of_unique_values(\@events);
 
   # A non validated entry does not have 'subtype' set yet, so any subtype
@@ -1507,7 +1507,7 @@ sub get_all_events_observations {
   }
 
   my @res = ();
-  foreach my $event (sort @limitto_events) {
+  foreach my $event (@limitto_events) {
     my @tmp = $self->get_event_observations($event);
     return(0) if ($self->error());
     push @res, @tmp;
@@ -2212,11 +2212,6 @@ sub type_changer_init_randomseed { ## Class function
   return(1) if (MMisc::is_blank($seed_found));
 
   (my $seed, my $lastfound, $force_randomDetectionScore, $force_randomDetectionDecision) = split(m%\:%, $seed_found);
-
-  if (! ($seed =~ m%^\d+$%)) {
-    MMisc::warn_print("\'seed\' value ($seed) should only be an integer value, forcing to 0");
-    $seed = 0;
-  }
 
   MMisc::error_quit("[TrecVid08ViperFile] **Internal Error** in \'type_changer_init_randomseed\': can only use a float value for forcing the value of the random Detection Score")
       if ((! MMisc::is_blank($force_randomDetectionScore)) &&

@@ -7,8 +7,8 @@ Wrote: foo.results.txt
 |-----------------------------+----------------------+
 |                System Title |                   NA |
 |                 Decision ID |                Trial |
-|                      CostFA |                    1 |
 |                    CostMiss |                    1 |
+|                      CostFA |                    1 |
 |                       Ptarg |                  0.5 |
 
 
