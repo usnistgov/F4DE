@@ -19,9 +19,9 @@ Done
 |---------------------+-----------------------------------------+
 |        System Title |                                 DET Set |
 |         Decision ID |                                   Trial |
-|                   m |                                    12.5 |
 |              APPpct |                                    true |
 |               APpct |                                    true |
+|                   m |                                    12.5 |
 |   Combined DET Plot |   res-test2m13a.txt.dir/scoreDB.det.png |
 
 
