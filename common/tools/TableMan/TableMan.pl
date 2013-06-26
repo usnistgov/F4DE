@@ -17,18 +17,19 @@ use lib (@f4bv);
 use AutoTable;
 use Getopt::Long;
 use MMisc;
-use Data::Dumper;
+#use Data::Dumper;
 
 Getopt::Long::Configure(qw( auto_abbrev no_ignore_case));
 
 my $out_type = "Txt";
-my $sort_row = "Alpha";
+my $sort_row = "AsAdded";
 my $sort_row_key = "";
-my $sort_col = "Alpha";
+my $sort_col = "AsAdded";
 my $sort_col_key = "";
 my $separator = '\s';
 my $prefix_text = "";
 my $properties = {};
+my $strip_whitespace = undef;
 
 GetOptions
 (
@@ -37,6 +38,7 @@ GetOptions
  'row-sort:s' => \$sort_row,
  'col-sort:s' => \$sort_col,
  'separator:s' => \$separator,
+ 'Strip-whitespace' => \$strip_whitespace,
  'properties:s@' => \$props,
  'list-props' => sub { MMisc::ok_quit(&list_properties); },
  'help' => sub { MMisc::ok_quit(&get_usage); },
@@ -95,6 +97,12 @@ unless ($at->{Properties}->setValue($sort_col_key, $sort_col)) {
 while (<STDIN>){
     chomp;
     my @a = split(/$separator/);
+
+    if ($strip_whitespace) {
+	for (my $i=0; $i<@a; $i++) {
+	    $a[$i] =~ s/^\s*(.*?)\s*$/$1/
+	}
+    }
         
     $at->addData($a[0], $a[1], $a[2]);
     $at->setSpecial($a[1], $a[2], $a[3]) if (@a > 3);
@@ -132,17 +140,25 @@ sub list_properties {
 sub get_usage {
     return <<'EOT';
 
-ATman.pl [ OPTIONS ]
+TableMan.pl [ OPTIONS ]
     
-    -t, --type        Output type of generated AutoTable
-    -r, --row-sort    Sort rows
-    -c, --col-sort    Sort Columns
-    -s, --separator   Field separator for input file
-    -a, --append      Append text to each line when rendering in text mode
-    -p, --properties  Specify properties as a list of Property:Value
-    -l, --list-props  List accepted properties and values
+    -t, --type        Output type of generated AutoTable possible
+                      types are (Txt|HTML|LaTeX|CSV) default is Txt.
+    -r, --row-sort    Sorts rows by either (Alpha|Num|AsAdded) default
+                      is AsAdded.
+    -c, --col-sort    Sorts columns by either (Alpha|Num|AsAdded)
+                      default is AsAdded.
+    -s, --separator   Field separator for input file default is space.
+    -S, --strip_whitespace
+                      Removes leading and trailing whitespace from
+		      each field.
+    -a, --append      Append text to each line when rendering in text
+                      mode, useful for indentation.
+    -p, --properties  Specify properties as a list of property:value
+                      pairs.
+    -l, --list-props  List accepted properties and values.
 
-    -h, --help        Print this text
+    -h, --help        Print this usage text.
 EOT
 }
 
