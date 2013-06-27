@@ -245,7 +245,7 @@ sub __cfgcheck {
 &__cfgcheck("\@expid_tag", (scalar @expid_tag == 0), 1);
 my $medyear = $expid_tag[0];
 &__cfgcheck("\@expid_data", (scalar @expid_data == 0), 1);
-&__cfgcheck("\@expid_task", (scalar @expid_task == 0), ($expid_count == 9));
+&__cfgcheck("\@expid_task", (scalar @expid_task == 0), (($expid_count == 9) || ($medyear eq 'MED13')));
 &__cfgcheck("\@expid_MEDtype", (scalar @expid_MEDtype == 0), ($medyear ne 'MED13'));
 &__cfgcheck("\@expid_traintype", (scalar @expid_traintype == 0), (($expid_count == 9) || ($medyear eq 'MED13')));
 &__cfgcheck("\@expid_EAG", (scalar @expid_EAG == 0), ($medyear ne 'MED13'));
