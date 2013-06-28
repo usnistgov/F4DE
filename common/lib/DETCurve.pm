@@ -33,7 +33,6 @@ use MetricTestStub;
 use MetricTV08;
 use MetricNormLinearCostFunct;
 use MetricTWV;
-use MetricRo;
 use MetricDiscreteTWV;
 use MetricPrecRecallFbeta;
 use MetricRo;
