@@ -802,13 +802,13 @@ sub dumpCountSummary {
     $at->addData($self->getNumNoTarg($block),      "Miss:NoTarg", $block);
     $at->addData($self->getNumYesNonTarg($block),  "FA:YesNontarg", $block);
     $at->addData($self->getNumNoNonTarg($block),   "Corr:NoNontarg", $block);
-    
+     
     $TY += $self->getNumYesTarg($block);
     $OT += $self->getNumOmittedTarg($block);
     $NT += $self->getNumNoTarg($block);
     $YNT += $self->getNumYesNonTarg($block);
     $NNT += $self->getNumNoNonTarg($block);
-  }
+ }
   $at->addData("------",  "Corr:YesTarg", "-----");
   $at->addData("------",  "Miss:OmitTarg", "-----");
   $at->addData("------",  "Miss:NoTarg", "-----");
@@ -1036,6 +1036,13 @@ sub getNumTargScr {
 sub getTargScr {
   my ($self, $block) = @_;
   $self->{"trials"}{$block}{"TARG"};
+}
+
+sub getNumTrials {
+  my ($self, $block) = @_;
+  return ($self->getNumYesTarg($block) + $self->getNumOmittedTarg($block) +
+	  $self->getNumNoTarg($block) + $self->getNumYesNonTarg($block) + 
+	  $self->getNumNoNonTarg($block) );
 }
 
 sub getNumNoTarg {

@@ -33,6 +33,7 @@ use MetricTestStub;
 use MetricTV08;
 use MetricNormLinearCostFunct;
 use MetricTWV;
+use MetricRo;
 use MetricDiscreteTWV;
 use MetricPrecRecallFbeta;
 use MetricRo;
@@ -1004,7 +1005,6 @@ sub readFromFile
       $VAR1->{"POINTS"} = \@arr;
     }
 
-#    print MMisc::get_sorted_MemDump(\$VAR1);
     ### Chack for and correct backward compatability problems in the TrialsStructure
     $VAR1->getTrials()->fixBackwardCompatabilityProblems();
     
@@ -1900,6 +1900,13 @@ sub getGlobalMeasure{
   return $self->{GLOBALMEASURES}{$measure}{MEASURE}{$measure};
 }
 
+sub getGlobalMeasureIDs{
+  my ($self, $measure) = @_;
+  $self->computePoints();
+  return undef unless(exists($self->{GLOBALMEASURES}));
+  return keys %{ $self->{GLOBALMEASURES} };
+}
+
 sub getGlobalMeasureString{
   my ($self, $measure) = @_;
 
@@ -1927,6 +1934,13 @@ sub getGlobalMeasureUnit{
   $self->computePoints();
   return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
   return $self->{GLOBALMEASURES}{$measure}{MEASURE}{UNIT};
+}
+
+sub getGlobalMeasureStructure{
+  my ($self, $measure) = @_;
+  $self->computePoints();
+  return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
+  return $self->{GLOBALMEASURES}{$measure};
 }
 
 sub ppndf
