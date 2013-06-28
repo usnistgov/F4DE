@@ -126,9 +126,13 @@ foreach my $srl(@ARGV){
   $at->addData($blk, "Event", $id);
   $at->addData($det->getGlobalMeasure("APpct"), "AP", $id);
   $at->addData($det->getGlobalMeasure("APPpct"), "APP", $id);
+  my ($BScombAvg, $BScombSSD, $BSmissAvg, $BSmissSSD, $BSfaAvg, $BSfaSSD) = $det->getMetric()->getActualDecisionPerformance();
+  $at->addData($BScombAvg, "Act. ".$det->getMetric()->combLab(), $id);
+  $at->addData($BSmissAvg, "Act. ".$det->getMetric()->errMissLab(), $id);
+  $at->addData($BSfaAvg, "Act. ".$det->getMetric()->errFALab(), $id);
   $at->addData($det->getTrials()->getNumTrials($blk), "Search Videos", $id);
   $at->addData($det->getTrials()->getNumTarg($blk), "Event Videos", $id);
-  my $thresh = $det->getTrials()->getTrialActualDecisionThreshold();
+  my $thresh = $det->getTrials()->getTrialActualDecisionThreshold();  
   $at->addData($thresh, "SysThresh", $id);
 
   ### (rank, score, targ|nontarg, id)
