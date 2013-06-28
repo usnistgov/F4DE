@@ -1,10 +1,8 @@
 #!/usr/bin/env perl
 
-# DETUtil
-# DETUtil.pl
+# APDump
+# APDump.pl
 # Authors: Jonathan Fiscus
-#          Jerome Ajot
-#          Martial Michel
 # 
 # This software was developed at the National Institute of Standards and
 # Technology by employees of the Federal Government in the course of
@@ -156,7 +154,8 @@ foreach my $srl(@ARGV){
 
 }
 $at->setProperties({ "KeyColumnCsv" => "Remove" });
-print $at->renderCSV();
+MMisc::writeTo($outFile, "", 0, 0, $at->renderCSV());
+
 
 
 
