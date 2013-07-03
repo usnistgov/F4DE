@@ -116,7 +116,7 @@ MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 MMisc::error_quit("Missing one of dbfile/csvfile/tablename\n\n$usage") 
   if (scalar @ARGV < 3);
 
-my ($dbfile, $tablename, $csvfile) = @ARGV;
+my ($dbfile, $tablename, $csvfile, @cols) = @ARGV;
 
 ##
 my $err = MMisc::check_file_r($dbfile);
@@ -133,7 +133,7 @@ my ($err, $dbh) = MtSQLite::get_dbh($dbfile);
 MMisc::error_quit("Problem using DB ($dbfile): $err")
   if (! MMisc::is_blank($err));
 
-my ($err, $inserted) = MtSQLite::dumpCSV($dbh, $tablename, $csvfile);
+my ($err, $inserted) = MtSQLite::dumpCSV($dbh, $tablename, $csvfile, @cols);
 MMisc::error_quit("Problem inserting into CSV file ($csvfile) from DB ($dbfile)'s table ($tablename): $err")
   if (! MMisc::is_blank($err));
 
@@ -150,9 +150,10 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --version] dbfile tablename csvfile
+$0 [--help | --version] dbfile tablename csvfile [col1 [col2 [...]]]
 
 Will dump into a given csvfile all entries from the SQLite dbfile's table called tablename.
+If columns are specified on the command line, only the requested columns will be written to the CVS
 
 Where:
   --help     This help message
