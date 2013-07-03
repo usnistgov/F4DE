@@ -26,3 +26,6 @@ $db_check_sql = "TV13MED-SubmissionChecker_conf-DBcheck.sql";
 @db_detectionTID = ("detectionTrialID", "TrialID");
 @db_thresholdEID = ("thresholdEventID", "EventID");
 @db_checkSEARCHMDTPT = ("checkSEARCHMDTPT", "SEARCHMDTPT");
+
+## MER
+$mer_subcheck = MMisc::get_file_actual_dir($0) . "/MER-SubmissionChecker.sh";
