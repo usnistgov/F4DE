@@ -227,6 +227,8 @@ my $max_expid = 0;
 my $max_expid_error = 1;
 my @db_checkSEARCHMDTPT;
 
+my $mer_subcheck = "";
+
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
   if (! defined $tmpstr);
@@ -265,6 +267,13 @@ my $medyear = $expid_tag[0];
 &__cfgcheck("\@db_checkSEARCHMDTPT", (scalar @db_checkSEARCHMDTPT == 0), ($medyear eq 'MED13'));
 
 &extend_file_location(\$db_check_sql, 'SQL DB check file', @data_search_path);
+
+my $xtratool = MMisc::get_file_actual_dir($0) . "/../../../common/tools/SQLite_tools/SQLite_dump_csv.pl";
+if (! MMisc::is_blank($mer_subcheck)) {
+    $err = MMisc::check_file_x($xtratool);
+    MMisc::error_quit("Problem with extra tool needed for MER ($xtratool): $err")
+        if (! MMisc::is_blank($err));
+}
 
 my $doepmd = 0;
 
@@ -787,10 +796,19 @@ sub check_name_med13p {
 sub check_exp_dirfiles {
   my ($bd, $exp, $data, $medtype, $task) = @_;
 
-  my ($derr, $rd, $rf, $ru) = MMisc::list_dirs_files("$bd/$exp");
+  my $expdir = "$bd/$exp";
+  my ($derr, $rd, $rf, $ru) = MMisc::list_dirs_files($expdir);
   return($derr) if (! MMisc::is_blank($derr));
-  
+
+  my $merdir = "";
   my @left = @$rd;
+  if (scalar @left == 1) {
+      if ($left[0] eq 'MER') {
+          return("Found an MER directory in EXPID ($exp) but MER's Submission Checker is not set") if (MMisc::is_blank($mer_subcheck));
+          $merdir = "$expdir/" . shift @left; # also remove problem from list for later check
+          vprint(4, "Found a MER directory, will check it after the MED checks");
+      }
+  }
   push @left, @$ru;
   return("Found more than just files (" . join(" ", @left) . ")")
     if (scalar @left > 0);
@@ -831,13 +849,13 @@ sub check_exp_dirfiles {
     vprint(5, "Matched \'$k\' CSV file: $fn");
   }
   
-  return(&run_DEVAcli($exp, $data, $medtype, $task, %match));
+  return(&run_DEVAcli($exp, $data, $medtype, $task, \%match, $merdir));
 }
 
 #####
 
 sub run_DEVAcli {
-  my ($exp, $data, $medtype, $task, %match) = @_;
+  my ($exp, $data, $medtype, $task, $rmatch, $merdir) = @_;
 
   vprint(4, "Creating the Database (ie validating System)");
 
@@ -846,21 +864,21 @@ sub run_DEVAcli {
     if (! MMisc::make_wdir($od));
   vprint(5, "Output dir: $od");
     
-  my @cmd = ();
-  push @cmd, '-p', $medyear, '-o', "$od";
-  foreach my $k (keys %match) {
-    push @cmd , '-s', $match{$k} . ":$k";
+  my @cmd_args = ();
+  push @cmd_args, '-p', $medyear, '-o', "$od";
+  foreach my $k (keys %$rmatch) {
+    push @cmd_args, '-s', $$rmatch{$k} . ":$k";
   }
-  push @cmd, "$trialindex:TrialIndex";
-  push @cmd, '-f', '-D';
+  push @cmd_args, "$trialindex:TrialIndex";
+  push @cmd_args, '-f', '-D';
 
   my $lf = "$od/DEVAcli_run.log";
   vprint(5, "Running tool ($DEVAtool), log: $lf");
-  my ($err) = &run_tool($lf, $DEVAtool, @cmd);
+  my ($err) = &run_tool($lf, $DEVAtool, @cmd_args);
 
   return($err) if (! MMisc::is_blank($err));
 
-  return(&check_TrialIDs($od, $exp, $data, $medtype, $task));
+  return(&check_TrialIDs($od, $exp, $data, $medtype, $task, $merdir));
 }
 
 #####
@@ -883,7 +901,7 @@ sub run_tool {
 #####
 
 sub check_TrialIDs {
-  my ($od, $expid, $data, $medtype, $task) = @_;
+  my ($od, $expid, $data, $medtype, $task, $merdir) = @_;
 
   vprint(4, "Checking Database's EventID and TrialID");
 
@@ -956,8 +974,24 @@ sub check_TrialIDs {
   if (scalar @db_checkSEARCHMDTPT > 0) {
     my $err = &id_check($dbfile, "unique \'SEARCHMDTPT\' value", $db_checkSEARCHMDTPT[0], $db_checkSEARCHMDTPT[1], 1);
     return($err) if (! MMisc::is_blank($err));
-  }    
-  
+  }
+
+  if (! MMisc::is_blank($merdir)) {
+      my $mof = "$od/MER_completeness.csv";
+      my $mol = "$mof.log";
+      vprint(5, "Generating MER Completeness file [log: $mol]");
+      my @cmd_args = ($dbfile, 'yesTrialID', $mof, 'TrialID');
+      ($err, my $ok) = &run_tool($mol, $xtratool, @cmd_args);
+      return("While running MER completeness file generation: $err (log:$mol")
+          if (! MMisc::is_blank($err));
+      $mol = "$od/MER_subcheck.log";
+      vprint(5, "Running MER submission checker [log: $mol]");
+      my @cmd_args = ($merdir, $mof);
+      ($err, $ok) = &run_tool($mol, $mer_subcheck, @cmd_args);
+      return("While running MER submission checks: $err (log:$mol)")
+          if (! MMisc::is_blank($err));
+  }
+     
   return("");
 }
 
