@@ -33,6 +33,7 @@ use strict;
 ##### Warning: only use packages that are part of the 'Core Modules'
 # see: http://perldoc.perl.org/index-modules-A.html
 use Cwd qw(cwd abs_path);
+use File::Basename 'dirname';
 use Data::Dumper;
 use File::Find;
 use File::Temp qw(tempdir tempfile);
@@ -1826,6 +1827,11 @@ sub get_file_full_path {
 
   return($o);
 }
+
+#####
+
+# careful, this one follow symlinks
+sub get_file_actual_dir { return(dirname(abs_path($_[0]))); }
 
 ##########
 
