@@ -283,7 +283,7 @@ sub insertCSV_handler {
 #####
 
 sub dumpCSV {
-  my ($dbh, $table, $csvfile) = @_;
+  my ($dbh, $table, $csvfile, @cols) = @_;
 
   return("No DB handler") 
     if (! defined $dbh);
@@ -304,18 +304,27 @@ sub dumpCSV {
   my ($err, @colsname) = &get_column_names($dbh, $table);
   return($err, 0) if (! MMisc::is_blank($err));
 
-  $csvh->set_number_of_columns(scalar @colsname);
+  my $needmatch = '*';
+  if (scalar @cols == 0) {
+    @cols = @colsname;
+  } else {
+    ($err, my %match) = MMisc::get_array1posinarray2(\@cols, \@colsname);
+    return("Problem finding asked for columns: $err [requested: " . join(" ", @cols) . " / found: " . join(" ", @colsname) ."]") if (! MMisc::is_blank($err));
+    $needmatch = join(",", @cols);
+  }
+
+  $csvh->set_number_of_columns(scalar @cols);
   return("Problem with CSV handler: " . $csvh->get_errormsg(), 0)
     if ($csvh->error());
   
-  my $text = $csvh->array2csvline(@colsname);
+  my $text = $csvh->array2csvline(@cols);
   return("Problem with CSV handler: " . $csvh->get_errormsg(), 0)
     if ($csvh->error());
 
   print CSV "$text\n";
 
   ## Data
-  my $sth = $dbh->prepare("SELECT * FROM $table") 
+  my $sth = $dbh->prepare("SELECT $needmatch FROM $table") 
     or return("Problem obtaining column names : " . $dbh->errstr());
   $sth->execute();
 
