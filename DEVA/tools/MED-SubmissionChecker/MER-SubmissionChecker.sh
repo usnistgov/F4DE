@@ -10,14 +10,23 @@ fi
 
 echo "Running MER submission checks"
 
-if [ $F4DE_BASE ]; then
-    data_path="$F4DE_BASE/DEVA/data"
-else
-    data_path="../../data"
-fi
+tool_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($ARGV[0])); print $dir' $0`
+data_path="${tool_dir}/../../data"
 xsd=$data_path/$xsd_name
+if [ -f $xsd ]; then
+  echo "**Could not find the needed xsd files ($xsd)"
+  exit 1
+fi
 
-if [ $completeness_file -a -f $completeness_file ]; then
+if [ $completeness_file ]; then
+  if [ ! -f $completeness_file ]; then
+      echo "**Could not find requested completeness_file ($completeness_file)"
+      exit 1
+  fi
+  if [ ! -r $completeness_file ]; then
+      echo "**Could not read requested completeness_file ($completeness_file)"
+      exit 1
+  fi
     echo "*Checking submission for completeness*"
     complete_list=`mktemp -t mer_check`
     echo $submission_dir > $complete_list
@@ -37,6 +46,16 @@ if [ $completeness_file -a -f $completeness_file ]; then
 else
     echo "*Skipping completeness check*"
 fi
+
+if [ ! -d $submission_dir ]; then
+    echo "**Could not find MER_submission_dir ($MER_submission_dir)"
+    exit 1
+fi
+if [ ! -r $submission_dir ]; then
+    echo "**Could not read from MER_submission_dir ($MER_submission_dir)"
+    exit 1
+fi
+
 
 echo "*Validating mer.xml files*"
 for mer in `find $submission_dir -type f -name '*mer.xml'`; do
