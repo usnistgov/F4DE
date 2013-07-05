@@ -1830,8 +1830,85 @@ sub get_file_full_path {
 
 #####
 
-# careful, this one follow symlinks
+# careful, these functions follow symlinks
 sub get_file_actual_dir { return(dirname(abs_path($_[0]))); }
+sub get_dir_actual_dir  { return(abs_path($_[0])); }
+sub get_file_actual_file { return(&get_dir_actual_dir($_[0])); }
+
+#####
+
+
+## compute_actual_dir_relative_path(from, to [, force_relative])
+#   tells how to cd from 'from' dir to get to 'to' dir
+# warning: use 'get_file_actual_dir'
+# notes:
+# - if a relative path is not possible (ie dirs differ from / forward), return dir1
+#   unless 'force_relative' is true, in which case a relative path will be computed
+# - only for directories AND directories need to exist already
+# - return 'undef' in case of problem
+sub compute_actual_dir_relative_path {
+  my ($d1, $d2, $force_relative) = &iuav(\@_, undef, undef, 0);
+  return(undef) if (! &does_dir_exist($d1));
+  return(undef) if (! &does_dir_exist($d2));
+
+  my $from = &get_dir_actual_dir($d1);
+  my $to   = &get_dir_actual_dir($d2);
+
+  return('.') if ($from eq $to);
+
+  my $dbg = 0;
+  vprint($dbg, "[$from]\n[$to]\n");
+
+  my @a1 = grep (! m%^$%, split(m%/%, $to));
+  my @a2 = grep (! m%^$%, split(m%/%, $from));
+
+  my $mod = 0;
+  my @out_b = ();
+  my @out_e = ();
+  for (my $i = 0; $i < max(scalar @a1, scalar @a2); $i++) {
+    vprint($dbg, "?? $a1[$i] | $a2[$i]\n");
+
+    # same path and no change yet, nothing to do
+    if (($mod == 0) && ($a1[$i] eq $a2[$i])) {
+      vprint($dbg, "== $a2[$i]\n");
+      next;
+    }
+
+    # no common PATH possible from /
+    return($to)
+      if (($i == 0) && ($force_relative == 0));
+     
+    # at this point whatever is next means change
+    $mod++; 
+
+    # ie we created the entry in the to go to path split by checking its existence ?
+    if ($a1[$i] eq '') { 
+      vprint($dbg, "..\n");
+      push @out_b, '..';
+      next;
+    } 
+
+    # ie we created the entry in the coming from path split by checking its existence ?
+    if ($a2[$i] eq '') {
+      vprint($dbg, "++ $a1[$i]\n");
+      push @out_e, $a1[$i];
+      next;
+    }
+
+    vprint($dbg, "** .. $a1[$i]\n");
+    push @out_b, '..';
+    push @out_e, $a1[$i];
+  }
+  
+  my $res = join('/', @out_b, @out_e);
+  if ($dbg) {
+    my $check = &get_dir_actual_dir("$from/$res");
+    vprint($dbg, "[$check]" . (($check ne $to) ? "   !!!!!!!!!!! different from: $to" : "") . "\n");
+  }
+  vprint($dbg, " => $res\n");
+
+  return($res);
+}
 
 ##########
 
