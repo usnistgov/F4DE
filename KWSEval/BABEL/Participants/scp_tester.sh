@@ -90,10 +90,12 @@ echo ""
 echo "COMMAND: $cmd" > $lf
 echo "" >> $lf
 $cmd 2>&1 | tee -a $lf
+scp_es=${PIPESTATUS[0]}
+echo ""
+echo ""
 
-echo ""
-echo ""
-if [ "${?}" -ne "0" ]; then error_quit "Problem running command, see: $lf"; fi
+if [ "${scp_es}" -ne "0" ]; then error_quit "Problem running command, see: $lf"; fi
+
 
 echo "** The scp upload attempt appears to have been succesful, please try a submission (see README)"
 exit 0
