@@ -1,6 +1,6 @@
 submission_dir=$1
 completeness_file=$2
-xsd_name="MER13_output_v1.xsd"
+xsd_name="MER13_output.xsd"
 
 if [ -z $submission_dir ]; then
     echo "$0 MER_submission_dir [completeness_file]"
@@ -40,7 +40,7 @@ fi
 
 echo "*Validating mer.xml files*"
 for mer in `find $submission_dir -type f -name '*mer.xml'`; do
-    xmllint --noout --schema $xsd $mer 2>&1 | sed 's/^/  /'
+    xmllint --noout --schema $xsd $mer
     if [ $? -ne 0 ]; then
 	echo "**Validation failed, aborting!"
 	exit 1
