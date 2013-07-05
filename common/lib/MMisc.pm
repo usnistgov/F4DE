@@ -1222,7 +1222,7 @@ sub file_shaXXXdigest {
   return("Problem with input file ($file): $err")
     if (! &is_blank($err));
 
-  my $err = &__get_SHAmodule();
+  $err = &__get_SHAmodule();
   return($err) if (! MMisc::is_blank($err));
 
   return("Can not do requested SHA Digest ($xxx), capability: " . join(" ", @okSHAs))
