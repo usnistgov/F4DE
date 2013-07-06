@@ -2,9 +2,13 @@
 
 TV08ViperValidator_tester=TV08ViperValidator_tester.pl
 
+ifdef F4DE_TEST_INSTALLDIR
+TV08ViperValidator=../../../bin/TV08ViperValidator
+else
 TV08ViperValidator_exec=TV08ViperValidator.pl
 TV08ViperValidator_reldir=../../tools/TV08ViperValidator
 TV08ViperValidator=${TV08ViperValidator_reldir}/${TV08ViperValidator_exec}
+endif
 
 TV08TC_lib=../lib
 F4DEC_lib=../../../common/lib

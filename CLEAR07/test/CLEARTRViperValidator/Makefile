@@ -2,9 +2,14 @@
 
 CLEARTRViperValidator_tester=CLEARTRViperValidator_tester.pl
 
+
+ifdef F4DE_TEST_INSTALLDIR
+CLEARTRViperValidator=../../../bin/CLEARTRViperValidator
+else
 CLEARTRViperValidator_exec=CLEARTRViperValidator.pl
 CLEARTRViperValidator_reldir=../../tools/CLEARTRViperValidator
 CLEARTRViperValidator=${CLEARTRViperValidator_reldir}/${CLEARTRViperValidator_exec}
+endif
 
 CLEARTRTC_lib=../lib
 F4DEC_lib=../../../common/lib

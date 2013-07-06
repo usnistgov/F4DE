@@ -2,9 +2,13 @@
 
 CLEARDTViperValidator_tester=CLEARDTViperValidator_tester.pl
 
+ifdef F4DE_TEST_INSTALLDIR
+CLEARDTViperValidator=../../../bin/CLEARDTViperValidator
+else
 CLEARDTViperValidator_exec=CLEARDTViperValidator.pl
 CLEARDTViperValidator_reldir=../../tools/CLEARDTViperValidator
 CLEARDTViperValidator=${CLEARDTViperValidator_reldir}/${CLEARDTViperValidator_exec}
+endif
 
 CLEARDTTC_lib=../lib
 F4DEC_lib=../../../common/lib

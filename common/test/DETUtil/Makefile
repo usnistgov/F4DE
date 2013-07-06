@@ -5,6 +5,12 @@ tester=DETUtil_tester.pl
 F4DEC_lib=../../../common/lib
 PERL=perl -I${F4DEC_lib}
 
+ifdef F4DE_TEST_INSTALLDIR
+DETUtilcmd=../../../bin/DETUtil
+else
+DETUtilcmd=../../../common/tools/DETUtil/DETUtil.pl
+endif
+
 all:
 	@echo "Nothing to do"
 
@@ -12,7 +18,7 @@ install:
 	@echo "Nothing to do for install"
 
 makecompcheckfiles makecheckfiles check:
-	@(${PERL} ${tester} $@)
+	@(${PERL} ${tester} ${DETUtilcmd} $@)
 
 cleanresfiles:
 	@rm -f res*.txt

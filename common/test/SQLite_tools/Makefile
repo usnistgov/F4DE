@@ -5,11 +5,19 @@ DBI_check=DBI_check.pl
 SQLite_tools_tester1=SQLite_tools_cfg_helper_tester.pl
 SQLite_tools_tester2=SQLite_tools_tables_creator_tester.pl
 
-SQLite_tools_exec1=SQLite_cfg_helper.pl
-SQLite_tools_exec2=SQLite_tables_creator.pl
+SQLite_tools_exec1_core=SQLite_cfg_helper
+SQLite_tools_exec2_core=SQLite_tables_creator
+
 SQLite_tools_reldir=../../tools/SQLite_tools
-SQLite_tools1=${SQLite_tools_reldir}/${SQLite_tools_exec1}
-SQLite_tools2=${SQLite_tools_reldir}/${SQLite_tools_exec2}
+F4DE_BIN=../../../bin
+
+ifdef F4DE_TEST_INSTALLDIR
+SQLite_tools1=${F4DE_BIN}/${SQLite_tools_exec1_core}
+SQLite_tools2=${F4DE_BIN}/${SQLite_tools_exec2_core}
+else
+SQLite_tools1=${SQLite_tools_reldir}/${SQLite_tools_exec1_core}.pl
+SQLite_tools2=${SQLite_tools_reldir}/${SQLite_tools_exec2_core}.pl
+endif
 
 F4DEC_lib=../../../common/lib
 PERL=perl -I${F4DEC_lib}

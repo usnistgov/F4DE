@@ -2,9 +2,13 @@
 
 CLEARDTScorer_tester=CLEARDTScorer_tester.pl
 
+ifdef F4DE_TEST_INSTALLDIR
+CLEARDTScorer=../../../bin/CLEARDTScorer
+else
 CLEARDTScorer_exec=CLEARDTScorer.pl
 CLEARDTScorer_reldir=../../tools/CLEARDTScorer
 CLEARDTScorer=${CLEARDTScorer_reldir}/${CLEARDTScorer_exec}
+endif
 
 CLEARDTTC_lib=../lib
 F4DEC_lib=../../../common/lib

@@ -4,9 +4,13 @@ AVSS09ViPERValidator_tester=AVSS09ViPERValidator_tester.pl
 
 CLEAR07_XSD=../../../CLEAR07/data
 
+ifdef F4DE_TEST_INSTALLDIR
+AVSS09ViPERValidator=../../../bin/AVSS09ViPERValidator
+else
 AVSS09ViPERValidator_exec=AVSS09ViPERValidator.pl
 AVSS09ViPERValidator_reldir=../../tools/AVSS09ViPERValidator
 AVSS09ViPERValidator=${AVSS09ViPERValidator_reldir}/${AVSS09ViPERValidator_exec}
+endif
 AVSS09ViPERValidator_Add=--CLEARxsd ${CLEAR07_XSD}
 
 CLEAR07_lib=../../../CLEAR07/lib

@@ -2,9 +2,13 @@
 
 TV08Scorer_tester=TV08Scorer_tester.pl
 
+ifdef F4DE_TEST_INSTALLDIR
+TV08Scorer=../../../bin/TV08Scorer
+else
 TV08Scorer_exec=TV08Scorer.pl
 TV08Scorer_reldir=../../tools/TV08Scorer
 TV08Scorer=${TV08Scorer_reldir}/${TV08Scorer_exec}
+endif
 
 TV08TC_lib=../lib
 F4DEC_lib=../../../common/lib
