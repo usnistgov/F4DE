@@ -1,8 +1,6 @@
 # Main F4DE directory Makefile
 SHELL=/bin/bash
 
-F4DE_BASE ?= "notset"
-
 ##########
 
 F4DE_VERSION=.f4de_version
@@ -13,12 +11,13 @@ all:
 	@make from_installdir
 	@make dist_head
 	@echo "Version Information : " `cat ${F4DE_VERSION}`
+	@make get_f4dedir
 	@echo ""
 	@echo "Possible options are:"
 	@echo ""
 	@echo "  perl_install    a helper to try and install required Perl packages  -- make sure the tools listed in the README's 'INSTALLATION' 'Prerequisites' section are installed first. Also insure that Perl's 'cpanp' tool is configured and ready to be used (please note you might be prompted to follow dependencies)"
 	@echo ""
-	@echo "[checks section -- recommended to run before installation -- DO NOT set the F4DE_BASE environment variable]"
+	@echo "[checks section -- run before installing]"
 	@echo "(note that each tool individual test can take from a few seconds to a few minutes to complete)"
 	@echo "  mincheck        run only a few common checks"
 	@echo "  check           to run checks on all included evaluation tools"
@@ -30,7 +29,9 @@ all:
 	@echo "  KWSEvalcheck    only run checks for the KWSEval subsection"
 	@echo "NOTE: for each tool specific check it is first required to run first 'make mincheck' to insure that the minimum requirements are met"
 	@echo ""
-	@echo "[install section -- requires the F4DE_BASE environment variable set]"
+	@echo "[install section -- create symbolic links]"
+	@echo "( extend your PATH with: ${F4DE_DIR}/bin"
+	@echo " and MANPATH with: ${F4DE_DIR}/man )"
 	@echo "  install         to install all the softwares"
 	@echo "  TV08install     only install the TrecVid08 subsection"
 	@echo "  CLEAR07install  only install the CLEAR07 subsection"
@@ -46,18 +47,26 @@ from_installdir:
 	@echo "** Checking that \"make\" is called from the source directory"
 	@test -f ${F4DE_VERSION}
 
+F4DE_DIR:=$(shell perl -Icommon/lib -e 'use Cwd "abs_path"; use File::Basename "dirname"; if (exists $$ENV{F4DE_DIR}) { print $$ENV{F4DE_DIR} } else { print dirname(abs_path("./installer.pl"));}')
+
+get_f4dedir: installer.pl
+	@echo "F4DE directory: " ${F4DE_DIR}
+
 
 ########## Install
+# moving the man install after the main install so that developper install is still "complete"
 
 install:
-	@make commoninstall
-	@make TV08install
-	@make CLEAR07install
-	@make AVSS09install
-	@make VidATinstall
-	@make SQLitetoolsinstall
-	@make DEVAinstall
-	@make KWSEvalinstall
+	@make install_noman
+	@make install_man
+
+#####
+
+install_man:
+	@make commoninstall_man
+	@make TV08install_man
+	@make AVSS09install_man
+	@make DEVAinstall_man
 
 #####
 
@@ -87,11 +96,10 @@ commoninstall_common:
 	@make from_installdir
 	@make install_head
 	@echo "** Installing common files"
-	@perl installer.pl ${F4DE_BASE} lib ${CM_DIR}/lib/*.pm
-	@perl installer.pl -x -r ${F4DE_BASE} bin ${CM_DIR}/${COMMONTOOLS}
+	@perl installer.pl -l -x -r ${F4DE_DIR} bin ${CM_DIR}/${COMMONTOOLS}
 
-commoninstall_man:
-	@perl installer.pl ${F4DE_BASE} man/man1 ${CM_DIR}/man/*.1
+commoninstall_man: 
+	@perl installer.pl -l ${F4DE_DIR} man/man1 ${CM_DIR}/man/*.1
 
 commoninstall_noman:
 	@make commoninstall_common
@@ -102,13 +110,12 @@ commoninstall_noman:
 VidATinstall:
 	@echo "** Installing VidAT"
 	@make commoninstall_common
-	@perl installer.pl ${F4DE_BASE} lib ${VIDATDIR}/*.pm
-	@perl installer.pl -x -r ${F4DE_BASE} bin ${VIDATDIR}/*.pl
+	@perl installer.pl -l -x -r ${F4DE_DIR} bin ${VIDATDIR}/*.pl
 
 SQLitetoolsinstall:
 	@echo "** Installing SQLite_tools"
 	@make commoninstall_common
-	@perl installer.pl -x -r ${F4DE_BASE} bin ${SQLITETOOLSDIR}/*.pl
+	@perl installer.pl -l -x -r ${F4DE_DIR} bin ${SQLITETOOLSDIR}/*.pl
 
 #####
 
@@ -127,13 +134,10 @@ TV08install_common:
 	@echo "********** Installing TrecVid08 tools"
 	@make commoninstall_common
 	@echo "** Installing TrecVid08 files"
-	@perl installer.pl ${F4DE_BASE} lib ${TV08DIR}/lib/*.pm
-	@perl installer.pl ${F4DE_BASE} lib/data ${TV08DIR}/data/*.xsd
-	@perl installer.pl ${F4DE_BASE} lib/data ${TV08DIR}/data/*.perl
-	@perl installer.pl -x -r ${F4DE_BASE} bin ${TV08DIR}/${TV08TOOLS}
+	@perl installer.pl -l -x -r ${F4DE_DIR} bin ${TV08DIR}/${TV08TOOLS}
 
 TV08install_man:
-	@perl installer.pl ${F4DE_BASE} man/man1 ${TV08DIR}/man/*.1
+	@perl installer.pl -l ${F4DE_DIR} man/man1 ${TV08DIR}/man/*.1
 	@make commoninstall_man
 
 TV08install_noman:
@@ -152,9 +156,7 @@ CLEAR07install:
 	@echo "********** Installing CLEAR07 tools"
 	@make commoninstall_common
 	@echo "** Installing CLEAR07 files"
-	@perl installer.pl ${F4DE_BASE} lib ${CL07DIR}/lib/*.pm
-	@perl installer.pl ${F4DE_BASE} lib/data ${CL07DIR}/data/*.xsd
-	@perl installer.pl -x -r ${F4DE_BASE} bin ${CL07DIR}/${CL07TOOLS}
+	@perl installer.pl -l -x -r ${F4DE_DIR} bin ${CL07DIR}/${CL07TOOLS}
 	@echo ""
 	@echo ""
 
@@ -176,13 +178,10 @@ AVSS09install_common:
 	@echo "  (Relies on CLEAR07, running installer)"
 	@make CLEAR07install
 	@echo "** Installing AVSS09 files"
-	@perl installer.pl ${F4DE_BASE} lib ${AV09DIR}/lib/*.pm
-	@perl installer.pl ${F4DE_BASE} lib/data ${AV09DIR}/data/*.xsd
-	@perl installer.pl ${F4DE_BASE} lib/data ${AV09DIR}/data/*.perl
-	@perl installer.pl -x -r ${F4DE_BASE} bin ${AV09DIR}/${AV09TOOLS}
+	@perl installer.pl -l -x -r ${F4DE_DIR} bin ${AV09DIR}/${AV09TOOLS}
 
 AVSS09install_man:
-	@perl installer.pl ${F4DE_BASE} man/man1 ${AV09DIR}/man/*.1
+	@perl installer.pl -l ${F4DE_DIR} man/man1 ${AV09DIR}/man/*.1
 
 AVSS09install_noman:
 	@make AVSS09install_common
@@ -209,13 +208,11 @@ DEVAinstall_common:
 	@make commoninstall_common
 	@make SQLitetoolsinstall
 	@echo "** Installing DEVA tools"
-	@perl installer.pl -x -r ${F4DE_BASE} bin ${DEVADIR}/${DEVATOOLS}
-	@perl installer.pl -x -r ${F4DE_BASE} bin ${DEVADIR}/${MEDTOOLS}
-	@perl installer.pl ${F4DE_BASE} lib/data ${DEVADIR}/data/*.sql
-	@perl installer.pl ${F4DE_BASE} lib/data ${DEVADIR}/data/*.perl
+	@perl installer.pl -l -x -r ${F4DE_DIR} bin ${DEVADIR}/${DEVATOOLS}
+	@perl installer.pl -l -x -r ${F4DE_DIR} bin ${DEVADIR}/${MEDTOOLS}
 
 DEVAinstall_man:
-	@perl installer.pl ${F4DE_BASE} man/man1 ${DEVADIR}/man/*.1
+	@perl installer.pl -l ${F4DE_DIR} man/man1 ${DEVADIR}/man/*.1
 	@make commoninstall_man
 
 DEVAinstall_noman:
@@ -239,36 +236,22 @@ KWSEvalinstall_common:
 	@echo ""
 	@echo "********** Installing KWSEval tools"
 	@make commoninstall_common
-	@perl installer.pl -x -r ${F4DE_BASE} bin ${KWSEVALDIR}/${KWSEVALTOOLS}
-	@perl installer.pl -x -r ${F4DE_BASE} bin ${KWSEVALDIR}/${KWSEVALBABEL}
-	@perl installer.pl ${F4DE_BASE} lib ${KWSEVALDIR}/lib/*.pm
-	@perl installer.pl ${F4DE_BASE} lib/data ${KWSEVALDIR}/data/*.xsd
-	@perl installer.pl ${F4DE_BASE} lib/data ${KWSEVALDIR}/data/*.perl
+	@perl installer.pl -l -x -r ${F4DE_DIR} bin ${KWSEVALDIR}/${KWSEVALTOOLS}
+	@perl installer.pl -l -x -r ${F4DE_DIR} bin ${KWSEVALDIR}/${KWSEVALBABEL}
 
 
 ##########
 
-check_f4debase_set:
-	@echo "** Checking that the F4DE_BASE environment variable is set"
-	@test ${F4DE_BASE}
-	@test ${F4DE_BASE} != "notset"
-
-check_f4debase_notset:
-	@echo "** Checking that the F4DE_BASE environment variable is NOT set"
-	@test ${F4DE_BASE} == "notset"
-
 install_head:
-	@make check_f4debase_set
-	@echo "** Checking that the F4DE_BASE is a writable directory"
-	@test -d ${F4DE_BASE}
-	@test -w ${F4DE_BASE}
+	@echo "** Checking that the F4DE_DIR is a writable directory"
+	@test -d ${F4DE_DIR}
+	@test -w ${F4DE_DIR}
 
 
 ########## Checks
 
 mincheck:
 	@make check_common
-	@make check_f4debase_notset
 	@make commoncheck
 
 check:
