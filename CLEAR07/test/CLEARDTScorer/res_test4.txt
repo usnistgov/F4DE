@@ -2,8 +2,6 @@
 [[RETURN CODE]] 0
 [[STDOUT]]
 ** Detection and Tracking Results:
-../../tools/CLEARDTScorer/CLEARDTScorer.pl ../common/MR_FDT/2005_Test_MRoom_FDT_50.rdf -g ../common/MR_FDT/2005_Test_MRoom_FDT_50.gtf -D MR -E Area
-
 Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
 
         Reference File            System Output File                   Video               Object    SFDA      ATA       MODA      MODP      MOTA      MOTP    

@@ -18,8 +18,6 @@
 **** Scoring results:
 -- Beg ----------
 ** Detection and Tracking Results:
-../../../CLEAR07/tools/CLEARDTScorer/CLEARDTScorer.pl --CLEARxsd ../../../CLEAR07/data --Domain SV --Eval Area --SpecialMode AVSS09 --quitOnMissingFiles /tmp/AVSS09Scorer_tester-Temp_test1/SYS/test_file2/test_file2.empty.xml.SSmemdump --gtf /tmp/AVSS09Scorer_tester-Temp_test1/GTF/test_file2/test_file2.clear.xml.SSmemdump
-
 Area Based Evaluation parameters: Detection-Threshold = 1 (Binary = False); Tracking-Threshold = 1 (Binary = False); Miss-Detect-Cost = 1; False-Alarm-Cost = 1; ID-Switch-Cost = 1.
 
      Reference File      System Output File       Video       Object    MOTA    
