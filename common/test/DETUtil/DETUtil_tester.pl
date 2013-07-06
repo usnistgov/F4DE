@@ -5,6 +5,7 @@ use strict;
 use F4DE_TestCore;
 use MMisc;
 
+my $detutil = shift @ARGV;
 my $mode = shift @ARGV;
 
 print "** Running DETUtil/SRL reading tests:\n";
@@ -25,7 +26,7 @@ foreach my $testid("1", "1o", "3", "3d"){
   foreach my $version("2.4.4", "2.4.3.3"){
     $tn = "test$testid.V$version";
     $testr += &do_simple_test($tn, "(Unit Test)", 
-                              "perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -X -o foo.png res-$tn.srl.gz ; cat foo.results.txt", "res-$tn.txt");
+                              "perl -I../../../common/lib $detutil -x -X -o foo.png res-$tn.srl.gz ; cat foo.results.txt", "res-$tn.txt");
 
     
   }
