@@ -2,9 +2,13 @@
 
 ValidateKWSList_tester=ValidateKWSList_tester.pl
 
+ifdef F4DE_TEST_INSTALLDIR
+ValidateKWSList=../../../bin/ValidateKWSList
+else
 ValidateKWSList_exec=ValidateKWSList.pl
 ValidateKWSList_reldir=../../tools/ValidateKWSList
 ValidateKWSList=${ValidateKWSList_reldir}/${ValidateKWSList_exec}
+endif
 
 KWSEval_lib=../lib
 F4DEC_lib=../../../common/lib

@@ -1,7 +1,12 @@
 # KWSEval/test/KWSEval
 
 KWSEval_tester=KWSEval_tester.pl
+
+ifdef F4DE_TEST_INSTALLDIR
+KWSEval=../../../bin/KWSEval
+else
 KWSEval=../../tools/KWSEval/KWSEval.pl
+endif
 
 KWSEval_lib=../../../KWSEval/lib
 F4DE_lib=../../../common/lib

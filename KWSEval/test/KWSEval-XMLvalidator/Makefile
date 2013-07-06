@@ -2,9 +2,13 @@
 
 KWSEval-XMLValidator_tester=KWSEval-XMLValidator_tester.pl
 
+ifdef F4DE_TEST_INSTALLDIR
+KWSEval-XMLValidator=../../../bin/KWSEval-XMLvalidator
+else
 KWSEval-XMLValidator_exec=KWSEval-XMLvalidator.pl
 KWSEval-XMLValidator_reldir=../../tools/KWSEval-XMLvalidator
 KWSEval-XMLValidator=${KWSEval-XMLValidator_reldir}/${KWSEval-XMLValidator_exec}
+endif
 
 KWSEval_lib=../lib
 F4DEC_lib=../../../common/lib
