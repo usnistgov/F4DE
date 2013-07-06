@@ -2,13 +2,15 @@
 
 use strict;
 
-my $sd = "";
+my (@f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
-  $sd = dirname(abs_path($0));
+  $f4d = dirname(abs_path($0));
+
+  push @f4bv, ("$f4d/../../../common/lib", "$f4d/../../lib");
 }
-use lib ("$sd/../../../common/lib", "$sd/../../lib");
+use lib (@f4bv);
 
 ########### Check we have every module (perl wise)
 sub eo2pe {
@@ -73,9 +75,7 @@ MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 
 
 ##########
-$sd = dirname(abs_path($0));
-
-my $tool = "$sd/GetVarValue.sh";
+my $tool = "$f4d/GetVarValue.sh";
 my $err = MMisc::check_file_x($tool);
 MMisc::error_quit("Problem with file ($tool) : $err")
   if (! MMisc::is_blank($err));
@@ -88,7 +88,7 @@ if (defined $out) {
       if (! grep(m%^$out_ext$%, @out_ok));
 }
 
-my @tocheck = `ls $sd/*_SubmissionHelper.cfg`;
+my @tocheck = `ls $f4d/*_SubmissionHelper.cfg`;
 chomp @tocheck;
 
 my $at = new AutoTable();
@@ -98,7 +98,7 @@ foreach my $mcfg (@tocheck) {
   MMisc::error_quit("Problem with file ($mcfg) : $err")
       if (! MMisc::is_blank($err));
   
-  my $q = `env subhelp_dir=$sd $tool $mcfg lockdir`;
+  my $q = `env subhelp_dir=$f4d $tool $mcfg lockdir`;
   chomp $q;
 
   &processdir($mcfg, $q);
@@ -117,7 +117,7 @@ MMisc::ok_exit();
 sub processdir {
   my ($cfg, $d) = @_;
 
-  $cfg =~ s%^$sd/%%;
+  $cfg =~ s%^$f4d/%%;
   my ($ev) = split(m%_%, $cfg);
 
   my @content = `ls $d/*.02-uploaded`;

@@ -225,9 +225,8 @@ sub openXMLFileAccess {
       or return("Problem opening input file ($kwslistf): $!");
     $self->{FH} = *KWSLISTFH;
   } else {
-    my $f4b = 'F4DE_BASE';
     my $xmllint_env = "F4DE_XMLLINT";
-    my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
+    my $xsdpath = "$modfp/../../KWSEval/data";
     my @xsdfilesl = ('KWSEval-kwslist.xsd');
     
     # First let us use xmllint on the file XML file

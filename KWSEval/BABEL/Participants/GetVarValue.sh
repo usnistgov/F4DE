@@ -15,13 +15,7 @@ check_file () {
   if [ ! -r "$1" ]; then error_quit "File ($1) is not readable"; fi
 }
 
-get_basedir () {
-    wbd=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname"; print dirname(abs_path($ARGV[0]));' $1`
-}
-
 ##########
-
-
 usage()
 {
 cat <<EOF

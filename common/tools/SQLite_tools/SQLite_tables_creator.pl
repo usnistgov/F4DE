@@ -43,16 +43,13 @@ my $versionid = "SQLite Tables Creator Version: $version";
 ##########
 # Check we have every module (perl wise)
 
-my ($f4b, @f4bv, $f4d);
+my (@f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4d = dirname(abs_path($0));
 
-  $f4b = "F4DE_BASE";
-  push @f4bv, (exists $ENV{$f4b}) 
-    ? ($ENV{$f4b} . "/lib") 
-      : ("$f4d/../../../common/lib");
+  push @f4bv, ("$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -63,7 +60,7 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
+my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
@@ -98,11 +95,9 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 my $usage = &set_usage();
 my $toolb = "SQLite_load_csv";
-my $tool = (exists $ENV{$f4b}) 
-  ? $ENV{$f4b} . "/bin/$toolb"
-  : dirname(abs_path($0)) . "/../../../common/tools/SQLite_tools/${toolb}.pl";
+my $tool = "$f4d/${toolb}.pl";
 $tool = MMisc::cmd_which($toolb) 
-  if (MMisc::is_blank($tool));
+  if (! MMisc::is_file_x($tool));
 my $loadcsv = 0;
 my $nullmode = 0;
 

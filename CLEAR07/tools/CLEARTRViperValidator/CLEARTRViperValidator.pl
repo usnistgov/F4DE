@@ -45,16 +45,13 @@ my $versionid = "CLEAR Text Recognition Viper XML Validator Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv, $f4d);
+my (@f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4d = dirname(abs_path($0));
 
-  $f4b = "F4DE_BASE";
-  push @f4bv, (exists $ENV{$f4b}) 
-    ? ($ENV{$f4b} . "/lib") 
-      : ("$f4d/../../lib", "$f4d/../../../common/lib");
+  push @f4bv, ("$f4d/../../lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -67,7 +64,7 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
+my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 
 # Part of this tool
@@ -114,7 +111,7 @@ my $usage = &set_usage();
 # Default values for variables
 my $isgtf = 0;
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../data");
+my $xsdpath = "$f4d/../../data";
 my $writeback = -1;
 my $xmlbasefile = -1;
 my $evaldomain = undef;

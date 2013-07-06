@@ -44,16 +44,13 @@ my $versionid = "AVSS09 Scorer Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv, $f4d);
+my (@f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4d = dirname(abs_path($0));
 
-  $f4b = "F4DE_BASE";
-  push @f4bv, (exists $ENV{$f4b}) 
-    ? ($ENV{$f4b} . "/lib") 
-      : ("$f4d/../../lib", "$f4d/../../../CLEAR07/lib", "$f4d/../../../common/lib");
+  push @f4bv, ("$f4d/../../lib", "$f4d/../../../CLEAR07/lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -66,7 +63,7 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
+my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 
 # Part of this tool
@@ -111,7 +108,7 @@ MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../../CLEAR07/data");
+my $xsdpath = "$f4d/../../../CLEAR07/data";
 my $gtfs = 0;
 my $verb = 1;
 my $valtool = "";
@@ -123,7 +120,7 @@ my $ttid = "";
 my $skval = 0;
 my $ecf_file = "";
 my $ovwrt = 0;
-my $AVxsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../data");
+my $AVxsdpath = "$f4d/../../data";
 my $docsv = 0;
 my $trackmota = 0;
 my $fullresults = 0;
@@ -203,10 +200,8 @@ if (! MMisc::is_blank($ecf_file)) {
 
 # Val tool
 if (MMisc::is_blank($valtool)) {
-  my @ok_tools = ();
-  if (defined $ENV{$f4b}) {
-    push @ok_tools, $ENV{$f4b} . "/bin/$valtool_bt";
-  }
+  my @ok_tools = ();  
+  push @ok_tools, "$f4d/bin/${valtool_bt}.pl";
   push @ok_tools, "./$valtool_bt";
   push @ok_tools, "./$valtool_bt.pl";
   push @ok_tools, "../$valtool_bt/$valtool_bt.pl";
@@ -227,9 +222,7 @@ if (! $skval) {
 # Scr tool
 if (MMisc::is_blank($scrtool)) {
   my @ok_tools = ();
-  if (defined $ENV{$f4b}) {
-    push @ok_tools, $ENV{$f4b} . "/bin/$scrtool_bt";
-  }
+  push @ok_tools, "$f4d/bin/${scrtool_bt}.pl";
   push @ok_tools, "./$scrtool_bt";
   push @ok_tools, "./$scrtool_bt.pl";
   push @ok_tools, "../../../CLEAR07/tools/$scrtool_bt/$scrtool_bt.pl";
@@ -376,21 +369,10 @@ sub load_preprocessing {
 sub do_single_scoring {
   my ($logfile, $rsysf, $rgtff, $csvfile) = @_;
 
-  my $cmd = "";
-  if (! defined $ENV{$f4b}) { 
-    $cmd .= "perl ";
-    foreach my $j ("../../../CLEAR07/lib", "../../../common/lib") {
-      my $err = MMisc::check_dir_r($j);
-      MMisc::error_quit("Problem with expected INC directory [$j]: $err")
-        if (! MMisc::is_blank($err));
-      $cmd .= " -I$j";
-    }
-    $cmd .= " ";
-  }
-
-  $cmd .= $scrtool;
+  my $cmd = $scrtool;
   $cmd .= " --xmllint $xmllint" if ($opt{'xmllint'});
-  $cmd .= " --CLEARxsd $xsdpath" if (($opt{'xsdpath'}) || (! defined $ENV{$f4b}));
+  $cmd .= " --CLEARxsd $xsdpath" 
+      if (($opt{'xsdpath'}) || (! MMisc::is_blank($xsdpath)));
   $cmd .= " --frameTol $frameTol" if ($opt{'frameTol'});
   $cmd .= " --Domain SV";
   $cmd .= " --Eval Area";
@@ -1011,7 +993,7 @@ You should not have to specify their location, if you have performed an install 
 
 =item B<GLOBAL ENVIRONMENT VARIABLES>
 
-Once you have installed the software, setting B<F4DE_BASE> to the installation location, and extending your B<PATH> to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
+Once you have installed the software, extending your B<PATH> to include F4DE's B<bin> directory should be sufficient for the tools to find their components.
 
 =back
 

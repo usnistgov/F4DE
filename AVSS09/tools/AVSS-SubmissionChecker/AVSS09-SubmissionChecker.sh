@@ -3,17 +3,12 @@
 specfilename="AVSS09-SubmissionChecker_conf.perl"
 avsssc_base="AVSS-SubmissionChecker"
 
+tool_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($ARGV[0])); print $dir' $0`
+
 echo "[$0]"
 # Im which mode are running
-if [ -z ${F4DE_BASE:-} ]; then
-  echo "Warning: Needs to run from the directory where $avsssc_base.pl is"
-  specfile="../../data/$specfilename"
-  avsssc="./$avsssc_base.pl"
-else
-  echo "Note: Running $0 using F4DE_BASE ($F4DE_BASE) as base location" 
-  specfile="${F4DE_BASE}/lib/data/$specfilename"
-  avsssc="${F4DE_BASE}/bin/$avsssc_base"
-fi
+specfile="$tool_dir/../../data/$specfilename"
+avsssc="$tool_dir/$avsssc_base.pl"
 
 # Check specfile
 if [ -z ${specfile:-} ]; then

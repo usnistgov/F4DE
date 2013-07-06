@@ -32,16 +32,13 @@ use Data::Dumper;
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv, $f4d);
+my (@f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4d = dirname(abs_path($0));
 
-  $f4b = "F4DE_BASE";
-  push @f4bv, (exists $ENV{$f4b}) 
-    ? ($ENV{$f4b} . "/lib") 
-      : ("$f4d/../../lib", "$f4d/../../../common/lib");
+  push @f4bv, ("$f4d/../../lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -54,7 +51,7 @@ sub eo2pe {
 
 # Part of this tool
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
+my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 
 foreach my $pn ("MMisc", "DETCurve", "DETCurveSet", "AutoTable") {

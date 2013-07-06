@@ -1,16 +1,13 @@
 #!/usr/bin/env perl
 
 # Check we have every module (perl wise)
-my ($f4b, @f4bv, $f4d);
+my (@f4bv, $f4d);
 BEGIN {
     use Cwd 'abs_path';
     use File::Basename 'dirname';
     $f4d = dirname(abs_path($0));
 
-    $f4b = "F4DE_BASE";
-    push @f4bv, (exists $ENV{$f4b})
-	? ($ENV{$f4b} . "/common/lib")
-	: ("$f4d/../../../common/lib");
+    push @f4bv, ("$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#### This script assumes F4DE 2.4.0 or greater is installed and $F4DE_BASE is set
+#### This script assumes F4DE 2.4.0 or greater is installed
 
 KWSEVAL=KWSEVAL
 TLISTADDNGRAM=TListAddNGram
@@ -8,15 +8,13 @@ KWSLISTGEN=KWSListGenerator
 KWSVALIDATE=ValidateKWSList
 DETUTIL=DETUtil
 
-if [ "$F4DE_BASE" = "" ] ; then
-    BASE=../../../
-else
-    BASE="$F4DE_BASE";
-fi
+tool_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($ARGV[0])); print $dir' $0`
+
+BASE="$tool_dir/../../../"
 
 KWSEVAL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSEval/KWSEval.pl"
 TLISTADDNGRAM="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSStats/TermListAnnotator.pl"
-BABELPARSE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib ./BabelTransParse.pl"
+BABELPARSE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $tool_dir/BabelTransParse.pl"
 KWSLISTGEN="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/KWSListGenerator/KWSListGenerator.pl"
 KWSVALIDATE="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/KWSEval/tools/ValidateKWSList/ValidateKWSList.pl"
 DETUTIL="perl -I $BASE/common/lib -I $BASE/KWSEval/lib $BASE/common/tools/DETUtil/DETUtil.pl"

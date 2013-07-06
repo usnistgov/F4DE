@@ -320,9 +320,8 @@ sub openXMLFileAccess {
   return("Could not obtain \'KWSecf.pm\' location, aborting")
       if (! defined $modfp);
 
-  my $f4b = 'F4DE_BASE';
   my $xmllint_env = "F4DE_XMLLINT";
-  my $xsdpath = (exists $ENV{$f4b}) ? $ENV{$f4b} . "/lib/data" : $modfp . "/../../KWSEval/data";
+  my $xsdpath = "$modfp/../../KWSEval/data";
   my @xsdfilesl = ('KWSEval-ecf.xsd');
 
   # First let us use xmllint on the file XML file

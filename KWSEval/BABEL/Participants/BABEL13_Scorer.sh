@@ -7,19 +7,12 @@
 specfilename="KWS13-SubmissionChecker_conf.perl"
 tvedsc_base="BABEL_Scorer"
 
+tool_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($ARGV[0])); print $dir' $0`
+
 echo "[$0]"
 # In which mode are we running ?
-if [ -z ${F4DE_BASE:-} ]; then
-  echo "Warning: Might need to be run from the directory where $tvedsc_base.pl is"
-  ap=`perl -e 'use Cwd 'abs_path'; use File::Basename 'dirname'; print dirname(abs_path($ARGV[0]));' $0`
-  echo "(trying to obtain tool path information: $ap)"
-  specfile="$ap/../../data/$specfilename"
-  tvedsc="$ap/./$tvedsc_base.pl"
-else
-  echo "Note: Running $0 using F4DE_BASE ($F4DE_BASE) as base location" 
-  specfile="${F4DE_BASE}/lib/data/$specfilename"
-  tvedsc="${F4DE_BASE}/bin/$tvedsc_base"
-fi
+specfile="$tool_dir/../../data/$specfilename"
+tvedsc="$tool_dir/$tvedsc_base.pl"
 
 # Check specfile
 if [ -z ${specfile:-} ]; then
@@ -54,7 +47,3 @@ $cmd
 
 # Exit with last command exit status
 exit $?
-
-
-#####
-abspath () { case "$1" in /*)printf "%s\n" "$1";; *)printf "%s\n" "$PWD/$1";; esac; }

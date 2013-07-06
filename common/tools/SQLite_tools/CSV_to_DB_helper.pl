@@ -43,16 +43,13 @@ my $versionid = "CSV to SQLite Helper Version: $version";
 ##########
 # Check we have every module (perl wise)
 
-my ($f4b, @f4bv, $f4d);
+my (@f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4d = dirname(abs_path($0));
 
-  $f4b = "F4DE_BASE";
-  push @f4bv, (exists $ENV{$f4b}) 
-    ? ($ENV{$f4b} . "/lib") 
-      : ("$f4d/../../../common/lib");
+  push @f4bv, ("$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -63,7 +60,7 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
+my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
@@ -213,7 +210,7 @@ MMisc::ok_quit("Done");
 sub do_cfgfile {
   my ($cfgfile, $nullok, $log, $cmdadd, @csvfl) = @_;
 
-  my $tool = &path_tool($sqlite_cfg_helper, dirname(abs_path($0)) . "/../../../common/tools/SQLite_tools");
+  my $tool = &path_tool($sqlite_cfg_helper, "$f4d/../../../common/tools/SQLite_tools");
 
   if (defined $quickConfig) {
     $cmdadd .= " -q";
@@ -245,9 +242,8 @@ sub db_create {
   MMisc::error_quit("Problem with config file ($cfgfile): $err")
     if (! MMisc::is_blank($err));
 
-  my $tool = &path_tool($sqlite_tables_creator, dirname(abs_path($0)) . "/../../../common/tools/SQLite_tools");
-  my $tool2 = (exists $ENV{$f4b}) ? "" : 
-    &path_tool($sqlite_load_csv, dirname(abs_path($0)) . "/../../../common/tools/SQLite_tools");
+  my $tool = &path_tool($sqlite_tables_creator, "$f4d/../../../common/tools/SQLite_tools");
+  my $tool2 = &path_tool($sqlite_load_csv, "$f4d/../../../common/tools/SQLite_tools");
 
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, 
@@ -260,9 +256,7 @@ sub db_create {
 
 sub path_tool {
   my ($toolb, $relpath) = @_;
-  my $tool = (exists $ENV{$f4b}) 
-    ? $ENV{$f4b} . "/bin/$toolb"
-    : "$relpath/${toolb}.pl";
+  my $tool = "$f4d/${toolb}.pl";
   &check_tool($tool, $toolb);
   return($tool);
 }
@@ -497,7 +491,7 @@ I<sqlite3> (S<http://www.sqlite.org/>) is required (at least version 3.6.12) to 
 
 =item B<GLOBAL ENVIRONMENT VARIABLE>
 
-Once you have installed the software, setting the environment variable B<F4DE_BASE> to the installation location, and extending your B<PATH> environment variable to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
+Once you have installed the software, extending your B<PATH> environment variable to include F4DE's B</bin> directory should be sufficient for the tools to find their components.
 
 =back
 

@@ -33,8 +33,6 @@ if ($version =~ m/b$/) {
 
 my $versionid = "Concatenate two CSV files Version: $version";
 
-use strict;
-
 ########################################
 
 my $usage = "$0 file1.csv file2.csv outfile.csv\n\nProgram will copy content from multiple CSV files to one output CSV file (it will copy the CSV header of the first file only)\nNote: the script will not try to do any check on the number of columns in the input files\n";

@@ -44,16 +44,13 @@ my $versionid = "KWS Eval Submission Checker Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv, $f4d);
+my (@f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4d = dirname(abs_path($0));
 
-  $f4b = "F4DE_BASE";
-  push @f4bv, (exists $ENV{$f4b}) 
-    ? ($ENV{$f4b} . "/lib") 
-      : ("$f4d/../../lib", "$f4d/../../../common/lib");
+  push @f4bv, ("$f4d/../../lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -66,7 +63,7 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
+my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 
 # Part of this tool
@@ -108,13 +105,9 @@ my $kwslist_ext = ".kwslist.xml";
 my $ctm_ext = ".ctm";
 my $stm_ext = ".stm";
 
-my $ValidateKWSList = (exists $ENV{$f4b})
-  ? $ENV{$f4b} . "/bin/ValidateKWSList"
-  : dirname(abs_path($0)) . "/../ValidateKWSList/ValidateKWSList.pl";
+my $ValidateKWSList = "$f4d/../ValidateKWSList/ValidateKWSList.pl";
 
-my $ValidateTM = (exists $ENV{$f4b})
-  ? $ENV{$f4b} . "/bin/ValidateTM"
-  : dirname(abs_path($0)) . "/../ValidateTM/ValidateTM.pl";
+my $ValidateTM = "$f4d/../ValidateTM/ValidateTM.pl";
 
 my $usage = &set_usage();
 MMisc::error_quit("Usage:\n$usage\n") if (scalar @ARGV == 0);

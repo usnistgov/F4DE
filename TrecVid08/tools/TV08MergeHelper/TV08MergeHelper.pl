@@ -44,16 +44,13 @@ my $versionid = "TrecVid08 ViPER XML File Merger Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv, $f4d);
+my (@f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4d = dirname(abs_path($0));
 
-  $f4b = "F4DE_BASE";
-  push @f4bv, (exists $ENV{$f4b}) 
-    ? ($ENV{$f4b} . "/lib") 
-      : ("$f4d/../../lib", "$f4d/../../../common/lib");
+  push @f4bv, ("$f4d/../../lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -66,7 +63,7 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
+my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 
 # Part of this tool
@@ -114,7 +111,7 @@ my $usage = &set_usage();
 # Default values for variables
 my $isgtf = 0; # a Ground Truth File is authorized not to have the Decision informations set
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../data");
+my $xsdpath = "$f4d/../../data";
 my $writetodir = "";
 my $fps = undef;
 my $forceFilename = "";
@@ -988,7 +985,7 @@ You should not have to specify their location, if you have performed an install 
 
 =item B<GLOBAL ENVIRONMENT VARIABLES>
 
-Once you have installed the software, setting B<F4DE_BASE> to the installation location, and extending your B<PATH> to include B<$F4DE_BASE/bin> should be sufficient for the tools to find their components.
+Once you have installed the software, extending your B<PATH> to include F4DE's B<bin> directory should be sufficient for the tools to find their components.
 
 =back
 

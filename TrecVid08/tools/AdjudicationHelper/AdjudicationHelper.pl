@@ -46,16 +46,13 @@ my $versionid = "TrecVid08 Adjudication Helper Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv, $f4d);
+my (@f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4d = dirname(abs_path($0));
 
-  $f4b = "F4DE_BASE";
-  push @f4bv, (exists $ENV{$f4b}) 
-    ? ($ENV{$f4b} . "/lib") 
-      : ("$f4d/../../lib", "$f4d/../../../common/lib");
+  push @f4bv, ("$f4d/../../lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -68,7 +65,7 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
+my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 
 # Part of this tool
@@ -102,16 +99,16 @@ Getopt::Long::Configure(qw(auto_abbrev no_ignore_case));
 
 my $xmllint_env = "F4DE_XMLLINT";
 my $margin_d = 75;
-my $validator_d = "../TV08ViperValidator/TV08ViperValidator.pl";
-my $scorer_d = "../TV08Scorer/TV08Scorer.pl";
-my $adjtool_d = "./Adjudicator.pl";
+my $validator_d = "$f4d/../TV08ViperValidator/TV08ViperValidator.pl";
+my $scorer_d = "$f4d/../TV08Scorer/TV08Scorer.pl";
+my $adjtool_d = "$f4d/Adjudicator.pl";
 
 my $usage = &set_usage();
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
 
 # Default values for variables
 my $xmllint = MMisc::get_env_val($xmllint_env, "");
-my $xsdpath = (exists $ENV{$f4b}) ? ($ENV{$f4b} . "/lib/data") : (dirname(abs_path($0)) . "/../../data");
+my $xsdpath = "$f4d/../../data";
 my $fps = undef;
 my $verb = 0;
 my $wid = "";

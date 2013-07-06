@@ -44,16 +44,13 @@ my $versionid = "Big XML Files Validator Helper Version: $version";
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
-my ($f4b, @f4bv, $f4d);
+my (@f4bv, $f4d);
 BEGIN {
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4d = dirname(abs_path($0));
 
-  $f4b = "F4DE_BASE";
-  push @f4bv, (exists $ENV{$f4b}) 
-    ? ($ENV{$f4b} . "/lib") 
-      : ("$f4d/../../lib", "$f4d/../../../CLEAR07/lib", "$f4d/../../../common/lib");
+  push @f4bv, ("$f4d/../../lib", "$f4d/../../../CLEAR07/lib", "$f4d/../../../common/lib");
 }
 use lib (@f4bv);
 
@@ -66,7 +63,7 @@ sub eo2pe {
 
 ## Then try to load everything
 my $have_everything = 1;
-my $partofthistool = "It should have been part of this tools' files. Please check your $f4b environment variable.";
+my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 
 # Part of this tool
@@ -103,13 +100,8 @@ my @ok_md = ("gzip", "text"); # Default is gzip / order is important
 my $frameTol = 0;
 my $mrgtool = "";
 my $valtool = "";
-if (exists $ENV{$f4b}) {
-  $valtool = $ENV{$f4b} . "/bin/AVSS09ViperValidator";
-  $mrgtool = $ENV{$f4b} . "/bin/AVSS09Merger";
-} else {
-  $valtool = dirname(abs_path($0)) . "/../AVSS09ViperValidator/AVSS09ViperValidator.pl";
-  $mrgtool = dirname(abs_path($0)) . "/../AVSS09Merger/AVSS09Merger.pl";
-}
+$valtool = "$f4d/AVSS09ViperValidator.pl";
+$mrgtool = "$f4d/../AVSS09Merger/AVSS09Merger.pl";
 my $usage = &set_usage();
 
 # Default values for variables
