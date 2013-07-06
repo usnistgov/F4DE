@@ -153,10 +153,11 @@ automated through the 'cpan' command.
 
 ----- Actual Installation:
 
-Note: Most of the F4DE tools are made so that they can be run from the directory 
-they are uncompressed from, and therefore installation is optional.
+All of the F4DE tools are made so that they can be run from the directory 
+they are uncompressed from, and therefore installation is optional, but 
+useful if you want to launch some tools from anywhere.
 
-Installation is a 4 step process:
+Installation is a 3 step process:
 
   1. Run 'make' to get a list of the "check" options available and at minimum
      run 'make mincheck' followed by the appropriate check for your tool set
@@ -166,18 +167,10 @@ Installation is a 4 step process:
      seconds to a few minutes to complete. 
       We recommend running 'make check' to run a full check to confirm
      that all software checks pass [*]. 
-      IMPORTANT: The 'F4DE_BASE' environment variable must not be set
-     for this step to complete. Checks are designed to be run before and
-     independently from any installation and might not work if the 
-     'F4DE_BASE' environment variable is set.      
-  2. Set the environment variable 'F4DE_BASE' to be the base directory
-     of the F4DE software package installation.
-  3. Execute the command 'make install' to copy the executables into 
-     '$F4DE_BASE/bin', perl modules into '$F4DE_BASE/lib', XSD and other
-     data files into '$F4DE_BASE/lib/data', and available man pages
-     in '$F4DE_BASE/man'
-  4. Add '$F4DE_BASE/bin' to your PATH environment variable and 
-     '$F4DE_BASE/man' to your MANPATH environment variable
+  2. Execute the command 'make install' to make symbolic links from the executables
+     into F4DE uncompression directory's 'bin' and 'man' directories
+  3. Add F4DE uncompression directory's 'bin' directory to your PATH environment
+     variable and its 'man' directory to your MANPATH environment variable
 
 [*] If one of the Tools tests fails, please follow the bug reports submission 
 instructions detailed in the "TEST CASE BUG REPORT" section.
