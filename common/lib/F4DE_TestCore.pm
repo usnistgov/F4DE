@@ -44,6 +44,8 @@ my $versionid = "MMisc.pm Version: $version";
 my $env_mmcadd = "F4DE_TEST_MMC_ADD";
 my $env_testonly = "F4DE_TEST_ONLY";
 my $env_testoptions = "F4DE_TEST_OPTIONS";
+my $env_discard_commandline = "F4DE_TEST_DISCARD_COMMANDLINE";
+my $env_test_installdir = "F4DE_TEST_INSTALLDIR";
 
 my $magicmode = "makecheckfiles"; # And the magic word is ...
 my $magicmode_comp = "makecompcheckfiles";
@@ -68,6 +70,8 @@ sub get_magicmode_comp_key { return($magicmode_comp); }
 sub get_mmcadd_env { return($env_mmcadd); }
 sub get_testonly_env { return($env_testonly); }
 sub get_testoptions_env { return($env_testoptions); }
+sub get_discard_commandline { return($env_discard_commandline); }
+sub get_test_installdir { return($env_test_installdir); }
 
 #####
 
@@ -149,6 +153,9 @@ sub _get_filec {
 
   my $txt = MMisc::slurp_file($f);
 
+  if (exists $ENV{$env_discard_commandline}) { # Remove command line for comparison
+    $txt =~ s%\[\[COMMANDLINE\]\].+(\[\[RETURN\sCODE\]\])%$1%s;
+  }
   return($txt);
 }
 
@@ -184,6 +191,11 @@ sub _is_magic {
 sub _run_core {
   my ($cmd, $cmp2resfile, $mode, $erv) = 
     MMisc::iuav(\@_, "", "", "", 0);
+
+  # just to be safe: if we are testing the bin components, make sure to NOT to
+  # compare the "commandline" in the text file
+  $ENV{$env_discard_commandline} = 1 
+    if (exists $ENV{$env_test_installdir});
 
   my $ofile = "";
   if (&_is_magic($mode)) {
