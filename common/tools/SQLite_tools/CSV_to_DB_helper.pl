@@ -97,7 +97,7 @@ my $mancmd = "perldoc -F $0";
 
 my ($sqlite_cfg_helper, $sqlite_tables_creator, $sqlite_load_csv)=
   ( "SQLite_cfg_helper", "SQLite_tables_creator", "SQLite_load_csv" ); 
-
+my $mdDBb    = "csvDB";
 
 my $usage = &set_usage();
 
@@ -119,10 +119,11 @@ my $nullmode = 0;
 my $debug = 0;
 my $sp_md_constr  = undef;
 
+
 my %opt = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:   C         MN       V      c    h    m o q    v      #
+# Used:   CD        MN       V      cd   h    m o q    v      #
 
 GetOptions
   (
@@ -133,10 +134,11 @@ GetOptions
    'outdir=s'      => \$outdir,
    'configSkip'    => sub {$doCfg = 0},
    'CreateDBSkip'  => sub {$createDBs = 0},
-   'MDBfile=s'     => \$wmdDBfile,
+   'MDBfile|DBfile=s'      => \$wmdDBfile, # to keep old option available
    'Vcfg=s'        => \$wmdCFfile,
    'quickConfig:i' => sub {$quickConfig = (defined $_[1]) ? $_[1] : 0;},
    'NULLfields'    => sub {$nullmode = 1;},
+   'defaultName=s' => \$mdDBb,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -160,7 +162,6 @@ my $logdir = "$outdir/_logs";
 MMisc::error_quit("Could not create log dir ($logdir)")
   if (! MMisc::make_dir($logdir));
 
-my $mdDBb    = "csvDB";
 my $mdDBbase = "$outdir/$mdDBb";
 my $mdDBcfg  = (MMisc::is_blank($wmdCFfile)) ? "$mdDBbase.cfg" : $wmdCFfile;
 my $mdDBfile = (MMisc::is_blank($wmdDBfile)) ? "$mdDBbase.db" : $wmdDBfile;
@@ -624,7 +625,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-$0 [--help | --man | --version] --outdir dir [--configSkip] [--CreateDBSkip] [--quickConfig [linecount]] [--NULLfields] [--VMDcfg file] [--MDBfile file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
+$0 [--help | --man | --version] --outdir dir [--defaultName name] [--configSkip] [--Vcfg file] [--quickConfig [linecount]] [--CreateDBSkip] [--NULLfields] [--DBfile file] [csvfile[:tablename][\%columnname:constraint[...]] [csvfile[...] [...]]] 
 
 Wrapper designed to help using one or muliptle CSV files and insert them as tables in a SQLite DB file 
 Arguments left on the command line are csvfile used to create the metadataDB
@@ -635,12 +636,13 @@ Where:
   --help          This help message
   --version       Version information
   --outdir        Specify the directory where are all the steps are being processed
+  --defaultName   The default base name for files created under \'outdir\' (default: $mdDBb)
   --configSkip    Bypass csv config helper step
-  --CreateDBSkip  Bypasss Databases creation step
   --Vcfg          Specify the configuration file location
-  --quickConfig   Specify the number of lines to be read in Step 1 to decide on file content for config helper step (wihtout quickConfig, process all lines) (*1)
+  --quickConfig   Specify the number of lines to be read in Step 1 to decide on file content for config helper step (wihtout quickConfig, process all lines) (*1) (default: 'outdir'/'defaultName'.cfg)
+  --CreateDBSkip  Bypasss Databases creation step
   --NULLfields    Empty columns will be inserted as the NULL value (the default is to insert them as the empty value of the defined type, ie '' for TEXTs). This behavior only apply to metadata CSV files.
-  --MDBfile       Specify the SQLite database file location
+  --DBfile        Specify the SQLite output database file location (default: 'outdir'/'defaultName'.db)
 
 *1: default number of lines if no value is set can be obtained from \"$sqlite_cfg_helper\" 's help
 
