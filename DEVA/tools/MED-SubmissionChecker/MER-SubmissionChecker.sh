@@ -4,7 +4,6 @@ xsd_name="MER13_output.xsd"
 
 if [ -z $submission_dir ]; then
     echo "$0 MER_submission_dir [completeness_file]"
-#    echo "Missing first argument, should be submission directory!"
     exit 1
 fi
 
@@ -13,7 +12,7 @@ echo "Running MER submission checks"
 tool_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($ARGV[0])); print $dir' $0`
 data_path="${tool_dir}/../../data"
 xsd=$data_path/$xsd_name
-if [ -f $xsd ]; then
+if [ ! -f $xsd ]; then
   echo "**Could not find the needed xsd files ($xsd)"
   exit 1
 fi
@@ -59,8 +58,19 @@ fi
 
 echo "*Validating mer.xml files*"
 for mer in `find $submission_dir -type f -name '*mer.xml'`; do
-    xmllint --noout --schema $xsd $mer
-    if [ $? -ne 0 ]; then
+    clip_id=`echo $mer | sed 's:^.*/\([0-9]\{6\}\)\..*\.mer\.xml$:\1:'`
+    event_id=`echo $mer | sed 's:^.*\.\([A-Z][0-9]\{3\}\)\.mer\.xml$:\1:'`
+    if [ $clip_id != `xmllint --noout --xpath "/mer/@clip_ID" $mer | sed 's/^.*"HVC\([^"]*\)".*/\1/'` ]; then
+	echo "**clip_ID in MER output '$mer' did not match expected id '$clip_id', aborting!"
+	exit 1
+    fi
+    if [ $event_id != `xmllint --noout --xpath "/mer/@event_ID" $mer | sed 's/^.*"\([^"]*\)".*/\1/'` ]; then
+	echo "**event_ID in MER output '$mer' did not match expected id '$event_id', aborting!"
+	exit 1
+    fi
+
+    xmllint --noout --schema $xsd $mer 2>&1 | sed 's/^/  /'
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then
 	echo "**Validation failed, aborting!"
 	exit 1
     fi
