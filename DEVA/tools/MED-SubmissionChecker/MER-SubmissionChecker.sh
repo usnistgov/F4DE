@@ -26,7 +26,7 @@ if [ $completeness_file ]; then
       echo "**Could not read requested completeness_file ($completeness_file)"
       exit 1
   fi
-    echo "*Checking submission for completeness*"
+    echo "*Checking submission directory for completeness*"
     complete_list=`mktemp -t mer_check`
     echo $submission_dir > $complete_list
     cat $completeness_file | perl -ne 's/["\n]//g; next if ($_ eq "TrialID");($c, $e) = split(/\./); print "'$submission_dir'/$e\n'$submission_dir'/$e/$_.mer.xml\n"' | sort -u >> $complete_list
@@ -55,25 +55,15 @@ if [ ! -r $submission_dir ]; then
     exit 1
 fi
 
+scan_for_errors() {
+    perl -ne '$ok =0; unless (m%validates$%) { print "[Problem with XML validation of entry]\n$_"; exit(1); } if (s%^.+?clip_ID=\"HVC(\d+)\"\s+event_ID=\"(\w+)\".+\"(.+/(\d+)\.(\w+)\.mer\.xml)\svalidates$%$3%) { if ($1 ne $4) { print "Problem with clip_ID in entry (exp: $4 / got: $1) in file: $_"; exit(1); } if ($2 ne $5) { print "Problem with event_ID in entry (exp: $5 / got: $2) in file: $_"; exit(1); } }'
+}
 
 echo "*Validating mer.xml files*"
-for mer in `find $submission_dir -type f -name '*mer.xml'`; do
-    clip_id=`echo $mer | sed 's:^.*/\([0-9]\{6\}\)\..*\.mer\.xml$:\1:'`
-    event_id=`echo $mer | sed 's:^.*\.\([A-Z][0-9]\{3\}\)\.mer\.xml$:\1:'`
-    if [ $clip_id != `xmllint --noout --xpath "/mer/@clip_ID" $mer | sed 's/^.*"HVC\([^"]*\)".*/\1/'` ]; then
-	echo "**clip_ID in MER output '$mer' did not match expected id '$clip_id', aborting!"
-	exit 1
-    fi
-    if [ $event_id != `xmllint --noout --xpath "/mer/@event_ID" $mer | sed 's/^.*"\([^"]*\)".*/\1/'` ]; then
-	echo "**event_ID in MER output '$mer' did not match expected id '$event_id', aborting!"
-	exit 1
-    fi
+find $submission_dir -type f | xargs -n100 xmllint --schema $xsd --xpath '/mer/@*' 2>&1 | scan_for_errors
+if [ $? != 0 ]; then
+    echo "  An error occurred during validation"; exit 1
+fi
 
-    xmllint --noout --schema $xsd $mer 2>&1 | sed 's/^/  /'
-    if [ ${PIPESTATUS[0]} -ne 0 ]; then
-	echo "**Validation failed, aborting!"
-	exit 1
-    fi
-done
 echo "  All files validated successfully!"
 exit 0
