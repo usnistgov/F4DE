@@ -32,5 +32,7 @@ $mer_subcheck = MMisc::get_file_actual_dir($0) . "/MER-SubmissionChecker.sh";
 
 # MED13DRYRUN / FullSys / PS / 100Ex
 $mer_ok_expid{$expid_data[0]}{$expid_sys[0]}{$expid_task[0]}{$expid_traintype[0]} = 1; 
+# PROGSub / FullSys / PS / 100Ex
+$mer_ok_expid{$expid_data[1]}{$expid_sys[0]}{$expid_task[0]}{$expid_traintype[0]} = 1; 
 # PROGAll / FullSys / PS / 100Ex
 $mer_ok_expid{$expid_data[2]}{$expid_sys[0]}{$expid_task[0]}{$expid_traintype[0]} = 1; 
