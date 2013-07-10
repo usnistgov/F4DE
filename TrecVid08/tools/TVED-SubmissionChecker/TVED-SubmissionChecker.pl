@@ -386,7 +386,7 @@ foreach my $sf (@ARGV) {
   }
 
   if ($subname_params == 5) {
-    vprint(2, "<SITE> = $site | <DATA> = $p1data | <TASK> = $p1task | <SUB-NUM> = $subnum");
+    vprint(2, "<SITE> = $site | <TASK> = $p1task | <DATA> = $p1data | <SUB-NUM> = $subnum");
   } else {
     vprint(2, "<SITE> = $site | <SUB-NUM> = $subnum");
   }
