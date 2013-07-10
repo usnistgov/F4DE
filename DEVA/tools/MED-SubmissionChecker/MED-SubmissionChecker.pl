@@ -223,6 +223,7 @@ my $max_expid_error = 1;
 my @db_checkSEARCHMDTPT;
 
 my $mer_subcheck = "";
+my %mer_ok_expid = ();
 
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
@@ -613,11 +614,11 @@ sub check_submission_dir {
   my ($bd, $dir, $team, $data, $eset) = @_;
 
   vprint(3, "Checking name");
-  my ($lerr, $ldata, $medtype, $task) = &check_name($dir, $team, $data, $eset);
+  my ($lerr, $ldata, $medtype, $task, $sys, $traintype) = &check_name($dir, $team, $data, $eset);
   return($lerr) if (! MMisc::is_blank($lerr));
 
   vprint(3, "Checking expected directory files");
-  return(&check_exp_dirfiles($bd, $dir, $data, $medtype, $task));
+  return(&check_exp_dirfiles($bd, $dir, $data, $medtype, $task, $sys, $traintype));
 }
 
 ##########
@@ -783,13 +784,13 @@ sub check_name_med13p {
   
   vprint(4, "<TEAM> = $lteam | <TAG> = $ltag | <SYS> = $lsys | <SEARCH> = $lsearch | <EVENTSET> = $leset | <EKTYPE> = $lektype | <VERSION> = $lversion");
   
-  return("", $lsearch, $lsearch, $leset);
+  return("", $lsearch, $lsearch, $leset, $lsys, $lektype);
 }
 
 ##########
 
 sub check_exp_dirfiles {
-  my ($bd, $exp, $data, $medtype, $task) = @_;
+  my ($bd, $exp, $data, $medtype, $task, $sys, $traintype) = @_;
 
   my $expdir = "$bd/$exp";
   my ($derr, $rd, $rf, $ru) = MMisc::list_dirs_files($expdir);
@@ -799,7 +800,15 @@ sub check_exp_dirfiles {
   my @left = @$rd;
   if (scalar @left == 1) {
       if ($left[0] eq 'MER') {
-          return("Found an MER directory in EXPID ($exp) but MER's Submission Checker is not set") if (MMisc::is_blank($mer_subcheck));
+          return("Found a MER directory in EXPID ($exp) but MER's Submission Checker is not set") 
+              if (MMisc::is_blank($mer_subcheck));
+
+          return("Some of the data needed for checking that the MER data is authorized is missing (have: $sys / $data / $task / $traintype)")
+              if (MMisc::any_blank($data, $sys, $task, $traintype));
+
+          return("Found a MER directory, but the following case is not authorized: $sys / $data / $task / $traintype")
+              if (! MMisc::safe_exists(\%mer_ok_expid, $data, $sys, $task, $traintype));
+
           $merdir = "$expdir/" . shift @left; # also remove problem from list for later check
           vprint(4, "Found a MER directory, will check it after the MED checks");
       }
@@ -883,9 +892,9 @@ sub run_tool {
 
   $lf = MMisc::get_tmpfile() if (MMisc::is_blank($lf));
 
-  my ($ok, $otxt, $so, $se, $rc, $of) = 
+  my ($ok, $otxt, $so, $se, $rc, $of, $sig) = 
     MMisc::write_syscall_smart_logfile($lf, $tool, @cmds); 
-  if ((! $ok) || ($rc != 0)) {
+  if ((! $ok) || ($rc + $sig != 0)) {
     my $lfc = MMisc::slurp_file($of);
     return("There was a problem running the tool ($tool) command\n  Run log (located at: $of) content: $lfc\n\n");
   }
