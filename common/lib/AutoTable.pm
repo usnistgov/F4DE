@@ -170,6 +170,23 @@ sub setProperties(){
   return (1);
 }
 
+
+#####
+
+sub setColSort {
+  return( $_[0]->setProperties( {$key_SortColKeyHTML  => $_[1],
+				 $key_SortColKeyCsv   => $_[1],
+				 $key_SortColKeyTxt   => $_[1],
+				 $key_SortColKeyLaTeX => $_[1] } ) );
+}
+
+sub setRowSort {
+  return( $_[0]->setProperties( {$key_SortRowKeyHTML  => $_[1],
+				 $key_SortRowKeyCsv   => $_[1],
+				 $key_SortRowKeyTxt   => $_[1],
+				 $key_SortRowKeyLaTeX => $_[1] } ) );
+}
+
 ##########
 
 sub __UT_showAllModes {
@@ -297,14 +314,8 @@ sub unitTest {
 #  &__UT_showAllModes("Complex Table (sorted: Num)", $sg);
 #  $sg->__UT_aterr();
 
-  $sg->{Properties}->setValue($key_SortColKeyTxt, "Alpha");
-  $sg->{Properties}->setValue($key_SortRowKeyTxt, "Alpha");
-  $sg->{Properties}->setValue($key_SortColKeyCsv, "Alpha");
-  $sg->{Properties}->setValue($key_SortRowKeyCsv, "Alpha");
-  $sg->{Properties}->setValue($key_SortColKeyHTML, "Alpha");
-  $sg->{Properties}->setValue($key_SortRowKeyHTML, "Alpha");
-  $sg->{Properties}->setValue($key_SortColKeyLaTeX, "Alpha");
-  $sg->{Properties}->setValue($key_SortRowKeyLaTeX, "Alpha");
+  $sg->setColSort("Alpha");
+  $sg->setRowSort("Alpha");
   $sg->__UT_aterr();
   &__UT_showAllModes("Complex Table (sorted: Alpha)", $sg);
   $sg->__UT_aterr();
@@ -332,10 +343,7 @@ sub unitTest {
   $sg->__UT_aterr();
   
   my $name = "AutoTable::__UT_reversesort";
-  $at->setProperties({ $key_SortColKeyTxt => "\&Function=$name" });
-  $at->setProperties({ $key_SortColKeyCsv => "\&Function=$name" });
-  $at->setProperties({ $key_SortColKeyHTML => "\&Function=$name" });
-  $at->setProperties({ $key_SortColKeyLaTeX => "\&Function=$name" });
+  $at->setColSort("\&Function=$name");
   $at->__UT_aterr();
   &__UT_showAllModes("Complex Table = Function=reverse column sort", $at);
   $at->__UT_aterr();
@@ -1082,7 +1090,7 @@ sub _buildLabelHeir(){
   
   my $levels = scalar( @{ $labHT->{SubID}{$IDs[0]}{labels} } );
   foreach my $id(@IDs){
-    MMisc::error_quit("[AutoTable] Inconsistent number of $colVrow sublevels for id '$id' not $levels\n")
+    MMisc::error_quit("Inconsistent number of $colVrow sublevels for id '$id' not $levels\n")
         if ($levels != scalar( @{ $labHT->{SubID}{$id}{labels} } ));
   } 
 #    print Dumper($self);
@@ -1262,8 +1270,8 @@ sub _getRowLabelWidth(){
       $len = $slen if ($len < $slen);
     }
     return $len           
-}
-  MMisc::error_quit("[AutoTable] Internal Error");
+  }
+  MMisc::error_quit("Internal Error");
 }
 
 sub _getColLabelWidth(){
@@ -1290,7 +1298,7 @@ sub _sortKeys(){
     my $rsf = $1;
     @sortedKeys = sort {&{\&$rsf}($a,$b)} @$keys;
   } else {
-    MMisc::error_quit("Internal Error AutoTable: Sort order '$order' not defined");
+    MMisc::error_quit("Internal Error: Sort order '$order' not defined");
   }  
 #  print "After : " . join(" -- ", @sortedKeys) . "\n";
 
@@ -1368,7 +1376,8 @@ sub _safeSplit{
   }
   ### Check to make sure there are NO empty elements.  If there are, then die
   foreach (@arr){
-    MMisc::error_quit("Column/row header \"$text\" contains empty items which is illegal") if ($_ eq "");
+    MMisc::error_quit("Column/row header \"$text\" contains empty items which is illegal") 
+	if ($_ eq "");
   } 
 #  print "safesplit ".join("%",@arr)."\n";;
   @arr;
@@ -1517,7 +1526,7 @@ sub loadGridFromSTDIN{
   } elsif ($renderer eq "CSV") {
     print($at->renderCSV()); 
   } else {
-    MMisc::error_quit("I need a Renderer for now '$renderer'\n");
+    MMisc::error_quit("I need a Renderer for '$renderer'\n");
   }
   #print Dumper(\%nameLUT);
 }
