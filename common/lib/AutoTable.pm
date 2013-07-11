@@ -309,17 +309,6 @@ sub unitTest {
   &__UT_showAllModes("Complex Table (sorted: Alpha)", $sg);
   $sg->__UT_aterr();
 
-##=======
-##  
-###  my $colLabTree = $sg->_buildLabelHeir("col", "Alpha");
-##  
-##  if (! $makecall) {
-###      $sg->dump();
-##    print($sg->renderTxtTable(2));
-##  }
-##  
-##>>>>>>> 1.3
-
   $sg->setProperties({ $key_KeepColumnsInOutput => ".*PartA.*|PartB.*col4" });
   $sg->__UT_aterr();
   &__UT_showAllModes("Complex Table = keepColumns .*PartA.*|PartB.*col4", $sg);
@@ -354,13 +343,8 @@ sub unitTest {
   print "<hr>OK EXIT\n";
 
   print "</body></html>\n";
-##=======
-##  
-##  print($sg->renderCSV());
-##  
-##>>>>>>> 1.3
+
   MMisc::ok_exit();
-  
 }
 
 sub footerUnitTest(){
@@ -428,9 +412,9 @@ sub __getLID {
 
 
 sub _buildHeir(){
-  # (0:$self, 1:$gap)
-  $_[0]->_buildLabelHeir('col', $_[1]);
-  $_[0]->_buildLabelHeir('row', $_[1]);
+  # (0:$self, 1:$gap, 2:$mode)
+  $_[0]->_buildLabelHeir('col', $_[1], $_[2]);
+  $_[0]->_buildLabelHeir('row', $_[1], $_[2]);
 }
 
 ########################################
@@ -566,7 +550,7 @@ sub renderHTMLTable(){
   }
   $cellJust = " align=\"$cellJust\""if ($cellJust ne "");
   
-  $self->_buildHeir(1);
+  $self->_buildHeir(1, $ok_specials[0]);
   
 #    print Dumper($self);
   my @IDs = $self->_getOrderedLabelIDs($self->{"colLabOrder"}, $self->{Properties}->getValue($key_SortColKeyHTML), $self->{Properties}->getValue($key_KeepColumnsInOutput));
@@ -706,17 +690,8 @@ sub renderTxtTable(){
   my $k1c = ($keyCol eq "Keep") ? 1 : 0;
   
   my $out = "";
-  $self->_buildHeir($gap);
+  $self->_buildHeir($gap, $ok_specials[2]);
   
-##=======
-##  my ($self, $gap) = @_;
-##  
-##  my $out = "";
-##  $self->_buildHeir($gap);
-##  
-##>>>>>>> 1.3
-#    print Dumper($self);
-#<<<<<<< AutoTable.pm
   my @IDs = $self->{render}{colIDs};
   my $levels = $self->{render}{colLabelLevels};
   my @nodeSet;
@@ -925,7 +900,7 @@ sub renderLaTeXTable(){
   }
   my $k1c = ($keyCol eq "Keep") ? 1 : 0;
   
-  $self->_buildHeir(1);
+  $self->_buildHeir(1, $ok_specials[3]);
   
 #    print Dumper($self);
   my @IDs = $self->{render}{colIDs};
@@ -1057,18 +1032,52 @@ sub renderLaTeXTable(){
 
 ##########
 
+sub _getmodesort {
+  # 0: self / 1: col/row 2: ok_special value
+  my $needed = "";
+  
+  if ($_[1] eq 'col') {
+    if ($_[2] eq $ok_specials[0])    { $needed = $key_SortColKeyHTML; }
+    elsif ($_[2] eq $ok_specials[1]) { $needed = $key_SortColKeyCsv; }
+    elsif ($_[2] eq $ok_specials[2]) { $needed = $key_SortColKeyTxt; }
+    elsif ($_[2] eq $ok_specials[3]) { $needed = $key_SortColKeyLaTeX; }
+    else { 
+      MMisc::error_quit("While finding " . $_[1] . " sort value: unknown \'mode\' (" . $_[2] . ")"); 
+    }
+  } elsif ($_[1] eq 'row') {
+    if ($_[2] eq $ok_specials[0])    { $needed = $key_SortRowKeyHTML; }
+    elsif ($_[2] eq $ok_specials[1]) { $needed = $key_SortRowKeyCsv; }
+    elsif ($_[2] eq $ok_specials[2]) { $needed = $key_SortRowKeyTxt; }
+    elsif ($_[2] eq $ok_specials[3]) { $needed = $key_SortRowKeyLaTeX; }
+    else { 
+      MMisc::error_quit("While finding " . $_[1] . " sort value: unknown \'mode\' (" . $_[2] . ")"); 
+    }
+  } else {
+    MMisc::error_quit("While trying to sort, unknown dimension: " . $_[1]);
+  }
+
+  MMisc::error_quit("Problem while looking for " . $_[1] . " sort for " . $_[2] . ": did not find any value")
+      if (MMisc::is_blank($needed));
+
+  return($needed);
+}
+
+#####
+
 sub _buildLabelHeir(){
-  my ($self, $colVrow, $gap) = @_;
+  my ($self, $colVrow, $gap, $mode) = @_;
   
   my ($labHT, @IDs);
   if ($colVrow eq "col") {
     $labHT = $self->{"colLabOrder"};
-    @IDs = $self->_getOrderedLabelIDs($labHT, $self->{Properties}->getValue($key_SortColKeyTxt),  
-                                      $self->{Properties}->getValue($key_KeepColumnsInOutput));
+    @IDs = $self->_getOrderedLabelIDs
+      ($labHT, $self->{Properties}->getValue($self->_getmodesort($colVrow, $mode)),
+       $self->{Properties}->getValue($key_KeepColumnsInOutput));
   } else {
     $labHT = $self->{"rowLabOrder"};
-    @IDs = $self->_getOrderedLabelIDs($labHT, $self->{Properties}->getValue($key_SortRowKeyTxt), 
-				      $self->{Properties}->getValue($key_KeepRowsInOutput));
+    @IDs = $self->_getOrderedLabelIDs
+      ($labHT, $self->{Properties}->getValue($self->_getmodesort($colVrow, $mode)),
+       $self->{Properties}->getValue($key_KeepRowsInOutput));
   }
   
   my $levels = scalar( @{ $labHT->{SubID}{$IDs[0]}{labels} } );
@@ -1779,6 +1788,8 @@ sub __renderCSVcore {
   }
   my $k1c = ($keyCol eq "Keep") ? 1 : 0;
   
+  $self->_buildHeir(1, $ok_specials[1]);
+
   my $rowSort = $self->{Properties}->getValue($key_SortRowKeyCsv);
   if ($self->{Properties}->error()) {
     $self->_set_errormsg("Unable to to return get the $key_SortRowKeyCsv property.  Message is ".$self->{Properties}->get_errormsg());
