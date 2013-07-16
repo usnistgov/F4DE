@@ -32,7 +32,7 @@ if [ $completeness_file ]; then
     cat $completeness_file | perl -ne 's/["\n]//g; next if ($_ eq "TrialID");($c, $e) = split(/\./); print "'$submission_dir'/$e\n'$submission_dir'/$e/$_.mer.xml\n"' | sort -u >> $complete_list
 
     diff_results=`mktemp -t mer_diff`
-    find $submission_dir | diff - $complete_list > $diff_results
+    find $submission_dir \( ! -iname '*._*' \) | diff - $complete_list > $diff_results
     if [ -s $diff_results ]; then
 	echo "*Completeness check failed, aborting!"
 	echo "**Missing files/dirs**"
@@ -60,7 +60,7 @@ scan_for_errors() {
 }
 
 echo "*Validating mer.xml files*"
-find $submission_dir -type f | xargs -n100 xmllint --schema $xsd --xpath '/mer/@*' 2>&1 | scan_for_errors
+find $submission_dir -type f \( ! -iname '*._*' \) | xargs -n100 xmllint --schema $xsd --xpath '/mer/@*' 2>&1 | scan_for_errors
 if [ $? != 0 ]; then
     echo "  An error occurred during validation"; exit 1
 fi
