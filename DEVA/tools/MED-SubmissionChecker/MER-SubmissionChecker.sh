@@ -27,11 +27,11 @@ if [ $completeness_file ]; then
       exit 1
   fi
     echo "*Checking submission directory for completeness*"
-    complete_list=`mktemp -t mer_check`
+    complete_list=`perl -I${tool_dir}/../../../common/lib -e 'use MMisc; print MMisc::get_tmpfile("mer_check")';`
     echo $submission_dir > $complete_list
     cat $completeness_file | perl -ne 's/["\n]//g; next if ($_ eq "TrialID");($c, $e) = split(/\./); print "'$submission_dir'/$e\n'$submission_dir'/$e/$_.mer.xml\n"' | sort -u >> $complete_list
 
-    diff_results=`mktemp -t mer_diff`
+    diff_results=`perl -I${tool_dir}/../../../common/lib -e 'use MMisc; print MMisc::get_tmpfile("mer_diff")';`
     find $submission_dir \( ! -iname '*._*' \) | diff - $complete_list > $diff_results
     if [ -s $diff_results ]; then
 	echo "*Completeness check failed, aborting!"
