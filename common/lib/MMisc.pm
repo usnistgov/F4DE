@@ -64,7 +64,7 @@ my $versionid = "MMisc.pm Version: $version";
 ########## No 'new' ... only functions to be useful
 
 sub get_tmpdir {
-  my $name = tempdir();
+  my $name = (defined $_[0]) ? tempdir($_[0] . '.XXXXXX', TMPDIR => 1) : tempdir();
   
   return($name) 
     if (-d $name);
@@ -80,7 +80,7 @@ sub get_tmpdir {
 
 # Request a temporary file (file is created)
 sub get_tmpfile {
-  my ($fh, $file) = tempfile();
+  my ($fh, $file) = (defined $_[0]) ? tempfile($_[0] . '.XXXXXX', TMPDIR => 1) : tempfile();
   return($file);
 }
 
