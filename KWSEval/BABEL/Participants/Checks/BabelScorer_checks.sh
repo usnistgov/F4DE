@@ -186,7 +186,7 @@ do
                 if [ ! -f "$finf" ]; then
                     echo "!! Skipping test: No $eval input file ($inf) in dbDir $dbDir"
                 else
-                    compdir=`mktemp -d -t ${expid}`
+                    compdir=`perl -I${tool_dir}/../../../../common/lib -e 'use MMisc; print MMisc::get_tmpdir("'$expid'")';`
                     resdir="$uncompdir/$inf"
                     if [ -d "$resdir" ]; then rm -rf $resdir; fi
                     mkdir -p $resdir
