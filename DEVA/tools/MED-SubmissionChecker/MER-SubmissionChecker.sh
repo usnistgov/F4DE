@@ -1,3 +1,5 @@
+#!/bin/bash
+
 submission_dir=$1
 completeness_file=$2
 xsd_name="MER13_output.xsd"
@@ -32,7 +34,7 @@ if [ $completeness_file ]; then
     cat $completeness_file | perl -ne 's/["\n]//g; next if ($_ eq "TrialID");($c, $e) = split(/\./); print "'$submission_dir'/$e\n'$submission_dir'/$e/$_.mer.xml\n"' | sort -u >> $complete_list
 
     diff_results=`perl -I${tool_dir}/../../../common/lib -e 'use MMisc; print MMisc::get_tmpfile("mer_diff")';`
-    find $submission_dir \( ! -iname '*._*' \) | diff - $complete_list > $diff_results
+    find $submission_dir \( ! -iname '*._*' \) | sort -u | diff - $complete_list > $diff_results
     if [ -s $diff_results ]; then
 	echo "*Completeness check failed, aborting!"
 	echo "**Missing files/dirs**"
@@ -60,9 +62,19 @@ scan_for_errors() {
 }
 
 echo "*Validating mer.xml files*"
-find $submission_dir -type f \( ! -iname '*._*' \) | xargs -n100 xmllint --schema $xsd --xpath '/mer/@*' 2>&1 | scan_for_errors
-if [ $? != 0 ]; then
-    echo "  An error occurred during validation"; exit 1
+
+xmllint_ver=`xmllint --version 2>&1 | perl -ne 'if ($_ =~ /.*using\slibxml\sversion\s(\d+)/) { print $1 }'`
+if [ $xmllint_ver -ge 20707 ]; then #check xmllint version, for --xpath
+    find $submission_dir -type f \( ! -iname '*._*' \) | xargs -n100 xmllint --schema $xsd --xpath '/mer/@*' 2>&1 | scan_for_errors
+    if [ $? != 0 ]; then
+	echo "  An error occurred during validation"; exit 1
+    fi
+else
+    #fake the xpath output
+    find $submission_dir -type f \( ! -iname '*._*' \) | xargs -n100 xmllint --schema $xsd 2>&1 | perl -ne 'if ($_ =~ /^<mer\s([^>]*)>/) { print $1 } elsif ($_ =~ /(validates?|\.)$/) { print $_ }' | scan_for_errors
+    if [ $? != 0 ]; then
+	echo "  An error occurred during validation"; exit 1
+    fi
 fi
 
 echo "  All files validated successfully!"
