@@ -358,7 +358,7 @@ cvsdist:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`
 	@echo "CVS checkout in: /tmp/"`cat ${F4DE_VERSION}`
 	@cp ${F4DE_VERSION} /tmp
-	@(cd /tmp; cvs -z3 -q -d gaston:/home/sware/cvs checkout -d `cat ${F4DE_VERSION}` F4DE)
+	@(cd /tmp; cvs -z3 -q -d gaston.ncsl.nist.gov:/home/sware/cvs checkout -d `cat ${F4DE_VERSION}` F4DE)
 	@make dist_common
 	@echo ""
 	@echo ""
