@@ -100,7 +100,7 @@ sub unitTestFind
   my ($rttm, $text, $exp, $thresh) = (@_);
 
   print " Finding terms ($text, thresh=$thresh)...     ";
-  my $out = findTermHashToArray($rttm->findTermOccurrences($text, $thresh));
+  my $out = findTermHashToArray($rttm->findTermOccurrences($text, $thresh, ""));
   if (@$out != $exp) { 
     print "Failed: ".scalar(@$out)." != $exp\n"; 
     for(my $i=0; $i<@$out; $i++) {
@@ -561,7 +561,7 @@ sub loadFile {
 
 sub findTermOccurrences
 {
-    my ($self, $term, $threshold) = @_;
+    my ($self, $term, $threshold, $info) = @_;
     
     my %outHash = ();
     $term =~ s/^\s*//;
@@ -571,7 +571,7 @@ sub findTermOccurrences
     #print Dumper (\@terms);
     #Currently no order to returned matches
 
-    die "Error: term /$term/ has no constituents tokens to find\n" if (@terms == 0);
+    die "Error: term $info /$term/ has no constituents tokens to find\n" if (@terms == 0);
     foreach my $record (@{ $self->{TERMLKUP}{$terms[0]} })
     {
       my @tmpList = ();

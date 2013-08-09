@@ -120,7 +120,9 @@ sub alignTerms
       push @{ $termlkup{$sys_term->{FILE}}{$sys_term->{CHAN}} }, $sys_term if (KWSAlignment::belongsInECF($self, $sys_term) == 1);
     }
 
-    my %refoccs = %{ $self->{RTTMLIST}->findTermOccurrences($self->{TERMLIST}->{TERMS}{$termid}{TEXT}, $fthreshold) };
+	MMisc::error_quit("Error: TermID $termid not found in termlist.  Aborting") unless exists($self->{TERMLIST}->{TERMS}{$termid});
+	
+    my %refoccs = %{ $self->{RTTMLIST}->findTermOccurrences($self->{TERMLIST}->{TERMS}{$termid}{TEXT}, $fthreshold, $termid) };
     
     my $trialBlock = $termid;
     $trialBlock = "Pooled" if ($pooled);
