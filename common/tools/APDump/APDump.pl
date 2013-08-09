@@ -127,6 +127,14 @@ foreach my $srl(@ARGV){
   $at->addData($BScombAvg, "Act. ".$det->getMetric()->combLab(), $id);
   $at->addData($BSmissAvg, "Act. ".$det->getMetric()->errMissLab(), $id);
   $at->addData($BSfaAvg, "Act. ".$det->getMetric()->errFALab(), $id);
+
+  my ($actBlocks) = $det->getMetric()->getActualDecisionRawCountBlocks("includeAllCounts");
+  foreach my $statDef("MMiss:Act. #Miss", "MFA:Act. #FA", "MCORRDET:Act. #CorrDet", "MCORRNOTDET:Act. #CorrNotDet"){
+  	my ($key, $name) = split(/:/, $statDef);
+  	my $sum = 0;
+	foreach my $blk(keys %{ $actBlocks }){  $sum += $actBlocks->{$blk}{$key} };
+	$at->addData($sum, $name, $id);
+  }  
   $at->addData($det->getTrials()->getNumTrials($blk), "Search Videos", $id);
   $at->addData($det->getTrials()->getNumTarg($blk), "Event Videos", $id);
   my $thresh = $det->getTrials()->getTrialActualDecisionThreshold();  
@@ -138,8 +146,16 @@ foreach my $srl(@ARGV){
   #set the threshold state
   my $threshState = ($thresh < $ranks->[0][1]) ? "above" : "tripped";
   for (my $r=0; $r<@$ranks; $r++){
-#    print "$r $numPos $threshState $thresh $ranks->[$r][0] $ranks->[$r][1] $ranks->[$r][2] $ranks->[$r][3]\n";
-    if ($threshState eq "tripped" || ($threshState eq "above" && $thresh >= $ranks->[$r][1])){
+    #print "$r $numPos $threshState $thresh $ranks->[$r][0] $ranks->[$r][1] $ranks->[$r][2] $ranks->[$r][3]\n";
+    my $useIt = 0;
+    if ($threshState eq "tripped"){
+      $useIt = 1;
+    } elsif ($threshState eq "above"){
+      if ($thresh >= $ranks->[$r][1] && $ranks->[$r][1] != $ranks->[$r+1][1] ){
+	$useIt = 1;
+      }
+    }
+    if ($useIt){
       $at->addData($numPos-1, "TP @ SysThresh", $id);
       $at->addData($r, "Retr @ SysThresh", $id);
       $threshState = "below";
@@ -153,6 +169,14 @@ foreach my $srl(@ARGV){
   MMisc::error_quit("Error: for Event $blk, $numPos positives found but expected ".$det->getTrials()->getNumTarg($blk))
     if ($numPos-1 != $det->getTrials()->getNumTarg($blk));
 
+  my $rt1 = $at->getData("Retr @ SysThresh", $id);
+  my $rt2 = $at->getData("Act. #FA", $id) + $at->getData("Act. #CorrDet", $id);
+  MMisc::error_quit("Error: for rt1($rt1) != rt2($rt2)") if ($rt1 != $rt2);
+  
+  my $tp1 = $at->getData("TP @ SysThresh", $id);
+  my $tp2 = $at->getData("Act. #CorrDet", $id);
+  MMisc::error_quit("Error: for tp1($tp1) != tp2($tp2)") if ($tp1 != $tp2);
+  
 }
 $at->setProperties({ "KeyColumnCsv" => "Remove" });
 MMisc::writeTo($outFile, "", 0, 0, $at->renderCSV());
