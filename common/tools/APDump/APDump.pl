@@ -129,12 +129,14 @@ foreach my $srl(@ARGV){
   $at->addData($BSfaAvg, "Act. ".$det->getMetric()->errFALab(), $id);
 
   my ($actBlocks) = $det->getMetric()->getActualDecisionRawCountBlocks("includeAllCounts");
-  foreach my $statDef("MMiss:Act. #Miss", "MFA:Act. #FA", "MCORRDET:Act. #CorrDet", "MCORRNOTDET:Act. #CorrNotDet"){
+  foreach my $statDef("MMISS:FN @ SysThresh", "MFA:FP @ SysThresh", "MCORRDET:TP @ SysThresh", "MCORRNOTDET:TN @ SysThresh"){
   	my ($key, $name) = split(/:/, $statDef);
   	my $sum = 0;
 	foreach my $blk(keys %{ $actBlocks }){  $sum += $actBlocks->{$blk}{$key} };
 	$at->addData($sum, $name, $id);
   }  
+  $at->addData($at->getData("TP @ SysThresh", $id) + $at->getData("FP @ SysThresh", $id), "Retr @ SysThresh", $id);
+
   $at->addData($det->getTrials()->getNumTrials($blk), "Search Videos", $id);
   $at->addData($det->getTrials()->getNumTarg($blk), "Event Videos", $id);
   my $thresh = $det->getTrials()->getTrialActualDecisionThreshold();  
@@ -144,22 +146,9 @@ foreach my $srl(@ARGV){
   my $ranks = $det->getGlobalMeasureStructure("APpct")->{MEASURE}{POSRANKS};
   my $numPos = 1;
   #set the threshold state
-  my $threshState = ($thresh < $ranks->[0][1]) ? "above" : "tripped";
   for (my $r=0; $r<@$ranks; $r++){
-    #print "$r $numPos $threshState $thresh $ranks->[$r][0] $ranks->[$r][1] $ranks->[$r][2] $ranks->[$r][3]\n";
+    #print "$r $numPos $thresh $ranks->[$r][0] $ranks->[$r][1] $ranks->[$r][2] $ranks->[$r][3]\n";
     my $useIt = 0;
-    if ($threshState eq "tripped"){
-      $useIt = 1;
-    } elsif ($threshState eq "above"){
-      if ($thresh >= $ranks->[$r][1] && $ranks->[$r][1] != $ranks->[$r+1][1] ){
-	$useIt = 1;
-      }
-    }
-    if ($useIt){
-      $at->addData($numPos-1, "TP @ SysThresh", $id);
-      $at->addData($r, "Retr @ SysThresh", $id);
-      $threshState = "below";
-    }
   
     if ($ranks->[$r][2] == 1){ ### Target
       $at->addData($ranks->[$r][0], "<<FOOTER>>".$numPos++, $id);
@@ -168,14 +157,6 @@ foreach my $srl(@ARGV){
   ### Error Check
   MMisc::error_quit("Error: for Event $blk, $numPos positives found but expected ".$det->getTrials()->getNumTarg($blk))
     if ($numPos-1 != $det->getTrials()->getNumTarg($blk));
-
-  my $rt1 = $at->getData("Retr @ SysThresh", $id);
-  my $rt2 = $at->getData("Act. #FA", $id) + $at->getData("Act. #CorrDet", $id);
-  MMisc::error_quit("Error: for rt1($rt1) != rt2($rt2)") if ($rt1 != $rt2);
-  
-  my $tp1 = $at->getData("TP @ SysThresh", $id);
-  my $tp2 = $at->getData("Act. #CorrDet", $id);
-  MMisc::error_quit("Error: for tp1($tp1) != tp2($tp2)") if ($tp1 != $tp2);
   
 }
 $at->setProperties({ "KeyColumnCsv" => "Remove" });
