@@ -1828,7 +1828,7 @@ sub _computeAvgPrecByType{
 
   if ($measureID eq "APP"){
     $weightP = 100 / $self->{TRIALS}->getNumTarg($blk); 
-    $weightF = 99000 / $self->{TRIALS}->getNumNonTarg($blk); 
+    $weightF = 99900 / $self->{TRIALS}->getNumNonTarg($blk); 
     $scale = 1;
     $apData{MEASURE}{STRING} = "AP'";
     $apData{MEASURE}{ABBREVSTRING} = "AP'";
@@ -1836,7 +1836,7 @@ sub _computeAvgPrecByType{
     $apData{MEASURE}{UNIT} = ""; 
   } elsif ($measureID eq "APPpct"){
     $weightP = 100 / $self->{TRIALS}->getNumTarg($blk); 
-    $weightF = 99000 / $self->{TRIALS}->getNumNonTarg($blk); 
+    $weightF = 99900 / $self->{TRIALS}->getNumNonTarg($blk); 
     $scale = 100;
     $apData{MEASURE}{STRING} = "AP'";
     $apData{MEASURE}{ABBREVSTRING} = "AP'";

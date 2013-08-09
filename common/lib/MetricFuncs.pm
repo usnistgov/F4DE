@@ -503,6 +503,35 @@ sub cloneForTrial(){
 ####################################################################################################
 =pod
 
+=item B<getActualDecisionRawCountBlocks>()
+
+Returns a Block Count Hash Table for use by the Metric Funcs.
+
+=cut
+
+sub getActualDecisionRawCountBlocks($flags){
+  my ($self, $flags) = @_;
+  my $b = "";
+  my %blocks = ();
+
+  my @tmp = $self->{TRIALS}->getBlockIDs();
+  for (my $i = 0; $i < scalar @tmp; $i++) {
+    next if (! $self->{TRIALS}->isBlockEvaluated($tmp[$i]));
+    my $b = $tmp[$i];
+    $blocks{$b}{MFA} = $self->{TRIALS}->getNumFalseAlarm($b);
+    $blocks{$b}{MMISS} = $self->{TRIALS}->getNumMiss($b);
+    if ($flags eq "includeAllCounts"){
+	  $blocks{$b}{MCORRDET} = $self->{TRIALS}->getNumCorrDetect($b);
+      $blocks{$b}{MCORRNOTDET} = $self->{TRIALS}->getNumCorrNonDetect ($b);
+	}
+  }
+  return(\%blocks);         
+}
+
+
+####################################################################################################
+=pod
+
 =item B<getActualDecisionPerformance>()
 
 Returns an array of global miss/fa/comb statistics based on the actual decisions. The contents of the array are:
@@ -511,20 +540,12 @@ Returns an array of global miss/fa/comb statistics based on the actual decisions
 
 =cut
 
-  sub getActualDecisionPerformance(){
-    my ($self) = @_;
-    my $b = "";
-    my %blocks = ();
+sub getActualDecisionPerformance(){
+  my ($self) = @_;
+  my $blocks = $self->getActualDecisionRawCountBlocks("");
 
-    my @tmp = $self->{TRIALS}->getBlockIDs();
-    for (my $i = 0; $i < scalar @tmp; $i++) {
-      next if (! $self->{TRIALS}->isBlockEvaluated($tmp[$i]));
-      my $b = $tmp[$i];
-      $blocks{$b}{MFA} = $self->{TRIALS}->getNumFalseAlarm($b);
-      $blocks{$b}{MMISS} = $self->{TRIALS}->getNumMiss($b);
-    }
-    $self->combBlockSetCalc(\%blocks);         
-  }
+  return ($self->combBlockSetCalc($blocks));
+}
 
 
 ####################################################################################################

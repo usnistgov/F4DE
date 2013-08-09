@@ -433,8 +433,8 @@ sub unitTest {
   die "\nError: Ave Prec for \$DNdet is ".$IDsDet->getGlobalMeasure("APpct")." not $exp\n" 
     if (abs($IDsDet->getGlobalMeasure("APpct") - $exp) > 0.0001);
 
-  $exp = 72.0639;
-  die "\nError: Ave Prec for \$det1 is ".$det1->getGlobalMeasure("APPpct")." not $exp\n" 
+  $exp = 72.0472;
+  die "\nError: Ave Prec' for \$det1 is ".$det1->getGlobalMeasure("APPpct")." not $exp\n" 
     if (abs($det1->getGlobalMeasure("APPpct") - $exp) > 0.0001);
   
 
