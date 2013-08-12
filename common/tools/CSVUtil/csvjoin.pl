@@ -92,7 +92,7 @@ MMisc::error_quit($usage) if (scalar @ARGV == 0);
 # Default values for variables
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                                  h j    o qrs         #
+# Used:                   S              h j    o qrs         #
 
 my $outcsv = "";
 my @joincol = ();
@@ -100,6 +100,7 @@ my $replace = 0;
 my $firstfilekeep = 0;
 my $separator=",";
 my $quote_char="\"";
+my $stdinFiles = 0;
 
 my %opt = ();
 GetOptions
@@ -112,13 +113,17 @@ GetOptions
    'separator=s' => \$separator,
    'quote=s' => \$quote_char,
    'LimitKeysToFirstFile'    => \$firstfilekeep,
+   'StdinFiles' => \$stdinFiles,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
-MMisc::ok_quit("\n$usage\n") if (($opt{'help'}) || (scalar @ARGV == 0));
-
-MMisc::error_quit("Need at least two \'infile.csv\'\n\n$usage") 
-  if (scalar @ARGV < 2);
-MMisc::error_quit("No \'outcsv\' provided\n\n$usage")
-  if (MMisc::is_blank($outcsv));
+MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
+if ($stdinFiles == 0){
+  MMisc::ok_quit("Files must be specified via --StdinFiles or at the end of the command\n$usage\n")
+	if ($stdinFiles == 0 && scalar @ARGV == 0);
+  MMisc::error_quit("Need at least two \'infile.csv\'\n\n$usage") 
+    if (scalar @ARGV < 2);
+} else {
+  ; ### No checks  
+}
 MMisc::error_quit("Need at least one \'joincol\'\n\n$usage")
   if (scalar @joincol < 1);
 my %jch = (); foreach my $jc (@joincol) { $jch{$jc} = scalar(keys %jch); }
@@ -126,9 +131,18 @@ $separator = "\t" if ($separator eq "<TAB>");
 
 my %all = ();
 my %header = ();
-foreach my $if (@ARGV) {
-  &load_file($if);
-  $firstfilekeep++ if ($firstfilekeep > 0);
+
+if ($stdinFiles == 0){
+  foreach my $if (@ARGV) {
+    &load_file($if);
+    $firstfilekeep++ if ($firstfilekeep > 0);
+  } 
+} else {
+  while (<>){
+  	chomp;
+    &load_file($_);
+    $firstfilekeep++ if ($firstfilekeep > 0);
+  }
 }
 #print MMisc::get_sorted_MemDump(\%all);
 
@@ -374,6 +388,7 @@ Where:
   --LimitKeysToFirstFile      If a key from the first file is not present in the following, remove that line from the output file
   --separator   Separator character for both input and output files, use <TAB> for tab separator
   --quote       Quote field character for both input and output files
+  --StdinFiles  Read the infile.csv files from STDIN
 
 Options can be specified for infile.csv:
   ++colname=colvalue will add extra columns to the loaded file
