@@ -144,12 +144,14 @@ foreach my $trans(@tfiles){
   my ($trans_bt, $trans_et) = (999999999, -1);
   ### Extract meaning from the name
   if ($trans =~ /(BABEL_(BP|OPT)_(\d{3})_(\d{5})_(\d{8})_(\d{6})_(inLine|outLine).txt)/){
+    $db->{$trans}{FILE} = $1;
     $db->{$trans}{PERIOD} = $2;
     $db->{$trans}{LANG} = $3;
     $db->{$trans}{SID} = $4;
     $db->{$trans}{DATE} = $5;
     $db->{$trans}{LINE} = $7;
   } elsif ($trans =~ /(BABEL_(BP|OPT)_(\d{3})_(\d{5})_(\d{8})_(\d{6})_([a-zA-Z\d]{2})_scripted.txt)/) {
+    $db->{$trans}{FILE} = $1;
     $db->{$trans}{PERIOD} = $2;
     $db->{$trans}{LANG} = $3;
     $db->{$trans}{SID} = $4;
@@ -226,9 +228,11 @@ binmode TLIST, "utf8" if ($encoding eq "UTF-8");
 print "   Building file $root.kwlist.xml\n";
 
 print ECF "<ecf source_signal_duration=\"$totalDuration\" language=\"$lang\" version=\"ECF Built by BabelTransParse.pl\">\n";
-foreach my $trans(sort {$db->{$a}{SID}<=>$db->{$b}{SID}} keys %$db){
+my $deferAbort = 0;
+foreach my $trans(sort {$db->{$a}{FILE} cmp $db->{$b}{FILE}} keys %$db){
 #  print Dumper($db->{$trans});
 #  die;
+#  print "$trans\n";
   my $outTransName = $trans;
   $outTransName =~ s:.*/::;
   $outTransName =~ s:\.[^.]*$::;
@@ -241,6 +245,17 @@ foreach my $trans(sort {$db->{$a}{SID}<=>$db->{$b}{SID}} keys %$db){
   my $spkr = 1;
   for (my $seg=0; $seg < @{ $db->{$trans}{transcript} }; $seg++){
 #    print "$seg $db->{$trans}{transcript}[$seg]{bt} $db->{$trans}{transcript}[$seg]{et}\n";
+    if (! defined($db->{$trans}{transcript}[$seg]{bt})){
+      warn "Error: Begin time of segment $seg of $trans not defined\n";
+      $deferAbort = 1;
+      last;
+    }
+    if (! defined($db->{$trans}{transcript}[$seg]{et})){
+      warn "Error: End time of segment $seg of $trans not defined\n";
+      $deferAbort = 1;
+      last;
+    }
+
     my $dur = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}));
     my $bt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt});
     my $et = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{et});
@@ -280,7 +295,8 @@ foreach my $trans(sort {$db->{$a}{SID}<=>$db->{$b}{SID}} keys %$db){
       elsif ($token eq "<int>"){       $type = "NON-SPEECH"; $stype = "noise"; }
       elsif ($token eq "<prompt>"){    $type = "NON-SPEECH"; $stype = "other"; $isNoScoreSTT = 1; $isNoScoreKWS = 1; }
       elsif ($token eq "<overlap>"){   $type = "NON-SPEECH"; $stype = "other"; $isNoScoreSTT = 1; $isNoScoreKWS = 1; }
-      elsif ($token =~ /^\*(${wrd})\*$/){   $token = $1;                 }  ## Mispronounced
+      elsif ($token =~ /^\/(${wrd})\/$/){   $token = $1; $stype = "other"; }  ## Phonetic spell - saying /b/ instead of /bi/ for the letter B
+      elsif ($token =~ /^\*(${wrd})\*$/){   $token = $1;                   }  ## Mispronounced
       elsif ($token =~ /^\*(${wrd}-)\*$/){  $token = $1;     $stype = "frag";            }  ## Mispronounced fragment
       elsif ($token =~ /^(${wrd}-)$/){                       $stype = "frag";             }  ## Fragments
       elsif ($token =~ /^(-${wrd})$/){                       $stype = "frag";             }  ## Fragments
@@ -341,6 +357,7 @@ foreach my $trans(sort {$db->{$a}{SID}<=>$db->{$b}{SID}} keys %$db){
     }
   }
 }
+die "Exiting" if ($deferAbort);
 
 print TLIST "<kwlist ecf_filename=\"$root.kwlist.xml\" version=\"20060511-0900\" language=\"$lang\" encoding=\"$encoding\" compareNormalize=\"$norm\">\n";
 
@@ -348,21 +365,21 @@ my @sortedunigrams = sort { $unigram->{$b} <=> $unigram->{$a} } keys %$unigram;
 print "Using 10 unigrams for terms\n";
 for (my $i=0; $i<10; $i++){
 #  print "$i $unigram->{$sortedunigrams[$i]}\n";
-  print TLIST "<kw kwid=\"TEST-".sprintf("%02d",$i)."\"><kwtext>$sortedunigrams[$i]</kwtext></kw>\n";
+  print TLIST "<kw kwid=\"TEST-".sprintf("%02d",$i)."\"><kwtext>$sortedunigrams[$i]</kwtext></kw>\n" if ($#sortedunigrams >= 0);
 }
 
 my @sortedBigrams = sort { $bigram->{$b} <=> $bigram->{$a} } keys %$bigram;
 print "Using 10 bigrams for terms\n";
 for (my $i=0; $i<10; $i++){
 #  print "$i $bigram->{$sortedBigrams[$i]}\n";
-  print TLIST "<kw kwid=\"TEST-".sprintf("%02d",$i+10)."\"><kwtext>$sortedBigrams[$i]</kwtext></kw>\n";
+  print TLIST "<kw kwid=\"TEST-".sprintf("%02d",$i+10)."\"><kwtext>$sortedBigrams[$i]</kwtext></kw>\n" if ($#sortedBigrams >= 0);
 }
 
 my @sortedtrigrams = sort { $trigram->{$b} <=> $trigram->{$a} } keys %$trigram;
 print "Using 10 trigrams for terms\n";
 for (my $i=0; $i<10; $i++){
 #  print "$i $trigram->{$sortedtrigrams[$i]}\n";
-  print TLIST "<kw kwid=\"TEST-".sprintf("%02d",$i+20)."\"><kwtext>$sortedtrigrams[$i]</kwtext></kw>\n";
+  print TLIST "<kw kwid=\"TEST-".sprintf("%02d",$i+20)."\"><kwtext>$sortedtrigrams[$i]</kwtext></kw>\n" if ($#sortedtrigrams >= 0);
 }
 
 print TLIST "</kwlist>\n";
