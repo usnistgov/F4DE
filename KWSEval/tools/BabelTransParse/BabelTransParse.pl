@@ -143,14 +143,14 @@ foreach my $trans(@tfiles){
 #  print "   $trans\n";
   my ($trans_bt, $trans_et) = (999999999, -1);
   ### Extract meaning from the name
-  if ($trans =~ /(BABEL_(BP|OPT)_(\d{3})_(\d{5})_(\d{8})_(\d{6})_(inLine|outLine).txt)/){
+  if ($trans =~ /(BABEL_(BP|OP[123])_(\d{3})_(\d{5})_(\d{8})_(\d{6})_(inLine|outLine).txt)/){
     $db->{$trans}{FILE} = $1;
     $db->{$trans}{PERIOD} = $2;
     $db->{$trans}{LANG} = $3;
     $db->{$trans}{SID} = $4;
     $db->{$trans}{DATE} = $5;
     $db->{$trans}{LINE} = $7;
-  } elsif ($trans =~ /(BABEL_(BP|OPT)_(\d{3})_(\d{5})_(\d{8})_(\d{6})_([a-zA-Z\d]{2})_scripted.txt)/) {
+  } elsif ($trans =~ /(BABEL_(BP|OP[123])_(\d{3})_(\d{5})_(\d{8})_(\d{6})_([a-zA-Z\d]{2})_scripted.txt)/) {
     $db->{$trans}{FILE} = $1;
     $db->{$trans}{PERIOD} = $2;
     $db->{$trans}{LANG} = $3;
@@ -229,6 +229,7 @@ print "   Building file $root.kwlist.xml\n";
 
 print ECF "<ecf source_signal_duration=\"$totalDuration\" language=\"$lang\" version=\"ECF Built by BabelTransParse.pl\">\n";
 my $deferAbort = 0;
+
 foreach my $trans(sort {$db->{$a}{FILE} cmp $db->{$b}{FILE}} keys %$db){
 #  print Dumper($db->{$trans});
 #  die;
@@ -244,7 +245,7 @@ foreach my $trans(sort {$db->{$a}{FILE} cmp $db->{$b}{FILE}} keys %$db){
   ### Interate over the segments
   my $spkr = 1;
   for (my $seg=0; $seg < @{ $db->{$trans}{transcript} }; $seg++){
-#    print "$seg $db->{$trans}{transcript}[$seg]{bt} $db->{$trans}{transcript}[$seg]{et}\n";
+#    print "$seg $db->{$trans}{transcript}[$seg]{bt} $db->{$trans}{transcript}[$seg]{et} $db->{$trans}{transcript}[$seg]{text}\n";
     if (! defined($db->{$trans}{transcript}[$seg]{bt})){
       warn "Error: Begin time of segment $seg of $trans not defined\n";
       $deferAbort = 1;
