@@ -1898,6 +1898,17 @@ sub getRowIDs{
   return($_[0]->_getOrderedLabelIDs($_[0]->{'rowLabOrder'}, $_[1], $_[0]->{Properties}->getValue($key_KeepRowsInOutput)));
 }
 
+### Builds a hash of the uniq values in a column.  The hash points to an array of the row IDs for the value
+sub getUniqValuesRowCountHistForCol{
+    my ($self, $colID) = @_;
+    my %valHT = ();
+    foreach my $rowID($self->getRowIDs("AsAdded")){
+	my $val = $self->getData($colID, $rowID);
+	push @{ $valHT{$val} }, $rowID;
+    }
+    return(\%valHT);
+}
+
 
 sub pivot{
   # (0:$self, 1:$order)
