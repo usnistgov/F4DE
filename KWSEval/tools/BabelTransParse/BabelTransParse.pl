@@ -271,6 +271,10 @@ foreach my $trans(sort {$db->{$a}{FILE} cmp $db->{$b}{FILE}} keys %$db){
     my $punct = '[\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]';
     my $notpunct = '[^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]';
     my $wrd = '[^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]+([_-][^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]+)*';
+    if ($lang eq "haitiancreole"){
+        ## hatiancreole clitics 
+        $wrd = '([^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]+([_-][^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]+)*|[^\`\~\!\@\#\$\%\^\&\*\(\)\-\_\+\=\[\]\{\}\|\\\<\>\,\.\/\?]_)';
+    }
     my $isNoScoreKWS = 0;
     my $isNoScoreSTT = 0;
     print "Warning: No tokens $outTransName $bt\n" if (@toks == 0);
@@ -296,7 +300,7 @@ foreach my $trans(sort {$db->{$a}{FILE} cmp $db->{$b}{FILE}} keys %$db){
       elsif ($token eq "<int>"){       $type = "NON-SPEECH"; $stype = "noise"; }
       elsif ($token eq "<prompt>"){    $type = "NON-SPEECH"; $stype = "other"; $isNoScoreSTT = 1; $isNoScoreKWS = 1; }
       elsif ($token eq "<overlap>"){   $type = "NON-SPEECH"; $stype = "other"; $isNoScoreSTT = 1; $isNoScoreKWS = 1; }
-      elsif ($token =~ /^\/(${wrd})\/$/){   $token = $1; $stype = "other"; }  ## Phonetic spell - saying /b/ instead of /bi/ for the letter B
+      elsif ($token =~ /^\/(${wrd})\/$/){   $token = "/$1/"; $stype = "other"; }  ## Phonetic spell - saying /b/ instead of /bi/ for the letter B
       elsif ($token =~ /^\*(${wrd})\*$/){   $token = $1;                   }  ## Mispronounced
       elsif ($token =~ /^\*(${wrd}-)\*$/){  $token = $1;     $stype = "frag";            }  ## Mispronounced fragment
       elsif ($token =~ /^(${wrd}-)$/){                       $stype = "frag";             }  ## Fragments
@@ -304,13 +308,16 @@ foreach my $trans(sort {$db->{$a}{FILE} cmp $db->{$b}{FILE}} keys %$db){
 #      elsif ($token =~ /^(${notpunct}+(_${notpunct}+)+)$/){      $stype = "frag";  }  ## Acronyms
       elsif ($token =~ /^\~$/){        $type = "NON-SPEECH"; $stype = "other"  }  ## truncations
       elsif ($token =~ /^$wrd$/){    ;                                       } ## Do nothing
+#      elsif ($lang eq "haitiancreole" && $token =~ /^${notpunct}_$/){  ;    } ## do nothing.  this is a hatiancreole clitic
+#      elsif ($lang eq "haitiancreole" && $token =~ /^${notpunct}_-$/){  $stype = "frag";   } ## This is a hatiancreole clitic that is a fragment
+          
       else {
         print "Illegal Token $token in $outTransName\n";
       }
       next if ($type eq "skip");
       $dur = sprintf("%.3f",($db->{$trans}{transcript}[$seg]{et} - $db->{$trans}{transcript}[$seg]{bt}) / (@toks + 1));
       $tokBt = sprintf("%.3f",$db->{$trans}{transcript}[$seg]{bt} + ($dur * $t));
- 
+    
       print RTTM "$type $outTransName 1 $tokBt $dur $token $stype spkr1 0.5\n";
       $lexCount ++ if ($type eq "LEXEME" && $stype eq "lex");
       if (($lexCount + 3) % 10 == 0){
