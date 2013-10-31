@@ -1910,9 +1910,18 @@ sub getUniqValuesRowCountHistForCol{
 }
 
 
-sub pivot{
-  # (0:$self, 1:$order)
-  my ($self, $rowLabelSet, $rowAttrs, $colAttrs) = @_;
+sub pivot{  
+  my ($self, $rowLabelSet, $rowAttrs, $colAttrs, $op, $opAttr) = @_;
+  use Statistics::Descriptive;
+
+  $op = "Count" if (! defined($op));
+  if ($op =~ /^(Sum|Values|Stat)$/ ){
+      die "Error: $op opAttr MUST be defined" if (! defined($opAttr));
+  } elsif ($op eq "Count") {
+      ;
+  } else {
+      die "Error: pivot \$op not defined";
+  }
 
   my $newAT = new AutoTable();
   if (! defined($rowLabelSet)){
@@ -1936,7 +1945,27 @@ sub pivot{
     }
     $colID =~ s/^\|//;
 
-    $newAT->increment($colID, $rowID);
+    if ($op eq "Count"){
+	$newAT->increment($colID, $rowID);
+    } if ($op eq "Sum"){
+	$val = $self->getData($opAttr, $rLab);
+	$newAT->incrementBy($colID, $rowID, $val);
+    } if ($op eq "Values"){
+	$val = $self->getData($opAttr, $rLab);
+	my $oldval = $newAT->getData($colID, $rowID);
+	$oldval .= "," if (defined($oldval));
+	$oldval .= $val;	
+	$newAT->setData($oldval, $colID, $rowID);
+    } if ($op eq "Stat"){
+	$val = $self->getData($opAttr, $rLab);
+	my $oldval = $newAT->getData($colID, $rowID);
+	if (! defined($oldval)){
+	    $oldval = Statistics::Descriptive::Full->new();
+	    $newAT->setData($oldval, $colID, $rowID);
+	}
+	$oldval->add_data($val);
+    }
+
   }
   return ($newAT);  
 
