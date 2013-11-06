@@ -22,19 +22,25 @@ The script run "CommandToRun MatchingFile" and matching the result to the FileTo
 
 -A request for the file within the samples dir to be added to the command line
 -D <BAD> Write the diff of the BAD file to <BAD>.
+-b build the comp.  Essentially, copy the answer before the diff
 
 EOF
 }
 
 ADDTOEND=0
 DOCUMENTBAD=""
-while getopts "hAD:" OPTION
+buildComp=""
+while getopts "bhAD:" OPTION
 do
     case $OPTION in
         h)
             usage
             exit 1
             ;;
+        b)
+	    buildComp="-b"
+            shift $((OPTIND-1)); OPTIND=1
+	    ;;
         A)
             ADDTOEND=1
             shift $((OPTIND-1)); OPTIND=1
@@ -160,8 +166,11 @@ else
         check_dir "$resdir"
         resfile="$resdir/$resf"
         check_file "$resfile"
-        perl -pe 's%(\s)\S+?\.png%$1%g' "$resfile"> $res1
+        perl -pe 's%(\s)\S+?\.png%$1%g' "$resfile"> $res1	
         cmpfile="$ff"
+	if [ ! "$buildComp" = "" -a ! -f $cmpfile ] ; then
+	    cp $resfile $cmpfile
+	fi
         check_file "$cmpfile"
         perl -pe 's%(\s)\S+?\.png%$1%g' "$cmpfile"> $res2
         cmp -s $res1 $res2

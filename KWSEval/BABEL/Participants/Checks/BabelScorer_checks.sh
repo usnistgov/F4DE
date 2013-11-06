@@ -22,6 +22,7 @@ The script will submit files to the local BABEL_Scorer
 OPTIONS:
    -h        Show this message
    -X        Pass the XmllintBypass option to KWSList validation and scoring tools
+   -b        build the data file for the CompsFile(s).  The file MUST NOT previously not exist
    -D <BAD>  Documet the Bad runs in the file BAD
 EOF
 }
@@ -30,12 +31,17 @@ XMLLINTBYPASS=0
 babscr_xtras=""
 DOCUMENTBAD=""
 toolOpt=""
-while getopts "hXD:" OPTION
+buildComp=""
+while getopts "hXbD:" OPTION
 do
     case $OPTION in
         h)
             usage
             exit 1
+            ;;
+        b)
+	    buildComp="-b"
+            shift $((OPTIND-1)); OPTIND=1
             ;;
         X)
             XMLLINTBYPASS=1
@@ -125,19 +131,34 @@ babscr="$subhelp_dir/BABEL_Scorer.pl"
 check_file_x "$babscr"
 
 ####################
-# Get list of available files to work with
-fl=""
-for e in $*
-do
-    if [ -f $e ]; then
-        fl="$fl $e"
-    elif [ -d $e ]; then
-        t=`ls $e`
-        for x in $t; do if [ -f "$e/$x" ]; then fl="$fl $e/$x"; fi; done
-    else
-        echo "Skipping: Not a file or a dir [$e]"
-    fi
-done
+if [ "$buildComp" = "" ] ; then
+    # Get list of available files to work with
+    fl=""
+    for e in $*
+    do
+	if [ -f $e ]; then
+            fl="$fl $e"
+	elif [ -d $e ]; then
+            t=`ls $e`
+            for x in $t; do if [ -f "$e/$x" ]; then fl="$fl $e/$x"; fi; done
+	else
+            echo "Skipping: Not a file or a dir [$e]"
+	fi
+    done
+else
+    fl=""
+    for e in $*
+    do
+	if [ -f $e ]; then
+            echo "Skipping: $e already exists.  Delete to rebuild"
+	elif [ -d $e ]; then
+            echo "Skipping: $e is a directory and can not be 'built' with -b"
+	else
+            fl="$fl $e"	    
+	fi
+    done
+
+fi
 
 # Prune extra configuration files
 cfl=""
@@ -201,7 +222,7 @@ do
 			echo TESTING $ff >> $DOCUMENTBAD
 		    fi
 		    com="$subhelp $babscr --Specfile $scconf --expid $expid --sysfile $finf --compdir $compdir --resdir $resdir --dbDir $dbDir --Tsctkbin $sctkbindir --ExcludePNGFileFromTxtTable $babscr_xtras $xtra"
-                    $tool $toolOpt $ff $com
+                    $tool $toolOpt $buildComp $ff $com
                     if [ "${?}" -ne "0" ]; then
 			if [ ! -z $DOCUMENTBAD ] ; then 
 			    echo COMMAND $com >> $DOCUMENTBAD
