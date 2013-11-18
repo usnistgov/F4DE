@@ -421,6 +421,8 @@ sub get_observation_meanDS {
   my $detscrsum = 0;
   foreach my $rh (@atc) {
     my $detscr = $$rh{$xtra_tc_list[8]};
+    if ($detscr =~ m%^\.%) { $detscr = "0$detscr"; }
+    if ($detscr =~ s%^\-\.%%) { $detscr = "-0$detscr"; }
 
     if (! MMisc::is_float($detscr)) {
       $self->_set_errormsg("Found an UnmappedSys entry without a proper \"DetectionScore\" ($detscr)");
@@ -538,6 +540,8 @@ sub add_tv08obs {
       my $fs_value = $$rh{$xtra_tc_list[6]};
       my $annot = $$rh{$xtra_tc_list[7]};
       my $detscr = $$rh{$xtra_tc_list[8]};
+      if ($detscr =~ m%^\.%) { $detscr = "0$detscr"; }
+      if ($detscr =~ s%^\-\.%%) { $detscr = "-0$detscr"; }
 
       if (! MMisc::is_float($detscr)) {
         $self->_set_errormsg("Found an UnmappedSys entry without a proper \"DetectionScore\" ($detscr)");
