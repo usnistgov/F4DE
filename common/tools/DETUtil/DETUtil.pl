@@ -899,8 +899,8 @@ The B<plotControl> options provides access to fine control the the DET curve dis
 
 /PointSize=\d+/     -> Overrides to default point size to the specified integer.
 
-/ExtraPoint=text:FA:MISS:pointSize:pointType:color:justification/
-                    -> Places a point at location FA,MISS with the label /text/ with the specified point type, color, size, and label justification.  All colons and the FA and MISS values are required.  Point type is an integer. Point color is /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors.  Point size is a floating point number.  Justification is either /right|left|center/.
+/ExtraPoint=text:FA:MISS:pointSize:pointType:color:justification[:arrow:FA:MISS]/
+                    -> Places a point at location FA,MISS with the label /text/ with the specified point type, color, size, and label justification.  All colons and the FA and MISS values are required.  Point type is an integer. Point color is /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors.  Point size is a floating point number.  Justification is either /right|left|center/.  If the text 'arrow' is used, an arrow will be drawn ending at the first set of FA,MISS point ending at the additional FA,MISS point where the text is displayed.
 
 /PerfBox=text:FA:MISS:color/
                     -> Places a transparent box at from the origin to location FA,MISS with the title /text/ with the specified color.  All colons and the FA and MISS values are required.  Color is /rgb "#hhhhhh"/ where the /h/ characters are hexidecimal RGB colors. 
