@@ -157,6 +157,15 @@ foreach my $trans(@tfiles){
     $db->{$trans}{SID} = $4;
     $db->{$trans}{DATE} = $5;
     $db->{$trans}{PROMPTID} = $7;
+  } elsif ($trans =~ /(BABEL_(BP|OP[123])_(\d{3})_(\d{5})_(\d{8})_(\d{6})_scripted.[1234].txt)/) {
+    $db->{$trans}{FILE} = $1;
+    $db->{$trans}{PERIOD} = $2;
+    $db->{$trans}{LANG} = $3;
+    $db->{$trans}{SID} = $4;
+    $db->{$trans}{DATE} = $5;
+    $db->{$trans}{PROMPTID} = $7;
+  } else {
+      die "Error: Unable to parse the filename $trans";
   }
 
   ### open the file
@@ -229,6 +238,8 @@ print "   Building file $root.kwlist.xml\n";
 
 print ECF "<ecf source_signal_duration=\"$totalDuration\" language=\"$lang\" version=\"ECF Built by BabelTransParse.pl\">\n";
 my $deferAbort = 0;
+
+#foreach my $f(keys %$db){  if (! exists($db->{$f}{FILE}) || !defined($db->{$f}{FILE})){ print "$f\n"; print Dumper($db->{$f});  exit;} }
 
 foreach my $trans(sort {$db->{$a}{FILE} cmp $db->{$b}{FILE}} keys %$db){
 #  print Dumper($db->{$trans});
