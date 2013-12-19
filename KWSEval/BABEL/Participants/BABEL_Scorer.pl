@@ -289,9 +289,9 @@ MMisc::error_quit("Can not score; no usable ECF & TLIST files with <CORPUSID> = 
   if (! MMisc::safe_exists(\%ecfs, $lcorpus, $lpart));
 
 MMisc::error_quit("Error: Corpus id $lcorpus does not begin with /babel###/")
-  if ($lcorpus !~ /^(babel(\d\d\d)).*$/);
+  if ($lcorpus !~ /^((IARPA-)?babel(\d\d\d)).*$/);
 my $languageID = $1;
-my $lang = $2;
+my $lang = $3;
 
 my @summaryDETS = ();
 
