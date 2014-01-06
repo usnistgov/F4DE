@@ -348,9 +348,49 @@ sub globalMeasureUnitTest(){
         my $txt = $ds->renderAsTxt("foomerge", 1, {(createDETfiles => 0, ReportGlobal => 1, ExcludePNGFileFromTextTable => 1)});  
         print $txt;
       }
-      print "OK\n";
     }
 
+  print "Computing Mean Average Precision\n";
+  my $mbTrial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+  $mbTrial->setPreserveTrialID(1);
+  my $blkNum = 1;
+  foreach my $_tr($trial, $trial2, $trial3){
+    my @blocks = $_tr->getBlockIDs();
+    my $ranks = $_tr->getRanks($blocks[0]);
+ #   print Dumper($ranks);
+    foreach my $rankData(@$ranks){
+      $mbTrial->addTrial("blk-$blkNum", $rankData->[1], ($rankData->[1] > .23 ? "YES" : "NO"), $rankData->[2],
+        undef, (defined($rankData->[3]) ? $rankData->[3] : undef));
+    }
+    $blkNum++;
+  }
+#  print $mbTrial->dump("");
+  my $mbMet = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $mbTrial);
+  $mbMet->setPerformGlobalMeasure("MAP", "true");
+  $mbMet->setPerformGlobalMeasure("MAPP", "true");
+  $mbMet->setPerformGlobalMeasure("MAPpct", "true");
+  $mbMet->setPerformGlobalMeasure("MAPPpct", "true");
+  my $mbDet = new DETCurve($mbTrial, $mbMet, "MultiBlockDET",[ () ], undef, 1);
+  my $mbDS = new DETCurveSet("MultiBlock");
+  my $rtn = $mbDS->addDET("First", $mbDet);
+  MMisc::error_quit("Unable to add single mulitBlock DET to a set /$rtn/") if ($rtn ne "success");
+  my $txt = $mbDS->renderAsTxt("foomerge", 1, 
+        {(createDETfiles => 0, ReportGlobal => 1, ExcludePNGFileFromTextTable => 1)});  
+#  print $txt;
+#  print Dumper($mbDet->{GLOBALMEASURES} );
+  #  $apData{MEASURE}{FORMAT} = "%.2f";   These will be set from the first computation below
+  print "  Mean AP Computed ...";
+  if (abs($mbDet->{GLOBALMEASURES}{MAP}{MEASURE}{MAP} - 0.60259) > 0.0001) {
+    print "\n  Error!!! Mean Average Precision computed to be $mbDet->{GLOBALMEASURES}{MAP}{MEASURE}{MAP} not 0.60259.  Aborting\n";
+    exit(1);
+  }
+  print "Ok\n";
+  print "  Mean AP' Computed ...";
+  if (abs($mbDet->{GLOBALMEASURES}{MAPP}{MEASURE}{MAPP} - 0.291699) > 0.0001) {
+    print "\n  Error!!! Mean Average Precision' computed to be $mbDet->{GLOBALMEASURES}{MAPP}{MEASURE}{MAPP} not 0.291699.  Aborting\n";
+    exit(1);
+  }
+  print "Ok\n";
 }
 
 sub bigDETUnitTest {
@@ -374,7 +414,9 @@ sub oneBigDET
     my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
     
     #####################################  Without data  ###############################    
-    my $emptyTrial = new TrialsFuncs({ ("TOTALTRIALS" => $nt + $nnt) },
+#     my $emptyTrial = new TrialsFuncs({ ("TOTALTRIALS" => $nt + $nnt) },
+#                                     "Term Detection", "Term", "Occurrence");
+    my $emptyTrial = new TrialsTWV({ ("TotDur" => 10000, TrialsPerSecond => 1, IncludeBlocksWithNoTargets => 1) },
                                      "Term Detection", "Term", "Occurrence");
 
     print "   ... adding trials\n";
@@ -394,8 +436,9 @@ sub oneBigDET
         print "   Block $blk Made trials < $tot\n" if ($tot % 10000 == 0); 
       }
     }
-    my $met = new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial);
-    if (ref($met) ne "MetricTestStub") {
+#    my $met = new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial);
+    my $met = new MetricTWV({ ('Cost' => 0.1, 'Value' => 1, 'Ptarg' => 0.0001 ) }, $emptyTrial);
+    if (ref($met) ne "MetricTWV") {
       die "Error: Unable to create a MetricTestStub object with message '$met'\n";
     }
     
@@ -405,6 +448,7 @@ sub oneBigDET
     my $ds = new DETCurveSet("title");
     $ds->addDET("Biggy", $emptydet);
 #    my %ht = ("createDETfiles", 1, "serialize", 0);
+
     my $dcRend = new DETCurveGnuplotRenderer({"yScale" => "linear", "xScale" => "linear",
                                               "Xmin" => 0, "Xmax" => 100, "Ymin" => 0, "Ymax" => 100,
                                               "DETShowPoint_Ratios" => 1,
@@ -1755,33 +1799,125 @@ sub computeArea{
   #  print "Total Area = $area\n";
 }
 
+sub computeOracleThresh{
+  my ($self) = @_;
+  my %apData = ();
+
+}
+
+sub computeOracleSuprema{
+  my ($self) = @_;
+  my %apData = ();
+
+}
+
+### $blockMeasureID is either AP, APP, APPct, APPPct
+sub _computeMeanForAP{
+  my ($self, $blockMeasureID) = @_;
+  my %apData = ();
+  my $measureID = "M".$blockMeasureID;
+  
+  if ($blockMeasureID !~ /^(AP|APP|APpct|APPpct)$/){
+    $apData{STATUS} = "NotApplicable";
+    $apData{STATUSMESG} = "Error computing $measureID.  BlockMeasureID does not match the pattern";
+    $self->{GLOBALMEASURES}{$measureID} = \%apData;
+    return;
+  }
+  
+  $apData{MEASURE}{STRING} = $measureID;
+  ### Lop off the pct if it exists
+  $apData{MEASURE}{STRING} =~ s/pct//;
+  #  $apData{MEASURE}{FORMAT} = "%.2f";   These will be set from the first computation below
+  #  $apData{MEASURE}{ABBREVSTRING} = $measureID;
+  #  $apData{MEASURE}{UNIT} = ""; 
+ 
+  my %blockStats = ();
+  my ($sum, $numBlk) = (0,0);
+  foreach my $block($self->{TRIALS}->getBlockIDs()){
+    $self->_computeAvgPrecByType($blockMeasureID, $block);
+#    print "global $block: ".Dumper($self->{GLOBALMEASURES} );
+    if ($self->{GLOBALMEASURES}{$blockMeasureID}{STATUS} ne "Computed"){
+      $apData{STATUS} = "NotApplicable";
+      $apData{STATUSMESG} = "Error computing $blockMeasureID for $block.  Status message was /$self->{GLOBALMEASURES}{$blockMeasureID}{STATUS}/";
+      $self->{GLOBALMEASURES}{$measureID} = \%apData;
+      delete $self->{GLOBALMEASURES}{$blockMeasureID};
+      return;
+    }
+    ### it worked
+
+    ### Set the format and unit if the first time through
+    if ($numBlk == 0){
+      $apData{MEASURE}{FORMAT} =          $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{FORMAT};
+      $apData{MEASURE}{UNIT} =            $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{UNIT};      
+      $apData{MEASURE}{ABBREVSTRING} =    "M".$self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{ABBREVSTRING};      
+      $apData{MEASURE}{PERBLOCKMEASURE} = $blockMeasureID;
+    }
+    
+    ### Harvewt the stats
+    $blockStats{$block} = $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{$blockMeasureID};  
+    $sum += $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{$blockMeasureID};  
+    $numBlk ++;
+    
+    ### Delete the block stats
+    delete $self->{GLOBALMEASURES}{$blockMeasureID};   
+  }
+  $apData{STATUS} = "Computed";
+  $apData{STATUSMESG} = "Successful";
+  $apData{MEASURE}{$measureID} = $sum / $numBlk;
+  $apData{MEASURE}{PERBLOCK} = \%blockStats;
+  $self->{GLOBALMEASURES}{$measureID} = \%apData;
+  return;   
+}
+
 sub computeAvgPrec{
   my ($self) = @_;
   my %apData = ();
 
-  $self->_computeAvgPrecByType("AP");
+  $self->_computeAvgPrecByType("AP", undef);
 }
 
 sub computeAvgPrecPrime{
   my ($self) = @_;
-  my %apData = ();
 
-  $self->_computeAvgPrecByType("APP");
+  $self->_computeAvgPrecByType("APP", undef);
 }
 
 sub computeAvgPrecPct{
   my ($self) = @_;
-  my %apData = ();
 
-  $self->_computeAvgPrecByType("APpct");
+  $self->_computeAvgPrecByType("APpct", undef);
 }
 
 sub computeAvgPrecPrimePct{
   my ($self) = @_;
-  my %apData = ();
 
-  $self->_computeAvgPrecByType("APPpct");
+  $self->_computeAvgPrecByType("APPpct", undef);
 }
+
+sub computeMeanAvgPrec{
+  my ($self) = @_;
+
+  $self->_computeMeanForAP("AP");
+}
+
+sub computeMeanAvgPrecPrime{
+  my ($self) = @_;
+
+  $self->_computeMeanForAP("APP");
+}
+
+sub computeMeanAvgPrecPct{
+  my ($self) = @_;
+
+  $self->_computeMeanForAP("APpct");
+}
+
+sub computeMeanAvgPrecPrimePct{
+  my ($self) = @_;
+
+  $self->_computeMeanForAP("APPpct");
+}
+
 
 #  Un-weighted
 #    Precision(rank) =  tp(rank) / [tp(rank) + fp(rank)]
@@ -1792,19 +1928,34 @@ sub computeAvgPrecPrimePct{
 #        f = 99,900 / number of false event videos in the searched video set
         
 sub _computeAvgPrecByType{
-  my ($self, $measureID) = @_;
+  my ($self, $measureID, $blockID) = @_;
   my ($weightP, $weightF, $scale) = (1, 1, 1);
   my %apData = ();
-  
-  ## Only Run IFF there is a single block
-  my @blocks = $self->{TRIALS}->getBlockIDs();
-  if (@blocks > 1){
-     $apData{STATUS} = "NotApplicable";
-     $apData{STATUSMESG} = "Not defined for multiple blocks in as Trials Structure";
-     $self->{GLOBALMEASURES}{$measureID} = \%apData;
-     return;
+
+  ### Set the block ID
+  my $blk = undef;
+    
+  #### if blockID is UNDEF, then compute for the ONLY block
+  if (! defined($blockID)){
+    ## Only Run IFF there is a single block
+    my @blocks = $self->{TRIALS}->getBlockIDs();
+    if (@blocks > 1){
+       $apData{STATUS} = "NotApplicable";
+       $apData{STATUSMESG} = "Not defined for multiple blocks in as Trials Structure";
+       $self->{GLOBALMEASURES}{$measureID} = \%apData;
+       return;
+    }
+    $blk = $blocks[0];
+  } else {
+    ### We are computing for the specified block
+    if (! $self->{TRIALS}->blockExists($blockID)){
+       $apData{STATUS} = "NotApplicable";
+       $apData{STATUSMESG} = "Supplied blockID $blockID does not exist in the Trials Structure";
+       $self->{GLOBALMEASURES}{$measureID} = \%apData;
+       return;
+    }    
+    $blk = $blockID;
   }
-  my $blk = $blocks[0];
   
   ## Make sure the block is evaluable
   if (! $self->{TRIALS}->isBlockEvaluated($blk)){
@@ -1889,6 +2040,12 @@ sub computeGlobalMeasures{
     $self->computeAvgPrecPrime() if ($mea eq "APP");
     $self->computeAvgPrecPct() if ($mea eq "APpct");
     $self->computeAvgPrecPrimePct() if ($mea eq "APPpct");
+    $self->computeMeanAvgPrec() if ($mea eq "MAP");
+    $self->computeMeanAvgPrecPrime() if ($mea eq "MAPP");
+    $self->computeMeanAvgPrecPct() if ($mea eq "MAPpct");
+    $self->computeMeanAvgPrecPrimePct() if ($mea eq "MAPPpct");
+    $self->computeOracleTresh() if ($mea eq "OracleThresh");
+    $self->computeOracleSuprema() if ($mea eq "OracleSuprema");
   }
 }
 
@@ -2062,7 +2219,7 @@ sub getCurveStyle{
 sub setCurveStyle{
   my ($self, $style) = @_;
   $self->{CURVE_STYLE} = $style;
-  die "Error: Unknown curve style.  Must be either (UniqThreshold|Articulated)" if ($style !~ /^(UniqThreshold|Articulated)$/);
+  die "Error: Unknown curve style /$style/.  Must be either (UniqThreshold|Articulated)" if ($style !~ /^(UniqThreshold|Articulated)$/);
 }
 
 1;

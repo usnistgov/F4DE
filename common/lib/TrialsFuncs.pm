@@ -1007,6 +1007,11 @@ sub isBlockEvaluated{
   return ($self->getNumTarg($block) > 0);
 }
   
+sub blockExists{
+  my ($self, $block) = @_;
+  return (exists($self->{"trials"}{$block}))
+}
+  
 sub getNumBlocks {
   my ($self) = @_;
   my @a = keys %{ $self->{"trials"} };
