@@ -1817,6 +1817,9 @@ sub _computeMeanForAP{
   my %apData = ();
   my $measureID = "M".$blockMeasureID;
   
+  ### IF already computed, don't recompute
+  return if (exists($self->{GLOBALMEASURES}{$measureID}));
+
   if ($blockMeasureID !~ /^(AP|APP|APpct|APPpct)$/){
     $apData{STATUS} = "NotApplicable";
     $apData{STATUSMESG} = "Error computing $measureID.  BlockMeasureID does not match the pattern";
@@ -1838,7 +1841,7 @@ sub _computeMeanForAP{
 #    print "global $block: ".Dumper($self->{GLOBALMEASURES} );
     if ($self->{GLOBALMEASURES}{$blockMeasureID}{STATUS} ne "Computed"){
       $apData{STATUS} = "NotApplicable";
-      $apData{STATUSMESG} = "Error computing $blockMeasureID for $block.  Status message was /$self->{GLOBALMEASURES}{$blockMeasureID}{STATUS}/";
+      $apData{STATUSMESG} = "Error computing $blockMeasureID for $block.  Status message was /$self->{GLOBALMEASURES}{$blockMeasureID}{STATUSMESG}/";
       $self->{GLOBALMEASURES}{$measureID} = \%apData;
       delete $self->{GLOBALMEASURES}{$blockMeasureID};
       return;
@@ -1851,6 +1854,7 @@ sub _computeMeanForAP{
       $apData{MEASURE}{UNIT} =            $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{UNIT};      
       $apData{MEASURE}{ABBREVSTRING} =    "M".$self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{ABBREVSTRING};      
       $apData{MEASURE}{PERBLOCKMEASURE} = $blockMeasureID;
+      $apData{MEASURE}{PERBLOCKABBREVSTRING} = $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{ABBREVSTRING};      
     }
     
     ### Harvewt the stats
@@ -1932,6 +1936,9 @@ sub _computeAvgPrecByType{
   my ($weightP, $weightF, $scale) = (1, 1, 1);
   my %apData = ();
 
+  ### IF already computed, don't recompute
+  return if (exists($self->{GLOBALMEASURES}{$measureID}));
+  
   ### Set the block ID
   my $blk = undef;
     
@@ -2024,9 +2031,14 @@ sub _computeAvgPrecByType{
     $apData{MEASURE}{$measureID} = $sum / $numPos;
     $apData{MEASURE}{POSRANKS} = $ranks;
   } else {
-    $apData{STATUS} = "NotApplicable";
-    $apData{STATUSMESG} = "No Positives for block $blk";
+    $apData{STATUS} = "Computed";
+    $apData{STATUSMESG} = "Successful.  No Positives for block $blk";
+    $apData{MEASURE}{$measureID} = 0;
     $apData{MEASURE}{POSRANKS} = $ranks;
+#  } else {
+#    $apData{STATUS} = "NotApplicable";
+#    $apData{STATUSMESG} = "No Positives for block $blk";
+#    $apData{MEASURE}{POSRANKS} = $ranks;
   }
   $self->{GLOBALMEASURES}{$measureID} = \%apData;
 
@@ -2034,8 +2046,10 @@ sub _computeAvgPrecByType{
 }
 
 sub computeGlobalMeasures{
-  my ($self, $measureSet) = @_;
-  foreach my $mea(@$measureSet){
+  my ($self) = @_;
+  # die "About to divy out global comp".join(" ",@$measureSet);
+# die "computeGlobal is ".join(" ",@{$self->getMetric()->getGlobalMeasures()});
+  foreach my $mea(@{ $self->getMetric()->getGlobalMeasures()}){
     $self->computeAvgPrec() if ($mea eq "AP");
     $self->computeAvgPrecPrime() if ($mea eq "APP");
     $self->computeAvgPrecPct() if ($mea eq "APpct");
@@ -2051,50 +2065,87 @@ sub computeGlobalMeasures{
 
 sub getGlobalMeasure{
   my ($self, $measure) = @_;
-  $self->computePoints();
+  $self->computeGlobalMeasures();
   return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
   return $self->{GLOBALMEASURES}{$measure}{MEASURE}{$measure};
 }
 
+sub getGlobalMeasureForBlock{
+  my ($self, $measure, $block) = @_;
+  $self->computeGlobalMeasures();
+  return undef unless(exists($self->{GLOBALMEASURES}{$measure}{MEASURE}{PERBLOCKMEASURE}));
+  return undef unless(exists($self->{GLOBALMEASURES}{$measure}{MEASURE}{PERBLOCK}{$block}));
+  
+  return $self->{GLOBALMEASURES}{$measure}{MEASURE}{PERBLOCK}{$block};
+}
+
 sub getGlobalMeasureIDs{
-  my ($self, $measure) = @_;
-  $self->computePoints();
-  return undef unless(exists($self->{GLOBALMEASURES}));
-  return keys %{ $self->{GLOBALMEASURES} };
+  my ($self) = @_;
+  $self->computeGlobalMeasures();
+  return () unless(exists($self->{GLOBALMEASURES}));
+  return sort (keys %{ $self->{GLOBALMEASURES} });
+}
+
+sub getGlobalMeasureIDsWithBlocks{
+  my ($self) = @_;
+  $self->computeGlobalMeasures();
+  my @ids = ();
+  return @ids unless(exists($self->{GLOBALMEASURES}));
+  foreach my $mea($self->getGlobalMeasureIDs()){
+    if (exists($self->{GLOBALMEASURES}{$mea}{MEASURE}{PERBLOCKMEASURE})){
+      push @ids, $mea;
+    }
+  }
+  return (sort(@ids));
 }
 
 sub getGlobalMeasureString{
   my ($self, $measure) = @_;
 
-  $self->computePoints();
+  $self->computeGlobalMeasures();
   return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
   return $self->{GLOBALMEASURES}{$measure}{MEASURE}{STRING};
 }
 
+sub getGlobalMeasureStringForBlock{
+  my ($self, $measure) = @_;
+
+  $self->computeGlobalMeasures();
+  return undef unless(exists($self->{GLOBALMEASURES}{$measure}{MEASURE}{PERBLOCKMEASURE}));
+  return $self->{GLOBALMEASURES}{$measure}{MEASURE}{PERBLOCKMEASURE};
+}
+
 sub getGlobalMeasureAbbrevString{
   my ($self, $measure) = @_;
-  $self->computePoints();
+  $self->computeGlobalMeasures();
   return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
   return $self->{GLOBALMEASURES}{$measure}{MEASURE}{ABBRREVSTRING};
 }
 
+sub getGlobalMeasureAbbrevStringForBlock{
+  my ($self, $measure) = @_;
+  $self->computeGlobalMeasures();
+  return undef unless(exists($self->{GLOBALMEASURES}{$measure}{MEASURE}{PERBLOCKMEASURE}));
+  return $self->{GLOBALMEASURES}{$measure}{MEASURE}{PERBLOCKABBREVSTRING};
+}
+
 sub getGlobalMeasureFormat{
   my ($self, $measure) = @_;
-  $self->computePoints();
+  $self->computeGlobalMeasures();
   return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
   return $self->{GLOBALMEASURES}{$measure}{MEASURE}{FORMAT};
 }
 
 sub getGlobalMeasureUnit{
   my ($self, $measure) = @_;
-  $self->computePoints();
+  $self->computeGlobalMeasures();
   return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
   return $self->{GLOBALMEASURES}{$measure}{MEASURE}{UNIT};
 }
 
 sub getGlobalMeasureStructure{
   my ($self, $measure) = @_;
-  $self->computePoints();
+  $self->computeGlobalMeasures();
   return undef unless(exists($self->{GLOBALMEASURES}{$measure}));
   return $self->{GLOBALMEASURES}{$measure};
 }

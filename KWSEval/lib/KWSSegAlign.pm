@@ -46,6 +46,7 @@ sub new
   $self->{KWSLIST} = shift;
   $self->{ECF} = shift;
   $self->{TERMLIST} = shift;  
+  $self->{GLOBALMEASURES} = shift;
   $self->{TERMLKUP} = {};
   $self->{SEGLKUP} = {};
 
@@ -295,11 +296,17 @@ sub alignSegments
 #####
 
   my $metric = new MetricDiscreteTWV({ ('Cost' =>$KoefC, 'Value' => $KoefV, 'Ptarg' => $probofterm ) }, $trials);
+  foreach my $globMea(@{ $self->{GLOBALMEASURES} }){
+    $metric->setPerformGlobalMeasure($globMea, "true");
+  }
   my $detcurve = new DETCurve($trials, $metric, $trials->{"DecisionID"}, $listIsolineCoef, undef);
   $detset->addDET($trials->{"DecisionID"}, $detcurve);
   #Build DETCurve(Set) for conditional occurence report
   foreach my $qtrialname (sort keys %qtrials) {
     my $metric = new MetricDiscreteTWV({ ('Cost' =>$KoefC, 'Value' => $KoefV, 'Ptarg' => $probofterm ) }, $qtrials{$qtrialname});
+    foreach my $globMea(@{ $self->{GLOBALMEASURES} }){
+      $metric->setPerformGlobalMeasure($globMea, "true");
+    }
     my $qdetcurve = new DETCurve($qtrials{$qtrialname}, $metric, $qtrialname, $listIsolineCoef, undef);
     $qdetset->addDET($qtrialname, $qdetcurve);
   }

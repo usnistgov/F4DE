@@ -206,6 +206,8 @@ my $IncludeRowTotals = 0;
 
 my $measureThreshPlots = "";
 
+my @globalMeasures = ();
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:  BCDEFG I K  NOP  ST   XY abcdefghijk mnopqrst vwxy  #
 # Mult:                                   i                z #
@@ -254,6 +256,7 @@ GetOptions
    'measureThreshPlots=s'                => \$measureThreshPlots,
    'zIsoRatioDAF'                        => \$SerializeSeparateIsoRatioFile,
    'zincludeRowTotals'                   => \$IncludeRowTotals,
+   'zGlobalMeasures=s@'                  => \@globalMeasures,
 ) or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
 #parsing TermIDs
@@ -347,6 +350,11 @@ if ($measureThreshPlots ne ""){
     if ($measureThreshPlots !~ /^(true|trueWithSE)$/);
 }
 
+foreach my $_gMea(@globalMeasures){
+  MMisc::error_quit("Error: Requested global measure /$_gMea/ not (MAP|MAPpct)")
+    if ($_gMea !~ /^(MAP|MAPpct)$/);
+}
+
 ###loading the files
 my $ECF;
 my $STD;
@@ -397,7 +405,7 @@ if ($segmentbased != 0)
 {
 ###Segment based Alignment
   print "Performing Segment Alignment\n";
-  my $segAlignment = new KWSSegAlign($RTTM, $STD, $ECF, $TERM);
+  my $segAlignment = new KWSSegAlign($RTTM, $STD, $ECF, $TERM, \@globalMeasures);
   $segAlignment->setFilterData(\%filterTypeArray, \%filterTermArray, \@arraycmdline, \@Queries);
 
 #Setup segment filters
@@ -416,7 +424,7 @@ else
 {
 ###Occurence based Alignment
   print "Performing Occurrence Alignment\n";
-  my $alignment = new KWSAlignment($RTTM, $STD, $ECF, $TERM);
+  my $alignment = new KWSAlignment($RTTM, $STD, $ECF, $TERM, \@globalMeasures);
   $alignment->setFilterData(\%filterTypeArray, \%filterTermArray, \@arraycmdline, \@Queries);
 
 #Setup filters
@@ -469,6 +477,9 @@ if ($articulatedDET){
   }
 }
 
+## Add teh global measure visualization
+$detoptions->{"ReportGlobal"} = 1 if (@globalMeasures > 0);
+
 
 ##Render reports
 my $detsPath = "";
@@ -507,7 +518,7 @@ if ($requestBlockSumReport) {
   $dset->renderBlockedReport($segmentbased,
 			     ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
 			     ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
-			     ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode); #shows Corr!Det if segment based
+			     ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode, $detoptions); #shows Corr!Det if segment based
 }
 #Render conditional summary reports
 if ($requestCondSumReport) {

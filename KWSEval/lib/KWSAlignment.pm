@@ -48,6 +48,7 @@ sub new
   $self->{KWSLIST} = shift;
   $self->{ECF} = shift;
   $self->{TERMLIST} = shift;
+  $self->{GLOBALMEASURES} = shift;
   $self->{TERMLKUP} = {};
   $self->{QUICKECF} = {};
   
@@ -279,11 +280,17 @@ sub alignTerms
   #Build DETCurveSet
   my $metric = new MetricTWV({ ('Cost' =>$KoefC, 'Value' => $KoefV, 'Ptarg' => $probofterm ) }, $trials);
   my $detcurve = new DETCurve($trials, $metric, $trials->{"DecisionID"}, $listIsolineCoef, undef);
+  foreach my $globMea(@{ $self->{GLOBALMEASURES} }){
+    $metric->setPerformGlobalMeasure($globMea, "true");
+  }
   $detset->addDET($trials->{"DecisionID"}, $detcurve);
 
   #Build conditional DETCurveSet
   foreach my $qtrialname (sort keys %qtrials) {
     my $metric = new MetricTWV({ ('Cost' =>$KoefC, 'Value' => $KoefV, 'Ptarg' => $probofterm ) }, $qtrials{$qtrialname});
+    foreach my $globMea(@{ $self->{GLOBALMEASURES} }){
+      $metric->setPerformGlobalMeasure($globMea, "true");
+    }
     my $qdetcurve = new DETCurve($qtrials{$qtrialname}, $metric, $qtrialname, $listIsolineCoef, undef);
     $qdetset->addDET($qtrialname, $qdetcurve);
   }

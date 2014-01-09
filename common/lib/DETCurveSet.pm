@@ -411,30 +411,30 @@ sub _buildAutoTable(){
         $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->combLab(),    $key);
         $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
       }
-      if ($reportGlobal){
-      	foreach my $gm(@{ $metric->getGlobalMeasures() }){
-	  $at->addData(&_PN($det->getGlobalMeasureFormat($gm), $det->getGlobalMeasure($gm)),
-	                    ($useAT ? "Global Measures|" : "" ) . $det->getGlobalMeasureString($gm). $det->getGlobalMeasureUnit($gm),
-	     $key);
-        }
-      }
       my $detpng = $det->getDETPng();
       if ($includePNG){
         if ($detpng ne "") {
-  	if ($detpng =~ m:([^/]+)/([^/]+)$:) {
-  	  $detpng = $1 . "/" . $2;
-  	}
-  	my $deturl = "url={" . $detpng . "}";
+  	      if ($detpng =~ m:([^/]+)/([^/]+)$:) {
+  	        $detpng = $1 . "/" . $2;
+  	      }
+  	      my $deturl = "url={" . $detpng . "}";
           $at->addData($det->getDETPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "DET Curve", $key, $deturl);
         }
         my $threshpng = $det->getThreshPng();
         if ($threshpng ne "") {
-  	if ($threshpng =~ m/([^\/]+)\/([^\/]+)$/) {
-  	  $threshpng = $1 . "/" . $2;
-  	}
-  	my $threshdeturl = "url={" . $threshpng . "}";
+        	if ($threshpng =~ m/([^\/]+)\/([^\/]+)$/) {
+  	        $threshpng = $1 . "/" . $2;
+        	}
+  	      my $threshdeturl = "url={" . $threshpng . "}";
           $at->addData($det->getThreshPng(), ($useAT ? "DET Curve Graphs|" : "" ) . "Threshold Curve", $key, $threshdeturl);
         }
+      }
+    }
+    if ($reportGlobal){
+     	foreach my $gm($det->getGlobalMeasureIDs()){
+    	  $at->addData(&_PN($det->getGlobalMeasureFormat($gm), $det->getGlobalMeasure($gm)),
+	                    ($useAT ? "Global Measures|" : "" ) . $det->getGlobalMeasureString($gm). $det->getGlobalMeasureUnit($gm),
+	          $key);
       }
     }
     if ($includeIsoRatios){
@@ -517,7 +517,7 @@ sub _buildAutoTable(){
 sub _buildBlockedAutoTable()
 {
  
-  my ($self, $includeCorrNonDetect) = @_;
+  my ($self, $includeCorrNonDetect, $DETOptions) = @_;
   my $at = new AutoTable();
   my %totals = ();
   my %means = ();
@@ -528,6 +528,9 @@ sub _buildBlockedAutoTable()
     die;
   }
 
+  my $reportGlobal  = 0;   $reportGlobal = 1  if (exists($DETOptions->{ReportGlobal}) && $DETOptions->{ReportGlobal} == 1);
+  my %globSum = ();
+  
   for (my $i=0; $i<@{ $self->{DETList} }; $i++) {
     my $det = $self->{DETList}[$i]->{DET};
     my $key = $self->{DETList}[$i]->{KEY};
@@ -558,6 +561,16 @@ sub _buildBlockedAutoTable()
       $at->addData($nPFA, $key . "|PFA", $blockID . "|" . $block);
       my $nPMISS = &_PN($metric->errMissPrintFormat(), $metric->errMissBlockCalc($nMiss, $nFA, $block));
       $at->addData($nPMISS, $key . "|PMISS", $blockID . "|" . $block);
+
+      if ($reportGlobal){
+       	foreach my $gm($det->getGlobalMeasureIDsWithBlocks()){
+       	  my $val = $det->getGlobalMeasureForBlock($gm, $block);
+       	  $at->addData(&_PN($det->getGlobalMeasureFormat($gm), $val),
+	                     "Global Measures|" . $det->getGlobalMeasureAbbrevStringForBlock($gm) . $det->getGlobalMeasureUnit($gm),
+	                     $blockID . "|" . $block);
+ 	        push(@{ $globSum{$gm} }, $val) if (defined($val));
+        }
+      }
     }
 
     my ($targSum, $targAvg, $targSSD) = $trial->getTotNumTarg();
@@ -614,6 +627,15 @@ sub _buildBlockedAutoTable()
     }
     foreach my $ccol (keys %{ $combs{$key} }) {
       $at->addData($combs{$key}{$ccol}, $key . $ccol, "Summary|" . $comblab);
+    }
+
+    if ($reportGlobal){
+     	foreach my $gm($det->getGlobalMeasureIDsWithBlocks()){
+        my ($sum, $mean, $ssd) = $det->getTrials()->_stater($globSum{$gm});
+     	  $at->addData(&_PN($det->getGlobalMeasureFormat($gm), $mean),
+	                     "Global Measures|" . $det->getGlobalMeasureAbbrevStringForBlock($gm) . $det->getGlobalMeasureUnit($gm),
+	                     "Summary|Means");
+      }
     }
   }
 
@@ -768,10 +790,10 @@ sub renderReport(){
 ##}     
 
 sub renderBlockedReport {
-  my ($self, $includeCorrNonDetect, $txtfn, $csvfn, $htmlfn, $binmode) = @_;
+  my ($self, $includeCorrNonDetect, $txtfn, $csvfn, $htmlfn, $binmode, $DETOptions) = @_;
 
   my $hat = $self->_buildHeaderTable();
-  my $at = $self->_buildBlockedAutoTable($includeCorrNonDetect);
+  my $at = $self->_buildBlockedAutoTable($includeCorrNonDetect, $DETOptions);
 
   my $renderedTxt = $hat->renderTxtTable(2) . "\n\n" . $at->renderTxtTable(2);
   MMisc::writeTo($csvfn, "", 1, 0, $at->renderCSV()) if (! MMisc::is_blank($csvfn));

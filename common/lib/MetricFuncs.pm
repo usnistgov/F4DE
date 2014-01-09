@@ -825,7 +825,7 @@ sub setPerformGlobalMeasure(){
     MMisc::warn_print("Global Measure '$measureName' not defined, only '$regex'.  Skipping") ;
     return;
   }
-    
+
   if ($bool =~ /^true$/i){
     my @mlist = grep { $_ eq $measureName} @{ $self->{globalMeasures} };
     push (@{ $self->{globalMeasures} }, $measureName)  if (@mlist == 0);

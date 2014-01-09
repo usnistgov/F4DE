@@ -26,6 +26,10 @@ $tn = "test1";
 $testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.kwlist.xml -o -b -f -", "res_$tn.txt");
 
 ##
+$tn = "test1withAP";
+$testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.kwlist.xml -o -b -f - -zG MAP -zG MAPpct", "res_$tn.txt");
+
+##
 $tn = "test2a";
 $testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Source Type)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -Y BN+CTS:BNEWS,CTS -O -B -y TXT -f -", "res_$tn.txt");
 
