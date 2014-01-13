@@ -389,6 +389,16 @@ Sets the type of the combined function to be maximizable.
 
 sub setCombTypToMaximizable(){ my $self = shift; $self->{"optimizationStyle"} = "maximizable" }
 
+#################################################################################################
+=pod
+
+=item B<getOptimizationStyle>()
+
+Gets the optimization style.
+
+=cut
+
+sub getOptimizationStyle() { my $self = shift; return $self->{"optimizationStyle"} }
 
 ####################################################################################################
 =item B<getParamsStr>()
@@ -902,5 +912,9 @@ sub testActualDecisionPerformance{
   return "ok";
 }
 
+sub getMetricName{
+    my ($self) = @_;
+    return ref($self);
+}
 
 1;

@@ -1517,6 +1517,11 @@ sub exportForDEVA{
   }
 }
 
+sub getPreserveTrialID{
+    my ($self) = @_;
+    return $self->{preserveTrialID};
+}
+
 sub buildScoreDistributions{
   my ($self, $root) = @_;
 
