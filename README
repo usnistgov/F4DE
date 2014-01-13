@@ -144,9 +144,10 @@ The only pre-requisites of the tool are:
 - the 'rsync' tool available in your PATH (used in the installation process)
 
 - some Perl modules (available on CPAN [http://www.cpan.org/]
-  following the "Installing Perl Modules").  Availability of those
-  will be tested during step 1 ('make check') of the installation
-  process. The list of those modules is as follow:
+  following the "Installing Perl Modules" using manual or automatic
+  installation).  Availability of those will be tested during step 1
+  ('make check') of the installation process. The list of those
+  modules is as follow:
 
     Text::CSV
     Text::CSV_XS
