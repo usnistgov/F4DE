@@ -27,6 +27,7 @@ my $separator = '\s';
 my $prefix_text = "";
 my $properties = {};
 my $strip_whitespace = undef;
+my $transpose = undef;
 
 GetOptions
 (
@@ -38,6 +39,7 @@ GetOptions
  'Strip-whitespace' => \$strip_whitespace,
  'properties:s@' => \$props,
  'list-props' => sub { MMisc::ok_quit(&list_properties); },
+ 'Transpose' => \$transpose,
  'help' => sub { MMisc::ok_quit(&get_usage); },
 ) or MMisc::error_quit("Unknown option(s)\n".&get_usage);
 
@@ -100,9 +102,13 @@ while (<STDIN>){
 	    $a[$i] =~ s/^\s*(.*?)\s*$/$1/
 	}
     }
-        
-    $at->addData($a[0], $a[1], $a[2]);
-    $at->setSpecial($a[1], $a[2], $a[3]) if (@a > 3);
+    if (!defined $transpose){   
+	$at->addData($a[0], $a[1], $a[2]);
+	$at->setSpecial($a[1], $a[2], $a[3]) if (@a > 3);
+    } else {
+	$at->addData($a[0], $a[2], $a[1]);
+	$at->setSpecial($a[2], $a[1], $a[3]) if (@a > 3);
+    }
 }
 
 #Render
@@ -154,6 +160,7 @@ TableMan.pl [ OPTIONS ]
     -p, --properties  Specify properties as a list of property:value
                       pairs.
     -l, --list-props  List accepted properties and values.
+    -T, --Transpose   Transpose the table by swaping colums 2 and 3
 
     -h, --help        Print this usage text.
 EOT
