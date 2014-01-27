@@ -123,11 +123,12 @@ my $scoringReady = 0;
 my $aMT = 0;
 my $descFile = "";
 my $descDumpFile = "";
+my $requireDesc = 0;
 my $bypassxmllint = 0;
 my $forceSpecfile = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A  D F    K   O   ST V X     d   h  k   o q st v x z #
+# Used: A  D F    K   O   ST V X     d   h  k   o qrst v x z #
 
 my %opt = ();
 GetOptions
@@ -147,6 +148,7 @@ GetOptions
    'AllowMissingTerms' => \$aMT,
    'DescFile=s' => \$descFile,
    'xDescDump=s' => \$descDumpFile,
+   'requireDesc' => \$requireDesc,
    'XmllintBypass' => \$bypassxmllint,
    'ForceSpecfile:s' => \$forceSpecfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -159,6 +161,9 @@ MMisc::error_quit("No arguments left on command line\n\n$usage\n")
 
 MMisc::error_quit("Cannot run system description check with multiple submissions")
   if (scalar @ARGV > 1 && ! MMisc::is_blank($descFile));
+
+MMisc::error_quit("System description required but is not provided")
+  if ($requireDesc && MMisc::is_blank($descFile));
 
 MMisc::error_quit("Can't dump system description data if it is not provided")
   if (MMisc::is_blank($descFile) && ! MMisc::is_blank($descDumpFile));
@@ -197,6 +202,7 @@ my %ecfs = ();
 my %tlists = ();
 my %rttms = ();
 my %stms = ();
+my @babellr = ();
 for (my $i = 0; $i < scalar @dbDir; $i++) {
   $err = MMisc::check_dir_r($dbDir[$i]);
   MMisc::error_quit("Problem with \'dbDir\' (" . $dbDir[$i] . ") : $err")
@@ -207,6 +213,7 @@ for (my $i = 0; $i < scalar @dbDir; $i++) {
      $tlist_ext_rgx, \%tlists, 
      $rttm_ext, \%rttms, 
      \%stms);
+  #KWSEval_SCHelper::obtain_lrlist($dbDir[$i], \@babellr) unless MMisc::is_blank($descFile);
 }
 MMisc::error_quit("Did not find any ECF or TLIST files; will not be able to continue")
   if ((scalar (keys %ecfs) == 0) || (scalar (keys %tlists) == 0));
@@ -371,7 +378,7 @@ sub check_submission {
     MMisc::error_quit("Internal error - unknow mode: $mode");
   }
 
-  unless (MMisc::is_blank($descf)) {
+  if ($requireDesc) {
       my ($derr, $data) = KWSEval_SCHelper::check_system_description($descf);
       return($derr) unless MMisc::is_blank($derr);
 
@@ -527,7 +534,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] --Specfile perlEvalfile [--ForceSpecfile [perlEvalfile]] --dbDir dir [--dbDir dir [...]] [--kwslistValidator tool [--AllowMissingTerms] [--XmllintBypass]] [--TmValidator tool] [--DescFile sysDescfile [--xDescDump sysDescDumpfile]] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID.extension
+Usage: $0 [--help | --version] --Specfile perlEvalfile [--ForceSpecfile [perlEvalfile]] --dbDir dir [--dbDir dir [...]] [--kwslistValidator tool [--AllowMissingTerms] [--XmllintBypass]] [--TmValidator tool] [--DescFile sysDescfile [--xDescDump sysDescDumpfile]] [--requireDesc] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID.extension
 
 Will confirm that a submission file conforms to the BABEL 'Submission Instructions'.
 
@@ -549,6 +556,7 @@ The program needs a 'dbDir' to load some of its eval specific definitions.
   --TmValidator  Location of the \'ValidateTM\' tool (default: $ValidateTM) for validating \'$ctm_ext\' files
   --DescFile      System description file to be checked with the submission
   --xDescDump     File to dump the system description data (.dump will be appended to the filename)
+  --requireDesc   Require system description file
   --Verbose       Explain step by step what is being checked
   --outdir        Output directory where validation is performed (if not provided, default is to use a temporary directory)
   --scoringReady  When using this mode, a copy of the input file for validation will be copied in \'--outdir\' for scoring
