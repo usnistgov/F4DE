@@ -176,6 +176,8 @@ sub check_name {
     if ($kwsyear eq 'KWS12');
   return(&check_name_kws13($kwsyear, $eteam, $name, $ext, $verb))
     if ($kwsyear eq 'KWS13');
+  return(&check_name_kws14($kwsyear, $eteam, $name, $ext, $verb))
+    if ($kwsyear eq 'KWS14');
   MMisc::error_quit("Unknown EXPID name handler for \'$kwsyear\'");
 }
 
@@ -290,6 +292,109 @@ sub check_name_kws13 {
   &vprint($verb, 3, "$ltag | <TEAM> = $lteam | <CORPUS> = $lcorpus | <PARTITION> = $lpart | <SCASE> = $lscase | <TASK> = $ltask | <LP> = $llp | <LR> = $llr | <AUD> = $laud | <SYSID> = $lsysid | <VERSION> = $lversion");
   
   return("", $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, undef, $lsysid, $lversion, $llr, $llp, $laud);
+}
+
+################################################################################
+
+sub check_name_kws14 {
+  my ($kwsyear, $eteam, $name, $ext, $verb) = @_;
+
+  my $et = "\'EXP-ID\' not of the form \'${kwsyear}_<TEAM>_<CORPUS>_<PARTITION>_<SCASE>_<TASK>_<SYSID>_<VERSION>\' : ";
+  
+  my ($ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $lsysid, $lversion,
+      @left) = split(m%\_%, $name);
+  
+  return($et . " leftover entries: " . join(" ", @left) . ". ", "")
+    if (scalar @left > 0);
+  
+  return($et ." missing parameters. ", "")
+    if (MMisc::any_blank($ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, $lsysid, $lversion));
+  
+  my $err = "";
+  
+  $err .= &cmp_exp($kwsyear, $ltag, @expid_tag);
+
+  $err .= " <TEAM> ($lteam) is different from required <TEAM> ($eteam). "
+    if ((defined $eteam) && ($eteam ne $lteam));
+  
+  $err .= &cmp_exp("<PARTITION>",  $lpart, @expid_partition);
+  $err .= &cmp_exp("<SCASE>", $lscase, @expid_scase);
+  $err .= &cmp_exp("<TASK>", $ltask, @expid_task);
+
+  if (grep(m%^$ltask$%, @expid_task)) {
+    if (! MMisc::safe_exists(\%Task2Regexp, $ltask)) {
+      &err .= "Can not find an extension match for task ($ltask). ";
+    } else {
+      my $tv = $Task2Regexp{$ltask};
+      $err .= "File's extension ($ext) for task ($ltask) does not match authorized regexp ($tv). "
+        if ($ext !~ m%^$tv$%);
+    }
+  }
+  
+  my $b = substr($lsysid, 0, 2);
+  $err .= "<SYSID> ($lsysid) does not start by expected value (" 
+    . join(" ", @expid_sysid_beg) . "). "
+    if (! grep(m%^$b$%, @expid_sysid_beg));
+  
+  $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
+    if ( ! MMisc::is_integer($lversion));
+  
+  return($et . $err, "")
+    if (! MMisc::is_blank($err));
+  
+  &vprint($verb, 3, "$ltag | <TEAM> = $lteam | <CORPUS> = $lcorpus | <PARTITION> = $lpart | <SCASE> = $lscase | <TASK> = $ltask | <SYSID> = $lsysid | <VERSION> = $lversion");
+  
+  return("", $ltag, $lteam, $lcorpus, $lpart, $lscase, $ltask, undef, $lsysid, $lversion);
+}
+
+################################################################################
+
+sub check_system_description {
+#Specific to KWS14
+    my ($sys_desc_f, $recognized_resources) = @_;
+    #recognized_resources should be a hash ref
+    $recognized_resources = {} unless defined $recognized_resources;
+    
+    my @required_times = ("Ingestion Elapsed Time",
+			  "Ingestion Total CPU Time",
+			  "Ingestion Maximum CPU Memory",
+			  "Search Elapsed Time",
+			  "Search Total CPU Time",
+			  "Search Maximum CPU Memory");
+
+    my %desc_data = ();
+    my $found_datadef = 0;
+    open SYSDESC, "<$sys_desc_f" or return "Problem opening system description file '$sys_desc_f'";
+    while (my $line = <SYSDESC>) {
+	if (my @match = $line =~ /(BaseLR)\{([^\+:,]+)\}(,(BabelLR)\{(([^\+:,]+\+?)*)\})?(,(OtherLR)\{(([^\+:,]+\+?)*)\})?:
+                                 (AM)\{(([^\+:,]+\+?)*)\},(LM)\{(([^\+:,]+\+?)*)\},(PRON)\{(([^\+:,]+\+?)*)\},(AR)\{(([^\+:,]+\+?)*)\}/x) {
+	    $found_datadef = 1;
+	    foreach my $i (0, 3, 7, 10, 13, 16, 19) { # BaseLR, BabelLR, OtherLR # AM, LM, PRON, AR
+		next if MMisc::is_blank($match[$i]);
+		my $def_type = $match[$i] =~ /LR$/ ? "LRDEFS" : "USAGEDEFS";
+
+		push @{ $desc_data{$def_type}{$match[$i]} }, split(/\+/, $match[$i+1]);
+
+		foreach my $res_id (@{ $desc_data{$def_type}{$match[$i]} }) {
+	    	    MMisc::warn_print("Unrecognized resource ID '$res_id' for $match[$i]") unless $recognized_resources->{$res_id};
+	    	}
+	    }
+
+	} elsif (my @match = $line =~ /((Ingestion|Search)\s(Elapsed\sTime|Total\s(CPU|GPU)\sTime|Maximum\s(CPU|GPU)\sMemory)).*?-\s*([\d]+(:\d+)*(\.\d+)?)/) {
+	    $desc_data{TIME}{$match[0]} = $match[5];
+	}
+    }
+    close SYSDESC;
+
+    return "Missing <DATADEF> line!" unless $found_datadef;
+    # Check required times
+    foreach my $time (@required_times) {
+	if (MMisc::is_blank($desc_data{TIME}{$time})) {
+	    return "Missing required data '$time'!";
+	}
+    }
+
+    return("", \%desc_data);
 }
 
 ################################################################################

@@ -121,11 +121,13 @@ my @dbDir = ();
 my $eteam = undef;
 my $scoringReady = 0;
 my $aMT = 0;
+my $descFile = "";
+my $descDumpFile = "";
 my $bypassxmllint = 0;
 my $forceSpecfile = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used: A    F    K   O   ST V X     d   h  k   o q st v   z #
+# Used: A  D F    K   O   ST V X     d   h  k   o q st v x z #
 
 my %opt = ();
 GetOptions
@@ -143,6 +145,8 @@ GetOptions
    'TmValidator=s' => \$ValidateTM,
    'scoringReady'   => \$scoringReady,
    'AllowMissingTerms' => \$aMT,
+   'DescFile=s' => \$descFile,
+   'xDescDump=s' => \$descDumpFile,
    'XmllintBypass' => \$bypassxmllint,
    'ForceSpecfile:s' => \$forceSpecfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -152,6 +156,12 @@ MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
 MMisc::error_quit("No arguments left on command line\n\n$usage\n")
   if (scalar @ARGV == 0);
+
+MMisc::error_quit("Cannot run system description check with multiple submissions")
+  if (scalar @ARGV > 1 && ! MMisc::is_blank($descFile));
+
+MMisc::error_quit("Can't dump system description data if it is not provided")
+  if (MMisc::is_blank($descFile) && ! MMisc::is_blank($descDumpFile));
 
 MMisc::error_quit("No \'Specfile\' given, will not continue processing\n\n$usage\n")
   if (MMisc::is_blank($specfile));
@@ -231,7 +241,7 @@ foreach my $sf (@ARGV) {
   print "\n---------- [$sf]\n";
   my $ok = 1;
 
-  my ($err) = &check_submission($sf);
+  my ($err) = &check_submission($sf, $descFile, $descDumpFile);
   if (! MMisc::is_blank($err)) {
     &valerr($sf, "While checking submission [$sf] : " . $err);
     $ok = 0;
@@ -320,7 +330,7 @@ sub format_warnings_notes {
 ##########
 
 sub check_submission {
-  my ($sf) = @_;
+  my ($sf, $descf, $dumpf) = @_;
 
   vprint(1, "Checking Submission");
 
@@ -359,6 +369,15 @@ sub check_submission {
     return(&ctm_validation($f, $sf, $lcorpus, $lpart));
   } else {
     MMisc::error_quit("Internal error - unknow mode: $mode");
+  }
+
+  unless (MMisc::is_blank($descf)) {
+      my ($derr, $data) = KWSEval_SCHelper::check_system_description($descf);
+      return($derr) unless MMisc::is_blank($derr);
+
+      unless (MMisc::is_blank($dumpf)) {
+          MMisc::dump_memory_object($dumpf, ".dump", $data);
+      }
   }
 }
 
@@ -502,12 +521,13 @@ sub vprint {
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 ############################################################
-
+   # 'DescFile=s' => \$descFile,
+   # 'xDescDump=s' => \$descDumpFile,
 sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] --Specfile perlEvalfile [--ForceSpecfile [perlEvalfile]] --dbDir dir [--dbDir dir [...]] [--kwslistValidator tool [--AllowMissingTerms] [--XmllintBypass]] [--TmValidator tool] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID.extension
+Usage: $0 [--help | --version] --Specfile perlEvalfile [--ForceSpecfile [perlEvalfile]] --dbDir dir [--dbDir dir [...]] [--kwslistValidator tool [--AllowMissingTerms] [--XmllintBypass]] [--TmValidator tool] [--DescFile sysDescfile [--xDescDump sysDescDumpfile]] [--Verbose] [--outdir dir] [--scoringReady] [--quit_if_non_scorable] EXPID.extension
 
 Will confirm that a submission file conforms to the BABEL 'Submission Instructions'.
 
@@ -527,6 +547,8 @@ The program needs a 'dbDir' to load some of its eval specific definitions.
   --AllowMissingTerms  Authorize TERMs defined in KWList file but not in the KWSlist file
   --XmllintBypass      Bypass xmllint check of the KWSList XML file (this will reduce the memory footprint when loading the file, but requires that the file be formatted in a way similar to how \'xmllint --format\' would)
   --TmValidator  Location of the \'ValidateTM\' tool (default: $ValidateTM) for validating \'$ctm_ext\' files
+  --DescFile      System description file to be checked with the submission
+  --xDescDump     File to dump the system description data (.dump will be appended to the filename)
   --Verbose       Explain step by step what is being checked
   --outdir        Output directory where validation is performed (if not provided, default is to use a temporary directory)
   --scoringReady  When using this mode, a copy of the input file for validation will be copied in \'--outdir\' for scoring
