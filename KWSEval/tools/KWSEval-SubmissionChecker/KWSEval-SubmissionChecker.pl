@@ -153,6 +153,7 @@ GetOptions
    'ForceSpecfile:s' => \$forceSpecfile,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
+
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
@@ -370,14 +371,6 @@ sub check_submission {
   return("The <PARTITION>=$lpart <SCASE>=$lscase combination is not authorized")
     if ($AuthorizedSet{$lpart}{$lscase} == 0);
   
-  if ($mode eq $kwslist_ext) {
-    return(&kwslist_validation($f, $sf, $lcorpus, $lpart));
-  } elsif ($mode eq $ctm_ext) {
-    return(&ctm_validation($f, $sf, $lcorpus, $lpart));
-  } else {
-    MMisc::error_quit("Internal error - unknow mode: $mode");
-  }
-
   if ($requireDesc) {
       my ($derr, $data) = KWSEval_SCHelper::check_system_description($descf);
       return($derr) unless MMisc::is_blank($derr);
@@ -385,6 +378,14 @@ sub check_submission {
       unless (MMisc::is_blank($dumpf)) {
           MMisc::dump_memory_object($dumpf, ".dump", $data);
       }
+  }
+
+  if ($mode eq $kwslist_ext) {
+    return(&kwslist_validation($f, $sf, $lcorpus, $lpart));
+  } elsif ($mode eq $ctm_ext) {
+    return(&ctm_validation($f, $sf, $lcorpus, $lpart));
+  } else {
+    MMisc::error_quit("Internal error - unknow mode: $mode");
   }
 }
 
