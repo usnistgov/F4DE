@@ -372,7 +372,9 @@ sub check_submission {
     if ($AuthorizedSet{$lpart}{$lscase} == 0);
   
   if ($requireDesc) {
-      my ($derr, $data) = KWSEval_SCHelper::check_system_description($descf);
+      my ($rerr, $resources) = KWSEval_SCHelper::get_recog_resources(@dbDir);
+      return($rerr) unless MMisc::is_blank($rerr);
+      my ($derr, $data) = KWSEval_SCHelper::check_system_description($descf, $resources);
       return($derr) unless MMisc::is_blank($derr);
 
       unless (MMisc::is_blank($dumpf)) {

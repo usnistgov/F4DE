@@ -376,7 +376,7 @@ sub check_system_description {
 		push @{ $desc_data{$def_type}{$match[$i]} }, split(/\+/, $match[$i+1]);
 
 		foreach my $res_id (@{ $desc_data{$def_type}{$match[$i]} }) {
-	    	    MMisc::warn_print("Unrecognized resource ID '$res_id' for $match[$i]") unless $recognized_resources->{$res_id};
+	    	    MMisc::warn_print("Unrecognized resource ID '$res_id' for '$match[$i]' in system description") unless $recognized_resources->{$res_id};
 	    	}
 	    }
 
@@ -386,15 +386,42 @@ sub check_system_description {
     }
     close SYSDESC;
 
-    return "Missing <DATADEF> line!" unless $found_datadef;
+    return "System description is missing <DATADEF> line!" unless $found_datadef;
     # Check required times
     foreach my $time (@required_times) {
 	if (MMisc::is_blank($desc_data{TIME}{$time})) {
-	    return "Missing required data '$time'!";
+	    return "System description is missing required data '$time'!";
 	}
     }
 
     return("", \%desc_data);
+}
+
+###################################################################
+
+sub get_recog_resources {
+    my (@dbdirs) = @_;
+    
+    my %resources = ();
+    my $resource_fn = "babel_resources.tsv";
+    my $resource_fc = 0; #Count to make sure we found at least one resource file
+
+    foreach my $dbdir (@dbdirs) {
+	my $rf = $dbdir."/$resource_fn";
+	if (MMisc::does_file_exist($rf)) {
+	    open RSRCF, "<$rf" or return "Problem opening resource file '$rf'";
+	    my $header = <RSRCF>;
+	    while (my $line = <RSRCF>) {
+		my ($rsrcID) = split(/\t/, $line);
+		chomp($rsrcID);
+		$resources{$rsrcID} = 1;
+	    }
+	    close RSRCF;
+	    $resource_fc++;
+	}
+    }
+    return "Couldn't find a $resource_fn file in dbDir(s) ".join(', ', @dbdirs) unless $resource_fc > 0;
+    return "", \%resources;
 }
 
 ################################################################################
