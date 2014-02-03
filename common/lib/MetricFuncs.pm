@@ -554,7 +554,7 @@ sub getActualDecisionPerformance(){
   my ($self) = @_;
   my $blocks = $self->getActualDecisionRawCountBlocks("");
 
-  return ($self->combBlockSetCalc($blocks));
+  return ($self->combBlockSetCalc($blocks, undef));
 }
 
 
@@ -706,10 +706,17 @@ the CODE DIES as this should never happen.
 =cut
 
   sub combBlockSetCalc(){
-    my ($self, $data) = @_;
+    my ($self, $data, $thresh, $secondaryHashLevel) = @_;
     #### Data is a hash ref with the primary key being a block and for each block there 
     #### MUST be a 2 secondary keys, 'MMISS' and 'MFA'
+    #### IF $thresh is defined, record the best combined for each block
+    #### IF $secondHashLevel is defined, then get the blocks miss and fa counts from a second level hash 
+    ####    E.g. $data->{$block}{$secondHashLevel}{MFA}
     
+#    $self->{pass}++;     print "Pass % 100 ".$self->{pass}++."\n" if ($self->{pass} %100 == 0);    
+#    return (0.1, undef, 1 - ($self->{pass}/1000000), undef, 0.1, undef);
+    my $isMax = $self->{"optimizationStyle"} eq "maximizable" if (defined($thresh));
+
     my ($combSum, $combSumSqr, $combN) = (0, 0, 0);
     my ($missSum, $missSumSqr, $missN) = (0, 0, 0);
     my ($faSum,   $faSumSqr,   $faN) =   (0, 0, 0);
@@ -720,27 +727,41 @@ the CODE DIES as this should never happen.
     my @ktmp = keys %$data;
     for (my $ik = 0; $ik < scalar @ktmp; $ik++) {
       my $block = $ktmp[$ik];
+      my $bPtr = undef;
+      my $luFA = $bPtr->{MFA};
+      my $luMiss = $bPtr->{MMISS};
 
-      my $luFA = $data->{$block}{MFA};
-      my $luMiss = $data->{$block}{MMISS};
-      die "Error: Can't calculate errCombBlockSetCalc: key 'MFA' for block '$block' missing" if (! defined($luFA));
-      die "Error: Can't calculate errCombBlockSetCalc: key 'MMISS' for block '$block' missing" if (! defined($luMiss));
+      if (!defined ($secondaryHashLevel)){
+        $bPtr = $data->{$ktmp[$ik]};
+      } else {
+#        print "Using secondary hash $secondaryHashLevel for $block \n".Dumper($data);
+        die "Error: SecondaryHashLevel /$secondaryHashLevel/ was defined but does not exist" 
+          unless (exists($data->{$ktmp[$ik]}{$secondaryHashLevel}));
+        $bPtr = $data->{$ktmp[$ik]}{$secondaryHashLevel};
+      }
+      my $luFA = $bPtr->{MFA};
+      my $luMiss = $bPtr->{MMISS};
+      if (!defined ($secondaryHashLevel)){
+        die "Error: Can't calculate errCombBlockSetCalc: key 'MFA' for block '$block' missing" if (! defined($luFA));
+        die "Error: Can't calculate errCombBlockSetCalc: key 'MMISS' for block '$block' missing" if (! defined($luMiss));
+      } else{
+        next if (!defined($luFA) || !defined($luMiss));
+      } 
 
-      
-      $miss = $data->{$block}{CACHEDMMISS};
+      $miss = $bPtr->{CACHEDMMISS};
       if (!defined($miss)){       
         $miss = $self->errMissBlockCalc($luMiss, $luFA, $block); 
-        $data->{$block}{CACHEDMMISS} = $miss;
+        $bPtr->{CACHEDMMISS} = $miss;
       }
       if (defined($miss)) {
         $missSum += $miss;
         $missSumSqr += $miss * $miss;
         $missN++;
       }
-      $fa = $data->{$block}{CACHEDMFA};
+      $fa = $bPtr->{CACHEDMFA};
       if (!defined($fa)){
         $fa = $self->errFABlockCalc($luMiss, $luFA, $block); 
-        $data->{$block}{CACHEDMFA} = $fa;
+        $bPtr->{CACHEDMFA} = $fa;
       }
       if (defined($fa)) {
         $faSum += $fa;
@@ -757,14 +778,30 @@ the CODE DIES as this should never happen.
           $combSum += $comb;
           $combSumSqr += $comb * $comb;
           $combN ++;
+          if (defined($thresh)){
+            my $best = $bPtr->{OPTIMUMCOMB}{COMB};
+            if (!defined($best) || ($isMax && $comb > $best) || (!$isMax && $comb < $best)){
+              $bPtr->{OPTIMUMCOMB}{COMB} = $comb;
+              $bPtr->{OPTIMUMCOMB}{MFA} = $luFA;
+              $bPtr->{OPTIMUMCOMB}{MMISS} = $luMiss;
+              $bPtr->{OPTIMUMCOMB}{DETECTIONSCORE} = $thresh;
+            }
+          }
         }
+####
       } else {
         $combSum = undef;
       }
+#      if (defined $secondaryHashLevel){
+#        print "   $block fa=$fa miss=$miss\n";
+#      }
+
     }
-#    print "miss=".($missSum/$missN).",$missSum,$missSumSqr,$missN ";
-#    print "FA=".(($faN > 0) ? sprintf("%.7f",$faSum/$faN) : "NaN").",$faSum,$faSumSqr,$faN ";
-#    print "comb=".(($combN > 0 && defined($combSum)) ? ($combSum/$combN) : "NaN").",".(defined($combSum)?$combSum:"NaN").",$combSumSqr,$combN\n";
+#    if (defined $secondaryHashLevel){
+#      print "miss=".($missSum/$missN).",$missSum,$missSumSqr,$missN ";
+#      print "FA=".(($faN > 0) ? sprintf("%.7f",$faSum/$faN) : "NaN").",$faSum,$faSumSqr,$faN ";
+#      print "comb=".(($combN > 0 && defined($combSum)) ? ($combSum/$combN) : "NaN").",".(defined($combSum)?$combSum:"NaN").",$combSumSqr,$combN\n";
+#    }
     my ($faBSet, $faBSetSSD) = (undef, undef); 
     $faBSet = $faSum / $faN if ($faN > 0);
     $faBSetSSD = MMisc::safe_sqrt((($faN * $faSumSqr) - ($faSum * $faSum)) / ($faN * ($faN - 1))) if ($faN > 1);
@@ -778,7 +815,6 @@ the CODE DIES as this should never happen.
 #  print "sqrt((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1))) if (defined($combSum)  && $combN > 1);\n"
 #    if ( (defined($combSum)  && $combN > 1) && ((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1)) < 0));
     $combBSetSSD = MMisc::safe_sqrt((($combN * $combSumSqr) - ($combSum * $combSum)) / ($combN * ($combN - 1))) if (defined($combSum)  && $combN > 1);
-
     ($combBSet, $combBSetSSD, $missBSet, $missBSetSSD, $faBSet, $faBSetSSD);
   }
 
