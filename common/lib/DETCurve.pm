@@ -57,6 +57,8 @@ sub new
        MAXSCORE => undef,
        MAXIMIZEBEST => undef,
        BESTCOMB => { DETECTIONSCORE => undef, COMB => undef, MFA => undef, MMISS => undef },
+       OPTIMUMCOMB => { DETECTIONSCORE => undef, COMB => undef, MFA => undef, MMISS => undef, BLOCKS => {()} },
+       SUPREMUMCOMB => { DETECTIONSCORE => undef, COMB => undef, MFA => undef, MMISS => undef, BLOCKS => {()} },
        SYSTEMDECISIONVALUE => undef, ### this is the value based on the system's hard decisions
        POINTS => undef, ## 2D array (score, Mmiss, Mfa, comb);  IF style is blocked, then (sampleStandardDev(Mmiss), ssd(Mfa), ssd(ssdComb), $numBlocks) 
        LAST_GNU_DETFILE_PNG => "",
@@ -203,6 +205,34 @@ sub globalMeasureUnitTest(){
     $trial->addTrial("she", 0.98, "YES", 0);
     $trial->addTrial("she", 1.0, "YES", 1);  #1
 
+    ### Same data as $trial but with 5 OMITTED trials
+    my $trialOmitted = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+    $trialOmitted->addTrial("she", 0.04, "NO", 1); #20
+    $trialOmitted->addTrial("she", 0.05, "NO", 0);
+    $trialOmitted->addTrial("she", 0.10, "NO", 0);
+    $trialOmitted->addTrial("she", 0.10, "NO", 0);
+    $trialOmitted->addTrial("she", 0.10, "NO", 0);
+    $trialOmitted->addTrial("she", 0.15, "NO", 0);
+    $trialOmitted->addTrial("she", 0.17, "NO", 0);
+    $trialOmitted->addTrial("she", 0.20, "NO", 0);
+    $trialOmitted->addTrial("she", 0.25, "YES", 0);
+    $trialOmitted->addTrial("she", 0.65, "YES", 0);
+    $trialOmitted->addTrial("she", 0.69, "YES", 1); #10
+    $trialOmitted->addTrial("she", 0.70, "YES", 0);
+    $trialOmitted->addTrial("she", 0.70, "YES", 0);
+    $trialOmitted->addTrial("she", 0.73, "YES", 0);
+    $trialOmitted->addTrial("she", 0.75, "YES", 1); #6
+    $trialOmitted->addTrial("she", 0.85, "YES", 0);
+    $trialOmitted->addTrial("she", 0.90, "YES", 0);
+    $trialOmitted->addTrial("she", 0.92, "YES", 1); #3
+    $trialOmitted->addTrial("she", 0.98, "YES", 0);
+    $trialOmitted->addTrial("she", 1.0, "YES", 1);  #1
+    $trialOmitted->addTrial("she", undef, "OMITTED", 1);  
+    $trialOmitted->addTrial("she", undef, "OMITTED", 1);  
+    $trialOmitted->addTrial("she", undef, "OMITTED", 1);  
+    $trialOmitted->addTrial("she", undef, "OMITTED", 1);  
+    $trialOmitted->addTrial("she", undef, "OMITTED", 1);  
+
     my $trial2 = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
     $trial2->addTrial("she", 0.15, "NO", 1); #15
     $trial2->addTrial("she", 0.17, "NO", 0);
@@ -260,6 +290,26 @@ sub globalMeasureUnitTest(){
         exit(1);
       }
 
+      print "Ok\n  Computing Average Precision and AP' with Omitted trails...";
+      my @isolinecoef = ( );
+      my $metOmitted = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trialOmitted);
+      my $detOmitted = new DETCurve($trialOmitted, $metOmitted, "Targetted point", \@isolinecoef, undef, 1);
+      $detOmitted->computeAvgPrec();
+      $detOmitted->computeAvgPrecPrime();
+      if (! exists($detOmitted->{GLOBALMEASURES}{AP})){
+        print "\n  Error!!! Average Precision DET1 not computed\n";
+        exit(1);
+      }
+      if (abs($detOmitted->{GLOBALMEASURES}{AP}{MEASURE}{AP} - 0.281666) > 0.0001) {
+        print "\n  Error!!! Average Precision computed to be $detOmitted->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.281666.  Aborting\n";
+        exit(1);
+      }
+      my $appStr = "APP";
+      if (abs($detOmitted->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} - 0.1005993) > 0.0001) {
+        print "\n  Error!!! $appStr computed to be $detOmitted->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} not 0.1005993.  Aborting\n";
+        exit(1);
+      }
+     
       my $met2 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial2);
       my $legacyDet2 = new DETCurve($trial2, $met2, "Targetted point", \@isolinecoef, undef, 1);
       $legacyDet2->computeAvgPrec();
@@ -354,13 +404,16 @@ sub globalMeasureUnitTest(){
   my $mbTrial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
   $mbTrial->setPreserveTrialID(1);
   my $blkNum = 1;
-  foreach my $_tr($trial, $trial2, $trial3){
+  foreach my $_tr($trial, $trial2, $trial3, $trialOmitted){
     my @blocks = $_tr->getBlockIDs();
     my $ranks = $_tr->getRanks($blocks[0]);
  #   print Dumper($ranks);
     foreach my $rankData(@$ranks){
       $mbTrial->addTrial("blk-$blkNum", $rankData->[1], ($rankData->[1] > .23 ? "YES" : "NO"), $rankData->[2],
         undef, (defined($rankData->[3]) ? $rankData->[3] : undef));
+    }
+    for (my $_m = 0; $_m < $_tr->getNumOmittedTarg($blocks[0]); $_m++){
+      $mbTrial->addTrial("blk-$blkNum", undef, "OMITTED", 1, undef, undef);
     }
     $blkNum++;
   }
@@ -380,13 +433,13 @@ sub globalMeasureUnitTest(){
 #  print Dumper($mbDet->{GLOBALMEASURES} );
   #  $apData{MEASURE}{FORMAT} = "%.2f";   These will be set from the first computation below
   print "  Mean AP Computed ...";
-  if (abs($mbDet->{GLOBALMEASURES}{MAP}{MEASURE}{MAP} - 0.60259) > 0.0001) {
+  if (abs($mbDet->{GLOBALMEASURES}{MAP}{MEASURE}{MAP} - 0.522361) > 0.0001) {
     print "\n  Error!!! Mean Average Precision computed to be $mbDet->{GLOBALMEASURES}{MAP}{MEASURE}{MAP} not 0.60259.  Aborting\n";
     exit(1);
   }
   print "Ok\n";
   print "  Mean AP' Computed ...";
-  if (abs($mbDet->{GLOBALMEASURES}{MAPP}{MEASURE}{MAPP} - 0.291699) > 0.0001) {
+  if (abs($mbDet->{GLOBALMEASURES}{MAPP}{MEASURE}{MAPP} - 0.243905) > 0.0001) {
     print "\n  Error!!! Mean Average Precision' computed to be $mbDet->{GLOBALMEASURES}{MAPP}{MEASURE}{MAPP} not 0.291699.  Aborting\n";
     exit(1);
   }
@@ -397,12 +450,19 @@ sub bigDETUnitTest {
   printf("Running a series of large DET Curves\n");
   my ($doProfile) = 0;
   
- foreach my $size(10000, 100000, 1000000, 3000000, 6000000, 8000000, 10000000){
+ foreach my $size(1000){
 #  foreach my $size(2000000, 5000000, 10000000){
 #  foreach my $size(1000003){
-    system "/home/fiscus/Projects/STD/STDEval/tools/ProcGragh/ProcGraph.pl --cumul --Tree --outdir /tmp --filebase BigDet.$size -- ".
+   if (0){
+     system "/home/fiscus/Projects/STD/STDEval/tools/ProcGragh/ProcGraph.pl --cumul --Tree --outdir /tmp --filebase BigDet.$size -- ".
           " perl ".($doProfile ? "-d:DProf" : "")." -I . -e 'use DETCurve; DETCurve::oneBigDET(\"/tmp/BigDet.$size\", $size)'"; 
-    print "\n";
+   } elsif (0) {
+     system " perl ".($doProfile ? "-d:DProf" : "")." -I . -e 'use DETCurve; DETCurve::oneBigDET(\"/tmp/BigDet.$size\", $size, \"UniqThreshold\")'"; 
+   } else {
+#     DETCurve::oneBigDET("/tmp/BigDet.$size", $size/10, $size, 100, "Articulated"); #"UniqThreshold"); 
+     DETCurve::oneBigDET("/tmp/BigDet.$size", $size, $size, 2, "UniqThreshold"); 
+   }
+   print "\n";
   }
 }
 
@@ -411,53 +471,76 @@ sub oneBigDET
    my ($root, $nt, $nnt, $numblk, $style) = @_;
 
     print " Computing big DET Curve... ".($nt)." trials\n";
-    my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );
+    use Math::Random::OO::Uniform;
+    my @isolinecoef = ( 5, 10, 20, 40, 80, 160 );  
+    my $rand = Math::Random::OO::Normal->new(0,1);
+
     
     #####################################  Without data  ###############################    
 #     my $emptyTrial = new TrialsFuncs({ ("TOTALTRIALS" => $nt + $nnt) },
 #                                     "Term Detection", "Term", "Occurrence");
-    my $emptyTrial = new TrialsTWV({ ("TotDur" => 10000, TrialsPerSecond => 1, IncludeBlocksWithNoTargets => 1) },
+    my $emptyTrial = new TrialsTWV({ ("TotDur" => ($nt + $nnt)*100, TrialsPerSecond => 1, 
+                                      IncludeBlocksWithNoTargets => 1) },
                                      "Term Detection", "Term", "Occurrence");
 
     print "   ... adding trials\n";
     my $tot = 0;
     for (my $blk=0; $blk<$numblk; $blk++){
      
-      for (my $i=0; $i<$nt; $i++){
-        my $r = rand();
-        $emptyTrial->addTrial("he$blk", $r, ($r < 0.5 ? "NO" : "YES"), 1);
+      for (my $i=0; $i<$nt*9/10; $i++){
+        my $r = $rand->next() + 2 + ($blk * 1);
+        $emptyTrial->addTrial("he$blk", $r, ($r < 0.0 ? "NO" : "YES"), 1);
+        $tot++;
+        print "   Block $blk Made trials < $tot\n" if ($tot % 10000 == 0); 
+      }
+      for (my $i=0; $i<$nt/10; $i++){
+        $emptyTrial->addTrial("he$blk", undef, "OMITTED", 1);
         $tot++;
         print "   Block $blk Made trials < $tot\n" if ($tot % 10000 == 0); 
       }
       for (my $i=0; $i<$nnt; $i++){
-        my $r = rand();
-        $emptyTrial->addTrial("he$blk", $r, ($r < 0.5 ? "NO" : "YES"), 0);
+        my $r = $rand->next() - 2 + ($blk * 1);
+        $emptyTrial->addTrial("he$blk", $r, ($r < 0.0 ? "NO" : "YES"), 0);
         $tot++;
         print "   Block $blk Made trials < $tot\n" if ($tot % 10000 == 0); 
       }
     }
+#    print $emptyTrial->dump();
 #    my $met = new MetricTestStub({ ('ValueC' => 0.1, 'ValueV' => 1, 'ProbOfTerm' => 0.0001 ) }, $emptyTrial);
     my $met = new MetricTWV({ ('Cost' => 0.1, 'Value' => 1, 'Ptarg' => 0.0001 ) }, $emptyTrial);
     if (ref($met) ne "MetricTWV") {
       die "Error: Unable to create a MetricTestStub object with message '$met'\n";
     }
-    
+    $met->setPerformGlobalMeasure("MAP", "true");
+
     my $emptydet = new DETCurve($emptyTrial, $met, "footitle", \@isolinecoef, undef);
     $emptydet->setCurveStyle($style);
     use DETCurveSet;
     my $ds = new DETCurveSet("title");
     $ds->addDET("Biggy", $emptydet);
 #    my %ht = ("createDETfiles", 1, "serialize", 0);
-
-    my $dcRend = new DETCurveGnuplotRenderer({"yScale" => "linear", "xScale" => "linear",
-                                              "Xmin" => 0, "Xmax" => 100, "Ymin" => 0, "Ymax" => 100,
-                                              "DETShowPoint_Ratios" => 1,
-                                              "DrawIsoratiolines" => 1, "Isoratiolines" => [ (.35, .7, .98, 1.9, 40, 99) ],
-                                              "DETLineAttr" => { ("Art DET1" => { label => "New DET1", lineWidth => 1, pointSize => 2, pointTypeSet => "circle", color => "rgb \"#ff00ff\"" },
-                                                                  "Art DET2" => { label => "New DET2", lineWidth => 1, pointSize => 3, pointTypeSet => "circle", color => "rgb \"#00ff00\"" },
-                                                                  "Normal 2" => { label => "Norm 2", lineWidth => 1, pointSize => 1, pointTypeSet => "square", color => "rgb \"#0000ff\"" },
-                                                                  "Normal 1" =>   { label => "Norm 1", lineWidth => 1, pointSize => 1, pointTypeSet => "circle", color => "rgb \"#222222\"" })}})  ;
+    my $options = {"yScale" => "nd", "xScale" => "nd",
+                   "Xmin" => 0.0001, "Xmax" => 99.9, "Ymin" => 0.001, "Ymax" => 99.9,
+                   "DETShowPoint_Ratios" => 1,
+                   "DETShowPoint_Best" => 1,
+                   "DETShowPoint_Actual" => 1,
+                   "DETShowPoint_Optimum" => 1,
+                   "DETShowPoint_Supremum" => 1,
+                   "ReportGlobal" => 1,
+                   #"ReportIsoRatios" => 1,
+                   "ReportOptimum" => 1,
+                   "ReportSupremum" => 1,
+                   "DrawIsometriclines" => 1, "Isometriclines" => [(.8, .6, .4)],
+                   "DrawIsoratiolines" => 1,  "Isoratiolines" => [ (5, 40, 80) ],
+                   "DETLineAttr" => { ("Art DET1" => { label => "New DET1", lineWidth => 1, pointSize => 2, pointTypeSet => "circle", color => "rgb \"#ff00ff\"" },
+                                       "Art DET2" => { label => "New DET2", lineWidth => 1, pointSize => 3, pointTypeSet => "circle", color => "rgb \"#00ff00\"" },
+                                       "Normal 2" => { label => "Norm 2", lineWidth => 1, pointSize => 1, pointTypeSet => "square", color => "rgb \"#0000ff\"" },
+                                       "Normal 1" =>   { label => "Norm 1", lineWidth => 1, pointSize => 1, pointTypeSet => "circle", color => "rgb \"#222222\"" })}};
+    my $dcRend = new DETCurveGnuplotRenderer($options)  ;
     $dcRend->writeMultiDetGraph("BIGDET",  $ds);
+    $ds->renderReport(".", 0, $options, "-", undef, undef, ":utf8"); 
+    $ds->renderBlockedReport(0, "-", undef, undef, ":utf8", $options); 
+
 }
 
 sub blockWeightedUnitTest()
@@ -1101,6 +1184,110 @@ sub getBestCombMFA{
   $self->{BESTCOMB}{MFA}
 }
 
+sub getOptimumCombDetectionScore{
+  my $self = shift;
+  $self->computePoints();
+  $self->{OPTIMUMCOMB}{DETECTIONSCORE}
+}
+
+sub getOptimumCombComb{
+  my $self = shift;
+  $self->computePoints();
+  $self->{OPTIMUMCOMB}{COMB}
+}
+
+sub getOptimumCombMMiss{
+  my $self = shift;
+  $self->computePoints();
+  $self->{OPTIMUMCOMB}{MMISS}
+}
+
+sub getOptimumCombMFA{
+  my $self = shift;
+  $self->computePoints();
+  $self->{OPTIMUMCOMB}{MFA}
+}
+
+sub getOptimumCombDetectionScoreForBlock{
+  my $self = shift;
+  my $block = shift;
+  $self->computePoints();
+  $self->{OPTIMUMCOMB}{BLOCKS}{$block}{DETECTIONSCORE}
+}
+
+sub getOptimumCombCombForBlock{
+  my $self = shift;
+  my $block = shift;
+  $self->computePoints();
+  $self->{OPTIMUMCOMB}{BLOCKS}{$block}{COMB}
+}
+
+sub getOptimumCombMMissForBlock{
+  my $self = shift;
+  my $block = shift;
+  $self->computePoints();
+  $self->{OPTIMUMCOMB}{BLOCKS}{$block}{MMISS}
+}
+
+sub getOptimumCombMFAForBlock{
+  my $self = shift;
+  my $block = shift;
+  $self->computePoints();
+  $self->{OPTIMUMCOMB}{BLOCKS}{$block}{MFA}
+}
+
+sub getSupremumCombDetectionScore{
+  my $self = shift;
+  $self->computePoints();
+  $self->{SUPREMUMCOMB}{DETECTIONSCORE}
+}
+
+sub getSupremumCombComb{
+  my $self = shift;
+  $self->computePoints();
+  $self->{SUPREMUMCOMB}{COMB}
+}
+
+sub getSupremumCombMMiss{
+  my $self = shift;
+  $self->computePoints();
+  $self->{SUPREMUMCOMB}{MMISS}
+}
+
+sub getSupremumCombMFA{
+  my $self = shift;
+  $self->computePoints();
+  $self->{SUPREMUMCOMB}{MFA}
+}
+
+sub getSupremumCombDetectionScoreForBlock{
+  my $self = shift;
+  my $block = shift;
+  $self->computePoints();
+  $self->{SUPREMUMCOMB}{BLOCKS}{$block}{DETECTIONSCORE}
+}
+
+sub getSupremumCombCombForBlock{
+  my $self = shift;
+  my $block = shift;
+  $self->computePoints();
+  $self->{SUPREMUMCOMB}{BLOCKS}{$block}{COMB}
+}
+
+sub getSupremumCombMMissForBlock{
+  my $self = shift;
+  my $block = shift;
+  $self->computePoints();
+  $self->{SUPREMUMCOMB}{BLOCKS}{$block}{MMISS}
+}
+
+sub getSupremumCombMFAForBlock{
+  my $self = shift;
+  my $block = shift;
+  $self->computePoints();
+  $self->{SUPREMUMCOMB}{BLOCKS}{$block}{MFA}
+}
+
 sub getTrials(){
   my ($self) = @_;
   $self->{TRIALS};
@@ -1382,6 +1569,8 @@ sub Compute_blocked_DET_points
       $blocks{$block} = { TARGi => 0, NONTARGi => 0, MFA => undef, MMISS => undef,
                           CACHEDMFA => undef, CACHEDMMISS => undef, COMB => undef, 
                           PREVMFA => undef, PREVMMISS => undef, PREVTARGi => undef, PREVNONTARGi => undef,
+                          OPTIMUMCOMB => { DETECTIONSCORE => undef, COMB => undef, MFA => undef, MMISS => undef},
+                          SUPREMUMCOMB => { DETECTIONSCORE => 0.5, COMB => undef, MFA => 0, MMISS => $trial->getNumOmittedTarg($block)},
                           TARGNScr => $trial->getNumTargScr($block), NONTARGNScr =>  $trial->getNumNonTargScr($block)};
       if ($blocks{$block}{TARGNScr} > 0) {
         $minScore = $trial->getTargDecScr($block,0)
@@ -1401,7 +1590,7 @@ sub Compute_blocked_DET_points
     $self->{MAXSCORE} = $maxScore;
     
     if (!defined($self->{MINSCORE}) || !defined($self->{MAXSCORE})) {
-      my ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial);
+      my ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial, $minScore);
       push(@Outputs, [ ( "NaN", $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks) ] );
 
       $self->{BESTCOMB}{DETECTIONSCORE} = "NaN";
@@ -1415,7 +1604,7 @@ sub Compute_blocked_DET_points
     }
 
 #    print "Blocks: '".join(" ",keys %blocks)."'  minScore: $minScore\n";
-    my ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial);
+    my ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial, $minScore);
     push(@Outputs, [ ( $minScore, $mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb, $numBlocks) ] );
 #    print "    (mMiss=$mMiss, mFa=$mFa, minScore=$minScore)\n";
 
@@ -1439,7 +1628,7 @@ sub Compute_blocked_DET_points
     while ($self->updateMinScoreForBlockWeighted(\%blocks, \$minScore, $trial, $style, \$stateInfo)){
       #print "    ".MetricFuncs::getBlocksStructSummary(\%blocks)." NumRetrieved=".MetricFuncs::getBlocksStructNumRetrieved(\%blocks)."\n";
       ### Calculate the current scores
-      ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial);
+      ($mMiss, $mFa, $TWComb, $ssdMMiss, $ssdMFa, $ssdComb) = $self->computeBlockWeighted(\%blocks, $numBlocks, $trial, $minScore);
 
       @listparams = $self->AllIntersectionIsolineParameter($previousAvgMfa, $previousAvgMmiss, $mFa, $mMiss, 1);
       foreach my $setelt ( @listparams ) {
@@ -1472,6 +1661,42 @@ sub Compute_blocked_DET_points
       $previousAvgMmiss = $mMiss;
     }
     #print "  Final ".MetricFuncs::getBlocksStructSummary(\%blocks)." NumRetrieved=".MetricFuncs::getBlocksStructNumRetrieved(\%blocks)."\n";
+
+    ### Retrieve the Optimum Combined
+    my ($combBSet, $combBSetSSD, $missBSet, $missBSetSSD, $faBSet, $faBSetSSD) = 
+      $self->getMetric()->combBlockSetCalc(\%blocks, undef, "OPTIMUMCOMB");
+    $self->{OPTIMUMCOMB}{COMB} = $combBSet;
+    $self->{OPTIMUMCOMB}{MMISS} = $missBSet;
+    $self->{OPTIMUMCOMB}{MFA} = $faBSet;
+  
+    foreach my $blk(keys %blocks){
+      if (defined($blocks{$blk}{OPTIMUMCOMB}{DETECTIONSCORE})){
+        $self->{OPTIMUMCOMB}{BLOCKS}{$blk}{DETECTIONSCORE} = $blocks{$blk}{OPTIMUMCOMB}{DETECTIONSCORE};
+        $self->{OPTIMUMCOMB}{BLOCKS}{$blk}{COMB} =           $blocks{$blk}{OPTIMUMCOMB}{COMB};
+        $self->{OPTIMUMCOMB}{BLOCKS}{$blk}{MFA} =            $blocks{$blk}{OPTIMUMCOMB}{MFA};
+        $self->{OPTIMUMCOMB}{BLOCKS}{$blk}{MMISS} =          $blocks{$blk}{OPTIMUMCOMB}{MMISS};
+      }    
+    }    
+#    print Dumper($self->{OPTIMUMCOMB});    
+#    print Dumper(\%blocks);
+#    print Dumper([ $self->getMetric()->combBlockSetCalc(\%blocks, undef, "SUPREMUMCOMB") ]); 
+    ### Retrieve the Supremum Combined
+    my ($combBSet, $combBSetSSD, $missBSet, $missBSetSSD, $faBSet, $faBSetSSD) = 
+      $self->getMetric()->combBlockSetCalc(\%blocks, undef, "SUPREMUMCOMB");
+    $self->{SUPREMUMCOMB}{COMB} = $combBSet;
+    $self->{SUPREMUMCOMB}{MMISS} = $missBSet;
+    $self->{SUPREMUMCOMB}{MFA} = $faBSet;
+  
+    foreach my $blk(keys %blocks){
+      if (defined($blocks{$blk}{SUPREMUMCOMB}{DETECTIONSCORE})){
+        $self->{SUPREMUMCOMB}{BLOCKS}{$blk}{DETECTIONSCORE} = $blocks{$blk}{SUPREMUMCOMB}{DETECTIONSCORE};
+        $self->{SUPREMUMCOMB}{BLOCKS}{$blk}{COMB} =           $blocks{$blk}{SUPREMUMCOMB}{COMB};
+        $self->{SUPREMUMCOMB}{BLOCKS}{$blk}{MFA} =            $blocks{$blk}{SUPREMUMCOMB}{CACHEDMFA};
+        $self->{SUPREMUMCOMB}{BLOCKS}{$blk}{MMISS} =          $blocks{$blk}{SUPREMUMCOMB}{CACHEDMMISS};
+      }    
+    }    
+#    print Dumper(\%blocks);
+#    print Dumper($self->{SUPREMUMCOMB});    
     
     return \@Outputs;
   }
@@ -1657,7 +1882,7 @@ sub updateMinScoreForBlockWeighted
 
 sub computeBlockWeighted
   {
-    my ($self, $blocks, $numBlocks, $trial) = @_;
+    my ($self, $blocks, $numBlocks, $trial, $thresh) = @_;
     my $b = "";
         
     foreach $b (keys %$blocks) {
@@ -1683,7 +1908,7 @@ sub computeBlockWeighted
 #    }
 #    print "\n";
 
-    my ($combAvg, $combSSD, $missAvg, $missSSD, $faAvg, $faSSD) = $self->{METRIC}->combBlockSetCalc($blocks);
+    my ($combAvg, $combSSD, $missAvg, $missSSD, $faAvg, $faSSD) = $self->{METRIC}->combBlockSetCalc($blocks, $thresh);
         
     ($missAvg, $faAvg, $combAvg, $missSSD, $faSSD, $combSSD);
   }
@@ -2013,14 +2238,16 @@ sub _computeAvgPrecByType{
     $apData{MEASURE}{FORMAT} = "%.1f";
     $apData{MEASURE}{UNIT} = "%"; 
   }
+  # print "  WeightP = $weightP\n  WeightF = $weightF\n";
   my $sum = 0;
   my $numPos = 0;
   my $numNonPos = 0;
+  my $numTarg = $self->{TRIALS}->getNumTarg($blk);
   for (my $t=0; $t<@$ranks; $t++){
     if ($ranks->[$t]->[2] > 0){
     	$numPos ++;
-    	#print "$numPos / $ranks->[$t] = ".$numPos / $ranks->[$t]."\n";
     	$sum += (($weightP * $numPos) / (($weightF * $numNonPos) + ($weightP * $numPos))) * $scale;
+    	#print "  Add: (($weightP * $numPos) / (($weightF * $numNonPos) + ($weightP * $numPos))) * $scale = $sum;\n";
     } else {
     	$numNonPos ++;
     }
@@ -2028,7 +2255,7 @@ sub _computeAvgPrecByType{
   if ($numPos > 0){
     $apData{STATUS} = "Computed";
     $apData{STATUSMESG} = "Successful";
-    $apData{MEASURE}{$measureID} = $sum / $numPos;
+    $apData{MEASURE}{$measureID} = $sum / $numTarg;
     $apData{MEASURE}{POSRANKS} = $ranks;
   } else {
     $apData{STATUS} = "Computed";
