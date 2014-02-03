@@ -333,13 +333,15 @@ sub _buildAutoTable(){
 	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove", 
                               "SortRowKeyTxt" => "Alpha", "SortRowKeyCsv" => "Alpha" } );
 
-  my $includeIsoRatios = (exists($DETOptions->{DETShowPoint_Ratios}) && ($DETOptions->{DETShowPoint_Ratios} == 1)) ? 1 : 0;
-  my $includeCounts = 1;   $includeCounts = 0 if (exists($DETOptions->{ExcludeCountsFromReports}) && $DETOptions->{ExcludeCountsFromReports} == 1);
-  my $includePNG    = 1;   $includePNG = 0    if (exists($DETOptions->{ExcludePNGFileFromTextTable}) && $DETOptions->{ExcludePNGFileFromTextTable} == 1);
-  my $reportActual  = 1;   $reportActual = 0  if (exists($DETOptions->{ReportActual}) && $DETOptions->{ReportActual} == 0);
-  my $reportBest    = 1;
-  my $reportGlobal  = 0;   $reportGlobal = 1  if (exists($DETOptions->{ReportGlobal}) && $DETOptions->{ReportGlobal} == 1);
-  my $reportRowTotals = 0; $reportRowTotals=1 if (exists($DETOptions->{ReportRowTotals}) && $DETOptions->{ReportRowTotals} == 1);
+  my $includeCounts = 1;    $includeCounts = 0 if (exists($DETOptions->{ExcludeCountsFromReports}) && $DETOptions->{ExcludeCountsFromReports} == 1);
+  my $includePNG    = 1;    $includePNG = 0    if (exists($DETOptions->{ExcludePNGFileFromTextTable}) && $DETOptions->{ExcludePNGFileFromTextTable} == 1);
+  my $reportActual  = 1;    $reportActual = 0  if (exists($DETOptions->{ReportActual}) && $DETOptions->{ReportActual} == 0);
+  my $reportBest    = 1;    $reportBest = 0    if (exists($DETOptions->{ReportBest}) && $DETOptions->{ReportBest} == 0);
+  my $reportGlobal  = 0;    $reportGlobal = 1    if (exists($DETOptions->{ReportGlobal}) && $DETOptions->{ReportGlobal} == 1);
+  my $reportOptimum  = 0;   $reportOptimum = 1   if (exists($DETOptions->{ReportOptimum}) && $DETOptions->{ReportOptimum} == 1);
+  my $reportSupremum  = 0;  $reportSupremum = 1  if (exists($DETOptions->{ReportSupremum}) && $DETOptions->{ReportSupremum} == 1);
+  my $reportRowTotals = 0;  $reportRowTotals=1   if (exists($DETOptions->{ReportRowTotals}) && $DETOptions->{ReportRowTotals} == 1);
+  my $reportIsoRatios = 0;  $reportIsoRatios=1   if (exists($DETOptions->{ReportIsoRatios}) && ($DETOptions->{ReportIsoRatios} == 1));
 
   ## Variable params get added to the report
   my $variableParams = $self->_findVariableParams();
@@ -402,15 +404,27 @@ sub _buildAutoTable(){
       $at->addData(&_PN($metric->combPrintFormat(), $BScombAvg),    ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . $act . $comblab,    $key);
       $at->addData(&_PN($metric->combPrintFormat(), $BSDecThresh),    ($useAT ? "Actual Decision $comblab Analysis|" : "" ) . $act . "Dec. Tresh",    $key);
     }    
+    my $opt = ($metric->combType() eq "maximizable" ? "Max " : "Min ");
+    my $optFull = ($metric->combType() eq "maximizable" ? "Maximum" : "Minimum");
+    if ($reportBest){
+      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errFALab(),   $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombMMiss()),          ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errMissLab(), $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->combLab(),    $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
+    }
+    if ($reportOptimum){
+      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getOptimumCombMFA()),              ($useAT ? "Optimum $comblab Analysis|" : "" ) . $metric->errFALab(),   $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getOptimumCombMMiss()),          ($useAT ? "Optimum $comblab Analysis|" : "" ) . $metric->errMissLab(), $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $det->getOptimumCombComb()),              ($useAT ? "Optimum $comblab Analysis|" : "" ) . $metric->combLab(),    $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getOptimumCombDetectionScore()), ($useAT ? "Optimum $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
+    }
+    if ($reportSupremum){
+      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getSupremumCombMFA()),              ($useAT ? "Supremum $comblab Analysis|" : "" ) . $metric->errFALab(),   $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getSupremumCombMMiss()),          ($useAT ? "Supremum $comblab Analysis|" : "" ) . $metric->errMissLab(), $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $det->getSupremumCombComb()),              ($useAT ? "Supremum $comblab Analysis|" : "" ) . $metric->combLab(),    $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getSupremumCombDetectionScore()), ($useAT ? "Supremum $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
+    }
     if ($buildCurves) {
-      my $opt = ($metric->combType() eq "maximizable" ? "Max " : "Min ");
-      my $optFull = ($metric->combType() eq "maximizable" ? "Maximum" : "Minimum");
-      if ($reportBest){
-        $at->addData(&_PN($metric->errFAPrintFormat(), $det->getBestCombMFA()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errFALab(),   $key);
-        $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombMMiss()),          ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->errMissLab(), $key);
-        $at->addData(&_PN($metric->combPrintFormat(), $det->getBestCombComb()),              ($useAT ? "$optFull $comblab Analysis|" : "" ) . $metric->combLab(),    $key);
-        $at->addData(&_PN($metric->errMissPrintFormat(), $det->getBestCombDetectionScore()), ($useAT ? "$optFull $comblab Analysis|" : "" ) ."Dec. Thresh", $key);
-      }
       my $detpng = $det->getDETPng();
       if ($includePNG){
         if ($detpng ne "") {
@@ -437,7 +451,7 @@ sub _buildAutoTable(){
 	          $key);
       }
     }
-    if ($includeIsoRatios){
+    if ($reportIsoRatios){
    		foreach my $cof ( sort {$a <=> $b} @{ $det->{ISOLINE_COEFFICIENTS} } ) {		
   			if(defined($det->{ISOPOINTS}{$cof}))	{
   				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_DETECTSCORE}),   
@@ -529,6 +543,8 @@ sub _buildBlockedAutoTable()
   }
 
   my $reportGlobal  = 0;   $reportGlobal = 1  if (exists($DETOptions->{ReportGlobal}) && $DETOptions->{ReportGlobal} == 1);
+  my $reportOptimum  = 0;   $reportOptimum = 1   if (exists($DETOptions->{ReportOptimum}) && $DETOptions->{ReportOptimum} == 1);
+  my $reportSupremum  = 0;  $reportSupremum = 1  if (exists($DETOptions->{ReportSupremum}) && $DETOptions->{ReportSupremum} == 1);
   my %globSum = ();
   
   for (my $i=0; $i<@{ $self->{DETList} }; $i++) {
@@ -562,6 +578,20 @@ sub _buildBlockedAutoTable()
       my $nPMISS = &_PN($metric->errMissPrintFormat(), $metric->errMissBlockCalc($nMiss, $nFA, $block));
       $at->addData($nPMISS, $key . "|PMISS", $blockID . "|" . $block);
 
+      if ($reportOptimum){
+        my $key = $blockID . "|" . $block;
+        $at->addData(&_PN($metric->errFAPrintFormat(), $det->getOptimumCombMFAForBlock($block)),              "Optimum $comblab|" . $metric->errFALab(),   $key);
+        $at->addData(&_PN($metric->errMissPrintFormat(), $det->getOptimumCombMMissForBlock($block)),          "Optimum $comblab|" . $metric->errMissLab(), $key);
+        $at->addData(&_PN($metric->combPrintFormat(), $det->getOptimumCombCombForBlock($block)),              "Optimum $comblab|" . $metric->combLab(),    $key);
+        $at->addData(&_PN($metric->errMissPrintFormat(), $det->getOptimumCombDetectionScoreForBlock($block)), "Optimum $comblab|" . "Dec. Thresh", $key);
+      }
+      if ($reportSupremum){
+        my $key = $blockID . "|" . $block;
+        $at->addData(&_PN($metric->errFAPrintFormat(), $det->getSupremumCombMFAForBlock($block)),              "Supremum $comblab|" . $metric->errFALab(),   $key);
+        $at->addData(&_PN($metric->errMissPrintFormat(), $det->getSupremumCombMMissForBlock($block)),          "Supremum $comblab|" . $metric->errMissLab(), $key);
+        $at->addData(&_PN($metric->combPrintFormat(), $det->getSupremumCombCombForBlock($block)),              "Supremum $comblab|" . $metric->combLab(),    $key);
+        $at->addData(&_PN($metric->errMissPrintFormat(), $det->getSupremumCombDetectionScoreForBlock($block)), "Supremum $comblab|" . "Dec. Thresh", $key);
+      }
       if ($reportGlobal){
        	foreach my $gm($det->getGlobalMeasureIDsWithBlocks()){
        	  my $val = $det->getGlobalMeasureForBlock($gm, $block);
@@ -571,6 +601,7 @@ sub _buildBlockedAutoTable()
  	        push(@{ $globSum{$gm} }, $val) if (defined($val));
         }
       }
+
     }
 
     my ($targSum, $targAvg, $targSSD) = $trial->getTotNumTarg();
@@ -636,6 +667,18 @@ sub _buildBlockedAutoTable()
 	                     "Global Measures|" . $det->getGlobalMeasureAbbrevStringForBlock($gm) . $det->getGlobalMeasureUnit($gm),
 	                     "Summary|Means");
       }
+    }
+    if ($reportOptimum){
+	    my $key = "Summary|Means";
+      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getOptimumCombMFA()),              "Optimum $comblab|" . $metric->errFALab(),   $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getOptimumCombMMiss()),          "Optimum $comblab|" . $metric->errMissLab(), $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $det->getOptimumCombComb()),              "Optimum $comblab|" . $metric->combLab(),    $key);
+    }
+    if ($reportSupremum){
+	    my $key = "Summary|Means";
+      $at->addData(&_PN($metric->errFAPrintFormat(), $det->getSupremumCombMFA()),              "Supremum $comblab|" . $metric->errFALab(),   $key);
+      $at->addData(&_PN($metric->errMissPrintFormat(), $det->getSupremumCombMMiss()),          "Supremum $comblab|" . $metric->errMissLab(), $key);
+      $at->addData(&_PN($metric->combPrintFormat(), $det->getSupremumCombComb()),              "Supremum $comblab|" . $metric->combLab(),    $key);
     }
   }
 
