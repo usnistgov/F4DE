@@ -21,10 +21,10 @@ Summary Report: -
 |                              Cost |         0.1000 |
 
 
-|           |                  Inputs                  |                               Actual Decision TWV Analysis                                |
-|   Title   |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   TWV    |  Dec. Tresh  |
-|-----------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+
-|   Segment |         30 |     406 |       60 |    405 |       345 |          0 |    60 |      61 |   0.00010 |    0.104 |   0.7936 |       0.1398 |
+|           |                  Inputs                  |                               Actual Decision TWV Analysis                                |              Maximum TWV Analysis               |
+|   Title   |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |   TWV    |  Dec. Tresh  |    PFA    |  PMiss   |   TWV    |  Dec. Thresh  |
+|-----------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+----------+--------------+-----------+----------+----------+---------------+
+|   Segment |         30 |     406 |       60 |    405 |       345 |          0 |    60 |      61 |   0.00010 |    0.104 |   0.7936 |       0.1398 |   0.00007 |    0.124 |   0.8055 |         0.533 |
 Block Summary Report: -
 |  Performance Summary Over and Ensemble of Subsets  |
 |                Key                |     Value      |

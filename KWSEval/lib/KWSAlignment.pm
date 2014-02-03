@@ -281,7 +281,11 @@ sub alignTerms
   my $metric = new MetricTWV({ ('Cost' =>$KoefC, 'Value' => $KoefV, 'Ptarg' => $probofterm ) }, $trials);
   my $detcurve = new DETCurve($trials, $metric, $trials->{"DecisionID"}, $listIsolineCoef, undef);
   foreach my $globMea(@{ $self->{GLOBALMEASURES} }){
-    $metric->setPerformGlobalMeasure($globMea, "true");
+    if ($globMea =~ /^(Optimum|Supremum)$/){
+      ;  ### These are always computed if possible
+    } else {
+      $metric->setPerformGlobalMeasure($globMea, "true");
+    }
   }
   $detset->addDET($trials->{"DecisionID"}, $detcurve);
 
@@ -289,7 +293,11 @@ sub alignTerms
   foreach my $qtrialname (sort keys %qtrials) {
     my $metric = new MetricTWV({ ('Cost' =>$KoefC, 'Value' => $KoefV, 'Ptarg' => $probofterm ) }, $qtrials{$qtrialname});
     foreach my $globMea(@{ $self->{GLOBALMEASURES} }){
-      $metric->setPerformGlobalMeasure($globMea, "true");
+      if ($globMea =~ /^(Optimum|Supremum)$/){
+        ;  ### These are always computed if possible
+      } else {
+        $metric->setPerformGlobalMeasure($globMea, "true");
+      }
     }
     my $qdetcurve = new DETCurve($qtrials{$qtrialname}, $metric, $qtrialname, $listIsolineCoef, undef);
     $qdetset->addDET($qtrialname, $qdetcurve);

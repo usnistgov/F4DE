@@ -23,10 +23,10 @@ Conditional Summary Report: -
 |                            Cost |           0.1000 |
 
 
-|          |                  Inputs                  |                                Actual Decision TWV Analysis                                 |
-|  Title   |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    TWV     |  Dec. Tresh  |
-|----------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+------------+--------------+
-|   BN+CTS |          3 |      35 |       10 |     27 |        17 |          0 |    10 |      18 |   0.03715 |    0.533 |   -36.6813 |       0.3450 |
+|          |                  Inputs                  |                                Actual Decision TWV Analysis                                 |              Maximum TWV Analysis               |
+|  Title   |  #Keyword  |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    TWV     |  Dec. Tresh  |    PFA    |  PMiss   |   TWV    |  Dec. Thresh  |
+|----------+------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+------------+--------------+-----------+----------+----------+---------------+
+|   BN+CTS |          3 |      35 |       10 |     27 |        17 |          0 |    10 |      18 |   0.03715 |    0.533 |   -36.6813 |       0.3450 |   0.00000 |    0.800 |   0.2000 |         0.901 |
 Conditional Block Summary Report: -
 |  Performance Summary Over and Ensemble of Subsets  |
 |               Key               |      Value       |

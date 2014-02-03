@@ -25,6 +25,7 @@ OPTIONS:
    -R      Resubmit a system file
    -V      re-Validate input file (in case component of the scoring tools was modified)
    -X      Pass the XmllintBypass option to KWSList validation and scoring tools
+   -Q      When -R is used, quit after each upload so that the server is queued up.  A subsequent run WITHOUT -Q and -R will get the results
 EOF
 }
 
@@ -32,8 +33,9 @@ RESUBMIT=0
 REVALIDATE=0
 AUTH_TERM=0
 XMLLINTBYPASS=0
+QUITAFTERUPLOAD=0
 subhelp_xtras=""
-while getopts "hARXV" OPTION
+while getopts "hARXVQ" OPTION
 do
     case $OPTION in
         h)
@@ -48,6 +50,11 @@ do
         R)
             RESUBMIT=1
             subhelp_xtras="${subhelp_xtras} -R"
+            shift $((OPTIND-1)); OPTIND=1
+            ;;
+        Q)
+            QUITAFTERUPLOAD=1
+            subhelp_xtras="${subhelp_xtras} -Q"
             shift $((OPTIND-1)); OPTIND=1
             ;;
         V)
@@ -66,7 +73,6 @@ do
             ;;
     esac
 done
-
 
 ## Check that a file exists, is a file and is readable
 # call: check_file filename

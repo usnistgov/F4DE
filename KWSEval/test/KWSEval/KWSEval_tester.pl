@@ -27,7 +27,7 @@ $testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../com
 
 ##
 $tn = "test1withAP";
-$testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.kwlist.xml -o -b -f - -zG MAP -zG MAPpct", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Occurrence)", "$tool -e ../common/test2.ecf.xml -r ../common/test2.rttm -s ../common/test2.kwslist.xml -t ../common/test2.kwlist.xml -o -b -f - -zG MAP -zG MAPpct -zG Optimum -zG Supremum", "res_$tn.txt");
 
 ##
 $tn = "test2a";

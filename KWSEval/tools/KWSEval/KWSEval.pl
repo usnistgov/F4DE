@@ -351,8 +351,8 @@ if ($measureThreshPlots ne ""){
 }
 
 foreach my $_gMea(@globalMeasures){
-  MMisc::error_quit("Error: Requested global measure /$_gMea/ not (MAP|MAPpct)")
-    if ($_gMea !~ /^(MAP|MAPpct)$/);
+  MMisc::error_quit("Error: Requested global measure /$_gMea/ not (MAP|MAPpct|Optimum|Supremum)")
+    if ($_gMea !~ /^(MAP|MAPpct|Optimum|Supremum)$/);
 }
 
 ###loading the files
@@ -477,9 +477,15 @@ if ($articulatedDET){
   }
 }
 
-## Add teh global measure visualization
-$detoptions->{"ReportGlobal"} = 1 if (@globalMeasures > 0);
-
+## Add the global measure visualization
+foreach my $globMea(@globalMeasures){
+  if ($globMea =~ /^(Optimum|Supremum)$/){
+    $detoptions->{"DETShowPoint_" . $globMea} = 1;
+    $detoptions->{"Report" . $globMea} = 1;
+  } else {
+    $detoptions->{"ReportGlobal"} = 1;
+  }
+}
 
 ##Render reports
 my $detsPath = "";
@@ -648,6 +654,8 @@ sub set_usage {
   $tmp .= "                                  notASCII  -> do not split ASCII words.  (no effect without charSplit)\n";
   $tmp .= "                                  deleteHyphens -> treat hyphens like required whitespace. (no effect without charSplit)\n";
   $tmp .= "      --zIsoRatioDAF            Write the Iso Ratio status into a separate DAF file and not in the SRL\n";
+  $tmp .= "      --zGlobalMeasures <name>  Include additional performance measures.  <name> can be MAP, AP, Optimum, Supremum.\n";
+	$tmp .= "                                The option cane be used multiple times.\n";
 	$tmp .= "\n";
 	$tmp .= "Other options:\n";
 	$tmp .= "  -a, --articulatedDET          Compute the faster articulated DET curves.\n";

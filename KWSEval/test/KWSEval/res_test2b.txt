@@ -23,11 +23,11 @@ Conditional Summary Report: -
 |                            Cost |           0.1000 |
 
 
-|                |           Inputs            |                                Actual Decision TWV Analysis                                 |
-|     Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    TWV     |  Dec. Tresh  |
-|----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+------------+--------------+
-|   Characters-3 |      15 |        2 |     12 |        10 |          0 |     2 |       5 |   0.02353 |    0.333 |   -22.8604 |       0.3450 |
-|   Characters-5 |       0 |        0 |      0 |         0 |          0 |     0 |       0 |        NA |       NA |         NA |           NA |
+|                |           Inputs            |                                Actual Decision TWV Analysis                                 |              Maximum TWV Analysis               |
+|     Title      |  #Targ  |  #NTarg  |  #Sys  |  #CorDet  |  #Cor!Det  |  #FA  |  #Miss  |    PFA    |  PMiss   |    TWV     |  Dec. Tresh  |    PFA    |  PMiss   |   TWV    |  Dec. Thresh  |
+|----------------+---------+----------+--------+-----------+------------+-------+---------+-----------+----------+------------+--------------+-----------+----------+----------+---------------+
+|   Characters-3 |      15 |        2 |     12 |        10 |          0 |     2 |       5 |   0.02353 |    0.333 |   -22.8604 |       0.3450 |   0.00000 |    0.467 |   0.5333 |         0.567 |
+|   Characters-5 |       0 |        0 |      0 |         0 |          0 |     0 |       0 |        NA |       NA |         NA |           NA |        NA |       NA |       NA |           NaN |
 Conditional Block Summary Report: -
 |  Performance Summary Over and Ensemble of Subsets  |
 |               Key               |      Value       |
