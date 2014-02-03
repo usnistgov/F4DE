@@ -66,6 +66,8 @@ sub new
        DETShowPoint_Actual => 0,
        DETShowPoint_Best => 0,
        DETShowPoint_Ratios => 0,
+       DETShowPoint_Optimum => 0,
+       DETShowPoint_Supremum => 0,
        DETShowPoint_SupportValues => [ ('C', 'M', 'F', 'T')],
        DETShowEvaluatedBlocks => 0,
        ### From Brian A.  'rgb "\#ff0000"', 'rgb "\#0000ff"', 'rgb "\#00ff00"', 'rgb "\#ffd700"', 'rgb "\#006400"', 'rgb "\#8383ff"', 'rgb "\#a0522d"', 'rgb "\#00ffc1"', 'rgb "\#008395"', 'rgb "\#00008b"', 'rgb "\#95d34f"', 'rgb "\#f69edb"', 'rgb "\#800080"', 'rgb "\#f61160"', 'rgb "\#ffc183"', 'rgb "\#8ca77b"', 'rgb "\#ff8c00"', 'rgb "\#837200"', 'rgb "\#72f6ff"', 'rgb "\#9ec1ff"', 'rgb "\#72607b"', 'rgb "\#800000"', 'rgb "\#ffff00"',
@@ -304,6 +306,8 @@ sub _parseOptions{
   $self->{DETShowPoint_Actual} = $options->{DETShowPoint_Actual} if (exists($options->{DETShowPoint_Actual}));
   $self->{DETShowPoint_Best}   = $options->{DETShowPoint_Best}   if (exists($options->{DETShowPoint_Best}));
   $self->{DETShowPoint_Ratios} = $options->{DETShowPoint_Ratios} if (exists($options->{DETShowPoint_Ratios}));
+  $self->{DETShowPoint_Optimum} = $options->{DETShowPoint_Optimum} if (exists($options->{DETShowPoint_Optimum}));
+  $self->{DETShowPoint_Supremum} = $options->{DETShowPoint_Supremum} if (exists($options->{DETShowPoint_Supremum}));
   $self->{DETShowMeasurementsAsLegend} = $options->{DETShowMeasurementsAsLegend} if (exists($options->{DETShowMeasurementsAsLegend}));
   $self->{DETAbbreviateMeasureTypes} = $options->{DETAbbreviateMeasureTypes} if (exists($options->{DETAbbreviateMeasureTypes}));
   
@@ -1453,6 +1457,7 @@ sub _getValueInGraph
 ## this functions Checks the extent of the graph frame and builds labels for points off the graph
 sub _getOffAxisLabel{
   my ($self, $yval, $xval, $color, $pointType, $pointSize, $qstr) = @_;
+  return "" if ($yval eq "" || $xval eq "");
 
   my $gyval = _getValueInGraph($yval, $self->{Bounds}{ymin}{metric}, $self->{Bounds}{ymax}{metric}, $self->{props}->getValue("yScale"));
   my $gxval = _getValueInGraph($xval, $self->{Bounds}{xmin}{metric}, $self->{Bounds}{xmax}{metric}, $self->{props}->getValue("xScale"));
@@ -1464,23 +1469,23 @@ sub _getOffAxisLabel{
   ###       ------
   ###    Q7   Q8   Q9
   # Q1
-  if ($gyval > 1 && $gxval < 0) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q1" : "")."\" point lc $color pt $pointType ps $pointSize at graph  -0.02, graph   1.02"; }
+  if ($gyval > 1 && $gxval < 0) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q1, $yval, $xval" : "")."\" point lc $color pt $pointType ps $pointSize at graph  -0.02, graph   1.02"; }
   # Q2
-  if ($gyval > 1 && $gxval < 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q2" : "")."\" point lc $color pt $pointType ps $pointSize at graph $gxval, graph   1.02"; }
+  if ($gyval > 1 && $gxval < 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q2, $yval, $xval" : "")."\" point lc $color pt $pointType ps $pointSize at graph $gxval, graph   1.02"; }
   # Q3
-  if ($gyval > 1 && $gxval > 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q3" : "")."\" point lc $color pt $pointType ps $pointSize at graph   1.02, graph   1.02"; }
+  if ($gyval > 1 && $gxval > 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q3, $yval, $xval" : "")."\" point lc $color pt $pointType ps $pointSize at graph   1.02, graph   1.02"; }
   # Q4
-  if ($gyval > 0 && $gxval < 0) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q4" : "")."\" point lc $color pt $pointType ps $pointSize at graph  -0.02, graph $gyval"; }
+  if ($gyval > 0 && $gxval < 0) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q4, $yval, $xval" : "")."\" point lc $color pt $pointType ps $pointSize at graph  -0.02, graph $gyval"; }
   # Q5
   if ($gyval > 0 && $gxval < 1) { return ""; }
   # Q6
-  if ($gyval > 0 && $gxval > 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q6" : "")."\" point lc $color pt $pointType ps $pointSize at graph     1.02, graph $gyval"; }
+  if ($gyval > 0 && $gxval > 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q6, $yval, $xval" : "")."\" point lc $color pt $pointType ps $pointSize at graph     1.02, graph $gyval"; }
   # Q7
-  if ($gyval < 0 && $gxval < 0) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q7" : "")."\" point lc $color pt $pointType ps $pointSize at graph    -0.02, graph  -0.02"; }
+  if ($gyval < 0 && $gxval < 0) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q7, $yval, $xval" : "")."\" point lc $color pt $pointType ps $pointSize at graph    -0.02, graph  -0.02"; }
   # Q8
-  if ($gyval < 0 && $gxval < 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q8" : "")."\" point lc $color pt $pointType ps $pointSize at graph   $gxval, graph  -0.02"; }
+  if ($gyval < 0 && $gxval < 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q8, $yval, $xval" : "")."\" point lc $color pt $pointType ps $pointSize at graph   $gxval, graph  -0.02"; }
   # Q9
-  if ($gyval < 0 && $gxval > 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q9" : "")."\" point lc $color pt $pointType ps $pointSize at graph     1.02, graph  -0.02"; }
+  if ($gyval < 0 && $gxval > 1) { return "set label ".($self->{labelNum}++)."  \"".($qstr == 1 ? "Q9, $yval, $xval" : "")."\" point lc $color pt $pointType ps $pointSize at graph     1.02, graph  -0.02"; }
   "";
 }
 
@@ -1547,6 +1552,20 @@ sub _getLineTitleString
                                              $det->getBestCombMFA(),
                                              $det->getBestCombMMiss(),
                                              $det->getBestCombDetectionScore());
+    } elsif ($type eq "Optimum"){
+       ($metStr, $abrMetStr, $comb, $fa, $miss, $thr) = ("Opt", 
+                                             "O",
+                                             $det->getOptimumCombComb(),
+                                             $det->getOptimumCombMFA(),
+                                             $det->getOptimumCombMMiss(),
+                                             $det->getOptimumCombDetectionScore());
+    } elsif ($type eq "Supremum"){
+       ($metStr, $abrMetStr, $comb, $fa, $miss, $thr) = ("Sup",
+                                             "S",
+                                             $det->getSupremumCombComb(),
+                                             $det->getSupremumCombMFA(),
+                                             $det->getSupremumCombMMiss(),
+                                             $det->getSupremumCombDetectionScore());
     } elsif ($type eq "ErrorRatio"){
       ($metStr, $abrMetStr, $comb, $fa, $miss, $thr) = ("IsoRatio=$ratio", 
                                             "I=$ratio",
@@ -1567,7 +1586,7 @@ sub _getLineTitleString
             my $gmVal = $det->getGlobalMeasure($gm);
             my $gmFmt = $det->getGlobalMeasureFormat($gm);
             $title .= ($tag ? " " : ", ") if ($title ne "");
-            $title .= sprintf(($tag ? " $gmStr=" : "").$gmFmt,    $gmVal);
+            $title .= sprintf(($tag ? "  $gmStr=" : "").$gmFmt,    $gmVal);
           }
         } else {
           $title .= ($tag ? " " : ", ") if ($title ne "");
@@ -1610,6 +1629,9 @@ sub _getLineTitleString
 ### Ymax -> Set the maximum Y coordinate
 ### lTitleNoDETType    -> write the DET Type if the element exists
 ### DETShowPoint_Best  -> write the Max Value if the element exists
+### DETShowPoint_Ratios  -> write the Max Value if the element exists
+### DETShowPoint_Optimum  -> write the Optimum Value if the element exists
+### DETShowPoint_Supremum  -> write the Suprmeum Value if the element exists
 ### KeyLoc -> set the key location.  Values can be left | right | top | bottom | outside | below 
 ### Isolines -> Draw the isolines coefs
 ### CurveLineStyle -> sets the curve line style
@@ -1755,6 +1777,7 @@ sub writeMultiDetGraph
       my $displayKey = "true";
       my $thisPointSize = $self->{pointSize};
       my $thisPointSizeDiv2 = $thisPointSize / 2;
+      my $thisPointSizeDiv3 = $thisPointSize / 3;
       
       my $lineTitle = $detset->getDETForID($d)->{LINETITLE};
       if (exists($self->{DETLineAttr})){
@@ -1822,7 +1845,7 @@ sub writeMultiDetGraph
         ### The curve
         $xcol = ($xScale eq "nd" ? "3" : "5");
         $ycol = ($yScale eq "nd" ? "2" : "4");
-        if ($self->{DETShowPoint_Actual} || ($self->{DETShowPoint_Best}) || $self->{DETShowPoint_Ratios}){
+        if ($self->{DETShowPoint_Actual} || ($self->{DETShowPoint_Best}) || $self->{DETShowPoint_Ratios} || $self->{DETShowPoint_Optimum} || $self->{DETShowPoint_Supremum}){
           ### PLOT the Curve with NO TITLE because it will be used for the 1st point 
           my $prType = " $curveLineStyle ".(($curveLineStyle =~ /point/) ? "pt $closedPoint  ps $thisPointSize" : "");
           push @PLOTCOMS, "  '$troot.dat.1' using $xcol:$ycol notitle with $prType lc $color lw $lineWidth";
@@ -1894,6 +1917,38 @@ sub writeMultiDetGraph
             $ltitle = "";
           }
         }
+
+        ### The Optimum point
+        if ($self->{DETShowPoint_Optimum}){
+          $xcol = ($xScale eq "nd" ? "16" : "14");
+          $ycol = ($yScale eq "nd" ? "15" : "13");
+
+          $ltitle .= " - " if ($ltitle ne "");
+          $ltitle .= $self->_getLineTitleString("Optimum", 0, $detset->getDETForID($d),
+                                                \@offAxisLabels, $color, $openPoint, $thisPointSize, 0); 
+          my $title = ($displayKey eq "false") ? "notitle" : "title '"._gnuplotSafeString($ltitle)."'";
+          push @PLOTCOMS, "  '$troot.dat.2' using $xcol:$ycol $title with points lc $color pt $openPoint lw $lineWidth ps $thisPointSizeDiv2";
+
+          ## Clear out the title!
+          $ltitle = "";
+        }
+
+        ### The BEST point
+        if ($self->{DETShowPoint_Supremum}){
+          $xcol = ($xScale eq "nd" ? "21" : "19");
+          $ycol = ($yScale eq "nd" ? "20" : "18");
+
+          $ltitle .= " - " if ($ltitle ne "");
+          $ltitle .= $self->_getLineTitleString("Supremum", 0, $detset->getDETForID($d),
+                                                \@offAxisLabels, $color, 3, $thisPointSize, 0); 
+          my $title = ($displayKey eq "false") ? "notitle" : "title '"._gnuplotSafeString($ltitle)."'";
+          push @PLOTCOMS, "  '$troot.dat.2' using $xcol:$ycol $title with points lc $color pt 3 lw $lineWidth ps $thisPointSize";
+
+          ## Clear out the title!
+          $ltitle = "";
+        }
+        
+        
 
       }
 
@@ -2032,13 +2087,27 @@ sub writeGNUGraph{
     die("unable to open DET gnuplot file $fileRoot.dat.2"); 
   print DAT "# Points for DET Graph made by DETCurve\n";
   #     print DAT "# DET Type: $typeStr\n";
-  print DAT "# 1:Best${combStr}DetectionScore 2:Best${combStr}Value 3:Best$missStr 4:Best$faStr 5:ppndf(Best$missStr) 6:ppndf(Best$faStr) 7:ActualComb 8:Actual$missStr 9:Actual$faStr 10:ppndf(Actual$missStr) 11:ppndf(Actual$faStr)\n";
+  print DAT "# 1:Best${combStr}DetectionScore 2:Best${combStr}Value 3:Best$missStr 4:Best$faStr 5:ppndf(Best$missStr) 6:ppndf(Best$faStr) ".
+            "7:ActualComb 8:Actual$missStr 9:Actual$faStr 10:ppndf(Actual$missStr) 11:ppndf(Actual$faStr) ".
+            "12:OptimumComb 13:Optimum$missStr 14:Optimum$faStr 15:ppndf(Optimum$missStr) 16:ppndf(Optimum$faStr) ".
+            "17:SupremumComb 18:Supremum$missStr 19:Supremum$faStr 20:ppndf(Supremum$missStr) 21:ppndf(Supremum$faStr)\n";
   my ($scr, $comb, $miss, $fa) = ($det->getBestCombDetectionScore(),
                                   $det->getBestCombComb(),
 				  $det->getBestCombMMiss(),
 				  $det->getBestCombMFA());
   my ($actComb, $actCombSSD, $actMiss, $actMissSSD, $actFa, $actFaSSD) = $metric->getActualDecisionPerformance();
-  print DAT "$scr $comb $miss $fa ".ppndf($miss)." ".ppndf($fa)." $actComb $actMiss $actFa ".ppndf($actMiss)." ".ppndf($actFa)."\n";
+  my ($oscr, $ocomb, $omiss, $ofa) = ($det->getOptimumCombDetectionScore(),
+                                      $det->getOptimumCombComb(),
+                            				  $det->getOptimumCombMMiss(),
+                            				  $det->getOptimumCombMFA());
+  my ($sscr, $scomb, $smiss, $sfa) = ($det->getSupremumCombDetectionScore(),
+                                      $det->getSupremumCombComb(),
+                            				  $det->getSupremumCombMMiss(),
+                            				  $det->getSupremumCombMFA());
+  
+  print DAT "$scr $comb $miss $fa ".ppndf($miss)." ".ppndf($fa)." $actComb $actMiss $actFa ".ppndf($actMiss)." ".ppndf($actFa).
+             " $ocomb $omiss $ofa ".ppndf($omiss)." ".ppndf($ofa).
+             " $scomb $smiss $sfa ".ppndf($smiss)." ".ppndf($sfa)."\n";
   close DAT; 
   
   ### The iso ratio points data file
@@ -2060,6 +2129,7 @@ sub writeGNUGraph{
 #  my $color = $self->{colorsRGB}->[ $d % scalar(@{ $self->{colorsRGB} }) ];
   my $pointSize = $self->{pointSize};
   my $pointSizeDiv2 = $pointSize / 2;
+  my $pointSizeDiv3 = $pointSize / 3;
  
   my ($curveColor, $errCurveColor, $randomColor) = (2, 3, 1); 
   if ($self->{props}->getValue("ColorScheme") eq "grey"){
@@ -2084,7 +2154,7 @@ sub writeGNUGraph{
   ### This is ONLY the linetrace
   $xcol = ($xScale eq "nd" ? "3" : "5");
   $ycol = ($yScale eq "nd" ? "2" : "4");
-  if ($self->{DETShowPoint_Actual} || ($self->{DETShowPoint_Best}) || $self->{DETShowPoint_Ratios}){
+  if ($self->{DETShowPoint_Actual} || ($self->{DETShowPoint_Best}) || $self->{DETShowPoint_Ratios} || $self->{DETShowPoint_Optimum} || $self->{DETShowPoint_Supremum}){
     my $prType = " $curveLineStyle ".(($curveLineStyle =~ /point/) ? "" : "" );
     push @PLOTCOMS, "    '$fileRoot.dat.1' using $xcol:$ycol notitle with $prType lc $curveColor";
   } else {  
@@ -2143,8 +2213,7 @@ sub writeGNUGraph{
     push @PLOTCOMS, "  '$fileRoot.dat.1' using $xcol:$ycol notitle with $prType lc $curveColor";
     ## Clear out the title!
     $ltitle = "";
-  }
-
+  }  
   
   ### if the we want the ratio points 
   if ($self->{DETShowPoint_Ratios}){
@@ -2158,6 +2227,34 @@ sub writeGNUGraph{
       ## Clear out the title!
       $ltitle = "";
     }
+  }
+
+  ### The Optimum point
+  if ($self->{DETShowPoint_Optimum}){
+    $xcol = ($xScale eq "nd" ? "16" : "14");
+    $ycol = ($yScale eq "nd" ? "15" : "13");
+
+    $ltitle .= ": " if ($ltitle ne "");
+    $ltitle .= $self->_getLineTitleString("Optimum", 0, $det, 
+                                          \@offAxisLabels, $curveColor, 7, $pointSize, 0); 
+
+    push @PLOTCOMS, sprintf("    '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $curveColor pt 7 ps $pointSizeDiv2");
+    ## Clear out the title!
+    $ltitle = "";
+  }
+
+  ### The Supremum point
+  if ($self->{DETShowPoint_Supremum}){
+    $xcol = ($xScale eq "nd" ? "21" : "19");
+    $ycol = ($yScale eq "nd" ? "20" : "18");
+
+    $ltitle .= ": " if ($ltitle ne "");
+    $ltitle .= $self->_getLineTitleString("Supremum", 0, $det, 
+                                          \@offAxisLabels, $curveColor, 3, $pointSize, 0); 
+
+    push @PLOTCOMS, sprintf("    '$fileRoot.dat.2' using $xcol:$ycol title '"._gnuplotSafeString($ltitle)."' with points lc $curveColor pt 3 ps $pointSize");
+    ## Clear out the title!
+    $ltitle = "";
   }
 
   ### Make the boxes
