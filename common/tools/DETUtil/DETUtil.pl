@@ -260,9 +260,11 @@ $options{serialize} = 0;
 my %parseHT = ();
 $options{DETShowPoint_SupportValues} = [()];
 foreach my $code(split("", defined($lineTitleModification) ? $lineTitleModification : "ABCT")){
-  if ($code eq "A"){   $options{DETShowPoint_Actual} = 1; }
-  elsif ($code eq "B"){   $options{DETShowPoint_Best} = 1; }
-  elsif ($code eq "R"){   $options{DETShowPoint_Ratios} = 1; }
+  if ($code eq "A"){      $options{DETShowPoint_Actual} = 1;   $options{ReportIsoActual} = 1; }
+  elsif ($code eq "B"){   $options{DETShowPoint_Best} = 1;     $options{ReportBest} = 1}
+  elsif ($code eq "R"){   $options{DETShowPoint_Ratios} = 1;   $options{ReportIsoRatios} = 1;}
+  elsif ($code eq "O"){   $options{DETShowPoint_Optimum} = 1;  $options{ReportOptimum} = 1;}
+  elsif ($code eq "S"){   $options{DETShowPoint_Supremum} = 1; $options{ReportSupremum} = 1;}
   elsif ($code eq "t"){   $options{lTitleNoDETType} = 1;}
   elsif ($code eq "l"){   $options{DETShowMeasurementsAsLegend} = 1;}
   elsif ($code eq "v"){   $options{DETAbbreviateMeasureTypes} = 1;}
@@ -838,8 +840,10 @@ The DET curve lines includes specialized measurement points.  This option modifi
 Modifiers to control the type of calculated point to include.  Order is important.
 
     A -> Include the "Actual" point (used to be -O)
-    B -> Include the "Best" combined value
+    B -> Include the "Best" combined value (this 
     R -> Include the Iso Ratio points
+    O -> Include the "Optimum" block-specific combined value 
+    S -> Include the "Supremum" block-specific combined value
 
 =item 
 
