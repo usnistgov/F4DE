@@ -245,6 +245,12 @@ conf="${subhelp_dir}/${kmode}_SubmissionHelper.cfg"
 if [ "A${WEBPAGE}" != "A" ]; then $htmlproggen -f ${WEBPAGE} -V 10 -M 190 -m "Loading Configuration file"; fi
 echo "-- Loading Configuration file: $conf"
 
+#Check for system description file for KWS14
+if [ "$kmode" == "KWS14" ]; then
+    echo "-- Checking for system description file"
+    if [ "A${SYSDESC}" == "A" ]; then error_quit "Missing system description, provide it using the option -S SYSDESC_FILE"; fi
+fi
+
 check_file "$conf"
 source "$conf"
 
