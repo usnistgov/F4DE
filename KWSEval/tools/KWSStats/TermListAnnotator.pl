@@ -56,6 +56,9 @@ my $charTextRegex = undef;
 my @textPrefilters = ();
 my @deleteAttr = ();
 my $mduration = "";
+my $normalizeTermTexts = undef;   ### applies the text normalization to the term texts
+
+my $newVersion = undef;
 
 #Options
 #Need flags for adding programmatically generated annots, (i.e. NGram)
@@ -80,6 +83,8 @@ GetOptions
  'xprefilterText=s@'                   => \@textPrefilters,
  'deleteAttr=s@'                       => \@deleteAttr,
  "mediatedDuration=s" => \$mduration
+ 'setVersion=s'                        => \$newVersion,
+ 'normalizeTermTexts'                  => \$normalizeTermTexts,
 ) or MMisc::error_quit("Unknown option(s)\n");
 
 
@@ -325,15 +330,6 @@ my $total_per_char_dur = 0;
 ## Add the counts from the RTTMs
 if (@rttms > 0){
   print "Loading RTTMs for analisys\n";
-###<<<<<<< TermListAnnotator.pl
-###  foreach my $rttmInfo(@rttms){
-###    my ($rttmFile, $tag) = split(/:/,$rttmInfo);
-###    $tag = $rttmFile if (! defined($tag));
-###    print "   Processing $rttmFile, adding tag $tag\n";
-###    my $key = "RefOcc-$tag";
-###    my $quantKey = "QRefOcc-$tag";
-###    my $rttm = new RTTMList($rttmFile, $TermList->getLanguage(),
-###=======
   foreach my $rttm(@rttms){
     print "   Processing $rttm\n";
     my $key = "RefOccurences:$rttm";
@@ -342,7 +338,6 @@ if (@rttms > 0){
     my $meanDurPerCharKey = "MeanDurPerChar:$rttm";
     my $quantizedDurationKey = "QuantizedDuration:$rttm";
     my $rttm = new RTTMList($rttm, $TermList->getLanguage(),
-###>>>>>>> 1.13
                             $TermList->getCompareNormalize(), $TermList->getEncoding(), 
                             $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens, 1); # bypassCoreText -> no RTTM text rewrite possible  
     my @terms = keys %{ $TermList->{TERMS} };
@@ -475,6 +470,18 @@ foreach my $attr(@deleteAttr){
   foreach my $termid (keys %{ $TermList->{TERMS} }) {
      $TermList->{TERMS}{$termid}->deleteAttr($attr);
   }
+}
+
+### Update the version
+if (defined($newVersion)){
+    $TermList->setVersion($newVersion);
+}
+
+if (defined($normalizeTermTexts)){
+    print "Applying normalization to the term texts\n";
+    foreach my $termid (keys %{ $TermList->{TERMS} }) {
+	$TermList->{TERMS}{$termid}{TEXT} = $TermList->normalizeTerm($TermList->{TERMS}{$termid}{TEXT});
+    }   
 }
 
 #Dump TermList
