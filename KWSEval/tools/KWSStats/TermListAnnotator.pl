@@ -25,6 +25,7 @@ use Encode;
 use TermList;
 use TermListRecord;
 use RTTMList;
+use BabelLex;
 
 my $outfilename = "";
 my @annotFiles = ();
@@ -54,6 +55,7 @@ my $charTextRegex = undef;
 
 my @textPrefilters = ();
 my @deleteAttr = ();
+my $mduration = "";
 
 #Options
 #Need flags for adding programmatically generated annots, (i.e. NGram)
@@ -77,13 +79,17 @@ GetOptions
  'attrValue=s' => \$attrValueStr,
  'xprefilterText=s@'                   => \@textPrefilters,
  'deleteAttr=s@'                       => \@deleteAttr,
+ "mediatedDuration=s" => \$mduration
 ) or MMisc::error_quit("Unknown option(s)\n");
+
 
 #Check required options
 MMisc::error_quit("in-term-list required.") if ($inTlist eq "");
 MMisc::error_quit("out-file-name required.") if ($outfilename eq "");
 MMisc::error_quit("makeTextSplitChars is mutually exclusive will all other edits.") 
-  if ($makeTextSplitChars && ($ngram || (@rttms > 0) || $character || (@annotFiles > 0) || $useSplitChars));
+  if ($makeTextSplitChars && ($ngram || (@rttms > 0) || $character || $mduration || (@annotFiles > 0) || $useSplitChars));
+
+
 if (defined($attrValueStr)){
   eval("\$attrValue = ".$attrValueStr);
 #  print "Adding annotations:\n".Dumper($attrValue);
@@ -91,6 +97,8 @@ if (defined($attrValueStr)){
   MMisc::error_quit("Unable to parse attribute value String '$attrValueStr'") if (! defined($attrValue)); 
   MMisc::error_quit("parse attribute value String '$attrValueStr' is not a hash") if (ref($attrValue) ne "HASH"); 
 }
+
+
 if (defined($selectAttrValueStr)){
   eval("\$selectAttrValue = ".$selectAttrValueStr);
 #  print "Select Terms annotations $selectAttrValueStr:\n".Dumper($selectAttrValue);
@@ -98,6 +106,8 @@ if (defined($selectAttrValueStr)){
   MMisc::error_quit("Unable to parse attribute value String '$attrValueStr'") if (! defined($selectAttrValue)); 
   MMisc::error_quit("parse attribute value String '$attrValueStr' is not a hash") if (ref($selectAttrValue) ne "HASH"); 
 }
+
+
 foreach my $filt(@textPrefilters){
   if ($filt =~ /^charsplit$/i){
     $charSplitText = 1;
@@ -111,6 +121,8 @@ foreach my $filt(@textPrefilters){
     MMisc::error_quit("Error: -xprefilterText option /$filt/ not defined.  Aborting.");
   }
 }
+
+
 print "Warning: -zprefilterText notASCII ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextNotASCII);
 print "Warning: -zprefilterText deleteHyphens ignored because -z charsplit not used\n" if (!$charSplitText && $charSplitTextDeleteHyphens);
 print "Warning: -addInferredCharaterDuration ingnored because no RTTMs are present\n" if ($addInferredCharaterDuration && @rttms <= 0);
@@ -128,6 +140,7 @@ if (defined($attrValueStr)){
   }
 }
 
+
 if ($makeTextSplitChars){
    foreach my $termid (keys %{ $TermList->{TERMS} }) {
      $TermList->{TERMS}{$termid}{TEXT} = $TermList->{TERMS}{$termid}{CHARSPLITTEXT};
@@ -142,6 +155,7 @@ if (defined $charTextRegex){
      $TermList->{TERMS}{$termid}{TEXT} =~ s/$p1/$p2/g;
    }
 }
+
 
 my %annotations = ();
 #Build file annots
@@ -185,6 +199,7 @@ foreach my $file (@annotFiles) {
   print "Warning: $nonFoundTerms terms not found by text\n" if ($nonFoundTerms > 0);
   close AFILE;
 }
+
 
 foreach my $csvfile (@csvAnnotFiles) {
   print "Loading annotation csv file '$csvfile'\n";
@@ -235,6 +250,7 @@ foreach my $csvfile (@csvAnnotFiles) {
 #    print "  new term needed\n";
 }
 
+
 #Run annotation functions
 if ($character != 0) {
   print "Computing character counts\n";
@@ -243,6 +259,8 @@ if ($character != 0) {
     $term->setAttrValue("Characters", &charactersOfTerm($term->getAttrValue("TEXT")));
   }
 }
+
+
 if ($ngram != 0) {
   print "Computing N-gram counts\n";
   foreach my $termid (keys %{ $TermList->{TERMS} }) {
@@ -250,6 +268,44 @@ if ($ngram != 0) {
     $term->setAttrValue("NGram Order", &ngramOfTerm($term->getAttrValue("TEXT")));
   }
 }
+
+
+# Process Mediated Duration request:
+# expected argument and options:
+# --mediatedDuration lexicon_filename,romanized_flag,phone_duration_filename
+# where romanized flag must either be 1 or 0.
+# When the option is used, the argument string is split on comma, and the
+# results are passed to the BabelLex module. The module loads the files and
+# prepares the duration tables. This script then continues to query the module
+# for its terms durations. The new attribute name "Mediated Duration" and the 
+# received value are stored in the output file.
+if ($mduration ne "")
+{
+		my @args = split(/,/, join(',', $mduration));
+
+		my $mdur_map_file = $args[0];
+		my $mdur_lex_file = $args[1];
+		my $romanized     = $args[2];
+		my $mdur_dur_file = $args[3];
+
+  print "Computing term mediated durations using \
+		       $mdur_map_file, $mdur_lex_file, $romanized, $mdur_dur_file\n";
+
+		my $bl = new BabelLex($mdur_map_file,
+			                    	$mdur_lex_file,
+																							 $romanized,
+																								$TermList->getEncoding(),
+																								$mdur_dur_file);
+
+  foreach my $termid (keys %{ $TermList->{TERMS} })
+		{
+    my $term = $TermList->{TERMS}{$termid};
+    $term->setAttrValue("Phone_Mediated_Duration",
+					                  	$bl->getDurationAverage(
+																										$term->getAttrValue("TEXT")));
+  }
+}
+
 
 ### Replace original texts and Removing the ORIGTEXT attribute
 #foreach my $termid (keys %{ $TermList->{TERMS} }) {
