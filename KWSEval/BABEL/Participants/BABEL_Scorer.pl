@@ -116,6 +116,8 @@ my $ProcGraph = undef;
 my $sha256 = "";
 my $sctkbindir = "";
 my $sysdesc = "";
+my $sysmetadatadumpf = "";
+my $sysmetadatadump = undef;
 my $eteam = undef;
 my $bypassxmllint = 0;
 my $xpng = 0;
@@ -149,6 +151,7 @@ GetOptions
    'Hsha256id=s' => \$sha256,
    'Tsctkbin=s' => \$sctkbindir,
    'tSystemDescription=s' => \$sysdesc,
+   'mSystemMeta=s' => \$sysmetadatadumpf,
    'ExpectedTeamName=s' => \$eteam,
    'XmllintBypass' => \$bypassxmllint,
    'ExcludePNGFileFromTxtTable'          => \$xpng,
@@ -209,6 +212,12 @@ if (defined($extendedRunIndusDataDef)){
     MMisc::error_quit("Failed to make Extended Scoring '$scrdir-Extended'")
       if (! MMisc::make_dir($scrdir."-Extended")); 
   }  
+}
+if (! MMisc::is_blank($sysmetadatadumpf)) {
+    $err = MMisc::check_file_r($sysmetadatadumpf);
+    if (! MMisc::is_blank($err)) {
+	$sysmetadatadump = MMisc::load_memory_object($sysmetadatadumpf);
+    }
 }
 
 $ENV{PATH} .= ":".$sctkbindir if (! MMisc::is_blank($sctkbindir));
@@ -946,7 +955,7 @@ MMisc::ok_exit();
 ############################################################
 
 sub set_usage {
-  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass] [--ExcludePNGFileFromTxtTable]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--fileCreate file [--fileCreate file [...]]] [--ProcGraph tool] [--ExpectedTeamName TEAM] --Specfile perlEvalfile [--ForceSpecfile [perlEvalfile]] --expid EXPID --sysfile file --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]] [--FilePending file --FileRelease file]\n";
+  my $usage = "$0 [--version | --help] [--Verbose] [--KWSEval tool [--XmllintBypass] [--ExcludePNGFileFromTxtTable]] [--DETUtil tool] [--Tsctkbin dir] [--Hsha256id sha] [--fileCreate file [--fileCreate file [...]]] [--tSystemDescription file] [--mSystemMeta file] [--ProcGraph tool] [--ExpectedTeamName TEAM] --Specfile perlEvalfile [--ForceSpecfile [perlEvalfile]] --expid EXPID --sysfile file --compdir dir --resdir dir --dbDir dir [--dbDir dir [...]] [--FilePending file --FileRelease file]\n";
   $usage .= "\n";
   $usage .= "Will score a submission file against data present in the dbDir.\n";
   $usage .= "\nThe program needs a \'dbDir\' to load some of its eval specific definitions; this directory must contain pairs of <CORPUSID>_<PARTITION> \".ecf.xml\" and \".kwlist.xml\" files that match the component of the EXPID to confirm expected data validity, as well as a <CORPUSID>_<PARTITION> directory containing reference data needed for scoring.\n";
@@ -963,6 +972,8 @@ sub set_usage {
   $usage .= "  --ProcGraph  Location of the ProcGraph tool.  If defined ProcGraph will be run. (default: UNDEF)\n";
   $usage .= "  --ExpectedTeamName  Expected value of TEAM (used to check EXPID content)\n";
   $usage .= "  --Tsctkbin   Location of SCTK's bin directory\n";
+  $usage .= "  --tSystemDescription   System description file\n";
+  $usage .= "  --mSystemMeta        System metadata file\n";
   $usage .= "  --Specfile   Configuration file containing EXPID definition (note: if a specfile with the same filename is found in a dbDir, this specialized version will be used unless --ForceSpecfile is used)\n";
   $usage .= "  --ForceSpecfile  Force the use of the default specfile if no value is provided, or the selected file is provided (overriding the dbDir lookup)\n";
   $usage .= "  --sysfile    System input file\n";
