@@ -569,6 +569,30 @@ sub addTrial {
 
 ####################################################################################################
 
+=item B<getTrialScoreForBlock>(I<$blockID>, I<$trialIndex>, I<$forTarg>)  
+
+Return the detection score of the I<$trialIndex>'th trial of block I<$blockID>.  if I<$forTarg> is true.  Do this for the target trials, otherwise do it for the non-target trials. 
+
+Returns undef if I<$trialIndex> is greater than the number of elements in the array.
+
+=cut
+
+sub getTrialScoreForBlock {
+  my ($self, $block, $trialIndex, $forTarg) = @_;
+
+  my $type = ($forTarg == 1 ? "TARG" : "NONTARG");
+
+  return undef if ($trialIndex >= @{ $self->{"trials"}{$block}{$type} } ); 
+
+  if ($self->{preserveTrialID} == 1){
+    return ($self->{"trials"}{$block}{$type}[$trialIndex][0]);
+  } else {
+    return ($self->{"trials"}{$block}{$type}[$trialIndex]);
+  } 
+}
+
+####################################################################################################
+
 =item B<addTrialWithoutDecision>(I<$blockID>, I<$sysScore>, I<$isTarg>, I<$blockMetadata>, I<$trialID>)  
 
 Adds a trail which for which no "decision" is given.  The decision is set by applying the TrialActualDecisionThreshold that is set via B<setTrialActualDecisionThreshold>.  The threshold must be set and of type "supplied".  The rest of the arguments are as defined in B<addTrial>.
@@ -1164,6 +1188,7 @@ sub _stater {
   my $sum = 0;
   my $sumsqr = 0;
   my $n = 0;
+
   for (my $i = 0; $i < scalar @$data; $i++) {
     my $d = $$data[$i];
     $sum += $d;
