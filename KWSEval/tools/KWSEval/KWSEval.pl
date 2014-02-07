@@ -26,7 +26,10 @@
 
 ### Die on any warning and give a stack trace
 #use Carp qw(cluck);
+### Die on warning
 #$SIG{__WARN__} = sub { cluck "Warning:\n", @_, "\n";  die; };
+### On die, make a stack trace
+#$SIG{__DIE__} = \&Carp::confess;
 
 # Test: perl KWSEval.pl -e ../test_suite/test2.ecf.xml -r ../test_suite/test2.rttm -s ../test_suite/test2.stdlist.xml -t ../test_suite/test2.kwlist.xml -o -A
 
