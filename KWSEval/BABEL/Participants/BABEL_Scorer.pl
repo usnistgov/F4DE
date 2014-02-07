@@ -125,6 +125,7 @@ my $pendingfile = "";
 my $releasefile = "";
 my $extendedRunIndusDataDef = undef;
 my $forceSpecfile = undef;
+my $evalYearSpecificKWSOptions = "";
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used:    DEF H  K    P  ST V X    cdef h         rst v     #
@@ -304,9 +305,14 @@ my $lang = $3;
 
 my @summaryDETS = ();
 
+if ($ltag eq "KWS14"){
+  $evalYearSpecificKWSOptions = "-zG MAP -zG Optimum -zG Supremum";
+}
+
 
 print "Step 1: Parse input\n";
 my @parseInfo = ("Info: EXPID = $expid",
+                 "Info: Tag = $ltag",
                  "Info: Team = $lteam",
                  "Info: Corpus = $lcorpus",
                  "Info: Partition = $lpart",
@@ -319,6 +325,8 @@ my @parseInfo = ("Info: EXPID = $expid",
                  "Info: Language = $lang",
                  "Info: SCTKBin = $sctkbindir",
                  "Info: SHA256 = $sha256",
+                 "Info: evalYearSpecificKWSOptions = $evalYearSpecificKWSOptions",
+                 "Info: SystemMetadata = $sysmetadatadumpf",
                  );
 print join("\n",@parseInfo)."\n";
 
@@ -347,6 +355,11 @@ my $reqIDB = 3;
 MMisc::error_quit("Step 1 failed: IndusDB too old.  Must be > $reqIDB.  Aborting") if (!exists ($indusCorporaDefs->{versionID}));
 MMisc::error_quit("Step 1 failed: IndusDB too old.  Must be > $reqIDB.  Aborting") if ($indusCorporaDefs->{versionID} < $reqIDB);
 print "Info: indusCorporaDefsFile = $indusCorporaDefsFile version '".$indusCorporaDefs->{version}."'\n";
+
+my $sysMetadata = (-f $sysmetadatadumpf ? MMisc::load_memory_object($sysmetadatadumpf) : ());
+
+
+
 
 ### Paranoia check for the DryRun.  This will be implemented elsewhere!!!!!!
 if ($lcorpus =~ /babel101b-v0.4c-DryRunEval-v3/){
@@ -457,7 +470,8 @@ sub execKWSScoreRun{
     " -s $def->{KWSLIST}".
     " $def->{KWSEVAL_OPTS}{$lscase}".
     " -f $usedCompRoot".
-    " -y TXT -y HTML";
+    " -y TXT -y HTML".
+    " $evalYearSpecificKWSOptions";
   $com .= " --XmllintBypass" if ($bypassxmllint);
   $com .= " --ExcludePNGFileFromTxtTable" if ($xpng);
 
@@ -668,6 +682,9 @@ sub execKWSEnsemble2{
     $com = "$detutil $def->{DETOPTIONS}{$scase} --generateCSV --txtTable -I -Q 0.3 -T '$mainTitle' --plot ColorScheme=colorPresentation";
     $com .= ($xpng == 1) ? " --ExcludePNGFileFromTxtTable" : "";
     $com .= " -o $usedCompRoot/$def->{ensembleRoot}.png ";
+    if ($ltag eq "KWS14"){
+      $com .= "-l ABOSGCT ";
+    } 
     $com .= join(" ",@srls);
     MMisc::writeTo("$usedCompRoot/$def->{ensembleRoot}.sh", "", 0, 0, "$com\n");
     my ($ok, $otxt, $stdout, $stderr, $retcode, $logfile) = MMisc::write_syscall_logfile("$usedCompRoot/$def->{ensembleRoot}.log", $com);
@@ -785,10 +802,24 @@ if ($ltask =~ /KWS/){
 
   print "\nCompleted KWS Runs:\n   ".join("\n   ",@completed)."\n";
  
-  my $detOpts = " --plot 'ExtraPoint=Team = $lteam:.004:.12:0:1::' ";
-    $detOpts .= " --plot 'ExtraPoint=System = ${lsysid}_${lversion}:.004:.10:0:1::' ",;
-    $detOpts .= " --plot 'ExtraPoint=Data = $lcorpus $lpart:.004:.0805:0:1::' ";
-    $detOpts .= " --plot 'ExtraPoint=SHA256 = $sha256:.004:.062:0:1::' " if ($sha256 ne "");
+  my $yval = .14;
+  my $detOpts = " --plot 'ExtraPoint=Team = $lteam:.004:".$yval.":0:1::' "; $yval -= 0.02;
+  $detOpts .= " --plot 'ExtraPoint=System = ${lsysid}_${lversion}:.004:".$yval.":0:1::' ",; $yval -= 0.02;
+  $detOpts .= " --plot 'ExtraPoint=Data = $lcorpus $lpart:.004:".$yval.":0:1::' "; $yval -= 0.018;
+  if ($sha256 ne ""){
+    $detOpts .= " --plot 'ExtraPoint=SHA256 = $sha256:.004:".$yval.":0:1::' "; $yval -= 0.018;
+  }
+  if (defined($sysMetadata)){
+    my @str = ();
+    if (exists($sysMetadata->{LRDEFS})){
+      foreach my $lr(sort keys %{ $sysMetadata->{LRDEFS} }){
+        push @str, "$lr\{".join(",",@{ $sysMetadata->{LRDEFS}{$lr} })."}";
+      }
+    }
+    if (@str > 0){
+      $detOpts .= "   --plot 'ExtraPoint=".join(",",@str).":.004:".$yval.":0:1::' "; $yval -= 0.018;
+    }
+  }
 
   execKWSEnsemble2({scoreDefs => \%RunDefs,
                     selectDefs => { "Set" => ".*", "TokTimes" => ".*",
