@@ -179,7 +179,7 @@ do
     eval=`echo $f | perl -ne 'print $1 if (m%^(\w+?)_%);'`
     inf=`echo $f | perl -ne 'print $1 if (m%^(.+?)_____%);'`
     expid=`echo $inf | perl -ne 'print $1 if (m%^(.+?)\.[a-z\d\.]+$%i);'`
-    
+
 # Checks
     doit=1
     if [ "A$eval" == "A" ]; then doit=0; fi
@@ -203,6 +203,10 @@ do
                 dbDir_list=$(echo $dbDir | tr ":" "\n")
                 find_file_in_dbDir "$inf"
                 finf="$filev"
+		finfDesc=""
+                if [ -f "$finf.sysdesc.txt" ] ; then
+		    finfDesc="-S $finf.sysdesc.txt"
+		fi
                 if [ ! -f "$finf" ]; then
                     echo "!! Skipping test: No $eval input file ($inf) in dbDir $dbDir"
                 else
@@ -245,7 +249,8 @@ do
 		    if [ ! -z $DOCUMENTBAD ] ; then 
 			echo TESTING $ff >> $DOCUMENTBAD
 		    fi
-		    com="$subhelp $babscr --Specfile $scconf --expid $expid --sysfile $finf --compdir $compdir --resdir $resdir --dbDir $dbDir --Tsctkbin $sctkbindir --ExcludePNGFileFromTxtTable $babscr_xtras $xtra"
+		    
+		    com="$subhelp $babscr --Specfile $scconf --expid $expid --sysfile $finf $finfDesc --compdir $compdir --resdir $resdir --dbDir $dbDir --Tsctkbin $sctkbindir --ExcludePNGFileFromTxtTable $babscr_xtras $xtra"
                     $tool $toolOpt $buildComp $ff $com
                     if [ "${?}" -ne "0" ]; then
 			if [ ! -z $DOCUMENTBAD ] ; then 
