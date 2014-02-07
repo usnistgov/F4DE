@@ -265,11 +265,12 @@ foreach my $code(split("", defined($lineTitleModification) ? $lineTitleModificat
   elsif ($code eq "R"){   $options{DETShowPoint_Ratios} = 1;   $options{ReportIsoRatios} = 1;}
   elsif ($code eq "O"){   $options{DETShowPoint_Optimum} = 1;  $options{ReportOptimum} = 1;}
   elsif ($code eq "S"){   $options{DETShowPoint_Supremum} = 1; $options{ReportSupremum} = 1;}
+  elsif ($code eq "G"){   $options{DETShowPoint_Global} = 1; $options{ReportGlobal} = 1;}
   elsif ($code eq "t"){   $options{lTitleNoDETType} = 1;}
   elsif ($code eq "l"){   $options{DETShowMeasurementsAsLegend} = 1;}
   elsif ($code eq "v"){   $options{DETAbbreviateMeasureTypes} = 1;}
   elsif ($code eq "E"){   $options{DETShowEvaluatedBlocks} = 1;}
-  elsif ($code =~ /^([TFMCG])$/){
+  elsif ($code =~ /^([TFMC])$/){
     die "Error: --lineTitle code $code used twice" if (exists($parseHT{$code}));
     push (@{ $options{DETShowPoint_SupportValues} }, $code);
     $parseHT{$code} = 1;
