@@ -60,7 +60,7 @@ my $warn_msg = "";
 sub _warn_add { $warn_msg .= "[Warning] " . join(" ", @_) ."\n"; }
 
 # Part of this tool
-foreach my $pn ("MMisc", "KWSEval_SCHelper") {
+foreach my $pn ("MMisc", "KWSEval_SCHelper", "AutoTable") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -117,7 +117,7 @@ my $sha256 = "";
 my $sctkbindir = "";
 my $sysdesc = "";
 my $sysmetadatadumpf = "";
-my $sysmetadatadump = undef;
+my $sysmetadataat = undef;
 my $eteam = undef;
 my $bypassxmllint = 0;
 my $xpng = 0;
@@ -217,7 +217,8 @@ if (defined($extendedRunIndusDataDef)){
 if (! MMisc::is_blank($sysmetadatadumpf)) {
     $err = MMisc::check_file_r($sysmetadatadumpf);
     if (! MMisc::is_blank($err)) {
-	$sysmetadatadump = MMisc::load_memory_object($sysmetadatadumpf);
+	$sysmetadataat = new AutoTable();
+	$sysmetadataat->loadCSV($sysmetadatadumpf, undef, undef, undef, undef, "\t");
     }
 }
 
@@ -355,11 +356,6 @@ my $reqIDB = 3;
 MMisc::error_quit("Step 1 failed: IndusDB too old.  Must be > $reqIDB.  Aborting") if (!exists ($indusCorporaDefs->{versionID}));
 MMisc::error_quit("Step 1 failed: IndusDB too old.  Must be > $reqIDB.  Aborting") if ($indusCorporaDefs->{versionID} < $reqIDB);
 print "Info: indusCorporaDefsFile = $indusCorporaDefsFile version '".$indusCorporaDefs->{version}."'\n";
-
-my $sysMetadata = (-f $sysmetadatadumpf ? MMisc::load_memory_object($sysmetadatadumpf) : ());
-
-
-
 
 ### Paranoia check for the DryRun.  This will be implemented elsewhere!!!!!!
 if ($lcorpus =~ /babel101b-v0.4c-DryRunEval-v3/){
@@ -809,17 +805,17 @@ if ($ltask =~ /KWS/){
   if ($sha256 ne ""){
     $detOpts .= " --plot 'ExtraPoint=SHA256 = $sha256:.004:".$yval.":0:1::' "; $yval -= 0.018;
   }
-  if (defined($sysMetadata)){
-    my @str = ();
-    if (exists($sysMetadata->{LRDEFS})){
-      foreach my $lr(sort keys %{ $sysMetadata->{LRDEFS} }){
-        push @str, "$lr\{".join(",",@{ $sysMetadata->{LRDEFS}{$lr} })."}";
-      }
-    }
-    if (@str > 0){
-      $detOpts .= "   --plot 'ExtraPoint=".join(",",@str).":.004:".$yval.":0:1::' "; $yval -= 0.018;
-    }
-  }
+  # if (defined($sysMetadata)){
+  #   my @str = ();
+  #   if (exists($sysMetadata->{LRDEFS})){
+  #     foreach my $lr(sort keys %{ $sysMetadata->{LRDEFS} }){
+  #       push @str, "$lr\{".join(",",@{ $sysMetadata->{LRDEFS}{$lr} })."}";
+  #     }
+  #   }
+  #   if (@str > 0){
+  #     $detOpts .= "   --plot 'ExtraPoint=".join(",",@str).":.004:".$yval.":0:1::' "; $yval -= 0.018;
+  #   }
+  # }
 
   execKWSEnsemble2({scoreDefs => \%RunDefs,
                     selectDefs => { "Set" => ".*", "TokTimes" => ".*",

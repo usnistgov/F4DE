@@ -378,7 +378,14 @@ sub check_submission {
       return($derr) unless MMisc::is_blank($derr);
 
       unless (MMisc::is_blank($dumpf)) {
-          MMisc::dump_memory_object($dumpf, ".dump", $data);
+          open DUMP, ">$dumpf.dump";
+          foreach my $type (keys %$data) {
+              foreach my $d (keys %{ $data->{$type} }) {
+                  my $val = join('+', (ref $data->{$type}{$d} eq "ARRAY" ? @{ $data->{$type}{$d} } : $data->{$type}{$d}));
+                  print DUMP "$val\tVal\t$type|$d\n";                  
+              }
+          }
+          close DUMP;
       }
   }
 
