@@ -542,7 +542,7 @@ sub _buildBlockedAutoTable()
     die;
   }
 
-  my $reportGlobal  = 0;   $reportGlobal = 1  if (exists($DETOptions->{ReportGlobal}) && $DETOptions->{ReportGlobal} == 1);
+  my $reportGlobal  = 0;   $reportGlobal = 1     if (exists($DETOptions->{ReportGlobal}) && $DETOptions->{ReportGlobal} == 1);
   my $reportOptimum  = 0;   $reportOptimum = 1   if (exists($DETOptions->{ReportOptimum}) && $DETOptions->{ReportOptimum} == 1);
   my $reportSupremum  = 0;  $reportSupremum = 1  if (exists($DETOptions->{ReportSupremum}) && $DETOptions->{ReportSupremum} == 1);
   my %globSum = ();
@@ -592,6 +592,7 @@ sub _buildBlockedAutoTable()
         $at->addData(&_PN($metric->combPrintFormat(), $det->getSupremumCombCombForBlock($block)),              "Supremum $comblab|" . $metric->combLab(),    $key);
         $at->addData(&_PN($metric->errMissPrintFormat(), $det->getSupremumCombDetectionScoreForBlock($block)), "Supremum $comblab|" . "Dec. Thresh", $key);
       }
+
       if ($reportGlobal){
        	foreach my $gm($det->getGlobalMeasureIDsWithBlocks()){
        	  my $val = $det->getGlobalMeasureForBlock($gm, $block);
@@ -662,10 +663,16 @@ sub _buildBlockedAutoTable()
 
     if ($reportGlobal){
      	foreach my $gm($det->getGlobalMeasureIDsWithBlocks()){
-        my ($sum, $mean, $ssd) = $det->getTrials()->_stater($globSum{$gm});
-     	  $at->addData(&_PN($det->getGlobalMeasureFormat($gm), $mean),
+        if (exists($globSum{$gm})){
+          my ($sum, $mean, $ssd) = $det->getTrials()->_stater($globSum{$gm});
+       	  $at->addData(&_PN($det->getGlobalMeasureFormat($gm), $mean),
 	                     "Global Measures|" . $det->getGlobalMeasureAbbrevStringForBlock($gm) . $det->getGlobalMeasureUnit($gm),
 	                     "Summary|Means");
+        } else {
+       	  $at->addData("NA",
+	                     "Global Measures|" . $det->getGlobalMeasureAbbrevStringForBlock($gm) . $det->getGlobalMeasureUnit($gm),
+	                     "Summary|Means");
+        }
       }
     }
     if ($reportOptimum){
