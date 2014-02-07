@@ -773,8 +773,9 @@ the CODE DIES as this should never happen.
       ### Try to calculate the SSD of the combined metric IFF the miss and fa errors are allways defined.  If they
       ### are not for one block, then punt!
       if (defined($fa) && defined($miss)) {
+        $bPtr->{COMB} = $self->combCalc($miss, $fa);
         if (defined($combSum)) {
-          my $comb = $self->combCalc($miss, $fa);
+          my $comb = $bPtr->{COMB};
           $combSum += $comb;
           $combSumSqr += $comb * $comb;
           $combN ++;
@@ -784,7 +785,23 @@ the CODE DIES as this should never happen.
               $bPtr->{OPTIMUMCOMB}{COMB} = $comb;
               $bPtr->{OPTIMUMCOMB}{MFA} = $luFA;
               $bPtr->{OPTIMUMCOMB}{MMISS} = $luMiss;
-              $bPtr->{OPTIMUMCOMB}{DETECTIONSCORE} = $thresh;
+              ### Adjust the threshold to the this block's threshold
+              my $faT = $self->{TRIALS}->getTrialScoreForBlock($block, $luFA, 0);
+              my $miT = $self->{TRIALS}->getTrialScoreForBlock($block, $luMiss - $self->{TRIALS}->getNumOmittedTarg($block), 1);
+              my $bThresh = $thresh;
+              if (defined($faT) && defined($miT)){
+                if ($faT > $thresh && $miT > $thresh){
+                  $bThresh = MMisc::min($faT, $miT);
+                } else {
+                  $bThresh = MMisc::max($faT, $miT, $thresh);
+                }                  
+              } elsif (defined($faT)) {
+                $bThresh = $faT if ($faT > $thresh);
+              } else {
+                $bThresh = $miT if ($miT > $thresh);
+              }
+              
+              $bPtr->{OPTIMUMCOMB}{DETECTIONSCORE} = $bThresh; #." ".$thresh . " $fa\[".$luFA."] $miss\[".$luMiss."] c=".$comb." b=".$best." ".$faT." ".$miT;
             }
           }
         }
