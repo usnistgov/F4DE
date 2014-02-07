@@ -178,8 +178,108 @@ sub srlLoadTest {
     
 }
 
+sub _testOneBlock{
+  my ($mesg, $trial, $points, $expGlob, $expOptSup, $expBlockOptSup) = @_;
+  my ($report, $blockReport) = ("", "");
+  
+  print "  $mesg\n";
+  my @isolinecoef = ( );
+  my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial);
+  my $det = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef, 1);
+  foreach my $gm(keys %$expGlob){
+    if    ($gm eq "AP"){    $det->computeAvgPrec(); }
+    elsif ($gm eq "APP"){   $det->computeAvgPrecPrime(); }
+    elsif ($gm eq "MAP"){   $det->computeMeanAvgPrec(); }
+    elsif ($gm eq "MAPP"){  $det->computeMeanAvgPrecPrime(); }
+    else {
+      die "Requested global measure /$gm/ in _testOneBlock not defined";
+    }
+  }
+
+  if ($det->testGeneratedPoints($points, "    ") ne "ok"){ 
+    print "\n   Error: points do not match\n";  
+    print $det->getPointsAsPerlArrayOfArrays();
+    exit 1;
+  }
+  print "Ok\n";
+  print "    Checking Global Measures ".join(", ", sort keys %$expGlob)." .. ";
+  foreach my $gm(keys %$expGlob){
+    if (! exists($det->{GLOBALMEASURES}{$gm})){
+      print "\n  Error!!! Global Measure $gm not computed\n".Dumper($det->{GLOBALMEASURES});
+      exit(1);
+    }
+    if ((! defined($expGlob->{$gm})) && $det->{GLOBALMEASURES}{$gm}{STATUS} eq "Computed"){
+      print "\n  Error!!! Global computation of $gm produced data but expected undefined\n";
+      print Dumper($det->{GLOBALMEASURES}{$gm});
+      exit(1);
+    } elsif (defined($expGlob->{$gm}) && $det->{GLOBALMEASURES}{$gm}{STATUS} ne "Computed"){
+      print "\n  Error!!! Global computation for $gm.  expected a computation but it failed\n";
+      print Dumper($det->{GLOBALMEASURES}{$gm});
+      exit(1);
+    } elsif (abs($det->{GLOBALMEASURES}{$gm}{MEASURE}{$gm} - $expGlob->{$gm}) > 0.001){
+      print "\n  Error!!! Global computation for $gm.  expected $expGlob->{$gm}, got $det->{GLOBALMEASURES}{$gm}{MEASURE}{$gm}\n";
+      print Dumper($det->{GLOBALMEASURES}{$gm});
+      exit(1);
+    }
+  }
+  print "ok\n";
+
+  print "    Checking Overall Optimum and Supremum .. ";
+  foreach my $k(keys %$expOptSup){
+    foreach my $attr(keys %{ $expOptSup->{$k} }){
+      if ((! defined($expOptSup->{$k}{$attr})) && defined($det->{$k}{$attr})){
+        print "\n  Error!!! $k computation failed for attribute $attr but expected undefined\n";
+        print Dumper($det->{$k});
+        exit(1);
+      } elsif (abs($det->{$k}{$attr} - $expOptSup->{$k}{$attr}) > 0.001){
+        print "\n  Error!!! $k computation failed for attribute $attr but expected $expOptSup->{$k}{$attr}, got $det->{$k}{$attr}\n";
+        print Dumper($det->{$k});
+        exit(1);
+      }
+    }
+  }
+  print "Ok\n";
+
+  print "    Checking Block Optimum and Supremum .. ";
+  foreach my $blk(keys %$expBlockOptSup){
+    foreach my $k(keys %{ $expBlockOptSup->{$blk} }){
+      foreach my $attr(keys %{ $expBlockOptSup->{$blk}{$k} }){
+        if ((! defined($expBlockOptSup->{$blk}{$k}{$attr})) && defined($det->{$k}{BLOCKS}{$blk}{$attr})){
+          print "\n  Error!!! $k computation failed for attribute $attr of block $blk but expected undefined\n";
+          print Dumper($det->{$k});
+          exit(1);
+        } elsif (abs($det->{$k}{BLOCKS}{$blk}{$attr} - $expBlockOptSup->{$blk}{$k}{$attr}) > 0.001){
+          print "\n  Error!!! $k computation failed for attribute $attr of block $blk.  ".
+                "expected $expBlockOptSup->{$blk}{$k}{$attr}, got $det->{$k}{BLOCKS}{$blk}{$attr}\n";
+          print Dumper($det->{$k});
+          exit(1);
+        }
+      }
+    }
+  }
+  print "Ok\n";
+  
+  ### Rendering the reports to pass back
+  my $ds = new DETCurveSet("Test DET");
+  my $rtn = $ds->addDET("First", $det);
+  MMisc::error_quit("Unable to add single DET to a set /$rtn/") if ($rtn ne "success");
+  
+  my $opts = {(createDETfiles => 0, ReportGlobal => 1, ExcludePNGFileFromTextTable => 1, "ReportOptimum" => 1, "ReportSupremum" => 1)};
+  $report = $ds->renderAsTxt("foomerge", 1, $opts);  
+#  print $report;
+  $blockReport = $ds->renderBlockedReport(1, undef, undef, undef, undef, $opts);  
+#  print $report;
+  return($report, $blockReport); 
+}
+
 sub globalMeasureUnitTest(){
+   #use Carp qw(cluck);
+   ### Die on warning
+   #$SIG{__WARN__} = sub { cluck "Warning:\n", @_, "\n";  die; };
+   ### On die, make a stack trace
+   #$SIG{__DIE__} = \&Carp::confess;
   print "Global Measure Unit Test\n";
+  my ($report, $blockReport);
 		
     use MetricNormLinearCostFunct;
          
@@ -204,6 +304,25 @@ sub globalMeasureUnitTest(){
     $trial->addTrial("she", 0.92, "YES", 1); #3
     $trial->addTrial("she", 0.98, "YES", 0);
     $trial->addTrial("she", 1.0, "YES", 1);  #1
+    #           Thr   Pmiss     Pfa   TWval  SSDPmiss, SSDPfa, SSDValue, #blocks
+    my $trialPts
+        = [ [ ( 0.040,  0.000,  1.000,  9.900, undef, undef, undef,  1.000 ) ],
+            [ ( 0.050,  0.200,  1.000, 10.100, undef, undef, undef,  1.000 ) ],
+            [ ( 0.100,  0.200,  0.933,  9.440, undef, undef, undef,  1.000 ) ],
+            [ ( 0.150,  0.200,  0.733,  7.460, undef, undef, undef,  1.000 ) ],
+            [ ( 0.170,  0.200,  0.667,  6.800, undef, undef, undef,  1.000 ) ],
+            [ ( 0.200,  0.200,  0.600,  6.140, undef, undef, undef,  1.000 ) ],
+            [ ( 0.250,  0.200,  0.533,  5.480, undef, undef, undef,  1.000 ) ],
+            [ ( 0.650,  0.200,  0.467,  4.820, undef, undef, undef,  1.000 ) ],
+            [ ( 0.690,  0.200,  0.400,  4.160, undef, undef, undef,  1.000 ) ],
+            [ ( 0.700,  0.400,  0.400,  4.360, undef, undef, undef,  1.000 ) ],
+            [ ( 0.730,  0.400,  0.267,  3.040, undef, undef, undef,  1.000 ) ],
+            [ ( 0.750,  0.400,  0.200,  2.380, undef, undef, undef,  1.000 ) ],
+            [ ( 0.850,  0.600,  0.200,  2.580, undef, undef, undef,  1.000 ) ],
+            [ ( 0.900,  0.600,  0.133,  1.920, undef, undef, undef,  1.000 ) ],
+            [ ( 0.920,  0.600,  0.067,  1.260, undef, undef, undef,  1.000 ) ],
+            [ ( 0.980,  0.800,  0.067,  1.460, undef, undef, undef,  1.000 ) ],
+            [ ( 1.000,  0.800,  0.000,  0.800, undef, undef, undef,  1.000 ) ] ];
 
     ### Same data as $trial but with 5 OMITTED trials
     my $trialOmitted = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
@@ -232,6 +351,51 @@ sub globalMeasureUnitTest(){
     $trialOmitted->addTrial("she", undef, "OMITTED", 1);  
     $trialOmitted->addTrial("she", undef, "OMITTED", 1);  
     $trialOmitted->addTrial("she", undef, "OMITTED", 1);  
+    my $trialOmittedPts = 
+          [ [ ( 0.040,  0.500,  1.000, 10.400, undef, undef, undef,  1.000 ) ],
+            [ ( 0.050,  0.600,  1.000, 10.500, undef, undef, undef,  1.000 ) ],
+            [ ( 0.100,  0.600,  0.933,  9.840, undef, undef, undef,  1.000 ) ],
+            [ ( 0.150,  0.600,  0.733,  7.860, undef, undef, undef,  1.000 ) ],
+            [ ( 0.170,  0.600,  0.667,  7.200, undef, undef, undef,  1.000 ) ],
+            [ ( 0.200,  0.600,  0.600,  6.540, undef, undef, undef,  1.000 ) ],
+            [ ( 0.250,  0.600,  0.533,  5.880, undef, undef, undef,  1.000 ) ],
+            [ ( 0.650,  0.600,  0.467,  5.220, undef, undef, undef,  1.000 ) ],
+            [ ( 0.690,  0.600,  0.400,  4.560, undef, undef, undef,  1.000 ) ],
+            [ ( 0.700,  0.700,  0.400,  4.660, undef, undef, undef,  1.000 ) ],
+            [ ( 0.730,  0.700,  0.267,  3.340, undef, undef, undef,  1.000 ) ],
+            [ ( 0.750,  0.700,  0.200,  2.680, undef, undef, undef,  1.000 ) ],
+            [ ( 0.850,  0.800,  0.200,  2.780, undef, undef, undef,  1.000 ) ],
+            [ ( 0.900,  0.800,  0.133,  2.120, undef, undef, undef,  1.000 ) ],
+            [ ( 0.920,  0.800,  0.067,  1.460, undef, undef, undef,  1.000 ) ],
+            [ ( 0.980,  0.900,  0.067,  1.560, undef, undef, undef,  1.000 ) ],
+            [ ( 1.000,  0.900,  0.000,  0.900, undef, undef, undef,  1.000 ) ] ];
+
+    ### Same data as $trial but with 5 NoSystem trials
+    my $trialNoSystem = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+    $trialNoSystem->addTrial("she", undef, "OMITTED", 1);  
+    $trialNoSystem->addTrial("she", undef, "OMITTED", 1);  
+    $trialNoSystem->addTrial("she", undef, "OMITTED", 1);  
+    $trialNoSystem->addTrial("she", undef, "OMITTED", 1);  
+    $trialNoSystem->addTrial("she", undef, "OMITTED", 1);  
+    my $trialNoSystemPts = 
+          [ [ (    undef,  1.000, undef, undef, undef, undef, undef,  1.000 ) ] ];
+
+    ### Same data as $trial but with 5 OnlyFASystem trials
+    my $trialOnlyFASystem = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+    $trialOnlyFASystem->addTrial("she", undef, "OMITTED", 1);  
+    $trialOnlyFASystem->addTrial("she", undef, "OMITTED", 1);  
+    $trialOnlyFASystem->addTrial("she", undef, "OMITTED", 1);  
+    $trialOnlyFASystem->addTrial("she", undef, "OMITTED", 1);  
+    $trialOnlyFASystem->addTrial("she", undef, "OMITTED", 1);  
+    $trialOnlyFASystem->addTrial("she", 0.10, "NO", 0);
+    $trialOnlyFASystem->addTrial("she", 0.10, "NO", 0);
+    #           Thr   Pmiss     Pfa   TWval  SSDPmiss, SSDPfa, SSDValue, #blocks
+    my $trialOnlyFASystemPts = 
+          [ [ (    0.1,  1.000, 1.0, 10.900, undef, undef, undef,  1.000 ) ] ];
+
+    ### Same data as $trial but with 5 EmptyBlock trials
+    my $trialEmptyBlock = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+    $trialEmptyBlock->addEmptyBlock("she");
 
     my $trial2 = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
     $trial2->addTrial("she", 0.15, "NO", 1); #15
@@ -249,6 +413,21 @@ sub globalMeasureUnitTest(){
     $trial2->addTrial("she", 0.92, "YES", 1); #3
     $trial2->addTrial("she", 0.98, "YES", 0);
     $trial2->addTrial("she", 1.0, "YES", 1);  #1
+    my $trial2Pts = 
+          [ [ ( 0.150,  0.000,  1.000,  9.900, undef, undef, undef,  1.000 ) ],
+            [ ( 0.170,  0.333,  1.000, 10.233, undef, undef, undef,  1.000 ) ],
+            [ ( 0.200,  0.333,  0.917,  9.408, undef, undef, undef,  1.000 ) ],
+            [ ( 0.250,  0.333,  0.833,  8.583, undef, undef, undef,  1.000 ) ],
+            [ ( 0.650,  0.333,  0.750,  7.758, undef, undef, undef,  1.000 ) ],
+            [ ( 0.690,  0.333,  0.667,  6.933, undef, undef, undef,  1.000 ) ],
+            [ ( 0.700,  0.333,  0.583,  6.108, undef, undef, undef,  1.000 ) ],
+            [ ( 0.730,  0.333,  0.417,  4.458, undef, undef, undef,  1.000 ) ],
+            [ ( 0.750,  0.333,  0.333,  3.633, undef, undef, undef,  1.000 ) ],
+            [ ( 0.850,  0.333,  0.250,  2.808, undef, undef, undef,  1.000 ) ],
+            [ ( 0.900,  0.333,  0.167,  1.983, undef, undef, undef,  1.000 ) ],
+            [ ( 0.920,  0.333,  0.083,  1.158, undef, undef, undef,  1.000 ) ],
+            [ ( 0.980,  0.667,  0.083,  1.492, undef, undef, undef,  1.000 ) ],
+            [ ( 1.000,  0.667,  0.000,  0.667, undef, undef, undef,  1.000 ) ] ];
 
     my $trial3 = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
     $trial3->setPreserveTrialID(1);
@@ -267,147 +446,108 @@ sub globalMeasureUnitTest(){
     $trial3->addTrial("she", 0.92, "YES", 0, undef, "id12");
     $trial3->addTrial("she", 0.92, "YES", 1, undef, "id13"); #3
     $trial3->addTrial("she", 1.0, "YES",  1, undef, "id11");  #1
-
-    { 
-      print "  Computing Average Precision and AP'...";
-      my @isolinecoef = ( );
-      my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial);
-      my $legacyDet = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef, 1);
-      $legacyDet->computeAvgPrec();
-      $legacyDet->computeAvgPrecPrime();
-      #print Dumper($legacyDet->{GLOBALMEASURES});
-      if (! exists($legacyDet->{GLOBALMEASURES}{AP})){
-        print "\n  Error!!! Average Precision DET1 not computed\n";
-        exit(1);
-      }
-      if (abs($legacyDet->{GLOBALMEASURES}{AP}{MEASURE}{AP} - 0.563333) > 0.0001) {
-        print "\n  Error!!! Average Precision computed to be $legacyDet->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.563333.  Aborting\n";
-        exit(1);
-      }
-      my $appStr = "APP";
-      if (abs($legacyDet->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} - 0.20241409) > 0.0001) {
-        print "\n  Error!!! $appStr computed to be $legacyDet->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} not 0.20241409.  Aborting\n";
-        exit(1);
-      }
-
-      print "Ok\n  Computing Average Precision and AP' with Omitted trails...";
-      my @isolinecoef = ( );
-      my $metOmitted = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trialOmitted);
-      my $detOmitted = new DETCurve($trialOmitted, $metOmitted, "Targetted point", \@isolinecoef, undef, 1);
-      $detOmitted->computeAvgPrec();
-      $detOmitted->computeAvgPrecPrime();
-      if (! exists($detOmitted->{GLOBALMEASURES}{AP})){
-        print "\n  Error!!! Average Precision DET1 not computed\n";
-        exit(1);
-      }
-      if (abs($detOmitted->{GLOBALMEASURES}{AP}{MEASURE}{AP} - 0.281666) > 0.0001) {
-        print "\n  Error!!! Average Precision computed to be $detOmitted->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.281666.  Aborting\n";
-        exit(1);
-      }
-      my $appStr = "APP";
-      if (abs($detOmitted->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} - 0.1005993) > 0.0001) {
-        print "\n  Error!!! $appStr computed to be $detOmitted->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} not 0.1005993.  Aborting\n";
-        exit(1);
-      }
-     
-      my $met2 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial2);
-      my $legacyDet2 = new DETCurve($trial2, $met2, "Targetted point", \@isolinecoef, undef, 1);
-      $legacyDet2->computeAvgPrec();
-      $legacyDet2->computeAvgPrecPrime();
-      #print Dumper($legacyDet2->{GLOBALMEASURES});
-      if (! exists($legacyDet2->{GLOBALMEASURES}{AP})){
-        print "\n  Error!!! Average Precision not computed\n";
-        exit(1);
-      }
-      if (abs($legacyDet2->{GLOBALMEASURES}{AP}{MEASURE}{AP} - 0.62222) > 0.0001) {
-        print "\n  Error!!! Average Precision computed to be $legacyDet2->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.62222.  Aborting\n";
-        exit(1);
-      }
-      if (abs($legacyDet2->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} - 0.336341704) > 0.0001) {
-        print "\n  Error!!! $appStr computed to be $legacyDet2->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} not 0.336341704.  Aborting\n";
-        exit(1);
-      }
-
-      my $met3 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial3);
-      my $legacyDet3 = new DETCurve($trial3, $met3, "Targetted point", \@isolinecoef, undef, 1);
-      $legacyDet3->computeAvgPrec();
-      $legacyDet3->computeAvgPrecPrime();
-      #print Dumper($legacyDet2->{GLOBALMEASURES});
-      if (! exists($legacyDet3->{GLOBALMEASURES}{AP})){
-        print "\n  Error!!! Average Precision not computed\n";
-        exit(1);
-      }
-      if (abs($legacyDet3->{GLOBALMEASURES}{AP}{MEASURE}{AP} - 0.62222) > 0.0001) {
-        print "\n  Error!!! Average Precision computed to be $legacyDet3->{GLOBALMEASURES}{AP}{MEASURE}{AP} not 0.62222.  Aborting\n";
-        exit(1);
-      }
-      if (abs($legacyDet3->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} - 0.336341) > 0.0001) {
-        print "\n  Error!!! $appStr computed to be $legacyDet3->{GLOBALMEASURES}{$appStr}{MEASURE}{$appStr} not 0.336341.  Aborting\n";
-        exit(1);
-      }
-
-      print "OK\n";
-    }
-
-    { 
-      print "  Automatic computations ...\n";
-      my @isolinecoef = ( );
-      my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01, "AP" => "true", "APP" => "false") },
-                                              $trial);
-      my $legacyDet = new DETCurve($trial, $met, "First ", \@isolinecoef, undef, 1);
-      $legacyDet->computePoints();
-
-      my $met2 = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01, "AP" => "false", "APP" => "true") },
-                                               $trial2);
-      my $legacyDet2 = new DETCurve($trial2, $met2, "Second", \@isolinecoef, undef, 1);
-      $legacyDet2->computePoints();
+    my $trial3Pts =
+          [ [ ( 0.150,  0.000,  1.000,  9.900, undef, undef, undef,  1.000 ) ],
+            [ ( 0.170,  0.333,  1.000, 10.233, undef, undef, undef,  1.000 ) ],
+            [ ( 0.200,  0.333,  0.917,  9.408, undef, undef, undef,  1.000 ) ],
+            [ ( 0.250,  0.333,  0.833,  8.583, undef, undef, undef,  1.000 ) ],
+            [ ( 0.650,  0.333,  0.750,  7.758, undef, undef, undef,  1.000 ) ],
+            [ ( 0.690,  0.333,  0.667,  6.933, undef, undef, undef,  1.000 ) ],
+            [ ( 0.700,  0.333,  0.583,  6.108, undef, undef, undef,  1.000 ) ],
+            [ ( 0.730,  0.333,  0.417,  4.458, undef, undef, undef,  1.000 ) ],
+            [ ( 0.750,  0.333,  0.333,  3.633, undef, undef, undef,  1.000 ) ],
+            [ ( 0.920,  0.333,  0.250,  2.808, undef, undef, undef,  1.000 ) ],
+            [ ( 1.000,  0.667,  0.000,  0.667, undef, undef, undef,  1.000 ) ] ];
   
-      print "    AP Computed ...";
-      if (! exists($legacyDet->{GLOBALMEASURES}{AP})){
-        print "\n  Error!!! Average Precision not computed for DET1\n";
-        exit(1);
-      }
-      print "Ok\n";
-      print "    AP Not Computed ...";
-      if (exists($legacyDet2->{GLOBALMEASURES}{AP})){
-        print "\n  Error!!! Average Precision exists but should not\n";
-        exit(1);
-      }
-      print "Ok\n";
-      print "    AP' Computed ...";
-      if (! exists($legacyDet2->{GLOBALMEASURES}{"APP"})){
-        print "\n  Error!!! AP' not computed for DET2\n";
-        exit(1);
-      }
-      print "Ok\n";
-      print "    AP' Not Computed ...";
-      if (exists($legacyDet->{GLOBALMEASURES}{"APP"})){
-        print "\n  Error!!! AP' not computed but should not have been\n";
-        exit(1);
-      }
-      print "Ok\n";
+    my $trial4 = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
+    $trial4->setPreserveTrialID(1);
+    $trial4->addTrial("she", 0.15, "NO",  0, undef);
+    $trial4->addTrial("she", 0.17, "NO",  0, undef);
+    $trial4->addTrial("she", 0.20, "NO",  1, undef);
+    $trial4->addTrial("she", 0.25, "YES", 0, undef);
+    $trial4->addTrial("she", 0.65, "YES", 0, undef);
+    $trial4->addTrial("she", 0.69, "YES", 0, undef); 
+    $trial4->addTrial("she", 0.70, "YES", 1, undef);
+    $trial4->addTrial("she", 0.71, "YES", 0, undef);
+    $trial4->addTrial("she", 0.73, "YES", 0, undef);
+    $trial4->addTrial("she", 0.75, "YES", 1, undef);
+    $trial4->addTrial("she", 0.80, "YES", 0, undef);
+    $trial4->addTrial("she", 0.86, "YES", 1, undef);
+    $trial4->addTrial("she", 0.90, "YES", 1, undef);
+    $trial4->addTrial("she", 0.92, "YES", 1, undef);  
+    $trial4->addTrial("she", 1.00, "YES", 1, undef);
+    my $trial4Pts =
+          [ [ ( 0.150,  0.000,  1.000,  9.900, undef, undef, undef,  1.000 ) ],
+            [ ( 0.170,  0.000,  0.875,  8.662, undef, undef, undef,  1.000 ) ],
+            [ ( 0.200,  0.000,  0.750,  7.425, undef, undef, undef,  1.000 ) ],
+            [ ( 0.250,  0.143,  0.750,  7.568, undef, undef, undef,  1.000 ) ],
+            [ ( 0.650,  0.143,  0.625,  6.330, undef, undef, undef,  1.000 ) ],
+            [ ( 0.690,  0.143,  0.500,  5.093, undef, undef, undef,  1.000 ) ],
+            [ ( 0.700,  0.143,  0.375,  3.855, undef, undef, undef,  1.000 ) ],
+            [ ( 0.710,  0.286,  0.375,  3.998, undef, undef, undef,  1.000 ) ],
+            [ ( 0.730,  0.286,  0.250,  2.761, undef, undef, undef,  1.000 ) ],
+            [ ( 0.750,  0.286,  0.125,  1.523, undef, undef, undef,  1.000 ) ],
+            [ ( 0.800,  0.429,  0.125,  1.666, undef, undef, undef,  1.000 ) ],
+            [ ( 0.860,  0.429,  0.000,  0.429, undef, undef, undef,  1.000 ) ],
+            [ ( 0.900,  0.571,  0.000,  0.571, undef, undef, undef,  1.000 ) ],
+            [ ( 0.920,  0.714,  0.000,  0.714, undef, undef, undef,  1.000 ) ],
+            [ ( 1.000,  0.857,  0.000,  0.857, undef, undef, undef,  1.000 ) ] ];
+  
+    _testOneBlock("Full system coverage of trials", $trial, $trialPts, 
+                  { AP => 0.563333, APP => 0.20241409},
+                  { OPTIMUMCOMB  => { COMB => 0.8, MMISS => 0.8, MFA => 0.0, DETECTIONSCORE => undef},
+                    SUPREMUMCOMB => { COMB => 0.0, MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => undef}},
+                  { "she" => {OPTIMUMCOMB  => { COMB => 0.8, MMISS => 0.8, MFA => 0, DETECTIONSCORE => 1},
+                              SUPREMUMCOMB => { COMB => 0.0, MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => 0.5}}});
+    _testOneBlock("Full system coverage of trials, unsorted trials case 1", $trial2, $trial2Pts, 
+                  { AP => 0.62222, APP => 0.336341704},
+                  { OPTIMUMCOMB  => { COMB => 0.6666, MMISS => 0.6667, MFA => 0.0, DETECTIONSCORE => undef},
+                    SUPREMUMCOMB => { COMB => 0,      MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => undef}},
+                  { "she" => {OPTIMUMCOMB  => { COMB => 0.6667, MMISS => 0.6667, MFA => 0, DETECTIONSCORE => 1},
+                              SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}}});
+    _testOneBlock("Full system coverage of trials, unsorted trials case 2", $trial3, $trial3Pts, 
+                  { AP => 0.62222, APP => 0.336341704},
+                  { OPTIMUMCOMB  => { COMB => 0.6666, MMISS => 0.6667, MFA => 0.0, DETECTIONSCORE => undef},
+                    SUPREMUMCOMB => { COMB => 0,      MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => undef}},
+                  { "she" => {OPTIMUMCOMB  => { COMB => 0.6667, MMISS => 0.6667, MFA => 0, DETECTIONSCORE => 1},
+                              SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}}});
+    _testOneBlock("Full system coverage of trials, Optimum internal", $trial4, $trial4Pts, 
+                  { AP => 0.862637, APP => 0.572757},
+                  { OPTIMUMCOMB  => { COMB => 0.429, MMISS => 0.429, MFA => 0.0, DETECTIONSCORE => undef},
+                    SUPREMUMCOMB => { COMB => 0,     MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => undef}},
+                  { "she" => {OPTIMUMCOMB  => { COMB => 0.429, MMISS => 0.429, MFA => 0, DETECTIONSCORE => 0.860},
+                              SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}}});
+    _testOneBlock("Omitted Trials", $trialOmitted, $trialOmittedPts, 
+                  { AP => 0.281666, APP => 0.1005993},
+                  { OPTIMUMCOMB  => { COMB => 0.9, MMISS => 0.9, MFA => 0.0, DETECTIONSCORE => undef},
+                    SUPREMUMCOMB => { COMB => 0.5, MMISS => 0.5, MFA => 0.0, DETECTIONSCORE => undef}},
+                  { "she" => {OPTIMUMCOMB  => { COMB => 0.9, MMISS => 0.9, MFA => 0, DETECTIONSCORE => 1},
+                              SUPREMUMCOMB => { COMB => 0.5, MMISS => 0.5, MFA => 0.0, DETECTIONSCORE => 0.5}}});
+    _testOneBlock("No System output", $trialNoSystem, $trialNoSystemPts, 
+                  { AP => 0, APP => undef},
+                  { OPTIMUMCOMB  => { COMB => undef, MMISS => undef, MFA => undef, DETECTIONSCORE => undef},
+                    SUPREMUMCOMB => { COMB => undef, MMISS => undef, MFA => undef, DETECTIONSCORE => undef}},
+                  { "she" => {OPTIMUMCOMB  => undef,
+                              SUPREMUMCOMB => undef }});
+    _testOneBlock("Only system false alarms", $trialOnlyFASystem, $trialOnlyFASystemPts, 
+                  { AP => 0, APP => 0},
+                  { OPTIMUMCOMB  => { COMB => 10.9, MMISS => 1.0, MFA => 1.0, DETECTIONSCORE => undef},
+                    SUPREMUMCOMB => { COMB => 1.0,  MMISS => 1.0, MFA => 0.0, DETECTIONSCORE => undef}},
+                  { "she" => {OPTIMUMCOMB  => { COMB => 10.9, MMISS => 1, MFA => 1, DETECTIONSCORE => 0.1},
+                              SUPREMUMCOMB => { COMB => 1,    MMISS => 1, MFA => 0, DETECTIONSCORE => 0.5}}});
+                    
 
-      if (0){ 
-        use DETCurveSet;
-        my $ds = new DETCurveSet("title");
-        my $rtn = $ds->addDET("First", $legacyDet);
-        MMisc::error_quit("Unable to add 1st DET /$rtn/") if ($rtn ne "success");
-
-        $rtn = $ds->addDET("Second", $legacyDet2);
-        MMisc::error_quit("Unable to add second DET /$rtn/") if ($rtn ne "success");
-        my $txt = $ds->renderAsTxt("foomerge", 1, {(createDETfiles => 0, ReportGlobal => 1, ExcludePNGFileFromTextTable => 1)});  
-        print $txt;
-      }
-    }
-
+ 
   print "Computing Mean Average Precision\n";
   my $mbTrial = new TrialsFuncs({ () }, "Term Detection", "Term", "Occurrence");
   $mbTrial->setPreserveTrialID(1);
   my $blkNum = 1;
-  foreach my $_tr($trial, $trial2, $trial3, $trialOmitted){
+  foreach my $_tr($trial, $trial2, $trial3, $trial4, $trialOmitted, $trialNoSystem, $trialOnlyFASystem){
+#  foreach my $_tr($trial, $trial2, $trial3, $trial4){
+#  foreach my $_tr($trial, $trial2, $trial3, $trial4, ){
     my @blocks = $_tr->getBlockIDs();
     my $ranks = $_tr->getRanks($blocks[0]);
- #   print Dumper($ranks);
+    #   print Dumper($ranks);
     foreach my $rankData(@$ranks){
       $mbTrial->addTrial("blk-$blkNum", $rankData->[1], ($rankData->[1] > .23 ? "YES" : "NO"), $rankData->[2],
         undef, (defined($rankData->[3]) ? $rankData->[3] : undef));
@@ -417,33 +557,56 @@ sub globalMeasureUnitTest(){
     }
     $blkNum++;
   }
-#  print $mbTrial->dump("");
-  my $mbMet = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $mbTrial);
-  $mbMet->setPerformGlobalMeasure("MAP", "true");
-  $mbMet->setPerformGlobalMeasure("MAPP", "true");
-  $mbMet->setPerformGlobalMeasure("MAPpct", "true");
-  $mbMet->setPerformGlobalMeasure("MAPPpct", "true");
-  my $mbDet = new DETCurve($mbTrial, $mbMet, "MultiBlockDET",[ () ], undef, 1);
-  my $mbDS = new DETCurveSet("MultiBlock");
-  my $rtn = $mbDS->addDET("First", $mbDet);
-  MMisc::error_quit("Unable to add single mulitBlock DET to a set /$rtn/") if ($rtn ne "success");
-  my $txt = $mbDS->renderAsTxt("foomerge", 1, 
-        {(createDETfiles => 0, ReportGlobal => 1, ExcludePNGFileFromTextTable => 1)});  
-#  print $txt;
-#  print Dumper($mbDet->{GLOBALMEASURES} );
-  #  $apData{MEASURE}{FORMAT} = "%.2f";   These will be set from the first computation below
-  print "  Mean AP Computed ...";
-  if (abs($mbDet->{GLOBALMEASURES}{MAP}{MEASURE}{MAP} - 0.522361) > 0.0001) {
-    print "\n  Error!!! Mean Average Precision computed to be $mbDet->{GLOBALMEASURES}{MAP}{MEASURE}{MAP} not 0.60259.  Aborting\n";
-    exit(1);
-  }
-  print "Ok\n";
-  print "  Mean AP' Computed ...";
-  if (abs($mbDet->{GLOBALMEASURES}{MAPP}{MEASURE}{MAPP} - 0.243905) > 0.0001) {
-    print "\n  Error!!! Mean Average Precision' computed to be $mbDet->{GLOBALMEASURES}{MAPP}{MEASURE}{MAPP} not 0.291699.  Aborting\n";
-    exit(1);
-  }
-  print "Ok\n";
+  ### Add an empty block
+  $mbTrial->addEmptyBlock("blk-empty");
+  my $mbTrialPts =  
+          [ [ ( 0.040,  0.357,  1.000, 10.257,  0.476,  0.000, undef,  7.000 ) ],
+            [ ( 0.050,  0.400,  1.000, 10.300,  0.462,  0.000, undef,  7.000 ) ],
+            [ ( 0.100,  0.400,  0.978, 10.080,  0.462,  0.034, undef,  7.000 ) ],
+            [ ( 0.150,  0.400,  0.744,  7.770,  0.462,  0.387, undef,  7.000 ) ],
+            [ ( 0.170,  0.495,  0.701,  7.439,  0.388,  0.375, undef,  7.000 ) ],
+            [ ( 0.200,  0.495,  0.631,  6.738,  0.388,  0.340, undef,  7.000 ) ],
+            [ ( 0.250,  0.516,  0.581,  6.263,  0.361,  0.316, undef,  7.000 ) ],
+            [ ( 0.650,  0.516,  0.510,  5.562,  0.361,  0.280, undef,  7.000 ) ],
+            [ ( 0.690,  0.516,  0.439,  4.861,  0.361,  0.246, undef,  7.000 ) ],
+            [ ( 0.700,  0.559,  0.390,  4.422,  0.344,  0.213, undef,  7.000 ) ],
+            [ ( 0.710,  0.579,  0.290,  3.453,  0.318,  0.158, undef,  7.000 ) ],
+            [ ( 0.730,  0.579,  0.269,  3.246,  0.318,  0.153, undef,  7.000 ) ],
+            [ ( 0.750,  0.579,  0.199,  2.545,  0.318,  0.127, undef,  7.000 ) ],
+            [ ( 0.800,  0.642,  0.171,  2.333,  0.294,  0.095, undef,  7.000 ) ],
+            [ ( 0.850,  0.642,  0.150,  2.127,  0.294,  0.118, undef,  7.000 ) ],
+            [ ( 0.860,  0.642,  0.114,  1.770,  0.294,  0.098, undef,  7.000 ) ],
+            [ ( 0.900,  0.663,  0.114,  1.790,  0.282,  0.098, undef,  7.000 ) ],
+            [ ( 0.920,  0.683,  0.078,  1.453,  0.279,  0.092, undef,  7.000 ) ],
+            [ ( 0.980,  0.841,  0.036,  1.199,  0.140,  0.040, undef,  7.000 ) ],
+            [ ( 1.000,  0.841,  0.000,  0.841,  0.140,  0.000, undef,  7.000 ) ] ];
+  ($report, $blockReport) = _testOneBlock("Combined Block DET", $mbTrial, $mbTrialPts, 
+                  { MAP => 0.4217259, MAPP => 0.258063},
+                  { OPTIMUMCOMB  => { COMB => 0.7437, MMISS => 0.744, MFA => 0.0, DETECTIONSCORE => undef},
+                    SUPREMUMCOMB => { COMB => 0.3571, MMISS => 0.3571, MFA => 0.0, DETECTIONSCORE => undef}},
+                  { "blk-1"=>{OPTIMUMCOMB  => { COMB => 0.8, MMISS => 0.8, MFA => 0, DETECTIONSCORE => 1},
+                              SUPREMUMCOMB => { COMB => 0.0, MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => 0.5}},
+                    "blk-2"=>{OPTIMUMCOMB  => { COMB => 0.6667, MMISS => 0.6667, MFA => 0, DETECTIONSCORE => 1},
+                              SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
+                    "blk-3"=>{OPTIMUMCOMB  => { COMB => 0.6667, MMISS => 0.6667, MFA => 0, DETECTIONSCORE => 1},
+                              SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
+                    "blk-4"=>{OPTIMUMCOMB  => { COMB => 0.429, MMISS => 0.429, MFA => 0, DETECTIONSCORE => 0.860},
+                              SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
+                    "blk-5"=>{OPTIMUMCOMB  => { COMB => 0.9, MMISS => 0.9, MFA => 0, DETECTIONSCORE => 1},
+                              SUPREMUMCOMB => { COMB => 0.5, MMISS => 0.5, MFA => 0.0, DETECTIONSCORE => 0.5}},
+                    "blk-6"=>{OPTIMUMCOMB  => undef,
+                              SUPREMUMCOMB => undef },
+                    "blk-7"=>{OPTIMUMCOMB  => { COMB => 1,    MMISS => 1, MFA => 0, DETECTIONSCORE => 0.15},
+                                              # Things change in the context of other blocks because this can now go to FA=1
+                                              #{ COMB => 10.9, MMISS => 1, MFA => 1, DETECTIONSCORE => 0.1}
+                              SUPREMUMCOMB => { COMB => 1,    MMISS => 1, MFA => 0, DETECTIONSCORE => 0.5}}
+                  }
+
+                );
+
+  #print $report;
+  #print $blockReport;
+
 }
 
 sub bigDETUnitTest {
@@ -1340,6 +1503,26 @@ sub getPoints(){
   (exists($self->{POINTS}) ? $self->{POINTS} : undef); 
 }
 
+sub getPointsAsPerlArrayOfArrays(){
+  my ($self) = @_;
+  $self->computePoints();
+  my $str = "my \$pts = [ ";
+  for (my $i=0; $i < @{ $self->{POINTS} }; $i++){
+    $str .= "            " if ($i != 0);
+    $str .= "[ (";
+    for (my $j=0; $j<@{ $self->{POINTS}[$i] }; $j++){
+      $str .= (defined($self->{POINTS}[$i][$j]) ? 
+               sprintf("%6.3f", $self->{POINTS}[$i][$j]) : "undef");
+      $str .= ", " if ($j < @{ $self->{POINTS}[$i] } - 1); 
+    }
+    $str .= " ) ]";
+    $str .= ",\n" if ($i < @{ $self->{POINTS} }-1)
+  }
+  $str .= " ];\n";
+  return $str;
+}
+
+
 sub getMinDecisionScore(){
   my ($self) = @_;
   $self->{MINSCORE};
@@ -1673,8 +1856,8 @@ sub Compute_blocked_DET_points
       if (defined($blocks{$blk}{OPTIMUMCOMB}{DETECTIONSCORE})){
         $self->{OPTIMUMCOMB}{BLOCKS}{$blk}{DETECTIONSCORE} = $blocks{$blk}{OPTIMUMCOMB}{DETECTIONSCORE};
         $self->{OPTIMUMCOMB}{BLOCKS}{$blk}{COMB} =           $blocks{$blk}{OPTIMUMCOMB}{COMB};
-        $self->{OPTIMUMCOMB}{BLOCKS}{$blk}{MFA} =            $blocks{$blk}{OPTIMUMCOMB}{MFA};
-        $self->{OPTIMUMCOMB}{BLOCKS}{$blk}{MMISS} =          $blocks{$blk}{OPTIMUMCOMB}{MMISS};
+        $self->{OPTIMUMCOMB}{BLOCKS}{$blk}{MFA} =            $blocks{$blk}{OPTIMUMCOMB}{CACHEDMFA};
+        $self->{OPTIMUMCOMB}{BLOCKS}{$blk}{MMISS} =          $blocks{$blk}{OPTIMUMCOMB}{CACHEDMMISS};
       }    
     }    
 #    print Dumper($self->{OPTIMUMCOMB});    
@@ -1686,7 +1869,7 @@ sub Compute_blocked_DET_points
     $self->{SUPREMUMCOMB}{COMB} = $combBSet;
     $self->{SUPREMUMCOMB}{MMISS} = $missBSet;
     $self->{SUPREMUMCOMB}{MFA} = $faBSet;
-  
+
     foreach my $blk(keys %blocks){
       if (defined($blocks{$blk}{SUPREMUMCOMB}{DETECTIONSCORE})){
         $self->{SUPREMUMCOMB}{BLOCKS}{$blk}{DETECTIONSCORE} = $blocks{$blk}{SUPREMUMCOMB}{DETECTIONSCORE};
@@ -2060,13 +2243,14 @@ sub _computeMeanForAP{
   #  $apData{MEASURE}{UNIT} = ""; 
  
   my %blockStats = ();
+  my %blockInfo = ();
   my ($sum, $numBlk) = (0,0);
   foreach my $block($self->{TRIALS}->getBlockIDs()){
     $self->_computeAvgPrecByType($blockMeasureID, $block);
 #    print "global $block: ".Dumper($self->{GLOBALMEASURES} );
-    if ($self->{GLOBALMEASURES}{$blockMeasureID}{STATUS} ne "Computed"){
+    if ($self->{GLOBALMEASURES}{$blockMeasureID}{STATUS} eq "NotApplicable"){
       $apData{STATUS} = "NotApplicable";
-      $apData{STATUSMESG} = "Error computing $blockMeasureID for $block.  Status message was /$self->{GLOBALMEASURES}{$blockMeasureID}{STATUSMESG}/";
+      $apData{STATUSMESG} = "Error computing $blockMeasureID for $block.  Status was /$self->{GLOBALMEASURES}{$blockMeasureID}{STATUS}/ with message /$self->{GLOBALMEASURES}{$blockMeasureID}{STATUSMESG}/";
       $self->{GLOBALMEASURES}{$measureID} = \%apData;
       delete $self->{GLOBALMEASURES}{$blockMeasureID};
       return;
@@ -2082,10 +2266,16 @@ sub _computeMeanForAP{
       $apData{MEASURE}{PERBLOCKABBREVSTRING} = $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{ABBREVSTRING};      
     }
     
-    ### Harvewt the stats
-    $blockStats{$block} = $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{$blockMeasureID};  
-    $sum += $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{$blockMeasureID};  
-    $numBlk ++;
+    ### Harvest the stats IFF the data was computable
+    if ($self->{GLOBALMEASURES}{$blockMeasureID}{STATUS} eq "Computed"){
+      $blockStats{$block} = $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{$blockMeasureID};  
+      $sum += $self->{GLOBALMEASURES}{$blockMeasureID}{MEASURE}{$blockMeasureID};  
+      $numBlk ++;
+    } else {
+      $blockStats{$block} = undef;  
+      $blockInfo{$block}{STATUS} = $self->{GLOBALMEASURES}{$blockMeasureID}{STATUS}; 
+      $blockInfo{$block}{STATUSMESG} = $self->{GLOBALMEASURES}{$blockMeasureID}{STATUSMESG}; 
+    }
     
     ### Delete the block stats
     delete $self->{GLOBALMEASURES}{$blockMeasureID};   
@@ -2094,6 +2284,7 @@ sub _computeMeanForAP{
   $apData{STATUSMESG} = "Successful";
   $apData{MEASURE}{$measureID} = $sum / $numBlk;
   $apData{MEASURE}{PERBLOCK} = \%blockStats;
+  $apData{MEASURE}{PERBLOCKINFO} = \%blockInfo;
   $self->{GLOBALMEASURES}{$measureID} = \%apData;
   return;   
 }
@@ -2155,11 +2346,41 @@ sub computeMeanAvgPrecPrimePct{
 #    Precision'(rank) = p * tp(rank) / [ p * tp(rank) + f * fp(rank) ] where
 #        p = 100 / number of positive event videos in the searched video set
 #        f = 99,900 / number of false event videos in the searched video set
-        
+      
+      
+# Status messages:
+#  NotApplicable = Fatal error
+#  NotComputable = For a reason, this block does not have an AP
+  
 sub _computeAvgPrecByType{
   my ($self, $measureID, $blockID) = @_;
   my ($weightP, $weightF, $scale) = (1, 1, 1);
   my %apData = ();
+
+  if ($measureID eq "APP"){
+    $scale = 1;
+    $apData{MEASURE}{STRING} = "AP'";
+    $apData{MEASURE}{ABBREVSTRING} = "AP'";
+    $apData{MEASURE}{FORMAT} = "%.2f"; 
+    $apData{MEASURE}{UNIT} = ""; 
+  } elsif ($measureID eq "APPpct"){
+    $scale = 100;
+    $apData{MEASURE}{STRING} = "AP'";
+    $apData{MEASURE}{ABBREVSTRING} = "AP'";
+    $apData{MEASURE}{FORMAT} = "%.1f"; 
+    $apData{MEASURE}{UNIT} = "%"; 
+  } elsif ($measureID eq "AP"){
+    $apData{MEASURE}{STRING} = "AP";
+    $apData{MEASURE}{ABBREVSTRING} = "AP";
+    $apData{MEASURE}{FORMAT} = "%.2f";
+    $apData{MEASURE}{UNIT} = ""; 
+  } elsif ($measureID eq "APpct"){
+    $scale = 100;
+    $apData{MEASURE}{STRING} = "AP";
+    $apData{MEASURE}{ABBREVSTRING} = "AP";
+    $apData{MEASURE}{FORMAT} = "%.1f";
+    $apData{MEASURE}{UNIT} = "%"; 
+  }
 
   ### IF already computed, don't recompute
   return if (exists($self->{GLOBALMEASURES}{$measureID}));
@@ -2191,7 +2412,7 @@ sub _computeAvgPrecByType{
   
   ## Make sure the block is evaluable
   if (! $self->{TRIALS}->isBlockEvaluated($blk)){
-     $apData{STATUS} = "NotApplicable";
+     $apData{STATUS} = "NotComputable";
      $apData{STATUSMESG} = "Single Block '$blk' is not evaluable";
      $self->{GLOBALMEASURES}{$measureID} = \%apData;
      return;
@@ -2209,34 +2430,21 @@ sub _computeAvgPrecByType{
     }                                        
   }                                          
 
-  if ($measureID eq "APP"){
+  if ($measureID eq "APP" || $measureID eq "APPpct"){
+    if ($self->{TRIALS}->getNumTarg($blk) == 0){
+       $apData{STATUS} = "NotComputable";
+       $apData{STATUSMESG} = "Single Block '$blk' has no target trails to compute AP'";
+       $self->{GLOBALMEASURES}{$measureID} = \%apData;
+       return;
+    }
+      if ($self->{TRIALS}->getNumNonTarg($blk) == 0){
+       $apData{STATUS} = "NotComputable";
+       $apData{STATUSMESG} = "Single Block '$blk' has no non-target trails to compute AP'";
+       $self->{GLOBALMEASURES}{$measureID} = \%apData;
+       return;
+    }
     $weightP = 100 / $self->{TRIALS}->getNumTarg($blk); 
     $weightF = 99900 / $self->{TRIALS}->getNumNonTarg($blk); 
-    $scale = 1;
-    $apData{MEASURE}{STRING} = "AP'";
-    $apData{MEASURE}{ABBREVSTRING} = "AP'";
-    $apData{MEASURE}{FORMAT} = "%.2f"; 
-    $apData{MEASURE}{UNIT} = ""; 
-  } elsif ($measureID eq "APPpct"){
-    $weightP = 100 / $self->{TRIALS}->getNumTarg($blk); 
-    $weightF = 99900 / $self->{TRIALS}->getNumNonTarg($blk); 
-    $scale = 100;
-    $apData{MEASURE}{STRING} = "AP'";
-    $apData{MEASURE}{ABBREVSTRING} = "AP'";
-    $apData{MEASURE}{FORMAT} = "%.1f"; 
-    $apData{MEASURE}{UNIT} = "%"; 
-  } elsif ($measureID eq "AP"){
-    $scale = 1;
-    $apData{MEASURE}{STRING} = "AP";
-    $apData{MEASURE}{ABBREVSTRING} = "AP";
-    $apData{MEASURE}{FORMAT} = "%.2f";
-    $apData{MEASURE}{UNIT} = ""; 
-  } elsif ($measureID eq "APpct"){
-    $scale = 100;
-    $apData{MEASURE}{STRING} = "AP";
-    $apData{MEASURE}{ABBREVSTRING} = "AP";
-    $apData{MEASURE}{FORMAT} = "%.1f";
-    $apData{MEASURE}{UNIT} = "%"; 
   }
   # print "  WeightP = $weightP\n  WeightF = $weightF\n";
   my $sum = 0;
