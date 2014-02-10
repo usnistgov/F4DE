@@ -97,6 +97,19 @@ check_dir () {
     if [ ! -r "$1" ]; then error_quit "Directory ($1) is not readable"; fi
 }
 
+find_file_in_dbDir () {
+  filev=""
+  for dbd in $dbDir_list
+  do
+      if [ "A$filev" == "A" ]; then
+          tmp_filev="$dbd/samples/$1"
+          if [ -f $tmp_filev ]; then
+            filev=$tmp_filev
+          fi
+      fi
+  done
+}
+
 get_basedir () {
     wbd=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname"; print dirname(abs_path($ARGV[0]));' $1`
 }
@@ -152,19 +165,45 @@ run_good=""
 
 for f in $cfl
 do
-    xtra=""
-    xtraf="$f.conf_SubmissionHelper"
-    if [ -f $xtraf ]; then
-        xtra=`cat $xtraf`
-    fi
-    $tool -A $f $subhelp $subhelp -E $subhelp_xtras $xtra
+    ff=`echo $f | perl -ne 'if (m%^.+/([^\/]+)$%){ print $1;}else{print $_;}'`
+    eval=`echo $ff | perl -ne 'print $1 if (m%^(\w+?)_%);'`
+    inf=`echo $ff | perl -ne 'print $1 if (m%^(.+?)_____%);'`
 
-    if [ "${?}" -ne "0" ]; then
-        run_bad="${run_bad} $f"
+    conf="$subhelp_dir/${eval}_SubmissionHelper.cfg"
+    if [ ! -f "$conf" ]; then
+        echo "!! Skipping test: No $eval configuration file ($conf)"
     else
-        run_good="${run_good} $f"
+	source $conf
+
+	dbDir_list=$(echo $dbDir | tr ":" "\n")
+	find_file_in_dbDir "$inf"
+        finf="$filev"
+	if [ "A$finf" == "A" ]; then
+	    echo "!! Skipping $f, couldn't find submission"
+	    run_skipped="${run_skipped} $f"
+	    continue
+	fi
+
+	xtra=""
+	xtraf="$f.conf_SubmissionHelper"
+	if [ -f $xtraf ]; then
+            xtra=`cat $xtraf`
+	fi
+	if [ "A$eval" == "AKWS14" ]; then
+	    descf=`echo $finf | perl -ne 'if (m%(.+)(\.kwslist\.xml|\.ctm)$%) {print "$1.sysdesc.txt\n"} else {print "$0\n"}'`
+	    sysdesc_xtra="-S $descf"
+	else
+	    sysdesc_xtra=""
+	fi
+	echo $tool -A $f $subhelp $subhelp -E $subhelp_xtras $sysdesc_xtra $xtra
+	$tool -A $f $subhelp $subhelp -E $subhelp_xtras $sysdesc_xtra $xtra
+
+	if [ "${?}" -ne "0" ]; then
+            run_bad="${run_bad} $f"
+	else
+            run_good="${run_good} $f"
+	fi	
     fi
-    
 done
 
 echo ""
@@ -174,6 +213,9 @@ for i in $run_good; do echo $i; done
 echo ""
 echo "***** "`echo $run_bad | wc -w`" BAD"
 for i in $run_bad; do echo $i; done
+echo ""
+echo "***** "`echo $run_skipped | wc -w`" SKIPPED"
+for i in $run_skipped; do echo $i; done
 
 exit 0
 
