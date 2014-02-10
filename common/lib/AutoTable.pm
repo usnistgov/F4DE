@@ -1489,6 +1489,37 @@ sub renderGrid(){
   return $str;
 }
 
+sub loadGridFromFile{
+  my ($filename, $sep, $encoding) = @_;
+  
+  $sep = '\s' unless(defined($sep));
+  
+  my $err = MMisc::check_file_r($filename);
+  return undef if (! MMisc::is_blank($err));
+  
+  my $at = new AutoTable();
+  if (defined($encoding)){
+    return (undef) if (! $at->setEncoding($encoding));
+  }
+  
+  if (!open (FILE, $filename)){
+    print STDERR "Error: unable to open '$filename' in loadGridFromFile().  Returning undef.\n";
+    return undef;
+  }
+  binmode FILE, $at->getPerlEncodingString()
+    if (! MMisc::is_blank($at->getPerlEncodingString()));
+
+  while (<FILE>){
+    chomp;
+    my @a = split(/$sep/);
+        
+    $at->addData($a[0], $a[1], $a[2]);
+    $at->setSpecial($a[1], $a[2], $a[3]) if (@a > 3);
+  }
+  close FILE;
+  return $at;
+}
+
 sub loadGridFromSTDIN{
   my ($renderer, $props) = @_;
   #print Dumper($props);
