@@ -116,8 +116,8 @@ my $ProcGraph = undef;
 my $sha256 = "";
 my $sctkbindir = "";
 my $sysdesc = "";
-my $sysmetadatadumpf = "";
-my $sysmetadataat = undef;
+my $sysMetadataDumpf = "";
+my $sysMetadataAT = undef;
 my $eteam = undef;
 my $bypassxmllint = 0;
 my $xpng = 0;
@@ -152,7 +152,7 @@ GetOptions
    'Hsha256id=s' => \$sha256,
    'Tsctkbin=s' => \$sctkbindir,
    'tSystemDescription=s' => \$sysdesc,
-   'mSystemMeta=s' => \$sysmetadatadumpf,
+   'mSystemMeta=s' => \$sysMetadataDumpf,
    'ExpectedTeamName=s' => \$eteam,
    'XmllintBypass' => \$bypassxmllint,
    'ExcludePNGFileFromTxtTable'          => \$xpng,
@@ -214,12 +214,13 @@ if (defined($extendedRunIndusDataDef)){
       if (! MMisc::make_dir($scrdir."-Extended")); 
   }  
 }
-if (! MMisc::is_blank($sysmetadatadumpf)) {
-    $err = MMisc::check_file_r($sysmetadatadumpf);
-    if (! MMisc::is_blank($err)) {
-	$sysmetadataat = new AutoTable();
-	$sysmetadataat->loadCSV($sysmetadatadumpf, undef, undef, undef, undef, "\t");
-    }
+if (! MMisc::is_blank($sysMetadataDumpf)) {
+  $err = MMisc::check_file_r($sysMetadataDumpf);
+  if (MMisc::is_blank($err)) {
+    $sysMetadataAT = AutoTable::loadGridFromFile($sysMetadataDumpf, "\t", undef);
+    MMisc::error_quit("Problem loading system metadata file '$sysMetadataDumpf'") if (! defined($sysMetadataDumpf));
+    system ("cp $sysMetadataDumpf $scrdir/SystemMetadata.tsv");
+  }
 }
 
 $ENV{PATH} .= ":".$sctkbindir if (! MMisc::is_blank($sctkbindir));
@@ -327,9 +328,14 @@ my @parseInfo = ("Info: EXPID = $expid",
                  "Info: SCTKBin = $sctkbindir",
                  "Info: SHA256 = $sha256",
                  "Info: evalYearSpecificKWSOptions = $evalYearSpecificKWSOptions",
-                 "Info: SystemMetadata = $sysmetadatadumpf",
+                 "Info: SystemMetadata = $sysMetadataDumpf",
                  );
 print join("\n",@parseInfo)."\n";
+if (defined($sysMetadataAT)){
+  $sysMetadataAT->setProperties({ "TxtPrefix" => "SystemMetadata: "});
+  print $sysMetadataAT->renderTxtTable(1);  
+}
+
 
 my ($com, $ret);
 my $db = undef;
@@ -798,24 +804,43 @@ if ($ltask =~ /KWS/){
 
   print "\nCompleted KWS Runs:\n   ".join("\n   ",@completed)."\n";
  
-  my $yval = .14;
-  my $detOpts = " --plot 'ExtraPoint=Team = $lteam:.004:".$yval.":0:1::' "; $yval -= 0.02;
-  $detOpts .= " --plot 'ExtraPoint=System = ${lsysid}_${lversion}:.004:".$yval.":0:1::' ",; $yval -= 0.02;
-  $detOpts .= " --plot 'ExtraPoint=Data = $lcorpus $lpart:.004:".$yval.":0:1::' "; $yval -= 0.018;
+  my $xval = .005;
+  my @opts = (); 
+  push @opts, " --plot 'ExtraPoint=Team = $lteam:$xval:yval:0:1::' "; 
+  push @opts, " --plot 'ExtraPoint=System = ${lsysid}_${lversion}:$xval:yval:0:1::' ";
+  push @opts, " --plot 'ExtraPoint=Data = $lcorpus $lpart:$xval:yval:0:1::' ";
   if ($sha256 ne ""){
-    $detOpts .= " --plot 'ExtraPoint=SHA256 = $sha256:.004:".$yval.":0:1::' "; $yval -= 0.018;
+    push @opts, " --plot 'ExtraPoint=SHA256 = $sha256:$xval:yval:0:1::' ";
   }
-  # if (defined($sysMetadata)){
-  #   my @str = ();
-  #   if (exists($sysMetadata->{LRDEFS})){
-  #     foreach my $lr(sort keys %{ $sysMetadata->{LRDEFS} }){
-  #       push @str, "$lr\{".join(",",@{ $sysMetadata->{LRDEFS}{$lr} })."}";
-  #     }
-  #   }
-  #   if (@str > 0){
-  #     $detOpts .= "   --plot 'ExtraPoint=".join(",",@str).":.004:".$yval.":0:1::' "; $yval -= 0.018;
-  #   }
-  # }
+  if (defined($sysMetadataAT)){
+    my $lrBase = $sysMetadataAT->getData("Val","LRDEFS|BaseLR");
+    my $lrBabel = $sysMetadataAT->getData("Val","LRDEFS|BabelLR");
+    my $lrOther = $sysMetadataAT->getData("Val","LRDEFS|OtherLR");
+    my $am = $sysMetadataAT->getData("Val","USAGEDEFS|AM");
+    my $lm = $sysMetadataAT->getData("Val","USAGEDEFS|LM");
+    my $pr = $sysMetadataAT->getData("Val","USAGEDEFS|PRON");
+    my $ar = $sysMetadataAT->getData("Val","USAGEDEFS|AR");
+    my $str;
+    ### Make the LR string:
+    $str = "BaseLR{".(defined($lrBase)   ? $lrBase  : "")."}"; push @opts, " --plot 'ExtraPoint=$str:$xval:yval:0:1::' ";
+    $str = "BabelLR{".(defined($lrBabel) ? $lrBabel : "")."}"; push @opts, " --plot 'ExtraPoint=$str:$xval:yval:0:1::' ";
+    $str = "OtherLR{".(defined($lrOther) ? $lrOther : "")."}"; push @opts, " --plot 'ExtraPoint=$str:$xval:yval:0:1::' ";
+     ### Make the usge def strings
+    $str = "AR{".(defined($ar) ? $ar : "")."}"; push @opts, " --plot 'ExtraPoint=$str:$xval:yval:0:1::' ";
+    $str = "AM{".(defined($ar) ? $am : "")."}"; push @opts, " --plot 'ExtraPoint=$str:$xval:yval:0:1::' ";
+    $str = "LM{".(defined($ar) ? $lm : "")."}"; push @opts, " --plot 'ExtraPoint=$str:$xval:yval:0:1::' ";
+    $str = "PR{".(defined($ar) ? $pr : "")."}"; push @opts, " --plot 'ExtraPoint=$str:$xval:yval:0:1::' ";
+  }
+  ### Add the options in reverse order adjusting xval
+  my $detOpts = "";
+  my @pos = (0.46, 0.40, 0.35, 0.30, 0.26, 0.22, 0.185, 0.15, 0.125, 0.10, 0.08, 0.065);
+  ### Pop off what I do not need
+  splice(@pos, 0, scalar(@pos) - scalar(@opts));
+  for (my $i=0; $i < @opts; $i++){
+    my $x = $opts[$i];
+    $x =~ s/yval/$pos[$i]/;
+    $detOpts .= " $x";
+  }
 
   execKWSEnsemble2({scoreDefs => \%RunDefs,
                     selectDefs => { "Set" => ".*", "TokTimes" => ".*",
@@ -836,6 +861,7 @@ if ($ltask =~ /KWS/){
   print "  Scoring completed.  Copying readme and system description\n";
   copyToResult($scrdir, $resdir, "Readme", [ ".txt" ]);
   copySystemDescription($sysdesc, $resdir);
+  copyToResult($scrdir, $resdir, "SystemMetadata", [ ".tsv" ]);
 } elsif ($ltask =~ /STT/){
   print "Beginning $ltask scoring\n";
 
@@ -955,6 +981,7 @@ if ($ltask =~ /KWS/){
   print "\nStep 3: Cleanup\n";
   print "  Scoring completed.  Copying readme\n";
   copyToResult($scrdir, $resdir, "Readme", [ ".txt" ]);
+  copyToResult($scrdir, $resdir, "SystemMetadata", [ ".tsv" ]);
 
 }
 
