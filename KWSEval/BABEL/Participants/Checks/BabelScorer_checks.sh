@@ -24,6 +24,7 @@ OPTIONS:
    -X        Pass the XmllintBypass option to KWSList validation and scoring tools
    -b        build the data file for the CompsFile(s).  The file MUST NOT previously not exist
    -D <BAD>  Documet the Bad runs in the file BAD
+   -S        Skip the scoring step
 EOF
 }
 
@@ -32,7 +33,8 @@ babscr_xtras=""
 DOCUMENTBAD=""
 toolOpt=""
 buildComp=""
-while getopts "hXbD:" OPTION
+skipScoring=""
+while getopts "hSXbD:" OPTION
 do
     case $OPTION in
         h)
@@ -41,6 +43,10 @@ do
             ;;
         b)
 	    buildComp="-b"
+            shift $((OPTIND-1)); OPTIND=1
+            ;;
+        S)
+	    skipScoring="yes"
             shift $((OPTIND-1)); OPTIND=1
             ;;
         X)
@@ -227,7 +233,7 @@ do
 		    check_file_x "$validtool"
 
 		    if [ "A$eval" == "AKWS14" ]; then
-			descf=`echo $finf | perl -ne 'if (m%(.+)(\.kwslist\.xml|\.ctm)$%) {print "$1.sysdesc.txt\n"} else {print "$0\n"}'`
+			descf=`echo $finf | perl -ne 'if (m%(.+)(\.kwslist\d*\.xml|\.ctm)$%) {print "$1.sysdesc.txt\n"} else {print "$0\n"}'`
 			check_file $descf
 			descdumpf=`mktemp -t XXXX`
 			validtool_xtras="${validtool_xtras} --DescFile $descf --xDescDump $descdumpf --requireDesc"
@@ -250,8 +256,14 @@ do
 			echo TESTING $ff >> $DOCUMENTBAD
 		    fi
 		    
-		    com="$subhelp $babscr --Specfile $scconf --expid $expid --sysfile $finf $finfDesc --compdir $compdir --resdir $resdir --dbDir $dbDir --Tsctkbin $sctkbindir --ExcludePNGFileFromTxtTable $babscr_xtras $xtra"
-                    $tool $toolOpt $buildComp $ff $com
+ 		    com="$subhelp $babscr --Specfile $scconf --expid $expid --sysfile $finf $finfDesc --compdir $compdir --resdir $resdir --dbDir $dbDir --Tsctkbin $sctkbindir --ExcludePNGFileFromTxtTable $babscr_xtras $xtra"
+ 		    if [ ! "$skipScoring" = "yes" ] ; then
+ 			$tool $toolOpt $buildComp $ff $com
+ 		    else
+			echo "  Skipping scoring Run"
+ 			true
+ 		    fi
+
                     if [ "${?}" -ne "0" ]; then
 			if [ ! -z $DOCUMENTBAD ] ; then 
 			    echo COMMAND $com >> $DOCUMENTBAD
