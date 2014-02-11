@@ -94,7 +94,7 @@ my $tlist_ext_rgx = '\.kwlist\d*\.xml';
 my $stm_ext = ".stm";
 my $rttm_ext = ".rttm";
 
-my $kwslist_ext = ".kwslist.xml";
+my $kwslist_ext = '\.kwslist\d*\.xml';
 my $ctm_ext = ".ctm";
 
 my $kwseval = "$f4d/../../tools/KWSEval/KWSEval.pl";
@@ -280,8 +280,8 @@ my %AuthorizedSet = KWSEval_SCHelper::get_AuthorizedSet();
 
 # Remove the file ending (and extract it value for 'mode' selector)
 my $mode = undef;
-if ($sysfile =~ m%$kwslist_ext$%i) {
-  $mode = $kwslist_ext;
+if ($sysfile =~ m%($kwslist_ext)$%i) {
+  $mode = $1;
 } elsif ($sysfile =~ m%$ctm_ext$%i) {
   $mode = $ctm_ext;
 }
