@@ -101,7 +101,7 @@ my $tlist_ext_rgx = '\.kwlist\d*\.xml';
 
 my $rttm_ext = ".rttm";
 
-my $kwslist_ext = ".kwslist\d*.xml";
+my $kwslist_ext = '\.kwslist\d*\.xml';
 my $ctm_ext = ".ctm";
 my $stm_ext = ".stm";
 
@@ -352,8 +352,8 @@ sub check_submission {
 
   # Remove the file ending (and extract it value for 'mode' selector)
   my $mode = undef;
-  if ($f =~ s%$kwslist_ext$%%i) {
-    $mode = $kwslist_ext;
+  if ($f =~ s%($kwslist_ext)$%%i) {
+    $mode = $1;
   } elsif ($f =~ s%$ctm_ext$%%i) {
     $mode = $ctm_ext;
   } else {
@@ -389,7 +389,7 @@ sub check_submission {
       }
   }
 
-  if ($mode eq $kwslist_ext) {
+  if ($mode =~ m%$kwslist_ext%) {
     return(&kwslist_validation($f, $sf, $lcorpus, $lpart));
   } elsif ($mode eq $ctm_ext) {
     return(&ctm_validation($f, $sf, $lcorpus, $lpart));

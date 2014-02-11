@@ -326,7 +326,7 @@ sub check_name_kws14 {
       &err .= "Can not find an extension match for task ($ltask). ";
     } else {
       my $tv = $Task2Regexp{$ltask};
-      $err .= "File's extension ($ext) for task ($ltask) does not match authorized regexp ($tv). "
+      $err .= "FileX's extension ($ext) for task ($ltask) does not match authorized regexp ($tv). "
         if ($ext !~ m%^$tv$%);
     }
   }
