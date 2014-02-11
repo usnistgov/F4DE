@@ -126,6 +126,7 @@ my $descDumpFile = "";
 my $requireDesc = 0;
 my $bypassxmllint = 0;
 my $forceSpecfile = undef;
+my $mode = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
 # Used: A  D F    K   O   ST V X     d   h  k   o qrst v x z #
@@ -351,7 +352,6 @@ sub check_submission {
   my $f = $sf;
 
   # Remove the file ending (and extract it value for 'mode' selector)
-  my $mode = undef;
   if ($f =~ s%($kwslist_ext)$%%i) {
     $mode = $1;
   } elsif ($f =~ s%$ctm_ext$%%i) {
@@ -481,7 +481,7 @@ sub run_ValidateKWSList {
   return("Problem creating output dir ($od)")
     if (! MMisc::make_wdir($od));
   vprint(4, "Output dir: $od");
-  my $of = "$od/$exp$kwslist_ext";
+  my $of = "$od/$exp$mode";
 
   my @cmd = ();
   push @cmd, '-e', $ecf;
