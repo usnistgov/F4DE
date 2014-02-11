@@ -101,7 +101,7 @@ my $tlist_ext_rgx = '\.kwlist\d*\.xml';
 
 my $rttm_ext = ".rttm";
 
-my $kwslist_ext = ".kwslist.xml";
+my $kwslist_ext = ".kwslist\d*.xml";
 my $ctm_ext = ".ctm";
 my $stm_ext = ".stm";
 

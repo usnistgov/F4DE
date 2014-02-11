@@ -403,7 +403,7 @@ sub get_recog_resources {
     my (@dbdirs) = @_;
     
     my %resources = ();
-    my $resource_fn = "babel_resources.tsv";
+    my $resource_fn = "DataDefs.tsv";
     my $resource_fc = 0; #Count to make sure we found at least one resource file
 
     foreach my $dbdir (@dbdirs) {
