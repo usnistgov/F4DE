@@ -82,7 +82,7 @@ GetOptions
  'attrValue=s' => \$attrValueStr,
  'xprefilterText=s@'                   => \@textPrefilters,
  'deleteAttr=s@'                       => \@deleteAttr,
- "mediatedDuration=s" => \$mduration
+ "mediatedDuration=s" => \$mduration,
  'setVersion=s'                        => \$newVersion,
  'normalizeTermTexts'                  => \$normalizeTermTexts,
 ) or MMisc::error_quit("Unknown option(s)\n");
@@ -286,28 +286,35 @@ if ($ngram != 0) {
 # received value are stored in the output file.
 if ($mduration ne "")
 {
-		my @args = split(/,/, join(',', $mduration));
+  my @args = split(/,/, join(',', $mduration));
 
-		my $mdur_map_file = $args[0];
-		my $mdur_lex_file = $args[1];
-		my $romanized     = $args[2];
-		my $mdur_dur_file = $args[3];
+  my $mdur_map_file = $args[0];
+  my $mdur_lex_file = $args[1];
+  my $romanized     = $args[2];
+  my $mdur_dur_file = $args[3];
+
+  unless (-e $mdur_map_file){die "Arg 1 map file [$mdur_map_file] not found\n";}
+  unless (-e $mdur_lex_file){die "Arg 2 map file [$mdur_lex_file] not found\n";}
+  unless ($romanized == 0 || $romanized == 1){
+    die "Arg 3 map file [$romanized] must be 0 or 1\n";}
+  unless (-e $mdur_dur_file){die "Arg 4 map file [$mdur_dur_file] not found\n";}
 
   print "Computing term mediated durations using \
-		       $mdur_map_file, $mdur_lex_file, $romanized, $mdur_dur_file\n";
+         $mdur_map_file, $mdur_lex_file, $romanized, $mdur_dur_file\n";
 
-		my $bl = new BabelLex($mdur_map_file,
-			                    	$mdur_lex_file,
-																							 $romanized,
-																								$TermList->getEncoding(),
-																								$mdur_dur_file);
+  my $bl = new BabelLex($mdur_map_file,
+                        $mdur_lex_file,
+                        $romanized,
+                        $TermList->getEncoding(),
+                        $mdur_dur_file);
 
   foreach my $termid (keys %{ $TermList->{TERMS} })
-		{
+  {
     my $term = $TermList->{TERMS}{$termid};
-    $term->setAttrValue("Phone_Mediated_Duration",
-					                  	$bl->getDurationAverage(
-																										$term->getAttrValue("TEXT")));
+    my %data = %{$bl->getDurationHash($term->getAttrValue("TEXT"))};
+
+    $term->setAttrValue("Phone_Mediated_Status", $data{STATUS});
+    $term->setAttrValue("Phone_Mediated_Duration", $data{DURAVERAGE});
   }
 }
 
