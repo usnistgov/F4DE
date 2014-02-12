@@ -98,11 +98,11 @@ to the EXPID you are submitting
 
 In order to be able to use the tool (SubmissionHelper.sh), its
 configuration file must be edited: 
-- For all, edit the SubmissionHelper_common.cfg 's 'scp_user' line to reflect 
+- For all, edit the SubmissionHelper_common.cfg's 'scp_user' line to reflect 
 your scoring transfer system account information.
-- For BABEL 2012, edit the KWS12_SubmissionHelper.cfg and confirm the values 
-match your settings
-- For BABEL 2013, the file to edit is called:  KWS13_SubmissionHelper.cfg
+- Review KWS12_SubmissionHelper.cfg, KWS13_SubmissionHelper.cfg, and 
+  KWS14_SubmissionHelper.cfg and confirm the values match your settings.  
+  If you follow the default setup, these will not change.
 
 The default configuration files are designed to make everything work
 from the current directory, 'JobRunner.pl', and the 'bin' directory
@@ -115,22 +115,22 @@ directory:
 % ln -s <SCTK_INSTALL_BIN_DIRECTORY> sctkbin
 
 Make the local copy of your 'IndusDB' available as the
-SubmissionHelper's <DBDIR>:
-- For BABEL12, the directory should be called "KWS12-dbDir" 
-(as specified in the KWS12_SubmissionHelper.cfg file)
-% ln -s <KWS12_INDUSDB_DIR> KWS12-dbDir
-- For BABEL13, the directory must be named "KWS13-dbDir"
-(as specified in the KWS13_SubmissionHelper.cfg file)
-% ln -s <KWS13_INDUSDB_DIR> KWS13-dbDir
+SubmissionHelper's <DBDIR>. Each evaluation year requires a separate
+link.  IndusDBs are cumulative so linking to a single release is
+expected.  Execute the following:
+
+% ln -s <KWS13_INDUSDB_DIR> KWS14-dbDir
+% ln -s KWS14-dbDir KWS12-dbDir
+% ln -s KWS13-dbDir KWS13-dbDir
 
 Please insure that you have completed the scp account setup and testing.
 
 Familiarize yourself with the list of options of the tool by running
 it without any option:
 
-% ./SubmissionHelper.sh
+% ./SubmissionHelper.shpo
 
-Confirm that the "SubmissionHelper.sh" tool is functional by calling
+Confirm that the "SubmissionHelpoer.sh" tool is functional by calling
 it from the current directory with a invalid file (such as one of the
 configuration file), which should fail, but will confirm that the
 expected entries from the configuration file are presumed valid:
@@ -143,25 +143,33 @@ directories/files specified by the configuration file are present)
 From within the <DBDIR> are some samples that can be used for testing
 your setup; for example:
 
-% ./SubmissionHelper.sh KWS12-dbDir/samples/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1.kwslist.xml
+% ./SubmissionHelper.sh \
+   -S KWS14-dbdir/samples/KWS14_NIST_IARPA-babel107b-v0.7_conv-dev_BaDev_KWS_p-word-m10xf20_1.sysdesc.txt \
+   KWS14-dbdir/samples/KWS14_NIST_IARPA-babel107b-v0.7_conv-dev_BaDev_KWS_p-word-m10xf20_1.kwslist2.xml
 
 should prompt a submission log similar to:
 
--- Loading Configuration file: KWS12_SubmissionHelper.cfg
-** Submission file: [KWS12-dbDir/samples/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1.kwslist.xml]
-   Internal SHA256 : 4043be376e0e8060d54c6f53673e53da8d4d25ef46db98befaa237a8551a72a7
+-- Loading Configuration file: /Users/jon/Projects/F4DE/F4DE-3.1.0/KWSEval/BABEL/Participants/SubmissionHelper_common.cfg
+-- Loading Configuration file: /Users/jon/Projects/F4DE/F4DE-3.1.0/KWSEval/BABEL/Participants/KWS14_SubmissionHelper.cfg
+-- Checking for system description file
+== [F4DE: F4DE-3.1.0] [scp_user:kwstest-jon] [hostIP:129.6.227.176] [contact_email:jon@nist.gov]
+** Submission file: [KWS14-dbdir/samples/KWS14_NIST_IARPA-babel107b-v0.7_conv-dev_BaDev_KWS_p-word-m10xf20_1.kwslist2.xml]
+   Internal SHA256 : 5b1915dd6e6af95ca82b4f23f89e769c1e23f81596df9c97ccdfc13c42147244
 ++ Validation step
   -> validating submission file
 ++ Archive Generation and Upload
   -> transfer file
+Remote SHA256 : 9cd1354eff324ab96ac8062f0227b7a4f91cdf5078394ef4524ab03738235685
 ++ Awaiting scoring server completion
 Remote Server: Awaiting Status update from scoring server
-Remote Server: Scoring
-Remote Server: Report Uploaded
+Remote Server: Downloaded and Awaiting Processing (0%)
+Remote Server: Validated (37.5%)
+Remote Server: Scored (62.5%)
+Remote Server: Report Uploaded (100%)
 ++ Downloading Results
   <- Trying to download result file
-** Result file: /home/user/F4DE/KWSEval/BABEL/Participants/_KWS12-downloads/27da546477cfac992756ff66346fb9c03190616a21187325e8112222c4530d90.tar.bz2
-** Uncompressed in: /home/user/F4DE/KWSEval/BABEL/Participants/KWS12-Results/KWS12_NIST_babel101b-v0.4c-DryRunEval-v3_conv-eval_BaEval_PI-KWS_FullLP_p-word-m10xf20_1
+** Result file: /Users/jon/Projects/F4DE/F4DE-3.1.0/KWSEval/BABEL/Participants/_KWS14-downloads/9cd1354eff324ab96ac8062f0227b7a4f91cdf5078394ef4524ab03738235685.tar.bz2
+** Uncompressed in: /Users/jon/Projects/F4DE/F4DE-3.1.0/KWSEval/BABEL/Participants/KWS14-Results/KWS14_NIST_IARPA-babel107b-v0.7_conv-dev_BaDev_KWS_p-word-m10xf20_1.kwslist2.xml
 
 (this may take a few minutes to complete)
 
