@@ -451,13 +451,17 @@ sub getSingleWordDurations()
 
   my $entry = \$self->{LEXTABLE}{$key_word};
 
+  # Consider the data status for every pronunciation variant and set the 
+  # global DATASTATUS accordingly. Here the status can only vary from OK to
+  # Estimated. So if global status is OK, then symply accept the local value,
+  # but if the global status has already been downgraded to Estimated, then
+  # just ignore the local status because once the global status was set to
+  # Estimated, it can not go back to OK.
   my @stati = @{${$$entry}{"status"}};
   foreach my $stat (@stati)
   {
-    #print "\nBefore: $self->{DATASTATUS}\n";
     $self->{DATASTATUS} =
       ($self->{DATASTATUS} eq "OK") ? $stat : $self->{DATASTATUS};
-    #print "After : $self->{DATASTATUS}\n";
   }
 
   return [@{${$$entry}{"duration"}}];
@@ -476,8 +480,12 @@ sub getDurationAverage()
   {
     if (!$self->{LEXTABLE}{$word})
     {
+      # One of the words in this key-phrase doesn't exsist in our
+      # lexicon, so we are giving up, reporting Failed status and
+      # returning 0 values.
+      $self->{DATASTATUS} = "Failed";
       print "The keyword $word is unknown, duration invalid\n";
-      return -200;
+      return 0;
     }
 
     $duration += $self->getSingleWordDurationAverage($word);
