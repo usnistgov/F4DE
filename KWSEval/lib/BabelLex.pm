@@ -42,10 +42,10 @@ sub new
 {
   my ($my_class, $map_file, $lex_file, $romanized, $encoding, $dur_file) = @_;
 
-		$romanized = ($romanized eq "no" || $romanized eq "0") ? 0 : 1;
+  $romanized = ($romanized eq "no" || $romanized eq "0") ? 0 : 1;
   &printIntro ($map_file, $lex_file, $romanized, $encoding, $dur_file);
 
-		my $self = new TranscriptHolder('BabelLex');
+  my $self = new TranscriptHolder('BabelLex');
 
   $self = {
     MAPFILE       => $map_file,
@@ -58,20 +58,52 @@ sub new
     ENCODING      => $encoding,
     MAPLOADSTATUS => 0,             # 0 = table not loaded
     LEXLOADSTATUS => 0,             # 1 = load in progress
-    DURLOADSTATUS => 0              # 2 = table loaded
+    DURLOADSTATUS => 0,             # 2 = table loaded
+    AVERAGEPHONE  => 0,             # Substitution for missing phones
+    DATASTATUS    => "OK"           # Indicates (not)estimated calculations
   };
+
+  #
+  # The DATASTATUS is used to collect and report the status of the duration
+  # calculation. It is used in a manner similar to that of ERRNO flag. When
+  # the getDurationHash() routine is invoked, it sets the DATASTATUS to "OK".
+  # Then, as the durations are calculated, the status can be downgraded to
+  # either "Estimated" or "Failed". At the conclusion of the calculations the
+  # DATASTATUS is copied into the return hash. 
+  #
+  # ########### IMPORTANT!: The DATASTATUS should not be used for any other
+  #                         purposes as it may become overwritten.
+  #
+  # The status can be set to "OK", "Estimated", and "Failed".
+  #
+  #   "OK" status is given to the return data hash when all the phone duration
+  # values have been either located directly in the Phone Duration file, or
+  # first translated with the help of the Phone Map file and then located in
+  # the Phone Duration file.
+  #
+  #  "Estimated" status is given when any of the phones required to calculate a
+  # word or phrase duration were not found in either Phone Duration or Phone
+  # Map files. In such cases the previously calculated average phone duration
+  # value for the given lexicon is used in place of the missing phone duration.
+  # Hence, the calculation status is deemed Estimated.
+  #
+  # "Failed" status is returned when a keyword or any word in a key phrase can
+  # not be found in the lexicon hash table. Consecuntly, there will be no known
+  # pronunciations to work with. The rest of the return data is set to 0.
+  #
+
 
   bless $self;
 
-		$self->setEncoding($encoding);
+  $self->setEncoding($encoding);
 
-		if (!$map_file || !$lex_file)
-		{
-		  MMisc::error_quit("Lexicon file, Romanized flag, and XSAMPA-to_Phone \
-				  Map file are required for this module");
-		}
+  if (!$map_file || !$lex_file)
+  {
+    MMisc::error_quit("Lexicon file, Romanized flag, and XSAMPA-to_Phone \
+      Map file are required for this module");
+  }
 
-		$self->loadMapFile($map_file);
+  $self->loadMapFile($map_file);
   $self->loadLexFile($lex_file);
 
   if ($dur_file)
@@ -89,35 +121,31 @@ sub printIntro()
   my ($map_file, $lex_file, $romanized, $encoding, $dur_file) = @_;
 
   my $rome_text = ($romanized == 1) ?
-     "Romanized column expected" :
-       "Romanized column not expected";
+    "Romanized column expected" :
+      "Romanized column not expected";
 
-  print "\n                             ***\n";
-  print "                           Warning!\
-        This version of BabelLex has missing duration \
-               times temporary substitutions!\n\n";
-
-  print "                    - XSAMPA-to-Phone Map -\
-  $map_file\n";
-  print "                         - Lexicon -\
-  $lex_file ($encoding)\n";
-  print "                 --- $rome_text ---\n\n";
+  print "\n***\n";
+  print "XSAMPA-to-Phone Map: $map_file\n";
+  print "Lexicon: $lex_file ($encoding)\n";
+  print "$rome_text\n\n";
   
   if ($dur_file)
   {
-    print "                        - Durations -\
-    $dur_file";
+    print "Durations: $dur_file";
   }
   else
   {
-    print "                        - Durations -\
-          No filename for pnone durations received";
+    print "Durations: No filename for pnone durations received yet";
   }
-  print "\n\n                             ***\n\n";
+  print "\n***\n\n";
 
 } #printIntro()
 
 
+################################################################################
+# Map file provides mapping from the XSAMPA characters used in lexicon files to
+# the phones used in the phone duration files. While most of these are the same
+# some are different and the map file provides the translation needed.
 ################################################################################
 sub loadMapFile()
 {
@@ -143,7 +171,7 @@ sub loadMapFile()
     $self->{MAPTABLE}{$words[0]} = $words[1];
   }
 
-		#print Dumper($self->{MAPTABLE});
+    #print Dumper($self->{MAPTABLE});
   close $DATA;
 
   $self->{MAPFILE}       = $file;
@@ -155,6 +183,13 @@ sub loadMapFile()
 
 
 ################################################################################
+# Lexicon file is a collection of words ipresented in one column. The second 
+# column may be the "romanaized" version of the word. Some languages will not
+# have the romanized version. The "romanized" flag indicates whether to account
+# for the romanized column or not. The following columns are one or more pro-
+# nunciations of the words. This routine loads the words and all available pro-
+# nunciations into a hash for future use.
+################################################################################
 sub loadLexFile()
 {
   my ($self, $file) = @_;
@@ -163,17 +198,17 @@ sub loadLexFile()
   {
     return "Lexicon file is already loaded or in progress";
   }
-		elsif ($self->{MAPLOADSTATUS} < 2)
-		{
-				MMisc::error_quit("Can't load lexicon without XSAMPA-to_Phone Map");
-		}
+  elsif ($self->{MAPLOADSTATUS} < 2)
+  {
+    MMisc::error_quit("Can't load lexicon without XSAMPA-to_Phone Map");
+  }
   else
   {
     $self->{LEXLOADSTATUS} = 1;
   }
 
   open my $DATA, $file or MMisc::error_quit("Couldn't open $file");
-		binmode ($DATA, ":encoding($self->{ENCODING})") if ($self->{ENCODING} ne "");
+  binmode ($DATA, ":encoding($self->{ENCODING})") if ($self->{ENCODING} ne "");
 
   while(<$DATA>)
   {
@@ -192,7 +227,7 @@ sub loadLexFile()
 
     $self->{LEXTABLE}{$words[0]} = \%entry;
 
-		#print Dumper(\%entry);
+    #print Dumper(\%entry);
   }
 
   close $DATA;
@@ -211,9 +246,15 @@ sub loadLexFile()
 
 
 ################################################################################
+# Phone Duration file provides the duration values for the phones. This routine
+# loads the file data into a hash for future use.
+################################################################################
 sub loadDurFile()
 {
   my ($self, $file) = @_;
+  my $total      = 0;
+  my $num_phones = 0;
+
 
   if ($self->{DURLOADSTATUS} > 0)
   {
@@ -232,6 +273,8 @@ sub loadDurFile()
   {
     my @words = split('\t', $_);
     $self->{DURTABLE}{$words[0]} = $words[1]; # $1 for the mean duration
+    $total += $words[1];
+    $num_phones++;
   }
 
   close $DATA;
@@ -244,10 +287,15 @@ sub loadDurFile()
     $self->calculateDurations();
   }
 
-		#print "                             ***\n";
-		#print "                        - Durations -\
-		#$file\n\n";
-		#print "                             ***\n\n\n";
+  # The average phone duration for the given lexicon is calculated so if
+  # in the future duration calculations any phones are missing, then this
+  # average value will be used in the missing phones duration place.
+  $self->{AVERAGEPHONE} = $total / $num_phones;
+
+    #print "                             ***\n";
+    #print "                        - Durations -\
+    #$file\n\n";
+    #print "                             ***\n\n\n";
 
   
   return "Duration data successfully loaded from $file";
@@ -255,6 +303,11 @@ sub loadDurFile()
 } #loadDurFile()
 
 
+################################################################################
+# Once Lexicon, Duration, and Map files are loaded, this routine will be called
+# to go through the collection of the words loaded into the LEXTABLE hash, and
+# for every pronunciation of that word will calculate the duration value, which
+# is then also stored in the same hash for future use.
 ################################################################################
 sub calculateDurations
 {
@@ -265,6 +318,7 @@ sub calculateDurations
     my $entry = \$self->{LEXTABLE}{$word};
     my @prons = @{${$$entry}{"adj_pron"}};
     my $var_num  = 0;
+    my $status   = "OK";
 
     foreach my $variant (@prons)
     {
@@ -277,30 +331,48 @@ sub calculateDurations
           {
             $duration += $self->{DURTABLE}{$syllable};
           }
-										elsif ($self->{MAPTABLE}{$syllable})
-										{
-												$syllable = $self->{MAPTABLE}{$syllable};
-												if ($self->{DURTABLE}{$syllable})
-												{
-												  $duration += $self->{DURTABLE}{$syllable};
-												}
-												else
-												{
-														#print "Error! mapped [$syllable] not found\n";
-														print "![$syllable]";
-												  $duration = -100;
-										  }
-										}
+           elsif ($self->{MAPTABLE}{$syllable})
+          {
+            $syllable = $self->{MAPTABLE}{$syllable};
+            if ($self->{DURTABLE}{$syllable})
+            {
+              # We are here because we didn't find the syllable in the phone
+              # durations file, so instead we looked up a substitution in the
+              # phone map file and now we will use it in the duration calcu-
+              # lations. This is not an error.
+              $duration += $self->{DURTABLE}{$syllable};
+            }
+            else
+            {
+              # Here  we didn't find the substituted phone in the phone map
+              # file either, so we will substitute the duration we are
+              # looking for with an average phone duration that we have
+              # calculated when loaded the phone duration file. This is a
+              # temporary workaround that should not get used as soon as
+              # we have a correct finalized phone map file.
+              $duration += $self->{AVERAGEPHONE};
+              $status = "Estimated";
+            }
+          }
           else
           {
-												#print "Error! [$syllable] not found\n";
-												print "![$syllable]";
-            $duration = -100;
+            # Here  we didn't find the phone either in the phone duration file
+            # or in the phone map file, so we are substituting the duration we
+            # are looking for with an average phone duration that we have
+            # calculated when loaded the phone duration file. This is a
+            # temporary workaround that should not get used as soon as
+            # we have a correct finalized phone map file.
+            $duration += $self->{AVERAGEPHONE};
+            $status = "Estimated";
+            #print "![$syllable]";
           }
         }
       } #foreach my $syllable (@$variant)
 
+      # Store calculated duration and its "OK" or "Estimated" status
+      # in the Lexicon hash table for future lookups.
       ${$$entry}{"duration"}[$var_num] = $duration;
+      ${$$entry}{"status"}[$var_num] = $status;
       $var_num++;
 
     } #foreach my $variant (@prons)
@@ -310,6 +382,12 @@ sub calculateDurations
 } #calculateDurations()
 
 
+################################################################################
+# This routine expects to be passed a keyword or a multi-word key-phrase. It 
+# will return the durations for every pronunciation of a single keyword, or in
+# case of a multi-word key-phrase, it will return a single value that is a sum
+# of averages of all available pronunciations durations for every word in the
+# key-phrase.
 ################################################################################
 sub getDurations()
 {
@@ -322,18 +400,44 @@ sub getDurations()
   {
     foreach my $word (@word_array)
     {
+      if (!$self->{LEXTABLE}{$word})
+      {
+        # One of the words in this key-phrase doesn't exsist in our
+        # lexicon, so we are giving up, reporting Failed status and
+        # returning 0 values.
+        $self->{DATASTATUS} = "Failed";
+        print "The keyword $word is unknown, duration invalid\n";
+        $durations[0] = 0;
+        return \@durations;
+      }
+
+      # Just adding average durations of every word in a phrase together
       $duration += $self->getSingleWordDurationAverage($word);
     }
+    # Store the sum of averages in the array and return
     push (@durations, $duration);
     return \@durations;
   }
   elsif (scalar(@word_array) == 1)
   {
+    if (!$self->{LEXTABLE}{$word_array[0]})
+    {
+      # This key-word doesn't exsist in our lexicon, so we are giving up,
+      # reporting Failed status and returning 0 values.
+      $self->{DATASTATUS} = "Failed";
+      print "The keyword $key_phrase is unknown, duration invalid\n";
+      $durations[0] = 0;
+      return \@durations;
+    }
+    
     return \@{$self->getSingleWordDurations($word_array[0])};
   }
   else
   {
-    # This should never happen
+    # Empty key-word! Report Failed status and return 0 values.
+    $self->{DATASTATUS} = "Failed";
+    print "Empty key-word, duration invalid\n";
+    $durations[0] = 0;
     return \@durations;
   }
 
@@ -346,6 +450,15 @@ sub getSingleWordDurations()
   my ($self, $key_word) = @_;
 
   my $entry = \$self->{LEXTABLE}{$key_word};
+
+  my @stati = @{${$$entry}{"status"}};
+  foreach my $stat (@stati)
+  {
+    #print "\nBefore: $self->{DATASTATUS}\n";
+    $self->{DATASTATUS} =
+      ($self->{DATASTATUS} eq "OK") ? $stat : $self->{DATASTATUS};
+    #print "After : $self->{DATASTATUS}\n";
+  }
 
   return [@{${$$entry}{"duration"}}];
   
@@ -361,6 +474,12 @@ sub getDurationAverage()
 
   foreach my $word (@word_array)
   {
+    if (!$self->{LEXTABLE}{$word})
+    {
+      print "The keyword $word is unknown, duration invalid\n";
+      return -200;
+    }
+
     $duration += $self->getSingleWordDurationAverage($word);
   }
 
@@ -401,72 +520,140 @@ sub getSingleWordDurationAverage()
 sub adjustPronunciation()
 {
   my ($self, $string) = @_;
-		my @result = split(" ", $string);
+  my @result = split(" ", $string);
 
-		my $i = 0;
-		foreach my $char (@result)
-		{
-				# 2014/02/05: No longer replacing the lexicon characters with mapped
-				# phones. Instead just changing a string into an array and returning.
-				# The mapped characters lookup will take place in the calculateDurations
-				# routine only if the original characters duration can not be found.
-				#$result[$i] = $self->{MAPTABLE}{$char};
+  my $i = 0;
+  foreach my $char (@result)
+  {
+    # 2014/02/05: No longer replacing the lexicon characters with mapped
+    # phones. Instead just changing a string into an array and returning.
+    # The mapped characters lookup will take place in the calculateDurations
+    # routine only if the original characters duration can not be found.
+    #$result[$i] = $self->{MAPTABLE}{$char};
 
-				$result[$i] = $char;
-				$i++;
-		}
-		
+    $result[$i] = $char;
+    $i++;
+  }
+    
   return @result;
+
 } #adjustPronunciation()
+
+
+################################################################################
+sub getDurationHash()
+{
+  my ($self, $key_phrase) = @_;
+
+  my $ret;
+
+  $ret = {
+    STATUS     => "OK",
+    DURATIONS  => [],
+    DURAVERAGE => 0
+  };
+
+  $self->{DATASTATUS} = "OK";
+  my @duration = @{$self->getDurations($key_phrase)};
+  my $status = $self->{DATASTATUS};
+  if ($status eq "Failed")
+  {
+    $ret->{STATUS} = $status;
+    push (@{$ret->{DURATIONS}}, 0);
+    $ret->{DURAVERAGE} = 0;
+  }
+  else
+  {
+    foreach my $dur (@duration)
+    {
+      push (@{$ret->{DURATIONS}}, $dur);
+    }
+
+    my $durave = $self->getDurationAverage($key_phrase);
+    $status = ($status eq "OK") ? $self->{DATASTATUS} : $status;
+
+    $ret->{STATUS} = $status;
+    $ret->{DURAVERAGE} = $durave;
+  }
+  
+  return $ret;
+
+} #getDurationHash()
 
 
 ################################################################################
 sub unitTest()
 {
-  my $mapfile = "/Users/vad/2013.12.16-PhoneDurations/temporary_102+103+201+203+206-phoneMaps.txt";
+  my $mapfile = "/Users/vad/TestData/102+103+201+203+206-phoneMaps.txt";
 
-  my $lexfile = "/Users/vad/2013.12.16-PhoneDurations/IARPA-babel102b-v0.5a.lexicon";
+  my $lexfile = "/Users/vad/TestData/IARPA-babel102b-v0.5a.lexicon";
   #my $lexfile = "/home/vlad/poc/lexicon.head";
-  #my $lexfile = "/Users/vad/2013.12.16-PhoneDurations/IARPA-babel102b-v0.5a.lexicon.small";
+  #my $lexfile = "/Users/vad/TestData/IARPA-babel102b-v0.5a.lexicon.small";
 
   my $romanized = "";
 
   #my $durfile = "/home/vlad/poc/babel102b-v0.5a-phone_stats.perPhone.txt";
-  my $durfile = "/Users/vad/2013.12.16-PhoneDurations/babel102b-v0.5a-phone_stats.perPhone.txt";
+  my $durfile = "/Users/vad/TestData/babel102b-v0.5a-phone_stats.perPhone.txt";
   
-		my $encoding = "UTF-8";
+  my $encoding = "UTF-8";
 
   my $lp = new BabelLex($mapfile, $lexfile, $romanized, $encoding, $durfile);
 
-		#my $lp = new BabelLex($mapfile, $lexfile, $romanized, $encoding);
+  #my $lp = new BabelLex($mapfile, $lexfile, $romanized, $encoding);
 
-		#$lp->loadDurFile($durfile);
+  #$lp->loadDurFile($durfile);
  
   my $multiword = 3;
   my $phrase = " ";
 
+  
   foreach my $keys (keys $lp->{LEXTABLE})
   {
-    my @duration = @{$lp->getDurations($keys)};
-				print join(", ", @duration);
-    my $dur_ave = $lp->getDurationAverage($keys);
-				print "\t\tAverage = $dur_ave\n";
+    my %res = %{$lp->getDurationHash($keys)};
+
+    print "Status = " . $res{STATUS} . "\t";
+    print "Durations = " . join(", ", @{$res{DURATIONS}}) . "\t";
+    print "Average = " . $res{DURAVERAGE} . "\n";
 
     $phrase = $phrase . $keys . " ";
     $multiword--;
-    
+
     if ($multiword == 0)
     {
-						print "[$phrase]: ";
-      @duration = @{$lp->getDurations($phrase)};
-						print join(", ", @duration);
-      $dur_ave = $lp->getDurationAverage($phrase);
-						print ", Ave = $dur_ave\n\n\n";
-  
+      #print "[$phrase]:\n";
+      %res = %{$lp->getDurationHash($phrase)};
+
+      print "Status = " . $res{STATUS};
+      print "\tDurations = " . join(", ", @{$res{DURATIONS}});
+      print "\tAverage = " . $res{DURAVERAGE} . "\t [$phrase]\n\n";
+
       $phrase    = " ";
       $multiword = 3;
     }
   }
+
+  #foreach my $keys (keys $lp->{LEXTABLE})
+  #{
+    #my @duration = @{$lp->getDurations($keys)};
+    #print join(", ", @duration);
+    #my $dur_ave = $lp->getDurationAverage($keys);
+    #print "\t\tAverage = $dur_ave\n";
+
+    #$phrase = $phrase . $keys . " ";
+    #$multiword--;
+    
+    #if ($multiword == 0)
+    #{
+      #print "[$phrase]: ";
+      #@duration = @{$lp->getDurations($phrase)};
+      #print join(", ", @duration);
+      #$dur_ave = $lp->getDurationAverage($phrase);
+      #print ", Ave = $dur_ave\n\n\n";
+  #
+      #$phrase    = " ";
+      #$multiword = 3;
+    #}
+  #}
 
   #print Dumper($lp);
 
