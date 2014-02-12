@@ -190,7 +190,7 @@ do
             xtra=`cat $xtraf`
 	fi
 	if [ "A$eval" == "AKWS14" ]; then
-	    descf=`echo $finf | perl -ne 'if (m%(.+)(\.kwslist\.xml|\.ctm)$%) {print "$1.sysdesc.txt\n"} else {print "$0\n"}'`
+	    descf=`echo $finf | perl -ne 'if (m%(.+)(\.kwslist\d*\.xml|\.ctm)$%) {print "$1.sysdesc.txt\n"} else {print "$0\n"}'`
 	    sysdesc_xtra="-S $descf"
 	else
 	    sysdesc_xtra=""
