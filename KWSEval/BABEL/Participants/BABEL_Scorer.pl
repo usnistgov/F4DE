@@ -534,7 +534,7 @@ sub execSTTScoreRun{
   ### Checking for a GLM
   my $GLM = undef;
   for (my $i = 0; $i < scalar @dbDir; $i++) {
-    my $_tmp_GLM = $dbDir[$i] . "/babel$lang.glm";
+    my $_tmp_GLM = $dbDir[$i] . "/IARPA-babel$lang.glm";
     $err = MMisc::check_file_r($_tmp_GLM);
     if (MMisc::is_blank($err)){
       $GLM = $_tmp_GLM;
