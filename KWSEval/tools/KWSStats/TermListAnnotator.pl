@@ -286,32 +286,40 @@ if ($ngram != 0) {
 # prepares the duration tables. This script then continues to query the module
 # for its terms durations. The new attribute name "Mediated Duration" and the 
 # received value are stored in the output file.
-if ($mduration ne "")
-{
+if ($mduration ne "") {
+
   my @args = split(/,/, join(',', $mduration));
 
-  my $mdur_map_file = $args[0];
-  my $mdur_lex_file = $args[1];
-  my $romanized     = $args[2];
-  my $mdur_dur_file = $args[3];
+  my $mdur_lex_file = $args[0];
+  my $romanized     = $args[1];
+  my $mdur_dur_file = $args[2];
+  my $mdur_map_file = $args[3];
 
-  unless (-e $mdur_map_file){die "Arg 1 map file [$mdur_map_file] not found\n";}
-  unless (-e $mdur_lex_file){die "Arg 2 map file [$mdur_lex_file] not found\n";}
-  unless ($romanized == 0 || $romanized == 1){
-    die "Arg 3 map file [$romanized] must be 0 or 1\n";}
-  unless (-e $mdur_dur_file){die "Arg 4 map file [$mdur_dur_file] not found\n";}
+  MMisc::error_quit ("Arg 1 lex file [$mdur_lex_file] not found\n")
+  unless (-e $mdur_lex_file);
 
-  print "Computing term mediated durations using \
-         $mdur_map_file, $mdur_lex_file, $romanized, $mdur_dur_file\n";
+  MMisc::error_quit ("Arg 2 romanized flag [$romanized] must be 0 or 1\n")
+    unless ($romanized == 0 || $romanized == 1);
 
-  my $bl = new BabelLex($mdur_map_file,
-                        $mdur_lex_file,
-                        $romanized,
-                        $TermList->getEncoding(),
-                        $mdur_dur_file);
+  MMisc::error_quit ("Arg 4 dur file [$mdur_dur_file] not found\n")
+    unless (-e $mdur_dur_file);
 
-  foreach my $termid (keys %{ $TermList->{TERMS} })
-  {
+  MMisc::error_quit ("Arg 5 map file [$mdur_map_file] not found\n")
+    unless (-e $mdur_map_file);
+
+  print "\n                             ***\n";
+  print "Computing term mediated durations using:\n";
+  print "$mdur_map_file,\n$mdur_lex_file,\n$romanized,\n$mdur_dur_file\n";
+  print "***\n";
+
+  my $bl = new BabelLex ($mdur_lex_file,
+                         $romanized,
+                         $TermList->getEncoding(),
+                         $mdur_dur_file,
+                         $mdur_map_file);
+
+  foreach my $termid (keys %{ $TermList->{TERMS} }) {
+
     my $term = $TermList->{TERMS}{$termid};
     my %data = %{$bl->getDurationHash($term->getAttrValue("TEXT"))};
 
@@ -331,7 +339,7 @@ if (@oovLexicons > 0){
     unless ($romanized == 0 || $romanized == 1){ die "Error: Arg 2 /$romanized/ must be 0 or 1 for OOV computation\n";}
     print "Computing OOVs for lexicon $lex, romanzied=$romanized\n";
 
-    my $bl = new BabelLex(undef, $lex, $romanized, $TermList->getEncoding(), undef);
+    my $bl = new BabelLex ($lex, $romanized, $TermList->getEncoding(), undef, undef);
     foreach my $termid (keys %{ $TermList->{TERMS} }) {
       my $term = $TermList->{TERMS}{$termid};
       my $oov = $bl->getOOVCount($term->getAttrValue("TEXT"));
