@@ -588,6 +588,18 @@ sub getDurationHash()
 
 } #getDurationHash()
 
+sub getOOVCount()
+{
+  my ($self, $key_phrase) = @_;
+  my @word_array = split(" ", $key_phrase);
+  my $oov = 0;
+
+  MMisc::error_quit("Error: Attempt to look up an empty keyword") if (@word_array == 0);
+  foreach my $word (@word_array) {
+    $oov ++ if (! exists($self->{LEXTABLE}{$word}));
+  }
+  return $oov;
+}
 
 ################################################################################
 sub unitTest()
