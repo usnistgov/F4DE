@@ -40,10 +40,10 @@ use Data::Dumper;
 ################################################################################
 sub new
 {
-  my ($my_class, $map_file, $lex_file, $romanized, $encoding, $dur_file) = @_;
+  my ($my_class, $lex_file, $romanized, $encoding, $dur_file, $map_file) = @_;
 
   $romanized = ($romanized eq "no" || $romanized eq "0") ? 0 : 1;
-  &printIntro ($map_file, $lex_file, $romanized, $encoding, $dur_file);
+  &printIntro ($lex_file, $romanized, $encoding, $dur_file, $map_file);
 
   my $self = new TranscriptHolder('BabelLex');
 
@@ -76,7 +76,7 @@ sub new
   #
   # The status can be set to "OK", "Estimated", and "Failed".
   #
-  #   "OK" status is given to the return data hash when all the phone duration
+  #  "OK" status is given to the return data hash when all the phone duration
   # values have been either located directly in the Phone Duration file, or
   # first translated with the help of the Phone Map file and then located in
   # the Phone Duration file.
@@ -87,7 +87,7 @@ sub new
   # value for the given lexicon is used in place of the missing phone duration.
   # Hence, the calculation status is deemed Estimated.
   #
-  # "Failed" status is returned when a keyword or any word in a key phrase can
+  #  "Failed" status is returned when a keyword or any word in a key phrase can
   # not be found in the lexicon hash table. Consecuntly, there will be no known
   # pronunciations to work with. The rest of the return data is set to 0.
   #
@@ -95,20 +95,26 @@ sub new
 
   bless $self;
 
-  $self->setEncoding($encoding);
+  if (!$encoding) {
 
-  if (!$map_file || !$lex_file)
-  {
-    MMisc::error_quit("Lexicon file, Romanized flag, and XSAMPA-to_Phone \
-      Map file are required for this module");
+    print ("Warning! Continuing without encoding...\n");
+  }
+  else {
+
+    $self->setEncoding($encoding);
   }
 
-  $self->loadMapFile($map_file);
+  if (!$lex_file)
+  {
+    MMisc::error_quit("Lexicon file and Romanized flag are required for\
+      this module");
+  }
+
   $self->loadLexFile($lex_file);
 
   if ($dur_file)
   {
-    $self->loadDurFile ($dur_file);
+    $self->loadDurFile ($dur_file, $map_file);
   }
 
   return $self;
@@ -118,25 +124,33 @@ sub new
 ################################################################################
 sub printIntro()
 {
-  my ($map_file, $lex_file, $romanized, $encoding, $dur_file) = @_;
+  my ($lex_file, $romanized, $encoding, $dur_file, $map_file) = @_;
 
   my $rome_text = ($romanized == 1) ?
-    "Romanized column expected" :
-      "Romanized column not expected";
+    "Romanized column expected" : "Romanized column not expected";
 
-  print "\n***\n";
-  print "XSAMPA-to-Phone Map: $map_file\n";
+  print "\n                             ***\n";
   print "Lexicon: $lex_file ($encoding)\n";
   print "$rome_text\n\n";
   
-  if ($dur_file)
-  {
-    print "Durations: $dur_file";
+  if ($dur_file) {
+
+    print "Durations: $dur_file\n";
   }
-  else
-  {
-    print "Durations: No filename for pnone durations received yet";
+  else {
+
+    print "Durations: No pnone durations filename received yet\n";
   }
+
+  if ($map_file) {
+
+    print "XSAMPA-to-Phone Map: $map_file";
+  }
+  else {
+
+    print "Phone Maps: No pnone map filename received yet";
+  }
+
   print "\n***\n\n";
 
 } #printIntro()
@@ -144,19 +158,19 @@ sub printIntro()
 
 ################################################################################
 # Map file provides mapping from the XSAMPA characters used in lexicon files to
-# the phones used in the phone duration files. While most of these are the same
-# some are different and the map file provides the translation needed.
+# the phones used in the phone duration files. While some of these are the same
+# some others can be different and the map file provides the translation needed.
 ################################################################################
-sub loadMapFile()
-{
+sub loadMapFile() {
+
   my ($self, $file) = @_;
 
-  if ($self->{MAPLOADSTATUS} > 0)
-  {
+  if ($self->{MAPLOADSTATUS} > 0) {
+
     return "XSAMPA/Phone map file is already loaded or in progress";
   }
-  else
-  {
+  else {
+
     $self->{MAPLOADSTATUS} = 1;
   }
 
@@ -164,18 +178,20 @@ sub loadMapFile()
 
 
   my $header = <$DATA>; # Skip the file header
-  while(<$DATA>)
-  {
+  while(<$DATA>) {
+
     my @words = split('\t', $_);
     chomp (@words);
     $self->{MAPTABLE}{$words[0]} = $words[1];
   }
 
-    #print Dumper($self->{MAPTABLE});
   close $DATA;
 
   $self->{MAPFILE}       = $file;
   $self->{MAPLOADSTATUS} = 2;
+
+  print "XSAMPA-to-Phone Map: $file";
+  print "\n***\n\n";
 
   return "XSAMPA-to-Phone map file successfully loaded from $file";
 
@@ -197,10 +213,6 @@ sub loadLexFile()
   if ($self->{LEXLOADSTATUS} > 0)
   {
     return "Lexicon file is already loaded or in progress";
-  }
-  elsif ($self->{MAPLOADSTATUS} < 2)
-  {
-    MMisc::error_quit("Can't load lexicon without XSAMPA-to_Phone Map");
   }
   else
   {
@@ -251,14 +263,14 @@ sub loadLexFile()
 ################################################################################
 sub loadDurFile()
 {
-  my ($self, $file) = @_;
-  my $total      = 0;
-  my $num_phones = 0;
+  my ($self, $file, $mapfile) = @_;
+  my $total                   = 0;
+  my $num_phones              = 0;
 
 
   if ($self->{DURLOADSTATUS} > 0)
   {
-    return "Duration file is already loaded or in progress";
+    print "Duration file is already loaded or in progress";
   }
   else
   {
@@ -279,6 +291,20 @@ sub loadDurFile()
 
   close $DATA;
 
+  print "                             ***\n";
+  print "Durations: " . $file . "\n";
+  
+  if (!$mapfile) {
+
+    print "Warning! Continuing without XSAMPA to Phone map file...";
+    print "\n***\n\n";
+  }
+  else {
+
+    print "Mapfile: " . $mapfile . "\n";
+    $self->loadMapFile($mapfile);
+  }
+
   $self->{DURFILE}       = $file;
   $self->{DURLOADSTATUS} = 2;
 
@@ -292,12 +318,6 @@ sub loadDurFile()
   # average value will be used in the missing phones duration place.
   $self->{AVERAGEPHONE} = $total / $num_phones;
 
-    #print "                             ***\n";
-    #print "                        - Durations -\
-    #$file\n\n";
-    #print "                             ***\n\n\n";
-
-  
   return "Duration data successfully loaded from $file";
 
 } #loadDurFile()
@@ -331,7 +351,7 @@ sub calculateDurations
           {
             $duration += $self->{DURTABLE}{$syllable};
           }
-           elsif ($self->{MAPTABLE}{$syllable})
+          elsif ($self->{MAPTABLE}{$syllable})
           {
             $syllable = $self->{MAPTABLE}{$syllable};
             if ($self->{DURTABLE}{$syllable})
@@ -364,7 +384,6 @@ sub calculateDurations
             # we have a correct finalized phone map file.
             $duration += $self->{AVERAGEPHONE};
             $status = "Estimated";
-            #print "![$syllable]";
           }
         }
       } #foreach my $syllable (@$variant)
@@ -531,8 +550,9 @@ sub adjustPronunciation()
   my @result = split(" ", $string);
 
   my $i = 0;
-  foreach my $char (@result)
-  {
+
+  foreach my $char (@result) {
+
     # 2014/02/05: No longer replacing the lexicon characters with mapped
     # phones. Instead just changing a string into an array and returning.
     # The mapped characters lookup will take place in the calculateDurations
@@ -553,9 +573,13 @@ sub getDurationHash()
 {
   my ($self, $key_phrase) = @_;
 
+  MMisc::error_quit("Error: Missing  phone durations file") if
+    ($self->{DURLOADSTATUS} != 2);
+
   my $ret;
 
   $ret = {
+
     STATUS     => "OK",
     DURATIONS  => [],
     DURAVERAGE => 0
@@ -564,16 +588,17 @@ sub getDurationHash()
   $self->{DATASTATUS} = "OK";
   my @duration = @{$self->getDurations($key_phrase)};
   my $status = $self->{DATASTATUS};
-  if ($status eq "Failed")
-  {
+
+  if ($status eq "Failed") {
+
     $ret->{STATUS} = $status;
     push (@{$ret->{DURATIONS}}, 0);
     $ret->{DURAVERAGE} = 0;
   }
-  else
-  {
-    foreach my $dur (@duration)
-    {
+  else {
+
+    foreach my $dur (@duration) {
+
       push (@{$ret->{DURATIONS}}, $dur);
     }
 
@@ -588,92 +613,79 @@ sub getDurationHash()
 
 } #getDurationHash()
 
+################################################################################
 sub getOOVCount()
 {
   my ($self, $key_phrase) = @_;
   my @word_array = split(" ", $key_phrase);
   my $oov = 0;
 
-  MMisc::error_quit("Error: Attempt to look up an empty keyword") if (@word_array == 0);
+  MMisc::error_quit("Error: Attempt to look up an empty keyword")
+    if (@word_array == 0);
+
   foreach my $word (@word_array) {
+
     $oov ++ if (! exists($self->{LEXTABLE}{$word}));
   }
+
   return $oov;
 }
 
 ################################################################################
 sub unitTest()
 {
-  my $mapfile = "/Users/vad/TestData/102+103+201+203+206-phoneMaps.txt";
+  my $mapfile = "/home/vad/TestData/102+103+201+203+206-phoneMaps.txt";
 
-  my $lexfile = "/Users/vad/TestData/IARPA-babel102b-v0.5a.lexicon";
+  my $lexfile = "/home/vad/TestData/IARPA-babel102b-v0.5a.lexicon";
   #my $lexfile = "/home/vlad/poc/lexicon.head";
-  #my $lexfile = "/Users/vad/TestData/IARPA-babel102b-v0.5a.lexicon.small";
+  #my $lexfile = "/home/vad/TestData/IARPA-babel102b-v0.5a.lexicon.small";
 
   my $romanized = "";
 
   #my $durfile = "/home/vlad/poc/babel102b-v0.5a-phone_stats.perPhone.txt";
-  my $durfile = "/Users/vad/TestData/babel102b-v0.5a-phone_stats.perPhone.txt";
+  my $durfile = "/home/vad/TestData/babel102b-v0.5a-phone_stats.perPhone.txt";
   
   my $encoding = "UTF-8";
 
-  my $lp = new BabelLex($mapfile, $lexfile, $romanized, $encoding, $durfile);
+  #my $lp = new BabelLex($lexfile, $romanized, $encoding, $durfile, $mapfile);
+  #my $lp = new BabelLex($lexfile, $romanized, $encoding, $durfile);
 
-  #my $lp = new BabelLex($mapfile, $lexfile, $romanized, $encoding);
 
-  #$lp->loadDurFile($durfile);
+  my $lp = new BabelLex($lexfile, $romanized, $encoding);
+
+  $lp->loadDurFile($durfile, $mapfile);
  
   my $multiword = 3;
   my $phrase = " ";
 
   
-  foreach my $keys (keys $lp->{LEXTABLE})
-  {
+  foreach my $keys (keys $lp->{LEXTABLE}) {
+
     my %res = %{$lp->getDurationHash($keys)};
+    my $oov = $lp->getOOVCount($keys);
 
     print "Status = " . $res{STATUS} . "\t";
     print "Durations = " . join(", ", @{$res{DURATIONS}}) . "\t";
-    print "Average = " . $res{DURAVERAGE} . "\n";
+    print "Average = " . $res{DURAVERAGE} . "\t";
+    print "OOV Count = " . $oov . "\n";
 
     $phrase = $phrase . $keys . " ";
     $multiword--;
 
-    if ($multiword == 0)
-    {
-      #print "[$phrase]:\n";
-      %res = %{$lp->getDurationHash($phrase)};
+    if ($multiword == 0) {
 
-      print "Status = " . $res{STATUS};
+      %res = %{$lp->getDurationHash($phrase)};
+      $oov = $lp->getOOVCount($phrase);
+
+      print "STATUS = " . $res{STATUS};
       print "\tDurations = " . join(", ", @{$res{DURATIONS}});
-      print "\tAverage = " . $res{DURAVERAGE} . "\t [$phrase]\n\n";
+      print "\tAverage = " . $res{DURAVERAGE};
+      print "\tOOV Count = " . $oov . "\t [$phrase]\n\n";
 
       $phrase    = " ";
       $multiword = 3;
     }
   }
-
-  #foreach my $keys (keys $lp->{LEXTABLE})
-  #{
-    #my @duration = @{$lp->getDurations($keys)};
-    #print join(", ", @duration);
-    #my $dur_ave = $lp->getDurationAverage($keys);
-    #print "\t\tAverage = $dur_ave\n";
-
-    #$phrase = $phrase . $keys . " ";
-    #$multiword--;
-    
-    #if ($multiword == 0)
-    #{
-      #print "[$phrase]: ";
-      #@duration = @{$lp->getDurations($phrase)};
-      #print join(", ", @duration);
-      #$dur_ave = $lp->getDurationAverage($phrase);
-      #print ", Ave = $dur_ave\n\n\n";
-  #
-      #$phrase    = " ";
-      #$multiword = 3;
-    #}
-  #}
 
   #print Dumper($lp);
 
