@@ -426,15 +426,24 @@ sub groupByAttributes
 {
   my ($self, $rec, $term) = @_;
   my @groups = ();
-  foreach my $attrvalexp (@{ $self->{ATTRIBUTES} }) {
-    my ($attribute, $value_regexp) = ($attrvalexp, undef);
-    if ($attrvalexp =~ /^(.+):regex=(.+)$/){
-      ($attribute, $value_regexp) = ($1, $2)
+
+  foreach my $attrvalexpJoin (@{ $self->{ATTRIBUTES} }) {
+    my @groupSet = ();
+    my $components = 0;
+    foreach my $attrvalexp(split(/\s+\&\&\s+/, $attrvalexpJoin)){
+      $components ++;
+      my ($attribute, $value_regexp) = ($attrvalexp, undef);
+      if ($attrvalexp =~ /^(.+):regex=(.+)$/){ 
+	($attribute, $value_regexp) = ($1, $2)
+      }
+      my $value = $term->{$attribute};
+      if (defined($value)){
+	if ((!defined $value_regexp) || ($value =~ /$value_regexp/)){
+	  push (@groupSet, $attribute . "-" . $value);
+	}
+      }
     }
-    my $value = $term->{$attribute};
-    if (defined($value)){
-      push (@groups, ($attribute . "-" . $value)) if ((!defined $value_regexp) || ($value =~ /$value_regexp/));
-    }
+    push (@groups, join(" X ", @groupSet)) if (scalar(@groupSet) == $components);
   }
   return \@groups;
 }

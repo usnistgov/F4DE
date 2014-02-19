@@ -615,11 +615,12 @@ sub set_usage {
 	$tmp .= "                           nel> (separated by ',') will be displayed in the Occurrence\n";
 	$tmp .= "                           Report and DET Curve (<file> and <channel> can be regular\n";
 	$tmp .= "                           expressions).\n";
-	$tmp .= "  -q, --query <name_attribute>[:regex=<REGEXXP>]\n";
+	$tmp .= "  -q, --query <name_attribute>[:regex=<REGEXP>][ && <name_attribute>[:regex=<REGEXP>]*\n";
 	$tmp .= "                           Populate the Conditional Reports with set of terms identified by\n";
 	$tmp .= "                           <name_attribute> in the the term list's 'terminfo' tags.  Optionally,\n";
 	$tmp .= "                           the valuses of the attribute can be selected using the regular expression\n";
-	$tmp .= "                           <REGEXP>\n";
+	$tmp .= "                           <REGEXP>.  Multiple attributes specified with the '&&' operator which will\n";
+  $tmp .= "                           create the joint set of all occurring attributed\n";
 	$tmp .= "  -w, --words-oov          Generate a Conditional Report sorted by terms that are \n";
 	$tmp .= "                           Out-Of-Vocabulary (OOV) for the system.\n";
 	$tmp .= "\n";
