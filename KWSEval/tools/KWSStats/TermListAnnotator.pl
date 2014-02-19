@@ -59,6 +59,7 @@ my $mduration = "";
 my $normalizeTermTexts = undef;   ### applies the text normalization to the term texts
 
 my $newVersion = undef;
+my @oovLexicons = ();
 
 #Options
 #Need flags for adding programmatically generated annots, (i.e. NGram)
@@ -85,6 +86,7 @@ GetOptions
  "mediatedDuration=s" => \$mduration,
  'setVersion=s'                        => \$newVersion,
  'normalizeTermTexts'                  => \$normalizeTermTexts,
+ 'addOOVCount=s@'                  => \@oovLexicons,
 ) or MMisc::error_quit("Unknown option(s)\n");
 
 
@@ -315,6 +317,27 @@ if ($mduration ne "")
 
     $term->setAttrValue("Phone_Mediated_Status", $data{STATUS});
     $term->setAttrValue("Phone_Mediated_Duration", $data{DURAVERAGE});
+  }
+}
+
+# Process oovCount request:
+# expected argument is a set of lexicons:
+if (@oovLexicons > 0){
+  for my $lexdef(@oovLexicons){
+    print "$lexdef\n";
+    my ($lex, $romanized) = split(/,/, $lexdef);
+
+    unless (-e $lex){ die "Error: Arg 1 lexicon /$lex/ does not exist for OOV computation"; }
+    unless ($romanized == 0 || $romanized == 1){ die "Error: Arg 2 /$romanized/ must be 0 or 1 for OOV computation\n";}
+    print "Computing OOVs for lexicon $lex, romanzied=$romanized\n";
+
+    my $bl = new BabelLex(undef, $lex, $romanized, $TermList->getEncoding(), undef);
+    foreach my $termid (keys %{ $TermList->{TERMS} }) {
+      my $term = $TermList->{TERMS}{$termid};
+      my $oov = $bl->getOOVCount($term->getAttrValue("TEXT"));
+
+      $term->setAttrValue("OOVCount:$lex", $oov);
+    }
   }
 }
 
