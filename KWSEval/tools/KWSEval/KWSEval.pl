@@ -25,11 +25,11 @@
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 ### Die on any warning and give a stack trace
-#use Carp qw(cluck);
+use Carp qw(cluck);
 ### Die on warning
-#$SIG{__WARN__} = sub { cluck "Warning:\n", @_, "\n";  die; };
+$SIG{__WARN__} = sub { cluck "Warning:\n", @_, "\n";  die; };
 ### On die, make a stack trace
-#$SIG{__DIE__} = \&Carp::confess;
+$SIG{__DIE__} = \&Carp::confess;
 
 # Test: perl KWSEval.pl -e ../test_suite/test2.ecf.xml -r ../test_suite/test2.rttm -s ../test_suite/test2.stdlist.xml -t ../test_suite/test2.kwlist.xml -o -A
 
@@ -529,30 +529,39 @@ if ($requestBlockSumReport) {
 			     ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
 			     ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode, $detoptions); #shows Corr!Det if segment based
 }
+
 #Render conditional summary reports
 if ($requestCondSumReport) {
-  if ($fileRoot eq "-") { $file = "-"; }
-  else { $file = $fileRoot . "cond.sum"; }
-  
-  print "Conditional Summary Report: " . $file . "\n";
-  my $detsPath = "";
-  if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/cond.sum" }
-  else { $detsPath = "dets/cond.sum"; }
-  $qdset->renderReport($detsPath, $requestDETConditionalCurve, $detoptions,
-		      ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
-		      ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
-		      ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode);
+  if (@{ $qdset->getDETList() } > 0){
+    if ($fileRoot eq "-") { $file = "-"; }
+    else { $file = $fileRoot . "cond.sum"; }
+    
+    print "Conditional Summary Report: " . $file . "\n";
+    my $detsPath = "";
+    if ($fileRoot ne "-") { $detsPath = $fileRoot . "dets/cond.sum" }
+    else { $detsPath = "dets/cond.sum"; }
+    $qdset->renderReport($detsPath, $requestDETConditionalCurve, $detoptions,
+                         ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
+                         ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
+                         ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode);
+  } else {
+    print "  No Conditional Summary Report will be generated.  No conditional DET Curves found\n";
+  } 
 }
 if ($requestCondBlockSumReport) {
-  if ($fileRoot eq "-") { $file = "-"; }
-  else { $file = $fileRoot . "cond.bsum"; }
-  
-  print "Conditional Block Summary Report: " . $file . "\n";
-
-  $qdset->renderBlockedReport($segmentbased,
-			      ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
-			      ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
-			      ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode); #shows Corr!Det if segment based
+  if (@{ $qdset->getDETList() } > 0){
+    if ($fileRoot eq "-") { $file = "-"; }
+    else { $file = $fileRoot . "cond.bsum"; }
+    
+    print "Conditional Block Summary Report: " . $file . "\n";
+    
+    $qdset->renderBlockedReport($segmentbased,
+                                ($outTypes{"txt"}) ? ($file eq "-") ? "-" : "$file.txt" : undef,
+                                ($outTypes{"csv"}) ? ($file eq "-") ? "-" : "$file.csv" : undef, 
+                                ($outTypes{"html"}) ? ($file eq "-") ? "-" : "$file.html" : undef, $binmode); #shows Corr!Det if segment based
+  } else {
+    print "  No Conditional Summary Report will be generated.  No conditional DET Curves found\n";
+  } 
 }
 ###
 
