@@ -96,13 +96,15 @@ my $inKWSList = "";
 my $outKWSList = "";
 my $kwlist = "";
 my $err;
-
+my $system = "";
+my $kwlistName =""; 
 GetOptions
 (
     'inkwslist=s'                          => \$inKWSList,
     'outkwslist=s'                          => \$outKWSList,
     'kwlist=s'                          => \$kwlist,
-    'version',                            => sub { MMisc::ok_quit($versionid) },
+    'systemid=s',                            => \$system,
+    'KWEntry',                            => \$kwlistName,
     'help'                                => sub { MMisc::ok_quit($usage) },
 )  or MMisc::error_quit("Unknown option(s)\n\n$usage\n");
 
@@ -121,12 +123,14 @@ my %termsToKeep = ();
 foreach my $termID($TERM->getTermIDs()){
   $termsToKeep{$termID} = 1;
 }
-print Dumper(\%termsToKeep);
+#print Dumper(\%termsToKeep);
 foreach my $termID($inKWS->getTermIDs()){
-  print "Exists $termID ".(exists($termsToKeep{$termID}) ? "keep" : "delete")."\n";
+  # print "Exists $termID ".(exists($termsToKeep{$termID}) ? "keep" : "delete")."\n";
   $inKWS->deleteTermByID($termID) unless (exists($termsToKeep{$termID}));
 }
 
+($inKWS ->{TERMLIST_FILENAME} = $kwlist) =~ s:.*/::;
+($inKWS ->{SYSTEM_ID} = $system) if ($system ne "");
 $inKWS ->{KWSLIST_FILENAME} = $outKWSList;
 $inKWS->saveFile();
 
