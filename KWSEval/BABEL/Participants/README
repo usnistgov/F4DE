@@ -121,7 +121,7 @@ expected.  Execute the following:
 
 % ln -s <KWS13_INDUSDB_DIR> KWS14-dbDir
 % ln -s KWS14-dbDir KWS12-dbDir
-% ln -s KWS13-dbDir KWS13-dbDir
+% ln -s KWS14-dbDir KWS13-dbDir
 
 Please insure that you have completed the scp account setup and testing.
 
