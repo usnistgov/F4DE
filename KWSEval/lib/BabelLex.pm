@@ -54,6 +54,7 @@ sub new
     MAPTABLE      => {},
     LEXTABLE      => {},
     DURTABLE      => {},
+    MISSINGPHONES => {},
     ROMANIZED     => $romanized,
     ENCODING      => $encoding,
     MAPLOADSTATUS => 0,             # 0 = table not loaded
@@ -332,6 +333,7 @@ sub loadDurFile()
 sub calculateDurations
 {
   my ($self)   = @_;
+  my $verbose  = 0;
 
   foreach my $word (keys $self->{LEXTABLE})
   {
@@ -353,14 +355,14 @@ sub calculateDurations
           }
           elsif ($self->{MAPTABLE}{$syllable})
           {
-            $syllable = $self->{MAPTABLE}{$syllable};
-            if ($self->{DURTABLE}{$syllable})
+            my $mapped_syllable = $self->{MAPTABLE}{$syllable};
+            if ($self->{DURTABLE}{$mapped_syllable})
             {
               # We are here because we didn't find the syllable in the phone
               # durations file, so instead we looked up a substitution in the
               # phone map file and now we will use it in the duration calcu-
               # lations. This is not an error.
-              $duration += $self->{DURTABLE}{$syllable};
+              $duration += $self->{DURTABLE}{$mapped_syllable};
             }
             else
             {
@@ -370,8 +372,24 @@ sub calculateDurations
               # calculated when loaded the phone duration file. This is a
               # temporary workaround that should not get used as soon as
               # we have a correct finalized phone map file.
-              $duration += $self->{AVERAGEPHONE};
-              $status = "Estimated";
+              if ($mapped_syllable ne "removed")
+              {
+                $duration += $self->{AVERAGEPHONE};
+                $status = "Estimated";
+                if ($self->{MISSINGPHONES}{$syllable})
+                {
+                  $self->{MISSINGPHONES}{$syllable}++;
+                }
+                else
+                {
+                  $self->{MISSINGPHONES}{$syllable} = 1;
+                }
+                if ($verbose)
+                {
+                  print ("Maptable substitution $mapped_syllable");
+                  print (" for $syllable duration not found, Estimating.\n");
+                }
+              }
             }
           }
           else
@@ -384,6 +402,19 @@ sub calculateDurations
             # we have a correct finalized phone map file.
             $duration += $self->{AVERAGEPHONE};
             $status = "Estimated";
+            if ($self->{MISSINGPHONES}{$syllable})
+            {
+              $self->{MISSINGPHONES}{$syllable}++;
+            }
+            else
+            {
+              $self->{MISSINGPHONES}{$syllable} = 1;
+            }
+            if ($verbose)
+            {
+              print ("Syllable $syllable not in Maptable and not in");
+              print (" duration file, Estimating.\n");
+            }
           }
         }
       } #foreach my $syllable (@$variant)
@@ -612,6 +643,17 @@ sub getDurationHash()
   return $ret;
 
 } #getDurationHash()
+
+
+################################################################################
+sub getMissingPhones()
+{
+  my ($self) = @_;
+
+  return $self->{MISSINGPHONES};
+
+} #getMissingPhones()
+
 
 ################################################################################
 sub getOOVCount()
