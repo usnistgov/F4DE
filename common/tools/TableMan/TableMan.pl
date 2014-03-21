@@ -163,6 +163,13 @@ TableMan.pl [ OPTIONS ]
     -T, --Transpose   Transpose the table by swaping colums 2 and 3
 
     -h, --help        Print this usage text.
+
+
+Example Usage:
+
+(echo "v1 col1|s1 row1|r1"; echo "v2 col1|s2 row1|r1"; echo "v3 col1|s1 row1|r2"; echo "v4 col2|s1 row1|r12"; ) | TableMan
+
+
 EOT
 }
 
