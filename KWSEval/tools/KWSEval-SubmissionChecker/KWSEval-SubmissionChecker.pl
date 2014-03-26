@@ -404,7 +404,7 @@ sub kwslist_validation {
   my ($f, $sf, $lcorpus, $lpart) = @_;
 
   vprint(2, "Confirming having matching ECF & TLIST");
-  return("Can not validate; no usable ECF & TLIST files with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'dbDir\'")
+  return("Can not validate; no usable ECF & TLIST files with <CORPUSID> = $lcorpus | <PARTITION> = $lpart in \'dbDir\'. Found ".join(", ",sort keys %ecfs))
     if (! MMisc::safe_exists(\%ecfs, $lcorpus, $lpart));
 
   vprint(2, "Running Validation tool");
