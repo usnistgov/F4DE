@@ -62,6 +62,7 @@ sub new {
   my $charSplitText = shift;
   my $charSplitTextNotASCII = shift;
   my $charSplitTextDeleteHyphens = shift;
+  my $bypassXMLLint = shift;
 
   my $self = TranscriptHolder->new();
   
@@ -86,7 +87,7 @@ sub new {
   bless $self;
   
   my $err = "";
-  $err = $self->loadFile($termlistfile) if (defined($termlistfile));
+  $err = $self->loadFile($termlistfile, $bypassXMLLint) if (defined($termlistfile));
   MMisc::error_quit($err) if (! MMisc::is_blank($err));
 
   return $self;
@@ -581,13 +582,13 @@ sub getNextKW {
 
 # 'justValidate' will ask for TERMs not to be created (ie no rewrite possible)
 sub loadXMLFile {
-  my ($self, $kwlistf, $justValidate) = MMisc::iuav(\@_, undef, undef, 0);
+  my ($self, $kwlistf, $justValidate, $bypassXMLLint) = MMisc::iuav(\@_, undef, undef, 0, 0);
 
   return("Refusing to load a file on top of an already existing object")
     if ($self->{LoadedFile} != 0);
 
   # First: open the file access to read the header, asking for TERMs to be created
-  my $err = $self->openXMLFileAccess($kwlistf, ($justValidate == 1) ? 0 : 1, 0);
+  my $err = $self->openXMLFileAccess($kwlistf, ($justValidate == 1) ? 0 : 1, $bypassXMLLint);
   return($err) if (! MMisc::is_blank($err));
   
   my $doit = 1;
@@ -765,7 +766,7 @@ sub load_MemDump_File {
 #####
 
 sub loadFile {
-  my ($self, $tlist) = @_;
+  my ($self, $tlist, $bypassXMLLint) = @_;
 
   return("Refusing to load a file on top of an already existing object")
     if ($self->{LoadedFile} != 0);
@@ -785,7 +786,7 @@ sub loadFile {
     if ( ($header eq $MemDump_FileHeader_cmp)
          || ($header eq $MemDump_FileHeader_gz_cmp) );
 
-  return($self->loadXMLFile($tlist));
+  return($self->loadXMLFile($tlist, 0, $bypassXMLLint));
 }
 
 ############################################################
