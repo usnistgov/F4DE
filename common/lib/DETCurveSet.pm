@@ -454,14 +454,14 @@ sub _buildAutoTable(){
     if ($reportIsoRatios){
    		foreach my $cof ( sort {$a <=> $b} @{ $det->{ISOLINE_COEFFICIENTS} } ) {		
   			if(defined($det->{ISOPOINTS}{$cof}))	{
-  				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_DETECTSCORE}),   
-  				  ($useAT ? "Iso Ratios|" : "" ) . sprintf("%.4f-Dec. Thresh", $cof),   $key);
   				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MFA}),   
-  				  ($useAT ? "Iso Ratios|" : "" ) . sprintf("%.4f-%s", $cof, $det->getMetric()->errFALab()),   $key);
+  				  ($useAT ? "Ratio=$cof|" : "" ) . $det->getMetric()->errFALab(),   $key);
 	   			$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS}), 
-	   			  ($useAT ? "Iso Ratios|" : "" ) . sprintf("%.4f-%s", $cof, $det->getMetric()->errMissLab()), $key);
+	   			  ($useAT ? "Ratio=$cof|" : "" ) . $det->getMetric()->errMissLab(), $key);
 		  		$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_COMB}),  
-		  		  ($useAT ? "Iso Ratios|" : "" ) . sprintf("%.4f-%s", $cof, $det->getMetric()->combLab()),    $key);
+		  		  ($useAT ? "Ratio=$cof|" : "" ) . $det->getMetric()->combLab(),    $key);
+  				$at->addData(sprintf("%.4f", $det->{ISOPOINTS}{$cof}{INTERPOLATED_DETECTSCORE}),   
+  				  ($useAT ? "Ratio=$cof|" : "" ) . "Dec. Thresh",                   $key);
 			  }
 		  }  
     }
@@ -545,6 +545,7 @@ sub _buildBlockedAutoTable()
   my $reportGlobal  = 0;   $reportGlobal = 1     if (exists($DETOptions->{ReportGlobal}) && $DETOptions->{ReportGlobal} == 1);
   my $reportOptimum  = 0;   $reportOptimum = 1   if (exists($DETOptions->{ReportOptimum}) && $DETOptions->{ReportOptimum} == 1);
   my $reportSupremum  = 0;  $reportSupremum = 1  if (exists($DETOptions->{ReportSupremum}) && $DETOptions->{ReportSupremum} == 1);
+  my $reportIsoRatios = 0;  $reportIsoRatios=1   if (exists($DETOptions->{ReportIsoRatios}) && ($DETOptions->{ReportIsoRatios} == 1));
   my %globSum = ();
   
   for (my $i=0; $i<@{ $self->{DETList} }; $i++) {
@@ -602,7 +603,17 @@ sub _buildBlockedAutoTable()
  	        push(@{ $globSum{$gm} }, $val) if (defined($val));
         }
       }
-
+      if ($reportIsoRatios){
+        my $key = $blockID . "|" . $block;
+     		foreach my $cof ( sort {$a <=> $b} @{ $det->{ISOLINE_COEFFICIENTS} } ) {		
+    			if(defined($det->{ISOPOINTS}{$cof}))	{
+            $at->addData(&_PN($metric->errFAPrintFormat(),   $det->{ISOPOINTS}{$cof}{BLOCKS}{$block}{MFA}),      "Ratio=$cof $comblab|" . $metric->errFALab(),   $key);
+            $at->addData(&_PN($metric->errMissPrintFormat(), $det->{ISOPOINTS}{$cof}{BLOCKS}{$block}{MMISS}),    "Ratio=$cof $comblab|" . $metric->errMissLab(), $key);
+            $at->addData(&_PN($metric->combPrintFormat(),    $det->{ISOPOINTS}{$cof}{BLOCKS}{$block}{COMB}),     "Ratio=$cof $comblab|" . $metric->combLab(),    $key);
+            $at->addData(&_PN($metric->errMissPrintFormat(), $det->{ISOPOINTS}{$cof}{INTERPOLATED_DETECTSCORE}), "Ratio=$cof $comblab|" . "Dec. Thresh", $key);
+          }
+        }
+      }
     }
 
     my ($targSum, $targAvg, $targSSD) = $trial->getTotNumTarg();
@@ -686,6 +697,17 @@ sub _buildBlockedAutoTable()
       $at->addData(&_PN($metric->errFAPrintFormat(), $det->getSupremumCombMFA()),              "Supremum $comblab|" . $metric->errFALab(),   $key);
       $at->addData(&_PN($metric->errMissPrintFormat(), $det->getSupremumCombMMiss()),          "Supremum $comblab|" . $metric->errMissLab(), $key);
       $at->addData(&_PN($metric->combPrintFormat(), $det->getSupremumCombComb()),              "Supremum $comblab|" . $metric->combLab(),    $key);
+    }
+    if ($reportIsoRatios){
+	    my $key = "Summary|Means";
+  		foreach my $cof ( sort {$a <=> $b} @{ $det->{ISOLINE_COEFFICIENTS} } ) {		
+   			if(defined($det->{ISOPOINTS}{$cof}))	{
+          $at->addData(&_PN($metric->errFAPrintFormat(),   $det->{ISOPOINTS}{$cof}{INTERPOLATED_MFA}),         "Ratio=$cof $comblab|" . $metric->errFALab(),   $key);
+          $at->addData(&_PN($metric->errMissPrintFormat(), $det->{ISOPOINTS}{$cof}{INTERPOLATED_MMISS}),       "Ratio=$cof $comblab|" . $metric->errMissLab(), $key);
+          $at->addData(&_PN($metric->combPrintFormat(),    $det->{ISOPOINTS}{$cof}{INTERPOLATED_COMB}),        "Ratio=$cof $comblab|" . $metric->combLab(),    $key);
+          $at->addData(&_PN($metric->errMissPrintFormat(), $det->{ISOPOINTS}{$cof}{INTERPOLATED_DETECTSCORE}), "Ratio=$cof $comblab|" . "Dec. Thresh", $key);
+        }
+      }
     }
   }
 

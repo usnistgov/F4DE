@@ -179,11 +179,11 @@ sub srlLoadTest {
 }
 
 sub _testOneBlock{
-  my ($mesg, $trial, $points, $expGlob, $expOptSup, $expBlockOptSup) = @_;
+  my ($mesg, $trial, $points, $expGlob, $expOptSup, $expBlockOptSup, $expRatios, $expBlockRatios) = @_;
   my ($report, $blockReport) = ("", "");
   
   print "  $mesg\n";
-  my @isolinecoef = ( );
+  my @isolinecoef = (100, 10);
   my $met = new MetricNormLinearCostFunct({ ('CostFA' => 1, 'CostMiss' => 10, 'Ptarg' => 0.01 ) }, $trial);
   my $det = new DETCurve($trial, $met, "Targetted point", \@isolinecoef, undef, 1);
   foreach my $gm(keys %$expGlob){
@@ -258,17 +258,54 @@ sub _testOneBlock{
     }
   }
   print "Ok\n";
+
+  if (scalar(keys %$expRatios) > 0){  
+    print "    Checking Ratios .. ";
+    foreach my $coef(keys %$expRatios){
+      foreach my $attr(keys %{ $expRatios->{$coef} }){
+        ### Overall
+        if ((defined($expRatios->{$coef}{$attr})) && !defined($det->{ISOPOINTS}{$coef}{$attr})){
+          print "\n  Error!!! ISOPOINTS for coeff $coef failed for attribute $attr\n";
+          print Dumper($det->{ISOPOINTS}{$coef});
+          exit(1);
+        } elsif (abs($expRatios->{$coef}{$attr} - $det->{ISOPOINTS}{$coef}{$attr}) > 0.001){
+          print "\n  Error!!! ISOPOINTS for coeff $coef failed for attribute $attr.  ".
+                "expected $expRatios->{$coef}{$attr}, got $det->{ISOPOINTS}{$coef}{$attr}\n";
+          print Dumper($det->{ISOPOINTS}{$coef});
+          exit(1);
+        }
+      }
+      ### for blocks
+      foreach my $block(keys %$expBlockRatios){
+        foreach my $attr(keys %{ $expBlockRatios->{$block}{$coef} }){
+          if ((defined($expBlockRatios->{$block}{$coef}{$attr})) && !defined($det->{ISOPOINTS}{$coef}{BLOCKS}{$block}{$attr})){
+            print "\n  Error!!! ISOPOINTS for coeff $coef of block $block failed for attribute $attr\n";
+            print Dumper($det->{ISOPOINTS}{$coef});
+            exit(1);
+          } elsif (abs($expBlockRatios->{$block}{$coef}{$attr} - $det->{ISOPOINTS}{$coef}{BLOCKS}{$block}{$attr}) > 0.001){
+            print "\n  Error!!! ISOPOINTS for coeff $coef of block $block failed for attribute $attr.  ".
+                  "expected $expBlockRatios->{$block}{$coef}{$attr}, got $det->{ISOPOINTS}{$coef}{BLOCKS}{$block}{$attr}\n";
+            print Dumper($det->{ISOPOINTS}{$coef});
+            exit(1);
+          }
+        }
+      }
+    }
+    print "Ok\n";
+  }
   
   ### Rendering the reports to pass back
   my $ds = new DETCurveSet("Test DET");
   my $rtn = $ds->addDET("First", $det);
   MMisc::error_quit("Unable to add single DET to a set /$rtn/") if ($rtn ne "success");
   
-  my $opts = {(createDETfiles => 0, ReportGlobal => 1, ExcludePNGFileFromTextTable => 1, "ReportOptimum" => 1, "ReportSupremum" => 1)};
+  my $opts = {(createDETfiles => 1, ReportGlobal => 1, ExcludePNGFileFromTextTable => 1, "ReportOptimum" => 1, "ReportSupremum" => 1,
+               ReportIsoRatios => 1, DrawIsoratiolines => 1, Isoratiolines => \@isolinecoef )};
   $report = $ds->renderAsTxt("foomerge", 1, $opts);  
 #  print $report;
   $blockReport = $ds->renderBlockedReport(1, undef, undef, undef, undef, $opts);  
 #  print $report;
+
   return($report, $blockReport); 
 }
 
@@ -498,7 +535,12 @@ sub globalMeasureUnitTest(){
                   { OPTIMUMCOMB  => { COMB => 0.8, MMISS => 0.8, MFA => 0.0, DETECTIONSCORE => undef},
                     SUPREMUMCOMB => { COMB => 0.0, MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => undef}},
                   { "she" => {OPTIMUMCOMB  => { COMB => 0.8, MMISS => 0.8, MFA => 0, DETECTIONSCORE => 1},
-                              SUPREMUMCOMB => { COMB => 0.0, MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => 0.5}}});
+                              SUPREMUMCOMB => { COMB => 0.0, MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => 0.5}}},
+                  { 10  => { INTERPOLATED_COMB => 1.32666, INTERPOLATED_MMISS => 0.6666, INTERPOLATED_MFA => 0.0667, INTERPOLATED_DETECTSCORE => 0.98},
+                    100 => { INTERPOLATED_COMB => 0.87920, INTERPOLATED_MMISS => 0.8000, INTERPOLATED_MFA => 0.0080, INTERPOLATED_DETECTSCORE => 1.00}},
+                  { "she" => { 10 =>  { COMB => 1.32666, MMISS => 0.6666, MFA => 0.0667},
+                               100 => { COMB => 0.87920, MMISS => 0.8000, MFA => 0.0080}}}
+                  );
     _testOneBlock("Full system coverage of trials, unsorted trials case 1", $trial2, $trial2Pts, 
                   { AP => 0.62222, APP => 0.336341704},
                   { OPTIMUMCOMB  => { COMB => 0.6666, MMISS => 0.6667, MFA => 0.0, DETECTIONSCORE => undef},
@@ -603,7 +645,6 @@ sub globalMeasureUnitTest(){
                   }
 
                 );
-
   #print $report;
   #print $blockReport;
 
@@ -1693,11 +1734,13 @@ sub AddIsolineInformation
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_MMISS} = $estMMiss;
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_COMB} = $self->{METRIC}->combCalc($estMMiss, $estMFa);
     $self->{ISOPOINTS}{$isolinecoef}{INTERPOLATED_DETECTSCORE} = $detectScore;
-        
+
     foreach my $b ( keys %{ $blocks } ) {
       # Add info of previous in the block id
-      $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MFA} = (1-$paramt)*($blocks->{$b}{PREVMFA}) + $paramt*($blocks->{$b}{MFA});
-      $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MMISS} = (1-$paramt)*($blocks->{$b}{PREVMMISS}) + $paramt*($blocks->{$b}{MMISS});
+      my $interpMFA = (1-$paramt)*($blocks->{$b}{PREVMFA}) + $paramt*($blocks->{$b}{MFA});
+      my $interpMMISS = (1-$paramt)*($blocks->{$b}{PREVMMISS}) + $paramt*($blocks->{$b}{MMISS});
+      $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MFA} = $self->{METRIC}->errFABlockCalc($interpMMISS, $interpMFA, $b);
+      $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MMISS} = $self->{METRIC}->errMissBlockCalc($interpMMISS, $interpMFA, $b);
       # Value function
       $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{COMB} = $self->{METRIC}->combCalc($self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MMISS},
                                                                                      $self->{ISOPOINTS}{$isolinecoef}{BLOCKS}{$b}{MFA});
