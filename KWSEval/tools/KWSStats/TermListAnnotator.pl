@@ -57,6 +57,7 @@ my @textPrefilters = ();
 my @deleteAttr = ();
 my $mduration = "";
 my $normalizeTermTexts = undef;   ### applies the text normalization to the term texts
+my $bypassxmllint = 0;
 
 my $newVersion = undef;
 my @oovLexicons = ();
@@ -86,6 +87,7 @@ GetOptions
  "mediatedDuration=s" => \$mduration,
  'setVersion=s'                        => \$newVersion,
  'normalizeTermTexts'                  => \$normalizeTermTexts,
+ 'XmllintBypass'                       => \$bypassxmllint,
  'addOOVCount=s@'                  => \@oovLexicons,
 ) or MMisc::error_quit("Unknown option(s)\n");
 
@@ -137,7 +139,7 @@ print "Warning: -addInferredCharaterDuration ingnored because no RTTMs are prese
 
 #Load TermList
 #$TermList = new TermList($inTlist, $charSplitText, $charSplitTextNotASCII, $charSplitTextDeleteHyphens);
-$TermList = new TermList($inTlist, 0, 0, 0);
+$TermList = new TermList($inTlist, 0, 0, 0, $bypassxmllint);
 ### Apply the attrValue
 if (defined($attrValueStr)){
  foreach my $termid (keys %{ $TermList->{TERMS} }) {
