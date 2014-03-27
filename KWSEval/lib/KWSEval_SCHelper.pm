@@ -366,8 +366,8 @@ sub check_system_description {
     my $found_datadef = 0;
     open SYSDESC, "<$sys_desc_f" or return "Problem opening system description file '$sys_desc_f'";
     while (my $line = <SYSDESC>) {
-	if (my @match = $line =~ /(BaseLR)\{([^\+:,]+)\}(,(BabelLR)\{(([^\+:,]+\+?)*)\})?(,(OtherLR)\{(([^\+:,]+\+?)*)\})?:
-                                 (AM)\{(([^\+:,]+\+?)*)\},(LM)\{(([^\+:,]+\+?)*)\},(PRON)\{(([^\+:,]+\+?)*)\},(AR)\{(([^\+:,]+\+?)*)\}/x) {
+	if (!$found_datadef && (my @match = $line =~ /(BaseLR)\{([^\+:,]+)\}(,(BabelLR)\{(([^\+:,]+\+?)*)\})?(,(OtherLR)\{(([^\+:,]+\+?)*)\})?:
+                                 (AM)\{(([^\+:,]+\+?)*)\},(LM)\{(([^\+:,]+\+?)*)\},(PRON)\{(([^\+:,]+\+?)*)\},(AR)\{(([^\+:,]+\+?)*)\}/x)) {
 	    $found_datadef = 1;
 	    foreach my $i (0, 3, 7, 10, 13, 16, 19) { # BaseLR, BabelLR, OtherLR # AM, LM, PRON, AR
 		next if MMisc::is_blank($match[$i]);
