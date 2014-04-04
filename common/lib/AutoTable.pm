@@ -257,7 +257,7 @@ sub unitTest {
   $at->__UT_aterr();
   &__UT_showAllModes("Simple Table", $at);
   $at->__UT_aterr();
-  
+
 ##=======
 ##  
 ##>>>>>>> 1.3
@@ -1483,7 +1483,8 @@ sub renderGrid(){
   foreach my $col(@colIDS){
     foreach my $row(@rowIDS){
       my $val = $self->getData($col, $row);
-      $str .= "$val$sep$col$sep$row\n" if (defined($val));
+      my $lid = &__getLID($row, $col);
+      $str .= "$val$sep$col$sep$row".(exists($self->{special}{$lid}) ? "$sep$self->{special}{$lid}" : "")."\n" if (defined($val));
     }
   }            
   return $str;
