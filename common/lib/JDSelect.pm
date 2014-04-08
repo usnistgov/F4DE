@@ -19,6 +19,7 @@ sub new {
   {
     TOTALN      => undef,
     COUNT       => {},
+    UNIVARIATECOUNT => {},
     MIXTURE     => {},
     DATAOUTOFMIX   => 0,
     DATAINMIX   => 0,
@@ -79,6 +80,16 @@ sub addToCount{
 	  $self->{SELECTTIERS}{$dataArr->[2]} = 1;
       }
   }
+  
+  # Record the univariatn stats including in vs. out distinction
+  foreach my $_fact(@{ $self->{MIXTURENAMES} }){
+      my $out = ($outOfMix ? "OUT" : "IN");
+      my $val = "UNK";
+      if (exists($coordHT->{$_fact}) && $coordHT->{$_fact} ne ""){ # && exists($self->{MIXTURE}{$_fact}{$coordHT->{$_fact}})){
+	  $val = $coordHT->{$_fact};					  
+      }
+      $self->{UNIVARIATECOUNT}{$_fact}{VAL}{$val}{$out} ++;
+  }
 }
 
 sub combinations{
@@ -123,7 +134,7 @@ sub getMixtureForValue{
 }
 
 sub calculateExpected{
-  my ($self) = @_;
+  my ($self, $doPass2) = @_;
   my $vb = 0;
 
   my @factArrs = ();
@@ -161,90 +172,95 @@ sub calculateExpected{
 
   print "###Start to redistribute\n" if ($vb);
   
-  my $redist = @factArrs-1;
-  while ($redist > 0){
-    my @topFactArrs = ();
-    my @botFactArrs = ();
-    for ($_ = 0; $_<$redist; $_++) {          push @topFactArrs, $factArrs[$_] }
-    for ($_ = $redist; $_<@factArrs; $_++) { push @botFactArrs, $factArrs[$_] }
-    # Compute the shortfall
-    my $leftovers = 0;
-    foreach my $topComb(@{ combinations(\@topFactArrs) }){
-      print "   ".join(", ",@$topComb)."\n" if ($vb);
-      my ($expInt, $toSelInit, $toSelAdd, $avail, $short) = (0, 0, 0, 0, 0);
-      my $cntBot = 0;
-      foreach my $botComb(@{ combinations(\@botFactArrs) }){
-	$cntBot ++;
-	print "       ".join(", ",@$botComb)."\n" if ($vb);
-	my $key = join("_____",@$topComb, @$botComb);
- 	$expInt += $self->{EXPECTEDINT}{$key};
-	$toSelInit  += $self->{TOSELECTINIT}{$key};
-	$toSelAdd  += $self->{TOSELECTADD}{$key};
-	my $realAvail   = (exists($self->{COUNT}{$key})       ? scalar(@{ $self->{COUNT}{$key} }) : 0);
-	if ($realAvail > ($self->{TOSELECTINIT}{$key}) + $self->{TOSELECTADD}{$key} ){
-	  $avail ++;  ### There's some to select somewhere
-	}
-      }
-      $short = $expInt - ($toSelInit + $toSelAdd);
-      print "           Short = $short for $cntBot divisions\n" if ($vb);
-      my $resid = $short;
-      while ($avail > 0 && $resid > 0){
-	$avail = 0;
+  if ($doPass2){
+    my $redist = @factArrs-1;
+    while ($redist > 0){
+      my @topFactArrs = ();
+      my @botFactArrs = ();
+      for ($_ = 0; $_<$redist; $_++) {          push @topFactArrs, $factArrs[$_] }
+      for ($_ = $redist; $_<@factArrs; $_++) { push @botFactArrs, $factArrs[$_] }
+      # Compute the shortfall
+      my $leftovers = 0;
+      foreach my $topComb(@{ combinations(\@topFactArrs) }){
+	print "   ".join(", ",@$topComb)."\n" if ($vb);
+	my ($expInt, $toSelInit, $toSelAdd, $avail, $short) = (0, 0, 0, 0, 0);
+	my $cntBot = 0;
 	foreach my $botComb(@{ combinations(\@botFactArrs) }){
+	  $cntBot ++;
+	  print "       ".join(", ",@$botComb)."\n" if ($vb);
 	  my $key = join("_____",@$topComb, @$botComb);
+	  $expInt += $self->{EXPECTEDINT}{$key};
+	  $toSelInit  += $self->{TOSELECTINIT}{$key};
+	  $toSelAdd  += $self->{TOSELECTADD}{$key};
 	  my $realAvail   = (exists($self->{COUNT}{$key})       ? scalar(@{ $self->{COUNT}{$key} }) : 0);
-	  my $selected    = $self->{TOSELECTINIT}{$key} + $self->{TOSELECTADD}{$key};
-	  if ($selected < $realAvail){
-	    ### Add one
-	    $self->{TOSELECTADD}{$key} ++;
-	    $self->{TOSELECT}{$key}  =  $self->{TOSELECTADD}{$key} + $self->{TOSELECTINIT}{$key};
-	    $resid--;
-	    $avail = 1 if ($selected + 1 < $realAvail);  ### Is there more
-	    print "               Adding one to ".$key."\n" if ($vb);
+	  if ($realAvail > ($self->{TOSELECTINIT}{$key}) + $self->{TOSELECTADD}{$key} ){
+	    $avail ++;  ### There's some to select somewhere
 	  }
 	}
+	$short = $expInt - ($toSelInit + $toSelAdd);
+	print "           Short = $short for $cntBot divisions\n" if ($vb);
+	my $resid = $short;
+	while ($avail > 0 && $resid > 0){
+	  $avail = 0;
+	  foreach my $botComb(@{ combinations(\@botFactArrs) }){
+	    my $key = join("_____",@$topComb, @$botComb);
+	    my $realAvail   = (exists($self->{COUNT}{$key})       ? scalar(@{ $self->{COUNT}{$key} }) : 0);
+	    my $selected    = $self->{TOSELECTINIT}{$key} + $self->{TOSELECTADD}{$key};
+	    if ($selected < $realAvail){
+	      ### Add one
+	      $self->{TOSELECTADD}{$key} ++;
+	      $self->{TOSELECT}{$key}  =  $self->{TOSELECTADD}{$key} + $self->{TOSELECTINIT}{$key};
+	      $resid--;
+	      $avail = 1 if ($selected + 1 < $realAvail);  ### Is there more
+	      print "               Adding one to ".$key."\n" if ($vb);
+	    }
+	  }
+	}
+	if ($resid > 0){
+	  print "Warning: Resid is $resid for ".join("_____",@$topComb)."[*].  Redistributing to a higher factor \n" if ($vb);
+	  $leftovers = 1;	
+	}
       }
-      if ($resid > 0){
-	print "Warning: Resid is $resid for ".join("_____",@$topComb)."[*].  Redistributing to a higher factor \n" if ($vb);
-	$leftovers = 1;	
+      if ($leftovers) {
+	$redist --;
+      } else {
+	$redist = -1;
       }
-    }
-    if ($leftovers) {
-      $redist --;
-    } else {
-      $redist = -1;
     }
   }
 }
 
 
 sub dump{
-  my    ($self) = @_;
+  my  ($self, $rootOutput, $setID) = @_;
   print "JDS Dump\n";
   print "    totalN=".$self->{TOTALN}."\n";
   print "    DataOutOfMix=".$self->{DATAOUTOFMIX}."\n";
   print "    DataInMix=".$self->{DATAINMIX}."\n";
+  print "    RootOutput=$rootOutput\n";
   print "    Mixtures:\n";
   my $mixAt = new AutoTable();
 
   foreach my $_fact(@{ $self->{MIXTURENAMES} }){
     foreach my $_lev(sort keys %{ $self->{MIXTURE}{$_fact} }){
-	$mixAt->addData($self->{MIXTURE}{$_fact}{$_lev}, "Targ%", "$_fact|$_lev");
-	$mixAt->addData($self->{MIXTURE}{$_fact}{$_lev} * $self->{TOTALN}, "Expected", "$_fact|$_lev")
+	$mixAt->addData($self->{MIXTURE}{$_fact}{$_lev}, "Results|Targ%", "$setID|$_fact|$_lev");
+	$mixAt->addData($self->{MIXTURE}{$_fact}{$_lev} * $self->{TOTALN}, "Results|Expected", "$setID|$_fact|$_lev")
     }
   }
   $mixAt->setRowSort("Alpha");
   $mixAt->setProperties({ "TxtPrefix" => "        "});
+  print "Initial mixAt\n";
+  print $mixAt->renderByType("txt");
 
   my $at = new AutoTable();
   my %sums = ();
   my $totKey = undef;
   my $rawCountKey = "Raw Count|Total";
   foreach my $_key(sort keys %{ $self->{EXPECTED} }){
-    my $_pkey = $_key;
+    my $_pkey = "$setID|".$_key;
     $_pkey =~ s/_____/|/g;
     if (!defined $totKey){
-      ($totKey = $_key) =~ s/_____/|/g;
+      ($totKey = "$setID|".$_key) =~ s/_____/|/g;
       $totKey =~ s/[^\|]+/__SUM__/g;      
     }
     if (exists($self->{COUNT}{$_key})){
@@ -264,7 +280,7 @@ sub dump{
       }
     }
     foreach my $mixFact(keys %{ $self->{MIXTUREKEYLUT}{$_key} }){
-	$mixAt->incrementBy("Selected",$mixFact,$self->{TOSELECT}{$_key})
+	$mixAt->incrementBy("Results|Selected","$setID|".$mixFact,$self->{TOSELECT}{$_key})
     }
 
     foreach my $stat("EXPECTED", "EXPECTEDINT", "TOSELECTINIT", "TOSELECTUNDERAGE", "TOSELECTADD", "TOSELECT"){
@@ -289,20 +305,49 @@ sub dump{
       }
     }
   }
+  ### Calc the selected for a factor
+  my %factCount = ();
   foreach my $mixFact($mixAt->getRowIDs("AsAdded")){
-      $mixAt->addData(sprintf("%.2f",$mixAt->getData("Selected", $mixFact) / $self->{TOTALN}), "Selected%",$mixFact);
-      $mixAt->addData(sprintf("%.2f",$mixAt->getData("Targ%", $mixFact) - ($mixAt->getData("Selected", $mixFact) / $self->{TOTALN})), "Deviation%",$mixFact);
+    my ($set, $fact, $lev) = split(/\|/, $mixFact);
+    $factCount{$fact} += $mixAt->getData("Results|Selected", $mixFact);
+    #  $mixAt->addData(sprintf("%.2f",$mixAt->getData("Results|Selected", $mixFact) / $self->{TOTALN}), "Results|Selected%",$mixFact);
+    #  $mixAt->addData(sprintf("%.2f",($mixAt->getData("Results|Selected%", $mixFact) - $mixAt->getData("Results|Targ%", $mixFact)) ), "Results|DeviationFromExp%",$mixFact);
   }
+  foreach my $mixFact($mixAt->getRowIDs("AsAdded")){
+    my ($set, $fact, $lev) = split(/\|/, $mixFact);
+    $mixAt->addData(sprintf("%.2f",($mixAt->getData("Results|Selected", $mixFact) / $factCount{$fact}) ), "Results|Selected%",$mixFact);
+    $mixAt->addData(sprintf("%.2f",($mixAt->getData("Results|Selected%", $mixFact) - $mixAt->getData("Results|Targ%", $mixFact)) ), "Results|DeviationFromExp%",$mixFact);
+  }
+#  print Dumper(\%factCount); exit;  
+  ## add the input univariate counts
+  foreach my $fact(keys %{ $self->{UNIVARIATECOUNT} }){
+      foreach my $k(keys %{ $self->{UNIVARIATECOUNT}{$fact}{VAL} }){
+	  my $mixFact = "$setID|$fact|$k";
+	  foreach my $o(keys %{ $self->{UNIVARIATECOUNT}{$fact}{VAL}{$k} }){
+	      $mixAt->addData($self->{UNIVARIATECOUNT}{$fact}{VAL}{$k}{$o}, "Inputs|$o Mixture", $mixFact);
+	      if ($o eq "IN"){
+		  my $res = $self->{UNIVARIATECOUNT}{$fact}{VAL}{$k}{$o} - $mixAt->getData("Results|Selected", $mixFact);
+		  $mixAt->addData($res, "Inputs|$o Mixture Not Selected", $mixFact);
+		  $mixAt->addData(sprintf("%.1f",$self->{UNIVARIATECOUNT}{$fact}{VAL}{$k}{$o} / $mixAt->getData("Results|Targ%", $mixFact)), "Capacity|Maximum N", $mixFact);
+	      }
+	  }
+       }
+   }
+
   foreach my $totStat(sort keys %sums){
     $at->addData($sums{$totStat}, $totStat, $totKey);
   }
   $at->setProperties({ "SortRowKeyTxt" => "Alpha", "TxtPrefix" => "        "});
-  print "    Counts:\n";
-  $at->setColSort("Alpha");
-  print $at->renderTxtTable(1);
   print "    Univariant Results:\n";
   print $mixAt->renderTxtTable(1);
-  
+  MMisc::writeTo($rootOutput, ".Univariate.tgrid", 1, 0, $mixAt->renderByType("tgrid")) if (defined($rootOutput));
+
+  print "\n    Multivariant Counts:\n";
+  $at->setColSort("Alpha");
+  print $at->renderTxtTable(1);
+  MMisc::writeTo($rootOutput, ".MultiVariate.tgrid", 1, 0, $at->renderByType("tgrid")) if (defined($rootOutput));
+#  print Dumper($self->{UNIVARIATECOUNT});  
+
 }
 
 sub selectSort{
@@ -323,14 +368,14 @@ sub getSelection{
   my %sortedLists = ();
 #  print "Presort\n";
   foreach my $_key(sort keys %{ $self->{TOSELECT} }){
-#      print "   $_key\n";
       my $sel = $self->{TOSELECT}{$_key};
+      #print "   $_key -> $sel to select\n";
       if ($sel > 0){
 	  my @list = sort selectSort @{ $self->{COUNT}{$_key} };
 	  my $num = @list;
 	  for (my $set = 0; $set < $nList; $set ++){
 	      my $numToGet = MMisc::max(1,sprintf("%.0f",$num / 10));
-#	      print "      Set $set, $numToGet\n";
+	      #print "      Set $set, $numToGet\n";
 	      if (@list > 0){
 		  if ($set + 1 != $nList){
 		      $sortedLists{"set".sprintf("%02d",$set)}{$_key} = [ splice(@list, 0, $numToGet) ];
@@ -344,11 +389,23 @@ sub getSelection{
 #  print Dumper(\%sortedLists);
 
   my $priority = 0; 
+  my %needed = ();
+  my %neededInit = ();
+  foreach my $_key(sort keys %{ $self->{TOSELECT} }){
+    $needed{$_key} = $self->{TOSELECT}{$_key};
+    $neededInit{$_key} = $self->{TOSELECTINIT}{$_key};
+  }
+
   foreach my $_set(sort keys %sortedLists){
       foreach my $_key(sort keys %{ $sortedLists{$_set}}){
 	  for (my $i=0; $i<@{ $sortedLists{$_set}{$_key} }; $i++){
 	      #print "   Selec $_key $i $sorted[$i][0] $sorted[$i][1] $sorted[$i][2]\n";
-	      push @select, [($sortedLists{$_set}{$_key}->[$i][0], $priority++, $_key )];
+	    if ($needed{$_key} > 0){
+	      my $selectPhase = ($neededInit{$_key} > 0) ? "Phase1Init" : "Phase2Add";
+	      push @select, [($sortedLists{$_set}{$_key}->[$i][0], $priority++, $_key, $selectPhase )];
+	      $needed{$_key} --;
+	      $neededInit{$_key} --;
+	    }
 	  }
       }
   }
@@ -359,9 +416,8 @@ sub getSelection{
 
 
 sub unitTest{
-
   my $jds = new JDSelect();
-  $jds->setTotalN(300);
+  $jds->setTotalN(100);
   $jds->setFactorMixtures('Vocab',     { 'InDev-InTrn' => .42, 'InDev-OutOfTrn' => 0.08, 'OutOfDev-OutOfTrn' => .5 });
   $jds->setFactorMixtures('TYPE-BIG3', { 'NAME' => .17,        'NUMBER' => 0.1,          'PHRASE' => .73 });
   $jds->setFactorMixtures('FREQ',      { '0.0-0.5' => .48,     '0.5-1.0' => .48,         '1.0-1.5' => .04});     
@@ -410,12 +466,17 @@ sub unitTest{
 
   foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '1.0'}, [("REF=".$rnum++, rand())], 1); }
 
-  $jds->calculateExpected();
+  print "Calculating the expected sizes\n";
+  $jds->calculateExpected(0);
 
-  my @selected = $jds->getSelection();
+  my $selected = $jds->getSelection();
 
-  $jds->dump();
-  print Dumper(\@selected);
+  $jds->dump(undef, "test");
+  print scalar(@$selected)." elements selected\n";
+  for (my $s=0; $s < @$selected; $s++){
+    print join(",", @{ $selected->[$s] })."\n";
+  }
+#  print Dumper($jds);
 }
 
 1;
