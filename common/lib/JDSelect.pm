@@ -23,6 +23,56 @@
 # This package implements partial DET curves which means that not a TARGET trials have scores
 # and not all NONTARG Trials have scores.  
 
+
+# Description:
+#  
+
+# JDSelect is a tool to control the random selection of elements ensuring
+# the outcome closely matches the specified profile described by a joint
+# distribtion derived from a set of factors each with univariate densities.  
+
+# 1. The selection percentage:
+
+# Each factor has a set of discrete "levels" each with a target proportion of
+# data to select. For instance, the factor /duration/ could have three
+# levels with the corresponding proportions:
+
+#    '0.0-0.5' => .48,     '0.5-1.0' => .48,         '1.0-1.5' => .04
+
+# The proportions of a given factor must sum to 1.
+
+# Using the set of factors, JDSelect enumerates all combinations of
+# factor levels and computes the combination proportion for the combined
+# factor levels by multiplying the univariate porportions together.
+
+# 2. The selection elements:
+
+# The elements to select are added to the object specifying through the
+# addToCount() method.  The method takes two arguements:
+#   ARG1: a hash table specifying the levels of each factor for the element.  
+#   ARG2: an array reference where:
+#       ARG2[0] = the label of the element
+#       ARG2[1] = the ordering number.  The ordering number can be build by
+#                 any means: random, stratified random, etc.
+#       ARG2[2] = the optional strata id for the element.  The sorting order 
+#                 uses the strata id as the major sort, and the ordering nunmbers
+#                 as the minor sort key.  Elements without a strata are selected
+#                 last.
+
+# 3. The selection:
+
+# Using the supplied total number of elements to select, N, the
+# elements to select for a given factor level combination, K, is N *
+# the combination proportion.  JDSelect selects the K elements for the
+# factor level combination by sorting the element ordering numbers in
+# assending order.
+
+
+
+
+
+
+
 package JDSelect;
 
 use strict;
@@ -274,8 +324,6 @@ sub dump{
   }
   $mixAt->setRowSort("Alpha");
   $mixAt->setProperties({ "TxtPrefix" => "        "});
-  print "Initial mixAt\n";
-  print $mixAt->renderByType("txt");
 
   my $at = new AutoTable();
   my %sums = ();
@@ -363,11 +411,11 @@ sub dump{
     $at->addData($sums{$totStat}, $totStat, $totKey);
   }
   $at->setProperties({ "SortRowKeyTxt" => "Alpha", "TxtPrefix" => "        "});
-  print "    Univariant Results:\n";
+  print "    Univariate Results:\n";
   print $mixAt->renderTxtTable(1);
   MMisc::writeTo($rootOutput, ".Univariate.tgrid", 1, 0, $mixAt->renderByType("tgrid")) if (defined($rootOutput));
 
-  print "\n    Multivariant Counts:\n";
+  print "\n    Multivariate Counts:\n";
   $at->setColSort("Alpha");
   print $at->renderTxtTable(1);
   MMisc::writeTo($rootOutput, ".MultiVariate.tgrid", 1, 0, $at->renderByType("tgrid")) if (defined($rootOutput));
@@ -384,29 +432,34 @@ sub selectSort{
     return $a->[1] <=> $b->[1];
 }
 
+### $nList is the number of element sets to output in the selection array.  This stratifies the 
+### selection so that IF a process needs to prioritize usage of the selected elements, sequentially 
+### processing the selection list maintains a balanced usage accross all factor level combinations.
 sub getSelection{
-  my ($self) = @_;
+  my ($self, $nList) = @_;
   my @select = ();
-  my $nList = 10;
 
   ### Build the sorted lists for each key and chop each sorted list into Nlist equal size lists
   my %sortedLists = ();
 #  print "Presort\n";
   foreach my $_key(sort keys %{ $self->{TOSELECT} }){
       my $sel = $self->{TOSELECT}{$_key};
-      #print "   $_key -> $sel to select\n";
+      my $selPerSet = $sel / $nList;
+#      print "   $_key -> $sel to select\n";
       if ($sel > 0){
 	  my @list = sort selectSort @{ $self->{COUNT}{$_key} };
 	  my $num = @list;
+	  my $numConsumed = 0;
 	  for (my $set = 0; $set < $nList; $set ++){
-	      my $numToGet = MMisc::max(1,sprintf("%.0f",$num / 10));
-	      #print "      Set $set, $numToGet\n";
+	      my $numToGet = MMisc::max(1,sprintf("%.0f",($selPerSet * ($set + 1)) - $numConsumed ));
+#	      print "      Set $_key, set$set, numConsumed=$numConsumed, $numToGet of $num (".scalar(@list)." really)\n";
 	      if (@list > 0){
 		  if ($set + 1 != $nList){
 		      $sortedLists{"set".sprintf("%02d",$set)}{$_key} = [ splice(@list, 0, $numToGet) ];
 		  } else {
 		      $sortedLists{"set".sprintf("%02d",$set)}{$_key} = [ splice(@list, 0, @list) ];
 		  }
+		  $numConsumed += scalar(@{ $sortedLists{"set".sprintf("%02d",$set)}{$_key} });
 	      }
 	  }
       }
@@ -427,7 +480,7 @@ sub getSelection{
 	      #print "   Selec $_key $i $sorted[$i][0] $sorted[$i][1] $sorted[$i][2]\n";
 	    if ($needed{$_key} > 0){
 	      my $selectPhase = ($neededInit{$_key} > 0) ? "Phase1Init" : "Phase2Add";
-	      push @select, [($sortedLists{$_set}{$_key}->[$i][0], $priority++, $_key, $selectPhase )];
+	      push @select, [($sortedLists{$_set}{$_key}->[$i][0], $priority++, $_key, $selectPhase, $_set )];
 	      $needed{$_key} --;
 	      $neededInit{$_key} --;
 	    }
@@ -448,53 +501,53 @@ sub unitTest{
   $jds->setFactorMixtures('FREQ',      { '0.0-0.5' => .48,     '0.5-1.0' => .48,         '1.0-1.5' => .04});     
   
   my $rnum = 0;
-  foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NAME',   'FREQ' => '0.0-0.5'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..3)  { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NAME',   'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand())]); }
-#  foreach (1..1)   { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NAME',   'FREQ' => '1.0-1.5'}, [("REF=".$rnum++, rand())]); }
+  foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NAME',   'FREQ' => '0.0-0.5'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..3)  { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NAME',   'FREQ' => '0.5-1.0'}, [("REF=".$rnum, $rnum++)]); }
+#  foreach (1..1)   { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NAME',   'FREQ' => '1.0-1.5'}, [("REF=".$rnum, $rnum++)]); }
 
 
-  foreach (1..1)   { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..5)   { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..1)   { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NUMBER', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum++, rand())]); }
+  foreach (1..1)   { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..5)   { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..1)   { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'NUMBER', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum, $rnum++)]); }
 
-  foreach (1..58)  { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..50)  { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..11)  { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'PHRASE', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum++, rand())]); }
-
-##########################
-  foreach (1..10)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'NAME',   'FREQ' => '0.0-0.5'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..50)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'NAME',   'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'NAME',   'FREQ' => '1.0-1.5'}, [("REF=".$rnum++, rand())]); }
-
-  foreach (1..3)   { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..1)   { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand())]); }
-  ###foreach (1..1)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn', 'TYPE-BIG3' => 'NUMBER', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum++, rand())]); }
-
-  foreach (1..44)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..59)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'PHRASE', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum++, rand())]); }
+  foreach (1..58)  { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..50)  { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..11)  { $jds->addToCount({ 'Vocab' => 'InDev-InTrn',       'TYPE-BIG3' => 'PHRASE', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum, $rnum++)]); }
 
 ##########################
-  foreach (1..158) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NAME',   'FREQ' => '0.0-0.5'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..346) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NAME',   'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..86)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NAME',   'FREQ' => '1.0-1.5'}, [("REF=".$rnum++, rand())]); }
+  foreach (1..10)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'NAME',   'FREQ' => '0.0-0.5'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..50)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'NAME',   'FREQ' => '0.5-1.0'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'NAME',   'FREQ' => '1.0-1.5'}, [("REF=".$rnum, $rnum++)]); }
 
-  foreach (1..3)   { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..64)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..163) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NUMBER', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum++, rand())]); }
+  foreach (1..3)   { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..1)   { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum, $rnum++)]); }
+  ###foreach (1..1)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn', 'TYPE-BIG3' => 'NUMBER', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum, $rnum++)]); }
 
-  foreach (1..219) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..10) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand(), "tier1")]); }
-  foreach (1..20) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand(), "tier2")]); }
-  foreach (1..10) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum++, rand())]); }
-  foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum++, rand(), "tier1")]); }
+  foreach (1..44)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..59)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'InDev-OutOfTrn',    'TYPE-BIG3' => 'PHRASE', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum, $rnum++)]); }
 
-  foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '1.0'}, [("REF=".$rnum++, rand())], 1); }
+##########################
+  foreach (1..158) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NAME',   'FREQ' => '0.0-0.5'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..346) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NAME',   'FREQ' => '0.5-1.0'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..86)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NAME',   'FREQ' => '1.0-1.5'}, [("REF=".$rnum, $rnum++)]); }
+
+  foreach (1..3)   { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..64)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NUMBER', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..163) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'NUMBER', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum, $rnum++)]); }
+
+  foreach (1..219) { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.0-0.5'}, [("REF=".$rnum, $rnum++)]); }
+  foreach (1..10)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum.".notier", $rnum++)]); }
+  foreach (1..10)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum.".tier1", $rnum++, "tier1")]); }
+  foreach (1..5)   { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '0.5-1.0'}, [("REF=".$rnum.".tier2", $rnum++, "tier2")]); }
+  foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '1.0-1.5'}, [("REF=".$rnum, $rnum++)]); }
+
+  foreach (1..13)  { $jds->addToCount({ 'Vocab' => 'OutOfDev-OutOfTrn', 'TYPE-BIG3' => 'PHRASE', 'FREQ' => '1.0'}, [("REF=".$rnum, $rnum++)], 1); }
 
   print "Calculating the expected sizes\n";
   $jds->calculateExpected(0);
 
-  my $selected = $jds->getSelection();
+  my $selected = $jds->getSelection(10);
 
   $jds->dump(undef, "test");
   print scalar(@$selected)." elements selected\n";
