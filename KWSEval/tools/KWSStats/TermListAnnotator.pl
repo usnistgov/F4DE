@@ -325,8 +325,10 @@ if ($mduration ne "") {
     my $term = $TermList->{TERMS}{$termid};
     my %data = %{$bl->getDurationHash($term->getAttrValue("TEXT"))};
 
-    $term->setAttrValue("Phone_Mediated_Status", $data{STATUS});
+    $term->setAttrValue("Phone_Length_i", $data{NUMPHONES});
+    $term->setAttrValue("Phone_Length_Med_Status_n", $data{SIZESTATUS});
     $term->setAttrValue("Phone_Mediated_Duration", $data{DURAVERAGE});
+    $term->setAttrValue("Phone_Mediated_Status", $data{DURSTATUS});
   }
 }
 
