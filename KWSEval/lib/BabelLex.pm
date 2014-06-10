@@ -48,31 +48,33 @@ sub new
   my $self = new TranscriptHolder('BabelLex');
 
   $self = {
-    MAPFILE       => $map_file,
-    LEXFILE       => $lex_file,
-    DURFILE       => $dur_file,
-    MAPTABLE      => {},
-    LEXTABLE      => {},
-    DURTABLE      => {},
-    MISSINGPHONES => {},
-    ROMANIZED     => $romanized,
-    ENCODING      => $encoding,
-    MAPLOADSTATUS => 0,             # 0 = table not loaded
-    LEXLOADSTATUS => 0,             # 1 = load in progress
-    DURLOADSTATUS => 0,             # 2 = table loaded
-    AVERAGEPHONE  => 0,             # Substitution for missing phones
-    DATASTATUS    => "OK"           # Indicates (not)estimated calculations
+    MAPFILE          => $map_file,
+    LEXFILE          => $lex_file,
+    DURFILE          => $dur_file,
+    MAPTABLE         => {},
+    LEXTABLE         => {},
+    DURTABLE         => {},
+    MISSINGPHONES    => {},
+    ROMANIZED        => $romanized,
+    ENCODING         => $encoding,
+    MAPLOADSTATUS    => 0,        # 0 = table not loaded
+    LEXLOADSTATUS    => 0,        # 1 = load in progress
+    DURLOADSTATUS    => 0,        # 2 = table loaded
+    AVERAGEPHONE     => 0,        # Substitution for missing phones
+    LEXPHONESPERCHAR => 0,        # Ratio of phones per character in lex file
+    DURATIONSTATUS   => "OK",     # Indicates OK/Estimated duration calculations
+    PHONESIZESTATUS  => "OK"      # Indicates OK/Estimated phone calculations
   };
 
   #
-  # The DATASTATUS is used to collect and report the status of the duration
+  # The DURATIONSTATUS is used to collect and report the status of the duration
   # calculation. It is used in a manner similar to that of ERRNO flag. When
-  # the getDurationHash() routine is invoked, it sets the DATASTATUS to "OK".
+  # the getDurationHash() routine is invoked, it sets the DURATIONSTATUS to "OK".
   # Then, as the durations are calculated, the status can be downgraded to
   # either "Estimated" or "Failed". At the conclusion of the calculations the
-  # DATASTATUS is copied into the return hash. 
+  # DURATIONSTATUS is copied into the return hash. 
   #
-  # ########### IMPORTANT!: The DATASTATUS should not be used for any other
+  # ########### IMPORTANT!: The DURATIONSTATUS should not be used for any other
   #                         purposes as it may become overwritten.
   #
   # The status can be set to "OK", "Estimated", and "Failed".
@@ -89,7 +91,7 @@ sub new
   # Hence, the calculation status is deemed Estimated.
   #
   #  "Failed" status is returned when a keyword or any word in a key phrase can
-  # not be found in the lexicon hash table. Consecuntly, there will be no known
+  # not be found in the lexicon hash table. Consequently, there will be no known
   # pronunciations to work with. The rest of the return data is set to 0.
   #
 
@@ -200,7 +202,7 @@ sub loadMapFile() {
 
 
 ################################################################################
-# Lexicon file is a collection of words ipresented in one column. The second 
+# Lexicon file is a collection of words presented in one column. The second 
 # column may be the "romanaized" version of the word. Some languages will not
 # have the romanized version. The "romanized" flag indicates whether to account
 # for the romanized column or not. The following columns are one or more pro-
@@ -210,6 +212,9 @@ sub loadMapFile() {
 sub loadLexFile()
 {
   my ($self, $file) = @_;
+
+  my $num_words     = 0; # number of calculated average ratio values
+  my $total_average = 0; # this is the total of average ratio values
 
   if ($self->{LEXLOADSTATUS} > 0)
   {
@@ -226,6 +231,8 @@ sub loadLexFile()
   while(<$DATA>)
   {
     my %entry;
+    my $phone_size = 0;
+
     my @words = split('\t', $_);
     chomp (@words);
 
@@ -236,17 +243,25 @@ sub loadLexFile()
       push (@{$entry{"pron"}},     $words[$i]);
       push (@{$entry{"adj_pron"}}, \@adjusted);
       push (@{$entry{"duration"}}, -1);          # duration unknown
+
+      $phone_size = ($phone_size lt @adjusted) ? @adjusted : $phone_size;
     }
 
     $self->{LEXTABLE}{$words[0]} = \%entry;
+
+    # Words length should always be > 0, if it is 0 then it's either a bug reading
+    # the data or an error in the data. Either way we'll just die here and debug
+    $total_average += $phone_size / length ($words[0]);
+    $num_words++;
 
     #print Dumper(\%entry);
   }
 
   close $DATA;
 
-  $self->{LEXFILE}       = $file;
-  $self->{LEXLOADSTATUS} = 2;
+  $self->{LEXPHONESPERCHAR} = $total_average / $num_words;
+  $self->{LEXFILE}          = $file;
+  $self->{LEXLOADSTATUS}    = 2;
 
   if ($self->{DURLOADSTATUS} == 2)
   {
@@ -342,27 +357,32 @@ sub calculateDurations
     my $var_num  = 0;
     my $status   = "OK";
 
+    my $numphones           = 0;
+    my $max_numphones       = 0;
+    ${$$entry}{"numphones"} = 0;
+
     foreach my $variant (@prons)
     {
       my $duration = 0;
-      foreach my $syllable (@$variant)
+      foreach my $character (@$variant)
       {
-        if ($syllable ne '.' && $syllable ne '#')
+        if ($character ne '.' && $character ne '#')
         {
-          if ($self->{DURTABLE}{$syllable})
+          $numphones++;
+          if ($self->{DURTABLE}{$character})
           {
-            $duration += $self->{DURTABLE}{$syllable};
+            $duration += $self->{DURTABLE}{$character};
           }
-          elsif ($self->{MAPTABLE}{$syllable})
+          elsif ($self->{MAPTABLE}{$character})
           {
-            my $mapped_syllable = $self->{MAPTABLE}{$syllable};
-            if ($self->{DURTABLE}{$mapped_syllable})
+            my $mapped_character = $self->{MAPTABLE}{$character};
+            if ($self->{DURTABLE}{$mapped_character})
             {
-              # We are here because we didn't find the syllable in the phone
+              # We are here because we didn't find the character in the phone
               # durations file, so instead we looked up a substitution in the
               # phone map file and now we will use it in the duration calcu-
               # lations. This is not an error.
-              $duration += $self->{DURTABLE}{$mapped_syllable};
+              $duration += $self->{DURTABLE}{$mapped_character};
             }
             else
             {
@@ -372,22 +392,22 @@ sub calculateDurations
               # calculated when loaded the phone duration file. This is a
               # temporary workaround that should not get used as soon as
               # we have a correct finalized phone map file.
-              if ($mapped_syllable ne "removed")
+              if ($mapped_character ne "removed")
               {
                 $duration += $self->{AVERAGEPHONE};
                 $status = "Estimated";
-                if ($self->{MISSINGPHONES}{$syllable})
+                if ($self->{MISSINGPHONES}{$character})
                 {
-                  $self->{MISSINGPHONES}{$syllable}++;
+                  $self->{MISSINGPHONES}{$character}++;
                 }
                 else
                 {
-                  $self->{MISSINGPHONES}{$syllable} = 1;
+                  $self->{MISSINGPHONES}{$character} = 1;
                 }
                 if ($verbose)
                 {
-                  print ("Maptable substitution $mapped_syllable");
-                  print (" for $syllable duration not found, Estimating.\n");
+                  print ("Maptable substitution $mapped_character");
+                  print (" for $character duration not found, Estimating.\n");
                 }
               }
             }
@@ -402,22 +422,22 @@ sub calculateDurations
             # we have a correct finalized phone map file.
             $duration += $self->{AVERAGEPHONE};
             $status = "Estimated";
-            if ($self->{MISSINGPHONES}{$syllable})
+            if ($self->{MISSINGPHONES}{$character})
             {
-              $self->{MISSINGPHONES}{$syllable}++;
+              $self->{MISSINGPHONES}{$character}++;
             }
             else
             {
-              $self->{MISSINGPHONES}{$syllable} = 1;
+              $self->{MISSINGPHONES}{$character} = 1;
             }
             if ($verbose)
             {
-              print ("Syllable $syllable not in Maptable and not in");
+              print ("Syllable $character not in Maptable and not in");
               print (" duration file, Estimating.\n");
             }
           }
         }
-      } #foreach my $syllable (@$variant)
+      } #foreach my $character (@$variant)
 
       # Store calculated duration and its "OK" or "Estimated" status
       # in the Lexicon hash table for future lookups.
@@ -425,7 +445,11 @@ sub calculateDurations
       ${$$entry}{"status"}[$var_num] = $status;
       $var_num++;
 
+      $max_numphones = $numphones if ($numphones > $max_numphones);
+      $numphones     = 0;
     } #foreach my $variant (@prons)
+
+    ${$$entry}{"numphones"} = $max_numphones;
 
   } #foreach my $word (keys $self->{LEXTABLE})
   
@@ -441,7 +465,8 @@ sub calculateDurations
 ################################################################################
 sub getDurations()
 {
-  my ($self, $key_phrase) = @_;
+  my ($self, $key_phrase, $num_phones_ref) = @_;
+
   my @word_array = split(" ", $key_phrase);
   my $duration   = 0;
   my @durations;
@@ -450,19 +475,26 @@ sub getDurations()
   {
     foreach my $word (@word_array)
     {
+      my $num_phones = 0;
       if (!$self->{LEXTABLE}{$word})
       {
         # One of the words in this key-phrase doesn't exsist in our
-        # lexicon, so we are giving up, reporting Failed status and
-        # returning 0 values.
-        $self->{DATASTATUS} = "Failed";
-        print "The keyword $word is unknown, duration invalid\n";
-        $durations[0] = 0;
-        return \@durations;
+        # lexicon, so we using the pre-calculated ratio of average number
+        # of phones per character, and pre-calculated average phone duration
+        # to report both number of phones and the duration. The status is
+        # reported as Estimated returning 0 values.
+        $self->{DURATIONSTATUS}  = "Estimated";
+        $self->{PHONESIZESTATUS} = "Estimated";
+        print "The keyword $word is unknown, duration estimated\n";
+        $num_phones = int (length ($word_array[0]) * $self->{LEXPHONESPERCHAR} + 0.5);
+        $duration  += $num_phones * $self->{AVERAGEPHONE};;
       }
-
-      # Just adding average durations of every word in a phrase together
-      $duration += $self->getSingleWordDurationAverage($word);
+      else
+      {
+        # Just adding average durations of every word in a phrase together
+        $duration += $self->getSingleWordDurationAverage ($word, \$num_phones);
+      }
+      $$num_phones_ref += $num_phones;
     }
     # Store the sum of averages in the array and return
     push (@durations, $duration);
@@ -472,22 +504,29 @@ sub getDurations()
   {
     if (!$self->{LEXTABLE}{$word_array[0]})
     {
-      # This key-word doesn't exsist in our lexicon, so we are giving up,
-      # reporting Failed status and returning 0 values.
-      $self->{DATASTATUS} = "Failed";
-      print "The keyword $key_phrase is unknown, duration invalid\n";
-      $durations[0] = 0;
+      # This key-word doesn't exsist in our lexicon, so we are using the
+      # pre-calculated ratio of average number of phones per character, and
+      # pre-calculated average phone duration to report both number of phones
+      # and the duration. The status is reported as Estimated
+      $self->{DURATIONSTATUS}  = "Estimated";
+      $self->{PHONESIZESTATUS} = "Estimated";
+      print "The keyword $key_phrase is unknown, duration estimated\n";
+      $$num_phones_ref = int (length ($word_array[0]) * $self->{LEXPHONESPERCHAR} + 0.5);
+      $durations[0]    = $$num_phones_ref * $self->{AVERAGEPHONE};
+
       return \@durations;
     }
     
-    return \@{$self->getSingleWordDurations($word_array[0])};
+    return \@{$self->getSingleWordDurations($word_array[0], $num_phones_ref)};
   }
   else
   {
     # Empty key-word! Report Failed status and return 0 values.
-    $self->{DATASTATUS} = "Failed";
+    $self->{DURATIONSTATUS}  = "Failed";
+    $self->{PHONESIZESTATUS} = "Failed";
     print "Empty key-word, duration invalid\n";
     $durations[0] = 0;
+    $$num_phones_ref = 0;
     return \@durations;
   }
 
@@ -497,12 +536,12 @@ sub getDurations()
 ################################################################################
 sub getSingleWordDurations()
 {
-  my ($self, $key_word) = @_;
+  my ($self, $key_word, $num_phones_ref) = @_;
 
   my $entry = \$self->{LEXTABLE}{$key_word};
 
   # Consider the data status for every pronunciation variant and set the 
-  # global DATASTATUS accordingly. Here the status can only vary from OK to
+  # global DURATIONSTATUS accordingly. Here the status can only vary from OK to
   # Estimated. So if global status is OK, then symply accept the local value,
   # but if the global status has already been downgraded to Estimated, then
   # just ignore the local status because once the global status was set to
@@ -510,10 +549,11 @@ sub getSingleWordDurations()
   my @stati = @{${$$entry}{"status"}};
   foreach my $stat (@stati)
   {
-    $self->{DATASTATUS} =
-      ($self->{DATASTATUS} eq "OK") ? $stat : $self->{DATASTATUS};
+    $self->{DURATIONSTATUS} =
+      ($self->{DURATIONSTATUS} eq "OK") ? $stat : $self->{DURATIONSTATUS};
   }
 
+  $$num_phones_ref = ${$$entry}{"numphones"};
   return [@{${$$entry}{"duration"}}];
   
 } #getSingleWordDurations()
@@ -528,17 +568,23 @@ sub getDurationAverage()
 
   foreach my $word (@word_array)
   {
+    my $num_phones = 0;
     if (!$self->{LEXTABLE}{$word})
     {
       # One of the words in this key-phrase doesn't exsist in our
-      # lexicon, so we are giving up, reporting Failed status and
-      # returning 0 values.
-      $self->{DATASTATUS} = "Failed";
-      print "The keyword $word is unknown, duration invalid\n";
-      return 0;
+      # lexicon, so we using the pre-calculated ratio of average number
+      # of phones per character, and pre-calculated average phone duration
+      # to report both number of phones and the duration. The status is
+      # reported as Estimated returning 0 values.
+      $self->{DURATIONSTATUS}  = "Estimated";
+      print "The keyword $word is unknown, duration estimated\n";
+      $num_phones = int (length ($word) * $self->{LEXPHONESPERCHAR} + 0.5);
+      $duration  += $num_phones * $self->{AVERAGEPHONE};
     }
-
-    $duration += $self->getSingleWordDurationAverage($word);
+    else
+    {
+      $duration += $self->getSingleWordDurationAverage($word);
+    }
   }
 
   return $duration;
@@ -548,12 +594,12 @@ sub getDurationAverage()
 ################################################################################
 sub getSingleWordDurationAverage()
 {
-  my ($self, $key_word) = @_;
+  my ($self, $key_word, $num_phones_ref) = @_;
 
   my $dur_sum  = 0;
   my $num_durs = 0;
 
-  my @durations = @{$self->getSingleWordDurations($key_word)};
+  my @durations = @{$self->getSingleWordDurations($key_word, $num_phones_ref)};
 
   foreach my $dur (@durations)
   {
@@ -608,23 +654,30 @@ sub getDurationHash()
     ($self->{DURLOADSTATUS} != 2);
 
   my $ret;
+  my $num_phones = 0;
 
   $ret = {
 
-    STATUS     => "OK",
+    DURSTATUS  => "OK",
     DURATIONS  => [],
-    DURAVERAGE => 0
+    DURAVERAGE => 0,
+    SIZESTATUS => "OK",
+    NUMPHONES  => 0
   };
 
-  $self->{DATASTATUS} = "OK";
-  my @duration = @{$self->getDurations($key_phrase)};
-  my $status = $self->{DATASTATUS};
+  $self->{DURATIONSTATUS}  = "OK";
+  $self->{PHONESIZESTATUS} = "OK";
+
+  my @duration = @{$self->getDurations ($key_phrase, \$num_phones)};
+  my $status = $self->{DURATIONSTATUS};
 
   if ($status eq "Failed") {
 
-    $ret->{STATUS} = $status;
+    $ret->{DURSTATUS} = $status;
     push (@{$ret->{DURATIONS}}, 0);
     $ret->{DURAVERAGE} = 0;
+    $ret->{NUMPHONES}  = 0;
+    $ret->{DURSTATUS}  = $status;
   }
   else {
 
@@ -633,11 +686,13 @@ sub getDurationHash()
       push (@{$ret->{DURATIONS}}, $dur);
     }
 
-    my $durave = $self->getDurationAverage($key_phrase);
-    $status = ($status eq "OK") ? $self->{DATASTATUS} : $status;
+    my $durave = $self->getDurationAverage ($key_phrase);
+    $status = ($status eq "OK") ? $self->{DURATIONSTATUS} : $status;
 
-    $ret->{STATUS} = $status;
+    $ret->{DURSTATUS}  = $status;
     $ret->{DURAVERAGE} = $durave;
+    $ret->{NUMPHONES}  = $num_phones;
+    $ret->{SIZESTATUS} = $self->{PHONESIZESTATUS};
   }
   
   return $ret;
@@ -706,10 +761,10 @@ sub unitTest()
     my %res = %{$lp->getDurationHash($keys)};
     my $oov = $lp->getOOVCount($keys);
 
-    print "Status = " . $res{STATUS} . "\t";
-    print "Durations = " . join(", ", @{$res{DURATIONS}}) . "\t";
-    print "Average = " . $res{DURAVERAGE} . "\t";
-    print "OOV Count = " . $oov . "\n";
+    print "Durations($res{DURSTATUS}): " . join(", ", @{$res{DURATIONS}}) . "\t";
+    print "  Ave: " . $res{DURAVERAGE} . "\t \t";
+    print "NumPhones($res{SIZESTATUS}): " . $res{NUMPHONES} . "\t \t";
+    print "OOV Count: " . $oov . "\n";
 
     $phrase = $phrase . $keys . " ";
     $multiword--;
@@ -719,10 +774,10 @@ sub unitTest()
       %res = %{$lp->getDurationHash($phrase)};
       $oov = $lp->getOOVCount($phrase);
 
-      print "STATUS = " . $res{STATUS};
-      print "\tDurations = " . join(", ", @{$res{DURATIONS}});
-      print "\tAverage = " . $res{DURAVERAGE};
-      print "\tOOV Count = " . $oov . "\t [$phrase]\n\n";
+      print "Durations($res{DURSTATUS}): " . join(", ", @{$res{DURATIONS}});
+      print "\t  Ave: " . $res{DURAVERAGE};
+      print "\t \tNumPhones($res{SIZESTATUS}): " . $res{NUMPHONES};
+      print "\t \tOOV Count: " . $oov . "\t [$phrase]\n\n";
 
       $phrase    = " ";
       $multiword = 3;
