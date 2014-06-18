@@ -95,12 +95,17 @@ unless ($at->{Properties}->setValue($sort_col_key, $sort_col)) {
 
 while (<STDIN>){
     chomp;
-    my @a = split(/$separator/);
-
-    if ($strip_whitespace) {
+    my @a;
+    if ($separator eq "\\s" || $separator eq " "){
+      s/^\s+// if ($strip_whitespace);
+      @a = split(/$separator/);
+    } else {
+      @a = split(/$separator/);
+      if ($strip_whitespace) {
 	for (my $i=0; $i<@a; $i++) {
-	    $a[$i] =~ s/^\s*(.*?)\s*$/$1/
+	  $a[$i] =~ s/^\s*(.*?)\s*$/$1/
 	}
+      }
     }
     if (!defined $transpose){   
 	$at->addData($a[0], $a[1], $a[2]);
