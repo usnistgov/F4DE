@@ -404,6 +404,10 @@ dist_archive_pre_remove:
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/tools/BabelTransParse/Lang*
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Server
 	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Participants/Checks/Comps*
+## DAPR
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/DAPR
+## MLPAP
+	@rm -rf /tmp/`cat ${F4DE_VERSION}`/MLPAP
 
 dist_replace:
 # Replace F4DEver in SubmissionHelper_common.cfg
