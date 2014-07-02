@@ -1,6 +1,6 @@
 File:  README
-Date:  February 11, 2014
-F4DE Version: 3.1.0
+Date:  July 2, 2014
+F4DE Version: 3.1.1
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
@@ -107,6 +107,12 @@ evaluations and for specific NIST-coordinated evaluations listed below.
     - TV13SED-SubmissionChecker - A tool designed to help confirm SED13 submission
       archives before transmitting them to NIST. 
 
+  *  2014 TRECVID Surveillance Event Detection Evaluation. 
+    - Same tools as the 2008 TRECVID Surveillance Event Detection Evaluation
+      (TV08Scorer, TV08ViperValidator, TV08MergeHelper, 
+      TV08_BigXML_ValidatorHelper)
+    - TV14SED-SubmissionChecker - A tool designed to help confirm SED14 submission
+      archives before transmitting them to NIST. 
 
 In addition to evaluation tools, the package contains the following related tools:
 
