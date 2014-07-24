@@ -783,7 +783,7 @@ sub check_exp_dirfiles {
     return(\@ep, "Problem obtaining file list from ECF ($err)")
       if (! MMisc::is_blank($err));
     if (scalar @$rmiss > 0) {
-      my $tmp_txt = "Will not be able to perform soring (comparing ECF to common list"
+      my $tmp_txt = "Will not be able to perform scoring (comparing ECF to common list"
         . (($skipval && $forceUseEcf) ? " -- this is due to the use \'--skip_validation\', please rerun without this option before submitting)" : "")
         . "); the following referred to files are present in the ECF but where not found in the submission: " . join(" ", sort @$rmiss);
       push @{$warnings{$wn_key}}, $tmp_txt;
