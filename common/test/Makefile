@@ -26,6 +26,7 @@ check:
 	@(cd ../lib; perl -I. -e 'use MetricRo; MetricRo::unitTest()')
 	@(cd AutoTable_Extra; make check)
 	@(cd DETUtil; make check)
+	@(cd APDump; make check)
 	@echo ""
 	@echo "***** All tests ran succesfully"
 

@@ -164,6 +164,7 @@ my $Cfg_errorquit_dersys_checks_file = undef;
 my $Cfg_warn_dersys_checks_file      = undef;
 my $sp_sys_constr = undef;
 my $sp_md_constr  = undef;
+my $useRank = 0;
 
 my %opt = ();
 my @cc = ();
@@ -526,6 +527,7 @@ sub run_scorer {
   $cmdp .= " -G" if ($GetTrialsDB);
   $cmdp .= " -d $decThr" if (defined $decThr);
   $cmdp .= " -p $pbid_dt_sql" if (defined $pbid_dt_sql);
+  $cmdp .= " -jUseRankForScores" if ($useRank);
   $cmdp .= " $finalDBfile";
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdp);
@@ -618,8 +620,10 @@ sub derivedSys_Derive {
 
   my $cmd = "";
 
+  my $includeRank = 1;
+
   $cmd .= "DROP TABLE IF EXISTS $sysTN;\n";
-  $cmd .= "CREATE TABLE $sysTN (TrialID TEXT PRIMARY KEY, Score REAL, Decision TEXT CHECK(Decision==\"y\" OR Decision==\"n\"));\n";
+  $cmd .= "CREATE TABLE $sysTN (TrialID TEXT PRIMARY KEY, Score REAL".($includeRank ? ", Rank INT" : "").", Decision TEXT CHECK(Decision==\"y\" OR Decision==\"n\"));\n";
   $cmd .= "ATTACH DATABASE \"$mddb\" AS $mdDBb;\n" if (MMisc::does_file_exist($mddb));
   
   $cmd .= MMisc::slurp_file($derivedSys);
@@ -789,6 +793,7 @@ sub process_options {
      'KwSys=s' => sub {$Cfg_warn_sys_checks_file = $_[1]; &_cc2(@_);},
      'KSysConstraints=s' => sub {$sp_sys_constr = $_[1]; &_cc2(@_);},
      'KMDConstraints=s' => sub {$sp_md_constr = $_[1]; &_cc2(@_);},
+     'KjUseRankForScores' => sub {$useRank = 1; &_cc2(@_);},
     ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 }
 
@@ -1231,7 +1236,7 @@ This step also generate a few files starting with S<outdir/scoreDB.det> that are
 Derived system files are a mean to separate reporting requirement of systems within one or multiple files.
 When using B<--derivedSys> a SQLite join command must be available that will S<INSERT> the content in the I<System> table's I<TrialID>, I<Score> and I<Decision>.
 
-For example if the system reports both a I<decision> (with a I<TrialID> and I<Score> columns) and I<threshold> (with an I<EventID> and I<DetectionThreshold> columns) tables, given a I<metadata> database with a I<TrialIndex> with at least a I<TrialID> and I<EventID> columns, the I<join> file can contain:
+For example if the system reports both a I<decision> (with a I<TrialID> and I<Score> columns) and I<threshold> (with an I<EventID> and I<xeshold> columns) tables, given a I<metadata> database with a I<TrialIndex> with at least a I<TrialID> and I<EventID> columns, the I<join> file can contain:
 
 S<INSERT OR ABORT INTO System ( TrialID, Score, Decision )>
 S<  SELECT detection.TrialID, Score, 'y' FROM detection INNER JOIN TrialIndex, threshold>
@@ -1332,6 +1337,10 @@ Specify the perl hash memory dump file that contains a column to constraint list
 If a column specified in the file can not be found, the program will exit in error.
 
 File rules definition follow the specificities detailed in B<--KSysConstraints>.
+
+=item B<--KjUseRankForScores>
+
+Use the ranks supplied in the .detection.csv file rather than the detection scores for computing the DET curves. 
 
 =item B<--listParameters>
 

@@ -143,6 +143,9 @@ my $pbid_dt_sql = "";
 my @isolinecoef = ();
 my @dilc = ( );
 
+my $useRank = 0;
+
+
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
 # Used:  B D  G    LM    R TU  XY  b d   hi  lm op rstuv xy   #
 
@@ -176,6 +179,7 @@ GetOptions
    'perBlockDecisionThreshold=s' => \$pbid_dt_sql,
    'LoadMetadataDB=s'   => \$mdDBfile,
    'isolinecoef=s'      => \@isolinecoef,
+   'jUseRankForScores'   => \$useRank,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -289,7 +293,7 @@ DROP TABLE IF EXISTS main.$ThreshDB;
 
 CREATE TABLE $refDBtable AS SELECT $tablename.$TrialIDcolumn,$Targcolumn FROM $used_resDBname.$tablename INNER JOIN $refDBname.$refDBtable WHERE $tablename.$TrialIDcolumn = $refDBtable.$TrialIDcolumn;
 
-CREATE TABLE $sysDBtable AS SELECT $tablename.$TrialIDcolumn,$Decisioncolumn,$Scorecolumn FROM $used_resDBname.$tablename INNER JOIN $sysDBname.$sysDBtable WHERE $tablename.$TrialIDcolumn = $sysDBtable.$TrialIDcolumn;
+CREATE TABLE $sysDBtable AS SELECT System.* FROM $used_resDBname.$tablename INNER JOIN $sysDBname.$sysDBtable WHERE $tablename.$TrialIDcolumn = $sysDBtable.$TrialIDcolumn;
 
 EOF
   ;
@@ -305,7 +309,10 @@ if (! MMisc::is_blank($pbid_dt_sql)) {
   MMisc::error_quit("Problem with \'--perBlockDetectionThreshold\' file ($pbid_dt_sql) : $err")
     if (! MMisc::is_blank($err));
 
-  $tmp .= "CREATE TABLE $ThreshDB ($BlockIDcolumn TEXT PRIMARY KEY, $Threshcolumn REAL);\n";
+  my $includeRanks = 1;
+
+  $tmp .= "CREATE TABLE $ThreshDB ($BlockIDcolumn TEXT PRIMARY KEY, $Threshcolumn REAL".
+    ($includeRanks ? ", RankThreshold INT" : "").");\n";
 
   my $sc = MMisc::slurp_file($pbid_dt_sql);
   MMisc::error_quit("Problem with \'--perBlockDetectionThreshold\' file ($pbid_dt_sql) : empty file ?")
@@ -315,7 +322,6 @@ if (! MMisc::is_blank($pbid_dt_sql)) {
 }
 
 MtSQLite::commandAdd(\$cmdlines, $tmp);
-
 my ($err, $log, $stdout, $stderr) = 
   MtSQLite::sqliteCommands($sqlitecmd, $dbfile, $cmdlines);
 MMisc::error_quit($err) if (! MMisc::is_blank($err));
@@ -323,7 +329,11 @@ MMisc::error_quit($err) if (! MMisc::is_blank($err));
 my %ref = ();
 &confirm_table(\%ref, $dbfile, $refDBtable, $TrialIDcolumn, $Targcolumn);
 my %sys = ();
-&confirm_table(\%sys, $dbfile, $sysDBtable, $TrialIDcolumn, $Decisioncolumn, $Scorecolumn);
+if (! $useRank){
+  &confirm_table(\%sys, $dbfile, $sysDBtable, $TrialIDcolumn, $Decisioncolumn, $Scorecolumn);
+} else {
+  &confirm_table(\%sys, $dbfile, $sysDBtable, $TrialIDcolumn, $Decisioncolumn, $Scorecolumn, "Rank");
+}
 
 my $tot1 = scalar(keys %ref) + scalar(keys %sys);
 
@@ -340,7 +350,7 @@ my @at = ();
 ##
 my $blockavg_text = "$devadetname Average";
 foreach my $key (keys %sys) {
-
+  
   my $bid = (MMisc::safe_exists(\%tid2bid, $key, $BlockIDcolumn)) 
     ? $tid2bid{$key}{$BlockIDcolumn} : $BlockIDcolumn;
 
@@ -350,6 +360,11 @@ foreach my $key (keys %sys) {
 
   my $decision = ($sys{$key}{$Decisioncolumn} eq 'y') ? 'YES' : 'NO';
   my $istarg   = 0;
+  my $sortValue = $key;
+  my $score = $sys{$key}{$Scorecolumn};
+  if ($useRank){
+    $score = -$sys{$key}{"Rank"};
+  }
 
   if (exists $ref{$key}) { # mapped
     $istarg   = ($ref{$key}{$Targcolumn} eq 'y') ? 1 : 0;
@@ -359,11 +374,14 @@ foreach my $key (keys %sys) {
   }
 
   if ($g_thr) {
-    $bid_trials{$ubid}->addTrialWithoutDecision($bid, $sys{$key}{$Scorecolumn}, $istarg, undef, $key);
+    $bid_trials{$ubid}->addTrialWithoutDecision($bid, $score, $istarg, undef, $sortValue);
   } else {
-    $bid_trials{$ubid}->addTrial($bid, $sys{$key}{$Scorecolumn}, $decision, $istarg, undef, $key);
+    $bid_trials{$ubid}->addTrial($bid, $score, $decision, $istarg, undef, $sortValue);
   }
-  
+#print "$ubid $istarg $sortValue $g_thr $decision\n" if ($ubid eq "Red");
+#  use Data::Dumper;  
+#  print "key = $key\nSortvalue = $sortValue\nscore = $score\nisTarg = $istarg\n".
+#    Dumper($sys{$key}); 
   push(@at, [$key, $bid, $sys{$key}{$Scorecolumn},
              $decision, ($istarg == 1) ? 'TARG' : 'NonTARG']) if ($GetTrialsDB);
 }
@@ -528,6 +546,8 @@ sub def_bid_trials {
     $thr = $bid_thr{$abid}{$Threshcolumn};
   }
   $bid_trials{$ubid}->setTrialActualDecisionThreshold($thr) if (defined $thr);
+#  print "  $ubid $thr $useRank\n";
+  $bid_trials{$ubid}->setScoreSort("descending")  if ($useRank);
 }
 
 #####
@@ -608,8 +628,9 @@ Where:
   --usedXscale --UsedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (default: $xscale and $yscale)
   --isolinecoef      Specify the iso-line to plot (default: $dilcs)
   --BlockAverage    Combine all Trial in one DET instead of splitting them per BlockID
-  --decisionThreshold  When adding a Trial, do not use the System's Decision but base the decision on a given threshold
+  --decisionThreshold  When adding a Trial, do not use the System\'s Decision but base the decision on a given threshold
   --perBlockDecisionThreshold  Specify the SQL command file expected to insert into the \'$ThreshDB\' table (with two columns: $BlockIDcolumn $Threshcolumn) a Threshold per BlockID. 
+  --jUseRankForScores   Use the ranks supplied in the .detection.csv file rather than the detection scores for computing the DET curves. 
 
 
 Note: an example of the possible content of a \'--perBlockDecisionThreshold\' sql file can be:

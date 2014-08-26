@@ -62,6 +62,11 @@ $tn = "test2m13a";
 $com =  "-p MED13ALADDIN -r MTest.derivSys.ref.csv -s MTest.derivSys.sys.detect.csv:detection -s MTest.derivSys.med13.sys.thresh.csv:threshold MTest.derivSys.sys.index.csv:TrialIndex" ;
 $testr += &do_less_simple_test($tn, "MED13 Profile, Derived system file, block differentiated, trial weighted", $com, "res-$tn.txt");
 
+### Test 2m14
+$tn = "test2m14";
+$com =  "-p MED14 -r MTest.derivSys.ref.csv -s MTest.derivSys.med14.sys.detect.csv:detection -s MTest.derivSys.med14.sys.thresh.csv:threshold MTest.derivSys.sys.index.csv:TrialIndex" ;
+$testr += &do_less_simple_test($tn, "MED14 Profile, Rank sorting, Derived system file, block differentiated, trial weighted", $com, "res-$tn.txt");
+
 ### Test 3
 $tn = "test3";
 $com =  "--BlockAverage -t IndividualColorDetection -u MetricNormLinearCostFunct -U CostMiss=1 -U CostFA=1 -U Ptarg=0.5 -r MTest.oneSys.ref.csv -s MTest.oneSys.sys.csv -F SQL_filter_Nblock.sql MTest.oneSys.metadata.csv:metadata";

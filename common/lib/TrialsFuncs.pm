@@ -73,6 +73,7 @@ sub new {
      "computedActDecThreshRange" => undef,  ### Contains a hash table with the range for the decision threshold
      "preserveTrialID" => 0,        ### if true, keep the trial ID and use it as a minor sort key
      "trialNum" => 0,               ### a counter of added trials
+     "scoreSortOrder" => "ascending" ### score sort from good to bad.  default "ascending". 
     };
   
   bless $self;
@@ -607,7 +608,14 @@ sub addTrialWithoutDecision {
   MMisc::error_quit("Score is not defined (and must be) for adding a trial to a Trials object without a decision")
       if (! defined($sysscore));
 
-  $self->addTrial($block, $sysscore, ($sysscore >= $self->getTrialActualDecisionThreshold() ? "YES" : "NO"), $isTarg, $blockMetadata, $trialID);
+  my $decision = "NO";
+  if ($self->{scoreSortOrder} eq "ascending"){
+    $decision = "YES" if ($sysscore >= $self->getTrialActualDecisionThreshold());
+  } else {
+    $decision = "YES" if (-$sysscore < $self->getTrialActualDecisionThreshold());
+  }
+#  print "   $decision - ($sysscore > ".$self->getTrialActualDecisionThreshold()." $self->{scoreSortOrder}\n" if ($block eq "Red");
+    $self->addTrial($block, $sysscore, $decision, $isTarg, $blockMetadata, $trialID);
 }
 
 sub addBlockMetaData {
@@ -874,6 +882,8 @@ sub dumpGrid {
 
 sub numerically { $a <=> $b; }
 sub numericallyAndTrialID { $a->[0] != $b->[0] ? $a->[0] <=> $b->[0] : $a->[1] cmp $b->[1]; }
+sub numericallyReversed { $b <=> $a; }
+sub numericallyAndTrialIDReversed { $a->[0] != $b->[0] ? $b->[0] <=> $a->[0] : $a->[1] cmp $b->[1]; }
 
 #sub 2dimarrNum0 { $a->[0] <=> $b->[0]; }
 #sub 2dimarrNum0Str2 { $a->[0] != $b->[0] ? $a->[0] <=> $b->[0] : $a->[2] cmp $b->[2]; }
@@ -1163,6 +1173,18 @@ sub setPreserveTrialID {
   $self->{preserveTrialID} = ($bool eq "1");
 }
 
+sub setScoreSort {
+  my ($self, $order) = @_;
+  $self->{scoreSortOrder} = $order;
+    
+}
+
+sub getScoreSort {
+  my ($self) = @_;
+  return $self->{scoreSortOrder};
+    
+}
+  
 sub fixBackwardCompatabilityProblems{
   my ($self) = @_;
   my $fixes = 0;
@@ -1181,6 +1203,9 @@ sub fixBackwardCompatabilityProblems{
     }
   }
 #  print "Advisement: $fixes backward compatability fixes applied to the Trials  structure\n";
+
+  ### There is new field for 'scoreRank' that defaults to 0
+  $self->setScoreSort("ascending") if (! exists($self->{scoreSortOrder}));
 }
 
 sub _stater {
