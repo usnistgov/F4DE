@@ -93,18 +93,21 @@ unless ($at->{Properties}->setValue($sort_col_key, $sort_col)) {
     print &property_error();
 }
 
+my $hasMouseOver = 0;
 while (<STDIN>){
     chomp;
-    my @a;
+    $hasMouseOver = 1 if ($_ =~ /mourl=/);
+
+    my @a = split(/$separator/);
     if ($separator eq "\\s" || $separator eq " "){
       s/^\s+// if ($strip_whitespace);
       @a = split(/$separator/);
     } else {
       @a = split(/$separator/);
       if ($strip_whitespace) {
-	for (my $i=0; $i<@a; $i++) {
-	  $a[$i] =~ s/^\s*(.*?)\s*$/$1/
-	}
+        for (my $i=0; $i<@a; $i++) {
+	        $a[$i] =~ s/^\s*(.*?)\s*$/$1/
+	      }
       }
     }
     if (!defined $transpose){   
@@ -121,7 +124,7 @@ my $rendered_at = "";
 if ($out_type eq "Txt") {
     $rendered_at = $at->renderTxtTable(1);
 } elsif ($out_type eq "HTML") {
-    $rendered_at = $at->renderHTMLTable(1);
+    $rendered_at = ($hasMouseOver ? $at->getAutoTableMouseOverScript() : "") . $at->renderHTMLTable(1);
 } elsif ($out_type eq "LaTeX") {
     $rendered_at = $at->renderLaTeXTable();
 } elsif ($out_type eq "CSV") {
