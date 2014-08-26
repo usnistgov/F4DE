@@ -285,6 +285,10 @@ MtSQLite::commandAdd(\$cmdlines, "ATTACH DATABASE \"$mdDBfile\" AS $mdDBname")
 
 # Create the Final table
 
+## If the rank column is used, it must be added to the table
+my $rankCol = "";
+$rankCol = ", System.Rank" if ($useRank);
+
 my $tmp=<<EOF
 DROP TABLE IF EXISTS main.$refDBtable;
 DROP TABLE IF EXISTS main.$sysDBtable;
@@ -293,7 +297,7 @@ DROP TABLE IF EXISTS main.$ThreshDB;
 
 CREATE TABLE $refDBtable AS SELECT $tablename.$TrialIDcolumn,$Targcolumn FROM $used_resDBname.$tablename INNER JOIN $refDBname.$refDBtable WHERE $tablename.$TrialIDcolumn = $refDBtable.$TrialIDcolumn;
 
-CREATE TABLE $sysDBtable AS SELECT System.* FROM $used_resDBname.$tablename INNER JOIN $sysDBname.$sysDBtable WHERE $tablename.$TrialIDcolumn = $sysDBtable.$TrialIDcolumn;
+CREATE TABLE $sysDBtable AS SELECT $tablename.$TrialIDcolumn,$Decisioncolumn,$Scorecolumn $rankCol FROM $used_resDBname.$tablename INNER JOIN $sysDBname.$sysDBtable WHERE $tablename.$TrialIDcolumn = $sysDBtable.$TrialIDcolumn;
 
 EOF
   ;
