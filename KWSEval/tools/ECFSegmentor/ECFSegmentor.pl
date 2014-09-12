@@ -143,12 +143,14 @@ my $ECFfile = "";
 my $RTTMfile = "";
 my $Outfile = "";
 my $Versionnumber = "";
+my $updateDur = undef;
 
 GetOptions
 (
     'ecffile=s'                           => \$ECFfile,
     'rttmfile=s'                          => \$RTTMfile,
     'output-file=s'                       => \$Outfile,
+    'updateDur'                           => \$updateDur,
     'Version-number=s'                    => \$Versionnumber,
     'version',                            => sub { MMisc::ok_quit($versionid) },
     'help'                                => sub { MMisc::ok_quit($usage) },
@@ -203,6 +205,14 @@ if($ECF->{EXCERPT})
     }
 }
 
+if (defined($updateDur)) { 
+  $ECFOUT->{SIGN_DUR} = 0;
+
+  foreach my $excerpt (@{ $ECFOUT->{EXCERPT} }) {
+    $ECFOUT->{SIGN_DUR} += $excerpt->{DUR};
+  }
+}
+
 $ECFOUT->saveFile($ECFOUT->getFile());
 
 MMisc::ok_exit();
@@ -219,6 +229,7 @@ sub set_usage {
   $tmp .= "  -r, --rttmfile           Path to the RTTM file.\n";
   $tmp .= "  -o, --output-file        Path to the Output file.\n";
   $tmp .= "  -V, --Version-number     ECF version.\n";
+  $tmp .= "  -u, --updateDur          Update the ECF's duration field.\n";
   $tmp .= "\n";
   
   return($tmp);
