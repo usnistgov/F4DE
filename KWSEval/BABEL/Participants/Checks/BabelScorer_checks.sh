@@ -25,6 +25,7 @@ OPTIONS:
    -b        build the data file for the CompsFile(s).  The file MUST NOT previously not exist
    -D <BAD>  Documet the Bad runs in the file BAD
    -S        Skip the scoring step
+   -C <dir>  Place the computation dirs in <dir>/<filename>
 EOF
 }
 
@@ -34,7 +35,8 @@ DOCUMENTBAD=""
 toolOpt=""
 buildComp=""
 skipScoring=""
-while getopts "hSXbD:" OPTION
+computeDirOverrid=""
+while getopts "hSXbD:C:" OPTION
 do
     case $OPTION in
         h)
@@ -54,6 +56,10 @@ do
             babscr_xtras="${babscr_xtras} -X"
             shift $((OPTIND-1)); OPTIND=1
             ;;
+        C)
+            computeDirOverride=$OPTARG
+            shift $((OPTIND-1));
+	    ;;
         D)
             DOCUMENTBAD=$OPTARG
             shift $((OPTIND-1));
@@ -216,7 +222,17 @@ do
                 if [ ! -f "$finf" ]; then
                     echo "!! Skipping test: No $eval input file ($inf) in dbDir $dbDir"
                 else
-                    compdir=`perl -I${tool_dir}/../../../../common/lib -e 'use MMisc; print MMisc::get_tmpdir("'$expid'")';`
+		    if [ "$computeDirOverride" = "" ] ; then
+			compdir=`perl -I${tool_dir}/../../../../common/lib -e 'use MMisc; print MMisc::get_tmpdir("'$expid'")';`
+		    else
+			compdir="$computeDirOverride/$inf"
+			if [ -d $compdir ] ; then
+			    echo "   Error: Compute Dir $compdir exists.  Remove to run"
+			    exit 1;
+			fi
+			mkdir $compdir
+		    fi
+
                     resdir="$uncompdir/$inf"
                     if [ -d "$resdir" ]; then rm -rf $resdir; fi
                     mkdir -p $resdir
