@@ -298,6 +298,7 @@ foreach my $trans(sort {$db->{$a}{FILE} cmp $db->{$b}{FILE}} keys %$db){
       elsif ($token eq "<foreign>"){   $stype = "for-lex";   }
       elsif ($token eq "<female-to-male>"){   $type = "skip"; $spkr ++; }
       elsif ($token eq "<male-to-female>"){   $type = "skip"; $spkr ++; }
+      elsif ($token eq "<untranscribed>"){    $type = "NON-SPEECH";  $stype = "other"; $isNoScoreSTT = 1; $isNoScoreKWS = 1; }
       elsif ($token eq "<breath>"){    $type = "NON-LEX";    $stype = "breath"; }
       elsif ($token eq "<cough>"){     $type = "NON-LEX";    $stype = "cough"; }
       elsif ($token eq "<lipsmack>"){  $type = "NON-LEX";    $stype = "lipsmack"; }
@@ -348,8 +349,8 @@ foreach my $trans(sort {$db->{$a}{FILE} cmp $db->{$b}{FILE}} keys %$db){
       }
 
       ### Build the reference STM for STT scoring
-      if ($type eq "LEXEME"){
-        my $isOptDel = ($stype eq "fp" || $stype eq "frag" || $stype eq "for-lex");
+      if (($type eq "LEXEME") || ($token eq "<untranscribed>")){
+        my $isOptDel = ($stype eq "fp" || $stype eq "frag" || $stype eq "for-lex" || $token eq "<untranscribed>");
         $stmText .= " ".($isOptDel ? "(".$token.")" : $token) 
       }
       
