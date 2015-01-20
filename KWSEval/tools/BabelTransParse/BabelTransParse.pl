@@ -204,9 +204,11 @@ foreach my $trans(@tfiles){
 
     $lastTime = $thisTime;
   }
+  
   $db->{$trans}{bt} = $trans_bt;
   $db->{$trans}{et} = $trans_et;
   $totalDuration += $trans_et - $trans_bt;
+#  print "$trans_bt $trans_et $totalDuration\n";
   close TRANS;
 #  MMisc::error_quit("End of file with a non-used transcript line") if (defined($text));
   print("End of file with a non-used transcript line\n") if (defined($text));
@@ -251,7 +253,7 @@ foreach my $trans(sort {$db->{$a}{FILE} cmp $db->{$b}{FILE}} keys %$db){
   print ECF "  <excerpt audio_filename=\"$outTransName\" ".
     "channel=\"1\" ".
     "tbeg=\"".sprintf("%.3f",$db->{$trans}{bt})."\" ".
-    "dur=\"".sprintf("%.3f",$db->{$trans}{et})."\" ".
+    "dur=\"".sprintf("%.3f",$db->{$trans}{et}-$db->{$trans}{bt})."\" ".
     "source_type=\"splitcts\"/>\n";
   ### Interate over the segments
   my $spkr = 1;
