@@ -82,7 +82,7 @@ for Babel KWS and STT evaluations (for future reference we will call
 it 'IndusDB')
 
 - (for scoring your own STT input files) require the 'sctk' tool installed
-(at least version 2.4.7).  See:
+(at least version 2.4.9).  See:
 http://www.nist.gov/itl/iad/mig/tools.cfm
 
 - an understanding of the EXPID composition from the BABEL Evaluation
