@@ -307,7 +307,7 @@ my $lang = $3;
 
 my @summaryDETS = ();
 
-if ($ltag eq "KWS14"){
+if ($ltag =~ m%^KWS1[456]$%){
   $evalYearSpecificKWSOptions = "-zG MAP -zG Optimum -zG Supremum";
 }
 
@@ -684,7 +684,7 @@ sub execKWSEnsemble2{
     $com = "$detutil $def->{DETOPTIONS}{$scase} --generateCSV --txtTable -I -Q 0.3 -T '$mainTitle' --plot ColorScheme=colorPresentation";
     $com .= ($xpng == 1) ? " --ExcludePNGFileFromTxtTable" : "";
     $com .= " -o $usedCompRoot/$def->{ensembleRoot}.png ";
-    if ($ltag eq "KWS14"){
+    if ($ltag =~ m%^KWS1[456]$%){
       $com .= "-l ABOSGCT ";
     } 
     $com .= join(" ",@srls);
