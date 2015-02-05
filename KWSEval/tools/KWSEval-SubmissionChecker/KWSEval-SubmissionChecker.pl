@@ -394,7 +394,7 @@ sub check_submission {
   } elsif ($mode eq $ctm_ext) {
     return(&ctm_validation($f, $sf, $lcorpus, $lpart));
   } else {
-    MMisc::error_quit("Internal error - unknow mode: $mode");
+    MMisc::error_quit("Internal error - unknown mode: $mode");
   }
 }
 
