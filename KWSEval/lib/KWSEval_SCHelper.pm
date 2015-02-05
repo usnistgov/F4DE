@@ -177,7 +177,7 @@ sub check_name {
   return(&check_name_kws13($kwsyear, $eteam, $name, $ext, $verb))
     if ($kwsyear eq 'KWS13');
   return(&check_name_kws14($kwsyear, $eteam, $name, $ext, $verb))
-    if ($kwsyear eq 'KWS14');
+    if ($kwsyear =~ m%^KWS1[456]$%);
   MMisc::error_quit("Unknown EXPID name handler for \'$kwsyear\'");
 }
 
