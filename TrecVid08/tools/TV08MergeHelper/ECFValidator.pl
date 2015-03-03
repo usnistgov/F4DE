@@ -110,9 +110,10 @@ my $xmllint = MMisc::get_env_val($xmllint_env, "");
 my $xsdpath = "$f4d/../../data";
 my $show = 0;
 my $fps = 0;
+my $show_summary = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T           f h             v x  
+# USed:                    T        c  f h          s  v x  
 
 my %opt = ();
 my $dbgftmp = "";
@@ -124,6 +125,7 @@ GetOptions
    'xmllint=s'       => \$xmllint,
    'TrecVid08xsd=s'  => \$xsdpath,
    'fps=i'           => \$fps,
+   'content'         => \$show_summary,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -204,6 +206,7 @@ sub load_file {
   }
 
   &valok($tmp, "validates");
+  print $object->txt_summary() if ($show_summary);
 
   # This is really if you are a debugger
   $object->_display("** Memory Representation:\n") if ($show);
@@ -224,7 +227,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--xmllint location] [--TrecVid08xsd location]  --fps fps ecf_source_file.xml [ecf_source_file.xml [...]]
+Usage: $0 [--help] [--version] [--xmllint location] [--TrecVid08xsd location] [--content] --fps fps ecf_source_file.xml [ecf_source_file.xml [...]]
 
 Will perform a semantic validation of the ECF XML file(s) provided.
 
@@ -232,6 +235,7 @@ Will perform a semantic validation of the ECF XML file(s) provided.
   --fps           Set the default Frame per Second value for files within the ECF
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found
+  --content       Show per file summary
   --version       Print version number and exit
   --help          Print this usage information and exit
 

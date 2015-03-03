@@ -73,6 +73,7 @@ sub new {
      file           => "",
      xmllintobj     => $xmllintobj,
      duration       => 0,
+     computed_duration => 0,
      dfps           => -1,
      fhash          => undef,
      validated      => 0,       # To confirm file was validated
@@ -534,6 +535,8 @@ sub _excerpt_processor {
   return("Problem adding the 'excerpt' information to the object")
     if (! $self->_set_fhash(%fhash));
 
+  $self->{'computed_duration'} += $duration_ts;
+  
   return("");
 }
 
@@ -624,6 +627,12 @@ sub get_duration {
   my ($self) = @_;
   return($self->_get_XXX("duration"));
 }
+
+sub get_compduration {
+  my ($self) = @_;
+  return($self->_get_XXX("computed_duration"));
+}
+
 
 #####
 
@@ -718,6 +727,9 @@ sub txt_summary {
   return("") if ($self->error());
   $txt .= " - Duration: $d\n";
 
+  my $cd = $self->get_compduration();
+  return("") if ($self->error());
+  $txt .= " !! Computed Duration differs: $cd\n" if ($d != $cd);
 
   my %fhash = $self->_get_fhash();
   return("") if ($self->error());
