@@ -729,7 +729,8 @@ sub txt_summary {
 
   my $cd = $self->get_compduration();
   return("") if ($self->error());
-  $txt .= " !! Computed Duration differs: $cd\n" if ($d != $cd);
+  $txt .= (! MMisc::are_float_equal($d, $cd)) ? " !! Computed Duration differs: $cd\n"
+    : "   |-> Computed duration match\n";
 
   my %fhash = $self->_get_fhash();
   return("") if ($self->error());
