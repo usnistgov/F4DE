@@ -119,16 +119,18 @@ SubmissionHelper's <DBDIR>. Each evaluation year requires a separate
 link.  IndusDBs are cumulative so linking to a single release is
 expected.  Execute the following:
 
-% ln -s <KWS13_INDUSDB_DIR> KWS14-dbDir
-% ln -s KWS14-dbDir KWS12-dbDir
-% ln -s KWS14-dbDir KWS13-dbDir
+% ln -s <NIST_INDUSDB_DIR> KWS16-dbDir
+% ln -s KWS16-dbDir KWS12-dbDir
+% ln -s KWS16-dbDir KWS13-dbDir
+% ln -s KWS16-dbDir KWS14-dbDir
+% ln -s KWS16-dbDir KWS15-dbDir
 
 Please insure that you have completed the scp account setup and testing.
 
 Familiarize yourself with the list of options of the tool by running
 it without any option:
 
-% ./SubmissionHelper.shpo
+% ./SubmissionHelper.sh
 
 Confirm that the "SubmissionHelpoer.sh" tool is functional by calling
 it from the current directory with a invalid file (such as one of the
