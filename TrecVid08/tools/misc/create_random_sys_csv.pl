@@ -103,13 +103,13 @@ my @ok_csv_keys = TrecVid08Observation::get_ok_csv_keys();
 ########################################
 # Options processing
 
+my $entries = 100;
+my $beg_def = 1;
 my $usage = &set_usage();
 
 # Default values for variables
 my $writeto = "";
 my @asked_events = ();
-my ($beg, $end) = (0, 0);
-my $entries = 100; 
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
 # Used:                               e  h   l         vw     #
@@ -140,9 +140,12 @@ if (scalar @asked_events == 0) {
     if ($dummy->error());
 }
 
-MMisc::ok_quit("Not enough arguments leftover, awaiting number of frames\n$usage\n") if (scalar @ARGV != 1);
+MMisc::ok_quit("Not enough arguments leftover, awaiting number of frames\n$usage\n") if (scalar @ARGV < 1);
 
-($beg, $end) = (1, shift @ARGV);
+MMisc::ok_quit("Too many arguments leftover, awaiting number of frames\n$usage\n") if (scalar @ARGV > 2);
+
+my ($beg, $end) = ($beg_def, shift @ARGV);
+if (scalar @ARGV == 1) { $beg = shift @ARGV; }
 
 MMisc::error_quit("For \'end\'\'s \'beg:end\' values must follow: beg < end\n\n$usage\n")
   if ($end <= $beg);
@@ -163,7 +166,7 @@ foreach my $event (@asked_events) {
   my $ne = int(rand($entries));
   my $th = int(rand(100));
   my @bl = ();
-  for (my $i = 0; $i < $ne; $i++) { push @bl, int(rand($end)); }
+  for (my $i = 0; $i < $ne; $i++) { push @bl, $beg + int(rand($end-$beg)); }
   @bl = sort { $a <=> $b } @bl;
   my $inc = 0;
   foreach my $bv (@bl) {
@@ -194,9 +197,10 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--writeTo file.csv] [--limitto event1[,event2[...]]] [--entries number] endframenumber
+Usage: $0 [--help | --version] [--writeTo file.csv] [--limitto event1[,event2[...]]] [--entries number] end_framenumber [beg_framenumber]
 
-Create a CSV file filled with random system entries
+Create a CSV file filled with random system entries.
+Up to "number" random entries (default: $entries), potentially going from "beg_framenumber" (default: $beg_def) to "end_framenumber"
 
  Where:
   --help          Print this usage information and exit
