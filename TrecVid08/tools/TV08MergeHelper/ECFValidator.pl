@@ -204,7 +204,7 @@ while ($tmp = shift @ARGV) {
       MMisc::error_quit("Problem obtaining ECF ($tmp) file list: " . $object->get_errormsg())
           if ($object->error());
       my $btmpfile = MMisc::get_tmpfile();
-      foreach my $ufile (@flist) {
+      foreach my $ufile (sort @flist) {
           my ($err, $dir, $file, $ext) = MMisc::split_dir_file_ext($ufile);
           MMisc::error_quit("Problem splitting file information ($ufile): $err")
               if (! MMisc::is_blank($err));
