@@ -68,7 +68,7 @@ my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("MMisc", "TrecVid08ECF") {
+foreach my $pn ("MMisc", "TrecVid08ECF", "TrecVid08ViperFile", "ViperFramespan") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
@@ -99,10 +99,15 @@ my $dummy = new TrecVid08ECF();
 my @xsdfilesl = $dummy->get_required_xsd_files_list();
 # We will use the '$dummy' to do checks before processing files
 
+# Get some values from TrecVid08ViperFile
+my $dummyvf = new TrecVid08ViperFile();
+my @ok_events = $dummyvf->get_full_events_list();
+
 ########################################
 # Options processing
 
 my $xmllint_env = "F4DE_XMLLINT";
+my $rsyst_def = "../misc/create_random_sys_csv.pl";
 my $usage = &set_usage();
 
 # Default values for variables
@@ -112,8 +117,14 @@ my $show = 0;
 my $fps = 0;
 my $show_summary = 0;
 
-# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# USed:                    T        c  f h          s  v x  
+my $rsystool = undef;
+my $writetodir = "";
+my @asked_events = ();
+my $entries = undef;
+my @limitto = ();
+
+# Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
+# Used:   C                T        c ef h   l      s  vwx   #
 
 my %opt = ();
 my $dbgftmp = "";
@@ -126,6 +137,11 @@ GetOptions
    'TrecVid08xsd=s'  => \$xsdpath,
    'fps=i'           => \$fps,
    'content'         => \$show_summary,
+   # for 'create_random_sys_csv"
+   'CreateRandomSysCSV:s' => \$rsystool,
+   'writeToDir=s'       => \$writetodir,
+   'limitto=s'       => \@asked_events,
+   'entries=i'       => \$entries,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -134,6 +150,9 @@ MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 
 MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+
+MMisc::error_quit("\'fps\' must be set when using this tool\n\n$usage\n")
+    if ($fps == 0);
 
 if ($xmllint ne "") {
   MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
@@ -145,6 +164,31 @@ if ($xsdpath ne "") {
     if (! $dummy->set_xsdpath($xsdpath));
 }
 
+if (defined $rsystool) {
+    if (MMisc::is_blank($rsystool)) { $rsystool = $rsyst_def; }
+    my $err = MMisc::check_file_x($rsystool);
+    MMisc::error_quit("Problem with \'CreateRandomSysCSV\' executable ($rsystool): $err\n\n$usage\n")
+        if (! MMisc::is_blank($err));
+    if (MMisc::is_blank($writetodir)) { $writetodir = MMisc::get_pwd(); }
+    $err = MMisc::check_dir_w($writetodir);
+    MMisc::error_quit("Problem with \'writeToDir\': $err\n\n$usage\n")
+        if (! MMisc::is_blank($err));
+    if (scalar @asked_events > 0) {
+        @asked_events = $dummyvf->validate_events_list(@asked_events);
+        MMisc::error_quit("While checking \'limitto\' events list (" . $dummyvf->get_errormsg() .")")
+            if ($dummyvf->error());
+    }
+    MMisc::error_quit("Problem with \'entries\', must be positive\n\n$usage\n")
+        if ((defined $entries) && ($entries < 0));
+} else {
+    MMisc::error_quit("\'writeToDir\' can only be used with \'CreateRandomSysCSV\'\n\n$usage\n")
+        if (! MMisc::is_blank($writetodir));
+    MMisc::error_quit("\'limitto\' can only be used with \'CreateRandomSysCSV\'\n\n$usage\n")
+        if (scalar @limitto > 0);
+    MMisc::error_quit("\'entries\' can only be used with \'CreateRandomSysCSV\'\n\n$usage\n")
+        if (defined $entries);
+}
+    
 ##########
 # Main processing
 my $tmp = "";
@@ -155,6 +199,47 @@ while ($tmp = shift @ARGV) {
   my ($ok, $object) = &load_file($tmp);
   next if (! $ok);
 
+  if (defined $rsystool) {
+      my @flist = $object->get_files_list();
+      MMisc::error_quit("Problem obtaining ECF ($tmp) file list: " . $object->get_errormsg())
+          if ($object->error());
+      my $btmpfile = MMisc::get_tmpfile();
+      foreach my $ufile (@flist) {
+          my ($err, $dir, $file, $ext) = MMisc::split_dir_file_ext($ufile);
+          MMisc::error_quit("Problem splitting file information ($ufile): $err")
+              if (! MMisc::is_blank($err));
+          my @res = $object->get_file_ViperFramespans($ufile);
+          MMisc::error_quit("Problem obtaining ECF ($tmp) framespan information: " . $object->get_errormsg())
+              if ($object->error());
+          my ($beg, $end) = (undef, undef);
+          # just in case the ECF has more than one framespan for this given file, find its global min/max
+          foreach my $vfs (@res) {
+              my ($lbeg, $lend) = $vfs->get_beg_end_fs();
+              MMisc::error_quit("Problem obtaining framespan direct information: " . $vfs->get_errormsg())
+                  if ($vfs->error());
+              $beg = (defined $beg) ? (($lbeg < $beg) ? $lbeg : $beg) : $lbeg;
+              $end = (defined $end) ? (($lend > $end) ? $lend : $end) : $lend;
+          }
+          my $ofile = "$writetodir/$file.csv";
+          #          print "[$ufile / $ofile / $beg / $end]\n";
+          my @cmdl = ($rsystool);
+          if (! MMisc::is_blank($writetodir)) { push @cmdl, '--writeTo', $ofile; }
+          if (scalar @asked_events > 0) { push @cmdl, '--limitto', join(',', @asked_events); }
+          if (defined $entries) { push @cmdl, '--entries', $entries; }
+          push @cmdl, $end;
+          if ($beg != 1) { push @cmdl, $beg; }
+
+          my ($ok, $otxt, $stdout, $stderr, $retcode, $tmpfile, $signal) =
+              MMisc::write_syscall_smart_logfile($btmpfile, @cmdl);
+          MMisc::error_quit("Problem running \'CreateRandomSysCSV\' command, for more details, see: $tmpfile")
+              if ((! $ok) || ($retcode + $signal != 0));
+          $err = MMisc::check_file_r($ofile);
+          MMisc::error_quit("Could not find expected output file ($ofile) : $err")
+              if (! MMisc::is_blank($err));
+          print "     |->  wrote: $ofile\n";
+      }
+  }
+  
   $all{$tmp} = $object;
   $ndone++;
 }
