@@ -236,6 +236,7 @@ my $default_fps = undef;
 my @forceUseEcf_remove = ();
 my $subname_params = 2;
 my $subname_param1 = "";
+my %expected_limitto;
 
 my $tmpstr = MMisc::slurp_file($specfile);
 MMisc::error_quit("Problem loading \'Specfile\' ($specfile)")
@@ -260,6 +261,21 @@ sub __cfgcheck {
 &__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0), 1);
 my $forceUseEcf = (scalar @forceUseEcf_remove > 0) ? 1 : 0;
 &__cfgcheck("\%expected_sffn", (scalar keys %expected_sffn == 0), ($forceUseEcf ? 0 : 1));
+
+my @exp_limitto = keys %expected_limitto;
+if (scalar @exp_limitto > 0) {
+    my %check_exp_limitto = MMisc::array1d_to_ordering_hash(\@exp_limitto);
+    foreach my $ldata (@expected_data) {
+        if (exists $expected_limitto{$ldata}) {
+            my @asked_events = $dummy->validate_events_list(@{$expected_limitto{$ldata}});
+            MMisc::error_quit("While checking \'\%expected_limitto\' events list for \'$ldata\' (" . $dummy->get_errormsg() .")")
+                if ($dummy->error());
+        }
+        delete $check_exp_limitto{$ldata};
+    }
+    MMisc::error_quit("Found unknown \'data\' values for \'\%expected_limitto\': " . join(" ", keys %check_exp_limitto))
+        if (scalar keys %check_exp_limitto > 0);
+}
 
 $fps = $default_fps
   if ((defined $default_fps) && (! defined $fps));
@@ -741,11 +757,11 @@ sub check_exp_dirfiles {
   
   my @events_processed = ();
   if (! $dryrun) {
-    ($derr, @events_processed) = &get_events_processed("$bd/$exp", $expected_exp);
+    ($derr, @events_processed) = &get_events_processed("$bd/$exp", $expected_exp, $data);
     return(\@ep, $derr)
-      if (! MMisc::is_blank($derr));
+        if (! MMisc::is_blank($derr));
     return(\@ep, "No event found in \'Events_Processed:\' line ?")
-      if (scalar @events_processed == 0);
+        if (scalar @events_processed == 0);
   }
   delete $leftf{$expected_exp};
   
@@ -802,6 +818,7 @@ sub check_exp_dirfiles {
 sub get_events_processed {
   my $dir = shift @_;
   my $file = shift @_;
+  my $ldata = shift @_;
   
   my $fn = "$dir/$file";
   
@@ -828,6 +845,15 @@ sub get_events_processed {
     return("Problem validating file's event list (" . $dummy->get_errormsg() . ")", @ep)
       if ($dummy->error());
     @ep = @tep;
+    # check list against %expected_limitto if available
+    if (exists $expected_limitto{$ldata}) {
+        my @auth_events = @{$expected_limitto{$ldata}};
+        my %check_ep = MMisc::array1d_to_ordering_hash(\@ep);
+        foreach my $lev (@auth_events) {
+            delete $check_ep{$lev};
+        }
+        return("Found unauthorized events for \'$ldata\': " . join(" ", keys %check_ep), @ep);
+    }
   } else {
     return("Could not find the \'Events_Processed:\' line in file ($file)", @ep);
   }
