@@ -107,7 +107,7 @@ my @ok_events = $dummyvf->get_full_events_list();
 # Options processing
 
 my $xmllint_env = "F4DE_XMLLINT";
-my $rsyst_def = "../misc/create_random_sys_csv.pl";
+my $rsyst_def = "$f4d/../misc/create_random_sys_csv.pl";
 my $usage = &set_usage();
 
 # Default values for variables
@@ -309,25 +309,33 @@ sub _warn_add {
 
 sub set_usage {
   my $xsdfiles = join(" ", @xsdfilesl);
+  my $ro = join(" ", @ok_events);
+
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--xmllint location] [--TrecVid08xsd location] [--content] --fps fps ecf_source_file.xml [ecf_source_file.xml [...]]
+Usage: $0 [--help] [--version] [--xmllint location] [--TrecVid08xsd location] [--content] --fps fps [--CreateRandomSysCSV [tool_location] --writeToDir dir ] ecf_source_file.xml [ecf_source_file.xml [...]]
 
 Will perform a semantic validation of the ECF XML file(s) provided.
 
  Where:
+  --help          Print this usage information and exit
+  --version       Print version number and exit
   --fps           Set the default Frame per Second value for files within the ECF
   --xmllint       Full location of the \'xmllint\' executable (can be set using the $xmllint_env variable)
   --TrecVid08xsd  Path where the XSD files can be found
   --content       Show per file summary
-  --version       Print version number and exit
-  --help          Print this usage information and exit
+  --CreateRandomSysCSV   For each file entry found in any ECF, create a random system CSV file (default tool location: $rsyst_def)
+  --writeToDir     Directory to write output CSV files to. Naming of file is shortname.csv
+  --limitto       Only care about provided list of events
+  --entries       Maximum number of entries per event
+
 
 Note:
 - This prerequisite that the file can be been validated using 'xmllint' against the XSD file
 - Program will disard any xml comment(s).
 - 'TrecVid08xsd' files are: $xsdfiles
+- List of recognized events: $ro
 EOF
     ;
 
