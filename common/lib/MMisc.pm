@@ -1701,7 +1701,9 @@ sub follow_link {
 
 sub list_dirs_files {
   my $dir = &iuv($_[0], '');
-
+  my $fullpath = &iuv($_[1], 0);
+  # when requesting the full file path, does not just return the list of files or directory contained, return the full path filename
+    
   return('Empty dir name', undef, undef, undef)
     if (&is_blank($dir));
 
@@ -1715,8 +1717,15 @@ sub list_dirs_files {
   my @u = ();
   for (my $i = 0; $i < scalar @fl; $i++) {
     my $entry = $fl[$i];
-    my $ff = &follow_link("$dir/$entry", $dir);
-    $ff = "$dir/$ff" if ($ff =~ m%^\.\.\/%);
+    my $ff = "";
+    if ($fullpath) {
+      my $fd = &get_dir_actual_dir($dir);
+      $ff = "$fd/$entry";
+      $entry = $ff;
+    } else {
+      $ff = &follow_link("$dir/$entry", $dir);
+      $ff = "$dir/$ff" if ($ff ne "$dir/$entry");
+    }
 
     if (-d $ff) {
 #      print "[D] $entry -> $ff\n";
