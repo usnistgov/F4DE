@@ -234,7 +234,7 @@ while ($tmp = shift @ARGV) {
           MMisc::error_quit("Problem running \'CreateRandomSysCSV\' command, for more details, see: $tmpfile")
               if ((! $ok) || ($retcode + $signal != 0));
           $err = MMisc::check_file_r($ofile);
-          MMisc::error_quit("Could not find expected output file ($ofile) : $err")
+          MMisc::error_quit("Problem with expected output file ($ofile) : $err")
               if (! MMisc::is_blank($err));
           print "     |->  wrote: $ofile\n";
       }
