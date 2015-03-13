@@ -18,6 +18,7 @@
 ** SUMMARY: ECF file loaded
  - source file: ../common/tests.ecf
  - Duration: 75160.440
+ !! Computed Duration differs: 140.28
  - File key: 20050519-1503-Excerpt.mpg | Time range(s): [0 : 70] [140.24 : 210.52]
 
 
