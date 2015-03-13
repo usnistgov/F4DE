@@ -178,7 +178,7 @@ MMisc::error_quit("Problem with \'tool\' executable ($tool): $err\n\n$usage\n")
 my ($err, $rd, $rf, $ru) = MMisc::list_dirs_files($CSVinDir, 1);
 MMisc::error_quit("Problem checking input \'CSVinDir\': $err")
     if (! MMisc::is_blank($err));
-print "---", join(" ", @{$rf}), "\n";
+#print "---", join(" ", @{$rf}), "\n";
 my @CSVfiles = grep(m%\.csv$%i, @{$rf});
 MMisc::error_quit("Found no CSV files in \'CVSinDir\' ($CSVinDir)")
     if (scalar @CSVfiles == 0);
