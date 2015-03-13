@@ -205,7 +205,8 @@ if ($xmlbasefile != -1) {
   MMisc::ok_quit("");
 }
 
-MMisc::ok_quit("\n$usage\n") if (scalar @ARGV == 0);
+MMisc::error_quit("Not enough arguments on the command line\n$usage\n")
+    if (scalar @ARGV == 0);
 
 if ($xmllint ne "") {
   MMisc::error_quit("While trying to set \'xmllint\' (" . $dummy->get_errormsg() . ")")
