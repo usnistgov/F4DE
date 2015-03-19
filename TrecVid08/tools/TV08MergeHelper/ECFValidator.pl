@@ -122,9 +122,10 @@ my $writetodir = "";
 my @asked_events = ();
 my $entries = undef;
 my @limitto = ();
+my $th = undef;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz #
-# Used:   C                T        c ef h   l      s  vwx   #
+# Used:   C                T        c ef h   l      st vwx   #
 
 my %opt = ();
 my $dbgftmp = "";
@@ -142,6 +143,7 @@ GetOptions
    'writeToDir=s'       => \$writetodir,
    'limitto=s'       => \@asked_events,
    'entries=i'       => \$entries,
+   'threshold=f'     => \$th,
    # Hiden Option(s)
    'show_internals'  => \$show,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
@@ -174,7 +176,17 @@ if (defined $rsystool) {
     MMisc::error_quit("Problem with \'writeToDir\': $err\n\n$usage\n")
         if (! MMisc::is_blank($err));
     if (scalar @asked_events > 0) {
-        @asked_events = $dummyvf->validate_events_list(@asked_events);
+        my @tmp_el = ();
+        foreach my $entry (@asked_events) {
+            if ($entry =~ m%^(\w+)\:(.+)$%) {
+                MMisc::error_quit("Event ($1) \'threshold\' ($2) must be within 0 and 1 to be valid\n\n$usage\n")
+                    if (($2 < 0) || ($2 > 1));
+                push @tmp_el, $1;
+            } else {
+                push @tmp_el, $entry;
+            }
+        }
+        @tmp_el = $dummyvf->validate_events_list(@tmp_el);
         MMisc::error_quit("While checking \'limitto\' events list (" . $dummyvf->get_errormsg() .")")
             if ($dummyvf->error());
     }
@@ -226,6 +238,7 @@ while ($tmp = shift @ARGV) {
           if (! MMisc::is_blank($writetodir)) { push @cmdl, '--writeTo', $ofile; }
           if (scalar @asked_events > 0) { push @cmdl, '--limitto', join(',', @asked_events); }
           if (defined $entries) { push @cmdl, '--entries', $entries; }
+          if (defined $th) { push @cmdl, '--threshold', $th; }
           push @cmdl, $end;
           if ($beg != 1) { push @cmdl, $beg; }
 
@@ -314,7 +327,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help] [--version] [--xmllint location] [--TrecVid08xsd location] [--content] --fps fps [--CreateRandomSysCSV [tool_location] --writeToDir dir ] ecf_source_file.xml [ecf_source_file.xml [...]]
+Usage: $0 [--help] [--version] [--xmllint location] [--TrecVid08xsd location] [--content] --fps fps [--CreateRandomSysCSV [tool_location] --writeToDir dir [--limitto event1[:threshold1][,event2[:threshold2][,...]]] [--entries number] [--threshold float]] ecf_source_file.xml [ecf_source_file.xml [...]]
 
 Will perform a semantic validation of the ECF XML file(s) provided.
 
@@ -327,8 +340,9 @@ Will perform a semantic validation of the ECF XML file(s) provided.
   --content       Show per file summary
   --CreateRandomSysCSV   For each file entry found in any ECF, create a random system CSV file (default tool location: $rsyst_def)
   --writeToDir     Directory to write output CSV files to. Naming of file is shortname.csv
-  --limitto       Only care about provided list of events
+  --limitto       Only care about provided list of events. Also allow setting of per event threshold
   --entries       Maximum number of entries per event
+  --threshold     Any 'DetectionScore' about this value will have a 'DetectionDecision' value of 'true'
 
 
 Note:
