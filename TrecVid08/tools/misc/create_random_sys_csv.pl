@@ -147,6 +147,7 @@ if (scalar @asked_events == 0) {
                 if (($2 < 0) || ($2 > 1));
             push @tmp_el, $1;
             $eth{$1} = $2;
+#            print "[$1 / $2]\n";
         } else {
             push @tmp_el, $entry;
         }
@@ -182,7 +183,8 @@ MMisc::error_quit("Problem with output CSV : " . $ocsvh->get_errormsg())
 
 foreach my $event (@asked_events) {
   my $ne = int(rand($entries));
-  my $lth = (exists $eth{$event}) ? $eth{$event} : $th;
+  my $lth = (exists $eth{$event}) ? 100.0*$eth{$event} : $th;
+#  print "[$lth]\n";
   my @bl = ();
   for (my $i = 0; $i < $ne; $i++) { push @bl, $beg + int(rand($end-$beg)); }
   @bl = sort { $a <=> $b } @bl;
@@ -226,7 +228,7 @@ Up to "number" random entries (default: $entries), potentially going from "beg_f
   --writeTo       File to write CSV values to
   --limitto       Only care about provided list of events. Also allow setting of per event threshold
   --entries       Maximum number of entries per event
-  --threshold     Any number about this value will have a 'DetectionDecision' value of 'true' (default: $th)
+  --threshold     Any 'DetectionScore' about this value will have a 'DetectionDecision' value of 'true' (default: $th)
 
 Note:
  - List of recognized events: $ro
