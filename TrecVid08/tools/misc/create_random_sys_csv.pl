@@ -105,6 +105,7 @@ my @ok_csv_keys = TrecVid08Observation::get_ok_csv_keys();
 
 my $entries = 100;
 my $beg_def = 1;
+my $th = 0.75;
 my $usage = &set_usage();
 
 # Default values for variables
@@ -112,7 +113,7 @@ my $writeto = "";
 my @asked_events = ();
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                               e  h   l         vw     #
+# Used:                               e  h   l       t vw     #
 
 my %opt = ();
 GetOptions
@@ -123,6 +124,7 @@ GetOptions
    'writeTo=s'       => \$writeto,
    'limitto=s'       => \@asked_events,
    'entries=i'       => \$entries,
+   'threshold=f'     => \$th,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -164,7 +166,6 @@ MMisc::error_quit("Problem with output CSV : " . $ocsvh->get_errormsg())
 
 foreach my $event (@asked_events) {
   my $ne = int(rand($entries));
-  my $th = int(rand(100));
   my @bl = ();
   for (my $i = 0; $i < $ne; $i++) { push @bl, $beg + int(rand($end-$beg)); }
   @bl = sort { $a <=> $b } @bl;
@@ -197,7 +198,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--writeTo file.csv] [--limitto event1[,event2[...]]] [--entries number] end_framenumber [beg_framenumber]
+Usage: $0 [--help | --version] [--writeTo file.csv] [--limitto event1[,event2[...]]] [--entries number] [--threshold float] end_framenumber [beg_framenumber]
 
 Create a CSV file filled with random system entries.
 Up to "number" random entries (default: $entries), potentially going from "beg_framenumber" (default: $beg_def) to "end_framenumber"
@@ -208,6 +209,7 @@ Up to "number" random entries (default: $entries), potentially going from "beg_f
   --writeTo       File to write CSV values to
   --limitto       Only care about provided list of events
   --entries       Maximum number of entries per event
+  --threshold     Any number about this value will have a 'DetectionDecision' value of 'true' (default: $th)
 
 Note:
  - List of recognized events: $ro
