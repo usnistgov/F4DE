@@ -133,10 +133,26 @@ MMisc::ok_quit("$versionid\n") if ($opt{'version'});
 MMisc::error_quit("\'writeTo\' must be specified\n\n$usage\n")
   if (MMisc::is_blank($writeto));
 
+MMisc::error_quit("\'threshold\' must be within 0 and 1 to be valid\n\n$usage\n")
+    if (($th < 0) || ($th > 1));
 
+my %eth = ();
 if (scalar @asked_events == 0) {
   @asked_events = @ok_events;
 } else {
+    my @tmp_el = ();
+    foreach my $entry (@asked_events) {
+        if ($entry =~ m%^(\w+)\:(.+)$%) {
+            MMisc::error_quit("Event ($1) \'threshold\' ($2) must be within 0 and 1 to be valid\n\n$usage\n")
+                if (($2 < 0) || ($2 > 1));
+            push @tmp_el, $1;
+            $eth{$1} = $2;
+        } else {
+            push @tmp_el, $entry;
+        }
+    }
+    @asked_events = @tmp_el;
+    
   @asked_events = $dummy->validate_events_list(@asked_events);
   MMisc::error_quit("While checking \'limitto\' events list (" . $dummy->get_errormsg() .")")
     if ($dummy->error());
@@ -166,6 +182,7 @@ MMisc::error_quit("Problem with output CSV : " . $ocsvh->get_errormsg())
 
 foreach my $event (@asked_events) {
   my $ne = int(rand($entries));
+  my $lth = (exists $eth{$event}) ? $eth{$event} : $th;
   my @bl = ();
   for (my $i = 0; $i < $ne; $i++) { push @bl, $beg + int(rand($end-$beg)); }
   @bl = sort { $a <=> $b } @bl;
@@ -177,7 +194,7 @@ foreach my $event (@asked_events) {
     my $ev = $bv + int(rand((2*$end) / $ne));
     $ev = ($ev >= $end) ? $end : $ev;
     my $ds = int(rand(100));
-    my $dt = ($ds > $th) ? 'true' : 'false';
+    my $dt = ($ds > $lth) ? 'true' : 'false';
     my @csvl = ($inc, $event, "$bv:$ev", sprintf("%0.03f", $ds / 100), $dt);
 #    print join(" | ", @csvl) . "\n";
     $ocsvtxt .= $ocsvh->array2csvline(@csvl) . "\n";
@@ -198,7 +215,7 @@ sub set_usage {
   my $tmp=<<EOF
 $versionid
 
-Usage: $0 [--help | --version] [--writeTo file.csv] [--limitto event1[,event2[...]]] [--entries number] [--threshold float] end_framenumber [beg_framenumber]
+Usage: $0 [--help | --version] [--writeTo file.csv] [--limitto event1[:threshold1][,event2[:threshold2][,...]]] [--entries number] [--threshold float] end_framenumber [beg_framenumber]
 
 Create a CSV file filled with random system entries.
 Up to "number" random entries (default: $entries), potentially going from "beg_framenumber" (default: $beg_def) to "end_framenumber"
@@ -207,7 +224,7 @@ Up to "number" random entries (default: $entries), potentially going from "beg_f
   --help          Print this usage information and exit
   --version       Print version number and exit
   --writeTo       File to write CSV values to
-  --limitto       Only care about provided list of events
+  --limitto       Only care about provided list of events. Also allow setting of per event threshold
   --entries       Maximum number of entries per event
   --threshold     Any number about this value will have a 'DetectionDecision' value of 'true' (default: $th)
 
