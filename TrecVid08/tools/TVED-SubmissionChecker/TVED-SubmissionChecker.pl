@@ -852,7 +852,8 @@ sub get_events_processed {
         foreach my $lev (@auth_events) {
             delete $check_ep{$lev};
         }
-        return("Found unauthorized events for \'$ldata\': " . join(" ", keys %check_ep), @ep);
+        return("Found unauthorized events for \'$ldata\': " . join(" ", keys %check_ep), @ep)
+            if (scalar keys %check_ep > 0);
     }
   } else {
     return("Could not find the \'Events_Processed:\' line in file ($file)", @ep);
