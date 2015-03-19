@@ -176,6 +176,7 @@ if (defined $rsystool) {
     MMisc::error_quit("Problem with \'writeToDir\': $err\n\n$usage\n")
         if (! MMisc::is_blank($err));
     if (scalar @asked_events > 0) {
+        @asked_events = split(m%\,%, join(",", @asked_events));
         my @tmp_el = ();
         foreach my $entry (@asked_events) {
             if ($entry =~ m%^(\w+)\:(.+)$%) {
@@ -192,6 +193,8 @@ if (defined $rsystool) {
     }
     MMisc::error_quit("Problem with \'entries\', must be positive\n\n$usage\n")
         if ((defined $entries) && ($entries < 0));
+    MMisc::error_quit("\'threshold\' must be within 0 and 1 to be valid\n\n$usage\n")
+        if ((defined $th) && (($th < 0) || ($th > 1)));
 } else {
     MMisc::error_quit("\'writeToDir\' can only be used with \'CreateRandomSysCSV\'\n\n$usage\n")
         if (! MMisc::is_blank($writetodir));

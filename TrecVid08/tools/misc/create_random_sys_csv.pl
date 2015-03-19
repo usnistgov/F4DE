@@ -140,6 +140,7 @@ my %eth = ();
 if (scalar @asked_events == 0) {
   @asked_events = @ok_events;
 } else {
+    @asked_events = split(m%\,%, join(",", @asked_events));
     my @tmp_el = ();
     foreach my $entry (@asked_events) {
         if ($entry =~ m%^(\w+)\:(.+)$%) {
