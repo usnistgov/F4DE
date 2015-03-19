@@ -183,7 +183,7 @@ MMisc::error_quit("Problem with output CSV : " . $ocsvh->get_errormsg())
 
 foreach my $event (@asked_events) {
   my $ne = int(rand($entries));
-  my $lth = (exists $eth{$event}) ? 100.0*$eth{$event} : $th;
+  my $lth = (exists $eth{$event}) ? 100.0*$eth{$event} : 100.0*$th;
 #  print "[$lth]\n";
   my @bl = ();
   for (my $i = 0; $i < $ne; $i++) { push @bl, $beg + int(rand($end-$beg)); }
