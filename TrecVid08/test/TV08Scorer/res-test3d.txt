@@ -18,8 +18,8 @@
 ** SUMMARY: ECF file loaded
  - source file: ../common/tests.ecf
  - Duration: 75160.440
- !! Computed Duration differs: 140.28
- - File key: 20050519-1503-Excerpt.mpg | Time range(s): [0 : 70] [140.24 : 210.52]
+ !! Computed Duration differs: 95
+ - File key: 20050519-1503-Excerpt.mpg | Time range(s): [0 : 70] [140.24 : 165.24]
 
 
 ***** STEP 3: Generating EventLists (only adding observations matching loaded ECF)
