@@ -446,7 +446,9 @@ sub get_new_ViperFile_from_ViperFile_and_ECF {
       my $ok = $vf->is_within($efs);
       return("Problem confirming ECF vs ViperFile framespan overlap (" . $vf->get_errormsg() . ")", undef)
 	if ($vf->error());
-      return("The ECF does not appear to be within the ViperFile framespan, this will cause issues if left uncorrected", undef)
+      return("Problem confirming ECF framespan overlap within ViperFile (" . $efs->get_errormsg() . ")", undef)
+	if ($efs->error());
+      return("The framespan of the ECF (". $efs->get_value() .") does not appear to be within the ViperFile numframes value (". $vf->get_numframes_value() ."), this will cause issues if left uncorrected", undef)
 	if (! $ok);
     }
   } else {
