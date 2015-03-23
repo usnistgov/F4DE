@@ -903,11 +903,49 @@ sub _set_framespan_max_value {
     return(0);
   }
 
+  if ($self->{fps} != -1) {
+    $fs_tmp->set_fps($self->{fps});
+    if ($fs_tmp->error()) {
+      $self->_set_errormsg("Error setting the \'framespan_max\' object's fps (" . $fs_tmp->get_errormsg() . ")");
+      return(0);
+    }
+  }
+  
   my $v = $fs_tmp->set_value($fs);
   if ($fs_tmp->error()) {
     $self->_set_errormsg("Error setting the \'framespan_max\' (" . $fs_tmp->get_errormsg() . ")");
     return(0);
   }
+
+  return(1);
+}
+
+#####
+
+sub is_within {
+  my ($self, $fs) = @_;
+  
+  return(0) if ($self->error());
+
+  if (! $self->_is_framespan_max_set()) {
+    $self->_set_errormsg("Error accessing the \'framespan_max\' object, it is not set");
+    return(0);
+  }
+    
+  my $fs_tmp = $self->{fs_framespan_max};
+  if ($fs_tmp->error()) {
+    $self->_set_errormsg("Error accessing the \'framespan_max\' object (" . $fs_tmp->get_errormsg() . ")");
+    return(0);
+  }
+#  print MMisc::get_sorted_MemDump(\$fs_tmp) . "\n";
+  
+  my $ok = $fs->is_within($fs_tmp);
+  if ($fs->error()) {
+    $self->_set_errormsg("Problem checking if framespan is within another: " . $fs->error());
+    return(0);
+  }
+
+  return(0) if (! $ok);
 
   return(1);
 }
