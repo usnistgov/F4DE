@@ -432,13 +432,31 @@ sub get_new_ViperFile_from_ViperFile_and_ECF {
   return("Problem obtaining the sourcefile's filename (" . $vf->get_errormsg() . ")", undef)
     if ($vf->error());
 
-  my $tvf = $vf->clone_with_no_events();
-  return("Problem while cloning the ECF modifed ViperFile (" . $vf->get_errormsg() . ")", undef)
-    if (! defined $tvf);
-
   return("File ($sffn) is not in EventList", undef)
     if (! $el->is_filename_in($sffn));
 
+  my @ecf_vfs = $ecfobj->get_file_ViperFramespans($sffn);
+  return("Problem obtaining ECF's Viper Framespan ($sffn): " . $ecfobj->get_errormsg() . ")", undef)
+    if ($ecfobj->error());
+
+  if (scalar @ecf_vfs > 0) { # sffn contained within ECF
+    #  print "$sffn [" . scalar @ecf_vfs . "]\n";
+    foreach my $efs (@ecf_vfs) {
+      #    print MMisc::get_sorted_MemDump(\$efs) . "\n";
+      my $ok = $vf->is_within($efs);
+      return("Problem confirming ECF vs ViperFile framespan overlap (" . $vf->get_errormsg() . ")", undef)
+	if ($vf->error());
+      return("The ECF does not appear to be within the ViperFile framespan, this will cause issues if left uncorrected", undef)
+	if (! $ok);
+    }
+  } else {
+    MMisc::warn_print("\'$sffn\' not contained within ECF file, content used as is");
+  }
+     
+  my $tvf = $vf->clone_with_no_events();
+  return("Problem while cloning the ECF modifed ViperFile (" . $vf->get_errormsg() . ")", undef)
+    if (! defined $tvf);
+  
   my @ao = $el->get_all_Observations($sffn);
   foreach my $obs (@ao) {
     return("Problem adding EventList Observation to new ViperFile (" . $tvf->get_errormsg() .")", undef)
