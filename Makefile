@@ -120,7 +120,7 @@ SQLitetoolsinstall:
 #####
 
 TV08DIR=TrecVid08
-TV08TOOLS=tools/{TVED-SubmissionChecker/{TVED-SubmissionChecker.pl,TV{08,09,1{0,1,2,3,4}S}ED-SubmissionChecker.sh},TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
+TV08TOOLS=tools/{TVED-SubmissionChecker/{TVED-SubmissionChecker.pl,TV{08,09,1{0,1,2,3,4,5}S}ED-SubmissionChecker.sh},TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
 TV08TOOLS_MAN=tools/{TVED-SubmissionChecker/TVED-SubmissionChecker.pl,TV08MergeHelper/TV08MergeHelper.pl,TV08Scorer/TV08Scorer.pl,TV08ViperValidator/{TV08_BigXML_ValidatorHelper.pl,TV08ViperValidator.pl}}
 
 TV08install:
@@ -225,7 +225,7 @@ DEVAinstall_noman:
 
 KWSEVALDIR=KWSEval
 KWSEVALTOOLS=tools/{KWSEval/KWSEval.pl,KWSListGenerator/KWSListGenerator.pl,ValidateKWSList/ValidateKWSList.pl,ValidateTermList/ValidateTermList.pl,ValidateTM/ValidateTM.pl,KWSEval-XMLvalidator/KWSEval-XMLvalidator.pl,KWSEval-SubmissionChecker/{KWSEval-SubmissionChecker.pl,KWS1{2,3}-SubmissionChecker.sh}}
-KWSEVALBABEL=BABEL/Participants/BABEL{_Scorer.pl,1{2,3}_Scorer.sh}
+KWSEVALBABEL=BABEL/Participants/BABEL{_Scorer.pl,1{2,3,4,5,6}_Scorer.sh}
 
 KWSEvalinstall:
 	@make KWSEvalinstall_common
