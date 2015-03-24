@@ -1,6 +1,6 @@
 File:  README
-Date:  February 5, 2015
-F4DE Version: 3.2.0
+Date:  March 24, 2015
+F4DE Version: 3.2.1
 
 
 This directory contains the Framework for Detection Evaluation (F4DE)
@@ -116,6 +116,13 @@ evaluations and for specific NIST-coordinated evaluations listed below.
 
   *  2015 Open Keyword Search Evaluation
     - Participant's side of the BABEL Scorer
+
+  *  2015 TRECVID Surveillance Event Detection Evaluation. 
+    - Same tools as the 2008 TRECVID Surveillance Event Detection Evaluation
+      (TV08Scorer, TV08ViperValidator, TV08MergeHelper, 
+      TV08_BigXML_ValidatorHelper)
+    - TV15SED-SubmissionChecker - A tool designed to help confirm SED15 submission
+      archives before transmitting them to NIST. 
 
 In addition to evaluation tools, the package contains the following related tools:
 
