@@ -106,7 +106,7 @@ sub do_less_simple_test {
 
   my $retval = &do_simple_test($testname, "$subtype [run]", $command, $res, $rev);
 
-  $retval += &do_simple_test($testname, "$subtype [DBcheck]", "sqlite3 $db < add_checker_sql.cmd", $res . "-DBcheck", $rev);
+  $retval += &do_simple_test($testname, "$subtype [DBcheck]", "sqlite3 $db < add_checker_sql1.cmd | sort; sqlite3 $db < add_checker_sql2.cmd", $res . "-DBcheck", $rev);
 
   if ($mode eq $mmk) {
     print "  (keeping: $tdir)\n";
