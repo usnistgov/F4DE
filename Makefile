@@ -438,7 +438,7 @@ dist_common:
 	@echo `cat ${F4DE_VERSION}`"-"`date -u +%Y%m%d-%H%M`"Z.tar.bz2" > /tmp/.f4de_distname
 	@echo `pwd` > /tmp/.f4de_pwd
 	@(cd /tmp; tar cfj `cat /tmp/.f4de_pwd`/`cat /tmp/.f4de_distname` --exclude CVS --exclude .DS_Store --exclude "*~" `cat ${F4DE_VERSION}`)
-	@md5sum `cat /tmp/.f4de_distname` > `cat /tmp/.f4de_distname`.md5 || md5 -r `cat /tmp/.f4de_distname` > `cat /tmp/.f4de_distname`.md5
+	@(md5sum `cat /tmp/.f4de_distname` > `cat /tmp/.f4de_distname`.md5 2> /dev/null) || (md5 -r `cat /tmp/.f4de_distname` > `cat /tmp/.f4de_distname`.md5 2> /dev/null)
 	@echo ""
 	@echo ""
 	@echo "** Release ready:" `cat /tmp/.f4de_distname`
