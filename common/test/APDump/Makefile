@@ -1,5 +1,6 @@
 # DEVA/test/MTest
 
+PRE_tests=pre_tests.pl
 APDump_tester=APDump_tester.pl
 
 ifdef F4DE_TEST_INSTALLDIR
@@ -19,8 +20,8 @@ all:
 install:
 	@echo "Nothing to do for install"
 
-makecompcheckfiles makecheckfiles check: \
-	${APDump_tester} ${APDump}
+makecompcheckfiles makecheckfiles check: ${PRE_test} ${APDump_tester} ${APDump}
+	@(${PERL} ${PRE_tests})
 	@(${PERL} ${APDump_tester} ${APDump} $@)
 	@make cleanresdir
 
