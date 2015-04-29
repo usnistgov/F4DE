@@ -9,7 +9,7 @@ all:
 	@echo "NOTE: Make sure to run this Makefile from the source directory"
 	@echo ""
 	@make from_installdir
-	@make dist_head
+	@make check_head
 	@echo "Version Information : " `cat ${F4DE_VERSION}`
 	@make get_f4dedir
 	@echo ""
@@ -332,144 +332,10 @@ perl_install:
 	@(cd ${DEVADIR}; make $@)
 	@(cd ${KWSEVALDIR}; make $@)
 
-
-########################################
-########## For distribution purpose
-
-VIDAT_EX_DIR=${VIDATDIR}/example
-VIDAT_EX_TBZ=VidAT_example.tar.bz2
-
-VidAT_example: ${VIDAT_EX_DIR}
-	@(cd ${VIDATDIR} && tar cfj ../../../${VIDAT_EX_TBZ} --exclude CVS --exclude .DS_Store --exclude "*~" example)
-	@make VidAT_example_post
-
-VidAT_example_post: ${VIDAT_EX_TBZ}
-	@echo "Created: ${VIDAT_EX_TBZ}"
-
-#####
-
-# 'cvsdist' can only be run by developpers
-cvsdist:
-	@make from_installdir
-	@make dist_head
-	@echo ""
-	@echo ""
-	@echo "Building a CVS release:" `cat ${F4DE_VERSION}`
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`
-	@echo "CVS checkout in: /tmp/"`cat ${F4DE_VERSION}`
-	@cp ${F4DE_VERSION} /tmp
-	@(cd /tmp; cvs -z3 -q -d gaston.ncsl.nist.gov:/home/sware/cvs checkout -d `cat ${F4DE_VERSION}` F4DE)
-	@make dist_common
-	@echo ""
-	@echo ""
-	@echo "***** Did you REMEMBER to update the version number and date in the README file ? *****"
-	@echo " do a full 'make check' from the new archive"
-	@echo "   and then do a 'make cvs-tag-current-distribution' here "
-
-localdist:
-	@make from_installdir
-	@make dist_head
-	@echo "Building a local copy release:" `cat ${F4DE_VERSION}`
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`
-	@echo "Local copy in: /tmp/"`cat ${F4DE_VERSION}`
-	@mkdir /tmp/`cat ${F4DE_VERSION}`
-	@rsync -a . /tmp/`cat ${F4DE_VERSION}`/.
-	@make dist_common
-
-dist_head:
+check_head:
 	@echo "***** Checking ${F4DE_VERSION}"
 	@test -f ${F4DE_VERSION}
 	@fgrep F4DE ${F4DE_VERSION} > /dev/null
 
-dist_archive_pre_remove:
-# Main
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/HOWTO_Release.txt
-## CLEAR07
-# Sys files
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/common/BN_{TDT,TR}/*.rdf
-# Corresponding "res" files
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTViperValidator/res-test2b.txt
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRViperValidator/res-test1b.txt
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARDTScorer/res-test2.txt
-	@rm -f /tmp/`cat ${F4DE_VERSION}`/${CL07DIR}/test/CLEARTRScorer/res-test1[ab].txt
-## BarPlot
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/BarPlot/ /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/lib/BarPlot.pm
-## VidAT example
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${VIDAT_EX_DIR}
-## CCD
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/CCD
-## R_tools
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/tools/R_tools
-## KWSEval
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/tools/BabelTransParse/Lang*
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Server
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Participants/Checks/Comps*
-## DAPR
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/DAPR
-## MLPAP
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/MLPAP
-## Dockerfile
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`/Dockerfile
-
-dist_replace:
-# Replace F4DEver in SubmissionHelper_common.cfg
-	@perl -i -pe 's%^(F4DEver=).+$$%$$1"'`cat ${F4DE_VERSION}`'"%' /tmp/`cat ${F4DE_VERSION}`/${KWSEVALDIR}/BABEL/Participants/SubmissionHelper_common.cfg
-
-create_mans:
-# common
-	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/man
-	@for i in ${COMMONTOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${CM_DIR}/man/$$g.1; done
-# TrecVid08
-	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/man
-	@for i in ${TV08TOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${TV08DIR}/man/$$g.1; done
-# AVSS09
-	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man
-	@for i in ${AV09TOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${AV09DIR}/man/$$g.1; done
-# DEVA
-	@mkdir -p /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/man
-	@for i in ${DEVATOOLS_MAN}; do g=`basename $$i .pl`; pod2man /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/$$i /tmp/`cat ${F4DE_VERSION}`/${DEVADIR}/man/$$g.1; done
-
-
-dist_common:
-	@cp ${F4DE_VERSION} /tmp
-	@make dist_archive_pre_remove
-	@make dist_replace
-	@make create_mans
-	@echo ""
-	@echo "Building the tar.bz2 file"
-	@echo `cat ${F4DE_VERSION}`"-"`date -u +%Y%m%d-%H%M`"Z.tar.bz2" > /tmp/.f4de_distname
-	@echo `pwd` > /tmp/.f4de_pwd
-	@(cd /tmp; tar cfj `cat /tmp/.f4de_pwd`/`cat /tmp/.f4de_distname` --exclude CVS --exclude .DS_Store --exclude "*~" `cat ${F4DE_VERSION}`)
-	@(md5sum `cat /tmp/.f4de_distname` > `cat /tmp/.f4de_distname`.md5 2> /dev/null) || (md5 -r `cat /tmp/.f4de_distname` > `cat /tmp/.f4de_distname`.md5 2> /dev/null)
-	@echo ""
-	@echo ""
-	@echo "** Release ready:" `cat /tmp/.f4de_distname`
-#	@make dist_clean
-
-dist_clean:
-	@rm -rf /tmp/`cat ${F4DE_VERSION}`
-	@rm -f /tmp/.f4de_{distname,version,pwd}
-
-#################### Special ditributions
-
-OpH_D=F4DE-OpenHaRT_minirelease
-
-OpenHaRT_minirelease:
-	@mkdir -p ${OpH_D}/common/{lib,tools/{SQLite_tools,CSVUtil},test/{AutoTable_Extra,SQLite_tools,common}}
-	@rsync -a ${F4DE_VERSION} ${OpH_D}/.
-	@rsync -a common/lib/{MMisc,MErrorH,CSVHelper,PropList,AutoTable,MtSQLite,F4DE_TestCore,TranscriptHolder}.pm ${OpH_D}/common/lib/.
-	@rsync -a common/tools/SQLite_tools/*.pl ${OpH_D}/common/tools/SQLite_tools/.
-	@rsync -a common/tools/CSVUtil/*.pl ${OpH_D}/common/tools/CSVUtil/.
-	@rsync -a common/test/{Makefile,pre_tests.pl} ${OpH_D}/common/test/.
-	@rsync -a common/test/common/*.* ${OpH_D}/common/test/common/.
-	@rsync -a common/test/SQLite_tools/{Makefile,*.*} ${OpH_D}/common/test/SQLite_tools/.
-	@rsync -a common/test/AutoTable_Extra/{Makefile,*.*} ${OpH_D}/common/test/AutoTable_Extra/.
-
-##############################
-
-cvs-tag-current-distribution:
-	@make from_installdir
-	@make dist_head
-	@echo "Tagging the current CVS for distribution as '"`sed 's/\./dot/g' ${F4DE_VERSION}`"'"
-	@(echo -n "Starting actual tag in "; for i in 10 9 8 7 6 5 4 3 2 1 0; do echo -n "$$i "; sleep 1; done; echo " -- Tagging")
-	@cvs tag `sed 's/\./dot/g' ${F4DE_VERSION}`
+# Include the distribution part of the Makefile (if the file is present)
+-include Makefile_distrib
