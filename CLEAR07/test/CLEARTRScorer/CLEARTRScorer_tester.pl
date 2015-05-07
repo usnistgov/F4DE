@@ -21,12 +21,12 @@ my $t0 = F4DE_TestCore::get_currenttime();
 ##
 $tn = "test1a";
 $td = "BN_TR";
-$testr += &do_simple_test($tn, $td, "(BN TextRec: regular non-binary area thresholding)", "*.gtf", "*.rdf", "-D BN -E Area", "res_$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextRec: regular non-binary area thresholding)", "*.gtf", "*.rdf", "-D BN -E Area", "../../../../F4DE-NISTonly/CLEAR07/test/CLEARTRScorer/res_$tn.txt", "", "../../../F4DE-NISTonly/CLEAR07/test/");
 
 ##
 $tn = "test1b";
 $td = "BN_TR";
-$testr += &do_simple_test($tn, $td, "(BN TextRec: regular non-binary point thresholding)", "*.gtf", "*.rdf", "-D BN -E Point", "res_$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextRec: regular non-binary point thresholding)", "*.gtf", "*.rdf", "-D BN -E Point", "../../../../F4DE-NISTonly/CLEAR07/test/CLEARTRScorer/res_$tn.txt", "", "../../../F4DE-NISTonly/CLEAR07/test/");
 
 #####
 
@@ -42,9 +42,9 @@ MMisc::error_quit("Not all test ok$add\n\n");
 ##########
 
 sub do_simple_test {
-  my ($testname, $testdir, $subtype, $rf, $sf, $params, $res) = @_;
-  my $frf = "../common/$testdir/$rf";
-  my $fsf = "../common/$testdir/$sf";
+  my ($testname, $testdir, $subtype, $rf, $sf, $params, $res, $xtra1, $xtra2) = @_;
+  my $frf = "../${xtra1}common/$testdir/$rf";
+  my $fsf = "../${xtra2}common/$testdir/$sf";
 
   my $command = "$scorer $fsf -g $frf $params -f 15";
   $totest++;

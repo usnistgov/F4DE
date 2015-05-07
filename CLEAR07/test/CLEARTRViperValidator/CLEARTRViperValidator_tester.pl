@@ -21,12 +21,12 @@ my $t0 = F4DE_TestCore::get_currenttime();
 ##
 $tn = "test1a";
 $td = "BN_TR";
-$testr += &do_simple_test($tn, $td, "(BN TextRec: Reference files)", "*.gtf", "", "-D BN -w -f 15", "res_$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextRec: Reference files)", "*.gtf", "", "-D BN -w -f 15", "res_$tn.txt", "");
 
 ##
 $tn = "test1b";
 $td = "BN_TR";
-$testr += &do_simple_test($tn, $td, "(BN TextRec: System Submissions)", "", "*.rdf", "-D BN -w -f 15", "res_$tn.txt");
+$testr += &do_simple_test($tn, $td, "(BN TextRec: System Submissions)", "", "*.rdf", "-D BN -w -f 15", "../../../../F4DE-NISTonly/CLEAR07/test/CLEARTRViperValidator/res_$tn.txt", "../../../F4DE-NISTonly/CLEAR07/test/");
 
 #####
 
@@ -42,15 +42,15 @@ MMisc::error_quit("Not all test ok$add\n\n");
 ##########
 
 sub do_simple_test {
-  my ($testname, $testdir, $subtype, $rf, $sf, $params, $res) = @_;
+  my ($testname, $testdir, $subtype, $rf, $sf, $params, $res, $xtra) = @_;
   my ($files, $command);
 
   if ($rf ne "") {
-    $files = "../common/$testdir/$rf";
+    $files = "../${xtra}common/$testdir/$rf";
     $command = "$validator -g $files $params";
   }
   elsif ($sf ne "") {
-    $files = "../common/$testdir/$sf";
+    $files = "../${xtra}common/$testdir/$sf";
     $command = "$validator $files $params";
   }
   else {

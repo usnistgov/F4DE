@@ -338,4 +338,4 @@ check_head:
 	@fgrep F4DE ${F4DE_VERSION} > /dev/null
 
 # Include the distribution part of the Makefile (if the file is present)
--include Makefile_distrib
+-include ../F4DE-NISTonly/Makefile_distrib
