@@ -1,5 +1,7 @@
 package CLEARTRViperFile;
-
+#
+# $Id$
+#
 # CLEAR Text Recognition ViperFile
 #
 # Original Author(s) & Additions: Martial Michel
@@ -27,15 +29,6 @@ package CLEARTRViperFile;
 # $Id$
 
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "CLEARTRViperFile.pm Version: $version";
 
 use ViperFramespan;
 use MErrorH;
@@ -327,14 +320,6 @@ sub _set_domain {
 sub get_domain {
   my $self = $_[0];
   return($self->{domain});
-}
-
-####################
-
-sub get_version {
-  my $self = $_[0];
-
-  return($versionid);
 }
 
 ############################################################

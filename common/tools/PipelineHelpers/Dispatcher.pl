@@ -1,10 +1,12 @@
 #!/usr/bin/env perl
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # Dispatcher
 # 
 # Author: Martial Michel
-
+#
 # This software was developed at the National Institute of Standards and Technology by
 # employees of the Federal Government in the course of their official duties.  Pursuant to
 # Title 17 Section 105 of the United States Code this software is not subject to copyright
@@ -26,19 +28,6 @@
 use strict;
 
 # Note: Designed for UNIX style environments (ie use cygwin under Windows).
-
-##########
-# Version
-
-# $Id$
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "Dispatcher Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -72,6 +61,8 @@ foreach my $pn ("MMisc", "DispatcherHelper") {
     $have_everything = 0;
   }
 }
+my $versionkey = MMisc::slurp_file(dirname(abs_path($0)) . "/../../../.f4de_version");
+my $versionid = "Dispatcher ($versionkey)";
 
 # usualy part of the Perl Core
 foreach my $pn ("Getopt::Long") {

@@ -1,9 +1,11 @@
 #!/bin/bash
+#
+# $Id$
+#
 
 # BABEL Participant Submission Helper
 #   (by Martial Michel)
-# ID: $Id$
-# Revision: $Revision$
+
 
 WEBPAGE=""
 

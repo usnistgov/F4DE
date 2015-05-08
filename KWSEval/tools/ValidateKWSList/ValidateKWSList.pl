@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # ValidateKWSList
 # Authors: Jerome Ajot
 # Additions: Martial Michel
@@ -23,17 +25,6 @@
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 use strict;
-
-##########
-# Version
-
-# $Id$
-my $version     = "0.1b";
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-my $versionid = "ValidateKWSList Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -67,6 +58,8 @@ foreach my $pn ("KWSecf", "TermList", "KWSList", "RTTMList", "MMisc") {
     $have_everything = 0;
   }
 }
+my $versionkey = MMisc::slurp_file(dirname(abs_path($0)) . "/../../../.f4de_version");
+my $versionid = "ValidateKWSList ($versionkey)";
 
 # usualy part of the Perl Core
 foreach my $pn ("Getopt::Long") {

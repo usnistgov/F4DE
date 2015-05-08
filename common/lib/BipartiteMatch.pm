@@ -1,5 +1,7 @@
 package BipartiteMatch;
-
+#
+# $Id$
+#
 # BipartiteMatch
 #
 # Author(s): Martial Michel
@@ -23,19 +25,7 @@ package BipartiteMatch;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
-
-my $version     = '0.1b';
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "BipartiteMatch.pm Version: $version";
 
 ########################################
 # The trick it to keep the code totaly independent from knowing what
@@ -93,8 +83,6 @@ sub new {
 }
 
 ####################
-
-sub get_version { return($versionid); }
 
 ########## 'mapped', 'unmapped_ref', 'unmapped_sys' IDs
 

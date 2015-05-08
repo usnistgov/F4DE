@@ -1,6 +1,8 @@
 #!/usr/bin/env perl
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # TrecVid08 Big XML Files Validator Helper
 #
 # Author(s): Martial Michel
@@ -26,19 +28,6 @@
 use strict;
 
 # Note: Designed for UNIX style environments (ie use cygwin under Windows).
-
-##########
-# Version
-
-# $Id$
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "TrecVid08 Big XML Files Validator Helper Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -73,6 +62,8 @@ foreach my $pn ("TrecVid08ViperFile", "TrecVid08HelperFunctions", "xmllintHelper
     $have_everything = 0;
   }
 }
+my $versionkey = MMisc::slurp_file(dirname(abs_path($0)) . "/../../../.f4de_version");
+my $versionid = "TrecVid08 Big XML Files Validator ($versionkey)";
 
 # usualy part of the Perl Core
 foreach my $pn ("Getopt::Long") {

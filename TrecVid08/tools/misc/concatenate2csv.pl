@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # Concatenate two CSV files
 #
 # Author:    Martial Michel
@@ -19,19 +21,6 @@
 use strict;
 
 # Note: Designed for UNIX style environments (ie use cygwin under Windows).
-
-##########
-# Version
-
-# $Id$
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "Concatenate two CSV files Version: $version";
 
 ########################################
 

@@ -1,4 +1,7 @@
 # KWSEval
+#
+# $Id$
+#
 # KWSTermRecord.pm
 # Author: Jerome Ajot
 # 

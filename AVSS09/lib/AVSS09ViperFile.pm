@@ -1,7 +1,9 @@
 package AVSS09ViperFile;
 
 # AVSS09 ViPER File handler
-
+#
+# $Id$
+#
 # Original Author(s): Martial Michel
 #
 # This software was developed at the National Institute of Standards and Technology by
@@ -23,18 +25,7 @@ package AVSS09ViperFile;
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 
-# $Id$
-
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "AVSS09iperFile.pm Version: $version";
 
 ##########
 # Check we have every module (perl wise)

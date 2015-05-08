@@ -2,6 +2,8 @@ package AVSStoCLEAR;
 
 # AVSStoCLEAR
 #
+# $Id$
+#
 # Author(s): Martial Michel
 # 
 # This software was developed at the National Institute of Standards and Technology by
@@ -22,19 +24,7 @@ package AVSStoCLEAR;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "AVSStoCLEAR.pm Version: $version";
 
 use MMisc;
 use MtXML;
@@ -71,14 +61,6 @@ sub new {
 
   bless($self, $class);
   return($self);
-}
-
-##########
-
-sub get_version {
-  my ($self) = @_;
-
-  return($versionid);
 }
 
 ############################################################

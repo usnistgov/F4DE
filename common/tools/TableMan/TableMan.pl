@@ -1,4 +1,7 @@
 #!/usr/bin/env perl
+#
+# $Id$
+#
 
 # Check we have every module (perl wise)
 my (@f4bv, $f4d);

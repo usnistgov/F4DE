@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # HTML Status generator
 # Author: Martial Michel
 # 
@@ -22,17 +24,6 @@
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 use strict;
-
-##########
-# Version
-
-# $Id$
-my $version     = "0.1b";
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^0-9\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-my $versionid = "HTML Status generator -- Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -66,6 +57,8 @@ foreach my $pn ("MMisc") {
     $have_everything = 0;
   }
 }
+my $versionkey = MMisc::slurp_file(dirname(abs_path($0)) . "/../../../.f4de_version");
+my $versionid = "HTML Status generator ($versionkey)";
 
 # usualy part of the Perl Core
 foreach my $pn ("Getopt::Long") {

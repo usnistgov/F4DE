@@ -1,4 +1,7 @@
 # PropList.pm
+#
+# $Id$
+#
 # 
 # Original Author: Jon Fiscus
 # Extension Author: Martial Michel
@@ -21,8 +24,6 @@
 # THIS SOFTWARE IS PROVIDED "AS IS."  With regard to this software, NIST
 # MAKES NO EXPRESS OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING
 # MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
-
-# $Id$
 
 package PropList;
 

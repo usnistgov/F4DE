@@ -1,6 +1,9 @@
 package KWSecf;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 #
+# $Id$
+#
+#
 # KWSEval
 # KWSecf.pm
 #
@@ -28,17 +31,6 @@ package KWSecf;
 # $Id$
 
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "KWSecf.pm Version: $version";
-
-##
 
 use KWSecf_excerpt;
 

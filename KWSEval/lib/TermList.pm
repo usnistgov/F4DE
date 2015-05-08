@@ -1,6 +1,9 @@
 package TermList;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 #
+# $Id$
+#
+#
 # KWSEval
 # TermList.pm
 #
@@ -33,17 +36,6 @@ use TranscriptHolder;
 use strict;
 use AutoTable;
 use Encode;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "TermList.pm Version: $version";
-
-##
 
 use TermListRecord;
 

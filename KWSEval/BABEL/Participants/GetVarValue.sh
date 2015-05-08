@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# $Id$
+#
 
 ## Exit with error status
 # call: error_quit errormessage
@@ -27,7 +30,6 @@ EOF
 if  [ $# -lt 2 ]; then usage; error_quit "Not enough arguments on the command line, quitting" ; fi
 
 ##########
-
 
 conf="$1"
 check_file "$conf"

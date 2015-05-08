@@ -1,4 +1,7 @@
 # F4DE
+#
+# $Id$
+#
 # TrialsNormLinearCostFunct.pm
 # Author: Jon Fiscus
 # 

@@ -1,8 +1,8 @@
 #!/bin/bash
-
+#
+# $Id$
+#
 ########## BABEL
-# ID: $Id$
-# Revision: $Revision$
 
 specfilename="KWS16-SubmissionChecker_conf.perl"
 tvedsc_base="BABEL_Scorer"

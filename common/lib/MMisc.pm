@@ -1,6 +1,8 @@
 package MMisc;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # M's Misc Functions
 #
 # Author(s): Martial Michel
@@ -24,10 +26,6 @@ package MMisc;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
-
 use strict;
 
 ##### Warning: only use packages that are part of the 'Core Modules'
@@ -49,17 +47,6 @@ my $YAML_module = undef;
 my $DataDump_module = undef;
 my $AutoTable_module = undef;
 
-
-##########
-
-my $version     = '0.1b';
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "MMisc.pm Version: $version";
 
 ########## No 'new' ... only functions to be useful
 

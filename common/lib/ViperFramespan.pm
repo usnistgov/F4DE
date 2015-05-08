@@ -1,5 +1,7 @@
 package ViperFramespan;
-
+#
+# $Id$
+#
 # Viper Framespan
 #
 # Author(s): Martial Michel
@@ -22,25 +24,12 @@ package ViperFramespan;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
-
 ## IMPORTANT NOTE: few of the frames comparison functions check if the fps (if set) match; it is left to the library user to confirm this
 
 use strict;
 
 use MErrorH;
 use MMisc;
-
-my $version     = '0.1b';
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "ViperFramespan.pm Version: $version";
 
 my %error_msgs =
   (
@@ -88,14 +77,6 @@ sub new {
  
   bless $self;
   return($self);
-}
-
-####################
-
-sub get_version {
-  my $self = $_[0];
-
-  return($versionid);
 }
 
 ####################

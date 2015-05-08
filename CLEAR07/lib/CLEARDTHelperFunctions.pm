@@ -1,5 +1,7 @@
 package CLEARDTHelperFunctions;
-
+#
+# $Id$
+#
 # CLEAR Detection and Tracking HelperFunctions
 #
 # Original Author(s) & Additions: Martial Michel
@@ -24,18 +26,7 @@ package CLEARDTHelperFunctions;
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 
-# $Id$
-
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "CLEARDTHelperFunctions.pm Version: $version";
 
 use ViperFramespan;
 use CLEARDTViperFile;

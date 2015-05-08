@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # VidAT_TrackingLog2Xml.pl
 # Author: Jerome Ajot
 # 

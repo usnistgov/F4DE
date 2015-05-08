@@ -1,4 +1,7 @@
 # KWSEval
+#
+# $Id$
+#
 # KWSecf_excerpt.pm
 # Author: Jerome Ajot
 # 

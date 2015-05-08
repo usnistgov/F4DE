@@ -1,4 +1,7 @@
 # F4DE Package
+#
+# $Id$
+#
 # JDSelect.pm
 # Author: Jon Fiscus
 # 

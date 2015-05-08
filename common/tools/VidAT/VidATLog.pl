@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # VidATLog.pl
 # Author: Jerome Ajot
 # 

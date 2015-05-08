@@ -1,11 +1,12 @@
 #!/usr/bin/env perl
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # injector.pl
 #
 # Author(s): Martial Michel
 #
-
 # This software was developed at the National Institute of Standards and Technology by
 # employees and/or contractors of the Federal Government in the course of their official duties.
 # Pursuant to Title 17 Section 105 of the United States Code this software is not subject to 
@@ -24,11 +25,7 @@
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
-#use Data::Dumper;
 
 ##########
 # Check we have every module (perl wise)

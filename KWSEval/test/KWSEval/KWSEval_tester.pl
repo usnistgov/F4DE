@@ -1,5 +1,8 @@
 #!/usr/bin/env perl
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
+#
+# $Id$
+#
 
 use strict;
 use F4DE_TestCore;

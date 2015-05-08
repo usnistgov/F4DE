@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# $Id$
+#
 
 specfilename="TV13MED-SubmissionChecker_conf.perl"
 tvedsc_base="MED-SubmissionChecker"

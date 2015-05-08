@@ -1,6 +1,8 @@
 package F4DE_TestCore;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # F4DE Test Core functions
 #
 # Author(s): Martial Michel
@@ -24,22 +26,8 @@ package F4DE_TestCore;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
-
 use strict;
 use MMisc;
-
-my $version     = '0.1b';
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "MMisc.pm Version: $version";
-
 
 my $env_mmcadd = "F4DE_TEST_MMC_ADD";
 my $env_testonly = "F4DE_TEST_ONLY";

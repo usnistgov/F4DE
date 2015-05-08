@@ -13,6 +13,7 @@ check:
 	@(cd CLEARTRViperValidator; make $@)
 	@(cd CLEARDTScorer; make $@)
 	@(cd CLEARTRScorer; make $@)
+	@(rm -f ../../common/lib/foomerge*)
 	@echo "***** All tests ran succesfully"
 
 makecheckfiles:
@@ -21,6 +22,7 @@ makecheckfiles:
 	@(cd CLEARTRViperValidator; make $@)
 	@(cd CLEARDTScorer; make $@)
 	@(cd CLEARTRScorer; make $@)
+	@(rm -f ../../common/lib/foomerge*)
 	@echo "***** All files generated succesfully"
 
 makecompcheckfiles:
@@ -29,6 +31,7 @@ makecompcheckfiles:
 	@(cd CLEARTRViperValidator; make $@)
 	@(cd CLEARDTScorer; make $@)
 	@(cd CLEARTRScorer; make $@)
+	@(rm -f ../../common/lib/foomerge*)
 	@echo "***** All files generated succesfully"
 
 cleanresfiles:
@@ -36,4 +39,5 @@ cleanresfiles:
 	@(cd CLEARTRViperValidator; make $@)
 	@(cd CLEARDTScorer; make $@)
 	@(cd CLEARTRScorer; make $@)
+	@(rm -f ../../common/lib/foomerge*)
 	@echo "***** All results files removed"

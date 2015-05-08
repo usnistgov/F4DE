@@ -1,6 +1,8 @@
 package RTTMList;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 #
+# $Id$
+#
 # KWSEval
 # RTTMList.pm
 #
@@ -32,17 +34,6 @@ use TranscriptHolder;
 @ISA = qw(TranscriptHolder);
 
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "RTTMList.pm Version: $version";
-
-##
 
 use Data::Dumper;
 use RTTMRecord;

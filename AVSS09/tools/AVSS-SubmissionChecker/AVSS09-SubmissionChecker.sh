@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# $Id$
+#
 
 specfilename="AVSS09-SubmissionChecker_conf.perl"
 avsssc_base="AVSS-SubmissionChecker"

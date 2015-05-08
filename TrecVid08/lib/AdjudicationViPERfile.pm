@@ -1,6 +1,8 @@
 package AdjudicationViPERfile;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # Adjudication ViPER File
 #
 # Author(s): Martial Michel
@@ -23,33 +25,12 @@ package AdjudicationViPERfile;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
 
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "AdjudicationViPERfile.pm Version: $version";
-
-# "TrecVid08ViperFile.pm" (part of this program sources)
 use TrecVid08ViperFile;
-
-# "TrecVid08Observation.pm" (part of this program sources)
 use TrecVid08Observation;
-
-# "ViperFramespan.pm" (part of this program sources)
 use ViperFramespan;
-
-# "MErrorH.pm" (part of this program sources)
 use MErrorH;
-
-# "MMisc.pm" (part of this program sources)
 use MMisc;
 
 ########################################

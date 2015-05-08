@@ -1,6 +1,8 @@
 package TrecVid08ViperFile;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # TrecVid08 ViperFile
 #
 # Author(s): Martial Michel
@@ -23,19 +25,7 @@ package TrecVid08ViperFile;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "TrecVid08ViperFile.pm Version: $version";
 
 # "ViperFramespan.pm" (part of this program sources)
 use ViperFramespan;
@@ -273,14 +263,6 @@ sub _fill_required_hashes {
     @{$hasharray_inline_attributes{$key}} =
       @{$hasharray_inline_attributes{$keyt}};
   }
-}
-
-####################
-
-sub get_version {
-  my ($self) = @_;
-
-  return($versionid);
 }
 
 ########################################

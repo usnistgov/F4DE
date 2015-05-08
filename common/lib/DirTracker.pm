@@ -1,5 +1,7 @@
 package DirTracker;
-
+#
+# $Id$
+#
 # Dir Tracker
 #
 # Author(s): Martial Michel
@@ -22,8 +24,6 @@ package DirTracker;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-# $Id$
-
 use strict;
 
 use MErrorH;
@@ -31,15 +31,6 @@ use MMisc;
 
 use File::Monitor;
 use File::Monitor::Object;
-
-my $version     = '0.1b';
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "DirTracker.pm Version: $version";
 
 ##########
 # new(DirToTrack)

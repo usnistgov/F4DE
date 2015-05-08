@@ -1,6 +1,8 @@
 package TrecVid08HelperFunctions;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # TrecVid08 HelperFunctions
 #
 # Author(s): Martial Michel
@@ -23,9 +25,6 @@ package TrecVid08HelperFunctions;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
 
 use ViperFramespan;
@@ -37,16 +36,6 @@ use CSVHelper;
 
 use MErrorH;
 use MMisc;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "TrecVid08HelperFunctions.pm Version: $version";
-
 
 ############################################################
 #################### 'ViperFile_crop' functions

@@ -1,4 +1,7 @@
 # F4DE
+#
+# $Id$
+#
 # KWSSegAlign.pm
 # Author: David Joy
 # 

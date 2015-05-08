@@ -1,6 +1,8 @@
 package AVSS09HelperFunctions;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # AVSS09 Helper Functions
 #
 # Author(s): Martial Michel
@@ -23,24 +25,12 @@ package AVSS09HelperFunctions;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
 
 use MMisc;
 
 use AVSS09ViperFile;
 use AVSS09ECF;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "AVSS09HelperFunctions.pm Version: $version";
 
 ########################################
 

@@ -1,5 +1,7 @@
 package CLEARObject;
-
+#
+# $Id$
+#
 # CLEARObject
 #
 # Author(s): Vasant Manohar
@@ -24,15 +26,6 @@ package CLEARObject;
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "CLEARObject.pm Version: $version";
 
 use Levenshtein;
 use MErrorH;

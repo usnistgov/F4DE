@@ -1,4 +1,7 @@
 package Lexicon;
+#
+# $Id$
+#
 
 use TranscriptHolder;
 @ISA = qw(TranscriptHolder);

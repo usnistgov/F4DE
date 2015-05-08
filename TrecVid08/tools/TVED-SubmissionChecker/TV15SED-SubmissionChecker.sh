@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# $Id$
+#
 
 specfilename="TV15SED-SubmissionChecker_conf.perl"
 tvedsc_base="TVED-SubmissionChecker"

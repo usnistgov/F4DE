@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# $Id$
+#
 
 specfilename="KWS15-SubmissionChecker_conf.perl"
 tvedsc_base="KWSEval-SubmissionChecker"

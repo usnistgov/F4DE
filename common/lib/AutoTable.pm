@@ -1,5 +1,7 @@
 package AutoTable;
-
+#
+# $Id$
+#
 #  Auto Table
 #
 # Original Author: Jonathan Fiscus 

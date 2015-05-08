@@ -1,5 +1,7 @@
 package CLEARSequence;
-
+#
+# $Id$
+#
 # CLEARSequence
 #
 # Author(s): Vasant Manohar
@@ -23,15 +25,6 @@ package CLEARSequence;
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 use strict;
-
-my $version = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "CLEARSequence.pm Version: $version";
 
 use CLEARObject;
 use BipartiteMatch;

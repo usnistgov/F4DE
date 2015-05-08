@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # CLEAR Text Recognition Viper XML Validator
 #
 # Author:    Vasant Manohar
@@ -28,20 +30,6 @@ use strict;
 # Note: Designed for UNIX style environments (ie use cygwin under Windows).
 
 ##########
-# Version
-
-# $Id$
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "CLEAR Text Recognition Viper XML Validator Version: $version";
-
-##########
 # Check we have every module (perl wise)
 
 ## First insure that we add the proper values to @INC
@@ -68,13 +56,15 @@ my $partofthistool = "It should have been part of this tools' files.";
 my $warn_msg = "";
 
 # Part of this tool
-foreach my $pn ("CLEARTRViperFile", "CLEARTRHelperFunctions", "CLEARSequence") {
+foreach my $pn ("MMisc", "CLEARTRViperFile", "CLEARTRHelperFunctions", "CLEARSequence") {
   unless (eval "use $pn; 1") {
     my $pe = &eo2pe($@);
     &_warn_add("\"$pn\" is not available in your Perl installation. ", $partofthistool, $pe);
     $have_everything = 0;
   }
 }
+my $versionkey = MMisc::slurp_file(dirname(abs_path($0)) . "/../../../.f4de_version");
+my $versionid = "CLEAR Text Recognition Viper XML Validator ($versionkey)";
 
 # usualy part of the Perl Core
 foreach my $pn ("Getopt::Long") {

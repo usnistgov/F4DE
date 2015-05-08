@@ -1,6 +1,8 @@
 package CSVHelper;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # CSV Helper Functions
 #
 # Author(s): Martial Michel
@@ -23,23 +25,11 @@ package CSVHelper;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
 
 use MErrorH;
 use MMisc;
 use Text::CSV;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "CSVHelper.pm Version: $version";
 
 ########################################
 

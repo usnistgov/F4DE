@@ -1,9 +1,11 @@
 #!/bin/bash
+#
+# $Id$
+#
 
 # BABEL Participant scp_tester
 #   (by Martial Michel)
-# ID: $Id$
-# Revision: $Revision$
+
 
 ## Exit with error status
 # call: error_quit errormessage

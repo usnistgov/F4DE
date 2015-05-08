@@ -1,5 +1,7 @@
 package MErrorH;
-
+#
+# $Id$
+#
 # M's Error Handler
 #
 # Author(s): Martial Michel
@@ -22,21 +24,10 @@ package MErrorH;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
 
 use MMisc;
 
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "MErrorH.pm Version: $version";
 
 ## Constructor
 sub new {
@@ -54,10 +45,6 @@ sub new {
 }
 
 ####################
-
-sub get_version { return($versionid); }
-
-##########
 
 sub set_header {
   # arg 0: self

@@ -1,4 +1,7 @@
 # F4DE
+#
+# $Id$
+#
 # DETCurveSet.pm
 # Author: Jon Fiscus
 # Additions: David Joy

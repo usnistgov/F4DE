@@ -1,5 +1,7 @@
 package CLEARPoint;
-
+#
+# $Id$
+#
 # CLEARPoint
 #
 # Author(s): Vasant Manohar
@@ -25,15 +27,6 @@ package CLEARPoint;
 
 # use module
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "CLEARPoint.pm Version: $version";
 
 use MErrorH;
 use MMisc;

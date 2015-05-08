@@ -1,4 +1,7 @@
 # KWSEval
+#
+# $Id$
+#
 # TermListRecord.pm
 # Author: Jerome Ajot
 # 

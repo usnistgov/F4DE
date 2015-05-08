@@ -1,6 +1,8 @@
 package KWSEvalSTM;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 #
+# $Id$
+#
 # STM
 # KWSEvalSTM.pm
 #
@@ -27,17 +29,6 @@ package KWSEvalSTM;
 # $Id$
 
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "KWSEvalSTM.pm Version: $version";
-
-##
 
 use MMisc;
 use MErrorH;

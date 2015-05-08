@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# $Id$
+#
 
 submission_dir=$1
 completeness_file=$2

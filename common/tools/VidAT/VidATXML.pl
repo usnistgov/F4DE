@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # VidATXML.pl
 # Author: Jerome Ajot
 # 

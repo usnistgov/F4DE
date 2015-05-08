@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # CSV files concatenator
 #
 # Author:    Martial Michel
@@ -25,23 +27,6 @@
 use strict;
 
 # Note: Designed for UNIX style environments (ie use cygwin under Windows).
-
-##########
-# Version
-
-# $Id$
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "CSV files concatenator Version: $version";
-
-use strict;
-
-########################################
 
 my $usage = "$0 indir outfile.csv\n\nProgram will copy content from multiple CSV files (required to have the .csv extension) from a given directory to one output CSV file (it will copy the CSV header of the first file only)\nNote: the script will not try to do any check on the number of columns in the input files\n";
 

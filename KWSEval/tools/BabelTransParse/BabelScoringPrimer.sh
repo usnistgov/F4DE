@@ -1,4 +1,7 @@
 #!/bin/sh
+#
+# $Id$
+#
 
 #### This script assumes F4DE 2.4.0 or greater is installed
 

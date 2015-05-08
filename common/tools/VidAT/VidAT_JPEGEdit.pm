@@ -1,4 +1,7 @@
 # VidAT_JPEGEdit.pm
+#
+# $Id$
+#
 # Author: Jerome Ajot
 # 
 # This software was developed at the National Institute of Standards and Technology by employees of the Federal 

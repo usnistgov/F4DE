@@ -1,4 +1,7 @@
 # F4DE
+#
+# $Id$
+#
 # TrialsFuncs.pm
 # Author: Jon Fiscus
 # Additions: Martial Michel

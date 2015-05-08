@@ -1,6 +1,8 @@
 package BabelLex;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 #
+# $Id$
+#
 # KWSEval
 # TermList.pm
 #

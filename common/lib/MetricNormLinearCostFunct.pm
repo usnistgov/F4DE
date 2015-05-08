@@ -1,4 +1,7 @@
 # F4DE
+#
+# $Id$
+#
 # MetricNormLinearCostFunct.pm
 # Author: Jon Fiscus
 # 

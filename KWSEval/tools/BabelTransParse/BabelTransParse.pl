@@ -1,7 +1,9 @@
 #!/usr/bin/env perl -w
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
-# KWSEval
+#
+# $Id$
+#
+# BabelTransParse
 # 
 # Original Authors: Jon Fiscus, Martial Michel
 
@@ -30,19 +32,6 @@
 use strict;
 
 # Note: Designed for UNIX style environments (ie use cygwin under Windows).
-
-##########
-# Version
-
-# $Id$
-my $version     = "0.1a";
-
-if ($version =~ m/a$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "BabelTransParse Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -76,6 +65,8 @@ foreach my $pn ("MMisc", "RTTMList", "KWSecf", "TermList") {
     $have_everything = 0;
   }
 }
+my $versionkey = MMisc::slurp_file(dirname(abs_path($0)) . "/../../../.f4de_version");
+my $versionid = "BabelTransParse ($versionkey)";
 
 # usualy part of the Perl Core
 foreach my $pn ("Getopt::Long", "Data::Dumper") {

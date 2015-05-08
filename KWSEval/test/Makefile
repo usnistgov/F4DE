@@ -19,4 +19,5 @@ check:
 	@(cd ValidateKWSList; make $@)
 	@(echo "")
 	@(cd KWSEval; make $@)
+	@(rm -f ../../common/lib/foomerge*)
 	@echo "***** All tests ran succesfully"

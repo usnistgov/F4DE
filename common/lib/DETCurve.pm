@@ -1,4 +1,7 @@
 # F4DE Package
+#
+# $Id$
+#
 # DETCurve.pm
 # Author: Jon Fiscus
 # 

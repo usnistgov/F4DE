@@ -1,4 +1,7 @@
 # KWSEval
+#
+# $Id$
+#
 # KWSDetectedList.pm
 # Author: Jerome Ajot
 # 

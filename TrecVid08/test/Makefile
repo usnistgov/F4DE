@@ -11,6 +11,7 @@ check:
 	@(cd TV08ViperValidator; make $@)
 	@(cd TV08Scorer; make $@)
 	@(cd TV08MergeHelper; make $@)
+	@(rm -f ../../common/lib/foomerge*)
 	@echo "***** All tests ran succesfully"
 
 makecheckfiles:

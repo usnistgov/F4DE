@@ -1,9 +1,9 @@
 #!/bin/bash
-
+#
+# $Id$
+#
 # BABEL Participant Submission Helper Checker
 #   (by Martial Michel)
-# ID: $Id$
-# Revision: $Revision$
 
 ## Exit with error status
 # call: error_quit errormessage

@@ -1,6 +1,8 @@
 package KWSList;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
 #
+# $Id$
+#
 # KWSEval
 # KWSList.pm
 #
@@ -28,17 +30,6 @@ package KWSList;
 # $Id$
 
 use strict;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "KWSList.pm Version: $version";
-
-##
 
 use KWSDetectedList;
 

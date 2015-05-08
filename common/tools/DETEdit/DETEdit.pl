@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # DETEdit
 # DETEdit.pl
 # Authors: Jonathan Fiscus

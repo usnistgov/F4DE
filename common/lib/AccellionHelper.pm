@@ -1,5 +1,7 @@
 package AccellionHelper;
-
+#
+# $Id$
+#
 # Accellion command line tool Helper
 #
 # Author(s): Martial Michel
@@ -22,22 +24,10 @@ package AccellionHelper;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
 
 use MErrorH;
 use MMisc;
-
-my $version     = '0.1b';
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "AccellionHelper.pm Version: $version";
 
 my @modes = ('upload', 'download'); # Order is important
 my @post_modes = ('PostSendScript', 'PostDownloadScript', 'PostEmailDownloadScript'); # Order is important
@@ -77,10 +67,6 @@ sub new {
 }
 
 ####################
-
-# get_version()
-# Obtain the version number of the Perl Package
-sub get_version { return($versionid); }
 
 # get_tool_major_version()
 # Obtain the major version number of the Agent tool

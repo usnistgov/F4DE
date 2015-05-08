@@ -1,6 +1,8 @@
 package TrecVid08EventList;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # TrecVid08 EventList
 #
 # Author(s): Martial Michel
@@ -23,9 +25,6 @@ package TrecVid08EventList;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
 use TrecVid08ViperFile;
 use TrecVid08Observation;
@@ -34,15 +33,6 @@ use ViperFramespan;
 
 use MErrorH;
 use MMisc;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "TrecVid08EventList.pm Version: $version";
 
 my @ok_events = ();
 my @full_ok_events = ();
@@ -107,14 +97,6 @@ sub _set_infos {
   $txt .= &_set_infos_Observations();
 
   return($txt);
-}
-
-##########
-
-sub get_version {
-  my ($self) = @_;
-
-  return($versionid);
 }
 
 ########## 'changed'

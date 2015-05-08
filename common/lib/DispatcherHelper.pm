@@ -1,5 +1,7 @@
 package DispatcherHelper;
-
+#
+# $Id$
+#
 # DispatcherHelper
 #
 # Author(s): Martial Michel
@@ -22,8 +24,6 @@ package DispatcherHelper;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-# $Id$
-
 use strict;
 
 use MErrorH;
@@ -31,14 +31,6 @@ use MMisc;
 
 use DirTracker;
 
-my $version     = '0.1b';
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "DispatcherHelper.pm Version: $version";
 
 ############################################################
 ## new()

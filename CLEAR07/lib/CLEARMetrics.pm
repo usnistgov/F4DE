@@ -1,5 +1,7 @@
 package CLEARMetrics;
-
+#
+# $Id$
+#
 # CLEARMetrics
 #
 # Author(s): Martial Michel
@@ -23,16 +25,6 @@ package CLEARMetrics;
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
 use strict;
-
-my $version = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "CLEARMetrics.pm Version: $version";
-
 
 ########################################
 

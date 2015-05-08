@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # VidAT_Montage.pl
 # Author: Jerome Ajot
 # 

@@ -1,6 +1,8 @@
 package TrecVid08Observation;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # TrecVid08 Observation
 #
 # Author(s): Martial Michel
@@ -23,9 +25,6 @@ package TrecVid08Observation;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
 
 use ViperFramespan;
@@ -35,15 +34,6 @@ use CSVHelper;
 
 use MErrorH;
 use MMisc;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "TrecVid08Observation.pm Version: $version";
 
 my @ok_events = ();
 my @full_ok_events = ();
@@ -136,14 +126,6 @@ sub _get_TrecVid08ViperFile_infos {
   $char_tcs = $dummy->get_char_tc_separator();
   $key_tc = $dummy->get_key_xtra_trackingcomment();
   return($dummy->get_errormsg());
-}
-
-##########
-
-sub get_version {
-  my ($self) = @_;
-
-  return($versionid);
 }
 
 ########## 'eventtype'

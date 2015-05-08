@@ -1,6 +1,8 @@
 package TrecVid08ECF;
 # -*- mode: Perl; tab-width: 2; indent-tabs-mode: nil -*- # For Emacs
-
+#
+# $Id$
+#
 # TrecVid08 ECF XML Handler
 #
 # Author(s): Martial Michel
@@ -23,9 +25,6 @@ package TrecVid08ECF;
 # OR IMPLIED WARRANTY AS TO ANY MATTER WHATSOEVER, INCLUDING MERCHANTABILITY,
 # OR FITNESS FOR A PARTICULAR PURPOSE.
 
-
-# $Id$
-
 use strict;
 
 use ViperFramespan;
@@ -33,15 +32,6 @@ use xmllintHelper;
 use MtXML;
 use MErrorH;
 use MMisc;
-
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "TrecVid08ECF.pm Version: $version";
 
 ########################################
 
@@ -84,13 +74,6 @@ sub new {
   return($self);
 }
 
-####################
-
-sub get_version {
-  my ($self) = @_;
-
-  return($versionid);
-}
 
 ########################################
 

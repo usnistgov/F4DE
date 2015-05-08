@@ -1,4 +1,7 @@
 # F4DE
+#
+# $Id$
+#
 # DETCurveGnuplotRenderer.pm
 # Author: Jon Fiscus, Jerome Ajot
 # Testers: George Doddington.

@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
-
+#
+# $Id$
+#
 # AVSS09 ViPER File Validator
 #
 # Author:    Martial Michel
@@ -26,18 +28,6 @@ use strict;
 
 # Note: Designed for UNIX style environments (ie use cygwin under Windows).
 
-##########
-# Version
-
-# $Id$
-my $version     = "0.1b";
-
-if ($version =~ m/b$/) {
-  (my $cvs_version = '$Revision$') =~ s/[^\d\.]//g;
-  $version = "$version (CVS: $cvs_version)";
-}
-
-my $versionid = "AVSS09 ViPER XML Validator Version: $version";
 
 ##########
 # Check we have every module (perl wise)
@@ -73,6 +63,8 @@ foreach my $pn ("MMisc", "AVSS09ViperFile", "AVSS09ECF", "AVSS09HelperFunctions"
     $have_everything = 0;
   }
 }
+my $versionkey = MMisc::slurp_file(dirname(abs_path($0)) . "/../../../.f4de_version");
+my $versionid = "AVSS09 ViPER XML Validator ($versionkey)";
 
 # usualy part of the Perl Core
 foreach my $pn ("Getopt::Long") {

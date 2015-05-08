@@ -1,4 +1,7 @@
 #!/usr/bin/env perl
+#
+# $Id$
+#
 
 use lib ("../../lib", "../../../CLEAR07/lib", "../../../common/lib");
 

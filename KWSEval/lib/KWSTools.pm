@@ -1,4 +1,7 @@
 # KWSEval
+#
+# $Id$
+#
 # KWSTools.pm
 # Author: Jerome Ajot <jerome.ajot@nist.gov>
 # 
