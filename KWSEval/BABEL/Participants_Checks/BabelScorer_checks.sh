@@ -129,7 +129,7 @@ get_basedir $0
 tool_dir="$wbd"
 check_dir $tool_dir
 
-subhelp="${tool_dir}/../SubmissionHelper.sh"
+subhelp="${tool_dir}/../Participants/SubmissionHelper.sh"
 check_file_x "$subhelp"
 
 get_basedir $subhelp
@@ -223,7 +223,7 @@ do
                     echo "!! Skipping test: No $eval input file ($inf) in dbDir $dbDir"
                 else
 		    if [ "$computeDirOverride" = "" ] ; then
-			compdir=`perl -I${tool_dir}/../../../../common/lib -e 'use MMisc; print MMisc::get_tmpdir("'$expid'")';`
+			compdir=`perl -I${tool_dir}/../../../common/lib -e 'use MMisc; print MMisc::get_tmpdir("'$expid'")';`
 		    else
 			compdir="$computeDirOverride/$inf"
 			if [ -d $compdir ] ; then
@@ -244,7 +244,7 @@ do
                     fi
 
 		    # Validation
-		    validtool="${tool_dir}/../../../tools/KWSEval-SubmissionChecker/${eval}-SubmissionChecker.sh"
+		    validtool="${tool_dir}/../../tools/KWSEval-SubmissionChecker/${eval}-SubmissionChecker.sh"
 		    validtool_xtras=""
 		    check_file_x "$validtool"
 

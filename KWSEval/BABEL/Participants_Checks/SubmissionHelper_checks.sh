@@ -125,7 +125,7 @@ get_basedir $0
 tool_dir="$wbd"
 check_dir $tool_dir
 
-subhelp="${tool_dir}/../SubmissionHelper.sh"
+subhelp="${tool_dir}/../Participants/SubmissionHelper.sh"
 check_file_x "$subhelp"
 
 get_basedir $subhelp
