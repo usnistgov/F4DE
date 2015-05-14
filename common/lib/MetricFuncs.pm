@@ -80,7 +80,7 @@ sub new {
        "combLab" => "Cost",
        "combPrintFormat" => "%6.4f",
        "optimizationStyle" => "minimizable",
-       "definedGlobalMeasures" => [("AP", "APP", "APpct", "APPpct", "MAP", "MAPP", "MAPpct", "MAPPpct")],
+       "definedGlobalMeasures" => [("AP", "APP", "APpct", "APPpct", "MAP", "MAPP", "MAPpct", "MAPPpct", "P\@R05", "P\@R10")],
        "globalMeasures" => [()],
        "defaultPlotOptions" => {},
       };
@@ -885,8 +885,8 @@ Sets the flag to calculate and report the global measure I<$MeasureName>.
 
 sub setPerformGlobalMeasure(){
   my ($self, $measureName, $bool) = @_;
-  my $regex = "(AP|APP|APpct|APPpct|MAP|MAPP|MAPpct|MAPPpct|OracleThresh|OracleSuprema)";
-  
+  my $regex = "(".join("|",@{ $self->{"definedGlobalMeasures"} }).")"; 
+ 
   if ($measureName !~ /^${regex}$/){
     MMisc::warn_print("Global Measure '$measureName' not defined, only '$regex'.  Skipping") ;
     return;

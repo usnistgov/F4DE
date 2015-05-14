@@ -182,7 +182,7 @@ sub srlLoadTest {
 }
 
 sub _testOneBlock{
-  my ($mesg, $trial, $points, $expGlob, $expOptSup, $expBlockOptSup, $expRatios, $expBlockRatios) = @_;
+  my ($mesg, $trial, $points, $expGlob, $expOptSup, $expBlockOptSup, $expRatios, $expBlockRatios, $expPrecAtRecall) = @_;
   my ($report, $blockReport) = ("", "");
   
   print "  $mesg\n";
@@ -297,6 +297,31 @@ sub _testOneBlock{
     print "Ok\n";
   }
   
+  if (scalar(keys %$expPrecAtRecall) > 0){  
+    print "    Checking Precision at recall .. \n";
+    foreach my $met(keys %$expPrecAtRecall){
+      print "      $met.. ";
+      $det->computePrecAtRecall($met);
+      my $res = $det->{GLOBALMEASURES}{$met};
+      foreach my $l1(keys %{ $expPrecAtRecall->{$met} }){
+        if (ref($expPrecAtRecall->{$met}{$l1}) eq "HASH"){
+          foreach my $l2(keys %{ $expPrecAtRecall->{$met}{$l1} }){
+            if ($res->{$l1}{$l2} ne $expPrecAtRecall->{$met}{$l1}{$l2}){
+              print "Error: $l1,$l2=>".$expPrecAtRecall->{$met}{$l1}{$l2}." != to expected $res->{$l1}{$l2}\n";
+              exit 1;
+            }
+          }
+       } else {
+          if ($res->{$l1} ne $expPrecAtRecall->{$met}{$l1}){
+            print "Error: $l1=>".$expPrecAtRecall->{$met}{$l1}." != to expected $res->{$l1}\n";
+            exit 1;
+          }
+        }
+      }
+      print "Ok\n";
+    }
+  }
+
   ### Rendering the reports to pass back
   my $ds = new DETCurveSet("Test DET");
   my $rtn = $ds->addDET("First", $det);
@@ -542,7 +567,10 @@ sub globalMeasureUnitTest(){
                   { 10  => { INTERPOLATED_COMB => 1.32666, INTERPOLATED_MMISS => 0.6666, INTERPOLATED_MFA => 0.0667, INTERPOLATED_DETECTSCORE => 0.98},
                     100 => { INTERPOLATED_COMB => 0.87920, INTERPOLATED_MMISS => 0.8000, INTERPOLATED_MFA => 0.0080, INTERPOLATED_DETECTSCORE => 1.00}},
                   { "she" => { 10 =>  { COMB => 1.32666, MMISS => 0.6666, MFA => 0.0667},
-                               100 => { COMB => 0.87920, MMISS => 0.8000, MFA => 0.0080}}}
+                               100 => { COMB => 0.87920, MMISS => 0.8000, MFA => 0.0080}}},
+                  { # "P\@R0" =>  { STATUS => "NotDefined"} ,
+                    "P\@R20" => { STATUS => "Computed", MEASURE => { "P\@R20" => 1 } },
+                    "P\@R60" => { STATUS => "Computed", MEASURE => { "P\@R60" => 0.5 } } }
                   );
     _testOneBlock("Full system coverage of trials, unsorted trials case 1", $trial2, $trial2Pts, 
                   { AP => 0.62222, APP => 0.336341704},
@@ -2384,6 +2412,13 @@ sub computeMeanAvgPrecPrimePct{
   $self->_computeMeanForAP("APPpct");
 }
 
+sub computePrecAtRecall{
+  my ($self, $metStr) = @_;
+  my %apData = ();
+
+  $self->_computeAvgPrecByType($metStr, undef);
+}
+
 
 #  Un-weighted
 #    Precision(rank) =  tp(rank) / [tp(rank) + fp(rank)]
@@ -2415,6 +2450,7 @@ sub _computeAvgPrecByType{
     $apData{MEASURE}{ABBREVSTRING} = "AP'";
     $apData{MEASURE}{FORMAT} = "%.1f"; 
     $apData{MEASURE}{UNIT} = "%"; 
+###############################################    
   } elsif ($measureID eq "AP"){
     $apData{MEASURE}{STRING} = "AP";
     $apData{MEASURE}{ABBREVSTRING} = "AP";
@@ -2426,7 +2462,25 @@ sub _computeAvgPrecByType{
     $apData{MEASURE}{ABBREVSTRING} = "AP";
     $apData{MEASURE}{FORMAT} = "%.1f";
     $apData{MEASURE}{UNIT} = "%"; 
-  }
+################################################
+  } elsif ($measureID =~ /^P\@R(\d\d|\d\d\d)/){
+    $apData{MEASURE}{STRING} = $measureID;
+    $apData{MEASURE}{ABBREVSTRING} = $measureID;
+    $apData{MEASURE}{FORMAT} = "%.2f";
+    $apData{MEASURE}{UNIT} = ""; 
+  } elsif ($measureID =~ /^P\@R(\d\d|\d\d\d)/){
+    $scale = 100;
+    $apData{MEASURE}{STRING} = $measureID;
+    $apData{MEASURE}{ABBREVSTRING} = $measureID;
+    $apData{MEASURE}{FORMAT} = "%.1f";
+    $apData{MEASURE}{UNIT} = "%"; 
+################################################
+  } else {
+    $apData{STATUS} = "NotDefined";
+    $apData{STATUSMESG} = "Measure ID /$measureID/ is not defined";
+    $self->{GLOBALMEASURES}{$measureID} = \%apData;
+    return;    
+  } 
 
   ### IF already computed, don't recompute
   return if (exists($self->{GLOBALMEASURES}{$measureID}));
@@ -2476,51 +2530,97 @@ sub _computeAvgPrecByType{
     }                                        
   }                                          
 
-  if ($measureID eq "APP" || $measureID eq "APPpct"){
-    if ($self->{TRIALS}->getNumTarg($blk) == 0){
-       $apData{STATUS} = "NotComputable";
-       $apData{STATUSMESG} = "Single Block '$blk' has no target trails to compute AP'";
-       $self->{GLOBALMEASURES}{$measureID} = \%apData;
-       return;
-    }
+  if ($measureID =~ /^AP.*/){
+    if ($measureID eq "APP" || $measureID eq "APPpct"){
+      if ($self->{TRIALS}->getNumTarg($blk) == 0){
+         $apData{STATUS} = "NotComputable";
+         $apData{STATUSMESG} = "Single Block '$blk' has no target trails to compute ".$apData{MEASURE}{ABBREVSTRING};
+         $self->{GLOBALMEASURES}{$measureID} = \%apData;
+         return;
+      }
       if ($self->{TRIALS}->getNumNonTarg($blk) == 0){
-       $apData{STATUS} = "NotComputable";
-       $apData{STATUSMESG} = "Single Block '$blk' has no non-target trails to compute AP'";
-       $self->{GLOBALMEASURES}{$measureID} = \%apData;
-       return;
+         $apData{STATUS} = "NotComputable";
+         $apData{STATUSMESG} = "Single Block '$blk' has no non-target trails to compute ".$apData{MEASURE}{ABBREVSTRING};
+         $self->{GLOBALMEASURES}{$measureID} = \%apData;
+         return;
+      }
+      $weightP = 100 / $self->{TRIALS}->getNumTarg($blk); 
+      $weightF = 99900 / $self->{TRIALS}->getNumNonTarg($blk); 
     }
-    $weightP = 100 / $self->{TRIALS}->getNumTarg($blk); 
-    $weightF = 99900 / $self->{TRIALS}->getNumNonTarg($blk); 
-  }
-  # print "  WeightP = $weightP\n  WeightF = $weightF\n";
-  my $sum = 0;
-  my $numPos = 0;
-  my $numNonPos = 0;
-  my $numTarg = $self->{TRIALS}->getNumTarg($blk);
-  for (my $t=0; $t<@$ranks; $t++){
-    if ($ranks->[$t]->[2] > 0){
-    	$numPos ++;
-    	$sum += (($weightP * $numPos) / (($weightF * $numNonPos) + ($weightP * $numPos))) * $scale;
-    	#print "  Add: (($weightP * $numPos) / (($weightF * $numNonPos) + ($weightP * $numPos))) * $scale = $sum;\n";
+    # print "  WeightP = $weightP\n  WeightF = $weightF\n";
+    my $sum = 0;
+    my $numPos = 0;
+    my $numNonPos = 0;
+    my $numTarg = $self->{TRIALS}->getNumTarg($blk);
+    for (my $t=0; $t<@$ranks; $t++){
+      if ($ranks->[$t]->[2] > 0){
+      	$numPos ++;
+      	$sum += (($weightP * $numPos) / (($weightF * $numNonPos) + ($weightP * $numPos))) * $scale;
+      	#print "  Add: (($weightP * $numPos) / (($weightF * $numNonPos) + ($weightP * $numPos))) * $scale = $sum;\n";
+      } else {
+      	$numNonPos ++;
+      }
+    }
+    if ($numPos > 0){
+      $apData{STATUS} = "Computed";
+      $apData{STATUSMESG} = "Successful";
+      $apData{MEASURE}{$measureID} = $sum / $numTarg;
+      $apData{MEASURE}{POSRANKS} = $ranks;
     } else {
-    	$numNonPos ++;
+      $apData{STATUS} = "Computed";
+      $apData{STATUSMESG} = "Successful.  No Positives for block $blk";
+      $apData{MEASURE}{$measureID} = 0;
+      $apData{MEASURE}{POSRANKS} = $ranks;
+  #  } else {
+  #    $apData{STATUS} = "NotApplicable";
+  #    $apData{STATUSMESG} = "No Positives for block $blk";
+  #    $apData{MEASURE}{POSRANKS} = $ranks;
     }
-  }
-  if ($numPos > 0){
+  } elsif ($measureID =~ /^P\@R(\d\d|\d\d\d)/){
+    my $threshVal = $1;
+    my $thresh = $1/100;  ### The recall percentage is the digits / 100
+    if ($threshVal <= 0) {
+      $apData{STATUS} = "NotComputable";
+      $apData{STATUSMESG} = "Precision at Recall <= 0 not defined";
+      $self->{GLOBALMEASURES}{$measureID} = \%apData;
+      return;
+    }
+    if ($threshVal > 100) {
+      $apData{STATUS} = "NotComputable";
+      $apData{STATUSMESG} = "Precision at Recall > 100% not defined";
+      $self->{GLOBALMEASURES}{$measureID} = \%apData;
+      return;
+    }
+    if ($self->{TRIALS}->getNumTarg($blk) == 0){
+      $apData{STATUS} = "NotComputable";
+      $apData{STATUSMESG} = "Single Block '$blk' has no target trails to compute ".$apData{MEASURE}{ABBREVSTRING};
+      $self->{GLOBALMEASURES}{$measureID} = \%apData;
+      return;
+    }
+    if ($self->{TRIALS}->getNumNonTarg($blk) == 0){
+      $apData{STATUS} = "NotComputable";
+      $apData{STATUSMESG} = "Single Block '$blk' has no non-target trails to compute ".$apData{MEASURE}{ABBREVSTRING};
+      $self->{GLOBALMEASURES}{$measureID} = \%apData;
+      return;
+    }
+    my $numPos = 0;
+    my $numNonPos = 0;
+    my $numTarg = $self->{TRIALS}->getNumTarg($blk);
+    for (my $t=0; $t<@$ranks; $t++){
+      if ($ranks->[$t]->[2] > 0){
+      	$numPos ++;
+      } else {
+      	$numNonPos ++;
+      }
+      last if ($numPos/$numTarg >= $thresh)
+    }
     $apData{STATUS} = "Computed";
     $apData{STATUSMESG} = "Successful";
-    $apData{MEASURE}{$measureID} = $sum / $numTarg;
-    $apData{MEASURE}{POSRANKS} = $ranks;
-  } else {
-    $apData{STATUS} = "Computed";
-    $apData{STATUSMESG} = "Successful.  No Positives for block $blk";
-    $apData{MEASURE}{$measureID} = 0;
-    $apData{MEASURE}{POSRANKS} = $ranks;
-#  } else {
-#    $apData{STATUS} = "NotApplicable";
-#    $apData{STATUSMESG} = "No Positives for block $blk";
-#    $apData{MEASURE}{POSRANKS} = $ranks;
+    $apData{MEASURE}{$measureID} = $numPos / ($numPos + $numNonPos);
+    # $apData{MEASURE}{numPos} = $numPos;
+    # $apData{MEASURE}{retreived} = $numPos + $numNonPos;
   }
+
   $self->{GLOBALMEASURES}{$measureID} = \%apData;
 
   #print Dumper(\%apData);
@@ -2541,6 +2641,8 @@ sub computeGlobalMeasures{
     $self->computeMeanAvgPrecPrimePct() if ($mea eq "MAPPpct");
     $self->computeOracleTresh() if ($mea eq "OracleThresh");
     $self->computeOracleSuprema() if ($mea eq "OracleSuprema");
+    $self->computePrecAtRecall($mea) if ($mea eq "P\@R\d+");
+
   }
 }
 
