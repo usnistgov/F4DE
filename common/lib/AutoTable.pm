@@ -447,6 +447,13 @@ sub __HTML_proc_sp {
     unshift @h2, "</a>";
   }
 
+  while ($str =~ s%motext\=\{([^\}]+?)\}%%) {
+    my $txt = $1;
+    $txt =~ s/\"/&quot;/g;
+    push @h1, "<a onmouseover=\"show_text(this)\" onmouseout=\"hide_text()\" data-text=\"$txt\">";
+    unshift @h2, "</a>";
+  }
+
   while ($str =~ s%url\=\{([^\}]+?)\}%%) {
     push @h1, "<a href=\"$1\">";
     unshift @h2, "</a>";
@@ -672,7 +679,9 @@ sub renderByType(){
   } elsif ($type eq "csv"){
     return $self->renderCSV();
   } elsif ($type eq "tgrid"){
-    return $self->renderGrid("\t");
+    return $self->renderGrid("\t", 1);
+  } elsif ($type eq "tgridIncSpecial"){
+    return $self->renderGrid("\t", 0);
   } elsif ($type eq 'latex'){
     return $self->renderLaTeXTable();
   } else {
@@ -1232,7 +1241,7 @@ sub _addLab(){
   $ht = $ht->{SubID}{$_[2]};
   
   ### HT is now the lowest level so we can save of the length for later
-  $ht->{width}{charLen} = length($_[3]) if ($ht->{width}{charLen} < length($_[3]));
+  $ht->{width}{charLen} = length($_[3]) if (defined($ht->{width}{charLen}) && defined($_[3]) && ($ht->{width}{charLen} < length($_[3])));
 }
 
 sub _getNumLev(){
@@ -1447,6 +1456,18 @@ sub setData {
   return($_[0]->addData__core($_[1], $_[2], $_[3], $_[4], 0));
 }
 
+#####
+
+# This method appens $val to existing data.  When appending, $sep is pre-pended to $val
+sub appendData {
+  # (0:$self, 1:$val, 2:$colid, 3:$rowid, 4:$sep)
+  my $v = $_[0]->getData($_[2], $_[3]);
+  if (defined($v)){
+    return($_[0]->setData($v.$_[4].$_[1], $_[2], $_[3]));
+  } 
+  return($_[0]->addData($_[1], $_[2], $_[3]));
+}
+
 ##########
 
 sub dump(){ print Dumper($_[0]); }
@@ -1477,7 +1498,8 @@ sub _centerJust(){
 }
 
 sub renderGrid(){
-  my ($self, $sep) = @_;
+  my ($self, $sep, $includeSpecial) = @_;
+  $includeSpecial = 1 if (!defined($includeSpecial));
   my $str = "";
   
   my @rowIDS = $self->getRowIDs("AsAdded");
@@ -1486,7 +1508,7 @@ sub renderGrid(){
     foreach my $row(@rowIDS){
       my $val = $self->getData($col, $row);
       my $lid = &__getLID($row, $col);
-      $str .= "$val$sep$col$sep$row".(exists($self->{special}{$lid}) ? "$sep$self->{special}{$lid}" : "")."\n" if (defined($val));
+      $str .= "$val$sep$col$sep$row".($includeSpecial && exists($self->{special}{$lid}) ? "$sep$self->{special}{$lid}" : "")."\n" if (defined($val));
     }
   }            
   return $str;
@@ -1922,6 +1944,15 @@ sub getData{
   return(undef);    
 }
 
+sub getRowAsHT{
+  # (0:$self, 1:$rowid)
+  my %ht = ();
+  foreach my $col($_[0]->getColIDs("AsAdded")){
+    $ht{$col} = $_[0]->getData($col, $_[1]);
+  }
+  return(\%ht);    
+}
+
 sub getColIDs{
   # (0:$self, 1:$order)
   return($_[0]->_getOrderedLabelIDs($_[0]->{'colLabOrder'}, $_[1], $_[0]->{Properties}->getValue($key_KeepColumnsInOutput)));
@@ -1930,6 +1961,12 @@ sub getColIDs{
 sub getRowIDs{
   # (0:$self, 1:$order)
   return($_[0]->_getOrderedLabelIDs($_[0]->{'rowLabOrder'}, $_[1], $_[0]->{Properties}->getValue($key_KeepRowsInOutput)));
+}
+
+sub getNumRow{
+  # (0:$self, 1:$order)
+  return (0) if (!defined($_[0]->{'rowLabOrder'}->{SubIDCount}));
+  return($_[0]->{'rowLabOrder'}->{SubIDCount});
 }
 
 ### Builds a hash of the uniq values in a column.  The hash points to an array of the row IDs for the value
@@ -2052,6 +2089,17 @@ sub getFilteredRowIDs{
   return(\@returnLabelSet)
 }
 
+sub getColValuesForRowIDs{
+  my ($self, $rows, $col) = @_;
+
+  my @vals = ();
+  foreach my $row(@$rows){
+    my $val = $self->getData($col, $row);
+    push (@vals, $val);
+  }
+  return \@vals;
+}
+
 
 sub hasColID{
   # (0:$self, 1:$id)
@@ -2131,8 +2179,21 @@ function hide_big() {
 var big_img = window.top.document.querySelectorAll('#big_img')[0];
 big_img.setAttribute(\"hidden\", \"true\");
 }
+
+function show_text(x) {
+var big = window.top.document.querySelectorAll('#ATText')[0];
+big.innerHTML = x.dataset.text;
+big.removeAttribute(\"hidden\");
+}
+function hide_text() {
+var big = window.top.document.querySelectorAll('#ATText')[0];
+big.innerHTML = \"\";
+big.setAttribute(\"hidden\", \"true\");
+}
+
 </script>
  <img id=\"big_img\" src=\"\" hidden=\"true\" width=\"600\" style=\"position:fixed;right:0;top:0\"/>
+ <div id=\"ATText\" src=\"\" hidden=\"true\" width=\"600\" style=\"position:fixed;right:0;top:0;background-color:white;border:10px solid #a1a1a1;width:600px;height:1000px\"></div>
 ";
 }
 
