@@ -30,6 +30,14 @@ use encoding 'euc-cn';
 use encoding 'utf8';
 
 ##########
+my $version     = "0.1b";
+if ($version =~ m/b$/) {
+  (my $cvs_version = '$Revision: 1.3 $') =~ s/[^\d\.]//g;
+  $version = "$version (CVS: $cvs_version)";
+}
+my $versionid = "KWSListGenerator Version: $version";
+
+##########
 # Check we have every module (perl wise)
 
 my (@f4bv, $f4d);
@@ -61,8 +69,6 @@ foreach my $pn ("RTTMList", "TermList", "KWSList", "KWSDetectedList", "MMisc") {
     $have_everything = 0;
   }
 }
-my $versionkey = MMisc::slurp_file(dirname(abs_path($0)) . "/../../../.f4de_version");
-my $versionid = "KWSListGenerator ($versionkey)";
 
 # usualy part of the Perl Core
 foreach my $pn ("Getopt::Long", "Data::Dumper") {
@@ -87,7 +93,8 @@ MMisc::ok_quit($usage) if (scalar @ARGV == 0);
 
 my $inKWSList = "";
 my $outKWSList = "";
-my $kwlist = "";
+my $kwlistSelect = "";
+my $kwlistOrig =""; 
 my $err;
 my $system = "";
 my $kwlistName =""; 
@@ -95,7 +102,8 @@ GetOptions
 (
     'inkwslist=s'                          => \$inKWSList,
     'outkwslist=s'                          => \$outKWSList,
-    'kwlist=s'                          => \$kwlist,
+    'kwlistSelect=s'                          => \$kwlistSelect,
+    'kwlistOrig=s'                          => \$kwlistOrig,
     'systemid=s',                            => \$system,
     'KWEntry',                            => \$kwlistName,
     'help'                                => sub { MMisc::ok_quit($usage) },
@@ -103,15 +111,73 @@ GetOptions
 
 MMisc::error_quit("An input KWSList is needed\n\n$usage\n") if($inKWSList eq "");
 MMisc::error_quit("An output KWSList is needed\n\n$usage\n") if($outKWSList eq "");
-MMisc::error_quit("A KWList file is needed\n\n$usage\n") if($kwlist eq "");
+MMisc::error_quit("A KWList file is needed\n\n$usage\n") if($kwlistSelect eq "");
 
+print "   Loading $inKWSList\n";
 my $inKWS = new KWSList($inKWSList); #now ready for getNextDetectedKWlist
 
-$err = MMisc::check_file_r($kwlist);
-MMisc::error_quit("Problem with TERM File ($kwlist): $err")
+print "   Loading $kwlistSelect\n";
+$err = MMisc::check_file_r($kwlistSelect);
+MMisc::error_quit("Problem with Select TERM File ($kwlistSelect): $err")
   if (! MMisc::is_blank($err));
-my $TERM = new TermList($kwlist, 0, 0, 0);
+my $TERM = new TermList($kwlistSelect, 0, 0, 0);
+ 
+if ($kwlistOrig ne ""){
+  print "   Re ID based on original KW IDs in $kwlistOrig\n";
+  my $TERMORIG = undef;
+  $err = MMisc::check_file_r($kwlistOrig);
+  MMisc::error_quit("Problem with Orig TERM File ($kwlistSelect): $err")
+    if (! MMisc::is_blank($err));
+  my $TERMORIG = new TermList($kwlistOrig, 0, 0, 0);
 
+  my %action = ();
+  my $errors = 0;
+  my %normOrigTerm = ();
+  foreach my $termID($TERMORIG->getTermIDs()){
+    my $term = $TERMORIG->getTermFromID($termID);
+    $normOrigTerm{$TERMORIG->normalizeTerm($term->getText())} = $termID;
+  }
+  
+  foreach my $termID($TERM->getTermIDs()){
+    my $term = $TERM->getTermFromID($termID);
+    my $normText = $TERM->normalizeTerm($term->getText());
+    
+#    my $origTerm = $TERMORIG->getTermFromNormText($normText);  
+#    my $origTermID = $origTerm->{TERMID};
+    my $origTermID = (exists($normOrigTerm{$normText}) ? $normOrigTerm{$normText} : undef);
+    if (! defined($origTermID)){
+      print "Error: Select termID $termID /$normText/ not found in kwlistOrig\n";
+      $errors++;
+    } else {
+      my $sysTerm = $inKWS->{TERMS}{$origTermID};
+      if (! defined($sysTerm)){
+	print "Error: origTermID $origTermID not found in KWSList\n";
+	$errors++;
+      } else {
+	$action{$origTermID} = $termID;
+	print "Map \$action{$origTermID} = $termID\n";
+      }
+    }
+  }
+  die "Too many errors $errors" if ($errors > 0);
+ 
+#   foreach my $termID($inKWS->getTermIDs()){
+#     if (!defined($action{$termID})){
+#       $inKWS->deleteTermByID($termID);   
+#       print "Delete \$inKWS->deleteTermByID($termID);\n";
+#     }
+#   }
+  
+  my %ht = ();
+  foreach my $termID(keys %action){ 
+    $ht{$action{$termID}} = $inKWS->{TERMS}{$termID};
+    $ht{$action{$termID}}->{TERMID} = $termID;
+    print "Rename \$inKWS->renameTermByID($termID, $action{$termID})\n";
+  }
+  $inKWS->{TERMS} = \%ht;
+}
+
+print "   Processing Select\n";
 my %termsToKeep = ();
 foreach my $termID($TERM->getTermIDs()){
   $termsToKeep{$termID} = 1;
@@ -122,7 +188,7 @@ foreach my $termID($inKWS->getTermIDs()){
   $inKWS->deleteTermByID($termID) unless (exists($termsToKeep{$termID}));
 }
 
-($inKWS ->{TERMLIST_FILENAME} = $kwlist) =~ s:.*/::;
+($inKWS ->{TERMLIST_FILENAME} = $kwlistSelect) =~ s:.*/::;
 ($inKWS ->{SYSTEM_ID} = $system) if ($system ne "");
 $inKWS ->{KWSLIST_FILENAME} = $outKWSList;
 $inKWS->saveFile();
@@ -137,12 +203,6 @@ sub set_usage {
   $tmp .= "Desc: This program generates an STDList file based on searching the reference file.\n";
   $tmp .= "\n";
   $tmp .= "Required file arguments:\n";
-  $tmp .= "  -t, --termfile           Path to the Term file.\n";
-  $tmp .= "  -r, --rttmfile           Path to the RTTM file.\n";
-  $tmp .= "  -o, --output-file        Path to the Output file.\n";
-  $tmp .= "  -F, --Find-threshold     Threshold.\n";
-  $tmp .= "  -m, --missPct <float>    Percentage of Missed Detections\n";
-  $tmp .= "  -f, --faPct <float>      Percentage of False Alarms\n";
   $tmp .= "\n";
   
   return($tmp);
