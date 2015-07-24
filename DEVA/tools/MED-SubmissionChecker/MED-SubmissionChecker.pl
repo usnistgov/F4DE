@@ -193,6 +193,7 @@ my @expid_data;
 my @expid_task;
 my @expid_MEDtype;
 my @expid_traintype;
+my @expid_hardwaretype;
 my @expid_EAG;
 my @expid_sysid_beg;
 my @expid_sys;
@@ -235,10 +236,10 @@ sub __cfgcheck {
 my $medyear = $expid_tag[0];
 &__cfgcheck("\@expid_data", (scalar @expid_data == 0), 1);
 &__cfgcheck("\@expid_task", (scalar @expid_task == 0), (($expid_count == 9) || ($medyear eq 'MED13')));
-&__cfgcheck("\@expid_MEDtype", (scalar @expid_MEDtype == 0), ($medyear ne 'MED13'));
+&__cfgcheck("\@expid_MEDtype", (scalar @expid_MEDtype == 0), ($medyear ne 'MED13' && $medyear ne 'MED15'));
 &__cfgcheck("\@expid_traintype", (scalar @expid_traintype == 0), (($expid_count == 9) || ($medyear eq 'MED13')));
-&__cfgcheck("\@expid_EAG", (scalar @expid_EAG == 0), ($medyear ne 'MED13'));
-&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0), ($medyear ne 'MED13'));
+&__cfgcheck("\@expid_EAG", (scalar @expid_EAG == 0), ($medyear ne 'MED13' && $medyear ne 'MED15'));
+&__cfgcheck("\@expid_sysid_beg", (scalar @expid_sysid_beg == 0), ($medyear ne 'MED13' && $medyear ne 'MED15'));
 
 &__cfgcheck("\@expected_dir_output", (scalar @expected_dir_output == 0), 1);
 &__cfgcheck("\$expected_csv_per_expid", ($expected_csv_per_expid < 0), 1);
@@ -304,7 +305,7 @@ foreach my $sf (@ARGV) {
       next;
     }
 
-    if ($medyear eq 'MED13') {
+    if ($medyear eq 'MED13' || $medyear eq 'MED15') {
       vprint(1, "Get the TEAM, SEARCH, EVENTSET and SUB-NUM information");
     } else {
       vprint(1, "Get the TEAM, DATA and SUB-NUM information");
@@ -314,7 +315,7 @@ foreach my $sf (@ARGV) {
       &valerr($sf, $err);
       next;
     }
-    if ($medyear eq 'MED13') {
+    if ($medyear eq 'MED13' || $medyear eq 'MED15') {
       vprint(2, "<TEAM> = $team | <SEARCH> = $data | <EVENTSET> = $eset | <SUB-NUM> = $subnum");
     } else {
       vprint(2, "<TEAM> = $team | <DATA> = $data | <SUB-NUM> = $subnum");
@@ -327,7 +328,7 @@ foreach my $sf (@ARGV) {
       next;
     }
   } else {
-    if ($medyear eq 'MED13') {
+    if ($medyear eq 'MED13' || $medyear eq 'MED15') {
       ($err, $team, $data, $subnum, $eset) = &check_archive_name($sf);
       if (! MMisc::is_blank($err)) {
         &valerr($sf, $err);
@@ -341,7 +342,7 @@ foreach my $sf (@ARGV) {
     MMisc::error_quit("Problem with \'work_in_dir\' directory ($tmpdir): $de")
       if (! MMisc::is_blank($de));
     vprint(1, "\'work_in_dir\' selected");
-    if ($medyear eq 'MED13') {
+    if ($medyear eq 'MED13' || $medyear eq 'MED15') {
       vprint(2, "<TEAM> = $team | <SEARCH> = $data | <EVENTSET> = $eset");
     } else {
       vprint(2, "<TEAM> = $team");
@@ -494,7 +495,7 @@ sub check_archive_extension {
 sub check_archive_name {
   my $file = MMisc::iuv(shift @_, "");
 
-  return(check_archive_name13p($file)) if ($medyear eq 'MED13');
+  return(check_archive_name13p($file)) if ($medyear eq 'MED13' || $medyear eq 'MED15');
 
   my $et = "Archive name not of the form \'${medyear}_<TEAM>_<DATA>_<SUB-NUM>\' : ";
 
@@ -615,6 +616,8 @@ sub check_submission_dir {
 ##########
 
 sub check_name {
+  return(&check_name_med15p(@_))
+    if ($medyear eq 'MED15');
   return(&check_name_med13p(@_))
     if ($medyear eq 'MED13'); # pre-empt the check for 7 elements here
   return(&check_name_med12p(@_))
@@ -774,6 +777,51 @@ sub check_name_med13p {
     if (! MMisc::is_blank($err));
   
   vprint(4, "<TEAM> = $lteam | <TAG> = $ltag | <SYS> = $lsys | <SEARCH> = $lsearch | <EVENTSET> = $leset | <EKTYPE> = $lektype | <VERSION> = $lversion");
+  
+  return("", $lsearch, $lsearch, $leset, $lsys, $lektype);
+}
+
+#####
+
+sub check_name_med15p {
+  my ($name, $team, $data, $eset) = @_;
+
+  my $et = "\'EXP-ID\' not of the form \'<TEAM>_${medyear}_<SEARCH>_<EVENTSET>_<EKTYPE>_<SMGHW>_<SYS>_<VERSION>\' : ";
+  
+  my ($lteam, $ltag, $lsearch, $leset, $lektype, $lsmghw, $lsys, $lversion,
+      @left) = split(m%\_%, $name);
+  
+  return($et . " leftover entries: " . join(" ", @left) . ". ", "")
+    if (scalar @left > 0);
+  
+  return($et ." missing parameters ($name). ", "")
+    if (MMisc::any_blank($lteam, $ltag, $lsearch, $leset, $lektype, $lsmghw, $lsys, $lversion));
+  
+  my $err = "";
+  
+  $err .= " <TEAM> ($lteam) is different from submission file <TEAM> ($team)."
+    if ($team ne $lteam);
+  $err .= " <SEARCH> ($lsearch) is different from submission file <SEARCH> ($data)."
+    if ($data ne $lsearch);
+  $err .= " <EVENTSET> ($leset) is different from submission file <EVENTSET> ($eset)."
+    if ($eset ne $leset);
+
+  $err .= &cmp_exp($medyear, $ltag, @expid_tag);
+  $err .= &cmp_exp("<SEARCH>",  $lsearch, @expid_data);
+  $err .= &cmp_exp("<EVENTSET>", $leset, @expid_task);
+  $err .= &cmp_exp("<EKTYPE>", $lektype, @expid_traintype);
+  $err .= &cmp_exp("<SMGHW>", $lsmghw, @expid_hardwaretype);
+
+  $err .= "<SYS> ($lsys) not of the expected form: beginning with (p-, or c-), only alphanumeric characters. "
+    if ($lsys !~ /^[pc]\-[a-zA-Z\d]+/);
+
+  $err .= "<VERSION> ($lversion) not of the expected form: integer value starting at 1). "
+    if ( ($lversion !~ m%^\d+$%) || ($lversion =~ m%^0%) );
+  
+  return($et . $err, "")
+    if (! MMisc::is_blank($err));
+  
+  vprint(4, "<TEAM> = $lteam | <TAG> = $ltag | <SEARCH> = $lsearch | <EVENTSET> = $leset | <EKTYPE> = $lektype | <SMGHW> = $lsmghw | <SYS> = $lsys | <VERSION> = $lversion");
   
   return("", $lsearch, $lsearch, $leset, $lsys, $lektype);
 }

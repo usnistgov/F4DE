@@ -1,9 +1,9 @@
-$expid_count = 7;
+$expid_count = 8;
 @expid_tag  = ( 'MED15' ); # should only contain 1 entry
-@expid_sys = ( 'noPRF', 'PRF' ); # order is important
-@expid_data = ( 'MED15DRYRUN', 'MED15Sub', 'MED15Full' ); # <SEARCH> order is important
-@expid_task = ( 'PS', 'AH' ); # <EVENTSET> order is important
-@expid_traintype = ( '100Ex', '10Ex', '0Ex', 'SQ' ); # <EKTYPE> order is important
+@expid_data = ( 'MED15DRYRUN', 'MED15EvalSub', 'MED15EvalFull' ); # <SEARCH> order is important
+@expid_task = ( 'PS', 'AH', 'iAH' ); # <EVENTSET> order is important
+@expid_traintype = ( '100Ex', '10Ex', '0Ex' ); # <EKTYPE> order is important
+@expid_hardwaretype = ( 'SML', 'MED', 'LRG' ); # <SMGHW> order is important
 
 @expected_dir_output = ( "output" );
 $expected_csv_per_expid = 2;
