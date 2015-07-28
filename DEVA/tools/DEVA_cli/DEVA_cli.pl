@@ -160,6 +160,9 @@ my $useRank = 0;
 my %opt = ();
 my @cc = ();
 
+my $suppressMetricScores = 0;
+my $decisionThreshold = undef;
+
 &process_options();
 
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
@@ -519,6 +522,8 @@ sub run_scorer {
   $cmdp .= " -d $decThr" if (defined $decThr);
   $cmdp .= " -p $pbid_dt_sql" if (defined $pbid_dt_sql);
   $cmdp .= " -jUseRankForScores" if ($useRank);
+  $cmdp .= " --SuppressMetricScores" if ($suppressMetricScores);
+  $cmdp .= " --decisionThreshold $decisionThreshold" if (defined $decisionThreshold);
   $cmdp .= " $finalDBfile";
   my ($ok, $otxt, $so, $se, $rc, $of) = 
     &run_tool($log, $tool, $cmdp);
@@ -728,7 +733,7 @@ sub process_options {
 
 # For letter 'K'
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:                 Q     W       e           q s   w     #
+# Used:             M   Q S   W      de    j      q s   w  z  #
 
 
   GetOptions
@@ -785,6 +790,8 @@ sub process_options {
      'KSysConstraints=s' => sub {$sp_sys_constr = $_[1]; &_cc2(@_);},
      'KMDConstraints=s' => sub {$sp_md_constr = $_[1]; &_cc2(@_);},
      'KjUseRankForScores' => sub {$useRank = 1; &_cc2(@_);},
+     'KdecisionThreshold=s' => sub {$decisionThreshold = $_[1]; &_cc2(@_);},
+     'KzSuppressMetricScores' => sub {$suppressMetricScores = 1; &_cc2(@_);},
     ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 }
 
@@ -1003,6 +1010,8 @@ Optional arguments:
  S<[B<--additionalResDBfile> I<file> [B<--additionalResDBfile> I<file> [...]]]>
  S<[B<--BlockAverage>]>
  S<[B<--judgementThreshold> I<score> | B<--JudgementThresholdPerBlock> I<sql_file>]>
+ S<[B<--KzSuppressMetricScores>]>
+ S<[B<--KdecisionThreshold>]>
 
 Bypass step: 
  S<[B<--DETScoreSkip>]>
@@ -1332,6 +1341,14 @@ File rules definition follow the specificities detailed in B<--KSysConstraints>.
 =item B<--KjUseRankForScores>
 
 Use the ranks supplied in the .detection.csv file rather than the detection scores for computing the DET curves. 
+
+=item B<--KzSuppressMetricScores>
+
+Do not report the scores for the specified 'metric'.  The Global metrics will still be produced.
+
+=item B<--KdecisionThreshold>
+
+When adding a Trial, do not use the System\'s Decision but base the decision on a given threshold.
 
 =item B<--listParameters>
 

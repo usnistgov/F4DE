@@ -39,5 +39,8 @@ $VAR1 = [
           '--zusedXscale',
           'linear',
           '--ZusedYscale',
-          'linear'
+          'linear',
+          '--KdecisionThreshold',
+          '5',
+          '--KzSuppressMetricScores'
         ];

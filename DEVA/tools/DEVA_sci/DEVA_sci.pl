@@ -136,9 +136,10 @@ my @dilc = ( );
 
 my $useRank = 0;
 
+my $supressMetricScores = 0;
 
 # Av  : ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz  #
-# Used:  B D  G    LM    R TU  XY  b d   hi  lm op rstuv xy   #
+# Used:  B D  G    LM    RSTU  XY  b d   hij lm op rstuv xy   #
 
 my $usage = &set_usage();
 my %opt = ();
@@ -171,6 +172,7 @@ GetOptions
    'LoadMetadataDB=s'   => \$mdDBfile,
    'isolinecoef=s'      => \@isolinecoef,
    'jUseRankForScores'   => \$useRank,
+   'SuppressMetricScores' => \$supressMetricScores,
   ) or MMisc::error_quit("Wrong option(s) on the command line, aborting\n\n$usage\n");
 MMisc::ok_quit("\n$usage\n") if ($opt{'help'});
 MMisc::ok_quit("$versionid\n") if ($opt{'version'});
@@ -571,16 +573,28 @@ sub doDETwork {
       if ($rtn ne "success");
   }
 
-  my $report = $detSet->renderReport($bDETf . ".det", 1, 
-                                     { (xScale => $xscale, yScale => $yscale, 
-                                        Xmin => $xm, Xmax => $xM,
-                                        Ymin => $ym, Ymax => $yM,
-                                        gnuplotPROG => MMisc::cmd_which("gnuplot"),
-                                        createDETfiles => 1,
-                                        serialize => 1,
-                                        BuildPNG => 1,
-                                        DETShowPoint_Actual => 1),
-                                     },
+  my $opts = { (xScale => $xscale, yScale => $yscale, 
+                Xmin => $xm, Xmax => $xM,
+                Ymin => $ym, Ymax => $yM,
+                gnuplotPROG => MMisc::cmd_which("gnuplot"),
+                serialize => 1,
+                createDETfiles => 1,
+                BuildPNG => 1 ,
+                DETShowPoint_Actual => 1 ),
+  };
+  if ($supressMetricScores){
+    $opts = { (xScale => $xscale, yScale => $yscale, 
+               Xmin => $xm, Xmax => $xM,
+               Ymin => $ym, Ymax => $yM,
+               gnuplotPROG => MMisc::cmd_which("gnuplot"),
+               serialize => 1,
+               ReportActual => 0,
+               ReportBest => 0,
+               ExcludeCountsFromReports => 1)
+    };
+  }
+
+  my $report = $detSet->renderReport($bDETf . ".det", 1, $opts,
                                      ($bDETf eq "" ? "" : $bDETf.".scores.txt"),
                                      "$bDETf.scores.csv",
                                      undef,
@@ -619,13 +633,14 @@ Where:
   --blockName        Specify the name of the block type (default: $devadetname)
   --taskName         Specify the name of the task (default: $taskName)
   --xmin --Xmax      Specify the min and max value of the X axis (PFA) of the DET curve (default: $xm and $xM)
-  --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (default: $ym and $yM)
+  --ymin --Ymax      Specify the min and max value of the Y axis (PMiss) of the DET curve (default: o$ym and $yM)
   --usedXscale --UsedYscale    Specify the scale used for the X and Y axis of the DET curve (Possible values: $pv) (default: $xscale and $yscale)
   --isolinecoef      Specify the iso-line to plot (default: $dilcs)
   --BlockAverage    Combine all Trial in one DET instead of splitting them per BlockID
   --decisionThreshold  When adding a Trial, do not use the System\'s Decision but base the decision on a given threshold
   --perBlockDecisionThreshold  Specify the SQL command file expected to insert into the \'$ThreshDB\' table (with two columns: $BlockIDcolumn $Threshcolumn) a Threshold per BlockID. 
   --jUseRankForScores   Use the ranks supplied in the .detection.csv file rather than the detection scores for computing the DET curves. 
+  --SuppressMetricScores Do not report the scores for the specified 'metric'.  The Global metrics will still be produced.
 
 
 Note: an example of the possible content of a \'--perBlockDecisionThreshold\' sql file can be:
