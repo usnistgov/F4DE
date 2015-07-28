@@ -1,0 +1,394 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
+<title>TRECVID MED15 Scoring Primer</title>
+<style type="text/css">
+  body { counter-reset: chapter; }
+  h2:before { content: counter(chapter) ". "; counter-increment: chapter;  /* Add 1 to chapter */ }
+  h2 { counter-reset: section subsection; /* Set section to 0 */ }
+  h3:before { content: counter(chapter) "." counter(section) " "; counter-increment: section; }
+  h3 { counter-reset: subsection; }
+  h4:before { content: counter(chapter) "." counter(section) "." counter(subsection) " "; counter-increment: subsection; }
+  a {text-decoration:none}
+  pre { border-style: solid; border-width: 1px; margin-left: 5px; padding: 2px 2px 2px 2px; background-color: #DDDDDD; }
+</style>
+</head>
+<body>
+
+
+<div style="text-align: center;"><big><big><big>TRECVID MED15 Scoring Primer</big></big></big><br>
+</div>
+<div style="text-align: center;"><small>Last modified: July 28th, 2015</small><br>
+</div>
+ <br>
+
+
+<h2>Description</h2>
+This document provides a high-level overview of how to use the
+<i>Detection EVAluation</i> (DEVA) tools distributed within the NIST
+<i>Framework for Detection Evaluation</i> (F4DE) toolkit for the <a
+href="http://www.nist.gov/itl/iad/mig/med15.cfm">TRECVID MED15 Evaluation</a>.
+The <i>Multimedia Event Detection</i> (MED) evaluation track is part of the
+TRECVID Evaluation. The multi-year goal of MED is to assemble core
+detection technologies into a system that can quickly and accurately
+search a multimedia collection for user-defined events. See the web
+site for specific details about the evaluation.  The document assumes
+the reader is familiar with the <i>MED15 Evaluation Plan</i>.
+
+
+<p>There are four sections in this document: <a href="#executable">Scoring
+script synopsis</a>, <a href="#format">CSV File format definition</a>,
+<a href="#subcheck">Using the Submission Checker</a> and an <a
+ href="#cliuse">Example command lines to score a MED15 submission</a>.
+
+The examples below assume the F4DE package has been
+installed and is working properly according to the README.&nbsp;
+
+<p>The examples below also assume that you have obtained and have
+un-tarred the following files provided to participants for the MED15 Dry Run into your working directory:
+<ul>
+  <li>A test submission: MED15_testTEAM_MED15DRYRUN_PS_1.tar.bz2
+  <li><i>MED15DRYRUN</i> CSV files: MED15DRYRUN_Files.tar.bz2
+</ul>
+
+
+<a name="executable">
+<h2>Scoring Script Synopsis</h2>
+</a>
+
+<b>DEVA_cli</b> is the <i>Detection EVAluation command line
+interface</i>.  NIST will use DEVA_cli to measure the performance of MED systems.  
+The software uses <a href="http://www.sqlite.org">SQLite</a> to manage
+the data tables and then uses SQLite compatible queries to select
+data to score. The input to the software is a set of <i>Comma Separated Value</i> (CSV) tables as defined in Section 3. 
+
+<p>The MED evaluation tests a system's ability to detect if an event
+(as defined by an event kit) occurs within a video of the test
+collection.  An MED system ranks videos for each event kit/test video
+combination based on the likelyhood that the event has occurred, and
+returns this ranked list and the total processing time for the
+detection of each event.  For the DEVA tools, each time a system
+computes an event/test video rank, it is called a <i>trial</i>.  A
+unique <b>TrialID</b> identifies each trial.  TrialIDs are grouped
+into a statistical sample block referred to as <i>BlockID</i>.  For MED15, the EventIDs are used as BlockIDs. 
+
+<p>DEVA_cli accepts a variety of input combinations, however, to perform the MED15 scoring with the standard setup, NIST/LDC will provide a set of data files and MED systems will generate a set of files.
+
+<UL>
+<LI> <b>Provided Data Files</b>: NIST/LDC will provide the following
+  database files for use in scoring (all those files will be available
+  for MED15DRYRUN):
+<UL>
+<LI> <b> TrialIndex file: </b> 
+The trial index file contains a list of TrialIDs.  Each line contains three columns:
+<ul>
+  <li> <i>TrialID</i>: The ID assigned to the trial 
+  <li> <i>ClipID</i>:  The clip ID to be used in the trial.  The ID is defined in Clip Metadata file below.
+  <li> <i>EventID</i>: The ID of the event for which the system builds its event agent.  The ID is defined in the Event Database file below
+</UL>
+
+<LI> <b> Reference File: </b> The reference CSV file
+defines which TrialIDs are target trials (the video contains an
+instance of the event) and which TrialIDs are non-target trials (the
+video does not contain an instance of the event).  The file 
+contain two columns: 
+<ul>
+<li> <i>TrialID</i>:  <i>(as defined above)</i>
+<li> <i>Targ</i>: a two-valued column that must be either <i>y</i> a target or <i>n</i> otherwise. 
+</ul>
+
+<LI> <b> Event Database file: </b> 
+The event description metadata file maps the <i>EventID</i> to <i>EventName</i>.
+<ul>
+  <li><i>EventID</i>:   <i>(as defined above)</i>
+  <li><i>EventName</i>: is the textual name of the event
+</ul>
+</li>
+
+<LI> <b> Judgement Meta Data file: </b> 
+the ClipID's Event Metadata file (copied from the source database); Judgments for background clips are intentionally incomplete.   
+
+<ul>
+  <li><i>ClipID</i>: The clip ID to be used in the trial.  The ID is defined in Clip Metadata file below.
+  <li><i>EventID</i>: is the ID of one of the MED events or NULL indicating no event judgment was made
+  <li><i>INSTANCE_TYPE</i>: positive denotes that this clip is a positive (true) instance of the specified event
+  <li><i>SYNOPSIS</i>: brief summary of the clip content  
+  <li><i>GENRE</i>: data scout judgment about the clip's genre
+  <li><i>TOPIC</i>: general topic category for this clip
+  <li><i>SCENE</i>: optional freeform description by data scout of the scene/setting for the clip
+  <LI><I>OBJECTS</I>: optional freeform description by the data scout of the objects/people shown in the clip
+  <LI><i>ACTIVITIES</i>: optional freeform description by the data scout of the activities shown in the clip
+  <li><i>INSTANCE_VARIETY</i>: subjective judgment by data scout about whether this clip is more unusual than other instances of this event      
+  <li><i>INSTANCE_COMPLEXITY</i>: subjective judgment by data scout about whether this clip is more difficult/complex than other instances of this event
+  <li><i>VISUAL_EVIDENCE</i>: does this clip contain video evidence supporting the event
+  <li><i>AUDIO_EVIDENCE</i>: does this clip contain audio evidence supporting the event
+  <li><i>TEXT_EVIDENCE</i>: does this clip contain text evidence supporting the event
+  <li><i>NON_ENG_SPEECH</i>: does this clip contain non-English speech
+  <li><i>NON_ENG_TEXT</i>: does this clip contain non-English text
+  <li><i>NARRATIVE_AUDIO</i>: does the clip include someone explaining or describing (some or all of) the event step-by-step as they perform it. Empty when the Event is NULL. May be empty for some non-NULL events.
+  <li><i>NARRATIVE_TEXT</i>: does the clip include text explaining or describing (some or all of) the event step-by-step as it is performed. Empty when the Event is NULL. May be empty for some non-NULL events.
+  <li><i>INSTANCE_COMMENT</i>: optional comment providing additional information about why the clip was labeled as a negative instance.
+<li><i>PEOPLE</i>: optional description of the people appearing in the video.
+<li><i>OTHER_VISUAL</i>: optional description of any other visual evidence in the video.
+<li><i>SPEECH</i>: optional description of the speech evidence in the video.
+<li><i>NOISE</i>: optional description of the (non-speech) noise evidence in the video.
+<li><i>OTHER_AUDIO</i>: optional description of any other audio evidence in the video.
+<li><i>EDITED_TEXT</i>: optional description of text evidence edited into the video.
+<li><i>EMBEDDED_TEXT</i>: optional description of text evidence naturally occurring in the video.
+<li><i>OTHER_TEXT</i>: optional description of any other textual evidence in the video.
+</ul>
+  
+</li>
+<LI> <b> Clip Meta Data file: </b> 
+general clip metadata including a unique <i>ClipID</i>, associated <i>MEDIA_FILE</i>, <i>CODEC</i>, <i>MD5SUM</i> and <i>DURATION</i>
+where:
+<ul>
+  <li><i>ClipID</i>: unique numerical ID for this video/metadata entry (extracted from the RANDOM_MEDIA_FILE information)
+  <li><i>MEDIA_FILE</i>: randomized, non-chronological filename for the media file corresponding to this entry.
+  <li><i>CODEC</i>: codec of the media file corresponding to this entry.
+  <li><i>MD5SUM</i>: MD5 checksum for the media file corresponding to this entry
+  <li><i>DURATION</i>: duration in seconds for the media file corresponding to this entry.
+</ul>
+</li>
+
+</UL>
+
+
+
+<li> <b> System Generated Output Files: </b> Per the evaluation plan,
+MED15 systems will generate two CSV formatted files. The <i>testTEAM</i>
+submission (MED15_testTEAM_MED15DRYRUN_PS_1.tar.bz2) contains an MED15DRYRUN example of such files.
+
+<ul>
+  <li> <i> The detection file: </i> This file contains the rank for each TrialID in the test (present in the corresponding TrialIndex).  The file must contain two columns with column headings:
+  <ul>
+     <li><i>TrialID</i>:  <i>(as defined above)</i>
+     <li><i>Rank</i>: The rank of the video for the given event search
+     with values between 1 (most likely video to contain the event) to
+     N (least likely video to contain the event)</li>
+  </ul>
+  
+  <li> <i>The threshold file</i>: This file contains information about the processed event.   
+It must contain three columns:
+  <ul>
+  <li><i>EventID</i>:   <i>(as defined above)</i>
+  <li><i>DetectionTPT</i>: A value indicating the number of hours used
+    during the event search phase for the event. The value is positive
+    unbounded value: see the EvalPlan for
+    details.</li>
+    <li><i>SEARCHMDTPT</i>: A value indicating the number of hours used to generate the metadata for the “Search Videos”.  The value MUST be identical for all events.</li>
+  </ul>
+</ul>
+
+
+</LI>
+</UL>
+
+
+<a name="format">
+<h2>CSV File Format Definition</h2>
+</a>DEVA_cli uses <i>Comma Separated Values</i> (CSV)
+files to
+generate SQL tables that will be used by the scoring tool. CSV files
+are ASCII text files where each line contains comma separated, double quote enclosed values.   The DEVA tools require the first row of a CSV file to contain the
+column's header.  The following is a valid CSV file that contains three columns and two rows of data:
+</p>
+<dir>
+<code>
+"ID","FirstName","LastName"<br>
+"1","John","Doe"</br>
+"2","Mary","Smith"
+</code>
+</dir>
+
+Please refer to the Appendices of the Evaluation Plan for additional details.
+
+<a name="subcheck">
+<h2>Using the Submission Checker</h2>
+</a>
+
+Before providing a TEAM submission (as detailed in the Eval Plan in
+the Appendices), it is required that submissions pass the Submission
+Checker for acceptance.
+
+Submission naming is as follow:
+<pre>
+MED15_&lt;TEAM&gt;_&lt;SEARCH&gt;_&lt;EVENTSET&gt;_&lt;SUB-NUM&gt;
+</pre>
+
+In this example we will validate the
+MED15_testTEAM_MED15DRYRUN_PS_1.tar.bz2 submission for the
+<i>testTEAM</i> TEAM.
+
+The content of the archive is as follow:
+<pre>
+output/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1.detection.csv
+output/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1.threshold.csv
+output/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1.txt
+</pre>
+
+This submission only contains one EXPID
+(testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1).
+The file names follow the prescribed structure of the EXPID described
+in the Appendices of the evaluation plan so that:
+
+<pre>
+EXPID ::= &lt;TEAM&gt;_MED15_&lt;SEARCH&gt;_&lt;EVENTSET&gt;_&lt;EKTYPE&gt;_&lt;SMGHW&gt;_&lt;SYS&gt;_&lt;VERSION&gt;
+</pre>
+
+  where:
+<UL>
+  <LI> <i>TEAM</i> is named "testTEAM",
+  <LI> <i>SEARCH</i> is "MED15DRYRUN",
+  <li> <i>EVENTSET</i> is "PS",
+  <li> <i>EKTYPE</i> is "10Ex",
+  <LI> <i>SMGHW</i> is "SML", "MED", "LRG"
+  <LI> <i>SYS</i> is a site-specified alphanumeric (no spaces) string prefixed with either "p-" or "c-" for primary or contrastive, respectively
+  <LI> The <i>VERSION</i> number is "1". 
+</UL>
+
+<br>
+For testing purposes, the content of the
+<code>testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1.txt</code>
+was left empty, but it must be present and contain information
+detailed in the EVAL Plan.
+<br>
+In order to run the Submission Checker, the <b>TrialIndex</b> CSV file
+must be available (for MED15DRYRUN: 
+<code>MED15DRYRUN_20130501_TrialIndex.csv</code>).
+It is used to do generate the system database as
+well as doing some <i>EventID</i> and <i>TrialID</i> checks.
+
+
+The submission checker is executed with the following command:
+
+<pre>
+% TV15MED-SubmissionChecker --TrialIndex MED15DRYRUN_Files/MED15DRYRUN_20130501_TrialIndex.csv  MED15_testTEAM_MED15DRYRUN_PS_1.tar.bz2
+</pre>
+
+In case of success, the 'ok' string should appear next to the submission name
+(<code>MED15_testTEAM_MED15DRYRUN_PS_1.tar.bz2: ok</code>) and the program
+will exit with an OK exit status.
+<br>
+It is recommended to run the tool with the <code>--Verbose</code>
+option in order to see a step-by-step description of the steps performed.
+
+
+<br>
+<a name="cliuse">
+<h2>Example command lines to score a MED15 submission</h2>
+</a>
+
+  <p><i>For further information about the DEVA_cli tool (available as
+part of the F4DE), please refer to its manual:
+<code>DEVA_cli --man</code></i></p>
+
+The following is an example of how to score the testTEAM MED15DRYRUN system run using the default scoring setup using files formatted for submission to NIST.  
+
+<p>The MED15 testTEAM submission file (MED15_testTEAM_MED15DRYRUN_PS_1.tar.bz2) contains system-generated output files for a random system processing the MED15DRYRUN data set.  The files are <code>testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1.detection.csv</code>
+and <code>testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1.threshold.csv</code>.  
+  
+Using the MED15DRYRUN files, the following command will score the run:
+
+</doc>
+<pre>
+% mkdir MED15_testTEAM_MED15DRYRUN_PS_1--Results
+% DEVA_cli \
+--profile MED15 \
+--outdir MED15_testTEAM_MED15DRYRUN_PS_1--Results \
+--refcsv MED15DRYRUN_Files/MED15DRYRUN_20130501_Ref.csv \
+--syscsv output/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1.detection.csv:detection \
+--syscsv output/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1.threshold.csv:threshold \
+MED15DRYRUN_Files/MED15DRYRUN_20130501_TrialIndex.csv:TrialIndex \
+MED15DRYRUN_Files/MED15DRYRUN_20130501_ClipMD.csv:ClipMD \
+MED15DRYRUN_Files/MED15DRYRUN_20130501_JudgementMD.csv:JudgementMD \
+MED15DRYRUN_Files/MED15DRYRUN_20130501_EventDB.csv:EventDB
+</pre>
+where:<br>
+<ul>
+  <li>The "MED15_testTEAM_MED15DRYRUN_PS_1--Results" directory (which must exist
+  before running the DEVA_cli) will contain all the output generated by the script.</li>
+  <li>The <code>--profile MED15</code> argument provides preconfigured command line options (e.g., the metric, trial selection, join, ...) for the MED15 evaluation.</li>
+  <li>The CSV filenames use the <code>:</code> notation (example: <code>MED15DRYRUN_Files/MED15DRYRUN_20130501_ClipMD.csv:ClipMD</code>) to provide simple table names for use in the SQL statements.  </li>
+  
+<li>DEVA_cli accepts metadata CSV files at the end of the command line.  The files can contain any metadata about the test material:  the structure of the content is up to the user.    However, the use of <code>--profile MED15</code> option requires one metadata file to be the <i>MED15DRYRUN_Files/MED15DRYRUN_20130501_TrialIndex.csv:TrialIndex</i>.  It is used to apply the <i>DetectionThreshold</i> in the threshold file to the <i>Scores</i> in the detection file. 
+
+
+</ul>
+
+The script will run through the four steps of the DEVA_cli scorer (see
+the tool manual for details) and
+place the results, databases and logs in the "<i>MED15_testTEAM_MED15DRYRUN_PS_1--Results</i>" directory.
+There are many files generated by the script.  The most notable are:
+
+<UL> 
+
+<LI> <i>MED15_testTEAM_MED15DRYRUN_PS_1--Results/scoreDB.scores.txt</i>, a text version of the scoring report which
+includes five sections for each EventID.   (There is a .csv version of file as well.)  
+<ul>
+  <li> The "Inputs" section:
+  <UL>
+    <li> <code>#Targ</code>, the number of target TrialIDs. </li>
+    <li> <code>#NTarg</code>, the number of non-target TrialIDs. </li>
+    <li> <code>#Sys</code>, the number of TrialIDs with system responses.  For MED15 this should equal #Targ + #NTarg. </li>
+  </UL>
+  <li> The "Global Analysis"
+  <ul>
+    <li> <code> AP% </code>, the Average Precision expressed as a percent.  The Mean Average Precision (referred to as MAP) can be found in the "Mean" line of the report under "AP%".</li>
+  </ul>
+  </li>
+</ul>
+</ul>
+<br>
+<a name="clifilter">
+<h3>Performing Selective TrialID Scoring</h3>
+</a>
+
+DEVA_cli accepts as an option <code>--FilterCMDfile SQLFile</code>
+which filters the TrialIDs included in the scoring run.
+
+For sites only participating in some of the events, the default SQL filter will insure that only the <i>TrialID</i>s
+listed in their system CSV will be used. <i>The submission checker checks that all TrialIDs for an event are present
+in the system file.</i>
+
+The default filter's definition for the MED15 profile is the same one
+as MED12 (located in the
+<code>DEVAcli_filter-MED12.sql</code> file) and is as follow:
+<pre>
+INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )
+  SELECT system.TrialID,TrialIndex.EventID FROM TrialIndex INNER JOIN system
+  WHERE system.TrialID==TrialIndex.TrialID;
+</pre>
+
+
+An <b>SQL filter</b> restricts the selection of TrialIDs to only those
+whose ClipIDs duration is less than 30 seconds. The SQL command (save
+into such as <code>DEVAcli_filter-MED12-30s_or_less_Clips.sql</code>
+file) is:
+
+<pre>
+INSERT OR ABORT INTO ResultsTable ( TrialID, BlockID )
+  SELECT system.TrialID,TrialIndex.EventID FROM TrialIndex INNER JOIN system,ClipMD
+  WHERE system.TrialID==TrialIndex.TrialID AND TrialIndex.ClipID==ClipMD.ClipID AND ClipMD.DURATION<=30;
+</pre>
+
+To use the filter, execute the following commands: 
+
+<pre>
+% mkdir MED15_testTEAM_MED15DRYRUN_PS_1--Results2
+% DEVA_cli \
+--profile MED15 \
+--outdir MED15_testTEAM_MED15DRYRUN_PS_1--Results2 \
+--refcsv MED15DRYRUN_Files/MED15DRYRUN_20130501_Ref.csv \
+--syscsv output/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1.detection.csv:detection \
+--syscsv output/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1/testTEAM_MED15_MED15DRYRUN_PS_10Ex_LRG_p-baseline_1.threshold.csv:threshold \
+MED15DRYRUN_Files/MED15DRYRUN_20130501_TrialIndex.csv:TrialIndex \
+MED15DRYRUN_Files/MED15DRYRUN_20130501_ClipMD.csv:ClipMD \
+MED15DRYRUN_Files/MED15DRYRUN_20130501_JudgementMD.csv:JudgementMD \
+MED15DRYRUN_Files/MED15DRYRUN_20130501_EventDB.csv:EventDB
+--FilterCMDfile DEVAcli_filter-MED12-30s_or_less_Clips.sql
+</pre>
+
+</body>
+</html>
