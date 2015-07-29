@@ -12,10 +12,13 @@ $expected_csv_per_expid = 2;
 $medtype_fullcount = 0;
 $medtype_fullcount_perTask{$expid_data[0]}{$expid_task[0]} = 3;
 $medtype_fullcount_perTask{$expid_data[0]}{$expid_task[1]} = -1; # not a valid case
+$medtype_fullcount_perTask{$expid_data[0]}{$expid_task[2]} = -1; # not a valid case
 $medtype_fullcount_perTask{$expid_data[1]}{$expid_task[0]} = 20;
-$medtype_fullcount_perTask{$expid_data[1]}{$expid_task[1]} = 20;
+$medtype_fullcount_perTask{$expid_data[1]}{$expid_task[1]} = 10;
+$medtype_fullcount_perTask{$expid_data[1]}{$expid_task[2]} = 10;
 $medtype_fullcount_perTask{$expid_data[2]}{$expid_task[0]} = 20;
-$medtype_fullcount_perTask{$expid_data[2]}{$expid_task[1]} = 20;
+$medtype_fullcount_perTask{$expid_data[2]}{$expid_task[1]} = 10;
+$medtype_fullcount_perTask{$expid_data[2]}{$expid_task[2]} = 10;
 
 $db_check_sql = "TV13MED-SubmissionChecker_conf-DBcheck.sql";
 
@@ -26,13 +29,3 @@ $db_check_sql = "TV13MED-SubmissionChecker_conf-DBcheck.sql";
 @db_detectionTID = ("detectionTrialID", "TrialID");
 @db_thresholdEID = ("thresholdEventID", "EventID");
 @db_checkSEARCHMDTPT = ("checkSEARCHMDTPT", "SEARCHMDTPT");
-
-# ## MER
-# $mer_subcheck = MMisc::get_file_actual_dir($0) . "/MER-SubmissionChecker.sh";
-
-# # MED13DRYRUN / FullSys / PS / 100Ex
-# $mer_ok_expid{$expid_data[0]}{$expid_sys[0]}{$expid_task[0]}{$expid_traintype[0]} = 1; 
-# # PROGSub / FullSys / PS / 100Ex
-# $mer_ok_expid{$expid_data[1]}{$expid_sys[0]}{$expid_task[0]}{$expid_traintype[0]} = 1; 
-# # PROGAll / FullSys / PS / 100Ex
-# $mer_ok_expid{$expid_data[2]}{$expid_sys[0]}{$expid_task[0]}{$expid_traintype[0]} = 1; 
