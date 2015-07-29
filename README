@@ -1,5 +1,5 @@
 File:  README
-Date:  July 23, 2015
+Date:  July 29, 2015
 F4DE Version: 3.2.3
 
 
@@ -123,6 +123,12 @@ evaluations and for specific NIST-coordinated evaluations listed below.
       TV08_BigXML_ValidatorHelper)
     - TV15SED-SubmissionChecker - A tool designed to help confirm SED15 submission
       archives before transmitting them to NIST. 
+
+  *  2015 TRECVID Multimedia Event Detection Evaluation. 
+    - DEVA_cli - The main evaluation script. 
+    - TV15MED-SubmissionChecker - A tool designed to help confirm MED15 submission 
+      archives before transmitting them to NIST.
+    - Scoring Primer: DEVA/doc/TRECVid-MED15-ScoringPrimer.html
 
 In addition to evaluation tools, the package contains the following related tools:
 
