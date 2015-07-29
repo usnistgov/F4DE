@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
 <head>
 <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
@@ -66,7 +66,7 @@ data to score. The input to the software is a set of <i>Comma Separated Value</i
 <p>The MED evaluation tests a system's ability to detect if an event
 (as defined by an event kit) occurs within a video of the test
 collection.  An MED system ranks videos for each event kit/test video
-combination based on the likelyhood that the event has occurred, and
+combination based on the likelihood that the event has occurred, and
 returns this ranked list and the total processing time for the
 detection of each event.  For the DEVA tools, each time a system
 computes an event/test video rank, it is called a <i>trial</i>.  A
@@ -113,30 +113,6 @@ the ClipID's Event Metadata file (copied from the source database); Judgments fo
   <li><i>ClipID</i>: The clip ID to be used in the trial.  The ID is defined in Clip Metadata file below.
   <li><i>EventID</i>: is the ID of one of the MED events or NULL indicating no event judgment was made
   <li><i>INSTANCE_TYPE</i>: positive denotes that this clip is a positive (true) instance of the specified event
-  <li><i>SYNOPSIS</i>: brief summary of the clip content  
-  <li><i>GENRE</i>: data scout judgment about the clip's genre
-  <li><i>TOPIC</i>: general topic category for this clip
-  <li><i>SCENE</i>: optional freeform description by data scout of the scene/setting for the clip
-  <LI><I>OBJECTS</I>: optional freeform description by the data scout of the objects/people shown in the clip
-  <LI><i>ACTIVITIES</i>: optional freeform description by the data scout of the activities shown in the clip
-  <li><i>INSTANCE_VARIETY</i>: subjective judgment by data scout about whether this clip is more unusual than other instances of this event      
-  <li><i>INSTANCE_COMPLEXITY</i>: subjective judgment by data scout about whether this clip is more difficult/complex than other instances of this event
-  <li><i>VISUAL_EVIDENCE</i>: does this clip contain video evidence supporting the event
-  <li><i>AUDIO_EVIDENCE</i>: does this clip contain audio evidence supporting the event
-  <li><i>TEXT_EVIDENCE</i>: does this clip contain text evidence supporting the event
-  <li><i>NON_ENG_SPEECH</i>: does this clip contain non-English speech
-  <li><i>NON_ENG_TEXT</i>: does this clip contain non-English text
-  <li><i>NARRATIVE_AUDIO</i>: does the clip include someone explaining or describing (some or all of) the event step-by-step as they perform it. Empty when the Event is NULL. May be empty for some non-NULL events.
-  <li><i>NARRATIVE_TEXT</i>: does the clip include text explaining or describing (some or all of) the event step-by-step as it is performed. Empty when the Event is NULL. May be empty for some non-NULL events.
-  <li><i>INSTANCE_COMMENT</i>: optional comment providing additional information about why the clip was labeled as a negative instance.
-<li><i>PEOPLE</i>: optional description of the people appearing in the video.
-<li><i>OTHER_VISUAL</i>: optional description of any other visual evidence in the video.
-<li><i>SPEECH</i>: optional description of the speech evidence in the video.
-<li><i>NOISE</i>: optional description of the (non-speech) noise evidence in the video.
-<li><i>OTHER_AUDIO</i>: optional description of any other audio evidence in the video.
-<li><i>EDITED_TEXT</i>: optional description of text evidence edited into the video.
-<li><i>EMBEDDED_TEXT</i>: optional description of text evidence naturally occurring in the video.
-<li><i>OTHER_TEXT</i>: optional description of any other textual evidence in the video.
 </ul>
   
 </li>
@@ -208,9 +184,9 @@ Please refer to the Appendices of the Evaluation Plan for additional details.
 <h2>Using the Submission Checker</h2>
 </a>
 
-Before providing a TEAM submission (as detailed in the Eval Plan in
+Before making a TEAM submission (as detailed in the Eval Plan in
 the Appendices), it is required that submissions pass the Submission
-Checker for acceptance.
+Checker for acceptance.  NIST will run the smae checker before accepting the submission.
 
 Submission naming is as follow:
 <pre>
