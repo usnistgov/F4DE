@@ -214,6 +214,8 @@ my $max_expid = 0;
 my $max_expid_error = 1;
 my @db_checkSEARCHMDTPT;
 
+my @db_checkRanksdup = ();
+
 my $mer_subcheck = "";
 my %mer_ok_expid = ();
 
@@ -1017,6 +1019,14 @@ sub check_TrialIDs {
   if (scalar @db_checkSEARCHMDTPT > 0) {
     my $err = &id_check($dbfile, "unique \'SEARCHMDTPT\' value", $db_checkSEARCHMDTPT[0], $db_checkSEARCHMDTPT[1], 1);
     return($err) if (! MMisc::is_blank($err));
+  }
+
+  if (scalar @db_checkRanksdup > 0) {
+      my @lid = ();
+      my ($err, $tidc) = MtSQLite::select_helper__to_array($dbfile, \@lid, @db_checkRanksdup);
+      return("Problem obtaining the ". $db_checkRanksdup[0] . " list : $err") if (! MMisc::is_blank($err));
+      vprint(5, "Found $tidc duplicate Rank for individual EventIDs");
+      return("$tidc duplicate Ranks found:\n" . ajoin("\n   ", @lid) . "\n") if ($tidc > 0);
   }
 
   if (! MMisc::is_blank($merdir)) {
