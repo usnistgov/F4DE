@@ -1395,36 +1395,31 @@ sub cmd_which {
 
 ####################
 
-sub warn_print {
-  print '[Warning] ' . join(' ', @_) . "\n";
-}
+sub __printto_core { if (shift @_ == 2) { print STDERR join("", @_) } else { print join("", @_) } }
 
 ##########
 
-sub error_exit {
+sub __warn_print_core { &__printto_core(shift @_, '[Warning] ' . join(' ', @_) . "\n"); }
+sub warn_print { &__warn_print_core(1, @_); }
+sub stderr_warn_print { &__warn_print_core(2, @_); } 
+
+##########
+
 #  $Carp::Verbose = 1;  carp(1);
-  exit(1);
-}
+sub error_exit { exit(1); }
 
-#####
-
-sub error_quit {
-  print '[ERROR] ' . join(' ', @_) . "\n";
-  &error_exit();
-}
+sub __error_quit_core { &__printto_core(shift @_, '[ERROR] ' . join(' ', @_) . "\n"); }
+sub error_quit { &__error_quit_core(1, @_); &error_exit(); }
+sub stderr_error_quit { &__error_quit_core(2, @_); &error_exit(); }
 
 ##########
 
-sub ok_exit {
-  exit(0);
-}
+sub ok_exit { exit(0); }
 
-#####
+sub __ok_quit_core { &__printto_core(shift @_, join(' ', @_) . "\n"); }
+sub ok_quit { &__ok_quit_core(1, @_); &ok_exit(); }
+sub stderr_ok_quit { &__ok_quit_core(2, @_); &ok_exit(); }
 
-sub ok_quit {
-  print join(' ', @_) . "\n";
-  &ok_exit();
-}
 
 ####################
 
