@@ -29,4 +29,4 @@ $db_check_sql = "TV15MED-SubmissionChecker_conf-DBcheck.sql";
 @db_detectionTID = ("detectionTrialID", "TrialID");
 @db_thresholdEID = ("thresholdEventID", "EventID");
 @db_checkSEARCHMDTPT = ("checkSEARCHMDTPT", "SEARCHMDTPT");
-@db_checkRanksdup = ("dupRanks", "EventID", "Rank", "COUNT(*)");
+@db_checkRanksdup = ("dupRanks", "EventID", "Rank", 'COUNT(*)');

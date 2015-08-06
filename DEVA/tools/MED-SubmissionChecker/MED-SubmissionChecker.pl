@@ -1023,10 +1023,17 @@ sub check_TrialIDs {
 
   if (scalar @db_checkRanksdup > 0) {
       my @lid = ();
-      my ($err, $tidc) = MtSQLite::select_helper__to_array($dbfile, \@lid, @db_checkRanksdup);
-      return("Problem obtaining the ". $db_checkRanksdup[0] . " list : $err") if (! MMisc::is_blank($err));
+      my ($err, $tidc) = MtSQLite::select_helper__to_array($dbfile, \@lid, $db_checkRanksdup[0], "", '*');
+      return("Problem obtaining the ". $db_checkRanksdup[0] . " table : $err") if (! MMisc::is_blank($err));
       vprint(5, "Found $tidc duplicate Rank for individual EventIDs");
-      return("$tidc duplicate Ranks found:\n" . ajoin("\n   ", @lid) . "\n") if ($tidc > 0);
+      if ($tidc > 0) {
+          my $rtxt = "$tidc duplicate Ranks found:\n";
+          foreach my $rax (@lid) {
+              my ($l_eid, $l_rnk, $l_cnt) = @{$rax};
+              $rtxt .= "  EventID: $l_eid  / Rank: $l_rnk / Count: $l_cnt\n";
+          }
+          return($rtxt);
+      }
   }
 
   if (! MMisc::is_blank($merdir)) {
