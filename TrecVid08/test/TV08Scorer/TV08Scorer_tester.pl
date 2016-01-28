@@ -4,6 +4,20 @@
 # $Id$
 #
 
+my $ftxtra;
+BEGIN {
+    if ( ($^V ge 5.18.0)
+         && ( (! exists $ENV{PERL_HASH_SEED})
+              || ($ENV{PERL_HASH_SEED} != 0)
+              || (! exists $ENV{PERL_PERTURB_KEYS} )
+              || ($ENV{PERL_PERTURB_KEYS} != 0) )
+        ) {
+        print "You are using a version of perl above 5.16 ($^V); you need to run perl as:\nPERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl\n";
+        exit 1;
+    }
+    $ftxtra = ".518" if ($^V ge 5.18.0);
+}
+
 use strict;
 use F4DE_TestCore;
 use MMisc;
@@ -23,7 +37,7 @@ my $t0 = F4DE_TestCore::get_currenttime();
 
 ##
 $tn = "test1a";
-$testr += &do_simple_test($tn, "(same)", "test1-gtf.xml", "test1-same-sys.xml", "-D 1000", "res-$tn.txt");
+$testr += &do_simple_test($tn, "(same)", "test1-gtf.xml", "test1-same-sys.xml", "-D 1000", "res-$tn$ftxtra.txt");
 
 ##
 $tn = "test1b";
@@ -31,7 +45,7 @@ $testr += &do_simple_test($tn, "(1x False Alarm)",  "test1-gtf.xml", "test1-1fa-
 
 ##
 $tn = "test1c";
-$testr += &do_simple_test($tn, "(1x Missed Detect)",  "test1-gtf.xml", "test1-1md-sys.xml", "-D 1000", "res-$tn.txt");
+$testr += &do_simple_test($tn, "(1x Missed Detect)",  "test1-gtf.xml", "test1-1md-sys.xml", "-D 1000", "res-$tn$ftxtra.txt");
 
 ##
 $tn = "test2a";
@@ -63,11 +77,11 @@ $testr += &do_simple_test($tn, "(Big Test)", "test4-BigTest.ref.xml", "test4-Big
 
 ##
 $tn = "test5a";
-$testr += &do_simple_test($tn, "(writexml)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w", "res-$tn.txt");
+$testr += &do_simple_test($tn, "(writexml)",  "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w", "res-$tn$ftxtra.txt");
 
 ##
 $tn = "test5b";
-$testr += &do_simple_test($tn, "(writexml + pruneEvents)", "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w -p", "res-$tn.txt");
+$testr += &do_simple_test($tn, "(writexml + pruneEvents)", "test2-gtf.xml", "test2-1md_1fa-sys.xml", "-D 1000 -w -p", "res-$tn$ftxtra.txt");
 
 ##
 $tn = "test6";
