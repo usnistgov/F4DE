@@ -1,4 +1,5 @@
 # TrecVid08/test/Pre
+include ../../../Makefile_common
 
 all:
 	@echo "Nothing to do"
@@ -10,4 +11,4 @@ check:
 	@echo "***** F4DE common checks"
 	@(cd ../../..; make mincheck)
 	@echo ""
-	@perl -I../lib -I../../../common/lib -I../../lib pre_tests.pl
+	@${F4DEPERL} -I../lib -I../../../common/lib -I../../lib pre_tests.pl

@@ -1,4 +1,4 @@
-[[COMMANDLINE]] perl -I../../../common/lib ../../../common/tools/DETUtil/DETUtil.pl -x -X -o foo.png res-test3.V2.4.3.3.srl.gz ; cat foo.results.txt
+[[COMMANDLINE]] ../../../common/tools/DETUtil/DETUtil.pl -x -X -o foo.png res-test3.V2.4.3.3.srl.gz ; cat foo.results.txt
 [[RETURN CODE]] 0
 [[STDOUT]]
 Wrote: foo.results.txt
@@ -7,8 +7,8 @@ Wrote: foo.results.txt
 |-----------------------------+----------------------+
 |                System Title |                   NA |
 |                 Decision ID |                Trial |
-|                    CostMiss |                    1 |
 |                      CostFA |                    1 |
+|                    CostMiss |                    1 |
 |                       Ptarg |                  0.5 |
 
 

@@ -1527,7 +1527,7 @@ sub get_all_events_observations {
   }
 
   my @res = ();
-  foreach my $event (@limitto_events) {
+  foreach my $event (sort @limitto_events) {
     my @tmp = $self->get_event_observations($event);
     return(0) if ($self->error());
     push @res, @tmp;

@@ -4,6 +4,21 @@
 # $Id$
 #
 
+my $ftxtra;
+BEGIN {
+    if ( ($^V ge 5.18.0)
+         && ( (! exists $ENV{PERL_HASH_SEED})
+              || ($ENV{PERL_HASH_SEED} != 0)
+              || (! exists $ENV{PERL_PERTURB_KEYS} )
+              || ($ENV{PERL_PERTURB_KEYS} != 0) )
+        ) {
+        print "You are using a version of perl above 5.16 ($^V); you need to run perl as:\nPERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl\n";
+        exit 1;
+    }        
+    
+    $ftxtra = ".518" if ($^V ge 5.18.0);
+}
+
 use strict;
 use F4DE_TestCore;
 use MMisc;
@@ -94,7 +109,7 @@ $tn = "test11a";
 $testr += &do_simple_test($tn, "(ECF [REF])", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6", "res_$tn.txt");
 
 $tn = "test11b";
-$testr += &do_simple_test($tn, "(ECF + ChangeType + Crop [REF])", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6 -C word -w -p -c 20:1080", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(ECF + ChangeType + Crop [REF])", "$validator -g ../common/test1-gtf.xml ../common/test2-gtf.xml -e ../common/tests.ecf -f NTSC -d 6 -C 2022 -w -p -c 20:1080", "res_$tn$ftxtra.txt");
 
 ##
 $tn = "test12a";
@@ -143,7 +158,6 @@ MMisc::error_quit("Not all test ok$add\n");
 sub do_simple_test {
   my ($testname, $subtype, $command, $res, $rev) = 
     MMisc::iuav(\@_, "", "", "", "", 0);
-
   $totest++;
 
   return(F4DE_TestCore::run_simpletest($testname, $subtype, $command, $res, $mode, $rev));

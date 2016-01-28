@@ -150,7 +150,11 @@ INSTALLATION
 
 F4DE consists of a set of Perl scripts that can be run under a shell terminal.
 It has been confirmed to work under Linux, OS X and Cygwin.
-NOTE: the tools are known not to work with Perl 5.18 (or after), please use a 5.16 at most
+
+NOTE: If using Perl 5.18 (or after), the tools will use it forcing it to use
+PERL_PERTURB_KEYS=0 and PERL_HASH_SEED=0 in order to have repeatable results.
+Keep in mind that Perl 5.18 and above uses a new Hash algorithm that will not
+produce results comparable the tools ran using Perl 5.16 and below.
 
 The only pre-requisites of the tool are:
 
@@ -185,11 +189,13 @@ The only pre-requisites of the tool are:
     Digest::SHA
     YAML
     Data::Dump
+    
 From the main directory, after having insured side tools, and
-confirmed that Perl's 'cpanp' is installed and properly configured,
-you can run 'make perl_install' to try to help with the automatic
-installation of the perl modules that will be tested in the "make
-check" step.
+confirmed that Perl's 'cpanp' (for Perl before 5.20) or 'cpanm'
+[https://github.com/miyagawa/cpanminus] (for Perl 5.20 and above)
+is installed and properly configured, you can run 'make perl_install'
+to try to help with the automatic installation of the perl modules that
+will be tested in the "make check" step.
 
 If you prefer a manual approach, installation of those modules can be
 automated through the 'cpan' command.

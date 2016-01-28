@@ -333,8 +333,8 @@ sub _buildAutoTable(){
   my $useAT = 1;
   #print Dumper($DETOptions);
   my $at = ($useAT ? new AutoTable() : new SimpleAutoTable());
-	$at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove", 
-                              "SortRowKeyTxt" => "Alpha", "SortRowKeyCsv" => "Alpha" } );
+  $at->setProperties( { "KeyColumnCsv" => "Remove", "KeyColumnTxt" => "Remove", 
+			"SortRowKeyTxt" => "Alpha", "SortRowKeyCsv" => "Alpha" } );
 
   my $includeCounts = 1;    $includeCounts = 0 if (exists($DETOptions->{ExcludeCountsFromReports}) && $DETOptions->{ExcludeCountsFromReports} == 1);
   my $includePNG    = 1;    $includePNG = 0    if (exists($DETOptions->{ExcludePNGFileFromTextTable}) && $DETOptions->{ExcludePNGFileFromTextTable} == 1);
@@ -720,8 +720,9 @@ sub _buildBlockedAutoTable()
 sub _buildHeaderTable 
 {
   my ($self, $combinedDETpng, $xpng) = @_;
-
+  
   my $at = new AutoTable();
+  
   my $trial = $self->{DETList}[0]->{DET}->getTrials();
   my $metric = $self->{DETList}[0]->{DET}->getMetric();
   my $variableParams = $self->_findVariableParams();  
@@ -734,16 +735,18 @@ sub _buildHeaderTable
   $at->addData("Decision ID", $col . "|Key", $rowid);
   $at->addData($trial->{"DecisionID"}, $col . "|Value", $rowid);
   $rowid++;
+
   #Constant Params
-  foreach my $ckey ($trial->getTrialParamKeys()) {
+  foreach my $ckey (sort $trial->getTrialParamKeys()) {
     next if ($ckey =~ m%^_%); #Skip hidden keys
     next if (exists($variableParams->{$ckey}));
     $at->addData($ckey, $col . "|Key", $rowid);
     $at->addData($trial->getTrialParamValue($ckey), $col . "|Value", $rowid);
     $rowid++;
   }
+  
   #Variable Params
-  foreach my $vkey ($metric->getParamKeys()) {
+  foreach my $vkey (sort $metric->getParamKeys()) {
     next if ($vkey =~ m%^_%); #Skip hidden keys
     next if (exists($variableParams->{$vkey}));
     $at->addData($vkey, $col . "|Key", $rowid);
@@ -831,6 +834,7 @@ sub renderReport(){
 #  my $metric = $self->{DETList}[0]->{DET}->getMetric();
 
   my $hat = $self->_buildHeaderTable($multiInfo->{COMBINED_DET_PNG});
+#  print MMisc::get_sorted_MemDump(\$hat);
   my $that = undef;
   if ($DETOptions->{ExcludePNGFileFromTextTable} == 1) {
     $that = $self->_buildHeaderTable($multiInfo->{COMBINED_DET_PNG}, 1);

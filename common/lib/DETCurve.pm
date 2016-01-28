@@ -26,6 +26,18 @@
 # This package implements partial DET curves which means that not a TARGET trials have scores
 # and not all NONTARG Trials have scores.  
 
+BEGIN {
+  if ( ($^V ge 5.18.0)
+       && ( (! exists $ENV{PERL_HASH_SEED})
+	    || ($ENV{PERL_HASH_SEED} != 0)
+	    || (! exists $ENV{PERL_PERTURB_KEYS} )
+	    || ($ENV{PERL_PERTURB_KEYS} != 0) )
+     ) {
+    print "You are using a version of perl above 5.16 ($^V); you need to run perl as:\nPERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl\n";
+    exit 1;
+  }
+}
+
 package DETCurve;
 
 use strict;
@@ -653,32 +665,59 @@ sub globalMeasureUnitTest(){
             [ ( 0.920,  0.683,  0.078,  1.453,  0.279,  0.092, undef,  7.000 ) ],
             [ ( 0.980,  0.841,  0.036,  1.199,  0.140,  0.040, undef,  7.000 ) ],
             [ ( 1.000,  0.841,  0.000,  0.841,  0.140,  0.000, undef,  7.000 ) ] ];
-  ($report, $blockReport) = _testOneBlock("Combined Block DET", $mbTrial, $mbTrialPts, 
-                  { MAP => 0.4217259, MAPP => 0.258063},
-                  { OPTIMUMCOMB  => { COMB => 0.7437, MMISS => 0.744, MFA => 0.0, DETECTIONSCORE => undef},
-                    SUPREMUMCOMB => { COMB => 0.3571, MMISS => 0.3571, MFA => 0.0, DETECTIONSCORE => undef}},
-                  { "blk-1"=>{OPTIMUMCOMB  => { COMB => 0.8, MMISS => 0.8, MFA => 0, DETECTIONSCORE => 1},
-                              SUPREMUMCOMB => { COMB => 0.0, MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => 0.5}},
-                    "blk-2"=>{OPTIMUMCOMB  => { COMB => 0.6667, MMISS => 0.6667, MFA => 0, DETECTIONSCORE => 1},
-                              SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
-                    "blk-3"=>{OPTIMUMCOMB  => { COMB => 0.6667, MMISS => 0.6667, MFA => 0, DETECTIONSCORE => 1},
-                              SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
-                    "blk-4"=>{OPTIMUMCOMB  => { COMB => 0.429, MMISS => 0.429, MFA => 0, DETECTIONSCORE => 0.860},
-                              SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
-                    "blk-5"=>{OPTIMUMCOMB  => { COMB => 0.9, MMISS => 0.9, MFA => 0, DETECTIONSCORE => 1},
-                              SUPREMUMCOMB => { COMB => 0.5, MMISS => 0.5, MFA => 0.0, DETECTIONSCORE => 0.5}},
-                    "blk-6"=>{OPTIMUMCOMB  => undef,
-                              SUPREMUMCOMB => undef },
-                    "blk-7"=>{OPTIMUMCOMB  => { COMB => 1,    MMISS => 1, MFA => 0, DETECTIONSCORE => 0.15},
-                                              # Things change in the context of other blocks because this can now go to FA=1
-                                              #{ COMB => 10.9, MMISS => 1, MFA => 1, DETECTIONSCORE => 0.1}
-                              SUPREMUMCOMB => { COMB => 1,    MMISS => 1, MFA => 0, DETECTIONSCORE => 0.5}}
-                  }
+  if ($^V ge 5.18.0) { # results with new hash algorithm introduced in Perl 5.18
+    ($report, $blockReport) =
+      _testOneBlock
+      ("Combined Block DET", $mbTrial, $mbTrialPts, 
+       { MAP => 0.4217259, MAPP => 0.258063},
+       { OPTIMUMCOMB  => { COMB => 0.8555, MMISS => 0.8555, MFA => 0.0, DETECTIONSCORE => undef},
+	 SUPREMUMCOMB => { COMB => 0.3571, MMISS => 0.3571, MFA => 0.0, DETECTIONSCORE => undef}},
+       { "blk-1"=>{OPTIMUMCOMB  => undef,
+		   SUPREMUMCOMB => { COMB => 0.0, MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => 0.5}},
+	 "blk-2"=>{OPTIMUMCOMB  => undef,
+		   SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
+	 "blk-3"=>{OPTIMUMCOMB  => { COMB => 0.6667, MMISS => 0.6667, MFA => 0, DETECTIONSCORE => 1},
+		   SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
+	 "blk-4"=>{OPTIMUMCOMB  => undef,
+		   SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
+	 "blk-5"=>{OPTIMUMCOMB  => { COMB => 0.9, MMISS => 0.9, MFA => 0, DETECTIONSCORE => 1},
+		   SUPREMUMCOMB => { COMB => 0.5, MMISS => 0.5, MFA => 0.0, DETECTIONSCORE => 0.5}},
+	 "blk-6"=>{OPTIMUMCOMB  => undef,
+		   SUPREMUMCOMB => undef },
+	 "blk-7"=>{OPTIMUMCOMB  => { COMB => 1,    MMISS => 1, MFA => 0, DETECTIONSCORE => 0.15},
+		   SUPREMUMCOMB => { COMB => 1,    MMISS => 1, MFA => 0, DETECTIONSCORE => 0.5}}
+       }
+      );
+  } else {
 
-                );
+    ($report, $blockReport) =
+      _testOneBlock("Combined Block DET", $mbTrial, $mbTrialPts, 
+		    { MAP => 0.4217259, MAPP => 0.258063},
+		    { OPTIMUMCOMB  => { COMB => 0.7437, MMISS => 0.744, MFA => 0.0, DETECTIONSCORE => undef},
+		      SUPREMUMCOMB => { COMB => 0.3571, MMISS => 0.3571, MFA => 0.0, DETECTIONSCORE => undef}},
+		    { "blk-1"=>{OPTIMUMCOMB  => { COMB => 0.8, MMISS => 0.8, MFA => 0, DETECTIONSCORE => 1},
+				SUPREMUMCOMB => { COMB => 0.0, MMISS => 0.0, MFA => 0.0, DETECTIONSCORE => 0.5}},
+		      "blk-2"=>{OPTIMUMCOMB  => { COMB => 0.6667, MMISS => 0.6667, MFA => 0, DETECTIONSCORE => 1},
+				SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
+		      "blk-3"=>{OPTIMUMCOMB  => { COMB => 0.6667, MMISS => 0.6667, MFA => 0, DETECTIONSCORE => 1},
+				SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
+		      "blk-4"=>{OPTIMUMCOMB  => { COMB => 0.429, MMISS => 0.429, MFA => 0, DETECTIONSCORE => 0.860},
+				SUPREMUMCOMB => { COMB => 0,      MMISS => 0,      MFA => 0, DETECTIONSCORE => 0.5}},
+		      "blk-5"=>{OPTIMUMCOMB  => { COMB => 0.9, MMISS => 0.9, MFA => 0, DETECTIONSCORE => 1},
+				SUPREMUMCOMB => { COMB => 0.5, MMISS => 0.5, MFA => 0.0, DETECTIONSCORE => 0.5}},
+		      "blk-6"=>{OPTIMUMCOMB  => undef,
+				SUPREMUMCOMB => undef },
+		      "blk-7"=>{OPTIMUMCOMB  => { COMB => 1,    MMISS => 1, MFA => 0, DETECTIONSCORE => 0.15},
+				# Things change in the context of other blocks because this can now go to FA=1
+				#{ COMB => 10.9, MMISS => 1, MFA => 1, DETECTIONSCORE => 0.1}
+				SUPREMUMCOMB => { COMB => 1,    MMISS => 1, MFA => 0, DETECTIONSCORE => 0.5}}
+		    }
+		    
+		   );
+  }
   #print $report;
   #print $blockReport;
-
+  
 }
 
 sub bigDETUnitTest {

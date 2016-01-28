@@ -122,7 +122,7 @@ sub _get_TrecVid08ViperFile_infos {
   %hasharray_inline_attributes = $dummy->_get_hasharray_inline_attributes();
   %hash_objects_attributes_types_dynamic = $dummy->_get_hash_objects_attributes_types_dynamic();
   my %tmp = $dummy->_get_hash_file_attributes_types();
-  @array_file_attributes_keys = keys %tmp;
+  @array_file_attributes_keys = sort keys %tmp;
   $char_tcs = $dummy->get_char_tc_separator();
   $key_tc = $dummy->get_key_xtra_trackingcomment();
   return($dummy->get_errormsg());
@@ -1113,7 +1113,7 @@ sub list_all_xtra_attributes {
 
   return(@aa) if (! $self->is_xtra_set());
 
-  @aa = keys %{$self->{Xtra}};
+  @aa = sort keys %{$self->{Xtra}};
 
   return(@aa);
 }

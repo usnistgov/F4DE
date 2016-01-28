@@ -34,8 +34,10 @@ use MErrorH;
 use strict;
 use Data::Dumper;
 use Encode;
-use encoding 'euc-cn';
-use encoding 'utf8';
+use if $^V lt 5.18.0, "encoding", 'euc-cn';
+use if $^V ge 5.18.0, "Encode::CN";
+use if $^V lt 5.18.0, "encoding", 'utf8';
+use if $^V ge 5.18.0, "utf8";
 use MMisc;
 
 =pod

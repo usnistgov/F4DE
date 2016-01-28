@@ -23,6 +23,7 @@ if  [ $# != 1 ]; then
 fi
 
 package=$1
+echo "     $package"
 
 tool_dir=`perl -e 'use Cwd "abs_path"; use File::Basename "dirname";  $dir = dirname(abs_path($ARGV[0])); print $dir' $0`
 
@@ -32,5 +33,12 @@ installed=`perl -I$tool_dir/../../lib -e 'use MMisc;if (MMisc::check_package($AR
 if [ "A$installed" == "Apresent" ]; then
   exit 0
 fi
-# Not installed, try to install (we will check exit status of the cpanp command)
-cpanp -i $package
+
+# Not installed, try to install (we will check exit status of the cpan install command)
+ntool=`perl -e 'if ($^V ge 5.18.0){print "cpanm"}else{print "cpanp -i"}'`
+tool=`echo $ntool | perl -I$tool_dir/../../lib -ne 'use MMisc; print MMisc::cmd_which($_)'`
+if [ "A$tool" == "A" ]; then
+    echo "Problem finding needed tool ($ntool), aborting"
+    exit 1
+fi
+$tool $package

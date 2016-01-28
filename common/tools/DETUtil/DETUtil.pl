@@ -1,4 +1,7 @@
-#!/usr/bin/env perl
+#!/bin/sh
+#! -*-perl-*-
+eval 'exec env PERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl -x -S $0 ${1+"$@"}'
+  if 0;
 #
 # $Id$
 #
@@ -36,6 +39,16 @@ use Data::Dumper;
 ## First insure that we add the proper values to @INC
 my (@f4bv, $f4d);
 BEGIN {
+  if ( ($^V ge 5.18.0)
+       && ( (! exists $ENV{PERL_HASH_SEED})
+	    || ($ENV{PERL_HASH_SEED} != 0)
+	    || (! exists $ENV{PERL_PERTURB_KEYS} )
+	    || ($ENV{PERL_PERTURB_KEYS} != 0) )
+     ) {
+    print "You are using a version of perl above 5.16 ($^V); you need to run perl as:\nPERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl\n";
+    exit 1;
+  }
+    
   use Cwd 'abs_path';
   use File::Basename 'dirname';
   $f4d = dirname(abs_path($0));
@@ -687,7 +700,6 @@ if ($dumpFile){
   $dumpf =~ s/\.png$//i;
   $dumpf .= ".dump.txt";  
   MMisc::writeTo($dumpf, "", 1, 0, Dumper($ds));
-
 }
 
 MMisc::error_quit("Problem writing All Target Scores")

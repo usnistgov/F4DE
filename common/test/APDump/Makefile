@@ -1,4 +1,5 @@
 # DEVA/test/MTest
+include ../../../Makefile_common
 
 PRE_tests=pre_tests.pl
 APDump_tester=APDump_tester.pl
@@ -12,7 +13,7 @@ APDump=${APDump_reldir}/${APDump_exec}
 endif
 
 F4DEC_lib=../../../common/lib
-PERL=perl -I${F4DEC_lib}
+PERL=${F4DEPERL} -I${F4DEC_lib}
 
 all:
 	@echo "Nothing to do"

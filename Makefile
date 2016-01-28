@@ -1,5 +1,6 @@
 # Main F4DE directory Makefile
 SHELL=/bin/bash
+include Makefile_common
 
 ##########
 
@@ -318,7 +319,7 @@ KWSEvalcheck:
 
 check_common:
 	@make from_installdir
-	@(perl -Icommon/lib -e 'use MMisc; MMisc::ok_exit() if ($$] < 5.018); MMisc::error_quit("the tools are known not to work with Perl 5.18 (or after), please install Perl 5.16 at most");')
+#	@(perl -Icommon/lib -e 'use MMisc; MMisc::ok_exit() if ($$] < 5.018); MMisc::error_quit("the tools are known not to work with Perl 5.18 (or after), please install Perl 5.16 at most");')
 
 ########## perl_install
 
