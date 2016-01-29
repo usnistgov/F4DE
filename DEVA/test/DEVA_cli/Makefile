@@ -1,4 +1,5 @@
 # DEVA/test/DEVA_cli
+include ../../../Makefile_common
 
 DEVA_cli_tester=DEVA_cli_tester.pl
 
@@ -11,7 +12,7 @@ DEVA_cli=${DEVA_cli_reldir}/${DEVA_cli_exec}
 endif
 
 F4DEC_lib=../../../common/lib
-PERL=perl -I${F4DEC_lib}
+PERL=${F4DEPERL} -I${F4DEC_lib}
 
 all:
 	@echo "Nothing to do"

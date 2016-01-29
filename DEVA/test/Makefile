@@ -1,7 +1,8 @@
 # DEVA/test
+include ../../Makefile_common
 
 F4DEC_lib=../../common/lib
-PERL=perl -I${F4DEC_lib}
+PERL=${F4DEPERL} -I${F4DEC_lib}
 
 PRE_tests=Pre/pre_tests.pl
 
