@@ -1,0 +1,50 @@
+[[COMMANDLINE]] ../../tools/AVSS09Scorer/AVSS09Scorer.pl --CLEARxsd ../../../CLEAR07/data --Validator ../../tools/AVSS09ViPERValidator/AVSS09ViPERValidator.pl --Scorer ../../../CLEAR07/tools/CLEARDTScorer/CLEARDTScorer.pl ../common/test_file1.sys.xml ../common/test_file2.sys.xml -g ../common/test_file1.clear.xml ../common/test_file2.clear.xml ../common/test_file3.clear.xml -E ../common/test1-ecf.xml -w /tmp/AVSS09Scorer_tester-Temp_test4 -D /tmp/AVSS09Scorer_tester-Temp_test4/SYS -d /tmp/AVSS09Scorer_tester-Temp_test4/GTF
+[[RETURN CODE]] 0
+[[STDOUT]]
+
+
+***** STEP 1: Validating ECF file
+
+
+***** STEP 2: Validation
+** Validating and Generating SYS Sequence MemDump
+- Working on SYS file: ../common/test_file1.sys.xml
+   -> OK [logfile: /tmp/AVSS09Scorer_tester-Temp_test4/SYS/test_file1.log]
+- Working on SYS file: ../common/test_file2.sys.xml
+   -> OK [logfile: /tmp/AVSS09Scorer_tester-Temp_test4/SYS/test_file2.log]
+** Validating and Generating GTF Sequence MemDump
+- Working on GTF file: ../common/test_file1.clear.xml
+   -> OK [logfile: /tmp/AVSS09Scorer_tester-Temp_test4/GTF/test_file1.log]
+- Working on GTF file: ../common/test_file2.clear.xml
+   -> OK [logfile: /tmp/AVSS09Scorer_tester-Temp_test4/GTF/test_file2.log]
+- Working on GTF file: ../common/test_file3.clear.xml
+   -> OK [logfile: /tmp/AVSS09Scorer_tester-Temp_test4/GTF/test_file3.log]
+
+
+***** STEP 3: Scoring
+- Scoring "CPSPT_01" ttid
+  Type   Tracking Trial ID  Primary Cam ID  Primary Cam MOTA  Cam 5 MOTA  Cam 2 MOTA  Avg MOTA  
+----------------------------------------------------------------------------------------------
+  cpspt           CPSPT_01               5          1.000000          --    0.904762  0.952381
+
+- Scoring "SCSPT05b" ttid
+  Type   Tracking Trial ID  Primary Cam ID  Primary Cam MOTA  
+------------------------------------------------------------
+  scspt           SCSPT05b               1          1.000000
+
+
+
+
+
+########## ECF result table:
+  Type   Tracking Trial ID  Primary Cam ID  Primary Cam MOTA  Cam 1 MOTA  Cam 2 MOTA  Cam 5 MOTA  Avg MOTA  
+----------------------------------------------------------------------------------------------------------
+  cpspt           CPSPT_01               5          1.000000          NA    0.904762          --  0.952381
+  scspt           SCSPT05b               1          1.000000          --          NA          NA         1
+
+
+***** Done *****
+
+
+[[STDERR]]
+

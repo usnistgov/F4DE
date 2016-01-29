@@ -3,6 +3,20 @@
 #
 # $Id$
 #
+my $ftxtra;
+BEGIN {
+  if ( ($^V ge 5.18.0)
+       && ( (! exists $ENV{PERL_HASH_SEED})
+            || ($ENV{PERL_HASH_SEED} != 0)
+            || (! exists $ENV{PERL_PERTURB_KEYS} )
+            || ($ENV{PERL_PERTURB_KEYS} != 0) )
+     ) {
+    print "You are using a version of perl above 5.16 ($^V); you need to run perl as:\nPERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl\n";
+    exit 1;
+  }
+
+  $ftxtra = ".518" if ($^V ge 5.18.0);
+}
 
 use strict;
 use F4DE_TestCore;
@@ -37,7 +51,7 @@ $testr += &do_simple_test($tn, "(Full SYS vs GTF)", "$tool ../common/test_file2.
 
 ##
 $tn = "test4";
-$testr += &do_simple_test($tn, "(with ECF)", "$tool ../common/test_file1.sys.xml ../common/test_file2.sys.xml -g ../common/test_file1.clear.xml ../common/test_file2.clear.xml ../common/test_file3.clear.xml -E ../common/test1-ecf.xml", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(with ECF)", "$tool ../common/test_file1.sys.xml ../common/test_file2.sys.xml -g ../common/test_file1.clear.xml ../common/test_file2.clear.xml ../common/test_file3.clear.xml -E ../common/test1-ecf.xml", "res_$tn$ftxtra.txt");
 
 #####
 

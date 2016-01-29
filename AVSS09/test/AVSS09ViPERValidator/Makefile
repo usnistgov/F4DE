@@ -1,4 +1,5 @@
 # AVSS09/test/AVSS09ViPERValidator
+include ../../../Makefile_common
 
 AVSS09ViPERValidator_tester=AVSS09ViPERValidator_tester.pl
 
@@ -16,7 +17,7 @@ AVSS09ViPERValidator_Add=--CLEARxsd ${CLEAR07_XSD}
 CLEAR07_lib=../../../CLEAR07/lib
 AVSS09_lib=../lib
 F4DE_lib=../../../common/lib
-PERL=perl -I${CLEAR07_lib} -I${AVSS09_lib} -I${F4DE_lib}
+PERL=${F4DEPERL} -I${CLEAR07_lib} -I${AVSS09_lib} -I${F4DE_lib}
 
 all:
 	@echo "Nothing to do"

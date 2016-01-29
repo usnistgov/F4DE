@@ -2079,9 +2079,6 @@ sub _writeback_object {
 sub _writeback2xml {
   my ($comment, $domain, $isgtf, $rlhash, @asked_objects) = @_;
 
-  my @tao = ();
-  
-  
   my $txt = "";
   my $indent = 0;
 

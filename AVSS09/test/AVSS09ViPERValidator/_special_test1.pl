@@ -1,7 +1,23 @@
-#!/usr/bin/env perl
+#!/bin/sh
+#! -*-perl-*-
+eval 'exec env PERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl -x -S $0 ${1+"$@"}'
+  if 0;
+
 #
 # $Id$
 #
+
+BEGIN {
+  if ( ($^V ge 5.18.0)
+       && ( (! exists $ENV{PERL_HASH_SEED})
+            || ($ENV{PERL_HASH_SEED} != 0)
+            || (! exists $ENV{PERL_PERTURB_KEYS} )
+            || ($ENV{PERL_PERTURB_KEYS} != 0) )
+     ) {
+    print "You are using a version of perl above 5.16 ($^V); you need to run perl as:\nPERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl\n";
+    exit 1;
+  }
+}
 
 use lib ("../../lib", "../../../CLEAR07/lib", "../../../common/lib");
 
@@ -43,7 +59,7 @@ print "** Created DCR [ID $id]\n";
 my @idl = $object->get_person_id_list();
 MMisc::error_quit($object->get_errormsg()) if ($object->error());
     
-foreach my $id (@idl) {
+foreach my $id (sort @idl) {
   my ($fs) = $object->get_person_fs($id);
   print "########## ID: $id\n* fs     : $fs\n";
   MMisc::error_quit($object->get_errormsg()) if ($object->error());
