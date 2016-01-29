@@ -3,6 +3,21 @@
 # $Id$
 #
 
+my $ftxtra;
+BEGIN {
+    if ( ($^V ge 5.18.0)
+         && ( (! exists $ENV{PERL_HASH_SEED})
+              || ($ENV{PERL_HASH_SEED} != 0)
+              || (! exists $ENV{PERL_PERTURB_KEYS} )
+              || ($ENV{PERL_PERTURB_KEYS} != 0) )
+        ) {
+        print "You are using a version of perl above 5.16 ($^V); you need to run perl as:\nPERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl\n";
+        exit 1;
+    }        
+    
+    $ftxtra = ".518" if ($^V ge 5.18.0);
+  }
+
 use strict;
 use F4DE_TestCore;
 use MMisc;
@@ -64,7 +79,7 @@ $testr += &do_simple_test($tn, "(SYS: FrameShift + ForceFilename + Overlap Check
 
 ##
 $tn = "test5c";
-$testr += &do_simple_test($tn, "(SYS: FrameShift + ForceFilename + Overlap Check / on stdout + pruneEvents + OverlapOnlyXML)", "$d/test1-1md-sys.xml $d/test3-sys.xml $d/test1-same-sys.xml:40 $d/test1-1fa-sys.xml:10000 $d/test2-1md_1fa-sys.xml:5000 $d/test2-same-sys.xml:1500 -f PAL -s -S -o -F samefile -p -O", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(SYS: FrameShift + ForceFilename + Overlap Check / on stdout + pruneEvents + OverlapOnlyXML)", "$d/test1-1md-sys.xml $d/test3-sys.xml $d/test1-same-sys.xml:40 $d/test1-1fa-sys.xml:10000 $d/test2-1md_1fa-sys.xml:5000 $d/test2-same-sys.xml:1500 -f PAL -s -S -o -F samefile -p -O", "res_$tn$ftxtra.txt");
 
 #####
 

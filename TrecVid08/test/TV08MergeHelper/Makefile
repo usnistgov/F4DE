@@ -1,4 +1,5 @@
 # TrecVid08/test/TV08MergeHelper
+include ../../../Makefile_common
 
 TV08MergeHelper_tester=TV08MergeHelper_tester.pl
 
@@ -12,7 +13,7 @@ endif
 
 TV08TC_lib=../lib
 F4DEC_lib=../../../common/lib
-PERL=perl -I${TV08TC_lib} -I${F4DEC_lib}
+PERL=${F4DEPERL} -I${TV08TC_lib} -I${F4DEC_lib}
 
 all:
 	@echo "Nothing to do"
