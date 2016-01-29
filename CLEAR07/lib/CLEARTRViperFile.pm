@@ -361,7 +361,7 @@ sub validate_objects_list {
   my @objects = MMisc::uppercase_array_values(\@tmpa);
 
   @objects = split(m%\,%, join(",", @objects));
-  @objects = &_make_array_of_unique_values(@objects);
+  @objects = MMisc::make_array_of_unique_values(\@objects);
   my ($in, $out) = MMisc::compare_arrays(\@ok_objects, \@objects);
   if (scalar @$out > 0) {
     $self->_set_errormsg("Found some unknown object type: " . join(" ", @$out));
@@ -1398,17 +1398,6 @@ sub _parse_sourcefile_section {
 }
 
 ####################
-
-sub _make_array_of_unique_values {
-  my %tmp;
-  for (my $i = 0; $i < scalar @_; $i++) {
-    $tmp{$_[$i]}++;
-  }
-
-  return(keys %tmp);
-}
-
-#####
 
 sub _parse_file_section {
   my ($self, $str, $wtag, $isgtf) = @_;

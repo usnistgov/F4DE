@@ -11,3 +11,4 @@ check:
 	@(cd ../../lib; perl -I . -I ../../common/lib -e 'use CLEARObject; CLEARObject::unitTest()')
 	@(cd ../../lib; perl -I . -I ../../common/lib -e 'use CLEARFrame; CLEARFrame::unitTest()')
 	@echo "***** All tests ran succesfully"
+	@echo ""

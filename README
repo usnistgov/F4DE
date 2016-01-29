@@ -151,10 +151,10 @@ INSTALLATION
 F4DE consists of a set of Perl scripts that can be run under a shell terminal.
 It has been confirmed to work under Linux, OS X and Cygwin.
 
-NOTE: If using Perl 5.18 (or after), the tools will use it forcing it to use
+NOTE: If using Perl 5.18 (or after), the tools will use it forcing
 PERL_PERTURB_KEYS=0 and PERL_HASH_SEED=0 in order to have repeatable results.
-Keep in mind that Perl 5.18 and above uses a new Hash algorithm that will not
-produce results comparable the tools ran using Perl 5.16 and below.
+Perl 5.18 and above use a new Hash algorithm that will not always 
+produce results comparable with runs done using Perl 5.16 and below.
 
 The only pre-requisites of the tool are:
 
