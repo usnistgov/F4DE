@@ -13,14 +13,14 @@ Summary Report: -
 |---------------------------------+------------------+
 |                    System Title |               NA |
 |                     Decision ID |       Occurrence |
-|                       TotTrials |            28576 |
 |      IncludeBlocksWithNoTargets |                0 |
-|                 TrialsPerSecond |                1 |
 |                          TotDur |        28575.908 |
+|                       TotTrials |            28576 |
+|                 TrialsPerSecond |                1 |
 |                            BETA |            999.9 |
-|                           Value |                1 |
-|                           Ptarg |           0.0001 |
 |                            Cost |           0.1000 |
+|                           Ptarg |           0.0001 |
+|                           Value |                1 |
 
 
 |              |                  Inputs                  |                               Actual Decision TWV Analysis                                |              Maximum TWV Analysis               |
@@ -33,14 +33,14 @@ Block Summary Report: -
 |---------------------------------+------------------+
 |                    System Title |               NA |
 |                     Decision ID |       Occurrence |
-|                       TotTrials |            28576 |
 |      IncludeBlocksWithNoTargets |                0 |
-|                 TrialsPerSecond |                1 |
 |                          TotDur |        28575.908 |
+|                       TotTrials |            28576 |
+|                 TrialsPerSecond |                1 |
 |                            BETA |            999.9 |
-|                           Value |                1 |
-|                           Ptarg |           0.0001 |
 |                            Cost |           0.1000 |
+|                           Ptarg |           0.0001 |
+|                           Value |                1 |
 
 
                   |        MetaData         |                               Occurrence                               |

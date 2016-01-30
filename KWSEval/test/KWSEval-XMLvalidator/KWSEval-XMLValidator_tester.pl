@@ -4,6 +4,21 @@
 # $Id$
 #
 
+my $ftxtra;
+BEGIN {
+    if ( ($^V ge 5.18.0)
+         && ( (! exists $ENV{PERL_HASH_SEED})
+              || ($ENV{PERL_HASH_SEED} != 0)
+              || (! exists $ENV{PERL_PERTURB_KEYS} )
+              || ($ENV{PERL_PERTURB_KEYS} != 0) )
+        ) {
+        print "You are using a version of perl above 5.16 ($^V); you need to run perl as:\nPERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl\n";
+        exit 1;
+    }        
+    
+    $ftxtra = ".518" if ($^V ge 5.18.0);
+}
+  
 use strict;
 use F4DE_TestCore;
 use MMisc;
@@ -42,7 +57,7 @@ $testr += &do_simple_test_dir($tn, "(KWSList: Validation -> MemDump 1 save -> Me
 
 #####
 $tn = "test3a";
-$testr += &do_simple_test($tn, "(KWList Validation)", "$validator -t ../common/test2.kwlist.xml ../common/test3.kwlist.xml ../common/test4.cantonese.kwlist.xml ../common/test5.kwlist.xml ../common/test6.kwlist.xml -w", "res_${tn}.txt");
+$testr += &do_simple_test($tn, "(KWList Validation)", "$validator -t ../common/test2.kwlist.xml ../common/test3.kwlist.xml ../common/test4.cantonese.kwlist.xml ../common/test5.kwlist.xml ../common/test6.kwlist.xml -w", "res_${tn}$ftxtra.txt");
 
 ##
 $tn = "test3b";

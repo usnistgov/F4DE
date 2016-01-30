@@ -13,12 +13,12 @@ Summary Report: -
 |-----------------------------------+----------------+
 |                      System Title |             NA |
 |                       Decision ID |        Segment |
-|                         TotTrials |          19536 |
 |        IncludeBlocksWithNoTargets |              0 |
+|                         TotTrials |          19536 |
 |                              BETA |          999.9 |
-|                             Value |              1 |
-|                             Ptarg |         0.0001 |
 |                              Cost |         0.1000 |
+|                             Ptarg |         0.0001 |
+|                             Value |              1 |
 
 
 |           |                  Inputs                  |                               Actual Decision TWV Analysis                                |              Maximum TWV Analysis               |
@@ -31,12 +31,12 @@ Block Summary Report: -
 |-----------------------------------+----------------+
 |                      System Title |             NA |
 |                       Decision ID |        Segment |
-|                         TotTrials |          19536 |
 |        IncludeBlocksWithNoTargets |              0 |
+|                         TotTrials |          19536 |
 |                              BETA |          999.9 |
-|                             Value |              1 |
-|                             Ptarg |         0.0001 |
 |                              Cost |         0.1000 |
+|                             Ptarg |         0.0001 |
+|                             Value |              1 |
 
 
                   |        MetaData         |                                       Segment                                        |
@@ -83,9 +83,9 @@ Conditional Summary Report: -
 |                       Decision ID |        Segment |
 |        IncludeBlocksWithNoTargets |              0 |
 |                              BETA |          999.9 |
-|                             Value |              1 |
-|                             Ptarg |         0.0001 |
 |                              Cost |         0.1000 |
+|                             Ptarg |         0.0001 |
+|                             Value |              1 |
 
 
 |           |  Parameters  |                  Inputs                  |                                Actual Decision TWV Analysis                                |              Maximum TWV Analysis               |
@@ -103,9 +103,9 @@ Conditional Block Summary Report: -
 |                       Decision ID |        Segment |
 |        IncludeBlocksWithNoTargets |              0 |
 |                              BETA |          999.9 |
-|                             Value |              1 |
-|                             Ptarg |         0.0001 |
 |                              Cost |         0.1000 |
+|                             Ptarg |         0.0001 |
+|                             Value |              1 |
 
 
                   |        MetaData         |                                         ALL                                          |                                         BNEWS                                         |                                       CONFMTG                                        |                                         CTS                                          |

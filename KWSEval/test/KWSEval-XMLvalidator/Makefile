@@ -1,4 +1,5 @@
 # KWSEval/test/KWSEval-XMLValidator
+include ../../../Makefile_common
 
 KWSEval-XMLValidator_tester=KWSEval-XMLValidator_tester.pl
 
@@ -12,7 +13,7 @@ endif
 
 KWSEval_lib=../lib
 F4DEC_lib=../../../common/lib
-PERL=perl -I${KWSEval_lib} -I${F4DEC_lib}
+PERL=${F4DEPERL} -I${KWSEval_lib} -I${F4DEC_lib}
 
 all:
 	@echo "Nothing to do"

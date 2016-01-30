@@ -1,4 +1,5 @@
 # KWSEval/test/KWSEval
+include ../../../Makefile_common
 
 KWSEval_tester=KWSEval_tester.pl
 
@@ -11,7 +12,7 @@ endif
 KWSEval_lib=../../../KWSEval/lib
 F4DE_lib=../../../common/lib
 
-PERL=perl -I${KWSEval_lib} -I${F4DE_lib}
+PERL=${F4DEPERL} -I${KWSEval_lib} -I${F4DE_lib}
 
 all:
 	@echo "Nothing to do"

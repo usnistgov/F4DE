@@ -4,6 +4,22 @@
 # $Id$
 #
 
+my $ftxtra;
+BEGIN {
+  if ( ($^V ge 5.18.0)
+       && ( (! exists $ENV{PERL_HASH_SEED})
+            || ($ENV{PERL_HASH_SEED} != 0)
+            || (! exists $ENV{PERL_PERTURB_KEYS} )
+            || ($ENV{PERL_PERTURB_KEYS} != 0) )
+     ) {
+    print "You are using a version of perl above 5.16 ($^V); you need to run perl as:\nPERL_PERTURB_KEYS=0 PERL_HASH_SEED=0 perl\n";
+    exit 1;
+  }
+
+  $ftxtra = ".518" if ($^V ge 5.18.0);
+}
+
+
 use strict;
 use F4DE_TestCore;
 use MMisc;
@@ -38,11 +54,11 @@ $testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Sourc
 
 ##
 $tn = "test2b";
-$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Attribute Query)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -q 'Characters:regex=^[35]\$' -O -B -y TXT -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Attribute Query)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -q 'Characters:regex=^[35]\$' -O -B -y TXT -f -", "res_$tn$ftxtra.txt");
 
 ##
 $tn = "test2c";
-$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Attribute Query with regular expression filter)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -q 'Characters:regex=^[35]\$' -O -B -y TXT -f -", "res_$tn.txt");
+$testr += &do_simple_test($tn, "(DataCalculation: Conditional Occurrence - Attribute Query with regular expression filter)", "$tool -e ../common/test6.ecf.xml -r ../common/test6.rttm -s ../common/test6.kwslist.xml -t ../common/test6.kwlist.xml -q 'Characters:regex=^[35]\$' -O -B -y TXT -f -", "res_$tn$ftxtra.txt");
 
 ##
 $tn = "test3";
