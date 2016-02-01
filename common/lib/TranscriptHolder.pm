@@ -127,7 +127,7 @@ sub getEncoding
 sub getPerlEncodingString
 {
   my ($self) = @_;
-  
+
   return (":utf8") if ($self->{ENCODING} eq "UTF-8");
   return (":gb2312-raw") if ($self->{ENCODING} =~ /^gb2312$/i);
   return ($self->{ENCODING});

@@ -403,7 +403,7 @@ sub openXMLFileAccess {
     (local *KWLISTFH, my $sefile) = $xmlh->run_xmllint_pipe($kwlistf);
     return("While trying to load XML file ($kwlistf) : " . $xmlh->get_errormsg() )
       if ($xmlh->error());
-
+    
     $self->{FH} = *KWLISTFH;
     $self->{SEfile} = $sefile;
   }
@@ -440,8 +440,10 @@ sub openXMLFileAccess {
         if (! $self->setCompareNormalize(&__get_attr(\%vals, $tlist_attrs[3])));
       $self->{VERSION} = &__get_attr(\%vals, $tlist_attrs[4]);
       $doit = 0; # we are done reading the header
+      # Only re-specify the encoding IF we did not use xmllint to load the file
+      # (to which was passed the encoding information already)
       binmode KWLISTFH, $self->getPerlEncodingString()
-        if (! MMisc::is_blank($self->{ENCODING}));
+        if ((! MMisc::is_blank($self->{ENCODING})) && ($bypassxmllint == 1));
       next;
     }
 

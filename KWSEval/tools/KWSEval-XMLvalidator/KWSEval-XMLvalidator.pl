@@ -149,9 +149,13 @@ while (my $tmp = shift @ARGV) {
       MMisc::error_quit("Could not rewrite file ($fname)")
         if (! $object->saveFile($fname));
     } else {
-#        binmode STDOUT, ":encoding(UTF-8)";
-        # the above line would be the solution to the warning generated at times
-        # see: http://perldoc.perl.org/perlunifaq.html#What-is-a-%22wide-character%22%3f
+	if ($issome == 2) {
+	    my $objenc = $object->getEncoding();
+	    binmode STDOUT, $object->getPerlEncodingString()
+		if (! MMisc::is_blank($objenc));
+	    # the above line is a solution to the warning generated at times
+	    # see: http://perldoc.perl.org/perlunifaq.html#What-is-a-%22wide-character%22%3f
+	}
       print $object->get_XMLrewrite();
     }
 

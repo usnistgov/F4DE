@@ -27,6 +27,7 @@ check:
 	@(cd ../lib; ${F4DEPERL} -I. -e 'use MetricRo; MetricRo::unitTest()')
 	@(cd AutoTable_Extra; make check)
 	@(cd DETUtil; make check)
+	@(rm -f ../../common/lib/foomerge*)
 	@(cd APDump; make check)
 	@echo ""
 	@echo "***** All tests ran succesfully"

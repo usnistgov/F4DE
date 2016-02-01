@@ -57,7 +57,7 @@ $testr += &do_simple_test_dir($tn, "(KWSList: Validation -> MemDump 1 save -> Me
 
 #####
 $tn = "test3a";
-$testr += &do_simple_test($tn, "(KWList Validation)", "$validator -t ../common/test2.kwlist.xml ../common/test3.kwlist.xml ../common/test4.cantonese.kwlist.xml ../common/test5.kwlist.xml ../common/test6.kwlist.xml -w", "res_${tn}$ftxtra.txt");
+$testr += &do_simple_test($tn, "(KWList Validation)", "$validator -t ../common/test2.kwlist.xml ../common/test3.kwlist.xml ../common/test4.cantonese.kwlist.xml ../common/test5.kwlist.xml ../common/test6.kwlist.xml -w", "res_${tn}.txt");
 
 ##
 $tn = "test3b";

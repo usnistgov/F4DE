@@ -90,7 +90,7 @@ sub unitTestFind
 {
   my ($rttm, $text, $exp, $thresh) = (@_);
 
-  print " Finding terms ($text, thresh=$thresh)...     ";
+  print "  Finding terms ($text, thresh=$thresh)...     ";
   my $out = findTermHashToArray($rttm->findTermOccurrences($text, $thresh, ""));
   if (@$out != $exp) { 
     print "Failed: ".scalar(@$out)." != $exp\n"; 
@@ -156,7 +156,7 @@ sub unitTest
     return 0 unless(unitTestFind($rttm_eng_nonorm, "s.",           0, 0.1));
     return 0 unless(unitTestFind($rttm_eng_nonorm, "karachi used", 0, 0.1));
 
-    print "Space parsing...         \n";
+    print " Space parsing...         \n";
     return 0 unless(unitTestFind($rttm_eng_norm, "   of the",       53, 0.1));
     return 0 unless(unitTestFind($rttm_eng_norm, "   of    the",    53, 0.1));
     return 0 unless(unitTestFind($rttm_eng_norm, "of    the  ",     53, 0.1));
@@ -165,7 +165,7 @@ sub unitTest
     print " Adjacent terms...    \n";
     return 0 unless(unitTestFind($rttm_eng_norm, "word1 word2",       3, 0.5));
     return 0 unless(unitTestFind($rttm_eng_norm, "word1 word2 word3", 2, 0.5));
-    
+
     my $tlist = new TermList($file2tlist, 0, 0, 0);
     print "Loading Cantonese File (no normalization)...          \n";
     my $rttm_cant = new RTTMList($file2, $tlist->getLanguage(), $tlist->getCompareNormalize(), $tlist->getEncoding(), 0, 0, 0);
