@@ -266,11 +266,11 @@ Thank you for helping us improve F4DE.
 
 ## <a name="authors"></a> Authors
 
-Martial Michel \<martial.michel@nist.gov\>
+Martial Michel &lt;martial.michel@nist.gov&gt;
 
-David Joy \<david.joy@nist.gov\>
+David Joy &lt;david.joy@nist.gov&gt;
 
-Jonathan Fiscus \<jonathan.fiscus@nist.gov\>
+Jonathan Fiscus &lt;jonathan.fiscus@nist.gov&gt;
 
 Vladimir Dreyvitser
 
