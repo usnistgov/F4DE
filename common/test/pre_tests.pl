@@ -133,14 +133,23 @@ if ($mode ne "OpenHaRT_minirelease_check") {
   if (MMisc::is_blank($derr)) {
     print "$gnuplot [$gv]\n";
     
-    print "  ** Checking for \'gnuplot\' PNG mode : ";
-    my $gppng = "echo \"set terminal png\" | $gnuplot";
+    print "  ** Checking for \'gnuplot\' PNG (libdg) mode : ";
+    my $gppng = "echo \"set terminal\" | $gnuplot";
     my ($rc, $so, $se) = MMisc::do_system_call($gppng);
     if ($rc != 0) {
-      print "  ** missing **\n";
+      print "  ** problem running gnuplot: $se **\n";
       $err++;
     } else {
-      print " ok\n";
+        my $_tt = $so . $se;
+        if ($_tt =~ m%png\simages\susing\slibgd\sand\struetype\sfonts%i) {
+            print "  ok\n";
+        } elsif ($_tt =~ m%pngcairo%) {
+            print "  ** Found \'pngcairo\', which is not supported, see README.md for details **\n";
+            $err++;
+        } else {
+            print "  ** No PNG support **\n";
+            $err++;
+        }
     }
   } else {
     print "  ** $derr **\n";
