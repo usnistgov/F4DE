@@ -1393,6 +1393,17 @@ sub cmd_which {
   return($stdout);
 }
 
+## 
+
+sub smart_cmd_which {
+  my ($cmd, @rest) = split(m%\s+%, $_[0]);
+  
+  my $ret = &cmd_which($cmd);
+  return(undef) if (! defined $ret);
+  
+  return(join(" ", $ret, @rest));
+}
+
 ####################
 
 sub __printto_core { if (shift @_ == 2) { print STDERR join("", @_) } else { print join("", @_) } }

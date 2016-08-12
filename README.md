@@ -147,11 +147,11 @@ Classification of Events, Activities, and Relationships (CLEAR): [2007](#clear20
 
 KeyWord Search (KWS / OpenKWS): [KWS](#kws) [2015](#openkws2015)
 
-TRECVID Multimedia Event Detection(MED): [2010](#med2010) [2011](#med2011) [2012](#med2012) [2013](#med2013) [2015](#med2015)
+TRECVID Multimedia Event Detection(MED): [2010](#med2010) [2011](#med2011) [2012](#med2012) [2013](#med2013) [2015](#med2015) [2016](#med2016)
 
 TRECVID Multimedia Event Recounting (MER): [2013](#mer2013)
 
-TRECVID Surveillance Event Detection (SED): [2008](#sed2008) [2009](#sed2009) [2010](#sed2010) [2011](#sed2011) [2012](#sed2012) [2013](#sed2013) [2014](#sed2014) [2015](#sed2015)
+TRECVID Surveillance Event Detection (SED): [2008](#sed2008) [2009](#sed2009) [2010](#sed2010) [2011](#sed2011) [2012](#sed2012) [2013](#sed2013) [2014](#sed2014) [2015](#sed2015) [2016](#sed2016)
 
 
 ### <a name="clear2007"></a>2007 CLEAR Evaluation:
@@ -240,6 +240,10 @@ TRECVID Surveillance Event Detection (SED): [2008](#sed2008) [2009](#sed2009) [2
 - Same tool as the [2013 MED](#med2013) Evaluation (`DEVA_cli`).
 - `TV15MED-SubmissionChecker` - A tool designed to help confirm MED15 submission archives before transmitting them to NIST.
 - Scoring Primer: `DEVA/doc/TRECVid-MED15-ScoringPrimer.html`
+
+### <a name="sed2016"></a>2016 TRECVID SED Evaluation: 
+- Same tools as the [2014 TRECVID SED](#sed2014) Evaluation (`TV08Scorer`, `TV08ViperValidator`, `TV08MergeHelper`, `TV08_BigXML_ValidatorHelper`)
+- `TV16SED-SubmissionChecker` - A tool designed to help confirm SED16 submission archives before transmitting them to NIST. 
 
 ### <a name="med2016"></a>2016 TRECVID MED Evaluation: 
 - Same tool as the [2013 MED](#med2013) Evaluation (`DEVA_cli`).

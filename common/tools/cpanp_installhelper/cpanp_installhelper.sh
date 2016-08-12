@@ -36,7 +36,7 @@ fi
 
 # Not installed, try to install (we will check exit status of the cpan install command)
 ntool=`perl -e 'if ($^V ge 5.18.0){print "cpanm"}else{print "cpanp -i"}'`
-tool=`echo $ntool | perl -I$tool_dir/../../lib -ne 'use MMisc; print MMisc::cmd_which($_)'`
+tool=`echo $ntool | perl -I$tool_dir/../../lib -ne 'use MMisc; print MMisc::smart_cmd_which($_)'`
 if [ "A$tool" == "A" ]; then
     echo "Problem finding needed tool ($ntool), aborting"
     exit 1
