@@ -1,8 +1,8 @@
 # Framework for Detection Evaluation (F4DE)
 
-**Version:** 3.3.0
+**Version:** 3.3.1
 
-**Date:** July 25, 2016
+**Date:** February 22, 2017
 
 ## Table of Content
 
@@ -32,7 +32,7 @@ F4DE's source files are publicly available on [GitHub](https://github.com), see:
 
 It has been confirmed to work under Linux, OS X and Cygwin.
 
-F4DE does not have to be installed as the tools can be run directly from their  base location. An installation method is made available if you intend to add some of more common tools to your path. See the [installation](installation) subsection for more details.
+After confirming the [prerequisites](#prerequisites) are met, F4DE does not have to be installed as the tools can be run directly from their  base location. An installation method is made available if you intend to add some of more common tools to your path. See the [installation](installation) subsection for more details.
 
 A [docker](https://www.docker.com/) release for F4DE is available, please see:   [https://hub.docker.com/r/martialnist/docker-f4de/](https://hub.docker.com/r/martialnist/docker-f4de/)
 
